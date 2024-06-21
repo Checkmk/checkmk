@@ -1,4 +1,4 @@
-Title: <tt>check_sftp</tt>: Fix command line argument for private key
+Title: check_sftp: Fix command line argument for private key
 Class: fix
 Compatible: compat
 Component: checks

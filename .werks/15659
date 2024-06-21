@@ -1,4 +1,4 @@
-Title: Make `Remove TLS registration` work for hosts on remote sites
+Title: Make 'Remove TLS registration' work for hosts on remote sites
 Class: fix
 Compatible: compat
 Component: setup

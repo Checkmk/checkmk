@@ -7,6 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_sap_state(info):
     for line in info:
@@ -26,7 +28,12 @@ def check_sap_state(item, _no_parameters, info):
             return value_to_status(value), "Status: %s" % value
 
 
+def parse_sap_state(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["sap_state"] = LegacyCheckDefinition(
+    parse_function=parse_sap_state,
     service_name="SAP State %s",
     discovery_function=inventory_sap_state,
     check_function=check_sap_state,

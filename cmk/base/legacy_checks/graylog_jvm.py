@@ -6,9 +6,11 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.graylog import deserialize_and_merge_json, GraylogSection
+
+from cmk.agent_based.v2 import render
+from cmk.plugins.lib.graylog import deserialize_and_merge_json, GraylogSection
 
 # <<<graylog_jvm>>>
 # {"jvm.memory.heap.init": 1073741824, "jvm.memory.heap.used": 357154208,
@@ -39,7 +41,7 @@ def check_graylog_jvm(_no_item, params, parsed):
             mem_data,
             metric_name,
             params.get(key),
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.bytes,
             infoname="%s heap space" % key.title(),
         )
     if not has_mem_data:

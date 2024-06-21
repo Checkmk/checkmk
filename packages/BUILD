@@ -3,6 +3,8 @@ exports_files([
     "cmk-agent-receiver",
     "cmk-graphing",
     "cmk-mkp-tool",
+    "cmk-rulesets",
     "cmk-server-side-calls",
     "cmk-werks",
+    "cmk-livestatus-client",
 ])

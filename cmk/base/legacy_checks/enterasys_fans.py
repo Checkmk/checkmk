@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.enterasys import DETECT_ENTERASYS
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.plugins.lib.enterasys import DETECT_ENTERASYS
 
 
 def inventory_enterasys_fans(info):
@@ -32,7 +33,12 @@ def check_enterasys_fans(item, _no_params, info):
     return None
 
 
+def parse_enterasys_fans(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["enterasys_fans"] = LegacyCheckDefinition(
+    parse_function=parse_enterasys_fans,
     detect=DETECT_ENTERASYS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.52.4.3.1.3.1.1",

@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 INSTALL_PREFIX=""
 CLANG_VERSION=""
-TARGET_DIR="/opt"
+TARGET_DIR="${TARGET_DIR:-/opt}"
 
 # option parsing ###############################################################
 
@@ -102,19 +102,11 @@ trap cleanup EXIT
 
 # build/install ################################################################
 
-BRANCH_NAME=clang_${TAG_NAME}
 cd "${WORK_DIR}"
-# TODO: No branch for Clang 17 yet, remove the hack below when there is one.
-if [[ ${BRANCH_NAME} == clang_17 ]]; then
-    git clone https://github.com/include-what-you-use/include-what-you-use
-    # Even worse: The commit below broke Clang 17 compatibility
-    git -C include-what-you-use reset --hard d459ef458298~1
-else
-    git clone \
-        --depth 1 \
-        --branch ${BRANCH_NAME} \
-        https://github.com/include-what-you-use/include-what-you-use
-fi
+git clone \
+    --depth 1 \
+    --branch clang_${TAG_NAME} \
+    https://github.com/include-what-you-use/include-what-you-use
 
 IWYU_VERSION=$(grep --word-regexp IWYU_VERSION_STRING include-what-you-use/iwyu_version.h | sed 's/^.*"\(.*\)"$/\1/')
 IWYU_PATH=/opt/iwyu-${IWYU_VERSION}

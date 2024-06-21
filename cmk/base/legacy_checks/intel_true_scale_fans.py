@@ -5,8 +5,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.intel import DETECT_INTEL_TRUE_SCALE
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.intel import DETECT_INTEL_TRUE_SCALE
 
 # .1.3.6.1.4.1.10222.2.1.6.5.1.2.6.1 Fan 201 --> ICS-CHASSIS-MIB::icsChassisFanDescription.6.1
 # .1.3.6.1.4.1.10222.2.1.6.5.1.2.7.1 Fan 202 --> ICS-CHASSIS-MIB::icsChassisFanDescription.7.1
@@ -76,7 +77,12 @@ def check_intel_true_scale_fans(item, _no_params, info):
                 yield state, f"{what_descr} status: {state_readable}"
 
 
+def parse_intel_true_scale_fans(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["intel_true_scale_fans"] = LegacyCheckDefinition(
+    parse_function=parse_intel_true_scale_fans,
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.10222.2.1.6.5.1",

@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 
 def inventory_epson_beamer_lamp(info):
@@ -25,7 +26,12 @@ def check_epson_beamer_lamp(_no_item, params, info):
     )
 
 
+def parse_epson_beamer_lamp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["epson_beamer_lamp"] = LegacyCheckDefinition(
+    parse_function=parse_epson_beamer_lamp,
     detect=contains(".1.3.6.1.2.1.1.2.0", "1248"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1248.4.1.1.1.1",

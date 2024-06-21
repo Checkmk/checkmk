@@ -33,7 +33,7 @@ def _migrate_opt_string(
 def _item_spec_heartbeat_crm_resources():
     return TextInput(
         title=_("Resource Name"),
-        help=_("The name of the cluster resource as shown in the service description."),
+        help=_("The name of the cluster resource as shown in the service name."),
         allow_empty=False,
     )
 
@@ -46,7 +46,7 @@ def _parameter_valuespec_heartbeat_crm_resources():
                     "expected_node",
                     Alternative(
                         title=_("Expected node"),
-                        help=_("The hostname of the expected node to hold this resource."),
+                        help=_("The host name of the expected node to hold this resource."),
                         elements=[
                             FixedValue(value=None, totext="", title=_("Do not check the node")),
                             TextInput(allow_empty=False, title=_("Expected node")),

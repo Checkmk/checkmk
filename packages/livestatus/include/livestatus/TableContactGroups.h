@@ -16,12 +16,14 @@ class User;
 
 class TableContactGroups : public Table {
 public:
-    explicit TableContactGroups(ICore *mc);
+    TableContactGroups();
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query &query, const User &user) override;
-    [[nodiscard]] Row get(const std::string &primary_key) const override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
+    [[nodiscard]] Row get(const std::string &primary_key,
+                          const ICore &core) const override;
 };
 
 #endif  // TableContactGroups_h

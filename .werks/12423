@@ -1,4 +1,4 @@
-Title: <tt>cisco_asa_failover</tt>: Also monitor local, remote and failover link status
+Title: cisco_asa_failover: Also monitor local, remote and failover link status
 Class: feature
 Compatible: compat
 Component: checks

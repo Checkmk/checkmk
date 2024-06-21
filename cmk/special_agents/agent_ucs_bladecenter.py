@@ -28,12 +28,9 @@ import urllib3
 from cmk.utils.exceptions import MKException
 from cmk.utils.password_store import replace_passwords
 
-from cmk.special_agents.utils import vcrtrace
+from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 ElementAttributes = dict[str, str]
-
-# TODO Add functionality in the future
-# import cmk.utils.password_store
 
 # Be aware of
 # root = ET.fromstring(content)
@@ -369,17 +366,15 @@ class CommunicationException(MKException):
 
 
 class Server:
-    def __init__(  # type: ignore[no-untyped-def]
-        self, hostname, username, password, verify_ssl
-    ) -> None:
+    def __init__(self, hostname: str, username: str, password: str, verify_ssl: bool) -> None:
         self._url = "https://%s/nuova" % hostname
         self._username = username
         self._password = password
         self._session = requests.Session()
         self._verify_ssl = verify_ssl
-        self._cookie = None
+        self._cookie: str | None = None
 
-    def login(self):
+    def login(self) -> None:
         logging.debug("Server.login: Login")
         attributes: ElementAttributes = {
             "inName": self._username,
@@ -398,14 +393,14 @@ class Server:
             request.body = b"login request filtered out"
         return request
 
-    def logout(self):
+    def logout(self) -> None:
         logging.debug("Server.logout: Logout")
         attributes: ElementAttributes = {}
         if self._cookie:
             attributes.update({"inCookie": self._cookie})
         self._communicate(ET.Element("aaaLogout", attrib=attributes))
 
-    def _get_bios_unit_name_from_dn(self, xml_object) -> str:  # type: ignore[no-untyped-def]
+    def _get_bios_unit_name_from_dn(self, xml_object: ET.Element) -> str:
         dn = self._get_attribute_data(xml_object, "dn")
         return "/".join(dn.split("/")[0:2])
 
@@ -461,13 +456,13 @@ class Server:
                             attribute_data = self._get_attribute_data(xml_object, "dn")
                         if attribute_data is None:
                             logging.debug("No such attribute '%s'", attribute)
-                            # ensure order of entries in related check plugins is consistent
+                            # ensure order of entries in related check plug-ins is consistent
                             attribute_data = ""
                         xml_data.append((attribute, attribute_data))
                     data.setdefault(header, []).append((class_id, xml_data))
         return data
 
-    def _get_attribute_data(self, xml_object, attribute):
+    def _get_attribute_data(self, xml_object: ET.Element, attribute: str) -> str:
         logging.debug("Server._get_attribute_data: Try getting attribute '%s'", attribute)
         attribute_data = xml_object.attrib.get(attribute)
         if attribute_data:
@@ -483,9 +478,9 @@ class Server:
         attribute_data = xml_object.attrib.get(attribute_lower)
         if attribute_data:
             return attribute_data
-        return None
+        raise ValueError("No such attribute '%s'" % attribute)
 
-    def _get_class_data(self, class_id):
+    def _get_class_data(self, class_id: str) -> list[ET.Element]:
         """
         Returns list of XML trees for class_id or empty list in case no entries are found.
         """
@@ -502,7 +497,7 @@ class Server:
         logging.debug("Server._get_class_data: Entries found: '%s'", xml_objects)
         return xml_objects
 
-    def _communicate(self, xml_obj):
+    def _communicate(self, xml_obj: ET.Element) -> ET.Element:
         """
         Sends a XML object and returns the response as XML tree. Raises CommunicationException
         in case of any error.
@@ -562,12 +557,12 @@ class Server:
 #   '----------------------------------------------------------------------'
 
 
-def debug():
+def debug() -> bool:
     """Do not depend on argument parsing here."""
     return "-d" in sys.argv[1:] or "--debug" in sys.argv[1:]
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -587,7 +582,7 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def setup_logging(opt_debug):
+def setup_logging(opt_debug: bool) -> None:
     fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
     if opt_debug:
         lvl = logging.DEBUG
@@ -596,12 +591,12 @@ def setup_logging(opt_debug):
     logging.basicConfig(level=lvl, format=fmt)
 
 
-def main(args=None):
-    if args is None:
+def main(argv: Sequence[str] | None = None) -> int:
+    if argv is None:
         replace_passwords()
-        args = sys.argv[1:]
+        argv = sys.argv[1:]
 
-    args = parse_arguments(args)
+    args = parse_arguments(argv)
     setup_logging(args.debug)
     handle = Server(args.hostname, args.username, args.password, not args.no_cert_check)
     try:

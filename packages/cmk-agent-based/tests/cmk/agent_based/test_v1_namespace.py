@@ -29,7 +29,8 @@ def test_v1() -> None:
         # value_store: not explicitly exposed here,
         # not at all exposed in the old location under cmk/base/plugins/agent_based/agent_based/api
         "value_store",
-        # register: not moved to this package, b/c that is not how we're doing things anymore.
+        # register: only partially in this package, b/c that is not how we're doing things anymore.
+        "register",
         "Attributes",
         "GetRateError",
         "HostLabel",

@@ -22,10 +22,10 @@ from collections.abc import Collection
 
 from marshmallow import ValidationError
 
-import cmk.gui.forms as forms
-import cmk.gui.userdb as userdb
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -48,7 +48,8 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserRole
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName
+from cmk.gui.userdb import UserRole
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link
@@ -133,7 +134,7 @@ class ModeRoles(WatoMode):
                 table.row()
 
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
 
                 # Actions
                 table.cell(_("Actions"), css=["buttons"])
@@ -171,7 +172,7 @@ class ModeRoles(WatoMode):
                 # Users
                 table.cell(
                     _("Users"),
-                    HTML(", ").join(
+                    HTML.without_escaping(", ").join(
                         [
                             HTMLWriter.render_a(
                                 user.get("alias", user_id),
@@ -256,16 +257,17 @@ class ModeEditRole(WatoMode):
         return redirect(mode_url("roles"))
 
     def page(self) -> None:
+        with html.form_context("role", method="POST"):
+            self._page_form()
+
+    def _page_form(self) -> None:
         search = get_search_expression()
-
-        html.begin_form("role", method="POST")
-
         # ID
         forms.header(_("Basic properties"), css="wide")
         forms.section(_("Internal ID"), simple=self._role.builtin, is_required=True)
 
         if self._role.builtin:
-            html.write_text("{} ({})".format(self._role_id, _("built-in role")))
+            html.write_text_permissive("{} ({})".format(self._role_id, _("built-in role")))
             html.hidden_field("id", self._role_id)
         else:
             html.text_input("id", self._role_id)
@@ -283,7 +285,7 @@ class ModeEditRole(WatoMode):
                 _(
                     "Each user defined role is based on one of the built-in roles. "
                     "When created it will start with all permissions of that role. When due to a software "
-                    "update or installation of an addons new permissions appear, the user role will get or "
+                    "update or installation of an add-on new permissions appear, the user role will get or "
                     "not get those new permissions based on the default settings of the built-in role it's "
                     "based on."
                 )
@@ -345,7 +347,6 @@ class ModeEditRole(WatoMode):
 
         forms.end()
         html.hidden_fields()
-        html.end_form()
 
 
 class ModeRoleMatrix(WatoMode):
@@ -364,12 +365,16 @@ class ModeRoleMatrix(WatoMode):
     def title(self) -> str:
         return _("Permission matrix")
 
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(breadcrumb=breadcrumb, inpage_search=PageMenuSearch())
+
     def page(self) -> None:
         for section in permission_section_registry.get_sorted_sections():
             with table_element(
                 section.name,
                 section.title,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
+                limit=max(200, active_config.table_row_limit),
             ) as table:
                 permission_list = permission_registry.get_sorted_permissions(section)
 

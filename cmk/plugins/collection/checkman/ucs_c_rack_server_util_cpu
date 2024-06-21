@@ -1,0 +1,46 @@
+title: UCS C-Series Rack Server: CPU Utilization
+agents: agent_ucs_bladecenter
+catalog: hw/server/cisco
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about the CPU utilization of an UCS C-Series Rack Servers racks.
+ The metric is based on the aggregation of all RMCs (Resource Monitoring Counters) of a servers
+ rack unit and describe the cumulative utilization of all CPU cores.
+
+ This check supports the following C-Series Rack Server models providing XML API 2.0
+ [Cisco UCS Rack-Mount Servers Cisco IMC XML API 2.0]:
+
+ - Cisco UCS C220 M5 Rack Server
+
+ - Cisco UCS C240 M5 Rack Server
+
+ - Cisco UCS C480 M5 Rack Server
+
+ - Cisco UCS C480 ML M5 Rack Server
+
+ - Cisco UCS C220 M4 Rack Server
+
+ - Cisco UCS C240 M4 Rack Server
+
+ - Cisco UCS C460 M4 Rack Server
+
+ This check does not support the C-Series Rack Server model "Cisco UCS C125 M5 Rack Server Node"
+ which is used as part of a "Cisco UCS C4200 Series Rack Server Chassis".
+
+ Check status:
+
+ - {OK} in case the monitored CPU utilization is within the configured valid range.
+
+ - {WARN} in case the monitored CPU utilization is equal or higher than the configured warn level.
+
+ - {CRIT} in case the monitored CPU utilization is equel or higher than the configured crit level.
+
+ The default value for the {warn} level is 90.0%. The default value for the {crit} level is 95.0%.
+ The {warn} and {crit} level are configurable via WATO rule {CPU utilization of Devices with Modules}.
+
+discovery:
+ One service is created for each server rack included in the agent plug-in output.
+
+item:
+ {{Rack unit}} followed by the index of the rack

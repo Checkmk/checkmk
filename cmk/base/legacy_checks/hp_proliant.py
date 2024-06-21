@@ -10,13 +10,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    any_of,
-    contains,
-    exists,
-    SNMPTree,
-)
+
+from cmk.agent_based.v2 import all_of, any_of, contains, exists, SNMPTree, StringTable
 
 
 def inventory_proliant_general(info):
@@ -40,7 +35,12 @@ def check_proliant_general(_no_item, _no_params, info):
     return state, f"Status: {state_readable}, Firmware: {firmware}, S/N: {serial_number}"
 
 
+def parse_hp_proliant(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hp_proliant"] = LegacyCheckDefinition(
+    parse_function=parse_hp_proliant,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", "8072.3.2.10"),
         contains(".1.3.6.1.2.1.1.2.0", "232.9.4.10"),

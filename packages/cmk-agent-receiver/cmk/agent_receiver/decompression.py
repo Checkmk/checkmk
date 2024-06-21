@@ -8,8 +8,7 @@ from zlib import decompress
 from zlib import error as zlibError
 
 
-class DecompressionError(Exception):
-    ...
+class DecompressionError(Exception): ...
 
 
 class Decompressor(Enum):
@@ -32,7 +31,7 @@ class Decompressor(Enum):
         >>> Decompressor._zlib_decompress(b"blablub")
         Traceback (most recent call last):
             ...
-        cmk.agent_receiver.decompression.DecompressionError: ...
+        agent_receiver.decompression.DecompressionError: ...
         """
         try:
             return decompress(data)

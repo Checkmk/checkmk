@@ -107,18 +107,17 @@ def jolokia_metrics_parse(info: Sequence[MutableSequence[str]]) -> Mapping[str, 
             bean = parsed[inst].setdefault(bean_type, {}).setdefault(bean_name, {})
             bean[var] = value
             bean.update(attributes)
-        else:
-            if positional:
-                app = positional[0]
-                app_dict = parsed[inst].setdefault("apps", {}).setdefault(app, {})
-                if len(positional) > 1:
-                    servlet = positional[1]
-                    app_dict.setdefault("servlets", {}).setdefault(servlet, {})
-                    app_dict["servlets"][servlet][var] = value
-                else:
-                    app_dict[var] = value
+        elif positional:
+            app = positional[0]
+            app_dict = parsed[inst].setdefault("apps", {}).setdefault(app, {})
+            if len(positional) > 1:
+                servlet = positional[1]
+                app_dict.setdefault("servlets", {}).setdefault(servlet, {})
+                app_dict["servlets"][servlet][var] = value
             else:
-                parsed[inst][var] = value
+                app_dict[var] = value
+        else:
+            parsed[inst][var] = value
     return parsed
 
 
@@ -145,17 +144,13 @@ def jolokia_metrics_parse(info: Sequence[MutableSequence[str]]) -> Mapping[str, 
 #   '----------------------------------------------------------------------'
 
 
-_DefaultsType = tuple[int, int] | tuple[int, int, int, int] | None
-
-
 def get_inventory_jolokia_metrics_apps(  # pylint: disable=too-many-branches
     what: str,
     *,
     needed_keys: set[str],
-    default_params: _DefaultsType = None,
-) -> Callable[[list[list[str]]], Sequence[tuple[str, _DefaultsType]]]:
-    def inventory_function(info: list[list[str]]) -> Sequence[tuple[str, _DefaultsType]]:
-        inv = []
+) -> Callable[[list[list[str]]], Sequence[tuple[str, Mapping[str, object]]]]:
+    def inventory_function(info: list[list[str]]) -> Sequence[tuple[str, Mapping[str, object]]]:
+        inv: list[tuple[str, Mapping[str, object]]] = []
         parsed = jolokia_metrics_parse(info)
 
         # this handles information from BEA, they stack one level
@@ -170,7 +165,7 @@ def get_inventory_jolokia_metrics_apps(  # pylint: disable=too-many-branches
                         for nk in needed_keys:
                             for servlet in appstate["servlets"]:
                                 if nk in appstate["servlets"][servlet]:
-                                    inv.append((f"{inst} {app} {servlet}", default_params))
+                                    inv.append((f"{inst} {app} {servlet}", {}))
                                     continue
         # This does the same for tomcat
         for inst, vals in parsed.items():
@@ -180,7 +175,7 @@ def get_inventory_jolokia_metrics_apps(  # pylint: disable=too-many-branches
             for app, appstate in vals.get("apps", {}).items():
                 for nk in needed_keys:
                     if nk in appstate:
-                        inv.append((f"{inst} {app}", default_params))
+                        inv.append((f"{inst} {app}", {}))
                         continue
         return inv
 

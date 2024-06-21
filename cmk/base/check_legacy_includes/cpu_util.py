@@ -4,15 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 
-import cmk.base.plugins.agent_based.utils.cpu_util as cpu_util
-from cmk.base.check_api import check_levels, get_age_human_readable
+from cmk.base.check_api import check_levels, ServiceCheckResult
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_average,
     get_value_store,
     IgnoreResultsError,
-    render,
 )
+
+from cmk.agent_based.v2 import render
+from cmk.plugins.lib import cpu_util
 
 # Common file for all (modern) checks that check CPU utilization (not load!)
 
@@ -30,7 +33,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 ##########################################################################################
 #                                                                                        #
 #     THE FUNCTIONS IN THIS FILE HAVE PARTIALLY BEEN MIGRATED TO CPU_UTIL.PY             #
-#     IN cmk/base/plugins/agent_based/utils/                                             #
+#     IN cmk.plugins.lib/                                             #
 #                                                                                        #
 #     PLEASE TAKE A LOOK AT THOSE BEFOR MODIFYING ANY CODE IN THIS FILE                  #
 #     THERE ARE MORE FUNCTIONS IN IT THAT THE ONES USED BELOW!                           #
@@ -127,9 +130,12 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
 
 
 # ALREADY MIGRATED
-def check_cpu_util_unix(  # type: ignore[no-untyped-def]
-    values: CPUInfo, params, cores=None, values_counter=True
-):
+def check_cpu_util_unix(
+    values: CPUInfo,
+    params: Mapping[str, Any],
+    cores: Sequence[CPUInfo] | None = None,
+    values_counter: bool = True,
+) -> Iterable[ServiceCheckResult]:
     this_time = time.time()
     value_store = get_value_store()
 
@@ -287,7 +293,7 @@ def cpu_util_time(this_time, core, perc, threshold, warn_core, crit_core):
             high_load_duration,
             "%s_is_under_high_load_for" % core,  # Not used
             (warn_core, crit_core),
-            human_readable_func=get_age_human_readable,
+            human_readable_func=render.timespan,
             infoname="%s is under high load for" % core,
         )
         if timestamp == 0:

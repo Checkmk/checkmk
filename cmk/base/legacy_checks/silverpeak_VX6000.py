@@ -26,7 +26,8 @@ from typing import Any
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith
 
 Section = Mapping[str, Any]
 
@@ -45,9 +46,11 @@ severity_to_states = {
 
 
 def parse_silverpeak(string_table):
-    parsed = {}
-
     alarm_count, alarms = string_table
+    if not alarm_count:
+        return None
+
+    parsed = {}
 
     # We currently do not know if any (alarm) OIDs will be delivered in case no alarm is active.
     # Therefore acquire the alarm count in any case.

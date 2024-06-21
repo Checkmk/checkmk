@@ -8,10 +8,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Annotated, Callable, Literal, Self, Union
+from itertools import chain
+from typing import Annotated, final, Literal, NamedTuple
 
-from pydantic import BaseModel, Field, SerializeAsAny, TypeAdapter, validator
-from typing_extensions import TypedDict
+from pydantic import BaseModel, computed_field, field_validator, PlainValidator, SerializeAsAny
 
 from livestatus import SiteId
 
@@ -20,280 +20,125 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.type_defs import GraphRenderOptions, VisualContext
+from cmk.gui.time_series import TimeSeries
 
-from ._type_defs import (
-    GraphConsoldiationFunction,
-    GraphPresentation,
-    LineType,
-    Operators,
-    TranslatedMetric,
-)
-
-HorizontalRule = tuple[float, str, str, str]
+from ._graph_render_config import GraphRenderOptions
+from ._timeseries import AugmentedTimeSeries, derive_num_points_twindow, time_series_math
+from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData, RRDDataKey
 
 
-class SelectedMetric(BaseModel, frozen=True):
-    expression: str
-    line_type: LineType
+class HorizontalRule(NamedTuple):
+    value: float
+    rendered_value: str
+    color: str
+    title: str
 
 
 @dataclass(frozen=True)
-class CombinedSingleMetricSpec:
-    datasource: str
-    context: VisualContext
-    selected_metric: SelectedMetric
-    consolidation_function: GraphConsoldiationFunction
-    presentation: GraphPresentation
-
-
-@dataclass(frozen=True)
-class NeededElementForTranslation:
+class TranslationKey:
     host_name: HostName
     service_name: ServiceName
 
 
-@dataclass(frozen=True)
-class NeededElementForRRDDataKey:
-    # TODO Intermediate step, will be cleaned up:
-    # Relates to MetricOperation::rrd with SiteId, etc.
-    site_id: SiteId
-    host_name: HostName
-    service_name: ServiceName
-    metric_name: str
-    consolidation_func_name: GraphConsoldiationFunction | None
-    scale: float
+class MetricOperation(BaseModel, ABC, frozen=True):
+    @staticmethod
+    @abstractmethod
+    def operation_name() -> str: ...
+
+    @abstractmethod
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]: ...
+
+    @abstractmethod
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]: ...
+
+    def fade_odd_color(self) -> bool:
+        return True
+
+    # mypy does not support other decorators on top of @property:
+    # https://github.com/python/mypy/issues/14461
+    # https://docs.pydantic.dev/2.0/usage/computed_fields (mypy warning)
+    @computed_field  # type: ignore[misc]
+    @property
+    @final
+    def ident(self) -> str:
+        return self.operation_name()
 
 
-RetranslationMap = Mapping[
-    tuple[HostName, ServiceName], Mapping[MetricName, tuple[SiteId, TranslatedMetric]]
-]
+class MetricOperationRegistry(Registry[type[MetricOperation]]):
+    def plugin_name(self, instance: type[MetricOperation]) -> str:
+        return instance.operation_name()
 
 
-class MetricOpConstant(BaseModel, frozen=True):
-    ident: Literal["constant"] = "constant"
+metric_operation_registry = MetricOperationRegistry()
+
+
+def parse_metric_operation(raw: object) -> MetricOperation:
+    match raw:
+        case MetricOperation():
+            return raw
+        case {"ident": str(ident), **rest}:
+            return metric_operation_registry[ident].model_validate(rest)
+        case dict():
+            raise ValueError("Missing 'ident' key in metric operation")
+    raise TypeError(raw)
+
+
+class MetricOpConstant(MetricOperation, frozen=True):
     value: float
 
-    def needed_elements(
-        self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+    @staticmethod
+    def operation_name() -> Literal["constant"]:
+        return "constant"
+
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
         yield from ()
 
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        return self
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+        num_points, twindow = derive_num_points_twindow(rrd_data)
+        return [AugmentedTimeSeries(data=TimeSeries([self.value] * num_points, twindow))]
 
 
-class MetricOpScalar(BaseModel, frozen=True):
-    ident: Literal["scalar"] = "scalar"
-    host_name: HostName
-    service_name: ServiceName
-    metric_name: MetricName
-    scalar_name: Literal["warn", "crit", "min", "max"] | None
+class MetricOpConstantNA(MetricOperation, frozen=True):
+    @staticmethod
+    def operation_name() -> Literal["constant_na"]:
+        return "constant_na"
 
-    def needed_elements(
-        self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield NeededElementForTranslation(self.host_name, self.service_name)
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
+        yield from ()
 
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        _site, trans = retranslation_map[(self.host_name, self.service_name)][self.metric_name]
-        if not isinstance(value := trans["scalar"].get(str(self.scalar_name)), float):
-            # TODO if scalar_name not in trans["scalar"] -> crash; No warning to the user :(
-            raise TypeError(value)
-        return MetricOpConstant(value=value)
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+        num_points, twindow = derive_num_points_twindow(rrd_data)
+        return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
 
 
-class MetricOpOperator(BaseModel, frozen=True):
-    ident: Literal["operator"] = "operator"
+class MetricOpOperator(MetricOperation, frozen=True):
     operator_name: Operators
-    operands: Sequence[MetricOperation] = []
-
-    def needed_elements(
-        self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield from (
-            ne
-            for o in self.operands
-            for ne in o.needed_elements(resolve_combined_single_metric_spec)
-        )
-
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        return MetricOpOperator(
-            operator_name=self.operator_name,
-            operands=[o.reverse_translate(retranslation_map) for o in self.operands],
-        )
-
-
-class TransformationParametersPercentile(BaseModel, frozen=True):
-    percentile: int
-
-
-class VSTransformationParametersForecast(TypedDict):
-    past: (
-        Literal["m1", "m3", "m6", "y0", "y1"]
-        | tuple[Literal["age"], int]
-        | tuple[Literal["date"], tuple[float, float]]
-    )
-    future: (
-        Literal["m-1", "m-3", "m-6", "y-1"]
-        | tuple[Literal["next"], int]
-        | tuple[Literal["until"], float]
-    )
-    changepoint_prior_scale: float
-    seasonality_mode: Literal["additive", "multiplicative"]
-    interval_width: float
-    display_past: int
-    display_model_parametrization: bool
-
-
-class TransformationParametersForecast(BaseModel, frozen=True):
-    past: (
-        Literal["m1", "m3", "m6", "y0", "y1"]
-        | tuple[Literal["age"], int]
-        | tuple[Literal["date"], tuple[float, float]]
-    )
-    future: (
-        Literal["m-1", "m-3", "m-6", "y-1"]
-        | tuple[Literal["next"], int]
-        | tuple[Literal["until"], float]
-    )
-    changepoint_prior_scale: Literal["0.001", "0.01", "0.05", "0.1", "0.2"]
-    seasonality_mode: Literal["additive", "multiplicative"]
-    interval_width: Literal["0.68", "0.86", "0.95"]
-    display_past: int
-    display_model_parametrization: bool
-
-    @classmethod
-    def from_vs_parameters(cls, vs_params: VSTransformationParametersForecast) -> Self:
-        return cls(
-            past=vs_params["past"],
-            future=vs_params["future"],
-            changepoint_prior_scale=cls._parse_changepoint_prior_scale(
-                vs_params["changepoint_prior_scale"]
-            ),
-            seasonality_mode=vs_params["seasonality_mode"],
-            interval_width=cls._parse_interval_width(vs_params["interval_width"]),
-            display_past=vs_params["display_past"],
-            display_model_parametrization=vs_params["display_model_parametrization"],
-        )
-
-    def to_vs_parameters(self) -> VSTransformationParametersForecast:
-        return VSTransformationParametersForecast(
-            past=self.past,
-            future=self.future,
-            changepoint_prior_scale=float(self.changepoint_prior_scale),
-            seasonality_mode=self.seasonality_mode,
-            interval_width=float(self.interval_width),
-            display_past=self.display_past,
-            display_model_parametrization=self.display_model_parametrization,
-        )
+    operands: Sequence[
+        Annotated[SerializeAsAny[MetricOperation], PlainValidator(parse_metric_operation)]
+    ] = []
 
     @staticmethod
-    def _parse_changepoint_prior_scale(
-        raw: float,
-    ) -> Literal["0.001", "0.01", "0.05", "0.1", "0.2"]:
-        match raw:
-            case 0.001:
-                return "0.001"
-            case 0.01:
-                return "0.01"
-            case 0.05:
-                return "0.05"
-            case 0.1:
-                return "0.1"
-            case 0.2:
-                return "0.2"
-        raise ValueError(raw)
+    def operation_name() -> Literal["operator"]:
+        return "operator"
 
-    @staticmethod
-    def _parse_interval_width(
-        raw: float,
-    ) -> Literal["0.68", "0.86", "0.95"]:
-        match raw:
-            case 0.68:
-                return "0.68"
-            case 0.86:
-                return "0.86"
-            case 0.95:
-                return "0.95"
-        raise ValueError(raw)
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
+        yield from (k for o in self.operands for k in o.keys())
 
-
-# TODO transformation is not part of cre but we first have to fix all types
-class MetricOpTransformation(BaseModel, frozen=True):
-    ident: Literal["transformation"] = "transformation"
-    parameters: TransformationParametersPercentile | TransformationParametersForecast
-    operands: Sequence[MetricOperation]
-
-    def needed_elements(
-        self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield from (
-            ne
-            for o in self.operands
-            for ne in o.needed_elements(resolve_combined_single_metric_spec)
-        )
-
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        return MetricOpTransformation(
-            parameters=self.parameters,
-            operands=[o.reverse_translate(retranslation_map) for o in self.operands],
-        )
-
-
-# TODO Check: Similar to CombinedSingleMetricSpec
-class SingleMetricSpec(TypedDict):
-    datasource: str
-    context: VisualContext
-    selected_metric: SelectedMetric
-    consolidation_function: GraphConsoldiationFunction | None
-    presentation: GraphPresentation
-    single_infos: list[str]
-
-
-# TODO combined is not part of cre but we first have to fix all types
-class MetricOpCombined(BaseModel, frozen=True):
-    ident: Literal["combined"] = "combined"
-    single_metric_spec: SingleMetricSpec
-
-    def needed_elements(
-        self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        if (consolidation_func_name := self.single_metric_spec["consolidation_function"]) is None:
-            raise TypeError(consolidation_func_name)
-
-        for metric in resolve_combined_single_metric_spec(
-            CombinedSingleMetricSpec(
-                datasource=self.single_metric_spec["datasource"],
-                context=self.single_metric_spec["context"],
-                selected_metric=self.single_metric_spec["selected_metric"],
-                consolidation_function=consolidation_func_name,
-                presentation=self.single_metric_spec["presentation"],
-            )
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+        if result := time_series_math(
+            self.operator_name,
+            [
+                operand_evaluated.data
+                for operand_evaluated in chain.from_iterable(
+                    operand.compute_time_series(rrd_data) for operand in self.operands
+                )
+            ],
         ):
-            yield from metric.operation.needed_elements(resolve_combined_single_metric_spec)
-
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        return self
+            return [AugmentedTimeSeries(data=result)]
+        return []
 
 
-class MetricOpRRDSource(BaseModel, frozen=True):
-    ident: Literal["rrd"] = "rrd"
+class MetricOpRRDSource(MetricOperation, frozen=True):
     site_id: SiteId
     host_name: HostName
     service_name: ServiceName
@@ -301,13 +146,12 @@ class MetricOpRRDSource(BaseModel, frozen=True):
     consolidation_func_name: GraphConsoldiationFunction | None
     scale: float
 
-    def needed_elements(
-        self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield NeededElementForRRDDataKey(
+    @staticmethod
+    def operation_name() -> Literal["rrd"]:
+        return "rrd"
+
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
+        yield RRDDataKey(
             self.site_id,
             self.host_name,
             self.service_name,
@@ -316,116 +160,82 @@ class MetricOpRRDSource(BaseModel, frozen=True):
             self.scale,
         )
 
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        site_id, trans = retranslation_map[(self.host_name, self.service_name)][self.metric_name]
-        metrics: list[MetricOperation] = [
-            MetricOpRRDSource(
-                site_id=site_id,
-                host_name=self.host_name,
-                service_name=self.service_name,
-                metric_name=name,
-                consolidation_func_name=self.consolidation_func_name,
-                scale=scale,
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+        if (
+            key := RRDDataKey(
+                self.site_id,
+                self.host_name,
+                self.service_name,
+                self.metric_name,
+                self.consolidation_func_name,
+                self.scale,
             )
-            for name, scale in zip(trans["orig_name"], trans["scale"])
-        ]
+        ) in rrd_data:
+            return [AugmentedTimeSeries(data=rrd_data[key])]
 
-        if len(metrics) > 1:
-            return MetricOpOperator(operator_name="MERGE", operands=metrics)
-
-        return metrics[0]
-
-
-class MetricOpRRDChoice(BaseModel, frozen=True):
-    ident: Literal["rrd_choice"] = "rrd_choice"
-    host_name: HostName
-    service_name: ServiceName
-    metric_name: MetricName
-    consolidation_func_name: GraphConsoldiationFunction | None
-
-    def needed_elements(
-        self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield NeededElementForTranslation(self.host_name, self.service_name)
-
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        site_id, trans = retranslation_map[(self.host_name, self.service_name)][self.metric_name]
-        metrics: list[MetricOperation] = [
-            MetricOpRRDSource(
-                site_id=site_id,
-                host_name=self.host_name,
-                service_name=self.service_name,
-                metric_name=name,
-                consolidation_func_name=self.consolidation_func_name,
-                scale=scale,
-            )
-            for name, scale in zip(trans["orig_name"], trans["scale"])
-        ]
-
-        if len(metrics) > 1:
-            return MetricOpOperator(operator_name="MERGE", operands=metrics)
-
-        return metrics[0]
-
-
-MetricOperation = (
-    MetricOpConstant
-    | MetricOpOperator
-    | MetricOpTransformation
-    | MetricOpCombined
-    | MetricOpRRDSource
-    | MetricOpRRDChoice
-    | MetricOpScalar
-)
+        num_points, twindow = derive_num_points_twindow(rrd_data)
+        return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
 
 
 MetricOpOperator.model_rebuild()
-MetricOpTransformation.model_rebuild()
 
 
 class GraphMetric(BaseModel, frozen=True):
     title: str
     line_type: LineType
-    operation: MetricOperation
+    operation: Annotated[SerializeAsAny[MetricOperation], PlainValidator(parse_metric_operation)]
     unit: str
     color: str
     visible: bool
 
 
 class GraphSpecification(BaseModel, ABC, frozen=True):
-    graph_type: str
-
     @staticmethod
     @abstractmethod
-    def name() -> str:
-        ...
+    def graph_type_name() -> str: ...
 
     @abstractmethod
-    def recipes(self) -> Sequence[GraphRecipe]:
-        ...
+    def recipes(self) -> Sequence[GraphRecipe]: ...
+
+    # mypy does not support other decorators on top of @property:
+    # https://github.com/python/mypy/issues/14461
+    # https://docs.pydantic.dev/2.0/usage/computed_fields (mypy warning)
+    @computed_field  # type: ignore[misc]
+    @property
+    @final
+    def graph_type(self) -> str:
+        return self.graph_type_name()
 
 
 class GraphSpecificationRegistry(Registry[type[GraphSpecification]]):
     def plugin_name(self, instance: type[GraphSpecification]) -> str:
-        return instance.name()
+        return instance.graph_type_name()
 
 
 graph_specification_registry = GraphSpecificationRegistry()
 
 
-def parse_raw_graph_specification(raw: Mapping[str, object]) -> GraphSpecification:
-    parsed = TypeAdapter(
-        Annotated[
-            Union[*graph_specification_registry.values()],
-            Field(discriminator="graph_type"),
-        ],
-    ).validate_python(raw)
-    # mypy apparently doesn't understand TypeAdapter.validate_python
-    assert isinstance(parsed, GraphSpecification)
-    return parsed
+def parse_raw_graph_specification(raw: object) -> GraphSpecification:
+    match raw:
+        case GraphSpecification():
+            return raw
+        case {"graph_type": str(graph_type), **rest}:
+            return graph_specification_registry[graph_type].model_validate(rest)
+        case dict():
+            raise ValueError("Missing 'graph_type' key in graph specification")
+    raise TypeError(raw)
+
+
+class FixedVerticalRange(BaseModel, frozen=True):
+    type: Literal["fixed"] = "fixed"
+    min: float | None
+    max: float | None
+
+
+class MinimalVerticalRange(BaseModel, frozen=True):
+    type: Literal["minimal"] = "minimal"
+    min: float | None
+    max: float | None
 
 
 class GraphDataRange(BaseModel, frozen=True):
@@ -441,26 +251,24 @@ class AdditionalGraphHTML(BaseModel, frozen=True):
     html: str
 
 
-class GraphRecipeBase(BaseModel, frozen=True):
+class GraphRecipe(BaseModel, frozen=True):
     title: str
     unit: str
-    explicit_vertical_range: tuple[float | None, float | None]
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     horizontal_rules: Sequence[HorizontalRule]
     omit_zero_metrics: bool
     consolidation_function: GraphConsoldiationFunction | None
-    metrics: Sequence[GraphMetric]
+    # TODO: Use Sequence once https://github.com/pydantic/pydantic/issues/9319 is resolved
+    # Internal marker: pydantic-9319
+    metrics: list[GraphMetric]
     additional_html: AdditionalGraphHTML | None = None
     render_options: GraphRenderOptions = GraphRenderOptions()
     data_range: GraphDataRange | None = None
     mark_requested_end_time: bool = False
-
-
-class GraphRecipe(GraphRecipeBase, frozen=True):
     # https://docs.pydantic.dev/2.4/concepts/serialization/#subclass-instances-for-fields-of-basemodel-dataclasses-typeddict
     # https://docs.pydantic.dev/2.4/concepts/serialization/#serializing-with-duck-typing
     specification: SerializeAsAny[GraphSpecification]
 
-    @validator("specification", pre=True)
-    @classmethod
+    @field_validator("specification", mode="before")
     def parse_specification(cls, value: Mapping[str, object]) -> GraphSpecification:
         return parse_raw_graph_specification(value)

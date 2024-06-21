@@ -76,11 +76,11 @@ def _discovery_valuespec_snapvault():
                     title=_("Exclude destination vserver"),
                     help=_(
                         "Only applicable to clustermode installations. "
-                        "The service description of snapvault services is composed of the "
+                        "The service name of snapvault services is composed of the "
                         "destination vserver (SVM) and the destination volume by default. Check "
                         "this box if you would like to use the destination volume as the "
-                        "service description on its own. "
-                        "Please be advised that this may lead to a service description that is "
+                        "service name on its own. "
+                        "Please be advised that this may lead to a service name that is "
                         "not unique, resulting in some services, which are not shown!"
                     ),
                 ),

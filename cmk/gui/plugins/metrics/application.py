@@ -21,24 +21,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["major_page_faults"] = {
-    "title": _l("Major page faults"),
-    "unit": "1/s",
-    "color": "#20ff80",
-}
-
-metric_info["page_swap_in"] = {
-    "title": _l("Page Swap In"),
-    "unit": "1/s",
-    "color": "33/a",
-}
-
-metric_info["page_swap_out"] = {
-    "title": _l("Page Swap Out"),
-    "unit": "1/s",
-    "color": "36/a",
-}
-
 metric_info["uncommitted"] = {
     "title": _l("Uncommitted"),
     "unit": "bytes",
@@ -141,58 +123,10 @@ metric_info["registered_phones"] = {
     "color": "#60bbbb",
 }
 
-metric_info["messages"] = {
-    "title": _l("Messages"),
-    "unit": "count",
-    "color": "#aa44cc",
-}
-
 metric_info["call_legs"] = {
     "title": _l("Call legs"),
     "unit": "count",
     "color": "#60bbbb",
-}
-
-metric_info["messages_inbound"] = {
-    "title": _l("Inbound messages"),
-    "unit": "1/s",
-    "color": "31/a",
-}
-
-metric_info["messages_outbound"] = {
-    "title": _l("Outbound messages"),
-    "unit": "1/s",
-    "color": "36/a",
-}
-
-metric_info["licenses"] = {
-    "title": _l("Used licenses"),
-    "unit": "count",
-    "color": "#ff6234",
-}
-
-metric_info["license_percentage"] = {
-    "title": _l("Used licenses"),
-    "unit": "%",
-    "color": "16/a",
-}
-
-metric_info["licenses_total"] = {
-    "title": _l("Total licenses"),
-    "unit": "count",
-    "color": "16/b",
-}
-
-metric_info["license_size"] = {
-    "title": _l("Size of license"),
-    "unit": "bytes",
-    "color": "11/a",
-}
-
-metric_info["license_usage"] = {
-    "title": _l("License usage"),
-    "unit": "%",
-    "color": "13/a",
 }
 
 metric_info["database_apply_lag"] = {
@@ -211,52 +145,16 @@ metric_info["replication_lag"] = {
     "color": "14/a",
 }
 
-metric_info["jvm_garbage_collection_count"] = {
-    "title": _l("Garbage collections"),
-    "unit": "1/s",
-    "color": "31/a",
-}
-
-metric_info["jvm_garbage_collection_time"] = {
-    "title": _l("Time spent collecting garbage"),
-    "unit": "%",
-    "color": "32/a",
-}
-
 metric_info["registered_desktops"] = {
     "title": _l("Registered desktops"),
     "unit": "count",
-    "color": "16/d",
+    "color": "16/a",
 }
 
 metric_info["time_in_GC"] = {
     "title": _l("Time spent in GC"),
     "unit": "%",
     "color": "16/a",
-}
-
-metric_info["db_read_latency"] = {
-    "title": _l("Read latency"),
-    "unit": "s",
-    "color": "35/a",
-}
-
-metric_info["db_read_recovery_latency"] = {
-    "title": _l("Read recovery latency"),
-    "unit": "s",
-    "color": "31/a",
-}
-
-metric_info["db_write_latency"] = {
-    "title": _l("Write latency"),
-    "unit": "s",
-    "color": "45/a",
-}
-
-metric_info["db_log_latency"] = {
-    "title": _l("Log latency"),
-    "unit": "s",
-    "color": "25/a",
 }
 
 metric_info["active_vms"] = {
@@ -271,12 +169,6 @@ metric_info["quarantine"] = {
     "color": "43/b",
 }
 
-metric_info["messages_in_queue"] = {
-    "title": _l("Messages in queue"),
-    "unit": "count",
-    "color": "16/a",
-}
-
 metric_info["service_costs_eur"] = {
     "title": _l("Service Costs per Day"),
     "unit": "EUR",
@@ -289,22 +181,10 @@ metric_info["elapsed_time"] = {
     "color": "11/a",
 }
 
-metric_info["splunk_slave_usage_bytes"] = {
-    "title": _l("Slave usage bytes across all pools"),
-    "unit": "bytes",
-    "color": "11/a",
-}
-
 metric_info["fired_alerts"] = {
     "title": _l("Number of fired alerts"),
     "unit": "count",
     "color": "22/a",
-}
-
-metric_info["msgs_avg"] = {
-    "title": _l("Average number of messages"),
-    "unit": "count",
-    "color": "23/a",
 }
 
 metric_info["index_count"] = {
@@ -428,30 +308,6 @@ metric_info["epoch_objects"] = {
     "color": "42/a",
 }
 
-metric_info["graylog_input"] = {
-    "title": _l("Input traffic"),
-    "unit": "bytes",
-    "color": "16/b",
-}
-
-metric_info["graylog_output"] = {
-    "title": _l("Output traffic"),
-    "unit": "bytes",
-    "color": "23/a",
-}
-
-metric_info["graylog_decoded"] = {
-    "title": _l("Decoded traffic"),
-    "unit": "bytes",
-    "color": "42/a",
-}
-
-metric_info["graylog_diff"] = {
-    "title": _l("Number of messages in defined timespan"),
-    "unit": "count",
-    "color": "11/a",
-}
-
 metric_info["collectors_running"] = {
     "title": _l("Running collectors"),
     "unit": "count",
@@ -492,30 +348,6 @@ metric_info["fetched_items"] = {
     "color": "23/b",
 }
 
-metric_info["jira_count"] = {
-    "title": _l("Number of issues"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["jira_sum"] = {
-    "title": _l("Result of summed up values"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["jira_avg"] = {
-    "title": _l("Average value"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["jira_diff"] = {
-    "title": _l("Difference"),
-    "unit": "count",
-    "color": "11/a",
-}
-
 metric_info["consumers"] = {
     "title": _l("Consumers"),
     "unit": "count",
@@ -532,48 +364,6 @@ metric_info["queues"] = {
     "title": _l("Queues"),
     "unit": "count",
     "color": "31/a",
-}
-
-metric_info["messages_rate"] = {
-    "title": _l("Message Rate"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["messages_ready"] = {
-    "title": _l("Ready messages"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["messages_unacknowledged"] = {
-    "title": _l("Unacknowledged messages"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["messages_publish"] = {
-    "title": _l("Published messages"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["messages_publish_rate"] = {
-    "title": _l("Published message rate"),
-    "unit": "1/s",
-    "color": "21/a",
-}
-
-metric_info["messages_deliver"] = {
-    "title": _l("Delivered messages"),
-    "unit": "count",
-    "color": "26/a",
-}
-
-metric_info["messages_deliver_rate"] = {
-    "title": _l("Delivered message rate"),
-    "unit": "1/s",
-    "color": "53/a",
 }
 
 metric_info["gc_runs"] = {
@@ -606,58 +396,10 @@ metric_info["gc_bytes_rate"] = {
     "color": "42/a",
 }
 
-metric_info["mobileiron_policyviolationcount"] = {
-    "title": _l("Policy violation count"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["mobileiron_last_build"] = {
-    "title": _l("Age of OS build version"),
-    "unit": "s",
-    "color": "#94b65a",
-}
-
-metric_info["mobileiron_last_patched"] = {
-    "title": _l("Age of security patch"),
-    "unit": "s",
-    "color": "#54b65a",
-}
-
-metric_info["mobileiron_devices_total"] = {
-    "title": _l("Total devices"),
-    "unit": "count",
-    "color": "#000000",
-}
-
-metric_info["mobileiron_non_compliant"] = {
-    "title": _l("Non-compliant devices"),
-    "unit": "count",
-    "color": "41/a",
-}
-
-metric_info["mobileiron_non_compliant_summary"] = {
-    "title": _l("Non-compliant devices"),
-    "unit": "%",
-    "color": "41/b",
-}
-
 metric_info["memory_reservation"] = {
     "title": _l("Memory reservation"),
     "unit": "%",
     "color": "36/a",
-}
-
-metric_info["delivered_notifications"] = {
-    "title": _l("Delivered notifications"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["failed_notifications"] = {
-    "title": _l("Failed notifications"),
-    "unit": "count",
-    "color": "15/a",
 }
 
 metric_info["num_topics"] = {
@@ -724,20 +466,6 @@ graph_info["deadlocks_and_waits"] = {
     ],
 }
 
-graph_info["licenses"] = {
-    "title": _l("Licenses"),
-    "metrics": [
-        (
-            "licenses_total",
-            "area",
-        ),
-        (
-            "licenses",
-            "area",
-        ),
-    ],
-}
-
 graph_info["current_users"] = {
     "title": _l("Number of signed-in users"),
     "metrics": [
@@ -755,22 +483,6 @@ graph_info["firewall_users"] = {
     "metrics": [
         ("num_user", "line"),
         ("max_user", "line"),
-    ],
-}
-
-
-graph_info["mobileiron_compliances"] = {
-    "title": _l("Total non-compliant devices"),
-    "metrics": [("mobileiron_non_compliant", "stack"), ("mobileiron_devices_total", "line")],
-}
-
-
-graph_info["messages"] = {
-    "title": _l("Messages"),
-    "metrics": [
-        ("failed_notifications", "line"),
-        ("delivered_notifications", "line"),
-        ("messages_publish", "line"),
     ],
 }
 

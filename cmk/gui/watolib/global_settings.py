@@ -8,9 +8,9 @@ from typing import Any
 
 from cmk.utils.version import edition, Edition
 
-import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.global_config import get_global_config, GlobalConfig
 from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
@@ -37,13 +37,19 @@ def save_global_settings(
     site_specific: bool = False,
     custom_site_path: str | None = None,
     get_global_settings_config: Callable[[], GlobalConfig] = get_global_config,
+    skip_cse_edition_check: bool = False,
 ) -> None:
-    if edition() is Edition.CSE:
+    if not skip_cse_edition_check and edition() is Edition.CSE:
         global_settings_config = get_global_settings_config().global_settings
+        current_global_settings = dict(load_configuration_settings())
         vars_ = {
-            varname: value
+            varname: (
+                value
+                if global_settings_config.is_activated(varname)
+                else current_global_settings[varname]
+            )
             for varname, value in vars_.items()
-            if global_settings_config.is_activated(varname)
+            if global_settings_config.is_activated(varname) or varname in current_global_settings
         }
 
     per_domain: dict[str, dict[Any, Any]] = {}

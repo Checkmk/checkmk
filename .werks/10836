@@ -8,8 +8,8 @@ Knowledge: undoc
 Level: 1
 Version: 2.0.0i1
 
-HW/SW inventory views can be declared with {{declare_invtable_view}} in
-{{local/share/check_mk/web/plugins/views/MY_FILE_NAME.py}}. After this
+HW/SW inventory views can be declared with "declare_invtable_view" in
+`local/share/check_mk/web/plugins/views/MY_FILE_NAME.py`. After this
 declaration a new view with sorters and filters is available.
 
 Example:
@@ -21,10 +21,10 @@ declare_invtable_view(
     _("Network interfaces"),
 )
 C-:
-generates the view {{Search Network interfaces}} in the views sidebar below
-{{Inventory}}.
+generates the view "Search Network interfaces" in the views sidebar below
+"Inventory".
 
-Some of these tables may have common columns like {{ID}} but have different
+Some of these tables may have common columns like "ID" but have different
 data sources. A new function is introduced in order to join some table-based
 views:
 C+:
@@ -120,6 +120,6 @@ declare_joined_inventory_table_view(
 )
 C-:
 
-The keys in {{match_by}} must be part of each table. Otherwise Checkmk does not
+The keys in "match_by" must be part of each table. Otherwise Checkmk does not
 known which rows belong together. Now all stated tables are merged into one and
 all columns of both are visible in the new view.

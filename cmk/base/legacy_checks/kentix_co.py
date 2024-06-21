@@ -12,11 +12,14 @@ from collections.abc import Iterable
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.kentix import DETECT_KENTIX
 
 
-def parse_kentix_co(string_table: list[list[str]]) -> int | None:
+def parse_kentix_co(string_table: StringTable) -> int | None:
+    if not string_table:
+        return None
     for value in string_table[0]:
         try:
             return int(value)

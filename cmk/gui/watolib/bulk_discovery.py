@@ -4,29 +4,36 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import NamedTuple, NewType
-
-from typing_extensions import TypedDict
+from typing import NamedTuple, NewType, TypedDict
 
 from livestatus import SiteId
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
 
-from cmk.checkengine.discovery import DiscoveryResult
+from cmk.checkengine.discovery import DiscoveryResult, DiscoverySettings
 
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
+from cmk.gui.logged_in import user
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    FixedValue,
+    Integer,
+    Migrate,
+    Tuple,
+    ValueSpec,
+)
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
 from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
 
-DiscoveryMode = NewType("DiscoveryMode", str)
 DoFullScan = NewType("DoFullScan", bool)
 
 BulkSize = NewType("BulkSize", int)
@@ -65,21 +72,61 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
         elements=[
             (
                 "mode",
-                DropdownChoice(
-                    title=_("Mode"),
-                    default_value="new",
-                    choices=[
-                        ("new", _("Add unmonitored services and new host labels")),
-                        ("remove", _("Remove vanished services")),
-                        (
-                            "fixall",
-                            _(
-                                "Add unmonitored services and new host labels, remove vanished services"
+                Migrate(
+                    migrate=_migrate_automatic_rediscover_parameters,
+                    valuespec=CascadingDropdown(
+                        title=_("Parameters"),
+                        sorted=False,
+                        choices=[
+                            (
+                                "update_everything",
+                                _("Refresh all services and host labels (tabula rasa)"),
+                                FixedValue(
+                                    value=None,
+                                    title=_("Refresh all services and host labels (tabula rasa)"),
+                                    totext="",
+                                ),
                             ),
-                        ),
-                        ("refresh", _("Refresh all services (tabula rasa), add new host labels")),
-                        ("only-host-labels", _("Only discover new host labels")),
-                    ],
+                            (
+                                "custom",
+                                _("Custom service configuration update"),
+                                Dictionary(
+                                    elements=[
+                                        (
+                                            "add_new_services",
+                                            Checkbox(
+                                                label=_("Monitor undecided services"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                        (
+                                            "remove_vanished_services",
+                                            Checkbox(
+                                                label=_("Remove vanished services"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                        (
+                                            "update_changed_service_labels",
+                                            Checkbox(
+                                                label=_("Update service labels"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                        (
+                                            "update_host_labels",
+                                            Checkbox(
+                                                label=_("Update host labels"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                    ],
+                                    optional_keys=[],
+                                    indent=False,
+                                ),
+                            ),
+                        ],
+                    ),
                 ),
             ),
             ("selection", Tuple(title=_("Selection"), elements=selection_elements)),
@@ -97,13 +144,63 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                 "error_handling",
                 Checkbox(
                     title=_("Error handling"),
-                    label=_("Ignore errors in single check plugins"),
+                    label=_("Ignore errors in single check plug-ins"),
                     default_value=True,
                 ),
             ),
         ],
         optional_keys=[],
     )
+
+
+def _migrate_automatic_rediscover_parameters(
+    param: str | tuple[str, dict[str, bool]]
+) -> tuple[str, dict[str, bool]]:
+    # already migrated
+    if isinstance(param, tuple):
+        return param
+
+    if param == "new":
+        return (
+            "custom",
+            {
+                "add_new_services": True,
+                "remove_vanished_services": False,
+                "update_host_labels": True,
+            },
+        )
+
+    if param == "remove":
+        return (
+            "custom",
+            {
+                "add_new_services": False,
+                "remove_vanished_services": True,
+                "update_host_labels": False,
+            },
+        )
+
+    if param == "fixall":
+        return (
+            "custom",
+            {
+                "add_new_services": True,
+                "remove_vanished_services": True,
+                "update_host_labels": True,
+            },
+        )
+
+    if param == "refresh":
+        return (
+            "update_everything",
+            {
+                "add_new_services": True,
+                "remove_vanished_services": True,
+                "update_host_labels": True,
+            },
+        )
+
+    raise MKUserError(None, _("Automatic rediscovery parameter {param} not implemented"))
 
 
 class BulkDiscoveryBackgroundJob(BackgroundJob):
@@ -114,21 +211,16 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         return _("Bulk Discovery")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def _back_url(self) -> str:
-        return disk_or_search_folder_from_request().url()
+        return disk_or_search_folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        ).url()
 
     def do_execute(
         self,
-        mode: DiscoveryMode,
+        mode: DiscoverySettings,
         do_scan: DoFullScan,
         ignore_errors: IgnoreErrors,
         tasks: Sequence[DiscoveryTask],
@@ -185,7 +277,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
     def _bulk_discover_item(
         self,
         task: DiscoveryTask,
-        mode: DiscoveryMode,
+        mode: DiscoverySettings,
         do_scan: DoFullScan,
         ignore_errors: IgnoreErrors,
         job_interface: BackgroundProcessInterface,
@@ -193,7 +285,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         try:
             response = discovery(
                 task.site_id,
-                mode,
+                mode.to_json(),
                 task.host_names,
                 scan=do_scan,
                 raise_errors=not ignore_errors,
@@ -201,7 +293,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 non_blocking_http=True,
             )
             self._process_discovery_results(task, job_interface, response)
-        except Exception:
+        except Exception as e:
             self._num_hosts_failed += len(task.host_names)
             if task.site_id:
                 msg = _("Error during discovery of %s on site %s") % (
@@ -210,14 +302,17 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 )
             else:
                 msg = _("Error during discovery of %s") % (", ".join(task.host_names))
-            self._logger.exception(msg)
+            self._logger.warning(f"{msg}, Error: {e}")
+
+            # only show traceback on debug
+            self._logger.debug("Exception", exc_info=True)
 
         self._num_hosts_processed += len(task.host_names)
 
-    def _process_discovery_results(  # type: ignore[no-untyped-def]
+    def _process_discovery_results(
         self,
         task: DiscoveryTask,
-        job_interface,
+        job_interface: BackgroundProcessInterface,
         response: AutomationDiscoveryResult,
     ) -> None:
         # The following code updates the host config. The progress from loading the Setup folder
@@ -319,7 +414,7 @@ def bulk_discovery_job_status(job: BulkDiscoveryBackgroundJob) -> BulkDiscoveryS
 def start_bulk_discovery(
     job: BulkDiscoveryBackgroundJob,
     hosts: list[DiscoveryHost],
-    discovery_mode: DiscoveryMode,
+    discovery_mode: DiscoverySettings,
     do_full_scan: DoFullScan,
     ignore_errors: IgnoreErrors,
     bulk_size: BulkSize,
@@ -354,7 +449,13 @@ def start_bulk_discovery(
     job.start(
         lambda job_interface: job.do_execute(
             discovery_mode, do_full_scan, ignore_errors, tasks, job_interface
-        )
+        ),
+        InitialStatusArgs(
+            title=job.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
     )
 
 

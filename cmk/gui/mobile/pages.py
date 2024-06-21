@@ -2,18 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
-import cmk.gui.visuals as visuals
+from cmk.gui import visuals
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -21,10 +19,12 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
+from cmk.gui.pages import Page, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Rows, VisualContext
-from cmk.gui.userdb import active_connections_by_type
+from cmk.gui.userdb import get_active_saml_connections
+from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
@@ -51,7 +51,7 @@ NavigationBar = list[tuple[str, str, str, str]]
 
 def mobile_html_head(title: str) -> None:
     html.write_html(
-        HTML(
+        HTML.without_escaping(
             """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
         )
     )
@@ -173,7 +173,8 @@ def jqm_page_index_topic_renderer(topic: str, items: Items) -> None:
         if top == topic:
             html.open_li()
             html.open_a(href=href, **{"data-ajax": "false", "data-transition": "flip"})
-            html.write_html(HTML(title))
+            # Todo (CMK-17819)
+            html.write_html(HTML.without_escaping(title))
             html.close_a()
             html.close_li()
     html.close_ul()
@@ -185,40 +186,44 @@ def page_login() -> None:
     jqm_page_header(title, id_="login")
     html.div(_("Welcome to Checkmk Mobile."), id_="loginhead")
 
-    html.begin_form("login", method="POST", add_transid=False)
-    # Keep information about original target URL
-    default_origtarget = (
-        "index.py" if requested_file_name(request) in ["login", "logout"] else makeuri(request, [])
-    )
-    origtarget = request.get_url_input("_origtarget", default_origtarget)
-    html.hidden_field("_origtarget", escaping.escape_attribute(origtarget))
+    with html.form_context("login", method="POST", add_transid=False):
+        # Keep information about original target URL
+        default_origtarget = (
+            "index.py"
+            if requested_file_name(request) in ["login", "logout"]
+            else makeuri(request, [])
+        )
+        origtarget = request.get_url_input("_origtarget", default_origtarget)
+        html.hidden_field("_origtarget", escaping.escape_attribute(origtarget))
 
-    saml2_user_error: str | None = None
-    if saml_connections := [
-        c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
-    ]:
-        saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
+        saml2_user_error: str | None = None
+        if saml_connections := [
+            c for c in get_active_saml_connections().values() if c["owned_by_site"] == omd_site()
+        ]:
+            saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
 
-    html.text_input("_username", label=_("Username:"), autocomplete="username", id_="input_user")
-    html.password_input(
-        "_password",
-        size=None,
-        label=_("Password:"),
-        autocomplete="current-password",
-        id_="input_pass",
-    )
-    html.br()
-    html.button("_login", _("Login"))
+        html.text_input(
+            "_username", label=_("Username:"), autocomplete="username", id_="input_user"
+        )
+        html.password_input(
+            "_password",
+            size=None,
+            label=_("Password:"),
+            autocomplete="current-password",
+            id_="input_pass",
+        )
+        html.br()
+        html.button("_login", _("Login"))
 
-    if user_errors and not saml2_user_error:
-        show_user_errors("login_error")
+        if user_errors and not saml2_user_error:
+            show_user_errors("login_error")
 
-    html.set_focus("_username")
-    html.end_form()
+        html.set_focus("_username")
     html.open_div(id_="loginfoot")
     html.img("themes/facelift/images/logo_cmk_small.png", class_="logomk")
     html.div(
-        HTML(_('&copy; <a target="_blank" href="https://checkmk.com">Checkmk GmbH</a>')),
+        HTML.without_escaping("&copy; ")
+        + HTMLWriter.render_a("Checkmk GmbH", href="https://checkmk.com", target="_blank"),
         class_="copyright",
     )
     html.close_div()  # close content-div
@@ -227,7 +232,17 @@ def page_login() -> None:
     mobile_html_foot()
 
 
-def page_index() -> None:
+class PageMobileIndex(Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "mobile"
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        _page_index()
+        return None
+
+
+def _page_index() -> None:
     title = _("Checkmk Mobile")
     mobile_html_head(title)
     jqm_page_header(
@@ -279,10 +294,20 @@ def page_index() -> None:
     mobile_html_foot()
 
 
-def page_view() -> None:
+class PageMobileView(Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "mobile_view"
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        _page_view()
+        return None
+
+
+def _page_view() -> None:
     view_name = request.var("view_name")
     if not view_name:
-        return page_index()
+        return _page_index()
 
     view_spec = get_permitted_views().get(view_name)
     if not view_spec:
@@ -313,7 +338,7 @@ def page_view() -> None:
         logger.exception("error showing mobile view")
         if active_config.debug:
             raise
-        html.write_text("ERROR showing view: %s" % e)
+        html.write_text_permissive("ERROR showing view: %s" % e)
 
     mobile_html_foot()
     return None
@@ -385,7 +410,7 @@ class MobileViewRenderer(ABCViewRenderer):
             )
             html.open_div(id_="view_results")
             if len(rows) == 0:
-                html.write_text(_("No hosts/services found."))
+                html.write_text_permissive(_("No hosts/services found."))
             else:
                 try:
                     if cmk.gui.view_utils.row_limit_exceeded(
@@ -403,7 +428,7 @@ class MobileViewRenderer(ABCViewRenderer):
                     )
                 except Exception as e:
                     logger.exception("error rendering mobile view")
-                    html.write_text(_("Error showing view: %s") % e)
+                    html.write_text_permissive(_("Error showing view: %s") % e)
             html.close_div()
             jqm_page_navfooter(navbar, "data", page_id)
 
@@ -418,19 +443,18 @@ def _show_filter_form(show_filters: list[Filter], context: VisualContext) -> Non
     # Sort filters
     s = sorted([(f.sort_index, f.title, f) for f in show_filters if f.available()])
 
-    html.begin_form("filter")
-    html.open_ul(**{"data-role": "listview", "data-inset": "false"})
-    for _sort_index, title, f in s:
-        html.open_li(**{"data-role": "fieldcontain"})
-        html.legend(title)
-        f.display(context.get(f.ident, {}))
-        html.close_li()
-    html.close_ul()
-    html.hidden_fields()
-    html.hidden_field("search", "Search")
-    html.hidden_field("page", "data")
-    html.form_has_submit_button = True  # a.results_button functions as a submit button
-    html.end_form()
+    with html.form_context("filter"):
+        html.open_ul(**{"data-role": "listview", "data-inset": "false"})
+        for _sort_index, title, f in s:
+            html.open_li(**{"data-role": "fieldcontain"})
+            html.legend(title)
+            f.display(context.get(f.ident, {}))
+            html.close_li()
+        html.close_ul()
+        html.hidden_fields()
+        html.hidden_field("search", "Search")
+        html.hidden_field("page", "data")
+        html.form_has_submit_button = True  # a.results_button functions as a submit button
     html.final_javascript(
         """
         const filter_form = document.getElementById("form_filter");
@@ -465,19 +489,18 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
             html.h3(command.title)
             html.open_p()
 
-            html.begin_form("actions")
-            html.hidden_field("_do_actions", "yes")
-            html.hidden_field("actions", "yes")
-            command.render(what)
-            html.hidden_fields()
-            html.end_form()
+            with html.form_context("actions"):
+                html.hidden_field("_do_actions", "yes")
+                html.hidden_field("actions", "yes")
+                command.render(what)
+                html.hidden_fields()
 
             html.close_p()
             html.close_div()
             one_shown = True
     html.close_div()
     if not one_shown:
-        html.write_text(_("No commands are possible in this view"))
+        html.write_text_permissive(_("No commands are possible in this view"))
 
 
 # FIXME: Reduce duplicate code with views.py
@@ -489,9 +512,11 @@ def do_commands(what: str, rows: Rows) -> bool:
     if not command_confirm_dialog(
         confirm_options,
         confirm_dialog_options.confirm_title,
-        confirm_dialog_options.affected + confirm_dialog_options.additions
-        if confirm_dialog_options.additions
-        else confirm_dialog_options.affected,
+        (
+            confirm_dialog_options.affected + confirm_dialog_options.additions
+            if confirm_dialog_options.additions
+            else confirm_dialog_options.affected
+        ),
         confirm_dialog_options.icon_class,
         confirm_dialog_options.confirm_button,
     ):

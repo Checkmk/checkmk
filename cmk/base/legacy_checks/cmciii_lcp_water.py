@@ -8,9 +8,9 @@ from collections.abc import Iterable
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.cmciii import DETECT_CMCIII_LCP
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.cmciii import DETECT_CMCIII_LCP
 
 # Note: The CMCIII checks for Water IN/OUT and similar stuff are
 # deep and fundamentally broken (such as the implementation of
@@ -52,9 +52,8 @@ def parse_cmciii_lcp_water(string_table: StringTable) -> Section:
             unit_name = line[0].split(" ")[0]
             unit_lines = []
             units[unit_name] = unit_lines
-        else:
-            if unit_lines is not None:
-                unit_lines.append(line[0])
+        elif unit_lines is not None:
+            unit_lines.append(line[0])
 
     if "Water" in units:
         return units["Water"]

@@ -17,7 +17,8 @@ import time
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
+from cmk.agent_based.v2 import render, StringTable
 
 
 def inventory_symantec_av_updates(info):
@@ -46,7 +47,12 @@ def check_symantec_av_updates(_no_item, params, info):
     )
 
 
+def parse_symantec_av_updates(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["symantec_av_updates"] = LegacyCheckDefinition(
+    parse_function=parse_symantec_av_updates,
     service_name="AV Update Status",
     discovery_function=inventory_symantec_av_updates,
     check_function=check_symantec_av_updates,

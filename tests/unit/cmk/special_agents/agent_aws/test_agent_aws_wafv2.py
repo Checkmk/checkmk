@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Callable, Mapping, Sequence
-from typing import Literal
+from argparse import Namespace as Args
+from collections.abc import Mapping, Sequence
+from typing import Literal, Protocol
 
 import pytest
 
@@ -16,6 +19,8 @@ from cmk.special_agents.agent_aws import (
     NamingConvention,
     OverallTags,
     ResultDistributor,
+    TagsImportPatternOption,
+    TagsOption,
     WAFV2Limits,
     WAFV2Summary,
     WAFV2WebACL,
@@ -53,7 +58,7 @@ class FakeWAFV2Client:
         if ResourceARN == "ARN-2":  # the third Web ACL has no tags
             tags = {}
         else:
-            tags = WAFV2ListTagsForResourceIB.create_instances(amount=1)[0]
+            tags = WAFV2ListTagsForResourceIB.create_instances(amount=3)[0]
         return {"TagInfoForResource": tags, "NextMarker": "string"}
 
 
@@ -63,7 +68,7 @@ Wafv2Sections = Mapping[str, WAFV2Limits | WAFV2Summary | WAFV2WebACL]
 def test_search_string_bytes_handling_in_get_wafv2_web_acls() -> None:
     fake_wafv2_client = FakeWAFV2Client()
 
-    def get_response_content(response, key, dflt=None):  # type: ignore[no-untyped-def]
+    def get_response_content(response, key, dflt=None):
         if dflt is None:
             dflt = []
         if key in response:
@@ -76,10 +81,14 @@ def test_search_string_bytes_handling_in_get_wafv2_web_acls() -> None:
 
     for rule in res[0]["Rules"]:  # type: ignore[attr-defined]
         if "RateBasedStatement" in rule["Statement"]:
-            search_string = rule["Statement"]["RateBasedStatement"]["ScopeDownStatement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+            search_string = rule["Statement"]["RateBasedStatement"]["ScopeDownStatement"][
+                "ByteMatchStatement"
+            ]["SearchString"]
             assert isinstance(search_string, str)
         if "NotStatement" in rule["Statement"]:
-            search_string = rule["Statement"]["NotStatement"]["ScopeDownStatement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+            search_string = rule["Statement"]["NotStatement"]["ScopeDownStatement"][
+                "ByteMatchStatement"
+            ]["SearchString"]
             assert isinstance(search_string, str)
         if "AndStatement" in rule["Statement"]:
             search_string = rule["Statement"]["AndStatement"]["Statements"][0][
@@ -88,11 +97,18 @@ def test_search_string_bytes_handling_in_get_wafv2_web_acls() -> None:
             assert isinstance(search_string, str)
 
 
-def create_sections(names: object | None, tags: OverallTags, is_regional: bool) -> Wafv2Sections:
+def create_sections(
+    names: object | None,
+    tags: OverallTags,
+    is_regional: bool,
+    tag_import: TagsOption = TagsImportPatternOption.import_all,
+) -> Wafv2Sections:
     region = "region" if is_regional else "us-east-1"
     scope: Literal["REGIONAL", "CLOUDFRONT"] = "REGIONAL" if is_regional else "CLOUDFRONT"
 
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+    )
     config.add_single_service_config("wafv2_names", names)
     config.add_service_tags("wafv2_tags", tags)
 
@@ -116,13 +132,28 @@ def create_sections(names: object | None, tags: OverallTags, is_regional: bool) 
     }
 
 
-CreateWafv2Sections = Callable[[object | None, OverallTags], tuple[Wafv2Sections, Wafv2Sections]]
+CreateWafv2SectionsOut = tuple[Wafv2Sections, Wafv2Sections]
+
+
+class CreateWafv2Sections(Protocol):
+    def __call__(
+        self,
+        names: object | None,
+        tags: OverallTags,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> CreateWafv2SectionsOut: ...
 
 
 @pytest.fixture()
 def get_wafv2_sections() -> CreateWafv2Sections:
-    def _create_wafv2_sections(names, tags):
-        return create_sections(names, tags, True), create_sections(names, tags, False)
+    def _create_wafv2_sections(
+        names: object | None,
+        tags: OverallTags,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> CreateWafv2SectionsOut:
+        return create_sections(names, tags, True, tag_import), create_sections(
+            names, tags, False, tag_import
+        )
 
     return _create_wafv2_sections
 
@@ -172,7 +203,7 @@ wafv2_params = [
 
 
 def test_agent_aws_wafv2_regional_cloudfront() -> None:
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
 
     region = "region"
     # TODO: This is plainly wrong, the client can't be None.
@@ -293,3 +324,35 @@ def test_agent_aws_wafv2_web_acls_wo_limits(
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _test_web_acl(wafv2_sections, found_instances)
+
+
+@pytest.mark.parametrize(
+    "tag_import, expected_tags",
+    [
+        (
+            TagsImportPatternOption.import_all,
+            {
+                "ARN-0": ["Key-0", "Key-1", "Key-2"],
+                "ARN-1": ["Key-0", "Key-1", "Key-2"],
+                "ARN-2": [],
+            },
+        ),
+        (r".*-1$", {"ARN-0": ["Key-1"], "ARN-1": ["Key-1"], "ARN-2": []}),
+        (
+            TagsImportPatternOption.ignore_all,
+            {"ARN-0": [], "ARN-1": [], "ARN-2": []},
+        ),
+    ],
+)
+def test_agent_aws_wafv2_summary_filters_tags(
+    get_wafv2_sections: CreateWafv2Sections,
+    tag_import: TagsOption,
+    expected_tags: dict[str, Sequence[str]],
+) -> None:
+    for wafv2_sections in get_wafv2_sections(None, (None, None), tag_import):
+        wafv2_sections["wafv2_limits"].run()
+        wafv2_summary_results = wafv2_sections["wafv2_summary"].run().results
+        wafv2_summary_result = wafv2_summary_results[0]
+
+        for result in wafv2_summary_result.content:
+            assert list(result["TagsForCmkLabels"].keys()) == expected_tags[result["ARN"]]

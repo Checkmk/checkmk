@@ -1,0 +1,14 @@
+Title: Support Diagnostics: Use pip3
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1701851869
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+When creating a Support Diagnowtics dump, the information about the installed Python modules was collected using pip.                
+This actually collected information about the OS' Python environment, not about the one in the site context.
+Sometimes, it caused a crash, when there was no pip installed.
+
+Now, pip3 is used, which is built-in to the Checkmk Site.

@@ -87,7 +87,7 @@ You should find an example configuration file at
 '../cfg_examples/filestats.cfg' relative to this file.
 """
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 import collections
 import configparser
@@ -107,9 +107,8 @@ def ensure_str(s):
     if sys.version_info[0] >= 3:
         if isinstance(s, bytes):
             return s.decode("utf-8")
-    else:
-        if isinstance(s, unicode):  # pylint: disable=undefined-variable
-            return s.encode("utf-8")
+    elif isinstance(s, unicode):  # pylint: disable=undefined-variable # noqa: F821
+        return s.encode("utf-8")
     return s
 
 
@@ -117,9 +116,8 @@ def ensure_text(s):
     if sys.version_info[0] >= 3:
         if isinstance(s, bytes):
             return s.decode("utf-8")
-    else:
-        if isinstance(s, str):
-            return s.decode("utf-8")
+    elif isinstance(s, str):
+        return s.decode("utf-8")
     return s
 
 
@@ -207,11 +205,10 @@ class FileStat:
             self.writeable_path = raw_path.encode("utf-8", "surrogateescape").decode(
                 "utf-8", "replace"
             )
+        elif isinstance(raw_path, unicode):  # pylint: disable=undefined-variable # noqa: F821
+            self.writeable_path = raw_path
         else:
-            if isinstance(raw_path, unicode):  # pylint: disable=undefined-variable
-                self.writeable_path = raw_path
-            else:
-                self.writeable_path = raw_path.decode("utf-8", "replace")
+            self.writeable_path = raw_path.decode("utf-8", "replace")
         self.regex_matchable_path = self.writeable_path
         self.stat_status = stat_status
         self.size = size
@@ -269,7 +266,7 @@ class PatternIterator:
                 if filestat.isfile:
                     yield filestat
                 if filestat.isdir:
-                    for filestat in self._iterate_folder(item):
+                    for filestat in self._iterate_folder(item):  # pylint: disable=use-yield-from
                         yield filestat
 
 

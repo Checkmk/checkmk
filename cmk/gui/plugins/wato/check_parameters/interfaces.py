@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
-import cmk.gui.ifaceoper as ifaceoper
+from cmk.gui import ifaceoper
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.interface_utils import vs_interface_traffic
@@ -130,7 +130,7 @@ def _vs_grouping():
         help=_(
             "Normally, the interface checks create a single service for each interface. By defining "
             "interface groups, multiple interfaces can be combined together. For each group, a "
-            "single service is created. This services reports the total traffic amount summed over "
+            "single service is created. These services report the total traffic amount summed over "
             "all group members."
         ),
         choices=[
@@ -156,7 +156,7 @@ def _vs_grouping():
                                             "group_name",
                                             TextInput(
                                                 title=_("Group name"),
-                                                help=_("Name of group in service description"),
+                                                help=_("Name of group in service name"),
                                                 allow_empty=False,
                                             ),
                                         ),
@@ -298,7 +298,7 @@ def _vs_matching_conditions():
                                 ),
                                 choices=ifaceoper.interface_oper_states(),
                                 toggle_all=True,
-                                default_value=["1", "-1"],
+                                default_value=["1"],
                             ),
                         ),
                         (
@@ -423,7 +423,7 @@ vs_elements_if_groups_group: list[DictionaryEntry] = [
         "group_name",
         TextInput(
             title=_("Group name"),
-            help=_("Name of group in service description"),
+            help=_("Name of group in service name"),
             allow_empty=False,
         ),
     ),
@@ -545,12 +545,10 @@ def _vs_packet_levels(
                         Percentage(
                             label=_("Warning at"),
                             default_value=percent_levels[0],
-                            display_format="%.3f",
                         ),
                         Percentage(
                             label=_("Critical at"),
                             default_value=percent_levels[1],
-                            display_format="%.3f",
                         ),
                     ],
                 ),
@@ -1057,7 +1055,7 @@ def _parameter_valuespec_if() -> Dictionary:
             (
                 "average_bm",
                 Integer(
-                    title=_("Average values for broad- and multicast packet rates"),
+                    title=_("Average values for broadcast and multicast packet rates"),
                     help=_(
                         "By activating the computation of averages, the levels on "
                         "broad- and multicast packet rates are applied to "
@@ -1111,7 +1109,7 @@ def _parameter_valuespec_if() -> Dictionary:
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
-        check_group_name="if",
+        check_group_name="interfaces",
         group=RulespecGroupCheckParametersNetworking,
         item_spec=_item_spec_if,
         match_type="dict",

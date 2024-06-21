@@ -15,6 +15,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -27,21 +28,21 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.site_config import get_login_sites
+from cmk.gui.site_config import get_login_sites, sitenames
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.userdb import load_connection_config, save_connection_config, UserConnectionSpec
+from cmk.gui.userdb import (
+    ConfigurableUserConnectionSpec,
+    load_connection_config,
+    save_connection_config,
+    UserConnectionConfigFile,
+)
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri_contextless
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import redirect
-
-if cmk_version.edition() is cmk_version.Edition.CME:
-    import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-
 
 DisplayIndex = NewType("DisplayIndex", int)
 RealIndex = NewType("RealIndex", int)
@@ -139,6 +140,7 @@ def _connections_by_gui_index(
 def render_connections_page(
     connection_type: str, edit_mode_path: str, config_mode_path: str
 ) -> None:
+    customer = customer_api()
     with table_element() as table:
         for display_index, (real_index, connection) in _connections_by_gui_index(
             connection_type, load_connection_config(lock=False)
@@ -146,7 +148,7 @@ def render_connections_page(
             table.row()
 
             table.cell("#", css=["narrow nowrap"])
-            html.write_text(display_index)
+            html.write_text_permissive(display_index)
 
             table.cell(_("Actions"), css=["buttons"])
             connection_id = connection["id"]
@@ -189,7 +191,7 @@ def render_connections_page(
             table.cell(_("Name"), connection.get("name", connection_id))
 
             if cmk_version.edition() is cmk_version.Edition.CME:
-                table.cell(_("Customer"), managed.get_customer_name(connection))
+                table.cell(_("Customer"), customer.get_customer_name(connection))
 
             table.cell(_("Description"))
             url = connection.get("docu_url")
@@ -197,24 +199,30 @@ def render_connections_page(
                 html.icon_button(
                     url, _("Context information about this connection"), "url", target="_blank"
                 )
-                html.write_text("&nbsp;")
-            html.write_text(connection["description"])
+                html.write_text_permissive("&nbsp;")
+            html.write_text_permissive(connection["description"])
 
 
 def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
     _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=sites)
 
 
-def get_affected_sites(connection: UserConnectionSpec) -> list[SiteId]:
+def get_affected_sites(connection: ConfigurableUserConnectionSpec) -> list[SiteId]:
     if cmk_version.edition() is cmk_version.Edition.CME:
-        return list(managed_helpers.get_sites_of_customer(connection["customer"]).keys())
+        # TODO CMK-14203
+        _customer_api = customer_api()
+        customer: str | None = connection.get("customer", SCOPE_GLOBAL)
+        if _customer_api.is_global(customer):
+            return sitenames()
+        assert customer is not None
+        return list(_customer_api.get_sites_of_customer(customer).keys())
     return get_login_sites()
 
 
 def _delete_connection(
     index: int, connection_type: str, *, custom_config_dirs: Iterable[Path]
 ) -> None:
-    connections = load_connection_config(lock=True)
+    connections = UserConnectionConfigFile().load_for_modification()
     connection = connections[index]
     connection_id = connection["id"]
     add_change(
@@ -238,7 +246,7 @@ def _remove_custom_files(cert_dir: Path) -> None:
 
 
 def _move_connection(from_index: int, to_index: int, connection_type: str) -> None:
-    connections = load_connection_config(lock=True)
+    connections = UserConnectionConfigFile().load_for_modification()
     connection = connections[from_index]
     add_change(
         f"move-{connection_type}-connection",

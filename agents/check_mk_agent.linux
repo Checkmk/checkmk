@@ -44,7 +44,7 @@ is_valid_plugin() {
     # test if a file is executable and does not have certain
     # extensions (remnants from distro upgrades).
     case "${1:?No plugin defined}" in
-        *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
+        *.dpkg-new | *.dpkg-old | *.dpkg-temp | *.dpkg-tmp) return 1 ;;
         *) [ -f "${1}" ] && [ -x "${1}" ] ;;
     esac
 }
@@ -229,7 +229,7 @@ set_up_profiling() {
 unset_locale() {
     # eliminate localized outputs where possible
     # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
-    unset -v LANG
+    unset -v LANG LC_ALL
     if inpath locale && inpath paste; then
         # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
         case "$(locale -a | paste -sd ' ' -)" in
@@ -333,23 +333,101 @@ set_up_encryption() {
     define_optionally_encrypt "${ENCRYPTED:-"no"}"
 }
 
+hex_decode() {
+    # We might not have xxd available, so we have to do it manually.
+    # Be aware that this implementation is very slow and should not be used for large data.
+    local hex="$1"
+    for ((i = 0; i < ${#hex}; i += 2)); do
+        printf '%b' "\x${hex:i:2}"
+    done
+}
+
+parse_kdf_output() {
+    local kdf_output="$1"
+    salt_hex=$(echo "$kdf_output" | grep -oP "(?<=salt=)[0-9A-F]+")
+    key_hex=$(echo "$kdf_output" | grep -oP "(?<=key=)[0-9A-F]+")
+    iv_hex=$(echo "$kdf_output" | grep -oP "(?<=iv =)[0-9A-F]+")
+    # Make sure this rather brittle grepping worked. For example, some openssl update might decide
+    # to remove that odd-looking space behind 'iv'.
+    # Note that the expected LENGTHS ARE DOUBLED because the values are hex encoded.
+    if [ ${#salt_hex} -ne 16 ] || [ ${#key_hex} -ne 64 ] || [ ${#iv_hex} -ne 32 ]; then
+        encryption_panic
+    fi
+    echo "$salt_hex" "$key_hex" "$iv_hex"
+}
+
+encrypt_then_mac() {
+    # Encrypt the input data, calculate a MAC over IV and ciphertext, then
+    # print mac and ciphertext.
+    local salt_hex="$1"
+    local key_hex="$2"
+    local iv_hex="$3"
+    local ciphertext_b64
+
+    # We need the ciphertext twice: for the mac and for the output. But we can only store it in
+    # encoded form because it can contain null bytes.
+    ciphertext_b64=$(openssl enc -aes-256-cbc -K "$key_hex" -iv "$iv_hex" | openssl enc -base64)
+
+    (
+        hex_decode "$iv_hex"
+        echo "$ciphertext_b64" | openssl enc -base64 -d
+    ) | openssl dgst -sha256 -mac HMAC -macopt hexkey:"$key_hex" -binary
+
+    echo "$ciphertext_b64" | openssl enc -base64 -d
+}
+
 define_optionally_encrypt() {
     # if things fail, make sure we don't accidentally send unencrypted data
     unset optionally_encrypt
 
     if [ "${1}" != "no" ]; then
         OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
-        # Depending on the Checkmk version, a key of proper length (256 bits) is provided.
-        # However, always use key derivation here (suitable for passwords of all lengths).
+        #
+        # Encryption scheme for version 04 and 05:
+        #
+        #   salt    <- random_salt()
+        #   key, IV <- version_specific_kdf( salt, password )
+        #
+        #   ciphertext <- aes_256_cbc_encrypt( key, IV, message )
+        #   mac        <- hmac_sha256( key, iv:ciphertext )
+        #
+        #   // The output blob is formed as:
+        #   // - 2 bytes version
+        #   // - optional: rtc timestamp
+        #   // - 8 bytes salt
+        #   // - 32 bytes MAC
+        #   // - the ciphertext
+        #   result <- [version:salt:mac:ciphertext]
+
         if [ "${OPENSSL_VERSION}" -ge 10101 ]; then
             optionally_encrypt() {
-                printf "03%s" "${2}"
-                openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "${1}"
+                # version: 05
+                # kdf: pbkdf2, 600.000 iterations
+
+                local salt_hex key_hex iv_hex
+                read -r salt_hex key_hex iv_hex <<<"$(
+                    parse_kdf_output "$(openssl enc -aes-256-cbc -md sha256 -pbkdf2 -iter 600000 -k "${1}" -P)"
+                )"
+
+                printf "05"
+                printf "%s" "${2}"
+                hex_decode "$salt_hex"
+                encrypt_then_mac "$salt_hex" "$key_hex" "$iv_hex"
             }
         elif [ "${OPENSSL_VERSION}" -ge 10000 ]; then
             optionally_encrypt() {
-                printf "02%s" "${2}"
-                openssl enc -aes-256-cbc -md sha256 -k "${1}" -nosalt
+                # version: 04
+                # kdf: openssl custom kdf based on sha256
+
+                local salt_hex key_hex iv_hex
+                read -r salt_hex key_hex iv_hex <<<"$(
+                    parse_kdf_output "$(openssl enc -aes-256-cbc -md sha256 -k "${1}" -P)"
+                )"
+
+                printf "04"
+                printf "%s" "${2}"
+                hex_decode "$salt_hex"
+                encrypt_then_mac "$salt_hex" "$key_hex" "$iv_hex"
             }
         else
             optionally_encrypt() {
@@ -386,7 +464,7 @@ export_utility_functions() {
 section_checkmk() {
     cat <<HERE
 <<<check_mk>>>
-Version: 2.3.0b1
+Version: 2.4.0b1
 AgentOS: linux
 Hostname: $(uname -n)
 AgentDirectory: ${MK_CONFDIR}
@@ -409,6 +487,20 @@ HERE
         #
         # However this ("successfully") reports an empty list or '[unprintable]' on older systemd versions :-(
     fi
+
+    #
+    # OS based labels are created from these variables
+    #
+
+    echo "OSType: linux"
+    while read -r line; do
+        raw_line="${line//\"/}"
+        case $line in
+            ID=*) echo "OSPlatform: ${raw_line##*=}" ;;
+            NAME=*) echo "OSName: ${raw_line##*=}" ;;
+            VERSION_ID=*) echo "OSVersion: ${raw_line##*=}" ;;
+        esac
+    done <<<"$(cat /etc/os-release 2>/dev/null)"
 
     #
     # BEGIN COMMON AGENT CODE
@@ -465,17 +557,6 @@ section_checkmk_failed_plugin() {
 
 section_labels() {
     echo '<<<labels:sep(0)>>>'
-
-    echo '{"cmk/os_type":"linux"}'
-
-    while read -r line; do
-        raw_line="${line//\"/}"
-        case $line in
-            ID=*) echo '{"cmk/os_platform":"'"${raw_line##*=}"'"}' ;;
-            NAME=*) echo '{"cmk/os_name":"'"${raw_line##*=}"'"}' ;;
-            VERSION_ID=*) echo '{"cmk/os_version":"'"${raw_line##*=}"'"}' ;;
-        esac
-    done <<<"$(cat /etc/os-release 2>/dev/null)"
 
     if [ -n "${IS_DOCKERIZED}" ] || [ -n "${IS_LXC_CONTAINER}" ]; then
         echo '{"cmk/device_type":"container"}'
@@ -612,6 +693,8 @@ section_zfs() {
 }
 
 section_nfs_mounts() {
+    proc_mounts_file=${1}
+
     if inpath waitmax; then
         STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
         STAT_BROKE="5.3.0"
@@ -625,9 +708,10 @@ section_nfs_mounts() {
 
         echo '<<<nfsmounts_v2:sep(0)>>>'
 
-        sed -n '/ nfs4\? /s/\([^ ]*\) \([^ ]*\) .*/\1 \2/p' </proc/mounts |
-            sed 's/\\040/ /g' |
+        sed -n '/ nfs4\? /s/\([^ ]*\) \([^ ]*\) .*/\1 \2/p' <"${proc_mounts_file}" |
             while read -r MD MP; do
+                MD="$(printf "%s" "${MD}" | sed 's/\\040/ /g')"
+                MP="$(printf "%s" "${MP}" | sed 's/\\040/ /g')"
                 if [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
                     waitmax -s 9 5 stat -f -c "$(json_templ "${MP}" "${MD}")" "${MP}" ||
                         json_templ_empty "${MP}" "${MD}"
@@ -638,9 +722,9 @@ section_nfs_mounts() {
             done
 
         echo '<<<cifsmounts>>>'
-        sed -n -e '/ cifs /s/.*\ \([^ ]*\)\ cifs\ .*/\1/p' </proc/mounts |
-            sed 's/\\040/ /g' |
+        sed -n -e '/ cifs /s/.*\ \([^ ]*\)\ cifs\ .*/\1/p' <"${proc_mounts_file}" |
             while read -r MP; do
+                MP="$(printf "%s" "${MP}" | sed 's/\\040/ /g')"
                 if [ ! -r "${MP}" ]; then
                     echo "${MP} Permission denied"
                 elif [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
@@ -751,6 +835,15 @@ section_diskstat() {
             echo '[vx_dsk]'
             stat -c "%t %T %n" /dev/vx/dsk/*/*
         fi
+        if [ -d /dev/disk/by-id ]; then
+            echo '[device_wwn]'
+            for F in /dev/disk/by-id/*; do
+                if echo "${F}" | grep -E "nvme-eui|wwn" >/dev/null; then
+                    echo "${F##*/} $(readlink -f "${F}")"
+                fi
+            done
+
+        fi
     else
         echo "<<<docker_container_diskstat${CGROUP_SECTION_SUFFIX}>>>"
         echo "[time]"
@@ -800,13 +893,7 @@ section_ipmitool() {
 
 section_ipmisensors() {
     inpath ipmi-sensors && ls /dev/ipmi* >/dev/null || return
-    ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
-    # Newer ipmi-sensors version have new output format; Legacy format can be used
-    if ipmi-sensors --help | grep -q legacy-output; then
-        IPMI_FORMAT="--legacy-output"
-    else
-        IPMI_FORMAT=""
-    fi
+
     if ipmi-sensors --help | grep -q " \-\-groups"; then
         IPMI_GROUP_OPT="-g"
     else
@@ -814,8 +901,8 @@ section_ipmisensors() {
     fi
 
     # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
-    _run_cached_internal "ipmi_sensors" 300 300 900 600 "echo '<<<ipmi_sensors>>>'; for class in Temperature Power_Unit Fan; do
-        ipmi-sensors ${IPMI_FORMAT} --sdr-cache-directory /var/cache ${IPMI_GROUP_OPT} \"\${class}\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+    _run_cached_internal "ipmi_sensors" 300 300 900 600 "echo '<<<ipmi_sensors:sep(124)>>>'; for class in Temperature Power_Unit Fan; do
+        ipmi-sensors --sdr-cache-directory /var/cache ${IPMI_GROUP_OPT} \"\${class}\"
         # In case of a timeout immediately leave loop.
         if [ $? = 255 ]; then break; fi
     done"
@@ -1004,12 +1091,12 @@ read_postfix_queue_dirs() {
 ## Postfix status monitoring
 read_postfix_master_pid() {
     postfix_queue_dir=${1}
-    postfix_instance_name=${2:-postfix}
+    postfix_instance_name=${2}
     echo "<<<postfix_mailq_status:sep(58)>>>"
     if [ -e "${postfix_queue_dir}/pid/master.pid" ]; then
         if [ -r "${postfix_queue_dir}/pid/master.pid" ]; then
             postfix_pid=$(sed 's/ //g' <"${postfix_queue_dir}/pid/master.pid") # handle possible spaces in output
-            if readlink -- "/proc/${postfix_pid}/exe" | grep -q ".*postfix/\(s\?bin/\)\?master.*"; then
+            if ps -p "${postfix_pid}" -o cmd= | grep -q ".*postfix/\(s\?bin/\)\?/\?master.*"; then
                 echo "${postfix_instance_name}:the Postfix mail system is running:PID:${postfix_pid}"
             else
                 echo "${postfix_instance_name}:PID file exists but instance is not running!"
@@ -1040,8 +1127,8 @@ section_mailqueue() {
             done
         fi
         # Always check for the default queue. It can exist even if multiple instances are configured
-        read_postfix_queue_dirs "$(postconf -h queue_directory 2>/dev/null)"
-        read_postfix_master_pid "$(postconf -h queue_directory 2>/dev/null)"
+        read_postfix_queue_dirs "$(postconf -h queue_directory 2>/dev/null)" "default"
+        read_postfix_master_pid "$(postconf -h queue_directory 2>/dev/null)" "default"
 
     elif [ -x /usr/sbin/ssmtp ]; then
         echo '<<<postfix_mailq>>>'
@@ -1186,14 +1273,24 @@ section_omd_core() {
     (
         cd /omd/sites || return
 
+        # The files within a site are site-user writable! Therefore we must not use them!
+        # The version files are only root writable so we can use them instead.
+        site_version() {
+            printf "%s" "$(realpath "${1}/version" | sed 's|.*/||')"
+        }
+
         site_cmd() {
             # DO NOT ACCESS /omd/sites/${site}/bin/cmd directly.
             # bin might point anywhere -> priv escalation.
-            printf "/omd/versions/%s/bin/%s" "$(realpath "${1}/version" | sed 's|.*/||')" "${2}"
+            printf "/omd/versions/%s/bin/%s" "$(site_version "${1}")" "${2}"
+        }
+
+        site_lib() {
+            printf "/omd/versions/%s/lib" "$(site_version "${1}")"
         }
 
         waitmax_for_unixcat_with_site_ld_library_path() {
-            LD_LIBRARY_PATH="/omd/sites/${2}/lib:${LD_LIBRARY_PATH}" waitmax "${1}" "$(site_cmd "${2}" unixcat)" "/omd/sites/${2}/tmp/run/${3}"
+            LD_LIBRARY_PATH="$(site_lib "${2}"):${LD_LIBRARY_PATH}" waitmax "${1}" "$(site_cmd "${2}" unixcat)" "/omd/sites/${2}/tmp/run/${3}"
         }
 
         echo '<<<livestatus_status:sep(59)>>>'
@@ -1619,6 +1716,16 @@ run_cached() {
     _run_cached_internal "${NAME}" "${REFRESH_INTERVAL}" "${MAXAGE}" "${OUTPUT_TIMEOUT}" "${CREATION_TIMEOUT}" "$@"
 }
 
+if inpath setsid; then
+    # we can kill the whole process group, including children.
+    _nohup_kill_id() { printf "0"; }
+    _nohup() { setsid nohup "$@"; }
+else
+    # we can only the main process, children will survive :-/
+    _nohup_kill_id() { printf "\$\$"; }
+    _nohup() { nohup "$@"; }
+fi
+
 _run_cached_internal() {
     # Run a command asynchronous by use of a cache file.
     # Usage: _run_cached_internal NAME REFRESH_INTERVAL MAXAGE OUTPUT_TIMEOUT OUTPUT_TIMEOUT CREATION_TIMEOUT [COMMAND ...]
@@ -1680,32 +1787,6 @@ _run_cached_internal() {
     fi
 
     if ${MK_RUN_ASYNC_PARTS}; then
-        # Kill the process if it is running too long (cache file not accessed for more than CREATION_TIMEOUT seconds).
-        # If killing succeeds, remove CACHFILE.new.PID.
-        # Write info about the timed out process and the kill attempt to the SPOOLDIR.
-        # It will be reported to the server in the next (synchronous) agent execution.
-        # The file will be deleted as soon as the plugin/local check is functional again.
-        # Do not output the file here, it will interrupt the local and mrpe sections, as well as any other
-        # partially cached section.
-        for cfile in "${CACHEFILE}.new."*; do
-            [ -e "${cfile}" ] || break # no match
-            TRYING_SINCE="$(get_file_atime "${cfile}")"
-            [ -n "${TRYING_SINCE}" ] || break # race condition: file vanished
-            if [ $((NOW - TRYING_SINCE)) -ge "${CREATION_TIMEOUT}" ]; then
-                {
-                    printf "<<<checkmk_cached_plugins:sep(124)>>>\n"
-                    pid="${cfile##*.new.}"
-                    printf "timeout|%s|%s|%s\n" "${NAME}" "${CREATION_TIMEOUT}" "${pid}"
-                    kill -9 "${pid}" >/dev/null 2>&1 && sleep 2 # TODO: what about child processes?
-                    if [ -n "$(ps -o args= -p "${pid}")" ]; then
-                        printf "killfailed|%s|%s|%s\n" "${NAME}" "${CREATION_TIMEOUT}" "${pid}"
-                    else
-                        rm -f "${cfile}"
-                    fi
-                } >"${FAIL_REPORT_FILE}" 2>&1
-            fi
-        done
-
         # This does the right thing, regardless whether the pattern matches!
         _cfile_in_use() {
             for cfile in "${CACHEFILE}.new."*; do
@@ -1716,11 +1797,29 @@ _run_cached_internal() {
 
         # Time to refresh cache file and new job not yet running?
         if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
-            # Start it. If the command fails the output is thrown away
-            cat <<HERE | nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
-eval '${MK_DEFINE_LOG_SECTION_TIME}'
-exec > "${CACHEFILE}.new.\$\$" || exit 1
-$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}" || rm -f "${CACHEFILE}.new.\$\$"
+
+            # Start it.
+            # We're running two parrallel blocks, implementing a timeout. Roughly:
+            # First block: Run command then kill ourselves (including the other block!)
+            # Second block: Sleep for a while. If I survive: Handle the fact that block one did not kill me.
+            cat <<HERE | _nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
+             {
+                eval '${MK_DEFINE_LOG_SECTION_TIME}'
+                exec > "${CACHEFILE}.new.\$\$" || exit 1
+                $* \
+                && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}" \
+                || rm -f "${CACHEFILE}.new.\$\$"
+                kill $(_nohup_kill_id)
+             } &
+             {
+                sleep ${CREATION_TIMEOUT}
+                {
+                      printf "<<<checkmk_cached_plugins:sep(124)>>>\\n"
+                      printf "timeout|${NAME}|${CREATION_TIMEOUT}|\$\$\\n"
+                } >"${FAIL_REPORT_FILE}" 2>&1
+                rm -f "${CACHEFILE}.new.\$\$"
+                kill -9 $(_nohup_kill_id)
+             } &
 HERE
         fi
 
@@ -1880,7 +1979,7 @@ run_remote_plugins() {
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
         else
             # Sourcing the agent here is not very performant, but we need 'run_mrpe', and not all shells support exporting of functions.
-            _run_cached_internal "mrpe_${descr}" "${interval}" "${interval}" $((interval * 3)) $((interval * 2)) "MK_SOURCE_AGENT=yes . '${0}'; run_mrpe '${descr}' '${cmdline}'"
+            _run_cached_internal "mrpe_${descr}" "${interval}" "${interval}" $((interval * 3)) $((interval * 2)) "MK_SOURCE_AGENT=yes . '${0}'; run_mrpe \"${descr}\" \"${cmdline}\""
         fi
 
     done
@@ -1925,7 +2024,7 @@ run_runas_executor() {
                     echo "<<<local:sep(0)>>>"
                 fi
 
-                find "${configfile}/" -executable -type f |
+                find "${configfile}" -executable -type f |
                     while read -r filename; do
                         if [ -n "${prefix}" ]; then
                             # SC2086: We don't want to quote since prefix should not be treated as a
@@ -1960,7 +2059,7 @@ run_purely_synchronous_sections() {
     # Check NFS mounts by accessing them with stat -f (System
     # call statfs()). If this lasts more then 2 seconds we
     # consider it as hanging. We need waitmax.
-    [ -z "${MK_SKIP_NFS_MOUNTS}" ] && _log_section_time section_nfs_mounts
+    [ -z "${MK_SKIP_NFS_MOUNTS}" ] && _log_section_time section_nfs_mounts "/proc/mounts"
 
     # Check mount options. Filesystems may switch to 'ro' in case
     # of a read error.

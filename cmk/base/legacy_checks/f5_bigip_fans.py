@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+from cmk.agent_based.v2 import SNMPTree
 
 # Agent / MIB output
 # see 1.3.6.1.4.1.3375.2.1.3.2.1.1.0
@@ -25,8 +26,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 # F5-BIGIP-SYSTEM-MIB::sysCpuSensorFanSpeed.2.1.   1.3.6.1.4.1.3375.2.1.3.6.2.1.3.2.1 = 4730
 # F5-BIGIP-SYSTEM-MIB::sysCpuSensorName.1.1.       1.3.6.1.4.1.3375.2.1.3.6.2.1.4.1.1 = 1/cpu1
 # F5-BIGIP-SYSTEM-MIB::sysCpuSensorName.2.1.       1.3.6.1.4.1.3375.2.1.3.6.2.1.4.2.1 = 2/cpu1
-
-f5_bigip_fans_default_levels = (2000, 500)
 
 
 def parse_f5_bigip_fans(string_table):
@@ -52,7 +51,7 @@ def parse_f5_bigip_fans(string_table):
 
 def inventory_f5_bigip_fans(parsed):
     for item in parsed.keys():
-        yield item, f5_bigip_fans_default_levels
+        yield item, {}
 
 
 def check_f5_bigip_fans(item, params, parsed):
@@ -93,4 +92,5 @@ check_info["f5_bigip_fans"] = LegacyCheckDefinition(
     discovery_function=inventory_f5_bigip_fans,
     check_function=check_f5_bigip_fans,
     check_ruleset_name="hw_fans",
+    check_default_parameters={"lower": (2000, 500)},
 )

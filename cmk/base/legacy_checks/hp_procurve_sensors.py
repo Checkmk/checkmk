@@ -47,7 +47,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree
+
+from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
 
 hp_procurve_status_map = {
     "1": "unknown",
@@ -93,7 +94,12 @@ def check_hp_procurve_sensors(item, _not_used, info):
     return (3, "item not found in snmp data")
 
 
+def parse_hp_procurve_sensors(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hp_procurve_sensors"] = LegacyCheckDefinition(
+    parse_function=parse_hp_procurve_sensors,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.8"),

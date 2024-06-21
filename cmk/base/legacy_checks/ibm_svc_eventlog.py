@@ -18,6 +18,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_ibm_svc_eventlog(info):
     return [(None, None)]
@@ -53,7 +55,12 @@ def check_ibm_svc_eventlog(item, _no_params, info):
     return 0, "No messages not expired and not yet fixed found in event log"
 
 
+def parse_ibm_svc_eventlog(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ibm_svc_eventlog"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_svc_eventlog,
     service_name="Eventlog",
     discovery_function=inventory_ibm_svc_eventlog,
     check_function=check_ibm_svc_eventlog,

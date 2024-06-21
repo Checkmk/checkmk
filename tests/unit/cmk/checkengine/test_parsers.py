@@ -10,12 +10,11 @@ import itertools
 import logging
 import time
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 
-import cmk.utils.debug
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
@@ -23,20 +22,17 @@ from cmk.utils.translations import TranslationOptions
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.fetchers.cache import SectionStore
-
-from cmk.checkengine.parser import AgentParser, AgentRawDataSectionElem, NO_SELECTION, SNMPParser
+from cmk.checkengine.parser import (
+    AgentParser,
+    AgentRawDataSectionElem,
+    NO_SELECTION,
+    SectionStore,
+    SNMPParser,
+)
+from cmk.checkengine.parser._agent import ParserState
 from cmk.checkengine.parser._markers import PiggybackMarker, SectionMarker
 
 StringTable = list[list[str]]
-
-
-@pytest.fixture(autouse=True)
-def enable_debug_fixture():
-    debug_mode = cmk.utils.debug.debug_mode
-    cmk.utils.debug.enable()
-    yield
-    cmk.utils.debug.debug_mode = debug_mode
 
 
 class TestAgentParser:
@@ -66,11 +62,10 @@ class TestAgentParser:
         return AgentParser(
             hostname,
             store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -285,7 +280,7 @@ class TestAgentParser:
         raw_data = AgentRawData(
             b"\n".join(
                 (
-                    b"<<<<piggyback header>>>>",
+                    b"<<<<piggyback_header>>>>",
                     b"<<<a_section>>>",
                     b"a first line",
                     b"a second line",
@@ -318,6 +313,54 @@ class TestAgentParser:
             ]
         }
         assert not store.load()
+
+    def test_unrecoverably_invalid_hosts_are_ignored(self, parser: AgentParser) -> None:
+        # a too long name can't be a valid hostname -- not even after character replacements
+        too_long = b"piggybackedhost" * 100
+        raw_data = AgentRawData(
+            b"\n".join(
+                (
+                    b"<<<section1>>>",
+                    b"one line",
+                    b"<<<<%s>>>>" % too_long,  # <- invalid host name
+                    b"<<<this_goes_nowhere>>>",
+                    b"dead line",
+                    b"<<<<>>>>",
+                    b"<<<section2>>>",
+                    b"a first line",
+                    b"a second line",
+                )
+            )
+        )
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert set(ahs.sections) == {SectionName("section1"), SectionName("section2")}
+        assert ahs.piggybacked_raw_data == {}
+
+    def test_invalid_hosts_are_projected(
+        self, parser: AgentParser, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
+        monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
+        raw_data = AgentRawData(
+            b"\n".join(
+                (
+                    b"<<<section1>>>",
+                    b"one line",
+                    b"<<<<Foo Bar>>>>",  # <- invalid host name
+                    b"<<<this_is_found>>>",
+                    b"some line",
+                    b"<<<<>>>>",
+                    b"<<<section2>>>",
+                    b"a first line",
+                    b"a second line",
+                )
+            )
+        )
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert set(ahs.sections) == {SectionName("section1"), SectionName("section2")}
+        assert ahs.piggybacked_raw_data == {
+            "Foo_Bar": [b"<<<this_is_found:cached(1000,900)>>>", b"some line"]
+        }
 
     def test_closing_piggyback_out_of_piggyback_section_closes_section(
         self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
@@ -364,7 +407,7 @@ class TestAgentParser:
         raw_data = AgentRawData(
             b"\n".join(
                 (
-                    b"<<<<piggyback header>>>>",  # <- space is OK
+                    b"<<<<piggyback_header>>>>",
                     b"<<<section>>>",
                     b"first line",
                     b"second line",
@@ -377,9 +420,6 @@ class TestAgentParser:
                     b"third line",
                     b"forth line",
                     b"<<<<>>>>",
-                    b"<<<<../b:l*a../>>>>",
-                    b"<<<section>>>",
-                    b"first line",
                     b"<<<</b_l-u/>>>>",
                     b"<<<section>>>",
                     b"first line",
@@ -404,10 +444,6 @@ class TestAgentParser:
                 b"<<<other_other_section:cached(1000,900)>>>",
                 b"third line",
                 b"forth line",
-            ],
-            ".._b_l_a.._": [
-                b"<<<section:cached(1000,900)>>>",
-                b"first line",
             ],
             "_b_l-u_": [
                 b"<<<section:cached(1000,900)>>>",
@@ -696,90 +732,139 @@ class TestAgentParser:
         assert store.load() == {}
 
 
-class TestSectionMarker:
-    def test_options_serialize_options(self) -> None:
-        section_header = SectionMarker.from_headerline(
-            b"<<<"
-            + b":".join(
-                (
-                    b"section",
-                    b"cached(1,2)",
-                    b"encoding(ascii)",
-                    b"nostrip()",
-                    b"persist(42)",
-                    b"sep(124)",
-                )
-            )
-            + b">>>"
+class ParserStateAdapter(ParserState):
+    def __init__(self, *, translation: TranslationOptions | None = None):
+        super().__init__(
+            HostName("foo"),
+            sections=[],
+            piggyback_sections={},
+            translation={} if translation is None else translation,
+            encoding_fallback="utf-8",
+            logger=logging.getLogger(),
         )
-        assert section_header == SectionMarker.from_headerline(str(section_header).encode("ascii"))
 
-    def test_options_deserialize_defaults(self) -> None:
-        section_header = SectionMarker.from_headerline(b"<<<section>>>")
-        other_header = SectionMarker.from_headerline(str(section_header).encode("ascii"))
-        assert section_header == other_header
-        assert str(section_header) == str(other_header)
+    def do_action(self, line: bytes) -> ParserState:
+        raise AssertionError("unexpected data line")
+
+    def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
+        raise AssertionError("unexpected piggyback header")
+
+    def on_piggyback_footer(self) -> ParserState:
+        raise AssertionError("unexpected piggyback footer")
+
+    def on_section_header(self, section_header: SectionMarker) -> ParserState:
+        raise AssertionError("unexpected section header")
+
+    def on_section_footer(self) -> ParserState:
+        raise AssertionError("unexpected section footer")
+
+
+class TestSectionMarker:
+    @pytest.mark.parametrize(
+        "line",
+        [
+            b"<<<section>>>",
+            b"<<<section:cached(1,2):encoding(ascii):nostrip():persist(42):sep(124)>>>",
+        ],
+    )
+    def test_stringify(self, line: bytes) -> None:
+        parsed: SectionMarker | None = None
+
+        class ExpectSectionHeader(ParserStateAdapter):
+            def on_section_header(self, section_header: SectionMarker) -> ParserState:
+                nonlocal parsed
+                parsed = section_header
+                return self
+
+        ExpectSectionHeader()(line)
+        parsed_line = parsed
+        ExpectSectionHeader()(str(parsed).encode("ascii"))
+        assert parsed_line == parsed
+        assert str(parsed_line) == str(parsed)
 
     @pytest.mark.parametrize(
-        "headerline, section_name, section_options",
+        "line, expected",
         [
-            ("norris", SectionName("norris"), {}),
-            ("norris:chuck", SectionName("norris"), {"chuck": None}),
-            (
-                "my_section:sep(0):cached(23,42)",
-                SectionName("my_section"),
-                {"sep": "0", "cached": "23,42"},
+            (  # defaults
+                b"<<<norris>>>",
+                SectionMarker(
+                    name=SectionName("norris"),
+                    cached=None,
+                    encoding="utf-8",
+                    nostrip=False,
+                    persist=None,
+                    separator=None,
+                ),
             ),
-            ("my.section:sep(0):cached(23,42)", None, {}),  # invalid section name
-            ("", None, {}),  # invalid section name
+            (
+                b"<<<norris:encoding(chuck)>>>",
+                SectionMarker(
+                    name=SectionName("norris"),
+                    cached=None,
+                    encoding="chuck",
+                    nostrip=False,
+                    persist=None,
+                    separator=None,
+                ),
+            ),
+            (
+                b"<<<my_section:sep(0):cached(23,42)>>>",
+                SectionMarker(
+                    name=SectionName("my_section"),
+                    cached=(23, 42),
+                    encoding="utf-8",
+                    nostrip=False,
+                    persist=None,
+                    separator="\x00",
+                ),
+            ),
+            (
+                b"<<<name:cached(1,2):encoding(ascii):nostrip():persist(42):sep(124)>>>",
+                SectionMarker(
+                    name=SectionName("name"),
+                    cached=(1, 2),
+                    encoding="ascii",
+                    nostrip=True,
+                    persist=42,
+                    separator="|",
+                ),
+            ),
+            (  # option without parentheses gets ignored
+                b"<<<norris:encoding:encoding(dong)>>>",
+                SectionMarker(
+                    name=SectionName("norris"),
+                    cached=None,
+                    encoding="dong",
+                    nostrip=False,
+                    persist=None,
+                    separator=None,
+                ),
+            ),
+            (  # unknown option gets ignored
+                b"<<<norris:hurz(42):encoding(blah)>>>",
+                SectionMarker(
+                    name=SectionName("norris"),
+                    cached=None,
+                    encoding="blah",
+                    nostrip=False,
+                    persist=None,
+                    separator=None,
+                ),
+            ),
+            (b"<<<my.section:sep(0):cached(23,42)>>>", None),  # invalid section name
+            (b"<<< >>>", None),  # invalid section name
         ],
-    )  # fmt: off
-    def test_options_from_headerline(
-        self,
-        headerline: str,
-        section_name: SectionName | None,
-        section_options: Mapping[str, object],
-    ) -> None:
+    )
+    def test_options_from_headerline(self, line: bytes, expected: SectionMarker | None) -> None:
+        class ExpectSectionHeader(ParserStateAdapter):
+            def on_section_header(self, section_header: SectionMarker) -> ParserState:
+                assert section_header == expected
+                return self
+
         try:
-            SectionMarker.from_headerline(
-                f"<<<{headerline}>>>".encode("ascii")
-            ) == (  # type: ignore[comparison-overlap]
-                section_name,
-                section_options,
-            )
+            ExpectSectionHeader()(line)
         except ValueError:
-            assert section_name is None
-
-    def test_options_decode_values(self) -> None:
-        section_header = SectionMarker.from_headerline(
-            b"<<<"
-            + b":".join(
-                (
-                    b"name",
-                    b"cached(1,2)",
-                    b"encoding(ascii)",
-                    b"nostrip()",
-                    b"persist(42)",
-                    b"sep(124)",
-                )
-            )
-            + b">>>"
-        )
-        assert section_header.name == SectionName("name")
-        assert section_header.cached == (1, 2)
-        assert section_header.encoding == "ascii"
-        assert section_header.nostrip is True
-        assert section_header.persist == 42
-        assert section_header.separator == "|"
-
-    def test_options_decode_defaults(self) -> None:
-        section_header = SectionMarker.from_headerline(b"<<<name>>>")
-        assert section_header.name == SectionName("name")
-        assert section_header.cached is None
-        assert section_header.encoding == "utf-8"
-        assert section_header.nostrip is False
-        assert section_header.persist is None
-        assert section_header.separator is None
+            assert expected is None
 
 
 class TestSNMPParser:
@@ -796,6 +881,7 @@ class TestSNMPParser:
                 logger=logging.Logger("test"),
             ),
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logging.Logger("test"),
         )
@@ -874,11 +960,10 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -898,11 +983,10 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -918,11 +1002,10 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -942,11 +1025,10 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -972,11 +1054,10 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -1005,11 +1086,10 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -1033,11 +1113,10 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=42,
+            host_check_interval=42,
             keep_outdated=False,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -1061,11 +1140,10 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=42,
+            host_check_interval=42,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -1091,6 +1169,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1112,6 +1191,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1131,6 +1211,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1152,6 +1233,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1182,6 +1264,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={SectionName("section"): 42},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1205,6 +1288,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={SectionName("section"): 42},
+            host_check_interval=60,
             keep_outdated=False,
             logger=logger,
         )
@@ -1228,6 +1312,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={SectionName("section"): 42},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1239,46 +1324,75 @@ class TestSNMPPersistedSectionHandling:
         assert shs.piggybacked_raw_data == {}
         assert not section_store.load() == {SectionName("section"): (1000, 1042, [["old"]])}
 
+    def test_section_expired_during_checking(
+        self, logger: logging.Logger, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
+
+        section_store = MockStore(
+            "/dev/null",
+            {SectionName("section"): (890, 990, [["old"]])},
+            logger=logger,
+        )
+        parser = SNMPParser(
+            HostName("testhost"),
+            section_store,
+            check_intervals={SectionName("section"): 100},
+            host_check_interval=60,
+            keep_outdated=False,
+            logger=logger,
+        )
+        shs = parser.parse({}, selection=NO_SELECTION)
+        assert shs.sections == {SectionName("section"): [["old"]]}
+        assert shs.cache_info == {
+            SectionName("section"): (890, 100),
+        }
+        assert shs.piggybacked_raw_data == {}
+        assert section_store.load() == {SectionName("section"): (890, 990, [["old"]])}
+
 
 class TestMarkers:
     @pytest.mark.parametrize("line", [b"<<<x>>>", b"<<<x:cached(10, 5)>>>"])
     def test_section_header(self, line: bytes) -> None:
-        assert SectionMarker.is_header(line) is True
-        assert SectionMarker.is_footer(line) is False
-        assert PiggybackMarker.is_header(line) is False
-        assert PiggybackMarker.is_footer(line) is False
+        class ExpectSectionHeader(ParserStateAdapter):
+            def on_section_header(self, section_header: SectionMarker) -> ParserState:
+                return self
+
+        ExpectSectionHeader()(line)
 
     @pytest.mark.parametrize("line", [b"<<<>>>", b"<<<:cached(10, 5)>>>"])
     def test_section_footer(self, line: bytes) -> None:
-        assert SectionMarker.is_header(line) is False
-        assert SectionMarker.is_footer(line) is True
-        assert PiggybackMarker.is_header(line) is False
-        assert PiggybackMarker.is_footer(line) is False
+        class ExpectSectionFooter(ParserStateAdapter):
+            def on_section_footer(self) -> ParserState:
+                return self
+
+        ExpectSectionFooter()(line)
 
     def test_piggybacked_host_header(self) -> None:
-        line = b"<<<<x>>>>"
-        assert SectionMarker.is_header(line) is False
-        assert SectionMarker.is_footer(line) is False
-        assert PiggybackMarker.is_header(line) is True
-        assert PiggybackMarker.is_footer(line) is False
+        class ExpectPiggybackHeader(ParserStateAdapter):
+            def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
+                return self
 
-    def test_piggybacked_host_translation_results_in_empty_string(self) -> None:
-        line = b"<<<<x>>>>"
-        translation = TranslationOptions(
-            case=None,
-            drop_domain=False,
-            mapping=[],
-            regex=[
-                (".*(.*?)", r"\1"),
-            ],
-        )
-        assert PiggybackMarker.from_headerline(
-            line, translation, encoding_fallback="utf-8"
-        ).hostname == HostName("_")
+        ExpectPiggybackHeader()(b"<<<<x>>>>")
+
+    def test_piggybacked_host_translation_results_in_None(self) -> None:
+        class ExpectPiggybackHeader(ParserStateAdapter):
+            def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
+                assert piggyback_header.hostname is None
+                return self
+
+        ExpectPiggybackHeader(
+            translation=TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[(".*(.*?)", r"\1")],
+            )
+        )(b"<<<<x>>>>")
 
     def test_piggybacked_host_footer(self) -> None:
-        line = b"<<<<>>>>"
-        assert SectionMarker.is_header(line) is False
-        assert SectionMarker.is_footer(line) is False
-        assert PiggybackMarker.is_header(line) is False
-        assert PiggybackMarker.is_footer(line) is True
+        class ExpectPiggybackFooter(ParserStateAdapter):
+            def on_piggyback_footer(self) -> ParserState:
+                return self
+
+        ExpectPiggybackFooter()(b"<<<<>>>>")

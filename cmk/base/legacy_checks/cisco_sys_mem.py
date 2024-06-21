@@ -9,7 +9,8 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree, startswith
+
+from cmk.agent_based.v2 import render, SNMPTree, startswith, StringTable
 
 
 def inventory_cisco_sys_mem(info):
@@ -31,7 +32,12 @@ def check_cisco_sys_mem(_no_item, params, info):
     return None
 
 
+def parse_cisco_sys_mem(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cisco_sys_mem"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_sys_mem,
     detect=startswith(".1.3.6.1.2.1.1.1.0", "Cisco NX-OS"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.305.1.1.2",

@@ -13,7 +13,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.hooks as hooks
+from cmk.gui import hooks
 from cmk.gui.pages import Page, page_registry
 
 
@@ -27,6 +27,7 @@ def reset_hooks() -> Generator[None, None, None]:
         hooks.hooks = old_hooks
 
 
+@pytest.mark.usefixtures("patch_theme")
 def test_flask_request_memoize(flask_app: Flask) -> None:
     @hooks.request_memoize()
     def cached_function():
@@ -49,6 +50,7 @@ def test_flask_request_memoize(flask_app: Flask) -> None:
         assert prev != cached_function()
 
 
+@pytest.mark.usefixtures("patch_theme")
 def test_request_memoize() -> None:
     @hooks.request_memoize()
     def blah(a=[]):  # pylint: disable=dangerous-default-value
@@ -63,6 +65,7 @@ def test_request_memoize() -> None:
     assert blah() == [1, 1]
 
 
+@pytest.mark.usefixtures("patch_theme")
 def test_request_memoize_request_integration(
     logged_in_wsgi_app: WebTestAppForCMK, mocker: MockerFixture
 ) -> None:
@@ -99,7 +102,7 @@ def test_request_memoize_request_integration(
 
 
 def test_request_memoize_unregister() -> None:
-    # Make sure request-start hooks are still called, after plugin hooks are
+    # Make sure request-start hooks are still called, after plug-in hooks are
     # unregistered. In previous versions unregister_plugin_hooks also
     # unregistered hooks used by memoize.
 

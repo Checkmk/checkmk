@@ -13,6 +13,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_windows_broadcom_bonding(info):
     inventory = []
@@ -35,7 +37,12 @@ def check_windows_broadcom_bonding(item, params, info):
     return 3, "Bond %s not found in agent output" % item
 
 
+def parse_windows_broadcom_bonding(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["windows_broadcom_bonding"] = LegacyCheckDefinition(
+    parse_function=parse_windows_broadcom_bonding,
     service_name="Bonding Interface %s",
     discovery_function=inventory_windows_broadcom_bonding,
     check_function=check_windows_broadcom_bonding,

@@ -1,0 +1,9 @@
+Title: Custom graphs/Graph collections: Fix permissions if admin wants to see custom graphs from other users
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1702027122
+Edition: cee
+Level: 1
+Version: 2.3.0b1
+

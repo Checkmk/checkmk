@@ -1,4 +1,4 @@
-Title: <tt>sap_hana_status</tt>: Add description to service output
+Title: sap_hana_status: Add description to service output
 Class: feature
 Compatible: compat
 Component: checks

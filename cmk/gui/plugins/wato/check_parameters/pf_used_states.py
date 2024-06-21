@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer
 
 
 def _parameter_valuespec_pf_used_states():
@@ -17,12 +18,9 @@ def _parameter_valuespec_pf_used_states():
         elements=[
             (
                 "used",
-                Tuple(
+                SimpleLevels(
+                    spec=Integer,
                     title=_("Limits for the number of used states"),
-                    elements=[
-                        Integer(title=_("warning at")),
-                        Integer(title=_("critical at")),
-                    ],
                 ),
             ),
         ],

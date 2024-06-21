@@ -13,7 +13,7 @@ from livestatus import SiteId
 from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
-import cmk.gui.key_mgmt as key_mgmt
+from cmk.gui import key_mgmt
 from cmk.gui.type_defs import Key
 
 

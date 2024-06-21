@@ -1,4 +1,4 @@
-Title: <tt>gude_pdu</tt>: Fix errors during discovery and checking
+Title: gude_pdu: Fix errors during discovery and checking
 Class: fix
 Compatible: compat
 Component: checks

@@ -11,9 +11,9 @@ from cmk.base.check_legacy_includes.huawei_switch import (
     Section,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_SWITCH
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
 
 huawei_switch_hw_oper_state_map = {
     "1": "notSupported",

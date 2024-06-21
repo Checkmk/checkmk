@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # Golden Tests for the LDAP connector
 # trying to capture the current behavior of the connector to facilitate refactoring
 
 import datetime
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 from unittest.mock import ANY, MagicMock
 
-import ldap  # type: ignore[import]
+import ldap  # type: ignore[import-untyped]
 import pytest
 from pytest_mock import MockerFixture
 
@@ -19,6 +20,7 @@ from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
 from cmk.gui.type_defs import Users
+from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 
 
@@ -31,39 +33,38 @@ def fixture_mock_ldap_object(mocker: MockerFixture) -> MagicMock:
     return mocker.patch("ldap.ldapobject.ReconnectLDAPObject", autospec=True)
 
 
-Config = Mapping[str, Any]
-_test_config: Config = {
-    "id": "test-golden-ldap-connector",
-    "description": "LDAP connector for unit tests",
-    "comment": "Hi!",
-    "docu_url": "",
-    "disabled": False,
-    "directory_type": (
+_test_config = LDAPUserConnectionConfig(
+    id="test-golden-ldap-connector",
+    description="LDAP connector for unit tests",
+    comment="Hi!",
+    docu_url="",
+    disabled=False,
+    directory_type=(
         "openldap",
-        {
-            "connect_to": (
+        LDAPConnectionConfigFixed(
+            connect_to=(
                 "fixed_list",
-                {
-                    "server": "lolcathorst",
-                    "failover_servers": ["internet"],
-                },
+                Fixed(
+                    server="lolcathorst",
+                    failover_servers=["internet"],
+                ),
             )
-        },
+        ),
     ),
-    "user_dn": "ou=People,dc=ldap_golden,dc=unit_tests,dc=local",
-    "user_scope": "sub",
-    "user_id_umlauts": "keep",
-    "group_dn": "ou=Groups,dc=ldap_golden,dc=unit_tests,dc=local",
-    "group_scope": "sub",
-    "active_plugins": {"alias": {}, "email": {}},
-    "cache_livetime": 300,
-    "type": "ldap",
-    "bind": ("bind_dn", "ldap_golden_unknown_password"),  # not in password_store
-    "version": 42,
-    "connect_timeout": 0.1,
-    "lower_user_ids": True,
-    "suffix": "LDAP_SUFFIX",
-}
+    user_dn="ou=People,dc=ldap_golden,dc=unit_tests,dc=local",
+    user_scope="sub",
+    user_id_umlauts="keep",
+    group_dn="ou=Groups,dc=ldap_golden,dc=unit_tests,dc=local",
+    group_scope="sub",
+    active_plugins={"email": {}},
+    cache_livetime=300,
+    type="ldap",
+    bind=("bind_dn", ("store", "ldap_golden_unknown_password")),  # not in password_store
+    version=2,
+    connect_timeout=0.1,
+    lower_user_ids=True,
+    suffix="LDAP_SUFFIX",
+)
 
 
 @pytest.mark.parametrize(
@@ -82,7 +83,7 @@ _test_config: Config = {
         },
     ],
 )
-def test_init_connector(config: Config) -> None:
+def test_init_connector(config: LDAPUserConnectionConfig) -> None:
     """Test initializing the connector with a given config"""
     LDAPUserConnector(config)
 
@@ -174,21 +175,25 @@ class AnyOrderMatcher:
         return f"AnyOrderMatcher({self.args})"
 
 
-def test_do_sync(mocker: MockerFixture) -> None:
+def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
     connector = LDAPUserConnector(_test_config)
     loaded_users: Users = {
         UserId("alice"): {"connector": "htpasswd"},
         UserId("bob"): {"connector": connector.id},
+        UserId("david"): {"connector": connector.id, "alias": "dave"},
     }
-    ldap_users = {"carol": {"connector": connector.id}}
+    ldap_users = {"carol": {"connector": connector.id}, "david": {"connector": connector.id}}
 
     def assert_expected_users(users_to_save: Users, _now: datetime.datetime) -> None:
-        # bob is gone, carol is added
+        # bob is gone, carol is added, davids alias stays the same
         assert UserId("alice") in users_to_save
         assert users_to_save[UserId("alice")]["connector"] == "htpasswd"
         assert UserId("bob") not in users_to_save
         assert UserId("carol") in users_to_save
         assert users_to_save[UserId("carol")]["connector"] == connector.id
+        assert users_to_save[UserId("carol")]["alias"] == "carol"
+        assert UserId("david") in users_to_save
+        assert users_to_save[UserId("david")]["alias"] == "dave"
 
     mocker.patch.object(connector, "get_users", return_value=ldap_users)
     connector.do_sync(
@@ -199,7 +204,7 @@ def test_do_sync(mocker: MockerFixture) -> None:
     )
 
 
-def test_check_credentials_valid(mocker: MockerFixture) -> None:
+def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -> None:
     connector = LDAPUserConnector(_test_config)
     connector.connect()
     assert connector._ldap_obj
@@ -211,7 +216,7 @@ def test_check_credentials_valid(mocker: MockerFixture) -> None:
     assert result == UserId("carol_id@LDAP_SUFFIX")
 
 
-def test_check_credentials_invalid(mocker: MockerFixture) -> None:
+def test_check_credentials_invalid(mocker: MockerFixture, request_context: None) -> None:
     connector = LDAPUserConnector(_test_config)
     connector.connect()
     assert connector._ldap_obj

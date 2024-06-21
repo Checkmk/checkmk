@@ -16,10 +16,7 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
 from cmk.utils.statename import core_state_names
 
-from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
-    SyslogFacility,
-    SyslogPriority,
-)
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.logged_in import user
 
@@ -82,11 +79,11 @@ class ECEvent:
                 continue
 
             if k == "priority":
-                yield k, SyslogPriority.NAMES.get(v, "unknown")
+                yield k, ec.SyslogPriority.NAMES.get(v, "unknown")
                 continue
 
             if k == "facility":
-                yield k, SyslogFacility.NAMES.get(v, "unknown")
+                yield k, ec.SyslogFacility.NAMES.get(v, "unknown")
 
                 continue
 
@@ -224,7 +221,7 @@ def change_state(
 def archive_events(
     connection: MultiSiteConnection,
     query: Query,
-    site_id: SiteId,
+    site_id: SiteId | None,
 ) -> None:
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():

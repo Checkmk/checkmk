@@ -2,18 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
-# mypy: disable-error-code="no-untyped-def"
+#
+# comNET GmbH, Fabian Binder - 2018-05-07
 
 from typing import NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-# comNET GmbH, Fabian Binder - 2018-05-07
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 
 class Section(NamedTuple):
@@ -24,7 +22,9 @@ class Section(NamedTuple):
     vendor: str
 
 
-def parse_cisco_ucs_raid(string_table) -> Section:
+def parse_cisco_ucs_raid(string_table: StringTable) -> Section | None:
+    if not string_table:
+        return None
     return Section(
         string_table[0][0],
         *map_operability[string_table[0][1]],

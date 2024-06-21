@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 hp_eml_sum_map = {
     # snmp_value: (nagios_status, txt)
@@ -39,7 +40,12 @@ def check_hp_eml_sum(_no_item, _no_param, info):
     )
 
 
+def parse_hp_eml_sum(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hp_eml_sum"] = LegacyCheckDefinition(
+    parse_function=parse_hp_eml_sum,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11.10.2.1.3.20"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.36.1.1.5.1.1",

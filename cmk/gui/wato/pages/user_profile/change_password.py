@@ -18,9 +18,11 @@ from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
 from cmk.gui.session import session
+from cmk.gui.userdb._connections import get_connection
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.watolib.mode import redirect
 from cmk.gui.watolib.users import verify_password_policy
 
@@ -70,6 +72,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         verify_password_policy(password)
         user_spec["password"] = hash_password(password)
         user_spec["last_pw_change"] = int(time.time())
+        send_security_message(user.id, SecurityNotificationEvent.password_change)
 
         # In case the user was enforced to change it's password, remove the flag
         try:
@@ -84,12 +87,15 @@ class UserChangePasswordPage(ABCUserProfilePage):
             user_spec["serial"] += 1
 
         userdb.save_users(users, now)
-
+        connection_id = user_spec.get("connector", None)
+        connection = get_connection(connection_id)
         log_security_event(
             UserManagementEvent(
                 event="password changed",
                 affected_user=user.id,
                 acting_user=user.id,
+                connector=connection.type() if connection else None,
+                connection_id=connection_id,
             )
         )
 
@@ -135,25 +141,24 @@ class UserChangePasswordPage(ABCUserProfilePage):
                 _("You can not change your password, because it is managed by another system."),
             )
 
-        html.begin_form("profile", method="POST")
-        html.prevent_password_auto_completion()
-        html.open_div(class_="wato")
-        forms.header(self._page_title())
+        with html.form_context("profile", method="POST"):
+            html.prevent_password_auto_completion()
+            html.open_div(class_="wato")
+            forms.header(self._page_title())
 
-        forms.section(_("Current Password"))
-        html.password_input("cur_password", autocomplete="new-password")
+            forms.section(_("Current password"))
+            html.password_input("cur_password", autocomplete="new-password")
 
-        forms.section(_("New Password"))
-        html.password_input("password", autocomplete="new-password")
-        html.password_meter()
+            forms.section(_("New password"))
+            html.password_input("password", autocomplete="new-password")
+            html.password_meter()
 
-        forms.section(_("New Password Confirmation"))
-        html.password_input("password2", autocomplete="new-password")
+            forms.section(_("New password confirmation"))
+            html.password_input("password2", autocomplete="new-password")
 
-        html.hidden_field("_origtarget", request.get_str_input("_origtarget"))
+            html.hidden_field("_origtarget", request.get_str_input("_origtarget"))
 
-        forms.end()
-        html.close_div()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.close_div()
+            html.hidden_fields()
         html.footer()

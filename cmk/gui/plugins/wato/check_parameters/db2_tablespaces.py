@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import math
+from typing import Literal
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -12,14 +15,71 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
+    DropdownChoice,
     Filesize,
     Float,
     Integer,
     ListOf,
     Percentage,
     TextInput,
+    Transform,
     Tuple,
 )
+
+_IEC_UNITS = Literal["B", "KiB", "MiB", "GiB", "TiB"]
+
+
+def _transform_abs_level_back(value: tuple[int, _IEC_UNITS]) -> int | float:
+    level, dimension = value
+    match dimension:
+        case "B":
+            return level / 1024**2
+        case "KiB":
+            return level / 1024
+        case "MiB":
+            return level
+        case "GiB":
+            return level * 1024
+        case "TiB":
+            return level * 1024**2
+
+
+def _transform_abs_level_forth(value: int | float) -> tuple[int, _IEC_UNITS]:
+    exponent = math.floor(math.log2(value))
+    if exponent >= 20:
+        return int(value / 1024**2), "TiB"
+    if exponent >= 10:
+        return int(value / 1024), "GiB"
+    if exponent <= -10:
+        return int(value * 1024**2), "B"
+    if exponent <= 0:
+        return int(value * 1024), "KiB"
+    return int(value), "MiB"
+
+
+def _absolute_level_common(title: str, default_value: int) -> Transform:
+    # Note: The related check plug-ins expect levels in MiB
+    return Transform(
+        Tuple(
+            title=title,
+            elements=[
+                Integer(default_value=default_value),
+                DropdownChoice(
+                    choices=[
+                        ("B", _("Byte")),
+                        ("KiB", _("KiB")),
+                        ("MiB", _("MiB")),
+                        ("GiB", _("GiB")),
+                        ("TiB", _("TiB")),
+                    ],
+                    default_value="MiB",
+                ),
+            ],
+            orientation="horizontal",
+        ),
+        back=_transform_abs_level_back,
+        forth=_transform_abs_level_forth,
+    )
 
 
 def db_levels_common():
@@ -48,8 +108,8 @@ def db_levels_common():
                     Tuple(
                         title=_("Absolute free space"),
                         elements=[
-                            Integer(title=_("Warning if below"), unit=_("MB"), default_value=1000),
-                            Integer(title=_("Critical if below"), unit=_("MB"), default_value=500),
+                            _absolute_level_common(_("Warning if below"), 1000),
+                            _absolute_level_common(_("Critical if below"), 500),
                         ],
                     ),
                     ListOf(
@@ -78,8 +138,8 @@ def db_levels_common():
                                         Tuple(
                                             title=_("Absolute free space"),
                                             elements=[
-                                                Integer(title=_("Warning if below"), unit=_("MB")),
-                                                Integer(title=_("Critical if below"), unit=_("MB")),
+                                                _absolute_level_common(_("Warning if below"), 1000),
+                                                _absolute_level_common(_("Critical if below"), 500),
                                             ],
                                         ),
                                     ],
@@ -103,12 +163,7 @@ def db_levels_common():
         ),
         (
             "magic_normsize",
-            Integer(
-                title=_("Reference size for magic factor"),
-                minvalue=1,
-                default_value=1000,
-                unit=_("MB"),
-            ),
+            _absolute_level_common(_("Reference size for magic factor"), 1000),
         ),
         (
             "magic_maxlevels",

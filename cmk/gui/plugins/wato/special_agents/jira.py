@@ -6,8 +6,8 @@
 
 from cmk.utils.rulesets.definition import RuleGroup
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import validate_aws_tags
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -25,6 +25,33 @@ from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 def _factory_default_special_agents_jira():
     # No default, do not use setting if no rule matches
     return Rulespec.FACTORY_DEFAULT_UNUSED
+
+
+def _validate_jira_projects(value, varprefix):
+    used_keys = []
+    # KEY:
+    # ve_p_services_p_ec2_p_choice_1_IDX_0
+    # VALUES:
+    # ve_p_services_p_ec2_p_choice_1_IDX_1_IDX
+    for idx_project, (project_key, project_values) in enumerate(value):
+        project_field = f"{varprefix}_{idx_project + 1}_0"
+        if project_key not in used_keys:
+            used_keys.append(project_key)
+        else:
+            raise MKUserError(
+                project_field, _("Each project must be unique and cannot be used multiple times")
+            )
+        if len(project_key) > 128:
+            raise MKUserError(project_field, _("The maximum key length is 128 characters."))
+        if len(project_values) > 50:
+            raise MKUserError(
+                project_field, _("The maximum number of projects per resource is 50.")
+            )
+
+        for idx_values, v in enumerate(project_values):
+            values_field = f"{varprefix}_{idx_project + 1}_1_{idx_values + 1}"
+            if len(v) > 256:
+                raise MKUserError(values_field, _("The maximum value length is 256 characters."))
 
 
 def _vs_jira_projects(title):
@@ -62,7 +89,7 @@ def _vs_jira_projects(title):
         add_label=_("Add new project"),
         movable=False,
         title=title,
-        validate=validate_aws_tags,
+        validate=_validate_jira_projects,
     )
 
 
@@ -78,7 +105,7 @@ def _valuespec_special_agents_jira():
                     help=_(
                         "Use this option to set which instance should be "
                         "checked by the special agent. Please add the "
-                        "hostname here, eg. my_jira.com. If not set, the "
+                        "host name here, eg. my_jira.com. If not set, the "
                         "assigned host is used as instance."
                     ),
                     size=32,
@@ -130,10 +157,10 @@ def _valuespec_special_agents_jira():
                             (
                                 "service_description",
                                 TextInput(
-                                    title=_("Service description: "),
+                                    title=_("Service name: "),
                                     help=_(
                                         "The resulting service will get this entry as "
-                                        "service description"
+                                        "service name"
                                     ),
                                     allow_empty=False,
                                 ),

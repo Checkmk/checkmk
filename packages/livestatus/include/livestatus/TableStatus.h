@@ -23,8 +23,9 @@ public:
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query &query, const User &user) override;
-    [[nodiscard]] Row getDefault() const override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
+    [[nodiscard]] Row getDefault(const ICore &core) const override;
 
 private:
     void addCounterColumns(const std::string &name,

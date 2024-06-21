@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree, startswith
+
+from cmk.agent_based.v2 import any_of, equals, SNMPTree, startswith, StringTable
 
 # Example output from agent:
 # [['1', '24', 'SLOT #0: TEMP #1'],
@@ -20,7 +21,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMP
 # ['7', '1', 'Power Supply #1'],
 # ['8', '1', 'Power Supply #2']]
 
+
+def parse_brocade(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["brocade"] = LegacyCheckDefinition(
+    parse_function=parse_brocade,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.24.1.1588.2.1.1"),
@@ -45,12 +52,9 @@ def brocade_sensor_convert(info, what):
     return return_list
 
 
-brocade_fan_default_levels = {"lower": (3000, 2800)}
-
-
 def inventory_brocade_fan(info):
     converted = brocade_sensor_convert(info, "FAN")
-    return [(x[0], brocade_fan_default_levels) for x in converted]
+    return [(x[0], {}) for x in converted]
 
 
 def check_brocade_fan(item, params, info):
@@ -70,6 +74,7 @@ check_info["brocade.fan"] = LegacyCheckDefinition(
     discovery_function=inventory_brocade_fan,
     check_function=check_brocade_fan,
     check_ruleset_name="hw_fans",
+    check_default_parameters={"lower": (3000, 2800)},
 )
 
 

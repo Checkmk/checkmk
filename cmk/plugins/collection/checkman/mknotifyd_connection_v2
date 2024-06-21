@@ -1,0 +1,18 @@
+title: Checkmk Notification Spooler: Connection
+agents: linux
+catalog: app/cmk
+license: GPLv2
+distribution: check_mk
+description:
+ This check checks the status of indiviual TCP connections from a
+ Checkmk Notification Spooler to a remote spooler. For each incoming
+ and outoing TCP connection one service will be created. The state goes
+ critical if the connection is not up.
+
+item:
+ The name of the site followed by a dash followed by the name of the
+ connected remote site. If more than one incoming connections exist
+ from the same remote host then an index will be appended.
+
+discovery:
+ One sevice is created for each site and connection.

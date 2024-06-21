@@ -1,4 +1,4 @@
-Title: <tt>hr_fs</tt>: Don't Discover Services without Mount Information
+Title: hr_fs: Don't Discover Services without Mount Information
 Class: fix
 Compatible: incomp
 Component: checks

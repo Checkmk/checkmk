@@ -97,15 +97,14 @@ def parse_emcvnx_mirrorview(string_table):
 
             if line[0] == "Images":
                 instance.setdefault("Images", {})
-            else:
-                if "Images" in instance:
-                    if line[0] == "Image UID":
-                        image_uid = lun_value
-                        instance["Images"].setdefault(image_uid, {})
-                    else:
-                        instance["Images"][image_uid][line[0]] = lun_value
+            elif "Images" in instance:
+                if line[0] == "Image UID":
+                    image_uid = lun_value
+                    instance["Images"].setdefault(image_uid, {})
                 else:
-                    instance[line[0]] = lun_value
+                    instance["Images"][image_uid][line[0]] = lun_value
+            else:
+                instance[line[0]] = lun_value
     return parsed
 
 

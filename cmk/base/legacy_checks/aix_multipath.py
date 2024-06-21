@@ -16,6 +16,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_aix_multipath(info):
     disks = {}
@@ -59,7 +61,12 @@ def check_aix_multipath(item, params, info):
     return (state, ", ".join(message))
 
 
+def parse_aix_multipath(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["aix_multipath"] = LegacyCheckDefinition(
+    parse_function=parse_aix_multipath,
     service_name="Multipath %s",
     discovery_function=inventory_aix_multipath,
     check_function=check_aix_multipath,

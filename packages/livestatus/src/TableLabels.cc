@@ -17,9 +17,9 @@
 #include "livestatus/StringColumn.h"
 #include "livestatus/User.h"
 
-TableLabels::TableLabels(ICore *mc) : Table(mc) {
-    addColumns(this, "", ColumnOffsets{});
-}
+using row_type = Attribute;
+
+TableLabels::TableLabels() { addColumns(this, "", ColumnOffsets{}); }
 
 std::string TableLabels::name() const { return "labels"; }
 
@@ -28,15 +28,16 @@ std::string TableLabels::namePrefix() const { return "label_"; }
 // static
 void TableLabels::addColumns(Table *table, const std::string &prefix,
                              const ColumnOffsets &offsets) {
-    table->addColumn(std::make_unique<StringColumn<Attribute>>(
+    table->addColumn(std::make_unique<StringColumn<row_type>>(
         prefix + "name", "The name of the label", offsets,
-        [](const Attribute &r) { return r.name; }));
-    table->addColumn(std::make_unique<StringColumn<Attribute>>(
+        [](const row_type &row) { return row.name; }));
+    table->addColumn(std::make_unique<StringColumn<row_type>>(
         prefix + "value", "The value of the label", offsets,
-        [](const Attribute &r) { return r.value; }));
+        [](const row_type &row) { return row.value; }));
 }
 
-void TableLabels::answerQuery(Query &query, const User &user) {
+void TableLabels::answerQuery(Query &query, const User &user,
+                              const ICore &core) {
     // NOTE: Due to the lack of data from real sites, we use a very simple and
     // straightforward algorithm below: We just iterate through all hosts,
     // services, and contacts, filtering out unauthorized entities on the way.
@@ -51,10 +52,10 @@ void TableLabels::answerQuery(Query &query, const User &user) {
     // improvement, because there is no data about the number of different
     // labels, hosts, etc. Building such a collection upfront could slow down
     // the startup and need tons of memory. Or perhaps not. ;-)
-    std::unordered_set<Attribute> emitted;
-    auto processLabel = [&query, &emitted](const Attribute &r) {
-        const auto &[it, insertion_happened] = emitted.insert(r);
-        return !insertion_happened || query.processDataset(Row{&r});
+    std::unordered_set<row_type> emitted;
+    auto processLabel = [&query, &emitted](const row_type &row) {
+        const auto &[it, insertion_happened] = emitted.insert(row);
+        return !insertion_happened || query.processDataset(Row{&row});
     };
 
     auto processHost = [&processLabel, &user](const IHost &host) {
@@ -76,6 +77,6 @@ void TableLabels::answerQuery(Query &query, const User &user) {
         return contact.all_of_labels(processLabel);
     };
 
-    core()->all_of_hosts(processHostAndServices) &&
-        core()->all_of_contacts(processContact);
+    core.all_of_hosts(processHostAndServices) &&
+        core.all_of_contacts(processContact);
 }

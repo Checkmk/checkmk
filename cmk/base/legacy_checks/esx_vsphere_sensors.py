@@ -17,6 +17,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_esx_vsphere_sensors(info):
     yield None, {}
@@ -55,7 +57,12 @@ def check_esx_vsphere_sensors(_no_item, params, info):
     yield 0, "\n".join(mulitline)
 
 
+def parse_esx_vsphere_sensors(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["esx_vsphere_sensors"] = LegacyCheckDefinition(
+    parse_function=parse_esx_vsphere_sensors,
     service_name="Hardware Sensors",
     discovery_function=inventory_esx_vsphere_sensors,
     check_function=check_esx_vsphere_sensors,

@@ -8,12 +8,13 @@ from cmk.base.check_legacy_includes.didactum import (
     check_didactum_sensors_humidity,
     check_didactum_sensors_temp,
     check_didactum_sensors_voltage,
-    inventory_didactum_sensors,
+    discover_didactum_sensors,
     parse_didactum_sensors,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.didactum import DETECT_DIDACTUM
+
+from cmk.agent_based.v2 import SNMPTree
+from cmk.plugins.lib.didactum import DETECT_DIDACTUM
 
 # .1.3.6.1.4.1.46501.5.2.1.5.201001 Onboard Temperature --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogName.201001
 # .1.3.6.1.4.1.46501.5.2.1.5.201002 Analog-1 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogName.201002
@@ -57,7 +58,7 @@ from cmk.base.plugins.agent_based.utils.didactum import DETECT_DIDACTUM
 
 
 def inventory_didactum_sensors_analog_temp(parsed):
-    return inventory_didactum_sensors(parsed, "temperature")
+    return discover_didactum_sensors(parsed, "temperature")
 
 
 check_info["didactum_sensors_analog"] = LegacyCheckDefinition(
@@ -85,7 +86,7 @@ check_info["didactum_sensors_analog"] = LegacyCheckDefinition(
 
 
 def inventory_didactum_sensors_analog_humid(parsed):
-    return inventory_didactum_sensors(parsed, "humidity")
+    return discover_didactum_sensors(parsed, "humidity")
 
 
 check_info["didactum_sensors_analog.humidity"] = LegacyCheckDefinition(
@@ -108,7 +109,7 @@ check_info["didactum_sensors_analog.humidity"] = LegacyCheckDefinition(
 
 
 def inventory_didactum_sensors_analog_volt(parsed):
-    return inventory_didactum_sensors(parsed, "voltage")
+    return discover_didactum_sensors(parsed, "voltage")
 
 
 check_info["didactum_sensors_analog.voltage"] = LegacyCheckDefinition(

@@ -1,0 +1,15 @@
+title: Checkmk: State of BI Aggregation
+agents: BI
+catalog: app/cmk
+license: GPLv2
+distribution: check_mk
+description:
+ This check outputs the state of a BI aggregation.
+ The plug-in output also shows, if the aggregation is currently
+ in downtime or has been acknowledged.
+
+item:
+ The name of the aggregation.
+
+discovery:
+ One service is created for each BI aggregation

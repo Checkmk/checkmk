@@ -10,6 +10,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_dmi_sysinfo(info):
     if len(info) > 0 and info[0] == ["System", "Information"]:
@@ -39,7 +41,12 @@ def check_dmi_sysinfo(item, param, info):
     )
 
 
+def parse_dmi_sysinfo(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dmi_sysinfo"] = LegacyCheckDefinition(
+    parse_function=parse_dmi_sysinfo,
     service_name="DMI Sysinfo",
     discovery_function=inventory_dmi_sysinfo,
     check_function=check_dmi_sysinfo,

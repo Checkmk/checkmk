@@ -51,6 +51,6 @@ check_info["mssql_connections"] = LegacyCheckDefinition(
     check_function=check_mssql_connections,
     check_ruleset_name="mssql_connections",
     check_default_parameters={
-        "levels": (None, None),
+        "levels": None,
     },
 )

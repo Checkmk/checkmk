@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 threads_default_levels = {"levels": ("levels", (2000, 4000))}
 
@@ -31,7 +32,12 @@ def check_bluecat_threads(item, params, info):
     return 0, "%d threads" % (nthreads,), perfdata
 
 
+def parse_bluecat_threads(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["bluecat_threads"] = LegacyCheckDefinition(
+    parse_function=parse_bluecat_threads,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315.100.200"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.100.200.1.1.2",

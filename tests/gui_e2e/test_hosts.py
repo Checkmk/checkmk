@@ -3,87 +3,67 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+from collections.abc import Iterator
+from urllib.parse import quote_plus
+
+import pytest
 from faker import Faker
+from playwright.sync_api import expect
 
-from tests.testlib.playwright.helpers import PPage
-
-
-class TestHost:
-    def __init__(self) -> None:
-        self.name: str = f"test_host_{Faker().first_name()}"
-        self.ip: str = "127.0.0.1"
+from tests.testlib.playwright.pom.login import LoginPage
+from tests.testlib.playwright.pom.setup.hosts import HostDetails, HostProperties
 
 
-class TestHosts:
-    def test_create_and_delete_a_host(self, logged_in_page: PPage, is_chromium: bool) -> None:
-        """Creates a host and deletes it afterwards. Calling order of static methods
-        is therefore essential!
-        """
-        host = TestHost()
-        self._create_host(logged_in_page, host)
+@pytest.fixture(name="host")
+def fixture_host(logged_in_page: LoginPage) -> Iterator[HostProperties]:
+    _host = HostProperties(
+        logged_in_page.page,
+        HostDetails(name=f"test_host_{Faker().first_name()}", ip="127.0.0.1"),
+    )
+    yield _host
+    _host.navigate()
+    _host.delete_host()
 
-        logged_in_page.goto_monitoring_all_hosts()
-        logged_in_page.select_host(host.name)
 
-        self._delete_host(logged_in_page, host)
+def test_navigate_to_host_properties(host: HostProperties) -> None:
+    # - sanity checks
+    for link in HostProperties.dropdown_buttons + HostProperties.links + HostProperties.properties:
+        locator = host.main_area.get_text(text=link, first=False)
+        expect(locator).to_have_count(1)
 
-    def test_reschedule(self, logged_in_page: PPage, is_chromium: bool) -> None:
-        """reschedules a check"""
-        host = TestHost()
-        self._create_host(logged_in_page, host)
+    # - check absence of errors and warnings
+    expect(host.main_area.locator("div.error")).to_have_count(0)
+    expect(host.main_area.locator("div.warning")).to_have_count(0)
 
-        logged_in_page.goto_monitoring_all_hosts()
-        logged_in_page.select_host(host.name)
 
-        # Use the Check_MK Service. It is always there and the first.
-        # There are two Services containing "Check_MK", using the first
-        logged_in_page.main_area.locator(
-            "tr.data:has-text('Check_MK') >> nth=0 >> img[title='Open the action menu']"
-        ).click()
-        logged_in_page.main_area.locator("div#popup_menu >> a:has-text('Reschedule check')").click()
-        # In case of a success the page is reloaded, therefore the div is hidden,
-        # otherwise the div stays open...
-        logged_in_page.main_area.locator("div#popup_menu").wait_for(state="hidden")
+def test_create_and_delete_a_host(logged_in_page: LoginPage) -> None:
+    """Validate creation and deletes of a host."""
+    # create Host
+    host = HostProperties(
+        logged_in_page.page,
+        host=HostDetails(name=f"test_host_{Faker().first_name()}", ip="127.0.0.1"),
+    )
+    # validate
+    host.main_menu.monitor_all_hosts.click()
+    host.page.wait_for_url(url=re.compile(quote_plus("view_name=allhost")), wait_until="load")
+    host.select_host(host.details.name)
+    # Cleanup: delete host
+    host.navigate()
+    host.delete_host()
 
-        self._delete_host(logged_in_page, host)
 
-    @staticmethod
-    def _create_host(logged_in_page: PPage, host: TestHost) -> None:
-        """Creates a host by starting from a logged in page."""
-        logged_in_page.goto_setup_hosts()
-        logged_in_page.main_area.get_suggestion("Add host").click()
+def test_reschedule(host: HostProperties) -> None:
+    """reschedules a check"""
+    host.main_menu.monitor_all_hosts.click()
+    host.select_host(host.details.name)
 
-        logged_in_page.main_area.get_input("host").fill(host.name)
-        logged_in_page.main_area.get_attribute_label("ipaddress").click()
-        logged_in_page.main_area.get_input("ipaddress").fill(host.ip)
-
-        logged_in_page.main_area.get_suggestion("Save & run service discovery").click()
-        logged_in_page.main_area.get_element_including_texts(
-            element_id="changes_info", texts=["1", "change"]
-        ).click()
-
-        logged_in_page.activate_selected()
-        logged_in_page.expect_success_state()
-
-    @staticmethod
-    def _delete_host(logged_in_page: PPage, host: TestHost) -> None:
-        """Deletes the former created host by starting from a logged in page."""
-        logged_in_page.goto_setup_hosts()
-
-        # click on "delete host" for the given hostname via xpath selector
-        logged_in_page.main_area.locator(
-            f"div#popup_trigger_host_action_menu_{host.name} >> a,popup_trigger"
-        ).click()
-        logged_in_page.main_area.locator(
-            f"div#popup_trigger_host_action_menu_{host.name} >> div#popup_menu"
-        ).wait_for()
-
-        logged_in_page.main_area.get_text("Delete host").click()
-        logged_in_page.main_area.locator_via_xpath("button", "Remove").click()
-
-        logged_in_page.main_area.get_element_including_texts(
-            element_id="changes_info", texts=["1", "change"]
-        ).click()
-
-        logged_in_page.activate_selected()
-        logged_in_page.expect_success_state()
+    # Use the Check_MK Service. It is always there and the first.
+    # There are two Services containing "Check_MK", using the first
+    host.main_area.locator(
+        "tr.data:has-text('Check_MK') >> nth=0 >> img[title='Open the action menu']"
+    ).click()
+    host.main_area.locator("div#popup_menu >> a:has-text('Reschedule check')").click()
+    # In case of a success the page is reloaded, therefore the div is hidden,
+    # otherwise the div stays open...
+    host.main_area.locator("div#popup_menu").wait_for(state="hidden")

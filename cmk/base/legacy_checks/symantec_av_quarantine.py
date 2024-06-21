@@ -10,6 +10,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_symantec_av_quarantine(info):
     return [(None, None)]
@@ -22,7 +24,12 @@ def check_symantec_av_quarantine(_no_item, _no_params, info):
     return 0, "No objects in quarantine", perf
 
 
+def parse_symantec_av_quarantine(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["symantec_av_quarantine"] = LegacyCheckDefinition(
+    parse_function=parse_symantec_av_quarantine,
     service_name="AV Quarantine",
     discovery_function=inventory_symantec_av_quarantine,
     check_function=check_symantec_av_quarantine,

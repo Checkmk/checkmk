@@ -6,27 +6,19 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, OIDEnd, SNMPTree
 
-arris_cmts_cpu_default_levels = (90, 95)
+from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree, StringTable
 
 
 def inventory_arris_cmts_cpu(info):
     for oid_id, cpu_id, _cpu_idle_util in info:
         # Sadly the cpu_id seams empty. Referring to
         # the MIB, its slot id
-        if cpu_id:
-            yield cpu_id, arris_cmts_cpu_default_levels
-        else:
-            # Fallback to the oid end
-            item = str(int(oid_id) - 1)
-            yield item, arris_cmts_cpu_default_levels
+        # Fallback to the oid end
+        yield cpu_id or str(int(oid_id) - 1), {}
 
 
 def check_arris_cmts_cpu(item, params, info):
-    if isinstance(params, tuple):
-        params = {"levels": params}
-
     for oid_id, cpu_id, cpu_idle_util in info:
         # see inventory function
         if cpu_id:
@@ -51,7 +43,12 @@ def check_arris_cmts_cpu(item, params, info):
             return
 
 
+def parse_arris_cmts_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["arris_cmts_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_arris_cmts_cpu,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4998.1.1.5.3.1.1.1",
@@ -61,4 +58,5 @@ check_info["arris_cmts_cpu"] = LegacyCheckDefinition(
     discovery_function=inventory_arris_cmts_cpu,
     check_function=check_arris_cmts_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
+    check_default_parameters={"levels": (90.0, 95.0)},
 )

@@ -25,6 +25,7 @@ def test_perl_modules(site: Site) -> None:
         "Math::Calc::Units",
         "Config::Tiny",
         "Class::Accessor",
+        "RRDs",
     ]
 
     for module in test_modules:

@@ -10,7 +10,10 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.gui import sites
 
 
-def test_intercept_queries(mock_livestatus: MockLiveStatusConnection) -> None:
+def test_intercept_queries(
+    mock_livestatus: MockLiveStatusConnection,
+    request_context: None,
+) -> None:
     with mock_livestatus(expect_status_query=True):
         live = sites.live()
 

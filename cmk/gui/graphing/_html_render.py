@@ -7,7 +7,7 @@ import copy
 import json
 import time
 import traceback
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -16,6 +16,7 @@ from livestatus import MKLivestatusNotFoundError, SiteId
 import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.config import active_config
@@ -26,9 +27,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import GraphRenderOptions, SizePT
+from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -47,16 +49,9 @@ from ._artwork import (
     save_graph_pin,
 )
 from ._color import render_color_icon
-from ._graph_render_config import GraphRenderConfig, GraphRenderConfigBase
-from ._graph_specification import (
-    CombinedSingleMetricSpec,
-    GraphDataRange,
-    GraphMetric,
-    GraphRecipe,
-    GraphSpecification,
-)
+from ._graph_render_config import GraphRenderConfig, GraphRenderConfigBase, GraphTitleFormat
+from ._graph_specification import GraphDataRange, GraphRecipe, GraphSpecification
 from ._utils import SizeEx
-from ._valuespecs import migrate_graph_render_options_title_format
 
 RenderOutput = HTML | str
 
@@ -93,22 +88,17 @@ def host_service_graph_popup_cmk(
     site: SiteId | None,
     host_name: HostName,
     service_description: ServiceName,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
 ) -> None:
-    graph_render_config = GraphRenderConfig.from_render_options_and_context(
-        GraphRenderOptions(
-            size=(30, 10),
-            font_size=SizePT(6.0),
-            resizable=False,
-            show_controls=False,
-            show_legend=False,
-            interaction=False,
-            show_time_range_previews=False,
-        ),
+    graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
         theme.get(),
+        size=(30, 10),
+        font_size=SizePT(6.0),
+        resizable=False,
+        show_controls=False,
+        show_legend=False,
+        interaction=False,
+        show_time_range_previews=False,
     )
 
     graph_data_range = make_graph_data_range(
@@ -125,7 +115,6 @@ def host_service_graph_popup_cmk(
             ),
             graph_data_range,
             graph_render_config,
-            resolve_combined_single_metric_spec,
             render_async=False,
         )
     )
@@ -171,14 +160,14 @@ def _render_graph_html(
 ) -> HTML:
     with output_funnel.plugged():
         _show_graph_html_content(graph_artwork, graph_data_range, graph_render_config)
-        html_code = HTML(output_funnel.drain())
+        html_code = HTML.without_escaping(output_funnel.drain())
 
     return HTMLWriter.render_javascript(
         "cmk.graphs.create_graph(%s, %s, %s, %s);"
         % (
             json.dumps(html_code),
-            graph_artwork.json(),
-            graph_render_config.model_dump_json(),
+            json.dumps(graph_artwork.model_dump()),
+            json.dumps(graph_render_config.model_dump()),
             json.dumps(_graph_ajax_context(graph_artwork, graph_data_range, graph_render_config)),
         )
     )
@@ -194,7 +183,7 @@ def _graph_ajax_context(
     graph_render_config: GraphRenderConfig,
 ) -> dict[str, Any]:
     return {
-        "definition": graph_artwork.definition.dict(),
+        "definition": graph_artwork.definition.model_dump(),
         "data_range": graph_data_range.model_dump(),
         "render_config": graph_render_config.model_dump(),
         "display_id": graph_artwork.display_id,
@@ -228,9 +217,7 @@ def _render_graph_title_elements(
 
     title_elements: list[tuple[str, str | None]] = []
 
-    title_format = migrate_graph_render_options_title_format(graph_render_config.title_format)
-
-    if "plain" in title_format and graph_artwork.title:
+    if graph_render_config.title_format.plain and graph_artwork.title:
         title_elements.append((graph_artwork.title, None))
 
     # Only add host/service information for template based graphs
@@ -238,15 +225,15 @@ def _render_graph_title_elements(
     if not isinstance(specification, TemplateGraphSpecification):
         return title_elements
 
-    title_elements.extend(_title_info_elements(specification, title_format))
+    title_elements.extend(_title_info_elements(specification, graph_render_config.title_format))
 
     return title_elements
 
 
 def _title_info_elements(
-    spec_info: TemplateGraphSpecification, title_format: Sequence[str]
+    spec_info: TemplateGraphSpecification, title_format: GraphTitleFormat
 ) -> Iterable[tuple[str, str]]:
-    if "add_host_name" in title_format:
+    if title_format.add_host_name:
         host_url = makeuri_contextless(
             request,
             [("view_name", "hoststatus"), ("host", spec_info.host_name)],
@@ -254,7 +241,7 @@ def _title_info_elements(
         )
         yield spec_info.host_name, host_url
 
-    if "add_host_alias" in title_format:
+    if title_format.add_host_alias:
         host_alias = get_alias_of_host(spec_info.site, spec_info.host_name)
         host_url = makeuri_contextless(
             request,
@@ -263,7 +250,7 @@ def _title_info_elements(
         )
         yield host_alias, host_url
 
-    if "add_service_description" in title_format:
+    if title_format.add_service_description:
         service_description = spec_info.service_description
         if service_description != "_HOST_":
             service_url = makeuri_contextless(
@@ -287,7 +274,7 @@ def _show_html_graph_title(
             graph_render_config,
             explicit_title=graph_render_config.explicit_title,
         ),
-        separator=" / ",
+        separator=HTML.without_escaping(" / "),
     )
     if not title:
         return
@@ -349,7 +336,7 @@ def _show_graph_html_content(
     if additional_html := graph_artwork.definition.additional_html:
         html.open_div(align="center")
         html.h2(additional_html.title)
-        html.write_html(HTML(additional_html.html))
+        html.write_html(HTML.without_escaping(additional_html.html))
         html.close_div()
 
     html.close_div()
@@ -360,7 +347,7 @@ def _show_graph_add_to_icon_for_popup(
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
 ) -> None:
-    icon_html = html.render_icon("menu", _("Add this graph to..."))
+    icon_html = html.render_icon("menu", _("Add to ..."))
     element_type_name = "pnpgraph"
 
     # Data will be transferred via URL and Javascript magic eventually
@@ -497,7 +484,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
         html.open_tr()
         html.open_td(style=font_size_style)
         html.write_html(render_color_icon(curve["color"]))
-        html.write_text(curve["title"])
+        html.write_text_permissive(curve["title"])
         html.close_td()
 
         for scalar, title, inactive in scalars:
@@ -515,16 +502,21 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
     # Render scalar values
     if graph_artwork.horizontal_rules:
         first = True
-        for _value, readable, color, rule_title in graph_artwork.horizontal_rules:
+        for horizontal_rule in graph_artwork.horizontal_rules:
             html.open_tr(class_=["scalar"] + (["first"] if first else []))
             html.open_td(style=font_size_style)
-            html.write_html(render_color_icon(color))
-            html.write_text(str(rule_title))
+            html.write_html(render_color_icon(horizontal_rule.color))
+            html.write_text_permissive(str(horizontal_rule.title))
             html.close_td()
 
             # A colspan of 5 has to be used here, since the pin that is added by a click into
             # the graph introduces a new column.
-            html.td(readable, colspan=5, class_="scalar", style=font_size_style)
+            html.td(
+                horizontal_rule.rendered_value,
+                colspan=5,
+                class_="scalar",
+                style=font_size_style,
+            )
             html.close_tr()
             first = False
 
@@ -575,31 +567,33 @@ def _graph_margin_ex(
     )
 
 
-def ajax_graph(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
-    """Registered as `ajax_graph`."""
-    response.set_content_type("application/json")
-    try:
-        context_var = request.get_str_input_mandatory("context")
-        context = json.loads(context_var)
-        response_data = _render_ajax_graph(context, resolve_combined_single_metric_spec)
-        response.set_data(json.dumps(response_data))
-    except Exception as e:
-        logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
-        if active_config.debug:
-            raise
-        response.set_data("ERROR: %s" % e)
+# NOTE
+# No AjaxPage, as ajax-pages have a {"result_code": [1|0], "result": ..., ...} result structure,
+# while these functions do not have that. In order to preserve the functionality of the JS side
+# of things, we keep it.
+# TODO: Migrate this to a real AjaxPage
+class AjaxGraph(cmk.gui.pages.Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "ajax_graph"
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        """Registered as `ajax_graph`."""
+        response.set_content_type("application/json")
+        try:
+            context_var = request.get_str_input_mandatory("context")
+            context = json.loads(context_var)
+            response_data = _render_ajax_graph(context)
+            response.set_data(json.dumps(response_data))
+        except Exception as e:
+            logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
+            if active_config.debug:
+                raise
+            response.set_data("ERROR: %s" % e)
+        return None
 
 
-def _render_ajax_graph(
-    context: Mapping[str, Any],
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> dict[str, Any]:
+def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_render_config = GraphRenderConfig.model_validate(context["render_config"])
     graph_recipe = GraphRecipe.model_validate(context["definition"])
@@ -637,7 +631,7 @@ def _render_ajax_graph(
         save_graph_pin()
 
     if request.has_var("consolidation_function"):
-        graph_recipe = graph_recipe.copy(
+        graph_recipe = graph_recipe.model_copy(
             update={"consolidation_function": request.var("consolidation_function")}
         )
 
@@ -647,61 +641,65 @@ def _render_ajax_graph(
         step=step,
     )
 
-    # Persist the current data range for the graph editor
-    if graph_render_config.editing:
-        _save_user_graph_data_range(graph_data_range)
+    # Persist the current data range for the graph editor.
+    if graph_render_config.editing and (
+        specification_id := context.get("definition", {}).get("specification", {}).get("id")
+    ):
+        UserGraphDataRangeStore(user).save(specification_id, graph_data_range)
 
     graph_artwork = compute_graph_artwork(
         graph_recipe,
         graph_data_range,
         graph_render_config.size,
-        resolve_combined_single_metric_spec,
     )
 
     with output_funnel.plugged():
         _show_graph_html_content(graph_artwork, graph_data_range, graph_render_config)
-        html_code = HTML(output_funnel.drain())
+        html_code = HTML.without_escaping(output_funnel.drain())
 
     return {
         "html": html_code,
-        "graph": graph_artwork.dict(),
+        "graph": graph_artwork.model_dump(),
         "context": {
             "graph_id": context["graph_id"],
-            "definition": graph_recipe.dict(),
+            "definition": graph_recipe.model_dump(),
             "data_range": graph_data_range.model_dump(),
             "render_config": graph_render_config.model_dump(),
         },
     }
 
 
-def load_user_graph_data_range() -> GraphDataRange:
-    return (
-        GraphDataRange.model_validate(raw_range)
-        if (
-            raw_range := user.load_file(
-                "graph_range",
-                None,
+def _user_graph_data_range_file_name(custom_graph_id: str) -> str:
+    return f"graph_range_{custom_graph_id}"
+
+
+class UserGraphDataRangeStore:
+    def __init__(self, user_: LoggedInUser) -> None:
+        self.user = user_
+
+    def save(self, custom_graph_id: str, graph_data_range: GraphDataRange) -> None:
+        self.user.save_file(
+            _user_graph_data_range_file_name(custom_graph_id),
+            graph_data_range.model_dump(),
+        )
+
+    def load(self, custom_graph_id: str) -> GraphDataRange | None:
+        return (
+            GraphDataRange.model_validate(raw_range)
+            if (
+                raw_range := self.user.load_file(
+                    _user_graph_data_range_file_name(custom_graph_id), None
+                )
             )
+            else None
         )
-        else GraphDataRange(
-            time_range=(int(time.time() - 86400), int(time.time())),
-            step="86400:80000",
-        )
-    )
 
-
-def _save_user_graph_data_range(graph_data_range: GraphDataRange) -> None:
-    user.save_file("graph_range", graph_data_range.model_dump())
-
-
-def forget_manual_vertical_zoom() -> None:
-    user_range = load_user_graph_data_range()
-    _save_user_graph_data_range(
-        GraphDataRange(
-            time_range=user_range.time_range,
-            step=user_range.step,
-        )
-    )
+    def remove(self, custom_graph_id: str) -> None:
+        (
+            profile_dir
+            / self.user.ident
+            / f"{_user_graph_data_range_file_name(custom_graph_id)}.mk"
+        ).unlink(missing_ok=True)
 
 
 def _resolve_graph_recipe_with_error_handling(
@@ -727,9 +725,6 @@ def render_graphs_from_specification_html(
     graph_specification: GraphSpecification,
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
     *,
     render_async: bool = True,
     graph_display_id: str = "",
@@ -742,7 +737,6 @@ def render_graphs_from_specification_html(
         graph_recipes,
         graph_data_range,
         graph_render_config,
-        resolve_combined_single_metric_spec,
         render_async=render_async,
         graph_display_id=graph_display_id,
     )
@@ -752,14 +746,11 @@ def _render_graphs_from_definitions(
     graph_recipes: Sequence[GraphRecipe],
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
     *,
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
-    output = HTML()
+    output = HTML.empty()
     for graph_recipe in graph_recipes:
         recipe_specific_render_config = graph_render_config.model_copy(
             update=dict(graph_recipe.render_options)
@@ -780,7 +771,6 @@ def _render_graphs_from_definitions(
                 graph_recipe,
                 recipe_specific_data_range,
                 recipe_specific_render_config,
-                resolve_combined_single_metric_spec,
                 graph_display_id=graph_display_id,
             )
     return output
@@ -812,9 +802,9 @@ def _render_graph_container_html(
     output += HTMLWriter.render_javascript(
         "cmk.graphs.load_graph_content(%s, %s, %s, %s)"
         % (
-            graph_recipe.json(),
-            graph_data_range.model_dump_json(),
-            graph_render_config.model_dump_json(),
+            json.dumps(graph_recipe.model_dump()),
+            json.dumps(graph_data_range.model_dump()),
+            json.dumps(graph_render_config.model_dump()),
             json.dumps(graph_display_id),
         )
     )
@@ -825,54 +815,37 @@ def _render_graph_container_html(
     return output
 
 
-# Called from javascript code via JSON to initially render a graph
-def ajax_render_graph_content(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
-    """Registered as `ajax_render_graph_content`."""
-    response.set_content_type("application/json")
-    try:
-        api_request = request.get_request()
-        resp = {
-            "result_code": 0,
-            "result": _render_graph_content_html(
-                GraphRecipe.model_validate(api_request["graph_recipe"]),
-                GraphDataRange.model_validate(api_request["graph_data_range"]),
-                GraphRenderConfig.model_validate(api_request["graph_render_config"]),
-                resolve_combined_single_metric_spec,
-                graph_display_id=api_request["graph_display_id"],
-            ),
-        }
-    except Exception:
-        logger.exception("could not render graph")
-        resp = {
-            "result_code": 1,
-            "result": _("Unhandled exception: %s") % traceback.format_exc(),
-        }
+class AjaxRenderGraphContent(AjaxPage):
+    @classmethod
+    def ident(cls) -> str:
+        return "ajax_render_graph_content"
 
-    response.set_data(json.dumps(resp))
+    def page(self) -> PageResult:
+        # Called from javascript code via JSON to initially render a graph
+        """Registered as `ajax_render_graph_content`."""
+        api_request = request.get_request()
+        return _render_graph_content_html(
+            GraphRecipe.model_validate(api_request["graph_recipe"]),
+            GraphDataRange.model_validate(api_request["graph_data_range"]),
+            GraphRenderConfig.model_validate(api_request["graph_render_config"]),
+            graph_display_id=api_request["graph_display_id"],
+        )
 
 
 def _render_graph_content_html(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
     *,
     graph_display_id: str = "",
 ) -> HTML:
-    output = HTML()
+    output = HTML.empty()
 
     try:
         graph_artwork = compute_graph_artwork(
             graph_recipe,
             graph_data_range,
             graph_render_config.size,
-            resolve_combined_single_metric_spec,
             graph_display_id=graph_display_id,
         )
         main_graph_html = _render_graph_or_error_html(
@@ -885,7 +858,6 @@ def _render_graph_content_html(
                 + _render_time_range_selection(
                     graph_recipe,
                     graph_render_config,
-                    resolve_combined_single_metric_spec,
                     graph_display_id=graph_display_id,
                 ),
                 class_="graph_with_timeranges",
@@ -908,9 +880,6 @@ def _render_graph_content_html(
 def _render_time_range_selection(
     graph_recipe: GraphRecipe,
     graph_render_config: GraphRenderConfig,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
     *,
     graph_display_id: str,
 ) -> HTML:
@@ -944,17 +913,16 @@ def _render_time_range_selection(
             graph_recipe,
             graph_data_range,
             graph_render_config.size,
-            resolve_combined_single_metric_spec,
             graph_display_id=graph_display_id,
         )
         rows.append(
             HTMLWriter.render_td(
                 _render_graph_html(graph_artwork, graph_data_range, graph_render_config),
-                title=_("Change graph timerange to: %s") % timerange_attrs["title"],
+                title=_("Change graph time range to: %s") % timerange_attrs["title"],
             )
         )
     return HTMLWriter.render_table(
-        HTML().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
+        HTML.empty().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
     )
 
 
@@ -991,43 +959,41 @@ def estimate_graph_step_for_html(
 #   '----------------------------------------------------------------------'
 
 
-def ajax_graph_hover(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
-    """Registered as `ajax_graph_hover`."""
-    response.set_content_type("application/json")
-    try:
-        context_var = request.get_str_input_mandatory("context")
-        context = json.loads(context_var)
-        hover_time = request.get_integer_input_mandatory("hover_time")
-        response_data = __render_ajax_graph_hover(
-            context, hover_time, resolve_combined_single_metric_spec
-        )
-        response.set_data(json.dumps(response_data))
-    except Exception as e:
-        logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
-        if active_config.debug:
-            raise
-        response.set_data("ERROR: %s" % e)
+# NOTE
+# No AjaxPage, as ajax-pages have a {"result_code": [1|0], "result": ..., ...} result structure,
+# while these functions do not have that. In order to preserve the functionality of the JS side
+# of things, we keep it.
+# TODO: Migrate this to a real AjaxPage
+class AjaxGraphHover(cmk.gui.pages.Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "ajax_graph_hover"
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        """Registered as `ajax_graph_hover`."""
+        response.set_content_type("application/json")
+        try:
+            context_var = request.get_str_input_mandatory("context")
+            context = json.loads(context_var)
+            hover_time = request.get_integer_input_mandatory("hover_time")
+            response_data = _render_ajax_graph_hover(context, hover_time)
+            response.set_data(json.dumps(response_data))
+        except Exception as e:
+            logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
+            if active_config.debug:
+                raise
+            response.set_data("ERROR: %s" % e)
+        return None
 
 
-def __render_ajax_graph_hover(
+def _render_ajax_graph_hover(
     context: Mapping[str, Any],
     hover_time: int,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
 ) -> dict[str, object]:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_recipe = GraphRecipe.model_validate(context["definition"])
 
-    curves = compute_graph_artwork_curves(
-        graph_recipe,
-        graph_data_range,
-        resolve_combined_single_metric_spec,
-    )
+    curves = compute_graph_artwork_curves(graph_recipe, graph_data_range)
 
     return {
         "rendered_hover_time": cmk.utils.render.date_and_time(hover_time),
@@ -1091,19 +1057,10 @@ def _graph_title_height_ex(config: GraphRenderConfig) -> SizeEx:
 
 def host_service_graph_dashlet_cmk(
     graph_specification: GraphSpecification,
-    graph_render_options: GraphRenderOptions,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
+    graph_render_config: GraphRenderConfig,
     *,
     graph_display_id: str = "",
 ) -> HTML | None:
-    graph_render_config = GraphRenderConfig.from_render_options_and_context(
-        graph_render_options,
-        user,
-        theme.get(),
-    )
-
     width_var = request.get_float_input_mandatory("width", 0.0)
     width = int(width_var / html_size_per_ex)
 
@@ -1148,7 +1105,6 @@ def host_service_graph_dashlet_cmk(
             graph_recipe,
             graph_data_range,
             graph_render_config.size,
-            resolve_combined_single_metric_spec,
         )
         if graph_artwork.curves:
             legend_height = _graph_legend_height_ex(
@@ -1161,7 +1117,6 @@ def host_service_graph_dashlet_cmk(
         [graph_recipe],
         graph_data_range,
         graph_render_config,
-        resolve_combined_single_metric_spec,
         render_async=False,
         graph_display_id=graph_display_id,
     )

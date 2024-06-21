@@ -154,8 +154,8 @@ class ConfigVariableNotificationPluginTimeout(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Age(
-            title=_("Notification plugin timeout"),
-            help=_("After the configured time notification plugins are being interrupted."),
+            title=_("Notification plug-in timeout"),
+            help=_("After the configured time notification plug-ins are being interrupted."),
             minvalue=1,
         )
 
@@ -201,7 +201,7 @@ class ConfigVariableFailedNotificationHorizon(ConfigVariable):
         return Age(
             title=_("Failed notification horizon"),
             help=_(
-                "The tactical overview snapin is reporing about notifications that could not be sent "
+                "The tactical overview snap-in is reporing about notifications that could not be sent "
                 'by Checkmk. Users with the permission "See failed Notifications (all)" get the number '
                 "of failed notification within the configured horizon."
             ),

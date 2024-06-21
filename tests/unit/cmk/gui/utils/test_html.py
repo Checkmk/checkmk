@@ -3,126 +3,91 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-
 import pytest
 
 from cmk.gui.utils.html import HTML
 
 
+def test_HTML_value() -> None:
+    """test that strings and HTML inputs work and others not"""
+    with pytest.raises(TypeError):
+        HTML(42, escape=False)  # type: ignore[arg-type]
+
+    assert str(HTML("42", escape=False)) == "42"
+    assert str(HTML(HTML("42", escape=False), escape=False)) == "42"
+    assert isinstance("%s" % HTML("42", escape=False), str)
+
+
 @pytest.mark.parametrize(
     "value",
-    [
-        "",
-        "one",
-        "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ",
-    ],
+    ("a",),
 )
-def test_class_HTML_value(value: str) -> None:
-    assert isinstance(HTML(value).value, str)
-    assert HTML(HTML(value)) == HTML(value)
+def test_repr(value: str) -> None:
+    assert repr(HTML.without_escaping(value)) == 'HTML("%s")' % value
 
 
-# TODO: Split this up into multiple tests
-def test_class_HTML() -> None:
+def test_adding() -> None:
+    # __radd__
+    a = "a" + HTML.without_escaping("b")
+    assert isinstance(a, HTML)
+    assert str(a) == "ab"
+
+    # __add__
+    b = HTML.without_escaping("a") + "b"
+    assert isinstance(b, HTML)
+    assert str(b) == "ab"
+
+    # escaping and adding
+    c = HTML.without_escaping("a") + "<script>alert('XSS')</script>"
+    assert isinstance(c, HTML)
+    assert str(c) == "a&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;"
+
+    d = "a" + HTML.without_escaping("b") + "c"
+    assert isinstance(d, HTML)
+    assert str(d) == "abc"
+
+    e = HTML.without_escaping("a") + "b" + HTML.without_escaping("c")
+    assert isinstance(e, HTML)
+    assert str(e) == "abc"
+
+    f = HTML.without_escaping("a")
+    f += "b"
+    assert isinstance(f, HTML)
+    assert str(f) == "ab"
+
+
+def test_eq() -> None:
+    # Is that really a good idea?
     a = "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ"
     b = "two"
-    c = "Three"
-    d = "u"
 
-    A = HTML(a)
-    B = HTML(b)
-    C = HTML(c)
-    D = HTML(d)
+    A = HTML.without_escaping(a)
+    B = HTML.without_escaping(b)
 
-    assert HTML() == HTML("")
-    assert HTML(HTML()) == HTML()
-    # One day we will fix this!
-    assert str(A) == a, str(A)
-    assert "%s" % A == a, "%s" % A
-    assert json.loads(json.dumps(A)) == A
-    assert repr(A) == 'HTML("%s")' % A.value
-    assert len(B) == len(b)
-    assert str(B) == str(b)
-
-    assert "1" + B + "2" + C == "1" + b + "2" + c
-
+    assert "1" + B + "2" + A == "1" + b + "2" + a
     assert (A + B) == (a + b)
-    assert HTML().join([A, B]) == A + B
-    assert HTML().join([a, b]) == a + b
-    assert HTML("jo").join([A, B]) == A + "jo" + B
-    assert HTML("jo").join([a, b]) == a + "jo" + b
-    assert "".join(map(str, [A, B])) == A + B
 
-    assert isinstance(A, HTML), type(A)
-    assert isinstance("%s" % A, str), "%s" % A
-    # One day we will fix this!
-    assert isinstance("%s" % A, str), "%s" % A
-    assert isinstance(A + B, HTML), type(A + B)
-    assert isinstance(HTML("").join([A, B]), HTML)
-    assert isinstance(HTML().join([A, B]), HTML)
-    assert isinstance(HTML("").join([a, b]), HTML)
-    # TODO: Investigate
-    assert isinstance("TEST" + HTML(), HTML)
-    assert isinstance(HTML() + "TEST", HTML)
-    # TODO: Investigate
-    assert isinstance("TEST" + HTML() + "TEST", HTML)
+    assert B + A != A + B
 
-    # assert "<div>" + HTML("content") + "</div>" == "&lt;div&gt;content&lt;/div&gt;"
-    # assert HTML().join(["<div>", HTML("</br>"), HTML("<input/>"), "</div>"]) ==\
-    #        "&lt;div&gt;</br><input/>&lt;/div&gt;"
 
-    A += B
-    a += b
-    assert isinstance(A, HTML), A
-    assert A == a, A
+def test_join() -> None:
+    assert str(HTML.empty().join(["a", HTML.without_escaping("b")])) == "ab"
 
-    assert a in A, A
-    assert A.count(a) == 1
-    assert A.index(a) == 0
+    a = HTML.without_escaping("c").join(("a", HTML.without_escaping("b")))
+    assert isinstance(a, HTML)
+    assert str(a) == "acb"
 
-    # TODO: Investigate type annotation
-    assert isinstance(A[1:3], HTML)  # type: ignore[index]
-    assert A[1:3] == a[1:3], A[1:3]  # type: ignore[index]
 
-    assert A == a
+def test_other_protocols() -> None:
+    a = HTML.without_escaping("abcdef")
+    assert a.count("b") == 1
+    assert a.index("b") == 1
+    assert "c" in a
 
-    assert ("%s" % A) == a
+    assert isinstance(a[1:3], HTML)
+    assert str(a[1:3]) == "bc"
 
-    assert B + C != C + B
-
-    assert HTML(A) == A, f"{HTML(A)} {A}"
-    assert HTML(a) == A, f"{HTML(a)} {A}"
-
-    # Not supported any more!
-    # assert  (A < B) == (a < b), "%s %s" % (A < B, a < b)
-    # assert (A > B) == (a > b)
-
-    assert A != B
-
-    assert isinstance(HTML(HTML(A)), HTML)
-    assert isinstance("%s" % HTML(HTML(A)), str)
-
-    assert isinstance(A, HTML)
-    A += " JO PICASSO! "
-    assert isinstance(A, HTML)
-
-    assert isinstance(A + "TEST", HTML)
-
-    assert isinstance("TEST%s" % A, str)
-
-    assert "test" + C == "test" + c
-
-    assert D == d
-    assert "%s" % D == "%s" % d
-    assert isinstance("%s" % D, str)
-    assert isinstance("%s" % D, str)
-
-    E = A + B
-    e = "%s" % E
-    assert E.lstrip(E[0]) == e.lstrip(e[0])
-    assert E == e
-    assert E.rstrip(E[0]) == e.rstrip(e[0])
-    assert E == e
-    assert E.strip(E[0]) == e.strip(e[0])
-    assert E == e
+    assert a.lstrip("ab") == "cdef"
+    assert a.rstrip("ef") == "abcd"
+    assert a.strip("a") == "bcdef"
+    assert a.strip("f") == "abcde"

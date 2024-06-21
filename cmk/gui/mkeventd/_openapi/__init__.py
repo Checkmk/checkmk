@@ -23,6 +23,8 @@ The event console endpoints allow for
 from collections.abc import Mapping
 from typing import Any
 
+from livestatus import SiteId
+
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
 
 from cmk.gui import fields as gui_fields
@@ -40,10 +42,11 @@ from cmk.gui.livestatus_utils.commands.event_console import (
     update_and_acknowledge,
 )
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
 
 from .common_fields import ApplicationField, EventIDField, HostNameField, PhaseField, StateField
 from .request_schemas import (
@@ -93,6 +96,7 @@ class FilterEventsByQuery(BaseSchema):
     query = gui_fields.query_field(
         Eventconsoleevents,
         required=False,
+        example='{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}',
     )
 
 
@@ -363,6 +367,8 @@ def archive_events_with_filter(params: Mapping[str, Any]) -> Response:
     """Archive events"""
     user.need_permission("mkeventd.delete")
     body = params["body"]
+
+    site_id: SiteId | None = None
     match body["filter_type"]:
         case "params":
             filters = body["filters"]
@@ -375,11 +381,12 @@ def archive_events_with_filter(params: Mapping[str, Any]) -> Response:
             )
         case "by_id":
             del_query = filter_event_table(event_id=body["event_id"])
+            site_id = SiteId(body["site_id"])
 
         case "query":
             del_query = filter_event_table(query=body["query"])
 
-    archive_events(sites.live(), del_query, body["site_id"])
+    archive_events(sites.live(), del_query, site_id)
     return Response(status=204)
 
 

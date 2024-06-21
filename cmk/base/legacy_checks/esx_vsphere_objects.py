@@ -141,4 +141,7 @@ check_info["esx_vsphere_objects.count"] = LegacyCheckDefinition(
     discovery_function=inventory_esx_vsphere_objects_count,
     check_function=check_esx_vsphere_objects_count,
     check_ruleset_name="esx_vsphere_objects_count",
+    check_default_parameters={
+        "distribution": [],
+    },
 )

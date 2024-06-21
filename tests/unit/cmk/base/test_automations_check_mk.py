@@ -9,17 +9,17 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-import cmk.utils.exceptions as exceptions
+import cmk.utils.debug
 import cmk.utils.resulttype as result
+from cmk.utils.hostaddress import HostAddress
 
 from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
 
 from cmk.fetchers import PiggybackFetcher
 
-import cmk.base.automations.check_mk as check_mk
-import cmk.base.config as config
-import cmk.base.core_config as core_config
+from cmk.base import config, core_config
+from cmk.base.automations import check_mk
 from cmk.base.config import ConfigCache
 
 
@@ -173,7 +173,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
                 "http": {
                     "command_line": "echo $ARG1$",
                     "argument_function": mock_argument_function,
-                    "service_description": mock_service_description,
+                    "service_description": lambda x: "HTTP my special HTTP",
                 }
             },
             {
@@ -227,7 +227,7 @@ def test_automation_active_check(
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *_: host_attrs)
     monkeypatch.setattr(core_config, "get_service_attributes", lambda *_: service_attrs)
-    monkeypatch.setattr(check_mk.AutomationActiveCheck, "_get_resouce_macros", lambda *_: {})
+    monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
 
     config_cache = config.reset_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
@@ -258,7 +258,9 @@ def test_automation_active_check(
                 "display_name": "my_host",
             },
             ["my_host", "my_active_check", "Active check of my_host"],
-            r"The check argument function needs to return either a list of arguments or a string of the concatenated arguments \(Host: my_host, Service: Active check of my_host\).",
+            "\nWARNING: Config creation for active check my_active_check failed on my_host: "
+            "The check argument function needs to return either a list of arguments or a string of "
+            "the concatenated arguments (Service: Active check of my_host).\n",
             id="invalid_args",
         ),
     ],
@@ -270,14 +272,22 @@ def test_automation_active_check_invalid_args(
     active_check_args: list[str],
     error_message: str,
     monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
+    monkeypatch.setattr(
+        config, config.lookup_ip_address.__name__, lambda *a, **kw: HostAddress("127.0.0.1")
+    )
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *_: host_attrs)
-    monkeypatch.setattr(check_mk.AutomationActiveCheck, "_get_resouce_macros", lambda *_: {})
+    monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
 
     config_cache = config.reset_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
+    monkeypatch.setattr(cmk.utils.debug, "enabled", lambda: False)
+
     active_check = check_mk.AutomationActiveCheck()
-    with pytest.raises(exceptions.MKGeneralException, match=error_message):
-        active_check.execute(active_check_args)
+    active_check.execute(active_check_args)
+
+    out, _ = capsys.readouterr()
+    assert out == error_message

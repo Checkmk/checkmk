@@ -52,7 +52,7 @@ The only difference being `/home/postgres/does-not-exist.env` does not exist in 
 Different defaults are chosen for Windows.
 """
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 import abc
 import io
@@ -67,12 +67,8 @@ import subprocess
 import sys
 
 try:
-    from collections.abc import (  # noqa: F401 # pylint: disable=unused-import
-        Callable,
-        Iterable,
-        Sequence,
-    )
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from collections.abc import Callable, Iterable, Sequence  # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     # We need typing only for testing
     pass
@@ -140,9 +136,8 @@ def ensure_str(s):
     if sys.version_info[0] >= 3:
         if isinstance(s, bytes):
             return s.decode("utf-8")
-    else:
-        if isinstance(s, unicode):  # pylint: disable=undefined-variable
-            return s.encode("utf-8")
+    elif isinstance(s, unicode):  # pylint: disable=undefined-variable # noqa: F821
+        return s.encode("utf-8")
     return s
 
 
@@ -517,7 +512,9 @@ class PostgresWin(PostgresBase):
     @classmethod
     def _logical_drives(cls):
         # type: () -> Iterable[str]
-        for drive in cls._parse_wmic_logicaldisk(cls._call_wmic_logicaldisk()):
+        for drive in cls._parse_wmic_logicaldisk(  # pylint: disable=use-yield-from # for python2.7
+            cls._call_wmic_logicaldisk()
+        ):
             yield drive
 
     def get_psql_binary_path(self):
@@ -1262,7 +1259,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
             pg_database, pg_port, pg_version = parse_env_file(env_file)
             instances.append(
                 {
-                    "name": instance_name,
+                    "name": instance_name.strip(),
                     "pg_user": pg_user.strip(),
                     "pg_passfile": pg_passfile.strip(),
                     "pg_database": pg_database,
@@ -1311,6 +1308,7 @@ def main(argv=None):
         )
         with open(postgres_cfg_path) as opened_file:
             postgres_cfg = opened_file.readlines()
+        postgres_cfg = [ensure_str(el) for el in postgres_cfg]
         dbuser, pg_binary_path, instances = parse_postgres_cfg(postgres_cfg, helper.get_conf_sep())
     except Exception:
         _, e = sys.exc_info()[:2]  # python2 and python3 compatible exception logging

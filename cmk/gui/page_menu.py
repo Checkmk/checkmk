@@ -17,7 +17,6 @@ import json
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -25,6 +24,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Icon
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
@@ -454,7 +454,9 @@ def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -
                 name="checkbox_selection",
                 title=_("Select all checkboxes"),
                 icon_name="toggle_on" if is_selected else "toggle_off",
-                item=make_javascript_link("cmk.selection.toggle_all_rows(this.form);"),
+                item=make_javascript_link(
+                    "cmk.selection.toggle_all_rows(cmk.utils.querySelectorID('main_page_content'));"
+                ),
                 is_enabled=is_enabled,
             ),
         ],
@@ -656,7 +658,10 @@ class PageMenuRenderer:
         for entry in entries:
             classes = ["suggestion"]
             classes += self._get_entry_css_classes(entry)
-            html.open_div(class_=classes)
+            html.open_div(
+                class_=classes,
+                title=entry.disabled_tooltip if not entry.is_enabled else None,
+            )
             SuggestedEntryRenderer().show(entry)
             html.close_div()
         html.close_td()
@@ -813,17 +818,16 @@ class DropdownEntryRenderer:
 
 # TODO: Cleanup all calls using title and remove the argument
 def search_form(title: str | None = None, mode: str | None = None, default_value: str = "") -> None:
-    html.begin_form("search", add_transid=False)
-    if title:
-        html.write_text(title + " ")
-    html.text_input("search", size=32, default_value=default_value)
-    html.hidden_fields()
-    if mode:
-        html.hidden_field("mode", mode, add_var=True)
-    html.set_focus("search")
-    html.write_text(" ")
-    html.button("_do_seach", _("Search"))
-    html.end_form()
+    with html.form_context("search", add_transid=False):
+        if title:
+            html.write_text_permissive(title + " ")
+        html.text_input("search", size=32, default_value=default_value)
+        html.hidden_fields()
+        if mode:
+            html.hidden_field("mode", mode, add_var=True)
+        html.set_focus("search")
+        html.write_text_permissive(" ")
+        html.button("_do_seach", _("Search"))
 
 
 # TODO: Mesh this function into one with the above search_form()
@@ -831,23 +835,24 @@ def inpage_search_form(mode: str | None = None, default_value: str = "") -> None
     form_name = "inpage_search_form"
     reset_button_id = "%s_reset" % form_name
     was_submitted = request.get_ascii_input("filled_in") == form_name
-    html.begin_form(form_name, add_transid=False)
-    html.text_input(
-        "search",
-        size=32,
-        default_value=default_value,
-        placeholder=_("Find on this page ..."),
-        required=True,
-        title="",
-    )
-    html.hidden_fields()
-    if mode:
-        html.hidden_field("mode", mode, add_var=True)
-    reset_url = request.get_ascii_input_mandatory("reset_url", requested_file_with_query(request))
-    html.hidden_field("reset_url", reset_url, add_var=True)
-    html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))
-    html.button("submit", "", cssclass="submit", help_=_("Apply"))
-    html.end_form()
+    with html.form_context(form_name, add_transid=False):
+        html.text_input(
+            "search",
+            size=32,
+            default_value=default_value,
+            placeholder=_("Find on this page ..."),
+            required=True,
+            title="",
+        )
+        html.hidden_fields()
+        if mode:
+            html.hidden_field("mode", mode, add_var=True)
+        reset_url = request.get_ascii_input_mandatory(
+            "reset_url", requested_file_with_query(request)
+        )
+        html.hidden_field("reset_url", reset_url, add_var=True)
+        html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))
+        html.button("submit", "", cssclass="submit", help_=_("Apply"))
     html.javascript(
         f"cmk.page_menu.inpage_search_init({json.dumps(reset_button_id)}, {json.dumps(was_submitted)})"
     )

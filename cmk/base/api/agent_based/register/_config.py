@@ -74,7 +74,7 @@ def add_section_plugin(section_plugin: SectionPlugin) -> None:
 
 
 def get_check_plugin(plugin_name: CheckPluginName) -> CheckPlugin | None:
-    """Returns the registered check plugin
+    """Returns the registered check plug-in
 
     Management plugins may be created on the fly.
     """
@@ -82,7 +82,7 @@ def get_check_plugin(plugin_name: CheckPluginName) -> CheckPlugin | None:
     if plugin is not None or not plugin_name.is_management_name():
         return plugin
 
-    # create management board plugin on the fly:
+    # create management board plug-in on the fly:
     non_mgmt_plugin = registered_check_plugins.get(plugin_name.create_basic_name())
     if non_mgmt_plugin is not None:
         mgmt_plugin = management_plugin_factory(non_mgmt_plugin)
@@ -103,7 +103,7 @@ def get_host_label_ruleset(ruleset_name: RuleSetName) -> Sequence[RuleSpec]:
 
 
 def get_inventory_plugin(plugin_name: InventoryPluginName) -> InventoryPlugin | None:
-    """Returns the registered inventory plugin"""
+    """Returns the registered inventory plug-in"""
     return registered_inventory_plugins.get(plugin_name)
 
 

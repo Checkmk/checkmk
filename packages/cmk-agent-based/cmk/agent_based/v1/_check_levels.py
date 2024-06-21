@@ -2,8 +2,15 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Callable, Generator
-from typing import Any, cast, overload
+
+from collections.abc import Callable, Generator, Mapping
+from typing import Literal, overload
+
+from cmk.agent_based.prediction_backend import (
+    InjectedParameters,
+    lookup_predictive_levels,
+    PredictionParameters,
+)
 
 from ._checking_classes import Metric, Result, State
 
@@ -17,7 +24,7 @@ def _do_check_levels(
     render_func: Callable[[float], str],
 ) -> tuple[State, str]:
     # Typing says that levels are either None, or a Tuple of float.
-    # However we also deal with (None, None) to avoid crashes of custom plugins.
+    # However we also deal with (None, None) to avoid crashes of custom plug-ins.
     # CRIT ?
     if levels_upper and levels_upper[1] is not None and value >= levels_upper[1]:
         return State.CRIT, _levelsinfo_ty("at", levels_upper, render_func)
@@ -138,15 +145,10 @@ def check_levels(
         yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
 
 
-_LevelsCallback = Callable[
-    [str], tuple[float | None, tuple[float | None, float | None, float | None, float | None]]
-]
-
-
-def check_levels_predictive(  # type: ignore[misc]
+def check_levels_predictive(
     value: float,
     *,
-    levels: dict[str, Any],
+    levels: dict[str, object],
     metric_name: str,
     render_func: Callable[[float], str] | None = None,
     label: str | None = None,
@@ -158,9 +160,8 @@ def check_levels_predictive(  # type: ignore[misc]
 
         value:        Currently measured value
         levels:       Predictive levels. These are used automatically.
-                      Lower levels are imposed if the passed dictionary contains "lower"
-                      as key, upper levels are imposed if it contains "upper" or
-                      "levels_upper_min" as key.
+                      Lower levels are imposed if the passed dictionary contains "levels_lower"
+                      as key, upper levels are imposed if it contains "levels_upper".
                       If value is lower/higher than these, the service goes to **WARN**
                       or **CRIT**, respecively.
         metric_name:  Name of the datasource in the RRD that corresponds to this value
@@ -177,24 +178,14 @@ def check_levels_predictive(  # type: ignore[misc]
     # validate the metric name, before we can get the levels.
     _ = Metric(metric_name, value)
 
-    callback = cast(_LevelsCallback, levels["__get_predictive_levels__"])  # type: ignore[misc]
-    ref_value, levels_tuple = callback(metric_name)
+    ref_value_upper, levels_upper = _get_prediction(metric_name, levels, "upper")
+    ref_value_lower, levels_lower = _get_prediction(metric_name, levels, "lower")
+
+    ref_value = ref_value_upper or ref_value_lower  # they are the same in the v1 world
     if ref_value is not None:
         predictive_levels_msg = f" (predicted reference: {render_func(ref_value)})"
     else:
         predictive_levels_msg = " (no reference for prediction yet)"
-
-    levels_upper = (
-        None
-        if levels_tuple[0] is None or levels_tuple[1] is None
-        else (levels_tuple[0], levels_tuple[1])
-    )
-
-    levels_lower = (
-        None
-        if levels_tuple[2] is None or levels_tuple[3] is None
-        else (levels_tuple[2], levels_tuple[3])
-    )
 
     value_state, levels_text = _do_check_levels(value, levels_upper, levels_lower, render_func)
 
@@ -207,3 +198,25 @@ def check_levels_predictive(  # type: ignore[misc]
     yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
     if ref_value is not None:
         yield Metric(f"predict_{metric_name}", ref_value)
+
+
+def _get_prediction(
+    metric_name: str, levels: Mapping[str, object], direction: Literal["upper", "lower"]
+) -> tuple[float | None, tuple[float, float] | None]:
+    return (
+        (None, None)
+        if (levels_spec := levels.get(f"levels_{direction}")) is None
+        else lookup_predictive_levels(
+            metric_name,
+            direction,
+            PredictionParameters.model_validate(
+                {  # type: ignore[misc]
+                    "horizon": levels["horizon"],
+                    "period": levels["period"],
+                    "levels": levels_spec,
+                    "bound": levels.get("levels_upper_min") if direction == "upper" else None,
+                }
+            ),
+            InjectedParameters.model_validate(levels["__injected__"]),
+        )
+    )

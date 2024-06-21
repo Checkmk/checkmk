@@ -9,15 +9,17 @@ from typing import cast, Literal
 
 import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui import forms
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML as HTML
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
@@ -85,6 +87,25 @@ def configure_attributes(  # pylint: disable=too-many-branches
             show_more_mode=show_more_mode,
         )
 
+        if topic_id == "management_board":
+            message = _(
+                "<b>This feature will be deprecated in a future version of Checkmk.</b>"
+                "<br>Please do not configure management boards in here anymore. "
+                "Monitor the management boards via a dedicated host using <a href='%s'>IPMI</a>"
+                " or SNMP.<br><a href='%s' target='_blank'>Read more about management boards.</a>"
+            ) % (
+                makeuri_contextless(
+                    request,
+                    [
+                        ("mode", "edit_ruleset"),
+                        ("varname", RuleGroup.SpecialAgents("ipmi_sensors")),
+                    ],
+                    filename="wato.py",
+                ),
+                "https://checkmk.com/blog/monitoring-management-boards",
+            )
+            forms.warning_message(message)
+
         if topic_id == "basic":
             for attr_varprefix, vs, default_value in basic_attributes:
                 forms.section(
@@ -148,16 +169,18 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
             if attr.show_inherited_value():
                 if for_what in ["host", "cluster"]:
-                    url = folder_from_request().edit_url()
+                    url = folder_from_request(
+                        request.var("folder"), request.get_ascii_input("host")
+                    ).edit_url()
 
                 container = parent  # container is of type Folder
                 while container:
-                    assert not isinstance(container, SearchFolder)
                     if attrname in container.attributes:
+                        assert not isinstance(container, SearchFolder)
                         url = container.edit_url()
-                        inherited_from = escape_to_html(_("Inherited from ")) + HTMLWriter.render_a(
-                            container.title(), href=url
-                        )
+                        inherited_from = HTML.with_escaping(
+                            _("Inherited from ")
+                        ) + HTMLWriter.render_a(container.title(), href=url)
 
                         # Mypy can not help here with the dynamic key
                         inherited_value = container.attributes[attrname]  # type: ignore[literal-required]
@@ -169,7 +192,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
                     container = container.parent()
 
             if not container:  # We are the root folder - we inherit the default values
-                inherited_from = escape_to_html(_("Default value"))
+                inherited_from = HTML.with_escaping(_("Default value"))
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
                 if attr.is_tag_attribute:
@@ -295,14 +318,15 @@ def configure_attributes(  # pylint: disable=too-many-branches
             #
 
             # in bulk mode we show inheritance only if *all* hosts inherit
-            explanation: HTML = HTML("")
+            explanation: HTML = HTML.empty()
+            value: object = None
             if for_what == "bulk":
                 if num_haveit == 0:
                     assert inherited_from is not None
-                    explanation = HTML(" (") + inherited_from + HTML(")")
+                    explanation = " (" + inherited_from + ")"
                     value = inherited_value
                 elif not unique:
-                    explanation = escape_to_html(
+                    explanation = HTML.with_escaping(
                         _("This value differs between the selected hosts.")
                     )
                 else:
@@ -323,14 +347,14 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
                 if isinstance(attr, ABCHostAttributeValueSpec):
                     html.open_b()
-                    html.write_text(content)
+                    html.write_text_permissive(content)
                     html.close_b()
                 elif isinstance(attr, str):
                     html.b(_u(cast(str, content)))
                 else:
                     html.b(content)
 
-            html.write_text(explanation)
+            html.write_text_permissive(explanation)
             html.close_div()
 
         if topic_is_volatile:

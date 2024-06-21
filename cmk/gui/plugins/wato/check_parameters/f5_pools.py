@@ -9,16 +9,26 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Integer, TextInput, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
 
 
 def _parameter_valuespec_f5_pools():
-    return Tuple(
-        title=_("Minimum number of pool members"),
-        elements=[
-            Integer(title=_("Warning if below"), unit=_("Members ")),
-            Integer(title=_("Critical if below"), unit=_("Members")),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels_lower",
+                    SimpleLevels(
+                        spec=Integer,
+                        title=_("Minimum number of pool members"),
+                        unit=_("Members "),
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels_lower": p},
     )
 
 
@@ -28,6 +38,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=lambda: TextInput(title=_("Name of pool")),
         parameter_valuespec=_parameter_valuespec_f5_pools,
-        title=lambda: _("F5 Loadbalancer Pools"),
+        title=lambda: _("F5 load balancer pools"),
     )
 )

@@ -18,6 +18,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_filehandler(info):
     return [(None, {})]
@@ -40,7 +42,12 @@ def check_filehandler(_no_item, params, info):
     return state, infotext, [("filehandler_perc", perc, warn, crit)]
 
 
+def parse_filehandler(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["filehandler"] = LegacyCheckDefinition(
+    parse_function=parse_filehandler,
     service_name="Filehandler",
     discovery_function=inventory_filehandler,
     check_function=check_filehandler,

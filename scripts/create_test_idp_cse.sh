@@ -1,5 +1,5 @@
-#!/bin/bash
-#
+#!/usr/bin/env bash
+# Launch a cognito idp for the SaaS edition
 set -e
 
 REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
@@ -7,34 +7,30 @@ REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
 # acquire sudo to run to change the configuration
 sudo true
 
-configure_cognito() {
-    idp_url="$1"
-    checkmk_port="$2"
+# PORT and URL under which we can reach the openid provider
+if [[ "$1" == *"://"* ]]; then
+    export URL=$1
+    HOST=$(echo "${URL}" | cut -d: -f2 | sed "s-^//--")
+    PORT=$(echo "${URL}" | cut -d: -f3)
+else
+    HOST=localhost
+    PORT=${1:-5551}
+    export URL=http://${HOST}:${PORT}
+fi
 
-    client_id="notused"
-    base_url="http://localhost:$checkmk_port"
-    well_known="$idp_url/.well-known/openid-configuration"
+# URL of the checkmk instance; checkmk uses port 5000 by default
+CMK_URL=${2:-http://localhost:5000}
 
-    # Create JSON object
-    JSON=$(printf '{\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s"\n}' \
-        "client_id" "$client_id" \
-        "base_url" "$base_url" \
-        "saas_api_url" "$idp_url" \
-        "tenant_id" "123tenant567" \
-        "logout_url" "$idp_url/logout" \
-        "well_known" "$well_known")
+# Write cognito configuration file
+sudo mkdir -p /etc/cse
+"$(dirname "$0")/create_cognito_config_cse.sh" "${URL}" "${CMK_URL}" | sudo tee /etc/cse/cognito-cmk.json >/dev/null
 
-    # Write JSON object to file
-    sudo mkdir -p /etc/cse
-    echo "$JSON" | sudo tee /etc/cse/cognito-cmk.json >/dev/null
-}
+CSE_UAP_URL=https://admin-panel.saas-prod.cloudsandbox.check-mk.net/
+json_string=$(jq --null-input \
+    --arg uap_url "$CSE_UAP_URL" \
+    '{"uap_url": $uap_url}')
 
-PORT=5551
-# URL under which we can reach the openid provider
-export URL="http://localhost:${PORT}"
+echo "$json_string" | jq "." | sudo tee /etc/cse/admin_panel_url.json >/dev/null
 
-# checkmk uses port 5000 by default
-configure_cognito $URL 5000
-
-export PYTHONPATH="${REPO_PATH}/tests/testlib"
-"$REPO_PATH"/scripts/run-pipenv run uvicorn cse.openid_oauth_provider:application --port "$PORT"
+export PYTHONPATH="${REPO_PATH}"
+"${REPO_PATH}/scripts/run-pipenv" run uvicorn tests.testlib.cse.openid_oauth_provider:application --host "${HOST}" --port "${PORT}"

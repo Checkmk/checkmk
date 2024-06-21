@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
 
 # Just an assumption, levels as in other fan checks
 
@@ -30,7 +31,12 @@ def check_netextreme_fan(item, params, info):
                 yield check_fan(int(fan_speed_str), params)
 
 
+def parse_netextreme_fan(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["netextreme_fan"] = LegacyCheckDefinition(
+    parse_function=parse_netextreme_fan,
     detect=DETECT_NETEXTREME,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1916.1.1.1.9.1",

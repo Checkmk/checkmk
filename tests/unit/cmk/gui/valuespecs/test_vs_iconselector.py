@@ -5,6 +5,7 @@
 
 
 import re
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -24,7 +25,15 @@ ICON_NONE: vs.IconSelectorModel = {"icon": None, "emblem": None}  # type: ignore
 
 
 class TestValueSpecFloat:
-    def test_validate(self) -> None:
+    @patch(
+        "cmk.gui.valuespec.definitions.IconSelector.available_icons",
+        return_value=["empty", "crash", "graph"],
+    )
+    @patch(
+        "cmk.gui.valuespec.definitions.IconSelector.available_emblems",
+        return_value=["add"],
+    )
+    def test_validate(self, _mock_icons: MagicMock, _mock_emblems: MagicMock) -> None:
         # ## value may be a string, or a dictionary.
         # ## first test string...
         expect_validate_failure(vs.IconSelector(), "asd", match="The selected icon does not exist.")
@@ -37,10 +46,6 @@ class TestValueSpecFloat:
             match=re.escape("The type is <class 'NoneType'>, but should be str or dict"),
         ):
             vs.IconSelector().validate_datatype(None, "")
-
-        # TODO: this seems a bit missleading. we don't allow empty, yet empty is still allowed?
-        # does not raise an error, because None is internally transformed to the "empty" icon
-        vs.IconSelector(allow_empty=False).validate_value(None, "")
 
         # ## ...then test dictionary:
         expect_validate_failure(

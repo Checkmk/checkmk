@@ -1,0 +1,13 @@
+Title: notification rule: update rule no longer creates a new rule
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1702294645
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue found when updating a rule via
+the REST-API. Previously, it would instead of updating an existing
+rule, create a new one. We now update the existing rule as
+would be expected.

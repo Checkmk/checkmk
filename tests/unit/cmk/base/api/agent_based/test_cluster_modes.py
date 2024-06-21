@@ -42,7 +42,7 @@ def _get_test_check_plugin(**kwargs) -> CheckPlugin:  # type: ignore[no-untyped-
         cluster_check_function=kwargs.get("cluster_check_function", lambda *args, **kw: object),
         check_default_parameters=kwargs.get("check_default_parameters"),
         check_ruleset_name=kwargs.get("check_ruleset_name"),
-        full_module=None,
+        location=None,
     )
 
 

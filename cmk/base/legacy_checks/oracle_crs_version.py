@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError, StringTable
 
 
 def inventory_oracle_crs_version(info):
@@ -23,7 +24,12 @@ def check_oracle_crs_version(_no_item, _no_params, info):
     raise IgnoreResultsError("No version details found. Maybe the cssd is not running")
 
 
+def parse_oracle_crs_version(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["oracle_crs_version"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_crs_version,
     service_name="ORA-GI Version",
     discovery_function=inventory_oracle_crs_version,
     check_function=check_oracle_crs_version,

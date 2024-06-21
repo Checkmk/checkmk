@@ -1,0 +1,34 @@
+Title: KUBE: Extend 'Node conditions' Rule
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1701104788
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, Checkmk identified any NodeCondition with status `True`, except for the `Ready`
+condition, as a problem state. However, some Kubernetes addons report custom NodeConditions.  In
+some cases, the `True` status of these conditions is desired. With this Werk, this is fully
+configurable.
+
+Since there are no longer pre-defined problem states, the NodeConditions are now shown in the
+summary based on their monitoring states.
+
+The affected rule `Node conditions` has been renamed to `Kubernetes node conditions`.
+
+The default rules ensure that the monitoring states of existing services do not change. Existing
+rules are migrated. Manual intervention is only needed if there are multiple `Kubernetes node
+conditions` rules, which apply the to the same service. Previously, each NodeCondition would use the
+rule with a matching parameter. The new rule contains only a single parameter, thus only the first
+rule applies.
+
+Moreover, some minor tweaks have been done.
+
+* The check falsely reported `.status.message` to be `None`. The proper message is now shown.
+* NodeConditions are now shown in the order they are received from the Kubernetes API.
+* The check no longer shows `NodeConditionStatus.FALSE`, instead it now shows `False`.
+* The check is unaffected if one of the following conditions is missing: `Ready`, `MemoryPressure`,
+  `PIDPressure`, `DiskPressure`. This should not affect the monitoring since the Kubernetes API
+  server ensures that these conditions are always present.

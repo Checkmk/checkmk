@@ -9,28 +9,20 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Percentage, Tuple
+from cmk.gui.valuespec import Dictionary, Migrate
+
+from .memory_arbor import DualMemoryLevels
 
 
 def _parameter_valuespec_juniper_mem():
-    return Tuple(
-        title=_("Specify levels in percentage of total memory usage"),
-        elements=[
-            Percentage(
-                title=_("Warning at a usage of"),
-                # xgettext: no-python-format
-                unit=_("% of RAM"),
-                default_value=80.0,
-                maxvalue=100.0,
-            ),
-            Percentage(
-                title=_("Critical at a usage of"),
-                # xgettext: no-python-format
-                unit=_("% of RAM"),
-                default_value=90.0,
-                maxvalue=100.0,
-            ),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                ("levels", DualMemoryLevels("memory", default_percents=(80.0, 90.0))),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": ("perc_used", p)},
     )
 
 
@@ -39,6 +31,6 @@ rulespec_registry.register(
         check_group_name="juniper_mem",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_juniper_mem,
-        title=lambda: _("Juniper Memory Usage"),
+        title=lambda: _("Juniper memory usage"),
     )
 )

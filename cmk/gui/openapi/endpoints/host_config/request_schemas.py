@@ -9,13 +9,9 @@ from marshmallow import validates_schema, ValidationError
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.openapi.endpoints.common_fields import EXISTING_FOLDER
 
 from cmk import fields
-
-EXISTING_FOLDER = gui_fields.FolderField(
-    example="/",
-    required=True,
-)
 
 EXISTING_HOST_NAME = gui_fields.HostField(
     description="The hostname or IP address itself.",

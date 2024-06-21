@@ -6,10 +6,11 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.acme import DETECT_ACME
+
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.plugins.lib.acme import DETECT_ACME
 
 # .1.3.6.1.4.1.9148.3.9.1.10.1.3.65.1 rootca
 # .1.3.6.1.4.1.9148.3.9.1.10.1.5.65.1 Jul 25 00:33:17 2003 GMT
@@ -32,10 +33,10 @@ def check_acme_certificates(item, params, info):
             state = 0
 
             time_diff = expire_time - now
-            if expire_time <= now:
-                age_info = "%s ago" % get_age_human_readable(abs(time_diff))
+            if time_diff < 0:
+                age_info = "%s ago" % render.timespan(-time_diff)
             else:
-                age_info = "%s to go" % get_age_human_readable(time_diff)
+                age_info = "%s to go" % render.timespan(time_diff)
 
             infotext = f"Expire: {expire} ({age_info})"
 
@@ -46,8 +47,8 @@ def check_acme_certificates(item, params, info):
                     state = 1
                 if state:
                     infotext += " (warn/crit below {}/{})".format(
-                        get_age_human_readable(warn),
-                        get_age_human_readable(crit),
+                        render.timespan(warn),
+                        render.timespan(crit),
                     )
             else:
                 state = 2
@@ -57,7 +58,12 @@ def check_acme_certificates(item, params, info):
             yield 0, f"Start: {start}, Issuer: {issuer}"
 
 
+def parse_acme_certificates(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["acme_certificates"] = LegacyCheckDefinition(
+    parse_function=parse_acme_certificates,
     detect=DETECT_ACME,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.9.1.10.1",

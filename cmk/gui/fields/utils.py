@@ -6,11 +6,10 @@
 import collections
 import functools
 import typing
-from collections.abc import Callable
-from typing import Any, cast, Literal, NamedTuple, TypeVar
+from collections.abc import Callable, Mapping
+from typing import Any, Literal, NamedTuple, TypedDict, TypeVar
 
 from marshmallow import ValidationError
-from typing_extensions import TypedDict
 
 from livestatus import SiteId
 
@@ -281,8 +280,8 @@ def _field_from_attr(attr):
     return fields.String(**kwargs)
 
 
-def _schema_from_dict(name, schema_dict) -> type[BaseSchema]:  # type: ignore[no-untyped-def]
-    dict_ = schema_dict.copy()
+def _schema_from_dict(name: str, schema_dict: Mapping[str, Any]) -> type[BaseSchema]:
+    dict_ = {**schema_dict}
     dict_["cast_to_dict"] = True
     return type(name, (BaseSchema,), dict_)
 
@@ -346,7 +345,7 @@ def attr_openapi_schema(
     return _schema_from_dict(class_name, schema)
 
 
-def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type: ignore[no-untyped-def]
+def tree_to_expr(filter_dict: QueryExpression, table: Any = None) -> QueryExpression:
     """Turn a filter-dict into a QueryExpression.
 
     Examples:
@@ -415,7 +414,7 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type: ig
         #       <class 'cmk.utils.livestatus_helpers.expressions.BinaryExpression'>
         #   While these classes are actually the same, Python treats them distinct, so we can't
         #   just say `isinstance(filter_dict, BinaryExpression)` (or their super-type) here.
-        return cast(QueryExpression, filter_dict)
+        return filter_dict
     op = filter_dict["op"]
     if op in LIVESTATUS_OPERATORS:
         left = filter_dict["left"]

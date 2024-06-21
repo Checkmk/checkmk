@@ -4,41 +4,48 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from collections.abc import Callable
-from typing import overload
-
-from cmk.utils.check_utils import ParametersTypeAlias
-
-from cmk.snmplib import SNMPDetectBaseType
-
-from cmk.base.api.agent_based.plugin_classes import (
-    AgentParseFunction,
-    CheckFunction,
-    DiscoveryFunction,
-    HostLabelFunction,
-    InventoryFunction,
-    SimpleSNMPParseFunction,
-    SNMPParseFunction,
-)
-from cmk.base.api.agent_based.register import (
-    add_check_plugin,
-    add_discovery_ruleset,
-    add_host_label_ruleset,
-    add_inventory_plugin,
-    add_section_plugin,
-    is_registered_check_plugin,
-    is_registered_inventory_plugin,
-    is_registered_section_plugin,
-)
-from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
-from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
-from cmk.base.api.agent_based.register.section_plugins import (
-    create_agent_section_plugin,
-    create_snmp_section_plugin,
-)
-from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name, RuleSetType
+from collections.abc import Callable, Mapping
+from typing import Any, overload
 
 from cmk.agent_based.v1 import SNMPTree
+from cmk.agent_based.v1.register import RuleSetType
+from cmk.agent_based.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    HostLabelGenerator,
+    InventoryResult,
+    StringByteTable,
+    StringTable,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    InventoryPlugin,
+    SimpleSNMPSection,
+    SNMPDetectSpecification,
+    SNMPSection,
+)
+
+from ._discover import (
+    register_agent_section,
+    register_check_plugin,
+    register_inventory_plugin,
+    register_snmp_section,
+)
+from .section_plugins import create_parse_annotation, validate_parse_function
+from .utils import get_validated_plugin_location
+
+_ParametersTypeAlias = Mapping[str, Any]
+
+# This is slightly duplcated, but I don't want to expose v2 stuff in v1, not even as part of the signature.
+_HostLabelFunction = Callable[..., HostLabelGenerator]
+
+_SNMPParseFunction = (
+    Callable[[list[StringTable]], object] | Callable[[list[StringByteTable]], object]
+)
+
+_SimpleSNMPParseFunction = Callable[[StringTable], object] | Callable[[StringByteTable], object]
+
 
 __all__ = [
     "agent_section",
@@ -49,13 +56,24 @@ __all__ = [
 ]
 
 
+def _noop_agent_parse_function(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def _noop_snmp_parse_function(
+    string_table: StringByteTable,
+) -> Any:
+    return string_table
+
+
 def agent_section(
     *,
     name: str,
-    parse_function: AgentParseFunction | None = None,
+    # Note: the type is left for compatibility. It actually *is* object.
+    parse_function: Callable[[StringTable], Any] | None = None,
     parsed_section_name: str | None = None,
-    host_label_function: HostLabelFunction | None = None,
-    host_label_default_parameters: ParametersTypeAlias | None = None,
+    host_label_function: _HostLabelFunction | None = None,
+    host_label_default_parameters: _ParametersTypeAlias | None = None,
     host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: list[str] | None = None,
@@ -94,7 +112,7 @@ def agent_section(
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugin needs the merged result of the
+                           It describes whether this plug-in needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this section. If this
@@ -102,36 +120,35 @@ def agent_section(
                            superseded section will not be considered at all.
 
     """
-    section_plugin = create_agent_section_plugin(
-        name=name,
-        parsed_section_name=parsed_section_name,
-        parse_function=parse_function,
-        host_label_function=host_label_function,
-        host_label_default_parameters=host_label_default_parameters,
-        host_label_ruleset_name=host_label_ruleset_name,
-        host_label_ruleset_type=host_label_ruleset_type,
-        supersedes=supersedes,
-        full_module=get_validated_plugin_module_name(),
+    if parse_function is not None:
+        validate_parse_function(parse_function, expected_annotations=create_parse_annotation())
+
+    return register_agent_section(
+        # supressions: we have to live with what the old api gives us. It will be validated.
+        AgentSection(  # type: ignore[misc]
+            name=name,
+            parse_function=_noop_agent_parse_function if parse_function is None else parse_function,
+            parsed_section_name=parsed_section_name,
+            host_label_function=host_label_function,
+            host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]
+            host_label_ruleset_name=host_label_ruleset_name,  # type: ignore[arg-type]
+            host_label_ruleset_type=host_label_ruleset_type,
+            supersedes=supersedes,
+        ),
+        get_validated_plugin_location(),
     )
-
-    if is_registered_section_plugin(section_plugin.name):
-        raise ValueError(f"duplicate section definition: {section_plugin.name}")
-
-    add_section_plugin(section_plugin)
-    if section_plugin.host_label_ruleset_name is not None:
-        add_host_label_ruleset(section_plugin.host_label_ruleset_name)
 
 
 @overload  # no List of trees -> SimpleSNMPParseFunction
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectBaseType,
+    detect: SNMPDetectSpecification,
     fetch: SNMPTree,
-    parse_function: SimpleSNMPParseFunction | None = None,
+    parse_function: _SimpleSNMPParseFunction | None = None,
     parsed_section_name: str | None = None,
-    host_label_function: HostLabelFunction | None = None,
-    host_label_default_parameters: ParametersTypeAlias | None = None,
+    host_label_function: _HostLabelFunction | None = None,
+    host_label_default_parameters: _ParametersTypeAlias | None = None,
     host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: list[str] | None = None,
@@ -143,12 +160,12 @@ def snmp_section(
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectBaseType,
+    detect: SNMPDetectSpecification,
     fetch: list[SNMPTree],
-    parse_function: SNMPParseFunction | None = None,
+    parse_function: _SNMPParseFunction | None = None,
     parsed_section_name: str | None = None,
-    host_label_function: HostLabelFunction | None = None,
-    host_label_default_parameters: ParametersTypeAlias | None = None,
+    host_label_function: _HostLabelFunction | None = None,
+    host_label_default_parameters: _ParametersTypeAlias | None = None,
     host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: list[str] | None = None,
@@ -159,12 +176,12 @@ def snmp_section(
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectBaseType,
+    detect: SNMPDetectSpecification,
     fetch: SNMPTree | list[SNMPTree],
-    parse_function: SimpleSNMPParseFunction | SNMPParseFunction | None = None,
+    parse_function: _SimpleSNMPParseFunction | _SNMPParseFunction | None = None,
     parsed_section_name: str | None = None,
-    host_label_function: HostLabelFunction | None = None,
-    host_label_default_parameters: ParametersTypeAlias | None = None,
+    host_label_function: _HostLabelFunction | None = None,
+    host_label_default_parameters: _ParametersTypeAlias | None = None,
     host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: list[str] | None = None,
@@ -216,7 +233,7 @@ def snmp_section(
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugin needs the merged result of the
+                           It describes whether this plug-in needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this section. If this
@@ -224,26 +241,50 @@ def snmp_section(
                            superseded section will not be considered at all.
 
     """
-    section_plugin = create_snmp_section_plugin(
-        name=name,
-        parsed_section_name=parsed_section_name,
-        parse_function=parse_function,
-        host_label_function=host_label_function,
-        host_label_default_parameters=host_label_default_parameters,
-        host_label_ruleset_name=host_label_ruleset_name,
-        host_label_ruleset_type=host_label_ruleset_type,
-        detect_spec=detect,
-        fetch=fetch,
-        supersedes=supersedes,
-        full_module=get_validated_plugin_module_name(),
+    if parse_function is not None:
+        validate_parse_function(
+            parse_function,
+            expected_annotations=create_parse_annotation(
+                needs_bytes=any(
+                    oid.encoding == "binary"
+                    for tree in (fetch if isinstance(fetch, list) else [fetch])
+                    for oid in tree.oids
+                ),
+                is_list=isinstance(fetch, list),
+            ),
+        )
+
+    return register_snmp_section(
+        # supressions: we have to live with what the old api gives us. It will be validated.
+        (
+            SNMPSection(  # type: ignore[misc]
+                name=name,
+                detect=detect,
+                fetch=fetch,
+                parse_function=_noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
+                parsed_section_name=parsed_section_name,
+                host_label_function=host_label_function,
+                host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]
+                host_label_ruleset_name=host_label_ruleset_name,  # type: ignore[arg-type]
+                host_label_ruleset_type=host_label_ruleset_type,
+                supersedes=supersedes,
+            )
+            if isinstance(fetch, list)
+            else SimpleSNMPSection(  # type: ignore[misc]
+                name=name,
+                detect=detect,
+                fetch=fetch,
+                parse_function=_noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
+                parsed_section_name=parsed_section_name,
+                host_label_function=host_label_function,
+                host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]
+                host_label_ruleset_name=host_label_ruleset_name,  # type: ignore[arg-type]
+                host_label_ruleset_type=host_label_ruleset_type,
+                supersedes=supersedes,
+            )
+        ),
+        get_validated_plugin_location(),
     )
-
-    if is_registered_section_plugin(section_plugin.name):
-        raise ValueError(f"duplicate section definition: {section_plugin.name}")
-
-    add_section_plugin(section_plugin)
-    if section_plugin.host_label_ruleset_name is not None:
-        add_host_label_ruleset(section_plugin.host_label_ruleset_name)
 
 
 def check_plugin(
@@ -251,36 +292,36 @@ def check_plugin(
     name: str,
     sections: list[str] | None = None,
     service_name: str,
-    discovery_function: DiscoveryFunction,
-    discovery_default_parameters: ParametersTypeAlias | None = None,
+    discovery_function: Callable[..., DiscoveryResult],
+    discovery_default_parameters: _ParametersTypeAlias | None = None,
     discovery_ruleset_name: str | None = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    check_function: CheckFunction,
-    check_default_parameters: ParametersTypeAlias | None = None,
+    check_function: Callable[..., CheckResult],
+    check_default_parameters: _ParametersTypeAlias | None = None,
     check_ruleset_name: str | None = None,
     cluster_check_function: Callable | None = None,
 ) -> None:
-    """Register a check plugin to checkmk.
+    """Register a check plug-in to checkmk.
 
     Args:
 
-      name:                     The unique name of the check plugin. It must only contain the
+      name:                     The unique name of the check plug-in. It must only contain the
                                 characters 'A-Z', 'a-z', '0-9' and the underscore.
 
-      sections:                 An optional list of section names that this plugin subscribes to.
+      sections:                 An optional list of section names that this plug-in subscribes to.
                                 They correspond to the 'parsed_section_name' specified in
                                 :meth:`agent_section` and :meth:`snmp_section`.
                                 The corresponding sections are passed to the discovery and check
                                 function. The functions arguments must be called 'section_<name1>,
                                 section_<name2>' ect. Defaults to a list containing as only element
-                                a name equal to the name of the check plugin.
+                                a name equal to the name of the check plug-in.
 
       service_name:             The template for the service name. The check function must accept
                                 'item' as first argument if and only if "%s" is present in the value
                                 of "service_name".
 
       discovery_function:       The discovery_function. Arguments must be 'params' (if discovery
-                                parameters are defined) and 'section' (if the plugin subscribes
+                                parameters are defined) and 'section' (if the plug-in subscribes
                                 to a single section), or 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Service` instances.
@@ -292,13 +333,13 @@ def check_plugin(
 
       discovery_ruleset_type:   The ruleset type is either :class:`RuleSetType.ALL` or
                                 :class:`RuleSetType.MERGED`.
-                                It describes whether this plugin needs the merged result of the
+                                It describes whether this plug-in needs the merged result of the
                                 effective rules, or every individual rule matching for the current
                                 host.
 
       check_function:           The check_function. Arguments must be 'item' (if the service has an
                                 item), 'params' (if check default parameters are defined) and
-                                'section' (if the plugin subscribes to a single section), or
+                                'section' (if the plug-in subscribes to a single section), or
                                 'section_<name1>, section_<name2>' ect. corresponding to the
                                 `sections`.
 
@@ -314,54 +355,49 @@ def check_plugin(
                                 except that the sections are dicts (node name -> node section).
 
     """
-    plugin = create_check_plugin(
-        name=name,
-        sections=sections,
-        service_name=service_name,
-        discovery_function=discovery_function,
-        discovery_default_parameters=discovery_default_parameters,
-        discovery_ruleset_name=discovery_ruleset_name,
-        discovery_ruleset_type=discovery_ruleset_type,
-        check_function=check_function,
-        check_default_parameters=check_default_parameters,
-        check_ruleset_name=check_ruleset_name,
-        cluster_check_function=cluster_check_function,
-        full_module=get_validated_plugin_module_name(),
+    return register_check_plugin(
+        CheckPlugin(
+            name=name,
+            sections=sections,
+            service_name=service_name,
+            discovery_function=discovery_function,
+            discovery_default_parameters=discovery_default_parameters,
+            discovery_ruleset_name=discovery_ruleset_name,
+            discovery_ruleset_type=discovery_ruleset_type,
+            check_function=check_function,
+            check_default_parameters=check_default_parameters,
+            check_ruleset_name=check_ruleset_name,
+            cluster_check_function=cluster_check_function,
+        ),
+        get_validated_plugin_location(),
     )
-
-    if is_registered_check_plugin(plugin.name):
-        raise ValueError(f"duplicate check plugin definition: {plugin.name}")
-
-    add_check_plugin(plugin)
-    if plugin.discovery_ruleset_name is not None:
-        add_discovery_ruleset(plugin.discovery_ruleset_name)
 
 
 def inventory_plugin(
     *,
     name: str,
     sections: list[str] | None = None,
-    inventory_function: InventoryFunction,
-    inventory_default_parameters: ParametersTypeAlias | None = None,
+    inventory_function: Callable[..., InventoryResult],
+    inventory_default_parameters: _ParametersTypeAlias | None = None,
     inventory_ruleset_name: str | None = None,
 ) -> None:
-    """Register an inventory plugin to checkmk.
+    """Register an inventory plug-in to checkmk.
 
     Args:
 
-      name:                     The unique name of the check plugin. It must only contain the
+      name:                     The unique name of the check plug-in. It must only contain the
                                 characters 'A-Z', 'a-z', '0-9' and the underscore.
 
-      sections:                 An optional list of section names that this plugin subscribes to.
+      sections:                 An optional list of section names that this plug-in subscribes to.
                                 They correspond to the 'parsed_section_name' specified in
                                 :meth:`agent_section` and :meth:`snmp_section`.
                                 The corresponding sections are passed to the discovery and check
                                 function. The functions arguments must be called 'section_<name1>,
                                 section_<name2>' ect. Defaults to a list containing as only element
-                                a name equal to the name of the inventory plugin.
+                                a name equal to the name of the inventory plug-in.
 
       inventory_function:       The inventory_function. Arguments must be 'params' (if inventory
-                                parameters are defined) and 'section' (if the plugin subscribes
+                                parameters are defined) and 'section' (if the plug-in subscribes
                                 to a single section), or 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Attributes` or
@@ -373,16 +409,13 @@ def inventory_plugin(
       inventory_ruleset_name:   The name of the inventory ruleset.
 
     """
-    plugin = create_inventory_plugin(
-        name=name,
-        sections=sections,
-        inventory_function=inventory_function,
-        inventory_default_parameters=inventory_default_parameters,
-        inventory_ruleset_name=inventory_ruleset_name,
-        full_module=get_validated_plugin_module_name(),
+    return register_inventory_plugin(
+        InventoryPlugin(
+            name=name,
+            sections=sections,
+            inventory_function=inventory_function,
+            inventory_default_parameters=inventory_default_parameters,
+            inventory_ruleset_name=inventory_ruleset_name,
+        ),
+        get_validated_plugin_location(),
     )
-
-    if is_registered_inventory_plugin(plugin.name):
-        raise ValueError(f"duplicate inventory plugin definition: {plugin.name}")
-
-    add_inventory_plugin(plugin)

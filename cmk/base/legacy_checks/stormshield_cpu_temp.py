@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.stormshield import DETECT_STORMSHIELD
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
 
 
 def inventory_stormshield_cpu_temp(info):
@@ -23,7 +24,12 @@ def check_stormshield_cpu_temp(item, params, info):
     return None
 
 
+def parse_stormshield_cpu_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["stormshield_cpu_temp"] = LegacyCheckDefinition(
+    parse_function=parse_stormshield_cpu_temp,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.10.7.1",

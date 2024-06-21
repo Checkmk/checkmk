@@ -24,7 +24,7 @@
 # z4065084                        Running 1.10:28:39          Operating normally
 # z4133235                        Running 1.03:38:23          Operating normally
 
-# A Version with a plugin that uses tab as seperator and quotes the strings:
+# A Version with a plug-in that uses tab as seperator and quotes the strings:
 # <<<hyperv_vms:sep(9)>>>
 # "Name"  "State" "Uptime"        "Status"
 # "z4058013"      "Running"       "06:05:16"      "Operating normally"
@@ -86,49 +86,82 @@ def parse_hyperv_vms(string_table):
 
 
 def inventory_hyperv_vms(parsed):
-    return [(vm_name, {"state": vm["state"]}) for (vm_name, vm) in parsed.items()]
+    return [(vm_name, {"discovered_state": vm["state"]}) for (vm_name, vm) in parsed.items()]
 
 
 def check_hyperv_vms(item, params, parsed):
     if not (vm := parsed.get(item)):
         return
 
-    # compare against discovered VM state
-    if params.get("compare_discovery"):
-        discovery_state = params.get("state")
+    compare_mode = params["vm_target_state"][0]
+
+    if compare_mode == "discovery":
+        discovered_state = params.get("discovered_state")
 
         # this means that the check is executed as a manual check
-        if discovery_state is None:
-            service_state = 3
-            message = "State is {} ({}), discovery state is not available".format(
+        if discovered_state is None:
+            yield 3, "State is {} ({}), discovery state is not available".format(
                 vm["state"],
                 vm["state_msg"],
             )
-        elif vm["state"] == discovery_state:
-            service_state = 0
-            message = "State {} ({}) matches discovery".format(vm["state"], vm["state_msg"])
-        else:
-            service_state = 2
-            message = "State {} ({}) does not match discovery ({})".format(
-                vm["state"],
-                vm["state_msg"],
-                params["state"],
-            )
+            return
+
+        if vm["state"] == discovered_state:
+            yield 0, "State {} ({}) matches discovery".format(vm["state"], vm["state_msg"])
+            return
+
+        yield 2, "State {} ({}) does not match discovery ({})".format(
+            vm["state"],
+            vm["state_msg"],
+            discovered_state,
+        )
+        return
 
     # service state defined in rule
+    target_states = DEFAULT_STATE_MAPPING | params["vm_target_state"][1]
+    service_state = target_states.get(vm["state"])
+
+    # as a precaution, if in the future there are new VM states we do not know about
+    if service_state is None:
+        yield 3, "Unknown state {} ({})".format(vm["state"], vm["state_msg"])
     else:
-        service_state = params.get(vm["state"])
+        yield service_state, "State is {} ({})".format(vm["state"], vm["state_msg"])
 
-        # as a precaution, if in the future there are new VM states we do not know about
-        if service_state is None:
-            service_state = 3
-            message = "Unknown state {} ({})".format(vm["state"], vm["state_msg"])
 
-        else:
-            message = "State is {} ({})".format(vm["state"], vm["state_msg"])
+DEFAULT_STATE_MAPPING = {
+    "FastSaved": 0,
+    "FastSavedCritical": 2,
+    "FastSaving": 0,
+    "FastSavingCritical": 2,
+    "Off": 1,
+    "OffCritical": 2,
+    "Other": 3,
+    "Paused": 0,
+    "PausedCritical": 2,
+    "Pausing": 0,
+    "PausingCritical": 2,
+    "Reset": 1,
+    "ResetCritical": 2,
+    "Resuming": 0,
+    "ResumingCritical": 2,
+    "Running": 0,
+    "RunningCritical": 2,
+    "Saved": 0,
+    "SavedCritical": 2,
+    "Saving": 0,
+    "SavingCritical": 2,
+    "Starting": 0,
+    "StartingCritical": 2,
+    "Stopping": 1,
+    "StoppingCritical": 2,
+}
 
-    yield service_state, message
-
+DEFAULT_PARAMETERS = {
+    "vm_target_state": (
+        "map",
+        DEFAULT_STATE_MAPPING,
+    ),
+}
 
 check_info["hyperv_vms"] = LegacyCheckDefinition(
     parse_function=parse_hyperv_vms,
@@ -136,31 +169,5 @@ check_info["hyperv_vms"] = LegacyCheckDefinition(
     discovery_function=inventory_hyperv_vms,
     check_function=check_hyperv_vms,
     check_ruleset_name="hyperv_vms",
-    check_default_parameters={
-        "FastSaved": 0,
-        "FastSavedCritical": 2,
-        "FastSaving": 0,
-        "FastSavingCritical": 2,
-        "Off": 1,
-        "OffCritical": 2,
-        "Other": 3,
-        "Paused": 0,
-        "PausedCritical": 2,
-        "Pausing": 0,
-        "PausingCritical": 2,
-        "Reset": 1,
-        "ResetCritical": 2,
-        "Resuming": 0,
-        "ResumingCritical": 2,
-        "Running": 0,
-        "RunningCritical": 2,
-        "Saved": 0,
-        "SavedCritical": 2,
-        "Saving": 0,
-        "SavingCritical": 2,
-        "Starting": 0,
-        "StartingCritical": 2,
-        "Stopping": 1,
-        "StoppingCritical": 2,
-    },
+    check_default_parameters=DEFAULT_PARAMETERS,
 )

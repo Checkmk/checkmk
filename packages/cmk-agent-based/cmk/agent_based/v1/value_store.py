@@ -16,7 +16,7 @@ While a host is being checked this memory is kept in this module.
   Do not store long-time things here. Also do not store complex
   structures like log files or stuff.
 
-This package exposes one function to the plugins (via the API), and
+This package exposes one function to the plug-ins (via the API), and
 one function to the backend.
 
 Check API
@@ -52,8 +52,7 @@ class _ValueStoreManagerProtocol(Protocol):
     def active_service_interface(self) -> MutableMapping[str, Any] | None:  # type: ignore[misc]
         ...
 
-    def save(self) -> None:
-        ...
+    def save(self) -> None: ...
 
 
 _active_host_value_store: _ValueStoreManagerProtocol | None = None
@@ -84,7 +83,7 @@ def set_value_store_manager(
 ) -> Iterator[_TypeValueStoreManager]:
     """Create and load the value store for the host
 
-    This class is not to be used by plugins, and not part of the plugin API.
+    This class is not to be used by plug-ins, and not part of the plug-in API.
     """
     # ^- and yet it sits in this package. That's what you get for using a global state.
     global _active_host_value_store  # pylint: disable=global-statement

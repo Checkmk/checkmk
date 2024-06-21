@@ -146,7 +146,7 @@ PermissionConfigureSidebar = Permission(
     section=PermissionSectionGeneral,
     name="configure_sidebar",
     title=_l("Configure sidebar"),
-    description=_l("This allows the user to add, move and remove sidebar snapins."),
+    description=_l("This allows the user to add, move and remove sidebar snap-ins."),
     defaults=["admin", "user"],
 )
 
@@ -190,7 +190,7 @@ PermissionDisableNotifications = Permission(
     name="disable_notifications",
     title=_l("Disable all personal notifications"),
     description=_l(
-        "This permissions provides a checkbox and timerange in the personal settings of the user that "
+        "This permissions provides a checkbox and time range in the personal settings of the user that "
         "allows him to completely disable all of his notifications. Use with caution."
     ),
     defaults=["admin"],
@@ -254,7 +254,7 @@ PermissionIgnoreHardLimit = Permission(
 PermissionAcknowledgeWerks = Permission(
     section=PermissionSectionGeneral,
     name="acknowledge_werks",
-    title=_l("Acknowledge Incompatible Werks"),
+    title=_l("Acknowledge incompatible Werks"),
     description=_l(
         "In the change log of the Checkmk software version the administrator can manage change log entries "
         "(Werks) that requrire user interaction. These <i>incompatible Werks</i> can be acknowledged only "
@@ -266,10 +266,10 @@ PermissionAcknowledgeWerks = Permission(
 PermissionSeeFailedNotifications24H = Permission(
     section=PermissionSectionGeneral,
     name="see_failed_notifications_24h",
-    title=_l("See failed Notifications (last 24 hours)"),
+    title=_l("See failed notifications (last 24 hours)"),
     description=_l(
         "If Checkmk is unable to notify users about problems, the site will warn about this situation "
-        "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
+        "very visibly inside the UI (both in the tactical overview and the dashboard). This affects only "
         "users with this permission. Users with this permission will only see failed notifications "
         "that occured within the last 24 hours."
     ),
@@ -279,10 +279,10 @@ PermissionSeeFailedNotifications24H = Permission(
 PermissionSeeFailedNotifications = Permission(
     section=PermissionSectionGeneral,
     name="see_failed_notifications",
-    title=_l("See failed Notifications (all)"),
+    title=_l("See failed notifications (all)"),
     description=_l(
         "If Checkmk is unable to notify users about problems, the site will warn about this situation "
-        "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
+        "very visibly inside the UI (both in the tactical overview and the dashboard). This affects only "
         "users with this permission. Users with this permission will see failed notifications between now "
         'and the configured <a href="wato.py?mode=edit_configvar&varname=failed_notification_horizon">Failed notification horizon</a>.'
     ),
@@ -294,7 +294,7 @@ PermissionSeeStalesInTacticalOverview = Permission(
     name="see_stales_in_tactical_overview",
     title=_l("See stale objects in tactical overview"),
     description=_l(
-        "Show the column for stale host and service checks in the tactical overview snapin."
+        "Show the column for stale host and service checks in the tactical overview snap-in."
     ),
     defaults=config.default_authorized_builtin_role_ids,
 )
@@ -314,7 +314,7 @@ PermissionSeeCrashReports = Permission(
 PermissionParentChildTopology = Permission(
     section=PermissionSectionGeneral,
     name="parent_child_topology",
-    title=_l("Network Topology"),
+    title=_l("Network topology"),
     description=_l(
         "This dashboard uses the parent relationships of your hosts to "
         "display a hierarchical map."

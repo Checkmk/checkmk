@@ -10,9 +10,16 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
+
+
+def parse_bintec_sensors(string_table: StringTable) -> StringTable:
+    return string_table
+
 
 check_info["bintec_sensors"] = LegacyCheckDefinition(
+    parse_function=parse_bintec_sensors,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.272.4.17.7.1.1.1",

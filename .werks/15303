@@ -1,0 +1,14 @@
+Title: logwatch_ec: remove spool files after reading them
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698764921
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Before this fix spool files were only removed when they were too old or if
+there were too many of them.
+
+Spool files that got deleted after reading will be recreated if there was
+an error while sending a message.

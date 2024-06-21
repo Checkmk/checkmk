@@ -67,15 +67,14 @@ def show_create_view_dialog(next_url: str | None = None) -> None:
         except MKUserError as e:
             html.user_error(e)
 
-    html.begin_form("create_view")
-    html.hidden_field("mode", "create")
+    with html.form_context("create_view"):
+        html.hidden_field("mode", "create")
 
-    forms.header(_("Select Datasource"))
-    forms.section(vs_ds.title())
-    vs_ds.render_input("ds", ds)
-    html.help(vs_ds.help())
-    forms.end()
+        forms.header(_("Select datasource"))
+        forms.section(vs_ds.title())
+        vs_ds.render_input("ds", ds)
+        html.help(vs_ds.help())
+        forms.end()
 
-    html.hidden_fields()
-    html.end_form()
+        html.hidden_fields()
     html.footer()

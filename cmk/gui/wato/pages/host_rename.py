@@ -5,14 +5,15 @@
 """Modes for renaming one or multiple existing hosts"""
 
 import socket
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
+from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
+from cmk.utils.version import edition_supports_nagvis
 
-import cmk.gui.background_job as background_job
-import cmk.gui.forms as forms
+from cmk.gui import background_job, forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -69,6 +70,12 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeRenameHost)
 
 
+class HostRenamingException(MKGeneralException):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+        self.message = message
+
+
 class ModeBulkRenameHost(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -121,15 +128,10 @@ class ModeBulkRenameHost(WatoMode):
     def action(self) -> ActionResult:
         renaming_config = self._vs_renaming_config().from_html_vars("")
         self._vs_renaming_config().validate_value(renaming_config, "")
-        renamings = self._collect_host_renamings(renaming_config)
-
-        if not renamings:
-            flash(_("No matching host names"))
-            return None
-
-        warning = self._renaming_collision_error(renamings)
-        if warning:
-            flash(warning)
+        try:
+            renamings = self._collect_host_renamings(renaming_config)
+        except HostRenamingException as e:
+            flash(e.message)
             return None
 
         message = HTMLWriter.render_b(
@@ -148,7 +150,7 @@ class ModeBulkRenameHost(WatoMode):
                     HTMLWriter.render_td(host_name) + HTMLWriter.render_td(" → %s" % target_name)
                 )
             )
-        message += HTMLWriter.render_table(HTML().join(rows))
+        message += HTMLWriter.render_table(HTML.empty().join(rows))
 
         nr_rename = len(renamings)
         c = _confirm(
@@ -157,11 +159,18 @@ class ModeBulkRenameHost(WatoMode):
         )
         if c:
             title = _("Renaming of %s") % ", ".join("%s → %s" % x[1:] for x in renamings)
-            host_renaming_job = RenameHostsBackgroundJob(title=title)
+            host_renaming_job = RenameHostsBackgroundJob()
 
             try:
                 host_renaming_job.start(
-                    lambda job_interface: rename_hosts_background_job(renamings, job_interface)
+                    lambda job_interface: rename_hosts_background_job(renamings, job_interface),
+                    background_job.InitialStatusArgs(
+                        title=title,
+                        lock_wato=True,
+                        stoppable=False,
+                        estimated_duration=host_renaming_job.get_status().duration,
+                        user=str(user.id) if user.id else None,
+                    ),
                 )
             except background_job.BackgroundJobAlreadyRunning as e:
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
@@ -171,31 +180,61 @@ class ModeBulkRenameHost(WatoMode):
             return FinalizeRequest(code=200)
         return None  # browser reload
 
-    def _renaming_collision_error(self, renamings):
+    @staticmethod
+    def _format_renamings_warning(message: str, values: Iterable[str]) -> str:
+        values_list = "".join(f"<li>{value}</li>" for value in sorted(values))
+        return f"<b>{message}</b><ul>{values_list}</ul>"
+
+    def _validate_renamings(
+        self, renamings: list[tuple[Folder, HostName, str]]
+    ) -> list[tuple[Folder, HostName, HostName]]:
+        """Check if the new names are valid host names and do not collide with existing hosts.
+        Return a new list of renamings."""
+        invalid_names = set()
         name_collisions = set()
-        new_names = [new_name for _folder, _old_name, new_name in renamings]
+        seen_names = set()
         all_host_names = Host.all().keys()
-        for name in new_names:
-            if name in all_host_names:
-                name_collisions.add(name)
-        for name in new_names:
-            if new_names.count(name) > 1:
-                name_collisions.add(name)
+        updated_renamings = []
+        for folder, old_name, new_name in renamings:
+            if new_name in seen_names or new_name in all_host_names:
+                name_collisions.add(new_name)
+            seen_names.add(new_name)
+            try:
+                updated_renamings.append((folder, old_name, HostName(new_name)))
+            except ValueError:
+                invalid_names.add(new_name)
 
-        if name_collisions:
-            warning = "<b>%s</b><ul>" % _(
-                "You cannot do this renaming since the following host names would collide:"
+        warning = ""
+        if invalid_names:
+            warning += self._format_renamings_warning(
+                _("You cannot do this renaming since the following host names would be invalid:"),
+                invalid_names,
             )
-            for name in sorted(list(name_collisions)):
-                warning += "<li>%s</li>" % name
-            warning += "</ul>"
-            return warning
-        return None
+        if name_collisions:
+            warning += self._format_renamings_warning(
+                _("You cannot do this renaming since the following host names would collide:"),
+                name_collisions,
+            )
+        if warning:
+            raise HostRenamingException(warning)
 
-    def _collect_host_renamings(self, renaming_config):
-        return self._recurse_hosts_for_renaming(folder_from_request(), renaming_config)
+        return updated_renamings
 
-    def _recurse_hosts_for_renaming(self, folder, renaming_config):
+    def _collect_host_renamings(
+        self, renaming_config: dict[str, Any]
+    ) -> list[tuple[Folder, HostName, HostName]]:
+        unchecked = self._recurse_hosts_for_renaming(
+            folder_from_request(request.var("folder"), request.get_ascii_input("host")),
+            renaming_config,
+        )
+        if not unchecked:
+            raise HostRenamingException(_("No matching host names"))
+
+        return self._validate_renamings(unchecked)
+
+    def _recurse_hosts_for_renaming(
+        self, folder: Folder, renaming_config: dict[str, Any]
+    ) -> list[tuple[Folder, HostName, str]]:
         entries = []
         for host_name, host in folder.hosts().items():
             target_name = self._host_renamed_into(host_name, renaming_config)
@@ -206,20 +245,23 @@ class ModeBulkRenameHost(WatoMode):
                 entries += self._recurse_hosts_for_renaming(subfolder, renaming_config)
         return entries
 
-    def _host_renamed_into(self, hostname, renaming_config):
+    def _host_renamed_into(self, hostname: str, renaming_config: dict[str, Any]) -> str | None:
         prefix_regex = regex(renaming_config["match_hostname"])
         if not prefix_regex.match(hostname):
             return None
 
         new_hostname = hostname
         for operation in renaming_config["renamings"]:
-            new_hostname = self._host_renaming_operation(operation, new_hostname)
+            if (result := self._host_renaming_operation(operation, new_hostname)) is not None:
+                new_hostname = result
+            else:
+                return None
 
         if new_hostname != hostname:
             return new_hostname
         return None
 
-    def _host_renaming_operation(self, operation, hostname):
+    def _host_renaming_operation(self, operation: Any, hostname: str) -> str | None:
         if operation == "drop_domain":
             return hostname.split(".", 1)[0]
         if operation == "reverse_dns":
@@ -253,14 +295,13 @@ class ModeBulkRenameHost(WatoMode):
         return None
 
     def page(self) -> None:
-        html.begin_form("bulk_rename_host", method="POST")
-        self._vs_renaming_config().render_input("", {})
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("bulk_rename_host", method="POST"):
+            self._vs_renaming_config().render_input("", {})
+            html.hidden_fields()
 
     def _vs_renaming_config(self):
         return Dictionary(
-            title=_("Bulk Renaming"),
+            title=_("Bulk renaming"),
             render="form",
             elements=[
                 (
@@ -274,9 +315,9 @@ class ModeBulkRenameHost(WatoMode):
                 (
                     "match_hostname",
                     RegExp(
-                        title=_("Hostname matching"),
+                        title=_("Host name matching"),
                         help=_(
-                            "Only rename hostnames whose names <i>begin</i> with the regular expression entered here."
+                            "Only rename host names whose names <i>begin</i> with the regular expression entered here."
                         ),
                         mode=RegExp.complete,
                     ),
@@ -303,13 +344,13 @@ class ModeBulkRenameHost(WatoMode):
                     _("Case translation"),
                     DropdownChoice(
                         choices=[
-                            ("upper", _("Convert hostnames to upper case")),
-                            ("lower", _("Convert hostnames to lower case")),
+                            ("upper", _("Convert host names to upper case")),
+                            ("lower", _("Convert host names to lower case")),
                         ]
                     ),
                 ),
-                ("add_suffix", _("Add Suffix"), Hostname()),
-                ("add_prefix", _("Add Prefix"), Hostname()),
+                ("add_suffix", _("Add Suffix"), TextInput(allow_empty=False, size=38)),
+                ("add_prefix", _("Add Prefix"), TextInput(allow_empty=False, size=38)),
                 ("drop_domain", _("Drop Domain Suffix")),
                 ("reverse_dns", _("Convert IP addresses of hosts into host their DNS names")),
                 (
@@ -404,9 +445,9 @@ class ModeRenameHost(WatoMode):
         return ModeEditHost
 
     def _from_vars(self) -> None:
-        host_name = HostName(request.get_ascii_input_mandatory("host"))
+        host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), host_name)
         if not folder.has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
@@ -474,19 +515,24 @@ class ModeRenameHost(WatoMode):
                 % renamed_host_site,
             )
 
-        newname = HostName(request.get_ascii_input_mandatory("newname"))
-        folder = folder_from_request()
+        newname = request.get_validated_type_input_mandatory(HostName, "newname")
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         self._check_new_host_name(folder, "newname", newname)
         # Creating pending entry. That makes the site dirty and that will force a sync of
         # the config to that site before the automation is being done.
-        host_renaming_job = RenameHostBackgroundJob(
-            self._host, title=_("Renaming of %s -> %s") % (self._host.name(), newname)
-        )
+        host_renaming_job = RenameHostBackgroundJob(self._host)
         renamings = [(folder, self._host.name(), newname)]
 
         try:
             host_renaming_job.start(
-                lambda job_interface: rename_hosts_background_job(renamings, job_interface)
+                lambda job_interface: rename_hosts_background_job(renamings, job_interface),
+                background_job.InitialStatusArgs(
+                    title=_("Renaming of %s -> %s") % (self._host.name(), newname),
+                    lock_wato=True,
+                    stoppable=False,
+                    estimated_duration=host_renaming_job.get_status().duration,
+                    user=str(user.id) if user.id else None,
+                ),
             )
         except background_job.BackgroundJobAlreadyRunning as e:
             raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
@@ -510,7 +556,7 @@ class ModeRenameHost(WatoMode):
             )
         )
 
-        html.begin_form(
+        with html.form_context(
             "rename_host",
             method="POST",
             require_confirmation=RequireConfirmation(
@@ -523,16 +569,15 @@ class ModeRenameHost(WatoMode):
                 confirmButtonText=_("Yes, rename"),
                 cancelButtonText=_("No, keep current name"),
             ),
-        )
-        forms.header(_("Rename host %s") % self._host.name())
-        forms.section(_("Current name"))
-        html.write_text(self._host.name())
-        forms.section(_("New name"))
-        html.text_input("newname", "")
-        forms.end()
-        html.set_focus("newname")
-        html.hidden_fields()
-        html.end_form()
+        ):
+            forms.header(_("Rename host %s") % self._host.name())
+            forms.section(_("Current name"))
+            html.write_text_permissive(self._host.name())
+            forms.section(_("New name"))
+            html.text_input("newname", "")
+            forms.end()
+            html.set_focus("newname")
+            html.hidden_fields()
 
 
 # renamings is a list of tuples of (folder, oldname, newname)
@@ -561,18 +606,20 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         "piggyback-pig": _("Piggyback information for other hosts"),
         "autochecks": _("Disovered services of the host"),
         "host-labels": _("Disovered host labels of the host"),
-        "logwatch": _("Logfile information of logwatch plugin"),
+        "logwatch": _("Logfile information of logwatch plug-in"),
         "snmpwalk": _("A stored SNMP walk"),
         "rrd": _("RRD databases with performance data"),
         "rrdcached": _("RRD updates in journal of RRD Cache"),
         "pnpspool": _("Spool files of PNP4Nagios"),
-        "nagvis": _("NagVis map"),
         "history": _("Monitoring history entries (events and availability)"),
         "retention": _("The current monitoring state (including acknowledgements and downtimes)"),
         "inv": _("Recent hardware/software inventory"),
         "invarch": _("History of hardware/software inventory"),
         "uuid_link": _("UUID links for TLS-encrypting agent communication"),
     }
+
+    if edition_supports_nagvis():
+        action_titles["nagvis"] = _("NagVis map")
 
     texts = []
     for what, count in sorted(action_counts.items()):

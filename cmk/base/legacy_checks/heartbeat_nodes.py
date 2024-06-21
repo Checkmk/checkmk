@@ -16,6 +16,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_heartbeat_nodes(info):
     return [(line[0], None) for line in info if line[0] != ""]
@@ -52,7 +54,12 @@ def check_heartbeat_nodes(item, params, info):
     return (3, "Node is not present anymore")
 
 
+def parse_heartbeat_nodes(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["heartbeat_nodes"] = LegacyCheckDefinition(
+    parse_function=parse_heartbeat_nodes,
     service_name="Heartbeat Node %s",
     discovery_function=inventory_heartbeat_nodes,
     check_function=check_heartbeat_nodes,

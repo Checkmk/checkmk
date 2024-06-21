@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.fireeye import DETECT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.fireeye import DETECT
 
 
 def inventory_fireeye_lic_expiration(info):
@@ -31,7 +32,12 @@ def check_fireeye_lic_expiration(item, params, info):
                 yield 2, infotext + " (warn/crit at %d/%d days)" % (warn, crit), perfdata
 
 
+def parse_fireeye_lic_expiration(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fireeye_lic_expiration"] = LegacyCheckDefinition(
+    parse_function=parse_fireeye_lic_expiration,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1.16.1",

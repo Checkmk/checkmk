@@ -80,13 +80,12 @@ def markdown_to_nowiki(content: str) -> str:
                 if element.text is not None or element:
                     yield _render_children(element)
                     yield ""
+                elif element[0].tag == "code":
+                    yield "C+:"
+                    yield _render_children(element[0])
+                    yield "\n----\nC-:\n"
                 else:
-                    if element[0].tag == "code":
-                        yield "C+:"
-                        yield _render_children(element[0])
-                        yield "\n----\nC-:\n"
-                    else:
-                        raise NotImplementedError()
+                    raise NotImplementedError()
             elif element.tag == "ul":
                 for li in element:
                     yield f"LI: {_render_children(li)}"
@@ -103,19 +102,6 @@ def markdown_to_nowiki(content: str) -> str:
                 yield _render_element(element)
 
     return "\n".join(generator())
-
-
-# CMK-14546
-# def _escape_markdown(text: str) -> str:
-#     """
-#     >>> _escape_markdown("- one")
-#     '\\\\- one'
-#     >>> _escape_markdown("some_thing")
-#     'some\\\\_thing'
-#     >>> _escape_markdown("some[thing")
-#     'some\\\\[thing'
-#     """
-#     return re.sub(r"([\`*_{}\[\]()#+-.!])", r"\\\1", text)
 
 
 def markdown_to_html(text: str) -> str:

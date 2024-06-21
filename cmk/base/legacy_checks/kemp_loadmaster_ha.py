@@ -9,7 +9,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, any_of, equals, exists, SNMPTree
+
+from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, StringTable
 
 
 def inventory_kemp_loadmaster_ha(info):
@@ -29,7 +30,12 @@ def check_kemp_loadmaster_ha(_no_item, _no_params, info):
     return 0, f"Device is: {map_states[info[0][0]]} (Firmware: {info[0][1]})"
 
 
+def parse_kemp_loadmaster_ha(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["kemp_loadmaster_ha"] = LegacyCheckDefinition(
+    parse_function=parse_kemp_loadmaster_ha,
     detect=all_of(
         any_of(
             equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12196.250.10"),

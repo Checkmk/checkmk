@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Callable
 
-import cmk.gui.visuals as visuals
-from cmk.gui import forms
+from cmk.gui import forms, visuals
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
@@ -124,12 +125,15 @@ class EditDashletPage(Page):
 
         def dashlet_info_handler(dashlet_spec: DashletConfig) -> SingleInfos:
             assert isinstance(self._ident, int)
+            assert user.id is not None
             dashlet_type = dashlet_registry[dashlet_spec["type"]]
-            dashlet = dashlet_type(self._board, self._dashboard, self._ident, dashlet_spec)
+            dashlet = dashlet_type(self._board, user.id, self._dashboard, self._ident, dashlet_spec)
             return dashlet.infos()
 
         context_specs = visuals.get_context_specs(
-            dashlet_spec["single_infos"], dashlet_info_handler(dashlet_spec)
+            dashlet_spec["single_infos"],
+            dashlet_info_handler(dashlet_spec),
+            dashlet_type.ignored_context_choices(),
         )
 
         vs_type: ValueSpec | None = None
@@ -206,20 +210,19 @@ class EditDashletPage(Page):
             except MKUserError as e:
                 html.user_error(e)
 
-        html.begin_form("dashlet", method="POST")
-        vs_general.render_input("general", dict(dashlet_spec))
-        if context_specs:
-            visuals.render_context_specs(dashlet_spec["context"], context_specs)
+        with html.form_context("dashlet", method="POST"):
+            vs_general.render_input("general", dict(dashlet_spec))
+            if context_specs:
+                visuals.render_context_specs(dashlet_spec["context"], context_specs)
 
-        if vs_type:
-            vs_type.render_input("type", dict(dashlet_spec))
-        elif render_input_func:
-            render_input_func(dashlet_spec)
+            if vs_type:
+                vs_type.render_input("type", dict(dashlet_spec))
+            elif render_input_func:
+                render_input_func(dashlet_spec)
 
-        forms.end()
-        html.show_localization_hint()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.show_localization_hint()
+            html.hidden_fields()
 
         html.footer()
         return None
@@ -276,7 +279,7 @@ def dashlet_vs_general_settings(
                         (
                             _(
                                 "Most elements have a hard coded static title and some are aware of their "
-                                "content and set the title dynamically, like the view snapin, which "
+                                "content and set the title dynamically, like the view snap-in, which "
                                 "displays the title of the view. If you like to use any other title, set it "
                                 "here."
                             ),

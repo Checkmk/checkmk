@@ -14,6 +14,10 @@ test_checkmk_section() {
 
     assertContains "$checkmk_section" "<<<check_mk>>>"
     assertContains "$checkmk_section" "AgentOS: linux"
+    assertContains "$checkmk_section" "OSType: linux"
+    assertContains "$checkmk_section" "OSPlatform: "
+    assertContains "$checkmk_section" "OSName: "
+    assertContains "$checkmk_section" "OSVersion: "
 
 }
 

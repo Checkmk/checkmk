@@ -2,7 +2,7 @@
 set -e
 
 # Fmt creates regular releases.
-TAG=9.0.0
+TAG=10.2.1
 
 curl --silent \
     --show-error \

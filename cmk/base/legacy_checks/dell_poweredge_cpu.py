@@ -4,16 +4,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.dell_poweredge import (
-    check_dell_poweredge_cpu,
-    inventory_dell_poweredge_cpu,
-)
+from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_cpu
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.dell import DETECT_IDRAC_POWEREDGE
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
+
+
+def inventory_dell_poweredge_cpu(info):
+    for _chassisIndex, _Index, StateSettings, _Status, LocationName in info[0]:
+        if LocationName != "" and StateSettings != "1":
+            yield LocationName, None
+
+
+def parse_dell_poweredge_cpu(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
 
 check_info["dell_poweredge_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_dell_poweredge_cpu,
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=[
         SNMPTree(

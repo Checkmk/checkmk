@@ -2,39 +2,57 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Iterable
+from typing import Any
 
-
-from cmk.base.check_api import LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.apc_ats import (
+    CommunictionStatus,
+    DETECT,
+    OverCurrentStatus,
+    PowerSupplyStatus,
+    RedunandancyStatus,
+    Source,
+    Status,
+)
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 
-def inventory_apc_ats_status(info):
+def parse_apc_ats_status(info: StringTable) -> Status | None:
     if len(info) == 1:
-        return [(None, saveint(info[0][1]))]
-    return []
+        return Status.from_raw(info[0])
+    return None
 
 
-def check_apc_ats_status(_no_item, source, info):
-    comstatus, selected_source, redundancy, overcurrent, ps5, ps24 = map(saveint, info[0])
+def inventory_apc_ats_status(parsed: Status) -> Iterable[tuple[None, dict]]:
+    if parsed and parsed.selected_source:
+        yield None, {"power_source": parsed.selected_source.value}
+
+
+def check_apc_ats_status(_no_item: Any, params: dict, parsed: Status) -> Iterable:
+    source = params["power_source"]
     state = 0
     messages = []
 
     # current source of power
-    sources = {1: "A", 2: "B"}
-    if source != selected_source:
+    source_parsed = Source(source)
+    if source_parsed != parsed.selected_source:
         state = 2
+        assert parsed.selected_source is not None
         messages.append(
-            f"Power source Changed from {sources[source]} to {sources[selected_source]}(!!)"
+            "Power source Changed from %s to %s(!!)"
+            % (source_parsed.name, parsed.selected_source.name)
         )
     else:
-        messages.append("Power source %s selected" % sources[source])
+        messages.append("Power source %s selected" % source_parsed.name)
 
     # current communication status of the Automatic Transfer Switch.
-    if comstatus == 1:
+    if parsed.com_status == CommunictionStatus.NeverDiscovered:
         state = max(1, state)
         messages.append("Communication Status: never Discovered(!)")
-    elif comstatus == 3:
+    elif parsed.com_status == CommunictionStatus.Lost:
         state = 2
         messages.append("Communication Status: lost(!!)")
 
@@ -42,7 +60,7 @@ def check_apc_ats_status(_no_item, source, info):
     # Lost(1) indicates that the ATS is unable to switch over to the alternate power source
     # if the current source fails. Redundant(2) indicates that the ATS will switch
     # over to the alternate power source if the current source fails.
-    if redundancy != 2:
+    if parsed.redundancy == RedunandancyStatus.Lost:
         state = 2
         messages.append("redundancy lost(!!)")
     else:
@@ -52,30 +70,29 @@ def check_apc_ats_status(_no_item, source, info):
     # exceeded the output current threshold and will not allow a switch
     # over to the alternate power source if the current source fails.
     # atsCurrentOK(2) indicates that the output current is below the output current threshold.
-    if overcurrent == 1:
+    if parsed.overcurrent == OverCurrentStatus.Exceeded:
         state = 2
-        messages.append("exceedet ouput current threshold(!!)")
+        messages.append("exceeded ouput current threshold(!!)")
 
-    # 5Volt power supply
-    if ps5 != 2:
-        state = 2
-        messages.append("5V power supply failed(!!)")
-
-    # 24Volt power supply
-    if ps24 != 2:
-        state = 2
-        messages.append("24V power suppy failed(!!)")
+    for powersource in parsed.powersources:
+        if powersource is None:
+            continue
+        if powersource.status != PowerSupplyStatus.OK:
+            state = 2
+            messages.append(f"{powersource.name} power supply failed(!!)")
 
     return state, ", ".join(messages)
 
 
 check_info["apc_ats_status"] = LegacyCheckDefinition(
-    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.11"),
+    parse_function=parse_apc_ats_status,
+    detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.8.5.1",
-        oids=["1.0", "2.0", "3.0", "4.0", "5.0", "6.0"],
+        oids=["1.0", "2.0", "3.0", "4.0", "5.0", "6.0", "17.0", "18.0"],
     ),
     service_name="ATS Status",
     discovery_function=inventory_apc_ats_status,
     check_function=check_apc_ats_status,
+    check_default_parameters={},
 )

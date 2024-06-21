@@ -3,20 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.df import FSBlock
+
+from cmk.plugins.lib.df import FSBlock
 
 
-def inventory_emc_isilon_ifs(section: FSBlock):
+def inventory_emc_isilon_ifs(section: FSBlock) -> list[tuple[str, None]]:
     return [("Cluster", None)]
 
 
-def check_emc_isilon_ifs(item, params, section: FSBlock):
+def check_emc_isilon_ifs(item: str, params: Mapping[str, Any], section: FSBlock) -> Iterable:
     return df_check_filesystem_list("ifs", params, [section])
 
 

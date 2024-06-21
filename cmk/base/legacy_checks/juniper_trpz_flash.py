@@ -6,10 +6,11 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, savefloat
+from cmk.base.check_api import LegacyCheckDefinition, savefloat
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_TRPZ
+
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.plugins.lib.juniper import DETECT_JUNIPER_TRPZ
 
 
 def inventory_juniper_trpz_flash(info):
@@ -19,7 +20,7 @@ def inventory_juniper_trpz_flash(info):
 def check_juniper_trpz_flash(_no_item, params, info):
     warn, crit = params["levels"]
     used, total = map(savefloat, info[0])
-    message = f"Used: {get_bytes_human_readable(used)} of {get_bytes_human_readable(total)} "
+    message = f"Used: {render.bytes(used)} of {render.bytes(total)} "
     perc_used = (used / total) * 100  # fixed: true-division
     if isinstance(crit, float):
         a_warn = (warn / 100.0) * total
@@ -33,8 +34,8 @@ def check_juniper_trpz_flash(_no_item, params, info):
     else:
         perf = [("used", used, warn, crit, 0, total)]
         levels = "Levels Warn/Crit are ({}, {})".format(
-            get_bytes_human_readable(warn),
-            get_bytes_human_readable(crit),
+            render.bytes(warn),
+            render.bytes(crit),
         )
         if used > crit:
             return 2, message + levels, perf
@@ -43,7 +44,12 @@ def check_juniper_trpz_flash(_no_item, params, info):
     return 0, message, perf
 
 
+def parse_juniper_trpz_flash(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["juniper_trpz_flash"] = LegacyCheckDefinition(
+    parse_function=parse_juniper_trpz_flash,
     detect=DETECT_JUNIPER_TRPZ,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.8.1.1",

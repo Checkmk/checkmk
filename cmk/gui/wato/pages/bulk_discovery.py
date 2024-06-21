@@ -11,8 +11,9 @@ from typing import cast
 
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.forms as forms
-import cmk.gui.sites as sites
+from cmk.checkengine.discovery import DiscoverySettings
+
+from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
@@ -29,7 +30,6 @@ from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
     BulkSize,
     DiscoveryHost,
-    DiscoveryMode,
     DoFullScan,
     IgnoreErrors,
     start_bulk_discovery,
@@ -68,7 +68,9 @@ class ModeBulkDiscovery(WatoMode):
         self._just_started = False
         self._get_bulk_discovery_params()
         self._job = BulkDiscoveryBackgroundJob()
-        self._folder = disk_or_search_folder_from_request()
+        self._folder = disk_or_search_folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        )
 
     def _get_bulk_discovery_params(self) -> None:
         self._bulk_discovery_params = copy.deepcopy(active_config.bulk_discovery_default_settings)
@@ -85,7 +87,7 @@ class ModeBulkDiscovery(WatoMode):
         )
 
         self._do_full_scan, self._bulk_size = self._get_performance_params()
-        self._mode = DiscoveryMode(self._bulk_discovery_params["mode"])
+        self._mode = DiscoverySettings.from_vs(self._bulk_discovery_params.get("mode"))
         self._ignore_errors = IgnoreErrors(self._bulk_discovery_params["error_handling"])
 
     def _get_performance_params(self) -> tuple[DoFullScan, BulkSize]:
@@ -152,41 +154,39 @@ class ModeBulkDiscovery(WatoMode):
         self._show_start_form()
 
     def _show_start_form(self) -> None:
-        html.begin_form("bulkinventory", method="POST")
+        with html.form_context("bulkinventory", method="POST"):
+            msgs = []
+            if self._all:
+                vs = vs_bulk_discovery(render_form=True)
+            else:
+                # "Include subfolders" does not make sense for a selection of hosts
+                # which is already given in the following situations:
+                # - in the current folder below 'Selected hosts: Discovery'
+                # - Below 'Bulk import' a automatic service discovery for
+                #   imported/selected hosts can be executed
+                vs = vs_bulk_discovery(render_form=True, include_subfolders=False)
+                msgs.append(
+                    _("You have selected <b>%d</b> hosts for bulk discovery.")
+                    % len(self._get_hosts_to_discover())
+                )
+                # The cast is needed for the moment, because mypy does not understand our data structure here
+                selection = cast(
+                    tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
+                )
+                self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 
-        msgs = []
-        if self._all:
-            vs = vs_bulk_discovery(render_form=True)
-        else:
-            # "Include subfolders" does not make sense for a selection of hosts
-            # which is already given in the following situations:
-            # - in the current folder below 'Selected hosts: Discovery'
-            # - Below 'Bulk import' a automatic service discovery for
-            #   imported/selected hosts can be executed
-            vs = vs_bulk_discovery(render_form=True, include_subfolders=False)
             msgs.append(
-                _("You have selected <b>%d</b> hosts for bulk discovery.")
-                % len(self._get_hosts_to_discover())
+                _(
+                    "The Checkmk discovery will automatically find and configure services "
+                    "to be checked on your hosts and may also discover host labels."
+                )
             )
-            # The cast is needed for the moment, because mypy does not understand our data structure here
-            selection = cast(
-                tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
-            )
-            self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
+            html.open_p()
+            html.write_text_permissive(" ".join(msgs))
+            vs.render_input("bulkinventory", self._bulk_discovery_params)
+            forms.end()
 
-        msgs.append(
-            _(
-                "The Checkmk discovery will automatically find and configure services "
-                "to be checked on your hosts and may also discover host labels."
-            )
-        )
-        html.open_p()
-        html.write_text(" ".join(msgs))
-        vs.render_input("bulkinventory", self._bulk_discovery_params)
-        forms.end()
-
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
     def _get_hosts_to_discover(self) -> list[DiscoveryHost]:
         if self._only_failed_invcheck:

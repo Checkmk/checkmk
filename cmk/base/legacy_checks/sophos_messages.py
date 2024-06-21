@@ -22,12 +22,8 @@ import time
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    equals,
-    get_rate,
-    get_value_store,
-    SNMPTree,
-)
+
+from cmk.agent_based.v2 import equals, get_rate, get_value_store, SNMPTree, StringTable
 
 
 def inventory_sophos_messages(info):
@@ -55,7 +51,12 @@ def check_sophos_messages(item, params, info):
     return None
 
 
+def parse_sophos_messages(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["sophos_messages"] = LegacyCheckDefinition(
+    parse_function=parse_sophos_messages,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2604"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2604.1.1.1.4.1",

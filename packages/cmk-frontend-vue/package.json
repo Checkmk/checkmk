@@ -1,0 +1,44 @@
+{
+  "name": "cmk-frontend-vue",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test-eslint": "eslint . --max-warnings 0 --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-path .gitignore",
+    "test-tsc": "vue-tsc --build",
+    "test-prettier": "prettier  --check src/ *.json *.ts *.html",
+    "prettier": "prettier --write src/ *.json *.ts *.html"
+  },
+  "dependencies": {
+    "core-js": "^3.37.1",
+    "crossfilter2": "^1.5.4",
+    "d3": "^7.9.0",
+    "jquery": "^3.7.1",
+    "vue": "^3.4.27"
+  },
+  "devDependencies": {
+    "@rushstack/eslint-patch": "^1.10.3",
+    "@testing-library/vue": "^8.1.0",
+    "@tsconfig/node20": "^20.1.4",
+    "@types/d3": "^7.4.3",
+    "@types/node": "^20.14.2",
+    "@vitejs/plugin-vue": "^5.0.5",
+    "@vue/eslint-config-prettier": "^9.0.0",
+    "@vue/eslint-config-typescript": "^13.0.0",
+    "@vue/tsconfig": "^0.5.1",
+    "chai": "^5.1.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-vue": "^9.26.0",
+    "jsdom": "^24.1.0",
+    "npm-run-all2": "^6.2.0",
+    "prettier": "^3.3.1",
+    "typescript": "~5.4.5",
+    "vite": "^5.2.12",
+    "vitest": "^1.6.0",
+    "vue-tsc": "^2.0.19"
+  }
+}

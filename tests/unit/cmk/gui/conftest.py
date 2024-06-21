@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # pylint: disable=redefined-outer-name
 from __future__ import annotations
 
@@ -15,16 +17,15 @@ from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from typing import Any, ContextManager, Literal, NamedTuple
 from unittest import mock
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
-import webtest  # type: ignore[import]
+import webtest  # type: ignore[import-untyped]
 from flask import Flask
 from mypy_extensions import KwArg
 from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
-from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.rest_api_client import (
     ClientRegistry,
     expand_rel,
@@ -34,33 +35,30 @@ from tests.testlib.rest_api_client import (
     Response,
     RestApiClient,
 )
-from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.plugin_registry import Registry
 from cmk.utils.user import UserId
 
 from cmk.automations.results import DeleteHostsResult
 
 import cmk.gui.config as config_module
-import cmk.gui.login as login
-import cmk.gui.watolib.activate_changes as activate_changes
-import cmk.gui.watolib.groups as groups
-import cmk.gui.watolib.mkeventd as mkeventd
-from cmk.gui import hooks, http, main_modules, userdb
+import cmk.gui.mkeventd.wato as mkeventd
+import cmk.gui.watolib.password_store
+from cmk.gui import hooks, http, login, main_modules, userdb
 from cmk.gui.config import active_config
-from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.livestatus_utils.testing import mock_livestatus
-from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.session import session, SuperUserContext, UserContext
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.session import load_session_infos
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
+from cmk.gui.watolib import activate_changes, groups
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+
+from .users import create_and_destroy_user
 
 SPEC_LOCK = threading.Lock()
 
@@ -82,24 +80,52 @@ HTTPMethod = Literal[
 ]  # fmt: off
 
 
-@pytest.fixture(autouse=True)
-def deactivate_search_index_building_at_requenst_end(mocker: MockerFixture) -> None:
-    mocker.patch(
-        "cmk.gui.watolib.search.updates_requested",
-        return_value=False,
+@pytest.fixture
+def mock_password_file_regeneration(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        cmk.gui.watolib.password_store,
+        cmk.gui.watolib.password_store.update_passwords_merged_file.__name__,
+        lambda: None,
     )
 
 
 @pytest.fixture(autouse=True)
 def gui_cleanup_after_test(
-    request_context: None,
-    deactivate_search_index_building_at_requenst_end: None,
+    mocker: MockerFixture,
 ) -> Iterator[None]:
+    # deactivate_search_index_building_at_requenst_end.
+    mocker.patch("cmk.gui.watolib.search.updates_requested", return_value=False)
     yield
-
     # In case some tests use @request_memoize but don't use the request context, we'll emit the
     # clear event after each request.
     hooks.call("request-end")
+
+
+def fake_detect_icon_path(_: None, icon_name: str = "", prefix: str = "") -> str:
+    if icon_name == "link":
+        return "themes/facelift/images/icon_link.png"
+    if icon_name == "info":
+        return "themes/facelift/images/icon_info.svg"
+    return "unittest.png"
+
+
+@pytest.fixture()
+def patch_theme() -> Iterator[None]:
+    with (
+        patch(
+            "cmk.gui.utils.theme.Theme.detect_icon_path",
+            new=fake_detect_icon_path,
+        ),
+        patch(
+            "cmk.gui.utils.theme.Theme.get",
+            return_value="modern-dark",
+        ),
+        patch(
+            "cmk.gui.utils.theme.theme_choices",
+            return_value=[("modern-dark", "dark ut"), ("facelift", "light ut")],
+        ),
+    ):
+        yield
 
 
 @pytest.fixture()
@@ -174,7 +200,7 @@ def set_config(**kwargs: Any) -> Iterator[None]:
 def load_plugins() -> None:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
-        raise Exception(f"The following errors occured during plugin loading: {errors}")
+        raise Exception(f"The following errors occured during plug-in loading: {errors}")
 
 
 @pytest.fixture()
@@ -258,28 +284,13 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("cmk.utils.daemon.closefrom")
 
 
-# TODO: The list of registries is not complete. It would be better to selectively solve this
-# A good next step would be to prevent modifications of registries during test execution and
-# only allow them selectively with an automatic cleanup after the test finished.
-@pytest.fixture(autouse=True)
-def reset_gui_registries() -> Iterator[None]:
-    """Fixture to reset registries to its default entries."""
-    registries: list[Registry[Any]] = [
-        dashlet_registry,
-        permission_registry,
-        permission_section_registry,
-    ]
-    with reset_registries(registries):
-        yield
-
-
 @pytest.fixture()
 def with_automation_user(request_context: None, load_config: None) -> Iterator[tuple[UserId, str]]:
     with create_and_destroy_user(automation=True, role="admin") as user:
         yield user
 
 
-class WebTestAppForCMK(webtest.TestApp):
+class WebTestAppForCMK(webtest.TestApp):  # type: ignore[misc]
     """A webtest.TestApp class with helper functions for automation user APIs"""
 
     def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]
@@ -346,7 +357,7 @@ def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request
     # environment dict. When however a Request is passed in, the environment of the Request will
     # not be touched.
     user_id, _ = with_user
-    yield http.Request({**create_environ(), "REMOTE_USER": str(user_id)})
+    yield http.Request({**create_environ(path="/NO_SITE/"), "REMOTE_USER": str(user_id)})
 
 
 @pytest.fixture()
@@ -362,8 +373,7 @@ def admin_auth_request(
 
 
 class SingleRequest(typing.Protocol):
-    def __call__(self, *, in_the_past: int = 0) -> tuple[UserId, SessionInfo]:
-        ...
+    def __call__(self, *, in_the_past: int = 0) -> tuple[UserId, SessionInfo]: ...
 
 
 @pytest.fixture(scope="function")
@@ -436,7 +446,7 @@ def with_groups(monkeypatch, request_context, with_admin_login, suppress_remote_
     yield
     groups.delete_group("windows", "host")
     groups.delete_group("routers", "service")
-    monkeypatch.setattr(mkeventd, "get_rule_stats_from_ec", lambda: {})
+    monkeypatch.setattr(mkeventd, "_get_rule_stats_from_ec", lambda: {})
     groups.delete_group("admins", "contact")
 
 
@@ -454,7 +464,7 @@ def with_host(
     root_folder.delete_hosts(hostnames, automation=lambda *args, **kwargs: DeleteHostsResult())
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock__add_extensions_for_license_usage(monkeypatch):
     monkeypatch.setattr(activate_changes, "_add_extensions_for_license_usage", lambda: None)
 
@@ -506,7 +516,7 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
 
 @pytest.fixture()
-def flask_app() -> Flask:
+def flask_app(patch_omd_site: None, use_fakeredis_client: None) -> Flask:
     return session_wsgi_app(testing=True)
 
 

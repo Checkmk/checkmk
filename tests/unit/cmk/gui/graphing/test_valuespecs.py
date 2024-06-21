@@ -36,17 +36,19 @@ from cmk.gui.graphing._valuespecs import (
     ],
 )
 def test_migrate_graph_render_options_title_format(
-    entry: Literal["plain"]
-    | Literal["add_host_name"]
-    | Literal["add_host_alias"]
-    | tuple[
-        Literal["add_title_infos"],
-        list[
-            Literal["add_host_name"]
-            | Literal["add_host_alias"]
-            | Literal["add_service_description"]
-        ],
-    ],
+    entry: (
+        Literal["plain"]
+        | Literal["add_host_name"]
+        | Literal["add_host_alias"]
+        | tuple[
+            Literal["add_title_infos"],
+            list[
+                Literal["add_host_name"]
+                | Literal["add_host_alias"]
+                | Literal["add_service_description"]
+            ],
+        ]
+    ),
     result: Sequence[str],
 ) -> None:
     assert migrate_graph_render_options_title_format(entry) == result

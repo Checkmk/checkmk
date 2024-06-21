@@ -5,25 +5,24 @@
 
 import copy
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from typing import Literal
 from uuid import uuid4
 
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._graph_render_config import GraphRenderConfig
-from cmk.gui.graphing._graph_specification import CombinedSingleMetricSpec, GraphMetric
+from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._html_render import (
     make_graph_data_range,
     render_graphs_from_specification_html,
 )
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
-from cmk.gui.http import request, response
+from cmk.gui.http import Request, response, Response
 from cmk.gui.i18n import _, _l
-from cmk.gui.logged_in import user
-from cmk.gui.painter.v0.base import Cell, Painter2
+from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import (
     get_graph_timerange_from_painter_options,
     PainterOption,
@@ -71,7 +70,7 @@ _GRAPH_VIEWS = {
             "column_headers": "off",
             "datasource": "services",
             "description": _l(
-                "Shows all graphs including timerange selections of a collection of services."
+                "Shows all graphs including time range selections of a collection of services."
             ),
             "group_painters": [
                 ColumnSpec(
@@ -110,6 +109,7 @@ _GRAPH_VIEWS = {
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
+            "megamenu_search_terms": [],
         }
     ),
     "host_graphs": ViewSpec(
@@ -118,7 +118,7 @@ _GRAPH_VIEWS = {
             "column_headers": "off",
             "datasource": "hosts",
             "description": _l(
-                "Shows host graphs including timerange selections of a collection of hosts."
+                "Shows host graphs including time range selections of a collection of hosts."
             ),
             "group_painters": [
                 ColumnSpec(
@@ -151,19 +151,22 @@ _GRAPH_VIEWS = {
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
+            "megamenu_search_terms": [],
         }
     ),
 }
 
 
-def paint_time_graph_cmk(
+def paint_time_graph_cmk(  # pylint: disable=redefined-outer-name
     row: Row,
     cell: Cell,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
     *,
+    user: LoggedInUser,
+    request: Request,
+    response: Response,
+    painter_options: PainterOptions,
     show_time_range_previews: bool | None = None,
+    require_historic_metrics: bool = True,
 ) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
     # a) the painter parameters configured in the view
@@ -176,15 +179,14 @@ def paint_time_graph_cmk(
     if show_time_range_previews is not None:
         graph_render_options["show_time_range_previews"] = show_time_range_previews
 
-    painter_options = PainterOptions.get_instance()
     options = painter_options.get_without_default("graph_render_options")
     if options is not None:
         graph_render_options.update(options)
 
-    graph_render_config = GraphRenderConfig.from_render_options_and_context(
-        graph_render_options,
+    graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
         theme.get(),
+        **graph_grender_options_from_vs(graph_render_options),
     )
 
     now = int(time.time())
@@ -225,7 +227,7 @@ def paint_time_graph_cmk(
         available_metrics = row["service_metrics"]
         perf_data = row["service_perf_data"]
 
-    if not available_metrics and perf_data:
+    if not available_metrics and perf_data and require_historic_metrics:
         return "", _(
             "No historic metrics recorded but performance data is available. "
             "Maybe performance data processing is disabled."
@@ -239,7 +241,6 @@ def paint_time_graph_cmk(
         ),
         graph_data_range,
         graph_render_config,
-        resolve_combined_single_metric_spec,
         # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
         # Unfortunately, we have no access to this information here. Regarding the rows, we could
         # use (site, host, service) as identifier, but for the columns, there does not seem to be
@@ -248,21 +249,6 @@ def paint_time_graph_cmk(
         # painter settings (which makes sense). The caching in graph.ts breaks this assumption. So
         # for now, we randomize. See also CMK-13840.
         graph_display_id=str(uuid4()),
-    )
-
-
-def paint_cmk_graphs_with_timeranges(
-    row: Row,
-    cell: Cell,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> tuple[Literal[""], HTML | str]:
-    return paint_time_graph_cmk(
-        row,
-        cell,
-        resolve_combined_single_metric_spec,
-        show_time_range_previews=True,
     )
 
 
@@ -304,13 +290,13 @@ def _migrate_old_graph_render_options(value: PainterParameters | None) -> Painte
     return value
 
 
-class PainterServiceGraphs(Painter2):
+class PainterServiceGraphs(Painter):
     @property
     def ident(self) -> str:
         return "service_graphs"
 
     def title(self, cell):
-        return _("Service graphs with timerange previews")
+        return _("Service graphs with time range previews")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -335,12 +321,14 @@ class PainterServiceGraphs(Painter2):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
-        assert resolve_combined_single_metric_spec is not None
-        return paint_cmk_graphs_with_timeranges(
+        return paint_time_graph_cmk(
             row,
             cell,
-            resolve_combined_single_metric_spec,
+            user=self.user,
+            request=self.request,
+            response=response,
+            painter_options=self._painter_options,
+            show_time_range_previews=True,
         )
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
@@ -353,13 +341,13 @@ class PainterServiceGraphs(Painter2):
         raise JSONExportError()
 
 
-class PainterHostGraphs(Painter2):
+class PainterHostGraphs(Painter):
     @property
     def ident(self) -> str:
         return "host_graphs"
 
     def title(self, cell):
-        return _("Host Graphs with Timerange Previews")
+        return _("Host Graphs with Time Range Previews")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -378,12 +366,17 @@ class PainterHostGraphs(Painter2):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
-        assert resolve_combined_single_metric_spec is not None
-        return paint_cmk_graphs_with_timeranges(
+        return paint_time_graph_cmk(
             row,
             cell,
-            resolve_combined_single_metric_spec,
+            user=self.user,
+            request=self.request,
+            response=response,
+            painter_options=self._painter_options,
+            show_time_range_previews=True,
+            # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
+            # also render the graphs if there are no historic metrics available (but perf data is)
+            require_historic_metrics="service_description" not in row,
         )
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
@@ -420,7 +413,7 @@ class PainterOptionPNPTimerange(PainterOption):
         )
 
 
-class PainterSvcPnpgraph(Painter2):
+class PainterSvcPnpgraph(Painter):
     @property
     def ident(self) -> str:
         return "svc_pnpgraph"
@@ -451,9 +444,14 @@ class PainterSvcPnpgraph(Painter2):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
-        assert resolve_combined_single_metric_spec is not None
-        return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
+        return paint_time_graph_cmk(
+            row,
+            cell,
+            user=self.user,
+            request=self.request,
+            response=response,
+            painter_options=self._painter_options,
+        )
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -465,7 +463,7 @@ class PainterSvcPnpgraph(Painter2):
         raise JSONExportError()
 
 
-class PainterHostPnpgraph(Painter2):
+class PainterHostPnpgraph(Painter):
     @property
     def ident(self) -> str:
         return "host_pnpgraph"
@@ -493,9 +491,14 @@ class PainterHostPnpgraph(Painter2):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
-        assert resolve_combined_single_metric_spec is not None
-        return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
+        return paint_time_graph_cmk(
+            row,
+            cell,
+            user=self.user,
+            request=self.request,
+            response=response,
+            painter_options=self._painter_options,
+        )
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -507,7 +510,9 @@ class PainterHostPnpgraph(Painter2):
         raise JSONExportError()
 
 
-def cmk_graph_url(row, what):
+def cmk_graph_url(  # pylint: disable=redefined-outer-name
+    row: Row, what: str, *, request: Request
+) -> str:
     site_id = row["site"]
 
     urivars = [

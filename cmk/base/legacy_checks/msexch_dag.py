@@ -99,6 +99,20 @@
 # SeedingNetwork                   :
 # ActiveCopy                       : False
 
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
+from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import StringTable
+
+
+def parse_msexch_dag(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["msexch_dag"] = LegacyCheckDefinition(
+    parse_function=parse_msexch_dag,
+)
+
 #   .--dbcopy--------------------------------------------------------------.
 #   |                      _ _                                             |
 #   |                   __| | |__   ___ ___  _ __  _   _                   |
@@ -107,10 +121,6 @@
 #   |                  \__,_|_.__/ \___\___/| .__/ \__, |                  |
 #   |                                       |_|    |___/                   |
 #   +----------------------------------------------------------------------+
-
-
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
 
 
 def inventory_msexch_dag_dbcopy(info):
@@ -122,13 +132,14 @@ def inventory_msexch_dag_dbcopy(info):
                 dbname = line[1].strip()
                 getit = True
             elif getit and line[0].strip() == key:
-                yield dbname, (key, line[1].strip())
+                yield dbname, {"inv_key": key, "inv_val": line[1].strip()}
                 getit = False
 
 
 def check_msexch_dag_dbcopy(item, params, info):
     getit = False
-    inv_key, inv_val = params
+    inv_key = params["inv_key"]
+    inv_val = params["inv_val"]
     for line in info:
         if len(line) == 2:
             key, val = (i.strip() for i in line)
@@ -150,6 +161,7 @@ check_info["msexch_dag.dbcopy"] = LegacyCheckDefinition(
     sections=["msexch_dag"],
     discovery_function=inventory_msexch_dag_dbcopy,
     check_function=check_msexch_dag_dbcopy,
+    check_default_parameters={},
 )
 
 # .

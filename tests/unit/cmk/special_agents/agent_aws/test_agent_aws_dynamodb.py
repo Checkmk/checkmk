@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Callable, Sequence
+from argparse import Namespace as Args
+from collections.abc import Sequence
+from typing import Protocol
 
 import pytest
 
@@ -17,6 +21,8 @@ from cmk.special_agents.agent_aws import (
     NamingConvention,
     OverallTags,
     ResultDistributor,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import (
@@ -37,7 +43,7 @@ class PaginatorTags:
         if ResourceArn == "TableArn-2":  # the third table has no tags
             tags = []
         else:
-            tags = DynamoDBListTagsOfResourceIB.create_instances(amount=1)
+            tags = DynamoDBListTagsOfResourceIB.create_instances(amount=3)
         yield {"Tags": tags, "NextToken": "string"}
 
 
@@ -75,22 +81,33 @@ class FakeDynamoDBClient:
         if ResourceArn == "TableArn-2":  # the third table has no tags
             tags = []
         else:
-            tags = DynamoDBListTagsOfResourceIB.create_instances(amount=1)
+            tags = DynamoDBListTagsOfResourceIB.create_instances(amount=3)
         return {"Tags": tags, "NextToken": "string"}
 
 
-DynamobSections = Callable[
-    [object | None, OverallTags], dict[str, DynamoDBLimits | DynamoDBSummary | DynamoDBTable]
-]
+DynamobSectionsOut = dict[str, DynamoDBLimits | DynamoDBSummary | DynamoDBTable]
+
+
+class DynamobSections(Protocol):
+    def __call__(
+        self,
+        names: object | None,
+        tags: OverallTags,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> DynamobSectionsOut: ...
 
 
 @pytest.fixture()
 def get_dynamodb_sections() -> DynamobSections:
     def _create_dynamodb_sections(
-        names: object | None, tags: OverallTags
-    ) -> dict[str, DynamoDBLimits | DynamoDBSummary | DynamoDBTable]:
+        names: object | None,
+        tags: OverallTags,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> DynamobSectionsOut:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig(
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+        )
         config.add_single_service_config("dynamodb_names", names)
         config.add_service_tags("dynamodb_tags", tags)
 
@@ -271,3 +288,34 @@ def test_agent_aws_dynamodb_tables_wo_limits(
     dynamodb_sections = get_dynamodb_sections(names, tags)
     _dynamodb_summary_results = dynamodb_sections["dynamodb_summary"].run().results
     _test_table(dynamodb_sections["dynamodb_table"], found_instances)
+
+
+@pytest.mark.parametrize(
+    "tag_import, expected_tags",
+    [
+        (
+            TagsImportPatternOption.import_all,
+            {
+                "TableName-0": ["Key-0", "Key-1", "Key-2"],
+                "TableName-1": ["Key-0", "Key-1", "Key-2"],
+                "TableName-2": [],
+            },
+        ),
+        (r".*-1$", {"TableName-0": ["Key-1"], "TableName-1": ["Key-1"], "TableName-2": []}),
+        (
+            TagsImportPatternOption.ignore_all,
+            {"TableName-0": [], "TableName-1": [], "TableName-2": []},
+        ),
+    ],
+)
+def test_agent_aws_dynamodb_summary_filters_tags(
+    get_dynamodb_sections: DynamobSections,
+    tag_import: TagsOption,
+    expected_tags: dict[str, Sequence[str]],
+) -> None:
+    dynamodb_sections = get_dynamodb_sections(None, (None, None), tag_import)
+    dynamodb_summary_results = dynamodb_sections["dynamodb_summary"].run().results
+    dynamodb_summary_result = dynamodb_summary_results[0]
+
+    for result in dynamodb_summary_result.content:
+        assert list(result["TagsForCmkLabels"].keys()) == expected_tags[result["TableName"]]

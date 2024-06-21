@@ -18,9 +18,9 @@ class TestValueSpecPercentage:
         expect_validate_failure(vs.Percentage(allow_int=True), "10")  # type: ignore[misc]
 
     def test_value_to_html(self) -> None:
-        assert vs.Percentage().value_to_html(100) == "100.0%"
-        assert vs.Percentage().value_to_html(10) == "10.0%"
-        assert vs.Percentage().value_to_html(1) == "1.0%"
+        assert vs.Percentage().value_to_html(100) == "100%"
+        assert vs.Percentage().value_to_html(10) == "10%"
+        assert vs.Percentage().value_to_html(1) == "1%"
         assert vs.Percentage().value_to_html(0.1) == "0.1%"
-        assert vs.Percentage().value_to_html(0.01) == "0.0%"
-        assert vs.Percentage().value_to_html(-0.01) == "-0.0%"
+        assert vs.Percentage().value_to_html(0.01) == "0.01%"
+        assert vs.Percentage().value_to_html(-0.01) == "-0.01%"

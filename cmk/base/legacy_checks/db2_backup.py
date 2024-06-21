@@ -6,10 +6,11 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError, render
 
 # <<<db2_backup>>>
 # [[[db2taddm:CMDBS1]]]
@@ -40,7 +41,7 @@ def check_db2_backup(item, params, parsed):
         age,
         None,
         params["levels"],
-        human_readable_func=get_age_human_readable,
+        human_readable_func=render.timespan,
         infoname="Time since last backup",
     )
 

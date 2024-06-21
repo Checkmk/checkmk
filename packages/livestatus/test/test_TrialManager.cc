@@ -4,6 +4,7 @@
 // source code package.
 
 #include <chrono>
+#include <ratio>
 #include <stdexcept>
 #include <string>
 

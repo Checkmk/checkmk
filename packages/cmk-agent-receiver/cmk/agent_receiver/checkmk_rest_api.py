@@ -17,6 +17,7 @@ from pydantic import BaseModel, UUID4
 from .log import logger
 from .models import ConnectionMode
 from .site_context import site_config_path, site_name
+from .utils import B64SiteInternalSecret
 
 
 class CMKEdition(Enum):
@@ -24,6 +25,7 @@ class CMKEdition(Enum):
     cee = "Enterprise"  # pylint: disable=invalid-name
     cme = "Managed Services"  # pylint: disable=invalid-name
     cce = "Cloud"  # pylint: disable=invalid-name
+    cse = "Saas"  # pylint: disable=invalid-name
 
     def supports_register_new(self) -> bool:
         """
@@ -32,7 +34,7 @@ class CMKEdition(Enum):
         >>> CMKEdition.cce.supports_register_new()
         True
         """
-        return self is CMKEdition.cce
+        return self is CMKEdition.cce or self is CMKEdition.cse or self is CMKEdition.cme
 
 
 def _local_apache_port() -> int:
@@ -110,8 +112,8 @@ def log_http_exception(
     def wrapper(
         log_text: str,
         /,
-        *args: _TEndpointParams.args,
-        **kwargs: _TEndpointParams.kwargs,
+        *args: _TEndpointParams.args,  # pylint: disable=no-member
+        **kwargs: _TEndpointParams.kwargs,  # pylint: disable=no-member
     ) -> _TEndpointReturn:
         try:
             return endpoint_call(*args, **kwargs)
@@ -131,10 +133,15 @@ class ControllerCertSettings(BaseModel, frozen=True):
 
 
 @log_http_exception
-def controller_certificate_settings(credentials: HTTPBasicCredentials) -> ControllerCertSettings:
-    response = _forward_get(
-        "agent_controller_certificates_settings",
-        credentials,
+def controller_certificate_settings(
+    site_internal_secret: B64SiteInternalSecret,
+) -> ControllerCertSettings:
+    response = requests.get(
+        f"{_local_rest_api_url()}/agent_controller_certificates_settings",
+        headers={
+            "Authorization": f"InternalToken {site_internal_secret}",
+        },
+        timeout=30,
     )
     _verify_response(response, HTTPStatus.OK)
     return ControllerCertSettings.model_validate(response.json())
@@ -296,7 +303,7 @@ def _parse_error_response_body(body: str) -> str:
     'Insufficient permissions - Details: You need permission xyz.'
     """
     try:
-        error_descr = _RestApiErrorDescr.parse_raw(body)
+        error_descr = _RestApiErrorDescr.model_validate_json(body)
     except Exception:  # pylint: disable=broad-exception-caught
         return body
     return error_descr.title + (f" - Details: {error_descr.detail}" if error_descr.detail else "")

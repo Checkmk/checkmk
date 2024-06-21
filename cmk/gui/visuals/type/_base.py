@@ -7,7 +7,7 @@ import abc
 from collections.abc import Iterator
 
 from cmk.gui.page_menu import PageMenuEntry
-from cmk.gui.type_defs import Choices, VisualContext
+from cmk.gui.type_defs import Choices, HTTPVariables, Rows, SingleInfos, Visual, VisualContext
 from cmk.gui.view_utils import get_labels
 
 
@@ -81,7 +81,13 @@ class VisualType(abc.ABC):
     def choices(self) -> Choices:
         return [(k, v["title"]) for k, v in self.permitted_visuals.items()]
 
-    def link_from(self, linking_view, linking_view_rows, visual, context_vars):
+    def link_from(
+        self,
+        linking_view_single_infos: SingleInfos,
+        linking_view_rows: Rows,
+        visual: Visual,
+        context_vars: HTTPVariables,
+    ) -> bool:
         """Dynamically show/hide links to other visuals (e.g. reports, dashboards, views) from views
 
         This method uses the conditions read from the "link_from" attribute of a given visual to
@@ -109,7 +115,7 @@ class VisualType(abc.ABC):
 
         single_info_condition = link_from.get("single_infos")
         if single_info_condition and not set(single_info_condition).issubset(
-            linking_view.spec["single_infos"]
+            linking_view_single_infos
         ):
             return False  # Not matching required single infos
 

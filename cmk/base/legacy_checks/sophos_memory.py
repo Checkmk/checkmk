@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
-from cmk.base.plugins.agent_based.utils.sophos import DETECT_SOPHOS
+
+from cmk.agent_based.v2 import render, SNMPTree
+from cmk.plugins.lib.sophos import DETECT_SOPHOS
 
 
 def parse_sophos_memory(string_table):
@@ -27,6 +28,10 @@ def check_sophos_memory(_item, params, parsed):
     )
 
 
+def discover_sophos_memory(parsed):
+    yield None, {}
+
+
 check_info["sophos_memory"] = LegacyCheckDefinition(
     detect=DETECT_SOPHOS,
     fetch=SNMPTree(
@@ -35,7 +40,7 @@ check_info["sophos_memory"] = LegacyCheckDefinition(
     ),
     parse_function=parse_sophos_memory,
     service_name="Memory",
-    discovery_function=lambda parsed: [(None, {})] if parsed is not None else None,
+    discovery_function=discover_sophos_memory,
     check_function=check_sophos_memory,
     check_ruleset_name="sophos_memory",
 )

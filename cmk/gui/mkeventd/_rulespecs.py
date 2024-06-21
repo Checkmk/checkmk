@@ -16,6 +16,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     ListOf,
     ListOfStrings,
+    Migrate,
     MonitoringState,
     NetworkPort,
     RegExp,
@@ -61,15 +62,8 @@ def _valuespec_logwatch_rules() -> Dictionary:
                                     ("I", _("IGNORE")),
                                 ],
                             ),
-                            RegExp(
-                                title=_("Pattern (Regex)"),
-                                size=40,
-                                mode=RegExp.infix,
-                            ),
-                            TextInput(
-                                title=_("Comment"),
-                                size=40,
-                            ),
+                            RegExp(title=_("Pattern (Regex)"), size=40, mode=RegExp.infix),
+                            TextInput(title=_("Comment"), size=40),
                         ],
                     ),
                     title=_("Reclassify state matching regex pattern"),
@@ -78,7 +72,7 @@ def _valuespec_logwatch_rules() -> Dictionary:
                         "These patterns are applied to the selected logfiles to reclassify the "
                         "matching log messages. The first pattern which matches a line will "
                         "be used for reclassifying a message. You can use the "
-                        '<a href="wato.py?mode=pattern_editor">Logfile Pattern Analyzer</a> '
+                        '<a href="wato.py?mode=pattern_editor">Logfile pattern analyzer</a> '
                         "to test the rules you defined here.</p>"
                         "<p>Note that to match a special regex character in your patterns, you need to use a "
                         "backslash to escape its special meaning. This is especially relevant for Windows file paths. "
@@ -233,271 +227,269 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_logwatch_ec() -> Alternative:
-    return Alternative(
-        title=_("Forwarding"),
-        help=_(
-            "Instead of using the regular logwatch check all lines received by logwatch can "
-            "be forwarded to a Checkmk event console daemon to be processed. The target event "
-            "console can be configured for each host in a separate rule."
-        ),
-        elements=[
-            FixedValue(
-                value="",
-                totext=_("Messages are handled by logwatch."),
-                title=_("No forwarding"),
+def _match_method(x: object) -> int:
+    match x:
+        case tuple():
+            return 4
+        case "":
+            return 0
+        case "spool:":
+            return 2
+        case str() as local if local.startswith("spool:"):
+            return 3
+    return 1
+
+
+def _parameter_valuespec_logwatch_ec() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            title=_("Forward Messages to Event Console"),
+            help=_(
+                "Instead of using the regular logwatch check all lines received by logwatch can "
+                "be forwarded to a Checkmk event console daemon to be processed. The target event "
+                "console can be configured for each host in a separate rule."
             ),
-            Dictionary(
-                title=_("Forward Messages to Event Console"),
-                elements=[
-                    (
-                        "method",
-                        # TODO: Clean this up to some CascadingDropdown()
-                        Alternative(
-                            title=_("Forwarding Method"),
-                            elements=[
-                                FixedValue(
-                                    value="",
-                                    title=_(
-                                        "Local: Send events to local Event Console in same OMD site"
-                                    ),
-                                    totext=_("Directly forward to Event Console"),
+            elements=[
+                (
+                    "activation",
+                    Checkbox(
+                        title=_("Disable or enable forwarding"),
+                        label=_("Enable forwarding"),
+                        false_label=_("Messages are handled by logwatch."),
+                        true_label=_(
+                            "Message are forwarded according to below or inherited settings."
+                        ),
+                    ),
+                ),
+                (
+                    "method",
+                    # TODO: Clean this up to some CascadingDropdown()
+                    Alternative(
+                        title=_("Forwarding Method"),
+                        elements=[
+                            FixedValue(
+                                value="",
+                                title=_(
+                                    "Local: Send events to local Event Console in same OMD site"
                                 ),
-                                TextInput(
-                                    title=_(
-                                        "Local: Send events to local Event Console into unix socket"
-                                    ),
+                                totext=_("Directly forward to Event Console"),
+                            ),
+                            TextInput(
+                                title=_(
+                                    "Local: Send events to local Event Console into unix socket"
+                                ),
+                                allow_empty=False,
+                            ),
+                            FixedValue(
+                                value="spool:",
+                                title=_(
+                                    "Local: Spooling - Send events to local event console in same OMD site"
+                                ),
+                                totext=_("Spool to Event Console"),
+                            ),
+                            Transform(
+                                valuespec=TextInput(
                                     allow_empty=False,
                                 ),
-                                FixedValue(
-                                    value="spool:",
-                                    title=_(
-                                        "Local: Spooling - Send events to local event console in same OMD site"
-                                    ),
-                                    totext=_("Spool to Event Console"),
+                                title=_(
+                                    "Local: Spooling - Send events to local Event Console into given spool directory"
                                 ),
-                                Transform(
-                                    valuespec=TextInput(
-                                        allow_empty=False,
-                                    ),
-                                    title=_(
-                                        "Local: Spooling - Send events to local Event Console into given spool directory"
-                                    ),
-                                    to_valuespec=lambda x: x[6:],
-                                    # remove prefix
-                                    from_valuespec=lambda x: "spool:" + x,  # add prefix
-                                ),
-                                CascadingDropdown(
-                                    title=_("Remote: Send events to remote syslog host"),
-                                    choices=[
-                                        (
-                                            "tcp",
-                                            _("Send via TCP"),
-                                            Dictionary(
-                                                elements=[
-                                                    (
-                                                        "address",
-                                                        TextInput(
-                                                            title=_("Address"),
-                                                            allow_empty=False,
-                                                        ),
+                                to_valuespec=lambda x: x[6:],
+                                # remove prefix
+                                from_valuespec=lambda x: "spool:" + x,  # add prefix
+                            ),
+                            CascadingDropdown(
+                                title=_("Remote: Send events to remote syslog host"),
+                                choices=[
+                                    (
+                                        "tcp",
+                                        _("Send via TCP"),
+                                        Dictionary(
+                                            elements=[
+                                                (
+                                                    "address",
+                                                    TextInput(
+                                                        title=_("Address"),
+                                                        allow_empty=False,
                                                     ),
-                                                    (
-                                                        "port",
-                                                        NetworkPort(
-                                                            title=_("Port"),
-                                                            default_value=514,
-                                                        ),
+                                                ),
+                                                (
+                                                    "port",
+                                                    NetworkPort(
+                                                        title=_("Port"),
+                                                        default_value=514,
                                                     ),
-                                                    (
-                                                        "spool",
-                                                        Dictionary(
-                                                            title=_(
-                                                                "Spool messages that could not be sent"
-                                                            ),
-                                                            help=_(
-                                                                "Messages that can not be forwarded, e.g. when the target Event Console is "
-                                                                "not running, can temporarily be stored locally. Forwarding is tried again "
-                                                                "on next execution. When messages are spooled, the check will go into WARNING "
-                                                                "state. In case messages are dropped by the rules below, the check will shortly "
-                                                                "go into CRITICAL state for this execution."
-                                                            ),
-                                                            elements=[
-                                                                (
-                                                                    "max_age",
-                                                                    Age(
-                                                                        title=_(
-                                                                            "Maximum spool duration"
-                                                                        ),
-                                                                        help=_(
-                                                                            "Messages that are spooled longer than this time will be thrown away."
-                                                                        ),
-                                                                        default_value=60
-                                                                        * 60
-                                                                        * 24
-                                                                        * 7,  # 1 week should be fine (if size is not exceeded)
+                                                ),
+                                                (
+                                                    "spool",
+                                                    Dictionary(
+                                                        title=_(
+                                                            "Spool messages that could not be sent"
+                                                        ),
+                                                        help=_(
+                                                            "Messages that can not be forwarded, e.g. when the target Event Console is "
+                                                            "not running, can temporarily be stored locally. Forwarding is tried again "
+                                                            "on next execution. When messages are spooled, the check will go into WARNING "
+                                                            "state. In case messages are dropped by the rules below, the check will shortly "
+                                                            "go into CRITICAL state for this execution."
+                                                        ),
+                                                        elements=[
+                                                            (
+                                                                "max_age",
+                                                                Age(
+                                                                    title=_(
+                                                                        "Maximum spool duration"
                                                                     ),
-                                                                ),
-                                                                (
-                                                                    "max_size",
-                                                                    Filesize(
-                                                                        title=_(
-                                                                            "Maximum spool size"
-                                                                        ),
-                                                                        help=_(
-                                                                            "When the total size of spooled messages exceeds this number, the oldest "
-                                                                            "messages of the currently spooled messages is thrown away until the left "
-                                                                            "messages have the half of the maximum size."
-                                                                        ),
-                                                                        default_value=500000,  # do not save more than 500k of message
+                                                                    help=_(
+                                                                        "Messages that are spooled longer than this time will be thrown away."
                                                                     ),
+                                                                    default_value=60
+                                                                    * 60
+                                                                    * 24
+                                                                    * 7,  # 1 week should be fine (if size is not exceeded)
                                                                 ),
-                                                            ],
-                                                            optional_keys=[],
-                                                        ),
+                                                            ),
+                                                            (
+                                                                "max_size",
+                                                                Filesize(
+                                                                    title=_("Maximum spool size"),
+                                                                    help=_(
+                                                                        "When the total size of spooled messages exceeds this number, the oldest "
+                                                                        "messages of the currently spooled messages is thrown away until the left "
+                                                                        "messages have the half of the maximum size."
+                                                                    ),
+                                                                    default_value=500000,  # do not save more than 500k of message
+                                                                ),
+                                                            ),
+                                                        ],
+                                                        optional_keys=[],
                                                     ),
-                                                ],
-                                                optional_keys=["spool"],
-                                            ),
+                                                ),
+                                            ],
+                                            optional_keys=["spool"],
                                         ),
-                                        (
-                                            "udp",
-                                            _("Send via UDP"),
-                                            Dictionary(
-                                                elements=[
-                                                    (
-                                                        "address",
-                                                        TextInput(
-                                                            title=_("Address"),
-                                                            allow_empty=False,
-                                                        ),
+                                    ),
+                                    (
+                                        "udp",
+                                        _("Send via UDP"),
+                                        Dictionary(
+                                            elements=[
+                                                (
+                                                    "address",
+                                                    TextInput(
+                                                        title=_("Address"),
+                                                        allow_empty=False,
                                                     ),
-                                                    (
-                                                        "port",
-                                                        NetworkPort(
-                                                            title=_("Port"),
-                                                            default_value=514,
-                                                        ),
+                                                ),
+                                                (
+                                                    "port",
+                                                    NetworkPort(
+                                                        title=_("Port"),
+                                                        default_value=514,
                                                     ),
-                                                ],
-                                                optional_keys=[],
-                                            ),
+                                                ),
+                                            ],
+                                            optional_keys=[],
                                         ),
-                                    ],
-                                ),
-                            ],
-                            match=lambda x: 4
-                            if isinstance(x, tuple)
-                            else (
-                                0
-                                if not x
-                                else (2 if x == "spool:" else (3 if x.startswith("spool:") else 1))
+                                    ),
+                                ],
                             ),
-                        ),
+                        ],
+                        match=_match_method,
                     ),
-                    (
-                        "facility",
-                        DropdownChoice(
-                            title=_("Syslog facility for forwarded messages"),
-                            help=_(
-                                "When forwarding messages and no facility can be extracted from the "
-                                "message this facility is used."
-                            ),
-                            choices=syslog_facilities,
-                            default_value=17,  # local1
-                        ),
-                    ),
-                    (
-                        "restrict_logfiles",
-                        ListOfStrings(
-                            title=_("Restrict Logfiles (Prefix matching regular expressions)"),
-                            help=_(
-                                'Put the item names of the logfiles here. For example "System$" '
-                                'to select the service "LOG System". You can use regular expressions '
-                                "which must match the beginning of the logfile name."
-                            ),
-                        ),
-                    ),
-                    (
-                        "monitor_logfilelist",
-                        Checkbox(
-                            title=_("Monitoring of forwarded logfiles"),
-                            label=_("Warn if list of forwarded logfiles changes"),
-                            help=_(
-                                "If this option is enabled, the check monitors the list of forwarded "
-                                "logfiles and will warn you if at any time a logfile is missing or exceeding "
-                                "when compared to the initial list that was snapshotted during service detection. "
-                                "Reinventorize this check in order to make it OK again."
-                            ),
-                        ),
-                    ),
-                    (
-                        "expected_logfiles",
-                        ListOf(
-                            valuespec=TextInput(),
-                            title=_("List of expected logfiles"),
-                            help=_(
-                                "When the monitoring of forwarded logfiles is enabled, the check verifies that "
-                                "all of the logfiles listed here are reported by the monitored system."
-                            ),
-                        ),
-                    ),
-                    (
-                        "logwatch_reclassify",
-                        Checkbox(
-                            title=_("Reclassify messages before forwarding them to the EC"),
-                            label=_("Apply logwatch patterns"),
-                            help=_(
-                                "If this option is enabled, the logwatch lines are first reclassified by the logwatch "
-                                "patterns before they are sent to the event console. If you reclassify specific lines to "
-                                "IGNORE they are not forwarded to the event console. This takes the burden from the "
-                                "event console to process the message itself through all of its rulesets. The reclassifcation "
-                                "of each line takes into account from which logfile the message originates. So you can create "
-                                "logwatch reclassification rules specifically designed for a logfile <i>access.log</i>, "
-                                "which do not apply to other logfiles."
-                            ),
-                        ),
-                    ),
-                    (
-                        "monitor_logfile_access_state",
-                        MonitoringState(
-                            title=_("State if a logfile cannot be read"),
-                            default_value=2,
-                            help=_(
-                                "Choose the Checkmk state in case any of the forwarded logfiles "
-                                "cannot be read"
-                            ),
-                        ),
-                    ),
-                    (
-                        "separate_checks",
-                        Checkbox(
-                            title=_("Create a separate check for each logfile"),
-                            label=_("Separate check"),
-                            help=_(
-                                "If this option is enabled, there will be one separate check for each logfile found during "
-                                "the service discovery. This option also changes the behaviour for unknown logfiles. "
-                                "The default logwatch check forwards all logfiles to the event console, even logfiles "
-                                "which were not known during the service discovery. Creating one check per logfile changes "
-                                "this behaviour so that any data from unknown logfiles is discarded."
-                            ),
-                        ),
-                    ),
-                ],
-                optional_keys=[
-                    "method",
+                ),
+                (
                     "facility",
+                    DropdownChoice(
+                        title=_("Syslog facility for forwarded messages"),
+                        help=_(
+                            "When forwarding messages and no facility can be extracted from the "
+                            "message this facility is used."
+                        ),
+                        choices=syslog_facilities,
+                        default_value=17,  # local1
+                    ),
+                ),
+                (
                     "restrict_logfiles",
+                    ListOfStrings(
+                        title=_("Restrict Logfiles (Prefix matching regular expressions)"),
+                        help=_(
+                            'Put the item names of the logfiles here. For example "System$" '
+                            'to select the service "LOG System". You can use regular expressions '
+                            "which must match the beginning of the logfile name."
+                        ),
+                    ),
+                ),
+                (
                     "monitor_logfilelist",
-                    "monitor_logfile_access_state",
+                    Checkbox(
+                        title=_("Monitoring of forwarded logfiles"),
+                        label=_("Warn if list of forwarded logfiles changes"),
+                        help=_(
+                            "If this option is enabled, the check monitors the list of forwarded "
+                            "logfiles and will warn you if at any time a logfile is missing or exceeding "
+                            "when compared to the initial list that was snapshotted during service detection. "
+                            "Reinventorize this check in order to make it OK again."
+                        ),
+                    ),
+                ),
+                (
                     "expected_logfiles",
+                    ListOf(
+                        valuespec=TextInput(),
+                        title=_("List of expected logfiles"),
+                        help=_(
+                            "When the monitoring of forwarded logfiles is enabled, the check verifies that "
+                            "all of the logfiles listed here are reported by the monitored system."
+                        ),
+                    ),
+                ),
+                (
                     "logwatch_reclassify",
+                    Checkbox(
+                        title=_("Reclassify messages before forwarding them to the EC"),
+                        label=_("Apply logwatch patterns"),
+                        help=_(
+                            "If this option is enabled, the logwatch lines are first reclassified by the logwatch "
+                            "patterns before they are sent to the event console. If you reclassify specific lines to "
+                            "IGNORE they are not forwarded to the event console. This takes the burden from the "
+                            "event console to process the message itself through all of its rulesets. The reclassifcation "
+                            "of each line takes into account from which logfile the message originates. So you can create "
+                            "logwatch reclassification rules specifically designed for a logfile <i>access.log</i>, "
+                            "which do not apply to other logfiles."
+                        ),
+                    ),
+                ),
+                (
+                    "monitor_logfile_access_state",
+                    MonitoringState(
+                        title=_("State if a logfile cannot be read"),
+                        default_value=2,
+                        help=_(
+                            "Choose the Checkmk state in case any of the forwarded logfiles "
+                            "cannot be read"
+                        ),
+                    ),
+                ),
+                (
                     "separate_checks",
-                ],
-                ignored_keys=["service_level"],
-            ),
-        ],
-        default_value="",
+                    Checkbox(
+                        title=_("Create a separate check for each logfile"),
+                        label=_("Separate check"),
+                        help=_(
+                            "If this option is enabled, there will be one separate check for each logfile found during "
+                            "the service discovery. This option also changes the behaviour for unknown logfiles. "
+                            "The default logwatch check forwards all logfiles to the event console, even logfiles "
+                            "which were not known during the service discovery. Creating one check per logfile changes "
+                            "this behaviour so that any data from unknown logfiles is discarded."
+                        ),
+                    ),
+                ),
+            ],
+            ignored_keys=["service_level"],
+        ),
+        migrate=lambda p: {"activation": False} if isinstance(p, str) else p,
     )
 
 

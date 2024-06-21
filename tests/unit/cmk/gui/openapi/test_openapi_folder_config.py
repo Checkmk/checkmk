@@ -22,6 +22,7 @@ from cmk.utils.user import UserId
 
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 
 
 @pytest.mark.parametrize(
@@ -210,6 +211,23 @@ def test_openapi_folders(clients: ClientRegistry) -> None:
         clients.Folder.delete(folder_name=folder_obj["id"])
 
 
+def test_openapi_folder_non_existent_site(clients: ClientRegistry) -> None:
+    folder_name = "my_folder"
+    non_existing_site_name = "i_am_not_existing"
+    clients.Folder.create(
+        folder_name=folder_name,
+        title="My super folder",
+        parent="/",
+    ).assert_status_code(200)
+    resp = clients.Folder.edit(
+        folder_name=f"~{folder_name}",
+        update_attributes={"site": non_existing_site_name},
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert "site" in resp.json["fields"]["update_attributes"]
+
+
 def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
@@ -313,12 +331,12 @@ def _create_criticality_tag(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
         "/NO_SITE/check_mk/api/1.0/domain-types/host_tag_group/collections/all",
         params=json.dumps(
             {
-                "ident": "criticality",
+                "id": "criticality",
                 "title": "criticality",
                 "topic": "nothing",
                 "tags": [
                     {
-                        "ident": "discovered",
+                        "id": "discovered",
                         "title": "discovered",
                     }
                 ],
@@ -949,3 +967,122 @@ def test_move_root_folder(clients: ClientRegistry) -> None:
     resp = clients.Folder.move(folder_name="~", destination="/", expect_ok=False)
     resp.assert_status_code(400)
     assert resp.json["detail"] == "You can't move the root folder."
+
+
+def test_openapi_delete_folder_with_hosts(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="new_folder",
+    )
+    clients.HostConfig.create(host_name="host1", folder="~new_folder")
+    no_force_delete_result = clients.Folder.delete(
+        folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
+    )
+
+    clients.Folder.delete(folder_name="~new_folder").assert_status_code(204)
+    assert no_force_delete_result.status_code == 409
+
+
+def test_openapi_delete_folder_with_subfolders(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="new_folder",
+    )
+    clients.Folder.create(
+        parent="~new_folder",
+        folder_name="sub_folder",
+        title="sub_folder",
+    )
+    no_force_delete_result = clients.Folder.delete(
+        folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
+    )
+
+    clients.Folder.delete(folder_name="~new_folder").assert_status_code(204)
+    assert no_force_delete_result.status_code == 409
+
+
+def test_openapi_delete_folder_with_rules(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="new_folder",
+    )
+
+    clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="~new_folder",
+        conditions={},
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    no_force_delete_result = clients.Folder.delete(
+        folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
+    )
+
+    clients.Folder.delete(folder_name="~new_folder").assert_status_code(204)
+    assert no_force_delete_result.status_code == 409
+
+
+def test_openapi_delete_folder_with_predefined_conditions(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="new_folder",
+    )
+
+    clients.Folder.create(
+        parent="/new_folder",
+        folder_name="subfolder",
+        title="subfolder",
+    )
+
+    PredefinedConditionStore().save(
+        {
+            "condition_1": {
+                "title": "condition_1",
+                "comment": "",
+                "docu_url": "",
+                "conditions": {"host_folder": "new_folder"},
+                "owned_by": None,
+                "shared_with": [],
+            },
+            "condition_2": {
+                "title": "condition_2",
+                "comment": "",
+                "docu_url": "",
+                "conditions": {"host_folder": "new_folder/subfolder"},
+                "owned_by": None,
+                "shared_with": [],
+            },
+        },
+    )
+
+    no_force_delete_subfolder_result = clients.Folder.delete(
+        folder_name="~new_folder~subfolder",
+        mode="abort_on_nonempty",
+        expect_ok=False,
+    )
+    no_force_delete_folder_result = clients.Folder.delete(
+        folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
+    )
+
+    clients.Folder.delete(folder_name="~new_folder~subfolder").assert_status_code(204)
+    clients.Folder.delete(folder_name="~new_folder").assert_status_code(204)
+
+    assert no_force_delete_subfolder_result.status_code == 409
+    assert no_force_delete_folder_result.status_code == 409
+
+
+def test_openapi_delete_folder_default_mode_recursive(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="new_folder",
+    )
+    clients.HostConfig.create(host_name="host1", folder="~new_folder")
+    no_force_delete_result = clients.Folder.delete(folder_name="~new_folder")
+
+    clients.Folder.get(folder_name="~new_folder", expect_ok=False).assert_status_code(404)
+    assert no_force_delete_result.status_code == 204

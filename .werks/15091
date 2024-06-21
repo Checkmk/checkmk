@@ -12,13 +12,13 @@ Sometimes the full agent output, ie. the output of the agent itself and of all
 installed agent plugins, of a host is needed for debugging or simulation
 purposes.
 
-Especially collecting the output of the agent plugin {{mk_inventory}} is not
+Especially collecting the output of the agent plugin "mk_inventory" is not
 very user-friendly because the execution depends on a special flag file. A user
 has to delete or modified this flag file in order to get the output.
 In general this intervention is not a good idea because it steps in the Checkmk
 operations.
 
-With the new option "--force-inventory" the output of {{mk_inventory}} is
+With the new option "--force-inventory" the output of "mk_inventory" is
 collected and the Checkmk operations are not bothered anymore.
 
 Example:

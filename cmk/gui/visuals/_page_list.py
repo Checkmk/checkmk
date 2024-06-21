@@ -28,7 +28,6 @@ from cmk.gui.pagetypes import customize_page_menu
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import HTTPVariables, Icon, VisualName, VisualTypeName
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
-from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -44,7 +43,14 @@ from cmk.gui.visuals.type import visual_type_registry
 from cmk.mkp_tool import PackageName
 
 from ._breadcrumb import visual_page_breadcrumb
-from ._store import available, get_installed_packages, local_file_exists, save, TVisual
+from ._store import (
+    available,
+    get_installed_packages,
+    local_file_exists,
+    published_to_user,
+    save,
+    TVisual,
+)
 
 
 # TODO: This code has been copied to a new live into htdocs/pagetypes.py
@@ -58,8 +64,9 @@ def page_list(  # pylint: disable=too-many-branches
     render_custom_buttons: Callable[[VisualName, TVisual], None] | None = None,
     render_custom_columns: Callable[[Table, VisualName, TVisual], None] | None = None,
     custom_page_menu_entries: Callable[[], Iterable[PageMenuEntry]] | None = None,
-    check_deletable_handler: Callable[[dict[tuple[UserId, VisualName], TVisual], UserId, str], bool]
-    | None = None,
+    check_deletable_handler: (
+        Callable[[dict[tuple[UserId, VisualName], TVisual], UserId, str], bool] | None
+    ) = None,
 ) -> None:
     if custom_columns is None:
         custom_columns = []
@@ -140,9 +147,34 @@ def page_list(  # pylint: disable=too-many-branches
                 # Actions
                 table.cell(_("Actions"), css=["buttons visuals"])
 
+                is_packaged = visual["packaged"]
+                backurl = urlencode(makeuri(request, []))
+
+                # Edit
+                if (
+                    owner == user.id
+                    or (owner != UserId.builtin() and user.may("general.edit_foreign_%s" % what))
+                ) and not is_packaged:
+                    edit_vars: HTTPVariables = [
+                        ("mode", "edit"),
+                        ("load_name", visual_name),
+                        ("back", backurl),
+                    ]
+                    if owner != user.id:
+                        edit_vars.append(("owner", owner))
+                    edit_url = makeuri_contextless(
+                        request,
+                        edit_vars,
+                        filename="edit_%s.py" % what_s,
+                    )
+                    html.icon_button(edit_url, _("Edit"), "edit")
+
+                # Custom buttons - visual specific
+                if not is_packaged and render_custom_buttons:
+                    render_custom_buttons(visual_name, visual)
+
                 # Clone / Customize
                 buttontext = _("Create a private copy of this")
-                backurl = urlencode(makeuri(request, []))
                 clone_url = makeuri_contextless(
                     request,
                     [
@@ -155,7 +187,20 @@ def page_list(  # pylint: disable=too-many-branches
                 )
                 html.icon_button(clone_url, buttontext, "clone")
 
-                is_packaged = visual["packaged"]
+                # Packaged visuals have built-in user as owner, so we have to
+                # make sure to not show packaged related icons for built-in
+                # visuals
+                if user.may("wato.manage_mkps") and source != "builtin":
+                    _render_extension_package_icons(
+                        table,
+                        visual_name,
+                        what,
+                        owner,
+                        what_s,
+                        installed_packages,
+                        is_packaged,
+                        backurl,
+                    )
 
                 # Delete
                 if (
@@ -175,45 +220,8 @@ def page_list(  # pylint: disable=too-many-branches
                             suffix=str(visual["title"]),
                             message=confirm_message,
                         ),
-                        _("Delete!"),
+                        _("Delete"),
                         "delete",
-                    )
-
-                # Edit
-                if (
-                    owner == user.id
-                    or (owner != UserId.builtin() and user.may("general.edit_foreign_%s" % what))
-                ) and not is_packaged:
-                    edit_vars: HTTPVariables = [
-                        ("mode", "edit"),
-                        ("load_name", visual_name),
-                    ]
-                    if owner != user.id:
-                        edit_vars.append(("owner", owner))
-                    edit_url = makeuri_contextless(
-                        request,
-                        edit_vars,
-                        filename="edit_%s.py" % what_s,
-                    )
-                    html.icon_button(edit_url, _("Edit"), "edit")
-
-                # Custom buttons - visual specific
-                if not is_packaged and render_custom_buttons:
-                    render_custom_buttons(visual_name, visual)
-
-                # Packaged visuals have built-in user as owner, so we have to
-                # make sure to not show packaged related icons for built-in
-                # visuals
-                if user.may("wato.manage_mkps") and source != "builtin":
-                    _render_extension_package_icons(
-                        table,
-                        visual_name,
-                        what,
-                        owner,
-                        what_s,
-                        installed_packages,
-                        is_packaged,
-                        backurl,
                     )
 
                 # visual Name
@@ -234,7 +242,7 @@ def page_list(  # pylint: disable=too-many-branches
                         target="_blank" if what_s == "report" else None,
                     )
                 else:
-                    html.write_text(title2)
+                    html.write_text_permissive(title2)
                 html.help(_u(str(visual["description"])))
 
                 # Custom cols
@@ -247,7 +255,7 @@ def page_list(  # pylint: disable=too-many-branches
                 else:
                     ownertxt = owner
                 table.cell(_("Owner"), ownertxt)
-                table.cell(_("Public"), visual["public"] and _("yes") or _("no"))
+                table.cell(_("Public"), published_to_user(visual) and _("yes") or _("no"))
                 table.cell(_("Hidden"), visual["hidden"] and _("yes") or _("no"))
 
                 if render_custom_columns:
@@ -399,11 +407,9 @@ def _partition_visuals(
             builtin_visuals.append((owner, visual_name, visual))
         elif owner == user.id:
             my_visuals.append((owner, visual_name, visual))
-        elif (
-            visual["public"]
-            and owner != UserId.builtin()
-            and user_may(owner, "general.publish_%s" % what)
-        ) or user.may("general.edit_foreign_%s" % what):
+        elif (published_to_user(visual) and owner != UserId.builtin()) or user.may(
+            "general.edit_foreign_%s" % what
+        ):
             foreign_visuals.append((owner, visual_name, visual))
 
     return [

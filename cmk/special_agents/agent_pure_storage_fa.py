@@ -17,8 +17,8 @@ import requests
 import urllib3
 from requests.adapters import HTTPAdapter
 
-from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 _LOGGER = logging.getLogger("agent_pure_storage_fa")
 __version__ = "2.3.0b1"
@@ -98,7 +98,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
             " (pureadmin create --api-token)"
         ),
     )
-    parser.add_argument("server", type=str, help="Hostname or IP address")
+    parser.add_argument("server", type=str, help="Host name or IP address")
     return parser.parse_args(argv)
 
 
@@ -263,7 +263,7 @@ def agent_pure_storage_fa(args: Args) -> int:
     pure_storage_fa = PureStorageFlashArray(
         args.server,
         args.cert_server_name or not args.no_cert_check,
-        args.timeout,
+        int(args.timeout),
     )
 
     try:

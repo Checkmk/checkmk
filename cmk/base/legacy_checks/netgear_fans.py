@@ -9,8 +9,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.netgear import DETECT_NETGEAR
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.plugins.lib.netgear import DETECT_NETGEAR
 
 # .1.3.6.1.4.1.4526.10.43.1.6.1.3.1.0 2 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState.1.0
 # .1.3.6.1.4.1.4526.10.43.1.6.1.3.1.1 2 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState.1.1

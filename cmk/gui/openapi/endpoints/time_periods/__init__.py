@@ -14,9 +14,9 @@ You can find an introduction to time periods in the
 import datetime as dt
 import http.client
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 
-import cmk.utils.dateutils as dateutils
+from cmk.utils import dateutils
 from cmk.utils.timeperiod import TimeperiodSpec
 
 from cmk.gui.http import Response
@@ -29,11 +29,12 @@ from cmk.gui.openapi.endpoints.time_periods.response_schemas import (
     TimePeriodResponse,
     TimePeriodResponseCollection,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.parameters import TIMEPERIOD_NAME_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.openapi.utils import FIELDS, problem, ProblemException, serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.timeperiods import create_timeperiod as _create_timeperiod
 from cmk.gui.watolib.timeperiods import (
     delete_timeperiod,
@@ -124,6 +125,15 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
         raise ProblemException(
             405, http.client.responses[405], "You cannot change the built-in time period"
         )
+
+    if _is_alias_in_use(body.get("alias"), name):
+        return problem(
+            status=400,
+            title="Bad Request",
+            detail="These fields have problems: alias",
+            fields=FIELDS({"alias": f"Timeperiod alias '{body['alias']}' already exists"}),
+        )
+
     try:
         time_period = load_timeperiod(name)
     except TimePeriodNotFoundError:
@@ -225,12 +235,11 @@ def list_time_periods(params: Mapping[str, Any]) -> Response:
 
 def _serve_time_period(time_period: DomainObject) -> Response:
     response = serve_json(time_period)
-    return constructors.response_with_etag_created_from_dict(response, time_period)
+    timeperiod_dict = cast(dict[str, Any], time_period)
+    return constructors.response_with_etag_created_from_dict(response, timeperiod_dict)
 
 
-def _to_api_format(  # type: ignore[no-untyped-def]
-    time_period: TimeperiodSpec, builtin_period: bool = False
-):
+def _to_api_format(time_period: TimeperiodSpec, builtin_period: bool = False) -> dict[str, Any]:
     """Convert time_period to API format as specified in request schema
 
     Args:
@@ -415,6 +424,17 @@ def _to_checkmk_format(
     time_period.update(periods)
 
     return time_period
+
+
+def _is_alias_in_use(alias: str | None, name: str) -> bool:
+    if alias is None:
+        return False
+
+    for timeperiod_name, time_period in load_timeperiods().items():
+        if time_period["alias"] == alias and timeperiod_name != name:
+            return True
+
+    return False
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:

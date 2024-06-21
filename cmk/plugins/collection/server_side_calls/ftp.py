@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Sequence
 from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig, HTTPProxy
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
 
 
 class FTPParams(BaseModel):
@@ -23,9 +23,9 @@ class FTPParams(BaseModel):
 
 
 def generate_ftp_command(
-    params: FTPParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
+    params: FTPParams, host_config: HostConfig
 ) -> Iterator[ActiveCheckCommand]:
-    args = ["-H", host_config.address]
+    args = ["-H", host_config.primary_ip_config.address]
 
     if params.port:
         args += ["-p", str(params.port)]

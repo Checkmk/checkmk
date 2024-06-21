@@ -31,14 +31,13 @@ namespace tst {
 
 void AllowReadWriteAccess(const fs::path &path,
                           std::vector<std::wstring> &commands) {
-    const std::vector<std::wstring> command_templates = {
-        L"icacls \"{}\" /inheritance:d /c",  // disable inheritance
-        L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
-
-    for (const auto &t : command_templates) {
-        auto cmd = fmt::format(t, path.wstring());
-        commands.emplace_back(cmd);
-    }
+    // disable inheritance
+    commands.emplace_back(
+        fmt::format(L"icacls \"{}\" /inheritance:d /c", path.wstring()));
+    // read/exec
+    commands.emplace_back(
+        fmt::format(L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c",
+                    path.wstring()));
     XLOG::l.i("Protect file from User write '{}'", path);
 }
 

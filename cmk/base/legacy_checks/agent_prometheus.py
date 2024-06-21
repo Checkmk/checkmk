@@ -5,27 +5,15 @@
 
 
 from collections.abc import Mapping, Sequence
-from typing import Any, NamedTuple
 
 from cmk.base.config import special_agent_info
 
-# NOTE: This code is temporarily duplicated from cmk/base/config.py to resolve
-# a layering violation.
-# This will be resovled with CMK-3812.
-# DO NOT USE THIS!!!
-
-
-class SpecialAgentConfiguration(NamedTuple):
-    args: Sequence[str]
-    # None makes the stdin of subprocess /dev/null
-    stdin: str | None
-
 
 def agent_prometheus_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: str | None
-) -> SpecialAgentConfiguration:
+    params: Mapping[str, object], hostname: str, ipaddress: str | None
+) -> Sequence[str]:
     prometheus_params = {**params, "host_address": ipaddress, "host_name": hostname}
-    return SpecialAgentConfiguration([], repr(prometheus_params))
+    return ["--config", repr(prometheus_params)]
 
 
 special_agent_info["prometheus"] = agent_prometheus_arguments

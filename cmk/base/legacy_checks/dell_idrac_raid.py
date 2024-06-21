@@ -6,9 +6,12 @@
 # example output
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 
 def inventory_dell_idrac_raid(info):
@@ -32,7 +35,12 @@ def check_dell_idrac_raid(item, _no_params, info):
             yield state, f"Status of {name}: {state_readable}"
 
 
+def parse_dell_idrac_raid(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["dell_idrac_raid"] = LegacyCheckDefinition(
+    parse_function=parse_dell_idrac_raid,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10892.5"),
     fetch=[
         SNMPTree(

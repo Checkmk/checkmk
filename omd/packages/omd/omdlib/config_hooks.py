@@ -1,26 +1,8 @@
 #!/usr/bin/env python3
-#
-#       U  ___ u  __  __   ____
-#        \/"_ \/U|' \/ '|u|  _"\
-#        | | | |\| |\/| |/| | | |
-#    .-,_| |_| | | |  | |U| |_| |\
-#     \_)-\___/  |_|  |_| |____/ u
-#          \\   <<,-,,-.   |||_
-#         (__)   (./  \.) (__)_)
-#
-# This file is part of OMD - The Open Monitoring Distribution.
-# The official homepage is at <http://omdistro.org>.
-#
-# OMD  is  free software;  you  can  redistribute it  and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the  Free Software  Foundation  in  version 2.  OMD  is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Site configuration and config hooks
 
 Hooks are scripts in lib/omd/hooks that are being called with one
@@ -43,6 +25,8 @@ from ipaddress import ip_network
 from pathlib import Path
 from re import Pattern
 from typing import TYPE_CHECKING
+
+import pydantic
 
 from omdlib.type_defs import ConfigChoiceHasError
 
@@ -85,6 +69,23 @@ class IpAddressListHasError(ConfigChoiceHasError):
             except ValueError:
                 return result.Error(f"The IP address {ip_address} does match the expected format.")
         return result.OK(None)
+
+
+class ApacheTCPAddrHasError(ConfigChoiceHasError):
+    def __call__(self, value: str) -> result.Result[None, str]:
+        class _Parser(pydantic.RootModel):
+            root: pydantic.HttpUrl
+
+        url = f"http://{value}:80"
+        try:
+            _Parser.model_validate(url)
+            return result.OK(None)
+        except pydantic.ValidationError as e:
+            message = f"""OMD uses APACHE_TCP_ADDR and APACHE_TCP_PORT to construct an Apache
+Listen directive. For example, setting APACHE_TCP_PORT to 80 results in: {url}.
+This is invalid because of: """
+            message += ", ".join([error["ctx"]["error"] for error in e.errors()])
+            return result.Error(message)
 
 
 # Put all site configuration (explicit and defaults) into environment
@@ -179,6 +180,8 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
             raise MKTerminate("Invalid output of hook: empty output")
         case ["@{IP_ADDRESS_LIST}"]:
             return IpAddressListHasError()
+        case ["@{APACHE_TCP_ADDR}"]:
+            return ApacheTCPAddrHasError()
         case [regextext]:
             return re.compile(regextext + "$")
         case choices_list:

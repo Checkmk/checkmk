@@ -11,6 +11,8 @@ from cmk.base.check_legacy_includes.oracle import (
 )
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 # <<<oracle_version>>>
 # XE Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
 
@@ -33,7 +35,12 @@ def check_oracle_version(item, _no_params, info):
     return (3, "no version information, database might be stopped")
 
 
+def parse_oracle_version(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["oracle_version"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_version,
     service_name="ORA Version %s",
     discovery_function=inventory_oracle_version,
     check_function=check_oracle_version,

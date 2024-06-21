@@ -10,7 +10,7 @@ import schemathesis
 from requests.structures import CaseInsensitiveDict
 
 from tests.schemathesis_openapi import settings
-from tests.schemathesis_openapi.response import fix_response, problem_response
+from tests.schemathesis_openapi.response import fix_response
 from tests.schemathesis_openapi.schema import (
     add_formats_and_patterns,
     require_properties,
@@ -57,6 +57,7 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
         raw_schema, "TagConditionConditionSchemaBase", ["key", "operator", "value"], "CMK-15035"
     )
     require_properties(raw_schema, "LabelCondition", ["operator"], "CMK-15035")
+    require_properties(raw_schema, "PreDefinedTimeRange", ["range"], "CMK-15166")
 
     # NOTE: CMK-12182 is mostly done, but fixing InputPassword was apparently overlooked
     update_property(
@@ -204,43 +205,6 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
             ] = settings.default_string_pattern
 
     # PATH modifications
-    paths = raw_schema["paths"]
-    for endpoint in [
-        {"path": _path, "method": _method} for _path in paths for _method in paths[_path]
-    ]:
-        path = endpoint["path"]
-        method = endpoint["method"].lower()
-        responses = paths[path][method]["responses"]
-        if "UNDEFINED-HTTP500" in settings.suppressed_issues and not set(responses).intersection(
-            {"5XX", "500"}
-        ):
-            logger.warning(
-                "%s %s: Suppressed undefined status code 500! #UNDEFINED-HTTP500",
-                method.upper(),
-                path,
-            )
-            responses.update(problem_response("500", "Internal Server Error"))
-        if "UNDEFINED-HTTP400" in settings.suppressed_issues and not set(responses).intersection(
-            {"4XX", "400"}
-        ):
-            logger.warning(
-                "%s %s: Suppressed undefined status code 400!",
-                method.upper(),
-                path,
-            )
-            responses.update(problem_response("400", "Bad request"))
-        if (
-            "UNDEFINED-HTTP404" in settings.suppressed_issues
-            and method in ("get", "put", "patch", "delete")
-            and not "404" in responses
-        ):
-            logger.warning(
-                "%s %s: Suppressed undefined status code 404!",
-                method.upper(),
-                path,
-            )
-            responses.update(problem_response("404", "Not found"))
-
     # ignore some endpoints (via deprecating them) to avoid failures during parametrization
     for path, methods in {
         "/objects/rule/{rule_id}/actions/move/invoke": ("post",),
@@ -427,6 +391,20 @@ def hook_after_call(  # pylint: disable=too-many-branches
         },
         ticket_id="CMK-13216",
     )
+    fix_response(
+        case,
+        response,
+        method="POST",
+        path="/domain-types/host_tag_group/collections/all",
+        body={"detail": 'The tag ID ".*" is used twice.'},
+        status_code=500,
+        set_status_code=400,
+        update_body={
+            "title": "Bad Request",
+            "status": 400,
+        },
+        ticket_id="CMK-15167",
+    )
 
     # invalid status: 500 instead of 404
     fix_response(
@@ -436,9 +414,20 @@ def hook_after_call(  # pylint: disable=too-many-branches
         path="/objects/bi_pack/{pack_id}",
         status_code=500,
         body={"detail": "The requested pack_id does not exist"},
-        set_status_code=400,
-        update_body={"title": "Bad Request", "status": 404},
+        set_status_code=404,
+        update_body={"title": "Not Found", "status": 404},
         ticket_id="CMK-14991",
+    )
+    fix_response(
+        case,
+        response,
+        method="POST",
+        path="/domain-types/metric/actions/get_custom_graph/invoke",
+        status_code=500,
+        body={"detail": "Cannot find Custom graph with the name .*"},
+        set_status_code=400,
+        update_body={"title": "Not Found", "status": 404},
+        ticket_id="CMK-15515",
     )
 
     # invalid status: 500 instead of 409

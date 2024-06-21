@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Background tools required to register a check plugin
+"""Background tools required to register a check plug-in
 """
 import functools
 from collections.abc import Callable, Iterable, Mapping
@@ -20,6 +20,7 @@ from cmk.base.api.agent_based.register.utils import (
 )
 
 from cmk.agent_based.v1 import Attributes, TableRow
+from cmk.discover_plugins import PluginLocation
 
 
 def _filter_inventory(
@@ -47,7 +48,7 @@ def create_inventory_plugin(
     inventory_function: Callable,
     inventory_default_parameters: Mapping[str, Any] | None = None,
     inventory_ruleset_name: str | None = None,
-    full_module: str,
+    location: PluginLocation,
 ) -> InventoryPlugin:
     """Return an InventoryPlugin object after validating and converting the arguments one by one
 
@@ -81,5 +82,5 @@ def create_inventory_plugin(
         inventory_ruleset_name=(
             RuleSetName(inventory_ruleset_name) if inventory_ruleset_name else None
         ),
-        full_module=full_module,
+        location=location,
     )

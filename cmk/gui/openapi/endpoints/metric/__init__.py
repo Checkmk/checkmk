@@ -7,7 +7,7 @@
 Metrics visible in the Checkmk user interface can also be retrieved via the
 REST-API.
 """
-
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing._graph_images import graph_spec_from_request
 from cmk.gui.openapi.endpoints.metric import request_schemas, response_schemas
 from cmk.gui.openapi.endpoints.metric.common import (
@@ -17,8 +17,7 @@ from cmk.gui.openapi.endpoints.metric.common import (
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.openapi.utils import serve_json
-from cmk.gui.raw.plugins.main_modules.registration import resolve_combined_single_metric_spec
+from cmk.gui.openapi.utils import problem, serve_json
 
 
 # This is the only endpoint that is available in the raw edition
@@ -38,21 +37,30 @@ def get_graph(params):
     """
     body = params["body"]
 
-    result = graph_spec_from_request(
-        {
-            "specification": {
-                "graph_type": "template",
-                "site": body.get("site", ""),
-                "host_name": body["host_name"],
-                "service_description": body["service_description"],
-                "graph_id": graph_id_from_request(body),
+    try:
+        result = graph_spec_from_request(
+            {
+                "specification": {
+                    "graph_type": "template",
+                    "site": body.get("site", ""),
+                    "host_name": body["host_name"],
+                    "service_description": body["service_description"],
+                    "graph_id": graph_id_from_request(body),
+                },
+                "data_range": reorganize_time_range(body["time_range"]),
+                "consolidation_function": body["reduce"],
             },
-            "data_range": reorganize_time_range(body["time_range"]),
-            "consolidation_function": body["reduce"],
-        },
-        resolve_combined_single_metric_spec,
-    )
+        )
+
+    except MKUserError as e:
+        return problem(
+            status=400,
+            title="Bad Request",
+            detail=e.message,
+        )
+
     response = reorganize_response(result)
+
     return serve_json(response)
 
 

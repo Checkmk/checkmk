@@ -7,8 +7,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.raritan import raritan_map_state, raritan_map_type
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.raritan import DETECT_RARITAN
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.plugins.lib.raritan import DETECT_RARITAN
 
 
 def parse_raritan_pdu_inlet_summary(string_table):
@@ -25,7 +26,7 @@ def parse_raritan_pdu_inlet_summary(string_table):
                 else:
                     summary[key] = (value, None)
 
-    return {"Summary": summary}
+    return {"Summary": summary} if summary else None
 
 
 def discover_raritan_pdu_inlet_summary(section):

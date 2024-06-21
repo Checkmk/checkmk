@@ -3,24 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
 import os
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Final, Self
+from typing import Final, NewType, Self
 
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
-from fastapi.security import HTTPBasicCredentials
 from pydantic import UUID4
 
 from .models import ConnectionMode, R4RStatus, RequestForRegistration
-from .site_context import agent_output_dir, r4r_dir, users_dir
-
-INTERNAL_REST_API_USER = "automation"
+from .site_context import agent_output_dir, internal_secret_path, r4r_dir
 
 
-class NotRegisteredException(Exception):
-    ...
+class NotRegisteredException(Exception): ...
 
 
 class RegisteredHost:  # pylint: disable=too-few-public-methods
@@ -45,7 +42,8 @@ class R4R:
     def read(cls, uuid: UUID4) -> Self:
         for status in R4RStatus:
             if (path := r4r_dir() / status.name / f"{uuid}.json").exists():
-                request = RequestForRegistration.parse_file(path)
+                with open(path, encoding="utf-8") as file:
+                    request = RequestForRegistration.model_validate_json(file.read())
                 # access time is used to determine when to remove registration request file
                 with suppress(OSError):
                     os.utime(path, None)
@@ -58,7 +56,10 @@ class R4R:
             parents=True,
             exist_ok=True,
         )
-        (target_path := target_dir / f"{self.request.uuid}.json").write_text(self.request.json())
+        (target_path := target_dir / f"{self.request.uuid}.json").write_text(
+            self.request.model_dump_json(),
+            encoding="utf-8",
+        )
         target_path.chmod(0o660)
 
 
@@ -75,6 +76,10 @@ def uuid_from_pem_csr(pem_csr: str) -> str:
         return "[CSR parsing failed]"
 
 
-def internal_credentials() -> HTTPBasicCredentials:
-    secret = (users_dir() / INTERNAL_REST_API_USER / "automation.secret").read_text().strip()
-    return HTTPBasicCredentials(username=INTERNAL_REST_API_USER, password=secret)
+B64SiteInternalSecret = NewType("B64SiteInternalSecret", str)
+
+
+def internal_credentials() -> B64SiteInternalSecret:
+    return B64SiteInternalSecret(
+        base64.b64encode(internal_secret_path().read_bytes()).decode("ascii")
+    )

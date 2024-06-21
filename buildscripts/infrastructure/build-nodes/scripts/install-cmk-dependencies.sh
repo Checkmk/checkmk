@@ -8,9 +8,9 @@
 
 set -e -o pipefail
 
-TARGET_DIR="/opt"
-if [ "$DISTRO" = "cma-3" ]; then
-    # as there are no system tests with CMA-3, an installation of CMK
+TARGET_DIR="${TARGET_DIR:-/opt}"
+if [ "$DISTRO" = "cma-3" ] || [ "$DISTRO" = "cma-4" ]; then
+    # As there are no system tests for the appliance, an installation of CMK
     # dependencies is not required
     exit
 fi
@@ -31,7 +31,6 @@ add_gpg_key() {
 
 cleanup() {
     rm -f "$TARGET_DIR"/needed-packages
-    rm -rf /var/lib/apt/lists/*
 }
 
 extract_needed_packages
@@ -43,7 +42,7 @@ case "$DISTRO" in
         yum install -y $(cat "$TARGET_DIR"/needed-packages)
         ;;
     almalinux-*)
-        gpg --import "$TARGET_DIR"/Check_MK-pubkey.gpg
+        add_gpg_key
         # "mod_auth_mellon" is assumed to be installed on RHEL-9 from 2.3 on
         # see announcement in werk 15561 and removal of package from MK file with 15694
         # This line can be removed in 2.4. onwards

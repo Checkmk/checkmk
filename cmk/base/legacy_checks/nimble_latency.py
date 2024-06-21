@@ -10,7 +10,8 @@ import collections
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree, startswith
+
+from cmk.agent_based.v2 import render, SNMPTree, startswith
 
 # Default levels: issue a WARN/CRIT if 1%/2% of read or write IO
 # operations have a latency of 10-20 ms or above.
@@ -115,6 +116,10 @@ def check_nimble_latency_reads(item, params, parsed):
     yield from _check_nimble_latency(item, params, data, NimbleReadsType)
 
 
+def discover_nimble_latency(parsed):
+    return inventory_nimble_latency(parsed, NimbleReadsType)
+
+
 check_info["nimble_latency"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
     fetch=SNMPTree(
@@ -153,7 +158,7 @@ check_info["nimble_latency"] = LegacyCheckDefinition(
     ),
     parse_function=parse_nimble_read_latency,
     service_name="Volume %s Read IO",
-    discovery_function=lambda parsed: inventory_nimble_latency(parsed, NimbleReadsType),
+    discovery_function=discover_nimble_latency,
     check_function=check_nimble_latency_reads,
     check_ruleset_name="nimble_latency",
     check_default_parameters={
@@ -174,10 +179,14 @@ def check_nimble_latency_writes(item, params, parsed):
     yield from _check_nimble_latency(item, params, data, NimbleWritesType)
 
 
+def discover_nimble_latency_write(parsed):
+    return inventory_nimble_latency(parsed, NimbleWritesType)
+
+
 check_info["nimble_latency.write"] = LegacyCheckDefinition(
     service_name="Volume %s Write IO",
     sections=["nimble_latency"],
-    discovery_function=lambda parsed: inventory_nimble_latency(parsed, NimbleWritesType),
+    discovery_function=discover_nimble_latency_write,
     check_function=check_nimble_latency_writes,
     check_ruleset_name="nimble_latency",
     check_default_parameters={

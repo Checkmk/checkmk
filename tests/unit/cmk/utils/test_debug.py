@@ -10,9 +10,7 @@ def test_toggle() -> None:
     cmk.utils.debug.enable()
 
     assert cmk.utils.debug.enabled() is True
-    assert cmk.utils.debug.disabled() is False
 
     cmk.utils.debug.disable()
 
     assert cmk.utils.debug.enabled() is False
-    assert cmk.utils.debug.disabled() is True

@@ -61,9 +61,9 @@ def match_dual_level_type(value):
     return 0
 
 
-def _get_free_used_dynamic_valuespec(  # type: ignore[no-untyped-def]
+def _get_free_used_dynamic_valuespec(
     level_perspective: Literal["used", "free"],
-    default_value=(80.0, 90.0),
+    default_value: tuple[float, float] = (80.0, 90.0),
     *,
     maxvalue: None | float,
     do_include_absolutes: bool = True,
@@ -243,7 +243,7 @@ def _filesystem_reserved_elements() -> list[DictionaryEntry]:
                 title=_("Show space reserved for the <tt>root</tt> user"),
                 help=_(
                     # xgettext: no-python-format
-                    "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
+                    "Checkmk treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
                     "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
                     "With this option you can have Checkmk display the current amount of reserved but yet unused "
                     "space."

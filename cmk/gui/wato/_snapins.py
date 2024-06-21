@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable
+from typing import TypedDict
 
-import cmk.gui.site_config as site_config
-import cmk.gui.sites as sites
+from cmk.gui import site_config, sites
 from cmk.gui.config import active_config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -32,10 +32,9 @@ from cmk.gui.type_defs import (
     ViewSpec,
     Visual,
 )
-from cmk.gui.utils.html import HTML
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
 from cmk.gui.watolib.main_menu import main_module_registry, MainModuleTopic
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -56,13 +55,11 @@ def register(
     mega_menu_registry.register(MegaMenuSetup)
 
 
-def render_wato(mini) -> None | bool:  # type: ignore[no-untyped-def]
+def render_wato(mini: bool) -> None:
     if not active_config.wato_enabled:
-        html.write_text(_("Setup is disabled."))
-        return False
+        html.write_text_permissive(_("Setup is disabled."))
     if not user.may("wato.use"):
-        html.write_text(_("You are not allowed to use the setup."))
-        return False
+        html.write_text_permissive(_("You are not allowed to use the setup."))
 
     menu = get_wato_menu_items()
 
@@ -84,7 +81,6 @@ def render_wato(mini) -> None | bool:  # type: ignore[no-untyped-def]
         assert pending_info.message is not None  # only for mypy, semantically useless
         footnotelinks([(pending_info.message, "wato.py?mode=changelog")])
         html.div("", class_="clear")
-    return None
 
 
 def get_wato_menu_items() -> list[TopicMenuTopic]:
@@ -112,7 +108,7 @@ def get_wato_menu_items() -> list[TopicMenuTopic]:
                 sort_index=module.sort_index,
                 is_show_more=module.is_show_more,
                 icon=module.icon,
-                additional_matches_setup_search=module.additional_matches_setup_search(),
+                megamenu_search_terms=module.megamenu_search_terms(),
             )
         )
 
@@ -134,25 +130,28 @@ class SetupSearch(ABCMegaMenuSearch):
     def show_search_field(self) -> None:
         html.open_div(id_="mk_side_search_setup")
         # TODO: Implement submit action (e.g. show all results of current query)
-        html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
-        tooltip = _("Search for menu entries, settings, hosts and rulesets.")
-        html.input(
-            id_=f"mk_side_search_field_{self.name}",
-            type_="text",
-            name="search",
-            title=tooltip,
-            autocomplete="off",
-            placeholder=_("Search in Setup"),
-            onkeydown="cmk.search.on_key_down('setup')",
-            oninput="cmk.search.on_input_search('setup');",
-        )
-        html.input(
-            id_=f"mk_side_search_field_clear_{self.name}",
-            name="reset",
-            type_="button",
-            onclick="cmk.search.on_click_reset('setup');",
-        )
-        html.end_form()
+        with html.form_context(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;"):
+            tooltip = _("Search for menu entries, settings, hosts and rulesets.")
+            html.input(
+                id_=f"mk_side_search_field_{self.name}",
+                type_="text",
+                name="search",
+                title=tooltip,
+                autocomplete="off",
+                placeholder=_("Search in Setup"),
+                onkeydown="cmk.search.on_key_down('setup')",
+                oninput="cmk.search.on_input_search('setup');",
+            )
+            html.input(
+                id_=f"mk_side_search_field_clear_{self.name}",
+                name="reset",
+                type_="button",
+                onclick="cmk.search.on_click_reset('setup');",
+                # When the user searched for something, let him jump to the first result with the first
+                # <TAB> key press instead of jumping to the reset button. The reset can be triggered via
+                # the <ESC> key.
+                tabindex="-1",
+            )
         html.close_div()
         html.div("", id_="mk_side_clear")
 
@@ -185,7 +184,7 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
                 url=topic_menu_item.url,
                 match_texts=[
                     topic_menu_item.title,
-                    *topic_menu_item.additional_matches_setup_search,
+                    *topic_menu_item.megamenu_search_terms,
                 ],
             )
             for topic_menu_topic in self._topic_generator()
@@ -206,11 +205,11 @@ MatchItemGeneratorSetup = MatchItemGeneratorSetupMenu("setup", MegaMenuSetup.top
 
 class SidebarSnapinWATOMini(SidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "admin_mini"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Quick setup")
 
     @classmethod
@@ -218,7 +217,7 @@ class SidebarSnapinWATOMini(SidebarSnapin):
         return True
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Access to the setup menu with only icons (saves space)")
 
     @classmethod
@@ -227,34 +226,47 @@ class SidebarSnapinWATOMini(SidebarSnapin):
 
     # refresh pending changes, if other user modifies something
     @classmethod
-    def refresh_regularly(cls):
+    def refresh_regularly(cls) -> bool:
         return True
 
-    def show(self):
+    def show(self) -> None:
         render_wato(mini=True)
 
 
-def compute_foldertree():
+FolderEntry = TypedDict(
+    "FolderEntry",
+    {
+        ".folders": dict[str, "FolderEntry"],
+        ".num_hosts": int,
+        ".path": str,
+        "title": str,
+    },
+)
+
+
+def compute_foldertree() -> dict[str, FolderEntry]:
     sites.live().set_prepend_site(True)
     query = "GET hosts\nStats: state >= 0\nColumns: filename"
     hosts = sites.live().query(query)
     sites.live().set_prepend_site(False)
 
-    def get_folder(tree, path, num=0):
+    def get_folder(tree: FolderTree, path: str, num: int = 0) -> FolderEntry:
         folder = tree.folder(path)
-        return {
-            "title": folder.title() or path.split("/")[-1],
-            ".path": path,
-            ".num_hosts": num,
-            ".folders": {},
-        }
+        return FolderEntry(
+            {
+                "title": folder.title() or path.split("/")[-1],
+                ".path": path,
+                ".num_hosts": num,
+                ".folders": {},
+            }
+        )
 
     # After the query we have a list of lists where each
     # row is a folder with the number of hosts on this level.
     #
     # Now get number of hosts by folder
     # Count all children for each folder
-    user_folders = {}
+    user_folders: dict[str, FolderEntry] = {}
     tree = folder_tree()
     for _site, filename, num in sorted(hosts):
         # Remove leading /wato/
@@ -305,10 +317,7 @@ def compute_foldertree():
     return user_folders
 
 
-# Note: the dictionary that represents the folder here is *not*
-# the datastructure from Setup but a result of compute_foldertree(). The reason:
-# We fetch the information via livestatus - not from Setup.
-def render_tree_folder(tree_id, folder, js_func) -> None:  # type: ignore[no-untyped-def]
+def render_tree_folder(tree_id: str, folder: FolderEntry, js_func: str) -> None:
     subfolders = folder.get(".folders", {}).values()
     is_leaf = len(subfolders) == 0
 
@@ -330,8 +339,7 @@ def render_tree_folder(tree_id, folder, js_func) -> None:  # type: ignore[no-unt
             treename=tree_id,
             id_="/" + folder[".path"],
             isopen=False,
-            title=HTML(title),
-            icon="foldable_sidebar",
+            title=title,
             padding=6,
         ):
             for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
@@ -344,26 +352,25 @@ def render_tree_folder(tree_id, folder, js_func) -> None:  # type: ignore[no-unt
 
 class SidebarSnapinWATOFoldertree(SidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "wato_foldertree"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Tree of folders")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _(
-            "This snapin shows the folders defined in Setup. It can be used to "
+            "This snap-in shows the folders defined in Setup. It can be used to "
             "open views filtered by the Setup folder. It works standalone, without "
-            "interaction with any other snapin."
+            "interaction with any other snap-in."
         )
 
-    def show(self):
+    def show(self) -> None:
         if not site_config.is_wato_slave_site():
             if not active_config.wato_enabled:
-                html.write_text(_("Setup is disabled."))
-                return False
+                html.write_text_permissive(_("Setup is disabled."))
 
         user_folders = compute_foldertree()
 
@@ -443,4 +450,3 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             render_tree_folder(
                 "wato-hosts", list(user_folders.values())[0], "cmk.sidebar.wato_tree_click"
             )
-        return None

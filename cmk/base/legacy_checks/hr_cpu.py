@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils import ucd_hr_detection
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib import ucd_hr_detection
 
 # .1.3.6.1.2.1.25.3.3.1.2.768 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.768
 # .1.3.6.1.2.1.25.3.3.1.2.769 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.769
@@ -35,11 +36,16 @@ def check_hr_cpu(_no_item, params, info):
     return check_cpu_util(util, params, cores=cores)
 
 
-# Migration NOTE: Create a separate section, but a common check plugin for
+# Migration NOTE: Create a separate section, but a common check plug-in for
 # tplink_cpu, hr_cpu, cisco_nexus_cpu, bintec_cpu, winperf_processor,
 # lxc_container_cpu, docker_container_cpu.
 # Migration via cmk/update_config.py!
+def parse_hr_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hr_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_hr_cpu,
     detect=ucd_hr_detection.HR,
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.25.3.3.1",

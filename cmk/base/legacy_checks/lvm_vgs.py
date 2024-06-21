@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_lvm_vgs(info):
     for line in info:
@@ -23,7 +25,12 @@ def check_lvm_vgs(item, params, info):
     return df_check_filesystem_list(item, params, vglist)
 
 
+def parse_lvm_vgs(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["lvm_vgs"] = LegacyCheckDefinition(
+    parse_function=parse_lvm_vgs,
     service_name="LVM VG %s",
     discovery_function=inventory_lvm_vgs,
     check_function=check_lvm_vgs,

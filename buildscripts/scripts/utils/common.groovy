@@ -10,13 +10,11 @@ load_json = { json_file ->
     (new groovy.json.JsonSlurperClassic()).parseText(cmd_stdout_result);
 }
 
-
 cleanup_directory = { directory ->
     assert directory.startsWith(env.HOME);
     sh("rm -rf '${directory}/'*");
     sh("mkdir -p '${directory}'");
 }
-
 
 /// Run a block based on a global "dry run level"
 /// Global level = "0" (or unset) means "run everything"
@@ -24,7 +22,7 @@ cleanup_directory = { directory ->
 /// Global level "2" means "avoid dangerous side effects and long running stuff (like builds)"
 LONG_RUNNING = 1;
 GLOBAL_IMPACT = 2;
-on_dry_run_omit = {level, title, fn ->
+on_dry_run_omit = { level, title, fn ->
     if (("${global_dry_run_level}" == "0" && level <= 2) ||
         ("${global_dry_run_level}" == "1" && level <= 1) ||
         ("${global_dry_run_level}" == "2" && level <= 0)) {
@@ -47,24 +45,29 @@ on_dry_run_omit = {level, title, fn ->
         """.stripMargin());
 }
 
-shout = {msg ->
+shout = { msg ->
     sh("figlet -w 150 ${msg}");
 }
 
-check_job_parameters = {param_list ->
+check_job_parameters = { param_list ->
     print("""
         ||== REQUIRED JOB PARAMETERS ===============================================================
-        ${param_list.collect({param ->
-          if (!params.containsKey(param)) {
-            raise ("Expected job parameter ${param} not defined!");
-          }
-          "||  ${param.padRight(32)} ${"(${params[param].getClass().name.tokenize('.').last()})".padRight(12)} = |${params[param]}|"
-            }).join("\n")}
+        ${param_list.collect({param_or_tuple ->
+            def (param_name, must_be_nonempty) = (param_or_tuple instanceof java.util.ArrayList) ? param_or_tuple : [param_or_tuple, false];
+            if (!params.containsKey(param_name)) {
+                raise ("Expected job parameter ${param_name} not defined!");
+            }
+            def param_value = params[param_name];
+            if (must_be_nonempty && (param_value instanceof java.lang.String) && !param_value) {
+                raise ("Job parameter ${param_name} is expected to be nonempty!");
+            }
+            "||  ${param_name.padRight(32)} ${"(${param_value.getClass().name.tokenize('.').last()})".padRight(12)} = |${param_value}|"
+        }).join("\n")}
         ||==========================================================================================
         """.stripMargin());
 }
 
-check_environment_variables = {param_list ->
+check_environment_variables = { param_list ->
     println("""
         ||== USED ENVIRONMENT VARIABLES ============================================================
         ${param_list.collect({param ->
@@ -74,13 +77,13 @@ check_environment_variables = {param_list ->
         """.stripMargin());
 }
 
-assert_no_dirty_files = {repo_root ->
+assert_no_dirty_files = { repo_root ->
     dir (repo_root) {
         assert sh(script: "make -C tests/ test-find-dirty-files-in-git", returnStatus: true) == 0;
     }
 }
 
-provide_clone = {repo_name, credentials_id ->
+provide_clone = { repo_name, credentials_id ->
     dir("${WORKSPACE}/${repo_name}") {
         checkout([$class: "GitSCM",
             userRemoteConfigs: [[

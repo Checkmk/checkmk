@@ -5,26 +5,19 @@
 
 import copy
 import re
-from typing import Any, Callable, Literal
+from collections.abc import Callable
+from typing import Any, Literal
 
-import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.notify_types import EventRule
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.regex import GROUP_NAME_PATTERN
 from cmk.utils.timeperiod import timeperiod_spec_alias
 
-import cmk.gui.hooks as hooks
+from cmk.gui import hooks
+from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import (
-    AllGroupSpecs,
-    GroupName,
-    GroupSpec,
-    GroupSpecs,
-    GroupType,
-    load_contact_group_information,
-    load_group_information,
-)
+from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs, GroupType
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -38,7 +31,11 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.group_writer import save_group_information
+from cmk.gui.watolib.groups_io import (
+    load_contact_group_information,
+    load_group_information,
+    save_group_information,
+)
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     HostAttributeTopic,
@@ -47,10 +44,7 @@ from cmk.gui.watolib.host_attributes import (
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.rulesets import AllRulesets
-
-if cmk_version.edition() is cmk_version.Edition.CME:
-    import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+from cmk.gui.watolib.timeperiods import load_timeperiods
 
 ContactGroupUsageFinder = Callable[[GroupName, GlobalSettings], list[tuple[str, str]]]
 
@@ -98,21 +92,30 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
     old_group_backup = copy.deepcopy(groups[name])
 
     _set_group(all_groups, group_type, name, extra_info)
+    customer = customer_api()
     if cmk_version.edition() is cmk_version.Edition.CME:
-        old_customer = managed.get_customer_id(old_group_backup)
-        new_customer = managed.get_customer_id(extra_info)
+        old_customer = customer.get_customer_id(old_group_backup)
+        new_customer = customer.get_customer_id(extra_info)
         if old_customer != new_customer:
             _add_group_change(
                 old_group_backup,
                 "edit-%sgroups" % group_type,
                 _l("Removed %sgroup %s from customer %s")
-                % (group_type, name, managed.get_customer_name_by_id(old_customer)),
+                % (
+                    group_type,
+                    name,
+                    customer.get_customer_name_by_id(old_customer),
+                ),
             )
             _add_group_change(
                 extra_info,
                 "edit-%sgroups" % group_type,
                 _l("Moved %sgroup %s to customer %s. Additional properties may have changed.")
-                % (group_type, name, managed.get_customer_name_by_id(new_customer)),
+                % (
+                    group_type,
+                    name,
+                    customer.get_customer_name_by_id(new_customer),
+                ),
             )
         else:
             _add_group_change(
@@ -128,12 +131,10 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
         )
 
 
-class UnknownGroupException(Exception):
-    ...
+class UnknownGroupException(Exception): ...
 
 
-class GroupInUseException(Exception):
-    ...
+class GroupInUseException(Exception): ...
 
 
 def delete_group(name: GroupName, group_type: GroupType) -> None:
@@ -164,18 +165,8 @@ def delete_group(name: GroupName, group_type: GroupType) -> None:
     )
 
 
-# TODO: Consolidate all group change related functions in a class that can be overriden
-# by the CME code for better encapsulation.
 def _add_group_change(group: GroupSpec, action_name: str, text: LazyString) -> None:
-    group_sites = None
-    if cmk_version.edition() is cmk_version.Edition.CME:
-        cid = managed.get_customer_id(group)
-        if not managed.is_global(cid):
-            if cid is None:  # conditional caused by bad typing
-                raise Exception("cannot happen: no customer ID")
-            group_sites = list(managed_helpers.get_sites_of_customer(cid).keys())
-
-    add_change(action_name, text, sites=group_sites)
+    add_change(action_name, text, sites=customer_api().customer_group_sites(group))
 
 
 def check_modify_group_permissions(group_type: GroupType) -> None:
@@ -281,12 +272,12 @@ def is_alias_used(
                 return False, _("This alias is already used in the %s group %s.") % (what, gid)
 
     # Timeperiods
-    timeperiods = cmk.gui.watolib.timeperiods.load_timeperiods()
+    timeperiods = load_timeperiods()
     for key, value in timeperiods.items():
         if timeperiod_spec_alias(value) == my_alias and (
             my_what != "timeperiods" or my_name != key
         ):
-            return False, _("This alias is already used in timeperiod %s.") % key
+            return False, _("This alias is already used in time period %s.") % key
 
     # Roles
     roles = load_roles()
@@ -374,7 +365,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
                         ),
                     )
                 )
-        result: HTML = HTML(", ").join(texts)
+        result: HTML = HTML.without_escaping(", ").join(texts)
         if texts and value["use"]:
             result += HTMLWriter.render_span(
                 HTMLWriter.render_b("*"),
@@ -437,10 +428,12 @@ class HostAttributeContactGroups(ABCHostAttribute):
         html.checkbox(
             varprefix + self.name() + "_use_for_services",
             value.get("use_for_services", False),
-            label=_("Always add host contact groups also to its services")
-            if is_host
-            else _(
-                "Always add these groups as <b>contacts</b> to all services <b>in all subfolders of this folder</b>"
+            label=(
+                _("Always add host contact groups also to its services")
+                if is_host
+                else _(
+                    "Always add these groups as <b>contacts</b> to all services <b>in all subfolders of this folder</b>"
+                )
             ),
         )
 

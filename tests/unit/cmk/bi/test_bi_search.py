@@ -107,8 +107,13 @@ def test_host_search(
 
     # Label match
     schema_config = search_class.schema()().dump(
-        {"conditions": {"host_labels": {"cmk/check_mk_server": "yes"}}}
+        {
+            "conditions": {
+                "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])],
+            }
+        }
     )
+    schema_config = search_class.schema()().load(schema_config)
     search = search_class(schema_config)
     results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}

@@ -48,8 +48,8 @@ def translation_elements(what: str) -> list[tuple[str, ValueSpec]]:
         plural = "hostnames"
 
     elif what == "service":
-        singular = "service description"
-        plural = "service descriptions"
+        singular = "service name"
+        plural = "service names"
 
     else:
         raise MKGeneralException("No translations found for %s." % what)

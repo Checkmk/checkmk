@@ -1,0 +1,15 @@
+Title: Protect automation user secret against timing attacks
+Class: security
+Compatible: compat
+Component: wato
+Date: 1700216645
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This Werks improves how the secret of an automation user is validated during login.
+Prior to the Werk, the automation user's password was not checked in a way that is safe against (theoretical) timing attacks.
+This is fixed now.
+
+Even though this Werk improves security, it does not address an exploitable vulnerability.
+To aid automated scanning we assign a CVSS score of 0.0 (None) (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N).

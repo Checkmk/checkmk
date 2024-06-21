@@ -6,16 +6,23 @@
 from __future__ import annotations
 
 import dataclasses
-import typing
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.utils.datastructures import denilled
+from cmk.utils.labels import LabelGroups
 from cmk.utils.object_diff import make_diff_text
+from cmk.utils.rulesets.conditions import (
+    allow_host_label_conditions,
+    allow_service_label_conditions,
+)
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec
 
 from cmk.gui import exceptions, http
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.rule.fields import (
+    APILabelGroupCondition,
     InputRuleObject,
     MoveRuleTo,
     RULE_ID,
@@ -24,7 +31,7 @@ from cmk.gui.openapi.endpoints.rule.fields import (
     RuleSearchOptions,
     UpdateRuleObject,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import (
@@ -34,6 +41,7 @@ from cmk.gui.openapi.utils import (
     serve_json,
 )
 from cmk.gui.utils import gen_id
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -102,7 +110,7 @@ def _validate_rule_move(lhs: RuleEntry, rhs: RuleEntry) -> None:
     response_schema=RuleObject,
     permissions_required=RW_PERMISSIONS,
 )
-def move_rule_to(param: typing.Mapping[str, typing.Any]) -> http.Response:
+def move_rule_to(param: Mapping[str, Any]) -> http.Response:
     """Move a rule to a specific location"""
     user.need_permission("wato.edit")
     user.need_permission("wato.rulesets")
@@ -194,7 +202,9 @@ def create_rule(param):
             title=exc.title,
         )
 
-    rule = _create_rule(folder, ruleset, body["conditions"], body["properties"], value, gen_id())
+    rule = _create_rule(
+        folder, ruleset, body.get("conditions", {}), body.get("properties", {}), value, gen_id()
+    )
 
     index = ruleset.append_rule(folder, rule)
     rulesets.save_folder()
@@ -268,7 +278,7 @@ def show_rule(param):
     return serve_json(_serialize_rule(rule_entry))
 
 
-def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:  # type: ignore[no-untyped-def]
+def _get_rule_by_id(rule_uuid: str, all_rulesets: AllRulesets | None = None) -> RuleEntry:
     if all_rulesets is None:
         all_rulesets = AllRulesets.load_all_rulesets()
 
@@ -370,7 +380,12 @@ def edit_rule(param):
         )
 
     new_rule = _create_rule(
-        folder, ruleset, body["conditions"], body["properties"], value, param["rule_id"]
+        folder,
+        ruleset,
+        body.get("conditions", {}),
+        body.get("properties", {}),
+        value,
+        param["rule_id"],
     )
 
     ruleset.edit_rule(current_rule, new_rule)
@@ -380,9 +395,11 @@ def edit_rule(param):
     return serve_json(_serialize_rule(new_rule_entry))
 
 
-def _validate_value(ruleset: Ruleset, value: typing.Any) -> None:
+def _validate_value(ruleset: Ruleset, value: Any) -> None:
     try:
-        ruleset.valuespec().validate_value(value, "")
+        valuespec = ruleset.valuespec()
+        valuespec.validate_datatype(value, "")
+        valuespec.validate_value(value, "")
 
     except exceptions.MKUserError as exc:
         if exc.varname is None:
@@ -397,12 +414,55 @@ def _validate_value(ruleset: Ruleset, value: typing.Any) -> None:
         raise exception
 
 
+def _api_to_internal(
+    api_label_group_conditions: list[APILabelGroupCondition] | None,
+) -> LabelGroups | None:
+    """
+    >>> _api_to_internal([{"operator": "and", "label_group": [{"operator": "and", "label": "os:windows"}]}])
+    [('and', [('and', 'os:windows')])]
+    """
+    if api_label_group_conditions is None:
+        return None
+
+    internal_label_groups: LabelGroups = [
+        (
+            label_group_condition["operator"],
+            [
+                (label_condition["operator"], label_condition["label"])
+                for label_condition in label_group_condition["label_group"]
+            ],
+        )
+        for label_group_condition in api_label_group_conditions
+    ]
+
+    return internal_label_groups
+
+
+def _internal_to_api(label_groups: LabelGroups | None) -> list[APILabelGroupCondition] | None:
+    """
+    >>> _internal_to_api([("and", [("and", "os:windows")])])
+    [{'operator': 'and', 'label_group': [{'operator': 'and', 'label': 'os:windows'}]}]
+    """
+
+    if label_groups is None:
+        return None
+
+    api_label_group_conditions: list[APILabelGroupCondition] = [
+        {
+            "operator": group_op,
+            "label_group": [{"operator": op, "label": label} for op, label in label_group],
+        }
+        for group_op, label_group in label_groups
+    ]
+    return api_label_group_conditions
+
+
 def _create_rule(
     folder: Folder,
     ruleset: Ruleset,
-    conditions: dict[str, typing.Any],
+    conditions: dict[str, Any],
     properties: RuleOptionsSpec,
-    value: typing.Any,
+    value: Any,
     rule_id: str = gen_id(),
 ) -> Rule:
     rule = Rule(
@@ -412,10 +472,20 @@ def _create_rule(
         RuleConditions(
             host_folder=folder.path(),
             host_tags=conditions.get("host_tags"),
-            host_labels=conditions.get("host_labels"),
+            host_label_groups=(
+                _api_to_internal(conditions.get("host_label_groups"))
+                if allow_host_label_conditions(ruleset.rulespec.name)
+                else None
+            ),
             host_name=conditions.get("host_name"),
-            service_description=conditions.get("service_description"),
-            service_labels=conditions.get("service_labels"),
+            service_description=(
+                conditions.get("service_description") if ruleset.item_type() else None
+            ),
+            service_label_groups=(
+                _api_to_internal(conditions.get("service_label_groups"))
+                if (ruleset.item_type() and allow_service_label_conditions(ruleset.rulespec.name))
+                else None
+            ),
         ),
         RuleOptions.from_config(properties),
         value,
@@ -458,9 +528,9 @@ def _serialize_rule(rule_entry: RuleEntry) -> DomainObject:
                 {
                     "host_name": rule.conditions.host_name,
                     "host_tags": rule.conditions.host_tags,
-                    "host_labels": rule.conditions.host_labels,
+                    "host_label_groups": _internal_to_api(rule.conditions.host_label_groups),
                     "service_description": rule.conditions.service_description,
-                    "service_labels": rule.conditions.service_labels,
+                    "service_label_groups": _internal_to_api(rule.conditions.service_label_groups),
                 }
             ),
         },

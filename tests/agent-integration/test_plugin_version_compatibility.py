@@ -7,36 +7,39 @@
 
 import os
 from pathlib import Path
+from typing import Iterator
 
-import docker  # type: ignore[import]
+import docker  # type: ignore[import-untyped]
 import pytest
 
-from tests import testlib
+from tests.testlib.repo import repo_path
 
 
 @pytest.fixture(scope="module")
-def docker_client():
+def docker_client() -> docker.DockerClient:
     return docker.DockerClient()
 
 
 @pytest.fixture(scope="module")
-def python_container(request, docker_client):
+def python_container(
+    request: pytest.FixtureRequest, docker_client: docker.DockerClient
+) -> Iterator[docker.models.containers.Container]:
     c = docker_client.containers.run(
         image="shimizukawa/python-all",
         command=["python2.5", "-c", "import time; time.sleep(9999)"],
         detach=True,
         volumes={
-            testlib.cmk_path(): {"bind": "/cmk", "mode": "ro"},
+            repo_path(): {"bind": "/cmk", "mode": "ro"},
         },
     )
     yield c
     c.remove(force=True)
 
 
-def _get_python_plugins():
+def _get_python_plugins() -> list[str]:
     return [
         f"agents/plugins/{p.name}"
-        for p in Path(testlib.cmk_path(), "agents", "plugins").iterdir()
+        for p in (repo_path() / "agents" / "plugins").iterdir()
         if is_python_file(p, "python") or is_python_file(p, "python3")
     ]
 
@@ -51,8 +54,8 @@ def is_python_file(path: Path, shebang_name: str) -> bool:
 
 @pytest.mark.parametrize("plugin_path", _get_python_plugins())
 @pytest.mark.parametrize("python_version", ["2.5", "2.6", "2.7", "3.7"])
-def test_agent_plugin_syntax_compatibility(  # type: ignore[no-untyped-def]
-    python_container, plugin_path, python_version
+def test_agent_plugin_syntax_compatibility(
+    python_container: docker.models.containers.Container, plugin_path: str, python_version: str
 ) -> None:
     if plugin_path.endswith(".py2") and not python_version.startswith("2"):
         pytest.skip(

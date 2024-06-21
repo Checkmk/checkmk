@@ -1,0 +1,9 @@
+Title: HW/SW Inventory: Show icon and tooltip if a data field is kept further on or is outdated
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1701336085
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+

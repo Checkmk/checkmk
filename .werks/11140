@@ -11,6 +11,6 @@ Version: 2.0.0i1
 This werk picks a feature (werk 8143) originally only available in v1.6.0 into the master.
 
 The following labels are discovered automatically for ESX based hosts in Checkmk:
-{{cmk/vsphere_object:vcenter}}, {{cmk/vsphere_object:server}}, {{cmk/vsphere_object:vm}}.
+`cmk/vsphere_object:vcenter`, `cmk/vsphere_object:server`, `cmk/vsphere_object:vm`.
 
 Accordingly to the new introduces parse function, the inventory plugin is adapted.

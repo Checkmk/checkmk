@@ -15,14 +15,14 @@ from pydantic import BaseModel
 from livestatus import SiteId
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.hostaddress import HostName
 from cmk.utils.notify_types import EventRule
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.plugin_registry import Registry
 
-from cmk.gui import background_job, userdb
+from cmk.gui import userdb
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,
@@ -34,13 +34,14 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.urls import makeuri
 
+from ..config import active_config
 from .audit_log import log_audit
 from .automation_commands import AutomationCommand
 from .automations import do_remote_automation
 from .changes import add_change
 from .check_mk_automations import rename_hosts
 from .hosts_and_folders import call_hook_hosts_changed, Folder, folder_tree, Host
-from .notifications import load_notification_rules, save_notification_rules
+from .notifications import NotificationRuleConfigFile
 from .rulesets import FolderRulesets
 from .utils import rename_host_in_list
 
@@ -275,16 +276,16 @@ def _rename_host_in_event_rules(oldname: HostName, newname: HostName) -> list[st
 
     users = userdb.load_users(lock=True)
     some_user_changed = False
-    for user in users.values():
-        if unrules := user.get("notification_rules"):
+    for user_ in users.values():
+        if unrules := user_.get("notification_rules"):
             if num_changed := rename_in_event_rules(unrules, oldname, newname):
                 actions += ["notify_user"] * num_changed
                 some_user_changed = True
 
-    nrules = load_notification_rules()
+    nrules = NotificationRuleConfigFile().load_for_modification()
     if num_changed := rename_in_event_rules(nrules, oldname, newname):
         actions += ["notify_global"] * num_changed
-        save_notification_rules(nrules)
+        NotificationRuleConfigFile().save(nrules)
 
     if some_user_changed:
         userdb.save_users(users, datetime.now())
@@ -390,13 +391,13 @@ def _rename_host_in_uuid_link_manager(
 ) -> list[str]:
     n_relinked = 0
     for site_id, renamings in renamings_by_site.items():
-        if site_is_local(site_id):
+        if site_is_local(active_config, site_id):
             n_relinked += len(get_uuid_link_manager().rename(renamings))
         else:
             n_relinked += int(
                 str(
                     do_remote_automation(
-                        get_site_config(site_id),
+                        get_site_config(active_config, site_id),
                         "rename-hosts-uuid-link",
                         [
                             (
@@ -433,29 +434,13 @@ class RenameHostsBackgroundJob(BackgroundJob):
         return _("Host renaming")
 
     @classmethod
-    def status_checks(cls, title: str | None = None) -> tuple[bool, bool]:
+    def status_checks(cls) -> tuple[bool, bool]:
         instance = cls.__new__(cls)
-        super(RenameHostsBackgroundJob, instance).__init__(
-            instance.job_prefix,
-            background_job.InitialStatusArgs(
-                title=title or instance.gui_title(),
-                lock_wato=True,
-                stoppable=False,
-                estimated_duration=BackgroundJob(instance.job_prefix).get_status().duration,
-            ),
-        )
+        super(RenameHostsBackgroundJob, instance).__init__(instance.job_prefix)
         return instance.exists(), instance.is_active()
 
-    def __init__(self, title: str | None = None) -> None:
-        super().__init__(
-            self.job_prefix,
-            background_job.InitialStatusArgs(
-                title=title or self.gui_title(),
-                lock_wato=True,
-                stoppable=False,
-                estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
-            ),
-        )
+    def __init__(self) -> None:
+        super().__init__(self.job_prefix)
 
         if self.is_active():
             raise BackgroundJobAlreadyRunning(
@@ -467,8 +452,8 @@ class RenameHostsBackgroundJob(BackgroundJob):
 
 
 class RenameHostBackgroundJob(RenameHostsBackgroundJob):
-    def __init__(self, host, title=None) -> None:  # type: ignore[no-untyped-def]
-        super().__init__(title)
+    def __init__(self, host: Host) -> None:
+        super().__init__()
         self._host = host
 
     def _back_url(self):

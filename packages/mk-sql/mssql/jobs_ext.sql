@@ -1,0 +1,1 @@
+select physical_name from sys.database_files

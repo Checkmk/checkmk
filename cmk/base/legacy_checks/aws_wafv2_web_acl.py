@@ -12,8 +12,9 @@ from cmk.base.check_legacy_includes.aws import (
     inventory_aws_generic_single,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
-from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
+
+from cmk.agent_based.v2 import IgnoreResultsError, render
+from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
 
 
 def parse_aws_wafv2_web_acl(string_table):
@@ -69,12 +70,14 @@ def check_aws_wafv2_web_acl(item, params, parsed):
         )
 
 
+def discover_aws_wafv2_web_acl(p):
+    return inventory_aws_generic_single(p, ["AllowedRequests", "BlockedRequests"], requirement=any)
+
+
 check_info["aws_wafv2_web_acl"] = LegacyCheckDefinition(
     parse_function=parse_aws_wafv2_web_acl,
     service_name="AWS/WAFV2 Web ACL Requests",
-    discovery_function=lambda p: inventory_aws_generic_single(
-        p, ["AllowedRequests", "BlockedRequests"], requirement=any
-    ),
+    discovery_function=discover_aws_wafv2_web_acl,
     check_function=check_aws_wafv2_web_acl,
     check_ruleset_name="aws_wafv2_web_acl",
 )

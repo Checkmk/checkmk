@@ -14,8 +14,9 @@ import time
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
-from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
+
+from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
+from cmk.plugins.lib.brocade import DETECT_MLX
 
 
 def inventory_brocade_tm(info):
@@ -72,7 +73,12 @@ def check_brocade_tm(item, params, info):
     return (3, "Interface not found")
 
 
+def parse_brocade_tm(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["brocade_tm"] = LegacyCheckDefinition(
+    parse_function=parse_brocade_tm,
     detect=DETECT_MLX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1991.1.14.2.1.2.2.1",

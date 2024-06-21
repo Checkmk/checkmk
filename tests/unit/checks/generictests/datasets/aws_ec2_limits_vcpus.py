@@ -312,63 +312,15 @@ checks = {
                         ("aws_ec2_spot_fleet_total_target_capacity", 0, None, None, None, None),
                     ],
                 ),
-                (
-                    0,
-                    "\nActive Spot Fleet Requests: 0 (of max. 1000)\nElastic IP Addresses: 0 (of "
-                    "max. 5)\nRunning On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances "
-                    "vCPUs: 8 (of max. 1152)\nRunning On-Demand t2.medium Instances: 3 (of max. "
-                    "20)\nRunning On-Demand t2.nano Instances: 2 (of max. 20)\nSpot Fleet Requests "
-                    "Total Target Capacity: 0 (of max. 5000)\nSpot Instance Requests: 0 (of max. "
-                    "20)\nTotal Running On-Demand Instances: 5 (of max. 20)\nVPC Elastic IP "
-                    "Addresses: 0 (of max. 5)",
-                ),
-            ],
-        ),
-        (
-            "eu-central-1",
-            {
-                "vpc_elastic_ip_addresses": (None, 80.0, 90.0),
-                "running_ondemand_instances": [
-                    ("t2.nano", (10, 80.0, 90.0)),
-                    ("t2.medium", (10, 80.0, 90.0)),
-                ],
-                "active_spot_fleet_requests": (None, 80.0, 90.0),
-                "spot_fleet_total_target_capacity": (None, 80.0, 90.0),
-                "elastic_ip_addresses": (None, 80.0, 90.0),
-                "if_vpc_sec_group": (None, 80.0, 90.0),
-                "vpc_sec_group_rules": (None, 80.0, 90.0),
-                "spot_inst_requests": (None, 80.0, 90.0),
-                "running_ondemand_instances_total": (None, 80.0, 90.0),
-                "running_ondemand_instances_vcpus": [("__vcpu", (10, 50.0, 70.0))],
-                "vpc_sec_groups": (None, 80.0, 90.0),
-            },
-            [
-                (
-                    2,
-                    "Levels reached: Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) "
-                    "instances vCPUs",
-                    [
-                        ("aws_ec2_running_ondemand_instances_t2.medium", 3, None, None, None, None),
-                        ("aws_ec2_running_ondemand_instances___vcpu", 8, None, None, None, None),
-                        ("aws_ec2_running_ondemand_instances_t2.nano", 2, None, None, None, None),
-                        ("aws_ec2_running_ondemand_instances_total", 5, None, None, None, None),
-                        ("aws_ec2_vpc_elastic_ip_addresses", 0, None, None, None, None),
-                        ("aws_ec2_elastic_ip_addresses", 0, None, None, None, None),
-                        ("aws_ec2_spot_inst_requests", 0, None, None, None, None),
-                        ("aws_ec2_active_spot_fleet_requests", 0, None, None, None, None),
-                        ("aws_ec2_spot_fleet_total_target_capacity", 0, None, None, None, None),
-                    ],
-                ),
-                (
-                    0,
-                    "\nActive Spot Fleet Requests: 0 (of max. 1000)\nElastic IP Addresses: 0 (of "
-                    "max. 5)\nRunning On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances "
-                    "vCPUs: 8 (of max. 10), Usage: 80.00% (warn/crit at 50.00%/70.00%)(!!)\nRunning "
-                    "On-Demand t2.medium Instances: 3 (of max. 10)\nRunning On-Demand t2.nano "
-                    "Instances: 2 (of max. 10)\nSpot Fleet Requests Total Target Capacity: 0 (of "
-                    "max. 5000)\nSpot Instance Requests: 0 (of max. 20)\nTotal Running On-Demand "
-                    "Instances: 5 (of max. 20)\nVPC Elastic IP Addresses: 0 (of max. 5)",
-                ),
+                (0, "\nActive Spot Fleet Requests: 0 (of max. 1000)"),
+                (0, "\nElastic IP Addresses: 0 (of max. 5)"),
+                (0, "\nRunning On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances vCPUs: 8 (of max. 1152)"),
+                (0, "\nRunning On-Demand t2.medium Instances: 3 (of max. 20)"),
+                (0, "\nRunning On-Demand t2.nano Instances: 2 (of max. 20)"),
+                (0, "\nSpot Fleet Requests Total Target Capacity: 0 (of max. 5000)"),
+                (0, "\nSpot Instance Requests: 0 (of max. 20)"),
+                (0, "\nTotal Running On-Demand Instances: 5 (of max. 20)"),
+                (0, "\nVPC Elastic IP Addresses: 0 (of max. 5)"),
             ],
         ),
     ]

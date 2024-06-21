@@ -68,6 +68,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_f5_connections,
-        title=lambda: _("F5 Loadbalancer Connections"),
+        title=lambda: _("F5 load balancer connections"),
     )
 )

@@ -186,8 +186,9 @@ std::wstring Module::buildCommandLineForced(
         if (bin().empty()) {
             return {};
         }
-        auto actual_dir = fs::path{GetUserDir()} / dir();
-        return fmt::format((actual_dir / exec()).wstring(), script.wstring());
+        const auto actual_dir = fs::path{GetUserDir()} / dir();
+        return fmt::format(fmt::runtime((actual_dir / exec()).wstring()),
+                           script.wstring());
     } catch (const std::exception &e) {
         XLOG::d("can't build valid command line for '{}', exception is '{}'",
                 name(), e);

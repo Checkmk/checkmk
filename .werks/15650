@@ -1,0 +1,17 @@
+Title: mk_tsm: Fix export: =: is not an identifier
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1705329209
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Since Werk 16273 `eval` is no longer used to create the required environment.
+In some setups, the following error occurs.
+```
+export: =: is not an identifier
+```
+With this Werk the error is fixed.
+The error occured, if the ouput of `get_dsmserv_processes` consisted of a single linebreak.

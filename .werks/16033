@@ -1,0 +1,13 @@
+Title: Unable to create crash report
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701086091
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+When custom check plugins that used tuples as dictionary keys in the section crashed,
+the crash creation failed and crashed itself.
+
+Now the crash creation no longer fails and the crash is created successfully.

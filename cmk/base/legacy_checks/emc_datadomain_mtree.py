@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
+
+from cmk.agent_based.v2 import render, SNMPTree
+from cmk.plugins.lib.emc import DETECT_DATADOMAIN
 
 
 def parse_emc_datadomain_mtree(string_table):
@@ -35,7 +36,7 @@ def check_emc_datadomain_mtree(item, params, parsed):
     yield (
         params.get(dev_state_str, 3),
         "Status: {}, Precompiled: {}".format(
-            dev_state_str, get_bytes_human_readable(mtree_data["precompiled"])
+            dev_state_str, render.bytes(mtree_data["precompiled"])
         ),
         [("precompiled", mtree_data["precompiled"])],
     )

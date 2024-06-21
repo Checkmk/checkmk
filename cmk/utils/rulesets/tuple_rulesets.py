@@ -58,7 +58,7 @@ def in_extraconf_hostlist(hostlist, hostname):  # pylint: disable=too-many-branc
 
     for hostentry in hostlist:
         if hostentry == "":
-            raise MKGeneralException("Empty hostname in host list %r" % hostlist)
+            raise MKGeneralException("Empty host name in host list %r" % hostlist)
         negate = False
         use_regex = False
         if hostentry[0] == "@":
@@ -93,6 +93,15 @@ def in_extraconf_hostlist(hostlist, hostname):  # pylint: disable=too-many-branc
         except MKGeneralException:
             if cmk.utils.debug.enabled():
                 raise
+
+    return False
+
+
+# Slow variant of checking wether a service is matched by a list
+# of regexes
+def in_extraconf_servicelist(service_patterns: list[str], service: str) -> bool:
+    if optimized_pattern := convert_pattern_list(service_patterns):
+        return optimized_pattern.match(service) is not None
 
     return False
 

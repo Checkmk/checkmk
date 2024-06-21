@@ -22,7 +22,6 @@ from cmk.snmplib import RangeLimit, SNMPCredentials, SNMPTiming
 
 from cmk.fetchers import IPMICredentials
 
-from cmk.checkengine.checking import CheckPluginNameStr
 from cmk.checkengine.discovery import RediscoveryParameters
 from cmk.checkengine.exitspec import ExitSpec
 
@@ -60,11 +59,10 @@ cluster_max_cachefile_age = 90  # secs.
 piggyback_max_cachefile_age = 3600  # secs
 # Ruleset for translating piggyback host names
 piggyback_translation: list[RuleSpec[TranslationOptions]] = []
-# Ruleset for translating service descriptions
+# Ruleset for translating service names
 service_description_translation: list[RuleSpec[TranslationOptionsSpec]] = []
 simulation_mode = False
 fake_dns: str | None = None
-agent_simulator = False
 perfdata_format: Literal["pnp", "standard"] = "pnp"
 check_mk_perfdata_with_times = True
 # TODO: Remove these options?
@@ -150,6 +148,8 @@ always_cleanup_autochecks = None  # For compatiblity with old configuration
 class _PeriodicDiscovery(TypedDict):
     severity_unmonitored: SupportsInt
     severity_vanished: SupportsInt
+    severity_changed_service_labels: SupportsInt
+    severity_changed_service_params: SupportsInt
     severity_new_host_label: SupportsInt
     check_interval: SupportsInt
     inventory_rediscovery: RediscoveryParameters
@@ -182,13 +182,21 @@ tag_config: TagConfigSpec = {
 }
 static_checks: dict[str, list[RuleSpec[list[object]]]] = {}
 check_parameters: list[RuleSpec[Any]] = []
-checkgroup_parameters: dict[str, list[RuleSpec[object]]] = {}
+checkgroup_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 # for HW/SW-Inventory
 inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
+
+
 # WATO variant for fully formalized checks
-active_checks: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
+# WATOs active check configurations are demanded to be Mapping[str, object] by the new ruleset API.
+# However: We still have legacy rulesets, which can be of any (basic python) type.
+active_checks: dict[str, list[RuleSpec[object]]] = {}
 # WATO variant for datasource_programs
-special_agents: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
+# WATOs special agent configurations are demanded to be Mapping[str, object] by the new ruleset API.
+# However: We still have legacy rulesets, which can be of any (basic python) type.
+special_agents: dict[str, list[RuleSpec[object]]] = {}
+
+
 # WATO variant for free-form custom checks without formalization
 custom_checks: list[RuleSpec[dict[Any, Any]]] = []
 all_hosts: list = []
@@ -220,7 +228,9 @@ cmk_agent_connection: dict[HostName, Literal["pull-agent", "push-agent"]] = {}
 bulkwalk_hosts: list[RuleSpec[bool]] = []
 snmpv2c_hosts: list[RuleSpec[bool]] = []
 snmp_without_sys_descr: list[RuleSpec[bool]] = []
-snmpv3_contexts: list[RuleSpec[tuple[str | None, Sequence[str]]]] = []
+snmpv3_contexts: list[
+    RuleSpec[tuple[str | None, Sequence[str], Literal["continue_on_timeout", "stop_on_timeout"]]]
+] = []
 usewalk_hosts: list[RuleSpec[bool]] = []
 # use host name as ip address for these hosts
 dyndns_hosts: list[RuleSpec[bool]] = []
@@ -300,7 +310,7 @@ snmp_check_interval: list[RuleSpec[tuple[str | None, int]]] = []
 snmp_exclude_sections: list[RuleSpec[Mapping[str, Sequence[str]]]] = []
 # Rulesets for parameters of notification scripts
 notification_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
-use_new_descriptions_for: list[CheckPluginNameStr] = []
+use_new_descriptions_for: list[str] = []
 # Custom user icons / actions to be configured
 host_icons_and_actions: list[RuleSpec[str]] = []
 # Custom user icons / actions to be configured
@@ -310,7 +320,7 @@ custom_service_attributes: list[RuleSpec[Sequence[tuple[str, str]]]] = []
 # Assign tags to services
 service_tag_rules: list[RuleSpec[Sequence[tuple[str, str]]]] = []
 
-# Rulesets for agent bakery
+# Rulesets for Agent Bakery
 agent_config: dict[str, list[RuleSpec[Any]]] = {}
 agent_bakery_logging: int | None = None
 bake_agents_on_restart = False
@@ -340,3 +350,5 @@ logwatch_rules: list[RuleSpec[object]] = []
 config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
 
 automatic_host_removal: list[RuleSpec[object]] = []
+
+ruleset_matching_stats = False

@@ -2,6 +2,8 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 """This module contains functionality for dealing with X509 certificates.
 
 At the moment, only certificates based on RSA keys are supported.
@@ -24,122 +26,79 @@ Certificate
     contains the public key and certificate information, but no private key. Useful for validating
     certificates and signatures.
 
-RsaPublicKey/RsaPrivateKey
+PublicKey/PrivateKey
     probably don't have a direct use case on their own in our code base, at the moment.
 
 """
 
 from __future__ import annotations
 
-import contextlib
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import NamedTuple, NewType, overload
+from typing import assert_never, NamedTuple, TypeAlias
 
-import cryptography.exceptions
-import cryptography.hazmat.primitives.asymmetric.padding as padding
-import cryptography.hazmat.primitives.asymmetric.rsa as rsa
-import cryptography.x509 as x509
+import cryptography
+import cryptography.hazmat.primitives.asymmetric as asym
+from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from dateutil.relativedelta import relativedelta
 
-from cmk.utils.crypto import HashAlgorithm
+from cmk.utils.crypto.keys import (
+    EncryptedPrivateKeyPEM,
+    InvalidSignatureError,
+    is_supported_public_key_type,
+    PlaintextPrivateKeyPEM,
+    PrivateKey,
+    PrivateKeyType,
+    PublicKey,
+)
 from cmk.utils.crypto.password import Password
-from cmk.utils.exceptions import MKException
-from cmk.utils.site import omd_site
-
-Signature = NewType("Signature", bytes)
+from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError, MKCryptoException, SerializedPEM
 
 
-class _SerializedPEM:
-    """A serialized anything in PEM format
-
-    we tried NewTypes but the str or bytes encoding/decoding calls were just
-    annoying. This class can be inherited by the former NewTypes"""
-
-    def __init__(self, pem: str | bytes) -> None:
-        if isinstance(pem, str):
-            self._data = pem.encode()
-        elif isinstance(pem, bytes):
-            self._data = pem
-        else:
-            raise TypeError("Pem must either be bytes or str")
-
-    @property
-    def str(self) -> str:
-        return self._data.decode()
-
-    @property
-    def bytes(self) -> bytes:
-        return self._data
-
-
-class PlaintextPrivateKeyPEM(_SerializedPEM):
-    """A unencrypted private key in pem format"""
-
-
-class EncryptedPrivateKeyPEM(_SerializedPEM):
-    """A encrypted private key in pem format"""
-
-
-class PublicKeyPEM(_SerializedPEM):
-    """A public key in pem format"""
-
-
-class CertificatePEM(_SerializedPEM):
+class CertificatePEM(SerializedPEM):
     """A certificate in pem format"""
 
 
-class InvalidSignatureError(MKException):
-    """A signature could not be verified"""
-
-
-class InvalidExpiryError(MKException):
+class InvalidExpiryError(MKCryptoException):
     """The certificate is either not yet valid or not valid anymore"""
-
-
-class WrongPasswordError(MKException):
-    """The private key could not be decrypted, probably due to a wrong password"""
-
-
-class InvalidPEMError(MKException):
-    """The PEM is invalid"""
 
 
 class CertificateWithPrivateKey(NamedTuple):
     """A bundle of a certificate and its matching private key"""
 
     certificate: Certificate
-    private_key: RsaPrivateKey
+    private_key: PrivateKey
 
     @classmethod
     def generate_self_signed(
         cls,
         common_name: str,
-        organization: str | None = None,  # defaults to "Checkmk Site <SITE>"
-        organizational_unit_name: str | None = None,
+        organization: str,
+        organizational_unit: str | None = None,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
-        start_date: datetime | None = None,  # defaults to now
         subject_alt_dns_names: list[str] | None = None,
         is_ca: bool = False,
     ) -> CertificateWithPrivateKey:
         """Generate an RSA private key and create a self-signed certificated for it."""
 
-        private_key = RsaPrivateKey.generate(key_size)
+        # Note: Various places in the code expect our own certs to use RSA at the moment.
+        # At least: Agent Bakery and backups via key_mgmt.py, as well as the license server.
+        private_key = PrivateKey.generate_rsa(key_size)
         name = X509Name.create(
             common_name=common_name,
-            organization_name=organization or f"Checkmk Site {omd_site()}",
-            organizational_unit=organizational_unit_name,
+            organization_name=organization,
+            organizational_unit=organizational_unit,
         )
         certificate = Certificate._create(
             subject_public_key=private_key.public_key,
             subject_name=name,
             subject_alt_dns_names=subject_alt_dns_names,
             expiry=expiry,
-            start_date=start_date or Certificate._naive_utcnow(),
+            start_date=datetime.now(tz=timezone.utc),
             is_ca=is_ca,
             issuer_signing_key=private_key,
             issuer_name=name,
@@ -148,7 +107,7 @@ class CertificateWithPrivateKey(NamedTuple):
         return CertificateWithPrivateKey(certificate, private_key)
 
     @property
-    def public_key(self) -> RsaPublicKey:
+    def public_key(self) -> PublicKey:
         """
         Convenience accessor to the certificate's public key.
 
@@ -178,7 +137,7 @@ class CertificateWithPrivateKey(NamedTuple):
                 )
             ) is None:
                 raise InvalidPEMError("Could not find encrypted private key")
-            key = RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(key_match.group(0)), passphrase)
+            key = PrivateKey.load_pem(EncryptedPrivateKeyPEM(key_match.group(0)), passphrase)
         else:
             if (
                 key_match := re.search(
@@ -186,7 +145,7 @@ class CertificateWithPrivateKey(NamedTuple):
                 )
             ) is None:
                 raise InvalidPEMError("Could not find private key")
-            key = RsaPrivateKey.load_pem(PlaintextPrivateKeyPEM(key_match.group(0)), None)
+            key = PrivateKey.load_pem(PlaintextPrivateKeyPEM(key_match.group(0)), None)
 
         return cls(
             certificate=cert,
@@ -194,7 +153,12 @@ class CertificateWithPrivateKey(NamedTuple):
         )
 
     def sign_csr(self, csr: CertificateSigningRequest, expiry: relativedelta) -> Certificate:
-        """Create a certificate by signing a certificate signing request"""
+        """
+        Create a certificate by signing a certificate signing request.
+
+        Note that the resulting certificate is NOT a CA. This means we don't do intermediate
+        certificates at the moment.
+        """
         if not self.certificate.may_sign_certificates():
             raise ValueError("This certificate is not suitable for signing CSRs")
 
@@ -203,16 +167,17 @@ class CertificateWithPrivateKey(NamedTuple):
 
         # Add the DNS name of the subject CN as alternative name.
         # Our root CA has always done this, so for now this behavior is hardcoded.
-        sans = x509.DNSName(csr.subject.common_name).value
+        if (cn := csr.subject.common_name) is None:
+            raise ValueError("common name is expected for CSRs")
 
         return Certificate._create(
             subject_public_key=csr.public_key,
             subject_name=csr.subject,
-            subject_alt_dns_names=[sans],
+            subject_alt_dns_names=[x509.DNSName(cn).value],
             issuer_signing_key=self.private_key,
             issuer_name=self.certificate.subject,
             expiry=expiry,
-            start_date=Certificate._naive_utcnow(),
+            start_date=datetime.now(tz=timezone.utc),
             is_ca=False,
         )
 
@@ -233,7 +198,7 @@ class PersistedCertificateWithPrivateKey(CertificateWithPrivateKey):
         certificate_path: Path,
         certificate: Certificate,
         private_key_path: Path,
-        private_key: RsaPrivateKey,
+        private_key: PrivateKey,
     ) -> PersistedCertificateWithPrivateKey:
         """
         Initialize the certificate bundle.
@@ -264,9 +229,9 @@ class PersistedCertificateWithPrivateKey(CertificateWithPrivateKey):
         # bit verbose, as mypy thinks the PEM-NewTypes are bytes when I try to assign them directly
         pk_pem = private_key_path.read_bytes()
         if private_key_password is None:
-            key = RsaPrivateKey.load_pem(PlaintextPrivateKeyPEM(pk_pem))
+            key = PrivateKey.load_pem(PlaintextPrivateKeyPEM(pk_pem))
         else:
-            key = RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(pk_pem), private_key_password)
+            key = PrivateKey.load_pem(EncryptedPrivateKeyPEM(pk_pem), private_key_password)
 
         return PersistedCertificateWithPrivateKey(certificate_path, cert, private_key_path, key)
 
@@ -304,10 +269,7 @@ class Certificate:
     """An X.509 RSA certificate"""
 
     def __init__(self, certificate: x509.Certificate) -> None:
-        """Wrap an cryptography.x509.Certificate (RSA keys only)"""
-
-        if not isinstance(certificate.public_key(), rsa.RSAPublicKey):
-            raise ValueError("Only RSA certificates are supported at this time")
+        """Wrap a cryptography.x509.Certificate"""
         self._cert = certificate
 
     @classmethod
@@ -315,7 +277,7 @@ class Certificate:
         cls,
         *,
         # subject info
-        subject_public_key: RsaPublicKey,
+        subject_public_key: PublicKey,
         subject_name: X509Name,
         subject_alt_dns_names: list[str] | None = None,
         # cert properties
@@ -323,16 +285,16 @@ class Certificate:
         start_date: datetime,
         is_ca: bool = False,
         # issuer info
-        issuer_signing_key: RsaPrivateKey,
+        issuer_signing_key: PrivateKey,
         issuer_name: X509Name,
     ) -> Certificate:
         """
         Internal method to create a new certificate. It makes a lot of assumptions about how our
         certificates are used and is not suitable for general use.
         """
-        assert not Certificate._is_timezone_aware(
+        assert Certificate._is_timezone_aware(
             start_date
-        ), "Certificate expiry must use naive datetimes"
+        ), "Certificate expiry must use timzone-aware datetimes"
 
         builder = (
             x509.CertificateBuilder()
@@ -383,14 +345,18 @@ class Certificate:
                 critical=False,
             )
 
-        return Certificate(
-            builder.sign(private_key=issuer_signing_key._key, algorithm=HashAlgorithm.Sha512.value)
+        hash_algo = (
+            hash_.value
+            if (hash_ := Certificate._preferred_signing_hash_algorithm(issuer_signing_key._key))
+            is not None
+            else None
         )
+        return cls(builder.sign(private_key=issuer_signing_key._key, algorithm=hash_algo))
 
     @classmethod
     def load_pem(cls, pem_data: CertificatePEM) -> Certificate:
         try:
-            return Certificate(x509.load_pem_x509_certificate(pem_data.bytes))
+            return cls(x509.load_pem_x509_certificate(pem_data.bytes))
         except ValueError:
             raise InvalidPEMError("Unable to load certificate.")
 
@@ -414,10 +380,10 @@ class Certificate:
         return sn.to_bytes((sn.bit_length() + 7) // 8).hex(":")
 
     @property
-    def public_key(self) -> RsaPublicKey:
-        pk = self._cert.public_key()
-        assert isinstance(pk, rsa.RSAPublicKey)
-        return RsaPublicKey(pk)
+    def public_key(self) -> PublicKey:
+        key = self._cert.public_key()
+        assert is_supported_public_key_type(key)
+        return PublicKey(key)
 
     @property
     def subject(self) -> X509Name:
@@ -428,7 +394,7 @@ class Certificate:
         return X509Name(self._cert.issuer)
 
     @property
-    def common_name(self) -> str:
+    def common_name(self) -> str | None:
         return self.subject.common_name
 
     @property
@@ -437,11 +403,13 @@ class Certificate:
 
     @property
     def not_valid_before(self) -> datetime:
-        return self._cert.not_valid_before
+        """The beginning of the certificate's validity period in UTC as a timezone-aware datetime"""
+        return self._cert.not_valid_before_utc
 
     @property
     def not_valid_after(self) -> datetime:
-        return self._cert.not_valid_after
+        """The end of the certificate's validity period in UTC as a timezone-aware datetime"""
+        return self._cert.not_valid_after_utc
 
     def verify_is_signed_by(self, signer: Certificate) -> None:
         """
@@ -455,29 +423,9 @@ class Certificate:
             * check if certs are revoked
 
         :raise: InvalidSignatureError if the signature is not valid
-        :raise: ValueError
-                 * if the `signer` certificate's Key Usage does not allow certificate signature
-                   verification (keyCertSign)
-                 * if the signature scheme is not supported, see below
-
-        We assume the signature is made with PKCS1 v1.5 padding, as this is the only scheme
-        cryptography.io supports for X.509 certificates (see `RsaPublicKey.verify`). This is true
-        for certificates created with `Certificate._create`, but might not be true for certificates
-        loaded from elsewhere.
+        :raise: ValueError if the `signer` certificate is not marked to sign certificates
+                (see `may_sign_certificates`)
         """
-
-        # Check if PKCS1 v1.5 padding is used. The scheme is identified as <hash>WithRSAEncryption
-        # (RFC 4055 Section 5).
-        # We only accept SHA256, SHA384 and SHA512. Unsupported schemes include MD5, SHA1,
-        # RSAES-OAEP and RSASSA-PSS, and will lead to the error below.
-        if (oid := self._cert.signature_algorithm_oid.dotted_string) not in [
-            # https://oidref.com/1.2.840.113549.1.1
-            "1.2.840.113549.1.1.11",  # sha256WithRSAEncryption
-            "1.2.840.113549.1.1.12",  # sha384WithRSAEncryption
-            "1.2.840.113549.1.1.13",  # sha512WithRSAEncryption
-        ]:
-            raise ValueError(f"Unsupported signature scheme for X.509 certificate ({oid})")
-
         # Check if the signer is allowed to sign certificates. Self-signed, non-CA certificates do
         # not need to set the usage bit. See also https://github.com/openssl/openssl/issues/1418.
         if not signer.may_sign_certificates() and not self._is_self_signed():
@@ -486,30 +434,33 @@ class Certificate:
                 "(CA flag or keyCertSign bit missing)."
             )
 
-        signer.public_key.verify(
-            Signature(self._cert.signature),
-            self._cert.tbs_certificate_bytes,
-            HashAlgorithm.from_cryptography(self._cert.signature_hash_algorithm),
-        )
+        try:
+            self._cert.verify_directly_issued_by(signer._cert)
+        except cryptography.exceptions.InvalidSignature as e:
+            raise InvalidSignatureError(str(e)) from e
 
     def may_sign_certificates(self) -> bool:
         """
         Check if this certificate may be used to sign other certificates, that is, has the
-        cA flag set and allows key usage KeyCertSign.
+        cA flag set and allows key usage KeyCertSign (or does not restrict usage).
 
         Note that self-signed, non-CA end entity certificates may self-sign without this.
         """
-        is_ca = False
-        with contextlib.suppress(x509.ExtensionNotFound):
-            is_ca = self._cert.extensions.get_extension_for_class(x509.BasicConstraints).value.ca
+        try:
+            if not self._cert.extensions.get_extension_for_class(x509.BasicConstraints).value.ca:
+                return False
+        except x509.ExtensionNotFound:
+            # This extension and flag MUST be set for a CA
+            return False
 
-        has_key_sign_bit = False
-        with contextlib.suppress(x509.ExtensionNotFound):
-            has_key_sign_bit = self._cert.extensions.get_extension_for_class(
-                x509.KeyUsage
-            ).value.key_cert_sign
+        try:
+            if not self._cert.extensions.get_extension_for_class(x509.KeyUsage).value.key_cert_sign:
+                return False
+        except x509.ExtensionNotFound:
+            # If key usage is not restricted, that's ok
+            pass
 
-        return is_ca and has_key_sign_bit
+        return True
 
     def _is_self_signed(self) -> bool:
         """Is the issuer the same as the subject?"""
@@ -527,22 +478,22 @@ class Certificate:
         if allowed_drift is None:
             allowed_drift = relativedelta(hours=+2)
 
-        if self._is_not_valid_before(Certificate._naive_utcnow() + allowed_drift):
+        if self._is_not_valid_before(datetime.now(tz=timezone.utc) + allowed_drift):
             raise InvalidExpiryError(
-                f"Certificate is not yet valid (not_valid_before: {self._cert.not_valid_before})"
+                f"Certificate is not yet valid (not_valid_before: {self.not_valid_before})"
             )
-        if self._is_expired_after(Certificate._naive_utcnow() - allowed_drift):
+        if self._is_expired_after(datetime.now(tz=timezone.utc) - allowed_drift):
             raise InvalidExpiryError(
-                f"Certificate is expired (not_valid_after: {self._cert.not_valid_after})"
+                f"Certificate is expired (not_valid_after: {self.not_valid_after})"
             )
 
     def _is_not_valid_before(self, time: datetime) -> bool:
-        assert not Certificate._is_timezone_aware(time)
-        return time < self._cert.not_valid_before
+        assert Certificate._is_timezone_aware(time)
+        return time < self.not_valid_before
 
     def _is_expired_after(self, time: datetime) -> bool:
-        assert not Certificate._is_timezone_aware(time)
-        return time > self._cert.not_valid_after
+        assert Certificate._is_timezone_aware(time)
+        return time > self.not_valid_after
 
     def days_til_expiry(self) -> int:
         """
@@ -554,7 +505,7 @@ class Certificate:
         If the certificate's "not_valid_after" time lies in the past, a negative value will be
         returned.
         """
-        return (self._cert.not_valid_after - datetime.now()).days
+        return (self.not_valid_after - datetime.now(tz=timezone.utc)).days
 
     def fingerprint(self, algorithm: HashAlgorithm) -> bytes:
         """return the fingerprint
@@ -579,213 +530,36 @@ class Certificate:
 
     def get_subject_alt_names(self) -> list[str]:
         try:
-            sans = self._cert.extensions.get_extension_for_oid(
+            ext = self._cert.extensions.get_extension_for_oid(
                 x509.oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME
-            ).value.get_values_for_type(x509.DNSName)
+            ).value
+            assert isinstance(ext, x509.extensions.SubjectAlternativeName)
+            sans = ext.get_values_for_type(x509.DNSName)
         except x509.ExtensionNotFound:
             return []
 
-        assert all(isinstance(x, str) for x in sans)
-        # Well look at that assert...
-        return sans  # type: ignore[no-any-return]
+        return sans
 
     @staticmethod
     def _is_timezone_aware(dt: datetime) -> bool:
         return dt.tzinfo is not None
 
     @staticmethod
-    def _naive_utcnow() -> datetime:
+    def _preferred_signing_hash_algorithm(key: PrivateKeyType) -> HashAlgorithm | None:
         """
-        Create a not timezone aware, "naive", datetime at UTC now. This mimics the deprecated
-        datetime.utcnow(), but we still need it to be naive because that's what pyca/cryptography
-        certificates use. See also https://github.com/pyca/cryptography/issues/9186.
+        Choose the signature hash algorithm based on the type of the private key.
+        Some keys (Ed25519 and Ed448) must use 'None'.
         """
-        return datetime.now(tz=timezone.utc).replace(tzinfo=None)
+        match key:
+            case asym.ed25519.Ed25519PrivateKey() | asym.ed448.Ed448PrivateKey():
+                return None
+            case asym.rsa.RSAPrivateKey() | asym.ec.EllipticCurvePrivateKey():
+                return HashAlgorithm.Sha512
+            case unreachable:
+                assert_never(unreachable)
 
 
-class RsaPrivateKey:
-    """
-    An unencrypted RSA private key.
-
-    This class provides methods to generate, serialize and deserialize RSA private keys.
-    """
-
-    def __init__(self, key: rsa.RSAPrivateKey) -> None:
-        self._key = key
-
-    @classmethod
-    def generate(cls, key_size: int) -> RsaPrivateKey:
-        return RsaPrivateKey(rsa.generate_private_key(public_exponent=65537, key_size=key_size))
-
-    @overload
-    @classmethod
-    def load_pem(cls, pem_data: PlaintextPrivateKeyPEM, password: None = None) -> RsaPrivateKey:
-        ...
-
-    @overload
-    @classmethod
-    def load_pem(cls, pem_data: EncryptedPrivateKeyPEM, password: Password) -> RsaPrivateKey:
-        ...
-
-    @classmethod
-    def load_pem(
-        cls,
-        pem_data: EncryptedPrivateKeyPEM | PlaintextPrivateKeyPEM,
-        password: Password | None = None,
-    ) -> RsaPrivateKey:
-        """
-        Decode a PKCS8 PEM encoded RSA private key.
-
-        `password` can be given if the key is encrypted.
-
-        Raises:
-            InvalidPEMError: if the PEM cannot be decoded.
-            WrongPasswordError: if an encrypted PEM cannot be decrypted with the given password.
-                NOTE: it seems we cannot rely on this error being raised. In the unit tests we
-                sometimes saw an InvalidPEMError instead. Expect to see that as well.
-            TypeError: when trying to load an EncryptedPrivateKeyPEM but no password is given.
-                This would be caught by mypy though.
-
-        >>> RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(""))
-        Traceback (most recent call last):
-            ...
-        cmk.utils.crypto.certificate.InvalidPEMError
-
-        >>> pem = EncryptedPrivateKeyPEM(
-        ...     "\\n".join([
-        ...         "-----BEGIN ENCRYPTED PRIVATE KEY-----",
-        ...         "MIIC3TBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQIMRfolchikB0CAggA",
-        ...         "MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBBvZ2ZdTgc5U+OgzNvBs3cXBIIC",
-        ...         "gBe7tt6aHu+sfCvU8EzFqVbkf3f3qt6P/YEJZu4zXeGXrE+4D7E64PYooqGk+ZvU",
-        ...         "/xyqHNoRzbAGEAqqEsMhZxjhQbgLmWVqGCJrqkkl8d5UlcG661AuevhYqIW8D3Bk",
-        ...         "PfezIOnL+tDJuNb8y3KgQU0mqjUZ/BFLy6uTm6hQWeBluU5xtJ3C59o2JCP3pQwz",
-        ...         "5V/EuLu0nLRSxCxDGcZqCr0s5A0AGv4U7xA9LEgER+ZuXLa2m+zp8VI8aR+1zUp+",
-        ...         "lWq4rFY2UnA3DNayS/5QV0ljgDbE8Bzje6dwDhRiFUhgIwHa4C6EEDTajAXxbJEz",
-        ...         "JebDaz9HLUMbfFdE2LYjagQx/kopb35eZUihZs3uHZXgXCQzeaaG7bunPBdiCuML",
-        ...         "n0Cg+h13PmuH4eXuzcLEvwGzJrBrhenuYs/Vp9PYhwI7gIq+pqx7cgBprOge4xqM",
-        ...         "gZbyhYoWCITEMg6lMYga1uZuBtvkel7/0PtC35qxdJyo5AEUCwSisY//t7oZownH",
-        ...         "e8RlioxKnCisNxtcMYkPLmU68HNklZSX4/FrSd9zrWrpxC9XKKYeixe/RZPApeXO",
-        ...         "phVLXl8KaX/xEAuonEZXH9XaZRnYA1Lg4Hl3lfbbHVffet9X1jpRRo4RCuQ+yQrJ",
-        ...         "+YvX8SvnNAYHB1Pfp6aEqauUBR6FisUhHx2xahvnJ8y1GFNwY1VUEDdB63Ai0JVK",
-        ...         "zIzEXU8/psX8xDh5Gm+n4ZVkgbuJQdvQgYLNT6vEglytEuJXYKFZQY4zX8J+vc3N",
-        ...         "AVqHeoR61JEG+AcMdUgg2bO3vYorcQ8b3kwKkZzoBNeghMl6IS0Lj5tLVixweS5d",
-        ...         "Rnp7GPpozA4jOM89/WEk+LE=",
-        ...         "-----END ENCRYPTED PRIVATE KEY-----"
-        ...     ])
-        ... )
-
-        >>> RsaPrivateKey.load_pem(pem, Password("foo"))
-        <cmk.utils.crypto.certificate.RsaPrivateKey object at 0x...>
-
-        >>> RsaPrivateKey.load_pem(pem, Password("not foo"))
-        Traceback (most recent call last):
-            ...
-        cmk.utils.crypto.certificate.WrongPasswordError
-        """
-
-        pw = password.raw_bytes if password is not None else None
-        try:
-            return RsaPrivateKey(serialization.load_pem_private_key(pem_data.bytes, password=pw))
-        except ValueError as exception:
-            if str(exception) == "Bad decrypt. Incorrect password?":
-                raise WrongPasswordError
-            raise InvalidPEMError
-
-    @overload
-    def dump_pem(self, password: None) -> PlaintextPrivateKeyPEM:
-        ...
-
-    @overload
-    def dump_pem(self, password: Password) -> EncryptedPrivateKeyPEM:
-        ...
-
-    def dump_pem(
-        self, password: Password | None
-    ) -> EncryptedPrivateKeyPEM | PlaintextPrivateKeyPEM:
-        """
-        Encode the private key in PKCS8 PEM (i.e. '-----BEGIN PRIVATE KEY-----...').
-
-        If `password` is given, the key will be encrypted with the password
-        (i.e. '-----BEGIN ENCRYPTED PRIVATE KEY-----...').
-        """
-
-        # mypy is convinced private_bytes() doesn't exist, I don't know why
-        bytes_ = self._key.private_bytes(  # type: ignore[attr-defined]
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.BestAvailableEncryption(password.raw_bytes)
-            if password is not None
-            else serialization.NoEncryption(),
-        )
-        if password is None:
-            return PlaintextPrivateKeyPEM(bytes_)
-        return EncryptedPrivateKeyPEM(bytes_)
-
-    def dump_legacy_pkcs1(self) -> PlaintextPrivateKeyPEM:
-        """Deprecated. Do not use.
-
-        Encode the private key without encryption in PKCS#1 / OpenSSL format
-        (i.e. '-----BEGIN RSA PRIVATE KEY-----...').
-        """
-        bytes_ = self._key.private_bytes(  # type: ignore[attr-defined]
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption(),
-        )
-        return PlaintextPrivateKeyPEM(bytes_)
-
-    @property
-    def public_key(self) -> RsaPublicKey:
-        return RsaPublicKey(self._key.public_key())
-
-    def sign_data(
-        self, data: bytes, hash_algorithm: HashAlgorithm = HashAlgorithm.Sha512
-    ) -> Signature:
-        return Signature(self._key.sign(data, padding.PKCS1v15(), hash_algorithm.value))
-
-
-class RsaPublicKey:
-    def __init__(self, key: rsa.RSAPublicKey) -> None:
-        self._key = key
-
-    @classmethod
-    def load_pem(cls, pem_data: PublicKeyPEM) -> RsaPublicKey:
-        return RsaPublicKey(serialization.load_pem_public_key(pem_data.bytes))
-
-    def dump_pem(self) -> PublicKeyPEM:
-        # TODO: Use SubjectPublicKeyInfo format rather than PKCS1. PKCS1 doesn't include an
-        # algorithm identifier.
-        return PublicKeyPEM(
-            self._key.public_bytes(
-                serialization.Encoding.PEM,
-                serialization.PublicFormat.PKCS1,
-            )
-        )
-
-    def dump_openssh(self) -> str:
-        """Encode the public key in OpenSSH format (ssh-rsa AAAA...)"""
-        return self._key.public_bytes(
-            serialization.Encoding.OpenSSH,
-            serialization.PublicFormat.OpenSSH,
-        ).decode("utf-8")
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, RsaPublicKey):
-            return NotImplemented
-        return self._key.public_numbers() == other._key.public_numbers()
-
-    def verify(self, signature: Signature, message: bytes, digest_algorithm: HashAlgorithm) -> None:
-        # Currently the discouraged PKCS1 v1.5 padding is assumed. This is the only padding scheme
-        # cryptography.io supports for signing X.509 certificates at this time.
-        # See https://github.com/pyca/cryptography/issues/2850.
-        # As long as our RsaPublic/PrivateKeys are only used for certificates there's no point in
-        # supporting other schemes.
-        padding_scheme = padding.PKCS1v15()
-
-        try:
-            self._key.verify(signature, message, padding_scheme, digest_algorithm.value)
-        except cryptography.exceptions.InvalidSignature as e:
-            raise InvalidSignatureError(e) from e
+X509NameOid: TypeAlias = x509.oid.NameOID
 
 
 @dataclass
@@ -805,31 +579,37 @@ class X509Name:
         if common_name == "":
             raise ValueError("common name must not be empty")
 
-        attributes = [x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, common_name)]
+        attributes = [x509.NameAttribute(X509NameOid.COMMON_NAME, common_name)]
         if organization_name is not None:
-            attributes.append(
-                x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, organization_name)
-            )
+            attributes.append(x509.NameAttribute(X509NameOid.ORGANIZATION_NAME, organization_name))
         if organizational_unit is not None:
             attributes.append(
-                x509.NameAttribute(x509.oid.NameOID.ORGANIZATIONAL_UNIT_NAME, organizational_unit)
+                x509.NameAttribute(X509NameOid.ORGANIZATIONAL_UNIT_NAME, organizational_unit)
             )
 
         return cls(x509.Name(attributes))
 
-    def _get_name_attributes(self, attribute: x509.ObjectIdentifier) -> list[str]:
-        return [attr.value for attr in self.name.get_attributes_for_oid(attribute)]
+    def get_single_name_attribute(self, attribute: x509.oid.ObjectIdentifier) -> str | None:
+        """
+        Get an attribute, returning only the first if multiple are found.
+
+        Use an OID from X509NameOid.
+        """
+        return attrs[0] if (attrs := self._get_name_attributes(attribute)) else None
+
+    def _get_name_attributes(self, attribute: x509.oid.ObjectIdentifier) -> list[str]:
+        return [
+            val.decode("utf-8") if isinstance(val := attr.value, bytes) else val
+            for attr in self.name.get_attributes_for_oid(attribute)
+        ]
 
     @property
-    def common_name(self) -> str:
+    def common_name(self) -> str | None:
         """Get the common name
         >>> print(X509Name.create(common_name="john", organizational_unit="corp").common_name)
         john
         """
-        name = self._get_name_attributes(x509.oid.NameOID.COMMON_NAME)
-        if (count := len(name)) != 1:
-            raise ValueError(f"Expected to find exactly one common name, found {count}")
-        return name[0]
+        return self.get_single_name_attribute(X509NameOid.COMMON_NAME)
 
     @property
     def organization_name(self) -> str | None:
@@ -843,12 +623,7 @@ class X509Name:
         ... )
         corp
         """
-        name = self._get_name_attributes(x509.oid.NameOID.ORGANIZATION_NAME)
-        if (count := len(name)) == 1:
-            return name[0]
-        if count == 0:
-            return None
-        raise ValueError(f"Expected to find at most one organization name, found {count}")
+        return self.get_single_name_attribute(X509NameOid.ORGANIZATION_NAME)
 
     @property
     def organizational_unit(self) -> str | None:
@@ -866,12 +641,7 @@ class X509Name:
         ... )
         unit
         """
-        name = self._get_name_attributes(x509.oid.NameOID.ORGANIZATIONAL_UNIT_NAME)
-        if (count := len(name)) == 1:
-            return name[0]
-        if count == 0:
-            return None
-        raise ValueError(f"Expected to find at most one organizational unit name, found {count}")
+        return self.get_single_name_attribute(X509NameOid.ORGANIZATIONAL_UNIT_NAME)
 
 
 @dataclass
@@ -885,7 +655,7 @@ class CertificateSigningRequest:
 
     @classmethod
     def create(
-        cls, subject_name: X509Name, subject_private_key: RsaPrivateKey
+        cls, subject_name: X509Name, subject_private_key: PrivateKey
     ) -> CertificateSigningRequest:
         """Create a new Certificate Signing Request
 
@@ -896,18 +666,24 @@ class CertificateSigningRequest:
                 The private key is needed to sign the CSR and prove ownership of the public key.
         """
 
+        hash_algo = (
+            hash_.value
+            if (hash_ := Certificate._preferred_signing_hash_algorithm(subject_private_key._key))
+            is not None
+            else None
+        )
         builder = x509.CertificateSigningRequestBuilder().subject_name(subject_name.name)
-        return cls(builder.sign(subject_private_key._key, HashAlgorithm.Sha512.value))
+        return cls(builder.sign(subject_private_key._key, hash_algo))
 
     @property
     def subject(self) -> X509Name:
         return X509Name(self.csr.subject)
 
     @property
-    def public_key(self) -> RsaPublicKey:
-        pk = self.csr.public_key()
-        assert isinstance(pk, rsa.RSAPublicKey)
-        return RsaPublicKey(pk)
+    def public_key(self) -> PublicKey:
+        key = self.csr.public_key()
+        assert is_supported_public_key_type(key)
+        return PublicKey(key)
 
     @property
     def is_signature_valid(self) -> bool:

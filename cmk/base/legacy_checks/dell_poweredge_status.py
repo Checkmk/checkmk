@@ -5,15 +5,25 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.dell_poweredge import (
-    check_dell_poweredge_status,
-    inventory_dell_poweredge_status,
-)
+from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_status
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.dell import DETECT_IDRAC_POWEREDGE
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
+
+
+def inventory_dell_poweredge_status(info):
+    if info:
+        return [(None, None)]
+    return []
+
+
+def parse_dell_poweredge_status(string_table: StringTable) -> StringTable:
+    return string_table
+
 
 check_info["dell_poweredge_status"] = LegacyCheckDefinition(
+    parse_function=parse_dell_poweredge_status,
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5",

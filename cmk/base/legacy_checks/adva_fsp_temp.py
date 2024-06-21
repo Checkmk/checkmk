@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 # this is currently here only to prevent error messages when upgrading
 
@@ -45,7 +46,12 @@ def check_adva_fsp_temp(item, params, info):
     return None
 
 
+def parse_adva_fsp_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["adva_fsp_temp"] = LegacyCheckDefinition(
+    parse_function=parse_adva_fsp_temp,
     detect=equals(".1.3.6.1.2.1.1.1.0", "Fiber Service Platform F7"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2544",

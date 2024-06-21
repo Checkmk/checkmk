@@ -7,9 +7,10 @@
 import re
 from collections.abc import Callable, Mapping
 
-import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.plugins.lib import sap_hana
 
 _SAP_HANA_CONNECT_STATE_MAP: Mapping[str, tuple[int, Callable[[str], bool]]] = {
     "Worker: OK": (0, lambda inp: inp == "0"),

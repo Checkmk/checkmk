@@ -25,3 +25,27 @@ def test_command(site: Site, cmd: str) -> None:
     """
     with site.execute(cmd.split()) as p:
         assert p.wait() == 0
+
+
+def test_scp(site: Site) -> None:
+    """
+    Ensures that scp is working.
+
+    When executing scp as a site user, usually, the system scp is used. This binary is usually
+    dynamically linked against OpenSSL. We ship OpenSSL with OMD and set LD_LIBRARY_PATH to within
+    the site environment. Hence, when calling scp as a site user, the OMD OpenSSL is used. There is
+    no garantuee that this version is compatible with the scp compilation available on the system
+    (which is intended to compatible with the system OpenSSL). See also SUP-17682.
+
+    We execute this test in the CI containers of all supported distros to ensure that commands using
+    OpenSSL which are available there can be executed.
+    """
+    with site.execute(["touch", "test_scp_source"]) as p:
+        assert p.wait() == 0
+    with site.execute(["scp", "test_scp_source", "test_scp_target"]) as p:
+        exit_code = p.wait()
+        print(p.stdout)
+        print(p.stderr)
+        assert exit_code == 0
+    with site.execute(["rm", "test_scp_target"]) as p:
+        assert p.wait() == 0

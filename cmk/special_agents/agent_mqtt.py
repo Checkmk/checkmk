@@ -23,14 +23,14 @@ useful or probably only when directly connecting to single nodes - not sure abou
 import logging
 import sys
 import time
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
 
 import paho.mqtt.client as mqtt
 
-from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 LOGGER = logging.getLogger("agent_mqtt")
 
@@ -77,7 +77,7 @@ SYS_TOPIC_ALIASES = {
 class ReceivedData:
     connected: bool = False
     subscribed_to_sys: bool = False
-    topics: MutableMapping[str, str] = field(default_factory=dict)
+    topics: dict[str, str] = field(default_factory=dict)
     remaining_topics: set[str] = field(default_factory=lambda: set(EXPECTED_SYS_TOPICS))
 
 

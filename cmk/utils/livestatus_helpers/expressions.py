@@ -200,13 +200,12 @@ class ListExpression(UnaryExpression):
         if not other:
             # Check for empty list
             op = "="
+        elif ignore_case:
+            # case-insensitive equality
+            op = "<="
         else:
-            if ignore_case:
-                # case-insensitive equality
-                op = "<="
-            else:
-                # equality
-                op = ">="
+            # equality
+            op = ">="
         return self.op(op, other)
 
     def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
@@ -224,29 +223,13 @@ class ListExpression(UnaryExpression):
 
 
 class LiteralExpression(ScalarExpression):
-    """A literal value to be rendered in a Filter
-
-    Examples:
-
-        >>> LiteralExpression("blah").render()
-        [('', 'blah')]
-
-      We make sure not to accidentally send query terminating newlines.
-
-        >>> LiteralExpression("blah\\n\\n").render()
-        Traceback (most recent call last):
-            ...
-        ValueError: Illegal newline character in query
-    """
+    """A literal value to be rendered in a Filter"""
 
     def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
     def empty(self) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
-
-    def render(self) -> RenderIntermediary:
-        return [("", self.value.replace("\n", ""))]
 
 
 LivestatusOperator = str

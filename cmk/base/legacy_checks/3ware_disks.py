@@ -35,6 +35,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_3ware_disks(info):
     inventory = []
@@ -77,7 +79,13 @@ def check_3ware_disks(item, _no_params, info):
 
 # declare the check to Checkmk
 
+
+def parse_3ware_disks(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["3ware_disks"] = LegacyCheckDefinition(
+    parse_function=parse_3ware_disks,
     service_name="RAID 3ware disk %s",
     discovery_function=inventory_3ware_disks,
     check_function=check_3ware_disks,

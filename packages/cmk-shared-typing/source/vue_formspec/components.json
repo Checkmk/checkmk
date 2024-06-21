@@ -1,0 +1,346 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "$defs": {
+    "form_spec": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "help": {
+          "type": "string"
+        },
+        "validators": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "validators.json#/$defs/validators"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "help",
+        "validators"
+      ]
+    },
+    "integer": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "integer",
+          "default": "integer"
+        },
+        "label": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        }
+      ]
+    },
+    "float": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "float",
+          "default": "float"
+        },
+        "label": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        }
+      ]
+    },
+    "legacy_valuespec": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "legacy_valuespec",
+          "default": "legacy_valuespec"
+        },
+        "html": {
+          "type": "string"
+        },
+        "varprefix": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "html",
+        "varprefix"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        }
+      ]
+    },
+    "string": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "string",
+          "default": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        }
+      ]
+    },
+    "list": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "list",
+          "default": "list"
+        },
+        "element_template": {
+          "$ref": "#/$defs/form_spec"
+        },
+        "element_default_value": {},
+        "editable_order": {
+          "type": "boolean"
+        },
+        "add_element_label": {
+          "type": "string"
+        },
+        "remove_element_label": {
+          "type": "string"
+        },
+        "no_element_label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "element_template",
+        "element_default_value",
+        "editable_order",
+        "add_element_label",
+        "remove_element_label",
+        "no_element_label"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        }
+      ]
+    },
+    "dictionary_element": {
+      "type": "object",
+      "properties": {
+        "ident": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "default_value": {},
+        "parameter_form": {
+          "$ref": "#/$defs/form_spec"
+        }
+      },
+      "required": [
+        "ident",
+        "required",
+        "parameter_form",
+        "default_value"
+      ]
+    },
+    "dictionary": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "dictionary",
+          "default": "dictionary"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dictionary_element"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "type",
+        "elements"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        }
+      ]
+    },
+    "single_choice_element": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "title"
+      ]
+    },
+    "single_choice": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "single_choice",
+          "default": "single_choice"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/single_choice_element"
+          },
+          "default": []
+        },
+        "no_elements_text": {
+          "type": "string"
+        },
+        "frozen": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "frozen",
+        "elements"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        }
+      ]
+    },
+    "cascading_single_choice_element": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "default_value": {},
+        "parameter_form": {
+          "$ref": "#/$defs/form_spec"
+        }
+      },
+      "required": [
+        "name",
+        "title",
+        "default_value",
+        "parameter_form"
+      ]
+    },
+    "cascading_single_choice": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "cascading_single_choice",
+          "default": "cascading_single_choice"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/cascading_single_choice_element"
+          },
+          "default": []
+        },
+        "no_elements_text": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "elements"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        }
+      ]
+    },
+    "components": {
+      "discriminator": {
+        "propertyName": "type"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/integer"
+        },
+        {
+          "$ref": "#/$defs/float"
+        },
+        {
+          "$ref": "#/$defs/string"
+        },
+        {
+          "$ref": "#/$defs/dictionary"
+        },
+        {
+          "$ref": "#/$defs/list"
+        },
+        {
+          "$ref": "#/$defs/legacy_valuespec"
+        },
+        {
+          "$ref": "#/$defs/single_choice"
+        },
+        {
+          "$ref": "#/$defs/cascading_single_choice"
+        }
+      ],
+      "required": [
+        "type"
+      ]
+    }
+  }
+}

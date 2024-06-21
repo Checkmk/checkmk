@@ -16,7 +16,8 @@ from collections.abc import Iterable, Mapping
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from cmk.agent_based.v2 import StringTable
 
 Section = Mapping
 
@@ -82,4 +83,7 @@ check_info["cisco_prime_wifi_connections"] = LegacyCheckDefinition(
     discovery_function=discover_cisco_prime_wifi_connections,
     check_function=check_cisco_prime_wifi_connections,
     check_ruleset_name="cisco_prime_wifi_connections",
+    check_default_parameters={
+        "levels_lower": None,
+    },
 )

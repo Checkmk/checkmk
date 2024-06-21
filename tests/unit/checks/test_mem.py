@@ -5,10 +5,9 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.mem import parse_proc_meminfo_bytes
-from cmk.base.plugins.agent_based.utils.memory import SectionMem
-
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
+from cmk.plugins.collection.agent_based.mem import parse_proc_meminfo_bytes
+from cmk.plugins.lib.memory import SectionMem
 
 
 @pytest.mark.parametrize(

@@ -41,6 +41,6 @@ def _update_config_based_host_attributes() -> None:
     _update_config_based_host_attributes_config_hash = _compute_config_hash()
 
 
-def register():
+def register() -> None:
     # Make the config module initialize the host attributes after loading the config
     register_post_config_load_hook(_update_config_based_host_attributes)

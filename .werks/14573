@@ -1,4 +1,4 @@
-Title: Prometheus & Alertmanager: Deprecation of `IP Address` and `Host name` options
+Title: Prometheus & Alertmanager: Deprecation of 'IP Address` and 'Host name' options
 Class: fix
 Compatible: incomp
 Component: checks
@@ -26,5 +26,5 @@ instance, assume your rule specifies
 </ul>
 and your host has the address <tt>1.2.3.4</tt>. Then the new rule needs to specify
 C+:
-https://1.2.3.4:9000/my_prefix/api/v1/status/buildinfo
+1.2.3.4:9000/my_prefix/api/v1/status/buildinfo
 C-:

@@ -23,7 +23,7 @@
     <ProjectGuid>{FF2EBEE8-1220-462C-9F01-1E1163F949A3}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>checkmkservice</RootNamespace>
-    <FmtVersion>fmt-9.0.0</FmtVersion>
+    <FmtVersion>fmt-10.2.1</FmtVersion>
     <YamlCpp>yaml-cpp.9a362420</YamlCpp>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -147,10 +147,12 @@
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>echo "prebuild"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Command>pause 'aaaaaa'</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <Manifest>
       <AdditionalManifestFiles>$(SolutionDir)\check_mk.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
@@ -185,10 +187,12 @@
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>echo "prebuild"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Command>pause 'aaaaaa'</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <Manifest>
       <AdditionalManifestFiles>$(SolutionDir)\check_mk.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
@@ -222,14 +226,16 @@
       <AdditionalDependencies>../build/engine\$(Platform)\$(Configuration)\engine.lib;userenv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>echo "prebuild"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
       </Command>
     </PostBuildEvent>
     <CustomBuildStep>
-      <Command>pause 'aaaaaa'</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <Manifest>
       <AdditionalManifestFiles>$(SolutionDir)\check_mk.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
@@ -263,14 +269,16 @@
       <AdditionalDependencies>../build/engine\$(Platform)\$(Configuration)\engine.lib;userenv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>echo "prebuild"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
       </Command>
     </PostBuildEvent>
     <CustomBuildStep>
-      <Command>pause 'aaaaaa'</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <Manifest>
       <AdditionalManifestFiles>$(SolutionDir)\check_mk.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>

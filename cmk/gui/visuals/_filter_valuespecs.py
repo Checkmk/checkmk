@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import json
 import sys
 import traceback
@@ -12,6 +14,7 @@ from itertools import chain
 from livestatus import LivestatusTestingError
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -124,7 +127,7 @@ def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
     try:
         with output_funnel.plugged():
             f.display(value)
-            html.write_html(HTML(output_funnel.drain()))
+            html.write_html(HTML.without_escaping(output_funnel.drain()))
     except LivestatusTestingError:
         raise
     except Exception as e:
@@ -135,7 +138,7 @@ def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
         html.icon(
             "alert", _("This filter cannot be displayed") + " ({})\n{}".format(e, "".join(tbs))
         )
-        html.write_text(_("This filter cannot be displayed"))
+        html.write_text_permissive(_("This filter cannot be displayed"))
     html.close_div()
     html.close_div()
 
@@ -147,27 +150,38 @@ class VisualFilterList(ListOfMultiple):
     """
 
     @classmethod
-    def get_choices(cls, info: str) -> Sequence[tuple[str, VisualFilter]]:
+    def get_choices(
+        cls, info: str, ignored_context_choices: Sequence[str] = ()
+    ) -> Sequence[tuple[str, VisualFilter]]:
         return sorted(
-            cls._get_filter_specs(info), key=lambda x: (x[1]._filter.sort_index, x[1].title())
+            cls._get_filter_specs(info, ignored_context_choices),
+            key=lambda x: (x[1]._filter.sort_index, x[1].title()),
         )
 
     @classmethod
-    def _get_filter_specs(cls, info: str) -> Iterator[tuple[str, VisualFilter]]:
+    def _get_filter_specs(
+        cls, info: str, ignored_context_choices: Sequence[str]
+    ) -> Iterator[tuple[str, VisualFilter]]:
         for fname, filter_ in filters_allowed_for_info(info):
-            yield fname, VisualFilter(name=fname, title=filter_.title)
+            if fname not in ignored_context_choices:
+                yield fname, VisualFilter(name=fname, title=filter_.title)
 
-    def __init__(self, info_list: SingleInfos, **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def __init__(
+        self,
+        info_list: SingleInfos,
+        ignored_context_choices: Sequence[str] = (),
+        title: str | None = None,
+        allow_empty: bool = True,
+    ) -> None:
         self._filters = filters_allowed_for_infos(info_list)
 
-        kwargs.setdefault("title", _("Filters"))
-        kwargs.setdefault("add_label", _("Add filter"))
-        kwargs.setdefault("del_label", _("Remove filter"))
-        kwargs["delete_style"] = "filter"
+        if title is None:
+            title = _("Filters")
 
         grouped: GroupedListOfMultipleChoices = [
             ListOfMultipleChoiceGroup(
-                title=visual_info_registry[info]().title, choices=self.get_choices(info)
+                title=visual_info_registry[info]().title,
+                choices=self.get_choices(info, ignored_context_choices),
             )
             for info in info_list
         ]
@@ -177,7 +191,10 @@ class VisualFilterList(ListOfMultiple):
             page_request_vars={
                 "infos": info_list,
             },
-            **kwargs,
+            allow_empty=allow_empty,
+            add_label=_("Add filter"),
+            del_label=_("Remove filter"),
+            delete_style="filter",
         )
 
     def from_html_vars(self, varprefix: str) -> VisualContext:
@@ -210,6 +227,15 @@ def filters_allowed_for_infos(info_list: SingleInfos) -> dict[str, Filter]:
     return dict(chain.from_iterable(map(filters_allowed_for_info, info_list)))
 
 
+def filters_exist_for_infos(infos: SingleInfos) -> bool:
+    """Returns True if any filter is registered for the given infos"""
+    for _fname, filt in filter_registry.items():
+        for info in infos:
+            if filt.info is None or info == filt.info:
+                return True
+    return False
+
+
 class VisualFilterListWithAddPopup(VisualFilterList):
     """Special form of the visual filter list to be used in the views and dashboards"""
 
@@ -236,37 +262,37 @@ class VisualFilterListWithAddPopup(VisualFilterList):
 
             html.open_div(id_=group_id, class_="filter_group")
             # Show / hide all entries of this group
-            html.a(
-                group.title,
-                href="",
-                class_="filter_group_title",
-                onclick="cmk.page_menu.toggle_filter_group_display(this.nextSibling)",
-            )
+            with foldable_container(
+                treename="filter_group_title",
+                id_=group_id,
+                isopen=True,
+                title=group.title,
+                indent=None,
+            ):
+                # Display all entries of this group
+                html.open_ul(class_="active")
+                for choice in group.choices:
+                    filter_name = choice[0]
 
-            # Display all entries of this group
-            html.open_ul(class_="active")
-            for choice in group.choices:
-                filter_name = choice[0]
+                    filter_obj = filter_registry[filter_name]
+                    html.open_li(class_="show_more_mode" if filter_obj.is_show_more else "basic")
 
-                filter_obj = filter_registry[filter_name]
-                html.open_li(class_="show_more_mode" if filter_obj.is_show_more else "basic")
+                    html.a(
+                        choice[1].title() or filter_name,
+                        href="javascript:void(0)",
+                        onclick="cmk.valuespecs.listofmultiple_add(%s, %s, %s, this);"
+                        "cmk.page_menu.update_filter_list_scroll(%s)"
+                        % (
+                            json.dumps(varprefix),
+                            json.dumps(self._choice_page_name),
+                            json.dumps(self._page_request_vars),
+                            json.dumps(filter_list_selected_id),
+                        ),
+                        id_=f"{varprefix}_add_{filter_name}",
+                    )
 
-                html.a(
-                    choice[1].title() or filter_name,
-                    href="javascript:void(0)",
-                    onclick="cmk.valuespecs.listofmultiple_add(%s, %s, %s, this);"
-                    "cmk.page_menu.update_filter_list_scroll(%s)"
-                    % (
-                        json.dumps(varprefix),
-                        json.dumps(self._choice_page_name),
-                        json.dumps(self._page_request_vars),
-                        json.dumps(filter_list_selected_id),
-                    ),
-                    id_=f"{varprefix}_add_{filter_name}",
-                )
-
-                html.close_li()
-            html.close_ul()
+                    html.close_li()
+                html.close_ul()
 
             html.close_div()
         html.close_div()

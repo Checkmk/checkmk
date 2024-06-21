@@ -18,6 +18,7 @@ You can find an introduction to the configuration of Checkmk including activatio
 from collections.abc import Mapping
 from dataclasses import asdict
 from typing import Any
+from urllib.parse import urlparse
 
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request, Response
@@ -29,10 +30,11 @@ from cmk.gui.openapi.endpoints.activate_changes.response_schemas import (
     PendingChangesCollection,
 )
 from cmk.gui.openapi.endpoints.utils import may_fail
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import ProblemException, serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.activate_changes import (
     activate_changes_start,
     ActivationRestAPIResponseExtensions,
@@ -118,8 +120,10 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     sites = body["sites"]
     constructors.require_etag(constructors.hash_of_dict(get_pending_changes()))
-    with may_fail(MKUserError), may_fail(MKAuthException, status=401), may_fail(
-        MKLicensingError, status=403
+    with (
+        may_fail(MKUserError),
+        may_fail(MKAuthException, status=401),
+        may_fail(MKLicensingError, status=403),
     ):
         activation_response = activate_changes_start(
             sites, "REST API", force_foreign_changes=body["force_foreign_changes"]
@@ -128,7 +132,7 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
     if body["redirect"]:
         wait_for = _completion_link(activation_response.activation_id)
         response = Response(status=302)
-        response.location = wait_for["href"]
+        response.location = urlparse(wait_for["href"]).path
         return response
 
     return serve_json(_activation_run_domain_object(activation_response))
@@ -148,15 +152,19 @@ def _activation_run_domain_object(
     return constructors.domain_object(
         domain_type="activation_run",
         identifier=activation_response.activation_id,
-        title="Activation status: In progress."
-        if activation_response.is_running
-        else "Activation status: Complete.",
+        title=(
+            "Activation status: In progress."
+            if activation_response.is_running
+            else "Activation status: Complete."
+        ),
         extensions=asdict(activation_response),
         deletable=False,
         editable=False,
-        links=[_completion_link(activation_response.activation_id)]
-        if activation_response.is_running
-        else [],
+        links=(
+            [_completion_link(activation_response.activation_id)]
+            if activation_response.is_running
+            else []
+        ),
     )
 
 
@@ -196,7 +204,7 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
     done = manager.wait_for_completion(timeout=request.request_timeout - 10)
     if not done:
         response = Response(status=302)
-        response.location = request.url
+        response.location = urlparse(request.url).path
         return response
 
     return Response(status=204)
@@ -258,6 +266,7 @@ def list_activations(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("activation_run", "pending_changes"),
     "cmk/pending-activation-changes",
     method="get",
+    etag="output",
     permissions_required=RO_PERMISSIONS,
     response_schema=PendingChangesCollection,
 )

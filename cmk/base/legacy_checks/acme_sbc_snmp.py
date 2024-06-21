@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.acme import DETECT_ACME
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.acme import DETECT_ACME
 
 # comNET GmbH, Fabian Binder
 
@@ -56,7 +57,12 @@ def check_acme_sbc_snmp(_no_item, params, info):
         yield 0, score_msg
 
 
+def parse_acme_sbc_snmp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["acme_sbc_snmp"] = LegacyCheckDefinition(
+    parse_function=parse_acme_sbc_snmp,
     detect=DETECT_ACME,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.2.1.1",

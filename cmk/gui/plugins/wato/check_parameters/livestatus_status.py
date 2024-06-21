@@ -105,8 +105,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "average_latency_generic",
                 Tuple(
-                    title=_("Levels Latency Check"),
-                    help=_("Set Levels for the Check Latency Time"),
+                    title=_("Levels latency check"),
+                    help=_("Set levels for the check latency time"),
                     elements=[
                         Age(
                             title=_("Warning at or above"),
@@ -122,8 +122,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "average_latency_cmk",
                 Tuple(
-                    title=_("Levels Latency Checker"),
-                    help=_("Set Levels for the Checker Latency Time"),
+                    title=_("Levels latency checker"),
+                    help=_("Set levels for the checker latency time"),
                     elements=[
                         Age(
                             title=_("Warning at or above"),
@@ -139,8 +139,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "average_latency_fetcher",
                 Tuple(
-                    title=_("Levels Latency Fetcher"),
-                    help=_("Set Levels for the Fetcher Latency Time"),
+                    title=_("Levels latency fetcher"),
+                    help=_("Set levels for the fetcher latency time"),
                     elements=[
                         Age(
                             title=_("Warning at or above"),
@@ -156,8 +156,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "helper_usage_generic",
                 Tuple(
-                    title=_("Levels Helper usage Check"),
-                    help=_("Set Levels for the Check helper Usage"),
+                    title=_("Levels helper usage check"),
+                    help=_("Set levels for the check helper usage"),
                     elements=[
                         Percentage(
                             title=_("Warning at or above"),
@@ -173,8 +173,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "helper_usage_cmk",
                 Tuple(
-                    title=_("Levels Helper usage Checkmk"),
-                    help=_("Set Levels for the Checkmk helper Usage"),
+                    title=_("Levels helper usage Checkmk"),
+                    help=_("Set levels for the Checkmk helper usage"),
                     elements=[
                         Percentage(
                             title=_("Warning at or above"),
@@ -190,8 +190,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "helper_usage_fetcher",
                 Tuple(
-                    title=_("Levels Helper usage fetcher"),
-                    help=_("Set Levels for the fetcher helper Usage"),
+                    title=_("Levels helper usage fetcher"),
+                    help=_("Set levels for the fetcher helper usage"),
                     elements=[
                         Percentage(
                             title=_("Warning at or above"),
@@ -207,8 +207,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "helper_usage_checker",
                 Tuple(
-                    title=_("Levels Helper usage checker"),
-                    help=_("Set Levels for the checker helper Usage"),
+                    title=_("Levels helper usage checker"),
+                    help=_("Set levels for the checker helper usage"),
                     elements=[
                         Percentage(
                             title=_("Warning at or above"),
@@ -224,8 +224,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "livestatus_usage",
                 Tuple(
-                    title=_("Levels Livestatus Usage"),
-                    help=_("Set Levels for the Checkmk Livestatus Usage"),
+                    title=_("Levels livestatus usage"),
+                    help=_("Set levels for the Checkmk livestatus usage"),
                     elements=[
                         Percentage(
                             title=_("Warning at or above"),
@@ -241,8 +241,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "livestatus_overflows_rate",
                 Tuple(
-                    title=_("Levels Livestatus Overflows"),
-                    help=_("Set Levels for the Checkmk Livestatus Overflows"),
+                    title=_("Levels livestatus overflows"),
+                    help=_("Set levels for the Checkmk livestatus overflows"),
                     elements=[
                         Float(
                             title=_("Warning at or above"),
@@ -260,8 +260,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "levels_hosts",
                 Tuple(
-                    title=_("Levels Hosts"),
-                    help=_("Set Levels for the number of Hosts"),
+                    title=_("Levels hosts"),
+                    help=_("Set levels for the number of hosts"),
                     elements=[
                         Integer(
                             title=_("Warning at or above"),
@@ -277,8 +277,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "levels_services",
                 Tuple(
-                    title=_("Levels Services"),
-                    help=_("Set Levels for the number of Services"),
+                    title=_("Levels services"),
+                    help=_("Set levels for the number of services"),
                     elements=[
                         Integer(
                             title=_("Warning at or above"),
@@ -294,8 +294,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "carbon_overflows_rate",
                 Tuple(
-                    title=_("Carbon Overflows Rate"),
-                    help=_("Rate of performance data loss for Carbon"),
+                    title=_("Carbon overflows rate"),
+                    help=_("Rate of performance data loss for carbon"),
                     elements=[
                         Float(
                             title=_("Warning at or above"),
@@ -313,7 +313,7 @@ def _parameter_valuespec_livestatus_status():
             (
                 "carbon_queue_usage",
                 Tuple(
-                    title=_("Carbon Queue Usage"),
+                    title=_("Carbon queue usage"),
                     help=_("Carbon queue usage"),
                     elements=[
                         Percentage(
@@ -332,7 +332,7 @@ def _parameter_valuespec_livestatus_status():
             (
                 "influxdb_overflows_rate",
                 Tuple(
-                    title=_("InfluxDB Overflows Rate"),
+                    title=_("InfluxDB overflows rate"),
                     help=_("Rate of performance data loss for InfluxDB"),
                     elements=[
                         Float(
@@ -351,7 +351,7 @@ def _parameter_valuespec_livestatus_status():
             (
                 "influxdb_queue_usage",
                 Tuple(
-                    title=_("InfluxDB Queue Usage"),
+                    title=_("InfluxDB queue usage"),
                     help=_("InfluxDB queue usage"),
                     elements=[
                         Percentage(
@@ -370,7 +370,7 @@ def _parameter_valuespec_livestatus_status():
             (
                 "rrdcached_overflows_rate",
                 Tuple(
-                    title=_("RRD Overflows Rate"),
+                    title=_("RRD overflows rate"),
                     help=_("Rate of performance data loss for RRD"),
                     elements=[
                         Float(
@@ -389,7 +389,7 @@ def _parameter_valuespec_livestatus_status():
             (
                 "rrdcached_queue_usage",
                 Tuple(
-                    title=_("RRD Queue Usage"),
+                    title=_("RRD queue usage"),
                     help=_("RRD queue usage"),
                     elements=[
                         Percentage(

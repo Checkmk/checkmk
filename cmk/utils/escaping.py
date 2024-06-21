@@ -8,30 +8,17 @@ from html import escape as html_escape
 
 from cmk.utils.urls import is_allowed_url
 
-_UNESCAPER_TEXT = re.compile(
-    r"&lt;(/?)(h1|h2|b|tt|i|u|hr|br(?: /)?|nobr(?: /)?|pre|sup|p|li|ul|ol)&gt;"
-)
+ALLOWED_TAGS = r"h1|h2|b|tt|i|u|hr|br(?: /)?|nobr(?: /)?|pre|sup|p|li|ul|ol"
+_UNESCAPER_TEXT = re.compile(rf"&lt;(/?)({ALLOWED_TAGS})&gt;")
 _CLOSING_A = re.compile(r"&lt;/a&gt;")
 _A_HREF = re.compile(
     r"&lt;a href=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;))(?: target=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;)))?&gt;"
 )
 
 
-class HTMLEscapedStr(str):
-    """str in which all HTML entities are escaped
-
-    Not sure if this class really makes sense. I would only use this for
-    strings in which all entities are escaped. So as soon as we go the
-    permissive way, we shouldn't use this class anymore. Perhaps we should use
-    another? In `cmk.gui` we have the HTML object which is more or less exactly
-    that... I keep it for now, it shouldn't hurt let's see where this
-    goes...
-    """
-
-
-def escape(value: str) -> HTMLEscapedStr:
+def escape(value: str) -> str:
     """escape text for HTML (e.g. `< -> &lt;`)"""
-    return HTMLEscapedStr(html_escape(value, quote=True))
+    return html_escape(value, quote=True)
 
 
 def _unescape_link(escaped_str: str) -> str:

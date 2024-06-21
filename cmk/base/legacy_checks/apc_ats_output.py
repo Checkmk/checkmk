@@ -2,13 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
+from cmk.base.check_legacy_includes.apc_ats import DETECT
+from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import SNMPTree
 
 # mypy: disable-error-code="var-annotated"
-
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
 
 
 def parse_apc_ats_output(string_table):
@@ -67,10 +67,7 @@ def check_apc_ats_output(item, params, parsed):
 
 
 check_info["apc_ats_output"] = LegacyCheckDefinition(
-    detect=any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.11"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.32"),
-    ),
+    detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.8.5.4.3.1",
         oids=["1", "3", "4", "10", "13"],
@@ -82,6 +79,6 @@ check_info["apc_ats_output"] = LegacyCheckDefinition(
     check_ruleset_name="apc_ats_output",
     check_default_parameters={
         "output_voltage_max": (240, 250),
-        "load_perc_max": (85, 95),
+        "load_perc_max": (85.0, 95.0),
     },
 )

@@ -82,8 +82,10 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
 
 
 class BIAggregationFunctionBestSchema(Schema):
-    type = ReqConstant(BIAggregationFunctionBest.kind())
-    count = ReqInteger(dump_default=1)
+    type = ReqConstant(
+        BIAggregationFunctionBest.kind(), description="Take the best state from all child nodes."
+    )
+    count = ReqInteger(dump_default=1, description="Take the nth best state.")
     restrict_state = ReqInteger(
         dump_default=2,
         validate=validate.OneOf(
@@ -93,6 +95,7 @@ class BIAggregationFunctionBestSchema(Schema):
                 2,
             ]
         ),
+        description="Maximum severity for this node.",
     )
 
 
@@ -135,11 +138,14 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
 
 
 class BIAggregationFunctionWorstSchema(Schema):
-    type = ReqConstant(BIAggregationFunctionWorst.kind())
-    count = ReqInteger(dump_default=1, example=2)
+    type = ReqConstant(
+        BIAggregationFunctionWorst.kind(), description="Take the worst state from all child nodes."
+    )
+    count = ReqInteger(dump_default=1, example=2, description="Take the nth worst state.")
     restrict_state = ReqInteger(
         dump_default=2,
         validate=validate.OneOf([0, 1, 2]),
+        description="Maximum severity for this node.",
     )
 
 
@@ -190,14 +196,27 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
 
 
 class BIAggregationFunctionCountSettings(Schema):
-    type = ReqString(dump_default="count", validate=validate.OneOf(["count", "percentage"]))
-    value = ReqInteger(dump_default=1)
+    type = ReqString(
+        dump_default="count",
+        validate=validate.OneOf(["count", "percentage"]),
+        description="Explicit number or percentage.",
+    )
+    value = ReqInteger(dump_default=1, description="Value.")
 
 
 class BIAggregationFunctionCountOKSchema(Schema):
-    type = ReqConstant(BIAggregationFunctionCountOK.kind())
-    levels_ok = ReqNested(BIAggregationFunctionCountSettings)
-    levels_warn = ReqNested(BIAggregationFunctionCountSettings)
+    type = ReqConstant(
+        BIAggregationFunctionCountOK.kind(),
+        description="Count states from child nodes, defaulting to CRIT if both levels aren't met.",
+    )
+    levels_ok = ReqNested(
+        BIAggregationFunctionCountSettings,
+        description="Required number of OK child nodes for total state of OK.",
+    )
+    levels_warn = ReqNested(
+        BIAggregationFunctionCountSettings,
+        description="Required number of OK child nodes for total state of WARN.",
+    )
 
 
 #   .--SchemaReg.----------------------------------------------------------.

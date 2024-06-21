@@ -1,4 +1,4 @@
-Title: check_mk_agent.freebsd: Add missing <<<local>>> section, plugins was twice instead
+Title: check_mk_agent.freebsd: Add missing &lt;&lt;&lt;local>>> section, plugins was twice instead
 Level: 1
 Component: checks
 Class: fix

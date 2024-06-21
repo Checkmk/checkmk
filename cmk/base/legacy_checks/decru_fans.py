@@ -3,32 +3,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
+from collections.abc import Mapping
+
+from cmk.base.check_api import check_levels, CheckResult, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.decru import DETECT_DECRU
 
-decru_fan_default_levels = (8000, 8400)
-
-
-def inventory_decru_fans(info):
-    return [(l[0], decru_fan_default_levels) for l in info]
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.plugins.lib.decru import DETECT_DECRU
 
 
-def check_decru_fans(item, params, info):
-    for fan_name, rpm in info:
-        if fan_name == item:
-            rpm = int(rpm)
-            crit, warn = params
-            perfdata = [("rpm", rpm, 0, None, warn, crit)]
-            infotxt = "%d RPM" % rpm
-            if rpm <= crit:
-                return 2, infotxt, perfdata
-            if rpm <= warn:
-                return 1, infotxt, perfdata
-            return 0, infotxt, perfdata
+def parse_decru_fans(string_table: StringTable) -> Mapping[str, int]:
+    return {item: int(raw_value) for item, raw_value in string_table}
 
-    return (3, "fan not found")
+
+def discover_decru_fans(section: Mapping[str, int]) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
+
+
+def check_decru_fans(
+    item: str, params: Mapping[str, tuple[int, int]], section: Mapping[str, int]
+) -> CheckResult:
+    if (rpm := section.get(item)) is None:
+        return
+    yield check_levels(
+        int(rpm),
+        "rpm",
+        (None, None) + params["levels_lower"],
+        human_readable_func=str,
+        infoname="RPM",
+    )
 
 
 check_info["decru_fans"] = LegacyCheckDefinition(
@@ -37,7 +41,9 @@ check_info["decru_fans"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.12962.1.2.3.1",
         oids=["2", "3"],
     ),
+    parse_function=parse_decru_fans,
     service_name="FAN %s",
-    discovery_function=inventory_decru_fans,
+    discovery_function=discover_decru_fans,
     check_function=check_decru_fans,
+    check_default_parameters={"levels_lower": (8400, 8000)},
 )

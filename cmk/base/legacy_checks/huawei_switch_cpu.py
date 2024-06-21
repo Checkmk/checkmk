@@ -8,8 +8,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.huawei_switch import parse_huawei_physical_entity_values
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_SWITCH
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
 
 
 def parse_huawei_switch_cpu(string_table):

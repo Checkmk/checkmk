@@ -41,11 +41,13 @@ from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.user_role.request_schemas import CreateUserRole, EditUserRole
 from cmk.gui.openapi.endpoints.user_role.response_schemas import UserRoleCollection, UserRoleObject
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
-from cmk.gui.type_defs import UserRole
+from cmk.gui.permissions import load_dynamic_permissions
+from cmk.gui.userdb import UserRole
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.userroles import RoleID
@@ -99,6 +101,8 @@ def serialize_user_role(user_role: UserRole) -> DomainObject:
 )
 def show_user_role(params: Mapping[str, Any]) -> Response:
     """Show a user role"""
+    # TODO: clean this up (CMK-17068)
+    load_dynamic_permissions()
     user.need_permission("wato.users")
     user_role = userroles.get_role(RoleID(params["role_id"]))
     return serve_json(data=serialize_user_role(user_role))
@@ -114,6 +118,8 @@ def show_user_role(params: Mapping[str, Any]) -> Response:
 )
 def list_user_roles(params: Mapping[str, Any]) -> Response:
     """Show all user roles"""
+    # TODO: clean this up (CMK-17068)
+    load_dynamic_permissions()
     user.need_permission("wato.users")
 
     return serve_json(
@@ -137,6 +143,8 @@ def list_user_roles(params: Mapping[str, Any]) -> Response:
 )
 def create_userrole(params: Mapping[str, Any]) -> Response:
     """Create/clone a user role"""
+    # TODO: clean this up (CMK-17068) and check if this is really required.
+    load_dynamic_permissions()
     user.need_permission("wato.users")
     user.need_permission("wato.edit")
     body = params["body"]
@@ -197,6 +205,8 @@ def delete_userrole(params: Mapping[str, Any]) -> Response:
 )
 def edit_userrole(params: Mapping[str, Any]) -> Response:
     """Edit a user role"""
+    # TODO: clean this up (CMK-17068)
+    load_dynamic_permissions()
     user.need_permission("wato.users")
     user.need_permission("wato.edit")
     existing_roleid = params["role_id"]

@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 
 def inventory_bluecoat_diskcpu(info):
@@ -23,7 +24,12 @@ def check_bluecoat_diskcpu(item, _no_params, info):
     return (3, "item not found in SNMP data")
 
 
+def parse_bluecoat_diskcpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["bluecoat_diskcpu"] = LegacyCheckDefinition(
+    parse_function=parse_bluecoat_diskcpu,
     detect=contains(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.3417.1.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3417.2.4.1.1.1",

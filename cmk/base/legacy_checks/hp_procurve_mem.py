@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree
+
+from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
 
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should
@@ -23,13 +24,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SN
 # hpLocalMemAllocBytes   1.3.6.1.4.1.11.2.14.11.5.1.1.2.1.1.1.7
 
 
-def inventory_hp_procurve_mem(info):
+def discover_hp_procurve_mem(info):
     if len(info) == 1 and int(info[0][0]) >= 0:
-        return [("", {})]
-    return []
+        yield None, {}
 
 
-def check_hp_procurve_mem(item, params, info):
+def check_hp_procurve_mem(_no_item, params, info):
     if len(info) != 1:
         return None
 
@@ -45,7 +45,12 @@ def check_hp_procurve_mem(item, params, info):
     )
 
 
+def parse_hp_procurve_mem(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hp_procurve_mem"] = LegacyCheckDefinition(
+    parse_function=parse_hp_procurve_mem,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.8"),
@@ -55,8 +60,8 @@ check_info["hp_procurve_mem"] = LegacyCheckDefinition(
         oids=["5", "7"],
     ),
     service_name="Memory",
-    discovery_function=inventory_hp_procurve_mem,
+    discovery_function=discover_hp_procurve_mem,
     check_function=check_hp_procurve_mem,
-    check_ruleset_name="memory_simple",
+    check_ruleset_name="memory_simple_single",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

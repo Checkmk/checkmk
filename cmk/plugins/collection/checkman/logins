@@ -1,0 +1,13 @@
+title: Number of Logged in Users
+agents: linux
+catalog: os/misc
+license: GPLv2
+distribution: check_mk
+description:
+ This checks the number of logged in users. It goes to warn/crit levels
+ if the login count exceeds the configurable limits. The default levels
+ are set to {20} and {30}.
+ For this check to work the "mk_logins" plug-in needs to be installed.
+
+discovery:
+ One service is created.

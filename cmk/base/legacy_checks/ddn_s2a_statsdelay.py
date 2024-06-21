@@ -4,12 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="no-untyped-def,list-item"
+# mypy: disable-error-code="list-item"
+
+from collections.abc import Sequence
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, IgnoreResultsError
+
+from cmk.agent_based.v2 import get_value_store, IgnoreResultsError
 
 
 def parse_ddn_s2a_statsdelay(string_table):
@@ -44,7 +47,7 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
     def subtract_histograms(histogram1, histogram2):
         return [v1 - v2 for v1, v2 in zip(histogram1, histogram2)]
 
-    def is_zero(histogram) -> bool:
+    def is_zero(histogram: Sequence[int]) -> bool:
         return not any(histogram)
 
     def histogram_min(time_intervals, values):

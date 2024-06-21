@@ -10,6 +10,8 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_splunk_alerts(info):
     yield None, {}
@@ -28,7 +30,12 @@ def check_splunk_alerts(_no_item, params, info):
     )
 
 
+def parse_splunk_alerts(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["splunk_alerts"] = LegacyCheckDefinition(
+    parse_function=parse_splunk_alerts,
     service_name="Splunk Alerts",
     discovery_function=inventory_splunk_alerts,
     check_function=check_splunk_alerts,

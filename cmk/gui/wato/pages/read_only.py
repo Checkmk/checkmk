@@ -7,9 +7,9 @@
 import time
 from collections.abc import Collection
 
-import cmk.utils.store as store
+from cmk.utils import store
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
@@ -81,10 +81,9 @@ class ModeManageReadOnly(WatoMode):
                 "read only can disable it again when another permitted user enabled it before."
             )
         )
-        html.begin_form("read_only", method="POST")
-        self._vs().render_input("_read_only", self._settings)
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("read_only", method="POST"):
+            self._vs().render_input("_read_only", self._settings)
+            html.hidden_fields()
 
     def _vs(self):
         return Dictionary(

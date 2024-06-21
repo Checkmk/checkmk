@@ -14,6 +14,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_unitrends_backup(info):
     inventory = []
@@ -24,21 +26,20 @@ def inventory_unitrends_backup(info):
 
 
 def check_unitrends_backup(item, _no_params, info):
-    found = False
-    details = []
+    message = None
+    details: list[str] = []
     for line in info:
-        if line[0] == "HEADER" and found:
+        if line[0] == "HEADER" and message is not None:
             # We are finish collection detail informatoinen
             break
 
-        if found is True:
+        if message is not None:
             # Collection Backup deatils
             app_type, bid, backup_type, status = line
             details.append(f"Application Type: {app_type} ({bid}), {backup_type}: {status}")
             continue
 
         if line[0] == "HEADER" and line[1] == item:
-            found = True
             _head, _sched_name, app_name, sched_desc, failures = line
             message = "{} Errors in last 24/h for Application {} ({}) ".format(
                 failures,
@@ -46,7 +47,7 @@ def check_unitrends_backup(item, _no_params, info):
                 sched_desc,
             )
 
-    if found is True:
+    if message is not None:
         message += "\n" + "\n".join(details)
         if failures == "0":
             return 0, message
@@ -54,7 +55,12 @@ def check_unitrends_backup(item, _no_params, info):
     return 3, "Schedule not found in Agent Output"
 
 
+def parse_unitrends_backup(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["unitrends_backup"] = LegacyCheckDefinition(
+    parse_function=parse_unitrends_backup,
     service_name="Schedule %s",
     discovery_function=inventory_unitrends_backup,
     check_function=check_unitrends_backup,

@@ -1,4 +1,4 @@
-Title: <tt>ntp_peer</tt>: Fix "TypeError (tuple indices must be integers or slices, not str)"
+Title: ntp_peer: Fix "TypeError (tuple indices must be integers or slices, not str)"
 Class: fix
 Compatible: compat
 Component: checks

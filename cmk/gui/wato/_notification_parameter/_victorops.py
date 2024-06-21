@@ -30,7 +30,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                         help=_(
                             "Learn how to setup a REST endpoint "
                             '<a href="https://help.victorops.com/knowledge-base/victorops-restendpoint-integration/" target="_blank">here</a>'
-                            "<br />This URL can also be collected from the Password Store from Checkmk."
+                            "<br />This URL can also be collected from the password store from Checkmk."
                         ),
                         choices=[
                             (

@@ -8,14 +8,13 @@
 # available 51132
 # totalCreated 108141
 
-
-# mypy: disable-error-code="no-untyped-def"
-
 import time
+from typing import Sequence
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
+
+from cmk.agent_based.v2 import get_rate, get_value_store, render, StringTable
 
 
 def inventory_mongodb_connections(info):
@@ -59,7 +58,7 @@ def check_mongodb_connections(item, params, info):
     yield 0, "Rate: %s/sec" % rate, [("connections_rate", rate)]
 
 
-def _is_int(key_list, info_dict) -> bool:
+def _is_int(key_list: Sequence[str], info_dict: dict[str, object]) -> bool:
     """
     check if key is in dict and value is an integer
     :param key_list: list of keys
@@ -68,13 +67,18 @@ def _is_int(key_list, info_dict) -> bool:
     """
     for key in key_list:
         try:
-            int(info_dict[key])
+            int(info_dict[key])  # type: ignore[call-overload]
         except (KeyError, ValueError, TypeError):
             return False
     return True
 
 
+def parse_mongodb_connections(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mongodb_connections"] = LegacyCheckDefinition(
+    parse_function=parse_mongodb_connections,
     service_name="MongoDB %s",
     discovery_function=inventory_mongodb_connections,
     check_function=check_mongodb_connections,

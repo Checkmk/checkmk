@@ -7,10 +7,10 @@ import abc
 import copy
 from typing import Any
 
-import cmk.utils.plugin_registry as plugin_registry
+from cmk.utils import plugin_registry
 from cmk.utils.statename import short_service_state_name
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -22,16 +22,16 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     Integer,
+    LabelGroups,
     ListOf,
     ListOfStrings,
-    MonitoringState,
     Percentage,
     TextInput,
     Transform,
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import DictHostTagCondition, LabelCondition
+from cmk.gui.wato import DictHostTagCondition
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.bi import actions
@@ -59,6 +59,23 @@ def register() -> None:
     bi_config_aggregation_function_registry.register(BIConfigAggregationFunctionBest)
     bi_config_aggregation_function_registry.register(BIConfigAggregationFunctionWorst)
     bi_config_aggregation_function_registry.register(BIConfigAggregationFunctionCountOK)
+
+
+def get_bi_state_dropdown() -> DropdownChoice[int]:
+    return DropdownChoice[int](
+        title=_("Restrict severity to at worst"),
+        help=_(
+            "Here a maximum severity of the node state can be set. This severity is not "
+            "exceeded, even if some of the children have more severe states."
+        ),
+        default_value=2,
+        choices=[
+            (0, _("OK")),
+            (1, _("WARN")),
+            (3, _("UNKNOWN")),
+            (2, _("CRIT")),
+        ],
+    )
 
 
 #   .--Generic converter---------------------------------------------------.
@@ -97,7 +114,7 @@ def convert_from_cascading_vs_choice(value):
 #   ('host_search',
 #   ({'conditions': {'host_choice': {'type': 'all_hosts'},
 #                    'host_folder': '',
-#                    'host_labels': {},
+#                    'host_label_groups': [],
 #                    'host_tags': {}},
 #     'refer_to': 'host'},
 #    {'params': {'arguments': []},
@@ -163,7 +180,7 @@ def _get_aggregation_choices() -> CascadingDropdownChoices:
 # ('host_search',
 #  ({'conditions': {'host_choice': {'type': 'all_hosts'},
 #                   'host_folder': '',
-#                   'host_labels': {},
+#                   'host_label_groups': [],
 #                   'host_tags': {}},
 #    'refer_to': 'host'},
 #   ('call_a_rule',
@@ -364,7 +381,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                                     "child_with",
                                     _("The found hosts' children (with child filtering)"),
                                     Dictionary(
-                                        title=_("Child Conditions"),
+                                        title=_("Child conditions"),
                                         elements=cls.get_host_conditions(),
                                         optional_keys=[],
                                     ),
@@ -404,9 +421,17 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                     encode_value=False,
                 ),
             ),
-            ("host_tags", DictHostTagCondition(title=_("Host Tags"), help_txt="")),
-            ("host_labels", LabelCondition(title=_("Host Labels"), help_txt="")),
-            ("host_choice", _bi_host_choice_vs(_("Filter Host"))),
+            ("host_tags", DictHostTagCondition(title=_("Host tags"), help_txt="")),
+            (
+                "host_label_groups",
+                LabelGroups(
+                    show_empty_group_by_default=False,
+                    add_label=_("Add to condition"),
+                    title=_("Host labels"),
+                    help="",
+                ),
+            ),
+            ("host_choice", _bi_host_choice_vs(_("Filter host"))),
         ]
 
 
@@ -446,7 +471,15 @@ class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
                     size=80,
                 ),
             ),
-            ("service_labels", LabelCondition(title=_("Service Labels"), help_txt="")),
+            (
+                "service_label_groups",
+                LabelGroups(
+                    show_empty_group_by_default=False,
+                    add_label=_("Add to condition"),
+                    title=_("Service Labels"),
+                    help="",
+                ),
+            ),
         ]
 
 
@@ -804,14 +837,7 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
                         default_value=1,
                         minvalue=1,
                     ),
-                    MonitoringState(
-                        title=_("Restrict severity to at worst"),
-                        help=_(
-                            "Here a maximum severity of the node state can be set. This severity is not "
-                            "exceeded, even if some of the children have more severe states."
-                        ),
-                        default_value=2,
-                    ),
+                    get_bi_state_dropdown(),
                 ]
             ),
             to_valuespec=convert_to_vs,
@@ -858,14 +884,7 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
                         default_value=1,
                         minvalue=1,
                     ),
-                    MonitoringState(
-                        title=_("Restrict severity to at worst"),
-                        help=_(
-                            "Here a maximum severity of the node state can be set. This severity is not "
-                            "exceeded, even if some of the children have more severe states."
-                        ),
-                        default_value=2,
-                    ),
+                    get_bi_state_dropdown(),
                 ]
             ),
             to_valuespec=convert_to_vs,

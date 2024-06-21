@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 # This agent plugin has been built to collect information from SAP R/3 systems
 # using RFC calls. It needs the python module pyrfc.
@@ -42,7 +42,7 @@ import sys
 import time
 
 try:
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -112,8 +112,8 @@ local_cfg = {
     "passwd": "",
     "trace": "3",
     "loglevel": "warn",
-    #'lang':     'EN',
-    #'host_prefix': 'FOOBAR_',
+    # "lang": "EN",
+    # "host_prefix": "FOOBAR_",
 }
 
 # A list of strings, while the string must match the full path to one or
@@ -477,7 +477,7 @@ def main():  # pylint: disable=too-many-branches
     global state_file_changed
 
     try:
-        import pyrfc  # type: ignore[import]
+        import pyrfc  # type: ignore[import-not-found]
     except ImportError as e:
         if "No module named pyrfc" in str(e):
             sys.stderr.write("Missing the Python module pyrfc.\n")

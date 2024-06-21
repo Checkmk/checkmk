@@ -5,6 +5,7 @@
 // library for calculation of version numbers
 import groovy.transform.Field
 
+/* groovylint-disable DuplicateListLiteral */
 @Field
 def REPO_PATCH_RULES = [\
 "raw": [\
@@ -21,9 +22,9 @@ def REPO_PATCH_RULES = [\
         "saas", \
         "cse", \
         "cse.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"],\
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"],\
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"]], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"]], \
 "enterprise": [\
     "paths_to_be_removed": [\
         "managed", \
@@ -35,20 +36,15 @@ def REPO_PATCH_RULES = [\
         "saas", \
         "cse", \
         "cse.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cce}"], \
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
 "managed": [\
     "paths_to_be_removed": [\
-        "cloud", \
-        "cce", \
-        "cce.py", \
         "saas", \
         "cse", \
-        "cse.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cce"], \
-    "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cce"]], \
+        "cse.py"], \
+    "folders_to_be_created": []], \
 "cloud": [\
     "paths_to_be_removed": [\
         "managed", \
@@ -57,18 +53,19 @@ def REPO_PATCH_RULES = [\
         "saas", \
         "cse", \
         "cse.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"], \
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"]], \
 "saas": [\
     "paths_to_be_removed": [\
         "managed", \
         "cme", \
         "cme.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"], \
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
-]
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"]], \
+];
+/* groovylint-enable DuplicateListLiteral */
 
 def branch_name(scm) {
     return env.GERRIT_BRANCH ?: scm.branches[0].name;
@@ -78,53 +75,69 @@ def safe_branch_name(scm) {
     return branch_name(scm).replaceAll("/", "-");
 }
 
-def get_cmk_version(branch, version) {
+/* groovylint-disable DuplicateListLiteral */
+def get_cmk_version(branch_name, branch_version, version) {
     return (
-      // Regular daily build of master branch
-      (branch == 'master' && version in ['daily', 'git']) ? "${build_date}" :
       // Experimental builds
-      (branch.startsWith('sandbox') && version in ['daily', 'git']) ? "${build_date}-${branch}" :
-      // version branch dailies (e.g. 1.6.0)
-      (version == version in ['daily', 'git']) ? "${branch}-${build_date}" :
+      (branch_name.startsWith('sandbox') && version in ['daily', 'git']) ? "${build_date}-${branch_name}" :
+      // Daily builds
+      (version in ['daily', 'git']) ? "${branch_version}-${build_date}" :
       // else
       "${version}");
 }
+/* groovylint-enable DuplicateListLiteral */
 
-def configured_or_overridden_distros(edition, distro_list, use_case="daily") {
-    if(distro_list) {
-        return distro_list.trim().replaceAll(',', ' ').split(' ');
+def get_distros(Map args) {
+    def override_distros = args.override.trim() ?: "";
+
+    /// retrieve all available distros if provided distro-list is 'all',
+    /// respect provided arguments otherwise
+    def edition = override_distros == "all" ? "all" : args.edition.trim() ?: "all";
+    def use_case = override_distros == "all" ? "all" : args.use_case.trim() ?: "daily";
+
+    /// return requested list if provided
+    if(override_distros && override_distros != "all") {
+        return override_distros.replaceAll(',', ' ').split(' ').grep();
     }
-    docker_image_from_alias("IMAGE_TESTING").inside() {
-        dir("${checkout_dir}") {
-            return sh(script: """scripts/run-pipenv run \
-                  buildscripts/scripts/get_distros.py \
-                  --editions_file "${checkout_dir}/editions.yml" \
-                  use_cases \
-                  --edition "${edition}" \
-                  --use_case "${use_case}"
-            """, returnStdout: true).trim().split();
-        }
+
+    /// read distros from edition.yml otherwise.
+    dir("${checkout_dir}") {
+        return cmd_output("""python3 \
+              buildscripts/scripts/get_distros.py \
+              --editions_file "${checkout_dir}/editions.yml" \
+              use_cases \
+              --edition "${edition}" \
+              --use_case "${use_case}"
+        """).split().grep();
     }
 }
 
-def get_internal_distros_pattern() {
-    docker_image_from_alias("IMAGE_TESTING").inside() {
-        dir("${checkout_dir}") {
-            return sh(script: """scripts/run-pipenv run \
-                  buildscripts/scripts/get_distros.py \
-                  --editions_file "editions.yml" \
-                  internal_distros \
-                  --as-codename \
-                  --as-rsync-exclude-pattern;
-            """, returnStdout: true).trim();
-        }
+def get_editions() {
+    /// read editions from edition.yml
+    dir("${checkout_dir}") {
+        return cmd_output("""python3 \
+              buildscripts/scripts/get_distros.py \
+              --editions_file "${checkout_dir}/editions.yml" \
+              editions
+        """).split().grep();
     }
+}
 
+def get_internal_artifacts_pattern() {
+    dir("${checkout_dir}") {
+        return sh(script: """python3 \
+              buildscripts/scripts/get_distros.py \
+              --editions_file "editions.yml" \
+              internal_build_artifacts \
+              --as-codename \
+              --as-rsync-exclude-pattern;
+        """, returnStdout: true).trim();
+    }
 }
 
 def get_branch_version(String git_dir=".") {
     dir(git_dir) {
-        return (cmd_output("grep -m 1 BRANCH_VERSION defines.make | sed 's/^.*= //g'")
+        return (cmd_output("make --no-print-directory -f defines.make print-BRANCH_VERSION").trim()
                 ?: raise("Could not read BRANCH_VERSION from defines.make - wrong directory?"));
     }
 }
@@ -149,7 +162,7 @@ def get_docker_tag(scm, String git_dir=".") {
 }
 
 def get_docker_artifact_name(edition, cmk_version) {
-    return "check-mk-${edition}-docker-${cmk_version}.tar.gz"
+    return "check-mk-${edition}-docker-${cmk_version}.tar.gz";
 }
 
 def select_docker_tag(BRANCH, BUILD_TAG, FOLDER_TAG) {
@@ -177,22 +190,11 @@ def patch_themes(EDITION) {
             // Workaround since scss does not support conditional includes
             THEME_LIST.each { THEME ->
                 sh """
-                    echo '@mixin graphs_cee {}' > web/htdocs/themes/${THEME}/scss/cee/_graphs_cee.scss
-                    echo '@mixin reporting {}' > web/htdocs/themes/${THEME}/scss/cee/_reporting.scss
-                    echo '@mixin ntop {}' > web/htdocs/themes/${THEME}/scss/cee/_ntop.scss
-                    echo '@mixin license_usage {}' > web/htdocs/themes/${THEME}/scss/cee/_license_usage.scss
-                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
-                """
-            }
-            break
-        case 'cloud':
-        case 'saas':
-        case 'enterprise':
-        case 'free':
-            // Workaround since scss does not support conditional includes
-            THEME_LIST.each { THEME ->
-                sh """
-                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
+                    echo '@mixin graphs_cee {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_graphs_cee.scss
+                    echo '@mixin reporting {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_reporting.scss
+                    echo '@mixin ntop {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_ntop.scss
+                    echo '@mixin license_usage {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_license_usage.scss
+                    echo '@mixin robotmk {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_robotmk.scss
                 """
             }
             break
@@ -201,7 +203,7 @@ def patch_themes(EDITION) {
 
 def patch_demo(EDITION) {
     if (EDITION == 'free') {
-        sh '''sed -ri 's/^(FREE[[:space:]]*:?= *).*/\\1'"yes/" defines.make'''
+        sh('''sed -ri 's/^(FREE[[:space:]]*:?= *).*/\\1'"yes/" defines.make''');
     }
 }
 
@@ -210,7 +212,7 @@ def set_version(cmk_version) {
 }
 
 def configure_checkout_folder(edition, cmk_version) {
-    assert edition in REPO_PATCH_RULES: "edition=${edition} not known"
+    assert edition in REPO_PATCH_RULES: "edition=${edition} not known";
     patch_folders(edition);
     patch_themes(edition);
     patch_demo(edition);
@@ -236,13 +238,15 @@ def delete_non_cre_files() {
     ]
     find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ")
     // Do not remove files in .git, .venv, .mypy_cache directories
-    sh """bash -c \"find . \\
+    sh("""
+        bash -c \"find . \\
         -not \\( -path ./.\\* -prune \\) \\
-        \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\""""
+        \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\"
+    """);
 }
 
 def strip_rc_number_from_version(VERSION) {
-    return VERSION.split("-rc")[0]
+    return VERSION.split("-rc")[0];
 }
 
-return this
+return this;

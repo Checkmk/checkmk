@@ -11,6 +11,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_mongodb_instance(info):
     return [(None, None)]
@@ -24,7 +26,12 @@ def check_mongodb_instance(_no_item, _no_params, info):
             yield 0, f"{status.title()}: {messg}"
 
 
+def parse_mongodb_instance(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mongodb_instance"] = LegacyCheckDefinition(
+    parse_function=parse_mongodb_instance,
     service_name="MongoDB Instance",
     discovery_function=inventory_mongodb_instance,
     check_function=check_mongodb_instance,

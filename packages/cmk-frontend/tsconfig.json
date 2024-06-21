@@ -1,0 +1,35 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "types": [
+            "node",
+            "jquery"
+        ],
+        "typeRoots": [
+            "./node_modules/@types"
+        ],
+        "strict": true,
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "noImplicitThis": false,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noUnusedParameters": true,
+        "noEmit": true,
+        "moduleResolution": "node",
+        "esModuleInterop": false,
+        "module": "CommonJS",
+        "allowJs": false,
+        "allowSyntheticDefaultImports": true,
+        "baseUrl": "./",
+        "paths": {
+          "@/*": ["./src/js/*"]
+        }
+    },
+    "include": [
+        "./src/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

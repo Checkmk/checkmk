@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 """The rulespecs are the ruleset specifications registered to Setup."""
 import abc
 import re
@@ -50,6 +52,8 @@ from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry
 from .search import ABCMatchItemGenerator, match_item_generator_registry, MatchItem, MatchItems
 from .timeperiods import TimeperiodSelection
+
+MatchType = Literal["first", "all", "list", "dict", "varies"]
 
 
 class AllowAll:
@@ -308,7 +312,7 @@ class Rulespec(abc.ABC):
         group: type[RulespecBaseGroup],
         title: Callable[[], str] | None,
         valuespec: Callable[[], ValueSpec],
-        match_type: str,
+        match_type: MatchType,
         item_type: Literal["service", "item"] | None,
         # WATCH OUT: passing a Callable[[], Transform] will not work (see the
         # isinstance check in the item_spec property)!
@@ -317,7 +321,7 @@ class Rulespec(abc.ABC):
         item_help: Callable[[], str] | None,
         is_optional: bool,
         is_deprecated: bool,
-        is_cloud_edition_only: bool,
+        is_cloud_and_managed_edition_only: bool,
         is_for_services: bool,
         is_binary_ruleset: bool,  # unused
         factory_default: Any,
@@ -357,7 +361,7 @@ class Rulespec(abc.ABC):
         self._item_help = item_help
         self._is_optional = is_optional
         self._is_deprecated = is_deprecated
-        self._is_cloud_edition_only = is_cloud_edition_only
+        self._is_cloud_and_managed_edition_only = is_cloud_and_managed_edition_only
         self._is_binary_ruleset = is_binary_ruleset
         self._is_for_services = is_for_services
         self._factory_default = factory_default
@@ -383,8 +387,8 @@ class Rulespec(abc.ABC):
             return None
         if self._is_deprecated:
             return "{}: {}".format(_("Deprecated"), plain_title)
-        if self._is_cloud_edition_only:
-            return mark_edition_only(plain_title, Edition.CCE)
+        if self._is_cloud_and_managed_edition_only:
+            return mark_edition_only(plain_title, [Edition.CME, Edition.CCE])
         return plain_title
 
     @property
@@ -419,7 +423,7 @@ class Rulespec(abc.ABC):
             return self._item_name()
 
         if self._item_spec:
-            return self._item_spec().title()
+            return self._item_spec().title() or _("Item")
 
         if self.item_type == "service":
             return _("Service")
@@ -460,7 +464,7 @@ class Rulespec(abc.ABC):
         return self.group_name.split("/")[1] if "/" in self.group_name else ""
 
     @property
-    def match_type(self) -> str:
+    def match_type(self) -> MatchType:
         return self._match_type
 
     @property
@@ -476,8 +480,8 @@ class Rulespec(abc.ABC):
         return self._is_deprecated
 
     @property
-    def is_cloud_edition_only(self) -> bool:
-        return self._is_cloud_edition_only
+    def is_cloud_and_managed_edition_only(self) -> bool:
+        return self._is_cloud_and_managed_edition_only
 
     @property
     def doc_references(self) -> dict[DocReference, str]:
@@ -495,11 +499,11 @@ class HostRulespec(Rulespec):
         group: type[Any],
         valuespec: Callable[[], ValueSpec],
         title: Callable[[], str] | None = None,
-        match_type: str = "first",
+        match_type: MatchType = "first",
         is_optional: bool = False,
         is_deprecated: bool = False,
         is_binary_ruleset: bool = False,
-        is_cloud_edition_only: bool = False,
+        is_cloud_and_managed_edition_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
         doc_references: dict[DocReference, str] | None = None,
@@ -512,7 +516,7 @@ class HostRulespec(Rulespec):
             match_type=match_type,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
-            is_cloud_edition_only=is_cloud_edition_only,
+            is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
             is_binary_ruleset=is_binary_ruleset,
             factory_default=factory_default,
             help_func=help_func,
@@ -538,13 +542,13 @@ class ServiceRulespec(Rulespec):
         valuespec: Callable[[], ValueSpec],
         item_type: Literal["item", "service"],
         title: Callable[[], str] | None = None,
-        match_type: str = "first",
+        match_type: MatchType = "first",
         item_name: Callable[[], str] | None = None,
         item_spec: Callable[[], ValueSpec] | None = None,
         item_help: Callable[[], str] | None = None,
         is_optional: bool = False,
         is_deprecated: bool = False,
-        is_cloud_edition_only: bool = False,
+        is_cloud_and_managed_edition_only: bool = False,
         is_binary_ruleset: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
@@ -563,7 +567,7 @@ class ServiceRulespec(Rulespec):
             item_help=item_help,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
-            is_cloud_edition_only=is_cloud_edition_only,
+            is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
             factory_default=factory_default,
             help_func=help_func,
             doc_references=doc_references,
@@ -579,7 +583,7 @@ class BinaryHostRulespec(HostRulespec):
         name: str,
         group: type[RulespecBaseGroup],
         title: Callable[[], str] | None = None,
-        match_type: str = "first",
+        match_type: MatchType = "first",
         is_optional: bool = False,
         is_deprecated: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
@@ -618,7 +622,7 @@ class BinaryServiceRulespec(ServiceRulespec):
         name: str,
         group: type[RulespecBaseGroup],
         title: Callable[[], str] | None = None,
-        match_type: str = "first",
+        match_type: MatchType = "first",
         item_type: Literal["item", "service"] = "service",
         item_name: Callable[[], str] | None = None,
         item_spec: Callable[[], ValueSpec] | None = None,
@@ -664,8 +668,9 @@ def _get_manual_check_parameter_rulespec_instance(
     title: Callable[[], str] | None = None,
     parameter_valuespec: Callable[[], ValueSpec] | None = None,
     item_spec: Callable[[], ValueSpec] | None = None,
-    is_optional: bool | None = None,
-    is_deprecated: bool | None = None,
+    is_optional: bool = False,
+    is_deprecated: bool = False,
+    is_cloud_and_managed_edition_only: bool = False,
 ) -> "ManualCheckParameterRulespec":
     # There may be no RulespecGroup declaration for the static checks.
     # Create some based on the regular check groups (which should have a definition)
@@ -690,6 +695,7 @@ def _get_manual_check_parameter_rulespec_instance(
         item_spec=item_spec,
         is_optional=is_optional,
         is_deprecated=is_deprecated,
+        is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
     )
 
 
@@ -728,11 +734,11 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         parameter_valuespec: Callable[[], ValueSpec],
         item_spec: Callable[[], ValueSpec] | None = None,  # CMK-12228
         title: Callable[[], str] | None = None,
-        match_type: str | None = None,
+        match_type: MatchType | None = None,
         item_type: Literal["item", "service"] = "item",
         is_optional: bool = False,
         is_deprecated: bool = False,
-        is_cloud_edition_only: bool = False,
+        is_cloud_and_managed_edition_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         create_manual_check: bool = True,
     ) -> None:
@@ -756,7 +762,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
             item_spec=item_spec,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
-            is_cloud_edition_only=is_cloud_edition_only,
+            is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
             # Excplicit set
             is_binary_ruleset=False,
             match_type=match_type or "first",
@@ -796,15 +802,16 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
     def __init__(  # pylint: disable=dangerous-default-value
         self,
         *,
-        check_group_name,
-        group,
-        parameter_valuespec,
-        title=None,
-        match_type=None,
-        is_optional=False,
-        is_deprecated=False,
-        factory_default=Rulespec.NO_FACTORY_DEFAULT,
-        create_manual_check=True,
+        check_group_name: str,
+        group: type[RulespecBaseGroup],
+        parameter_valuespec: Callable[[], ValueSpec],
+        title: Callable[[], str] | None = None,
+        match_type: MatchType | None = None,
+        is_optional: bool = False,
+        is_deprecated: bool = False,
+        is_cloud_and_managed_edition_only: bool = False,
+        factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
+        create_manual_check: bool = True,
     ):
         self._check_group_name = check_group_name
         name = "checkgroup_parameters:%s" % self._check_group_name
@@ -822,6 +829,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
             title=title,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
+            is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
             # Excplicit set
             name=name,
             is_binary_ruleset=False,
@@ -870,16 +878,17 @@ class ManualCheckParameterRulespec(HostRulespec):
     # Required because of Rulespec.NO_FACTORY_DEFAULT
     def __init__(  # pylint: disable=dangerous-default-value
         self,
-        group,
-        check_group_name,
-        parameter_valuespec=None,
-        title=None,
-        item_spec=None,
-        is_optional=False,
-        is_deprecated=False,
-        name=None,
-        match_type="all",
-        factory_default=Rulespec.NO_FACTORY_DEFAULT,
+        group: type[RulespecBaseGroup],
+        check_group_name: str,
+        parameter_valuespec: Callable[[], ValueSpec] | None = None,
+        title: Callable[[], str] | None = None,
+        item_spec: Callable[[], ValueSpec] | None = None,
+        is_optional: bool = False,
+        is_deprecated: bool = False,
+        is_cloud_and_managed_edition_only: bool = False,
+        name: str | None = None,
+        match_type: MatchType = "all",
+        factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
     ):
         # Mandatory keys
         self._check_group_name = check_group_name
@@ -901,6 +910,7 @@ class ManualCheckParameterRulespec(HostRulespec):
             is_optional=is_optional,
             is_deprecated=is_deprecated,
             factory_default=factory_default,
+            is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
             # Explicit set
             valuespec=self._rulespec_valuespec,
         )
@@ -937,8 +947,8 @@ class ManualCheckParameterRulespec(HostRulespec):
             elements=[
                 CheckTypeGroupSelection(
                     self.check_group_name,
-                    title=_("Checktype"),
-                    help=_("Please choose the check plugin"),
+                    title=_("Check type"),
+                    help=_("Please choose the check plug-in"),
                 ),
                 self._get_item_spec(),
                 parameter_vs,
@@ -1078,7 +1088,7 @@ def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -
 
 
 class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
-    def __init__(self, group_registry) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, group_registry: RulespecGroupRegistry) -> None:
         super().__init__()
         self._group_registry = group_registry
 
@@ -1201,9 +1211,9 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
             is_active = self.is_active(value)
 
         # Set the actual used mode
-        html.hidden_field(self.tp_current_mode, "%d" % is_active)
+        html.hidden_field(self.tp_current_mode, str(int(is_active)))
 
-        vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
+        vars_copy[self.tp_toggle_var] = str(int(not is_active))
 
         url_vars: HTTPVariables = []
         url_vars += vars_copy.items()

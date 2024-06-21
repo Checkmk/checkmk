@@ -6,7 +6,7 @@
 # fmt: off
 # mypy: disable-error-code=var-annotated
 
-from cmk.base.plugins.agent_based.lparstat_aix import parse_lparstat_aix
+from cmk.plugins.collection.agent_based.lparstat_aix import parse_lparstat_aix
 
 checkname = "lparstat_aix"
 

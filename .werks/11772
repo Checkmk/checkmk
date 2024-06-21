@@ -1,4 +1,4 @@
-Title: Bring back Agent/SNMP info in `cmk --list-checks`
+Title: Bring back Agent/SNMP info in 'cmk --list-checks'
 Class: feature
 Compatible: compat
 Component: checks

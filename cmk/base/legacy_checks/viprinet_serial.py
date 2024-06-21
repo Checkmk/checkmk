@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.viprinet import DETECT_VIPRINET
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.viprinet import DETECT_VIPRINET
 
 
 def inventory_viprinet_serial(info):
@@ -20,7 +21,12 @@ def check_viprinet_serial(_no_item, _no_params, info):
     return 0, info[0][0]
 
 
+def parse_viprinet_serial(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["viprinet_serial"] = LegacyCheckDefinition(
+    parse_function=parse_viprinet_serial,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.35424.1.1",

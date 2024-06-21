@@ -5,13 +5,13 @@
 
 import pytest
 
-from cmk.ec.forward import (
+import cmk.ec.export as ec
+from cmk.ec.syslog import (
     StructuredData,
     StructuredDataID,
     StructuredDataName,
     StructuredDataParameters,
     StructuredDataValue,
-    SyslogMessage,
 )
 
 
@@ -33,41 +33,44 @@ class TestStructuredDataID:
         assert repr(StructuredDataID("enterprise@123")) == "enterprise@123"
 
     @pytest.mark.parametrize(
-        "id_, expected_result",
+        "id_",
         [
             pytest.param(
                 "syncAccuracy",
-                True,
                 id="normal id without enterprise number",
             ),
             pytest.param(
                 "Checkmk@123",
-                True,
                 id="normal id with enterprise number",
             ),
+        ],
+    )
+    def test_validate_passes(
+        self,
+        id_: str,
+    ) -> None:
+        assert StructuredDataID(id_)
+
+    @pytest.mark.parametrize(
+        "id_",
+        (
             pytest.param(
                 "Checkmk@",
-                False,
                 id="id with missing enterprise number",
             ),
             pytest.param(
                 "Checkmk@1hugo",
-                False,
                 id="id with invalid enterprise number",
             ),
             pytest.param(
                 "Checkmk@1@2",
-                False,
                 id="id with multiple @",
             ),
-        ],
+        ),
     )
-    def test_validate(
-        self,
-        id_: str,
-        expected_result: bool,
-    ) -> None:
-        assert StructuredDataID._validate(id_) is expected_result
+    def test_validate_raises(self, id_: str) -> None:
+        with pytest.raises(ValueError, match="is not an RFC 5425-conform SD-ID."):
+            assert StructuredDataID(id_)
 
 
 class TestStructuredDataValue:
@@ -235,7 +238,7 @@ class TestSyslogMessage:
         stuctured_data: StructuredData,
     ) -> None:
         with pytest.raises(ValueError, match="must"):
-            SyslogMessage(
+            ec.SyslogMessage(
                 facility=facility,
                 severity=severity,
                 structured_data=stuctured_data,
@@ -245,7 +248,7 @@ class TestSyslogMessage:
         "syslog_message, expected_result",
         [
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=30,
                     severity=2,
                 ),
@@ -253,7 +256,7 @@ class TestSyslogMessage:
                 id="facility 30-logfile case",
             ),
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=31,
                     severity=2,
                 ),
@@ -261,7 +264,7 @@ class TestSyslogMessage:
                 id="facility 31-snmptrap case",
             ),
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=1,
                     severity=2,
                 ),
@@ -269,7 +272,7 @@ class TestSyslogMessage:
                 id="minimal case",
             ),
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=1,
                     severity=2,
                     timestamp=1617864437,
@@ -295,7 +298,7 @@ class TestSyslogMessage:
                 id="standard case, ascii",
             ),
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=1,
                     severity=2,
                     timestamp=1617864437,
@@ -323,7 +326,7 @@ class TestSyslogMessage:
                 id="with ip address and service level, ascii",
             ),
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=1,
                     severity=2,
                     timestamp=1617864437,
@@ -351,7 +354,7 @@ class TestSyslogMessage:
                 id="with ip address and service level, utf-8",
             ),
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=1,
                     severity=2,
                     timestamp=1617864437.23,
@@ -388,7 +391,7 @@ class TestSyslogMessage:
     )
     def test_repr(
         self,
-        syslog_message: SyslogMessage,
+        syslog_message: ec.SyslogMessage,
         expected_result: str,
     ) -> None:
         assert str(syslog_message) == expected_result

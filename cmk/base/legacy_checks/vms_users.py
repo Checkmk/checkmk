@@ -13,6 +13,8 @@
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_vms_users(info):
     if len(info) > 0:
@@ -38,7 +40,12 @@ def check_vms_users(item, params, info):
     return (0, "No interactive users", perfdata)
 
 
+def parse_vms_users(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["vms_users"] = LegacyCheckDefinition(
+    parse_function=parse_vms_users,
     service_name="VMS Users",
     discovery_function=inventory_vms_users,
     check_function=check_vms_users,

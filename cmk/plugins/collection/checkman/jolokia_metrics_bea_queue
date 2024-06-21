@@ -1,0 +1,27 @@
+title: BEA Weblogic: Length of Queue
+agents: linux, windows
+catalog: app/java
+license: GPLv2
+distribution: check_mk
+description:
+ The BEA application servers have "Execute Queues" in which requests are
+ processed. This check allows to monitor the number of requests that
+ are being queued for processing.
+
+ To use this plugin, Jolokia and the agent plug-in need to be deployed
+ on the monitored server in each application container.
+
+ The check can alert if the {WARN}/{CRIT} thresholds for a configurable total
+ is exceeded.
+
+ Both, version 1.7 and 2.0 of Jolokia are supported.
+
+item:
+ The name of the application server instance as configured by the agent
+ followed by the name of the application.
+ I.e. webservices webservices
+
+discovery:
+ One service is created for each application running inside a weblogic
+ instance sent by the agent.
+

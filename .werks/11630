@@ -15,9 +15,9 @@ In general cached sections are marked with two timestamps:
 <li></li>
 </ul>
 
-On the Checkmk server the service columns {{checked}} or {{age}} display the
+On the Checkmk server the service columns "checked" or "age" display the
 evaluated timestamps.
 
-Custom SQLs of the {{mk_oracle}} can be declared as asynchrounous sections and
+Custom SQLs of the "mk_oracle" can be declared as asynchrounous sections and
 are executed in different intervals. In order to see the cached information for
-{{Oracle Custom SQLs}} you have to re-install the mk_oracle plugin.
+"Oracle Custom SQLs" you have to re-install the mk_oracle plugin.

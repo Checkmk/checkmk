@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+
 from ast import literal_eval
 from collections.abc import Sequence
 
@@ -146,7 +148,7 @@ def test_metric() -> None:
     assert metric1.levels == (2.4, 3.0)
     assert metric1.boundaries == (0.0, None)
 
-    assert metric1 == metric1  # pylint: disable=comparison-with-itself
+    assert metric1 == metric1  # pylint: disable=comparison-with-itself # noqa: PLR0124
     assert metric1 != metric2
 
 

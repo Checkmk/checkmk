@@ -14,9 +14,20 @@ from typing import assert_never, Final, Self
 
 from ._mkp import PackagePart
 
+_PERMISSION_EXECUTABLE = 0o700
+_PERMISSION_NONEXECUTABLE = 0o600
+
 
 @dataclass(frozen=True)
 class PathConfig:
+    # This is very confusing.
+    # Those paths describe both where to put things when installing,
+    # and where to look for things when packaging.
+    # There are also paths that have different purposes :-(
+
+    # paths for MKP content
+    cmk_plugins_dir: Path
+    cmk_addons_plugins_dir: Path
     agent_based_plugins_dir: Path
     agents_dir: Path
     alert_handlers_dir: Path
@@ -25,27 +36,53 @@ class PathConfig:
     checks_dir: Path
     doc_dir: Path
     gui_plugins_dir: Path
-    installed_packages_dir: Path
     inventory_dir: Path
     lib_dir: Path
     locale_dir: Path
-    local_root: Path
     mib_dir: Path
     mkp_rule_pack_dir: Path
     notifications_dir: Path
-    packages_enabled_dir: Path
-    packages_local_dir: Path
-    packages_shipped_dir: Path
     pnp_templates_dir: Path
-    tmp_dir: Path
     web_dir: Path
+
+    # other paths
+    installed_packages_dir: Path
+    local_root: Path
+    manifests_dir: Path
 
     @classmethod
     def from_toml(cls, content: str) -> Self:
-        return cls(**tomllib.loads(content)["paths"])
+        raw = tomllib.loads(content)["paths"]
+        return cls(
+            cmk_plugins_dir=Path(raw["cmk_plugins_dir"]),
+            cmk_addons_plugins_dir=Path(raw["cmk_addons_plugins_dir"]),
+            agent_based_plugins_dir=Path(raw["agent_based_plugins_dir"]),
+            agents_dir=Path(raw["agents_dir"]),
+            alert_handlers_dir=Path(raw["alert_handlers_dir"]),
+            bin_dir=Path(raw["bin_dir"]),
+            check_manpages_dir=Path(raw["check_manpages_dir"]),
+            checks_dir=Path(raw["checks_dir"]),
+            doc_dir=Path(raw["doc_dir"]),
+            gui_plugins_dir=Path(raw["gui_plugins_dir"]),
+            inventory_dir=Path(raw["inventory_dir"]),
+            lib_dir=Path(raw["lib_dir"]),
+            locale_dir=Path(raw["locale_dir"]),
+            mib_dir=Path(raw["mib_dir"]),
+            mkp_rule_pack_dir=Path(raw["mkp_rule_pack_dir"]),
+            notifications_dir=Path(raw["notifications_dir"]),
+            pnp_templates_dir=Path(raw["pnp_templates_dir"]),
+            web_dir=Path(raw["web_dir"]),
+            installed_packages_dir=Path(raw["installed_packages_dir"]),
+            local_root=Path(raw["local_root"]),
+            manifests_dir=Path(raw["manifests_dir"]),
+        )
 
     def get_path(self, part: PackagePart) -> Path:
         match part:
+            case PackagePart.CMK_PLUGINS:
+                return self.cmk_plugins_dir
+            case PackagePart.CMK_ADDONS_PLUGINS:
+                return self.cmk_addons_plugins_dir
             case PackagePart.EC_RULE_PACKS:
                 return self.mkp_rule_pack_dir
             case PackagePart.AGENT_BASED:
@@ -109,24 +146,28 @@ class PathConfig:
 
 def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
     match part:
+        case PackagePart.CMK_PLUGINS:
+            return _("Shipped Checkmk plug-ins")
+        case PackagePart.CMK_ADDONS_PLUGINS:
+            return _("Additional Checkmk plug-ins by third parties")
         case PackagePart.EC_RULE_PACKS:
             return _("Event Console rule packs")
         case PackagePart.AGENT_BASED:
-            return _("Agent based plugins (Checks, Inventory)")
+            return _("Agent based plug-ins (deprecated)")
         case PackagePart.CHECKS:
-            return _("Legacy check plugins")
+            return _("Legacy check plug-ins (deprecated)")
         case PackagePart.HASI:
-            return _("Legacy inventory plugins")
+            return _("Legacy inventory plug-ins (deprecated)")
         case PackagePart.CHECKMAN:
-            return _("Checks' man pages")
+            return _("Checks' man pages (deprecated)")
         case PackagePart.AGENTS:
             return _("Agents")
         case PackagePart.NOTIFICATIONS:
             return _("Notification scripts")
         case PackagePart.GUI:
-            return _("GUI extensions")
+            return _("GUI extensions (deprecated)")
         case PackagePart.WEB:
-            return _("Legacy GUI extensions")
+            return _("Legacy GUI extensions (deprecated)")
         case PackagePart.PNP_TEMPLATES:
             return _("PNP4Nagios templates (deprecated)")
         case PackagePart.DOC:
@@ -145,40 +186,43 @@ def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
             assert_never(unreachable)
 
 
-def permissions(part: PackagePart) -> int:
+def permissions(part: PackagePart, rel_path: Path) -> int | None:
     match part:
-        case PackagePart.EC_RULE_PACKS:
-            return 0o644
-        case PackagePart.AGENT_BASED:
-            return 0o644
-        case PackagePart.CHECKS:
-            return 0o644
-        case PackagePart.HASI:
-            return 0o644
-        case PackagePart.CHECKMAN:
-            return 0o644
-        case PackagePart.AGENTS:
-            return 0o755
-        case PackagePart.NOTIFICATIONS:
-            return 0o755
-        case PackagePart.GUI:
-            return 0o644
-        case PackagePart.WEB:
-            return 0o644
-        case PackagePart.PNP_TEMPLATES:
-            return 0o644
-        case PackagePart.DOC:
-            return 0o644
-        case PackagePart.LOCALES:
-            return 0o644
-        case PackagePart.BIN:
-            return 0o755
+        case PackagePart.CMK_PLUGINS | PackagePart.CMK_ADDONS_PLUGINS:
+            return (
+                _PERMISSION_EXECUTABLE
+                if rel_path.parts[-2] == "libexec"
+                else _PERMISSION_NONEXECUTABLE
+            )
+        case (
+            PackagePart.EC_RULE_PACKS
+            | PackagePart.AGENT_BASED
+            | PackagePart.CHECKS
+            | PackagePart.HASI
+            | PackagePart.CHECKMAN
+            | PackagePart.GUI
+            | PackagePart.WEB
+            | PackagePart.PNP_TEMPLATES
+            | PackagePart.DOC
+            | PackagePart.LOCALES
+            | PackagePart.MIBS
+        ):
+            return _PERMISSION_NONEXECUTABLE
         case PackagePart.LIB:
-            return 0o644
-        case PackagePart.MIBS:
-            return 0o644
-        case PackagePart.ALERT_HANDLERS:
-            return 0o755
+            # I guess this shows that nagios plug-ins ought to be their own package part.
+            # For now I prefer to stay compatible.
+            return (
+                _PERMISSION_EXECUTABLE
+                if rel_path.parts[:2] == ("nagios", "plugins")
+                else _PERMISSION_NONEXECUTABLE
+            )
+        case (
+            PackagePart.AGENTS
+            | PackagePart.NOTIFICATIONS
+            | PackagePart.BIN
+            | PackagePart.ALERT_HANDLERS
+        ):
+            return _PERMISSION_EXECUTABLE
         case unreachable:
             assert_never(unreachable)
 

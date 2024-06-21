@@ -1,4 +1,4 @@
-Title: <tt>juniper_cpu_util</tt>: Fix "Item not found in monitoring data" for 0% utilization
+Title: juniper_cpu_util: Fix "Item not found in monitoring data" for 0% utilization
 Class: fix
 Compatible: compat
 Component: checks

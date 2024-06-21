@@ -21,26 +21,20 @@ from cmk.gui.i18n import _
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["age"] = {
-    "title": _("Age"),
-    "unit": "s",
-    "color": "#80f000",
-}
-
 metric_info["last_updated"] = {
-    "title": _("Last Updated"),
+    "title": _("Last updated"),
     "unit": "s",
     "color": "#80f000",
 }
 
 metric_info["deferred_age"] = {
-    "title": _("Deferred Files Age"),
+    "title": _("Deferred files age"),
     "unit": "s",
     "color": "#80f000",
 }
 
 metric_info["runtime"] = {
-    "title": _("Process Runtime"),
+    "title": _("Process runtime"),
     "unit": "s",
     "color": "#80f000",
 }
@@ -109,53 +103,6 @@ metric_info["zfs_l2_size"] = {
     "title": _("L2 cache size"),
     "unit": "bytes",
     "color": "31/a",
-}
-
-metric_info["file_size"] = {
-    "title": _("File size"),
-    "unit": "bytes",
-    "color": "16/a",
-}
-
-metric_info["total_file_size"] = {
-    "title": _("Total file size"),
-    "unit": "bytes",
-    "color": "16/a",
-}
-metric_info["file_size_smallest"] = {
-    "title": _("Smallest file"),
-    "unit": "bytes",
-    "color": "21/a",
-}
-
-metric_info["file_size_largest"] = {
-    "title": _("Largest file"),
-    "unit": "bytes",
-    "color": "25/a",
-}
-
-metric_info["file_count"] = {
-    "title": _("Amount of files"),
-    "unit": "count",
-    "color": "23/a",
-}
-
-metric_info["new_files"] = {
-    "title": _("New files in Spool"),
-    "unit": "count",
-    "color": "23/a",
-}
-
-metric_info["deferred_files"] = {
-    "title": _("Deferred files in Spool"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["corrupted_files"] = {
-    "title": _("Corrupted files in Spool"),
-    "unit": "count",
-    "color": "34/a",
 }
 
 # cloud storage
@@ -295,52 +242,10 @@ metric_info["database_reclaimable"] = {
     "color": "45/a",
 }
 
-metric_info["mem_total"] = {
-    "title": _("RAM installed"),
-    "color": "#f0f0f0",
-    "unit": "bytes",
-}
-
-metric_info["memory_avg"] = {
-    "title": _("Memory Average"),
-    "color": "#80ff40",
-    "unit": "bytes",
-}
-
-metric_info["pagefile_avg"] = {
-    "title": _("Commit Charge Average"),
-    "color": "#408f20",
-    "unit": "bytes",
-}
-
-metric_info["mem_free"] = {
-    "title": _("Free RAM"),
-    "color": "#ffffff",
-    "unit": "bytes",
-}
-
-metric_info["mem_used"] = {
-    "color": "#80ff40",
-    "title": _("RAM used"),
-    "unit": "bytes",
-}
-
 metric_info["mem_available"] = {
     "color": "21/a",
     "title": _("Estimated RAM for new processes"),
     "unit": "bytes",
-}
-
-metric_info["pagefile_used"] = {
-    "color": "#408f20",
-    "title": _("Commit Charge"),
-    "unit": "bytes",
-}
-
-metric_info["mem_used_percent"] = {
-    "color": "#80ff40",
-    "title": _("RAM used %"),
-    "unit": "%",
 }
 
 metric_info["cpu_mem_used_percent"] = {
@@ -351,7 +256,7 @@ metric_info["cpu_mem_used_percent"] = {
 
 metric_info["mem_perm_used"] = {
     "color": "#80ff40",
-    "title": _("Permanent Generation Memory"),
+    "title": _("Permanent generation memory"),
     "unit": "bytes",
 }
 
@@ -373,34 +278,16 @@ metric_info["trend_hoursleft"] = {
     "color": "#94b65a",
 }
 
-metric_info["swap_total"] = {
-    "title": _("Swap installed"),
-    "color": "#e0e0e0",
-    "unit": "bytes",
-}
-
 metric_info["swap_free"] = {
     "title": _("Free swap space"),
     "unit": "bytes",
     "color": "#eeeeee",
 }
 
-metric_info["swap_used"] = {
-    "title": _("Swap used"),
-    "color": "#408f20",
-    "unit": "bytes",
-}
-
 metric_info["swap_used_percent"] = {
     "color": "#408f20",
     "title": _("Swap used"),
     "unit": "%",
-}
-
-metric_info["swap_cached"] = {
-    "title": _("Swap cached"),
-    "color": "#5bebc9",
-    "unit": "bytes",
 }
 
 metric_info["caches"] = {
@@ -410,7 +297,7 @@ metric_info["caches"] = {
 }
 
 metric_info["mem_pages_rate"] = {
-    "title": _("Memory Pages"),
+    "title": _("Memory pages"),
     "unit": "1/s",
     "color": "34/a",
 }
@@ -418,36 +305,6 @@ metric_info["mem_pages_rate"] = {
 metric_info["mem_lnx_total_used"] = {
     "title": _("Total used memory"),
     "color": "#70f038",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_cached"] = {
-    "title": _("Cached memory"),
-    "color": "#91cceb",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_buffers"] = {
-    "title": _("Buffered memory"),
-    "color": "#5bb9eb",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_slab"] = {
-    "title": _("Slab (Various smaller caches)"),
-    "color": "#af91eb",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_sreclaimable"] = {
-    "title": _("Reclaimable memory"),
-    "color": "23/a",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_sunreclaim"] = {
-    "title": _("Unreclaimable memory"),
-    "color": "24/a",
     "unit": "bytes",
 }
 
@@ -537,19 +394,19 @@ metric_info["mem_lnx_writeback_tmp"] = {
 
 metric_info["mem_lnx_total_total"] = {
     "title": _("Total virtual memory"),
-    "color": "#f0f0f0",
+    "color": "#1e8fff",
     "unit": "bytes",
 }
 
 metric_info["mem_lnx_committed_as"] = {
     "title": _("Committed memory"),
-    "color": "#40a080",
+    "color": "#32a852",
     "unit": "bytes",
 }
 
 metric_info["mem_lnx_commit_limit"] = {
     "title": _("Commit limit"),
-    "color": "#e0e0e0",
+    "color": "#ff64ff",
     "unit": "bytes",
 }
 
@@ -637,7 +494,7 @@ metric_info["mem_lnx_hardware_corrupted"] = {
     "unit": "bytes",
 }
 
-# Consumed Host Memory usage is defined as the amount of host memory that is allocated to the virtual machine
+# Consumed Host memory usage is defined as the amount of host memory that is allocated to the virtual machine
 metric_info["mem_esx_host"] = {
     "title": _("Consumed host memory"),
     "color": "#70f038",
@@ -753,40 +610,10 @@ metric_info["exclusive_locks"] = {
     "color": "#ca5706",
 }
 
-metric_info["disk_read_throughput"] = {
-    "title": _("Read throughput"),
-    "unit": "bytes/s",
-    "color": "#40c080",
-}
-
-metric_info["disk_write_throughput"] = {
-    "title": _("Write throughput"),
-    "unit": "bytes/s",
-    "color": "#4080c0",
-}
-
 metric_info["disk_ios"] = {
     "title": _("Disk I/O operations"),
     "unit": "1/s",
     "color": "#60e0a0",
-}
-
-metric_info["disk_read_ios"] = {
-    "title": _("Read operations"),
-    "unit": "1/s",
-    "color": "#60e0a0",
-}
-
-metric_info["disk_write_ios"] = {
-    "title": _("Write operations"),
-    "unit": "1/s",
-    "color": "#60a0e0",
-}
-
-metric_info["disk_average_read_wait"] = {
-    "title": _("Read wait time"),
-    "unit": "s",
-    "color": "#20e8c0",
 }
 
 metric_info["disk_min_read_wait"] = {
@@ -801,12 +628,6 @@ metric_info["disk_max_read_wait"] = {
     "color": "#20e8e0",
 }
 
-metric_info["disk_average_write_wait"] = {
-    "title": _("Write wait time"),
-    "unit": "s",
-    "color": "#20c0e8",
-}
-
 metric_info["disk_min_write_wait"] = {
     "title": _("Minimum write wait time"),
     "unit": "s",
@@ -817,36 +638,6 @@ metric_info["disk_max_write_wait"] = {
     "title": _("Maximum write wait time"),
     "unit": "s",
     "color": "#20e0e8",
-}
-
-metric_info["disk_average_wait"] = {
-    "title": _("Request wait time"),
-    "unit": "s",
-    "color": "#4488cc",
-}
-
-metric_info["disk_average_read_request_size"] = {
-    "title": _("Average read request size"),
-    "unit": "bytes",
-    "color": "#409c58",
-}
-
-metric_info["disk_average_write_request_size"] = {
-    "title": _("Average write request size"),
-    "unit": "bytes",
-    "color": "#40589c",
-}
-
-metric_info["disk_average_request_size"] = {
-    "title": _("Average request size"),
-    "unit": "bytes",
-    "color": "#4488cc",
-}
-
-metric_info["disk_latency"] = {
-    "title": _("Average disk latency"),
-    "unit": "s",
-    "color": "#c04080",
 }
 
 metric_info["disk_read_latency"] = {
@@ -885,12 +676,6 @@ metric_info["other_latency"] = {
     "color": "21/a",
 }
 
-metric_info["disk_queue_length"] = {
-    "title": _("Average disk I/O-queue length"),
-    "unit": "",
-    "color": "35/a",
-}
-
 metric_info["disk_read_ql"] = {
     "title": _("Average disk read queue length"),
     "unit": "",
@@ -901,12 +686,6 @@ metric_info["disk_write_ql"] = {
     "title": _("Average disk write queue length"),
     "unit": "",
     "color": "#7060b0",
-}
-
-metric_info["disk_utilization"] = {
-    "title": _("Disk utilization"),
-    "unit": "%",
-    "color": "#a05830",
 }
 
 metric_info["disk_capacity"] = {
@@ -1063,18 +842,6 @@ metric_info["backup_age"] = {
     "title": _("Time since last backup"),
     "unit": "s",
     "color": "34/a",
-}
-
-metric_info["file_age_oldest"] = {
-    "title": _("Oldest file"),
-    "unit": "s",
-    "color": "11/a",
-}
-
-metric_info["file_age_newest"] = {
-    "title": _("Newest file"),
-    "unit": "s",
-    "color": "13/a",
 }
 
 metric_info["logswitches_last_hour"] = {
@@ -1246,7 +1013,7 @@ metric_info["meta_usage"] = {
 }
 
 metric_info["storage_processor_util"] = {
-    "title": _("Storage Processor Utilization"),
+    "title": _("Storage processor utilization"),
     "unit": "%",
     "color": "34/a",
 }
@@ -1421,7 +1188,6 @@ graph_info["zfs_meta_data"] = {
         ("zfs_metadata_used", "line"),
         ("zfs_metadata_limit", "line"),
     ],
-    "range": (0, "zfs_metadata_max,zfs_metadata_used,zfs_metadata_limit,MAX,MAX"),
 }
 
 graph_info["cache_hit_ratio"] = {
@@ -1431,7 +1197,6 @@ graph_info["cache_hit_ratio"] = {
         ("prefetch_metadata_hit_ratio", "line"),
         ("prefetch_data_hit_ratio", "line"),
     ],
-    "range": (0, "cache_hit_ratio,prefetch_metadata_hit_ratio,prefetch_data_hit_ratio,MAX,MAX"),
 }
 
 graph_info["wasted_space_of_tables_and_indexes"] = {
@@ -1444,61 +1209,11 @@ graph_info["wasted_space_of_tables_and_indexes"] = {
 
 # diskstat checks
 
-graph_info["disk_utilization"] = {
-    "title": _("Disk utilization"),
-    "metrics": [
-        ("disk_utilization", "area"),
-    ],
-    "range": (0, 100),
-    "scalars": [
-        "disk_utilization:warn",
-        "disk_utilization:crit",
-    ],
-}
-
-graph_info["disk_throughput"] = {
-    "title": _("Disk throughput"),
-    "metrics": [
-        ("disk_read_throughput", "area"),
-        ("disk_write_throughput", "-area"),
-    ],
-    "scalars": [
-        ("disk_read_throughput:warn", "Warning read"),
-        ("disk_read_throughput:crit", "Critical read"),
-        ("disk_write_throughput:warn,-1,*", "Warning write"),
-        ("disk_write_throughput:crit,-1,*", "Critical write"),
-    ],
-}
-
-graph_info["disk_io_operations"] = {
-    "title": _("Disk I/O operations"),
-    "metrics": [
-        ("disk_read_ios", "area"),
-        ("disk_write_ios", "-area"),
-    ],
-}
-
 graph_info["direct_and_buffered_io_operations"] = {
     "title": _("Direct and buffered I/O operations"),
     "metrics": [
         ("direct_io", "stack"),
         ("buffered_io", "stack"),
-    ],
-}
-
-graph_info["average_request_size"] = {
-    "title": _("Average request size"),
-    "metrics": [
-        ("disk_average_read_request_size", "area"),
-        ("disk_average_write_request_size", "-area"),
-    ],
-}
-
-graph_info["average_end_to_end_wait_time"] = {
-    "title": _("Average end to end wait time"),
-    "metrics": [
-        ("disk_average_read_wait", "area"),
-        ("disk_average_write_wait", "-area"),
     ],
 }
 
@@ -1567,20 +1282,8 @@ graph_info["ram_swap_used"] = {
     "range": (0, "swap_used:max,mem_used:max,+"),
 }
 
-graph_info["mem_used_percent"] = {
-    "title": _("Used RAM"),
-    "metrics": [
-        ("mem_used_percent", "area"),
-    ],
-    "scalars": [
-        "mem_used_percent:warn",
-        "mem_used_percent:crit",
-    ],
-    "range": (0, 100),
-}
-
 graph_info["cpu_mem_used_percent"] = {
-    "title": _("Used CPU Memory"),
+    "title": _("Used CPU memory"),
     "metrics": [
         ("cpu_mem_used_percent", "area"),
     ],
@@ -1617,14 +1320,11 @@ graph_info["mem_shrinking"] = {
 # Linux memory graphs. They are a lot...
 
 graph_info["ram_swap_overview"] = {
-    "title": _("RAM + Swap overview"),
+    "title": _("RAM + swap overview"),
     "metrics": [
-        ("mem_total", "line"),
-        ("swap_total", "line"),
-        ("mem_used", "line"),
-        ("swap_used", "line"),
+        ("mem_total,swap_total,+#87cefa", "area", _("RAM + swap installed")),
+        ("mem_used,swap_used,+#37fa37", "line", _("RAM + swap used")),
     ],
-    "range": (0, "mem_total,swap_total,MAX"),
 }
 
 graph_info["swap"] = {
@@ -1634,21 +1334,10 @@ graph_info["swap"] = {
         ("swap_used", "stack"),
         ("swap_cached", "stack"),
     ],
-    "range": (0, "swap_total,swap_used,swap_cached,MAX,MAX"),
-}
-
-graph_info["caches"] = {
-    "title": _("Caches"),
-    "metrics": [
-        ("mem_lnx_slab", "stack"),
-        ("swap_cached", "stack"),
-        ("mem_lnx_buffers", "stack"),
-        ("mem_lnx_cached", "stack"),
-    ],
 }
 
 graph_info["active_and_inactive_memory_anon"] = {
-    "title": _("Active and Inactive Memory"),
+    "title": _("Active and inactive memory"),
     "metrics": [
         ("mem_lnx_inactive_anon", "stack"),
         ("mem_lnx_inactive_file", "stack"),
@@ -1662,13 +1351,14 @@ graph_info["active_and_inactive_memory_anon"] = {
 # since we currently cannot state a condition on non-existing
 # metrics.
 graph_info["active_and_inactive_memory"] = {
-    "title": _("Active and Inactive Memory"),
+    "title": _("Active and inactive memory"),
     "metrics": [
         ("mem_lnx_active", "stack"),
         ("mem_lnx_inactive", "stack"),
     ],
     "conflicting_metrics": ["mem_lnx_active_anon"],
 }
+
 
 graph_info["ram_used"] = {
     "title": _("RAM used"),
@@ -1684,21 +1374,9 @@ graph_info["ram_used"] = {
     "range": (0, "mem_used:max"),
 }
 
-graph_info["commit_charge"] = {
-    "title": _("Commit Charge"),
-    "metrics": [
-        ("pagefile_used", "area"),
-    ],
-    "scalars": [
-        ("pagefile_used:max#000000", "Maximum"),
-        ("pagefile_used:warn", "Warning"),
-        ("pagefile_used:crit", "Critical"),
-    ],
-    "range": (0, "pagefile_used:max"),
-}
 
 graph_info["filesystem_writeback"] = {
-    "title": _("Filesystem Writeback"),
+    "title": _("Filesystem writeback"),
     "metrics": [
         ("mem_lnx_dirty", "area"),
         ("mem_lnx_writeback", "stack"),
@@ -1727,7 +1405,7 @@ graph_info["memory_that_cannot_be_swapped_out"] = {
 }
 
 graph_info["huge_pages"] = {
-    "title": _("Huge Pages"),
+    "title": _("Huge pages"),
     "metrics": [
         ("mem_lnx_huge_pages_total", "line"),
         ("mem_lnx_huge_pages_free", "stack"),
@@ -1737,7 +1415,7 @@ graph_info["huge_pages"] = {
 }
 
 graph_info["vmalloc_address_space_1"] = {
-    "title": _("VMalloc Address Space"),
+    "title": _("VMalloc address space"),
     "metrics": [
         ("mem_lnx_vmalloc_total", "line"),
         ("mem_lnx_vmalloc_used", "stack"),
@@ -1748,7 +1426,7 @@ graph_info["vmalloc_address_space_1"] = {
 # TODO: Warum ohne total? Dürfte eigentlich nicht
 # vorkommen.
 graph_info["vmalloc_address_space_2"] = {
-    "title": _("VMalloc Address Space"),
+    "title": _("VMalloc address space"),
     "metrics": [
         ("mem_lnx_vmalloc_used", "area"),
         ("mem_lnx_vmalloc_chunk", "stack"),
@@ -1777,7 +1455,6 @@ graph_info["heap_memory_usage"] = {
         "mem_heap:warn",
         "mem_heap:crit",
     ],
-    "range": (0, "mem_heap_committed,mem_heap,MAX"),
 }
 
 graph_info["non-heap_memory_usage"] = {
@@ -1791,7 +1468,6 @@ graph_info["non-heap_memory_usage"] = {
         "mem_nonheap:crit",
         "mem_nonheap:max",
     ],
-    "range": (0, "mem_nonheap_committed,mem_nonheap,MAX"),
 }
 
 graph_info["private_and_shared_memory"] = {
@@ -1818,7 +1494,7 @@ graph_info["harddrive_health_statistic"] = {
 }
 
 graph_info["mem_perm_used"] = {
-    "title": _("Permanent Generation Memory"),
+    "title": _("Permanent generation memory"),
     "metrics": [("mem_perm_used", "area")],
     "scalars": [
         "mem_perm_used:warn",
@@ -1829,19 +1505,8 @@ graph_info["mem_perm_used"] = {
 }
 
 graph_info["datafile_sizes"] = {
-    "title": _("Datafile Sizes"),
+    "title": _("Datafile sizes"),
     "metrics": [("allocated_size", "line"), ("data_size", "area")],
-}
-
-graph_info["files_notification_spool"] = {
-    "title": _("Amount of files in notification spool"),
-    "metrics": [
-        ("new_files", "line"),
-        ("deferred_files", "line"),
-        ("corrupted_files", "line"),
-    ],
-    "optional_metrics": ["deferred_files", "corrupted_files"],
-    "range": (0, "new_files,deferred_files,corrupted_files,MAX,MAX"),
 }
 
 # workaround for showing single metrics of multiple hosts on the same combined graph dashlet

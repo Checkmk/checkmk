@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.3.0b1"
+CMK_VERSION="2.4.0b1"
 
 # sample output of pgrep command
 # 1051 /usr/bin/redis-server 127.0.0.1:6380
@@ -56,7 +56,9 @@ redis_args() {
     fi
 
     if [[ "${!PASSWORD}" ]] && [[ "${!PASSWORD}" != "None" ]]; then
-        REDIS_ARGS+=("-a" "${!PASSWORD}")
+        REDIS_CLI_COMMAND="REDISCLI_AUTH='${!PASSWORD}' redis-cli"
+    else
+        REDIS_CLI_COMMAND="redis-cli"
     fi
 
     REDIS_ARGS+=("info")
@@ -104,8 +106,9 @@ main() {
         # print server section
         echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
-        # execute command
-        waitmax 3 redis-cli "${REDIS_ARGS[@]}" || true
+        # TODO: Use an array instead of the suppression for the command, too.
+        # shellcheck disable=SC2086
+        waitmax 3 bash -c "${REDIS_CLI_COMMAND} ${REDIS_ARGS[*]}" || true
         echo
     done
 

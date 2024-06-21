@@ -9,20 +9,22 @@ import shutil
 import signal
 import subprocess
 import traceback
-from collections.abc import Mapping
+import warnings as warnings_module
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
+from cryptography.hazmat.primitives import hashes
 from cryptography.x509 import Certificate, load_pem_x509_certificate
 from cryptography.x509.oid import NameOID
 
 from livestatus import SiteId
 
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store
 from cmk.utils.certs import CN_TEMPLATE, RemoteSiteCertsStore
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
@@ -30,14 +32,16 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.process import pid_from_file, send_signal
 
-import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.type_defs import TrustedCertificateAuthorities
 from cmk.gui.userdb import load_users, save_users
+from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -47,6 +51,19 @@ from cmk.gui.watolib.config_domain_name import (
     SerializedSettings,
 )
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
+
+
+class _NegativeSerialException(Exception):
+    def __init__(self, message: str, subject: str, fingerprint: str) -> None:
+        super().__init__(message)
+        self.subject = subject
+        self.fingerprint = fingerprint
+
+    def should_be_ignored(self) -> bool:
+        # We ignore CAs with negative serials and we warn about them, except these, see CMK-16410
+        return self.fingerprint in (
+            "88497f01602f3154246ae28c4d5aef10f1d87ebb76626f4ae0b7f95ba7968799",  # EC-ACC
+        )
 
 
 @dataclass
@@ -150,8 +167,8 @@ class ConfigDomainGUI(ABCConfigDomain):
             raise MKUserError(
                 "",
                 _(
-                    "'git' command was not found on this system, but it is requried for versioning the configuration."
-                    "Please either install 'git' or disable git configuration tracking in WATO."
+                    "'git' command was not found on this system, but it is required for versioning the configuration."
+                    "Please either install 'git' or disable git configuration tracking in setup."
                 ),
             )
 
@@ -163,8 +180,8 @@ class ConfigDomainGUI(ABCConfigDomain):
 
 # TODO: This has been moved directly into watolib because it was not easily possible
 # to extract SiteManagement() to a separate module (depends on Folder, add_change, ...).
-# As soon as we have untied this we should re-establish a watolib plugin hierarchy and
-# move this to a CEE/CME specific watolib plugin
+# As soon as we have untied this we should re-establish a watolib plug-in hierarchy and
+# move this to a CEE/CME specific watolib plug-in
 class ConfigDomainLiveproxy(ABCConfigDomain):
     needs_sync = False
     needs_activation = False
@@ -175,7 +192,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         return config_domain_name.LIVEPROXY
 
     @classmethod
-    def enabled(cls):
+    def enabled(cls) -> bool:
         return (
             cmk_version.edition() is not cmk_version.Edition.CRE
             and active_config.liveproxyd_enabled
@@ -308,7 +325,9 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 f"Failed to create trusted CA file '{self.trusted_cas_file}': {traceback.format_exc()}"
             ]
 
-    def _update_trusted_cas(self, current_config) -> ConfigurationWarnings:  # type: ignore[no-untyped-def]
+    def _update_trusted_cas(
+        self, current_config: TrustedCertificateAuthorities
+    ) -> ConfigurationWarnings:
         trusted_cas: list[str] = []
         errors: ConfigurationWarnings = []
 
@@ -328,18 +347,48 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     # this is only a non-member classmethod, because it used in update config to 2.2
     @classmethod
-    def update_remote_sites_cas(cls, trusted_cas: list[str]) -> None:
+    def update_remote_sites_cas(cls, trusted_cas: Sequence[str]) -> None:
         remote_cas_store = RemoteSiteCertsStore(cmk.utils.paths.remote_sites_cas_dir)
         for site, cert in cls._remote_sites_cas(trusted_cas).items():
             remote_cas_store.save(site, cert)
 
     @staticmethod
-    def _remote_sites_cas(trusted_cas: list[str]) -> Mapping[SiteId, Certificate]:
+    def _load_cert(cert_str: str) -> Certificate:
+        """load a cert and return it except it has a negative serial number
+
+        Cryptography started to warn about negative serial numbers, these warnings are "blindly" written
+        to stderr so it might confuse users.
+        Here we catch these warnings and raise an exception if the serial number is negative.
+        """
+        with warnings_module.catch_warnings(record=True, category=UserWarning):
+            cert = load_pem_x509_certificate(cert_str.encode())
+            if cert.serial_number < 0:
+                raise _NegativeSerialException(
+                    f"Certificate with a negative serial number {cert.serial_number!r}",
+                    cert.subject.rfc4514_string(),
+                    cert.fingerprint(hashes.SHA256()).hex(),
+                )
+        return cert
+
+    @staticmethod
+    def _load_certs(trusted_cas: Sequence[str]) -> Iterable[Certificate]:
+        for cert_str in trusted_cas:
+            try:
+                yield ConfigDomainCACertificates._load_cert(cert_str)
+            except _NegativeSerialException as e:
+                if not e.should_be_ignored():
+                    logger.warning(
+                        "There is a certificate %r with a negative serial number in the trusted certificate authorities! Ignoring that...",
+                        e.subject,
+                    )
+
+    @staticmethod
+    def _remote_sites_cas(trusted_cas: Sequence[str]) -> Mapping[SiteId, Certificate]:
         return {
             site_id: cert
             for cert in sorted(
-                (load_pem_x509_certificate(raw.encode()) for raw in trusted_cas),
-                key=lambda cert: cert.not_valid_after,
+                ConfigDomainCACertificates._load_certs(trusted_cas),
+                key=lambda cert: cert.not_valid_after_utc,
             )
             if (
                 (cns := cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME))
@@ -351,7 +400,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     @staticmethod
     def is_valid_cert(raw_cert: str) -> bool:
         try:
-            _ = load_pem_x509_certificate(raw_cert.encode())
+            ConfigDomainCACertificates._load_cert(raw_cert)
             return True
         except ValueError:
             return False
@@ -390,20 +439,25 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                     continue
 
                 for raw_cert in raw_certs:
-                    if self.is_valid_cert(raw_cert):
-                        trusted_cas.add(raw_cert)
-                    else:
-                        logger.exception("Skipping invalid certificates in file %s", cert_file_path)
-                        errors.append(
-                            f"Failed to add invalid certificate in '{cert_file_path}' to trusted CA certificates. "
-                            "See web.log for details."
-                        )
+                    try:
+                        if self.is_valid_cert(raw_cert):
+                            trusted_cas.add(raw_cert)
+                            continue
+                    except _NegativeSerialException as e:
+                        if e.should_be_ignored():
+                            continue
+
+                    logger.exception("Skipping invalid certificates in file %s", cert_file_path)
+                    errors.append(
+                        f"Failed to add invalid certificate in '{cert_file_path}' to trusted CA certificates. "
+                        "See web.log for details."
+                    )
 
             break
 
         return list(trusted_cas), errors
 
-    def default_globals(self) -> Mapping[str, Any]:
+    def default_globals(self) -> Mapping[str, TrustedCertificateAuthorities]:
         return {
             "trusted_certificate_authorities": {
                 "use_system_wide_cas": True,
@@ -467,7 +521,15 @@ class ConfigDomainOMD(ABCConfigDomain):
             if job.is_active():
                 raise MKUserError(None, _("Another omd config change job is already running."))
 
-            job.start(lambda job_interface: job.do_execute(config_change_commands, job_interface))
+            job.start(
+                lambda job_interface: job.do_execute(config_change_commands, job_interface),
+                InitialStatusArgs(
+                    title=job.gui_title(),
+                    lock_wato=False,
+                    stoppable=False,
+                    user=str(user.id) if user.id else None,
+                ),
+            )
         else:
             _do_config_change(config_change_commands, self._logger)
 
@@ -622,14 +684,7 @@ class OMDConfigChangeBackgroundJob(BackgroundJob):
         return _("Apply OMD config changes")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def do_execute(
         self, config_change_commands: list[str], job_interface: BackgroundProcessInterface

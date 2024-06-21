@@ -19,12 +19,14 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../../../"))
+sys.path.insert(0, os.path.abspath("../../../packages/cmk-agent-based"))
 sys.path.insert(0, os.path.abspath("../../../packages/cmk-graphing"))
+sys.path.insert(0, os.path.abspath("../../../packages/cmk-rulesets"))
 sys.path.insert(0, os.path.abspath("../../../packages/cmk-server-side-calls"))
 
 # -- Project information -----------------------------------------------------
 
-project = "Checkmk's Plugin API"
+project = "Checkmk's Plug-in APIs"
 copyright = "2023, Checkmk GmbH"  # pylint: disable=redefined-builtin
 author = "Checkmk GmbH"
 

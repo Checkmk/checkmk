@@ -7,13 +7,14 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import DiscoveryResult, equals, Service, SNMPTree, StringTable
 
 
-def inventory_climaveneta_fan(info):
-    if len(info[0]) == 2:
-        return [("1", {}), ("2", {})]
-    return []
+def discover_climaveneta_fan(section: StringTable) -> DiscoveryResult:
+    if section and len(section[0]) == 2:
+        yield Service(item="1")
+        yield Service(item="2")
 
 
 def check_climaveneta_fan(item, params, info):
@@ -21,14 +22,19 @@ def check_climaveneta_fan(item, params, info):
     return check_fan(rpm, params)
 
 
+def parse_climaveneta_fan(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["climaveneta_fan"] = LegacyCheckDefinition(
+    parse_function=parse_climaveneta_fan,
     detect=equals(".1.3.6.1.2.1.1.1.0", "pCO Gateway"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9839.2.1.2",
         oids=["42", "43"],
     ),
     service_name="Fan %s",
-    discovery_function=inventory_climaveneta_fan,
+    discovery_function=discover_climaveneta_fan,
     check_function=check_climaveneta_fan,
     check_ruleset_name="hw_fans",
     check_default_parameters={

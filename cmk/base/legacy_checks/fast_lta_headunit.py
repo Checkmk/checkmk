@@ -4,17 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    any_of,
-    exists,
-    SNMPTree,
-    startswith,
-)
+
+from cmk.agent_based.v2 import all_of, any_of, exists, SNMPTree, startswith, StringTable
+
+
+def parse_fast_lta_headunit(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
 
 check_info["fast_lta_headunit"] = LegacyCheckDefinition(
+    parse_function=parse_fast_lta_headunit,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         any_of(exists(".1.3.6.1.4.1.27417.2.1"), exists(".1.3.6.1.4.1.27417.2.1.0")),

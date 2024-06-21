@@ -2,7 +2,6 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import (
     Permission,
@@ -26,7 +25,7 @@ def register(
                 "This permissions allows users to use Setup - Checkmk's "
                 "Web Administration Tool. Without this "
                 "permission all references to Setup (buttons, links, "
-                "snapins) will be invisible."
+                "snap-ins) will be invisible."
             ),
             defaults=["admin", "user"],
         )
@@ -96,9 +95,9 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="discard",
-            title=_l("Discard changes"),
+            title=_l("Revert changes"),
             description=_l(
-                "This permission allows to discard pending changes. Beware that this holds only for "
+                "This permission allows to revert pending changes. Beware that this holds only for "
                 "the user's own pending changes, not for those of other users (foreign changes)."
             ),
             defaults=["admin", "user"],
@@ -109,11 +108,11 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="discardforeign",
-            title=_l("Discard foreign changes"),
+            title=_l("Revert foreign changes"),
             description=_l(
                 "When several users work in parallel with Setup then several pending changes of "
                 "different users might pile up before changes are activated. Only with this permission "
-                "a user will be allowed to discard all pending changes, including foreign ones."
+                "a user will be allowed to revert all pending changes, including foreign ones."
             ),
             defaults=["admin"],
         )
@@ -123,7 +122,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="auditlog",
-            title=_l("Audit Log"),
+            title=_l("Audit log"),
             description=_l(
                 "Access to the historic audit log. "
                 "The currently pending changes can be seen by all users "
@@ -137,9 +136,9 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="clear_auditlog",
-            title=_l("Clear audit Log"),
+            title=_l("Archive audit log"),
             description=_l(
-                "Clear the entries of the audit log. To be able to clear the audit log "
+                "Archive the entries of the audit log. To be able to archive the audit log "
                 'a user needs the generic Setup permission "Make changes, perform actions", '
                 'the "View audit log" and this permission.'
             ),
@@ -233,7 +232,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="diag_host",
-            title=_l("Host Diagnostic"),
+            title=_l("Host diagnostic"),
             description=_l(
                 "Check whether or not the host is reachable, test the different methods "
                 "a host can be accessed, for example via agent, SNMPv1, SNMPv2 to find out "
@@ -524,7 +523,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="backups",
-            title=_l("Backup & Restore"),
+            title=_l("Backup & restore"),
             description=_l(
                 "Access to the module <i>Site backup</i>. Please note: a user with "
                 "write access to this module "
@@ -538,7 +537,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="pattern_editor",
-            title=_l("Logfile Pattern Analyzer"),
+            title=_l("Logfile pattern analyzer"),
             description=_l("Access to the module for analyzing and validating logfile patterns."),
             defaults=["admin", "user"],
         )
@@ -548,7 +547,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="icons",
-            title=_l("Manage Custom Icons"),
+            title=_l("Manage custom icons"),
             description=_l("Upload or delete custom icons"),
             defaults=["admin"],
         )
@@ -581,7 +580,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="download_agent_output",
-            title=_l("Download Agent Output / SNMP Walks"),
+            title=_l("Download agent output / SNMP walks"),
             description=_l(
                 "Allows to download the current agent output or SNMP walks of the monitored hosts."
             ),
@@ -628,11 +627,11 @@ def register(
             title=_l("Add or modify executables"),
             description=_l(
                 "There are different places in Checkmk where an admin can use the GUI to add "
-                "executable code to Checkmk. For example when configuring "
+                "executable code to a Checkmk site or agent. For example when configuring "
                 "datasource programs, the user inserts a command line for gathering monitoring data. "
                 "This command line is then executed during monitoring by Checkmk. Another example is "
                 "the upload of extension packages (MKPs). All these functions have in "
-                "common that the user provides data that is executed by Checkmk. "
+                "common that the user provides data that is executed by Checkmk or the agent. "
                 'If you want to ensure that your Setup users cannot "inject" arbitrary executables '
                 "into your Checkmk installation, you only need to remove this permission for them. "
                 "This permission is needed in addition to the other component related permissions. "
@@ -688,8 +687,8 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="check_plugins",
-            title=_l("Catalog of check plugins"),
-            description=_l("Use the catalog of check plugins."),
+            title=_l("Catalog of check plug-ins"),
+            description=_l("Use the catalog of check plug-ins."),
             defaults=["admin", "user"],
         )
     )

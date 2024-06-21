@@ -202,9 +202,9 @@ class Services(Table):
     description = Column(
         'description',
         col_type='string',
-        description='Service description',
+        description='Service name',
     )
-    """Service description"""
+    """Service name"""
 
     display_name = Column(
         'display_name',
@@ -755,23 +755,23 @@ class Services(Table):
     host_last_time_down = Column(
         'host_last_time_down',
         col_type='time',
-        description='The last time the host was DOWN (Unix timestamp)',
+        description='Last time the host was DOWN (Unix timestamp)',
     )
-    """The last time the host was DOWN (Unix timestamp)"""
+    """Last time the host was DOWN (Unix timestamp)"""
 
     host_last_time_unreachable = Column(
         'host_last_time_unreachable',
         col_type='time',
-        description='The last time the host was UNREACHABLE (Unix timestamp)',
+        description='Last time the host was UNREACHABLE (Unix timestamp)',
     )
-    """The last time the host was UNREACHABLE (Unix timestamp)"""
+    """Last time the host was UNREACHABLE (Unix timestamp)"""
 
     host_last_time_up = Column(
         'host_last_time_up',
         col_type='time',
-        description='The last time the host was UP (Unix timestamp)',
+        description='Last time the host was UP (Unix timestamp)',
     )
-    """The last time the host was UP (Unix timestamp)"""
+    """Last time the host was UP (Unix timestamp)"""
 
     host_latency = Column(
         'host_latency',
@@ -1052,6 +1052,13 @@ class Services(Table):
         description='Optional performance data of the last check',
     )
     """Optional performance data of the last check"""
+
+    host_performance_data = Column(
+        'host_performance_data',
+        col_type='dictdouble',
+        description='Optional performance data as a dict',
+    )
+    """Optional performance data as a dict"""
 
     host_plugin_output = Column(
         'host_plugin_output',
@@ -1392,30 +1399,30 @@ class Services(Table):
     last_time_critical = Column(
         'last_time_critical',
         col_type='time',
-        description='The last time the service was CRIT (Unix timestamp)',
+        description='Last time the service was CRIT (Unix timestamp)',
     )
-    """The last time the service was CRIT (Unix timestamp)"""
+    """Last time the service was CRIT (Unix timestamp)"""
 
     last_time_ok = Column(
         'last_time_ok',
         col_type='time',
-        description='The last time the service was OK (Unix timestamp)',
+        description='Last time the service was OK (Unix timestamp)',
     )
-    """The last time the service was OK (Unix timestamp)"""
+    """Last time the service was OK (Unix timestamp)"""
 
     last_time_unknown = Column(
         'last_time_unknown',
         col_type='time',
-        description='The last time the service was UNKNOWN (Unix timestamp)',
+        description='Last time the service was UNKNOWN (Unix timestamp)',
     )
-    """The last time the service was UNKNOWN (Unix timestamp)"""
+    """Last time the service was UNKNOWN (Unix timestamp)"""
 
     last_time_warning = Column(
         'last_time_warning',
         col_type='time',
-        description='The last time the service was WARN (Unix timestamp)',
+        description='Last time the service was WARN (Unix timestamp)',
     )
-    """The last time the service was WARN (Unix timestamp)"""
+    """Last time the service was WARN (Unix timestamp)"""
 
     latency = Column(
         'latency',
@@ -1578,6 +1585,13 @@ class Services(Table):
     )
     """Optional performance data of the last check"""
 
+    performance_data = Column(
+        'performance_data',
+        col_type='dictdouble',
+        description='Optional performance data as a dict',
+    )
+    """Optional performance data as a dict"""
+
     plugin_output = Column(
         'plugin_output',
         col_type='string',
@@ -1591,6 +1605,13 @@ class Services(Table):
         description='Whether there is a PNP4Nagios graph present for this object (-1/0/1)',
     )
     """Whether there is a PNP4Nagios graph present for this object (-1/0/1)"""
+
+    prediction_files = Column(
+        'prediction_files',
+        col_type='list',
+        description='List currently available predictions',
+    )
+    """List currently available predictions"""
 
     previous_hard_state = Column(
         'previous_hard_state',

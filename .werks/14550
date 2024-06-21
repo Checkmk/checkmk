@@ -1,4 +1,4 @@
-Title: <tt>mk_logwatch</tt> via bakery: Add <i>APPEND</i> option for message classification
+Title: mk_logwatch via bakery: Add APPEND option for message classification
 Class: fix
 Compatible: compat
 Component: agents

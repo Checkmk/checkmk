@@ -7,10 +7,9 @@ import hashlib
 
 import pytest
 
-from cmk.utils.encryption import Encrypter
-
 import cmk.gui.valuespec as vs
 from cmk.gui.http import request
+from cmk.gui.utils.encrypter import Encrypter
 
 from .utils import request_var
 
@@ -24,7 +23,7 @@ class TestValueSpecPassword:
         assert vs.Password().value_to_html("elon") == "******"
         assert vs.Password().value_to_html(None) == "none"
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         with request_var(p="smth"):
             assert vs.Password(encrypt_value=False).from_html_vars("p") == "smth"
 
@@ -32,7 +31,7 @@ class TestValueSpecPassword:
             assert vs.Password().from_html_vars("p") == "smth"
 
 
-def test_password_from_html_vars_initial_pw() -> None:
+def test_password_from_html_vars_initial_pw(request_context: None) -> None:
     request.set_var("pw_orig", "")
     request.set_var("pw", "abc")
     pw = vs.Password()
@@ -42,7 +41,7 @@ def test_password_from_html_vars_initial_pw() -> None:
 @pytest.mark.skipif(
     not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
 )
-def test_password_from_html_vars_unchanged_pw() -> None:
+def test_password_from_html_vars_unchanged_pw(request_context: None) -> None:
     request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
     request.set_var("pw", "")
     pw = vs.Password()
@@ -52,7 +51,7 @@ def test_password_from_html_vars_unchanged_pw() -> None:
 @pytest.mark.skipif(
     not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
 )
-def test_password_from_html_vars_change_pw() -> None:
+def test_password_from_html_vars_change_pw(request_context: None) -> None:
     request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
     request.set_var("pw", "xyz")
     pw = vs.Password()

@@ -6,6 +6,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
@@ -18,17 +19,6 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-
-
-def _item_spec_memory_simple():
-    return TextInput(
-        title=_("Module name or empty"),
-        help=_(
-            "Leave this empty for systems without modules, which just "
-            "have one global memory usage."
-        ),
-        allow_empty=True,
-    )
 
 
 def _parameter_valuespec_memory_simple() -> Dictionary:
@@ -116,12 +106,23 @@ def _parameter_valuespec_memory_simple() -> Dictionary:
 
 
 rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="memory_simple_single",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_memory_simple,
+        title=lambda: _("Main memory usage of simple devices with single services"),
+    )
+)
+
+
+rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="memory_simple",
         group=RulespecGroupCheckParametersOperatingSystem,
-        item_spec=_item_spec_memory_simple,
+        item_spec=lambda: TextInput(title=_("Module name"), allow_empty=True),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_memory_simple,
-        title=lambda: _("Main memory usage of simple devices"),
+        title=lambda: _("Main memory usage of simple devices with multiple services"),
     )
 )

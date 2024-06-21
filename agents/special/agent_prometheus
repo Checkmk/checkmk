@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.special_agents.agent_prometheus import main
+from cmk.plugins.prometheus.special_agents.agent_prometheus import main
 
 if __name__ == "__main__":
     sys.exit(main())

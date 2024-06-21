@@ -128,7 +128,9 @@ def load_mk_file(
         acquire_lock(path)
 
     try:
-        exec(path.read_bytes(), globals(), default)  # nosec B102 # BNS:aee528
+        exec(
+            compile(path.read_bytes(), path, "exec"), globals(), default
+        )  # nosec B102 # BNS:aee528
     except FileNotFoundError:
         pass
     except (MKTerminate, MKTimeout):
@@ -142,7 +144,7 @@ def load_mk_file(
 
 # A simple wrapper for cases where you only have to read a single value from a .mk file.
 def load_from_mk_file(path: Path | str, key: str, default: Any, lock: bool = False) -> Any:
-    return load_mk_file(path, {key: default}, lock=False)[key]
+    return load_mk_file(path, {key: default}, lock=lock)[key]
 
 
 def save_mk_file(path: Path | str, mk_content: str, add_header: bool = True) -> None:

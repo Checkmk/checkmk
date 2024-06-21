@@ -17,7 +17,6 @@ from cmk.utils.validatedstr import ValidatedString
 
 from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.checkengine.fetcher import HostKey
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider
 
@@ -25,13 +24,9 @@ __all__ = [
     "AggregatedResult",
     "CheckPlugin",
     "CheckPluginName",
-    "CheckPluginNameStr",
     "ConfiguredService",
     "ServiceID",
 ]
-
-
-CheckPluginNameStr = str
 
 
 class CheckPluginName(ValidatedString):
@@ -63,8 +58,7 @@ class ConfiguredService(NamedTuple):
     item: Item
     description: ServiceName
     parameters: TimespecificParameters
-    # Explicitly optional b/c enforced services don't have disocvered params.
-    discovered_parameters: LegacyCheckParameters | None
+    discovered_parameters: Mapping[str, object]
     service_labels: Mapping[str, ServiceLabel]
     is_enforced: bool
 
@@ -83,7 +77,6 @@ class ConfiguredService(NamedTuple):
 @dataclass(frozen=True)
 class AggregatedResult:
     service: ConfiguredService
-    submit: bool
     data_received: bool
     result: ServiceCheckResult
     cache_info: tuple[int, int] | None
@@ -96,8 +89,7 @@ class CheckFunction(Protocol):
         service: ConfiguredService,
         *,
         providers: Mapping[HostKey, Provider],
-    ) -> AggregatedResult:
-        ...
+    ) -> AggregatedResult: ...
 
 
 @dataclass(frozen=True)
@@ -106,3 +98,4 @@ class CheckPlugin:
     function: CheckFunction
     default_parameters: Mapping[str, object] | None
     ruleset_name: RuleSetName | None
+    discovery_ruleset_name: RuleSetName | None

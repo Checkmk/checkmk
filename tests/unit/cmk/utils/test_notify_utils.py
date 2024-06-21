@@ -4,13 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from pytest import MonkeyPatch
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import time_machine
+from pytest import MonkeyPatch
 
 import livestatus
 
-import cmk.utils.notify as notify
+from cmk.utils import notify
 
 
 class FakeLocalConnection:
@@ -26,7 +28,7 @@ class FakeLocalConnection:
 
 def test_log_to_history(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(livestatus, "LocalConnection", FakeLocalConnection)
-    with on_time("2018-04-15 16:50", "CET"):
+    with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))):
         notify.log_to_history("ä")
 
     assert FakeLocalConnection.sent_command == "[1523811000] LOG;ä"

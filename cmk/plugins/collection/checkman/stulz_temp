@@ -1,0 +1,15 @@
+title: STULZ Clima Unit: Temperatures
+agents: snmp
+catalog: hw/environment/stulz
+license: GPLv2
+distribution: check_mk
+description:
+ This plug-in polls the air temperature of all connected clima units on a stulz management.
+ It is possible to define levels for warning and critical temperature. The plug-in return
+ {CRIT} or {WARN} if the current temperatue is higher then one of the levels.
+
+item:
+ The type of the sensor (e.g. {{unit air}}, etc.) and the index of the sensor seperated by a {{-}}
+
+discovery:
+ One service is created for each device.

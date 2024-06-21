@@ -11,7 +11,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError, StringTable
 
 
 def inventory_oracle_crs_voting(info):
@@ -46,7 +47,12 @@ def check_oracle_crs_voting(_no_item, _no_params, info):
     return state, infotext
 
 
+def parse_oracle_crs_voting(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["oracle_crs_voting"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_crs_voting,
     service_name="ORA-GI Voting",
     discovery_function=inventory_oracle_crs_voting,
     check_function=check_oracle_crs_voting,

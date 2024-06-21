@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.enterasys import DETECT_ENTERASYS
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.plugins.lib.enterasys import DETECT_ENTERASYS
 
 
 def inventory_enterasys_cpu_util(info):
@@ -24,7 +25,12 @@ def check_enterasys_cpu_util(item, params, info):
     return None
 
 
+def parse_enterasys_cpu_util(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["enterasys_cpu_util"] = LegacyCheckDefinition(
+    parse_function=parse_enterasys_cpu_util,
     detect=DETECT_ENTERASYS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5624.1.2.49.1.1.1.1",

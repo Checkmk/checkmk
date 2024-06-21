@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iterator>
 #include <ranges>
+#include <ratio>
 #include <stdexcept>
 #include <system_error>
 

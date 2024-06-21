@@ -1,4 +1,4 @@
-Title: <tt>cisco_qos</tt>: Interpret thresholds correctly
+Title: cisco_qos: Interpret thresholds correctly
 Class: fix
 Compatible: compat
 Component: checks

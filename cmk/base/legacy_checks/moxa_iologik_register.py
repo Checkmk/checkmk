@@ -8,7 +8,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, SNMPTree, startswith
+
+from cmk.agent_based.v2 import all_of, SNMPTree, startswith, StringTable
 
 
 def inventory_iologik_register(info):
@@ -29,7 +30,12 @@ def check_iologik_register(item, params, info):
     return (3, "Register not found")
 
 
+def parse_moxa_iologik_register(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["moxa_iologik_register"] = LegacyCheckDefinition(
+    parse_function=parse_moxa_iologik_register,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8691."),
         startswith(".1.3.6.1.4.1.8691.10.2242.2.0", "E2242-T"),

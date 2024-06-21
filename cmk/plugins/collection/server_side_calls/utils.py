@@ -6,4 +6,3 @@
 from typing import Literal
 
 ProxyType = Literal["global", "environment", "url", "no_proxy"]
-SecretType = Literal["store", "password"]

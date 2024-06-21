@@ -2,37 +2,62 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from collections.abc import Mapping
+import traceback
+from collections.abc import Sequence
+from pathlib import Path
 
 from cmk.utils.debug import enabled as debug_enabled
 
+from cmk.gui.form_specs.vue.vue_lib import form_spec_registry
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.utils.rulespecs.legacy_converter import convert_to_legacy_rulespec
-from cmk.gui.utils.rulespecs.loader import load_api_v1_rulespecs
+from cmk.gui.utils import add_failed_plugin
+from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
+from cmk.gui.utils.rule_specs.loader import load_api_v1_rule_specs, LoadedRuleSpec
 from cmk.gui.watolib.rulespecs import rulespec_registry
-
-from cmk.rulesets.v1 import RuleSpec
 
 
 def load_plugins() -> None:
-    errors, loaded_rulespecs = load_api_v1_rulespecs(debug_enabled())
+    errors, loaded_rule_specs = load_api_v1_rule_specs(debug_enabled())
     if errors:
         logger.error("Error loading rulespecs: %s", errors)
+        for error in errors:
+            module_path = str(error).split(":", maxsplit=1)[0]
+            add_failed_plugin(
+                Path(module_path.replace(".", "/") + ".py"),
+                Path(__file__).stem,
+                module_path.split(".")[-1],
+                error,
+            )
 
-    register_plugins(loaded_rulespecs)
+    register_plugins(loaded_rule_specs)
 
 
-def register_plugins(loaded_rulespecs: Mapping[str, RuleSpec]) -> None:
-    for name, rulespec in loaded_rulespecs.items():
+def register_plugins(loaded_rule_specs: Sequence[LoadedRuleSpec]) -> None:
+    for loaded_rule_spec in loaded_rule_specs:
         try:
-            legacy_rulespec = convert_to_legacy_rulespec(rulespec, _)
+            legacy_rulespec = convert_to_legacy_rulespec(
+                loaded_rule_spec.rule_spec, loaded_rule_spec.edition_only, _
+            )
             if legacy_rulespec.name in rulespec_registry.keys():
                 logger.debug(
-                    "Duplicate rulespec '%s', keeping legacy rulespec", legacy_rulespec.name
+                    "Duplicate rule_spec '%s', keeping legacy rulespec", legacy_rulespec.name
                 )
                 continue
+            # This isn't actually a "real" registry
+            # Just some lookup for the experimental formspec rendering
+            form_spec_registry[loaded_rule_spec.rule_spec.name] = loaded_rule_spec
+
             rulespec_registry.register(legacy_rulespec)
         except Exception as e:
-            logger.error("Error converting to legacy rulespec '%s' : %s", name, e)
+            if debug_enabled():
+                raise e
+            logger.error(
+                "Error converting to legacy rulespec '%s' : %s", loaded_rule_spec.rule_spec.name, e
+            )
+            add_failed_plugin(
+                Path(traceback.extract_tb(e.__traceback__)[-1].filename),
+                Path(__file__).stem,
+                loaded_rule_spec.rule_spec.name,
+                e,
+            )

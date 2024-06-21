@@ -7,21 +7,25 @@ single Setup folder. The hosts can either be provided by uploading a CSV file or
 by pasting the contents of a CSV file into a textbox."""
 
 import csv
+import itertools
+import operator
 import time
+import typing
 import uuid
 from collections.abc import Collection
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
-import cmk.utils.store as store
+from cmk.utils import store
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 
 import cmk.gui.pages
-import cmk.gui.watolib.bakery as bakery
-import cmk.gui.weblib as weblib
+from cmk.gui import weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -49,12 +53,15 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.watolib.host_attributes import host_attribute_registry
-from cmk.gui.watolib.hosts_and_folders import folder_from_request
+from cmk.gui.watolib import bakery
+from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttributes
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
 from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
 
 # Was not able to get determine the type of csv._reader / _csv.reader
 CSVReader = Any
+
+ImportTuple = tuple[HostName, HostAttributes, None]
 
 from cmk.gui.watolib.mode import ModeRegistry
 
@@ -220,45 +227,131 @@ class ModeBulkImport(WatoMode):
         return csv.reader(csv_file, csv_dialect)
 
     def _import(self, csv_reader: CSVReader) -> ActionResult:
-        if self._has_title_line:
+        def _emit_raw_rows(_reader: CSVReader) -> typing.Generator[dict, None, None]:
+            if self._has_title_line:
+                try:
+                    next(_reader)  # skip header
+                except StopIteration:
+                    return
+
+            def _check_duplicates(_names: list[str | None]) -> None:
+                _attrs_seen = set()
+                for _name in _attr_names:
+                    if _name in _attrs_seen:
+                        raise MKUserError(
+                            None,
+                            _(
+                                'The attribute "%s" is assigned to multiple columns. '
+                                "You can not populate one attribute from multiple columns. "
+                                "The column to attribute associations need to be unique."
+                            )
+                            % _name,
+                        )
+                    _attrs_seen.add(_name)
+
+            # Determine the used attributes once. We also check for duplicates only once.
             try:
-                next(csv_reader)  # skip header
+                first_row = next(_reader)
             except StopIteration:
-                pass
+                return
 
-        num_succeeded, num_failed = 0, 0
-        fail_messages = []
-        selected = []
-        imported_hosts = []
-        folder = folder_from_request()
+            _attr_names = [request.var(f"attribute_{index}") for index in range(len(first_row))]
+            _check_duplicates(_attr_names)
+            yield dict(zip(_attr_names, first_row))
 
-        for row_num, row in enumerate(csv_reader):
-            if not row:
-                continue  # skip empty lines
+            for csv_row in _reader:
+                if not csv_row:
+                    continue  # skip empty lines
 
-            host_name, attributes = self._get_host_info_from_row(row, row_num)
-            try:
-                folder.create_hosts([(host_name, attributes, None)])
-                imported_hosts.append(host_name)
-                selected.append("_c_%s" % host_name)
-                num_succeeded += 1
-            except Exception as e:
-                fail_messages.append(
-                    _("Failed to create a host from line %d: %s") % (csv_reader.line_num, e)
-                )
-                num_failed += 1
+                yield dict(zip(_attr_names, csv_row))
+
+        def _transform_and_validate_raw_rows(
+            iterator: typing.Iterator[dict[str, str]]
+        ) -> typing.Generator[ImportTuple, None, None]:
+            """Here we transform each row into a tuple of HostName and HostAttributes and None.
+
+            This format is directly compatible with Folder().create_hosts(...)
+
+            Each attribute will be validated against it's corresponding ValueSpec.
+
+            Example:
+                Before:
+                    [{'alias': 'foo', 'host_name': 'foo_server', 'dummy_attr': '5'}]
+
+                After:
+                    [('foo_server', {'alias': 'foo', 'dummy_attr': '5'}, None)]
+
+            """
+            hostname_valuespec = Hostname()
+
+            class HostAttributeInstances(dict):
+                def __missing__(self, key):
+                    inst = host_attribute_registry[key]()
+                    self[key] = inst
+                    return inst
+
+            host_attributes = HostAttributeInstances()
+
+            for row_num, entry in enumerate(iterator):
+                _host_name: HostName | None = None
+                # keys are ordered in insert-first order, so we can derive col_num from the ordering
+                for col_num, (attr_name, attr_value) in enumerate(
+                    list(entry.items())
+                ):  # iterate on copy
+                    if attr_name == "host_name":
+                        hostname_valuespec.validate_value(attr_value, "host")
+                        # Remove host_name from attributes
+                        del entry["host_name"]
+                        _host_name = HostName(attr_value)
+                    elif attr_name in ("-", ""):
+                        # Don't import / No select
+                        del entry[attr_name]
+                    elif attr_name != "alias":
+                        host_attribute_inst = host_attributes[attr_name]
+
+                        if not attr_value.isascii():
+                            raise MKUserError(
+                                None,
+                                _('Non-ASCII characters are not allowed in the attribute "%s".')
+                                % attr_name,
+                            )
+                        try:
+                            host_attribute_inst.validate_input(attr_value, "")
+                        except MKUserError as exc:
+                            raise MKUserError(
+                                None,
+                                _("Invalid value in column %d (%s) of row %d: %s")
+                                % (col_num, attr_name, row_num, exc),
+                            ) from exc
+
+                if _host_name is None:
+                    raise MKUserError(
+                        None, _("The host name attribute needs to be assigned to a column.")
+                    )
+
+                yield _host_name, typing.cast(HostAttributes, entry), None
+
+        raw_rows = _emit_raw_rows(csv_reader)
+        host_attribute_tuples: typing.Iterator[ImportTuple] = _transform_and_validate_raw_rows(
+            raw_rows
+        )
+
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
+        imported_hosts, _failed_hosts, error_msgs = self._import_hosts_batched(
+            host_attribute_tuples,
+            folder=folder,
+            batch_size=100,
+        )
 
         bakery.try_bake_agents_for_hosts(imported_hosts)
 
         self._delete_csv_file()
 
-        msg = _("Imported %d hosts into the current folder.") % num_succeeded
-        if num_failed:
-            msg += "<br><br>" + (_("%d errors occured:") % num_failed)
-            msg += "<ul>"
-            for fail_msg in fail_messages:
-                msg += "<li>%s</li>" % fail_msg
-            msg += "</ul>"
+        num_succeeded = len(imported_hosts)
+        num_failed = len(error_msgs)
+
+        # We select all imported ones.
+        selected = [f"_c_{host_name}" for host_name in imported_hosts]
 
         folder_path = folder.path()
         if num_succeeded > 0 and request.var("do_service_detection") == "1":
@@ -278,69 +371,57 @@ class ModeBulkImport(WatoMode):
                     selection=weblib.selection_id(),
                 )
             )
+
+        msg = _("Imported %d hosts into the current folder.") % num_succeeded
+        if num_failed:
+            msg += "<br><br>" + (_("%d errors occured:") % num_failed)
+            msg += "<ul>"
+            for fail_msg in error_msgs:
+                msg += "<li>%s</li>" % fail_msg
+            msg += "</ul>"
+
         flash(msg)
         return redirect(mode_url("folder", folder=folder_path))
 
+    def _import_hosts_batched(
+        self,
+        host_attribute_tuples: typing.Iterator[ImportTuple],
+        *,
+        folder: Folder,
+        batch_size: int = 100,
+    ) -> tuple[list[HostName], list[HostName], list[str]]:
+        imported_hosts: list[HostName] = []
+        failed_hosts: list[HostName] = []
+        batch: tuple[ImportTuple, ...]
+
+        index = 0
+        fail_messages = []
+        for batch in itertools.batched(host_attribute_tuples, batch_size):
+            try:
+                # NOTE
+                # Folder.create_hosts will either import all of them, or no host at all. The
+                # caught exceptions below will only trigger during the verification phase.
+                folder.create_hosts(batch)
+                index += len(batch)
+                # First column is host_name. Add all of them.
+                imported_hosts.extend(map(operator.itemgetter(0), batch))
+            except (MKAuthException, MKUserError, MKGeneralException):
+                # We fall back to individual imports to determine the precise location of the error
+                for entry in batch:
+                    try:
+                        folder.create_hosts([entry])
+                        index += 1
+                        imported_hosts.append(entry[0])
+                    except (MKAuthException, MKUserError, MKGeneralException) as exc:
+                        failed_hosts.append(entry[0])
+                        fail_messages.append(
+                            _("Failed to create a host from line %d: %s") % (index, exc)
+                        )
+
+        return imported_hosts, failed_hosts, fail_messages
+
     def _delete_csv_file(self) -> None:
         self._file_path().unlink()
-
-    def _get_host_info_from_row(self, row, row_num):
-        host_name = None
-        attributes: dict[str, str] = {}
-        for col_num, value in enumerate(row):
-            if not value:
-                continue
-
-            attribute = request.var("attribute_%d" % col_num)
-            if attribute == "host_name":
-                Hostname().validate_value(value, "host")
-                host_name = value
-
-            elif attribute and attribute != "-":
-                if attribute in attributes:
-                    raise MKUserError(
-                        None,
-                        _(
-                            'The attribute "%s" is assigned to multiple columns. '
-                            "You can not populate one attribute from multiple columns. "
-                            "The column to attribute associations need to be unique."
-                        )
-                        % attribute,
-                    )
-
-                attr = host_attribute_registry[attribute]()
-
-                # TODO: The value handling here is incorrect. The correct way would be to use the
-                # host attributes from_html_vars and validate_input, just like collect_attributes()
-                # from cmk/gui/watolib/host_attributes.py is doing it.
-                # The problem here is that we get the value in a different way (from row instead of
-                # HTTP request vars) which from_html_vars can not work with.
-
-                if attribute == "alias":
-                    attributes[attribute] = value
-                else:
-                    if not value.isascii():
-                        raise MKUserError(
-                            None,
-                            _('Non-ASCII characters are not allowed in the attribute "%s".')
-                            % attribute,
-                        )
-
-                    try:
-                        attr.validate_input(value, "")
-                    except MKUserError as e:
-                        raise MKUserError(
-                            None,
-                            _("Invalid value in column %d (%s) of row %d: %s")
-                            % (col_num, attribute, row_num, e),
-                        )
-
-                    attributes[attribute] = value
-
-        if host_name is None:
-            raise MKUserError(None, _("The host name attribute needs to be assigned to a column."))
-
-        return host_name, attributes
 
     def page(self) -> None:
         if not request.has_var("file_id"):
@@ -349,18 +430,17 @@ class ModeBulkImport(WatoMode):
             self._preview()
 
     def _upload_form(self) -> None:
-        html.begin_form("upload", method="POST")
-        html.p(
-            _(
-                "Using this page you can import several hosts at once into the choosen folder. You can "
-                "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
-                "into the textarea or simply enter a list of hostnames (one per line) to the textarea."
+        with html.form_context("upload", method="POST"):
+            html.p(
+                _(
+                    "Using this page you can import several hosts at once into the choosen folder. You can "
+                    "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
+                    "into the textarea or simply enter a list of host names (one per line) to the textarea."
+                )
             )
-        )
 
-        self._vs_upload().render_input("_upload", None)
-        html.hidden_fields()
-        html.end_form()
+            self._vs_upload().render_input("_upload", None)
+            html.hidden_fields()
 
     def _vs_upload(self):
         return Dictionary(
@@ -388,85 +468,86 @@ class ModeBulkImport(WatoMode):
         )
 
     def _preview(self) -> None:
-        html.begin_form("preview", method="POST")
-        self._preview_form()
+        with html.form_context("preview", method="POST"):
+            self._preview_form()
 
-        attributes = self._attribute_choices()
+            attributes = self._attribute_choices()
 
-        # first line could be missing in situation of import error
-        csv_reader = self._open_csv_file()
-        if not csv_reader:
-            return  # don't try to show preview when CSV could not be read
+            # first line could be missing in situation of import error
+            csv_reader = self._open_csv_file()
+            if not csv_reader:
+                return  # don't try to show preview when CSV could not be read
 
-        html.h2(_("Preview"))
-        attribute_list = "<ul>%s</ul>" % "".join(
-            ["<li>%s (%s)</li>" % a for a in attributes if a[0] is not None]
-        )
-        html.help(
-            _(
-                "This list shows you the first 10 rows from your CSV file in the way the import is "
-                "currently parsing it. If the lines are not splitted correctly or the title line is "
-                "not shown as title of the table, you may change the import settings above and try "
-                "again."
+            html.h2(_("Preview"))
+            attribute_list = "<ul>%s</ul>" % "".join(
+                ["<li>%s (%s)</li>" % a for a in attributes if a[0] is not None]
             )
-            + "<br><br>"
-            + _(
-                "The first row below the titles contains fields to specify which column of the "
-                "CSV file should be imported to which attribute of the created hosts. The import "
-                "progress is trying to match the columns to attributes automatically by using the "
-                "titles found in the title row (if you have some). "
-                "If you use the correct titles, the attributes can be mapped automatically. The "
-                "currently available attributes are:"
-            )
-            + attribute_list
-            + _(
-                "You can change these assignments according to your needs and then start the "
-                "import by clicking on the <i>Import</i> button above."
-            )
-        )
-
-        # Wenn bei einem Host ein Fehler passiert, dann wird die Fehlermeldung zu dem Host angezeigt, so dass man sehen kann, was man anpassen muss.
-        # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
-        # erneut importieren kann.
-        if self._has_title_line:
-            try:
-                headers = list(next(csv_reader))
-            except StopIteration:
-                headers = []  # nope, there is no header
-        else:
-            headers = []
-
-        rows = list(csv_reader)
-
-        # Determine how many columns should be rendered by using the longest column
-        num_columns = max(len(r) for r in [headers] + rows)
-
-        with table_element(
-            sortable=False, searchable=False, omit_headers=not self._has_title_line
-        ) as table:
-            # Render attribute selection fields
-            table.row()
-            for col_num in range(num_columns):
-                header = headers[col_num] if len(headers) > col_num else None
-                table.cell(escape_to_html_permissive(header))
-                attribute_varname = "attribute_%d" % col_num
-                if request.var(attribute_varname):
-                    attribute_method = request.get_ascii_input_mandatory(attribute_varname)
-                else:
-                    attribute_method = self._try_detect_default_attribute(attributes, header)
-                    request.del_var(attribute_varname)
-
-                html.dropdown(
-                    "attribute_%d" % col_num, attributes, deflt=attribute_method, autocomplete="off"
+            html.help(
+                _(
+                    "This list shows you the first 10 rows from your CSV file in the way the import is "
+                    "currently parsing it. If the lines are not splitted correctly or the title line is "
+                    "not shown as title of the table, you may change the import settings above and try "
+                    "again."
                 )
+                + "<br><br>"
+                + _(
+                    "The first row below the titles contains fields to specify which column of the "
+                    "CSV file should be imported to which attribute of the created hosts. The import "
+                    "progress is trying to match the columns to attributes automatically by using the "
+                    "titles found in the title row (if you have some). "
+                    "If you use the correct titles, the attributes can be mapped automatically. The "
+                    "currently available attributes are:"
+                )
+                + attribute_list
+                + _(
+                    "You can change these assignments according to your needs and then start the "
+                    "import by clicking on the <i>Import</i> button above."
+                )
+            )
 
-            # Render sample rows
-            for row in rows:
+            # Wenn bei einem Host ein Fehler passiert, dann wird die Fehlermeldung zu dem Host angezeigt, so dass man sehen kann, was man anpassen muss.
+            # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
+            # erneut importieren kann.
+            if self._has_title_line:
+                try:
+                    headers = list(next(csv_reader))
+                except StopIteration:
+                    headers = []  # nope, there is no header
+            else:
+                headers = []
+
+            rows = list(csv_reader)
+
+            # Determine how many columns should be rendered by using the longest column
+            num_columns = max(len(r) for r in [headers] + rows)
+
+            with table_element(
+                sortable=False, searchable=False, omit_headers=not self._has_title_line
+            ) as table:
+                # Render attribute selection fields
                 table.row()
-                for cell in row:
-                    table.cell(None, cell)
+                for col_num in range(num_columns):
+                    header = headers[col_num] if len(headers) > col_num else None
+                    table.cell(escape_to_html_permissive(header))
+                    attribute_varname = "attribute_%d" % col_num
+                    if request.var(attribute_varname):
+                        attribute_method = request.get_ascii_input_mandatory(attribute_varname)
+                    else:
+                        attribute_method = self._try_detect_default_attribute(attributes, header)
+                        request.del_var(attribute_varname)
 
-        html.end_form()
+                    html.dropdown(
+                        "attribute_%d" % col_num,
+                        attributes,
+                        deflt=attribute_method,
+                        autocomplete="off",
+                    )
+
+                # Render sample rows
+                for row in rows:
+                    table.row()
+                    for cell in row:
+                        table.cell(None, cell)
 
     def _preview_form(self) -> None:
         if self._params is not None:
@@ -506,7 +587,7 @@ class ModeBulkImport(WatoMode):
         attributes = [
             (None, _("(please select)")),
             ("-", _("Don't import")),
-            ("host_name", _("Hostname")),
+            ("host_name", _("Host name")),
             ("alias", _("Alias")),
             ("site", _("Monitored on site")),
             ("ipaddress", _("IPv4 address")),

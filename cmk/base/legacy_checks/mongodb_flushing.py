@@ -11,9 +11,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store
+
+from cmk.agent_based.v2 import get_average, get_value_store, render, StringTable
 
 
 def inventory_mongodb_flushing(info):
@@ -65,7 +66,7 @@ def check_mongodb_flushing(_no_item, params, info):
     )
 
     yield 0, "Flushes since restart: %s" % flushed, [("flushed", flushed)]
-    yield 0, "Average flush time since restart: %s" % get_age_human_readable(avg_flush_time), [
+    yield 0, "Average flush time since restart: %s" % render.timespan(avg_flush_time), [
         ("avg_flush_time", avg_flush_time)
     ]
 
@@ -78,7 +79,12 @@ def _get_missing_keys(key_list, info_dict):
     return " and ".join(sorted(missing_keys))
 
 
+def parse_mongodb_flushing(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mongodb_flushing"] = LegacyCheckDefinition(
+    parse_function=parse_mongodb_flushing,
     service_name="MongoDB Flushing",
     discovery_function=inventory_mongodb_flushing,
     check_function=check_mongodb_flushing,

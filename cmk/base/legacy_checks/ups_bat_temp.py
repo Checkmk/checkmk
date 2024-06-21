@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
 
 
 def format_item_ups_bat_temp(name, new_format):
@@ -37,7 +38,12 @@ def check_ups_bat_temp(item, params, info):
     return None
 
 
+def parse_ups_bat_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ups_bat_temp"] = LegacyCheckDefinition(
+    parse_function=parse_ups_bat_temp,
     detect=DETECT_UPS_GENERIC,
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.33.1",

@@ -5,11 +5,10 @@
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import assert_never, Final, Literal
+from typing import assert_never, Final, Literal, TypedDict
 
 from azure.identity import ClientSecretCredential
 from azure.storage.blob import ContainerClient, LinearRetry
-from typing_extensions import TypedDict
 
 from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.utils.exceptions import MKGeneralException

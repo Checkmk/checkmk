@@ -84,11 +84,13 @@ source "azure-arm" "builder" {
   vm_size                             = "Standard_DS2_v2"
 }
 
+# https://cloud-images.ubuntu.com/locator/ec2/
+# filter for region=us-east-1, arch=amd64, version=latest lts
 source "amazon-ebs" "builder" {
   region        = "us-east-1"
   access_key    = var.aws_access_key
   secret_key    = var.aws_secret_key
-  source_ami    = "ami-00874d747dde814fa"
+  source_ami    = "ami-04ab94c703fb30101"
   instance_type = "t2.micro"
   ssh_username  = "ubuntu"
   ami_name      = var.aws_ami_name
@@ -117,8 +119,10 @@ build {
   # install ansible
   provisioner "shell" {
     inline = [
-      "sudo apt-get install -y -q software-properties-common python3-pip",
-      "sudo python3 -m pip install ansible==8.5.0",
+      "sudo apt-get install -y -q software-properties-common",
+      "sudo add-apt-repository --yes --update ppa:ansible/ansible",
+      "sudo apt-get update",
+      "sudo apt-get install -y -q ansible",
     ]
   }
   # run playbook

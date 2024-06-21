@@ -34,15 +34,16 @@ from cmk.gui.openapi.endpoints.acknowledgement.request_schemas import (
     AcknowledgeHostRelatedProblem,
     AcknowledgeServiceRelatedProblem,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.utils import permission_verification as permissions
 
 from cmk import fields
 
 SERVICE_DESCRIPTION = {
     "service_description": fields.String(
-        description="The service description.",
+        description="The service name.",
         example="Memory",
     )
 }

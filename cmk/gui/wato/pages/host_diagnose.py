@@ -4,18 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Verify or find out a hosts agent related configuration"""
 
+import base64
 import json
 from collections.abc import Collection
-from typing import NotRequired
-
-from typing_extensions import TypedDict
+from typing import NotRequired, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -32,6 +31,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -88,8 +88,10 @@ class ModeDiagHost(WatoMode):
         ]
 
     def _from_vars(self) -> None:
-        self._hostname = HostName(request.get_ascii_input_mandatory("host"))
-        self._host = folder_from_request().load_host(self._hostname)
+        self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
+        self._host = folder_from_request(request.var("folder"), self._hostname).load_host(
+            self._hostname
+        )
         self._host.permissions.need_permission("read")
 
         if self._host.is_cluster():
@@ -187,7 +189,9 @@ class ModeDiagHost(WatoMode):
                 mode_url(
                     "edit_host",
                     host=self._hostname,
-                    folder=folder_from_request().path(),
+                    folder=folder_from_request(
+                        request.var("folder"), request.get_ascii_input("host")
+                    ).path(),
                 )
             )
         return None
@@ -207,48 +211,47 @@ class ModeDiagHost(WatoMode):
         html.open_tr()
         html.open_td()
 
-        html.begin_form("diag_host", method="POST")
-        html.prevent_password_auto_completion()
+        with html.form_context("diag_host", method="POST"):
+            html.prevent_password_auto_completion()
 
-        forms.header(_("Host Properties"))
+            forms.header(_("Host Properties"))
 
-        forms.section(legend=False)
+            forms.section(legend=False)
 
-        # The diagnose page shows both SNMP variants at the same time
-        # We need to analyse the preconfigured community and set either the
-        # snmp_community or the snmp_v3_credentials
-        vs_dict: dict[str, object] = {}
-        for key, value in self._host.attributes.items():
-            if key == "snmp_community" and isinstance(value, tuple):
-                vs_dict["snmp_v3_credentials"] = value
-                continue
-            vs_dict[key] = value
+            # The diagnose page shows both SNMP variants at the same time
+            # We need to analyse the preconfigured community and set either the
+            # snmp_community or the snmp_v3_credentials
+            vs_dict: dict[str, object] = {}
+            for key, value in self._host.attributes.items():
+                if key == "snmp_community" and isinstance(value, tuple):
+                    vs_dict["snmp_v3_credentials"] = value
+                    continue
+                vs_dict[key] = value
 
-        vs_host = self._vs_host()
-        vs_host.render_input("vs_host", vs_dict)
-        html.help(vs_host.help())
+            vs_host = self._vs_host()
+            vs_host.render_input("vs_host", vs_dict)
+            html.help(vs_host.help())
 
-        forms.end()
+            forms.end()
 
-        html.open_div(style="margin-bottom:10px")
-        html.close_div()
+            html.open_div(style="margin-bottom:10px")
+            html.close_div()
 
-        forms.header(_("Options"))
+            forms.header(_("Options"))
 
-        value = {}
-        forms.section(legend=False)
-        vs_rules = self._vs_rules()
-        vs_rules.render_input("vs_rules", value)
-        html.help(vs_rules.help())
-        forms.end()
+            value = {}
+            forms.section(legend=False)
+            vs_rules = self._vs_rules()
+            vs_rules.render_input("vs_rules", value)
+            html.help(vs_rules.help())
+            forms.end()
 
-        # When clicking "Save & Test" on the "Edit host" page, this will be set
-        # to immediately execute the tests using the just saved settings
-        if request.has_var("_start_on_load"):
-            html.final_javascript("cmk.page_menu.form_submit('diag_host', '_save');")
+            # When clicking "Save & Test" on the "Edit host" page, this will be set
+            # to immediately execute the tests using the just saved settings
+            if request.has_var("_start_on_load"):
+                html.final_javascript("cmk.page_menu.form_submit('diag_host', '_save');")
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
         html.close_td()
         html.open_td(style="padding-left:10px;")
@@ -314,7 +317,7 @@ class ModeDiagHost(WatoMode):
                     "hostname",
                     FixedValue(
                         value=self._hostname,
-                        title=_("Hostname"),
+                        title=_("Host name"),
                     ),
                 ),
                 (
@@ -427,7 +430,7 @@ class PageAjaxDiagHost(AjaxPage):
 
         hostname = api_request.get("host")
         if not hostname:
-            raise MKGeneralException(_("The hostname is missing."))
+            raise MKGeneralException(_("The host name is missing."))
 
         host = Host.host(hostname)
 
@@ -480,7 +483,7 @@ class PageAjaxDiagHost(AjaxPage):
 
                 args[8] = snmpv3_auth_proto
                 args[9] = api_request.get("snmpv3_security_name", "")
-                args[10] = api_request.get("snmpv3_security_password", "")
+                args[10] = _decrypt_passwd(api_request.get("snmpv3_security_password", ""))
 
                 if snmpv3_use == "authPriv":
                     snmpv3_privacy_proto = {
@@ -492,7 +495,7 @@ class PageAjaxDiagHost(AjaxPage):
 
                     args[11] = snmpv3_privacy_proto
 
-                    args[12] = api_request.get("snmpv3_privacy_password", "")
+                    args[12] = _decrypt_passwd(api_request.get("snmpv3_privacy_password", ""))
             else:
                 args[9] = api_request.get("snmpv3_security_name", "")
 
@@ -507,3 +510,10 @@ class PageAjaxDiagHost(AjaxPage):
             "status_code": result.return_code,
             "output": result.response,
         }
+
+
+def _decrypt_passwd(encrypted_passwd: str) -> str:
+    try:
+        return Encrypter.decrypt(base64.b64decode(encrypted_passwd.encode("ascii")))
+    except Exception:
+        raise MKUserError(None, _("Decryption of SNMPv3 password failed."))

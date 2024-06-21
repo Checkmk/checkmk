@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import pytest
+import time_machine
 
 import cmk.gui.valuespec as vs
 
@@ -45,7 +47,7 @@ import cmk.gui.valuespec as vs
     ],
 )
 def test_timerange(entry: vs.TimerangeValue, result: tuple[tuple[int, int], str]) -> None:
-    with on_time("2019-09-05 16:50", "UTC"):
+    with time_machine.travel(datetime.datetime(2019, 9, 5, 16, 50, tzinfo=ZoneInfo("UTC"))):
         assert vs.Timerange.compute_range(entry) == vs.ComputedTimerange(*result)
 
 
@@ -73,5 +75,7 @@ def test_timerange(entry: vs.TimerangeValue, result: tuple[tuple[int, int], str]
 def test_timerange2(
     entry: vs.TimerangeValue, refutcdate: str, result: tuple[tuple[int, int], str]
 ) -> None:
-    with on_time(refutcdate, "UTC"):
+    with time_machine.travel(
+        datetime.datetime.fromisoformat(refutcdate).replace(tzinfo=ZoneInfo("UTC"))
+    ):
         assert vs.Timerange.compute_range(entry) == vs.ComputedTimerange(*result)

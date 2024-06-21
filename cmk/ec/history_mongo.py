@@ -7,14 +7,14 @@ import contextlib
 import datetime
 import os
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
-from typing import Any, assert_never, Literal
+from typing import Any, Literal
 
 from .config import Config
 from .event import Event
 from .history import _log_event, History
-from .query import QueryGET
+from .query import Columns, QueryFilter, QueryGET
 from .settings import Settings
 
 HistoryWhat = Literal[
@@ -34,8 +34,6 @@ HistoryWhat = Literal[
     "AUTODELETE",
     "CHANGESTATE",
 ]
-
-Columns = Sequence[tuple[str, float | int | str | list[object]]]
 
 
 class MongoDBHistory(History):
@@ -78,11 +76,7 @@ class MongoDBHistory(History):
             }
         )
 
-    def get(  # pylint: disable=too-many-branches
-        self, query: QueryGET
-    ) -> Iterable[Sequence[object]]:
-        filters, limit = query.filters, query.limit
-
+    def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
         history_entries = []
 
         if not self._mongodb.connection:
@@ -90,38 +84,7 @@ class MongoDBHistory(History):
 
         # Construct the mongodb filtering specification. We could fetch all information
         # and do filtering on this data, but this would be way too inefficient.
-        mongo_query = {}
-        for column_name, operator_name, _predicate, argument in filters:
-            if operator_name == "=":
-                mongo_filter: str | dict[str, str] = argument
-            elif operator_name == ">":
-                mongo_filter = {"$gt": argument}
-            elif operator_name == "<":
-                mongo_filter = {"$lt": argument}
-            elif operator_name == ">=":
-                mongo_filter = {"$gte": argument}
-            elif operator_name == "<=":
-                mongo_filter = {"$lte": argument}
-            elif operator_name == "~":  # case sensitive regex, find pattern in string
-                mongo_filter = {"$regex": argument, "$options": ""}
-            elif operator_name == "=~":  # case insensitive, match whole string
-                mongo_filter = {"$regex": argument, "$options": "mi"}
-            elif operator_name == "~~":  # case insensitive regex, find pattern in string
-                mongo_filter = {"$regex": argument, "$options": "i"}
-            elif operator_name == "in":
-                mongo_filter = {"$in": argument}
-            else:
-                assert_never(operator_name)
-
-            if column_name[:6] == "event_":
-                mongo_query["event." + column_name[6:]] = mongo_filter
-            elif column_name[:8] == "history_":
-                key = column_name[8:]
-                if key == "line":
-                    key = "_id"
-                mongo_query[key] = mongo_filter
-            else:
-                raise Exception(f"Filter {column_name} not implemented for MongoDB")
+        mongo_query = filters_to_mongo_query(query.filters)
 
         result = self._mongodb.db.ec_archive.find(mongo_query).sort("time", -1)
 
@@ -129,8 +92,8 @@ class MongoDBHistory(History):
         # open(cmk.utils.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
         #    pprint.pformat(filters) + '\n' + pprint.pformat(result.explain()) + '\n')
 
-        if limit:
-            result = result.limit(limit + 1)
+        if query.limit:
+            result = result.limit(query.limit + 1)
 
         # now convert the MongoDB data structure to the eventd internal one
         for entry in result:
@@ -152,9 +115,44 @@ class MongoDBHistory(History):
         """Not needed in mongo since the lifetime of DB entries is taken care automatically."""
 
     def _reload_configuration_mongodb(self) -> None:
-        """Configure the auto deleting indexes in the DB"""
+        """Configure the auto deleting indexes in the DB."""
         _update_mongodb_indexes(self._settings, self._mongodb)
         _update_mongodb_history_lifetime(self._settings, self._config, self._mongodb)
+
+    def close(self) -> None:
+        if self._mongodb.connection:
+            self._mongodb.connection.close()
+            self._mongodb.connection = None
+
+
+def filters_to_mongo_query(
+    filters: Iterable[QueryFilter],
+) -> dict[str, str | dict[str, str]]:
+    """Construct the mongodb filtering specification."""
+    mongo_query = {}
+    for f in filters:
+        mongo_filter: str | dict[str, str] = {
+            "=": f.argument,
+            ">": {"$gt": f.argument},
+            "<": {"$lt": f.argument},
+            ">=": {"$gte": f.argument},
+            "<=": {"$lte": f.argument},
+            "~": {"$regex": f.argument, "$options": ""},
+            "=~": {"$regex": f.argument, "$options": "mi"},
+            "~~": {"$regex": f.argument, "$options": "i"},
+            "in": {"$in": f.argument},
+        }[f.operator_name]
+
+        if f.column_name[:6] == "event_":
+            mongo_query["event." + f.column_name[6:]] = mongo_filter
+        elif f.column_name[:8] == "history_":
+            key = f.column_name[8:]
+            if key == "line":
+                key = "_id"
+            mongo_query[key] = mongo_filter
+        else:
+            raise Exception(f"Filter {f.column_name} not implemented for MongoDB")
+    return mongo_query
 
 
 try:
@@ -168,7 +166,7 @@ except ImportError:
 
 class MongoDB:
     def __init__(self) -> None:
-        self.connection: pymongo.MongoClient | None = None
+        self.connection: pymongo.MongoClient[Mapping[str, object]] | None = None
         self.db: Any = None
 
 

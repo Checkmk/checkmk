@@ -29,10 +29,9 @@ test_mk_redis_config() {
     assertEquals "-s /var/redis/redis.sock info" "${REDIS_ARGS[*]}"
 
     redis_args "IPHOST"
-    assertEquals "-h 127.0.0.1 -p 6380 -a MYPASSWORD info" "${REDIS_ARGS[*]}"
+    assertEquals "-h 127.0.0.1 -p 6380 info" "${REDIS_ARGS[*]}"
 
     assertEquals "-h" "${REDIS_ARGS[0]}"
-    assertEquals "MYPASSWORD" "${REDIS_ARGS[5]}"
 
 }
 

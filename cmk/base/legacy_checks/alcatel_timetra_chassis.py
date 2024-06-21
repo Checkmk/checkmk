@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 
 def inventory_alcatel_timetra_chassis(info):
@@ -63,7 +64,12 @@ def check_alcatel_timetra_chassis(item, _no_params, info):
             return
 
 
+def parse_alcatel_timetra_chassis(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["alcatel_timetra_chassis"] = LegacyCheckDefinition(
+    parse_function=parse_alcatel_timetra_chassis,
     detect=contains(".1.3.6.1.2.1.1.1.0", "TiMOS"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6527.3.1.2.2.1.8.1",

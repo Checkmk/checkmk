@@ -2,16 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import typing
 
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing._utils import MetricName
+from cmk.gui.graphing._valuespecs import MetricName
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,
     filter_kubernetes_namespace_element,
+    prometheus_connection,
 )
 from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
@@ -24,69 +24,15 @@ from cmk.gui.valuespec import (
     Hostname,
     ListChoice,
     ListOf,
-    Migrate,
-    NetworkPort,
     TextInput,
     Tuple,
 )
 from cmk.gui.wato import RulespecGroupVMCloudContainer
 
 
-def _deprecate_dynamic_host_adress(*value: object, **kwargs: object) -> typing.NoReturn:
-    raise MKUserError(None, _("The options IP Address and Host name are deprecated - Werk 14573."))
-
-
 def _check_not_empty_exporter_dict(value, _varprefix):
     if not value:
         raise MKUserError("dict_selection", _("Please select at least one element"))
-
-
-def _rename_path_prefix_key(connection_elements: dict[str, object]) -> dict[str, object]:
-    if (prefix := connection_elements.pop("path-prefix", None)) is not None:
-        connection_elements["base_prefix"] = prefix
-    return connection_elements
-
-
-def _valuespec_connection_elements(  # pylint: disable=redefined-builtin
-    help: str,
-) -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                ("port", NetworkPort(title=_("Port"), default_value=6443)),
-                (
-                    "path_prefix",
-                    TextInput(
-                        title=_("Custom path prefix"),
-                        help=_(
-                            "Specifies a URL path prefix, which is prepended to API calls "
-                            "to the Prometheus API. If this option is not relevant for "
-                            "your installation, please leave it unchecked."
-                        ),
-                        allow_empty=False,
-                    ),
-                ),
-                (
-                    "base_prefix",
-                    TextInput(
-                        title=_("Custom URL base prefix"),
-                        help=_(
-                            "Specifies a prefix, which is prepended to the hostname "
-                            "or base address. This is an exotic option, which is "
-                            "kept for legacy reasons. Consider using a custom URL instead. "
-                            "If this option is not relevant for your installation, "
-                            "please leave it unchecked."
-                        ),
-                        allow_empty=False,
-                    ),
-                ),
-            ],
-            show_more_keys=["base_prefix"],
-            help=help,
-        ),
-        migrate=_rename_path_prefix_key,
-        validate=_deprecate_dynamic_host_adress,
-    )
 
 
 def _valuespec_generic_metrics_prometheus() -> Dictionary:
@@ -97,9 +43,9 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
             help=_(
                 "If a cluster uses multiple namespaces you need to activate this option. "
                 "Hosts for namespaced Kubernetes objects will then be prefixed with the "
-                "name of their namespace. This makes Kubernetes resources in different "
+                "names of their namespaces. This makes Kubernetes resources in different "
                 "namespaces that have the same name distinguishable, but results in "
-                "longer hostnames."
+                "longer host names."
             ),
             choices=[
                 ("use_namespace", _("Use a namespace prefix")),
@@ -110,51 +56,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
 
     return Dictionary(
         elements=[
-            (
-                "connection",
-                CascadingDropdown(
-                    choices=[
-                        (
-                            "ip_address",
-                            _("(deprecated) IP Address"),
-                            _valuespec_connection_elements(
-                                help=_("Use IP Address of assigned host")
-                            ),
-                        ),
-                        (
-                            "host_name",
-                            _("(deprecated) Host name"),
-                            _valuespec_connection_elements(
-                                help=_("Use host name of assigned host")
-                            ),
-                        ),
-                        (
-                            "url_custom",
-                            _("Custom URL"),
-                            Dictionary(
-                                elements=[
-                                    (
-                                        "url_address",
-                                        TextInput(
-                                            title=_("Custom URL server address"),
-                                            help=_(
-                                                "Specify a custom URL to connect to "
-                                                "your server. Do not include the "
-                                                "protocol. This option overwrites "
-                                                "all available options such as port and "
-                                                "other URL prefixes."
-                                            ),
-                                            allow_empty=False,
-                                        ),
-                                    )
-                                ],
-                                optional_keys=[],
-                            ),
-                        ),
-                    ],
-                    title=_("Prometheus connection option"),
-                ),
-            ),
+            ("connection", prometheus_connection()),
             tls_verify_flag_default_no(),
             api_request_authentication(),
             (
@@ -185,7 +87,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                                                 help=_(
                                                     "Per default, Checkmk tries to map the underlying Checkmk host "
                                                     "to the Node Exporter host which contains either the Checkmk "
-                                                    'hostname, host address or "localhost" in its endpoint address. '
+                                                    'host name, host address or "localhost" in its endpoint address. '
                                                     "The created services of the mapped Node Exporter will "
                                                     "be assigned to the Checkmk host. A piggyback host for each "
                                                     "Node Exporter host will be created if none of the options are "
@@ -302,7 +204,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                                                     (
                                                         "both",
                                                         _(
-                                                            "Both - Display the information for both, pod and container, levels"
+                                                            "Both - Display the information for both pod and container levels"
                                                         ),
                                                         Dictionary(
                                                             elements=[
@@ -514,7 +416,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                         optional_keys=["host_name"],
                     ),
                     title=_("Service creation using PromQL queries"),
-                    add_label=_("Add new Service"),
+                    add_label=_("Add new service"),
                 ),
             ),
         ],

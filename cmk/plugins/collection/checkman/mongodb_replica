@@ -1,0 +1,16 @@
+title: MongoDB: Replica Info
+agents: linux
+catalog: app/mongodb
+license: GPLv2
+distribution: check_mk
+description:
+ This check shows the primary, secondary and arbiter hosts from a MongoDB cluster.
+
+ If the replica set does not have a primary node, the check will report a warning.
+
+ Note: If the MongoDB is running as a replica set, this check is not discovered
+ on the same host where the {mk_mongodb} plug-in is installed. The data is piggybacked
+ to a pseudo host named after the replica set name instead.
+
+discovery:
+ One service is created.

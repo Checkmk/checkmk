@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_statgrab_cpu(info):
     if len(info) > 1:
@@ -41,7 +43,12 @@ def check_statgrab_cpu(_no_item, params, info):
     return check_cpu_util_unix(values, params)
 
 
+def parse_statgrab_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["statgrab_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_statgrab_cpu,
     service_name="CPU utilization",
     discovery_function=inventory_statgrab_cpu,
     check_function=check_statgrab_cpu,

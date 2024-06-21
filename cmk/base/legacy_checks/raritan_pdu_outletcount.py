@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, any_of, SNMPTree, startswith
+
+from cmk.agent_based.v2 import all_of, any_of, SNMPTree, startswith, StringTable
 
 
 def inventory_raritan_pdu_outletcount(info):
@@ -24,7 +25,12 @@ def check_raritan_pdu_outletcount(item, params, info):
         pass
 
 
+def parse_raritan_pdu_outletcount(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["raritan_pdu_outletcount"] = LegacyCheckDefinition(
+    parse_function=parse_raritan_pdu_outletcount,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.6"),
         any_of(

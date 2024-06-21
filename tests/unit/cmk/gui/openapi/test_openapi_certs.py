@@ -197,6 +197,7 @@ def test_csr_200(
     )
 
 
+@pytest.mark.usefixtures("patch_theme")
 def test_agent_controller_certificates_settings_ok(
     logged_in_admin_wsgi_app: WebTestAppForCMK,
 ) -> None:
@@ -209,6 +210,7 @@ def test_agent_controller_certificates_settings_ok(
     ) == {"lifetime_in_months"}
 
 
+@pytest.mark.usefixtures("patch_theme")
 def test_agent_controller_certificates_settings_unauthorized(
     logged_in_wsgi_app: WebTestAppForCMK,
 ) -> None:

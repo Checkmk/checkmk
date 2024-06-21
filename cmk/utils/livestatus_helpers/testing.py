@@ -230,7 +230,7 @@ class MockLiveStatusConnection:
             ...      pass
             Traceback (most recent call last):
             ...
-            livestatus.LivestatusTestingError: Expected queries were not queried on site 'NO_SITE':
+            cmk.livestatus_client.LivestatusTestingError: Expected queries were not queried on site 'NO_SITE':
              * 'GET status\\nColumns: livestatus_version program_version \
 program_start num_hosts num_services max_long_output_size core_pid edition'
             <BLANKLINE>
@@ -244,7 +244,7 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
             ...     live.result_of_next_query("Foo bar!")
             Traceback (most recent call last):
             ...
-            livestatus.LivestatusTestingError: Expected query (strict) on site 'NO_SITE':
+            cmk.livestatus_client.LivestatusTestingError: Expected query (strict) on site 'NO_SITE':
              * 'Hello world!'
             Got query:
              * 'Foo bar!'
@@ -260,7 +260,7 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
             ...     live.result_of_next_query("Spanish inquisition!")
             Traceback (most recent call last):
             ...
-            livestatus.LivestatusTestingError: Got unexpected query on site 'NO_SITE':
+            cmk.livestatus_client.LivestatusTestingError: Got unexpected query on site 'NO_SITE':
              * 'Spanish inquisition!'
             <BLANKLINE>
             The following queries were sent to site NO_SITE:
@@ -894,7 +894,9 @@ def _compare(expected: str, query: str, match_type: MatchType) -> bool:
     elif match_type == "strict":
         result = expected == query
     elif match_type == "ellipsis":
-        final_pattern = expected.replace("[", "\\[").replace("...", ".*?")  # non-greedy match
+        final_pattern = (
+            expected.replace("[", "\\[").replace("+", "\\+").replace("...", ".*?")
+        )  # non-greedy match
         result = bool(re.match(f"^{final_pattern}$", query))
     else:
         raise LivestatusTestingError(f"Unsupported match behaviour: {match_type}")
@@ -946,7 +948,7 @@ def evaluate_stats(query: str, columns: list[ColumnName], result: ResultList) ->
             ...                [{'state': 1}, {'state': 2}, {'state': 1}])
             Traceback (most recent call last):
             ...
-            livestatus.LivestatusTestingError: Stats combinators are not yet implemented!
+            cmk.livestatus_client.LivestatusTestingError: Stats combinators are not yet implemented!
 
         Non-contiguous results don't throw the grouper off-track.
 
@@ -1229,6 +1231,7 @@ OPERATORS: dict[str, OperatorFunc] = {
     ">=": cast_down(operator.ge),
     "<=": cast_down(operator.le),
     "~": match_regexp,
+    "~~": operator.contains,
 }
 """A dict of all implemented comparison operators."""
 
@@ -1280,7 +1283,8 @@ def make_filter_func(line: str) -> FilterKeyFunc:
             >>> f = make_filter_func("Filter: name !! heute")
             Traceback (most recent call last):
             ...
-            livestatus.LivestatusTestingError: Operator '!!' not implemented. Please check docs or implement.
+            cmk.livestatus_client.LivestatusTestingError: Operator '!!' not \
+implemented. Please check docs or implement.
 
 
     """
@@ -1426,9 +1430,12 @@ def _unpack_headers(query: str) -> dict[str, str]:
 @contextmanager
 def mock_livestatus_communication() -> Iterator[MockLiveStatusConnection]:
     live = MockLiveStatusConnection()
-    with mock.patch(
-        "livestatus.MultiSiteConnection.expect_query", new=live.expect_query, create=True
-    ), mock.patch("livestatus.SingleSiteConnection._create_socket", new=live.create_socket):
+    with (
+        mock.patch(
+            "livestatus.MultiSiteConnection.expect_query", new=live.expect_query, create=True
+        ),
+        mock.patch("livestatus.SingleSiteConnection._create_socket", new=live.create_socket),
+    ):
         yield live
 
 

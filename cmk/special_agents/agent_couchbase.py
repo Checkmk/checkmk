@@ -12,8 +12,8 @@ from typing import Any, TypeVar
 
 import requests
 
-from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 LOGGER = logging.getLogger(__name__)
 
@@ -354,11 +354,13 @@ def couchbase_main(args: Args) -> int:
         port=args.port,
         timeout=args.timeout,
         credentials=(
-            args.username,
-            args.password,
-        )
-        if args.username and args.password
-        else None,
+            (
+                args.username,
+                args.password,
+            )
+            if args.username and args.password
+            else None
+        ),
     )
 
     try:

@@ -32,8 +32,8 @@ class NotificationParameterJiraIssues(NotificationParameter):
                 (
                     "url",
                     HTTPUrl(
-                        title=_("JIRA URL"),
-                        help=_("Configure the JIRA URL here."),
+                        title=_("Jira URL"),
+                        help=_("Configure the Jira URL here."),
                     ),
                 ),
                 (
@@ -70,7 +70,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                     TextInput(
                         title=_("Project ID"),
                         help=_(
-                            "The numerical JIRA project ID. If not set, it will be retrieved from a "
+                            "The numerical Jira project ID. If not set, it will be retrieved from a "
                             "custom user attribute named <tt>jiraproject</tt>. "
                             "If that is not set, the notification will fail."
                         ),
@@ -82,7 +82,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                     TextInput(
                         title=_("Issue type ID"),
                         help=_(
-                            "The numerical JIRA issue type ID. If not set, it will be retrieved from a "
+                            "The numerical Jira issue type ID. If not set, it will be retrieved from a "
                             "custom user attribute named <tt>jiraissuetype</tt>. "
                             "If that is not set, the notification will fail."
                         ),
@@ -93,7 +93,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                     "host_customid",
                     TextInput(
                         title=_("Host custom field ID"),
-                        help=_("The numerical JIRA custom field ID for host problems."),
+                        help=_("The numerical Jira custom field ID for host problems."),
                         size=10,
                     ),
                 ),
@@ -101,7 +101,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                     "service_customid",
                     TextInput(
                         title=_("Service custom field ID"),
-                        help=_("The numerical JIRA custom field ID for service problems."),
+                        help=_("The numerical Jira custom field ID for service problems."),
                         size=10,
                     ),
                 ),
@@ -110,10 +110,10 @@ class NotificationParameterJiraIssues(NotificationParameter):
                     TextInput(
                         title=_("Site custom field ID"),
                         help=_(
-                            "The numerical ID of the JIRA custom field for sites. "
+                            "The numerical ID of the Jira custom field for sites. "
                             "Please use this option if you have multiple sites in a "
                             "distributed setup which send their notifications "
-                            "to the same JIRA instance."
+                            "to the same Jira instance."
                         ),
                         size=10,
                     ),
@@ -123,8 +123,8 @@ class NotificationParameterJiraIssues(NotificationParameter):
                     HTTPUrl(
                         title=_("Monitoring URL"),
                         help=_(
-                            "Configure the base URL for the Monitoring Web-GUI here. Include the site name. "
-                            "Used for link to check_mk out of jira."
+                            "Configure the base URL for the monitoring web-GUI here. Include the site name. "
+                            "Used for link to Checkmk out of Jira."
                         ),
                     ),
                 ),
@@ -133,7 +133,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                     TextInput(
                         title=_("Priority ID"),
                         help=_(
-                            "The numerical JIRA priority ID. If not set, it will be retrieved from a "
+                            "The numerical Jira priority ID. If not set, it will be retrieved from a "
                             "custom user attribute named <tt>jirapriority</tt>. "
                             "If that is not set, the standard priority will be used."
                         ),
@@ -180,7 +180,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                     TextInput(
                         title=_("Activate resolution with following resolution transition ID"),
                         help=_(
-                            "The numerical JIRA resolution transition ID. "
+                            "The numerical Jira resolution transition ID. "
                             "11 - 'To Do', 21 - 'In Progress', 31 - 'Done'"
                         ),
                         size=3,
@@ -189,7 +189,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                 (
                     "timeout",
                     TextInput(
-                        title=_("Set optional timeout for connections to JIRA"),
+                        title=_("Set optional timeout for connections to Jira"),
                         help=_("Here you can configure timeout settings."),
                         default_value="10",
                     ),

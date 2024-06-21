@@ -16,7 +16,7 @@ import time
 from email.message import Message as POPIMAPMessage
 from pathlib import Path
 
-from exchangelib import Message as EWSMessage  # type: ignore[import]
+from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
 from cmk.utils.mailbox import (
     active_check_main,
@@ -111,7 +111,7 @@ def syslog_time(localtime: time.struct_time = time.localtime()) -> str:
 def _get_imap_or_pop_log_line(msg: POPIMAPMessage, body_limit: int) -> str:
     subject = msg.get("Subject", "None")
     encoding = msg.get("Content-Transfer-Encoding", "None")
-    payload = msg.get_payload()
+    payload = str(msg.get_payload())
 
     # Add the body to the event
     if msg.is_multipart():
@@ -121,9 +121,10 @@ def _get_imap_or_pop_log_line(msg: POPIMAPMessage, body_limit: int) -> str:
             disposition = str(part.get("Content-Disposition"))
             encoding = part.get("Content-Transfer-Encoding", "None")
             if content_type == "text/plain" and "attachment" not in disposition:
-                payload = part.get_payload()
+                payload = str(part.get_payload())
 
     if encoding == "base64":
+        # bytes -> str conversion with str() is brutal...
         payload = str(base64.b64decode(payload))
     return subject + " | " + payload[:body_limit]
 
@@ -181,7 +182,7 @@ def forward_to_ec(args: Args, messages: list[str]) -> CheckResult:
         if not description:
             return "%s/tmp/run/mkeventd/eventsocket" % os.getenv("OMD_ROOT", "")
         if description == "spool:":
-            return "spool: %s/var/mkeventd/spool" % os.getenv("OMD_ROOT", "")
+            return "spool:%s/var/mkeventd/spool" % os.getenv("OMD_ROOT", "")
         if "," in description:
             prot_addr_port = description.split(",")
             return prot_addr_port[0], prot_addr_port[1], prot_addr_port[3]

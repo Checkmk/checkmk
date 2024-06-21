@@ -11,8 +11,8 @@ from cmk.base.check_legacy_includes.huawei_switch import huawei_item_dict_from_e
 from cmk.base.config import check_info
 
 # mypy: disable-error-code="var-annotated"
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, render, SNMPTree
-from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_SWITCH
+from cmk.agent_based.v2 import OIDEnd, render, SNMPTree
+from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
 
 HuaweiFanData = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "HuaweiFanData", "fan_present fan_speed"

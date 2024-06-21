@@ -3,7 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
+# pylint: disable=protected-access
+
+from collections import Counter
+from collections.abc import Mapping, Sequence
+from typing import Literal
 
 import pytest
 
@@ -13,15 +17,36 @@ from cmk.utils.metrics import MetricName
 
 import cmk.gui.graphing._utils as utils
 from cmk.gui.config import active_config
-from cmk.gui.graphing._expression import CriticalOf, Metric, MetricExpression, WarningOf
+from cmk.gui.graphing._expression import (
+    Constant,
+    CriticalOf,
+    Difference,
+    Fraction,
+    Maximum,
+    MaximumOf,
+    Metric,
+    Minimum,
+    MinimumOf,
+    Product,
+    Sum,
+    WarningOf,
+)
+from cmk.gui.graphing._type_defs import UnitInfo
 from cmk.gui.graphing._utils import (
+    _compute_predictive_metrics,
     _NormalizedPerfData,
     AutomaticDict,
     MetricDefinition,
+    MetricInfoExtended,
+    metrics_from_api,
     TranslationInfo,
 )
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
+
+from cmk.graphing.v1 import graphs, metrics, Title
+
+UNIT = metrics.Unit(metrics.DecimalNotation(""))
 
 
 @pytest.mark.parametrize(
@@ -41,16 +66,34 @@ def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
     "perf_str, check_command, result",
     [
         ("", None, ([], "")),
-        ("hi=6 [ihe]", "ter", ([PerfDataTuple("hi", 6, "", None, None, None, None)], "ihe")),
+        (
+            "hi=6 [ihe]",
+            "ter",
+            (
+                [
+                    PerfDataTuple("hi", "hi", 6, "", None, None, None, None),
+                ],
+                "ihe",
+            ),
+        ),
         ("hi=l6 [ihe]", "ter", ([], "ihe")),
-        ("hi=6 [ihe]", "ter", ([PerfDataTuple("hi", 6, "", None, None, None, None)], "ihe")),
+        (
+            "hi=6 [ihe]",
+            "ter",
+            (
+                [
+                    PerfDataTuple("hi", "hi", 6, "", None, None, None, None),
+                ],
+                "ihe",
+            ),
+        ),
         (
             "hi=5 no=6",
             "test",
             (
                 [
-                    PerfDataTuple("hi", 5, "", None, None, None, None),
-                    PerfDataTuple("no", 6, "", None, None, None, None),
+                    PerfDataTuple("hi", "hi", 5, "", None, None, None, None),
+                    PerfDataTuple("no", "no", 6, "", None, None, None, None),
                 ],
                 "test",
             ),
@@ -60,8 +103,8 @@ def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
             "test",
             (
                 [
-                    PerfDataTuple("hi", 5, "", 6, 7, 8, 9),
-                    PerfDataTuple("not_here", 6, "", 5.6, None, None, None),
+                    PerfDataTuple("hi", "hi", 5, "", 6, 7, 8, 9),
+                    PerfDataTuple("not_here", "not_here", 6, "", 5.6, None, None, None),
                 ],
                 "test",
             ),
@@ -71,8 +114,8 @@ def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
             "test",
             (
                 [
-                    PerfDataTuple("hi", 5, "G", None, None, None, None),
-                    PerfDataTuple("not_here", 6, "M", 5.6, None, None, None),
+                    PerfDataTuple("hi", "hi", 5, "G", None, None, None, None),
+                    PerfDataTuple("not_here", "not_here", 6, "M", 5.6, None, None, None),
                 ],
                 "test",
             ),
@@ -80,7 +123,12 @@ def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
         (
             "11.26=6;;;;",
             "check_mk-local",
-            ([PerfDataTuple("11.26", 6, "", None, None, None, None)], "check_mk-local"),
+            (
+                [
+                    PerfDataTuple("11.26", "11.26", 6, "", None, None, None, None),
+                ],
+                "check_mk-local",
+            ),
         ),
     ],
 )
@@ -89,12 +137,12 @@ def test_parse_perf_data(
     check_command: str | None,
     result: tuple[Perfdata, str],
 ) -> None:
-    assert utils.parse_perf_data(perf_str, check_command) == result
+    assert utils.parse_perf_data(perf_str, check_command, config=active_config) == result
 
 
 def test_parse_perf_data2(request_context: None, set_config: SetConfig) -> None:
     with pytest.raises(ValueError), set_config(debug=True):
-        utils.parse_perf_data("hi ho", None)
+        utils.parse_perf_data("hi ho", None, config=active_config)
 
 
 @pytest.mark.parametrize(
@@ -155,7 +203,7 @@ def test_find_matching_translation(
     "perf_data, check_command, result",
     [
         (
-            PerfDataTuple("in", 496876.200933, "", None, None, 0, 125000000),
+            PerfDataTuple("in", "in", 496876.200933, "", None, None, 0, 125000000),
             "check_mk-lnx_if",
             (
                 "if_in_bps",
@@ -169,7 +217,7 @@ def test_find_matching_translation(
             ),
         ),
         (
-            PerfDataTuple("fast", 5, "", 4, 9, 0, 10),
+            PerfDataTuple("fast", "fast", 5, "", 4, 9, 0, 10),
             "check_mk-imaginary",
             (
                 "fast",
@@ -188,99 +236,6 @@ def test__normalize_perf_data(
     perf_data: PerfDataTuple, check_command: str, result: tuple[str, _NormalizedPerfData]
 ) -> None:
     assert utils._normalize_perf_data(perf_data, check_command) == result
-
-
-@pytest.mark.parametrize(
-    ["canonical_name", "current_version", "all_translations", "expected_result"],
-    [
-        pytest.param(
-            MetricName("my_metric"),
-            123,
-            [
-                {
-                    MetricName("some_metric_1"): {"scale": 10},
-                    MetricName("some_metric_2"): {
-                        "scale": 10,
-                        "name": MetricName("new_metric_name"),
-                    },
-                }
-            ],
-            {MetricName("my_metric")},
-            id="no applicable translations",
-        ),
-        pytest.param(
-            MetricName("my_metric"),
-            2030020100,
-            [
-                {
-                    MetricName("some_metric_1"): {"scale": 10},
-                    MetricName("old_name_1"): {
-                        "scale": 10,
-                        "name": MetricName("my_metric"),
-                    },
-                },
-                {
-                    MetricName("old_name_1"): {
-                        "name": MetricName("my_metric"),
-                    },
-                },
-                {
-                    MetricName("old_name_2"): {
-                        "name": MetricName("my_metric"),
-                    },
-                    MetricName("irrelevant"): {"name": MetricName("still_irrelevant")},
-                },
-                {
-                    MetricName("old_name_deprecated"): {
-                        "name": MetricName("my_metric"),
-                        "deprecated": "2.0.0i1",
-                    },
-                },
-            ],
-            {
-                MetricName("my_metric"),
-                MetricName("old_name_1"),
-                MetricName("old_name_2"),
-            },
-            id="some applicable and one deprecated translation",
-        ),
-        pytest.param(
-            MetricName("my_metric"),
-            2030020100,
-            [
-                {
-                    MetricName("old_name_1"): {
-                        "name": MetricName("my_metric"),
-                    },
-                },
-                {
-                    "~.*expr": {
-                        "name": MetricName("my_metric"),
-                    },
-                },
-            ],
-            {
-                MetricName("my_metric"),
-                MetricName("old_name_1"),
-            },
-            id="regex translation",
-        ),
-    ],
-)
-def test_reverse_translate_into_all_potentially_relevant_metrics(
-    canonical_name: MetricName,
-    current_version: int,
-    all_translations: Iterable[Mapping[MetricName, utils.CheckMetricEntry]],
-    expected_result: frozenset[MetricName],
-) -> None:
-    assert (
-        utils.reverse_translate_into_all_potentially_relevant_metrics(
-            canonical_name,
-            current_version,
-            all_translations,
-        )
-        == expected_result
-    )
 
 
 @pytest.mark.parametrize(
@@ -331,16 +286,428 @@ def test_reverse_translate_into_all_potentially_relevant_metrics(
                 "aws_ec2_running_ondemand_instances_t2.nano",
             ],
             "check_mk-aws_ec2_limits",
-            ["aws_ec2_running_ondemand_instances"],
+            ["aws_ec2_running_ondemand_instances", "aws_ec2_running_ondemand_instances_t2"],
         ),
     ],
 )
 def test_get_graph_templates(
     metric_names: Sequence[str], check_command: str, graph_ids: Sequence[str]
 ) -> None:
-    perfdata: Perfdata = [PerfDataTuple(n, 0, "", None, None, None, None) for n in metric_names]
+    perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
     assert [t.id for t in utils.get_graph_templates(translated_metrics)] == graph_ids
+
+
+@pytest.mark.parametrize(
+    "metric_definitions, expected_predictive_metric_definitions",
+    [
+        pytest.param(
+            [],
+            [],
+            id="empty",
+        ),
+        pytest.param(
+            [MetricDefinition(expression=Metric(name="metric_name"), line_type="line")],
+            [
+                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="line"),
+                MetricDefinition(
+                    expression=Metric(name="predict_lower_metric_name"), line_type="line"
+                ),
+            ],
+            id="line",
+        ),
+        pytest.param(
+            [MetricDefinition(expression=Metric(name="metric_name"), line_type="area")],
+            [
+                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="line"),
+                MetricDefinition(
+                    expression=Metric(name="predict_lower_metric_name"), line_type="line"
+                ),
+            ],
+            id="area",
+        ),
+        pytest.param(
+            [MetricDefinition(expression=Metric(name="metric_name"), line_type="stack")],
+            [
+                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="line"),
+                MetricDefinition(
+                    expression=Metric(name="predict_lower_metric_name"), line_type="line"
+                ),
+            ],
+            id="stack",
+        ),
+        pytest.param(
+            [MetricDefinition(expression=Metric(name="metric_name"), line_type="-line")],
+            [
+                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="-line"),
+                MetricDefinition(
+                    expression=Metric(name="predict_lower_metric_name"), line_type="-line"
+                ),
+            ],
+            id="-line",
+        ),
+        pytest.param(
+            [MetricDefinition(expression=Metric(name="metric_name"), line_type="-area")],
+            [
+                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="-line"),
+                MetricDefinition(
+                    expression=Metric(name="predict_lower_metric_name"), line_type="-line"
+                ),
+            ],
+            id="-area",
+        ),
+        pytest.param(
+            [MetricDefinition(expression=Metric(name="metric_name"), line_type="-stack")],
+            [
+                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="-line"),
+                MetricDefinition(
+                    expression=Metric(name="predict_lower_metric_name"), line_type="-line"
+                ),
+            ],
+            id="-stack",
+        ),
+    ],
+)
+def test__compute_predictive_metrics(
+    metric_definitions: Sequence[MetricDefinition],
+    expected_predictive_metric_definitions: Sequence[MetricDefinition],
+) -> None:
+    assert (
+        list(
+            _compute_predictive_metrics(
+                {
+                    "metric_name": {
+                        "orig_name": ["metric_name"],
+                        "value": 0.0,
+                        "scalar": {},
+                        "scale": [1.0],
+                        "auto_graph": True,
+                        "title": "",
+                        "unit": {
+                            "title": "",
+                            "symbol": "",
+                            "render": str,
+                            "js_render": "v => v;",
+                        },
+                        "color": "#0080c0",
+                    },
+                    "predict_metric_name": {
+                        "orig_name": ["predict_metric_name"],
+                        "value": 0.0,
+                        "scalar": {},
+                        "scale": [1.0],
+                        "auto_graph": True,
+                        "title": "",
+                        "unit": {
+                            "title": "",
+                            "symbol": "",
+                            "render": str,
+                            "js_render": "v => v;",
+                        },
+                        "color": "#0080c0",
+                    },
+                    "predict_lower_metric_name": {
+                        "orig_name": ["predict_lower_metric_name"],
+                        "value": 0.0,
+                        "scalar": {},
+                        "scale": [1.0],
+                        "auto_graph": True,
+                        "title": "",
+                        "unit": {
+                            "title": "",
+                            "symbol": "",
+                            "render": str,
+                            "js_render": "v => v;",
+                        },
+                        "color": "#0080c0",
+                    },
+                },
+                metric_definitions,
+            )
+        )
+        == expected_predictive_metric_definitions
+    )
+
+
+def test__get_legacy_metric_info() -> None:
+    color_counter: Counter[Literal["metric", "predictive"]] = Counter()
+    assert utils._get_legacy_metric_info("foo", color_counter) == {
+        "title": "Foo",
+        "unit": "",
+        "color": "12/a",
+    }
+    assert utils._get_legacy_metric_info("bar", color_counter) == {
+        "title": "Bar",
+        "unit": "",
+        "color": "13/a",
+    }
+    assert color_counter["metric"] == 2
+
+
+@pytest.mark.parametrize(
+    "metric_name, predictive_metric_name, expected_title, expected_color",
+    [
+        pytest.param(
+            "messages_outbound",
+            "predict_messages_outbound",
+            "Prediction of Outbound messages (upper levels)",
+            "#4b4b4b",
+            id="upper",
+        ),
+        pytest.param(
+            "messages_outbound",
+            "predict_lower_messages_outbound",
+            "Prediction of Outbound messages (lower levels)",
+            "#4b4b4b",
+            id="lower",
+        ),
+    ],
+)
+def test_translate_metrics_with_predictive_metrics(
+    metric_name: str,
+    predictive_metric_name: str,
+    expected_title: str,
+    expected_color: str,
+) -> None:
+    perfdata: Perfdata = [
+        PerfDataTuple(metric_name, metric_name, 0, "", None, None, None, None),
+        PerfDataTuple(predictive_metric_name, metric_name, 0, "", None, None, None, None),
+    ]
+    translated_metrics = utils.translate_metrics(perfdata, "my-check-plugin")
+    assert translated_metrics[predictive_metric_name]["title"] == expected_title
+    assert (
+        translated_metrics[metric_name]["unit"]
+        == translated_metrics[predictive_metric_name]["unit"]
+    )
+    assert translated_metrics[predictive_metric_name]["color"] == expected_color
+
+
+def test_translate_metrics_with_multiple_predictive_metrics() -> None:
+    perfdata: Perfdata = [
+        PerfDataTuple("messages_outbound", "messages_outbound", 0, "", None, None, None, None),
+        PerfDataTuple(
+            "predict_messages_outbound", "messages_outbound", 0, "", None, None, None, None
+        ),
+        PerfDataTuple(
+            "predict_lower_messages_outbound", "messages_outbound", 0, "", None, None, None, None
+        ),
+    ]
+    translated_metrics = utils.translate_metrics(perfdata, "my-check-plugin")
+    assert translated_metrics["predict_messages_outbound"]["color"] == "#4b4b4b"
+    assert translated_metrics["predict_lower_messages_outbound"]["color"] == "#5a5a5a"
+
+
+@pytest.mark.parametrize(
+    "metric_names, predict_metric_names, predict_lower_metric_names, check_command, graph_templates",
+    [
+        pytest.param(
+            [
+                "messages_outbound",
+                "messages_inbound",
+            ],
+            [
+                "predict_messages_outbound",
+                "predict_messages_inbound",
+            ],
+            [
+                "predict_lower_messages_outbound",
+                "predict_lower_messages_inbound",
+            ],
+            "check_mk-inbound_and_outbound_messages",
+            [
+                utils.GraphTemplate(
+                    id="inbound_and_outbound_messages",
+                    title="Inbound and Outbound Messages",
+                    scalars=[],
+                    conflicting_metrics=(),
+                    optional_metrics=(),
+                    consolidation_function=None,
+                    range=None,
+                    omit_zero_metrics=False,
+                    metrics=[
+                        MetricDefinition(
+                            expression=Metric(name="messages_outbound"),
+                            line_type="stack",
+                            title="Outbound messages",
+                        ),
+                        MetricDefinition(
+                            expression=Metric(name="messages_inbound"),
+                            line_type="stack",
+                            title="Inbound messages",
+                        ),
+                        MetricDefinition(
+                            expression=Metric(name="predict_messages_outbound"),
+                            line_type="line",
+                        ),
+                        MetricDefinition(
+                            expression=Metric(name="predict_lower_messages_outbound"),
+                            line_type="line",
+                        ),
+                        MetricDefinition(
+                            expression=Metric(name="predict_messages_inbound"),
+                            line_type="line",
+                        ),
+                        MetricDefinition(
+                            expression=Metric(name="predict_lower_messages_inbound"),
+                            line_type="line",
+                        ),
+                    ],
+                )
+            ],
+            id="matches",
+        ),
+        pytest.param(
+            [
+                "messages_outbound",
+                "messages_inbound",
+                "foo",
+            ],
+            [
+                "predict_foo",
+            ],
+            [
+                "predict_lower_foo",
+            ],
+            "check_mk-inbound_and_outbound_messages",
+            [
+                utils.GraphTemplate(
+                    id="inbound_and_outbound_messages",
+                    title="Inbound and Outbound Messages",
+                    scalars=[],
+                    conflicting_metrics=(),
+                    optional_metrics=(),
+                    consolidation_function=None,
+                    range=None,
+                    omit_zero_metrics=False,
+                    metrics=[
+                        MetricDefinition(
+                            expression=Metric(name="messages_outbound"),
+                            line_type="stack",
+                            title="Outbound messages",
+                        ),
+                        MetricDefinition(
+                            expression=Metric(name="messages_inbound"),
+                            line_type="stack",
+                            title="Inbound messages",
+                        ),
+                    ],
+                ),
+                utils.GraphTemplate(
+                    id="METRIC_foo",
+                    title=None,
+                    scalars=[
+                        utils.ScalarDefinition(
+                            expression=WarningOf(
+                                metric=Metric(name="foo"),
+                                name="warn",
+                            ),
+                            title="Warning",
+                        ),
+                        utils.ScalarDefinition(
+                            expression=CriticalOf(
+                                metric=Metric(name="foo"),
+                                name="crit",
+                            ),
+                            title="Critical",
+                        ),
+                    ],
+                    conflicting_metrics=[],
+                    optional_metrics=[],
+                    consolidation_function=None,
+                    range=None,
+                    omit_zero_metrics=False,
+                    metrics=[
+                        MetricDefinition(
+                            expression=Metric(name="foo"),
+                            line_type="area",
+                        )
+                    ],
+                ),
+                utils.GraphTemplate(
+                    id="METRIC_predict_foo",
+                    title=None,
+                    scalars=[
+                        utils.ScalarDefinition(
+                            expression=WarningOf(
+                                metric=Metric(name="predict_foo"),
+                                name="warn",
+                            ),
+                            title="Warning",
+                        ),
+                        utils.ScalarDefinition(
+                            expression=CriticalOf(
+                                metric=Metric(name="predict_foo"),
+                                name="crit",
+                            ),
+                            title="Critical",
+                        ),
+                    ],
+                    conflicting_metrics=[],
+                    optional_metrics=[],
+                    consolidation_function=None,
+                    range=None,
+                    omit_zero_metrics=False,
+                    metrics=[
+                        MetricDefinition(
+                            expression=Metric(name="predict_foo"),
+                            line_type="area",
+                        )
+                    ],
+                ),
+                utils.GraphTemplate(
+                    id="METRIC_predict_lower_foo",
+                    title=None,
+                    scalars=[
+                        utils.ScalarDefinition(
+                            expression=WarningOf(
+                                metric=Metric(name="predict_lower_foo"),
+                                name="warn",
+                            ),
+                            title="Warning",
+                        ),
+                        utils.ScalarDefinition(
+                            expression=CriticalOf(
+                                metric=Metric(name="predict_lower_foo"),
+                                name="crit",
+                            ),
+                            title="Critical",
+                        ),
+                    ],
+                    conflicting_metrics=[],
+                    optional_metrics=[],
+                    consolidation_function=None,
+                    range=None,
+                    omit_zero_metrics=False,
+                    metrics=[
+                        MetricDefinition(
+                            expression=Metric(name="predict_lower_foo"),
+                            line_type="area",
+                        )
+                    ],
+                ),
+            ],
+            id="does-not-match",
+        ),
+    ],
+)
+def test_get_graph_templates_with_predictive_metrics(
+    metric_names: Sequence[str],
+    predict_metric_names: Sequence[str],
+    predict_lower_metric_names: Sequence[str],
+    check_command: str,
+    graph_templates: Sequence[utils.GraphTemplate],
+) -> None:
+    perfdata: Perfdata = (
+        [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
+        + [PerfDataTuple(n, n[8:], 0, "", None, None, None, None) for n in predict_metric_names]
+        + [
+            PerfDataTuple(n, n[14:], 0, "", None, None, None, None)
+            for n in predict_lower_metric_names
+        ]
+    )
+    translated_metrics = utils.translate_metrics(perfdata, check_command)
+    found_graph_templates = list(utils.get_graph_templates(translated_metrics))
+    assert found_graph_templates == graph_templates
 
 
 @pytest.mark.parametrize(
@@ -683,11 +1050,11 @@ def test_get_graph_templates(
     ],
 )
 def test_conflicting_metrics(metric_names: Sequence[str], graph_ids: Sequence[str]) -> None:
-    # Hard to find all avail metric names of a check plugin.
+    # Hard to find all avail metric names of a check plug-in.
     # We test conflicting metrics as following:
     # 1. write test for expected metric names of a graph template if it has "conflicting_metrics"
     # 2. use metric names from (1) and conflicting metrics
-    perfdata: Perfdata = [PerfDataTuple(n, 0, "", None, None, None, None) for n in metric_names]
+    perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, "check_command")
     assert [t.id for t in utils.get_graph_templates(translated_metrics)] == graph_ids
 
@@ -695,7 +1062,7 @@ def test_conflicting_metrics(metric_names: Sequence[str], graph_ids: Sequence[st
 def test_graph_titles() -> None:
     graphs_without_title = sorted(
         graph_id
-        for graph_id, graph_info in utils.graph_templates_internal().items()
+        for graph_id, graph_info in utils._graph_templates_internal().items()
         if not graph_info.title
     )
     assert (
@@ -724,10 +1091,11 @@ def test_translate_metrics(
     default_temperature_unit: TemperatureUnit,
     expected_value: float,
     expected_scalars: Mapping[str, float],
+    request_context: None,
 ) -> None:
     active_config.default_temperature_unit = default_temperature_unit.value
     translated_metric = utils.translate_metrics(
-        [PerfDataTuple("temp", 59.05, "", 85.05, 85.05, None, None)],
+        [PerfDataTuple("temp", "temp", 59.05, "", 85.05, 85.05, None, None)],
         "check_mk-lnx_thermal",
     )["temp"]
     assert translated_metric["value"] == expected_value
@@ -861,15 +1229,15 @@ def test_automatic_dict_append() -> None:
                 title=None,
                 scalars=[
                     utils.ScalarDefinition(
-                        expression=MetricExpression(Metric("metric")),
+                        expression=Metric("metric"),
                         title="metric",
                     ),
                     utils.ScalarDefinition(
-                        expression=MetricExpression(WarningOf(Metric("metric"))),
+                        expression=WarningOf(Metric("metric")),
                         title="Warning",
                     ),
                     utils.ScalarDefinition(
-                        expression=MetricExpression(CriticalOf(Metric("metric"))),
+                        expression=CriticalOf(Metric("metric")),
                         title="Critical",
                     ),
                 ],
@@ -892,15 +1260,15 @@ def test_automatic_dict_append() -> None:
                 title=None,
                 scalars=[
                     utils.ScalarDefinition(
-                        expression=MetricExpression(Metric("metric")),
+                        expression=Metric("metric"),
                         title="Title",
                     ),
                     utils.ScalarDefinition(
-                        expression=MetricExpression(WarningOf(Metric("metric"))),
+                        expression=WarningOf(Metric("metric")),
                         title="Warn",
                     ),
                     utils.ScalarDefinition(
-                        expression=MetricExpression(CriticalOf(Metric("metric"))),
+                        expression=CriticalOf(Metric("metric")),
                         title="Crit",
                     ),
                 ],
@@ -928,7 +1296,7 @@ def test_automatic_dict_append() -> None:
                 omit_zero_metrics=False,
                 metrics=[
                     MetricDefinition(
-                        expression=MetricExpression(Metric("metric")),
+                        expression=Metric("metric"),
                         line_type="line",
                     ),
                 ],
@@ -950,7 +1318,7 @@ def test_automatic_dict_append() -> None:
                 omit_zero_metrics=False,
                 metrics=[
                     MetricDefinition(
-                        expression=MetricExpression(Metric("metric")),
+                        expression=Metric("metric"),
                         line_type="line",
                         title="Title",
                     ),
@@ -968,3 +1336,608 @@ def test_graph_template_from_template(
         utils.GraphTemplate.from_template("ident", graph_template_registation)
         == expected_graph_template
     )
+
+
+COLOR = metrics.Color.BLUE
+COLOR_HEX = "#1e90ff"
+
+
+@pytest.mark.parametrize(
+    "graph, raw_metric_names, expected_template",
+    [
+        pytest.param(
+            graphs.Graph(
+                name="name",
+                title=Title("Title"),
+                compound_lines=[
+                    "metric-name-1",
+                    metrics.Constant(Title("Constant"), UNIT, COLOR, 10),
+                    metrics.WarningOf("metric-name-2"),
+                    metrics.CriticalOf("metric-name-3"),
+                    metrics.MinimumOf("metric-name-4", COLOR),
+                    metrics.MaximumOf("metric-name-5", COLOR),
+                    metrics.Sum(
+                        Title("Sum"),
+                        COLOR,
+                        ["metric-name-6"],
+                    ),
+                    metrics.Product(
+                        Title("Product"),
+                        UNIT,
+                        COLOR,
+                        ["metric-name-7"],
+                    ),
+                    metrics.Difference(
+                        Title("Difference"),
+                        COLOR,
+                        minuend="metric-name-7",
+                        subtrahend="metric-name-8",
+                    ),
+                    metrics.Fraction(
+                        Title("Fraction"),
+                        UNIT,
+                        COLOR,
+                        dividend="metric-name-9",
+                        divisor="metric-name-10",
+                    ),
+                ],
+            ),
+            [
+                "metric-name-1",
+                "metric-name-2",
+                "metric-name-3",
+                "metric-name-4",
+                "metric-name-5",
+                "metric-name-6",
+                "metric-name-7",
+                "metric-name-8",
+                "metric-name-9",
+                "metric-name-10",
+            ],
+            utils.GraphTemplate(
+                id="name",
+                title="Title",
+                scalars=[],
+                conflicting_metrics=(),
+                optional_metrics=(),
+                consolidation_function=None,
+                range=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricDefinition(
+                        Metric("metric-name-1"),
+                        "stack",
+                        "metric-name-1",
+                    ),
+                    MetricDefinition(
+                        Constant(
+                            value=10,
+                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "stack",
+                        "Constant",
+                    ),
+                    MetricDefinition(
+                        WarningOf(Metric("metric-name-2")),
+                        "stack",
+                        "Warning of metric-name-2",
+                    ),
+                    MetricDefinition(
+                        CriticalOf(Metric("metric-name-3")),
+                        "stack",
+                        "Critical of metric-name-3",
+                    ),
+                    MetricDefinition(
+                        MinimumOf(
+                            Metric("metric-name-4"),
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "stack",
+                        "metric-name-4",
+                    ),
+                    MetricDefinition(
+                        MaximumOf(
+                            Metric("metric-name-5"),
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "stack",
+                        "metric-name-5",
+                    ),
+                    MetricDefinition(
+                        Sum(
+                            [Metric("metric-name-6")],
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "stack",
+                        "Sum",
+                    ),
+                    MetricDefinition(
+                        Product(
+                            [Metric("metric-name-7")],
+                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "stack",
+                        "Product",
+                    ),
+                    MetricDefinition(
+                        Difference(
+                            minuend=Metric("metric-name-7"),
+                            subtrahend=Metric("metric-name-8"),
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "stack",
+                        "Difference",
+                    ),
+                    MetricDefinition(
+                        Fraction(
+                            dividend=Metric("metric-name-9"),
+                            divisor=Metric("metric-name-10"),
+                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "stack",
+                        "Fraction",
+                    ),
+                ],
+            ),
+            id="compound-lines",
+        ),
+        pytest.param(
+            graphs.Graph(
+                name="name",
+                title=Title("Title"),
+                simple_lines=[
+                    "metric-name-1",
+                    metrics.Constant(Title("Constant"), UNIT, COLOR, 10),
+                    metrics.WarningOf("metric-name-2"),
+                    metrics.CriticalOf("metric-name-3"),
+                    metrics.MinimumOf("metric-name-4", COLOR),
+                    metrics.MaximumOf("metric-name-5", COLOR),
+                    metrics.Sum(
+                        Title("Sum"),
+                        COLOR,
+                        ["metric-name-6"],
+                    ),
+                    metrics.Product(
+                        Title("Product"),
+                        UNIT,
+                        COLOR,
+                        ["metric-name-7"],
+                    ),
+                    metrics.Difference(
+                        Title("Difference"),
+                        COLOR,
+                        minuend="metric-name-7",
+                        subtrahend="metric-name-8",
+                    ),
+                    metrics.Fraction(
+                        Title("Fraction"),
+                        UNIT,
+                        COLOR,
+                        dividend="metric-name-9",
+                        divisor="metric-name-10",
+                    ),
+                ],
+            ),
+            [
+                "metric-name-1",
+                "metric-name-2",
+                "metric-name-3",
+                "metric-name-4",
+                "metric-name-5",
+                "metric-name-6",
+                "metric-name-7",
+                "metric-name-8",
+                "metric-name-9",
+                "metric-name-10",
+            ],
+            utils.GraphTemplate(
+                id="name",
+                title="Title",
+                scalars=[
+                    utils.ScalarDefinition(
+                        WarningOf(Metric("metric-name-2")),
+                        "Warning of metric-name-2",
+                    ),
+                    utils.ScalarDefinition(
+                        CriticalOf(Metric("metric-name-3")),
+                        "Critical of metric-name-3",
+                    ),
+                    utils.ScalarDefinition(
+                        MinimumOf(
+                            Metric("metric-name-4"),
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "metric-name-4",
+                    ),
+                    utils.ScalarDefinition(
+                        MaximumOf(
+                            Metric("metric-name-5"),
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "metric-name-5",
+                    ),
+                ],
+                conflicting_metrics=(),
+                optional_metrics=(),
+                consolidation_function=None,
+                range=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricDefinition(
+                        Metric("metric-name-1"),
+                        "line",
+                        "metric-name-1",
+                    ),
+                    MetricDefinition(
+                        Constant(
+                            value=10,
+                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "line",
+                        "Constant",
+                    ),
+                    MetricDefinition(
+                        Sum(
+                            [Metric("metric-name-6")],
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "line",
+                        "Sum",
+                    ),
+                    MetricDefinition(
+                        Product(
+                            [Metric("metric-name-7")],
+                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "line",
+                        "Product",
+                    ),
+                    MetricDefinition(
+                        Difference(
+                            minuend=Metric("metric-name-7"),
+                            subtrahend=Metric("metric-name-8"),
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "line",
+                        "Difference",
+                    ),
+                    MetricDefinition(
+                        Fraction(
+                            dividend=Metric("metric-name-9"),
+                            divisor=Metric("metric-name-10"),
+                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
+                            explicit_color=COLOR_HEX,
+                        ),
+                        "line",
+                        "Fraction",
+                    ),
+                ],
+            ),
+            id="simple-lines",
+        ),
+        pytest.param(
+            graphs.Graph(
+                name="name",
+                title=Title("Title"),
+                minimal_range=graphs.MinimalRange(0, 100.0),
+                simple_lines=["metric-name"],
+            ),
+            ["metric-name"],
+            utils.GraphTemplate(
+                id="name",
+                title="Title",
+                range=utils.MinimalGraphTemplateRange(min=Constant(0), max=Constant(100.0)),
+                scalars=[],
+                conflicting_metrics=(),
+                optional_metrics=(),
+                consolidation_function=None,
+                omit_zero_metrics=False,
+                metrics=[MetricDefinition(Metric("metric-name"), "line", "metric-name")],
+            ),
+            id="explicit-range",
+        ),
+        pytest.param(
+            graphs.Graph(
+                name="name",
+                title=Title("Title"),
+                simple_lines=["metric-name"],
+                optional=["metric-name-opt"],
+                conflicting=["metric-name-confl"],
+            ),
+            ["metric-name"],
+            utils.GraphTemplate(
+                id="name",
+                title="Title",
+                range=None,
+                scalars=[],
+                conflicting_metrics=["metric-name-confl"],
+                optional_metrics=["metric-name-opt"],
+                consolidation_function=None,
+                omit_zero_metrics=False,
+                metrics=[MetricDefinition(Metric("metric-name"), "line", "metric-name")],
+            ),
+            id="optional-conflicting",
+        ),
+    ],
+)
+def test_graph_template_from_graph(
+    graph: graphs.Graph, raw_metric_names: Sequence[str], expected_template: utils.GraphTemplate
+) -> None:
+    for r in raw_metric_names:
+        metrics_from_api.register(
+            MetricInfoExtended(
+                name=r,
+                title=r,
+                unit=UnitInfo(
+                    title="",
+                    symbol="",
+                    render=str,
+                    js_render="",
+                ),
+                color="#000000",
+            )
+        )
+    assert utils.GraphTemplate.from_graph(graph) == expected_template
+
+
+@pytest.mark.parametrize(
+    "graph, raw_metric_names, expected_template",
+    [
+        pytest.param(
+            graphs.Bidirectional(
+                name="name",
+                title=Title("Title"),
+                lower=graphs.Graph(
+                    name="name-lower",
+                    title=Title("Title lower"),
+                    compound_lines=["metric-name-l1"],
+                    simple_lines=[
+                        "metric-name-l2",
+                        metrics.WarningOf("metric-name-l3"),
+                        metrics.CriticalOf("metric-name-l4"),
+                        metrics.MinimumOf("metric-name-l5", COLOR),
+                        metrics.MaximumOf("metric-name-l6", COLOR),
+                    ],
+                    optional=["metric-name-opt-l"],
+                    conflicting=["metric-name-confl-l"],
+                ),
+                upper=graphs.Graph(
+                    name="name-upper",
+                    title=Title("Title upper"),
+                    compound_lines=["metric-name-u1"],
+                    simple_lines=[
+                        "metric-name-u2",
+                        metrics.WarningOf("metric-name-u3"),
+                        metrics.CriticalOf("metric-name-u4"),
+                        metrics.MinimumOf("metric-name-u5", COLOR),
+                        metrics.MaximumOf("metric-name-u6", COLOR),
+                    ],
+                    optional=["metric-name-opt-u"],
+                    conflicting=["metric-name-confl-u"],
+                ),
+            ),
+            [
+                "metric-name-l1",
+                "metric-name-l2",
+                "metric-name-l3",
+                "metric-name-l4",
+                "metric-name-l5",
+                "metric-name-l6",
+                "metric-name-u1",
+                "metric-name-u2",
+                "metric-name-u3",
+                "metric-name-u4",
+                "metric-name-u5",
+                "metric-name-u6",
+            ],
+            utils.GraphTemplate(
+                id="name",
+                title="Title",
+                range=None,
+                scalars=[
+                    utils.ScalarDefinition(
+                        WarningOf(Metric("metric-name-l3"), "warn"),
+                        "Warning of metric-name-l3",
+                    ),
+                    utils.ScalarDefinition(
+                        CriticalOf(Metric("metric-name-l4"), "crit"),
+                        "Critical of metric-name-l4",
+                    ),
+                    utils.ScalarDefinition(
+                        MinimumOf(Metric("metric-name-l5"), "min", explicit_color=COLOR_HEX),
+                        "metric-name-l5",
+                    ),
+                    utils.ScalarDefinition(
+                        MaximumOf(Metric("metric-name-l6"), "max", explicit_color=COLOR_HEX),
+                        "metric-name-l6",
+                    ),
+                    utils.ScalarDefinition(
+                        WarningOf(Metric("metric-name-u3"), "warn"),
+                        "Warning of metric-name-u3",
+                    ),
+                    utils.ScalarDefinition(
+                        CriticalOf(Metric("metric-name-u4"), "crit"),
+                        "Critical of metric-name-u4",
+                    ),
+                    utils.ScalarDefinition(
+                        MinimumOf(Metric("metric-name-u5"), "min", explicit_color=COLOR_HEX),
+                        "metric-name-u5",
+                    ),
+                    utils.ScalarDefinition(
+                        MaximumOf(Metric("metric-name-u6"), "max", explicit_color=COLOR_HEX),
+                        "metric-name-u6",
+                    ),
+                ],
+                conflicting_metrics=["metric-name-confl-l", "metric-name-confl-u"],
+                optional_metrics=["metric-name-opt-l", "metric-name-opt-u"],
+                consolidation_function=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricDefinition(Metric("metric-name-l1"), "-stack", "metric-name-l1"),
+                    MetricDefinition(Metric("metric-name-u1"), "stack", "metric-name-u1"),
+                    MetricDefinition(Metric("metric-name-l2"), "-line", "metric-name-l2"),
+                    MetricDefinition(Metric("metric-name-u2"), "line", "metric-name-u2"),
+                ],
+            ),
+            id="lower-upper",
+        ),
+        pytest.param(
+            graphs.Bidirectional(
+                name="name",
+                title=Title("Title"),
+                lower=graphs.Graph(
+                    name="name-lower",
+                    title=Title("Title lower"),
+                    minimal_range=graphs.MinimalRange(1, 10),
+                    simple_lines=["metric-name-l"],
+                ),
+                upper=graphs.Graph(
+                    name="name-upper",
+                    title=Title("Title upper"),
+                    minimal_range=graphs.MinimalRange(2, 11),
+                    simple_lines=["metric-name-u"],
+                ),
+            ),
+            ["metric-name-l", "metric-name-u"],
+            utils.GraphTemplate(
+                id="name",
+                title="Title",
+                range=utils.MinimalGraphTemplateRange(
+                    min=Minimum([Constant(1), Constant(2)]),
+                    max=Maximum([Constant(10), Constant(11)]),
+                ),
+                scalars=[],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
+                    MetricDefinition(Metric("metric-name-u"), "line", "metric-name-u"),
+                ],
+            ),
+            id="range-both",
+        ),
+        pytest.param(
+            graphs.Bidirectional(
+                name="name",
+                title=Title("Title"),
+                lower=graphs.Graph(
+                    name="name-lower",
+                    title=Title("Title lower"),
+                    minimal_range=graphs.MinimalRange(1, 10),
+                    simple_lines=["metric-name-l"],
+                ),
+                upper=graphs.Graph(
+                    name="name-upper",
+                    title=Title("Title upper"),
+                    simple_lines=["metric-name-u"],
+                ),
+            ),
+            ["metric-name-l", "metric-name-u"],
+            utils.GraphTemplate(
+                id="name",
+                title="Title",
+                range=utils.MinimalGraphTemplateRange(
+                    min=Minimum([Constant(1)]),
+                    max=Maximum([Constant(10)]),
+                ),
+                scalars=[],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
+                    MetricDefinition(Metric("metric-name-u"), "line", "metric-name-u"),
+                ],
+            ),
+            id="range-only-lower",
+        ),
+        pytest.param(
+            graphs.Bidirectional(
+                name="name",
+                title=Title("Title"),
+                lower=graphs.Graph(
+                    name="name-lower",
+                    title=Title("Title lower"),
+                    simple_lines=["metric-name-l"],
+                ),
+                upper=graphs.Graph(
+                    name="name-upper",
+                    title=Title("Title upper"),
+                    minimal_range=graphs.MinimalRange(2, 11),
+                    simple_lines=["metric-name-u"],
+                ),
+            ),
+            ["metric-name-l", "metric-name-u"],
+            utils.GraphTemplate(
+                id="name",
+                title="Title",
+                range=utils.MinimalGraphTemplateRange(
+                    min=Minimum([Constant(2)]),
+                    max=Maximum([Constant(11)]),
+                ),
+                scalars=[],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
+                    MetricDefinition(Metric("metric-name-u"), "line", "metric-name-u"),
+                ],
+            ),
+            id="range-only-upper",
+        ),
+    ],
+)
+def test_graph_template_from_bidirectional(
+    graph: graphs.Bidirectional,
+    raw_metric_names: Sequence[str],
+    expected_template: utils.GraphTemplate,
+) -> None:
+    for r in raw_metric_names:
+        metrics_from_api.register(
+            MetricInfoExtended(
+                name=r,
+                title=r,
+                unit=UnitInfo(
+                    title="",
+                    symbol="",
+                    render=str,
+                    js_render="",
+                ),
+                color="#000000",
+            )
+        )
+    assert utils.GraphTemplate.from_bidirectional(graph) == expected_template
+
+
+@pytest.mark.parametrize(
+    "check_command, expected",
+    [
+        pytest.param(
+            "check-mk-custom!foobar",
+            "check-mk-custom",
+            id="custom-foobar",
+        ),
+        pytest.param(
+            "check-mk-custom!check_ping",
+            "check_ping",
+            id="custom-check_ping",
+        ),
+        pytest.param(
+            "check-mk-custom!./check_ping",
+            "check_ping",
+            id="custom-check_ping-2",
+        ),
+    ],
+)
+def test__parse_check_command(check_command: str, expected: str) -> None:
+    assert utils._parse_check_command(check_command) == expected

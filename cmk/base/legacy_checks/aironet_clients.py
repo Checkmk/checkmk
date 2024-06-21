@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
+
+from cmk.agent_based.v2 import any_of, equals, SNMPTree, StringTable
 
 aironet_default_strength_levels = (-25, -20)
 aironet_default_quality_levels = (40, 35)
@@ -22,16 +23,14 @@ aironet_default_quality_levels = (40, 35)
 
 
 def inventory_aironet_clients(info):
-    if len(info) > 0:
-        return [
-            ("strength", aironet_default_strength_levels),
-            ("quality", aironet_default_quality_levels),
-            ("clients", None),
-        ]
-    return []
+    if not info:
+        return
+    yield "strength", {}
+    yield "quality", {}
+    yield "clients", {}
 
 
-def check_aironet_clients(item, params, info):
+def check_aironet_clients(item, _no_params, info):
     info = [line for line in info if line[0] != ""]
 
     if len(info) == 0:
@@ -59,7 +58,9 @@ def check_aironet_clients(item, params, info):
         neg = -1
 
     avg = sum(saveint(line[index]) for line in info) / float(len(info))
-    warn, crit = params
+    warn, crit = (
+        aironet_default_quality_levels if item == "quality" else aironet_default_strength_levels
+    )
     perfdata = [(item, avg, warn, crit, mmin, mmax)]
     infotxt = f"signal {item} at {avg:.1f}{unit} (warn/crit at {warn}{unit}/{crit}{unit})"
 
@@ -70,7 +71,12 @@ def check_aironet_clients(item, params, info):
     return (0, infotxt, perfdata)
 
 
+def parse_aironet_clients(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["aironet_clients"] = LegacyCheckDefinition(
+    parse_function=parse_aironet_clients,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.525"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.618"),

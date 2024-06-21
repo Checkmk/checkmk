@@ -1,0 +1,28 @@
+title: Jolokia: Generic Numeric MBean Rate
+agents: linux, windows
+catalog: app/java
+license: GPLv2
+distribution: check_mk
+description:
+ This check outputs the rate of a generic numeric value from the java virtual machine.
+ This check can go WARN or CRIT when the rate is below or above certain
+ configurable levels.
+
+ To use this plugin, Jolokia and the agent plug-in need to be installed
+ on the monitored server.
+
+ Please note that this check was designed with single values in mind.
+ It is best utilized using explicit configuration of specific MBeans
+ and their titles.
+ While bulk requests of MBeans may appear to work, it will probably
+ have undesired side effects (such as ugly formatting or discovery
+ of services always in UNKNOWN state), and is therefore strongly
+ discouraged.
+
+ Both, version 1.7 and 2.0 of Jolokia are supported.
+
+item:
+ The name of the instance and the MBean value
+
+discovery:
+ One service is created for each numeric MBean rate value sent by the agent.

@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.viprinet import DETECT_VIPRINET
+
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.plugins.lib.viprinet import DETECT_VIPRINET
 
 
 def check_viprinet_firmware(_no_item, _no_params, info):
@@ -24,13 +25,23 @@ def check_viprinet_firmware(_no_item, _no_params, info):
     return (3, "%s, no firmware status available")
 
 
+def parse_viprinet_firmware(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def discover_viprinet_firmware(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
 check_info["viprinet_firmware"] = LegacyCheckDefinition(
+    parse_function=parse_viprinet_firmware,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.35424.1.1",
         oids=["4", "7"],
     ),
     service_name="Firmware Version",
-    discovery_function=lambda info: len(info) > 0 and [(None, None)] or [],
+    discovery_function=discover_viprinet_firmware,
     check_function=check_viprinet_firmware,
 )

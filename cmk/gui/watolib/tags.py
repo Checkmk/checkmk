@@ -8,39 +8,38 @@ import abc
 from collections.abc import Mapping, Sequence
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final, TypeVar
+from typing import Any, TypeVar
 
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.tags
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
 
+from cmk.gui import hooks
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, RuleConditions, Ruleset
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import format_php, multisite_dir, wato_root_dir
 
 
-class TagConfigFile:
+class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
     """Handles loading the tag definitions from GUI tags.mk
 
     When saving the configuration it also writes out the tags.mk for the cmk.base world.
     """
 
     def __init__(self) -> None:
-        self._config_file_path: Final = Path(multisite_dir()) / "tags.mk"
-        self._config_variable: Final = "wato_tags"
-
-    def load_for_reading(self) -> TagConfigSpec:
-        return self._load_file(lock=False)
-
-    def load_for_modification(self) -> TagConfigSpec:
-        return self._load_file(lock=True)
+        super().__init__(
+            config_file_path=Path(multisite_dir()) / "tags.mk",
+            config_variable="wato_tags",
+            spec_class=TagConfigSpec,
+        )
 
     def _load_file(self, lock: bool = False) -> TagConfigSpec:
         cfg = store.load_from_mk_file(
@@ -49,8 +48,9 @@ class TagConfigFile:
             default={},
             lock=lock,
         )
-        if not cfg:  # Initialize with empty default config
-            return {"tag_groups": [], "aux_tags": []}
+        if not cfg:
+            cfg = {"tag_groups": [], "aux_tags": []}
+
         return cfg
 
     def save(self, cfg: TagConfigSpec) -> None:
@@ -59,12 +59,15 @@ class TagConfigFile:
         _export_hosttags_to_php(cfg)
 
     def _save_gui_config(self, cfg: TagConfigSpec) -> None:
-        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        store.save_to_mk_file(self._config_file_path, self._config_variable, cfg)
+        super().save(cfg)
 
     def _save_base_config(self, cfg: TagConfigSpec) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(Path(wato_root_dir()) / "tags.mk", "tag_config", cfg)
+
+
+def register(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(TagConfigFile())
 
 
 def load_tag_config() -> TagConfig:
@@ -83,7 +86,7 @@ def load_all_tag_config_read_only() -> TagConfig:
     return tag_config
 
 
-def update_tag_config(tag_config: TagConfig):  # type: ignore[no-untyped-def]
+def update_tag_config(tag_config: TagConfig) -> None:
     """Persist the tag config saving the information to the mk file
     and update the current environment
 
@@ -96,6 +99,7 @@ def update_tag_config(tag_config: TagConfig):  # type: ignore[no-untyped-def]
         user.need_permission("wato.hosttags")
     TagConfigFile().save(tag_config.get_dict_format())
     _update_tag_dependencies()
+    hooks.call("tags-changed")
 
 
 def load_tag_group(ident: TagGroupID) -> TagGroup | None:
@@ -111,7 +115,7 @@ def load_tag_group(ident: TagGroupID) -> TagGroup | None:
     return tag_config.get_tag_group(ident)
 
 
-def save_tag_group(tag_group: TagGroup):  # type: ignore[no-untyped-def]
+def save_tag_group(tag_group: TagGroup) -> None:
     """Save a new tag group
 
     Args:
@@ -490,10 +494,10 @@ def _change_host_tags_in_rule(  # pylint: disable=too-many-branches
                         **rule.conditions.host_tags,
                         operation.tag_group_id: new_value,
                     },
-                    host_labels=rule.conditions.host_labels,
+                    host_label_groups=rule.conditions.host_label_groups,
                     host_name=rule.conditions.host_name,
                     service_description=rule.conditions.service_description,
-                    service_labels=rule.conditions.service_labels,
+                    service_label_groups=rule.conditions.service_label_groups,
                 )
             )
         # Example for current_value: {'$ne': 'my_tag'} / my_tag
@@ -510,10 +514,10 @@ def _remove_tag_group_condition(rule: Rule, tag_group_id: TagGroupID) -> None:
         RuleConditions(
             host_folder=rule.conditions.host_folder,
             host_tags={k: v for k, v in rule.conditions.host_tags.items() if k != tag_group_id},
-            host_labels=rule.conditions.host_labels,
+            host_label_groups=rule.conditions.host_label_groups,
             host_name=rule.conditions.host_name,
             service_description=rule.conditions.service_description,
-            service_labels=rule.conditions.service_labels,
+            service_label_groups=rule.conditions.service_label_groups,
         )
     )
 

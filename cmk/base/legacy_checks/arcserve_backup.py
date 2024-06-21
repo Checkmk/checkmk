@@ -58,8 +58,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_arcserve_backup(info):
@@ -91,46 +93,44 @@ def parse_arcserve_backup(info):
     return parsed
 
 
-def inventory_arcserve_backup(info):
-    parsed = parse_arcserve_backup(info)
+def inventory_arcserve_backup(section):
     inventory = []
-    for backup in parsed:
+    for backup in section:
         inventory.append((backup, None))
     return inventory
 
 
-def check_arcserve_backup(item, _no_params, info):  # pylint: disable=too-many-branches
-    parsed = parse_arcserve_backup(info)
-    if item not in parsed:
+def check_arcserve_backup(item, _no_params, section):  # pylint: disable=too-many-branches
+    if item not in section:
         return 3, "Backup %s not found in agent output" % item
 
     message = ""
     perfdata = []
 
     # directories
-    if "dirs" in parsed[item]:
-        dirs = parsed[item]["dirs"]
-        message += "%s directories" % parsed[item]["dirs"]
+    if "dirs" in section[item]:
+        dirs = section[item]["dirs"]
+        message += "%s directories" % section[item]["dirs"]
     else:
         dirs = 0
     perfdata.append(("dirs", dirs))
 
     # files
-    if "files" in parsed[item]:
+    if "files" in section[item]:
         if message != "":
             message += ", "
-        files = parsed[item]["files"]
-        message += "%s files" % parsed[item]["files"]
+        files = section[item]["files"]
+        message += "%s files" % section[item]["files"]
     else:
         files = 0
     perfdata.append(("files", files))
 
     # size
-    if "size" in parsed[item]:
+    if "size" in section[item]:
         if message != "":
             message += ", "
-        size = parsed[item]["size"]
-        message += "Size: %s" % get_bytes_human_readable(parsed[item]["size"])
+        size = section[item]["size"]
+        message += "Size: %s" % render.bytes(section[item]["size"])
     else:
         size = 0
     perfdata.append(("size", size))
@@ -139,23 +139,24 @@ def check_arcserve_backup(item, _no_params, info):  # pylint: disable=too-many-b
     if message != "":
         message += ", "
 
-    if parsed[item]["result"].startswith("Sichern erfolgreich"):
+    if section[item]["result"].startswith("Sichern erfolgreich"):
         status = 0
-    elif parsed[item]["result"].startswith("Sichern unvollst"):
+    elif section[item]["result"].startswith("Sichern unvollst"):
         status = 1
-    elif parsed[item]["result"].startswith("Sichern konnte nicht durchgef"):
+    elif section[item]["result"].startswith("Sichern konnte nicht durchgef"):
         status = 2
     else:
-        message += "unknown Result: %s" % parsed[item]["result"]
+        message += "unknown Result: %s" % section[item]["result"]
         return 3, message, perfdata
 
-    message += "Result: %s" % parsed[item]["result"]
+    message += "Result: %s" % section[item]["result"]
 
     return status, message, perfdata
 
 
 check_info["arcserve_backup"] = LegacyCheckDefinition(
     service_name="Arcserve Backup %s",
+    parse_function=parse_arcserve_backup,
     discovery_function=inventory_arcserve_backup,
     check_function=check_arcserve_backup,
 )

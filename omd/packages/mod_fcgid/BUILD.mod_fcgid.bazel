@@ -29,6 +29,7 @@ configure_make(
         cp modules/fcgid/.libs/mod_fcgid.so $INSTALLDIR/lib
     """,
     targets = [""],
+    visibility = ["//visibility:public"],
 )
 
 genrule(

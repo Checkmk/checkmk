@@ -40,10 +40,13 @@ See ``announce`` sub-command of ``python -m cmk.utils.werks``
 Rewrite Versions of Werks
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a second release candidate is created ``bw-release`` needs to modify the
-version from ``p(n)`` to ``p(n-1)``. This is done via ``werk list -version`` and
-a ``sed`` command. At the time of writing the ``sed`` command can only handle v1
-Werks.
+During the release process, a new release candidate may need to be created.
+In this case, dedicated commits will be picked onto the corresponding release
+branch ``release/A.B.CpX``. Potentially picked werks therefore may need a fix-up
+of their version field. In case the ``werk`` script is used, the version field
+will be automatically rewritten. However in the upstream branch ``A.B.C`` the
+version of the corresponding werk would also need to be updated.
+This is a current design flaw and should be fixed in the future.
 
 Precompiled Werks
 ~~~~~~~~~~~~~~~~~
@@ -53,8 +56,12 @@ which contains Werks relevant for this release.
 
 Version 2.2 and below shipped Werks from all versions, suggesting that the
 database shipped with checkmk contains all Werks from all versions. But this is
-not true. It only contains all versions of the current major version and some
-Werks from previous versions (those Werks were probably added by accident).
+not true. It only contains:
+
+* all versions of the current major version
+* all Werks that were added on the master branch (normally Werks assigned to the
+  first beta release of a major version)
+* some random Werks, which were probably added by accident
 
 Version 2.3 and higher ship only Werks from the current major version.
 
@@ -91,9 +98,21 @@ are three levels (1=trivial change, 3=big impact), for each of those levels a
 mailing-list exists. An additional security mailing-list is also available (each
 Werk is either a fix, a feature or security related).
 
-Those mails are sent via ``python -m cmk.utils.werks mail``. The command is
-executed for each currently supported branch. And will directly send mails to
-the mailing-list addresses.
+The mails are sent via ``python -m cmk.utils.werks mail``. The command is
+executed daily on jenkins for each currently supported branch. It sends mails
+directly to the mailing-list addresses.
+
+Each and every edit on a Werk will result in at least one mail to the
+mailing lists. So if you need to modify many (>10) Werks, you should think about
+disabling sending mails. The normal workflow for that is:
+
+* ask IT-Admins to add you to the moderators of the Werk mailing lists
+* ask IT-Admins to enable emergency moderation of all Werk mailing lists
+* (optional) wait one day to see if this works correctly
+* merge your mass editing Werks change
+* wait one day until the cron job runs
+* reject unwanted mails on the mailing list
+* ask IT-Admins to disable emergency moderation
 
 If a mail was sent for a particular commit is saved in git notes.
 
@@ -122,7 +141,7 @@ Werk-tool
 ---------
 
 The source of all Werks are files. You can create, grep and edit them via normal
-tools, but there is also a specialized helper called ``werk``. It now lives in
+tools, but there is also a specialized helper called ``werk``. It lives in
 ``/packages/cmk-werks/``. It is used to pick Werks between version branches, and
 can pick from branches using v1 Werks and automatically transform them to v2
 Werks if the destination branch has markdown Werks enabled.
@@ -148,3 +167,9 @@ transformed to v2 files and then again parsed and loaded as Werk v2 files. This
 way there is no difference if the file is automatically translated to markdown
 and written to disk as markdown file, or loaded from v1 files and automatically
 translated. They are exactly the same.
+
+But this is only true when talking about Werks in 2.3 or higher. Werks in 2.2
+and below have two different render targets with slightly different behavior:
+The description may contain markdown formatting which is interpreted when
+displayed on the website, but not interpreted when displayed in the built in
+Werks viewer of checkmk 2.2. and below.

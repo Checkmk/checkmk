@@ -6,9 +6,7 @@
 import datetime as dt
 import time
 from collections.abc import Mapping
-from typing import Any, Literal
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, TypedDict
 
 from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
@@ -20,11 +18,18 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.user_config.request_schemas import CreateUser, UpdateUser
 from cmk.gui.openapi.endpoints.user_config.response_schemas import UserCollection, UserObject
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.userdb import ConnectorType, htpasswd, load_connection_config, load_users
+from cmk.gui.userdb import (
+    ConnectorType,
+    htpasswd,
+    load_connection_config,
+    load_users,
+    locked_attributes,
+)
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.users import delete_users, edit_users, verify_password_policy
 
@@ -164,6 +169,7 @@ def delete_user(params: Mapping[str, Any]) -> Response:
     request_schema=UpdateUser,
     response_schema=UserObject,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[403],
 )
 def edit_user(params: Mapping[str, Any]) -> Response:
     """Edit a user
@@ -173,7 +179,22 @@ def edit_user(params: Mapping[str, Any]) -> Response:
     # last_pw_change & serial must be changed manually if edit happens
     username = params["username"]
     api_attrs = params["body"]
-    internal_attrs = _api_to_internal_format(_load_user(username), api_attrs)
+
+    current_attrs = _load_user(username)
+    internal_attrs = _api_to_internal_format(current_attrs, api_attrs)
+
+    if connector_id := internal_attrs.get("connector"):
+        user_locked_attributes = set(locked_attributes(connector_id))
+        if user_locked_attributes:
+            modified_attrs = _identify_modified_attrs(current_attrs, internal_attrs)
+            locked_changes = user_locked_attributes.intersection(modified_attrs)
+            if locked_changes:
+                raise ProblemException(
+                    status=403,
+                    title="Attempt to modify locked attributes set by connector",
+                    detail=f"Request attempts to modify the following locked attributes: {', '.join(locked_changes)}",
+                )
+
     edit_users(
         {
             username: {
@@ -183,6 +204,15 @@ def edit_user(params: Mapping[str, Any]) -> Response:
         }
     )
     return serve_user(username)
+
+
+def _identify_modified_attrs(initial_attrs: UserSpec, new_attrs: dict) -> set[str]:
+    modified_attrs = set()
+    all_keys = set(initial_attrs.keys()).union(new_attrs.keys())
+    for key in all_keys:
+        if initial_attrs.get(key) != new_attrs.get(key):
+            modified_attrs.add(key)
+    return modified_attrs
 
 
 def serve_user(user_id):
@@ -202,6 +232,7 @@ def serialize_user(user_id, attributes):
 
 
 def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
+    attrs = internal_attrs.copy()
     for attr, value in api_configurations.items():
         if attr in (
             "username",
@@ -214,43 +245,37 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
             "interface_options",
         ):
             continue
-        internal_attrs[attr] = value
+        attrs[attr] = value
 
     if "customer" in api_configurations:
-        internal_attrs = update_customer_info(
-            internal_attrs, api_configurations["customer"], remove_provider=True
-        )
+        attrs = update_customer_info(attrs, api_configurations["customer"], remove_provider=True)
 
     if (authorized_sites := api_configurations.get("authorized_sites")) is not None:
         if authorized_sites and "all" not in authorized_sites:
-            internal_attrs["authorized_sites"] = authorized_sites
+            attrs["authorized_sites"] = authorized_sites
         # Update with all
-        elif "all" in authorized_sites and "authorized_sites" in internal_attrs:
-            del internal_attrs["authorized_sites"]
+        elif "all" in authorized_sites and "authorized_sites" in attrs:
+            del attrs["authorized_sites"]
 
-    internal_attrs.update(
+    attrs.update(
         _interface_options_to_internal_format(api_configurations.get("interface_options", {}))
     )
-    internal_attrs.update(
+    attrs.update(
         _contact_options_to_internal_format(
-            api_configurations.get("contact_options"), internal_attrs.get("email")
+            api_configurations.get("contact_options"), attrs.get("email")
         )
     )
-    internal_attrs = _update_auth_options(
-        internal_attrs, api_configurations["auth_option"], new_user=new_user
-    )
-    internal_attrs = _update_notification_options(
-        internal_attrs, api_configurations.get("disable_notifications")
-    )
-    internal_attrs = _update_idle_options(internal_attrs, api_configurations.get("idle_timeout"))
+    attrs = _update_auth_options(attrs, api_configurations["auth_option"], new_user=new_user)
+    attrs = _update_notification_options(attrs, api_configurations.get("disable_notifications"))
+    attrs = _update_idle_options(attrs, api_configurations.get("idle_timeout"))
 
     if temperature_unit := api_configurations.get("temperature_unit"):
-        internal_attrs = _api_temperature_format_to_internal_format(
-            internal_attrs,
+        attrs = _api_temperature_format_to_internal_format(
+            attrs,
             temperature_unit,
         )
 
-    return internal_attrs
+    return attrs
 
 
 def _internal_to_api_format(  # pylint: disable=too-many-branches
@@ -387,9 +412,9 @@ class ContactOptions(TypedDict, total=False):
     fallback_contact: bool
 
 
-def _contact_options_to_internal_format(  # type: ignore[no-untyped-def]
+def _contact_options_to_internal_format(
     contact_options: ContactOptions, current_email: str | None = None
-):
+) -> dict[str, str | bool]:
     updated_details: dict[str, str | bool] = {}
     if not contact_options:
         return updated_details
@@ -549,7 +574,9 @@ class IdleDetails(TypedDict, total=False):
     duration: int
 
 
-def _update_idle_options(internal_attrs, idle_details: IdleDetails):  # type: ignore[no-untyped-def]
+def _update_idle_options(
+    internal_attrs: dict[str, Any], idle_details: IdleDetails
+) -> dict[str, Any]:
     if not idle_details:
         return internal_attrs
 
@@ -653,9 +680,9 @@ class NotificationDetails(TypedDict, total=False):
     disable: bool
 
 
-def _update_notification_options(  # type: ignore[no-untyped-def]
-    internal_attrs, notification_options: NotificationDetails
-):
+def _update_notification_options(
+    internal_attrs: dict[str, Any], notification_options: NotificationDetails
+) -> dict[str, Any]:
     internal_attrs["disable_notifications"] = _notification_options_to_internal_format(
         internal_attrs.get("disable_notifications", {}), notification_options
     )

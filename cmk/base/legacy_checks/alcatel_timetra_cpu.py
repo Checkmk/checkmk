@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 
 def inventory_alcatel_timetra_cpu(info):
@@ -19,7 +20,12 @@ def check_alcatel_timetra_cpu(_no_item, params, info):
     return check_cpu_util(cpu_perc, params)
 
 
+def parse_alcatel_timetra_cpu(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["alcatel_timetra_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_alcatel_timetra_cpu,
     detect=contains(".1.3.6.1.2.1.1.1.0", "TiMOS"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6527.3.1.2.1.1",

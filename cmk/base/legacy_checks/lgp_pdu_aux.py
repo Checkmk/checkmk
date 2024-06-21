@@ -38,8 +38,9 @@ from collections.abc import Callable, Mapping
 
 from cmk.base.check_api import LegacyCheckDefinition, savefloat, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.lgp import DETECT_LGP
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.plugins.lib.lgp import DETECT_LGP
 
 lgp_pdu_aux_types = {
     "0": "UNSPEC",
@@ -80,7 +81,7 @@ def lgp_pdu_aux_fmt(info):
     new_info = {}
     for oid, value in info:
         type_, id_ = oid.split(".", 1)
-        if not id_ in new_info:
+        if id_ not in new_info:
             new_info[id_] = {"TypeIndex": id_.split(".")[-1]}
 
         try:
@@ -163,7 +164,12 @@ def check_lgp_pdu_aux(item, params, info):
     return (3, "Could not find given PDU.")
 
 
+def parse_lgp_pdu_aux(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["lgp_pdu_aux"] = LegacyCheckDefinition(
+    parse_function=parse_lgp_pdu_aux,
     detect=DETECT_LGP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.8.60.15",

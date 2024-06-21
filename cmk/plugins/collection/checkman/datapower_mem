@@ -1,0 +1,16 @@
+title: IBM Datapower: Memory Usage
+agents: snmp
+catalog: hw/network/ibm
+license: GPLv2
+distribution: check_mk
+description:
+
+ This check monitors the memory usage of IBMs Datapower Gateways
+ supporting the DATAPOWER-STATUS-MIB. The check reads the used and total
+ amount of memory and computes the used percentage.
+
+ The check will result in a WARNING/CRITICAL state when the given thresholds
+ for the used memory in percent are reached.
+
+discovery:
+ One service is created for each gateway.

@@ -7,13 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
-# FIXME
-# The WATO group 'memory_simple' needs an item and the service_description should
-# have a '%s'.  At the moment the current item 'total'/'TMM' and 'Memory' without '%s'
-# works but is not consistent.  This will be fixed in the future.
-# If we change this we loose history and parameter sets have to be adapted.
+from cmk.agent_based.v2 import contains, SNMPTree
 
 # Example output:
 # Overall memory
@@ -26,6 +21,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 
 def parse_f5_bigip_mem(string_table):
+    if not string_table:
+        return None
+
     parsed = {}
     try:
         parsed["total"] = (float(string_table[0][0]), float(string_table[0][1]))
@@ -43,13 +41,15 @@ def parse_f5_bigip_mem(string_table):
 def discover_f5_bigip_mem(parsed):
     if "total" in parsed:
         yield "total", {}
+    if parsed.get("TMM", (0, 0))[0] > 0:
+        yield "TMM", {}
 
 
-def check_f5_bigip_mem(_item, params, parsed):
-    if "total" not in parsed:
+def check_f5_bigip_mem(item, params, parsed):
+    if item not in parsed:
         return None
 
-    mem_total, mem_used = parsed["total"]
+    mem_total, mem_used = parsed[item]
     return check_memory_element(
         "Usage",
         mem_used,
@@ -66,38 +66,9 @@ check_info["f5_bigip_mem"] = LegacyCheckDefinition(
         oids=["7.1.1", "7.1.2", "1.2.1.143", "1.2.1.144"],
     ),
     parse_function=parse_f5_bigip_mem,
-    service_name="Memory",
+    service_name="Memory %s",
     discovery_function=discover_f5_bigip_mem,
     check_function=check_f5_bigip_mem,
-    check_ruleset_name="memory_simple",
-    check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
-)
-
-
-def discover_f5_bigip_mem_tmm(parsed):
-    if parsed.get("TMM", (0, 0))[0] > 0:
-        yield "TMM", {}
-
-
-def check_f5_bigip_mem_tmm(_item, params, parsed):
-    if "TMM" not in parsed:
-        return None
-
-    mem_total, mem_used = parsed["TMM"]
-    return check_memory_element(
-        "Usage",
-        mem_used,
-        mem_total,
-        params.get("levels"),
-        metric_name="mem_used",
-    )
-
-
-check_info["f5_bigip_mem.tmm"] = LegacyCheckDefinition(
-    service_name="Memory",
-    sections=["f5_bigip_mem"],
-    discovery_function=discover_f5_bigip_mem_tmm,
-    check_function=check_f5_bigip_mem_tmm,
     check_ruleset_name="memory_simple",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

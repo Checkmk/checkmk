@@ -1,0 +1,18 @@
+Title: Introduce Last seen for the REST API usage
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1700822001
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Prior to this Werk, the last time a REST API user was used was not
+displayed in WATO and "Never logged in" was displayed. This Werk
+changes the behavior and now displays the date and time of when it
+was last used. These are the changes introduced in this Werk:
+
+* Last seen column shows "Never" if the user was never authenticated.
+* REST API users show the date and time when they last logged in.
+* In the Act. column, the login icon includes the means by which
+  the authentication information was last received (bearer, cookie, etc.).

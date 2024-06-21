@@ -12,10 +12,11 @@ import re
 import tarfile
 import time
 from collections import deque
-from collections.abc import Generator, Iterable, MutableMapping, MutableSequence
+from collections.abc import Generator, Iterable, MutableSequence
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
+from types import TracebackType
 from typing import NamedTuple
 from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 
@@ -52,7 +53,12 @@ class Progress:
         self.done_total = 0
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore[no-untyped-def]
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         logger.info(
             "%d done in %.3f secs %s",
             self.done_total,
@@ -143,44 +149,81 @@ def try_find_frame_named_main(page: playwright.async_api.Page) -> playwright.asy
 
 
 class Crawler:
-    def __init__(self, test_site: Site, report_file: str | None) -> None:
+    def __init__(self, test_site: Site, report_file: str | None, max_urls: int = 0) -> None:
         self.duration = 0.0
-        self.results: MutableMapping[str, CrawlResult] = {}
+        self.results: dict[str, CrawlResult] = {}
         self.site = test_site
-        self.report_file = Path(report_file or self.site.result_dir() + "/crawl.xml")
+        self.report_file = Path(report_file or self.site.result_dir()) / "crawl.xml"
         self.requests_session = requests.Session()
+        self._find_more_urls: bool = True
+        self._ignored_content_types: set[str] = {
+            "application/json",
+            "application/pdf",
+            "application/x-deb",
+            "application/x-debian-package",
+            "application/x-gzip",
+            "application/x-mkp",
+            "application/x-msdos-program",
+            "application/x-msi",
+            "application/x-pkg",
+            "application/x-redhat-package-manager",
+            "application/x-rpm",
+            "application/x-tar",
+            "application/x-tgz",
+            "application/x-yaml; charset=utf-8",
+            "image/gif",
+            "image/png",
+            "image/svg+xml",
+            "text/x-c++src",
+            "text/x-chdr",
+            "text/x-sh",
+        }
 
+        # override value using environment-variable
+        maxlen = int(os.environ.get("GUI_CRAWLER_URL_LIMIT", "0")) or max_urls
+        # limit minimum value to 0.
+        self._max_urls = max(0, maxlen)
         self._todos = deque([Url(self.site.internal_url)])
 
     async def crawl(self, max_tasks: int) -> None:
-        browser, storage_state = await self.create_browser_and_storage_state()
-        # makes sure authentication cookies is also available in the "requests" session.
-        for cookie_dict in storage_state["cookies"]:
-            self.requests_session.cookies.set(  # type: ignore[no-untyped-call]
-                name=cookie_dict["name"],
-                value=cookie_dict["value"],
-            )
-
-        with Progress() as progress:
-            tasks: set = set()
-            while tasks or self._todos:
-                while self._todos and len(tasks) < max_tasks:
-                    tasks.add(
-                        asyncio.create_task(
-                            self.visit_url(browser, storage_state, self._todos.popleft())
+        async with async_playwright() as pw:
+            browser = await pw.chromium.launch()
+            storage_state = await self.access_storage_state(browser)
+            # makes sure authentication cookies is also available in the "requests" session.
+            for cookie_dict in storage_state["cookies"]:
+                self.requests_session.cookies.set(
+                    name=cookie_dict["name"],
+                    value=cookie_dict["value"],
+                )
+            # special-case
+            search_limited_urls: bool = self._max_urls > 0
+            if search_limited_urls and self._max_urls < max_tasks:
+                max_tasks = self._max_urls
+            with Progress() as progress:
+                tasks: set = set()
+                while tasks or self._todos and self._find_more_urls:
+                    try:
+                        url = self._todos.popleft()
+                    except IndexError:
+                        logger.debug("Populating URLs/TODOs ...")
+                        url = None
+                    if url and len(tasks) < max_tasks:
+                        logger.debug("Checking URL %s", url.url)
+                        tasks.add(asyncio.create_task(self.visit_url(browser, storage_state, url)))
+                    else:
+                        logger.debug(
+                            "Maximum tasks assgined. Waiting for tasks to be completed ..."
                         )
-                    )
+                    done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                    progress.done(done=sum(1 for t in done if t.result()))
+                    if search_limited_urls:
+                        self._find_more_urls = progress.done_total < self._max_urls
+                    self.duration = progress.duration
+            await browser.close()
 
-                done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-                progress.done(done=sum(1 for t in done if t.result()))
-                self.duration = progress.duration
-
-    async def create_browser_and_storage_state(
-        self,
-    ) -> tuple[playwright.async_api.Browser, playwright.async_api.StorageState]:
-        pw = await async_playwright().start()
-        browser = await pw.chromium.launch()
-
+    async def access_storage_state(
+        self, browser: playwright.async_api.Browser
+    ) -> playwright.async_api.StorageState:
         context = await browser.new_context()
         page = await context.new_page()
 
@@ -202,7 +245,7 @@ class Crawler:
         storage_state = await context.storage_state()
         await context.close()
 
-        return browser, storage_state
+        return storage_state
 
     def _ensure_result(self, url: Url) -> None:
         if url.url not in self.results:
@@ -268,12 +311,23 @@ class Crawler:
             )
             return False
 
-        content_type = response.headers.get("content-type")
-        if response.status_code != 200 or content_type != "application/x-tar":
+        status_code = response.status_code
+        expected_status_code = 200
+        if status_code != expected_status_code:
             self.handle_error(
                 Url(url=crash_report_url, referer_url=url.url),
                 "CrashReportDownloadFailed",
-                f"status code: {response.status_code}, content-type: {content_type}",
+                f"status code: {status_code}, expected: {expected_status_code}",
+            )
+            return False
+
+        content_type = response.headers.get("content-type")
+        expected_content_type = "application/x-tgz"
+        if content_type != expected_content_type:
+            self.handle_error(
+                Url(url=crash_report_url, referer_url=url.url),
+                "CrashReportDownloadFailed",
+                f"content-type: {content_type}, expected: {expected_content_type}",
             )
             return False
 
@@ -320,27 +374,7 @@ class Crawler:
             content_type.startswith(ignored_start) for ignored_start in ["text/plain", "text/csv"]
         ):
             self.handle_skipped_reference(url, reason="content-type", message=content_type)
-        elif content_type in [
-            "application/x-rpm",
-            "application/x-deb",
-            "application/x-debian-package",
-            "application/x-gzip",
-            "application/x-msdos-program",
-            "application/x-msi",
-            "application/x-tgz",
-            "application/x-redhat-package-manager",
-            "application/x-pkg",
-            "application/x-tar",
-            "application/x-yaml; charset=utf-8",
-            "application/json",
-            "application/pdf",
-            "image/png",
-            "image/svg+xml",
-            "image/gif",
-            "text/x-chdr",
-            "text/x-c++src",
-            "text/x-sh",
-        ]:
+        elif content_type in self._ignored_content_types:
             self.handle_skipped_reference(url, reason="content-type", message=content_type)
         else:
             self.handle_error(url, error_type="UnknownContentType", message=content_type)
@@ -438,7 +472,7 @@ class Crawler:
             else:
                 self.handle_new_reference(url, referer_url=referer_url)
 
-    def check_logs(self, url: Url, logs: Iterable[str]):  # type: ignore[no-untyped-def]
+    def check_logs(self, url: Url, logs: Iterable[str]) -> None:
         accepted_logs = [
             "Missing object for SimpleBar initiation.",
         ]

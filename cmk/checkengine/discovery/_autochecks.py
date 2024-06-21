@@ -7,7 +7,7 @@ from __future__ import annotations
 import ast
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple, TypedDict
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
@@ -17,7 +17,7 @@ from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.store import ObjectStore
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
-from cmk.checkengine.legacy import LegacyCheckParameters
+from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.parameters import TimespecificParameters
 
 __all__ = [
@@ -25,48 +25,62 @@ __all__ = [
     "AutocheckEntry",
     "AutochecksStore",
     "AutochecksManager",
+    "DiscoveredService",
     "remove_autochecks_of_host",
+    "set_autochecks_for_effective_host",
     "set_autochecks_of_cluster",
     "set_autochecks_of_real_hosts",
 ]
 
 
 ComputeCheckParameters = Callable[
-    [HostName, CheckPluginName, Item, LegacyCheckParameters],
+    [HostName, CheckPluginName, Item, Mapping[str, object]],
     TimespecificParameters,
 ]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
-GetEffectviveHost = Callable[[HostName, str], HostName]
+GetEffectiveHost = Callable[[HostName, str], HostName]
+GetEffectiveHostOfAc = Callable[[HostName, CheckPluginName, Item], HostName]
 
 
 class AutocheckServiceWithNodes(NamedTuple):
-    service: AutocheckEntry
+    service: DiscoveredItem[AutocheckEntry]
     nodes: Sequence[HostName]
 
 
-# If we switched to something less stupid than "LegacyCheckParameters", see
-# if we can use pydantic
+class AutocheckDict(TypedDict):
+    check_plugin_name: str
+    item: str | None
+    parameters: Mapping[str, object]
+    service_labels: Mapping[str, str]
+
+
 class AutocheckEntry(NamedTuple):
     check_plugin_name: CheckPluginName
     item: Item
-    parameters: LegacyCheckParameters
+    parameters: Mapping[str, object]
     service_labels: Mapping[str, str]
 
     @staticmethod
-    def _parse_parameters(parameters: object) -> LegacyCheckParameters:
-        # Make sure it's a 'LegacyCheckParameters' (mainly done for mypy).
-        if parameters is None or isinstance(parameters, (dict, tuple, list, str, int, bool)):
-            return parameters
-        # I have no idea what else it could be (LegacyCheckParameters is quite pointless).
+    def _parse_parameters(parameters: object) -> Mapping[str, object]:
+        if isinstance(parameters, dict):
+            return {str(k): v for k, v in parameters.items()}
+
         raise ValueError(f"Invalid autocheck: invalid parameters: {parameters!r}")
 
+    @staticmethod
+    def _parse_labels(labels: object) -> Mapping[str, str]:
+        if isinstance(labels, dict):
+            return {str(k): str(v) for k, v in labels.items()}
+
+        raise ValueError(f"Invalid autocheck: invalid labels: {labels!r}")
+
     @classmethod
-    def load(cls, raw_dict: Mapping[str, Any]) -> AutocheckEntry:
+    def load(cls, raw_dict: Mapping[str, object]) -> AutocheckEntry:
         return cls(
-            check_plugin_name=CheckPluginName(raw_dict["check_plugin_name"]),
+            check_plugin_name=CheckPluginName(str(raw_dict["check_plugin_name"])),
             item=None if (raw_item := raw_dict["item"]) is None else str(raw_item),
             parameters=cls._parse_parameters(raw_dict["parameters"]),
-            service_labels={str(n): str(v) for n, v in raw_dict["service_labels"].items()},
+            service_labels=cls._parse_labels(raw_dict["service_labels"]),
         )
 
     def id(self) -> ServiceID:
@@ -76,7 +90,10 @@ class AutocheckEntry(NamedTuple):
         """
         return ServiceID(self.check_plugin_name, self.item)
 
-    def dump(self) -> Mapping[str, Any]:
+    def comparator(self) -> tuple[Mapping[str, object], Mapping[str, str]]:
+        return self.parameters, self.service_labels
+
+    def dump(self) -> AutocheckDict:
         return {
             "check_plugin_name": str(self.check_plugin_name),
             "item": self.item,
@@ -144,7 +161,7 @@ class AutochecksManager:
         hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
         get_service_description: GetServiceDescription,
-        get_effective_host: GetEffectviveHost,
+        get_effective_host: GetEffectiveHost,
     ) -> Sequence[ConfiguredService]:
         if hostname not in self._autochecks:
             self._autochecks[hostname] = list(
@@ -162,7 +179,7 @@ class AutochecksManager:
         hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
         get_service_description: GetServiceDescription,
-        get_effective_host: GetEffectviveHost,
+        get_effective_host: GetEffectiveHost,
     ) -> Iterable[ConfiguredService]:
         """Read automatically discovered checks of one host"""
         for autocheck_entry in self._read_raw_autochecks(hostname):
@@ -223,6 +240,7 @@ def set_autochecks_of_real_hosts(
     hostname: HostName,
     new_services_with_nodes: Sequence[AutocheckServiceWithNodes],
 ) -> None:
+    # TODO: use set_autochecks_for_effective_host instead
     store = AutochecksStore(hostname)
     # write new autochecks file for that host
     store.write(
@@ -230,7 +248,7 @@ def set_autochecks_of_real_hosts(
             hostname,
             new_services_with_nodes,
             store.read(),
-        ),
+        )
     )
 
 
@@ -240,45 +258,74 @@ def _consolidate_autochecks_of_real_hosts(
     existing_autochecks: Sequence[AutocheckEntry],
 ) -> Sequence[AutocheckEntry]:
     consolidated = {
-        discovered.id(): discovered
+        DiscoveredService.id(discovered): DiscoveredService.newer(discovered)
         for discovered, found_on_nodes in new_services_with_nodes
         if hostname in found_on_nodes
     }
-    # overwrite parameters from existing ones for those which are kept
-    new_services = {x.service.id() for x in new_services_with_nodes}
-    consolidated.update((id_, ex) for ex in existing_autochecks if (id_ := ex.id()) in new_services)
 
+    new_services = {DiscoveredService.id(x.service) for x in new_services_with_nodes}
+    consolidated.update(
+        (id_, ex)
+        for ex in existing_autochecks
+        if (id_ := ex.id()) in new_services and id_ not in consolidated
+    )
     return list(consolidated.values())
 
 
 def set_autochecks_of_cluster(
     nodes: Iterable[HostName],
     hostname: HostName,
-    new_services_with_nodes: Sequence[AutocheckServiceWithNodes],
-    get_effective_host: GetEffectviveHost,
+    new_services_with_nodes_by_host: Mapping[HostName, Sequence[AutocheckServiceWithNodes]],
+    get_effective_host: GetEffectiveHost,
     get_service_description: GetServiceDescription,
 ) -> None:
     """A Cluster does not have an autochecks file. All of its services are located
     in the nodes instead. For clusters we cycle through all nodes remove all
     clustered service and add the ones we've got as input."""
+
+    def get_effective_host_by_id(
+        host: HostName, plugin_name: CheckPluginName, item: Item
+    ) -> HostName:
+        return get_effective_host(host, get_service_description(host, plugin_name, item))
+
     for node in nodes:
-        new_autochecks = [
-            existing
-            for existing in AutochecksStore(node).read()
-            if hostname != get_effective_host(node, get_service_description(node, *existing.id()))
-        ] + [
-            discovered
-            for discovered, found_on_nodes in new_services_with_nodes
-            if node in found_on_nodes
-        ]
+        set_autochecks_for_effective_host(
+            autochecks_owner=node,
+            effective_host=hostname,
+            new_services=[
+                DiscoveredService.newer(discovered)
+                for discovered, found_on_nodes in new_services_with_nodes_by_host[node]
+                if node in found_on_nodes
+            ],
+            get_effective_host=get_effective_host_by_id,
+        )
 
-        # write new autochecks file for that host
-        AutochecksStore(node).write(_deduplicate(new_autochecks))
-
-    # Check whether or not the cluster host autocheck files are still existant.
+    # Check whether the cluster host autocheck files are still existent.
     # Remove them. The autochecks are only stored in the nodes autochecks files
     # these days.
     AutochecksStore(hostname).clear()
+
+
+def set_autochecks_for_effective_host(
+    autochecks_owner: HostName,
+    effective_host: HostName,
+    new_services: Iterable[AutocheckEntry],
+    get_effective_host: GetEffectiveHostOfAc,
+) -> None:
+    """Set all services of an effective host, and leave all other services alone."""
+    store = AutochecksStore(autochecks_owner)
+    store.write(
+        _deduplicate(
+            [
+                *(
+                    existing
+                    for existing in store.read()
+                    if effective_host != get_effective_host(autochecks_owner, *existing.id())
+                ),
+                *new_services,
+            ]
+        )
+    )
 
 
 def _deduplicate(autochecks: Sequence[AutocheckEntry]) -> Sequence[AutocheckEntry]:
@@ -301,7 +348,7 @@ def _deduplicate(autochecks: Sequence[AutocheckEntry]) -> Sequence[AutocheckEntr
 def remove_autochecks_of_host(
     hostname: HostName,
     remove_hostname: HostName,
-    get_effective_host: GetEffectviveHost,
+    get_effective_host: GetEffectiveHost,
     get_service_description: GetServiceDescription,
 ) -> int:
     """Remove all autochecks of a host while being cluster-aware
@@ -323,3 +370,33 @@ def remove_autochecks_of_host(
     store.write(new_entries)
 
     return len(existing_entries) - len(new_entries)
+
+
+class DiscoveredService:
+    @staticmethod
+    def check_plugin_name(discovered_item: DiscoveredItem[AutocheckEntry]) -> CheckPluginName:
+        return DiscoveredService.older(discovered_item).check_plugin_name
+
+    @staticmethod
+    def item(discovered_item: DiscoveredItem[AutocheckEntry]) -> Item:
+        return DiscoveredService.older(discovered_item).item
+
+    @staticmethod
+    def id(discovered_item: DiscoveredItem[AutocheckEntry]) -> ServiceID:
+        return DiscoveredService.older(discovered_item).id()
+
+    @staticmethod
+    def older(discovered_item: DiscoveredItem[AutocheckEntry]) -> AutocheckEntry:
+        if discovered_item.previous is not None:
+            return discovered_item.previous
+        if discovered_item.new is not None:
+            return discovered_item.new
+        raise ValueError("Neither previous nor new service is set.")
+
+    @staticmethod
+    def newer(discovered_item: DiscoveredItem[AutocheckEntry]) -> AutocheckEntry:
+        if discovered_item.new is not None:
+            return discovered_item.new
+        if discovered_item.previous is not None:
+            return discovered_item.previous
+        raise ValueError("Neither previous nor new service is set.")

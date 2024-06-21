@@ -13,8 +13,7 @@
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 
-TableEventConsoleReplication::TableEventConsoleReplication(ICore *mc)
-    : Table(mc) {
+TableEventConsoleReplication::TableEventConsoleReplication(ICore *mc) {
     const ColumnOffsets offsets{};
     addDynamicColumn(std::make_unique<DynamicEventConsoleReplicationColumn>(
         "value", "The replication value", mc, offsets));
@@ -29,6 +28,7 @@ std::string TableEventConsoleReplication::namePrefix() const {
 }
 
 void TableEventConsoleReplication::answerQuery(Query &query,
-                                               const User & /*user*/) {
+                                               const User & /*user*/,
+                                               const ICore & /*core*/) {
     query.processDataset(Row{this});
 }

@@ -29,6 +29,8 @@ def _parameter_valuespec_jvm_requests() -> Migrate:
                     "levels_lower",
                     SimpleLevels(
                         spec=Integer,
+                        title=_("Lower levels for incoming requests to a JVM application server"),
+                        unit=_("requests/sec"),
                         default_levels=(-1, -1),
                         direction="lower",
                     ),
@@ -37,19 +39,19 @@ def _parameter_valuespec_jvm_requests() -> Migrate:
                     "levels_upper",
                     SimpleLevels(
                         spec=Integer,
+                        title=_("Upper levels for incoming requests to a JVM application server"),
+                        unit=_("requests/sec"),
                         default_levels=(800, 1000),
                         direction="upper",
                     ),
                 ),
             ],
-            help=_(
-                "This rule sets the warn and crit levels for the number "
-                "of incoming requests to a JVM application server."
-            ),
         ),
-        migrate=lambda p: p
-        if isinstance(p, dict)
-        else {"levels_lower": (p[1], p[0]), "levels_upper": (p[2], p[3])},
+        migrate=lambda p: (
+            p
+            if isinstance(p, dict)
+            else {"levels_lower": (p[1], p[0]), "levels_upper": (p[2], p[3])}
+        ),
     )
 
 

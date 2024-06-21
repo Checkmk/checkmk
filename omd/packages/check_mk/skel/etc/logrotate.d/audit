@@ -1,0 +1,9 @@
+###ROOT###/var/check_mk/wato/log/wato_audit.log {
+	missingok
+	nocompress
+	rotate 3652
+	size 300M
+	dateext
+	dateformat .%Y-%m-%d
+	notifempty
+}

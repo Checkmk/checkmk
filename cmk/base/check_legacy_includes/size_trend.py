@@ -8,7 +8,6 @@
 import time
 from collections.abc import Callable
 
-from cmk.base.check_api import get_bytes_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_average,
     get_rate,
@@ -21,7 +20,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 # THESE FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
 # THE NEW CHECK API. PLEASE DO NOT MODIFY THESE FUNCTIONS ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
 # RESIDING IN
-# cmk/base/plugins/agent_based/utils/size_trend.py
+# cmk.plugins.lib/size_trend.py
 # ==================================================================================================
 
 Levels = tuple[float, float]
@@ -57,15 +56,15 @@ def _check_shrinking(
     return state, problem
 
 
-def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
-    check,
-    item,
-    resource,
-    levels,
-    used_mb,
+def size_trend(  # pylint: disable=too-many-branches
+    check: str,
+    item: str,
+    resource: str,
+    levels: dict,
+    used_mb: float,
     size_mb: float,
-    timestamp=None,
-):  # pylint: disable=function-redefined
+    timestamp: float | None = None,
+) -> tuple[int, str, list]:  # pylint: disable=function-redefined
     """Trend computation for size related checks of disks, ram, etc.
     Trends are computed in two steps. In the first step the delta to
     the last check is computed, using a normal check_mk counter.
@@ -141,7 +140,7 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
     sign = "+" if trend > 0 else ""
     infotext += ", trend: {}{} / {:g} hours".format(
         sign,
-        get_bytes_human_readable(trend * MB),
+        render.disksize(trend * MB),
         range_hours,
     )
 
@@ -158,8 +157,8 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
             problems.append(
                 "growing too fast (warn/crit at %s/%s per %.1f h)(!"
                 % (
-                    get_bytes_human_readable(wa),
-                    get_bytes_human_readable(cr),
+                    render.disksize(wa),
+                    render.disksize(cr),
                     range_hours,
                 )
             )
@@ -173,7 +172,7 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
         trend * MB,
         levels.get("trend_shrinking_bytes"),
         range_hours,
-        get_bytes_human_readable,
+        render.disksize,
     )
     if tmp_state > 0:
         state = max(state, tmp_state)

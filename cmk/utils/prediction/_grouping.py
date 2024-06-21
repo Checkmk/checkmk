@@ -26,7 +26,6 @@ _WEEKDAYS = [
 class PeriodInfo(NamedTuple):
     slice: int
     groupby: Callable[[int], tuple[Timegroup, int]]
-    valid: int
 
 
 def is_dst(timestamp: float) -> bool:
@@ -71,22 +70,18 @@ PREDICTION_PERIODS: Final[Mapping[PeriodName, PeriodInfo]] = {
     "wday": PeriodInfo(
         slice=86400,  # 7 slices
         groupby=_group_by_wday,
-        valid=7,
     ),
     "day": PeriodInfo(
         slice=86400,  # 31 slices
         groupby=_group_by_day_of_month,
-        valid=28,
     ),
     "hour": PeriodInfo(
         slice=86400,  # 1 slice
         groupby=_group_by_day,
-        valid=1,
     ),
     "minute": PeriodInfo(
         slice=3600,  # 1 slice
         groupby=_group_by_everyhour,
-        valid=24,
     ),
 }
 
@@ -94,12 +89,13 @@ PREDICTION_PERIODS: Final[Mapping[PeriodName, PeriodInfo]] = {
 def time_slices(
     timestamp: int,
     horizon_seconds: int,
-    period_info: PeriodInfo,
-    timegroup: Timegroup,
+    period_name: PeriodName,
 ) -> Sequence[tuple[int, int]]:
     "Collect all slices back into the past until time horizon is reached"
-    timestamp = int(timestamp)
     abs_begin = timestamp - horizon_seconds
+
+    period_info = PREDICTION_PERIODS[period_name]
+    timegroup, _rel_time = period_info.groupby(timestamp)
 
     # Note: due to the f**king DST, we can have several shifts between DST
     # and non-DST during a computation. Treatment is unfair on those longer

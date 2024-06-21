@@ -5,8 +5,7 @@
 
 import abc
 import enum
-from collections.abc import Mapping
-from typing import Any, final, Generic, Literal, TypeVar
+from typing import final, Generic, Literal, TypeVar
 
 import cmk.utils.resulttype as result
 from cmk.utils.exceptions import MKFetcherError, MKTimeout
@@ -32,22 +31,6 @@ _TRawData = TypeVar("_TRawData")
 
 class Fetcher(Generic[_TRawData], abc.ABC):
     """Interface to the data fetchers."""
-
-    @final
-    @classmethod
-    def from_json(cls: type[TFetcher], serialized: Mapping[str, Any]) -> TFetcher:
-        """Deserialize from JSON."""
-        return cls._from_json(serialized)
-
-    @classmethod
-    @abc.abstractmethod
-    def _from_json(cls: type[TFetcher], serialized: Mapping[str, Any]) -> TFetcher:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def to_json(self) -> Mapping[str, Any]:
-        """Serialize to JSON."""
-        raise NotImplementedError()
 
     @final
     def __enter__(self) -> "Fetcher[_TRawData]":

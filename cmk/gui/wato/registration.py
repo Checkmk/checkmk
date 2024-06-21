@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.version import edition_supports_nagvis
+
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import PageRegistry
@@ -41,8 +43,8 @@ from . import (
     _rulespec_groups,
     _snapins,
     filters,
-    pages,
 )
+from . import pages as wato_pages
 from ._notification_parameter import NotificationParameterRegistry
 from ._notification_parameter import registration as _notification_parameter_registration
 from ._virtual_host_tree import VirtualHostTree
@@ -102,7 +104,7 @@ def register(
     )
 
     filters.register(filter_registry)
-    pages.register(page_registry, mode_registry, automation_command_registry, job_registry)
+    wato_pages.register(page_registry, mode_registry, automation_command_registry, job_registry)
     _permissions.register(permission_section_registry, permission_registry)
     _main_module_topics.register(main_module_topic_registry)
     _main_modules.register(main_module_registry)
@@ -115,7 +117,8 @@ def register(
     )
     _ac_tests.register(ac_test_registry)
     _omd_configuration.register(config_domain_registry, config_variable_registry)
-    _nagvis_auth.register(permission_section_registry, permission_registry)
+    if edition_supports_nagvis():
+        _nagvis_auth.register(permission_section_registry, permission_registry)
     _snapins.register(snapin_registry, match_item_generator_registry, mega_menu_registry)
     _notification_settings.register(config_variable_registry)
     _notification_parameter_registration.register(notification_parameter_registry)

@@ -19,7 +19,7 @@ from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager
 
-import cmk.base.config as config
+from cmk.base import config
 from cmk.base.config import ConfigCache
 
 
@@ -167,6 +167,12 @@ class Scenario:
         self.config[varname] = option
 
     def set_ruleset(self, varname: str, ruleset: Sequence[RuleSpec[Any]]) -> None:
+        self.config[varname] = ruleset
+
+    def set_ruleset_bundle(
+        self, varname: str, ruleset: Mapping[str, Sequence[RuleSpec[Any]]]
+    ) -> None:
+        # active checks, special agents, etc.
         self.config[varname] = ruleset
 
     def set_autochecks(self, hostname: HostName, entries: Sequence[AutocheckEntry]) -> None:

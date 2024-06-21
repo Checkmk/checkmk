@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import shlex
 import subprocess
 import threading
@@ -17,16 +18,8 @@ from cmk.utils.render import date_and_time
 
 from .config import Config
 from .event import Event, scrub_string
-from .history import (
-    _log_event,
-    ActiveHistoryPeriod,
-    Columns,
-    get_logfile,
-    History,
-    HistoryWhat,
-    quote_tab,
-)
-from .query import OperatorName, QueryGET
+from .history import _log_event, ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab
+from .query import Columns, OperatorName, QueryFilter, QueryGET
 from .settings import Settings
 
 
@@ -92,9 +85,7 @@ class FileHistory(History):
         grep_pipeline = _grep_pipeline(filters)
 
         time_filters = [
-            (operator_name, argument)
-            for column_name, operator_name, _predicate, argument in filters
-            if column_name.split("_")[-1] == "time"
+            (f.operator_name, f.argument) for f in filters if f.column_name.split("_")[-1] == "time"
         ]
         time_range = (
             _greatest_lower_bound_for_filters(time_filters),
@@ -137,6 +128,9 @@ class FileHistory(History):
     def housekeeping(self) -> None:
         _expire_logfiles(self._settings, self._config, self._logger, self._lock, False)
 
+    def close(self) -> None:
+        pass
+
 
 def _expire_logfiles(
     settings: Settings, config: Config, logger: Logger, lock_history: threading.Lock, flush: bool
@@ -161,7 +155,7 @@ def _expire_logfiles(
         except Exception as e:
             if settings.options.debug:
                 raise
-            logger.warning(f"Error expiring log files: {e}")
+            logger.warning("Error expiring log files: %s", e)
 
 
 # Please note: Keep this in sync with packages/neb/src/TableEventConsole.cc.
@@ -179,9 +173,7 @@ _GREPABLE_COLUMNS = {
 }
 
 
-def _grep_pipeline(
-    filters: list[tuple[str, OperatorName, Callable[[Any], bool], Any]]
-) -> list[str]:
+def _grep_pipeline(filters: Iterable[QueryFilter]) -> list[str]:
     """
     Optimization: use grep in order to reduce amount of read lines based on some frequently used
     filters. It's OK if the filters don't match 100% accurately on the right lines. If in doubt, you
@@ -190,15 +182,15 @@ def _grep_pipeline(
     >>> _grep_pipeline([])
     []
 
-    >>> _grep_pipeline([("event_core_host", '=', lambda x: True, '|| ping')])
+    >>> _grep_pipeline([QueryFilter("event_core_host", '=', lambda x: True, '|| ping')])
     ["grep -F -e '|| ping'"]
 
     """
     return [
         command
-        for column_name, operator_name, _predicate, argument in filters
-        if column_name in _GREPABLE_COLUMNS
-        for command in [_grep_command(operator_name, str(argument))]
+        for f in filters
+        if f.column_name in _GREPABLE_COLUMNS
+        for command in [_grep_command(f.operator_name, str(f.argument))]
         if command is not None
     ]
 
@@ -295,9 +287,34 @@ def parse_history_file(
                 if filter_row(parts):
                     entries.append(parts)
             except Exception:
-                logger.exception(f"Invalid line '{line!r}' in history file {path}")
+                logger.exception("Invalid line '%s' in history file %s", line, path)
 
     return entries
+
+
+def parse_history_file_python(
+    history_columns: Sequence[tuple[str, Any]],
+    path: Path,
+    logger: Logger,
+) -> Iterable[Sequence[Any]]:
+    """Pure python reader for history files. Used for update config, where filtering is not needed.
+
+    To avoid slurping the whole file in memory this generator yields chunks of entries.
+    This is not faster than the grep approach(parse_history_file()), but it's more memory efficient
+    and does not need to fork a subprocess and other cmk specific stuff.
+    """
+    with open(path, "rb") as f:
+        for chunk in itertools.batched(f, 100_000):
+            entries = []
+            for line in chunk:
+                try:
+                    parts: list[Any] = line.decode("utf-8").rstrip("\n").split("\t")
+                    parts.insert(0, 0)  # add line number
+                    convert_history_line(history_columns, parts)
+                    entries.append(parts)
+                except Exception:
+                    logger.exception("Invalid line '%s' in history file %s", line, path)
+            yield entries
 
 
 def convert_history_line(history_columns: Sequence[tuple[str, Any]], values: list[Any]) -> None:

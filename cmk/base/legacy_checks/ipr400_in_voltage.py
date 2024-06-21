@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 
 def inventory_ipr400_in_voltage(info):
@@ -28,7 +29,12 @@ def check_ipr400_in_voltage(item, params, info):
     return 0, infotext, perfdata
 
 
+def parse_ipr400_in_voltage(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ipr400_in_voltage"] = LegacyCheckDefinition(
+    parse_function=parse_ipr400_in_voltage,
     detect=startswith(".1.3.6.1.2.1.1.1.0", "ipr voip device ipr400"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.27053.1.4.5.10",

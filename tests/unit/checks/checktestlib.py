@@ -4,14 +4,115 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
+import abc
 import copy
 import os
 import types
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, NamedTuple
 from unittest import mock
 
 import pytest
+
+from cmk.utils.hostaddress import HostName
+from cmk.utils.legacy_check_api import LegacyCheckDefinition
+
+from cmk.checkengine.checking import CheckPluginName
+
+
+class MissingCheckInfoError(KeyError):
+    pass
+
+
+class BaseCheck(abc.ABC):
+    """Abstract base class for Check and ActiveCheck"""
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+        # we cant use the current_host context, b/c some tests rely on a persistent
+        # item state across several calls to run_check
+        import cmk.base.plugin_contexts  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
+
+        cmk.base.plugin_contexts._hostname = HostName("non-existent-testhost")
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.name!r})"
+
+
+class Check(BaseCheck):
+    def __init__(self, name: str) -> None:
+        from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
+            config,
+        )
+        from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
+
+        super().__init__(name)
+        if self.name not in config.check_info:
+            raise MissingCheckInfoError(self.name)
+        info = config.check_info[self.name]
+        assert isinstance(info, LegacyCheckDefinition)
+        self.info = info
+        self._migrated_plugin = register.get_check_plugin(
+            CheckPluginName(self.name.replace(".", "_"))
+        )
+
+    def default_parameters(self) -> Mapping[str, Any]:
+        if self._migrated_plugin:
+            return self._migrated_plugin.check_default_parameters or {}
+        return {}
+
+    def run_parse(self, info: list) -> object:
+        if self.info.parse_function is None:
+            raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
+        return self.info.parse_function(info)
+
+    def run_discovery(self, info: object) -> Any:
+        if self.info.discovery_function is None:
+            raise MissingCheckInfoError(
+                "Check '%s' " % self.name + "has no discovery function defined"
+            )
+        return self.info.discovery_function(info)
+
+    def run_check(self, item: object, params: object, info: object) -> Any:
+        if self.info.check_function is None:
+            raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
+        return self.info.check_function(item, params, info)
+
+
+class ActiveCheck(BaseCheck):
+    def __init__(self, name: str) -> None:
+        from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
+            config,
+        )
+
+        super().__init__(name)
+        self.info = config.active_check_info.get(self.name[len("check_") :])
+
+    def run_argument_function(self, params: Mapping[str, object]) -> Sequence[str]:
+        assert self.info, "Active check has to be implemented in the legacy API"
+        return self.info["argument_function"](params)
+
+    def run_service_description(self, params: object) -> object:
+        assert self.info, "Active check has to be implemented in the legacy API"
+        return self.info["service_description"](params)
+
+    def run_generate_icmp_services(self, host_config: object, params: object) -> object:
+        assert self.info, "Active check has to be implemented in the legacy API"
+        yield from self.info["service_generator"](host_config, params)
+
+
+class SpecialAgent:
+    def __init__(self, name: str) -> None:
+        from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
+            config,
+        )
+
+        super().__init__()
+        self.name = name
+        assert self.name.startswith(
+            "agent_"
+        ), "Specify the full name of the active check, e.g. agent_3par"
+        self.argument_func = config.special_agent_info[self.name[len("agent_") :]]
 
 
 class Tuploid:
@@ -198,14 +299,14 @@ def assertBasicCheckResultsEqual(actual, expected):
 
     diff_idx = len(os.path.commonprefix((expected.infotext, actual.infotext)))
     diff_msg = ", differing at char %r" % diff_idx
-    assert expected.infotext == actual.infotext, msg % ("infotext", actual.infotext) + diff_msg
+    assert actual.infotext == expected.infotext, msg % ("infotext", actual.infotext) + diff_msg
 
     perf_count = len(actual.perfdata)
-    assert len(expected.perfdata) == perf_count, msg % ("perfdata count", perf_count)
+    assert perf_count == len(expected.perfdata), msg % ("perfdata count", perf_count)
     for pact, pexp in zip(actual.perfdata, expected.perfdata):
         assertPerfValuesEqual(pact, pexp)
 
-    assert expected.multiline == actual.multiline, msg % ("multiline", actual.multiline)
+    assert actual.multiline == expected.multiline, msg % ("multiline", actual.multiline)
 
 
 class CheckResult:
@@ -305,12 +406,17 @@ def assertCheckResultsEqual(actual, expected):
 class DiscoveryEntry(Tuploid):
     """A single entry as returned by the discovery function."""
 
-    def __init__(self, entry: tuple[str | None, dict | str | tuple | None]) -> None:
-        self.item, self.default_params = entry
+    @staticmethod
+    def _normalize_params(p: dict | None) -> dict:
+        return {} if p is None else p
+
+    def __init__(self, entry: tuple[str | None, dict | None]) -> None:
+        self.item = entry[0]
+        self.default_params = self._normalize_params(entry[1])
         assert self.item is None or isinstance(self.item, str)
 
     @property
-    def tuple(self):
+    def tuple(self) -> tuple[str | None, dict]:
         return self.item, self.default_params
 
     def __repr__(self) -> str:
@@ -326,8 +432,8 @@ class DiscoveryResult:
     get lost in the laziness.
     """
 
-    def __init__(self, result: Sequence[tuple[str | None, dict | str | tuple | None]] = ()) -> None:
-        self.entries = sorted((DiscoveryEntry(e) for e in (result or ())), key=repr)
+    def __init__(self, result: Sequence[tuple[str | None, dict | None]] = ()) -> None:
+        self.entries = sorted((DiscoveryEntry(e) for e in result), key=repr)
 
     def __eq__(self, other):
         return self.entries == other.entries

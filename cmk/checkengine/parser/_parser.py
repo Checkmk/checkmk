@@ -104,8 +104,7 @@ class ParserFunction(Protocol):
                 result.Result[AgentRawData | SNMPRawData, Exception],
             ]
         ],
-    ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
-        ...
+    ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]: ...
 
 
 def parse_raw_data(
@@ -113,7 +112,10 @@ def parse_raw_data(
     raw_data: result.Result[AgentRawData | SNMPRawData, Exception],
     *,
     selection: SectionNameCollection,
-) -> result.Result[HostSections[AgentRawDataSection | SNMPRawData], Exception,]:
+) -> result.Result[
+    HostSections[AgentRawDataSection | SNMPRawData],
+    Exception,
+]:
     try:
         return raw_data.map(partial(parser.parse, selection=selection))
     except Exception as exc:

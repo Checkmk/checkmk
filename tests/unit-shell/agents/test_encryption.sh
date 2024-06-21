@@ -12,8 +12,20 @@ MK_SOURCE_AGENT="true" source "$AGENT_LINUX"
 openssl() {
     if [ "${1}" = "version" ]; then
         printf "OpenSSL 1.1.1f  31 Mar 2020\n"
-    else
+    elif [[ " $* " =~ " -pbkdf2 " ]]; then
+        # This is the key derivation. We need to output some reasonable values to continue.
+        # This is also openssl enc, so this has to live above the encryption case.
+        printf "salt=53414C5453414C54\n"
+        printf "key=CC00CC00CC00CC00CC00CC00CC00CC00CC00CC00CC00CC00CC00CC00CC00CC00\n"
+        printf "iv =11001100110011001100110011001100\n"
+    elif [ "${1}" = "enc" ]; then
+        # Encryption
         sed 's/plain/cipher/g'
+    elif [ "${1}" = "dgst" ]; then
+        # Output something that looks like a MAC
+        printf "HMACHMACHMACHMACHMACHMACHMACHMAC"
+    else
+        fail "unexpected openssl command"
     fi
 }
 
@@ -22,9 +34,9 @@ test_unencrypted() {
 
     set_up_encryption
 
-    actual="$(printf "Hello plain world!\n" | optionally_encrypt)"
+    actual="$(printf "Hello plain 🌍!\n" | optionally_encrypt)"
 
-    assertEquals "Hello plain world!" "${actual}"
+    assertEquals "Hello plain 🌍!" "${actual}"
 }
 
 test_encrypted() {
@@ -32,19 +44,26 @@ test_encrypted() {
 
     ENCRYPTED="yes" set_up_encryption
 
-    actual="$(printf "Hello plain world!" | optionally_encrypt)"
+    expected="$(printf '%s%s%s%s' "05" "SALTSALT" "HMACHMACHMACHMACHMACHMACHMACHMAC" "Hello cipher 🌍!")"
+    actual="$(printf "Hello plain 🌍!" | optionally_encrypt)"
 
-    assertEquals "03Hello cipher world!" "${actual}"
+    assertEquals "${expected}" "${actual}"
 }
 
 test_encryption_does_not_strip_newlines() {
+    # Command substitution will remove trailing newlines, so we have to avoid
+    # storing intermediate binary computation results in variables.
+    #
+    # The expected output length is 61 bytes:
+    # 2 bytes version, 8 bytes salt, 32 bytes mac, and 19 bytes for the mocked
+    # encrypted message "Hello cipher 🌍!\n".
     unset optionally_encrypt
 
     ENCRYPTED="yes" set_up_encryption
 
-    actual="$(printf "Hello plain world!\n" | optionally_encrypt | wc -c)"
+    actual="$(printf "Hello plain 🌍!\n" | optionally_encrypt | wc -c)"
 
-    assertEquals "22" "${actual}"
+    assertEquals "61" "${actual}"
 }
 
 # shellcheck disable=SC1090

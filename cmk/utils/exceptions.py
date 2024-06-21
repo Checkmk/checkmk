@@ -5,8 +5,6 @@
 """User-defined exceptions and error handling related constant."""
 
 import enum
-import traceback
-from types import TracebackType
 
 __all__ = [
     "MKAgentError",
@@ -16,7 +14,6 @@ __all__ = [
     "MKException",
     "MKFetcherError",
     "MKGeneralException",
-    "MKParseFunctionError",
     "MKSkipCheck",
     "MKSNMPError",
     "MKTerminate",
@@ -43,22 +40,6 @@ class MKSNMPError(MKFetcherError):
     pass
 
 
-class MKParseFunctionError(MKException):
-    def __init__(
-        self, exception_type: type[Exception], exception: Exception, backtrace: TracebackType
-    ) -> None:
-        self.exception_type = exception_type
-        self.exception = exception
-        self.backtrace = backtrace
-        super().__init__(self, exception_type, exception, backtrace)
-
-    def exc_info(self) -> tuple[type[Exception], Exception, TracebackType]:
-        return self.exception_type, self.exception, self.backtrace
-
-    def __str__(self) -> str:
-        return "{!r}\n{}".format(self.exception, "".join(traceback.format_tb(self.backtrace)))
-
-
 class MKSkipCheck(MKException):
     pass
 
@@ -80,7 +61,7 @@ class MKTerminate(MKException):
 
 # This is raised to print an error message and then end the program.
 # The program should catch this at top level and end exit the program
-# with exit code 3, in order to be compatible with monitoring plugin API.
+# with exit code 3, in order to be compatible with monitoring plug-in API.
 class MKBailOut(MKException):
     pass
 

@@ -1,0 +1,11 @@
+Title: audit log: Add options to hide object and object type
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1699875661
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces the option to toggle the 'object' and
+'object type' columns in the audit log table.

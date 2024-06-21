@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.checkpoint import checkpoint_sensorstatus_to_nagios
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.checkpoint import DETECT
 
 
 def format_item_checkpoint_fan(name):
@@ -27,7 +28,12 @@ def check_checkpoint_fan(item, params, info):
             yield state, f"Status: {state_readable}, {value} {unit}"
 
 
+def parse_checkpoint_fan(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["checkpoint_fan"] = LegacyCheckDefinition(
+    parse_function=parse_checkpoint_fan,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6.7.8.2.1",

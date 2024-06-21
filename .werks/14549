@@ -1,4 +1,4 @@
-Title: <tt>mongodb_collections</tt>, <tt>mongodb_replica_set</tt>: Fix date parsing error
+Title: mongodb_collections, mongodb_replica_set: Fix date parsing error
 Class: fix
 Compatible: compat
 Component: checks

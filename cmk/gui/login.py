@@ -14,14 +14,14 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password
 from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
-from cmk.utils.licensing.registry import get_remaining_trial_time
+from cmk.utils.licensing.registry import get_remaining_trial_time_rounded
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site, url_prefix
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
 import cmk.gui.mobile
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -32,13 +32,12 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.log import AuthenticationFailureEvent, AuthenticationSuccessEvent
-from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
+from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser, user
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.session import session, UserContext
-from cmk.gui.userdb import active_connections_by_type
+from cmk.gui.userdb import get_active_saml_connections
 from cmk.gui.userdb.session import auth_cookie_name
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.mobile import is_mobile
@@ -73,6 +72,10 @@ def authenticate() -> Iterator[bool]:
     automation secret authentication."""
     if isinstance(session.user, LoggedInNobody):
         yield False
+    elif isinstance(session.user, LoggedInSuperUser):
+        # This is used with the internaltoken auth
+        # Let's hope we do not need the transactions for this user...
+        yield True
     else:
         assert session.session_info.auth_type
         with TransactionIdContext(session.user.ident):
@@ -296,88 +299,87 @@ class LoginPage(Page):
         html.close_a()
 
         try:
-            _show_remaining_trial_time(get_remaining_trial_time())
+            _show_remaining_trial_time(get_remaining_trial_time_rounded())
         except LicenseStateError:
             pass
 
-        html.begin_form("login", method="POST", add_transid=False, action="login.py")
-        html.hidden_field("_login", "1")
-        html.hidden_field("_origtarget", origtarget)
+        with html.form_context("login", method="POST", add_transid=False, action="login.py"):
+            html.hidden_field("_login", "1")
+            html.hidden_field("_origtarget", origtarget)
 
-        saml2_user_error: str | None = None
-        if saml_connections := [
-            c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
-        ]:
-            saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
+            saml2_user_error: str | None = None
+            if saml_connections := [
+                c
+                for c in get_active_saml_connections().values()
+                if c["owned_by_site"] == omd_site()
+            ]:
+                saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
 
-        html.open_table()
-        html.open_tr()
-        html.td(
-            html.render_label(
-                "%s:" % _("Username"),
-                id_="label_user",
-                class_=["legend"],
-                for_=self._username_varname,
-            ),
-            class_="login_label",
-        )
-        html.open_td(class_="login_input")
-        html.text_input(self._username_varname, id_="input_user")
-        html.close_td()
-        html.close_tr()
-        html.open_tr()
-        html.td(
-            html.render_label(
-                "%s:" % _("Password"),
-                id_="label_pass",
-                class_=["legend"],
-                for_=self._password_varname,
-            ),
-            class_="login_label",
-        )
-        html.open_td(class_="login_input")
-        html.password_input(self._password_varname, id_="input_pass", size=None)
-        html.close_td()
-        html.close_tr()
-        html.close_table()
+            html.open_table()
+            html.open_tr()
+            html.td(
+                html.render_label(
+                    "%s:" % _("Username"),
+                    id_="label_user",
+                    class_=["legend"],
+                    for_=self._username_varname,
+                ),
+                class_="login_label",
+            )
+            html.open_td(class_="login_input")
+            html.text_input(self._username_varname, id_="input_user")
+            html.close_td()
+            html.close_tr()
+            html.open_tr()
+            html.td(
+                html.render_label(
+                    "%s:" % _("Password"),
+                    id_="label_pass",
+                    class_=["legend"],
+                    for_=self._password_varname,
+                ),
+                class_="login_label",
+            )
+            html.open_td(class_="login_input")
+            html.password_input(self._password_varname, id_="input_pass", size=None)
+            html.close_td()
+            html.close_tr()
+            html.close_table()
 
-        html.open_div(id_="button_text")
-        html.button("_login", _("Login"), cssclass=None if saml_connections else "hot")
-        html.close_div()
-
-        if user_errors and not saml2_user_error:
-            show_user_errors("login_error")
-
-        html.close_div()
-
-        html.open_div(id_="foot")
-
-        if active_config.login_screen.get("login_message"):
-            html.open_div(id_="login_message")
-            html.show_message(active_config.login_screen["login_message"])
+            html.open_div(id_="button_text")
+            html.button("_login", _("Login"), cssclass=None if saml_connections else "hot")
             html.close_div()
 
-        footer: list[HTML] = []
-        for title, url, target in active_config.login_screen.get("footer_links", []):
-            footer.append(HTMLWriter.render_a(title, href=url, target=target))
+            if user_errors and not saml2_user_error:
+                show_user_errors("login_error")
 
-        if "hide_version" not in active_config.login_screen:
-            footer.append(escape_to_html("Version: %s" % cmk_version.__version__))
+            html.close_div()
 
-        footer.append(
-            HTML(
-                "&copy; %s"
-                % HTMLWriter.render_a("Checkmk GmbH", href="https://checkmk.com", target="_blank")
+            html.open_div(id_="foot")
+
+            if active_config.login_screen.get("login_message"):
+                html.open_div(id_="login_message")
+                html.show_message(active_config.login_screen["login_message"])
+                html.close_div()
+
+            footer: list[HTML] = []
+            for title, url, target in active_config.login_screen.get("footer_links", []):
+                footer.append(HTMLWriter.render_a(title, href=url, target=target))
+
+            if "hide_version" not in active_config.login_screen:
+                footer.append(HTML.with_escaping("Version: %s" % cmk_version.__version__))
+
+            footer.append(
+                HTML.without_escaping("&copy; ")
+                + HTMLWriter.render_a("Checkmk GmbH", href="https://checkmk.com", target="_blank")
             )
-        )
 
-        html.write_html(HTML(" - ").join(footer))
+            html.write_html(HTML.without_escaping(" - ").join(footer))
 
-        html.close_div()
+            html.close_div()
 
-        html.set_focus(self._username_varname)
-        html.hidden_fields()
-        html.end_form()
+            html.set_focus(self._username_varname)
+            html.hidden_fields()
         html.close_div()
 
         html.footer()
@@ -388,18 +390,22 @@ class LoginPage(Page):
 
 
 def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None:
-    # Add 1 to round up the remaining days/hours, to not show "0 days" or "0 hours"
-    # Note: Once the remaining trial time <= 0 seconds, this code is not reached anymore (license
-    #       switch from trial to free)
-    remaining_days: int = remaining_trial_time.days + 1
-    remaining_hours: int = remaining_trial_time.hours + 1
+    # remaining_trial_time has already been adjusted for display purposes
+    # so that 29d 23h turns into 30d
+    # and 0d 0h 30m turns into 1h
+    # Note: Once the actual remaining trial time <= 0 seconds,
+    #       this code is not reached anymore (license switch from trial to free)
+    remaining_days: int = remaining_trial_time.days
+    remaining_hours: int = remaining_trial_time.hours
     remaining_percentage: float = remaining_trial_time.perc
 
     html.open_div(class_="trial_expiration_info" + (" warning" if remaining_days < 8 else ""))
     html.span(
-        _("%d days") % remaining_days
-        if remaining_days > 1
-        else "%d " % remaining_hours + ungettext("hour", "hours", remaining_hours),
+        (
+            _("%d days") % remaining_days
+            if remaining_days > 1
+            else "%d " % remaining_hours + ungettext("hour", "hours", remaining_hours)
+        ),
         class_="remaining_time",
     )
 

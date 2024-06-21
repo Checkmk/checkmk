@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
+
+from cmk.agent_based.v2 import get_value_store, render, StringTable
 
 # <<<siemens_plc>>>
 # PFT01 temp Gesamt 279183569715
@@ -28,6 +29,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 # RGB01 seconds Service 109
 # RGB01 seconds Serviceintervall 700
 # RGB01 text Testtext HRL01-0001-0010-02-07
+
+
+def parse_siemens_plc(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["siemens_plc"] = LegacyCheckDefinition(parse_function=parse_siemens_plc)
+
 
 # .
 #   .--Temperature---------------------------------------------------------.
@@ -80,7 +89,7 @@ check_info["siemens_plc.temp"] = LegacyCheckDefinition(
 
 
 def inventory_siemens_plc_flag(info):
-    return [(l[0] + " " + l[2], False) for l in info if l[1] == "flag"]
+    return [(l[0] + " " + l[2], {}) for l in info if l[1] == "flag"]
 
 
 def check_siemens_plc_flag(item, params, info):
@@ -145,7 +154,7 @@ def check_siemens_plc_duration(item, params, info):
             if old_seconds is not None and old_seconds > seconds:
                 return (
                     2,
-                    f"Reduced from {get_age_human_readable(old_seconds)} to {get_age_human_readable(seconds)}",
+                    f"Reduced from {render.time_offset(old_seconds)} to {render.time_offset(seconds)}",
                     perfdata,
                 )
 
@@ -158,7 +167,7 @@ def check_siemens_plc_duration(item, params, info):
             elif warn is not None and seconds >= warn:
                 state = 1
 
-            return state, get_age_human_readable(seconds), perfdata
+            return state, render.time_offset(seconds), perfdata
     return None
 
 
@@ -280,7 +289,12 @@ def check_siemens_plc_cpu_state(_no_item, _no_params, info):
     return 3, "CPU is in unknown state"
 
 
+def parse_siemens_plc_cpu_state(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["siemens_plc_cpu_state"] = LegacyCheckDefinition(
+    parse_function=parse_siemens_plc_cpu_state,
     service_name="CPU state",
     discovery_function=inventory_siemens_plc_cpu_state,
     check_function=check_siemens_plc_cpu_state,

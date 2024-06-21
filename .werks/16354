@@ -1,0 +1,17 @@
+Title: nginx_status_2.py: Fix SyntaxError
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701879932
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The Python 2-version of the NGINX agent plugin crashed with a SyntaxError:
+
+C+:
+File "nginx_status_2.py", line 132
+  config: dict = {}
+        ^
+SyntaxError: invalid syntax
+C-:

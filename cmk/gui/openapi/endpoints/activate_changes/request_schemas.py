@@ -13,10 +13,7 @@ from cmk import fields
 
 class ActivateChanges(BaseSchema):
     redirect = fields.Boolean(
-        description=(
-            "After starting the activation, redirect immediately to the 'Wait for completion' "
-            "endpoint instead of waiting for the completion."
-        ),
+        description="After starting the activation, redirect immediately to the 'Wait for completion' endpoint.",
         required=False,
         load_default=False,
         example=False,

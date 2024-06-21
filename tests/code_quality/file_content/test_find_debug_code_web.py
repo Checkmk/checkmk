@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
+from itertools import chain
 from pathlib import Path
 
-from tests.testlib import cmk_path
+from tests.testlib.repo import repo_path
 
 from ..conftest import ChangedFiles
 
@@ -22,8 +23,9 @@ def test_find_debug_code(changed_files: ChangedFiles) -> None:
 
 
 def _files_to_scan(changed_files: ChangedFiles) -> Iterable[Path]:
-    to_scan = [Path(cmk_path(), "web", "app", "index.wsgi")]
-    for matched_file in Path(cmk_path(), "cmk", "gui").glob("**/*.py"):
+    base_dir = repo_path() / "cmk" / "gui"
+    to_scan = []
+    for matched_file in chain(base_dir.glob("**/*.py"), base_dir.glob("**/*.wsgi")):
         if matched_file.is_file() and changed_files.is_changed(matched_file):
             to_scan.append(matched_file)
     return to_scan

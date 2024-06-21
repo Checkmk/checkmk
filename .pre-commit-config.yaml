@@ -17,13 +17,11 @@ default_stages:
     - manual
 repos:
     - repo: https://github.com/charliermarsh/ruff-pre-commit
-      # v0.0.241 has problems suppressing SyntaxErrors due to its
-      # missing implementation of match expression. Skip that one.
-      rev: 'v0.0.240'
+      rev: 'v0.4.4'
       hooks:
         - id: ruff
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.4.0
+      rev: v4.6.0
       hooks:
           - id: trailing-whitespace
           - id: check-merge-conflict
@@ -36,11 +34,16 @@ repos:
             exclude: |
                 (?x)^(
                     ^agents/plugins/|
-                    ^enterprise/agents/plugins/|
+                    ^non-free/cmk-update-agent/|
                     ^tests/agent-plugin-unit/
                 )
     - repo: local
       hooks:
+          - id: check-cmk-namespace
+            name: Check cmk namespace package
+            language: script
+            entry: scripts/check-cmk-namespace
+            types: [file, python]
           - id: remove-stale-imports
             name: Remove stale imports
             language: script
@@ -56,11 +59,24 @@ repos:
             entry: scripts/run-black
             language: script
             types: [file, python]
+          - id: bandit
+            name: Run bandit
+            # -l level low -ll = level medium -lll level high
+            entry: scripts/run-pipenv run bandit --config bandit.yaml -ll
+            language: script
+            types: [file, python]
           - id: omd-python-modules
             name: Check Python modules in OMD
             entry: scripts/check-omd-python-modules
             language: script
             files: omd/packages/python3?-modules
+            types: [file]
+          - id: sphinx
+            name: Sphinx Documentation
+            entry: scripts/run-pipenv run make -C doc/documentation html
+            files: ^doc/documentation/.*(rst|puml)$
+            pass_filenames: false
+            language: script
             types: [file]
           - id: pylint
             name: Check pylint

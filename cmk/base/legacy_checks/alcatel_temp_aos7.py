@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.alcatel import ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.alcatel import DETECT_ALCATEL_AOS7
+
+from cmk.agent_based.v2 import SNMPTree
+from cmk.plugins.lib.alcatel import DETECT_ALCATEL_AOS7
 
 
 def parse_alcatel_aos7_temp(string_table):
@@ -83,5 +83,7 @@ check_info["alcatel_temp_aos7"] = LegacyCheckDefinition(
     discovery_function=discover_alcatel_temp_aos7,
     check_function=check_alcatel_aos7_temp,
     check_ruleset_name="temperature",
-    check_default_parameters=ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS,
+    check_default_parameters={
+        "levels": (45.0, 50.0),
+    },
 )

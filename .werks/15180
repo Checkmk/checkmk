@@ -1,4 +1,4 @@
-Title: <tt>logwatch</tt> agent plugin on Windows: Enable monitoring of log files with non-ASCII characters in their paths
+Title: logwatch agent plugin on Windows: Enable monitoring of log files with non-ASCII characters in their paths
 Class: fix
 Compatible: compat
 Component: checks

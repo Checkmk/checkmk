@@ -1,0 +1,15 @@
+Title: Resolve Runas section in Checkmk Linux agent
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1699515827
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the Runas section of the Checkmk agent
+contained a wrong trailing slash which resulted in an error
+with the find command. As a direct consequence, some or
+potentially all Runas rules were inadvertently ignored, leading
+to the plugin, not intended for root, being executed with root
+privileges. This werk fixes this behaviour.

@@ -1,0 +1,10 @@
+Title: ibm_imm_temp: Fix ValueError (could not convert string to float: '')
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1700149060
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes the crash mentioned above.

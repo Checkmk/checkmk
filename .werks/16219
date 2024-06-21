@@ -1,0 +1,27 @@
+Title: Limit length of Hostname
+Class: security
+Compatible: compat
+Component: wato
+Date: 1699601325
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Prior to this Werk it was possible to create Hosts with arbitrary length.
+Since Checkmk stores information in files which paths contain the hostname these path could exceed the allowed length leading to various errors to an extend that rendered the usage of parts of the GUI useless.
+
+We found this vulnerability internally.
+
+<b>Affected Versions</b>:
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0
+
+<b>Vulnerability Management</b>:
+We have rated the issue with a CVSS Score of 2.7 (Low) with the following CVSS vector:
+<tt>CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:L</tt>.
+We assigned CVE-2023-23549 to this vulnerability.
+
+<b>Changes</b>:
+This Werk adds a maximum length of 253 characters for the hostname.
+

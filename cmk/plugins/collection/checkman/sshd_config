@@ -1,0 +1,21 @@
+title: SSH Daemon Configuration: Parameters
+agents: linux
+catalog: app/sshd
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors security-relevant parameters of the effective SSH
+ daemon configuration (sshd -T). Note that this explicity excludes
+ context-specific configurations defined via Match directives. Hence,
+ as an example, even if this service reports that password authentication
+ is off, this does not garantuee that no user can ssh into the system using
+ a password.
+
+ Expected values for the relevant parameters can be configured
+ using the associated WATO rule.
+
+ For this check the agent plug-in mk_sshd_config needs to be
+ installed.
+
+discovery:
+ One service is created.

@@ -7,6 +7,7 @@ filegroup(
 
 configure_make(
     name="xmlsec1",
+    visibility = ["//visibility:public"],
     lib_name="xmlsec1",
     lib_source=":all_srcs",
     configure_command="configure",
@@ -40,14 +41,6 @@ configure_make(
     # So instead of listing library files explicitly we just deliver the
     # whole `lib` folder, containing shared and dynamic libraries as well as
     # .la files
-    # Note that we list the dynamic libraries anyway, in order to fail if they
-    # for any reason can't be built
-    out_shared_libs=[
-        "libxmlsec1.so",
-        "libxmlsec1.so.1",
-        "libxmlsec1-openssl.so",
-        "libxmlsec1-openssl.so.1",
-    ],
     out_data_dirs=["lib"],
     targets=["install"],
 )

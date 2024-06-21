@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_OSN
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.huawei import DETECT_HUAWEI_OSN
 
 # The dBm should not get too low. So we check only for lower levels
 
@@ -28,7 +30,7 @@ def check_huawei_osn_laser(item, params, info):
 
         if state:
             return state, f"(warn/crit below {warn}/{crit} dBm)"
-        return 0, None
+        return 0, ""
 
     for line in info:
         if item == line[0]:
@@ -57,7 +59,12 @@ def check_huawei_osn_laser(item, params, info):
                 yield 0, f"FEC Correction before/after: {fec_before}/{fec_after}"
 
 
+def parse_huawei_osn_laser(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["huawei_osn_laser"] = LegacyCheckDefinition(
+    parse_function=parse_huawei_osn_laser,
     detect=DETECT_HUAWEI_OSN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.2.25.3.40.50.119.10.1",
@@ -68,7 +75,7 @@ check_info["huawei_osn_laser"] = LegacyCheckDefinition(
     check_function=check_huawei_osn_laser,
     check_ruleset_name="huawei_osn_laser",
     check_default_parameters={
-        "levels_low_in": (-160.0, -180.0),
-        "levels_low_out": (-35.0, -40.0),
+        "levels_low_in": (-160, -180),
+        "levels_low_out": (-35, -40),
     },
 )

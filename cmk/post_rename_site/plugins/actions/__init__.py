@@ -4,11 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 #
-#    This file (cmk/post_rename_site/plugins/actions/__init__.py) is only kept to make
-#    our dev tools (pylint & co) happy.
-#    It will not be deployed, as cmk.post_rename_site.plugins.actions is supposed to be a
-#    namespace that can be shadowed/extended using the local/
-#    hierarchy.
-#
 #    This file must not contain any code.
+#
+#    It is only here to make our linters happy.
+#    It will not be deployed.
+#
+#    This folder is part of a namespace package, that can be shadowed/extended
+#    using the local/ hierarchy.
+#
+#    Do not change the following line, it is picked up by the build process:
+#    check_mk.make: do-not-deploy
 #

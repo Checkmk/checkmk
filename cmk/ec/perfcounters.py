@@ -5,21 +5,22 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Mapping, Sequence
 from logging import Logger
 
 from .helpers import ECLock
-from .history import Columns
+from .query import Columns
 
 
 def lerp(a: float, b: float, t: float) -> float:
-    """Linear interpolation between a and b with weight t"""
+    """Linear interpolation between a and b with weight t."""
     return (1 - t) * a + t * b
 
 
 class Perfcounters:
     """Helper class for performance counting."""
 
-    _counter_names = [
+    _counter_names: Sequence[str] = [
         "messages",
         "rule_tries",
         "rule_hits",
@@ -30,7 +31,7 @@ class Perfcounters:
     ]
 
     # Average processing times
-    _weights = {
+    _weights: Mapping[str, float] = {
         "processing": 0.99,  # event processing
         "sync": 0.95,  # Replication sync
         "request": 0.95,  # Client requests
@@ -64,10 +65,7 @@ class Perfcounters:
     def do_statistics(self) -> None:
         with self._lock:
             now = time.time()
-            if self._last_statistics:
-                duration = now - self._last_statistics
-            else:
-                duration = 0
+            duration = now - self._last_statistics if self._last_statistics else 0
             for name, value in self._counters.items():
                 if duration:
                     delta = value - self._old_counters[name]
@@ -100,7 +98,7 @@ class Perfcounters:
 
         return columns
 
-    def get_status(self) -> list[float]:
+    def get_status(self) -> Sequence[float]:
         with self._lock:
             row: list[float] = []
             # Please note: status_columns() and get_status() need to produce lists with exact same column order

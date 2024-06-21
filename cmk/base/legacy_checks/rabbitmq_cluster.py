@@ -22,10 +22,27 @@
 # 'exchanges': 7, 'queues': 2}}
 
 
+import enum
 import json
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+
+
+class MessageType(enum.StrEnum):
+    """Watch out! The values must match the ruleset!
+
+    For now copy'n'paste. Should go to cmk/plugins/rabbitmq sometay (TM).
+    """
+
+    TOTAL = "messages"
+    TOTAL_RATE = "messages_rate"
+    READY = "messages_ready"
+    UNACKNOWLEDGED = "messages_unacknowledged"
+    PUBLISH = "messages_publish"
+    PUBLISH_RATE = "messages_publish_rate"
+    DELIVER = "messages_deliver"
+    DELIVER_RATE = "messages_deliver_rate"
 
 
 def parse_rabbitmq_cluster(string_table):
@@ -48,20 +65,20 @@ def parse_rabbitmq_cluster(string_table):
         }
 
         msg = {
-            "messages": cluster.get("queue_totals", {}).get("messages", 0),
-            "messages_ready": cluster.get("queue_totals", {}).get("messages_ready", 0),
-            "messages_unacknowledged": cluster.get("queue_totals", {}).get(
+            MessageType.TOTAL: cluster.get("queue_totals", {}).get("messages", 0),
+            MessageType.READY: cluster.get("queue_totals", {}).get("messages_ready", 0),
+            MessageType.UNACKNOWLEDGED: cluster.get("queue_totals", {}).get(
                 "messages_unacknowledged", 0
             ),
-            "messages_rate": cluster.get("queue_totals", {})
+            MessageType.TOTAL_RATE: cluster.get("queue_totals", {})
             .get("messages_details", {})
             .get("rate", 0.0),
-            "messages_publish": cluster.get("message_stats", {}).get("publish", 0),
-            "messages_publish_rate": cluster.get("message_stats", {})
+            MessageType.PUBLISH: cluster.get("message_stats", {}).get("publish", 0),
+            MessageType.PUBLISH_RATE: cluster.get("message_stats", {})
             .get("publish_details", {})
             .get("rate", 0.0),
-            "messages_deliver": cluster.get("message_stats", {}).get("deliver_get", 0),
-            "messages_deliver_rate": cluster.get("message_stats", {})
+            MessageType.DELIVER: cluster.get("message_stats", {}).get("deliver_get", 0),
+            MessageType.DELIVER_RATE: cluster.get("message_stats", {})
             .get("deliver_get_details", {})
             .get("rate", 0.0),
         }
@@ -125,14 +142,14 @@ def check_rabbitmq_cluster_messages(_no_item, params, parsed):
         return
 
     for key, infotext, hr_func in [
-        ("messages", "Total number of messages", int),
-        ("messages_rate", "Rate", float),
-        ("messages_ready", "Messages ready", int),
-        ("messages_unacknowledged", "Messages unacknowledged", int),
-        ("messages_publish", "Messages published", int),
-        ("messages_publish_rate", "Rate", float),
-        ("messages_deliver", "Messages delivered", int),
-        ("messages_deliver_rate", "Rate", float),
+        (MessageType.TOTAL, "Total number of messages", int),
+        (MessageType.TOTAL_RATE, "Rate", float),
+        (MessageType.READY, "Messages ready", int),
+        (MessageType.UNACKNOWLEDGED, "Messages unacknowledged", int),
+        (MessageType.PUBLISH, "Messages published", int),
+        (MessageType.PUBLISH_RATE, "Rate", float),
+        (MessageType.DELIVER, "Messages delivered", int),
+        (MessageType.DELIVER_RATE, "Rate", float),
     ]:
         value = msg_data.get(key)
         if value is None:

@@ -27,7 +27,7 @@ class ArgParser(argparse.ArgumentParser):
         bail_out("Parsing the arguments failed - %s." % message)
 
 
-def parse_args():
+def parse_arguments(argv):
     parser = ArgParser(description="Special agent to retrieve data from Aerohive HiveManagerNG")
     parser.add_argument("-d", "--debug", help="enable debugging", action="store_true")
     parser.add_argument("url", help="URL to Aerohive NG, e.g. https://cloud.aerohive.com")
@@ -36,12 +36,12 @@ def parse_args():
     parser.add_argument("client_id", help="Client ID")
     parser.add_argument("client_secret", help="Client secret")
     parser.add_argument("redirect_url", help="Redirect URL")
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def main():
     replace_passwords()
-    args = parse_args()
+    args = parse_arguments(sys.argv[1:])
 
     print("<<<hivemanager_ng_devices:sep(124)>>>")
 

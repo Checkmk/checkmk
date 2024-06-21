@@ -5,7 +5,7 @@
 import contextlib
 import http.client
 import json
-from collections.abc import Sequence
+from collections.abc import Callable, Iterator, Sequence
 from typing import Any, Literal
 
 from livestatus import MultiSiteConnection, SiteId
@@ -15,21 +15,20 @@ from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.version import edition, Edition
 
+from cmk.gui.customer import customer_api, CustomerIdOrGlobal
 from cmk.gui.exceptions import MKHTTPException
-from cmk.gui.groups import GroupSpec, GroupSpecs, GroupType, load_group_information
+from cmk.gui.groups import GroupName, GroupSpec, GroupSpecs, GroupType
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import constructors
-from cmk.gui.openapi.restful_objects.type_defs import CollectionObject
+from cmk.gui.openapi.restful_objects.type_defs import CollectionObject, DomainObject
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.watolib.groups import edit_group
+from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.hosts_and_folders import Folder
 
-if edition() is Edition.CME:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
-
-
-GroupName = Literal["host_group_config", "contact_group_config", "service_group_config", "agent"]
+GroupDomainType = Literal[
+    "host_group_config", "contact_group_config", "service_group_config", "agent"
+]
 
 
 def complement_customer(details):
@@ -38,13 +37,13 @@ def complement_customer(details):
 
     if "customer" in details:
         customer_id = details["customer"]
-        details["customer"] = "global" if managed.is_global(customer_id) else customer_id
+        details["customer"] = "global" if customer_api().is_global(customer_id) else customer_id
     else:  # special case where customer is set to customer_default_id which results in no-entry
-        details["customer"] = default_customer_id()
+        details["customer"] = customer_api().default_customer_id()
     return details
 
 
-def serve_group(group, serializer) -> Response:  # type: ignore[no-untyped-def]
+def serve_group(group: GroupSpec, serializer: Callable[[GroupSpec], DomainObject]) -> Response:
     response = Response()
     response.set_data(json.dumps(serializer(group)))
     if response.status_code != 204:
@@ -53,8 +52,8 @@ def serve_group(group, serializer) -> Response:  # type: ignore[no-untyped-def]
 
 
 def serialize_group_list(
-    domain_type: GroupName,
-    collection: Sequence[dict[str, Any]],
+    domain_type: GroupDomainType,
+    collection: Sequence[GroupSpec],
 ) -> CollectionObject:
     return constructors.collection_object(
         domain_type=domain_type,
@@ -70,15 +69,15 @@ def serialize_group_list(
     )
 
 
-def serialize_group(name: GroupName) -> Any:
-    def _serializer(group: dict[str, str]) -> Any:
+def serialize_group(name: GroupDomainType) -> Callable[[GroupSpec], DomainObject]:
+    def _serializer(group: GroupSpec) -> Any:
         ident = group["id"]
         extensions = {}
         if "customer" in group:
             customer_id = group["customer"]
             extensions["customer"] = "global" if customer_id is None else customer_id
         elif edition() is Edition.CME:
-            extensions["customer"] = default_customer_id()
+            extensions["customer"] = customer_api().default_customer_id()
 
         extensions["alias"] = group["alias"]
         return constructors.domain_object(
@@ -91,9 +90,7 @@ def serialize_group(name: GroupName) -> Any:
     return _serializer
 
 
-def update_groups(  # type: ignore[no-untyped-def]
-    group_type: GroupType, entries: list[dict[str, Any]]
-):
+def update_groups(group_type: GroupType, entries: list[dict[str, Any]]) -> list[GroupSpec]:
     groups = []
     for details in entries:
         name = details["name"]
@@ -172,10 +169,10 @@ def _retrieve_group(
 
 
 @contextlib.contextmanager
-def may_fail(  # type: ignore[no-untyped-def]
+def may_fail(
     exc_type: type[Exception] | tuple[type[Exception], ...],
     status: int | None = None,
-):
+) -> Iterator[None]:
     """Context manager to make Exceptions REST-API safe
 
         Examples:
@@ -208,7 +205,7 @@ def may_fail(  # type: ignore[no-untyped-def]
 
     """
 
-    def _get_message(e):
+    def _get_message(e: Exception) -> str:
         if hasattr(e, "message"):
             return e.message
 
@@ -228,7 +225,9 @@ def may_fail(  # type: ignore[no-untyped-def]
         ) from exc
 
 
-def update_customer_info(attributes, customer_id, remove_provider=False):
+def update_customer_info(
+    attributes: dict[str, Any], customer_id: CustomerIdOrGlobal, remove_provider: bool = False
+) -> dict[str, Any]:
     """Update the attributes with the correct customer_id
 
     Args:
@@ -241,7 +240,7 @@ def update_customer_info(attributes, customer_id, remove_provider=False):
 
     """
     # None is a valid customer_id used for 'Global' configuration
-    if remove_provider and customer_id == default_customer_id():
+    if remove_provider and customer_id == customer_api().default_customer_id():
         attributes.pop("customer", None)
         return attributes
 
@@ -249,16 +248,16 @@ def update_customer_info(attributes, customer_id, remove_provider=False):
     return attributes
 
 
-def group_edit_details(body) -> GroupSpec:  # type: ignore[no-untyped-def]
-    group_details = {k: v for k, v in body.items() if k != "customer"}
+def group_edit_details(body: GroupSpec) -> GroupSpec:
+    group_details: GroupSpec = {k: v for k, v in body.items() if k != "customer"}
 
     if version.edition() is version.Edition.CME and "customer" in body:
         group_details = update_customer_info(group_details, body["customer"])
     return group_details
 
 
-def updated_group_details(  # type: ignore[no-untyped-def]
-    name: GroupName, group_type: GroupType, changed_details
+def updated_group_details(
+    name: GroupName, group_type: GroupType, changed_details: GroupSpec
 ) -> GroupSpec:
     """Updates the group details without saving
 

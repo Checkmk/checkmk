@@ -1,0 +1,16 @@
+Title: Change factory setting for "Lock user accounts after N logon failures"
+Class: feature
+Compatible: incomp
+Component: wato
+Date: 1700034155
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The factory setting for the rule "Lock user accounts after N logon failures" changes from `unset` to `10`.
+
+If enabled local user accounts are locked after N failed login attempts. (LDAP connected users are not affected.)
+
+Previous to this Werk a newly created site set this value to `10` but when reset to the factory setting the option was disabled.
+
+If you disabled this setting via "Reset to default" this setthing is now set to `10` again.

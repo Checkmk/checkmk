@@ -56,7 +56,7 @@ class VisualInfoHost(VisualInfo):
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
-        return [("host", MonitoredHostname(title=_("Hostname"), strict="True"))]
+        return [("host", MonitoredHostname(title=_("Host name"), strict="True"))]
 
     @property
     def multiple_site_filters(self):

@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.palo_alto import DETECT_PALO_ALTO
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.palo_alto import DETECT_PALO_ALTO
 
 
 def inventory_palo_alto_sessions(info):
@@ -58,7 +59,12 @@ def check_palo_alto_sessions(_no_item, params, info):
     return status, infotext, perfdata
 
 
+def parse_palo_alto_sessions(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["palo_alto_sessions"] = LegacyCheckDefinition(
+    parse_function=parse_palo_alto_sessions,
     detect=DETECT_PALO_ALTO,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25461.2.1.2.3",

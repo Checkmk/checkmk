@@ -11,10 +11,10 @@ import pprint
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final
 
 import cmk.utils.plugin_registry
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
@@ -24,6 +24,7 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.watolib.site_changes import ChangeSpec
 
 ConfigDomainName = str
 
@@ -68,8 +69,7 @@ class ABCConfigDomain(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def ident(cls) -> ConfigDomainName:
-        ...
+    def ident(cls) -> ConfigDomainName: ...
 
     @classmethod
     def enabled_domains(cls) -> Sequence[type[ABCConfigDomain]]:
@@ -84,7 +84,7 @@ class ABCConfigDomain(abc.ABC):
         return config_domain_registry[ident]
 
     @classmethod
-    def enabled(cls) -> Literal[True]:
+    def enabled(cls) -> bool:
         return True
 
     @classmethod
@@ -158,7 +158,7 @@ class ABCConfigDomain(abc.ABC):
         ]
 
     @classmethod
-    def get_domain_settings(cls, change) -> SerializedSettings:  # type: ignore[no-untyped-def]
+    def get_domain_settings(cls, change: ChangeSpec) -> SerializedSettings:
         return change.get("domain_settings", {}).get(cls.ident(), {})
 
     @classmethod
@@ -263,6 +263,10 @@ class ConfigVariableGroup:
         """Returns a list of configuration variable classes that belong to this group"""
         return [v for v in config_variable_registry.values() if v().group() == self.__class__]
 
+    def warning(self) -> str | None:
+        """Return a string if you want to show a warning at the top of this group"""
+        return None
+
 
 class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVariableGroup]]):
     def plugin_name(self, instance):
@@ -308,7 +312,7 @@ class ConfigVariable:
         return True
 
     def hint(self) -> HTML:
-        return HTML()
+        return HTML.empty()
 
 
 class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVariable]]):

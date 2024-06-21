@@ -16,11 +16,10 @@
 # Default values for parameters that can be overriden.
 
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, IgnoreResultsError, SNMPTree
 
-dell_powerconnect_cpu_default_levels = (80, 90)
+from cmk.agent_based.v2 import contains, IgnoreResultsError, render, SNMPTree, StringTable
 
 
 # Inventory of dell power connect CPU details.
@@ -28,8 +27,7 @@ def inventory_dell_powerconnect_cpu(info):
     if info:
         enabled, onesecondperc, _oneminuteperc, _fiveminutesperc = info[0]
         if enabled == "1" and onesecondperc != "" and int(onesecondperc) >= 0:
-            return [(None, dell_powerconnect_cpu_default_levels)]
-    return []
+            yield None, {}
 
 
 # Check of dell power connect CPU details.
@@ -38,35 +36,37 @@ def check_dell_powerconnect_cpu(item, params, info):
         enabled, onesecondperc, oneminuteperc, fiveminutesperc = map(int, info[0])
     except ValueError:
         raise IgnoreResultsError("Ignoring empty data from SNMP agent")
-    if int(enabled) == 1:
-        cpu_util = saveint(onesecondperc)
-        if cpu_util >= 0 <= 100:
-            status = 0
-            output = ""
-            if cpu_util >= params[1]:
-                status = 2
-                output = " (Above %d%%)" % params[1]
-            elif cpu_util >= params[0]:
-                status = 1
-                output = " (Above %d%%)" % params[0]
 
-            # Darn. It again happend. Someone mixed up load and utilization.
-            # We do *not* rename the performance variables here, in order not
-            # to mix up existing RRDs...
-            return (
-                status,
-                "CPU utilization is %d%% %s" % (cpu_util, output),
-                [
-                    ("util", "%d%%" % cpu_util, params[0], params[1], 0, 100),
-                    ("util1", "%d%%" % saveint(oneminuteperc), params[0], params[1], 0, 100),
-                    ("util5", "%d%%" % saveint(fiveminutesperc), params[0], params[1], 0, 100),
-                ],
-            )
+    if enabled != 1:
+        return
 
-    return (3, "Invalid  information in SNMP data")
+    cpu_util = saveint(onesecondperc)
+    if cpu_util < 0 or cpu_util > 100:
+        return
+
+    # Darn. It again happend. Someone mixed up load and utilization.
+    # We do *not* rename the performance variables here, in order not
+    # to mix up existing RRDs...
+    yield check_levels(
+        cpu_util,
+        "util",
+        params["levels"],
+        human_readable_func=render.percent,
+        infoname="CPU utilization",
+        boundaries=(0, 100),
+    )
+    yield 0, "", [
+        ("util1", "%d%%" % saveint(oneminuteperc), params[0], params[1], 0, 100),
+        ("util5", "%d%%" % saveint(fiveminutesperc), params[0], params[1], 0, 100),
+    ]
+
+
+def parse_dell_powerconnect_cpu(string_table: StringTable) -> StringTable:
+    return string_table
 
 
 check_info["dell_powerconnect_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_dell_powerconnect_cpu,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.89.1",
@@ -75,4 +75,5 @@ check_info["dell_powerconnect_cpu"] = LegacyCheckDefinition(
     service_name="CPU utilization",
     discovery_function=inventory_dell_powerconnect_cpu,
     check_function=check_dell_powerconnect_cpu,
+    check_default_parameters={"levels": (80.0, 90.0)},
 )

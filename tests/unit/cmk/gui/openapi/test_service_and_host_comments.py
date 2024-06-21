@@ -412,7 +412,8 @@ def test_delete_comment_by_id(
             "GET comments",
             "Columns: id is_service",
             "Filter: id = 1",
-        ]
+        ],
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query("COMMAND [...] DEL_HOST_COMMENT;1", match_type="ellipsis")
     with mock_livestatus:
@@ -438,7 +439,7 @@ def test_delete_comments_by_query(
             "GET comments",
             "Columns: id is_service",
             "Filter: host_name = heute",
-        ]
+        ],
     )
     mock_livestatus.expect_query("COMMAND [...] DEL_HOST_COMMENT;1", match_type="ellipsis")
     mock_livestatus.expect_query("COMMAND [...] DEL_SVC_COMMENT;2", match_type="ellipsis")
@@ -447,7 +448,6 @@ def test_delete_comments_by_query(
         clients.Comment.delete(
             delete_type="query",
             query={"op": "=", "left": "comments.host_name", "right": "heute"},
-            site_id=SITE_ID,
         )
 
 
@@ -470,7 +470,6 @@ def test_delete_comments_by_params_hostname(
         clients.Comment.delete(
             delete_type="params",
             host_name="heute",
-            site_id=SITE_ID,
         )
 
 
@@ -494,5 +493,4 @@ def test_delete_comments_by_params_service_description(
             delete_type="params",
             host_name="heute",
             service_descriptions=["service_2"],
-            site_id=SITE_ID,
         )

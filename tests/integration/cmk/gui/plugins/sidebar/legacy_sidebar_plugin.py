@@ -11,7 +11,7 @@ from cmk.gui.plugins.sidebar.utils import (  # type: ignore[attr-defined]  # pyl
 
 
 @snapin_registry.register
-class CurrentTime(SidebarSnapin):
+class CurrentTime(SidebarSnapin):  # type: ignore[misc]
     @staticmethod
     def type_name():
         return "test"

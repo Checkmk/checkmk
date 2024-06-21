@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
-from cmk.base.plugins.agent_based.utils.fireeye import DETECT
+
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.plugins.lib.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.13.1.40.0 1
 
@@ -28,7 +29,12 @@ def check_fireeye_quarantine(_no_item, params, info):
     )
 
 
+def parse_fireeye_quarantine(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fireeye_quarantine"] = LegacyCheckDefinition(
+    parse_function=parse_fireeye_quarantine,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1.40",

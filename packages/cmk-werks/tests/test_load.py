@@ -9,7 +9,7 @@ import pytest
 
 from cmk.werks import load_werk
 from cmk.werks.error import WerkError
-from cmk.werks.load import load_werk_v2
+from cmk.werks.load import _format_title, load_werk_v2
 from cmk.werks.models import Werk
 from cmk.werks.parse import parse_werk_v2
 
@@ -221,30 +221,41 @@ this is the `description` with some *formatting.*
         _markdown_string_to_werk(md)
 
 
-# wait for CMK-14546
-# def test_loading_md_werk_formatting_in_title() -> None:
-#     md = """[//]: # (werk v2)
-# # test `werk` ***test*** [a](#href) asd
-#
-# key | value
-# --- | ---
-# class | fix
-# component | core
-# date | 2022-12-12T11:08:08+00:00
-# level | 1
-# version | 2.0.0p7
-# compatible | yes
-# edition | cre
-#
-# this is the `description` with some *formatting.*
-#
-# # test `werk` ***test*** [a](#href)
-#
-# """
-#     with pytest.raises(
-#         WerkError, match="Markdown formatting in title detected, this is not allowed"
-#     ):
-#         _markdown_string_to_werk(md)
+def test_loading_md_werk_formatting_in_title() -> None:
+    md = """[//]: # (werk v2)
+# test `werk` ***test*** [a](#href) asd
+
+key | value
+--- | ---
+class | fix
+component | core
+date | 2022-12-12T11:08:08+00:00
+level | 1
+version | 2.0.0p7
+compatible | yes
+edition | cre
+
+this is the `description` with some *formatting.*
+
+# test `werk` ***test*** [a](#href)
+
+"""
+    with pytest.raises(WerkError, match="Werk title contains formatting, this is not allowed"):
+        _markdown_string_to_werk(md)
+
+
+@pytest.mark.parametrize(
+    ("str_in", "str_out"),
+    [
+        ("a < b", "a < b"),
+        ("&amp;", "&"),
+        ("&", "&"),
+        (r"\*bold*", "*bold*"),
+        (r"&lt;br/>", "<br/>"),
+    ],
+)
+def test_title_formatting(str_in: str, str_out: str) -> None:
+    assert _format_title(str_in) == str_out
 
 
 def test_loading_md_werk_tags_not_in_whitelist() -> None:

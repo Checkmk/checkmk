@@ -2,9 +2,11 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 import collections
 import typing
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from functools import cached_property
 
 from apispec.ext.marshmallow import common
@@ -116,7 +118,9 @@ class ValueTypedDictSchema(BaseSchema):
             result[key] = schema_func(value)
         return result
 
-    def _serialize_field(self, data, field: fields.Field):  # type: ignore[no-untyped-def]
+    def _serialize_field(
+        self, data: Mapping[str, object], field: fields.Field
+    ) -> dict[str, object]:
         result = {}
         for key, value in data.items():
             try:
@@ -129,7 +133,9 @@ class ValueTypedDictSchema(BaseSchema):
                 raise ValidationError(str(exc), field_name=key)
         return result
 
-    def _deserialize_field(self, data, field: fields.Field):  # type: ignore[no-untyped-def]
+    def _deserialize_field(
+        self, data: Mapping[str, object], field: fields.Field
+    ) -> dict[str, object]:
         result = {}
         for key, value in data.items():
             try:
@@ -171,7 +177,8 @@ class ValueTypedDictSchema(BaseSchema):
 
         return result
 
-    def dump(self, obj: typing.Any, *, many=None):  # type: ignore[no-untyped-def]
+    def dump(self, obj: typing.Any, *, many: bool | None = None) -> object:
+        many = self.many if many is None else bool(many)
         if self._has_processors(PRE_DUMP):
             obj = self._invoke_dump_processors(PRE_DUMP, obj, many=many, original_data=obj)
 
@@ -437,7 +444,7 @@ Keys 'optional1', 'required1' occur more than once.
 
     Result = dict[str, typing.Any]
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
         nested: typing.Sequence[type[Schema] | Schema | typing.Callable[[], type[Schema]]],
         mode: typing.Literal["anyOf", "allOf"] = "anyOf",
@@ -455,7 +462,7 @@ Keys 'optional1', 'required1' occur more than once.
         # For this we assume the schema is always symmetrical (i.e. a round trip is
         # idempotent) to get at the original keys. If this is not true, there may be bugs.
         merged: bool = False,
-        **kwargs,
+        **kwargs: typing.Any,
     ):
         if unknown is not None:
             raise ValueError("unknown is not supported for MultiNested")
@@ -587,12 +594,12 @@ Keys 'optional1', 'required1' occur more than once.
 
         return rv
 
-    def _serialize(  # type: ignore[no-untyped-def]
+    def _serialize(
         self,
         value: typing.Any,
         attr: str | None,
         obj: typing.Any,
-        **kwargs,
+        **kwargs: typing.Any,
     ) -> Result | list[Result]:
         result: typing.Any
         error_store = ErrorStore()
@@ -621,7 +628,7 @@ Keys 'optional1', 'required1' occur more than once.
 
         return result
 
-    def _make_type_error(self, value) -> ValidationError:  # type: ignore[no-untyped-def]
+    def _make_type_error(self, value: object) -> ValidationError:
         return self.make_error(
             "type",
             input=value,
@@ -698,12 +705,12 @@ Keys 'optional1', 'required1' occur more than once.
                 del error_store.errors[key]
         return result
 
-    def _deserialize(  # type: ignore[no-untyped-def]
+    def _deserialize(
         self,
         value: Result | list[Result],
         attr: str | None,
         data: typing.Mapping[str, typing.Any] | None,
-        **kwargs,
+        **kwargs: typing.Any,
     ) -> Result | list[Result]:
         if isinstance(value, list):  # pylint: disable=no-else-return
             if self.many:

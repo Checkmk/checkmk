@@ -1,0 +1,20 @@
+Title: mssql_backup: fix 'no backup found' for case-insensitive databases
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1702370026
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+In certain circumstances it was possible that the `mssql.vbs` agent plugin
+returned `no backup found` because it could not map the found backup to the
+database.
+
+The reason for that was, that the comparison between the backups database name
+and the database name was case sensitive, but its possible to configure mssql
+in a way that backups database name and database name does not match case
+sensitive.
+
+We now compare both names on the mssql server so the configured case
+sensitivity is respected.

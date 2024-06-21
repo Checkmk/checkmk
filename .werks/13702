@@ -1,4 +1,4 @@
-Title: Agent controller: rename <tt>register-surrogate-pull</tt> to <tt>proxy-register</tt>
+Title: Agent controller: rename register-surrogate-pull to proxy-register
 Class: fix
 Compatible: incomp
 Component: checks

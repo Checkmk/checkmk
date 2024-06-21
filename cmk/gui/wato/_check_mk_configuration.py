@@ -5,7 +5,7 @@
 
 import logging
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
 import cmk.utils.paths
@@ -18,7 +18,7 @@ from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-viol
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
-from cmk.gui.groups import GroupName, load_contact_group_information
+from cmk.gui.groups import GroupName
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _, get_languages
@@ -56,7 +56,6 @@ from cmk.gui.valuespec import (
     NetworkPort,
     Optional,
     PasswordSpec,
-    Percentage,
     RegExp,
     TextInput,
     Transform,
@@ -84,11 +83,13 @@ from cmk.gui.watolib.config_domains import (
 )
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.config_variable_groups import (
+    ConfigVariableGroupDeveloperTools,
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
 )
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupAgentSNMP,
@@ -136,6 +137,7 @@ def register(
     config_variable_registry.register(ConfigVariableDebug)
     config_variable_registry.register(ConfigVariableGUIProfile)
     config_variable_registry.register(ConfigVariableDebugLivestatusQueries)
+    config_variable_registry.register(ConfigVariableCMCRulesetMatchingStats)
     config_variable_registry.register(ConfigVariableSelectionLivetime)
     config_variable_registry.register(ConfigVariableShowLivestatusErrors)
     config_variable_registry.register(ConfigVariableEnableSounds)
@@ -144,6 +146,8 @@ def register(
     config_variable_registry.register(ConfigVariableQuicksearchDropdownLimit)
     config_variable_registry.register(ConfigVariableQuicksearchSearchOrder)
     config_variable_registry.register(ConfigVariableExperimentalFeatures)
+    config_variable_registry.register(ConfigVariableInjectJsProfiling)
+    config_variable_registry.register(ConfigVariableLoadFrontendVue)
     config_variable_registry.register(ConfigVariableTableRowLimit)
     config_variable_registry.register(ConfigVariableStartURL)
     config_variable_registry.register(ConfigVariablePageHeading)
@@ -158,6 +162,7 @@ def register(
     config_variable_registry.register(ConfigVariableiAdHocDowntime)
     config_variable_registry.register(ConfigVariableAuthByHTTPHeader)
     config_variable_registry.register(EnableLoginViaGet)
+    config_variable_registry.register(EnableDeprecatedAutomationuserAuthentication)
     config_variable_registry.register(ConfigVariableStalenessThreshold)
     config_variable_registry.register(ConfigVariableLoginScreen)
     config_variable_registry.register(ConfigVariableUserLocalizations)
@@ -166,7 +171,7 @@ def register(
     config_variable_registry.register(ConfigVariableUserDowntimeTimeranges)
     config_variable_registry.register(ConfigVariableBuiltinIconVisibility)
     config_variable_registry.register(ConfigVariableServiceViewGrouping)
-    config_variable_registry.register(ConfigVariableViewActionDefaults)
+    config_variable_registry.register(ConfigVariableAcknowledgeProblems)
     config_variable_registry.register(ConfigVariableDefaultTemperatureUnit)
     config_variable_registry.register(ConfigVariableTrustedCertificateAuthorities)
     config_variable_registry.register(ConfigVariableAgentControllerCertificates)
@@ -175,7 +180,6 @@ def register(
     config_variable_registry.register(ConfigVariableWATOActivateChangesCommentMode)
     config_variable_registry.register(ConfigVariableWATOActivationMethod)
     config_variable_registry.register(ConfigVariableWATOHideFilenames)
-    config_variable_registry.register(ConfigVariableWATOUploadInsecureSnapshots)
     config_variable_registry.register(ConfigVariableWATOHideHosttags)
     config_variable_registry.register(ConfigVariableWATOHideVarnames)
     config_variable_registry.register(ConfigVariableHideHelpInLists)
@@ -190,6 +194,7 @@ def register(
     config_variable_registry.register(ConfigVariableSessionManagement)
     config_variable_registry.register(ConfigVariableSingleUserSession)
     config_variable_registry.register(ConfigVariableDefaultUserProfile)
+    config_variable_registry.register(ConfigVariableUserSecurityNotifications)
     contact_group_usage_finder_registry.register(
         find_usages_of_contact_group_in_default_user_profile
     )
@@ -198,7 +203,6 @@ def register(
     config_variable_registry.register(ConfigVariableTCPConnectTimeout)
     config_variable_registry.register(ConfigVariableSimulationMode)
     config_variable_registry.register(ConfigVariableRestartLocking)
-    config_variable_registry.register(ConfigVariableAgentSimulator)
     config_variable_registry.register(ConfigVariableDelayPrecompile)
     config_variable_registry.register(ConfigVariableClusterMaxCachefileAge)
     config_variable_registry.register(ConfigVariablePiggybackMaxCachefileAge)
@@ -339,10 +343,10 @@ class ConfigVariableEnableCommunityTranslations(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Enable community translated languages (not supported)"),
-            label=_("Enable community translated languages"),
+            title=_("Community translated languages (not supported)"),
+            label=_("Community translated languages"),
             help=_(
-                'Show/Hide community translated languages in the "Language" dropdown (User > Edit '
+                'Show/hide community translated languages in the "Language" dropdown (User > Edit '
                 "profile). Note that these translations are contributed by the Checkmk community "
                 "and thus no liability is assumed for their validity.<br>"
                 "If this setting is turned from 'on' to 'off' while a user has set a community "
@@ -624,10 +628,10 @@ class ConfigVariableDebugLivestatusQueries(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Debug Livestatus queries"),
-            label=_("enable debug of Livestatus queries"),
+            title=_("Debug livestatus queries"),
+            label=_("enable debug of livestatus queries"),
             help=_(
-                "With this option turned on all Livestatus queries made by Multisite "
+                "With this option turned on all livestatus queries made by multisite "
                 "in order to render views are being displayed."
             ),
         )
@@ -645,7 +649,7 @@ class ConfigVariableSelectionLivetime(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Integer(
-            title=_("Checkbox Selection Livetime"),
+            title=_("Checkbox selection livetime"),
             help=_(
                 "This option defines the maximum age of unmodified checkbox selections stored for users. "
                 "If a user modifies the selection in a view, these selections are persisted for the currently "
@@ -690,8 +694,8 @@ class ConfigVariableEnableSounds(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Enable sounds in views"),
-            label=_("enable sounds"),
+            title=_("Sounds in views"),
+            label=_("Sounds"),
             help=_(
                 "If sounds are enabled then the user will be alarmed by problems shown "
                 "in a Multisite status view if that view has been configured for sounds. "
@@ -760,7 +764,7 @@ class ConfigVariableQuicksearchDropdownLimit(ConfigVariable):
         return Integer(
             title=_("Number of elements to show in Quicksearch"),
             help=_(
-                "When typing a texts in the Quicksearch snapin, a dropdown will "
+                "When typing a texts in the Quicksearch snap-in, a dropdown will "
                 "appear listing all matching host names containing that text. "
                 "That list is limited in size so that the dropdown will not get "
                 "too large when you have a huge number of lists. "
@@ -793,7 +797,7 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
                             ("tg", _("Host tag")),
                             ("hg", _("Host group")),
                             ("sg", _("Service group")),
-                            ("s", _("Service description")),
+                            ("s", _("Service name")),
                         ],
                     ),
                     DropdownChoice(
@@ -819,7 +823,7 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
 
 class ConfigVariableExperimentalFeatures(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupUserInterface
+        return ConfigVariableGroupDeveloperTools
 
     def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainGUI
@@ -832,14 +836,59 @@ class ConfigVariableExperimentalFeatures(ConfigVariable):
             title=_("Experimental features"),
             elements=[
                 (
-                    "use_vue_rendering",
-                    Checkbox(
-                        title=_("Use vue rendering"),
-                        default_value=False,
+                    "render_mode",
+                    DropdownChoice(
+                        title=_("Rendering mode for valuespecs and tables"),
+                        choices=[
+                            ("backend", "Backend"),
+                            ("frontend", "Frontend"),
+                            ("backend_and_frontend", "Backend and Frontend"),
+                        ],
                     ),
                 ),
             ],
             optional_keys=False,
+        )
+
+
+class ConfigVariableInjectJsProfiling(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupDeveloperTools
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "inject_js_profiling_code"
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Inject JavaScript profiling code"),
+            default_value=False,
+        )
+
+
+class ConfigVariableLoadFrontendVue(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupDeveloperTools
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "load_frontend_vue"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Inject frontend_vue files via vite client"),
+            help=_(
+                "If you change this to 'inject' and there is no vite dev server running "
+                "you may not be able to deactivate this option via UI, so be careful!"
+            ),
+            choices=[
+                ("static_files", "Load JavaScript from shipped, static files"),
+                ("inject", "Inject vite client to enable auto hot reloading"),
+            ],
         )
 
 
@@ -923,7 +972,7 @@ class ConfigVariableBIDefaultLayout(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Dictionary(
-            title=_("Default BI Visualization Settings"),
+            title=_("Default BI visualization settings"),
             elements=[
                 (
                     "node_style",
@@ -1089,9 +1138,9 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
                 optional_keys=[],
             ),
             add_label=_("Create new virtual host tree configuration"),
-            title=_("Virtual Host Trees"),
+            title=_("Virtual host trees"),
             help=_(
-                "Here you can define tree configurations for the snapin <i>Virtual Host-Trees</i>. "
+                "Here you can define tree configurations for the snap-in <i>Virtual Host-Trees</i>. "
                 "These trees organize your hosts based on their values in certain host tag groups. "
                 "Each host tag group you select will create one level in the tree."
             ),
@@ -1196,9 +1245,9 @@ class ConfigVariableSidebarUpdateInterval(ConfigVariable):
         return Float(
             title=_("Interval of sidebar status updates"),
             help=_(
-                "The information provided by the sidebar snapins is refreshed in a regular "
+                "The information provided by the sidebar snap-ins is refreshed in a regular "
                 "interval. You can change the refresh interval to fit your needs here. This "
-                "value means that all snapnis which request a regular refresh are updated "
+                "value means that all snap-ins which request a regular refresh are updated "
                 "in this interval."
             ),
             minvalue=10.0,
@@ -1252,7 +1301,7 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
                         "duration",
                         Integer(
                             title=_("Duration"),
-                            help=_("The duration in minutes of the adhoc downtime."),
+                            help=_("The duration in minutes of the ad hoc downtime."),
                             minvalue=1,
                             unit=_("minutes"),
                             default_value=60,
@@ -1261,9 +1310,9 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
                     (
                         "comment",
                         TextInput(
-                            title=_("Adhoc comment"),
+                            title=_("Ad hoc comment"),
                             help=_(
-                                "The comment which is automatically sent with an adhoc downtime"
+                                "The comment which is automatically sent with an ad hoc downtime"
                             ),
                             size=80,
                             allow_empty=False,
@@ -1271,11 +1320,11 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
                     ),
                 ],
             ),
-            title=_("Adhoc downtime"),
-            label=_("Enable adhoc downtime"),
+            title=_("Ad hoc downtime"),
+            label=_("Enable ad hoc downtime"),
             help=_(
-                "This setting allows to set an adhoc downtime comment and its duration. "
-                "When enabled a new button <i>Adhoc downtime for __ minutes</i> will "
+                "This setting allows to set an ad hoc downtime comment and its duration. "
+                "When enabled a new button <i>Ad hoc downtime for __ minutes</i> will "
                 "be available in the command form."
             ),
         )
@@ -1341,13 +1390,39 @@ class EnableLoginViaGet(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Enable login via GET requests"),
+            title=_("Login via GET requests"),
             help=_(
                 "Using the GET method to authenticate against login.py leaks user credentials "
                 "in the Apache logs (see more details in our Werk 14261). We disable logging  "
                 "in via this method by default. Use this property to enable logging in via the "
                 "GET method for all users."
             ),
+        )
+
+
+class EnableDeprecatedAutomationuserAuthentication(ConfigVariable):
+    """See Werk #16223"""
+
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserInterface
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "enable_deprecated_automation_user_authentication"
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Automation user authentication via HTTP parameters"),
+            help=_(
+                "In previous Checkmk versions it was possible to use an automation user to display "
+                "specific pages within Checkmk. To authenticate these requests it was possible to "
+                "add the _username and _secret parameters to the parameters (e.g. append them to the "
+                "URL). GET parameters are usually logged by proxies and webservers and are not "
+                "deemed secure for secrets. See Werk #16223 for more information."
+            ),
+            default_value=True,
         )
 
 
@@ -1520,7 +1595,7 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
                                                     "<ul>"
                                                     "<li>$HOSTNAME$: Contains the name of the host</li>"
                                                     "<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>"
-                                                    "<li>$SERVICEDESC$: Contains the service description "
+                                                    "<li>$SERVICEDESC$: Contains the service name "
                                                     "(in case this is a service)</li>"
                                                     "<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>"
                                                     "<li>$HOSTADDRESS$: Contains the network address of the host</li>"
@@ -1778,9 +1853,9 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
                 ],
                 optional_keys=[],
             ),
-            title=_("Custom Downtime Timeranges"),
+            title=_("Downtime duration presets"),
             movable=True,
-            totext=_("%d timeranges"),
+            totext=_("%d time ranges"),
         )
 
 
@@ -1917,7 +1992,7 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
         )
 
 
-class ConfigVariableViewActionDefaults(ConfigVariable):
+class ConfigVariableAcknowledgeProblems(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
@@ -1925,42 +2000,47 @@ class ConfigVariableViewActionDefaults(ConfigVariable):
         return ConfigDomainGUI
 
     def ident(self) -> str:
-        return "view_action_defaults"
+        return "acknowledge_problems"
 
     def valuespec(self) -> ValueSpec:
         return Dictionary(
-            title=_("View action defaults"),
+            title=_("Acknowledge problems"),
             elements=[
                 (
                     "ack_sticky",
                     Checkbox(
-                        title=_("Sticky"),
-                        label=_("Enable"),
-                        default_value=True,
-                    ),
-                ),
-                (
-                    "ack_notify",
-                    Checkbox(
-                        title=_("Send notification"),
-                        label=_("Enable"),
-                        default_value=True,
-                    ),
-                ),
-                (
-                    "ack_persistent",
-                    Checkbox(
-                        title=_("Persistent comment"),
+                        title=_(
+                            "Ignore status changes until services/hosts are OK/UP again (sticky)"
+                        ),
                         label=_("Enable"),
                         default_value=False,
                     ),
                 ),
                 (
+                    "ack_persistent",
+                    Checkbox(
+                        title=_("Keep comment after acknowledgment expires (persistent comment)"),
+                        label=_("Enable"),
+                        default_value=False,
+                    ),
+                ),
+                (
+                    "ack_notify",
+                    Checkbox(
+                        title=_(
+                            "Notify affected users if notification rules are in place (send notifications)"
+                        ),
+                        label=_("Enable"),
+                        default_value=True,
+                    ),
+                ),
+                (
                     "ack_expire",
                     Age(
-                        title=_("Expire acknowledgement after"),
+                        title=_("Default expiration time (relative)"),
                         display=["days", "hours", "minutes"],
-                        default_value=0,
+                        default_value=3600,
+                        minvalue=60,
                     ),
                 ),
             ],
@@ -2052,7 +2132,7 @@ class ConfigVariableAgentControllerCertificates(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Dictionary(
-            title=_("Agent Certificates"),
+            title=_("Agent certificates"),
             help=_("Settings for certificates issued to registered agents."),
             elements=[
                 (
@@ -2201,36 +2281,13 @@ class ConfigVariableWATOHideFilenames(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Hide internal folder names in WATO"),
+            title=_("Hide internal folder names in Setup"),
             label=_("hide folder names"),
             help=_(
                 "When enabled, then the internal names of Setup folder in the filesystem "
                 "are not shown. They will automatically be derived from the name of the folder "
                 "when a new folder is being created. Disable this option if you want to see and "
                 "set the filenames manually."
-            ),
-        )
-
-
-class ConfigVariableWATOUploadInsecureSnapshots(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
-
-    def ident(self) -> str:
-        return "wato_upload_insecure_snapshots"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Allow upload of insecure Setup snapshots"),
-            label=_("upload insecure snapshots"),
-            help=_(
-                "When enabled, insecure snapshots are allowed. Please keep in mind that the upload "
-                "of unverified snapshots represents a security risk, since the content of a snapshot is executed "
-                "during runtime. Any manipulations in the content - either willingly or unwillingly (XSS attack) "
-                "- pose a serious security risk."
             ),
         )
 
@@ -2304,7 +2361,7 @@ class ConfigVariableWATOUseGit(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Use GIT version control for WATO"),
+            title=_("Use GIT version control for Setup"),
             label=_("enable GIT version control"),
             help=_(
                 "When enabled, all changes of configuration files are tracked with the "
@@ -2450,7 +2507,6 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
         return Optional(
             valuespec=Integer(
                 label=_("Number of logon failures to lock the account"),
-                default_value=10,
                 minvalue=1,
             ),
             title=_("Lock user accounts after N logon failures"),
@@ -2458,6 +2514,7 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
             help=_(
                 "This options enables automatic locking of user accounts after "
                 "the configured number of consecutive invalid login attempts. "
+                "These attempts include failed Two Factor authentication events. "
                 "Once the account is locked only an admin user can unlock it. "
                 "Beware: Also the admin users will be locked that way. You need "
                 "to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> "
@@ -2536,6 +2593,15 @@ class ConfigVariableSessionManagement(ConfigVariable):
         return "session_mgmt"
 
     def valuespec(self) -> ValueSpec:
+        def _validate_max_duration(d: dict, varprefix: str) -> None:
+            if "enforce_reauth_warning_threshold" not in d:
+                return
+            if d["enforce_reauth"] > d["enforce_reauth_warning_threshold"]:
+                return
+            raise MKUserError(
+                varprefix, _("Warning threshold must be smaller than maximum session duration")
+            )
+
         return Dictionary(
             title=_("Session management"),
             elements=[
@@ -2547,7 +2613,7 @@ class ConfigVariableSessionManagement(ConfigVariable):
                             (
                                 "enforce_reauth",
                                 Age(
-                                    title=_("Enforce re-authentication after:"),
+                                    title=_("Enforce re-authentication after"),
                                     display=["minutes", "hours", "days"],
                                     minvalue=60,
                                     help=_(
@@ -2559,21 +2625,22 @@ class ConfigVariableSessionManagement(ConfigVariable):
                                 ),
                             ),
                             (
-                                "force_authuser",
-                                Percentage(
-                                    title=_(
-                                        "Prevent data loss of forms by forcing "
-                                        "re-authentification after"
+                                "enforce_reauth_warning_threshold",
+                                Age(
+                                    title=_("Advise re-authentication before termination"),
+                                    display=["minutes", "hours", "days"],
+                                    minvalue=60,
+                                    help=_(
+                                        "Warn the user at a specificied time before"
+                                        "the maximum session duration is reached"
+                                        "to aid users in preserving data.",
                                     ),
-                                    unit=_(
-                                        # xgettext: no-python-format
-                                        "% of the specified time via GET request"
-                                    ),
-                                    default_value=50.0,
+                                    default_value=900,
                                 ),
                             ),
                         ],
                         required_keys=["enforce_reauth"],
+                        validate=_validate_max_duration,
                     ),
                 ),
                 (
@@ -2598,7 +2665,6 @@ class ConfigVariableSingleUserSession(ConfigVariable):
     def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Age(
-                title=None,
                 display=["minutes", "hours"],
                 label=_("Session timeout:"),
                 minvalue=30,
@@ -2613,6 +2679,37 @@ class ConfigVariableSingleUserSession(ConfigVariable):
                 "When the user logs out or is inactive for the configured amount of time, the "
                 "session is invalidated automatically and the user has to log in again from the "
                 "current or another device."
+            ),
+        )
+
+
+class ConfigVariableUserSecurityNotifications(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserManagement
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "user_security_notification_duration"
+
+    def valuespec(self) -> ValueSpec:
+        return Optional(
+            valuespec=Age(
+                display=["days", "minutes", "hours"],
+                label=_("Session timeout:"),
+                minvalue=900,
+                default_value=604800,
+            ),
+            title=_("User security notification duration"),
+            label=_("Display time for user security messages"),
+            help=_(
+                "If a user has an email address associated with their account, "
+                "the user will not be shown a security notification in their user "
+                "tab."
+                "If a user does not have an associated email they will be shown "
+                "an undismissable message in their user tab for the duration "
+                "defined by this setting."
             ),
         )
 
@@ -2693,7 +2790,7 @@ def find_usages_of_contact_group_in_default_user_profile(
     ]:
         used_in.append(
             (
-                "%s" % (_("Default User Profile")),
+                "%s" % (_("Default user profile")),
                 folder_preserving_link(
                     [("mode", "edit_configvar"), ("varname", "default_user_profile")]
                 ),
@@ -2735,11 +2832,11 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return ListChoice(
-            title=_("Use new service descriptions"),
+            title=_("Use new service names"),
             help=_(
                 "In order to make Checkmk more consistent, "
                 "the descriptions of several services have been renamed in newer "
-                "Check_MK versions. One example is the filesystem services that have "
+                "Checkmk versions. One example is the filesystem services that have "
                 "been renamed from <tt>fs_</tt> into <tt>Filesystem</tt>. But since renaming "
                 "of existing services has many implications - including existing rules, performance "
                 "data and availability history - these renamings are disabled per default for "
@@ -2751,9 +2848,9 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
                 ("brocade_sys_mem", _("Main memory usage for Brocade fibre channel switches")),
                 ("casa_cpu_temp", _("Casa module: CPU temperature")),
-                ("cisco_mem", _("Cisco Memory Usage (%s)") % "cisco_mem"),
-                ("cisco_mem_asa", _("Cisco Memory Usage (%s)") % "cisco_mem_asa"),
-                ("cisco_mem_asa64", _("Cisco Memory Usage (%s)") % "cisco_mem_asa64"),
+                ("cisco_mem", _("Cisco memory usage (%s)") % "cisco_mem"),
+                ("cisco_mem_asa", _("Cisco memory usage (%s)") % "cisco_mem_asa"),
+                ("cisco_mem_asa64", _("Cisco memory usage (%s)") % "cisco_mem_asa64"),
                 ("cmciii_psm_current", _("Rittal CMC-III Units: Current")),
                 ("cmciii_temp", _("Rittal CMC-III Units: Temperatures")),
                 ("cmciii_lcp_airin", _("Rittal CMC-III LCP: Air In and Temperature")),
@@ -2774,7 +2871,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("enterasys_temp", _("Enterasys Switch: Temperature")),
                 ("esx_vsphere_datastores", _("VMware ESX host systems: Used space")),
                 ("esx_vsphere_hostsystem_mem_usage", _("Main memory usage of ESX host system")),
-                ("esx_vsphere_hostsystem_mem_usage_cluster", _("Memory Usage of ESX Clusters")),
+                ("esx_vsphere_hostsystem_mem_usage_cluster", _("Memory usage of ESX Clusters")),
                 ("etherbox_temp", _("Etherbox / MessPC: Sensor Temperature")),
                 ("fortigate_memory", _("Memory usage of Fortigate devices (fortigate_memory)")),
                 (
@@ -2784,7 +2881,15 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("fortigate_node_memory", _("Fortigate node memory")),
                 ("hr_fs", _("Used space in filesystems via SNMP")),
                 ("hr_mem", _("HR: Used memory via SNMP")),
-                ("http", _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections")),
+                # TODO: can be removed when
+                #  cmk.update_config.plugins.actions.rulesets._force_old_http_service_description
+                #  can be removed
+                (
+                    "http",
+                    _(
+                        "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections (Deprecated/ineffective)"
+                    ),
+                ),
                 (
                     "huawei_switch_mem",
                     _("Memory percentage used of devices with modules (Huawei)"),
@@ -2808,14 +2913,14 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                     "ibm_svc_systemstats_iops",
                     _("IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total"),
                 ),
-                ("innovaphone_mem", _("Innovaphone Memory Usage")),
+                ("innovaphone_mem", _("Innovaphone memory usage")),
                 ("innovaphone_temp", _("Innovaphone Gateway: Current Temperature")),
-                ("juniper_mem", _("Juniper Memory Usage (%s)") % "juniper_mem"),
+                ("juniper_mem", _("Juniper memory usage (%s)") % "juniper_mem"),
                 (
                     "juniper_screenos_mem",
-                    _("Juniper Memory Usage (%s)") % "juniper_screenos_mem",
+                    _("Juniper memory usage (%s)") % "juniper_screenos_mem",
                 ),
-                ("juniper_trpz_mem", _("Juniper Memory Usage (%s)") % "juniper_trpz_mem"),
+                ("juniper_trpz_mem", _("Juniper memory usage (%s)") % "juniper_trpz_mem"),
                 ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
                 ("logwatch", _("Check logfiles for relevant new messages")),
                 ("logwatch_groups", _("Check logfile groups")),
@@ -2840,8 +2945,12 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("mssql_tablespaces", _("MSSQL Tablespace")),
                 ("mssql_transactionlogs", _("MSSQL Transactionlog")),
                 ("mssql_versions", _("MSSQL Version")),
-                ("netscaler_mem", _("Netscaler Memory Usage")),
+                ("netscaler_mem", _("Netscaler memory Usage")),
                 ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
+                ("prism_alerts", _("Nutanix: Prism Alerts")),
+                ("prism_containers", _("Nutanix: Containers")),
+                ("prism_info", _("Nutanix: Prism Cluster")),
+                ("prism_storage_pools", _("Nutanix: Storage Pools")),
                 ("nvidia_temp", _("Temperatures of NVIDIA graphics card")),
                 ("postfix_mailq", _("Postfix: Mail Queue")),
                 ("ps", _("State and Count of Processes")),
@@ -2851,7 +2960,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("services", _("Windows Services")),
                 ("solaris_mem", _("Memory usage for %s hosts") % "Solaris"),
                 ("sophos_memory", _("Sophos Memory utilization")),
-                ("statgrab_mem", _("Statgrab Memory Usage")),
+                ("statgrab_mem", _("Statgrab memory usage")),
                 ("tplink_mem", _("TP Link: Used memory via SNMP")),
                 ("ups_bat_temp", _("Generic UPS Device: Temperature sensor")),
                 ("vms_diskstat_df", _("Disk space on OpenVMS")),
@@ -2901,7 +3010,7 @@ class ConfigVariableSimulationMode(ConfigVariable):
             title=_("Simulation mode"),
             label=_("Run in simulation mode"),
             help=_(
-                "This boolean variable allows you to bring check_mk into a dry run mode. "
+                "This boolean variable allows you to bring Checkmk into a dry run mode. "
                 "No hosts will be contacted, no DNS lookups will take place and data is read "
                 "from cache files that have been created during normal operation or have "
                 "been copied here from another monitoring site."
@@ -2933,28 +3042,6 @@ class ConfigVariableRestartLocking(ConfigVariable):
                 ("wait", _("Wait until the other has finished")),
                 (None, _("Disable locking")),
             ],
-        )
-
-
-class ConfigVariableAgentSimulator(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
-
-    def ident(self) -> str:
-        return "agent_simulator"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("SNMP Agent Simulator"),
-            label=_("Process stored SNMP walks with agent simulator"),
-            help=_(
-                "When using stored SNMP walks you can place inline code generating "
-                "dynamic simulation data. This feature can be activated here. There "
-                "is a big chance that you will never need this feature..."
-            ),
         )
 
 
@@ -2998,7 +3085,7 @@ class ConfigVariableClusterMaxCachefileAge(ConfigVariable):
             title=_("Maximum cache file age for clusters"),
             label=_("seconds"),
             help=_(
-                "The number of seconds a cache file may be old if check_mk should "
+                "The number of seconds a cache file may be old if Checkmk should "
                 "use it instead of getting information from the target hosts while "
                 "checking a cluster. Per default this is enabled and set to 90 seconds. "
                 "If your check cycle is set to a larger value than one minute then "
@@ -3111,7 +3198,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
         return Transform(
             valuespec=DropdownChoice(
                 title=cmk_version.mark_edition_only(
-                    _("Choose SNMP Backend"), cmk_version.Edition.CEE
+                    _("Choose SNMP backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
                 ),
                 choices=[
                     (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
@@ -3129,6 +3216,26 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
             ),
             to_valuespec=transform_snmp_backend_hosts_to_valuespec,
             from_valuespec=transform_snmp_backend_from_valuespec,
+        )
+
+
+class ConfigVariableCMCRulesetMatchingStats(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupDeveloperTools
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainCore
+
+    def ident(self) -> str:
+        return "ruleset_matching_stats"
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Collect ruleset matching statistics"),
+            help=_(
+                "If enabled, the core will collect statistics (cache hits/misses) during the "
+                "ruleset matching process."
+            ),
         )
 
 
@@ -3158,7 +3265,9 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
                 "Changes to this option will have no effect to the behaviour of "
                 "Checkmk"
             )
-            % cmk_version.mark_edition_only(_("Choose SNMP Backend"), cmk_version.Edition.CEE),
+            % cmk_version.mark_edition_only(
+                _("Choose SNMP backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
+            ),
         )
 
 
@@ -3427,7 +3536,7 @@ def _valuespec_extra_service_conf_check_interval():
         from_valuespec=lambda v: float(v) / 60.0,
         title=_("Normal check interval for service checks"),
         help=_(
-            "Check_MK usually uses an interval of one minute for the active Checkmk "
+            "Checkmk usually uses an interval of one minute for the active Checkmk "
             "check and for legacy checks. Here you can specify a larger interval. Please "
             "note, that this setting only applies to active checks (those with the "
             "reschedule button). If you want to change the check interval of "
@@ -3678,8 +3787,8 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
         ),
     ]
 
-    if user.may("wato.add_or_modify_executables"):
-        choices.append(("custom", _("Use a custom check plugin..."), PluginCommandLine()))
+    if user.may("wato.add_or_modify_executables") and edition() is not Edition.CSE:
+        choices.append(("custom", _("Use a custom check plug-in..."), PluginCommandLine()))
 
     return choices
 
@@ -3695,9 +3804,9 @@ def PluginCommandLine() -> ValueSpec:
         title=_("Command line"),
         help=_(
             "Please enter the complete shell command including path name and arguments to execute. "
-            "If the plugin you like to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
+            "If the plug-in you like to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
             "or <tt>~/lib/nagios/plugins</tt> within your site directory, you can strip the path name and "
-            "just configure the plugin file name as command <tt>check_foobar</tt>."
+            "just configure the plug-in file name as command <tt>check_foobar</tt>."
         )
         + monitoring_macro_help(),
         size="max",
@@ -3725,7 +3834,7 @@ def monitoring_macro_help() -> str:
 
 def _valuespec_host_check_commands():
     return CascadingDropdown(
-        title=_("Host Check Command"),
+        title=_("Host check command"),
         help=_(
             "Usually Checkmk uses a series of PING (ICMP echo request) in order to determine "
             "whether a host is up. In some cases this is not possible, however. With this rule "
@@ -3736,9 +3845,9 @@ def _valuespec_host_check_commands():
             '"Can add or modify executables".'
         ),
         choices=_host_check_commands_host_check_command_choices,
-        default_value="smart"
-        if ConfigDomainOMD().default_globals()["site_core"] == "cmc"
-        else "ping",
+        default_value=(
+            "smart" if ConfigDomainOMD().default_globals()["site_core"] == "cmc" else "ping"
+        ),
         orientation="horizontal",
     )
 
@@ -3815,8 +3924,8 @@ def _valuespec_extra_host_conf_notification_options():
             "of events that should initiate notifications. Please note that several other "
             "filters must also be passed in order for notifications to finally being sent out."
             "<br><br>"
-            "Please note: There is a difference between the Microcore and Nagios when you have "
-            "a host that has no matching rule in this ruleset. In this case the Microcore will "
+            "Please note: There is a difference between the Micro Core and Nagios when you have "
+            "a host that has no matching rule in this ruleset. In this case the Micro Core will "
             "not send out UNREACHABLE notifications while the Nagios core would send out "
             "UNREACHABLE notifications. To align this behaviour, create a rule matching "
             "all your hosts and configure it to either send UNREACHABLE notifications or not."
@@ -4141,24 +4250,61 @@ IgnoredChecks = HostRulespec(
 )
 
 
+def _from_periodic_service_discovery_config(values: dict | None) -> dict | None:
+    if not values:
+        return values
+
+    values = _fix_values_from_analyse_service_automation(values)
+
+    if "severity_changed_service_labels" not in values:
+        values["severity_changed_service_labels"] = 0
+
+    if "severity_changed_service_params" in values:
+        values.pop("severity_changed_service_params")
+
+    return values
+
+
 def _valuespec_periodic_discovery():
-    return Alternative(
-        title=_("Periodic service discovery"),
-        default_value={
-            "check_interval": 2 * 60,
-            "severity_unmonitored": 1,
-            "severity_vanished": 0,
-            "severity_new_host_label": 1,
-        },
-        elements=[
-            FixedValue(
-                value=None,
-                title=_("Do not perform periodic service discovery check"),
-                totext="",
-            ),
-            _vs_periodic_discovery(),
-        ],
+    return Transform(
+        valuespec=Alternative(
+            title=_("Periodic service discovery"),
+            default_value={
+                "check_interval": 2 * 60,
+                "severity_unmonitored": 1,
+                "severity_changed_service_labels": 0,
+                "severity_vanished": 0,
+                "severity_new_host_label": 1,
+            },
+            elements=[
+                FixedValue(
+                    value=None,
+                    title=_("Do not perform periodic service discovery check"),
+                    totext="",
+                ),
+                _vs_periodic_discovery(),
+            ],
+        ),
+        to_valuespec=_from_periodic_service_discovery_config,
     )
+
+
+_MAP_FROM_ANALYSE_SERVICE_KEYS = {
+    "severity_new_services": "severity_unmonitored",
+    "severity_vanished_services": "severity_vanished",
+    "severity_new_host_labels": "severity_new_host_label",
+    "rediscovery": "inventory_rediscovery",
+}
+
+
+def _fix_values_from_analyse_service_automation(values: dict) -> dict:
+    # be able to render what we get from the analyse-service automation.
+    return {
+        _MAP_FROM_ANALYSE_SERVICE_KEYS.get(k, k): v
+        for k, v in values.items()
+        # skip falsy redicovery
+        if k != "rediscovery" or v
+    }
 
 
 def _vs_periodic_discovery() -> Dictionary:
@@ -4215,6 +4361,22 @@ def _vs_periodic_discovery() -> Dictionary:
                 ),
             ),
             (
+                "severity_changed_service_labels",
+                DropdownChoice(
+                    title=_("Severity of services with changed labels"),
+                    help=_(
+                        "Please select which alarm state the service discovery check services "
+                        "shall assume in case that labels of services have changed."
+                    ),
+                    choices=[
+                        (0, _("OK - do not alert, just display")),
+                        (1, _("Warning")),
+                        (2, _("Critical")),
+                        (3, _("Unknown")),
+                    ],
+                ),
+            ),
+            (
                 "severity_new_host_label",
                 DropdownChoice(
                     title=_("Severity of new host labels"),
@@ -4233,7 +4395,7 @@ def _vs_periodic_discovery() -> Dictionary:
             ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
         ],
         optional_keys=["inventory_rediscovery"],
-        ignored_keys=["inventory_check_do_scan"],
+        ignored_keys=["inventory_check_do_scan", "commandline_only"],
     )
 
 
@@ -4247,15 +4409,70 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
         elements=[
             (
                 "mode",
-                DropdownChoice(
-                    title=_("Mode"),
-                    choices=[
-                        (0, _("Add unmonitored services, new host labels")),
-                        (1, _("Remove vanished services")),
-                        (2, _("Add unmonitored & remove vanished services and host labels")),
-                        (3, _("Refresh all services and host labels (tabula rasa)")),
-                    ],
-                    default_value=0,
+                Migrate(
+                    migrate=_migrate_automatic_rediscover_parameters,
+                    valuespec=CascadingDropdown(
+                        title=_("Parameters"),
+                        sorted=False,
+                        default_value=(
+                            "custom",
+                            {
+                                "add_new_services": False,
+                                "remove_vanished_services": False,
+                                "update_changed_service_labels": False,
+                                "update_host_labels": True,
+                            },
+                        ),
+                        choices=[
+                            (
+                                "update_everything",
+                                _("Refresh all services and host labels (tabula rasa)"),
+                                FixedValue(
+                                    value=None,
+                                    title=_("Refresh all services and host labels (tabula rasa)"),
+                                    totext="",
+                                ),
+                            ),
+                            (
+                                "custom",
+                                _("Custom service configuration update"),
+                                Dictionary(
+                                    elements=[
+                                        (
+                                            "add_new_services",
+                                            Checkbox(
+                                                label=_("Monitor undecided services"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                        (
+                                            "remove_vanished_services",
+                                            Checkbox(
+                                                label=_("Remove vanished services"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                        (
+                                            "update_changed_service_labels",
+                                            Checkbox(
+                                                label=_("Update service labels"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                        (
+                                            "update_host_labels",
+                                            Checkbox(
+                                                label=_("Update host labels"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                    ],
+                                    optional_keys=[],
+                                    indent=False,
+                                ),
+                            ),
+                        ],
+                    ),
                 ),
             ),
             (
@@ -4362,6 +4579,60 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                                             ),
                                         ),
                                     ),
+                                    (
+                                        "changed_service_labels_whitelist",
+                                        ListOfStrings(
+                                            title=_("Change labels only for matching services"),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "change labels of services automatically. "
+                                                "If you set both this and 'Don't change labels for matching services', "
+                                                "both rules have to apply for a service's labels to be changed."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "changed_service_labels_blacklist",
+                                        ListOfStrings(
+                                            title=_("Don't change labels for matching services"),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "prevent changing of labels for services automatically. "
+                                                "If you set both this and 'Change labels only for matching services', "
+                                                "both rules have to apply for a service's labels to be changed."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "changed_service_params_whitelist",
+                                        ListOfStrings(
+                                            title=_("Change parameters only for matching services"),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "change parameters of services automatically. "
+                                                "If you set both this and 'Don't change parameters for matching services', "
+                                                "both rules have to apply for a service's parameters to be changed."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "changed_service_params_blacklist",
+                                        ListOfStrings(
+                                            title=_(
+                                                "Don't change parameters for matching services"
+                                            ),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "prevent changing of parameters for services automatically. "
+                                                "If you set both this and 'Change parameters only for matching services', "
+                                                "both rules have to apply for a service's parameters to be changed."
+                                            ),
+                                        ),
+                                    ),
                                 ],
                             ),
                         ),
@@ -4371,6 +4642,52 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
         ],
         optional_keys=["service_filters", "keep_clustered_vanished_services"],
     )
+
+
+def _migrate_automatic_rediscover_parameters(
+    param: int | tuple[str, dict[str, bool]]
+) -> tuple[str, dict[str, bool] | None]:
+    # already migrated
+    if isinstance(param, tuple):
+        return param
+
+    if param == 0:
+        return (
+            "custom",
+            {
+                "add_new_services": True,
+                "remove_vanished_services": False,
+                "update_changed_service_labels": False,
+                "update_host_labels": True,
+            },
+        )
+
+    if param == 1:
+        return (
+            "custom",
+            {
+                "add_new_services": False,
+                "remove_vanished_services": True,
+                "update_changed_service_labels": False,
+                "update_host_labels": False,
+            },
+        )
+
+    if param == 2:
+        return (
+            "custom",
+            {
+                "add_new_services": True,
+                "remove_vanished_services": True,
+                "update_changed_service_labels": False,
+                "update_host_labels": True,
+            },
+        )
+
+    if param == 3:
+        return ("update_everything", None)
+
+    raise MKConfigError(f"Automatic rediscovery parameter {param} not implemented")
 
 
 def _get_periodic_discovery_dflt_service_filter_lists() -> list[tuple[str, ValueSpec]]:
@@ -4485,24 +4802,24 @@ def _valuespec_clustered_services_config():
             "</li><li>".join(
                 (
                     _(
-                        "Native: Use the cluster check function implemented by the check plugin. "
+                        "Native: Use the cluster check function implemented by the check plug-in. "
                         "If it is available, it is probably the best choice, as it implements logic "
-                        "specifically designed for the check plugin in question. Implementing it is "
+                        "specifically designed for the check plug-in in question. Implementing it is "
                         "optional however, so this might not be available (a warning will be displayed). "
-                        "Consult the plugins manpage for details about its cluster behaviour."
+                        "Consult the plug-ins manpage for details about its cluster behaviour."
                     ),
                     _(
-                        "Failover: The check function of the plugin will be applied to each individual "
+                        "Failover: The check function of the plug-in will be applied to each individual "
                         "node. The worst outcome will determine the overall state of the clustered "
                         "service. However only one node is supposed to send data, any additional nodes "
                         "results will least trigger a WARNING state."
                     ),
                     _(
-                        "Worst: The check function of the plugin will be applied to each individual node. "
+                        "Worst: The check function of the plug-in will be applied to each individual node. "
                         "The worst outcome will determine the overall state of the clustered service."
                     ),
                     _(
-                        "Best: The check function of the plugin will be applied to each individual node. "
+                        "Best: The plug-in's check function will be applied to each individual node. "
                         "The best outcome will determine the overall state of the clustered service."
                     ),
                 )
@@ -4738,7 +5055,7 @@ def _valuespec_extra_service_conf_display_name():
             "a column when creating new views or modifying existing ones. "
             "It is always visible in the details view of a service. In the "
             "availability reporting there is an option for using that name "
-            "instead of the normal service description. It does <b>not</b> automatically "
+            "instead of the normal service name. It does <b>not</b> automatically "
             "replace the normal service name in all views.<br><br><b>Note</b>: The "
             "purpose of this rule set is to define unique names for several well-known "
             "services. It cannot rename services in general."
@@ -4768,7 +5085,7 @@ def _valuespec_extra_service_conf_notes_url():
             "<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>"
             "<li>$HOSTADDRESS$: Contains the network address of the host</li>"
             "<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>"
-            "<li>$SERVICEDESC$: Contains the service description "
+            "<li>$SERVICEDESC$: Contains the service name "
             "(in case this is a service)</li>"
             "<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>"
             "<li>$USER_ID$: The user ID of the currently active user</li>"
@@ -4803,7 +5120,7 @@ def _valuespec_automatic_host_removal() -> CascadingDropdown:
                     filename="wato.py",
                 )
             )
-            if edition() is Edition.CCE
+            if edition() in (Edition.CME, Edition.CCE)
             else ""
         ),
         sorted=False,
@@ -4887,6 +5204,7 @@ def _valuespec_extra_service_conf_icon_image() -> IconSelector:
         )
         % str(cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"),
         with_emblem=False,
+        default_value="",
     )
 
 
@@ -4964,7 +5282,7 @@ def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT():
         title=_("Escape HTML in host output (Dangerous to deactivate - read help)"),
         help=_(
             "By default, for security reasons, the GUI does not interpret any HTML "
-            "code received from external sources, like plugin output or log messages. "
+            "code received from external sources, like plug-in output or log messages. "
             "If you are really sure what you are doing and need to have HTML code, like "
             "links rendered, disable this option. Be aware, you might open the way "
             "for several injection attacks."
@@ -5124,9 +5442,9 @@ def _valuespec_snmp_character_encodings():
     return DropdownChoice(
         title=_("Output text encoding settings for SNMP devices"),
         help=_(
-            "Some devices send texts in non-ASCII characters. Check_MK"
-            " always assumes UTF-8 encoding. You can declare other "
-            " other encodings here"
+            "Some devices send texts in non-ASCII characters. Checkmk "
+            "always assumes UTF-8 encoding. You can declare other "
+            "encodings here"
         ),
         choices=[
             ("utf-8", _("UTF-8")),
@@ -5145,22 +5463,21 @@ SnmpCharacterEncodings = HostRulespec(
 
 def _help_enable_snmpv2c():
     return _(
-        "Checkmk defaults to SNMPv1 in order to support as many devices as "
-        "possible. In practice, most SNMP devices also support SNMPv2c, which "
-        "has two advantages: it supports 64 bit counters and bulk walk, which "
-        "saves CPU and network resources and is more performant. Use this rule "
-        "to configure SNMPv2c for as many devices as possible. However, please be "
-        "aware that some devices that support SNMPv2c may be buggy. In such cases, "
-        'you may want to try disabling bulk walk using the ruleset "Disable '
-        'bulk walks on SNMPv2c/v3".'
-    )
+        "Use this rule to enable the use of SNMP verison 2c instead of the default SNMP version 1."
+        " Checkmk defaults to SNMPv1 in order to support as many devices as possible."
+        " In practice, most SNMP devices also support SNMPv2c, which has two advantages:"
+        ' It supports 64 bit counters and the "bulkwalk" query, which is faster and saves CPU and network resources.'
+        " Use this rule to configure SNMPv2c for as many devices as possible."
+        ' However, please be aware some buggy devices do not properly support "bulkwalk" queries.'
+        ' For those you may want to try disabling them using the ruleset "%s".'
+    ) % _("Disable bulkwalks")
 
 
 BulkwalkHosts = BinaryHostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_enable_snmpv2c,
     name="bulkwalk_hosts",
-    title=lambda: _("Enable SNMPv2c and bulk walk for hosts"),
+    title=lambda: _("Enable SNMPv2c for hosts"),
 )
 
 
@@ -5168,7 +5485,7 @@ ManagementBulkwalkHosts = BinaryHostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_enable_snmpv2c,
     name="management_bulkwalk_hosts",
-    title=lambda: _("Enable SNMPv2c and bulk walk for management boards"),
+    title=lambda: _("Enable SNMPv2c for management boards"),
 )
 
 
@@ -5184,7 +5501,7 @@ def _valuespec_snmp_bulk_size():
             "at once. This rule only applies to SNMP hosts that are configured to be bulk "
             "walk hosts.You may want to use this rule to tune SNMP performance. Be aware: A "
             "higher value is not always better. It may decrease the transactions between "
-            "Check_MK and the target system, but may increase the OID overhead in case you "
+            "Checkmk and the target system, but may increase the OID overhead in case you "
             "only need a small amount of OIDs."
         ),
     )
@@ -5215,11 +5532,10 @@ SnmpWithoutSysDescr = BinaryHostRulespec(
 
 def _help_snmpv2c_without_bulkwalk():
     return _(
-        "Some SNMPv2c/v3 capable devices are buggy when being queried using "
-        "bulk walks. In such cases, you can disable bulk walks with this "
-        "ruleset. Please be aware that you should only do this if no other "
-        "approach is feasible (e.g. limiting the bulk size), as bulk walks are "
-        "much more performant."
+        'Some SNMPv2c/v3 capable devices do not properly support "bulkwalk" queries.'
+        ' For those you can disable "bulkwalk" queries with this ruleset.'
+        " Please be aware that you should only do this if no other approach is feasible"
+        " (e.g. limiting the bulk size), as bulk walks are much more performant."
     )
 
 
@@ -5227,7 +5543,7 @@ Snmpv2CHosts = BinaryHostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_snmpv2c_without_bulkwalk,
     name="snmpv2c_hosts",
-    title=lambda: _("Disable bulk walks on SNMPv2c/v3"),
+    title=lambda: _("Disable bulkwalks"),
 )
 
 
@@ -5285,7 +5601,7 @@ SnmpTiming = HostRulespec(
 
 def _help_non_inline_snmp_hosts():
     return _(
-        "Check_MK has an efficient SNMP implementation called Inline SNMP which reduces "
+        "Checkmk has an efficient SNMP implementation called Inline SNMP which reduces "
         "the load produced by SNMP monitoring on the monitoring host significantly. This "
         "option is enabled by default for all SNMP hosts and it is a good idea to keep "
         "this default setting. However, there are SNMP devices which have problems with "
@@ -5328,10 +5644,10 @@ def transform_snmp_backend_hosts_to_valuespec(backend):
 def _valuespec_snmp_backend():
     return Transform(
         valuespec=DropdownChoice(
-            title=_("Choose SNMP Backend"),
+            title=_("Choose SNMP backend"),
             choices=[
-                (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
-                (SNMPBackendEnum.CLASSIC, _("Use Classic Backend")),
+                (SNMPBackendEnum.INLINE, _("Use Inline SNMP backend")),
+                (SNMPBackendEnum.CLASSIC, _("Use Classic backend")),
             ],
         ),
         to_valuespec=transform_snmp_backend_hosts_to_valuespec,
@@ -5345,7 +5661,7 @@ SnmpBackendHosts = HostRulespec(
     help_func=_help_snmp_backend,
     name="snmp_backend_hosts",
     title=lambda: cmk_version.mark_edition_only(
-        _("Hosts using a specific SNMP Backend"), cmk_version.Edition.CEE
+        _("Hosts using a specific SNMP Backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
     ),
 )
 
@@ -5594,7 +5910,7 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                                 "missing_sections",
                                 MonitoringState(
                                     default_value=1,
-                                    title=_("State if check plugins received no monitoring data"),
+                                    title=_("State if check plug-ins received no monitoring data"),
                                 ),
                             ),
                             (
@@ -5606,7 +5922,7 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                                                 help=_(
                                                     'In addition to setting the generic "Missing monitoring '
                                                     'data" state above you can specify a regex pattern to '
-                                                    "match specific check plugins and give them an individual "
+                                                    "match specific check plug-ins and give them an individual "
                                                     "state in case they receive no monitoring data. Note that "
                                                     "the first match is used."
                                                 ),
@@ -5617,7 +5933,7 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                                         orientation="horizontal",
                                     ),
                                     title=_(
-                                        "State if specific check plugins receive no monitoring data."
+                                        "State if specific check plug-ins receive no monitoring data."
                                     ),
                                 ),
                             ),
@@ -5731,16 +6047,16 @@ def _valuespec_agent_config_only_from():
         title=_("Allowed agent access via IP address (Linux, Windows)"),
         help=_(
             "This rule allows you to restrict the access to the "
-            "Check_MK agent to certain IP addresses and networks. "
+            "Checkmk agent to certain IP addresses and networks. "
             "Usually you configure just the IP addresses of your "
-            "Check_MK servers here. You can enter either IP addresses "
+            "Checkmk servers here. You can enter either IP addresses "
             "in the form <tt>1.2.3.4</tt> or networks in the style "
             "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
             "or create no rule then <b>all</b> addresses are allowed to "
             "access the agent. IPv6 addresses and networks are also allowed."
         )
         + _(
-            "If you are using the Agent bakery, the configuration will be "
+            "If you are using the Agent Bakery, the configuration will be "
             "used for restricting network access to the baked agents. On Linux, a systemd "
             "installation >= systemd 235 or an xinetd installation is needed. Please note "
             "that the agent will be inaccessible if a Linux host doesn't meet these prerequisites, "
@@ -5763,13 +6079,13 @@ AgentConfigOnlyFrom = HostRulespec(
 
 def _valuespec_piggyback_translation():
     return HostnameTranslation(
-        title=_("Hostname translation for piggybacked hosts"),
+        title=_("Host name translation for piggybacked hosts"),
         help=_(
-            "Some agents or agent plugins send data not only for the queried host but also "
+            "Some agents or agent plug-ins send data not only for the queried host but also "
             "for other hosts &quot;piggyback&quot; with their own data. This is the case "
-            "for the vSphere special agent and the SAP R/3 plugin, for example. The hostnames "
-            "that these agents send must match your hostnames in your monitoring configuration. "
-            "If that is not the case, then with this rule you can define a hostname translation. "
+            "for the vSphere special agent and the SAP R/3 plugin, for example. The host names "
+            "that these agents send must match your host names in your monitoring configuration. "
+            "If that is not the case, then with this rule you can define a host name translation. "
             "Note: This rule must be configured for the &quot;pig&quot; - i.e. the host that the "
             "agent is running on. It is not applied to the translated piggybacked hosts."
         ),
@@ -5786,10 +6102,10 @@ PiggybackTranslation = HostRulespec(
 
 def _valuespec_service_description_translation():
     return ServiceDescriptionTranslation(
-        title=_("Translation of service descriptions"),
+        title=_("Translation of service names"),
         help=_(
-            "Within this ruleset service descriptions can be translated similar to the ruleset "
-            "<tt>Hostname translation for piggybacked hosts</tt>. Services such as "
+            "Within this ruleset service names can be translated similar to the ruleset "
+            "<tt>Host name translation for piggybacked hosts</tt>. Services such as "
             "<tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "
             "<tt>Check_MK inventory</tt>, and <tt>Check_MK HW/SW Inventory</tt> are excluded. "
             "<b>Attention:</b><ul>"
@@ -5797,7 +6113,7 @@ def _valuespec_service_description_translation():
             "services have to be adapted.</li>"
             "<li>Performance data and graphs will begin from scratch for translated services.</li>"
             "<li>Especially configured check parameters keep their functionality further on.</li>"
-            "<li>This new ruleset translates also the item part of a service description. "
+            "<li>This new ruleset translates also the item part of a service name. "
             "This means that after such a translation the item may be gone but is used in the "
             "conditions of the parameters further on if any parameters are configured. "
             "This might be confusing.</li></ul>"
@@ -5843,7 +6159,7 @@ def _valuespec_snmp_fetch_interval():
                 title=_("Section"),
                 help=_(
                     "You can only configure section names here, but not choose individual "
-                    "check plugins. The reason for this is that the check plugins "
+                    "check plug-ins. The reason for this is that the check plug-ins "
                     "themselves are not aware whether or not they are processing SNMP based "
                     "data."
                 ),
@@ -5872,9 +6188,9 @@ def _valuespec_snmp_config_agent_sections() -> Dictionary:
         help=_(
             "This option allows to omit individual sections from being fetched at all. "
             "As a result, associated Checkmk services may be entirely missing. "
-            "However, some check plugins process multiple sections and their behavior may "
+            "However, some check plug-ins process multiple sections and their behavior may "
             "change if one of them is excluded. In such cases, you may want to disable "
-            "individual sections, instead of the check plugin itself. "
+            "individual sections, instead of the check plug-in itself. "
             "Furthermore, SNMP sections can supersede other SNMP sections in order to "
             "prevent duplicate services. By excluding a section which supersedes another one, "
             "the superseded section might become available. One such use case is the enforcing "
@@ -5928,25 +6244,53 @@ SnmpExcludeSections = HostRulespec(
 )
 
 
+prev_snmpv3_values = tuple[
+    str | None,
+    Sequence[str],
+]
+new_snmpv3_values = tuple[
+    str | None,
+    Sequence[str],
+    Literal["continue_on_timeout", "stop_on_timeout"],
+]
+
+
+def add_error_handling_option(values: prev_snmpv3_values | new_snmpv3_values) -> new_snmpv3_values:
+    """Update from 2.2 -> 2.3"""
+    return values + ("stop_on_timeout",) if len(values) == 2 else values
+
+
 def _valuespec_snmpv3_contexts():
-    return Tuple(
-        title=_("SNMPv3 contexts to use in requests"),
-        help=_(
-            "By default Checkmk does not use a specific context during SNMPv3 queries, "
-            "but some devices are offering their information in different SNMPv3 contexts. "
-            "This rule can be used to configure, based on hosts and SNMP sections, which SNMPv3 "
-            "contexts Checkmk should ask for when getting information via SNMPv3."
+    return Migrate(
+        migrate=add_error_handling_option,
+        valuespec=Tuple(
+            title=_("SNMPv3 contexts to use in requests"),
+            help=_(
+                "By default Checkmk does not use a specific context during SNMPv3 queries, "
+                "but some devices are offering their information in different SNMPv3 contexts. "
+                "This rule can be used to configure, based on hosts and SNMP sections, which SNMPv3 "
+                "contexts Checkmk should ask for when getting information via SNMPv3."
+            ),
+            elements=[
+                DropdownChoice(
+                    title=_("Section name"),
+                    choices=lambda: [(None, _("All SNMP sections"))] + get_snmp_section_names(),
+                ),
+                ListOfStrings(
+                    title=_("SNMP Context IDs"),
+                    allow_empty=False,
+                ),
+                DropdownChoice(
+                    title=_("Error Handling"),
+                    choices=lambda: [
+                        ("stop_on_timeout", _("Stop SNMP processing on timeout")),
+                        ("continue_on_timeout", _("Continue with other SNMP contexts on timeout")),
+                    ],
+                    help="You should not configure an unnecessarily large number of SNMP contexts, "
+                    "as this can lead to unnecessarily long runtimes due to accumulated timeouts.",
+                ),
+            ],
         ),
-        elements=[
-            DropdownChoice(
-                title=_("Section name"),
-                choices=lambda: [(None, _("All SNMP sections"))] + get_snmp_section_names(),
-            ),
-            ListOfStrings(
-                title=_("SNMP Context IDs"),
-                allow_empty=False,
-            ),
-        ],
     )
 
 
@@ -5992,7 +6336,7 @@ def _valuespec_piggybacked_host_files():
     )
 
     return Dictionary(
-        title=_("Processing of Piggybacked Host Data"),
+        title=_("Processing of piggybacked host data"),
         optional_keys=[],
         elements=[
             ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),
@@ -6072,7 +6416,7 @@ def _vs_validity():
             (
                 "check_mk_state",
                 MonitoringState(
-                    title=_("Check MK status of piggybacked host within this period"),
+                    title=_("Check_MK status of piggybacked host within this period"),
                     default_value=0,
                 ),
             ),

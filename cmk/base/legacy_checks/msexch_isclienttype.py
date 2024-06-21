@@ -57,9 +57,8 @@ check_info["msexch_isclienttype"] = LegacyCheckDefinition(
     check_function=check_msexch_isclienttype,
     check_ruleset_name="msx_info_store",
     check_default_parameters={
-        # attention! those three dictionaries are tuples when returned by wato!
-        "store_latency": {"upper": (40.0, 50.0)},
-        "clienttype_latency": {"upper": (40.0, 50.0)},
-        "clienttype_requests": {"upper": (60, 70)},
+        "store_latency": (40.0, 50.0),
+        "clienttype_latency": (40.0, 50.0),
+        "clienttype_requests": (60, 70),
     },
 )

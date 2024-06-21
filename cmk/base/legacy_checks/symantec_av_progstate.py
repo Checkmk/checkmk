@@ -9,6 +9,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_symantec_av_progstate(info):
     return [(None, None)]
@@ -20,7 +22,12 @@ def check_symantec_av_progstate(_no_item, _no_params, info):
     return 0, "Program enabled"
 
 
+def parse_symantec_av_progstate(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["symantec_av_progstate"] = LegacyCheckDefinition(
+    parse_function=parse_symantec_av_progstate,
     service_name="AV Program Status",
     discovery_function=inventory_symantec_av_progstate,
     check_function=check_symantec_av_progstate,

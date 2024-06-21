@@ -11,7 +11,8 @@ import sys
 # Make the tests.testlib available
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from tests.testlib.utils import repo_path, run
+from tests.testlib.repo import repo_path
+from tests.testlib.utils import run
 
 logger = logging.getLogger("pytest-bulked")
 

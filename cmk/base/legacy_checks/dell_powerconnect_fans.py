@@ -31,7 +31,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree
+
+from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
 
 dell_powerconnect_fans_status_map = {
     "1": "normal",
@@ -74,7 +75,13 @@ def check_dell_powerconnect_fans(item, _not_used, info):
 
 # Auto-detection of fan related details.
 
+
+def parse_dell_powerconnect_fans(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dell_powerconnect_fans"] = LegacyCheckDefinition(
+    parse_function=parse_dell_powerconnect_fans,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6027.1.3.22"),

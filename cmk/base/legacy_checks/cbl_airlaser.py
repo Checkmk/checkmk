@@ -11,7 +11,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
+
+from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree
 
 airlaser_default_levels = {
     "opttxTempValue": (60, 80),
@@ -22,7 +23,10 @@ airlaser_default_levels = {
 }
 
 
-def parse_cbl_airlaser(info):
+def parse_cbl_airlaser(string_table):
+    if not all(string_table):
+        return None
+
     airlaser_status_names = {
         0: "undefined",
         1: "active",
@@ -74,21 +78,23 @@ def parse_cbl_airlaser(info):
     # load the info into a dict separated by the different MIB regions
     # Selfest (info[0] is not handled here.
     data = {
-        "chassis": info[1],
-        "power": info[2],
-        "module": info[3],
-        "opttx": info[4],
-        "optrx": info[5],
+        "chassis": string_table[1],
+        "power": string_table[2],
+        "module": string_table[3],
+        "opttx": string_table[4],
+        "optrx": string_table[5],
     }
 
     # update values from one dict into the other by picking the "offsetted" values
     # (optimize at will, if we can make it one-dict-for-all then we 100% sanitized their MIB)
-    return {
+    return string_table[0], {
         hwclass: {
             sensor: (
-                airlaser_status_names[int(data[hwclass][offset][0])]
-                if "Status" in sensor
-                else saveint(data[hwclass][offset][0]),
+                (
+                    airlaser_status_names[int(data[hwclass][offset][0])]
+                    if "Status" in sensor
+                    else saveint(data[hwclass][offset][0])
+                ),
                 sub_oid,
                 offset,
             )
@@ -98,14 +104,14 @@ def parse_cbl_airlaser(info):
     }
 
 
-def check_cbl_airlaser_hw(item, params, info):  # pylint: disable=too-many-branches
-    airlaser_info = parse_cbl_airlaser(info)
+def check_cbl_airlaser_hw(item, params, section):  # pylint: disable=too-many-branches
+    _selftest, sensors_data = section
 
     state = 0
     msgtxt = ""
     perfdata = []
 
-    for sensors in airlaser_info.values():
+    for sensors in sensors_data.values():
         for sensor, s in sensors.items():
             val = s[0]
             if sensor.lower().endswith("value"):
@@ -126,15 +132,14 @@ def check_cbl_airlaser_hw(item, params, info):  # pylint: disable=too-many-branc
             if sensor in ["psStatus48V", "psStatus230V"] and val == "warning":
                 state = max(state, 0)
 
+            elif val == "failure":
+                state = 2
+            elif val == "warning":
+                state = max(state, 1)
+            # go here if no explicit error occured,
+            # no handling undefined and not_installed
             else:
-                if val == "failure":
-                    state = 2
-                elif val == "warning":
-                    state = max(state, 1)
-                # go here if no explicit error occured,
-                # no handling undefined and not_installed
-                else:
-                    continue
+                continue
             if state > 0:
                 msgtxt = msgtxt + f"Sensor {sensor} {val}" + state * "!" + " "
 
@@ -144,18 +149,15 @@ def check_cbl_airlaser_hw(item, params, info):  # pylint: disable=too-many-branc
     return (state, msgtxt, perfdata)
 
 
-def inventory_cbl_airlaser(info):
+def inventory_cbl_airlaser(section):
     # start passing parameters, but since we might also need some for optics
     # this may change to using factory settings.
     # Or we just hardcode the margins we got from the vendor.
     return [(None, airlaser_default_levels)]
 
 
-def check_cbl_airlaser_status(item, _no_params, info):
-    if len(info) == 0:
-        return (3, "no information sent by agent")
-
-    selftest, _chassis, _power, _module, _optrx, _opttx = info
+def check_cbl_airlaser_status(item, _no_params, section):
+    selftest, _sensors_data = section
     status = selftest[0][0]
 
     if status == "1":
@@ -198,6 +200,7 @@ check_info["cbl_airlaser"] = LegacyCheckDefinition(
             oids=["5"],
         ),
     ],
+    parse_function=parse_cbl_airlaser,
 )
 
 check_info["cbl_airlaser.status"] = LegacyCheckDefinition(

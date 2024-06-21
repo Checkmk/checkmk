@@ -45,17 +45,15 @@
 #   (PackageHub/12.5/x86_64)
 
 
-# mypy: disable-error-code="no-untyped-def"
-
 import time
+from collections.abc import Iterable, Mapping
+from typing import Any
 
-#   Registered
-##.
-from collections.abc import Iterable
-
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.suseconnect import get_data, Section
+
+from cmk.agent_based.v2 import render
+from cmk.plugins.collection.agent_based.suseconnect import get_data, Section
 
 
 def inventory_suseconnect(section: Section) -> Iterable[tuple[None, dict]]:
@@ -63,7 +61,9 @@ def inventory_suseconnect(section: Section) -> Iterable[tuple[None, dict]]:
         yield None, {}
 
 
-def check_suseconnect(_no_item, params, section: Section):
+def check_suseconnect(
+    _no_item: str, params: Mapping[str, Any], section: Section
+) -> Iterable[tuple[int, str]]:
     # we assume here that the parsed data contains all required keys
 
     if (specs := get_data(section)) is None:
@@ -101,13 +101,13 @@ def check_suseconnect(_no_item, params, section: Section):
         else:
             state = 0
 
-        infotext = "Expires in: %s" % get_age_human_readable(expiration_time)
+        infotext = "Expires in: %s" % render.timespan(expiration_time)
         if state:
             infotext += " (warn/crit at %d/%d days)" % (warn, crit)
 
         yield state, infotext
     else:
-        yield 2, "Expired since: %s" % get_age_human_readable(-1.0 * expiration_time)
+        yield 2, "Expired since: %s" % render.timespan(-1.0 * expiration_time)
 
 
 check_info["suseconnect"] = LegacyCheckDefinition(

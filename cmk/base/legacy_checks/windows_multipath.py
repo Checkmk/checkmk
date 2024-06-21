@@ -12,16 +12,17 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_windows_multipath(info):
     try:
         num_active = int(info[0][0])
     except (ValueError, IndexError):
-        return []
+        return
 
     if num_active > 0:
-        return [(None, num_active)]
-    return []
+        yield None, {"active_paths": num_active}
 
 
 def check_windows_multipath(item, params, info):
@@ -51,7 +52,12 @@ def check_windows_multipath(item, params, info):
             yield 1, "(warn at %d)" % levels
 
 
+def parse_windows_multipath(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["windows_multipath"] = LegacyCheckDefinition(
+    parse_function=parse_windows_multipath,
     service_name="Multipath",
     discovery_function=inventory_windows_multipath,
     check_function=check_windows_multipath,

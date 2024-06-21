@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.hitachi_hnas import DETECT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.hitachi_hnas import DETECT
 
 
 def format_hitachi_hnas_name(nodeid, sensorid, new_format):
@@ -53,7 +54,12 @@ def check_hitachi_hnas_temp(item, params, info):
     return 3, "No sensor found", []
 
 
+def parse_hitachi_hnas_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hitachi_hnas_temp"] = LegacyCheckDefinition(
+    parse_function=parse_hitachi_hnas_temp,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.1.2.1.9.1",

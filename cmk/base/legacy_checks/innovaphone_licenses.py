@@ -7,13 +7,12 @@
 from cmk.base.check_api import LegacyCheckDefinition, savefloat
 from cmk.base.config import check_info
 
-innovaphone_licenses_default_levels = (90.0, 95.0)
+from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
 
 
-def inventory_innovaphone_licenses(info):
-    if info:
-        return [(None, innovaphone_licenses_default_levels)]
-    return []
+def discover_innovaphone_licenses(string_table: StringTable) -> DiscoveryResult:
+    if string_table:
+        yield Service()
 
 
 def check_innovaphone_licenses(_no_item, params, info):
@@ -21,7 +20,7 @@ def check_innovaphone_licenses(_no_item, params, info):
         return None
     total, used = map(savefloat, info[0])
     perc_used = (100.0 * used) / total
-    warn, crit = params
+    warn, crit = params["levels"]
     message = f"Used {used:.0f}/{total:.0f} Licences ({perc_used:.0f}%)"
     levels = f"Warning/ Critical at ({warn}/{crit})"
     perf = [("licenses", used, None, None, total)]
@@ -32,8 +31,16 @@ def check_innovaphone_licenses(_no_item, params, info):
     return 0, message, perf
 
 
+def parse_innovaphone_licenses(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["innovaphone_licenses"] = LegacyCheckDefinition(
+    parse_function=parse_innovaphone_licenses,
     service_name="Licenses",
-    discovery_function=inventory_innovaphone_licenses,
+    discovery_function=discover_innovaphone_licenses,
     check_function=check_innovaphone_licenses,
+    check_default_parameters={
+        "levels": (90.0, 95.0),
+    },
 )

@@ -6,17 +6,19 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.fireeye import DETECT
+
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.plugins.lib.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.13.1.41.0 0
 # .1.3.6.1.4.1.25597.13.1.42.0 0
 # .1.3.6.1.4.1.25597.13.1.43.0 0
 
 
-def inventory_bypass(info):
-    value = int(info[0][0])
-    yield None, {"value": value}
+def discover_bypass(section: StringTable) -> DiscoveryResult:
+    if section:
+        value = int(section[0][0])
+        yield Service(parameters={"value": value})
 
 
 def check_fireeye_bypass(_no_item, params, info):
@@ -27,13 +29,18 @@ def check_fireeye_bypass(_no_item, params, info):
         yield 2, " (was %d before)" % expected_value
 
 
+def parse_fireeye_bypass(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fireeye_bypass"] = LegacyCheckDefinition(
+    parse_function=parse_fireeye_bypass,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",
         oids=["41"],
     ),
     service_name="Bypass Mail Rate",
-    discovery_function=inventory_bypass,
+    discovery_function=discover_bypass,
     check_function=check_fireeye_bypass,
 )

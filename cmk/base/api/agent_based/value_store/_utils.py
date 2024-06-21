@@ -19,7 +19,7 @@ from typing import Any, Final, TypeVar
 
 import cmk.utils.cleanup
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import logger
@@ -222,7 +222,7 @@ class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-an
     """Implements the mutable mapping that is exposed to the plugins
 
     This class ensures that every service has its own name space in the
-    persisted values, by adding the service ID (check plugin name and item) to
+    persisted values, by adding the service ID (check plug-in name and item) to
     the user supplied keys.
     """
 

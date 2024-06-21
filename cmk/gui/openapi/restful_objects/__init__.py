@@ -24,10 +24,6 @@ The modules:
     they only contain abstract models of the request and response formats
     and will be used in validation (currently only response).
 
-  * The `specification` module is the entry point for the OpenAPI
-    spec generation code and contains mostly boilerplate code and some
-    useful parameter definitions.
-
   * The `constructors` module contains helpers which generate parts
     of the nested JSON struct that is specified by the Restful Objects
     specification.
@@ -40,6 +36,5 @@ The modules:
 """
 
 from cmk.gui.openapi.restful_objects.decorators import Endpoint
-from cmk.gui.openapi.restful_objects.specification import SPEC
 
-__all__ = ["Endpoint", "SPEC"]
+__all__ = ["Endpoint"]

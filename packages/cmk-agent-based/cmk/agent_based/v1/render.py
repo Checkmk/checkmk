@@ -12,7 +12,7 @@ import math as _math
 import time as _time
 from collections.abc import Iterable as _Iterable
 
-_DATE_FORMAT = "%b %d %Y"
+_DATE_FORMAT = "%Y-%m-%d"
 
 _TIME_UNITS = [
     ("years", 31536000),
@@ -45,7 +45,7 @@ def date(epoch: float | None) -> str:
         'never'
         >>> _ = date(1606721022)
 
-        The latter will return something like 'Nov 30 2020', depending on the time zone.
+        The latter will return something like '2020-11-30', depending on the time zone.
 
     """
     if epoch is None:
@@ -61,7 +61,7 @@ def datetime(epoch: float | None) -> str:
         'never'
         >>> _ = datetime(1606721022)
 
-        The latter will return something like 'Nov 30 2020 07:23:42',
+        The latter will return something like '2020-11-30 07:23:42',
         depending on the time zone.
 
     """

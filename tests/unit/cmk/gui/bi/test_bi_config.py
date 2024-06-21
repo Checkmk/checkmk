@@ -3,12 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Mapping
 
 import pytest
 from pytest import param
 
+from tests.unit.cmk.bi.bi_test_data import sample_config
+from tests.unit.cmk.bi.conftest import MockBIAggregationPack
+
+from cmk.gui.bi._config import ModeBIEditRule
 from cmk.gui.bi._valuespecs import _convert_bi_rule_from_vs, _convert_bi_rule_to_vs
+from cmk.gui.exceptions import MKUserError
 
 
 # This test covers the outermost TransformValuespec
@@ -104,3 +111,23 @@ def test_bi_rule_outermost_transform_to_vs(rest_config: None | Mapping[str, obje
         return
 
     assert _convert_bi_rule_from_vs(_convert_bi_rule_to_vs(rest_config)) == rest_config
+
+
+class ModeBIEditRuleFake(ModeBIEditRule):
+    """Fake for testing new bi rule edit"""
+
+    def __init__(self):  # pylint: disable=super-init-not-called
+        self._rule_id = None
+        self._new = True
+
+        self._bi_packs = MockBIAggregationPack(sample_config.bi_packs_config)
+        self._bi_pack = None
+
+
+def test_validate_rule_id() -> None:
+    edit_rule_mode = ModeBIEditRuleFake()
+
+    edit_rule_mode._validate_rule_id("unique_rule_id")
+
+    with pytest.raises(MKUserError, match="There is already a rule with the ID <b>networking</b>."):
+        edit_rule_mode._validate_rule_id("networking")

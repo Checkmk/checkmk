@@ -5,15 +5,86 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.hp_proliant import (
-    check_hp_proliant_temp,
-    inventory_hp_proliant_temp,
-)
+from cmk.base.check_legacy_includes.hp_proliant import hp_proliant_status2nagios_map
+from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.hp_proliant import DETECT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.hp_proliant import DETECT
+
+hp_proliant_locale = {
+    1: "other",
+    2: "unknown",
+    3: "system",
+    4: "systemBoard",
+    5: "ioBoard",
+    6: "cpu",
+    7: "memory",
+    8: "storage",
+    9: "removableMedia",
+    10: "powerSupply",
+    11: "ambient",
+    12: "chassis",
+    13: "bridgeCard",
+    14: "managementBoard",
+    15: "backplane",
+    16: "networkSlot",
+    17: "bladeSlot",
+    18: "virtual",
+}
+
+hp_proliant_status_map = {
+    1: "unknown",
+    2: "ok",
+    3: "degraded",
+    4: "failed",
+    5: "disabled",
+}
+
+
+def parse_hp_proliant_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def format_hp_proliant_name(line):
+    return f"{line[0]} ({hp_proliant_locale[int(line[1])]})"
+
+
+def inventory_hp_proliant_temp(info):
+    for line in info:
+        if line[-1] != "1":
+            # other(1): Temperature could not be determined
+            yield format_hp_proliant_name(line), {}
+
+
+def check_hp_proliant_temp(item, params, info):
+    for line in info:
+        if format_hp_proliant_name(line) == item:
+            value, threshold, status = line[2:]
+
+            # This case means no threshold available and
+            # the devices' web interface displays "N/A"
+            if threshold in ("-99", "0"):
+                devlevels = None
+            else:
+                threshold = float(threshold)
+                devlevels = (threshold, threshold)
+
+            snmp_status = hp_proliant_status_map[int(status)]
+
+            return check_temperature(
+                float(value),
+                params,
+                "hp_proliant_temp_%s" % item,
+                dev_levels=devlevels,
+                dev_status=hp_proliant_status2nagios_map[snmp_status],
+                dev_status_name="Unit: %s" % snmp_status,
+            )
+    return 3, "item not found in snmp data"
+
 
 check_info["hp_proliant_temp"] = LegacyCheckDefinition(
+    parse_function=parse_hp_proliant_temp,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.6.2.6.8.1",

@@ -5,8 +5,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.infoblox import DETECT_INFOBLOX
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
 
 # .1.3.6.1.4.1.7779.3.1.1.2.1.2.1.1.X.X.X.X.X X.X.X.X --> IB-PLATFORMONE-MIB::ibNodeIPAddress."11.112.133.14"
 # .1.3.6.1.4.1.7779.3.1.1.2.1.2.1.1.X.X.X.X.X X.X.X.X --> IB-PLATFORMONE-MIB::ibNodeIPAddress."11.112.133.17"
@@ -52,7 +53,12 @@ def check_infoblox_replication_status(item, _no_params, info):
     return None
 
 
+def parse_infoblox_replication_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["infoblox_replication_status"] = LegacyCheckDefinition(
+    parse_function=parse_infoblox_replication_status,
     detect=DETECT_INFOBLOX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7779.3.1.1.2.1.2.1",

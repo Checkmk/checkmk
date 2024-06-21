@@ -1,4 +1,4 @@
-Title: <tt>datapower_fan</tt>: Fix <tt>KeyError (...)</tt>
+Title: datapower_fan: Fix KeyError (...)
 Class: fix
 Compatible: compat
 Component: checks

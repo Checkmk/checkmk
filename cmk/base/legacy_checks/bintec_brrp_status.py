@@ -8,7 +8,8 @@ import re
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree, startswith
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, startswith, StringTable
 
 
 def bintec_brrp_status_compose_item(brrp_id):
@@ -44,7 +45,12 @@ def check_bintec_brrp_status(item, _no_params, info):
     return 3, "Status for %s not found" % item
 
 
+def parse_bintec_brrp_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["bintec_brrp_status"] = LegacyCheckDefinition(
+    parse_function=parse_bintec_brrp_status,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.272.4.40.1.1",

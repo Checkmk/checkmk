@@ -6,7 +6,7 @@
 import datetime
 import time
 
-import cmk.utils.schedule as schedule
+from cmk.utils import schedule
 
 
 def test_day_schedule() -> None:

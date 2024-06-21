@@ -114,11 +114,10 @@ checks = {
                         ("aws_wafv2_regex_pattern_sets", 1),
                     ],
                 ),
-                (
-                    0,
-                    "\nIP sets: 0 (of max. 100)\nRegex sets: 1 (of max. 10)\nRule groups: 1 (of max. "
-                    "100)\nWeb ACLs: 1 (of max. 100)",
-                ),
+                (0, "\nIP sets: 0 (of max. 100)"),
+                (0, "\nRegex sets: 1 (of max. 10)"),
+                (0, "\nRule groups: 1 (of max. 100)"),
+                (0, "\nWeb ACLs: 1 (of max. 100)"),
             ],
         ),
         (
@@ -141,38 +140,10 @@ checks = {
                         ("aws_wafv2_regex_pattern_sets", 1),
                     ],
                 ),
-                (
-                    0,
-                    "\nIP sets: 1 (of max. 100)\nRegex sets: 1 (of max. 10)\nRule groups: 1 (of max. "
-                    "100)\nWeb ACLs: 1 (of max. 100)",
-                ),
-            ],
-        ),
-        (
-            "us-east-1",
-            {
-                "web_acls": (None, 80.0, 90.0),
-                "rule_groups": (None, 80.0, 90.0),
-                "ip_sets": (None, 80.0, 90.0),
-                "regex_pattern_sets": (None, 80.0, 90.0),
-                "web_acl_capacity_units": (None, 80.0, 90.0),
-            },
-            [
-                (
-                    0,
-                    "No levels reached",
-                    [
-                        ("aws_wafv2_web_acls", 1),
-                        ("aws_wafv2_rule_groups", 0),
-                        ("aws_wafv2_ip_sets", 1),
-                        ("aws_wafv2_regex_pattern_sets", 0),
-                    ],
-                ),
-                (
-                    0,
-                    "\nIP sets: 1 (of max. 100)\nRegex sets: 0 (of max. 10)\nRule groups: 0 (of max. "
-                    "100)\nWeb ACLs: 1 (of max. 100)",
-                ),
+                (0, "\nIP sets: 1 (of max. 100)"),
+                (0, "\nRegex sets: 1 (of max. 10)"),
+                (0, "\nRule groups: 1 (of max. 100)"),
+                (0, "\nWeb ACLs: 1 (of max. 100)"),
             ],
         ),
     ]

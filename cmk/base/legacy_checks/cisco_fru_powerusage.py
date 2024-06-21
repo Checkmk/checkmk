@@ -9,8 +9,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.cisco import DETECT_CISCO
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.plugins.lib.cisco import DETECT_CISCO
 
 # .1.3.6.1.4.1.9.9.117.1.1.1.1.2.16  "centiAmpsAt12V"
 #  some more examples (but we dont know all):

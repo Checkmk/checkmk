@@ -47,7 +47,7 @@ def test_status_pull(
     assert remote_status.get("hostname"), 'Error in status output: No "hostname" field returned!'
     assert (
         remote_status["hostname"] == "pull-host"
-    ), f"Error in status output: Invalid hostname {remote_status['hostname']} returned!"
+    ), f"Error in status output: Invalid host name {remote_status['hostname']} returned!"
     assert HostAgentConnectionMode(remote_status["connection_mode"]) is HostAgentConnectionMode.PULL
 
 
@@ -67,5 +67,5 @@ def test_status_push(
     assert remote_status.get("hostname"), 'Error in status output: No "hostname" field returned!'
     assert (
         remote_status["hostname"] == "push-host"
-    ), f'Error in status output: Invalid hostname "{remote_status["hostname"]}" returned!'
+    ), f'Error in status output: Invalid host name "{remote_status["hostname"]}" returned!'
     assert HostAgentConnectionMode(remote_status["connection_mode"]) is HostAgentConnectionMode.PUSH

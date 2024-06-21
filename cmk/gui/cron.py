@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import Any
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.pages
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.http import response
 from cmk.gui.log import logger
 from cmk.gui.pages import PageRegistry
@@ -36,25 +36,25 @@ def _lock_file() -> Path:
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("cron", globals())
 
 
 def _register_pre_21_plugin_api() -> None:
-    """Register pre 2.1 "plugin API"
+    """Register pre 2.1 "plug-in API"
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our built-in plugin have been changed to directly import from main module. We add these old
-    names to remain compatible with 3rd party plugins for now.
+    Our built-in plug-in have been changed to directly import from main module. We add these old
+    names to remain compatible with 3rd party plug-ins for now.
 
-    In the moment we define an official plugin API, we can drop this and require all plugins to
+    In the moment we define an official plug-in API, we can drop this and require all plug-ins to
     switch to the new API. Until then let's not bother the users with it.
 
     CMK-12228
     """
-    # Needs to be a local import to not influence the regular plugin loading order
+    # Needs to be a local import to not influence the regular plug-in loading order
     import cmk.gui.plugins.cron as api_module  # pylint: disable=cmk-module-layer-violation
 
     api_module.__dict__.update(

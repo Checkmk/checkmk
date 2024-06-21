@@ -11,7 +11,7 @@ import pytest
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
-from tests.testlib.users import create_and_destroy_user
+from tests.unit.cmk.gui.users import create_and_destroy_user
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -19,7 +19,7 @@ import cmk.utils.paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.user import UserId
 
-import cmk.gui.permissions as permissions
+from cmk.gui import permissions
 from cmk.gui.config import (
     active_config,
     builtin_role_ids,
@@ -100,7 +100,7 @@ def test_user_context_explicit_permissions(with_user: tuple[UserId, str]) -> Non
         ),
         (
             LoggedInSuperUser(),
-            "Superuser for unauthenticated pages",
+            "Superuser for internal use",
             "admin",
             ["admin"],
             "admin",
@@ -265,7 +265,7 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
         yield LoggedInUser(user[0])
 
 
-def test_monitoring_user(monitoring_user: LoggedInUser) -> None:
+def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -> None:
     assert monitoring_user.id == "test"
     assert monitoring_user.alias == "Test user"
     assert monitoring_user.email == "test_user_test@checkmk.com"
@@ -309,7 +309,9 @@ def test_monitoring_user(monitoring_user: LoggedInUser) -> None:
     assert monitoring_user.acknowledged_notifications == timestamp
 
 
-def test_monitoring_user_read_broken_file(monitoring_user: LoggedInUser) -> None:
+def test_monitoring_user_read_broken_file(
+    request_context: None, monitoring_user: LoggedInUser
+) -> None:
     assert monitoring_user.confdir
     with Path(monitoring_user.confdir, "asd.mk").open("w") as f:
         f.write("%#%#%")
@@ -318,7 +320,10 @@ def test_monitoring_user_read_broken_file(monitoring_user: LoggedInUser) -> None
 
 
 def test_monitoring_user_permissions(
-    mocker: MockerFixture, monkeypatch: MonkeyPatch, monitoring_user: LoggedInUser
+    mocker: MockerFixture,
+    monkeypatch: MonkeyPatch,
+    request_context: None,
+    monitoring_user: LoggedInUser,
 ) -> None:
     mocker.patch.object(permissions, "permission_registry")
     with monkeypatch.context() as m:
@@ -354,7 +359,7 @@ def test_monitoring_user_permissions(
             monitoring_user.need_permission("unknown_permission")
 
 
-@pytest.mark.usefixtures("monitoring_user")
+@pytest.mark.usefixtures("request_context", "monitoring_user")
 @pytest.mark.parametrize(
     "varname",
     [

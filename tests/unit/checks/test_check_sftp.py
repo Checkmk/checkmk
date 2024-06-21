@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-from typing import Any
+from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import ActiveCheck
+from .checktestlib import ActiveCheck
 
 pytestmark = pytest.mark.checks
 
@@ -17,12 +16,12 @@ pytestmark = pytest.mark.checks
     "params,expected_args",
     [
         pytest.param(
-            (
-                "foo",
-                "bar",
-                ("password", "baz"),
-                {"look_for_keys": True},
-            ),
+            {
+                "host": "foo",
+                "user": "bar",
+                "secret": ("password", "baz"),
+                "look_for_keys": True,
+            },
             [
                 "--host=foo",
                 "--user=bar",
@@ -32,12 +31,12 @@ pytestmark = pytest.mark.checks
             id="look for keys",
         ),
         pytest.param(
-            (
-                "foo",
-                "bar",
-                ("password", "baz"),
-                {"look_for_keys": False},
-            ),
+            {
+                "host": "foo",
+                "user": "bar",
+                "secret": ("password", "baz"),
+                "look_for_keys": False,
+            },
             [
                 "--host=foo",
                 "--user=bar",
@@ -48,7 +47,7 @@ pytestmark = pytest.mark.checks
     ],
 )
 def test_check_sftp_argument_parsing(
-    params: tuple[Any],
+    params: Mapping[str, object],
     expected_args: Sequence[str],
 ) -> None:
     """Tests if all required arguments are present."""

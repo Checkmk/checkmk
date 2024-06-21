@@ -18,7 +18,7 @@
 using namespace std::string_literals;
 
 namespace {
-template <class T>
+template <typename T>
 using table = std::vector<std::tuple<std::string, T>>;
 
 const table<HostState> host_states{{"UP", HostState::up},
@@ -61,7 +61,7 @@ std::chrono::system_clock::time_point tp(time_t t) {
 }
 
 // host_or_svc_state | reason (host_or_svc_state) | ALERTHANDLER (exit_code)
-template <class T>
+template <typename T>
 info_table notification_state_types(const table<T> &states) {
     info_table result;
     for (const auto &[state_name, state] : states) {
@@ -82,6 +82,13 @@ info_table notification_state_types(const table<T> &states) {
     return result;
 }
 }  // namespace
+
+TEST(LogEntry, Encode) {
+    EXPECT_EQ("", LogEntry::encode(""));
+    EXPECT_EQ("foo bar", LogEntry::encode("foo bar"));
+    EXPECT_EQ("\nfoo\nbar\n", LogEntry::encode("\nfoo\nbar\n"));
+    EXPECT_EQ("\nfoo\nbar\n", LogEntry::encode("\\nfoo\\nbar\\n"));
+}
 
 TEST(LogEntry, InitialHostState) {
     // The host state string is directly taken from a log line field.

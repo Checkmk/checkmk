@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains helpers to trigger acknowledgments.
 """
-from livestatus import SiteId
+from livestatus import MultiSiteConnection, SiteId
 
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
@@ -16,8 +16,8 @@ from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 from cmk.gui.logged_in import user as _user
 
 
-def acknowledge_service_problem(  # type: ignore[no-untyped-def]
-    connection,
+def acknowledge_service_problem(
+    connection: MultiSiteConnection,
     host_name: str,
     service_description: str,
     sticky: bool = False,
@@ -25,10 +25,10 @@ def acknowledge_service_problem(  # type: ignore[no-untyped-def]
     persistent: bool = False,
     user: UserId = UserId.builtin(),
     comment: str = "",
-):
+) -> None:
     """Acknowledge the current problem for the given service.
 
-    When acknowledging a problem, furhter notifications for the service are disabled, as
+    When acknowledging a problem, further notifications for the service are disabled, as
     long as the service doesn't change state. At state change, notifications are re-enabled.
 
     Args:
@@ -39,7 +39,7 @@ def acknowledge_service_problem(  # type: ignore[no-untyped-def]
             The host-name for which this acknowledgement is for.
 
         service_description:
-            The service description of the service, whose problems shall be acknowledged.
+            The service name of the service, whose problems shall be acknowledged.
 
         sticky:
             If set, only a state-change of the service to an OK state will discard the
@@ -97,15 +97,15 @@ def acknowledge_service_problem(  # type: ignore[no-untyped-def]
     )
 
 
-def acknowledge_servicegroup_problem(  # type: ignore[no-untyped-def]
-    connection,
+def acknowledge_servicegroup_problem(
+    connection: MultiSiteConnection,
     servicegroup_name: str,
     sticky: bool = False,
     notify: bool = False,
     persistent: bool = False,
     user: UserId = UserId.builtin(),
     comment: str = "",
-):
+) -> None:
     """Acknowledge the problems of the current services of the service group
 
     When acknowledging a problem, further notifications for the respective services are disabled, as
@@ -166,15 +166,15 @@ def acknowledge_servicegroup_problem(  # type: ignore[no-untyped-def]
             )
 
 
-def acknowledge_host_problem(  # type: ignore[no-untyped-def]
-    connection,
-    host_name,
+def acknowledge_host_problem(
+    connection: MultiSiteConnection,
+    host_name: str,
     sticky: bool = False,
     notify: bool = False,
     persistent: bool = False,
     user: UserId = UserId.builtin(),
     comment: str = "",
-):
+) -> None:
     """Acknowledge the current problem for the given host.
 
     When acknowledging a problem, notifications for the host are disabled, as long as the
@@ -244,15 +244,15 @@ def acknowledge_host_problem(  # type: ignore[no-untyped-def]
     )
 
 
-def acknowledge_hostgroup_problem(  # type: ignore[no-untyped-def]
-    connection,
+def acknowledge_hostgroup_problem(
+    connection: MultiSiteConnection,
     hostgroup_name: str,
     sticky: bool = False,
     notify: bool = False,
     persistent: bool = False,
     user: UserId = UserId.builtin(),
     comment: str = "",
-):
+) -> None:
     """Acknowledge the problems of the current hosts of the host group
 
     When acknowledging a problem, further notifications for the respective services are disabled, as
@@ -311,7 +311,7 @@ def acknowledge_hostgroup_problem(  # type: ignore[no-untyped-def]
             )
 
 
-def _query_site(connection, host_name: str) -> SiteId:  # type: ignore[no-untyped-def]
+def _query_site(connection: MultiSiteConnection, host_name: str) -> SiteId:
     with detailed_connection(connection) as conn:
         site_id = Query([Hosts.name], Hosts.name.equals(host_name)).first_value(conn)
         if not isinstance(site_id, str):

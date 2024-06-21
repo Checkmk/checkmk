@@ -7,15 +7,21 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def branch_name = versioning.safe_branch_name(scm);
-    def cmk_version = versioning.get_cmk_version(branch_name, "daily");
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_version = versioning.get_cmk_version(branch_name, branch_version, "daily");
 
     dir("${checkout_dir}") {
         stage("make setversion") {
             bat("make -C agents\\wnx NEW_VERSION='${cmk_version}' setversion");
         }
-        windows.build(
-            TARGET: "agent_no_sign"
-        );
+        withCredentials([string(
+            credentialsId: "CI_TEST_SQL_DB_ENDPOINT",
+            variable:"CI_TEST_SQL_DB_ENDPOINT"
+        )]) {
+            windows.build(
+                TARGET: 'agent_no_sign'
+            );
+        }
     }
 }
 

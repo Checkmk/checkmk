@@ -6,15 +6,16 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.stormshield import DETECT_STORMSHIELD
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
 
 
 def inventory_stormshield_updates(info):
     for subsystem, state, lastrun in info:
         if state == "Failed" and lastrun == "":
             pass
-        elif not state in ["Not Available", "Never started"]:
+        elif state not in ["Not Available", "Never started"]:
             yield subsystem, {}
 
 
@@ -28,7 +29,12 @@ def check_stormshield_updates(item, params, info):
             yield monitoringstate, infotext
 
 
+def parse_stormshield_updates(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["stormshield_updates"] = LegacyCheckDefinition(
+    parse_function=parse_stormshield_updates,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.9.1.1",

@@ -3,16 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
+import datetime
 from collections.abc import Mapping, Sequence
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 from pytest import MonkeyPatch
-
-from tests.testlib import on_time
 
 import cmk.utils.render
 
-import cmk.gui.availability as availability
+from cmk.gui import availability
 
 
 @pytest.mark.parametrize(
@@ -225,7 +228,7 @@ def test_reclassify_by_annotations(
 def test_relevant_annotation_times(
     annotation_from: int, annotation_until: int, result: bool
 ) -> None:
-    with on_time(1572253746, "CET"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1572253746, tz=ZoneInfo("CET"))):
         assert (
             availability._annotation_affects_time_range(annotation_from, annotation_until, 30, 60)
             == result
@@ -257,7 +260,7 @@ def test_get_annotation_date_render_function(
     annotation_times: Sequence[tuple[int, int]], result: str
 ) -> None:
     annotations = [((None, None, None), {"from": s, "until": e}) for s, e in annotation_times]
-    with on_time(1572253746, "CET"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1572253746, tz=ZoneInfo("CET"))):
         assert (
             availability.get_annotation_date_render_function(  # pylint: disable=comparison-with-callable
                 annotations, {"range": ((1543446000, 1543446000 + 86399), "bla")}

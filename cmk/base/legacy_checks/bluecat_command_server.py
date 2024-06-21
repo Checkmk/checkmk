@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.bluecat import DETECT_BLUECAT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.bluecat import DETECT_BLUECAT
 
 
 def inventory_bluecat_command_server(info):
@@ -31,7 +32,12 @@ def check_bluecat_command_server(item, params, info):
     yield state, "Command Server is %s" % oper_states[oper_state]
 
 
+def parse_bluecat_command_server(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["bluecat_command_server"] = LegacyCheckDefinition(
+    parse_function=parse_bluecat_command_server,
     detect=DETECT_BLUECAT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.7.2.1",

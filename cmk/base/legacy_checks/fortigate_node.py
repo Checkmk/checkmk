@@ -7,13 +7,8 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    contains,
-    not_equals,
-    OIDEnd,
-    SNMPTree,
-)
+
+from cmk.agent_based.v2 import all_of, contains, not_equals, OIDEnd, SNMPTree
 
 #
 # monitoring of cluster members (nodes) in fortigate high availability tree
@@ -50,7 +45,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 
 
 def parse_fortigate_node(string_table):
-    parsed = {}
+    parsed: dict = {"nodes": {}}
     if string_table[0]:
         parsed["cluster_info"] = string_table[0][0]
 
@@ -63,7 +58,6 @@ def parse_fortigate_node(string_table):
         else:
             item_name = "Node %s" % oid_end
 
-        parsed.setdefault("nodes", {})
         parsed["nodes"].setdefault(
             item_name,
             {
@@ -126,17 +120,15 @@ check_info["fortigate_node"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-fortigate_node_cpu_default_levels = (80.0, 90.0)
 
-
-def inventory_fortigate_node_cpu(parsed):
-    for hostname in parsed["nodes"]:
-        yield hostname, fortigate_node_cpu_default_levels
+def inventory_fortigate_node_cpu(section):
+    for hostname in section["nodes"]:
+        yield hostname, {}
 
 
 def check_fortigate_node_cpu(item, params, parsed):
     if item in parsed["nodes"]:
-        return check_cpu_util(parsed["nodes"][item]["cpu"], params)
+        return check_cpu_util(parsed["nodes"][item]["cpu"], params["levels"])
     return None
 
 
@@ -145,6 +137,7 @@ check_info["fortigate_node.cpu"] = LegacyCheckDefinition(
     sections=["fortigate_node"],
     discovery_function=inventory_fortigate_node_cpu,
     check_function=check_fortigate_node_cpu,
+    check_default_parameters={"levels": (80.0, 90.0)},
 )
 
 # .

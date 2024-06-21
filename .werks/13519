@@ -1,4 +1,4 @@
-Title: <tt>check_icmp</tt>: Fix "Failed to resolve $: Name or service not known"
+Title: check_icmp: Fix "Failed to resolve $: Name or service not known"
 Class: fix
 Compatible: compat
 Component: checks

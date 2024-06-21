@@ -8,8 +8,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.juniper import DETECT_JUNIPER
 
 
 def inventory_juniper_alarm(info):
@@ -34,7 +35,12 @@ def check_juniper_alarm(item, params, info):
     return state, "Status: %s" % state_readable
 
 
+def parse_juniper_alarm(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["juniper_alarm"] = LegacyCheckDefinition(
+    parse_function=parse_juniper_alarm,
     detect=DETECT_JUNIPER,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2636.3.1.10.1",

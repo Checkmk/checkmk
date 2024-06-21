@@ -8,20 +8,20 @@ import time
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+
+from cmk.agent_based.v2 import (
     any_of,
     equals,
     get_rate,
     get_value_store,
     OIDEnd,
     SNMPTree,
+    StringTable,
 )
-
-aironet_default_error_levels = (1.0, 10.0)  # per second
 
 
 def inventory_aironet_errors(info):
-    yield from ((line[0], aironet_default_error_levels) for line in info)
+    yield from ((line[0], {}) for line in info)
 
 
 def check_aironet_errors(item, params, info):
@@ -38,13 +38,18 @@ def check_aironet_errors(item, params, info):
                     raise_overflow=True,
                 ),
                 "errors",
-                params,
+                (1.0, 10.0),
                 infoname="Errors/s",
             )
             return
 
 
+def parse_aironet_errors(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["aironet_errors"] = LegacyCheckDefinition(
+    parse_function=parse_aironet_errors,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.525"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.618"),

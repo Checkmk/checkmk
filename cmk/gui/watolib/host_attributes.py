@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 """A host attribute is something that is inherited from folders to
 hosts. Examples are the IP address and the host tags."""
 
@@ -10,15 +12,16 @@ from __future__ import annotations
 import abc
 import functools
 import re
+import warnings
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, NotRequired
+from typing import Any, Literal, NotRequired, TypedDict
 
 from marshmallow import fields
-from typing_extensions import TypedDict
 
 from livestatus import SiteId
 
 import cmk.utils.plugin_registry
+from cmk.utils import deprecation_warnings
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
@@ -169,10 +172,10 @@ class HostAttributeTopic(abc.ABC):
 
 
 class HostAttributeTopicRegistry(cmk.utils.plugin_registry.Registry[type[HostAttributeTopic]]):
-    def plugin_name(self, instance: type[HostAttributeTopic]):  # type: ignore[no-untyped-def]
+    def plugin_name(self, instance: type[HostAttributeTopic]) -> str:
         return instance().ident
 
-    def get_choices(self):
+    def get_choices(self) -> Choices:
         return [
             (t.ident, t.title)
             for t in sorted([t_class() for t_class in self.values()], key=lambda e: e.sort_index)
@@ -553,8 +556,8 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str
     ]
 
 
-def get_sorted_host_attributes_by_topic(  # type: ignore[no-untyped-def]
-    topic_id,
+def get_sorted_host_attributes_by_topic(
+    topic_id: str,
 ) -> list[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
     # TODO: Clean this up by implementing some sort of explicit sorting
@@ -592,7 +595,7 @@ def declare_host_attribute(
 ) -> None:
     if not issubclass(a, ABCHostAttribute):
         raise MKGeneralException(
-            _("Failed to load legacy host attribute from local plugins: %r") % a
+            _("Failed to load legacy host attribute from local plug-ins: %r") % a
         )
 
     attrs: dict[str, Any] = {}
@@ -808,6 +811,11 @@ def transform_pre_16_host_topics(custom_attributes: list[dict[str, Any]]) -> lis
         if custom_attr["topic"] in host_attribute_topic_registry:
             continue
 
+        # The topic not being in the registry means that is most likely an unconverted one.
+        warnings.warn(
+            "Use of free-text topics in custom attributes deprecated.",
+            deprecation_warnings.DeprecatedSince20Warning,
+        )
         custom_attr["topic"] = (
             _transform_attribute_topic_title_to_id(custom_attr["topic"]) or "custom_attributes"
         )
@@ -943,7 +951,10 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         return self.valuespec().from_html_vars(varprefix + self.name())
 
     def validate_input(self, value: Any, varprefix: str) -> None:
-        self.valuespec().validate_value(value, varprefix + self.name())
+        vs = self.valuespec()
+        prefix = varprefix + self.name()
+        vs.validate_datatype(value, prefix)
+        vs.validate_value(value, prefix)
 
 
 class ABCHostAttributeFixedText(ABCHostAttributeText, abc.ABC):
@@ -956,7 +967,7 @@ class ABCHostAttributeFixedText(ABCHostAttributeText, abc.ABC):
     def render_input(self, varprefix: str, value: str | None) -> None:
         if value is not None:
             html.hidden_field(varprefix + "attr_" + self.name(), value)
-            html.write_text(value)
+            html.write_text_permissive(value)
 
     def from_html_vars(self, varprefix: str) -> str | None:
         return request.var(varprefix + "attr_" + self.name())
@@ -1103,7 +1114,7 @@ class ABCHostAttributeNagiosValueSpec(ABCHostAttributeValueSpec):
         return True
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def TextAttribute(
     name: str,
     title: str,
@@ -1133,8 +1144,8 @@ def TextAttribute(
     )
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
-def NagiosTextAttribute(  # type: ignore[no-untyped-def]
+# TODO: Kept for pre 1.6 plug-in compatibility
+def NagiosTextAttribute(
     name: str,
     nag_name: str,
     title: str,
@@ -1143,7 +1154,7 @@ def NagiosTextAttribute(  # type: ignore[no-untyped-def]
     mandatory: bool = False,
     allow_empty: bool = True,
     size: int = 25,
-):
+) -> type[ABCHostAttributeNagiosText]:
     return type(
         "HostAttribute%s" % name.title(),
         (ABCHostAttributeNagiosText,),
@@ -1166,7 +1177,7 @@ def NagiosTextAttribute(  # type: ignore[no-untyped-def]
     )
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def FixedTextAttribute(
     name: str, title: str, help_txt: str | None = None
 ) -> type[ABCHostAttributeFixedText]:
@@ -1184,7 +1195,7 @@ def FixedTextAttribute(
     )
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def ValueSpecAttribute(name: str, vs: ValueSpec) -> type[ABCHostAttributeValueSpec]:
     return type(
         "HostAttributeValueSpec%s" % name.title(),
@@ -1198,7 +1209,7 @@ def ValueSpecAttribute(name: str, vs: ValueSpec) -> type[ABCHostAttributeValueSp
     )
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def NagiosValueSpecAttribute(
     name: str, nag_name: str, vs: ValueSpec
 ) -> type[ABCHostAttributeNagiosValueSpec]:
@@ -1216,7 +1227,7 @@ def NagiosValueSpecAttribute(
     )
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def EnumAttribute(
     name: str,
     title: str,

@@ -8,10 +8,10 @@
 
 #include <chrono>
 #include <functional>
-#include <list>
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -20,25 +20,37 @@
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/RendererBrokenCSV.h"
-#include "livestatus/Row.h"
 #include "livestatus/StatsColumn.h"
 #include "livestatus/Triggers.h"
-#include "livestatus/User.h"
+
 class Column;
-class Table;
+
+enum struct OrderByDirection { ascending, descending };
+
+struct OrderBy {
+    std::shared_ptr<Column> column;
+    std::optional<std::string> key;  // only for DictColumn
+    OrderByDirection direction;
+};
 
 class ParsedQuery {
 public:
-    ParsedQuery(const std::list<std::string> &lines, const Table &table,
-                OutputBuffer &output);
+    using ColumnCreator =
+        std::function<std::shared_ptr<Column>(const std::string &)>;
 
+    ParsedQuery(const std::vector<std::string> &lines,
+                const std::function<std::vector<std::shared_ptr<Column>>()>
+                    &all_columns,
+                const ColumnCreator &make_column);
+
+    std::optional<std::string> error;
     std::unordered_set<std::string> all_column_names;
     std::vector<std::shared_ptr<Column>> columns;
     std::unique_ptr<Filter> filter;
     std::unique_ptr<Filter> wait_condition;
     std::vector<std::unique_ptr<StatsColumn>> stats_columns;
     bool show_column_headers{true};
-    int limit{-1};
+    std::optional<int> limit;
     std::optional<
         std::pair<std::chrono::seconds, std::chrono::steady_clock::time_point>>
         time_limit;
@@ -47,46 +59,45 @@ public:
     bool keepalive{false};
     OutputBuffer::ResponseHeader response_header{
         OutputBuffer::ResponseHeader::off};
-    std::unique_ptr<const User> user;
+    std::optional<std::string> user;
     std::chrono::milliseconds wait_timeout{0};
     Triggers::Kind wait_trigger{Triggers::Kind::all};
-    Row wait_object{nullptr};
+    std::optional<std::string> wait_object;
     std::chrono::seconds timezone_offset{0};
+    std::vector<OrderBy> order_by;
 
 private:
-    using ColumnCreator =
-        std::function<std::shared_ptr<Column>(const std::string &)>;
-
     using FilterStack = Filters;
 
     using LogicalConnective =
         std::function<std::unique_ptr<Filter>(Filter::Kind, const Filters &)>;
 
-    void parseFilterLine(char *line, FilterStack &filters,
+    void parseFilterLine(std::string_view line, FilterStack &filters,
                          const ColumnCreator &make_column);
-    void parseStatsLine(char *line, const ColumnCreator &make_column);
-    static void parseAndOrLine(char *line, Filter::Kind kind,
+    void parseStatsLine(std::string_view line,
+                        const ColumnCreator &make_column);
+    static void parseAndOrLine(std::string_view line, Filter::Kind kind,
                                const LogicalConnective &connective,
                                FilterStack &filters);
-    static void parseNegateLine(char *line, FilterStack &filters);
-    void parseStatsAndOrLine(char *line, const LogicalConnective &connective);
-    void parseStatsNegateLine(char *line);
-    void parseColumnsLine(const char *line, const ColumnCreator &make_column);
-    void parseColumnHeadersLine(char *line);
-    void parseLimitLine(char *line);
-    void parseTimelimitLine(char *line);
-    void parseSeparatorsLine(char *line);
-    void parseOutputFormatLine(const char *line);
-    void parseKeepAliveLine(char *line);
-    void parseResponseHeaderLine(char *line);
-    void parseAuthUserHeader(const char *line,
-                             const std::function<std::unique_ptr<const User>(
-                                 const std::string &name)> &find_user);
-    void parseWaitTimeoutLine(char *line);
-    void parseWaitTriggerLine(char *line);
-    void parseWaitObjectLine(
-        const char *line, const std::function<Row(const std::string &)> &get);
-    void parseLocaltimeLine(char *line);
+    static void parseNegateLine(std::string_view line, FilterStack &filters);
+    void parseStatsAndOrLine(std::string_view line,
+                             const LogicalConnective &connective);
+    void parseStatsNegateLine(std::string_view line);
+    void parseColumnsLine(std::string_view line,
+                          const ColumnCreator &make_column);
+    void parseColumnHeadersLine(std::string_view line);
+    void parseLimitLine(std::string_view line);
+    void parseTimelimitLine(std::string_view line);
+    void parseSeparatorsLine(std::string_view line);
+    void parseOutputFormatLine(std::string_view line);
+    void parseKeepAliveLine(std::string_view line);
+    void parseResponseHeaderLine(std::string_view line);
+    void parseAuthUserHeader(std::string_view line);
+    void parseWaitTimeoutLine(std::string_view line);
+    void parseWaitTriggerLine(std::string_view line);
+    void parseWaitObjectLine(std::string_view line);
+    void parseLocaltimeLine(std::string_view line);
+    void parseOrderBy(std::string_view line, const ColumnCreator &make_column);
 };
 
 #endif  // ParsedQuery_h

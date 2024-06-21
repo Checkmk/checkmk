@@ -1,0 +1,27 @@
+Title: Privilege escalation in Agent
+Class: security
+Compatible: compat
+Component: checks
+Date: 1701938773
+Edition: cre
+Level: 2
+Version: 2.3.0b1
+
+
+In order to monitor livestatus from running sites on a host the Checkmk agent uses unixcat that is part of Checkmk.
+Since the binary is linked to libraries that are also part of Checkmk and may differ from the libraries of the operating system calling unixcat outside of the scope of a site could result to errors due to version mismatches in these libraries.
+To use the correct libraries in Checkmk 2.2.0p10 a fix was introduced to add the libraries from the site to the call in the agent.
+Since the lib folder within a site is writable by the site a rogue site could inject malicious libraries into the unixcat call from the agent that is executed as root leading to a privilege escalation.
+
+We thank Jan-Philipp Litza for reporting this issue.
+
+<b>Affected Versions</b>:
+LI: since 2.2.0p10
+
+<b>Vulnerability Management</b>:
+We have rated the issue with a CVSS Score of 8.8 (High) with the following CVSS vector:
+<tt>CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H</tt>.
+We assigned CVE-2023-31210 to this vulnerability.
+
+<b>Changes</b>:
+This Werk changes the library path from the site to the version files, which are only root-writable.

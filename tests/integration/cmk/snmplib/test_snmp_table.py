@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 from pathlib import Path
 from subprocess import CalledProcessError
 
@@ -67,7 +68,9 @@ def test_get_simple_snmp_table_not_resolvable(site: Site, backend_type: SNMPBack
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = default_config(backend_type)._replace(ipaddress=HostAddress("bla.local"))
+    config = dataclasses.replace(
+        default_config(backend_type), ipaddress=HostAddress("unknown_host.internal.")
+    )
 
     # TODO: Unify different error messages
     if config.snmp_backend is SNMPBackendEnum.INLINE:
@@ -94,7 +97,7 @@ def test_get_simple_snmp_table_wrong_credentials(site: Site, backend_type: SNMPB
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = default_config(backend_type)._replace(credentials="dingdong")
+    config = dataclasses.replace(default_config(backend_type), credentials="dingdong")
 
     # TODO: Unify different error messages
     if config.snmp_backend is SNMPBackendEnum.INLINE:
@@ -120,7 +123,7 @@ def test_get_simple_snmp_table_wrong_credentials(site: Site, backend_type: SNMPB
 def test_get_simple_snmp_table_bulkwalk(
     site: Site, backend_type: SNMPBackendEnum, bulk: bool
 ) -> None:
-    config = default_config(backend_type)._replace(is_bulkwalk_host=bulk)
+    config = dataclasses.replace(default_config(backend_type), bulkwalk_enabled=bulk)
     table, _ = get_snmp_table(site, INFO_TREE, backend_type, config)
 
     assert table == [
@@ -137,9 +140,9 @@ def test_get_simple_snmp_table_bulkwalk(
 def test_get_simple_snmp_table_fills_cache(site: Site, backend_type: SNMPBackendEnum) -> None:
     _, walk_cache = get_snmp_table(site, INFO_TREE, backend_type, default_config(backend_type))
     assert sorted(walk_cache) == [
-        ".1.3.6.1.2.1.1.1.0",
-        ".1.3.6.1.2.1.1.2.0",
-        ".1.3.6.1.2.1.1.5.0",
+        (".1.3.6.1.2.1.1.1.0", "f3a8901547f4c88fd9947f9e401ce2", False),
+        (".1.3.6.1.2.1.1.2.0", "f3a8901547f4c88fd9947f9e401ce2", False),
+        (".1.3.6.1.2.1.1.5.0", "f3a8901547f4c88fd9947f9e401ce2", False),
     ]
 
 

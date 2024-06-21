@@ -14,12 +14,12 @@ from cmk.gui.valuespec import Dictionary, Float, Tuple
 
 def _parameter_valuespec_netscaler_dnsrates():
     return Dictionary(
-        help=_("Counter rates of DNS parameters for Citrix Netscaler Loadbalancer Appliances"),
+        help=_("Counter rates of DNS parameters for Citrix Netscaler Load Balancer Appliances"),
         elements=[
             (
                 "query",
                 Tuple(
-                    title=_("Upper Levels for Total Number of DNS queries"),
+                    title=_("Upper levels for total number of DNS queries"),
                     elements=[
                         Float(title=_("Warning at"), default_value=1500.0, unit="/sec"),
                         Float(title=_("Critical at"), default_value=2000.0, unit="/sec"),
@@ -29,7 +29,7 @@ def _parameter_valuespec_netscaler_dnsrates():
             (
                 "answer",
                 Tuple(
-                    title=_("Upper Levels for Total Number of DNS replies"),
+                    title=_("Upper levels for total number of DNS replies"),
                     elements=[
                         Float(title=_("Warning at"), default_value=1500.0, unit="/sec"),
                         Float(title=_("Critical at"), default_value=2000.0, unit="/sec"),

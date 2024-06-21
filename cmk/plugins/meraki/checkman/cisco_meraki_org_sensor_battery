@@ -1,0 +1,16 @@
+title: Cisco Meraki: Sensor Battery
+agents: cisco_meraki
+catalog: os/services
+license: GPLv2
+distribution: check_mk
+description:
+ This check plug-in monitors the sensor battery.
+
+ In order to make this check plug-in work you have to configure the ruleset for
+ the special agent {{Cisco Meraki}}.
+
+item:
+ The fixed name {Sensor}.
+
+discovery:
+ One service per organisation ID is created.

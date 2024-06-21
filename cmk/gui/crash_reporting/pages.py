@@ -12,9 +12,7 @@ import tarfile
 import time
 import traceback
 from collections.abc import Iterator, Mapping
-from typing import Final
-
-from typing_extensions import TypedDict
+from typing import Final, TypedDict
 
 import livestatus
 from livestatus import SiteId
@@ -23,9 +21,7 @@ import cmk.utils.crash_reporting
 import cmk.utils.version as cmk_version
 from cmk.utils.crash_reporting import CrashInfo
 
-import cmk.gui.forms as forms
-import cmk.gui.userdb as userdb
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
@@ -52,6 +48,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, urlencode_vars
@@ -330,13 +327,15 @@ class PageCrash(ABCCrashReportPage):
         if not files:
             return
 
-        warn_text = escaping.escape_to_html(
+        warn_text = HTML.with_escaping(
             _(
                 "The following files located in the local hierarchy of your site are involved in this exception:"
             )
         )
-        warn_text += HTMLWriter.render_ul(HTML("\n").join(map(HTMLWriter.render_li, files)))
-        warn_text += escaping.escape_to_html(
+        warn_text += HTMLWriter.render_ul(
+            HTML.without_escaping("\n").join(map(HTMLWriter.render_li, files))
+        )
+        warn_text += HTML.with_escaping(
             _(
                 "Maybe these files are not compatible with your current Checkmk "
                 "version. Please verify and only report this crash when you think "
@@ -349,15 +348,14 @@ class PageCrash(ABCCrashReportPage):
         if crash_info["crash_type"] == "gui":
             self._add_gui_user_infos_to_details(details)
 
-        html.begin_form("report", method="GET")
-        html.show_user_errors()
-        vs = self._vs_crash_report()
-        vs.render_input("_report", details)
-        vs.set_focus("report")
-        forms.end()
-        html.button("_report", _("Submit report"), cssclass="hot")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("report", method="GET"):
+            html.show_user_errors()
+            vs = self._vs_crash_report()
+            vs.render_input("_report", details)
+            vs.set_focus("report")
+            forms.end()
+            html.button("_report", _("Submit report"), cssclass="hot")
+            html.hidden_fields()
 
     def _add_gui_user_infos_to_details(self, details: ReportSubmitDetails) -> None:
         users = userdb.load_users()
@@ -379,7 +377,15 @@ class PageCrash(ABCCrashReportPage):
             pre=True,
         )
         _crash_row(
-            _("Traceback"), self._format_traceback(info["exc_traceback"]), odd=False, pre=True
+            _("Traceback"),
+            "".join(
+                [
+                    self._format_traceback(info["exc_traceback"]),
+                    info["exc_value"],
+                ]
+            ),
+            odd=False,
+            pre=True,
         )
         _crash_row(
             _("Local Variables"),
@@ -561,18 +567,18 @@ class ReportRendererCheck(ABCReportRenderer):
         html.open_table(class_="data")
 
         _crash_row(_("Host"), details["host"], odd=False, legend=True)
-        _crash_row(_("Is Cluster Host"), format_bool(details.get("is_cluster")), odd=True)
-        _crash_row(_("Check Type"), details["check_type"], odd=False)
+        _crash_row(_("Is cluster host"), format_bool(details.get("is_cluster")), odd=True)
+        _crash_row(_("Check type"), details["check_type"], odd=False)
         _crash_row(
-            _("Enforced Service"), format_bool(details.get("enforced_service")), odd=True, pre=True
+            _("Enforced service"), format_bool(details.get("enforced_service")), odd=True, pre=True
         )
         _crash_row(_("Inline-SNMP"), format_bool(details.get("inline_snmp")), odd=True, pre=True)
-        _crash_row(_("Check Item"), details.get("item", "This check has no item."), odd=False)
+        _crash_row(_("Check item"), details.get("item", "This check has no item."), odd=False)
         _crash_row(_("Description"), details["description"], odd=True)
         if "params" in details:
             _crash_row(_("Parameters"), format_params(details["params"]), odd=False, pre=True)
         else:
-            _crash_row(_("Parameters"), "This Check has no parameters", odd=False)
+            _crash_row(_("Parameters"), "This check has no parameters", odd=False)
 
         html.close_table()
 
@@ -637,7 +643,7 @@ def _show_output_box(title: str, content: bytes) -> None:
     html.h3(title, class_="table")
     html.open_div(class_="log_output")
     html.write_html(
-        HTML(
+        HTML.without_escaping(
             escaping.escape_attribute(content.decode(errors="surrogateescape"))
             .replace("\n", "<br>")
             .replace(" ", "&nbsp;")

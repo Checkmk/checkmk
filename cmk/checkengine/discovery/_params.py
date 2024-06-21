@@ -16,5 +16,7 @@ class DiscoveryCheckParameters:
     check_interval: int
     severity_new_services: int
     severity_vanished_services: int
+    severity_changed_service_labels: int
+    severity_changed_service_params: int
     severity_new_host_labels: int
     rediscovery: RediscoveryParameters

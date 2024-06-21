@@ -27,10 +27,6 @@ from cmk.gui.valuespec import (
 )
 
 
-def _item_spec_azure_agent_info():
-    return TextInput(title=_("Azure Agent Info"))
-
-
 def _parameter_valuespec_azure_agent_info():
     return Dictionary(
         elements=[
@@ -91,10 +87,9 @@ def _parameter_valuespec_azure_agent_info():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="azure_agent_info",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_azure_agent_info,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_agent_info,
         title=lambda: _("Azure Agent Info"),
@@ -264,7 +259,7 @@ def _item_spec_azure_databases():
 
 def _parameter_valuespec_azure_databases():
     return Dictionary(
-        title=_("Set Levels"),
+        title=_("Set levels"),
         elements=[
             (
                 "storage_percent_levels",

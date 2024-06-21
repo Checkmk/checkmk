@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
-import random
-import string
 import typing
 import urllib
 from typing import Any
@@ -22,10 +20,6 @@ from tests.testlib.rest_api_client import (
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.store import load_mk_file
-from cmk.utils.user import UserId
-
-import cmk.gui.watolib.check_mk_automations
-import cmk.gui.watolib.rulespecs
 
 DEFAULT_VALUE_RAW = """{
     "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
@@ -45,7 +39,17 @@ DEFAULT_CONDITIONS: RuleConditions = {
             "value": "wan",
         },
     ],
-    "host_labels": [{"key": "os", "operator": "is", "value": "windows"}],
+    "host_label_groups": [
+        {
+            "operator": "and",
+            "label_group": [
+                {
+                    "operator": "and",
+                    "label": "os:windows",
+                }
+            ],
+        },
+    ],
 }
 
 
@@ -70,6 +74,7 @@ def _create_rule(
     ruleset: str = "inventory_df_rules",
     value: dict[str, Any] | list[Any] | tuple | str | None = None,
     value_raw: str | None = DEFAULT_VALUE_RAW,
+    conditions: RuleConditions | None = None,
     expect_ok: bool = True,
 ) -> tuple[Response, dict[str, Any]]:
     if value is None:
@@ -77,17 +82,16 @@ def _create_rule(
             "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
             "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
         }
-
     properties: RuleProperties = {
         "description": description,
         "comment": comment,
         "disabled": disabled,
     }
-
     if documentation_url:
         properties["documentation_url"] = documentation_url
 
-    conditions: RuleConditions = DEFAULT_CONDITIONS
+    if conditions is None:
+        conditions = DEFAULT_CONDITIONS
 
     values = {
         "ruleset": ruleset,
@@ -96,7 +100,6 @@ def _create_rule(
         "value_raw": value_raw,
         "conditions": conditions,
     }
-
     resp = clients.Rule.create(
         ruleset=ruleset,
         folder=folder,
@@ -112,7 +115,6 @@ def _create_rule(
 def site_with_test_folders(clients: ClientRegistry) -> tuple[str, str]:
     test_folder_name_one = "test_folder_1"
     test_folder_name_two = "test_folder_2"
-
     clients.Folder.create(
         folder_name=test_folder_name_one,
         title=test_folder_name_one,
@@ -125,7 +127,6 @@ def site_with_test_folders(clients: ClientRegistry) -> tuple[str, str]:
         parent="/",
         expect_ok=True,
     )
-
     return test_folder_name_one, test_folder_name_two
 
 
@@ -161,7 +162,7 @@ def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
 def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
     value_raw = """{
         "name": "Halli-gALLI",
-        "host": {"address": "mimi.ch", "virthost": "mimi.ch"},
+        "host": {"address": ("direct", "mimi.ch"), "virthost": "mimi.ch"},
         "mode": (
             "url",
             {
@@ -179,7 +180,6 @@ def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
         folder="~",
         properties={"disabled": False},
     )
-
     clients.Rule.get(rule_id=resp.json["id"])
 
 
@@ -207,7 +207,6 @@ def test_openapi_create_rule_failure(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     resp.assert_status_code(400)
-
     # Its not really important that this text is in the response, just that this call failed.
     # assert "You have not defined any host group yet" in resp.json["detail"]
 
@@ -217,10 +216,8 @@ def test_openapi_create_rule(
     new_rule: tuple[Response, dict[str, typing.Any]],
 ) -> None:
     new_resp, values = new_rule
-
     resp = clients.Ruleset.get(ruleset_id=values["ruleset"])
     assert resp.json["extensions"]["number_of_rules"] == 1
-
     # Also fetch the newly created rule and check if it's actually persisted.
     resp2 = clients.Rule.get(new_resp.json["id"])
     ext = resp2.json["extensions"]
@@ -228,14 +225,13 @@ def test_openapi_create_rule(
     assert ext["folder"] == values["folder"]
     assert ext["properties"] == values["properties"]
     assert ext["conditions"].items() >= values["conditions"].items()
-
     # Check that the format on disk is as expected.
     rules_mk = os.path.join(paths.omd_root, "etc", "check_mk", "conf.d", "wato", "rules.mk")
     environ = load_mk_file(rules_mk, default={})
     stored_condition = environ[values["ruleset"]][0]["condition"]  # type: ignore[index]
     expected_condition = {
         "host_tags": {"criticality": "prod", "networking": {"$ne": "wan"}},
-        "host_labels": {"os": "windows"},
+        "host_label_groups": [("and", [("and", "os:windows")])],
     }
     assert stored_condition == expected_condition
 
@@ -251,31 +247,6 @@ def test_create_rule_with_string_value(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["value_raw"] == "'d,u,r,f,s'"
 
 
-def test_openapi_list_rules_with_hyphens(
-    clients: ClientRegistry,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        cmk.gui.watolib.rulespecs.CheckTypeGroupSelection,
-        "get_elements",
-        lambda x: {"fileinfo_groups": "some title"},
-    )
-    STATIC_CHECKS_FILEINFO_GROUPS = RuleGroup.StaticChecks("fileinfo-groups")
-    _, result = _create_rule(
-        clients,
-        "/",
-        ruleset=STATIC_CHECKS_FILEINFO_GROUPS,
-        value_raw="('fileinfo_groups', '', {'group_patterns': []})",
-    )
-
-    assert result["ruleset"] == STATIC_CHECKS_FILEINFO_GROUPS
-
-    resp2 = clients.Rule.list(ruleset=STATIC_CHECKS_FILEINFO_GROUPS)
-
-    assert len(resp2.json["value"]) == 1
-    assert resp2.json["value"][0]["extensions"]["ruleset"] == STATIC_CHECKS_FILEINFO_GROUPS
-
-
 def test_openapi_list_rules(
     clients: ClientRegistry,
     new_rule: tuple[Response, dict[str, typing.Any]],
@@ -283,15 +254,13 @@ def test_openapi_list_rules(
     _, values = new_rule
     rule_set = values["ruleset"]
     resp = clients.Rule.list(ruleset=rule_set)
-
     for entry in resp.json["value"]:
         assert entry["domainType"] == "rule"
-
     stored = resp.json["value"][0]["extensions"]
     assert stored["properties"]["disabled"] == values["properties"]["disabled"]
     assert stored["properties"]["comment"] == values["properties"]["comment"]
     # Do the complete round-trip check. Everything stored is also retrieved.
-    assert stored["conditions"]["host_labels"] == values["conditions"]["host_labels"]
+    assert stored["conditions"]["host_label_groups"] == values["conditions"]["host_label_groups"]
     assert stored["conditions"]["host_tags"] == values["conditions"]["host_tags"]
 
 
@@ -301,19 +270,15 @@ def test_openapi_delete_rule(
     new_rule: tuple[Response, dict[str, typing.Any]],
 ) -> None:
     resp, values = new_rule
-
     _resp = clients.Ruleset.get(ruleset_id=values["ruleset"])
     assert _resp.json["extensions"]["number_of_rules"] == 1
-
     api_client.follow_link(
         resp.json,
         ".../delete",
         headers={"If-Match": _resp.headers["ETag"]},
     ).assert_status_code(204)
-
     list_resp = clients.Ruleset.get(ruleset_id=values["ruleset"])
     assert list_resp.json["extensions"]["number_of_rules"] == 0
-
     api_client.follow_link(
         resp.json,
         ".../delete",
@@ -338,367 +303,194 @@ def test_openapi_list_rulesets(clients: ClientRegistry) -> None:
     assert len(resp.json["value"]) == 2
 
 
-@pytest.mark.usefixtures("new_rule")
-def test_openapi_has_rule(clients: ClientRegistry) -> None:
-    assert _order_of_rules(clients) == ["They made me do it!"]
-
-
-@pytest.mark.usefixtures("new_rule")
-def test_openapi_create_rule_order(
-    clients: ClientRegistry,
-    test_folders: tuple[str, str],
-) -> None:
-    folder_name_one, folder_name_two = test_folders
-    rule1, _ = _create_rule(clients, f"/{folder_name_one}", comment="rule1")
-    rule1_id = rule1.json["id"]
-
-    assert _order_of_rules(clients) == ["rule1", "They made me do it!"]
-
-    rule2, _ = _create_rule(clients, f"/{folder_name_two}", comment="rule2")
-    rule2_id = rule2.json["id"]
-
-    assert _order_of_rules(clients) == ["rule2", "rule1", "They made me do it!"]
-
-    rule_resp1 = clients.Rule.get(rule1_id)
-    assert rule_resp1.json["extensions"]["folder"] == f"/{folder_name_one}"
-
-    rule_resp2 = clients.Rule.get(rule2_id)
-    assert rule_resp2.json["extensions"]["folder"] == f"/{folder_name_two}"
-
-
-def test_openapi_move_rule_to_top_of_folder(
+def test_create_rule_old_label_format(
     clients: ClientRegistry,
     new_rule: tuple[Response, dict[str, typing.Any]],
-    test_folders: tuple[str, str],
 ) -> None:
-    folder_name_one, folder_name_two = test_folders
-    resp, _ = new_rule
-    rule_id = resp.json["id"]
+    """This test can be removed when the old "host_labels" field is eventually removed."""
 
-    _rule1, _ = _create_rule(clients, f"/{folder_name_one}", comment="rule1")
-    _rule2, _ = _create_rule(clients, f"/{folder_name_two}", comment="rule2")
+    # Create rule - new format
+    _, values = new_rule
 
-    _move_to(clients, rule_id, "top_of_folder", folder=f"/{folder_name_one}")
-
-    rule_resp1 = clients.Rule.get(rule_id)
-    assert rule_resp1.json["extensions"]["folder"] == f"/{folder_name_one}"
-
-    assert _order_of_rules(clients) == ["rule2", "They made me do it!", "rule1"]
-
-
-def test_openapi_move_rule_to_bottom_of_folder(
-    clients: ClientRegistry,
-    new_rule: tuple[Response, dict[str, typing.Any]],
-    test_folders: tuple[str, str],
-) -> None:
-    folder_name_one, folder_name_two = test_folders
-    resp, _ = new_rule
-    rule_id = resp.json["id"]
-
-    _rule1, _ = _create_rule(clients, f"/{folder_name_one}", comment="rule1")
-    _rule2, _ = _create_rule(clients, f"/{folder_name_two}", comment="rule2")
-
-    _move_to(clients, rule_id, "bottom_of_folder", folder=f"/{folder_name_two}")
-
-    rule_resp1 = clients.Rule.get(rule_id)
-    assert rule_resp1.json["extensions"]["folder"] == f"/{folder_name_two}"
-
-    assert _order_of_rules(clients) == ["rule2", "They made me do it!", "rule1"]
-
-
-def test_openapi_move_rule_after_specific_rule(
-    clients: ClientRegistry,
-    new_rule: tuple[Response, dict[str, typing.Any]],
-    test_folders: tuple[str, str],
-) -> None:
-    folder_name_one, folder_name_two = test_folders
-    resp, _ = new_rule
-    rule_id = resp.json["id"]
-
-    rule1, _ = _create_rule(clients, f"/{folder_name_one}", comment="rule1")
-    _rule2, _ = _create_rule(clients, f"/{folder_name_two}", comment="rule2")
-
-    _move_to(clients, rule_id, "after_specific_rule", dest_rule_id=rule1.json["id"])
-
-    rule_resp1 = clients.Rule.get(rule_id)
-    assert rule_resp1.json["extensions"]["folder"] == f"/{folder_name_one}"
-
-    assert _order_of_rules(clients) == ["rule2", "rule1", "They made me do it!"]
-
-
-def test_openapi_move_rule_before_specific_rule(
-    clients: ClientRegistry,
-    new_rule: tuple[Response, dict[str, typing.Any]],
-    test_folders: tuple[str, str],
-) -> None:
-    folder_name_one, folder_name_two = test_folders
-    resp, _ = new_rule
-    rule_id = resp.json["id"]
-
-    _rule1, _ = _create_rule(clients, f"/{folder_name_one}", comment="rule1")
-    rule2, _ = _create_rule(clients, f"/{folder_name_two}", comment="rule2")
-
-    _move_to(clients, rule_id, "before_specific_rule", dest_rule_id=rule2.json["id"])
-
-    rule_resp = clients.Rule.get(rule_id)
-    assert rule_resp.json["extensions"]["folder"] == f"/{folder_name_two}"
-
-    assert _order_of_rules(clients) == ["They made me do it!", "rule2", "rule1"]
-
-
-def test_create_rule_permission_error_regression(clients: ClientRegistry) -> None:
-    clients.Rule.create(
-        ruleset=RuleGroup.ActiveChecks("cmk_inv"),
-        folder="~",
-        properties={"disabled": False},
-        value_raw='{"status_data_inventory": True}',
-        conditions={},
-    )
-
-
-def _move_to(
-    clients: ClientRegistry,
-    _rule_id: str,
-    position: str,
-    dest_rule_id: str | None = None,
-    folder: str | None = None,
-) -> Response:
-    options: dict[str, Any] = {"position": position}
-    if position in ("top_of_folder", "bottom_of_folder"):
-        options["folder"] = folder
-    elif position in ("before_specific_rule", "after_specific_rule"):
-        options["rule_id"] = dest_rule_id
-
-    _resp = clients.Rule.move(rule_id=_rule_id, options=options)
-
-    if position in ("top_of_folder", "bottom_of_folder"):
-        assert _resp.json["extensions"]["folder"] == folder
-
-    return _resp
-
-
-def _order_of_rules(clients: ClientRegistry) -> list[str]:
-    _resp = clients.Rule.list(ruleset="inventory_df_rules")
-    comments = []
-    for rule in _resp.json["value"]:
-        comments.append(rule["extensions"]["properties"]["comment"])
-    return comments
-
-
-def test_user_needs_folder_permissions_to_move_rules(
-    clients: ClientRegistry,
-    with_user: tuple[UserId, str],
-) -> None:
-    source_folder = "source"
-    dest_folder = "dest"
-
-    clients.Folder.create(
-        folder_name=source_folder,
-        title=source_folder,
-        parent="/",
-        expect_ok=True,
-    )
-    clients.Folder.create(
-        folder_name=dest_folder,
-        title=dest_folder,
-        parent="/",
-        expect_ok=True,
-    )
-
-    # make_folder_inaccessible
-    nobody = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
-    clients.ContactGroup.create(name=nobody, alias=nobody)
-    clients.Folder.edit(
-        folder_name=f"~{dest_folder}",
-        title=nobody,
-        attributes={"contactgroups": {"groups": [nobody]}},
-    )
-
-    resp = clients.Rule.create(
-        ruleset=RuleGroup.ActiveChecks("cmk_inv"),
-        folder="~" + source_folder,
-        properties={"disabled": False},
-        value_raw='{"status_data_inventory": True}',
-        conditions={},
-    )
-
-    clients.Rule.set_credentials(username=with_user[0], password=with_user[1])
-
-    clients.Rule.move(
-        rule_id=resp.json["id"],
-        options={"position": "top_of_folder", "folder": "~" + dest_folder},
-        expect_ok=False,
-    ).assert_status_code(401)
-
-
-def test_openapi_only_show_used_rulesets_by_default_regression(
-    clients: ClientRegistry,
-) -> None:
-    """With default parameters, the 'list rulesets' endpoint should only show rulessets that are in use."""
-    # make one ruleset used, so this tests won't pass on an empty result
-    _create_rule(clients, "~")
-    rulesets = clients.Ruleset.list().json["value"]
-    assert len(rulesets) > 0
-    for ruleset in rulesets:
-        assert ruleset["extensions"]["number_of_rules"] > 0
-
-
-def test_openapi_fulltext_crash_regression(clients: ClientRegistry) -> None:
-    """A fulltext search shouldn't crash the endpoint."""
-    clients.Ruleset.list(fulltext="cluster").assert_status_code(200)
-
-
-def test_openapi_deprecated_filter_regression(clients: ClientRegistry) -> None:
-    """No deprecated rules should be shown when they are filtered out."""
-
-    # checkgroup_parameters:jvm_threads is deprecated.
-    clients.Rule.create(
-        ruleset=RuleGroup.CheckgroupParameters("jvm_threads"),
-        value_raw="'(80, 100)'",
-        conditions={"host_name": {"match_on": ["heute"], "operator": "one_of"}},
-        properties={},
-        expect_ok=False,
-    )
-
-    resp = clients.Ruleset.list(deprecated=False)
-    assert len(resp.json["value"]) == 0
-
-
-def test_openapi_ruleset_search_invalid_regex_regression(clients: ClientRegistry) -> None:
-    """Searching for an invalid regex shouldn't crash"""
-    clients.Ruleset.list(
-        search_options="?fulltext=%5C&used=false",
-        expect_ok=False,
-    ).assert_status_code(400)
-
-
-def test_openapi_cannot_move_rules_from_different_rulesets_regression(
-    clients: ClientRegistry,
-) -> None:
-    resp = clients.Rule.create(
-        "custom_checks",
-        value_raw=repr(
+    # add field "host_labels" with the old format & remove the new field "host_label_groups"
+    conditions: RuleConditions = {
+        "host_tags": [
             {
-                "service_description": "Test-Service",
-                "command_line": 'echo "123"',
-            }
-        ),
-        conditions={},
-    )
-    lhs_rule_id = resp.json["id"]
-
-    resp = clients.Rule.create(
-        RuleGroup.ActiveChecks("tcp"), value_raw=repr((1, {})), conditions={}
-    )
-    rhs_rule_id = resp.json["id"]
-
-    clients.Rule.move(
-        lhs_rule_id, {"after_specific_rule": rhs_rule_id}, expect_ok=False
-    ).assert_status_code(400)
-
-    clients.Rule.move(
-        lhs_rule_id, {"before_specific_rule": rhs_rule_id}, expect_ok=False
-    ).assert_status_code(400)
-
-
-def test_openapi_cannot_move_rule_before_or_after_itself(clients: ClientRegistry) -> None:
-    resp = clients.Rule.create(
-        RuleGroup.ActiveChecks("tcp"), value_raw=repr((1, {})), conditions={}
-    )
-    rule_id = resp.json["id"]
-
-    clients.Rule.move(
-        rule_id, {"after_specific_rule": rule_id}, expect_ok=False
-    ).assert_status_code(400)
-
-    clients.Rule.move(
-        rule_id, {"before_specific_rule": rule_id}, expect_ok=False
-    ).assert_status_code(400)
-
-
-@pytest.mark.usefixtures("new_rule")
-def test_openapi_edit_nonexistent_rule(clients: ClientRegistry) -> None:
-    properties: RuleProperties = {
-        "description": "new description",
-        "comment": "new comment",
-        "disabled": False,
+                "key": "criticality",
+                "operator": "is",
+                "value": "prod",
+            },
+            {
+                "key": "networking",
+                "operator": "is_not",
+                "value": "wan",
+            },
+        ],
+        "host_labels": [{"key": "os", "operator": "is", "value": "windows"}],
     }
 
-    res = clients.Rule.edit(
-        rule_id="i-do-not-exist",
-        value_raw=DEFAULT_VALUE_RAW,
-        conditions=DEFAULT_CONDITIONS,
-        properties=properties,
+    clients.Rule.create(
+        ruleset=values["ruleset"],
+        folder=values["folder"],
+        properties=values["properties"],
+        value_raw=values["value_raw"],
+        conditions=conditions,
+    )
+
+
+def test_create_rule_old_and_new_label_formats(
+    clients: ClientRegistry,
+    new_rule: tuple[Response, dict[str, typing.Any]],
+) -> None:
+    """This test can be removed when the old "host_labels" field is eventually removed."""
+    # Create rule - new format
+    _, values = new_rule
+
+    # add field "host_labels" - Sending old format + new format
+    conditions: RuleConditions = {
+        "host_tags": [
+            {
+                "key": "criticality",
+                "operator": "is",
+                "value": "prod",
+            },
+            {
+                "key": "networking",
+                "operator": "is_not",
+                "value": "wan",
+            },
+        ],
+        "host_labels": [{"key": "os", "operator": "is", "value": "windows"}],
+        "host_label_groups": [
+            {"operator": "and", "label_group": [{"operator": "and", "label": "os:windows"}]}
+        ],
+    }
+
+    resp = clients.Rule.create(
+        ruleset=values["ruleset"],
+        folder=values["folder"],
+        properties=values["properties"],
+        value_raw=values["value_raw"],
+        conditions=conditions,
         expect_ok=False,
-    ).assert_status_code(404)
-
-    assert res.json["title"] == "Unknown rule."
-    assert res.json["detail"] == "Rule with UUID 'i-do-not-exist' was not found."
-
-
-def test_openapi_edit_rule(clients: ClientRegistry) -> None:
-    ruleset = "inventory_df_rules"
-    original_raw_value = "{'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}"
-    new_raw_value = "{'ignore_fs_types': ['iso9660'], 'never_ignore_mountpoints': ['/mnt/data']}"
-
-    creation_response, _ = _create_rule(
-        clients=clients,
-        folder="/",
-        comment="I will update this rule and will keep the same index, folder, and ruleset. Only the value will be changed.",
-        ruleset=ruleset,
-        value=original_raw_value,
     )
 
-    created_rule = creation_response.json
-    rule_id = created_rule["id"]
-    properties = created_rule["extensions"]["properties"]
-    conditions = created_rule["extensions"]["conditions"]
-
-    _create_rule(
-        clients=clients,
-        folder="/",
-        comment="I am a placeholder rule",
-        ruleset=ruleset,
-    )
-
-    edit_response = clients.Rule.edit(
-        rule_id=rule_id, value_raw=new_raw_value, conditions=conditions, properties=properties
-    )
-    updated_rule = edit_response.json
-
-    assert updated_rule["id"] == rule_id
-    assert updated_rule["extensions"]["ruleset"] == created_rule["extensions"]["ruleset"]
-    assert updated_rule["extensions"]["folder"] == created_rule["extensions"]["folder"]
-    assert updated_rule["extensions"]["folder_index"] == created_rule["extensions"]["folder_index"]
-    assert updated_rule["extensions"]["value_raw"] == new_raw_value
+    resp.assert_status_code(400)
+    assert resp.json["fields"]["conditions"]["_schema"] == [
+        "Please provide the field 'host_labels' OR 'host_label_groups', not both."
+    ]
 
 
-def test_create_rule_no_value_raw(clients: ClientRegistry) -> None:
+def test_create_rule_missing_operator(clients: ClientRegistry) -> None:
+    conditions: RuleConditions = {"service_description": {"operator": "one_of"}}
     resp, _ = _create_rule(
         clients=clients,
         folder="/",
-        comment="I should fail.  value_raw should not be None.",
-        value_raw=None,  # no value_raw field will be sent
-        expect_ok=False,
-    )
-    resp.assert_status_code(400)
-    assert resp.json["detail"] == "These fields have problems: value_raw"
-
-
-def test_update_rule_no_value_raw(
-    clients: ClientRegistry,
-    new_rule: tuple[Response, dict[str, typing.Any]],
-) -> None:
-    new_resp, _ = new_rule
-    rule_id = new_resp.json["id"]
-    conditions = new_resp.json["extensions"]["conditions"]
-    properties = new_resp.json["extensions"]["properties"]
-    resp = clients.Rule.edit(
-        rule_id=rule_id,
-        value_raw=None,
+        comment="They made me do it!",
+        description="This is my title for this very important rule.",
+        documentation_url="http://example.com/",
         conditions=conditions,
-        properties=properties,
         expect_ok=False,
     )
     resp.assert_status_code(400)
-    assert resp.json["detail"] == "These fields have problems: value_raw"
+
+
+def test_create_rule_missing_match_on(clients: ClientRegistry) -> None:
+    conditions: RuleConditions = {"service_description": {"match_on": []}}
+    resp, _ = _create_rule(
+        clients=clients,
+        folder="/",
+        comment="They made me do it!",
+        description="This is my title for this very important rule.",
+        documentation_url="http://example.com/",
+        conditions=conditions,
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+
+
+def test_create_rule_empty_match_on_str(clients: ClientRegistry) -> None:
+    conditions: RuleConditions = {
+        "host_name": {
+            "operator": "one_of",
+            "match_on": [""],
+        }
+    }
+    resp, _ = _create_rule(
+        clients=clients,
+        folder="/",
+        comment="They made me do it!",
+        description="This is my title for this very important rule.",
+        documentation_url="http://example.com/",
+        conditions=conditions,
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+
+
+def test_create_rule_no_conditions_nor_properties(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.get(rule_id=resp.json["id"])
+
+
+def test_create_rule_no_conditions(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        properties={},
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.get(rule_id=resp.json["id"])
+
+
+def test_create_rule_no_properties(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        conditions={},
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.get(rule_id=resp.json["id"])
+
+
+def test_openapi_create_rule_reject_incompatible_value_raw(clients: ClientRegistry) -> None:
+    clients.Rule.create(
+        ruleset="checkgroup_parameters:memory_linux",
+        folder="/",
+        conditions={},
+        value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
+        expect_ok=False,
+    )
+
+
+def test_openapi_edit_rule_reject_incompatible_value_raw(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        conditions={},
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.edit(
+        rule_id=resp.json["id"],
+        value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
+        expect_ok=False,
+    )
+
+
+def test_openapi_create_rule_label_groups_no_operator(clients: ClientRegistry) -> None:
+    clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        conditions={
+            "host_label_groups": [{"label_group": [{"operator": "and", "label": "os:windows"}]}]
+        },
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )

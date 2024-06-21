@@ -9,7 +9,7 @@ values."""
 from collections.abc import Collection, Sequence
 from hashlib import sha256
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -56,7 +56,9 @@ class ModeBulkEdit(WatoMode):
         return ModeFolder
 
     def _from_vars(self) -> None:
-        self._folder = disk_or_search_folder_from_request()
+        self._folder = disk_or_search_folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        )
 
     def title(self) -> str:
         return _("Bulk edit hosts")
@@ -118,15 +120,14 @@ class ModeBulkEdit(WatoMode):
             )
         )
 
-        html.begin_form("edit_host", method="POST")
-        html.prevent_password_auto_completion()
-        html.hidden_field("host_hash", current_host_hash)
-        configure_attributes(
-            False, {str(k): v for k, v in hosts.items()}, "bulk", parent=self._folder
-        )
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("edit_host", method="POST"):
+            html.prevent_password_auto_completion()
+            html.hidden_field("host_hash", current_host_hash)
+            configure_attributes(
+                False, {str(k): v for k, v in hosts.items()}, "bulk", parent=self._folder
+            )
+            forms.end()
+            html.hidden_fields()
 
 
 class ModeBulkCleanup(WatoMode):
@@ -143,7 +144,9 @@ class ModeBulkCleanup(WatoMode):
         return ModeFolder
 
     def _from_vars(self) -> None:
-        self._folder = disk_or_search_folder_from_request()
+        self._folder = disk_or_search_folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        )
 
     def title(self) -> str:
         return _("Bulk removal of explicit attributes")
@@ -200,11 +203,10 @@ class ModeBulkCleanup(WatoMode):
             % len(hosts)
         )
 
-        html.begin_form("bulkcleanup", method="POST")
-        forms.header(_("Attributes to remove from hosts"))
-        self._select_attributes_for_bulk_cleanup(hosts)
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("bulkcleanup", method="POST"):
+            forms.header(_("Attributes to remove from hosts"))
+            self._select_attributes_for_bulk_cleanup(hosts)
+            html.hidden_fields()
 
     def _select_attributes_for_bulk_cleanup(self, hosts: Sequence[Host]) -> None:
         attributes = self._get_attributes_for_bulk_cleanup(hosts)
@@ -214,7 +216,7 @@ class ModeBulkCleanup(WatoMode):
             forms.section(attr.title())
 
             if attr.is_mandatory() and not is_inherited:
-                html.write_text(
+                html.write_text_permissive(
                     _(
                         "This attribute is mandatory and there is no value "
                         "defined in the host list or any parent folder."
@@ -230,7 +232,7 @@ class ModeBulkCleanup(WatoMode):
         forms.end()
 
         if not attributes:
-            html.write_text(_("The selected hosts have no explicit attributes"))
+            html.write_text_permissive(_("The selected hosts have no explicit attributes"))
 
     def _get_attributes_for_bulk_cleanup(
         self, hosts: Sequence[Host]

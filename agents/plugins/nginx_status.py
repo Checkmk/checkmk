@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 USER_AGENT = "checkmk-agent-nginx_status-" + __version__
-# Checkmk-Agent-Plugin - Nginx Server Status
+# Checkmk-Agent-Plug-in - Nginx Server Status
 #
 # Fetches the stub nginx_status page from detected or configured nginx
 # processes to gather status information about this process.
@@ -46,7 +46,7 @@ if PY3:
     text_type = str
     binary_type = bytes
 else:
-    text_type = unicode  # pylint: disable=undefined-variable
+    text_type = unicode  # pylint: disable=undefined-variable # noqa: F821
     binary_type = str
 
 
@@ -123,7 +123,7 @@ def main():  # pylint: disable=too-many-branches
     config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
     config_file = config_dir + "/nginx_status.cfg"
 
-    config: dict = {}
+    config = {}  # type: dict
     if os.path.exists(config_file):
         with open(config_file) as open_config_file:
             config_src = open_config_file.read()
@@ -171,7 +171,7 @@ def main():  # pylint: disable=too-many-branches
                     raise
 
             for line in ensure_str(fd.read()).split("\n"):
-                if not line.strip():
+                if not line or line.isspace():
                     continue
                 if line.lstrip()[0] == "<":
                     # seems to be html output. Skip this server.

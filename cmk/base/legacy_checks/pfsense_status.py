@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 
 def inventory_pfsense_status(info):
@@ -25,7 +26,12 @@ def check_pfsense_status(_no_item, params, info):
     raise Exception("Unknown status value %s" % statusvar)
 
 
+def parse_pfsense_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["pfsense_status"] = LegacyCheckDefinition(
+    parse_function=parse_pfsense_status,
     detect=contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12325.1.200.1.1",

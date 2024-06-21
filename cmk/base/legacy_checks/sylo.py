@@ -30,14 +30,13 @@ import time
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
-sylo_default_levels = (70, 5, 25)
+from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
 
 
 def inventory_sylo(info):
     if len(info) > 0 and len(info[0]) == 4:
-        return [(None, sylo_default_levels)]
+        return [(None, {})]
     return []
 
 
@@ -48,20 +47,20 @@ def check_sylo(item, params, info):
     if len(info[0]) == 4:
         msg = ""
 
-        alive_report, warn, crit = params
+        usage_warn_perc, usage_crit_perc = params["levels_usage_perc"]
 
         mtime = int(info[0][0])
         inOffset = int(info[0][1])
         outOffset = int(info[0][2])
         size = int(info[0][3])
         size_mb = size / (1024 * 1024.0)
-        warn_mb = size_mb * warn / 100.0
-        crit_mb = size_mb * crit / 100.0
+        warn_mb = size_mb * usage_warn_perc / 100.0
+        crit_mb = size_mb * usage_crit_perc / 100.0
 
         # CRIT: too old
         now = int(time.time())
         age = now - mtime
-        if age > alive_report:
+        if age > params["max_age_secs"]:
             status = 2
             return (2, "Sylo not running (Hintfile too old: last update %d secs ago)" % age)
 
@@ -87,9 +86,9 @@ def check_sylo(item, params, info):
         )
 
         status = 0
-        if percUsed >= crit and status < 2:
+        if percUsed >= usage_crit_perc and status < 2:
             status = 2
-        elif percUsed >= warn and status < 1:
+        elif percUsed >= usage_warn_perc and status < 1:
             status = 1
 
         return (
@@ -105,8 +104,17 @@ def check_sylo(item, params, info):
     return (3, "Invalid hint file contents: %s" % info)
 
 
+def parse_sylo(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["sylo"] = LegacyCheckDefinition(
+    parse_function=parse_sylo,
     service_name="Sylo",
     discovery_function=inventory_sylo,
     check_function=check_sylo,
+    check_default_parameters={
+        "max_age_secs": 70,
+        "levels_usage_perc": (5.0, 25.0),
+    },
 )

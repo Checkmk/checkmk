@@ -1,0 +1,9 @@
+Title: Event Console: Fix events on central site if these events are dedicated for remote sites
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1702905058
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+

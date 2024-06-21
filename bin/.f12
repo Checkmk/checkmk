@@ -18,13 +18,15 @@ sudo install -m 755 \
     mkevent \
     mkbackup \
     cmk-update-config \
+    cmk-compute-api-spec \
     cmk-update-license-usage \
     cmk-passwd \
+    cmk-trigger-api-spec-job \
     post-rename-site \
     init-redis \
     "$ROOT"/bin/
 sudo ln -sf check_mk "$ROOT"/bin/cmk
-sudo chown root.omd "$ROOT"/bin/mkeventd_open514
+sudo chown root:omd "$ROOT"/bin/mkeventd_open514
 sudo chmod 750 "$ROOT"/bin/mkeventd_open514
 sudo setcap "CAP_NET_BIND_SERVICE+ep" "$ROOT"/bin/mkeventd_open514
 echo "Installed to $ROOT/bin"

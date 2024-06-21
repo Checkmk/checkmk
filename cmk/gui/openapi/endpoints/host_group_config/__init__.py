@@ -22,8 +22,6 @@ from typing import Any
 
 from cmk.utils import version
 
-import cmk.gui.watolib.groups as groups
-from cmk.gui.groups import load_host_group_information
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.host_group_config.request_schemas import (
@@ -31,7 +29,7 @@ from cmk.gui.openapi.endpoints.host_group_config.request_schemas import (
     BulkInputHostGroup,
     BulkUpdateHostGroup,
     InputHostGroup,
-    UpdateGroup,
+    UpdateHostGroupAttributes,
 )
 from cmk.gui.openapi.endpoints.host_group_config.response_schemas import (
     HostGroup,
@@ -48,11 +46,14 @@ from cmk.gui.openapi.endpoints.utils import (
     update_groups,
     updated_group_details,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.parameters import GROUP_NAME_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
+from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib import groups
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
+from cmk.gui.watolib.groups_io import load_host_group_information
 
 PERMISSIONS = permissions.Perm("wato.groups")
 
@@ -197,7 +198,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     path_params=[GROUP_NAME_FIELD],
     etag="both",
     response_schema=HostGroup,
-    request_schema=UpdateGroup,
+    request_schema=UpdateHostGroupAttributes,
     permissions_required=RW_PERMISSIONS,
 )
 def update(params: Mapping[str, Any]) -> Response:

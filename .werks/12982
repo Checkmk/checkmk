@@ -1,4 +1,4 @@
-Title: <tt>oracle_recovery_status</tt>: Stop ignoring offline datafiles (12.1+)
+Title: oracle_recovery_status: Stop ignoring offline datafiles (12.1+)
 Class: fix
 Compatible: compat
 Component: checks

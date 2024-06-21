@@ -7,11 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import Check
-
 from cmk.agent_based.v1.type_defs import StringTable
 
-from .checktestlib import BasicCheckResult
+from .checktestlib import BasicCheckResult, Check
 
 pytestmark = pytest.mark.checks
 
@@ -161,7 +159,7 @@ pytestmark = pytest.mark.checks
     ],
 )
 def test_ra32e_sensors_inputs(
-    info: Sequence[StringTable],
+    info: list[StringTable],
     discoveries_expected: Sequence[tuple[str, Sequence[object]]],
     checks_expected: Sequence[tuple[str, str, Mapping[str, object], BasicCheckResult]],
 ) -> None:

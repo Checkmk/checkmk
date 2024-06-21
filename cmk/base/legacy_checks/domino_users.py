@@ -4,37 +4,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.domino import DETECT
 
-domino_users_default_levels = (1000, 1500)
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.domino import DETECT
 
 
 def inventory_domino_users(info):
     if info:
-        yield None, domino_users_default_levels
+        yield None, {}
 
 
 def check_domino_users(_no_item, params, info):
-    if info:
+    try:
         users = int(info[0][0])
-        warn, crit = params
-        infotext = "%d Domino Users on Server" % users
-        levels = f" (Warn/Crit at {warn}/{crit})"
-        perfdata = [("users", users, warn, crit)]
-        state = 0
-        if users >= crit:
-            state = 2
-            infotext += levels
-        elif users >= warn:
-            state = 1
-            infotext += levels
-        yield state, infotext, perfdata
+    except IndexError:
+        return
+
+    yield check_levels(
+        users, "users", params["levels"], human_readable_func=str, infoname="Domino users on server"
+    )
+
+
+def parse_domino_users(string_table: StringTable) -> StringTable:
+    return string_table
 
 
 check_info["domino_users"] = LegacyCheckDefinition(
+    parse_function=parse_domino_users,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.334.72.1.1.6.3",
@@ -44,4 +42,7 @@ check_info["domino_users"] = LegacyCheckDefinition(
     discovery_function=inventory_domino_users,
     check_function=check_domino_users,
     check_ruleset_name="domino_users",
+    check_default_parameters={
+        "levels": (1000, 1500),
+    },
 )

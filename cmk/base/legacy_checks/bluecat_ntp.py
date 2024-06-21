@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 
 def inventory_bluecat_ntp(info):
@@ -49,7 +50,12 @@ def check_bluecat_ntp(item, params, info):
     yield state, "Stratum: %s" % stratum
 
 
+def parse_bluecat_ntp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["bluecat_ntp"] = LegacyCheckDefinition(
+    parse_function=parse_bluecat_ntp,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.4.2",

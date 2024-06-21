@@ -3,18 +3,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Final
+
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.utils.notify_types import EventContext
+from cmk.utils.notify import NotificationHostConfig
+from cmk.utils.notify_types import EnrichedEventContext, EventContext, EventRule, NotificationRuleID
+from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
+from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.base.events
-from cmk.base.core_config import CollectedHostLabels
 from cmk.base.events import (
-    _update_raw_context_with_labels,
+    _update_enriched_context_with_labels,
     add_to_event_context,
+    event_match_hosttags,
     raw_context_from_string,
 )
+
+
+class HTTPPRoxyConfig:
+    def to_requests_proxies(self) -> None:
+        return None
+
+    def serialize(self) -> str:
+        return ""
+
+    def __eq__(self, o: object) -> bool:
+        return NotImplemented
+
+
+HTTP_PROXY: Final = HTTPPRoxyConfig()
 
 
 @pytest.mark.parametrize(
@@ -42,15 +61,15 @@ def test_raw_context_from_string(context: str, expected: EventContext) -> None:
 
 def test_add_to_event_context_param_overrides_context() -> None:
     context = {"FOO": "bar", "BAZ": "old"}
-    add_to_event_context(context, "BAZ", "new")
+    add_to_event_context(context, "BAZ", "new", lambda *args, **kw: HTTP_PROXY)
     assert context == {"FOO": "bar", "BAZ": "new"}
 
 
 def test_add_to_event_context_prefix_is_prepended() -> None:
     context: EventContext = {}
-    add_to_event_context(context, "FOO", "bar")
-    add_to_event_context(context, "BAZ", "boo")
-    add_to_event_context(context, "AAA", {"BBB": "CCC"})
+    add_to_event_context(context, "FOO", "bar", lambda *args, **kw: HTTP_PROXY)
+    add_to_event_context(context, "BAZ", "boo", lambda *args, **kw: HTTP_PROXY)
+    add_to_event_context(context, "AAA", {"BBB": "CCC"}, lambda *args, **kw: HTTP_PROXY)
     assert context == {"FOO": "bar", "BAZ": "boo", "AAA_BBB": "CCC"}
 
 
@@ -200,12 +219,12 @@ def test_add_to_event_context_prefix_is_prepended() -> None:
 )
 def test_add_to_event_context(param: object, expected: EventContext) -> None:
     context: EventContext = {}
-    add_to_event_context(context, "PARAMETER", param)
+    add_to_event_context(context, "PARAMETER", param, lambda *args, **lw: HTTP_PROXY)
     assert context == expected
 
 
 @pytest.mark.parametrize(
-    "raw_context, labels, expected",
+    "enriched_context, config, expected",
     [
         pytest.param(
             {
@@ -215,7 +234,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 "SERVICEDESC": "Interface 1",
                 "WHAT": "SERVICE",
             },
-            CollectedHostLabels(
+            NotificationHostConfig(
                 host_labels={
                     "cmk/check_mk_server": "yes",
                     "cmk/docker_object": "node",
@@ -225,6 +244,9 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                     "cmk/site": "heute",
                 },
                 service_labels={"Interface 1": {"dicovered": "label", "rule": "label"}},
+                tags={
+                    TagGroupID("criticality"): TagID("prod"),
+                },
             ),
             {
                 "CONTACTS": "cmkadmin",
@@ -250,7 +272,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 "HOSTNAME": "heute",
                 "WHAT": "HOST",
             },
-            CollectedHostLabels(
+            NotificationHostConfig(
                 host_labels={
                     "cmk/check_mk_server": "yes",
                     "cmk/docker_object": "node",
@@ -260,6 +282,9 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                     "cmk/site": "heute",
                 },
                 service_labels={"Interface 1": {"dicovered": "label", "rule": "label"}},
+                tags={
+                    TagGroupID("criticality"): TagID("prod"),
+                },
             ),
             {
                 "CONTACTS": "cmkadmin",
@@ -277,16 +302,133 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
         ),
     ],
 )
-def test_update_raw_contect_with_labels(
-    raw_context: EventContext,
-    labels: CollectedHostLabels,
+def test_update_enriched_contect_with_labels(
+    enriched_context: EnrichedEventContext,
+    config: NotificationHostConfig,
     expected: EventContext,
     monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         cmk.base.events,
         "read_notify_host_file",
-        lambda host_name: labels,
+        lambda *args, **kw: config,
     )
-    _update_raw_context_with_labels(raw_context)
-    assert raw_context == expected
+    _update_enriched_context_with_labels(enriched_context)
+    assert enriched_context == expected
+
+
+@pytest.mark.parametrize(
+    "enriched_context, host_config, event_rule, expected",
+    [
+        pytest.param(
+            {
+                "HOSTNAME": "heute",
+            },
+            NotificationHostConfig(
+                host_labels={},
+                service_labels={},
+                tags={
+                    TagGroupID("criticality"): TagID("prod"),
+                },
+            ),
+            EventRule(
+                rule_id=NotificationRuleID("1"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_hosttags={TagGroupID("bla"): TagID("bli")},
+            ),
+            "The host's tags {'criticality': 'prod'} do not match the required tags {'bla': 'bli'}",
+            id="Does not match",
+        ),
+        pytest.param(
+            {
+                "HOSTNAME": "heute",
+            },
+            NotificationHostConfig(
+                host_labels={},
+                service_labels={},
+                tags={
+                    TagGroupID("criticality"): TagID("prod"),
+                    TagGroupID("hurz"): TagID("blub"),
+                    TagGroupID("hans"): TagID("wurst"),
+                },
+            ),
+            EventRule(
+                rule_id=NotificationRuleID("2"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_hosttags={
+                    TagGroupID("criticality"): TagID("prod"),
+                    TagGroupID("hurz"): TagID("blub"),
+                    TagGroupID("hans"): TagID("wurst"),
+                },
+            ),
+            None,
+            id="Matches",
+        ),
+        pytest.param(
+            {
+                "HOSTNAME": "heute",
+            },
+            NotificationHostConfig(
+                host_labels={},
+                service_labels={},
+                tags={
+                    TagGroupID("criticality"): TagID("prod"),
+                    TagGroupID("hurz"): TagID("blub"),
+                    TagGroupID("hans"): TagID("wurst"),
+                },
+            ),
+            EventRule(
+                rule_id=NotificationRuleID("2"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_hosttags={
+                    TagGroupID("criticality"): TagConditionNE({"$ne": TagID("prod")}),
+                    TagGroupID("hurz"): TagID("blub"),
+                    TagGroupID("hans"): TagID("wurst"),
+                },
+            ),
+            "The host's tags {'criticality': 'prod', 'hurz': 'blub', 'hans': "
+            "'wurst'} do not match the required tags {'criticality': {'$ne': "
+            "'prod'}, 'hurz': 'blub', 'hans': 'wurst'}",
+            id="Does not match because of negate",
+        ),
+    ],
+)
+def test_match_host_tags(
+    enriched_context: EnrichedEventContext,
+    host_config: NotificationHostConfig,
+    event_rule: EventRule,
+    expected: str | None,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        cmk.base.events,
+        "read_notify_host_file",
+        lambda *args, **kw: host_config,
+    )
+    assert (
+        event_match_hosttags(
+            rule=event_rule,
+            context=enriched_context,
+            _analyse=False,
+            _all_timeperiods={},
+        )
+        == expected
+    )

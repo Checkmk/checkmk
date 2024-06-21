@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import json
 from collections.abc import Mapping
 from typing import Any
@@ -22,7 +24,7 @@ def render_filter_form(
 ) -> HTML:
     with output_funnel.plugged():
         show_filter_form(info_list, context, page_name, reset_ajax_page)
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def show_filter_form(
@@ -30,29 +32,28 @@ def show_filter_form(
 ) -> None:
     html.show_user_errors()
     form_name: str = "filter"
-    html.begin_form(
+    with html.form_context(
         form_name,
         method="GET",
         add_transid=False,
         onsubmit=f"cmk.forms.on_filter_form_submit_remove_vars({json.dumps('form_' + form_name)});",
-    )
-    varprefix = ""
-    vs_filters = VisualFilterListWithAddPopup(info_list=info_list)
+    ):
+        varprefix = ""
+        vs_filters = VisualFilterListWithAddPopup(info_list=info_list)
 
-    filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
-    filter_list_selected_id = filter_list_id + "_selected"
-    _show_filter_form_buttons(
-        varprefix, filter_list_id, vs_filters._page_request_vars, page_name, reset_ajax_page
-    )
+        filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
+        filter_list_selected_id = filter_list_id + "_selected"
+        _show_filter_form_buttons(
+            varprefix, filter_list_id, vs_filters._page_request_vars, page_name, reset_ajax_page
+        )
 
-    html.open_div(id_=filter_list_selected_id, class_=["side_popup_content"])
-    vs_filters.render_input(varprefix, context)
-    html.close_div()
+        html.open_div(id_=filter_list_selected_id, class_=["side_popup_content"])
+        vs_filters.render_input(varprefix, context)
+        html.close_div()
 
-    forms.end()
+        forms.end()
 
-    html.hidden_fields()
-    html.end_form()
+        html.hidden_fields()
     html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_selected_id))
 
     # The filter popup is shown automatically when it has been submitted before on page reload. To

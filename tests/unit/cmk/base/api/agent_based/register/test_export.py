@@ -58,7 +58,7 @@ def dummy_inventory_function(
 
 @pytest.fixture(name="valid_plugin_module_name")
 def fixture_valid_plugin_module_name() -> Iterator[None]:
-    with patch.object(export, "get_validated_plugin_module_name") as mocked_method:
+    with patch.object(export, "get_validated_plugin_location") as mocked_method:
         mocked_method.side_effect = lambda: None
         yield
 

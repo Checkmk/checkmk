@@ -4,21 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Collection, Mapping, Sequence
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 
 import livestatus
 
-import cmk.gui.notifications as notifications
-import cmk.gui.sites as sites
-import cmk.gui.visuals as visuals
+from cmk.gui import notifications, sites, visuals
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
+from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput
+from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput, ValueSpec
 
 from ._base import CustomizableSidebarSnapin
 from ._helpers import link
@@ -39,13 +38,13 @@ class OverviewRow(NamedTuple):
     views: ViewURLParams
 
 
-def get_context_url_variables(context):
+def get_context_url_variables(context: VisualContext) -> list[tuple[str, str]]:
     """Returns the URL variables of a context.
     Returns a list of two-element tuples
 
     Please note: This does not deal with single contexts.
     """
-    add_vars = {}
+    add_vars: dict[str, str] = {}
     for filter_vars in context.values():
         add_vars.update(filter_vars)
     return list(add_vars.items())
@@ -62,11 +61,11 @@ def group_by_state(
 
 class TacticalOverviewSnapin(CustomizableSidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "tactical_overview"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Overview")
 
     @classmethod
@@ -74,15 +73,15 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         return True
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("The total number of hosts and service with and without problems")
 
     @classmethod
-    def refresh_regularly(cls):
+    def refresh_regularly(cls) -> bool:
         return True
 
     @classmethod
-    def vs_parameters(cls):
+    def vs_parameters(cls) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "rows",
@@ -172,12 +171,12 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             ],
         }
 
-    def show(self):
+    def show(self) -> None:
         self._show_rows()
         self._show_failed_notifications()
         self._show_site_status()
 
-    def _show_rows(self):
+    def _show_rows(self) -> None:
         rows = self._get_rows()
 
         if bool([r for r in rows if r.stats is None]):
@@ -189,9 +188,14 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         show_stales = self.parameters()["show_stale"] and user.may(
             "general.see_stales_in_tactical_overview"
         )
-        has_stale_objects = bool([r for r in rows if r.what != "events" and r.stats[-1]])
+        has_stale_objects = bool(
+            [r for r in rows if r.what != "events" and r.stats is not None and r.stats[-1]]
+        )
 
         for row in rows:
+            if row.stats is None:
+                continue
+
             if row.what == "events":
                 amount, problems, unhandled_problems = row.stats
                 stales = 0
@@ -218,7 +222,9 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             td_class = "col4" if has_stale_objects else "col3"
 
             html.open_tr()
-            url = makeuri_contextless(request, row.views.total + context_vars, filename="view.py")
+            url = makeuri_contextless(
+                request, [*row.views.total, *context_vars], filename="view.py"
+            )
             html.open_td(class_=["total", td_class])
             html.a("%s" % amount, href=url, target="main")
             html.close_td()
@@ -241,7 +247,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 if row.views.stale:
                     url = makeuri_contextless(
                         request,
-                        row.views.stale + context_vars,
+                        [*row.views.stale, *context_vars],
                         filename="view.py",
                     )
                     html.open_td(class_=[td_class] + ([] if stales == 0 else ["states prob"]))
@@ -253,7 +259,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.close_tr()
         html.close_table()
 
-    def _get_rows(self):
+    def _get_rows(self) -> list[OverviewRow]:
         rows = []
         for row_config in self.parameters()["rows"]:
             what, context = row_config["query"]
@@ -275,7 +281,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
         return rows
 
-    def _row_views(self, what):
+    def _row_views(self, what: Literal["hosts", "services", "events"]) -> ViewURLParams:
         if what == "hosts":
             return ViewURLParams(
                 total=[
@@ -335,24 +341,29 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
         raise NotImplementedError()
 
-    def _get_stats(self, what, context):
+    def _get_stats(
+        self,
+        what: Literal["hosts", "services", "events"],
+        context: VisualContext,
+    ) -> Sequence[int] | None:
+        query: str | livestatus.Query
         if what == "hosts":
             context_filters, only_sites = visuals.get_filter_headers(
-                table="hosts", infos=["host"], context=context
+                infos=["host"], context=context
             )
 
             query = self._get_host_stats_query(context_filters)
 
         elif what == "services":
             context_filters, only_sites = visuals.get_filter_headers(
-                table="services", infos=["host", "service"], context=context
+                infos=["host", "service"], context=context
             )
 
             query = self._get_service_stats_query(context_filters)
 
         elif what == "events":
             context_filters, only_sites = visuals.get_filter_headers(
-                table="eventconsoleevents", infos=["host", "event"], context=context
+                infos=["host", "event"], context=context
             )
 
             query = self._get_event_stats_query(context_filters)
@@ -366,7 +377,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             deflt=[0, 0, 0] if what == "events" else None,
         )
 
-    def _get_host_stats_query(self, context_filters):
+    def _get_host_stats_query(self, context_filters: str) -> str:
         return (
             "GET hosts\n"
             # Total
@@ -387,7 +398,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "%s"
         ) % (active_config.staleness_threshold, context_filters)
 
-    def _get_service_stats_query(self, context_filters):
+    def _get_service_stats_query(self, context_filters: str) -> str:
         return (
             "GET services\n"
             # Total
@@ -414,7 +425,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "%s"
         ) % (active_config.staleness_threshold, context_filters)
 
-    def _get_event_stats_query(self, context_filters):
+    def _get_event_stats_query(self, context_filters: str) -> livestatus.Query:
         # In case the user is not allowed to see unrelated events
         ec_filters = ""
         if not user.may("mkeventd.seeall") and not user.may("mkeventd.seeunrelated"):
@@ -448,7 +459,13 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             ),
         )
 
-    def _execute_stats_query(self, query, auth_domain="read", only_sites=None, deflt=None):
+    def _execute_stats_query(
+        self,
+        query: str | livestatus.Query,
+        auth_domain: str = "read",
+        only_sites: list[livestatus.SiteId] | None = None,
+        deflt: Sequence[int] | None = None,
+    ) -> Sequence[int] | None:
         try:
             sites.live().set_auth_domain(auth_domain)
             if only_sites:
@@ -461,7 +478,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             sites.live().set_only_sites(None)
             sites.live().set_auth_domain("read")
 
-    def _show_failed_notifications(self):
+    def _show_failed_notifications(self) -> None:
         if not self.parameters()["show_failed_notifications"]:
             return
 
@@ -487,7 +504,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         html.close_div()
         html.close_div()
 
-    def _show_site_status(self):
+    def _show_site_status(self) -> None:
         if not self.parameters().get("show_sites_not_connected"):
             return
 
@@ -501,12 +518,12 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         if error.site_ids:
             self._create_status_box(error.site_ids, "tacticalalert", error.readable)
 
-    def _create_status_box(  # type: ignore[no-untyped-def]
+    def _create_status_box(
         self,
         site_ids: Collection[livestatus.SiteId],
         css_class: str,
         site_status: str,
-    ):
+    ) -> None:
         html.open_div(class_="spacertop")
         html.open_div(class_=css_class)
         message_template = ungettext("%d site is %s.", "%d sites are %s.", len(site_ids))
@@ -526,6 +543,6 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.a(message, target="main", href=url)
         else:
             html.icon("sites", tooltip)
-            html.write_text(message)
+            html.write_text_permissive(message)
         html.close_div()
         html.close_div()

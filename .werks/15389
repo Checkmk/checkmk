@@ -9,6 +9,5 @@ Level: 1
 Version: 2.3.0b1
 
 Previously we only used the organisation ID as item name. Now we added the
-organisation name and you have to rediscover the related {{Licenses Overview}}
+organisation name and you have to rediscover the related "Licenses Overview"
 services.
-

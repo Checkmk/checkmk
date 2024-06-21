@@ -10,7 +10,7 @@
 import argparse
 import sys
 
-import cmk.utils.log as log
+from cmk.utils import log
 
 from cmk.gui import main_modules
 from cmk.gui.session import SuperUserContext

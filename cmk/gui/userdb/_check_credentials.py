@@ -11,14 +11,17 @@ from typing import Literal
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password
+from cmk.utils.log.security_event import log_security_event
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
+from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import LoggedInUser
 
 from ._connections import active_connections, get_connection
@@ -90,6 +93,7 @@ def create_non_existing_user(connection_id: str, username: UserId, now: datetime
 
     users = load_users(lock=True)
     users[username] = new_user_template(connection_id)
+    users[username].setdefault("alias", username)
     save_users(users, now)
 
     # Call the sync function for this new user
@@ -97,6 +101,16 @@ def create_non_existing_user(connection_id: str, username: UserId, now: datetime
     try:
         if connection is None:
             raise MKUserError(None, _("Invalid user connection: %s") % connection_id)
+
+        log_security_event(
+            UserManagementEvent(
+                event="user created",
+                affected_user=username,
+                acting_user=None,
+                connector=connection.type(),
+                connection_id=connection_id,
+            )
+        )
 
         connection.do_sync(
             add_to_changelog=False,
@@ -132,16 +146,11 @@ def is_customer_user_allowed_to_login(user_id: UserId) -> bool:
     if cmk_version.edition() is not cmk_version.Edition.CME:
         return True
 
-    try:
-        import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-    except ImportError:
-        return True
-
     user = LoggedInUser(user_id)
-    if managed.is_global(user.customer_id):
+    if customer_api().is_global(user.customer_id):
         return True
 
-    return managed.is_current_customer(user.customer_id)
+    return customer_api().is_current_customer(user.customer_id)
 
 
 def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = True) -> None:
@@ -152,4 +161,4 @@ def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = 
 
 
 def user_locked(user_id: UserId) -> bool:
-    return bool(load_user(user_id).get("locked"))
+    return load_user(user_id)["locked"]

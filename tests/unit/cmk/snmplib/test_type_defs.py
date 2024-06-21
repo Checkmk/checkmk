@@ -7,9 +7,39 @@ import json
 
 import pytest
 
-from cmk.snmplib import BackendOIDSpec, BackendSNMPTree, SNMPDetectSpec, SpecialColumn
+from cmk.utils.hostaddress import HostAddress, HostName
+
+from cmk.snmplib import (
+    BackendOIDSpec,
+    BackendSNMPTree,
+    SNMPBackendEnum,
+    SNMPDetectSpec,
+    SNMPHostConfig,
+    SNMPVersion,
+    SpecialColumn,
+)
 
 from cmk.agent_based.v1 import OIDBytes, OIDCached, OIDEnd, SNMPTree
+
+
+class TestSNMPHostConfig:
+    def test_serialization(self) -> None:
+        conf = SNMPHostConfig(
+            is_ipv6_primary=False,
+            hostname=HostName("unittest"),
+            ipaddress=HostAddress("127.0.0.1"),
+            credentials="",
+            port=0,
+            bulkwalk_enabled=True,
+            snmp_version=SNMPVersion.V2C,
+            bulk_walk_size_of=0,
+            timing={},
+            oid_range_limits={},
+            snmpv3_contexts=[],
+            character_encoding=None,
+            snmp_backend=SNMPBackendEnum.STORED_WALK,
+        )
+        assert conf.deserialize(conf.serialize()) == conf
 
 
 class TestSNMPDetectSpec:

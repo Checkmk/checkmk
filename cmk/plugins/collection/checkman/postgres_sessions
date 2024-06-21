@@ -1,0 +1,18 @@
+title: PostgreSQL: Sessions
+agents: linux
+catalog: app/postgresql
+license: GPLv2
+distribution: check_mk
+description:
+ This check allows tracking of the session parameters for a PostgreSQL
+ database.
+ It reports how many sessions there are in total and how many of them are
+ actively querying something.
+
+ This check relies on data reported by the agent-side plug-in {mk_postgres}
+
+item:
+ Name of the category
+
+discovery:
+ One service is created for all sessions connected to the PostgreSQL daemon.

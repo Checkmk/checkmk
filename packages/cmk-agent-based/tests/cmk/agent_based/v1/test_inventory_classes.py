@@ -61,7 +61,7 @@ def test_attributes_instanciated() -> None:
         status_attributes={"vendor": "camembert"},
         inventory_attributes={"version": "42"},
     )
-    assert attr == attr  # pylint: disable= comparison-with-itself
+    assert attr == attr  # pylint: disable= comparison-with-itself # noqa: PLR0124
     assert attr2 != attr
 
 
@@ -111,5 +111,5 @@ def test_tablerow_instanciated() -> None:
         status_columns={"packages": 42},
         inventory_columns={"vendor": "gorgonzola"},
     )
-    assert table_row == table_row  # pylint: disable= comparison-with-itself
+    assert table_row == table_row  # pylint: disable= comparison-with-itself # noqa: PLR0124
     assert table_row2 != table_row

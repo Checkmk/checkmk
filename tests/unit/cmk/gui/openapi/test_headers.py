@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from webtest import TestResponse  # type: ignore[import]
+from webtest import TestResponse  # type: ignore[import-untyped]
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -32,7 +32,9 @@ def test_headers_exposed(
     assert resp.headers["x-checkmk-version"] == cmk_version.__version__
 
 
-def test_headers_not_exposed_for_unauthorized_users(wsgi_app: WebTestAppForCMK) -> None:
+def test_headers_not_exposed_for_unauthorized_users(
+    wsgi_app: WebTestAppForCMK, request_context: None
+) -> None:
     resp = _get_version(
         wsgi_app,
         status=401,

@@ -7,9 +7,9 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.testlib import Check
-
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from .checktestlib import Check
 
 pytestmark = pytest.mark.checks
 
@@ -152,8 +152,9 @@ pytestmark = pytest.mark.checks
     ],
 )
 def test_parse_cmciii_lcp_water(string_table: StringTable, section: StringTable) -> None:
-    check = Check("cmciii_lcp_water")
-    assert list(check.run_parse(string_table)) == section
+    parsed = Check("cmciii_lcp_water").run_parse(string_table)
+    assert isinstance(parsed, list)
+    assert parsed == section
 
 
 @pytest.mark.parametrize(

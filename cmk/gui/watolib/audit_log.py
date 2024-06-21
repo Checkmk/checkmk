@@ -10,9 +10,8 @@ import json
 import re
 import time
 from collections.abc import Sequence
-from typing import Any, NamedTuple
-
-from typing_extensions import TypedDict
+from pathlib import Path
+from typing import Any, NamedTuple, TypedDict
 
 from cmk.utils.user import UserId
 
@@ -48,8 +47,8 @@ class AuditLogFilterRaw(TypedDict, total=False):
 
 
 class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
-    def __init__(self) -> None:
-        super().__init__(wato_var_dir() / "log" / "wato_audit.log")
+    def __init__(self, filepath: Path = wato_var_dir() / "log" / "wato_audit.log") -> None:
+        super().__init__(path=filepath)
 
     class Entry(NamedTuple):
         time: int
@@ -65,7 +64,11 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
             if not isinstance(raw, dict):
                 raise ValueError("expected a dictionary")
             # TODO: Parse raw's entries, too, below we have our traditional 'wishful typing'... :-P
-            raw["text"] = HTML(raw["text"][1]) if raw["text"][0] == "html" else raw["text"][1]
+            raw["text"] = (
+                HTML.without_escaping(raw["text"][1])
+                if raw["text"][0] == "html"
+                else raw["text"][1]
+            )
             raw["object_ref"] = (
                 ObjectRef.deserialize(raw["object_ref"]) if raw["object_ref"] else None
             )
@@ -170,7 +173,7 @@ def log_audit(
 
     if active_config.wato_use_git:
         if isinstance(message, HTML):
-            message = escaping.strip_tags(message.value)
+            message = escaping.strip_tags(str(message))
         cmk.gui.watolib.git.add_message(message)
 
     _log_entry(action, message, object_ref, user_id, diff_text)

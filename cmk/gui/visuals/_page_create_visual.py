@@ -7,7 +7,7 @@
 
 from collections.abc import Sequence
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -47,7 +47,7 @@ def page_create_visual(
     )
 
     html.open_p()
-    html.write_text(
+    html.write_text_permissive(
         _(
             "Depending on the chosen datasource, a %s can list <i>multiple</i> or <i>single</i> objects. "
             "For example, the <i>services</i> datasource can be used to simply create a list "
@@ -72,17 +72,16 @@ def page_create_visual(
         except MKUserError as e:
             html.user_error(e)
 
-    html.begin_form("create_visual")
-    html.hidden_field("mode", "create")
+    with html.form_context("create_visual"):
+        html.hidden_field("mode", "create")
 
-    forms.header(_("Select specific object type"))
-    forms.section(vs_infos.title())
-    vs_infos.render_input("single_infos", "")
-    html.help(vs_infos.help())
-    forms.end()
+        forms.header(_("Select specific object type"))
+        forms.section(vs_infos.title())
+        vs_infos.render_input("single_infos", "")
+        html.help(vs_infos.help())
+        forms.end()
 
-    html.hidden_fields()
-    html.end_form()
+        html.hidden_fields()
     html.footer()
 
 

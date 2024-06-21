@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
+
+from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
 
 
 def inventory_fortigate_sessions_base(info):
@@ -20,7 +21,12 @@ def check_fortigate_sessions_base(item, params, info):
     )
 
 
+def parse_fortigate_sessions_base(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["fortigate_sessions_base"] = LegacyCheckDefinition(
+    parse_function=parse_fortigate_sessions_base,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
         exists(".1.3.6.1.4.1.12356.101.4.1.8.0"),

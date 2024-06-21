@@ -133,7 +133,7 @@ def _may_create_screenshot(
             pytestconfig, request, f".{human_readable_status}.png"
         )
         try:
-            page.screenshot(timeout=5000, path=screenshot_path)
+            page.screenshot(timeout=5432, path=screenshot_path)
         except Error as e:
             logger.info("Failed to create screenshot of page %s due to: %s", page, e)
 

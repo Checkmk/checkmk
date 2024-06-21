@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from logging import Logger
 from typing import Final
 
-import cmk.utils.paths as paths
+from cmk.utils import paths
 from cmk.utils.redis import disable_redis
 
 import cmk.base.config as base_config
@@ -94,9 +95,6 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
     "apc_humidity_default_levels",
     "apc_inrow_airflow_default_levels",
     "apc_inrow_temp_default_levels",
-    "apc_netbotz_sensors_dewpoint_default_levels",
-    "apc_netbotz_sensors_humidity_default_levels",
-    "apc_netbotz_sensors_temp_default_levels",
     "apc_sts_inputs_default_levels",
     "apc_symmetra_elphase_default_levels",
     "apc_symmetra_ext_temp_default_levels",
@@ -188,7 +186,6 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
     "climaveneta_temp_default_levels",
     "cluster_info",
     "cmc_temp_default_levels",
-    "cmctc_lcp_sensors",
     "cmctc_pcm_m_sensor_types",
     "condition_map",
     "cpsecure_sessions_default_levels",
@@ -428,7 +425,6 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
     "juniper_screenos_cpu_default_levels",
     "juniper_screenos_temp_default_levels",
     "juniper_temp_default_levels",
-    "juniper_trpz_cpu_util_default_levels",
     "juniper_trpz_flash_default_levels",
     "keepalived_default_levels",
     "kentix_amp_sensors_smoke_default_levels",
@@ -662,8 +658,6 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
     "wagner_titanus_topsense_info",
     "wagner_titanus_topsense_temperature_default_values",
     "watchdog_sensors_humidity_default_levels",
-    "websphere_mq_channels_default_levels",
-    "websphere_mq_queues_default_levels",
     "win_netstat_states",
     "win_printer_default_levels",
     "windows_license_default_levels",
@@ -676,7 +670,7 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
 class PreUpdateDeprecatedConfigurationStyle(PreUpdateAction):
     """Make sure users do not use .mk files to configure legacy check plguins"""
 
-    def __call__(self, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD):
             return
         base_config.load_all_plugins(
@@ -703,7 +697,7 @@ class PreUpdateDeprecatedConfigurationStyle(PreUpdateAction):
             return
         raise MKUserError(
             None,
-            "Loading config variables for legacy check plugins is no longer supported. "
+            "Loading config variables for legacy check plug-ins is no longer supported. "
             f"Please remove the following variables from your .mk files: {', '.join(sorted(problematic_variables))}",
         )
 

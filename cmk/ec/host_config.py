@@ -49,7 +49,7 @@ class HostConfig:
             )
 
     def _update_cache_after_core_restart(self) -> bool:
-        """Once the core reports a restart update the cache
+        """Once the core reports a restart update the cache.
 
         Returns:
             False in case the update failed, otherwise True.
@@ -59,8 +59,8 @@ class HostConfig:
             if self._cache_timestamp is None or self._cache_timestamp < timestamp:
                 self._update_cache()
                 self._cache_timestamp = timestamp
-        except Exception as e:
-            self._logger.error(f"Cannot get host info from core: {e}")
+        except Exception:
+            self._logger.exception("Cannot get host info from core.")
             return False
         return True
 

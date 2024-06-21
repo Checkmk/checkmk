@@ -3,23 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
-import cmk.gui.livestatus_utils.commands.downtimes as downtimes
 from cmk.gui import sites
 from cmk.gui.config import load_config
+from cmk.gui.livestatus_utils.commands import downtimes
 from cmk.gui.session import SuperUserContext
 
 
 @pytest.fixture(name="dates")
 def _dates():
     return (
-        dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC")),
-        dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC")),
+        dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC")),
+        dt.datetime(1970, 1, 2, tzinfo=ZoneInfo("UTC")),
     )
 
 
@@ -48,8 +48,8 @@ def test_host_downtime(
 
 
 @pytest.mark.usefixtures("request_context")
-def test_host_downtime_with_services(  # type: ignore[no-untyped-def]
-    mock_livestatus, dates
+def test_host_downtime_with_services(
+    mock_livestatus: MockLiveStatusConnection, dates: tuple[dt.datetime, dt.datetime]
 ) -> None:
     start_time, end_time = dates
 
@@ -99,14 +99,11 @@ def test_hostgroup_host_downtime(
             ]
         )
         live.expect_query(
-            "GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2"
-        )
-        live.expect_query(
-            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
             match_type="ellipsis",
         )
         live.expect_query(
-            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom",
             match_type="ellipsis",
         )
 
@@ -137,18 +134,15 @@ def test_hostgroup_host_downtime_with_services(
             ]
         )
         live.expect_query(
-            "GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2"
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
         live.expect_query(
             "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom",
             match_type="ellipsis",
         )
         live.expect_query(
-            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
-            match_type="ellipsis",
-        )
-        live.expect_query(
-            "GET services\nColumns: host_name description\nFilter: host_name = heute\nFilter: host_name = example.com\nOr: 2"
+            "GET services\nColumns: host_name description\nFilter: host_name = example.com\nFilter: host_name = heute\nOr: 2"
         )
         live.expect_query(
             "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom",
@@ -242,14 +236,11 @@ def test_servicegroup_service_downtime_and_hosts(
         )
 
         live.expect_query(
-            "GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2"
-        )
-        live.expect_query(
-            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;...;0;86400;16;0;120;;Boom",
             match_type="ellipsis",
         )
         live.expect_query(
-            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;...;0;86400;16;0;120;;Boom",
             match_type="ellipsis",
         )
         downtimes.schedule_servicegroup_service_downtime(

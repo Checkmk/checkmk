@@ -6,10 +6,11 @@
 
 # mypy: disable-error-code="arg-type"
 
-import cmk.base.plugins.agent_based.kernel
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
+
+import cmk.plugins.collection.agent_based.kernel
+from cmk.agent_based.v2 import get_rate, get_value_store
 
 #   .--kernel--Counters----------------------------------------------------.
 #   |                ____                  _                               |
@@ -22,7 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_
 #   |  Check page faults, context switches and process creations           |
 #   '----------------------------------------------------------------------'
 
-kernel_counter_names = cmk.base.plugins.agent_based.kernel.KERNEL_COUNTER_NAMES
+kernel_counter_names = cmk.plugins.collection.agent_based.kernel.KERNEL_COUNTER_NAMES
 
 kernel_metrics_names = {
     "ctxt": "context_switches",

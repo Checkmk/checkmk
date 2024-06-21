@@ -10,7 +10,7 @@ from types import ModuleType
 
 import pytest
 
-from tests.testlib import import_module_hack
+from tests.unit.import_module_hack import import_module_hack
 
 from cmk.utils.mailbox import _active_check_main_core
 
@@ -193,9 +193,9 @@ def test_ac_check_mail_loop(
     ],
 )
 def test_regex_pattern(check_mail_loop: ModuleType, subject: str) -> None:
-    assert check_mail_loop._regex_pattern(subject).match(f"{subject} a b").groups() == (
-        "a",
-        "b",
+    assert check_mail_loop.subject_regex(subject).match(f"{subject} 123 45").groups() == (
+        "123",
+        "45",
     )
 
 

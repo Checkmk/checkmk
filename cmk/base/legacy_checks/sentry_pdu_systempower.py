@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import equals, SNMPTree
 
 # .1.3.6.1.4.1.1718.3.1.6.0 2111
 
@@ -17,7 +18,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
 
 def parse_sentry_pdu_systempower(string_table):
-    return {"Power Supply System": {"power": (int(string_table[0][0]), {})}}
+    return (
+        {"Power Supply System": {"power": (int(string_table[0][0]), {})}} if string_table else None
+    )
 
 
 def discover_sentry_pdu_systempower(section):

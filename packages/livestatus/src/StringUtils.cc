@@ -12,6 +12,7 @@
 #include <cctype>
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>
 
 #include "livestatus/OStreamStateSaver.h"
 
@@ -50,13 +51,6 @@ std::tuple<std::string, std::string> splitCompositeKey2(
                             mk::rstrip(composite_key.substr(semicolon + 1)));
 }
 
-std::tuple<std::string, std::string, std::string> splitCompositeKey3(
-    const std::string &composite_key) {
-    const auto &[part1, rest] = splitCompositeKey2(composite_key);
-    const auto &[part2, part3] = splitCompositeKey2(rest);
-    return {part1, part2, part3};
-}
-
 std::string join(const std::vector<std::string> &values,
                  const std::string &separator) {
     std::string result;
@@ -79,10 +73,6 @@ std::string lstrip(const std::string &str, const std::string &chars) {
 std::string rstrip(const std::string &str, const std::string &chars) {
     auto pos = str.find_last_not_of(chars);
     return pos == std::string::npos ? "" : str.substr(0, pos + 1);
-}
-
-std::string strip(const std::string &str, const std::string &chars) {
-    return rstrip(lstrip(str, chars), chars);
 }
 
 std::ostream &operator<<(std::ostream &os, const escape_nonprintable &enp) {
@@ -150,14 +140,6 @@ std::string replace_chars(const std::string &str,
         result[i++] = replacement;
     }
     return result;
-}
-
-std::string from_multi_line(const std::string &str) {
-    return replace_all(str, "\n", R"(\n)");
-}
-
-std::string to_multi_line(const std::string &str) {
-    return replace_all(str, R"(\n)", "\n");
 }
 
 std::string ipv4ToString(in_addr_t ipv4_address) {
@@ -250,6 +232,38 @@ bool is_utf8(std::string_view s) {
         }
     }
     return true;
+}
+
+void skip_whitespace(std::string_view &str) {
+    str.remove_prefix(
+        std::min(str.size(), str.find_first_not_of(mk::whitespace)));
+}
+
+std::string next_argument(std::string_view &str) {
+    skip_whitespace(str);
+    if (str.empty()) {
+        throw std::runtime_error("missing argument");
+    }
+    constexpr auto quote = '\'';
+    if (!str.starts_with(quote)) {
+        std::string result{str.substr(0, str.find_first_of(mk::whitespace))};
+        str.remove_prefix(result.size());
+        return result;
+    }
+    std::string result;
+    while (true) {
+        str.remove_prefix(1);
+        auto pos = str.find(quote);
+        if (pos == std::string_view::npos) {
+            throw std::runtime_error("missing closing quote");
+        }
+        result += str.substr(0, pos);
+        str.remove_prefix(pos + 1);
+        if (!str.starts_with(quote)) {
+            return result;
+        }
+        result += quote;
+    }
 }
 
 }  // namespace mk

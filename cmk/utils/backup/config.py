@@ -12,11 +12,17 @@ line: mkbackup should not completely stop working due to eg. one invalid target 
 
 from __future__ import annotations
 
+import ast
 from collections.abc import Mapping, MutableMapping
+from os import getuid
 from pathlib import Path
+from stat import S_IMODE, S_IWOTH
+from typing import Any
 
 from pydantic import BaseModel, PrivateAttr
 
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
 from cmk.utils.store import load_object_from_file, save_object_to_file
 from cmk.utils.version import is_cma
@@ -51,12 +57,26 @@ class CMASystemConfig(BaseModel, frozen=True):
 
     @classmethod
     def load(cls, path: Path) -> CMASystemConfig:
-        return cls.construct(
-            **load_object_from_file(
-                path,
-                default={"targets": {}},
-            )
-        )
+        data: dict[str, Any] = {"targets": {}}
+        # The default CMESystemConfig file (/etc/cma/backup.conf) has special permissions
+        # The file is group-owned by omd. To fix this in the appliance will
+        # take more time, considering the compatibility with older versions
+        # So we check for owner and world and don't care for group...
+        try:
+            if path.exists():
+                if path.resolve() == Path("/etc/cma/backup.conf"):
+                    stat = path.stat()
+                    world_writable = S_IMODE(stat.st_mode) & S_IWOTH != 0
+                    if stat.st_uid not in [0, getuid()] or world_writable:
+                        raise MKGeneralException(
+                            _("/etc/cma/backup.conf has wrong permissions. Refusing to read file")
+                        )
+                data = ast.literal_eval(path.read_text())
+        except (ValueError, SyntaxError, OSError, PermissionError, UnicodeDecodeError):
+            # Note: MKGeneralException is explicitly not caught
+            pass
+
+        return cls.model_construct(**data)
 
 
 class Config(BaseModel, frozen=True):
@@ -86,9 +106,9 @@ class Config(BaseModel, frozen=True):
     ) -> Config:
         return cls(
             site=SiteConfig.load(path_site),
-            cma_system=CMASystemConfig.load(path_cma_system)
-            if is_cma()
-            else CMASystemConfig(targets={}),
+            cma_system=(
+                CMASystemConfig.load(path_cma_system) if is_cma() else CMASystemConfig(targets={})
+            ),
             path_site=path_site,
         )
 

@@ -90,6 +90,7 @@ def check_certificate_against_public_key(
     public_key: rsa.RSAPublicKey,
 ) -> None:
     # Check if the signature of the certificate matches the public key
+    assert cert.signature_hash_algorithm is not None
     public_key.verify(
         cert.signature,
         cert.tbs_certificate_bytes,

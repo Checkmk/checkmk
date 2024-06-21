@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal
-
-from typing_extensions import TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 
 class BasicSettingsRequired(TypedDict):
@@ -63,10 +61,10 @@ class StatusConnectionRequired(TypedDict):
     connection: Connection
     proxy: Proxy
     connect_timeout: int
-    persistent_connection: bool
-    url_prefix: str
+    persistent_connection: NotRequired[bool]
+    url_prefix: NotRequired[str]
     status_host: StatusHost
-    disable_in_status_gui: bool
+    disable_in_status_gui: NotRequired[bool]
 
 
 class ConfigurationConnection(TypedDict, total=False):

@@ -4,14 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.alcatel import (
-    ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS,
-    inventory_alcatel_temp,
-)
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.alcatel import DETECT_ALCATEL
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.alcatel import DETECT_ALCATEL
+
+
+def parse_alcatel_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def discover_alcatel_temp(info):
+    with_slot = len(info) != 1
+    for index, row in enumerate(info):
+        for oid, name in enumerate(["Board", "CPU"]):
+            if row[oid] != "0":
+                if with_slot:
+                    yield f"Slot {index + 1} {name}", {}
+                else:
+                    yield name, {}
 
 
 def check_alcatel_temp(item, params, info):
@@ -32,14 +44,17 @@ def check_alcatel_temp(item, params, info):
 
 
 check_info["alcatel_temp"] = LegacyCheckDefinition(
+    parse_function=parse_alcatel_temp,
     detect=DETECT_ALCATEL,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.800.1.1.1.3.1.1.3.1",
         oids=["4", "5"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_alcatel_temp,
+    discovery_function=discover_alcatel_temp,
     check_function=check_alcatel_temp,
     check_ruleset_name="temperature",
-    check_default_parameters=ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS,
+    check_default_parameters={
+        "levels": (45.0, 50.0),
+    },
 )

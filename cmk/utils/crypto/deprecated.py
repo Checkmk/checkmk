@@ -10,8 +10,8 @@ from typing import Literal
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import algorithms, Cipher, modes
 
-import cmk.utils.crypto.certificate as certificate
-from cmk.utils.crypto import HashAlgorithm
+from cmk.utils.crypto import certificate, keys
+from cmk.utils.crypto.types import HashAlgorithm
 
 
 class AesCbcCipher:
@@ -50,9 +50,9 @@ class AesCbcCipher:
         return block[: -block[-1]]
 
 
-def encrypt_for_rsa_key(recipient_key: certificate.RsaPublicKey, data: bytes) -> bytes:
+def encrypt_for_rsa_key(recipient_key: keys.PublicKey, data: bytes) -> bytes:
     """Deprecated. Do not use."""
-    return recipient_key._key.encrypt(
+    return recipient_key.get_raw_rsa_key().encrypt(
         data,
         padding.OAEP(
             mgf=padding.MGF1(algorithm=HashAlgorithm.Sha1.value),
@@ -62,9 +62,9 @@ def encrypt_for_rsa_key(recipient_key: certificate.RsaPublicKey, data: bytes) ->
     )
 
 
-def decrypt_with_rsa_key(recipient_key: certificate.RsaPrivateKey, data: bytes) -> bytes:
+def decrypt_with_rsa_key(recipient_key: keys.PrivateKey, data: bytes) -> bytes:
     """Deprecated. Do not use."""
-    return recipient_key._key.decrypt(
+    return recipient_key.get_raw_rsa_key().decrypt(
         data,
         padding.OAEP(
             mgf=padding.MGF1(algorithm=HashAlgorithm.Sha1.value),

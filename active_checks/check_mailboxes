@@ -53,6 +53,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
         "--mailbox",
         type=str,
         nargs="+",
+        action="extend",
         help="mailbox to check. Can appear repeatedly to monitor multiple mailboxes",
     )
 

@@ -15,8 +15,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.lgp import DETECT_LGP
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.lgp import DETECT_LGP
 
 
 def inventory_lgp_pdu_info(info):
@@ -37,7 +38,12 @@ def check_lgp_pdu_info(item, params, info):
     return (3, "Device can not be found in SNMP output.")
 
 
+def parse_lgp_pdu_info(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["lgp_pdu_info"] = LegacyCheckDefinition(
+    parse_function=parse_lgp_pdu_info,
     detect=DETECT_LGP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.8.20.1",

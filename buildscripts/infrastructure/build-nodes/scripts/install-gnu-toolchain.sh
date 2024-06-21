@@ -22,26 +22,18 @@ BINUTILS_VERSION="2.41"
 BINUTILS_ARCHIVE_NAME="binutils-${BINUTILS_VERSION}.tar.gz"
 BINUTILS_URL="${MIRROR_URL}binutils/${BINUTILS_ARCHIVE_NAME}"
 
-GDB_VERSION="13.2"
-GDB_ARCHIVE_NAME="gdb-${GDB_VERSION}.tar.gz"
-GDB_URL="${MIRROR_URL}gdb/${GDB_ARCHIVE_NAME}"
-
 DIR_NAME=gcc-${GCC_VERSION}
-TARGET_DIR="/opt"
+TARGET_DIR="${TARGET_DIR:-/opt}"
 PREFIX=${TARGET_DIR}/${DIR_NAME}
 BUILD_DIR="${TARGET_DIR}/src"
 
 # Increase this to enforce a recreation of the build cache
-# NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
-# Only the GCC_VERSION is part of the cache key, so be sure to bump this, too,
-# e.g. when changing the binutils or gdb version!
-BUILD_ID=1
+BUILD_ID="${BINUTILS_VERSION}-1"
 
 download_sources() {
     # Get the sources from nexus or upstream
     mirrored_download "${BINUTILS_ARCHIVE_NAME}" "${BINUTILS_URL}"
     mirrored_download "${GCC_ARCHIVE_NAME}" "${GCC_URL}"
-    mirrored_download "${GDB_ARCHIVE_NAME}" "${GDB_URL}"
 
     # Some GCC dependency download optimization
     local FILE_NAME="gcc-${GCC_VERSION}-with-prerequisites.tar.gz"
@@ -63,6 +55,10 @@ build_binutils() {
     log "Build binutils-${BINUTILS_VERSION}"
     cd "${BUILD_DIR}"
     tar xzf binutils-${BINUTILS_VERSION}.tar.gz
+    # remove potential older build directories
+    if [[ -d binutils-${BINUTILS_VERSION}-build ]]; then
+        rm -rf "binutils-${BINUTILS_VERSION}-build"
+    fi
     mkdir binutils-${BINUTILS_VERSION}-build
     cd binutils-${BINUTILS_VERSION}-build
     # HACK: Dispatching on the distro is not nice, we should really check the versions.
@@ -88,6 +84,10 @@ build_gcc() {
     log "Build gcc-${GCC_VERSION}"
     cd "${BUILD_DIR}"
     tar xzf "gcc-${GCC_VERSION}-with-prerequisites.tar.gz"
+    # remove potential older build directories
+    if [[ -d gcc-${GCC_VERSION}-build ]]; then
+        rm -rf "gcc-${GCC_VERSION}-build"
+    fi
     mkdir "gcc-${GCC_VERSION}-build"
     cd "gcc-${GCC_VERSION}-build"
     "../gcc-${GCC_VERSION}/configure" \
@@ -96,21 +96,6 @@ build_gcc() {
         --enable-linker-build-id \
         --disable-multilib \
         --enable-languages=c,c++
-    make -j4
-    make install
-}
-
-build_gdb() {
-    log "Build gdb-${GDB_VERSION}"
-    cd "${BUILD_DIR}"
-    tar xzf gdb-${GDB_VERSION}.tar.gz
-    mkdir gdb-${GDB_VERSION}-build
-    cd gdb-${GDB_VERSION}-build
-    ../gdb-${GDB_VERSION}/configure \
-        --prefix="${PREFIX}" \
-        CC="${PREFIX}/bin/gcc-${GCC_MAJOR}" \
-        CXX="${PREFIX}/bin/g++-${GCC_MAJOR}" \
-        "$(python -V 2>&1 | grep -q 'Python 2\.4\.' && echo "--with-python=no")"
     make -j4
     make install
 }
@@ -124,9 +109,9 @@ set_symlinks() {
     # our /usr/bin/as symlink. As an intermediate fix, we additionally install the link to /opt/bin.
     # As a follow-up, we should move everything to /opt/bin - but that needs separate testing.
     [ -d "${TARGET_DIR}/bin" ] || mkdir -p "${TARGET_DIR}/bin"
-    ln -sf "${PREFIX}/bin/"* ${TARGET_DIR}/bin
-    ln -sf "${PREFIX}/bin/gcc-${GCC_MAJOR}" ${TARGET_DIR}/bin/gcc
-    ln -sf "${PREFIX}/bin/g++-${GCC_MAJOR}" ${TARGET_DIR}/bin/g++
+    ln -sf "${PREFIX}/bin/"* "${TARGET_DIR}"/bin
+    ln -sf "${PREFIX}/bin/gcc-${GCC_MAJOR}" "${TARGET_DIR}"/bin/gcc
+    ln -sf "${PREFIX}/bin/g++-${GCC_MAJOR}" "${TARGET_DIR}"/bin/g++
 
     # Save distro executables under [name]-orig. It is used by some build steps
     # later that need to use the distro original compiler. For some platforms
@@ -150,7 +135,6 @@ build_package() {
     download_sources
     build_binutils
     build_gcc
-    build_gdb
 
     cd "$TARGET_DIR"
     rm -rf "$TARGET_DIR/src"
@@ -160,12 +144,12 @@ test_packages() {
     for i in $(dpkg -L binutils | grep '/bin/'); do
         this_version=$($i --version)
         if [[ "$this_version" == *"Binutils)"* ]]; then
-            echo "$this_version" | grep -q "$BINUTILS_VERSION" >/dev/null 2>&1 || (
-                echo "Invalid version: $(i)"
+            echo "$this_version" | grep -q "${BINUTILS_VERSION}" >/dev/null 2>&1 || (
+                echo "Invalid version: ${i}: ${this_version}!=${BINUTILS_VERSION}"
                 exit 1
             )
         else
-            echo "$i not of interest"
+            echo "${i} not of interest"
             # e.g. /usr/bin/dwp would report "GNU dwp (GNU Binutils for Ubuntu) 2.34"
         fi
     done
@@ -178,4 +162,3 @@ set_symlinks
 
 test_packages
 test_package "/usr/bin/gcc --version" "$GCC_VERSION"
-test_package "/usr/bin/gdb --version" "$GDB_VERSION"

@@ -14,8 +14,33 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Final, NamedTuple
 
-import telnetlib3  # type: ignore[import]
+import telnetlib3  # type: ignore[import-untyped]
 import yaml
+
+# check_mk section, example of output
+# <<<check_mk>>>
+# Version: 2.3.0b1
+# BuildDate: Jan  5 2024
+# AgentOS: windows
+# OSName: Microsoft Windows 10 Pro
+# OSVersion: 10.0.19045
+# OSType: windows
+# Hostname: klapp-9999
+# Architecture: 64bit
+# Time: 2024-01-05T14:47:46+0100
+# WorkingDirectory: C:\Program Files (x86)\checkmk\service
+# ConfigFile: C:\Program Files (x86)\checkmk\service\check_mk.yml
+# LocalConfigFile: C:\ProgramData\checkmk\agent\check_mk.user.yml
+# AgentDirectory: C:\Program Files (x86)\checkmk\service
+# PluginsDirectory: C:\ProgramData\checkmk\agent\plugins
+# StateDirectory: C:\ProgramData\checkmk\agent\state
+# ConfigDirectory: C:\ProgramData\checkmk\agent\config
+# TempDirectory: C:\ProgramData\checkmk\agent\tmp
+# LogDirectory: C:\ProgramData\checkmk\agent\log
+# SpoolDirectory: C:\ProgramData\checkmk\agent\spool
+# LocalDirectory: C:\ProgramData\checkmk\agent\local
+# OnlyFrom:
+
 
 YamlDict = dict[str, dict[str, Any]]
 INTEGRATION_PORT: Final = 25998
@@ -23,8 +48,8 @@ AGENT_EXE_NAME: Final = "check_mk_agent.exe"
 _HOST: Final = "localhost"
 USER_YAML_CONFIG: Final = "check_mk.user.yml"
 SECTION_COUNT: Final = 18
-ONLY_FROM_LINE: Final = 17
-CTL_STATUS_LINE: Final = 19
+ONLY_FROM_LINE: Final = 21
+CTL_STATUS_LINE: Final = ONLY_FROM_LINE + 2
 PYTHON_CAB_NAME: Final = "python-3.cab"
 CMK_UPDATER_PY: Final = "cmk_update_agent.py"
 CMK_UPDATER_CHECKMK_PY: Final = "cmk_update_agent.checkmk.py"
@@ -181,7 +206,7 @@ def unpack_modules(root_dir: Path, *, module_dir: Path) -> int:
         subprocess.Popen(
             [
                 "expand.exe",
-                f"{root_dir / PYTHON_CAB_NAME }",
+                f"{root_dir / PYTHON_CAB_NAME}",
                 "-F:*",
                 f"{module_dir}",
             ],

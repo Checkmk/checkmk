@@ -322,6 +322,25 @@ def test_api_endpoint_url(monkeypatch: MonkeyPatch, value: str, result: str) -> 
                 "HOST_ESCAPE_PLUGIN_OUTPUT": "0",  # variable set via the rule
             },
         ),
+        # special case 'check_mk-ps' with HTML Long output
+        (
+            {
+                "SERVICE_ESCAPE_PLUGIN_OUTPUT": "0",
+                "SERVICECHECKCOMMAND": "check_mk-ps",
+                "SERVICEOUTPUT": "<h1>A</h1>",
+                "LONGSERVICEOUTPUT": r"Processes: 1\nVirtual memory: 2.02 MiB\nResident memory: 10.2 MiB\nCPU: 0%\nProcess handles: 223\nRunning for: 11 days 12 hours\n<table><tr><th>name</th><th>user</th><th>virtual size</th><th>resident size</th><th>creation time</th><th>cpu usage (user space)</th><th>cpu usage (kernel space)</th><th>pid</th><th>cpu usage</th><th>pagefile usage</th><th>handle count</th></tr><tr><td>C:&bsol;Windows&bsol;system32&bsol;winlogon.exe</td><td>&bsol;&bsol;NT AUTHORITY&bsol;SYSTEM</td><td>2.02 MiB</td><td>10.2 MiB</td><td>Apr 20 2024 21:19:21</td><td>0.0%</td><td>0.0%</td><td>620</td><td>0.0%</td><td>2</td><td>223</td></tr></table>",
+                "HOSTOUTPUT": "<h1>C</h1>",
+                "LONGHOSTOUTPUT": "<h1>D</h1>",
+            },
+            {
+                "SERVICECHECKCOMMAND": "check_mk-ps",
+                "SERVICEOUTPUT": "<h1>A</h1>",
+                "LONGSERVICEOUTPUT": r"Processes: 1\nVirtual memory: 2.02 MiB\nResident memory: 10.2 MiB\nCPU: 0%\nProcess handles: 223\nRunning for: 11 days 12 hours\n<table><tr><th>name</th><th>user</th><th>virtual size</th><th>resident size</th><th>creation time</th><th>cpu usage (user space)</th><th>cpu usage (kernel space)</th><th>pid</th><th>cpu usage</th><th>pagefile usage</th><th>handle count</th></tr><tr><td>C:\Windows\system32\winlogon.exe</td><td>\\NT AUTHORITY\SYSTEM</td><td>2.02 MiB</td><td>10.2 MiB</td><td>Apr 20 2024 21:19:21</td><td>0.0%</td><td>0.0%</td><td>620</td><td>0.0%</td><td>2</td><td>223</td></tr></table>",
+                "HOSTOUTPUT": "&lt;h1&gt;C&lt;/h1&gt;",
+                "LONGHOSTOUTPUT": "&lt;h1&gt;D&lt;/h1&gt;",
+                "SERVICE_ESCAPE_PLUGIN_OUTPUT": "0",  # variable set via the rule
+            },
+        ),
     ],
 )
 def test_escape_context(input_context: dict[str, str], expected_context: Mapping[str, str]) -> None:
@@ -330,55 +349,152 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
 
 
 @pytest.mark.parametrize(
-    "response, result_map, expected_exit_msg, expected_exit_code",
+    "response, matchers, expected_exit_msg, expected_exit_code",
     [
         (
             Mock(requests.models.Response, status_code=200, text="whatever"),
-            {},
+            [],
             "Details for Status Code are not defined\n200: OK\n",
             3,
         ),
         (
             Mock(requests.models.Response, status_code=200, text="whatever"),
-            {
-                (400, 500): utils.StateInfo(state=0, type="str", title="some title"),
-            },
+            [
+                (
+                    utils.StatusCodeMatcher(range=(400, 500)),
+                    utils.StateInfo(state=0, type="str", title="some title"),
+                ),
+            ],
             "Details for Status Code are not defined\n200: OK\n",
             3,
         ),
         (
             Mock(requests.models.Response, status_code=200, text="whatever"),
-            {
-                (200, 300): utils.StateInfo(state=0, type="str", title="some title"),
-            },
-            "some title\n200: OK\n",
+            [
+                (
+                    utils.StatusCodeMatcher(range=(200, 300)),
+                    utils.StateInfo(state=0, type="str", title="some title"),
+                ),
+            ],
+            "some title: whatever\n200: OK\n",
             0,
         ),
         (
             Mock(requests.models.Response, status_code=201, text="whatever"),
-            {
-                (200, 300): utils.StateInfo(state=0, type="str", title="some title"),
-            },
-            "some title\n200: OK\n",
+            [
+                (
+                    utils.StatusCodeMatcher(range=(200, 300)),
+                    utils.StateInfo(state=0, type="str", title="some title"),
+                ),
+            ],
+            "some title: whatever\n201: Created\n",
             0,
         ),
         (
             Mock(requests.models.Response, status_code=300, text="whatever"),
-            {
-                (200, 300): utils.StateInfo(state=0, type="str", title="some title"),
-            },
-            "some title\n200: OK\n",
+            [
+                (
+                    utils.StatusCodeMatcher(range=(200, 300)),
+                    utils.StateInfo(state=0, type="str", title="some title"),
+                ),
+            ],
+            "some title: whatever\n300: Multiple Choices\n",
             0,
+        ),
+        (
+            Mock(
+                requests.models.Response,
+                status_code=200,
+                text="whatever",
+                json=lambda: {"code": "all good"},
+            ),
+            [
+                (
+                    utils.JsonFieldMatcher(field="not_found", value="all good"),
+                    utils.StateInfo(state=0, type="str", title="some title"),
+                ),
+            ],
+            "Details for Status Code are not defined\n200: OK\n",
+            3,
+        ),
+        (
+            Mock(
+                requests.models.Response,
+                status_code=200,
+                text="whatever",
+                json=lambda: {"code": "all good"},
+            ),
+            [
+                (
+                    utils.JsonFieldMatcher(field="code", value="wrong value"),
+                    utils.StateInfo(state=0, type="str", title="some title"),
+                ),
+            ],
+            "Details for Status Code are not defined\n200: OK\n",
+            3,
+        ),
+        (
+            Mock(
+                requests.models.Response,
+                status_code=200,
+                text="whatever",
+                json=lambda: {"code": "all good"},
+            ),
+            [
+                (
+                    utils.JsonFieldMatcher(field="code", value="all good"),
+                    utils.StateInfo(state=0, type="str", title="some title"),
+                ),
+            ],
+            "some title: whatever\n200: OK\n",
+            0,
+        ),
+        (
+            Mock(
+                requests.models.Response,
+                status_code=200,
+                text="whatever",
+                json=lambda: {"code": "all good"},
+            ),
+            [
+                (
+                    utils.StatusCodeMatcher(range=(200, 300)).and_(
+                        utils.JsonFieldMatcher(field="code", value="all good")
+                    ),
+                    utils.StateInfo(state=0, type="str", title="some title"),
+                ),
+            ],
+            "some title: whatever\n200: OK\n",
+            0,
+        ),
+        (
+            Mock(
+                requests.models.Response,
+                status_code=400,
+                text="whatever",
+                json=lambda: {"code": "all good"},
+            ),
+            [
+                (
+                    utils.StatusCodeMatcher(range=(200, 300)).and_(
+                        utils.JsonFieldMatcher(field="code", value="all good")
+                    ),
+                    utils.StateInfo(state=0, type="str", title="some title"),
+                ),
+            ],
+            "Details for Status Code are not defined\n400: Bad Request\n",
+            3,
         ),
     ],
 )
-def test_process_by_result_map(
-    response,
-    result_map,
-    expected_exit_msg,
-    expected_exit_code,
-):
+def test_process_by_matchers(
+    response: Mock,
+    matchers: list[tuple[utils.ResponseMatcher, utils.StateInfo]],
+    expected_exit_msg: str,
+    expected_exit_code: int,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     with pytest.raises(SystemExit) as sys_exit:
-        utils.process_by_result_map(response, result_map)
-        assert sys_exit.value == expected_exit_msg
-        assert sys_exit.value.code == expected_exit_code
+        utils.process_by_matchers(response, matchers)
+    assert sys_exit.value.code == expected_exit_code
+    assert capsys.readouterr().err == expected_exit_msg

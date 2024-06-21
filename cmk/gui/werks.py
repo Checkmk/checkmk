@@ -7,17 +7,13 @@
 # log
 
 import itertools
-import os
-import re
 import time
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Container, Iterable, Iterator
 from functools import partial
-from typing import Any, cast, Literal
+from typing import Any, cast, Literal, TypedDict
 
-from typing_extensions import TypedDict
-
-import cmk.utils.paths
 import cmk.utils.werks.werk as utils_werks_werk
+from cmk.utils.man_pages import make_man_page_path_map
 from cmk.utils.version import __version__, Edition, Version
 from cmk.utils.werks.acknowledgement import is_acknowledged
 from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
@@ -55,7 +51,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageRegistry, PageResult
 from cmk.gui.table import Table, table_element
-from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive, strip_tags
+from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -72,6 +68,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
+from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.werks.models import Compatibility, Werk
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -81,10 +78,6 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("info")(AboutCheckmkPage)
     page_registry.register_page("change_log")(ChangeLogPage)
     page_registry.register_page_handler("werk", page_werk)
-
-
-def render_description(description: str) -> HTML:
-    return HTML(description)
 
 
 def get_werk_by_id(werk_id: int) -> Werk:
@@ -230,7 +223,7 @@ class ChangeLogPage(Page):
         return menu
 
 
-def handle_acknowledgement():
+def handle_acknowledgement() -> None:
     if not transactions.check_transaction():
         return
 
@@ -274,9 +267,7 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
     )
 
 
-def _extend_display_dropdown(  # type: ignore[no-untyped-def]
-    menu, werk_table_options: WerkTableOptions
-) -> None:
+def _extend_display_dropdown(menu: PageMenu, werk_table_options: WerkTableOptions) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
     display_dropdown.topics.insert(
         0,
@@ -297,28 +288,26 @@ def _extend_display_dropdown(  # type: ignore[no-untyped-def]
 
 def _render_werk_options_form(werk_table_options: WerkTableOptions) -> HTML:
     with output_funnel.plugged():
-        html.begin_form("werks")
-        html.hidden_field("wo_set", "set")
+        with html.form_context("werks"):
+            html.hidden_field("wo_set", "set")
 
-        _show_werk_options_controls()
+            _show_werk_options_controls()
 
-        html.open_div(class_="side_popup_content")
-        for name, height, vs, _default_value in _werk_table_option_entries():
+            html.open_div(class_="side_popup_content")
+            for name, height, vs, _default_value in _werk_table_option_entries():
 
-            def renderer(
-                name: _WerkTableOptionColumns = name,
-                vs: ValueSpec = vs,
-                werk_table_options: WerkTableOptions = werk_table_options,
-            ) -> None:
-                vs.render_input("wo_" + name, werk_table_options[name])
+                def renderer(
+                    name: _WerkTableOptionColumns = name,
+                    vs: ValueSpec = vs,
+                    werk_table_options: WerkTableOptions = werk_table_options,
+                ) -> None:
+                    vs.render_input("wo_" + name, werk_table_options[name])
 
-            html.render_floating_option(name, height, vs.title(), renderer)
-        html.close_div()
+                html.render_floating_option(name, height, vs.title(), renderer)
+            html.close_div()
+            html.hidden_fields()
 
-        html.hidden_fields()
-        html.end_form()
-
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def _show_werk_options_controls() -> None:
@@ -381,7 +370,7 @@ def page_werk() -> None:
         css="werkcomp werkcomp%s" % _to_ternary_compatibility(werk),
     )
     werk_table_row(
-        _("Description"), render_description(werk.description), css="nowiki"
+        _("Description"), HTML.without_escaping(werk.description), css="nowiki"
     )  # TODO: remove nowiki
 
     html.close_table()
@@ -590,7 +579,7 @@ def render_unacknowleged_werks() -> None:
     werks = unacknowledged_incompatible_werks()
     if werks and not request.has_var("show_unack"):
         html.open_div(class_=["warning"])
-        html.write_text(
+        html.write_text_permissive(
             _("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks)
         )
         html.br()
@@ -741,7 +730,7 @@ def werk_matches_options(werk: Werk, werk_table_options: WerkTableOptions) -> bo
 
     if werk_table_options["werk_content"]:
         search_text = werk_table_options["werk_content"].lower()
-        text = werk.title + strip_tags(render_description(werk.description))
+        text = werk.title + strip_tags(werk.description)
         if search_text not in text.lower():
             return False
 
@@ -791,7 +780,7 @@ def render_werk_link(werk: Werk) -> HTML:
 
 def render_werk_title(werk: Werk) -> HTML:
     title = werk.title
-    # if the title begins with the name or names of check plugins, then
+    # if the title begins with the name or names of check plug-ins, then
     # we link to the man pages of those checks
     if ":" in title:
         parts = title.split(":", 1)
@@ -840,23 +829,21 @@ def render_nowiki_werk_description(  # pylint: disable=too-many-branches
                 elif not line.strip() and not in_code:
                     html.p("")
                 else:
-                    html.write_text(line + "\n")
+                    html.write_text_permissive(line + "\n")
 
         if in_list:
             html.close_ul()
 
         html.close_p()
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def insert_manpage_links(text: str) -> HTML:
     parts = text.replace(",", " ").split()
+    known_checks = _get_known_checks()
     new_parts: list[HTML] = []
-    check_regex = re.compile(r"[-_\.a-z0-9]")
     for part in parts:
-        if check_regex.match(part) and os.path.exists(
-            cmk.utils.paths.check_manpages_dir + "/" + part
-        ):
+        if part in known_checks:
             url = makeuri_contextless(
                 request,
                 [
@@ -867,5 +854,10 @@ def insert_manpage_links(text: str) -> HTML:
             )
             new_parts.append(HTMLWriter.render_a(content=part, href=url))
         else:
-            new_parts.append(escape_to_html(part))
-    return HTML(" ").join(new_parts)
+            new_parts.append(HTML.with_escaping(part))
+    return HTML.without_escaping(" ").join(new_parts)
+
+
+@request_memoize()
+def _get_known_checks() -> Container[str]:
+    return make_man_page_path_map(discover_families(raise_errors=False), PluginGroup.CHECKMAN.value)

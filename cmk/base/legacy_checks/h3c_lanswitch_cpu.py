@@ -19,7 +19,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, OIDEnd, SNMPTree
+
+from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree, StringTable
 
 
 def h3c_lanswitch_cpu_genitem(item):
@@ -67,7 +68,12 @@ def check_h3c_lanswitch_cpu(item, params, info):
     return (3, "%s not found" % item)
 
 
+def parse_h3c_lanswitch_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["h3c_lanswitch_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_h3c_lanswitch_cpu,
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com s"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.43.45.1.6.1.1.1",

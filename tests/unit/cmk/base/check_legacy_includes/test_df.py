@@ -9,7 +9,8 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single_coroutine
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 
 @pytest.mark.parametrize(
@@ -43,7 +44,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
             [
                 (
                     0,
-                    "Used: 42.71% - 42.8 GiB of 100 GiB",
+                    "Used: 42.71% - 46.0 GB of 108 GB",
                     [
                         ("fs_used", 43841.0, 82124.0, 92389.5, 0.0, 102655.0),
                         ("fs_free", 58814.0, None, None, 0.0, None),
@@ -53,7 +54,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
                 ),
                 (
                     0,
-                    "trend: +154 TiB / 24 hours",
+                    "trend: +169 TB / 24 hours",
                     [
                         ("growth", 161105947.82608697),
                         ("trend", 161105947.82608697, None, None, 0, 4277.291666666667),
@@ -73,7 +74,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
             [
                 (
                     0,
-                    "Used: 42.71% - 42.8 GiB of 100 GiB",
+                    "Used: 42.71% - 46.0 GB of 108 GB",
                     [
                         ("fs_used", 43841.0, 82124.0, 92389.5, 0.0, 102655.0),
                         ("fs_free", 58814.0, None, None, 0.0, None),
@@ -83,7 +84,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
                 ),
                 (
                     0,
-                    "trend: +154 TiB / 24 hours",
+                    "trend: +169 TB / 24 hours",
                     [
                         ("growth", 161105947.82608697),
                         ("trend", 161105947.82608697, None, None, 0, 4277.291666666667),
@@ -109,7 +110,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
             [
                 (
                     0,
-                    "Used: 42.71% - 42.8 GiB of 100 GiB",
+                    "Used: 42.71% - 46.0 GB of 108 GB",
                     [
                         ("fs_used", 43841.0, 82124.0, 92389.5, 0.0, 102655.0),
                         ("fs_free", 58814.0, None, None, 0.0, None),
@@ -119,7 +120,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
                 ),
                 (
                     0,
-                    "trend: +154 TiB / 24 hours",
+                    "trend: +169 TB / 24 hours",
                     [
                         ("growth", 161105947.82608697),
                         ("trend", 161105947.82608697, None, None, 0, 4277.291666666667),

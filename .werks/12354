@@ -1,4 +1,4 @@
-Title: Uneditable WATO rules: <i>"You are trying to edit a rule which does not exist anymore."</i>
+Title: Uneditable WATO rules: "You are trying to edit a rule which does not exist anymore."
 Class: fix
 Compatible: compat
 Component: wato
@@ -22,4 +22,3 @@ of single rules' values failed. That way, you can at least work with
 all of the other rules, and replace the offending ones.
 
 If this affects you, you can simply re-run cmk-update-config.
-

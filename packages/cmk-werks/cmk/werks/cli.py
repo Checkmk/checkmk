@@ -19,14 +19,14 @@ import sys
 import termios
 import time
 import tty
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from functools import cache
 from pathlib import Path
 from typing import Literal, NamedTuple, NoReturn
 
-from pydantic import BaseModel
-
+from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
+from .config import Config, load_config, try_load_current_version_from_defines_make
 from .convert import werkv1_metadata_to_werkv2_metadata
 from .format import format_as_werk_v1, format_as_werk_v2
 from .parse import WerkV2ParseResult
@@ -62,17 +62,6 @@ class Werk(NamedTuple):
     @property
     def date(self) -> datetime.datetime:
         return datetime.datetime.fromisoformat(self.content.metadata["date"])
-
-
-class Config(BaseModel):
-    editions: list[tuple[str, str]]
-    components: list[tuple[str, str]]
-    edition_components: dict[str, list[tuple[str, str]]]
-    classes: list[tuple[str, str, str]]
-    levels: list[tuple[str, str]]
-    compatible: list[tuple[str, str]]
-    online_url: str
-    current_version: str
 
 
 WerkVersion = Literal["v1", "v2"]
@@ -257,6 +246,13 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser_show.set_defaults(func=main_show)
 
+    # PREVIEW
+    parser_preview = subparsers.add_parser("preview", help="Preview html rendering of a werk")
+    parser_preview.add_argument(
+        "id",
+    )
+    parser_preview.set_defaults(func=main_preview)
+
     # URL
     parser_url = subparsers.add_parser("url", help="Show the online URL of a werk")
     parser_url.add_argument("id", type=int, help="werk ID")
@@ -309,51 +305,18 @@ def goto_werksdir() -> None:
         sys.exit(1)
 
 
-LAST_WERK: WerkId | None = None
-
-
 def get_last_werk() -> WerkId:
-    if LAST_WERK is None:
-        bail_out("No last werk known. Please specify id.")
-    return LAST_WERK
-
-
-@cache
-def get_valid_choices() -> dict[str, set[str]]:
-    return {
-        "component": {e[0] for e in all_components()},
-    }
-    # the following are checked on pydantic model level:
-    # "level": {e[0] for e in get_config().levels},
-    # "compatible": {e[0] for e in get_config().compatible},
-    # "class": {e[0] for e in get_config().classes},
-    # "edition": {e[0] for e in get_config().editions},
+    try:
+        with open(".last", encoding="utf-8") as f_last:
+            return WerkId(int(f_last.read()))
+    except Exception as e:
+        raise RuntimeError("No last werk known. Please specify id.") from e
 
 
 @cache
 def get_config() -> Config:
-    globals_: dict[str, object] = {}
-    with open("config", encoding="utf-8") as f_config:
-        exec(  # pylint: disable=exec-used # nosec B102 # BNS:aee528
-            f_config.read(), globals_, globals_
-        )
-
-    globals_.pop("__builtins__")
-    globals_["current_version"] = load_current_version()
-    return Config.model_validate(globals_)
-
-
-def load_config() -> None:
-    global LAST_WERK  # pylint: disable=global-statement
-    with open("config", encoding="utf-8") as f_config:
-        exec(  # pylint: disable=exec-used # nosec B102 # BNS:aee528
-            f_config.read(), globals(), globals()
-        )
-    try:
-        with open(".last", encoding="utf-8") as f_last:
-            LAST_WERK = WerkId(int(f_last.read()))
-    except Exception:  # pylint: disable=broad-exception-caught
-        LAST_WERK = None
+    current_version = try_load_current_version_from_defines_make(Path("../defines.make"))
+    return load_config(Path("config"), current_version=current_version)
 
 
 def load_werks() -> dict[WerkId, Werk]:
@@ -373,16 +336,6 @@ def save_last_werkid(wid: WerkId) -> None:
             f.write(f"{wid}\n")
     except OSError:
         pass
-
-
-def load_current_version() -> str:
-    with open("../defines.make", encoding="utf-8") as f:
-        for line in f:
-            if line.startswith("VERSION"):
-                version = line.split("=", 1)[1].strip()
-                return version
-
-    bail_out("Failed to read VERSION from defines.make")
 
 
 @cache
@@ -419,15 +372,7 @@ def load_werk(werk_path: Path) -> Werk:
         content=parsed,
     )
 
-    validate_werk(werk)
-
     return werk
-
-
-def validate_werk(werk: Werk) -> None:
-    for key, choices in get_valid_choices().items():
-        if (value := werk.content.metadata[key]) not in choices:
-            raise ValueError(f"Invalid value {value!r} for '{key}'")
 
 
 def save_werk(werk: Werk, werk_version: WerkVersion, destination: Path | None = None) -> None:
@@ -563,7 +508,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
     # in one class are orred. Multiple types are anded.
 
     werks: list[Werk] = list(load_werks().values())
-    versions = {werk.content.metadata["version"] for werk in werks}
+    versions = sorted({werk.content.metadata["version"] for werk in werks})
 
     filters: dict[str, list[str]] = {}
 
@@ -574,7 +519,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
         hit = False
         for tp, values in [
             ("edition", get_config().editions),
-            ("component", all_components()),
+            ("component", get_config().all_components()),
             ("level", get_config().levels),
             ("class", get_config().classes),
             ("version", versions),
@@ -630,8 +575,8 @@ def output_csv(werks: list[Werk]) -> None:
         # below.
         if isinstance(entry, tuple) and len(entry) == 2:
             name, alias = entry
-        elif isinstance(entry, str):  # TODO: Hmmm...
-            name, alias = entry, entry  # type: ignore[unreachable]
+        elif isinstance(entry, str):  # type: ignore[unreachable]  # TODO: Hmmm...
+            name, alias = entry, entry
         else:
             bail_out(f"invalid component {entry!r}")
 
@@ -754,13 +699,6 @@ def get_edition_components(edition: str) -> list[tuple[str, str]]:
     return get_config().components + get_config().edition_components.get(edition, [])
 
 
-def all_components() -> list[tuple[str, str]]:
-    c = get_config().components.copy()
-    for ed_components in get_config().edition_components.values():
-        c += ed_components
-    return c
-
-
 WERK_NOTES = """
     .---Werk----------------------------------------------------------------------.
     |                                                                             |
@@ -779,6 +717,9 @@ def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
     metadata: WerkMetadata = {}
+    werk_id = next_werk_id()
+    metadata["id"] = str(werk_id)
+
     # this is the metadata format of werkv1
     metadata["date"] = str(int(time.time()))
     metadata["version"] = get_config().current_version
@@ -791,9 +732,6 @@ def main_new(args: argparse.Namespace) -> None:
     metadata["component"] = input_choice("Component", get_edition_components(metadata["edition"]))
     metadata["level"] = input_choice("Level", get_config().levels)
     metadata["compatible"] = input_choice("Compatible", get_config().compatible)
-
-    werk_id = next_werk_id()
-    metadata["id"] = str(werk_id)
 
     werk_path = get_werk_filename(werk_id, get_werk_file_version())
     werk = Werk(
@@ -833,21 +771,24 @@ def main_url(args: argparse.Namespace) -> None:
 
 
 def main_delete(args: argparse.Namespace) -> None:
-    werks = args.ids or [get_last_werk()]
+    werks = [WerkId(i) for i in args.id]
 
     for werk_id in werks:
         if not werk_exists(werk_id):
             bail_out(f"There is no werk {format_werk_id(werk_id)}.")
 
-        werk_to_be_removed_title = load_werk(werk_id).content.metadata["title"]
-        if os.system("git rm -f {werk_id}") == 0:  # nosec
-            sys.stdout.write(
-                f"Deleted werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n"
-            )
-            my_ids = get_werk_ids()
-            my_ids.append(werk_id)
-            store_werk_ids(my_ids)
-            sys.stdout.write(f"You lucky bastard now own the werk ID {format_werk_id(werk_id)}.\n")
+        werk_path = werk_path_by_id(werk_id)
+        werk_to_be_removed_title = load_werk(werk_path).content.metadata["title"]
+        try:
+            subprocess.check_call(["git", "rm", "-f", f"{werk_path}"])
+        except subprocess.CalledProcessError as exc:
+            sys.stdout.write(f"Error removing werk file: {exc}.\n")
+            continue
+        sys.stdout.write(f"Deleted werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
+        my_ids = get_werk_ids()
+        my_ids.append(werk_id)
+        store_werk_ids(my_ids)
+        sys.stdout.write(f"You lucky bastard now own the werk ID {format_werk_id(werk_id)}.\n")
 
 
 def grep(line: str, kw: str, n: int) -> str | None:
@@ -940,11 +881,15 @@ class WerkToPick(NamedTuple):
 
 def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion) -> None:
     # First get the werk_id
-    result = subprocess.run(
-        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_id],
-        capture_output=True,
-        check=True,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_id],
+            capture_output=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        sys.stderr.buffer.write(exc.stderr)
+        sys.exit(exc.returncode)
     found_werk_path: WerkToPick | None = None
     for line in result.stdout.splitlines():
         filename = Path(line.decode("utf-8"))
@@ -1090,6 +1035,33 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
         sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
     else:
         bail_out("Cannot commit.")
+
+
+def main_preview(args: argparse.Namespace) -> None:
+    werk_path = werk_path_by_id(WerkId(args.id))
+    werk = cmk_werks_load_werk(
+        file_content=Path(werk_path).read_text(encoding="utf-8"), file_name=werk_path.name
+    )
+
+    def meta_data() -> Iterator[str]:
+        for item in werk.model_fields:
+            if item in {"title", "description"}:
+                continue
+            yield f"<dt>{item}<dt><dd>{getattr(werk, item)}</dd>"
+
+    definition_list = "\n".join(meta_data())
+    print(
+        f'<!DOCTYPE html><html lang="en" style="font-family:sans-serif;">'
+        "<head>"
+        f"<title>Preview of werk {args.id}</title>"
+        "</head>"
+        f'<body style="background-color:#ccc; max-width:1600px; padding: 10px; margin:auto;">'
+        f"<h1>{werk.title}</h1>"
+        f'<div style="background-color:#fff; padding: 10px;">{werk.description}</div>'
+        f"<dl>{definition_list}</dl>"
+        "</body>"
+        "</html>"
+    )
 
 
 def get_werk_file_version() -> WerkVersion:

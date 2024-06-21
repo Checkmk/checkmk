@@ -1,4 +1,4 @@
-Title: <tt>ucs_c_rack_server_util_cpu</tt>: Take user-configured parameters into account
+Title: ucs_c_rack_server_util_cpu: Take user-configured parameters into account
 Class: fix
 Compatible: compat
 Component: checks

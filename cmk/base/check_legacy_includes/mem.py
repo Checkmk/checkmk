@@ -5,10 +5,9 @@
 
 import collections
 
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-from cmk.base.plugins.agent_based.utils.memory import compute_state
-from cmk.base.plugins.agent_based.utils.memory import normalize_levels as normalize_mem_levels
+from cmk.agent_based.v2 import render
+from cmk.plugins.lib.memory import compute_state
+from cmk.plugins.lib.memory import normalize_levels as normalize_mem_levels
 
 memused_default_levels = (150.0, 200.0)
 
@@ -46,8 +45,8 @@ def check_memory_element(
         label,
         render.percent(100.0 * show_value / total),
         show_text,
-        get_bytes_human_readable(show_value, base=1024),
-        get_bytes_human_readable(total, base=1024),
+        render.bytes(show_value),
+        render.bytes(total),
         (" %s" % label_total).rstrip(),
     )
 

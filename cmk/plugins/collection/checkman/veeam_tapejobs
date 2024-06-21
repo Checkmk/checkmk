@@ -1,0 +1,23 @@
+title: Veeam: Tape Jobs
+agents: windows
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the status of the tape jobs run by the Veeam
+ backup tool. In order to carry out the check, the Veeam agent plugin
+ needs to be installed on the backup server. See special instructions in the
+ comment section of the Veeam agent plug-in powershell scripts on how to install
+ the scripts.
+
+ This check is {OK} if the last tape job ran successfully and {CRIT} otherwise,
+ provided the backup is not currently in progress.
+
+ While the tapejob is running, the status is determined by the levels set on
+ maximum acceptable time the job is supposed to take.
+
+discovery:
+ One service is created for each tape job created by the Veeam tool.
+
+item:
+ The name of the tape job.

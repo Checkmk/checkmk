@@ -9,7 +9,7 @@ from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, Domai
 from cmk import fields
 
 
-class HostTag(BaseSchema):
+class HostTagOutput(BaseSchema):
     id = fields.String(description="The unique identifier of this host tag", allow_none=True)
     title = fields.String(description="The title of this host tag")
     aux_tags = fields.List(fields.String(), description="The auxiliary tags this tag included in.")
@@ -17,7 +17,10 @@ class HostTag(BaseSchema):
 
 class HostTagExtensions(BaseSchema):
     topic = fields.String(description="The topic this host tag group is organized in.")
-    tags = fields.List(fields.Nested(HostTag()), description="The list of tags in this group.")
+    tags = fields.List(
+        fields.Nested(HostTagOutput()), description="The list of tags in this group."
+    )
+    help = fields.String(description="A help description for the tag group")
 
 
 class ConcreteHostTagGroup(DomainObject):

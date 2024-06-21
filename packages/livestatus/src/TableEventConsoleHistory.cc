@@ -13,8 +13,7 @@
 #include "livestatus/TableEventConsoleEvents.h"
 #include "livestatus/TimeColumn.h"
 
-TableEventConsoleHistory::TableEventConsoleHistory(ICore *mc)
-    : TableEventConsole{mc} {
+TableEventConsoleHistory::TableEventConsoleHistory(ICore *mc) {
     const ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(
         "history_line", "The line number of the event in the history file",
@@ -33,7 +32,7 @@ TableEventConsoleHistory::TableEventConsoleHistory(ICore *mc)
         "history_addinfo",
         "Additional information, like email recipient/subject or action ID",
         offsets));
-    TableEventConsoleEvents::addColumns(this);
+    TableEventConsoleEvents::addColumns(this, *mc);
 }
 
 std::string TableEventConsoleHistory::name() const {

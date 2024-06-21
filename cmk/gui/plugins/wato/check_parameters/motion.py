@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.dateutils as dateutils
+from cmk.utils import dateutils
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (

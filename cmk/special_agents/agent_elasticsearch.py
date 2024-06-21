@@ -9,8 +9,8 @@ from collections.abc import Mapping, Sequence
 import pydantic
 import requests
 
-from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 
 def agent_elasticsearch_main(args: Args) -> int:

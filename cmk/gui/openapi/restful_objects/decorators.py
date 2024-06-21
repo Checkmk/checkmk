@@ -12,28 +12,22 @@ from __future__ import annotations
 
 import contextlib
 import functools
-import hashlib
 import http.client
 import json
 import logging
 import warnings
-from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
-from types import FunctionType
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Any, Final, Literal, TypeVar
 from urllib import parse
 
-import apispec
-import apispec.utils
 from marshmallow import fields as ma_fields
 from marshmallow import Schema, ValidationError
-from marshmallow.schema import SchemaMeta
 from werkzeug.datastructures import MultiDict
 from werkzeug.http import parse_options_header
-from werkzeug.utils import import_string
 
 from cmk.utils import store
 
-from cmk.gui import fields, hooks
+from cmk.gui import hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
@@ -42,33 +36,15 @@ from cmk.gui.openapi.permission_tracking import (
     enable_permission_tracking,
     is_permission_tracking_enabled,
 )
-from cmk.gui.openapi.restful_objects import permissions
 from cmk.gui.openapi.restful_objects.api_error import ApiError
-from cmk.gui.openapi.restful_objects.code_examples import code_samples
-from cmk.gui.openapi.restful_objects.parameters import (
-    CONTENT_TYPE,
-    ETAG_HEADER_PARAM,
-    ETAG_IF_MATCH_HEADER,
-    HEADER_CHECKMK_EDITION,
-    HEADER_CHECKMK_VERSION,
-)
+from cmk.gui.openapi.restful_objects.parameters import CONTENT_TYPE
 from cmk.gui.openapi.restful_objects.params import path_parameters, to_openapi, to_schema
-from cmk.gui.openapi.restful_objects.specification import SPEC
 from cmk.gui.openapi.restful_objects.type_defs import (
-    ContentObject,
     EndpointTarget,
     ErrorStatusCodeInt,
     ETagBehaviour,
     LinkRelation,
-    LocationType,
-    OpenAPIParameter,
-    OpenAPITag,
-    OperationObject,
-    OperationSpecType,
-    PathItem,
     RawParameter,
-    ResponseType,
-    SchemaParameter,
     StatusCodeInt,
 )
 from cmk.gui.openapi.utils import (
@@ -87,13 +63,13 @@ from cmk.gui.openapi.utils import (
     RestAPIResponseException,
     RestAPIWatoDisabledException,
 )
-from cmk.gui.permissions import permission_registry
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )
 from cmk.gui.watolib.git import do_git_commit
 
-_SEEN_ENDPOINTS: set[FunctionType] = set()
+from .content_decoder import decode, KnownContentType
 
 T = TypeVar("T")
 K = TypeVar("K")
@@ -103,6 +79,9 @@ WrappedFunc = Callable[[Mapping[str, Any]], cmk_http.Response]
 
 
 _logger = logging.getLogger(__name__)
+
+
+ACCEPT_FIELD_TYPE = KnownContentType | list[KnownContentType]
 
 
 class WrappedEndpoint:
@@ -120,100 +99,6 @@ class WrappedEndpoint:
 
 
 Version = str
-
-
-def to_named_schema(fields_: dict[str, fields.Field]) -> type[Schema]:
-    attrs: dict[str, Any] = fields_.copy()
-    attrs["Meta"] = type(
-        "GeneratedMeta",
-        (Schema.Meta,),
-        {"register": True, "ordered": True},
-    )
-    _hash = hashlib.sha256()
-
-    def _update(d_):
-        for key, value in sorted(d_.items()):
-            _hash.update(str(key).encode("utf-8"))
-            if hasattr(value, "metadata"):
-                _update(value.metadata)
-            else:
-                _hash.update(str(value).encode("utf-8"))
-
-    _update(fields_)
-
-    name = f"GeneratedSchema{_hash.hexdigest()}"
-    schema_cls: type[Schema] = type(name, (Schema,), attrs)
-    return schema_cls
-
-
-def coalesce_schemas(
-    parameters: Sequence[tuple[LocationType, Sequence[RawParameter]]],
-) -> Sequence[SchemaParameter]:
-    rv: list[SchemaParameter] = []
-    for location, params in parameters:
-        if not params:
-            continue
-
-        to_convert: dict[str, fields.Field] = {}
-        for param in params:
-            if isinstance(param, SchemaMeta):
-                rv.append({"in": location, "schema": param})
-            else:
-                to_convert.update(param)
-
-        if to_convert:
-            rv.append({"in": location, "schema": to_named_schema(to_convert)})
-
-    return rv
-
-
-def _render_path_item(
-    status_code: int,
-    description: str,
-    error_schema: type[Schema],
-    content: dict[str, Any] | None = None,
-    headers: dict[str, OpenAPIParameter] | None = None,
-) -> PathItem:
-    """Build a OpenAPI PathItem segment
-
-    Examples:
-
-        >>> class Error(Schema):
-        ...     pass
-
-        >>> _render_path_item(404, "Godot is still not here.", Error)  # doctest: +ELLIPSIS
-        {'description': 'Not Found: Godot is still not here.', 'content': ...}
-
-        >>> _render_path_item(422, "What's this?", Error)  # doctest: +ELLIPSIS
-        {'description': "Unprocessable Entity: What's this?", 'content': ...}
-
-    Args:
-        status_code:
-            A HTTP status code
-
-        description:
-            Description for the segment.
-
-        content:
-            A dictionary which has content-types as keys and dicts as values in
-            the form of {'schema': <marshmallowschema>}
-
-        headers:
-            A dictionary which has header names as keys and their content as values.
-
-    Returns:
-        A PathItem segment of the OpenAPI specification.
-
-    """
-    response: PathItem = {"description": f"{http.client.responses[status_code]}: {description}"}
-    if status_code >= 400 and content is None:
-        content = {"application/problem+json": {"schema": error_schema}}
-    if content is None:
-        content = {}
-    response["content"] = content
-    if headers:
-        response["headers"] = headers
-    return response
 
 
 ArgDict = dict[str, str | list[str]]
@@ -378,6 +263,9 @@ class Endpoint:
         sort:
             An integer to influence the ordering of the endpoints in the yaml file.
 
+        accept:
+            The content-type accepted by the endpoint.
+
     """
 
     def __init__(  # pylint: disable=too-many-branches
@@ -389,7 +277,7 @@ class Endpoint:
         output_empty: bool = False,
         error_schemas: Mapping[ErrorStatusCodeInt, type[ApiError]] | None = None,
         response_schema: RawParameter | None = None,
-        request_schema: RawParameter | None = None,
+        request_schema: type[Schema] | None = None,
         convert_response: bool = True,
         skip_locking: bool = False,
         path_params: Sequence[RawParameter] | None = None,
@@ -407,6 +295,7 @@ class Endpoint:
         deprecated_urls: Mapping[str, int] | None = None,
         update_config_generation: bool = True,
         sort: int = 0,
+        accept: ACCEPT_FIELD_TYPE = "application/json",
     ):
         self.path = path
         self.link_relation = link_relation
@@ -430,6 +319,8 @@ class Endpoint:
         self.valid_from = valid_from
         self.valid_until = valid_until
         self.sort = sort
+        self.accept = accept if isinstance(accept, list) else [accept]
+
         if deprecated_urls is not None:
             for url in deprecated_urls:
                 if not url.startswith("/"):
@@ -469,6 +360,11 @@ class Endpoint:
                 "containing bodies. Consider using the POST method instead.",
                 UserWarning,
             )
+
+        self._expected_status_codes.append(406)
+
+        if self.tag_group == "Setup":
+            self._expected_status_codes.append(403)
 
         if self.output_empty:
             self._expected_status_codes.append(204)  # no content
@@ -625,39 +521,36 @@ class Endpoint:
         return ", ".join(_messages.keys())
 
     def _content_type_validation(self) -> None:
-        # If there is a request body with no content-type, raise an error.
+        inboud_method = self.method in ("post", "put")
+
+        # If we have an schema, or doing post/put, we need a content-type
         if self.request_schema and not request.content_type:
+
             raise RestAPIRequestContentTypeException(
-                detail="Please specify a content type.",
-                title="Missing content type.",
+                detail=f"No content-type specified. Possible value is: {", ".join(self.accept)}",
+                title="Content type not valid for this endpoint.",
             )
 
-        if self.request_schema and self.method in ("post", "put"):
-            if request.content_type is None:
-                raise RestAPIRequestContentTypeException(
-                    detail=f"No content-type specified. Possible value is: {self.content_type}",
-                    title="Content type not valid for this endpoint.",
-                )
+        content_type, options = parse_options_header(request.content_type)
 
-            content_type, options = parse_options_header(request.content_type)
-            if content_type == self.content_type:
-                # Content-Type is as expected.
-                if (
-                    content_type == "application/json"
-                    and "charset" in options
-                    and options["charset"] is not None
-                ):
-                    # but there are options.
-                    if options["charset"].lower() != "utf-8":
-                        raise RestAPIRequestContentTypeException(
-                            detail=f"Character set {options['charset']!r} not supported "
-                            f"for content-type {content_type!r}.",
-                            title="Content type not valid for this endpoint.",
-                        )
-            else:
-                # If the content type doesn't match what the endpoint expects.
+        if request.content_type and content_type not in self.accept:
+            raise RestAPIRequestContentTypeException(
+                detail=f"Content-Type {content_type!r} not supported for this endpoint.",
+                title="Content type not valid for this endpoint.",
+            )
+
+        if (
+            inboud_method
+            and self.request_schema
+            and content_type == "application/json"
+            and "charset" in options
+            and options["charset"] is not None
+        ):
+            # but there are options.
+            if options["charset"].lower() != "utf-8":
                 raise RestAPIRequestContentTypeException(
-                    detail=f"Content-Type {content_type!r} not supported for this endpoint.",
+                    detail=f"Character set {options['charset']!r} not supported "
+                    f"for content-type {content_type!r}.",
                     title="Content type not valid for this endpoint.",
                 )
 
@@ -743,13 +636,14 @@ class Endpoint:
         self, request_schema: type[Schema] | None, _params: dict[str, Any]
     ) -> None:
         try:
-            if request_schema:
-                # Try to decode only when there is data. Decoding an empty string will fail.
-                if request.get_data(cache=True):
-                    json_data = request.json or {}
-                else:
-                    json_data = {}
-                _params["body"] = request_schema().load(json_data)
+            # request.content_type was previously validated and is accepted by the endpoint or is None.
+            # If there is content_type, then we try to decode the payload
+            content_type, _ = parse_options_header(request.content_type)
+
+            if content_type and (body := decode(content_type, request, request_schema)) is not None:
+                _params["body"] = body
+                _params["content_type"] = content_type
+
         except ValidationError as exc:
             raise RestAPIRequestDataValidationException(
                 title=http.client.responses[400],
@@ -871,7 +765,7 @@ class Endpoint:
                 outbound = response_schema().dump(data)
             except ValidationError as exc:
                 raise RestAPIResponseException(
-                    title="Mismatch between endpoint and internal data format. ",
+                    title="Mismatch between endpoint and internal data format.",
                     detail="This could be due to invalid or outdated configuration, or be an error of the implementation. "
                     "Please check your *.mk files in case you have modified them by hand and run cmk-update-config. "
                     "If the problem persists afterwards, please report a bug.",
@@ -992,6 +886,10 @@ class Endpoint:
         return _wrap_with_wato_lock(_validating_wrapper)
 
     @property
+    def expected_status_codes(self) -> Sequence[StatusCodeInt]:
+        return self._expected_status_codes
+
+    @property
     def does_redirects(self):
         # created, moved permanently, found
         return any(code in self._expected_status_codes for code in [201, 301, 302])
@@ -1019,310 +917,11 @@ class Endpoint:
             )
         return path
 
-    def make_url(self, parameter_values: dict[str, Any]):  # type: ignore[no-untyped-def]
+    def make_url(self, parameter_values: dict[str, Any]) -> str:
         return self.path.format(**parameter_values)
 
-    def _path_item(
-        self,
-        status_code: StatusCodeInt,
-        description: str,
-        content: dict[str, Any] | None = None,
-        headers: dict[str, OpenAPIParameter] | None = None,
-    ) -> PathItem:
-        message = self.status_descriptions.get(status_code)
-        if message is None:
-            message = description
-        return _render_path_item(
-            status_code,
-            message,
-            error_schema=self.error_schemas.get(status_code, ApiError),  # type: ignore[arg-type]
-            content=content,
-            headers=headers,
-        )
 
-    def operation_dicts(self) -> Generator[tuple[str, OperationObject], None, None]:
-        """Generate the openapi spec part of this endpoint.
-
-        The result needs to be added to the `apispec` instance manually.
-        """
-        deprecate_self: bool = False
-        if self.deprecated_urls is not None:
-            for url, werk_id in self.deprecated_urls.items():
-                deprecate_self |= url == self.path
-                yield url, self.to_operation_dict(werk_id)
-
-        if not deprecate_self:
-            yield self.path, self.to_operation_dict()
-
-    def to_operation_dict(  # pylint: disable=too-many-branches
-        self,
-        werk_id: int | None = None,
-    ) -> OperationObject:
-        assert self.func is not None, "This object must be used in a decorator environment."
-        assert self.operation_id is not None, "This object must be used in a decorator environment."
-
-        module_obj = import_string(self.func.__module__)
-
-        response_headers: dict[str, OpenAPIParameter] = {}
-        for header_to_add in [CONTENT_TYPE, HEADER_CHECKMK_EDITION, HEADER_CHECKMK_VERSION]:
-            openapi_header = to_openapi([header_to_add], "header")[0]
-            del openapi_header["in"]
-            response_headers[openapi_header.pop("name")] = openapi_header
-
-        if self.etag in ("output", "both"):
-            etag_header = to_openapi([ETAG_HEADER_PARAM], "header")[0]
-            del etag_header["in"]
-            response_headers[etag_header.pop("name")] = etag_header
-
-        responses: ResponseType = {}
-
-        responses["406"] = self._path_item(406, "The requests accept headers can not be satisfied.")
-
-        if 401 in self._expected_status_codes:
-            responses["401"] = self._path_item(
-                401, "The user is not authorized to do this request."
-            )
-
-        if self.tag_group == "Setup":
-            responses["403"] = self._path_item(403, "Configuration via Setup is disabled.")
-        if self.tag_group == "Checkmk Internal" and 403 in self._expected_status_codes:
-            responses["403"] = self._path_item(
-                403,
-                "You have insufficient permissions for this operation.",
-            )
-
-        if 404 in self._expected_status_codes:
-            responses["404"] = self._path_item(404, "The requested object has not been found.")
-
-        if 422 in self._expected_status_codes:
-            responses["422"] = self._path_item(422, "The request could not be processed.")
-
-        if 423 in self._expected_status_codes:
-            responses["423"] = self._path_item(423, "This resource is currently locked.")
-
-        if 405 in self._expected_status_codes:
-            responses["405"] = self._path_item(
-                405, "Method not allowed: This request is only allowed with other HTTP methods"
-            )
-
-        if 409 in self._expected_status_codes:
-            responses["409"] = self._path_item(
-                409,
-                "The request is in conflict with the stored resource.",
-            )
-
-        if 415 in self._expected_status_codes:
-            responses["415"] = self._path_item(415, "The submitted content-type is not supported.")
-
-        if 302 in self._expected_status_codes:
-            responses["302"] = self._path_item(
-                302,
-                "Either the resource has moved or has not yet completed. Please see this "
-                "resource for further information.",
-            )
-
-        if 400 in self._expected_status_codes:
-            responses["400"] = self._path_item(400, "Parameter or validation failure.")
-
-        # We don't(!) support any endpoint without an output schema.
-        # Just define one!
-        if 200 in self._expected_status_codes:
-            if self.response_schema:
-                content: ContentObject
-                content = {self.content_type: {"schema": self.response_schema}}
-            elif self.content_type.startswith("application/") or self.content_type.startswith(
-                "image/"
-            ):
-                content = {
-                    self.content_type: {
-                        "schema": {
-                            "type": "string",
-                            "format": "binary",
-                        }
-                    }
-                }
-            else:
-                raise ValueError(f"Unknown content-type: {self.content_type} Please add condition.")
-            responses["200"] = self._path_item(
-                200,
-                "The operation was done successfully.",
-                content=content,
-                headers=response_headers,
-            )
-
-        if 204 in self._expected_status_codes:
-            responses["204"] = self._path_item(
-                204, "Operation done successfully. No further output."
-            )
-
-        if 412 in self._expected_status_codes:
-            responses["412"] = self._path_item(
-                412,
-                "The value of the If-Match header doesn't match the object's ETag.",
-            )
-
-        if 428 in self._expected_status_codes:
-            responses["428"] = self._path_item(428, "The required If-Match header is missing.")
-
-        docstring_name = _docstring_name(module_obj.__doc__)
-        tag_obj: OpenAPITag = {
-            "name": docstring_name,
-            "x-displayName": docstring_name,
-        }
-        docstring_desc = _docstring_description(module_obj.__doc__)
-        if docstring_desc:
-            tag_obj["description"] = docstring_desc
-
-        _add_tag(tag_obj, tag_group=self.tag_group)
-
-        operation_spec: OperationSpecType = {
-            "tags": [docstring_name],
-            "description": "",
-        }
-        if werk_id:
-            operation_spec["deprecated"] = True
-            # ReDoc uses operationIds to build its URLs, so it needs a unique operationId,
-            # otherwise links won't work properly.
-            operation_spec["operationId"] = f"{self.operation_id}-{werk_id}"
-        else:
-            operation_spec["operationId"] = self.operation_id
-
-        header_params: list[RawParameter] = []
-        query_params: Sequence[RawParameter] = (
-            self.query_params if self.query_params is not None else []
-        )
-        path_params: Sequence[RawParameter] = (
-            self.path_params if self.path_params is not None else []
-        )
-
-        if active_config.rest_api_etag_locking and self.etag in ("input", "both"):
-            header_params.append(ETAG_IF_MATCH_HEADER)
-
-        if self.request_schema:
-            header_params.append(CONTENT_TYPE)
-
-        # While we define the parameters separately to be able to use them for validation, the
-        # OpenAPI spec expects them to be listed in on place, so here we bunch them together.
-        operation_spec["parameters"] = coalesce_schemas(
-            [
-                ("header", header_params),
-                ("query", query_params),
-                ("path", path_params),
-            ]
-        )
-
-        operation_spec["responses"] = responses
-
-        if self.request_schema is not None:
-            operation_spec["requestBody"] = {
-                "required": True,
-                "content": {
-                    "application/json": {
-                        "schema": self.request_schema,
-                    }
-                },
-            }
-
-        operation_spec["x-codeSamples"] = code_samples(
-            self,
-            header_params=header_params,
-            path_params=path_params,
-            query_params=query_params,
-        )
-
-        # If we don't have any parameters we remove the empty list, so the spec will not have it.
-        if not operation_spec["parameters"]:
-            del operation_spec["parameters"]
-
-        try:
-            docstring_name = _docstring_name(self.func.__doc__)
-        except ValueError as exc:
-            raise ValueError(
-                f"Function {module_obj.__name__}:{self.func.__name__} has no docstring."
-            ) from exc
-
-        if docstring_name:
-            operation_spec["summary"] = docstring_name
-        else:
-            raise RuntimeError(f"Please put a docstring onto {self.operation_id}")
-
-        if description := _build_description(_docstring_description(self.func.__doc__), werk_id):
-            # The validator will complain on empty descriptions being set, even though it's valid.
-            operation_spec["description"] = description
-
-        if self.permissions_required is not None:
-            # Check that all the names are known to the system.
-            for perm in self.permissions_required.iter_perms():
-                if isinstance(perm, permissions.OkayToIgnorePerm):
-                    continue
-
-                if perm.name not in permission_registry:
-                    # NOTE:
-                    #   See rest_api.py. dynamic_permission() have to be loaded before request
-                    #   for this to work reliably.
-                    raise RuntimeError(
-                        f'Permission "{perm}" is not registered in the permission_registry.'
-                    )
-
-            # Write permission documentation in openapi spec.
-            if description := _permission_descriptions(
-                self.permissions_required, self.permissions_description
-            ):
-                operation_spec.setdefault("description", "")
-                if not operation_spec["description"]:
-                    operation_spec["description"] += "\n\n"
-                operation_spec["description"] += description
-
-        return {self.method: operation_spec}
-
-
-def _build_description(description_text: str | None, werk_id: int | None = None) -> str:
-    r"""Build a OperationSpecType description.
-
-    Examples:
-
-        >>> _build_description(None)
-        ''
-
-        >>> _build_description("Foo")
-        'Foo'
-
-        >>> _build_description(None, 12345)
-        '`WARNING`: This URL is deprecated, see [Werk 12345](https://checkmk.com/werk/12345) for more details.\n\n'
-
-        >>> _build_description('Foo', 12345)
-        '`WARNING`: This URL is deprecated, see [Werk 12345](https://checkmk.com/werk/12345) for more details.\n\nFoo'
-
-    Args:
-        description_text:
-            The text of the description. This may be None.
-
-        werk_id:
-            A Werk ID for a deprecation warning. This may be None.
-
-    Returns:
-        Either a complete description or None
-
-    """
-    if werk_id:
-        werk_link = f"https://checkmk.com/werk/{werk_id}"
-        description = (
-            f"`WARNING`: This URL is deprecated, see [Werk {werk_id}]({werk_link}) for more "
-            "details.\n\n"
-        )
-    else:
-        description = ""
-
-    if description_text is not None:
-        description += description_text
-
-    return description
-
-
-def _verify_parameters(  # type: ignore[no-untyped-def]
-    path: str,
-    path_schema: type[Schema] | None,
-):
+def _verify_parameters(path: str, path_schema: type[Schema] | None) -> None:
     """Verifies matching of parameters to the placeholders used in an URL-Template
 
     This works both ways, ensuring that no parameter is supplied which is then not used and that
@@ -1386,255 +985,3 @@ def _verify_parameters(  # type: ignore[no-untyped-def]
         raise ValueError(
             f"Params {missing_in_path!r} not used in path {path}. " f"Found params: {path_params!r}"
         )
-
-
-def _assign_to_tag_group(tag_group: str, name: str) -> None:
-    for group in SPEC.options.setdefault("x-tagGroups", []):
-        if group["name"] == tag_group:
-            group["tags"].append(name)
-            break
-    else:
-        raise ValueError(f"x-tagGroup {tag_group} not found. Please add it to specification.py")
-
-
-def _add_tag(tag: OpenAPITag, tag_group: str | None = None) -> None:
-    name = tag["name"]
-    if name in [t["name"] for t in SPEC._tags]:
-        return
-
-    SPEC.tag(tag)
-    if tag_group is not None:
-        _assign_to_tag_group(tag_group, name)
-
-
-def _schema_name(schema_name: str):  # type: ignore[no-untyped-def]
-    """Remove the suffix 'Schema' from a schema-name.
-
-    Examples:
-
-        >>> _schema_name("BakeSchema")
-        'Bake'
-
-        >>> _schema_name("BakeSchemaa")
-        'BakeSchemaa'
-
-    Args:
-        schema_name:
-            The name of the Schema.
-
-    Returns:
-        The name of the Schema, maybe stripped of the suffix 'Schema'.
-
-    """
-    return schema_name[:-6] if schema_name.endswith("Schema") else schema_name
-
-
-def _schema_definition(schema_name: str):  # type: ignore[no-untyped-def]
-    ref = f"#/components/schemas/{_schema_name(schema_name)}"
-    return f'<SchemaDefinition schemaRef="{ref}" showReadOnly={{true}} showWriteOnly={{true}} />'
-
-
-def _tag_from_schema(schema: type[Schema]) -> OpenAPITag:
-    """Construct a Tag-Dict from a Schema instance or class
-
-    Examples:
-
-        >>> from marshmallow import Schema, fields
-
-        >>> class TestSchema(Schema):
-        ...      '''My docstring title.\\n\\nMore docstring.'''
-        ...      field = fields.String()
-
-        >>> expected = {
-        ...    'x-displayName': 'My docstring title.',
-        ...    'description': ('More docstring.\\n\\n'
-        ...                    '<SchemaDefinition schemaRef="#/components/schemas/Test" '
-        ...                    'showReadOnly={true} showWriteOnly={true} />'),
-        ...    'name': 'Test'
-        ... }
-
-        >>> tag = _tag_from_schema(TestSchema)
-        >>> assert tag == expected, tag
-
-    Args:
-        schema (marshmallow.Schema):
-            A marshmallow Schema class or instance.
-
-    Returns:
-        A dict containing the tag name and the description, which is taken from
-
-    """
-    tag: OpenAPITag = {"name": _schema_name(schema.__name__)}
-    docstring_name = _docstring_name(schema.__doc__)
-    if docstring_name:
-        tag["x-displayName"] = docstring_name
-    docstring_desc = _docstring_description(schema.__doc__)
-    if docstring_desc:
-        tag["description"] = docstring_desc
-
-    tag["description"] = tag.get("description", "")
-    if tag["description"]:
-        tag["description"] += "\n\n"
-    tag["description"] += _schema_definition(schema.__name__)
-
-    return tag
-
-
-def _docstring_name(docstring: str | None) -> str:
-    """Split the docstring by title and rest.
-
-    This is part of the rest.
-
-    >>> _docstring_name(_docstring_name.__doc__)
-    'Split the docstring by title and rest.'
-
-    >>> _docstring_name("")
-    Traceback (most recent call last):
-    ...
-    ValueError: No name for the module defined. Please add a docstring!
-
-    Args:
-        docstring:
-
-    Returns:
-        A string or nothing.
-
-    """ ""
-    if not docstring:
-        raise ValueError("No name for the module defined. Please add a docstring!")
-
-    return [part.strip() for part in apispec.utils.dedent(docstring).split("\n\n", 1)][0]
-
-
-def _docstring_description(docstring: str | None) -> str | None:
-    """Split the docstring by title and rest.
-
-    This is part of the rest.
-
-    >>> _docstring_description(_docstring_description.__doc__).split("\\n")[0]
-    'This is part of the rest.'
-
-    Args:
-        docstring:
-
-    Returns:
-        A string or nothing.
-
-    """
-    if not docstring:
-        return None
-    parts = apispec.utils.dedent(docstring).split("\n\n", 1)
-    if len(parts) > 1:
-        return parts[1].strip()
-    return None
-
-
-def _permission_descriptions(
-    perms: permissions.BasePerm,
-    descriptions: dict[str, str] | None = None,
-) -> str:
-    r"""Describe permissions human-readable
-
-    Args:
-        perms:
-        descriptions:
-
-    Examples:
-
-        >>> _permission_descriptions(
-        ...     permissions.Perm("wato.edit_folders"),
-        ...     {'wato.edit_folders': 'Allowed to cook the books.'},
-        ... )
-        'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
-
-        >>> _permission_descriptions(
-        ...     permissions.AllPerm([permissions.Perm("wato.edit_folders")]),
-        ...     {'wato.edit_folders': 'Allowed to cook the books.'},
-        ... )
-        'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
-
-        >>> _permission_descriptions(
-        ...     permissions.AllPerm([permissions.Perm("wato.edit_folders"),
-        ...                          permissions.Undocumented(permissions.Perm("wato.edit"))]),
-        ...     {'wato.edit_folders': 'Allowed to cook the books.'},
-        ... )
-        'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
-
-        >>> _permission_descriptions(
-        ...     permissions.AnyPerm([permissions.Perm("wato.edit_folders"), permissions.Perm("wato.edit_folders")]),
-        ...     {'wato.edit_folders': 'Allowed to cook the books.'},
-        ... )
-        'This endpoint requires the following permissions: \n * Any of:\n   * `wato.edit_folders`: Allowed to cook the books.\n   * `wato.edit_folders`: Allowed to cook the books.\n'
-
-        The description will have a structure like this:
-
-            * Any of:
-               * c
-               * All of:
-                  * a
-                  * b
-
-        >>> _permission_descriptions(
-        ...     permissions.AnyPerm([
-        ...         permissions.Perm("c"),
-        ...         permissions.AllPerm([
-        ...              permissions.Perm("a"),
-        ...              permissions.Perm("b"),
-        ...         ]),
-        ...     ]),
-        ...     {'a': 'Hold a', 'b': 'Hold b', 'c': 'Hold c'}
-        ... )
-        'This endpoint requires the following permissions: \n * Any of:\n   * `c`: Hold c\n   * All of:\n     * `a`: Hold a\n     * `b`: Hold b\n'
-
-    Returns:
-        The description as a string.
-
-    """
-    description_map: dict[str, str] = descriptions if descriptions is not None else {}
-    _description: list[str] = ["This endpoint requires the following permissions: "]
-
-    def _count_perms(_perms):
-        return len([p for p in _perms if not isinstance(p, permissions.Undocumented)])
-
-    def _add_desc(  # pylint: disable=too-many-branches
-        permission: permissions.BasePerm, indent: int, desc_list: list[str]
-    ) -> None:
-        if isinstance(permission, permissions.Undocumented):
-            # Don't render
-            return
-
-        # We indent by two spaces, as is required by markdown.
-        prefix = "  " * indent
-        if isinstance(permission, (permissions.Perm, permissions.OkayToIgnorePerm)):
-            perm_name = permission.name
-            try:
-                desc = description_map.get(perm_name) or permission_registry[perm_name].description
-            except KeyError:
-                if isinstance(permission, permissions.OkayToIgnorePerm):
-                    return
-                raise
-            _description.append(f"{prefix} * `{perm_name}`: {desc}")
-        elif isinstance(permission, permissions.AllPerm):
-            # If AllOf only contains one permission, we don't need to show the AllOf
-            if _count_perms(permission.perms) == 1:
-                _add_desc(permission.perms[0], indent, desc_list)
-            else:
-                desc_list.append(f"{prefix} * All of:")
-                for perm in permission.perms:
-                    _add_desc(perm, indent + 1, desc_list)
-        elif isinstance(permission, permissions.AnyPerm):
-            # If AnyOf only contains one permission, we don't need to show the AnyOf
-            if _count_perms(permission.perms) == 1:
-                _add_desc(permission.perms[0], indent, desc_list)
-            else:
-                desc_list.append(f"{prefix} * Any of:")
-                for perm in permission.perms:
-                    _add_desc(perm, indent + 1, desc_list)
-        elif isinstance(permission, permissions.Optional):
-            desc_list.append(f"{prefix} * Optionally:")
-            _add_desc(permission.perm, indent + 1, desc_list)
-        else:
-            raise NotImplementedError(f"Printing of {permission!r} not yet implemented.")
-
-    _add_desc(perms, 0, _description)
-    return "\n".join(_description) + "\n"

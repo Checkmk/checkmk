@@ -14,6 +14,7 @@ def register(config_variable_group_registry: ConfigVariableGroupRegistry) -> Non
     config_variable_group_registry.register(ConfigVariableGroupUserInterface)
     config_variable_group_registry.register(ConfigVariableGroupWATO)
     config_variable_group_registry.register(ConfigVariableGroupSiteManagement)
+    config_variable_group_registry.register(ConfigVariableGroupDeveloperTools)
 
 
 class ConfigVariableGroupNotifications(ConfigVariableGroup):
@@ -46,3 +47,19 @@ class ConfigVariableGroupSiteManagement(ConfigVariableGroup):
 
     def sort_index(self) -> int:
         return 30
+
+
+class ConfigVariableGroupDeveloperTools(ConfigVariableGroup):
+    def title(self) -> str:
+        return _("Developer Tools")
+
+    def sort_index(self) -> int:
+        return 90
+
+    def warning(self) -> str | None:
+        return _(
+            "These are internal settings used by Checkmk developers. "
+            "Do not change them unless you know what you are doing. "
+            "There is a high risk that using these features will break your Checkmk site. "
+            "Any changes here will result in your Checkmk site no longer being officially supported."
+        )

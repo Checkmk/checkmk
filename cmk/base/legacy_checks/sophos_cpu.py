@@ -6,8 +6,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.sophos import DETECT_SOPHOS
+
+from cmk.agent_based.v2 import SNMPTree
+from cmk.plugins.lib.sophos import DETECT_SOPHOS
 
 
 def parse_sophos_cpu(string_table):
@@ -21,6 +22,10 @@ def check_sophos_cpu(item, params, parsed):
     return check_cpu_util(parsed, params.get("cpu_levels", (None, None)))
 
 
+def discover_sophos_cpu(parsed):
+    yield None, {}
+
+
 check_info["sophos_cpu"] = LegacyCheckDefinition(
     detect=DETECT_SOPHOS,
     fetch=SNMPTree(
@@ -29,7 +34,7 @@ check_info["sophos_cpu"] = LegacyCheckDefinition(
     ),
     parse_function=parse_sophos_cpu,
     service_name="CPU usage",
-    discovery_function=lambda parsed: [(None, {})] if parsed is not None else None,
+    discovery_function=discover_sophos_cpu,
     check_function=check_sophos_cpu,
     check_ruleset_name="sophos_cpu",
 )

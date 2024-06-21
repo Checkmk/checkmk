@@ -57,6 +57,7 @@ def test_registered_automation_commands() -> None:
         "get-config-sync-state",
         "receive-config-sync",
         "service-discovery-job",
+        "service-discovery-job-snapshot",
         "checkmk-remote-automation-start",
         "checkmk-remote-automation-get-status",
         "discovered-host-label-sync",
@@ -83,7 +84,6 @@ def test_registered_configvars() -> None:
     expected_vars = [
         "actions",
         "adhoc_downtime",
-        "agent_simulator",
         "apache_process_tuning",
         "archive_orphans",
         "auth_by_http_header",
@@ -111,6 +111,9 @@ def test_registered_configvars() -> None:
         "history_rotation",
         "hostname_translation",
         "housekeeping_interval",
+        "sqlite_housekeeping_interval",
+        "sqlite_freelist_size",
+        "user_security_notification_duration",
         "http_proxies",
         "inventory_check_autotrigger",
         "inventory_check_interval",
@@ -149,6 +152,7 @@ def test_registered_configvars() -> None:
         "retention_interval",
         "rrdcached_tuning",
         "rule_optimizer",
+        "ruleset_matching_stats",
         "selection_livetime",
         "service_view_grouping",
         "session_mgmt",
@@ -181,7 +185,7 @@ def test_registered_configvars() -> None:
         "user_downtime_timeranges",
         "user_icons_and_actions",
         "user_localizations",
-        "view_action_defaults",
+        "acknowledge_problems",
         "virtual_host_trees",
         "wato_activation_method",
         "wato_activate_changes_comment_mode",
@@ -193,16 +197,18 @@ def test_registered_configvars() -> None:
         "wato_icon_categories",
         "wato_max_snapshots",
         "wato_pprint_config",
-        "wato_upload_insecure_snapshots",
         "wato_use_git",
         "graph_timeranges",
         "agent_controller_certificates",
         "rest_api_etag_locking",
         "enable_login_via_get",
+        "enable_deprecated_automation_user_authentication",
         "enable_community_translations",
         "default_language",
         "default_temperature_unit",
         "experimental_features",
+        "inject_js_profiling_code",
+        "load_frontend_vue",
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:
@@ -277,7 +283,7 @@ def test_registered_configvars() -> None:
 
 
 # Can be removed once we use mypy there
-def test_registered_configvars_types() -> None:
+def test_registered_configvars_types(request_context: None) -> None:
     for var_class in config_variable_registry.values():
         var = var_class()
         assert issubclass(var.group(), ConfigVariableGroup)
@@ -299,6 +305,7 @@ def test_registered_configvar_groups() -> None:
         "User interface",
         "User management",
         "Support",
+        "Developer Tools",
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:

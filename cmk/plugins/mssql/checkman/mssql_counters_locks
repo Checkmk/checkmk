@@ -1,0 +1,22 @@
+title: MS SQL Tablespaces: Locks per Second
+agents: windows
+catalog: app/mssql
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors locking related information of MSSQL tablespaces
+ like for example the number of deadlocks per second or lock requests.
+ Upper levels for each element can be configured in Wato.
+
+ The check has been developed with MSSQL Server 2008 R2 but should
+ work with other versions too.
+
+ This check needs the Checkmk mssql.vbs plug-in installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ The MSSQL instance name and the tablespace name separated by a space.
+
+discovery:
+ One service is created for each tablespace.

@@ -6,12 +6,8 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_rate,
-    get_value_store,
-    IgnoreResultsError,
-    render,
-)
+
+from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render, StringTable
 
 
 def inventory_win_cpuusage(info):
@@ -117,6 +113,15 @@ def check_win_diskstat(item, params, info):
         f"reading {read_per_sec / 1024.0**2:.1f} MB/s, writing {write_per_sec / 1024.0**2:.1f} MB/s",
         perfdata,
     )
+
+
+def parse_winperf(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["winperf"] = LegacyCheckDefinition(
+    parse_function=parse_winperf,
+)
 
 
 check_info["winperf.cpuusage"] = LegacyCheckDefinition(

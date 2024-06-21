@@ -9,7 +9,13 @@ import abc
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
+from cmk.gui.config import Config
+from cmk.gui.http import Request
+from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.painter.v0.helpers import RenderLink
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
+from cmk.gui.utils.theme import Theme
 from cmk.gui.valuespec import Dictionary
 
 
@@ -23,6 +29,23 @@ class SorterEntry(NamedTuple):
 class Sorter(abc.ABC):
     """A sorter is used for allowing the user to sort the queried data
     according to a certain logic."""
+
+    def __init__(
+        self,
+        *,
+        user: LoggedInUser,
+        config: Config,
+        request: Request,
+        painter_options: PainterOptions,
+        theme: Theme,
+        url_renderer: RenderLink,
+    ):
+        self.user = user
+        self.config = config
+        self.request = request
+        self._painter_options = painter_options
+        self.theme = theme
+        self.url_renderer = url_renderer
 
     @property
     @abc.abstractmethod

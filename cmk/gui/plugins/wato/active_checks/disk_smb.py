@@ -82,7 +82,7 @@ def _valuespec_active_checks_disk_smb() -> Migrate:
                             (
                                 "define_host",
                                 _("Define name of NetBIOS server"),
-                                HostAddress(
+                                TextInput(
                                     title="Define name of NetBIOS server",
                                     allow_empty=False,
                                     help=_("You can specify the NetBIOS server name."),
@@ -95,7 +95,7 @@ def _valuespec_active_checks_disk_smb() -> Migrate:
                 (
                     "ip_address",
                     HostAddress(
-                        title=_("IP Address"),
+                        title=_("IP address"),
                         help=_(
                             "IP address of SMB share host (only necessary if SMB share host is in another network)"
                         ),
@@ -107,7 +107,7 @@ def _valuespec_active_checks_disk_smb() -> Migrate:
                 (
                     "port",
                     NetworkPort(
-                        title=_("TCP Port"),
+                        title=_("TCP port"),
                         help=_("TCP port number to connect to. Usually either 139 or 445."),
                         default_value=445,
                         minvalue=1,

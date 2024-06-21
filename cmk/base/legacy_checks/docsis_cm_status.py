@@ -24,7 +24,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, OIDEnd, SNMPTree
+
+from cmk.agent_based.v2 import any_of, equals, OIDEnd, SNMPTree, StringTable
 
 
 def inventory_docsis_cm_status(info):
@@ -77,7 +78,12 @@ def check_docsis_cm_status(item, params, info):
         yield 3, "Status Entry not found"
 
 
+def parse_docsis_cm_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["docsis_cm_status"] = LegacyCheckDefinition(
+    parse_function=parse_docsis_cm_status,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.900.2.0.0.0.0.0"),

@@ -78,8 +78,7 @@ class RoutetracerProto(Protocol):
         use_dns: bool,
         probe_method: ProbeMethod,
         ip_address_family: IPAddressFamily,
-    ) -> Route:
-        ...
+    ) -> Route: ...
 
 
 class ProbeMethod(enum.Enum):
@@ -201,7 +200,7 @@ def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--use_dns",
         action="store_true",
-        help="Use DNS to convert hostnames to IP addresses.",
+        help="Use DNS to convert host names to IP addresses.",
     )
     parser.add_argument(
         "--debug",
@@ -237,11 +236,11 @@ def _check_route(
     ]
 
     return (
-        2
-        if any(missing_routers_crit + found_routers_crit)
-        else 1
-        if any(missing_routers_warn + found_routers_warn)
-        else 0,
+        (
+            2
+            if any(missing_routers_crit + found_routers_crit)
+            else 1 if any(missing_routers_warn + found_routers_warn) else 0
+        ),
         f"%d hop{'' if route.n_hops == 1 else 's'}, missing routers: %s, bad routers: %s\n%s"
         % (
             route.n_hops,

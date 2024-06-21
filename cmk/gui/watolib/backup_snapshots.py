@@ -14,13 +14,11 @@ import traceback
 from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, IO, Literal, NotRequired, TypeVar
-
-from typing_extensions import TypedDict
+from typing import Any, IO, Literal, NotRequired, TypedDict, TypeVar
 
 import cmk.utils
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.user import UserId
 
@@ -120,16 +118,6 @@ def _do_create_snapshot(data: SnapshotData) -> None:
             tarinfo.type = tarfile.REGTYPE
             return tarinfo
 
-        # Initialize the snapshot tar file and populate with initial information
-        with tarfile.open(filename_work, "w") as tar_in_progress:
-            for key in ("comment", "created_by", "type"):
-                tarinfo = get_basic_tarinfo(key)
-                # key is basically Literal["comment", "created_by", "type"] but
-                # the assignment from the tuple confuses mypy
-                encoded_value = data[key].encode("utf-8")  # type: ignore[literal-required]
-                tarinfo.size = len(encoded_value)
-                tar_in_progress.addfile(tarinfo, io.BytesIO(encoded_value))
-
         # Process domains (sorted)
         subtar_info: dict[str, tuple[str, str]] = {}
 
@@ -183,13 +171,24 @@ def _do_create_snapshot(data: SnapshotData) -> None:
                 raise MKGeneralException("Error on adding backup domain %s to tarfile" % name)
 
         # Now add the info file which contains hashes and signed hashes for
-        # each of the subtars
+        # each of the subtars and the initial information files. Adding the
+        # initial information first will create a file unable to handle UID
+        # and GID greater than 2097152 (Werk #16714)
+
         info_str = "".join([f"{k} {v[0]} {v[1]}\n" for k, v in subtar_info.items()]) + "\n"
 
         with tarfile.open(filename_work, "a") as tar_in_progress:
             tarinfo = get_basic_tarinfo("checksums")
             tarinfo.size = len(info_str)
             tar_in_progress.addfile(tarinfo, io.BytesIO(info_str.encode()))
+
+            for key in ("comment", "created_by", "type"):
+                tarinfo = get_basic_tarinfo(key)
+                # key is basically Literal["comment", "created_by", "type"] but
+                # the assignment from the tuple confuses mypy
+                encoded_value = data[key].encode("utf-8")  # type: ignore[literal-required]
+                tarinfo.size = len(encoded_value)
+                tar_in_progress.addfile(tarinfo, io.BytesIO(encoded_value))
 
         shutil.move(filename_work, filename_target)
 
@@ -297,7 +296,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
             raise MKGeneralException(
                 _(
                     "You are currently using the Checkmk Micro Core, but this snapshot does not use the "
-                    "Check_MK Micro Core. If you need to migrate your data, you could consider changing "
+                    "Checkmk Micro Core. If you need to migrate your data, you could consider changing "
                     "the core, restoring the snapshot and changing the core back again."
                 )
             )
@@ -305,7 +304,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
             raise MKGeneralException(
                 _(
                     "You are currently not using the Checkmk Micro Core, but this snapshot uses the "
-                    "Check_MK Micro Core. If you need to migrate your data, you could consider changing "
+                    "Checkmk Micro Core. If you need to migrate your data, you could consider changing "
                     "the core, restoring the snapshot and changing the core back again."
                 )
             )
@@ -585,9 +584,8 @@ def extract_snapshot(  # pylint: disable=too-many-branches
         if is_pre_restore:
             if "pre_restore" in domain:
                 return domain["pre_restore"]()
-        else:
-            if "post_restore" in domain:
-                return domain["post_restore"]()
+        elif "post_restore" in domain:
+            return domain["post_restore"]()
         return []
 
     total_errors = []

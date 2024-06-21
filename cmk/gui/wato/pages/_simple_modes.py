@@ -14,14 +14,13 @@ b) A edit mode which can be used to create and edit an object.
 import abc
 import copy
 from collections.abc import Mapping
-from typing import Any, Generic, TypeVar
+from typing import Any, cast, Generic, TypeVar
 
 from livestatus import SiteId
 
-import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -250,7 +249,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
             text=_("Removed the %s '%s'") % (self._mode_type.name_singular(), ident),
             affected_sites=self._mode_type.affected_sites(entry),
         )
-        self._store.save(entries, pretty=active_config.wato_pprint_config)
+        self._store.save(entries)
 
         flash(_("The %s has been deleted.") % self._mode_type.name_singular())
         return redirect(mode_url(self._mode_type.list_mode_name()))
@@ -277,7 +276,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
 
     def _show_row(self, nr: int, table: Table, ident: str, entry: _T) -> None:
         table.cell("#", css=["narrow nowrap"])
-        html.write_text(nr)
+        html.write_text_permissive(nr)
 
         self._show_action_cell(nr, table, ident, entry)
         self._show_entry_cells(table, ident, entry)
@@ -323,7 +322,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         )
 
 
-class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
+class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
     """Base class for edit modes"""
 
     @abc.abstractmethod
@@ -361,7 +360,6 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
 
         self._new = True
         self._ident = None
-        self._entry = {}
 
     def title(self) -> str:
         if self._new:
@@ -489,7 +487,8 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
         if "ident" in config:
             self._ident = config.pop("ident")
         assert self._ident is not None
-        self._entry = config
+        # No typing support from valuespecs here, so we need to cast
+        self._entry = cast(_T, config)
 
         entries = self._store.load_for_modification()
 
@@ -531,17 +530,16 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
     def _save(self, entries: dict[str, _T]) -> None:
-        self._store.save(entries, active_config.wato_pprint_config)
+        self._store.save(entries)
 
     def page(self) -> None:
-        html.begin_form("edit", method="POST")
-        html.prevent_password_auto_completion()
+        with html.form_context("edit", method="POST"):
+            html.prevent_password_auto_completion()
 
-        vs = self.valuespec()
+            vs = self.valuespec()
 
-        vs.render_input("_edit", self._entry)
-        vs.set_focus("_edit")
-        forms.end()
+            vs.render_input("_edit", dict(self._entry) if not self._new else {})
+            vs.set_focus("_edit")
+            forms.end()
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()

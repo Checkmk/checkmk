@@ -8,7 +8,7 @@ from typing import Final, Literal
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.user import UserId
 
-import cmk.gui.permissions as permissions
+from cmk.gui import permissions
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 

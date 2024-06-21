@@ -5,8 +5,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.ibm import DETECT_IBM_IMM
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.ibm import DETECT_IBM_IMM
 
 
 def inventory_ibm_imm_fan(info):
@@ -51,7 +52,12 @@ def check_ibm_imm_fan(item, params, info):  # pylint: disable=too-many-branches
                     yield state, "too high (warn/crit at %d%%/%d%%)" % (warn, crit)
 
 
+def parse_ibm_imm_fan(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ibm_imm_fan"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_imm_fan,
     detect=DETECT_IBM_IMM,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.3.1.3.2.1",
@@ -62,6 +68,6 @@ check_info["ibm_imm_fan"] = LegacyCheckDefinition(
     check_function=check_ibm_imm_fan,
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={
-        "levels_lower": (28, 25),  # Just a guess. Please give feedback.
+        "levels_lower": (28.0, 25.0),  # Just a guess. Please give feedback.
     },
 )

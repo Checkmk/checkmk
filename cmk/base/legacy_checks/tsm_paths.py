@@ -7,6 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_tsm_paths(info):
     return [(None, None)]
@@ -20,7 +22,12 @@ def check_tsm_paths(item, _no_params, info):
     return 0, " %d paths OK" % count_pathes
 
 
+def parse_tsm_paths(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["tsm_paths"] = LegacyCheckDefinition(
+    parse_function=parse_tsm_paths,
     service_name="TSM Paths",
     discovery_function=inventory_tsm_paths,
     check_function=check_tsm_paths,

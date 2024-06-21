@@ -10,14 +10,14 @@ State: unknown
 Version: 2.1.0b1
 
 A lot of interface checks did exactly the same thing. The new check API allows us to
-consolidate them into one check plugin {{interfaces}}, without affecting the user.
+consolidate them into one check plugin "interfaces", without affecting the user.
 
 The following check plugins will be replaced by the new one:
-{{statgrab_net}}, {{emc_vplex_if}}, {{vms_if}}, {{if_brocade}}, {{if_lancom}},
-{{ucs_bladecenter_if}}, {{aix_if}}, {{if}}, {{if_fortigate}}, {{hp_msa_if}}, {{if64_tplink}}.
+"statgrab_net", "emc_vplex_if", "vms_if", "if_brocade", "if_lancom",
+"ucs_bladecenter_if", "aix_if", "if", "if_fortigate", "hp_msa_if", "if64_tplink".
 
 The transition to the new services is done during `cmk-update-config`.
 Existing rules will apply as before, no metrics will be lost.
 
-It may slightly change the "Service check command" count of the {{site_objects_counts}}
+It may slightly change the "Service check command" count of the "site_objects_counts"
 plugin, depending on its configuration.

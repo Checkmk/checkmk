@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.tplink import DETECT_TPLINK
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.tplink import DETECT_TPLINK
 
 
 def inventory_tplink_cpu(info):
@@ -33,11 +34,16 @@ def check_tplink_cpu(_no_item, params, info):
     return check_cpu_util(util, params, cores=cores)
 
 
-# Migration NOTE: Create a separate section, but a common check plugin for
+# Migration NOTE: Create a separate section, but a common check plug-in for
 # tplink_cpu, hr_cpu, cisco_nexus_cpu, bintec_cpu, winperf_processor,
 # lxc_container_cpu, docker_container_cpu.
 # Migration via cmk/update_config.py!
+def parse_tplink_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["tplink_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_tplink_cpu,
     detect=DETECT_TPLINK,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11863.6.4.1.1.1.1",

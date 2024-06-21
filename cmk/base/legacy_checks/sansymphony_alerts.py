@@ -7,6 +7,8 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_sansymphony_alerts(info):
     yield None, {}
@@ -23,7 +25,12 @@ def check_sansymphony_alerts(_no_item, params, info):
     )
 
 
+def parse_sansymphony_alerts(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["sansymphony_alerts"] = LegacyCheckDefinition(
+    parse_function=parse_sansymphony_alerts,
     service_name="sansymphony Alerts",
     discovery_function=inventory_sansymphony_alerts,
     check_function=check_sansymphony_alerts,

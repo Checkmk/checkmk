@@ -7,14 +7,13 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 
 
-def inventory_f5_bigip_apm(info):
-    discovered = []
-    if info[0][0]:
-        discovered.append((None, None))
-    return discovered
+def discover_f5_bigip_apm(section: StringTable) -> DiscoveryResult:
+    if section and section[0][0]:
+        yield Service()
 
 
 def check_f5_bigip_apm(item, _no_params, info):
@@ -23,13 +22,18 @@ def check_f5_bigip_apm(item, _no_params, info):
     return 0, "Connections: %s" % count, perfdata
 
 
+def parse_f5_bigip_apm(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["f5_bigip_apm"] = LegacyCheckDefinition(
+    parse_function=parse_f5_bigip_apm,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.6.1.5.3",
         oids=["0"],
     ),
     service_name="SSL/VPN Connections",
-    discovery_function=inventory_f5_bigip_apm,
+    discovery_function=discover_f5_bigip_apm,
     check_function=check_f5_bigip_apm,
 )

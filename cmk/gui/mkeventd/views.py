@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import urllib.parse
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal, TypeGuard, TypeVar
@@ -13,13 +15,12 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.statename import short_service_state_name
 from cmk.utils.user import UserId
 
-import cmk.gui.utils.escaping as escaping
-from cmk.gui.config import active_config, default_authorized_builtin_role_ids
+from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
@@ -40,8 +41,10 @@ from cmk.gui.type_defs import (
     VisualContext,
     VisualLinkSpec,
 )
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
@@ -231,13 +234,13 @@ class RowTableEC(RowTableLivestatus):
 # This should be handled in the core, but the core does not know anything about
 # the "mkeventd.seeall" permissions. So it is simply not possible to do this on
 # core level at the moment.
-def _ec_filter_host_information_of_not_permitted_hosts(rows):
+def _ec_filter_host_information_of_not_permitted_hosts(rows: Rows) -> None:
     if user.may("mkeventd.seeall"):
         return  # Don't remove anything. The user may see everything
 
     user_groups = set(user.contact_groups)
 
-    def is_contact(row) -> bool:  # type: ignore[no-untyped-def]
+    def is_contact(row: Row) -> bool:
         return bool(user_groups.intersection(row["host_contact_groups"]))
 
     if rows:
@@ -390,7 +393,7 @@ class PainterSvcServicelevel(Painter):
         return _("Service service level")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Service Level")
+        return _("Service level")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -401,7 +404,12 @@ class PainterSvcServicelevel(Painter):
         return "servicelevel"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_custom_var("service", "EC_SL", row, active_config.mkeventd_service_levels)
+        return paint_custom_var(
+            "service",
+            "EC_SL",
+            row,
+            self.config.mkeventd_service_levels,
+        )
 
 
 class PainterHostServicelevel(Painter):
@@ -413,7 +421,7 @@ class PainterHostServicelevel(Painter):
         return _("Host service level")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Service Level")
+        return _("Service level")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -424,7 +432,12 @@ class PainterHostServicelevel(Painter):
         return "servicelevel"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_custom_var("host", "EC_SL", row, active_config.mkeventd_service_levels)
+        return paint_custom_var(
+            "host",
+            "EC_SL",
+            row,
+            self.config.mkeventd_service_levels,
+        )
 
 
 class PainterEventId(Painter):
@@ -481,7 +494,9 @@ class PainterEventText(Painter):
         return ["event_text"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return "", HTML(escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>"))
+        return "", HTML.without_escaping(
+            escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>")
+        )
 
 
 class PainterEventMatchGroups(Painter):
@@ -502,11 +517,11 @@ class PainterEventMatchGroups(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         groups = row["event_match_groups"]
         if groups:
-            code = HTML("")
+            code = HTML.empty()
             for text in groups:
                 code += HTMLWriter.render_span(text)
             return "matchgroups", code
-        return "", HTML("")
+        return "", HTML.empty()
 
 
 class PainterEventFirst(Painter):
@@ -529,7 +544,13 @@ class PainterEventFirst(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["event_first"], True, True)
+        return paint_age(
+            row["event_first"],
+            True,
+            True,
+            request=self.request,
+            painter_options=self._painter_options,
+        )
 
 
 class PainterEventLast(Painter):
@@ -552,7 +573,13 @@ class PainterEventLast(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["event_last"], True, True)
+        return paint_age(
+            row["event_last"],
+            True,
+            True,
+            request=self.request,
+            painter_options=self._painter_options,
+        )
 
 
 class PainterEventComment(Painter):
@@ -590,7 +617,7 @@ class PainterEventSl(Painter):
         return ["event_sl"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        sl_txt = dict(active_config.mkeventd_service_levels).get(
+        sl_txt = dict(self.config.mkeventd_service_levels).get(
             row["event_sl"], str(row["event_sl"])
         )
         return "", sl_txt
@@ -602,7 +629,7 @@ class PainterEventHost(Painter):
         return "event_host"
 
     def title(self, cell: "Cell") -> str:
-        return _("Hostname")
+        return _("Host name")
 
     def short_title(self, cell: "Cell") -> str:
         return _("Host")
@@ -618,10 +645,14 @@ class PainterEventHost(Painter):
     def render(self, row: Row, cell: "Cell") -> CellSpec:
         host_name = row.get("host_name", row["event_host"])
 
-        return "", HTML(html.render_a(host_name, _get_event_host_link(host_name, row, cell)))
+        return "", html.render_a(
+            host_name, _get_event_host_link(host_name, row, cell, request=self.request)
+        )
 
 
-def _get_event_host_link(host_name: HostName, row: Row, cell: "Cell") -> str:
+def _get_event_host_link(  # pylint: disable=redefined-outer-name
+    host_name: HostName, row: Row, cell: "Cell", *, request: Request
+) -> str:
     """
     Needed to support links to views and dashboards. If no link is configured,
     always use ec_events_of_host as target view.
@@ -638,7 +669,7 @@ def _get_event_host_link(host_name: HostName, row: Row, cell: "Cell") -> str:
     # See SUP-10272 for a detailed explanation, hacks of view.py do not
     # work for SNMP traps
     return makeuri_contextless(
-        html.request,
+        request,
         [
             (link_type, link_target),
             ("host", host_name),
@@ -825,7 +856,7 @@ class PainterEventRuleId(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         rule_id = row["event_rule_id"]
-        if user.may("mkeventd.edit"):
+        if self.user.may("mkeventd.edit"):
             urlvars = urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
             return "", HTMLWriter.render_a(rule_id, "wato.py?%s" % urlvars)
         return "", rule_id
@@ -873,36 +904,55 @@ class PainterEventPhase(Painter):
         return ("", phase_names.get(row["event_phase"], ""))
 
 
-def paint_event_icons(row, history=False):
-    htmlcode = render_event_phase_icons(row)
+def paint_event_icons(  # pylint: disable=redefined-outer-name
+    row: Row,
+    history: bool = False,
+    *,
+    request: Request,
+    theme: Theme,
+) -> CellSpec:
+    phase = row["event_phase"]
+
+    htmlcode: str | HTML
+    if phase == "ack":
+        htmlcode = html.render_icon(
+            phase,
+            title=_("This event has been acknowledged."),
+            theme=theme,
+        )
+    elif phase == "counting":
+        htmlcode = html.render_icon(
+            phase,
+            title=_("This event has not reached the target count yet."),
+            theme=theme,
+        )
+    elif phase == "delayed":
+        htmlcode = html.render_icon(
+            phase,
+            title=_("The action of this event is still delayed in the hope of a cancelling event."),
+            theme=theme,
+        )
+    else:
+        htmlcode = ""
 
     if not history:
-        htmlcode += render_delete_event_icons(row)
+        htmlcode += render_delete_event_icons(row, request=request)
 
     if row["event_host_in_downtime"]:
-        htmlcode += html.render_icon("downtime", _("Host in downtime during event creation"))
+        htmlcode += html.render_icon(
+            "downtime",
+            _("Host in downtime during event creation"),
+            theme=theme,
+        )
 
     if htmlcode:
         return "icons", htmlcode
     return "", ""
 
 
-def render_event_phase_icons(row: Row) -> str | HTML:
-    phase = row["event_phase"]
-
-    if phase == "ack":
-        title = _("This event has been acknowledged.")
-    elif phase == "counting":
-        title = _("This event has not reached the target count yet.")
-    elif phase == "delayed":
-        title = _("The action of this event is still delayed in the hope of a cancelling event.")
-    else:
-        return ""
-
-    return html.render_icon(phase, title=title)
-
-
-def render_delete_event_icons(row: Row) -> str | HTML:
+def render_delete_event_icons(  # pylint: disable=redefined-outer-name
+    row: Row, *, request: Request
+) -> str | HTML:
     if not user.may("mkeventd.delete"):
         return ""
     urlvars: HTTPVariables = []
@@ -913,7 +963,7 @@ def render_delete_event_icons(row: Row) -> str | HTML:
     if _is_rendered_from_view_dashlet():
         ident = request.get_integer_input_mandatory("id")
 
-        import cmk.gui.dashboard as dashboard
+        from cmk.gui import dashboard
 
         # With the typed dicts we currently don't have an easy way of determining the type
         dashlet_config = dashboard.get_dashlet(request.get_str_input_mandatory("name"), ident)
@@ -982,7 +1032,7 @@ class PainterEventIcons(Painter):
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_event_icons(row)
+        return paint_event_icons(row, request=self.request, theme=self.theme)
 
 
 class PainterEventHistoryIcons(Painter):
@@ -1005,7 +1055,7 @@ class PainterEventHistoryIcons(Painter):
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_event_icons(row, history=True)
+        return paint_event_icons(row, history=True, request=self.request, theme=self.theme)
 
 
 class PainterEventContactGroups(Painter):
@@ -1106,7 +1156,13 @@ class PainterHistoryTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["history_time"], True, True)
+        return paint_age(
+            row["history_time"],
+            True,
+            True,
+            request=self.request,
+            painter_options=self._painter_options,
+        )
 
 
 class PainterHistoryWhat(Painter):
@@ -1222,11 +1278,11 @@ PermissionECUpdateContact = Permission(
 
 class ECCommand(Command):
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["event"]
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML(
+        return HTML.with_escaping(
             _("Affected %s: %s")
             % (
                 ungettext(
@@ -1270,7 +1326,7 @@ class CommandECUpdateEvent(ECCommand):
     def permission(self) -> Permission:
         return PermissionECUpdateEvent
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_table(border="0", cellpadding="0", cellspacing="3")
         if user.may("mkeventd.update_comment"):
             html.open_tr()
@@ -1315,15 +1371,9 @@ class CommandECUpdateEvent(ECCommand):
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")
+            events = ",".join(str(entry["event_id"]) for entry in action_rows)
             return (
-                "UPDATE;%s;%s;%s;%s;%s"
-                % (
-                    row["event_id"],
-                    user.id,
-                    ack and 1 or 0,
-                    comment,
-                    contact,
-                ),
+                f"UPDATE;{events};{user.id};{ack and 1 or 0};{comment};{contact}",
                 self.confirm_dialog_options(cmdtag, row, len(action_rows)),
             )
         return None
@@ -1362,19 +1412,27 @@ class CommandECChangeState(ECCommand):
     def permission(self) -> Permission:
         return PermissionECChangeEventState
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
-        return HTML(
-            "<br><br>"
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
+        value = MonitoringState().from_html_vars("_mkeventd_state")
+        assert value is not None
+        return (
+            HTMLWriter.render_br()
+            + HTMLWriter.render_br()
             + _("New state: %s")
             % {
                 0: _("OK"),
                 1: _("WARN"),
                 2: _("CRIT"),
                 3: _("UNKNOWN"),
-            }[MonitoringState().from_html_vars("_mkeventd_state")]
+            }[value]
         )
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         MonitoringState(label="Select new event state").render_input("_mkeventd_state", 2)
         html.br()
         html.br()
@@ -1387,7 +1445,7 @@ class CommandECChangeState(ECCommand):
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_mkeventd_changestate"):
-            events = ",".join([str(entry["event_id"]) for entry in action_rows])
+            events = ",".join(str(entry["event_id"]) for entry in action_rows)
             state = MonitoringState().from_html_vars("_mkeventd_state")
             return (
                 f"CHANGESTATE;{events};{user.id};{state}",
@@ -1429,7 +1487,7 @@ class CommandECCustomAction(ECCommand):
     def permission(self) -> Permission:
         return PermissionECCustomActions
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         for action_id, title in action_choices(omit_hidden=True):
             html.button("_action_" + action_id, title, cssclass="border_hot")
@@ -1443,8 +1501,9 @@ class CommandECCustomAction(ECCommand):
     ) -> CommandActionResult:
         for action_id, _title in action_choices(omit_hidden=True):
             if request.var("_action_" + action_id):
+                events = ",".join(str(entry["event_id"]) for entry in action_rows)
                 return (
-                    "ACTION;{};{};{}".format(row["event_id"], user.id, action_id),
+                    f"ACTION;{events};{user.id};{action_id}",
                     self.confirm_dialog_options(cmdtag, row, len(action_rows)),
                 )
         return None
@@ -1480,7 +1539,7 @@ class CommandECArchiveEvent(ECCommand):
     def permission(self) -> Permission:
         return PermissionECArchiveEvent
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_delete_event", _("Archive Event"), cssclass="hot")
         html.button("_cancel", _("Cancel"))
@@ -1490,7 +1549,7 @@ class CommandECArchiveEvent(ECCommand):
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_delete_event"):
-            events = ",".join([str(entry["event_id"]) for entry in action_rows])
+            events = ",".join(str(entry["event_id"]) for entry in action_rows)
             command = f"DELETE;{events};{user.id}"
             return command, self.confirm_dialog_options(cmdtag, row, len(action_rows))
         return None
@@ -1527,21 +1586,23 @@ class CommandECArchiveEventsOfHost(ECCommand):
         return PermissionECArchiveEventsOfHost
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["service"]
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
-        return HTML(
-            _(
-                "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."
-            )
-            % request.var("host")
-        )
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
+        return HTML.empty() + _(
+            "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."
+        ) % request.var("host")
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML("")
+        return HTML.empty()
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.help(
             _(
                 "Note: With this command you can archive all events of one host. "
@@ -1584,7 +1645,7 @@ class SorterServicelevel(Sorter):
 
     @property
     def title(self) -> str:
-        return _("Servicelevel")
+        return _("Service level")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -1594,7 +1655,7 @@ class SorterServicelevel(Sorter):
         return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
 
 
-def cmp_simple_state(column, ra, rb):
+def cmp_simple_state(column: ColumnName, ra: Row, rb: Row) -> int:
     a = ra.get(column, -1)
     b = rb.get(column, -1)
     if a == 3:
@@ -1633,6 +1694,7 @@ def mkeventd_view(d):
         "user_sortable": "on",
         "link_from": {},
         "add_context_to_title": True,
+        "megamenu_search_terms": [],
     }
     x.update(d)
     return x
@@ -1990,7 +2052,7 @@ EC_HISTORY_OF_EVENT = mkeventd_view(
             SorterSpec(sorter="history_time", negate=True),
             SorterSpec(sorter="history_line", negate=True),
         ],
-        "title": _l("History of Event"),
+        "title": _l("History of event"),
         "description": _l("History entries of one specific event"),
         "datasource": "mkeventd_history",
         "layout": "table",
@@ -2150,6 +2212,7 @@ EC_EVENT_MOBILE: ViewSpec = {
     "sort_index": 99,
     "is_show_more": False,
     "packaged": False,
+    "megamenu_search_terms": [],
 }
 
 EC_EVENTS_MOBILE: ViewSpec = {
@@ -2237,4 +2300,5 @@ EC_EVENTS_MOBILE: ViewSpec = {
     "sort_index": 99,
     "is_show_more": False,
     "packaged": False,
+    "megamenu_search_terms": [],
 }

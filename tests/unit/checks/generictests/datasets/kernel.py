@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.kernel import parse_kernel
+from collections.abc import Mapping, Sequence
+
+from cmk.plugins.collection.agent_based.kernel import parse_kernel
 
 # fmt: off
 
@@ -33,7 +35,10 @@ parsed = parse_kernel(
     ]
 )
 
-discovery = {"": [], "performance": [(None, {})]}
+discovery: Mapping[str, Sequence[tuple[str | None, Mapping[object, object]]]] = {
+    "": [],
+    "performance": [(None, {})],
+}
 
 _basic_result_util = [
     (0, "User: 6.49%", [("user", 6.48547647710549)]),

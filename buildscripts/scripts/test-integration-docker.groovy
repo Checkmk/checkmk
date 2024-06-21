@@ -24,7 +24,8 @@ def main() {
 
     def package_dir = "${checkout_dir}/downloaded_packages_for_docker_tests";
     def branch_name = versioning.safe_branch_name(scm);
-    def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_version = versioning.get_cmk_version(branch_name, branch_version, VERSION);
 
     print(
         """

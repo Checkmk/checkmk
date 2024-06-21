@@ -5,8 +5,6 @@
 pub mod agent;
 pub mod certs;
 use assert_cmd::Command;
-#[cfg(windows)]
-pub use is_elevated;
 
 pub fn setup_test_dir(prefix: &str) -> tempfile::TempDir {
     tempfile::Builder::new().prefix(prefix).tempdir().unwrap()

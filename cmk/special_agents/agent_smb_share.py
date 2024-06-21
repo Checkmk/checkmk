@@ -12,16 +12,15 @@ from datetime import datetime, timezone
 from fnmatch import fnmatch
 from typing import NamedTuple
 
-from smb.base import NotConnectedError, SharedFile  # type: ignore[import]
-from smb.smb_structs import OperationFailure  # type: ignore[import]
-from smb.SMBConnection import SMBConnection  # type: ignore[import]
+from smb.base import NotConnectedError, SharedFile  # type: ignore[import-untyped]
+from smb.smb_structs import OperationFailure  # type: ignore[import-untyped]
+from smb.SMBConnection import SMBConnection  # type: ignore[import-untyped]
 
-from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 
-class SMBShareAgentError(Exception):
-    ...
+class SMBShareAgentError(Exception): ...
 
 
 class File(NamedTuple):
@@ -149,11 +148,11 @@ def get_all_shared_files(
         pattern = pattern_string.strip("\\").split("\\")
         if len(pattern) < 3:
             raise SMBShareAgentError(
-                f"Invalid pattern {pattern_string}. Pattern has to consist of hostname, share and file matching pattern"
+                f"Invalid pattern {pattern_string}. Pattern has to consist of host name, share and file matching pattern"
             )
 
         if pattern[0] != hostname:
-            raise SMBShareAgentError(f"Pattern {pattern_string} doesn't match {hostname} hostname")
+            raise SMBShareAgentError(f"Pattern {pattern_string} doesn't match {hostname} host name")
 
         share_name = pattern[1]
         if share_name.lower() not in share_names:

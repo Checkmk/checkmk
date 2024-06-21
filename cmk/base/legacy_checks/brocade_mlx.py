@@ -7,12 +7,14 @@
 # mypy: disable-error-code="var-annotated"
 
 import re
+from collections.abc import Sequence
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.plugins.lib.brocade import DETECT_MLX
 
 # TODO refactoring: use parse-function
 
@@ -27,7 +29,13 @@ brocade_mlx_states = {
     11: (0, "Blocked for full height card"),
 }
 
+
+def parse_brocade_mlx(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["brocade_mlx"] = LegacyCheckDefinition(
+    parse_function=parse_brocade_mlx,
     detect=DETECT_MLX,
     fetch=[
         SNMPTree(
@@ -96,8 +104,6 @@ check_info["brocade_mlx.module_status"] = LegacyCheckDefinition(
 #   |                                                |___/                 |
 #   +----------------------------------------------------------------------+
 
-brocade_mlx_mem_default_levels = {"levels": (80.0, 90.0)}
-
 
 def parse_brocade_mlx_module_mem(info):
     parsed = {}
@@ -131,7 +137,6 @@ def parse_brocade_mlx_module_mem(info):
 
 def inventory_brocade_mlx_module_mem(info):
     parsed = parse_brocade_mlx_module_mem(info)
-    inventory = []
     for k, v in parsed.items():
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
@@ -139,8 +144,7 @@ def inventory_brocade_mlx_module_mem(info):
         if v["state_readable"] not in ["Slot is empty", "Blocked for full height card"] and (
             descr.startswith("NI-MLX") or descr.startswith("BR-MLX")
         ):
-            inventory.append((k, brocade_mlx_mem_default_levels))
-    return inventory
+            yield k, {}
 
 
 def check_brocade_mlx_module_mem(item, params, info):
@@ -153,14 +157,14 @@ def check_brocade_mlx_module_mem(item, params, info):
     if state_readable.lower() != "running":
         return 3, "Module is not running (Current State: %s)" % state_readable
 
-    warn, crit = params.get("levels", (None, None))
-    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    levels = params.get("levels")
+    mode = "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used"
     try:
         return check_memory_element(
             "Usage",
             data["mem_total"] - data["mem_avail"],
             data["mem_total"],
-            (mode, (warn, crit)),
+            (mode, levels),
             metric_name="mem_used",
         )
     except KeyError:
@@ -173,6 +177,7 @@ check_info["brocade_mlx.module_mem"] = LegacyCheckDefinition(
     discovery_function=inventory_brocade_mlx_module_mem,
     check_function=check_brocade_mlx_module_mem,
     check_ruleset_name="memory_multiitem",
+    check_default_parameters={"levels": (80.0, 90.0)},
 )
 
 # .
@@ -185,11 +190,8 @@ check_info["brocade_mlx.module_mem"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-brocade_mlx_cpu_default_levels = {"levels": (80.0, 90.0)}
-
 
 def inventory_brocade_mlx_module_cpu(info):
-    inventory = []
     for module_id, module_descr, module_state, _mem_total, _mem_avail in info[0]:
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
@@ -198,13 +200,7 @@ def inventory_brocade_mlx_module_cpu(info):
             and module_state != "11"
             and (module_descr.startswith("NI-MLX") or module_descr.startswith("BR-MLX"))
         ):
-            inventory.append(
-                (
-                    brocade_mlx_combine_item(module_id, module_descr),
-                    brocade_mlx_cpu_default_levels,
-                )
-            )
-    return inventory
+            yield brocade_mlx_combine_item(module_id, module_descr), {}
 
 
 def check_brocade_mlx_module_cpu(item, params, info):
@@ -262,4 +258,5 @@ check_info["brocade_mlx.module_cpu"] = LegacyCheckDefinition(
     discovery_function=inventory_brocade_mlx_module_cpu,
     check_function=check_brocade_mlx_module_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
+    check_default_parameters={"levels": (80.0, 90.0)},
 )

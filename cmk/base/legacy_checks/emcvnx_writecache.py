@@ -11,6 +11,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_emcvnx_writecache(info):
     inventory = []
@@ -33,7 +35,12 @@ def check_emcvnx_writecache(item, params, info):
     return None
 
 
+def parse_emcvnx_writecache(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["emcvnx_writecache"] = LegacyCheckDefinition(
+    parse_function=parse_emcvnx_writecache,
     service_name="Write Cache State %s",
     discovery_function=inventory_emcvnx_writecache,
     check_function=check_emcvnx_writecache,

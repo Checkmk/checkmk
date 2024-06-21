@@ -5,9 +5,7 @@
 
 import pytest
 
-from tests.testlib import Check
-
-from .checktestlib import CheckResult
+from .checktestlib import Check, CheckResult
 
 pytestmark = pytest.mark.checks
 

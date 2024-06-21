@@ -6,9 +6,7 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-from tests.testlib.utils import is_cloud_repo, is_enterprise_repo
-
-from tests.unit.cmk.conftest import import_plugins
+from tests.testlib.repo import is_cloud_repo, is_enterprise_repo
 
 import cmk.gui.watolib.host_attributes as attrs
 
@@ -16,7 +14,7 @@ expected_attributes = {
     "additional_ipv4addresses": {
         "class_name": "ValueSpecAttribute",
         "depends_on_roles": [],
-        "depends_on_tags": [],
+        "depends_on_tags": ["ip-v4"],
         "editable": True,
         "from_config": False,
         "show_in_folder": False,
@@ -29,7 +27,7 @@ expected_attributes = {
     "additional_ipv6addresses": {
         "class_name": "ValueSpecAttribute",
         "depends_on_roles": [],
-        "depends_on_tags": [],
+        "depends_on_tags": ["ip-v6"],
         "editable": True,
         "from_config": False,
         "show_in_folder": False,
@@ -359,7 +357,6 @@ expected_attributes = {
 
 
 @pytest.mark.usefixtures("load_config")
-@import_plugins(["cmk.gui.cce.plugins.wato"])
 def test_registered_host_attributes() -> None:
     names = attrs.host_attribute_registry.keys()
     assert sorted(expected_attributes.keys()) == sorted(names)
@@ -466,9 +463,6 @@ def test_legacy_register_rulegroup_without_defaults(
     [
         ("Basic settings", "basic"),
         ("Management board", "management_board"),
-        ("Custom attributes", "custom_attributes"),
-        ("Eigene Attribute", "custom_attributes"),
-        ("xyz_unknown", "custom_attributes"),
     ],
 )
 def test_custom_host_attribute_transform(old: str, new: str) -> None:
@@ -534,7 +528,6 @@ def test_host_attribute_topics_for_folders() -> None:
     ],
 )
 @pytest.mark.parametrize("new", [True, False])
-@import_plugins(["cmk.gui.cce.plugins.wato"])
 def test_host_attributes(for_what: str, new: bool) -> None:
     topics = {
         "basic": [

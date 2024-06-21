@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Callable
 
 import pytest
@@ -30,7 +31,7 @@ def get_cloudwatch_alarms_sections() -> CreateCloudwatchAlarmSections:
         alarm_names: object | None,
     ) -> tuple[CloudwatchAlarmsLimits, CloudwatchAlarms]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("cloudwatch_alarms", alarm_names)
 
         fake_cloudwatch_client = FakeCloudwatchClient()
@@ -90,7 +91,7 @@ def test_agent_aws_cloudwatch_alarms(
     amount_alarms: int,
 ) -> None:
     cloudwatch_alarms_limits, cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)
-    _cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results  # noqa: F841
+    _cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results
     cloudwatch_alarms_results = cloudwatch_alarms.run().results
 
     assert cloudwatch_alarms.cache_interval == 300

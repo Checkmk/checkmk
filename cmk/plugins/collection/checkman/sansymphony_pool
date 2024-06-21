@@ -1,0 +1,22 @@
+title: Sansymphony: Pool
+catalog: app/sansymphony
+agents: windows
+distribution: check_mk
+license: GPLv2
+description:
+
+ This check shows the allocated pool size, whether the dynamic pool is running, and whether the cache is in ReadWrite mode.
+ If the dynamic pool not running, {CRIT} will be reported.
+ If the cache is not in ReadWrite mode, {CRIT} will be reported.
+ It is possible to set levels to check the allocated size using the ruleset "Sansymphony pool allocation".
+ Magic factor can be used to adjust these levels dynamically based on the overall pool size.
+ Please refer to the user guide for more information on magic factor.
+
+ The windows agent needs to be extended with the agent plug-in sansymphony.ps1.
+ In order to use magic factor, the agent plug-in must be version 2.2.0 or higher.
+
+item:
+ Name of the pool.
+
+discovery:
+ One service is created for each pool.

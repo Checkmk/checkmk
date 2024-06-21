@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.apc import DETECT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.apc import DETECT
 
 
 def inventory_apc_humidity(info):
@@ -24,7 +25,12 @@ def check_apc_humidity(item, params, info):
     return None
 
 
+def parse_apc_humidity(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["apc_humidity"] = LegacyCheckDefinition(
+    parse_function=parse_apc_humidity,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.10.4.2.3.1",
@@ -35,7 +41,7 @@ check_info["apc_humidity"] = LegacyCheckDefinition(
     check_function=check_apc_humidity,
     check_ruleset_name="humidity",
     check_default_parameters={
-        "levels": (40, 35),
-        "levels_lower": (60, 65),
+        "levels": (40.0, 35.0),
+        "levels_lower": (60.0, 65.0),
     },
 )

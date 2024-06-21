@@ -54,8 +54,8 @@ TEST(WinPerf, ValidateFabricConfig) {
     ASSERT_NE(cfg_timeout, 1234567);
     EXPECT_EQ(groups::g_winperf.timeout(), cfg_timeout);
 
-    EXPECT_TRUE(wp_group[vars::kWinPerfFork].as<bool>(false));
-    EXPECT_TRUE(groups::g_winperf.isFork());
+    EXPECT_FALSE(wp_group[vars::kWinPerfFork].as<bool>(true));
+    EXPECT_FALSE(groups::g_winperf.isFork());
 
     EXPECT_FALSE(wp_group[vars::kWinPerfTrace].as<bool>(true));
     EXPECT_FALSE(groups::g_winperf.isTrace());
@@ -156,6 +156,10 @@ TEST(WinPerf, InvalidCounter) {
     EXPECT_TRUE(BuildWinPerfSection(L"winp", name, index).empty());
 }
 
+bool IsMacLike(const std::string &s) {
+    return tools::SplitString(s, ":").size() == 8;
+}
+
 TEST(WinPerf, IfCounter) {
     const auto x = BuildWinPerfSection(L"winp", L"if", L"510");
     const auto table = tools::SplitString(x, "\n");
@@ -165,6 +169,7 @@ TEST(WinPerf, IfCounter) {
     EXPECT_EQ(table[0], "<<<winp_if>>>"s);
     const auto stamp = tools::SplitString(table[1], " ");
     ASSERT_EQ(stamp.size(), 3);
+    const auto names = tools::SplitString(table[2], " ");
 
     // check stamp
     const auto stamp_time = tools::ConvertToUint64(stamp[0], 12345678);
@@ -177,6 +182,29 @@ TEST(WinPerf, IfCounter) {
               cfg::GetPerformanceFrequency());
     // check at least one negative value is in
     EXPECT_TRUE(rs::any_of(table, [](auto &l) { return l[0] == '-'; }));
+
+    // check pseudo counter is in last line
+    EXPECT_TRUE(table[table.size() - 2].starts_with(
+        wtools::ToUtf8(winperf::if_state_pseudo_counter)));
+
+    // check pseudo counter is in last line
+    EXPECT_TRUE(table[table.size() - 2].ends_with(
+        wtools::ToUtf8(winperf::if_state_pseudo_counter_type)));
+    // check pseudo counter is in last line
+    EXPECT_TRUE(table[table.size() - 1].starts_with(
+        wtools::ToUtf8(winperf::if_mac_pseudo_counter)));
+    auto pre_last_row = tools::SplitString(table[table.size() - 2], " ");
+    EXPECT_EQ(pre_last_row.size(), names.size());
+
+    // check pseudo counter is in last line
+    EXPECT_TRUE(table[table.size() - 1].ends_with(
+        wtools::ToUtf8(winperf::if_mac_pseudo_counter_type)));
+    auto last_row = tools::SplitString(table[table.size() - 1], " ");
+    EXPECT_EQ(last_row.size(), names.size());
+    EXPECT_TRUE(rs::all_of(std::next(last_row.begin()),
+                           std::prev(last_row.end()),
+                           [](const std ::string &e) { return IsMacLike(e); }))
+        << "Not all MACs found in:" << table[table.size() - 1];
 }
 
 TEST(WinPerf, TcpConnCounter) {

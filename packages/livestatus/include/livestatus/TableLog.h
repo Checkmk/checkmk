@@ -6,14 +6,13 @@
 #ifndef TableLog_h
 #define TableLog_h
 
-#include <cstddef>
 #include <memory>
 #include <string>
 
-#include "livestatus/LogCache.h"
 #include "livestatus/Table.h"
 class Column;
 class ICore;
+class LogCache;
 class Query;
 class User;
 
@@ -23,15 +22,13 @@ public:
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query &query, const User &user) override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
     [[nodiscard]] std::shared_ptr<Column> column(
         std::string colname) const override;
 
 private:
-    LogCache *_log_cache;
-
-    static LogFilter constructFilter(Query &query,
-                                     size_t max_lines_per_logfile);
+    LogCache *log_cache_;
 };
 
 #endif  // TableLog_h

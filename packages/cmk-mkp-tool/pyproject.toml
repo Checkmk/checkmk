@@ -1,10 +1,7 @@
 [project]
 name = "cmk-mkp-tool"
-version = "0.1.0"
-dependencies = [
-    "pydantic",
-    "semver",
-]
+version = "0.2.0"
+dependencies = ["pydantic"]
 
 [build-system]
 requires = ["setuptools"]
@@ -23,17 +20,19 @@ quiet = true
 profile = "black"
 order_by_type = false
 line_length = 100
-py_version = 311
+py_version = 312
 
 [tool.mypy]
 explicit_package_bases = true
 packages = ["cmk", "tests"]
 strict = true
 # Miscellaneous stuff not in --strict
-disallow_any_decorated = true
-disallow_any_explicit = true
-disallow_any_expr = false  # lots of Anys in APIs like pydantic, argparse, lxml, ...
+disallow_any_decorated = false
+disallow_any_explicit = false
+disallow_any_expr = false
+disallow_any_generics = true
 disallow_any_unimported = true
+disallow_subclassing_any = true
 no_implicit_optional = true
 strict_optional = true
 warn_unreachable = true
@@ -47,9 +46,16 @@ persistent = "no"
 score = "no"
 
 [tool.pylint.messages_control]
-disable = "missing-docstring,fixme"
+disable = [
+  # We should at least document modules and classes. :-/
+  "missing-module-docstring",
+  "missing-class-docstring",
+  "missing-function-docstring",
+  # Instead of suppressing TODOs, we should actually fix them. :-/
+  "fixme",
+]
 
 [tool.pytest.ini_options]
-pythonpath = [ "." ]
-testpaths = [ "cmk", "tests" ]
+pythonpath = ["."]
+testpaths = ["cmk", "tests"]
 addopts = "--doctest-modules --import-mode=importlib"

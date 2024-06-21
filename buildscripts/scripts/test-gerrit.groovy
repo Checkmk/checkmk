@@ -4,8 +4,9 @@
 
 def main() {
     def test_gerrit_helper = load("${checkout_dir}/buildscripts/scripts/utils/gerrit_stages.groovy");
+    // no `def` - must be global
+    test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     def result_dir = "${checkout_dir}/results";
-    def issues = [];
     def time_job_started = new Date();
     def time_stage_started = time_job_started;
 
@@ -36,8 +37,11 @@ def main() {
 
     stage("Prepare workspace") {
         dir("${checkout_dir}") {
-            sh("scripts/run-in-docker.sh buildscripts/scripts/ensure-workspace-integrity")
-            sh("rm -rf ${result_dir}; mkdir ${result_dir}")
+
+            inside_container() {
+                sh("buildscripts/scripts/ensure-workspace-integrity");
+            }
+            sh("rm -rf ${result_dir}; mkdir ${result_dir}");
 
             /// Reason for the following try/catch block:
             /// Jenkins will abort jobs (e.g. in case of a new patch set) with SIGKILL (at least this is what we think)
@@ -112,13 +116,15 @@ def main() {
                         pattern: "results/*junit.xml",
                         skipNoTestFiles: true,
                         stopProcessingIfError: true,
-                )])
+                )]);
 
-                archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
-                sh("scripts/run-in-docker.sh make workspaceclean");
+                show_duration("archiveArtifacts") {
+                    archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
+                }
             }
         }
         time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
     }
 }
+
 return this;

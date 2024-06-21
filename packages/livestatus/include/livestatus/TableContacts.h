@@ -17,12 +17,14 @@ class User;
 
 class TableContacts : public Table {
 public:
-    explicit TableContacts(ICore *mc);
+    TableContacts();
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query &query, const User &user) override;
-    [[nodiscard]] Row get(const std::string &primary_key) const override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
+    [[nodiscard]] Row get(const std::string &primary_key,
+                          const ICore &core) const override;
 
     static void addColumns(Table *table, const std::string &prefix,
                            const ColumnOffsets &offsets);

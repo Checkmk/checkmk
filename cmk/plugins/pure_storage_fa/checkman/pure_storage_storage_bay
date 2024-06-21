@@ -1,0 +1,24 @@
+title: Pure Storage FlashArray: Storage Bay
+agents: pure_storage_fa
+catalog: hw/storagehw/pure_storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the status of a Pure Storage Storage Bay.
+
+ The status is mapped to the following Checkmk state:
+
+ - {OK} if "ok", "healthy" , "unused" or "not_installed"
+
+ - {WARN} if "unknown" or "identifying"
+
+ - {CRIT} if "critical" or "unhealthy"
+
+ To make this check work you have to configure the related special agent
+ {Pure Storage FlashArray}.
+
+item:
+ Name of the storage bay.
+
+discovery:
+ One service per storage bay is created.

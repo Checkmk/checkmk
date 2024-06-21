@@ -2,7 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import enum
+
+# pylint: disable=protected-access
 import inspect
 import sys
 from collections.abc import Callable, Mapping, Sequence
@@ -18,6 +19,9 @@ from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 
+from cmk.agent_based.v1.register import RuleSetType
+from cmk.discover_plugins import PluginLocation
+
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
 ITEM_VARIABLE: Final = "%s"
@@ -25,15 +29,15 @@ ITEM_VARIABLE: Final = "%s"
 _ALLOWED_EDITION_FOLDERS: Final = {e.short for e in Edition}
 
 
-def get_validated_plugin_module_name() -> str:
-    """Find out which module registered the plugin and make sure its in the right place"""
+def get_validated_plugin_location() -> PluginLocation:
+    """Find out which module registered the plug-in and make sure its in the right place"""
     # We used this before, but it was a performance killer. The method below is a lot faster.
     # calling_from = inspect.stack()[2].filename
     full_module_name = str(sys._getframe(2).f_globals["__name__"])
 
     match full_module_name.split("."):
         case ("cmk", "base", "plugins", "agent_based", _module):
-            return full_module_name
+            return PluginLocation(full_module_name)
         case (
             "cmk",
             "base",
@@ -42,7 +46,7 @@ def get_validated_plugin_module_name() -> str:
             edition,
             _module,
         ) if edition in _ALLOWED_EDITION_FOLDERS:
-            return full_module_name
+            return PluginLocation(full_module_name)
 
     raise ImportError(f"do not register from {full_module_name!r}")
 
@@ -178,17 +182,6 @@ def _value_type(annotation: inspect.Parameter) -> bytes:
     return get_args(annotation)[1]
 
 
-class RuleSetType(enum.Enum):
-    """Indicate the type of the rule set
-
-    Discovery and host label functions may either use all rules of a rule set matching
-    the current host, or the merged rules.
-    """
-
-    MERGED = enum.auto()
-    ALL = enum.auto()
-
-
 def validate_ruleset_type(ruleset_type: RuleSetType) -> None:
     if not isinstance(ruleset_type, RuleSetType):
         allowed = ", ".join(str(c) for c in RuleSetType)
@@ -216,7 +209,7 @@ def validate_check_ruleset_item_consistency(
     check_plugin: CheckPlugin,
     check_plugins_by_ruleset_name: dict[RuleSetName | None, list[CheckPlugin]],
 ) -> None:
-    """Validate check plugins sharing a check_ruleset_name have either all or none an item.
+    """Validate check plug-ins sharing a check_ruleset_name have either all or none an item.
 
     Mixed checkgroups lead to strange exceptions when processing the check parameters.
     So it is much better to catch these errors in a central place with a clear error message.
@@ -241,5 +234,5 @@ def validate_check_ruleset_item_consistency(
         raise ValueError(
             f"Check ruleset {check_plugin.check_ruleset_name} has checks with and without item! "
             "At least one of the checks in this group needs to be changed "
-            f"(offending plugin: {check_plugin.name}, present_plugins: {present_plugins})."
+            f"(offending plug-in: {check_plugin.name}, present plug-ins: {present_plugins})."
         )

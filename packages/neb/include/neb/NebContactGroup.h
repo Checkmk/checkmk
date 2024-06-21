@@ -18,11 +18,14 @@ public:
         : contact_group_{contact_group} {}
 
     [[nodiscard]] bool isMember(const IContact &contact) const override {
-        auto ctc = static_cast<const NebContact &>(contact).handle();
+        const auto &ctc = static_cast<const NebContact &>(contact).handle();
         // Older Nagios headers are not const-correct... :-P
-        return ::is_contact_member_of_contactgroup(
-                   const_cast<contactgroup *>(&contact_group_),
-                   const_cast<::contact *>(&ctc)) != 0;
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        auto *cg = const_cast<contactgroup *>(&contact_group_);
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        auto *c = const_cast<::contact *>(&ctc);
+        return ::is_contact_member_of_contactgroup(cg, c) != 0;
     }
     [[nodiscard]] std::string name() const override {
         return contact_group_.group_name;

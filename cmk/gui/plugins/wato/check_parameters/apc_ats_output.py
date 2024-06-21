@@ -20,7 +20,7 @@ def _parameter_valuespec_apc_ats_output():
             (
                 "output_voltage_max",
                 Tuple(
-                    title=_("Maximum Levels for Voltage"),
+                    title=_("Maximum levels for Voltage"),
                     elements=[
                         Integer(title=_("Warning at"), unit="Volt"),
                         Integer(title=_("Critical at"), unit="Volt"),
@@ -30,7 +30,7 @@ def _parameter_valuespec_apc_ats_output():
             (
                 "output_voltage_min",
                 Tuple(
-                    title=_("Minimum Levels for Voltage"),
+                    title=_("Minimum levels for Voltage"),
                     elements=[
                         Integer(title=_("Warning if below"), unit="Volt"),
                         Integer(title=_("Critical if below"), unit="Volt"),
@@ -40,7 +40,7 @@ def _parameter_valuespec_apc_ats_output():
             (
                 "load_perc_max",
                 Tuple(
-                    title=_("Maximum Levels for load in percent"),
+                    title=_("Maximum levels for load in percent"),
                     elements=[
                         Percentage(title=_("Warning at")),
                         Percentage(title=_("Critical at")),
@@ -50,7 +50,7 @@ def _parameter_valuespec_apc_ats_output():
             (
                 "load_perc_min",
                 Tuple(
-                    title=_("Minimum Levels for load in percent"),
+                    title=_("Minimum levels for load in percent"),
                     elements=[
                         Percentage(title=_("Warning if below")),
                         Percentage(title=_("Critical if below")),

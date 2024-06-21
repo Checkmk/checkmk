@@ -8,15 +8,14 @@ from contextlib import suppress
 from itertools import chain
 from pathlib import Path
 from stat import filemode
-
-from typing_extensions import TypedDict
+from typing import TypedDict
 
 from ._installed import Installer
 from ._mkp import PackagePart
 from ._parts import PathConfig, ui_title
 
 
-def all_local_files(path_config: PathConfig) -> Mapping[PackagePart | None, set[Path]]:
+def _all_local_files(path_config: PathConfig) -> Mapping[PackagePart | None, set[Path]]:
     """Return a map of categorized local files
 
     Remove duplicates caused by symlinks, but keep the symlinks.
@@ -64,6 +63,20 @@ def all_rule_pack_files(ec_path: Path) -> set[Path]:
     return set()
 
 
+def all_packable_files(path_config: PathConfig) -> Mapping[PackagePart, set[Path]]:
+    """Collect all files that can be in a package in principle
+
+    Incudes already packaged files and EC exported rule packs.
+    Excludes rogue files (not belonging to a package part).
+    """
+    return {
+        **{p: f for p, f in _all_local_files(path_config).items() if p is not None},
+        PackagePart.EC_RULE_PACKS: all_rule_pack_files(
+            path_config.get_path(PackagePart.EC_RULE_PACKS)
+        ),
+    }
+
+
 class FileMetaInfo(TypedDict):
     file: str
     package: str
@@ -81,7 +94,7 @@ def files_inventory(installer: Installer, path_config: PathConfig) -> Sequence[F
         (
             (part, file, package_map[part].get(file) if part else None)
             for part, files in chain(
-                all_local_files(path_config).items(),
+                _all_local_files(path_config).items(),
                 (
                     (
                         PackagePart.EC_RULE_PACKS,

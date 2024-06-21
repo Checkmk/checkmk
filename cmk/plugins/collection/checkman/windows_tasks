@@ -1,0 +1,28 @@
+title: Windows Task Scheduler: State
+agents: windows
+catalog: os/misc
+license: GPLv2
+distribution: check_mk
+description:
+ This check plug-in monitors the last return state of Windows tasks. The check plug-in uses a default
+ mapping from return code to monitoring state to handle the return codes specified under
+ https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-error-and-success-constants.
+ For these return codes, the check plug-in will also display the appropriate error message. Any return
+ code not listed under the above link will by default result in the monitoring state {CRITICAL}.
+ Furthermore, by default, the check plug-in will go {WARNING} if a monitored task is not enabled.
+
+ The check plug-in can be configured via the rule "Windows Tasks". Here, users can customize the
+ mapping from return code to monitoring state and users can also change the output produced by the
+ check plug-in for a given return code. Finally, this rule allows users to modify the monitoring state
+ of tasks which are not enabled.
+
+ The discovered services are configurable via the service discovery rule "Windows Tasks".
+
+ Note that for this check plug-in to discover any services at all, you need to activate the Windows
+ agent plug-in "Windows Task Scheduler".
+
+item:
+ Name of the task
+
+discovery:
+ One service is created for each task which is not disabled.

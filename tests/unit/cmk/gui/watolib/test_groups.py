@@ -11,8 +11,8 @@ import pytest
 
 import cmk.utils.paths
 
-import cmk.gui.groups as gui_groups
 from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.watolib import groups_io
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
 
 
@@ -30,9 +30,9 @@ def patch_config_paths(monkeypatch, tmp_path):
 @pytest.mark.usefixtures("tmp_path")
 def test_load_group_information_empty(run_as_superuser: Callable[[], ContextManager[None]]) -> None:
     with application_and_request_context(), run_as_superuser():
-        assert gui_groups.load_contact_group_information() == {}
-        assert gui_groups.load_host_group_information() == {}
-        assert gui_groups.load_service_group_information() == {}
+        assert groups_io.load_contact_group_information() == {}
+        assert groups_io.load_host_group_information() == {}
+        assert groups_io.load_service_group_information() == {}
 
 
 @pytest.mark.usefixtures("tmp_path")
@@ -41,9 +41,9 @@ def test_load_group_information(run_as_superuser: Callable[[], ContextManager[No
         f.write(
             """# encoding: utf-8
 
-define_contactgroups.update({'all': u'Everything'})
 define_hostgroups.update({'all_hosts': u'All hosts :-)'})
 define_servicegroups.update({'all_services': u'All särvices'})
+define_contactgroups.update({'all': u'Everything'})
 """
         )
 
@@ -53,64 +53,64 @@ define_servicegroups.update({'all_services': u'All särvices'})
 
 multisite_hostgroups = {
     "all_hosts": {
-        "ding": "dong",
+        "customer": "foo",
     },
 }
 
 multisite_servicegroups = {
     "all_services": {
-        "d1ng": "dong",
+        "unknown": "field",
     },
 }
 
 multisite_contactgroups = {
     "all": {
-        "d!ng": "dong",
+        "inventory_paths": "allow_all",
     },
 }
 """
         )
 
     with application_and_request_context(), run_as_superuser():
-        assert gui_groups.load_group_information() == {
-            "contact": {
-                "all": {
-                    "alias": "Everything",
-                    "d!ng": "dong",
-                }
-            },
+        assert groups_io.load_group_information() == {
             "host": {
                 "all_hosts": {
                     "alias": "All hosts :-)",
-                    "ding": "dong",
+                    "customer": "foo",
                 }
             },
             "service": {
                 "all_services": {
                     "alias": "All s\xe4rvices",
-                    "d1ng": "dong",
+                    "unknown": "field",
+                }
+            },
+            "contact": {
+                "all": {
+                    "alias": "Everything",
+                    "inventory_paths": "allow_all",
                 }
             },
         }
 
-        assert gui_groups.load_contact_group_information() == {
-            "all": {
-                "alias": "Everything",
-                "d!ng": "dong",
-            }
-        }
-
-        assert gui_groups.load_host_group_information() == {
+        assert groups_io.load_host_group_information() == {
             "all_hosts": {
                 "alias": "All hosts :-)",
-                "ding": "dong",
+                "customer": "foo",
             }
         }
 
-        assert gui_groups.load_service_group_information() == {
+        assert groups_io.load_service_group_information() == {
             "all_services": {
                 "alias": "All s\xe4rvices",
-                "d1ng": "dong",
+                "unknown": "field",
+            }
+        }
+
+        assert groups_io.load_contact_group_information() == {
+            "all": {
+                "alias": "Everything",
+                "inventory_paths": "allow_all",
             }
         }
 

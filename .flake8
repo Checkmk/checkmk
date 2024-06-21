@@ -1,82 +1,37 @@
 [flake8]
-# In .style.yapf and .pylintrc we use 100, but in some cases this isn't enforced.
-max-line-length=550
-per-file-ignores=
-    cmk/gui/config.py:F403,F405
 ignore=
     ################################################################################################
-    # Miscellaneous stuff
+    # Black is our formatting tool, so ignore any formatting-related findings.
     ################################################################################################
-    # Incompatible with the vim folding markers:
-    # block comment should start with '# '
-    E265,
-    # Incompatible with our conditional imports:
-    # module level import not at top of file
-    E402,
-    # Incompatible with our re-exports:
-    # 'from FOO import *' used; unable to detect undefined names
-    F403,
-    # Incompatible with our exec/eval magic:
-    # 'FOO' may be undefined, or defined from star imports
-    F405,
-    # Bug in pyflakes
-    # syntax error in type comment 'FOO'
-    F723,
-    # Bug in pyflakes, already fixed in https://github.com/PyCQA/pyflakes/pull/455, but no release in sight after ages... :-P
-    # undefined name 'FOO'
-    F821,
-    # Highly questionable advice, we don't use the "Guido-hates-FP"-style...
-    # do not assign a lambda expression, use a def
-    E731,
-    ################################################################################################
-    # Incompatible with YAPF
-    ################################################################################################
-    # continuation line under-indented for hanging indent
-    E121,
-    # closing bracket does not match visual indentation
-    E124,
-    # continuation line with same indent as next logical line
-    E125,
-    # continuation line unaligned for hanging indent
-    E131,
-    # missing whitespace around operator
-    E225,
-    # missing whitespace after ','
-    E231,
-    # expected 1 blank line, found FOO
-    E301,
-    # expected 2 blank lines after class or function definition, found FOO
-    E305,
-    # line break before binary operator
-    W503,
-    # line break after binary operator
-    W504,
-    # unexpected spaces around keyword / parameter equals
-    E251,
-    ################################################################################################
-    # We should probably fix the stuff below, but it's just too much noise for now...
-    ################################################################################################
-    # continuation line missing indentation or outdented
-    E122,
-    # continuation line over-indented for hanging indent
-    E126,
-    # continuation line over-indented for visual indent
-    E127,
-    # continuation line under-indented for visual indent
-    E128,
-    # visually indented line with same indent as next logical line
-    E129,
-    # whitespace after '{'
-    E201,
-    # whitespace before '}'
-    E202,
     # whitespace before ':'
     E203,
-    # multiple spaces before operator
-    E221,
-    # missing whitespace around arithmetic operator
-    E226,
-    # multiple spaces after ','
-    E241,
+    # line too long
+    E501,
+    # line break before binary operator
+    W503,
+    # multiple statements on one line (colon)
+    E701,
+    # multiple statements on one line (def)
+    E704,
+    ################################################################################################
+    # Ignore findings which are incompatible with our "import" techonology.
+    ################################################################################################
+    # 'FOO' imported but unused
+    F401,
+    # module level import not at top of file
+    E402,
+    # 'from FOO import *' used; unable to detect undefined names
+    F403,
+    # 'FOO' may be undefined, or defined from star imports: BAR
+    F405,
+    ################################################################################################
+    # We should probably have a look at these findings.
+    ################################################################################################
+    # do not assign a lambda expression, use a def
+    E731,
     # ambiguous variable name 'FOO'
     E741,
+    # undefined name 'FOO'
+    F821,
+    # local variable 'FOO' is assigned to but never used
+    F841,

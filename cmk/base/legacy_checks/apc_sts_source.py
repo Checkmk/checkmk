@@ -9,11 +9,13 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 
 def inventory_apc_sts_source(info):
-    return [(None, {"source1": info[0][0], "source2": info[0][1]})]
+    if info:
+        yield None, {"source1": info[0][0], "source2": info[0][1]}
 
 
 def check_apc_sts_source(_not_item, params, info):
@@ -32,7 +34,12 @@ def check_apc_sts_source(_not_item, params, info):
         yield state, infotext
 
 
+def parse_apc_sts_source(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["apc_sts_source"] = LegacyCheckDefinition(
+    parse_function=parse_apc_sts_source,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.2.2"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.705.2",

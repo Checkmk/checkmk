@@ -22,7 +22,6 @@ class Edition(Enum):
     CEE = "cee"
     CCE = "cce"
     CME = "cme"
-    CFE = "cfe"
 
 
 class Level(Enum):
@@ -69,15 +68,6 @@ class WerkV2Base(BaseModel):
         except ValueError as e:
             raise ValueError(f"Expected level to be in (1, 2, 3). Got {v} instead") from e
 
-    # TODO: CMK-14587
-    # @field_validator("component")
-    # @classmethod
-    # def parse_component(cls, v: str) -> str:
-    #     components = {k for k, _ in WerkTranslator().components()}
-    #     if v not in components:
-    #         raise TypeError(f"Component {v} not know. Choose from: {components}")
-    #     return v
-
     def to_json_dict(self) -> dict[str, object]:
         return self.model_dump(by_alias=True, mode="json")
 
@@ -86,15 +76,6 @@ class Werk(WerkV2Base):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     version: str
-
-    # old werks contain some illegal versions
-    # the next refactoring will move this code away from cmk, so we won't have access to Version
-    # so we may also disable this right now.
-    # @validator("version")
-    # @classmethod
-    # def parse_version(cls, v: str) -> str:
-    #     Version.from_str(v)
-    #     return v
 
     @classmethod
     def from_json(cls, data: dict[str, object]) -> Werk:

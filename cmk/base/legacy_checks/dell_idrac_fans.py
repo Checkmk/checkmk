@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 DELL_IDRAC_FANS_STATE_MAP = {
     "1": (3, "OTHER"),
@@ -47,8 +48,12 @@ def check_dell_idrac_fans(item, params, info):
             yield check_fan(value, params)
 
 
+def parse_dell_idrac_fans(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dell_idrac_fans"] = LegacyCheckDefinition(
-    # use cmk.base.plugins.agent_based.utils.dell.DETECT_IDRAC ?
+    parse_function=parse_dell_idrac_fans,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10892.5"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5.4.700.12.1",

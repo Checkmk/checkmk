@@ -1,0 +1,72 @@
+======================
+rulesets.v1.form_specs
+======================
+
+.. automodule:: cmk.rulesets.v1.form_specs._base
+   :members:
+
+Atomic Form Specifications
+**************************
+
+Here is a list of all atomic form specifications that are available in Checkmk.
+These are the basic building blocks for creating forms.
+
+.. automodule:: cmk.rulesets.v1.form_specs._basic
+   :inherited-members:
+   :members:
+
+Levels Form Specifications
+**************************
+
+Here is a list of all levels form specifications that are available in Checkmk.
+These should be used whenever you want to create a form that is used to configure
+levels for a metric that will result in a warning or critical state of a service.
+
+.. automodule:: cmk.rulesets.v1.form_specs._levels
+   :members:
+
+Composite Form Specifications
+*****************************
+
+Here is a list of all composite form specifications that are available in Checkmk.
+These are composed of other form specifications and can be used to create more complex forms.
+You can nest them as deep as you want.
+
+.. automodule:: cmk.rulesets.v1.form_specs._composed
+   :members:
+
+
+Form Specifications for preconfigured entities
+**********************************************
+
+Here is a list of all form specifications for preconfigured entities that are available in Checkmk.
+You can use them to let the user configure a preconfigured entity, depending on what entities are
+available in the site.
+
+.. automodule:: cmk.rulesets.v1.form_specs._preconfigured
+   :members:
+
+
+Validators for Form Specifications
+**********************************
+
+This API provides a set of validators that can be used to validate the input of a form specification.
+Instances of these validators can be used as arguments to as "custom_validator" argument of a form specification.
+
+You can implement your own custom validator, these are just some commonly used ones at your disposal.
+
+.. automodule:: cmk.rulesets.v1.form_specs.validators
+   :members:
+
+Migrations for Form Specifications
+**********************************
+
+Since the data model of form specifications can change over time, we need to provide a way to migrate
+old data to the new data model. This is done by providing migration functions that can be used to
+migrate old data to the new data model.
+
+Here we offer a set of migration functions that can be used to migrate old configurations to the
+new :class:`Levels` and :class:`SimpleLevels` forms.
+
+.. automodule:: cmk.rulesets.v1.form_specs._migrations
+   :members:

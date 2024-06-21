@@ -9,14 +9,23 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.3.0b1"
+CMK_VERSION="2.4.0b1"
 
 _socket_exists() {
     [ -S "/omd/sites/${1}/tmp/run/live" ]
 }
 
 _query_site() {
-    echo -e "${2}" | LD_LIBRARY_PATH="/omd/sites/${1}/lib:${LD_LIBRARY_PATH}" waitmax 3 "/omd/sites/${1}/bin/unixcat" "/omd/sites/${1}/tmp/run/live"
+    site_cmd() {
+        # DO NOT ACCESS /omd/sites/${site}/bin/cmd directly.
+        # bin might point anywhere -> priv escalation.
+        printf "/omd/versions/%s/bin/%s" "$(realpath "/omd/sites/${1}/version" | sed 's|.*/||')" "${2}"
+    }
+
+    site_lib() {
+        printf "/omd/versions/%s/lib" "$(realpath "/omd/sites/${1}/version" | sed 's|.*/||')"
+    }
+    echo -e "${2}" | LD_LIBRARY_PATH="$(site_lib "${1}"):${LD_LIBRARY_PATH}" waitmax 3 "$(site_cmd "${1}" unixcat)" "/omd/sites/${1}/tmp/run/live"
 }
 
 #   .--queries-------------------------------------------------------------.

@@ -7,11 +7,11 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 
-import cryptography.x509 as x509
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from dateutil.relativedelta import relativedelta
 
@@ -21,9 +21,13 @@ from cmk.utils.crypto.certificate import (
     Certificate,
     CertificateSigningRequest,
     CertificateWithPrivateKey,
-    RsaPrivateKey,
     X509Name,
 )
+from cmk.utils.crypto.keys import is_supported_private_key_type, PrivateKey
+from cmk.utils.crypto.types import HashAlgorithm
+from cmk.utils.log.security_event import SecurityEvent
+from cmk.utils.site import omd_site
+from cmk.utils.user import UserId
 
 
 class _CNTemplate:
@@ -47,21 +51,13 @@ _DEFAULT_KEY_SIZE = 4096
 
 
 class RootCA(CertificateWithPrivateKey):
-    @property
-    def cert(self) -> x509.Certificate:
-        """Deprecated accessor to the underlying pyca/cryptography object"""
-        return self.certificate._cert
-
-    @property
-    def rsa(self) -> RSAPrivateKey:
-        """Deprecated accessor to the underlying pyca/cryptography object"""
-        return self.private_key._key
-
     @classmethod
     def load(cls, path: Path) -> RootCA:
         cert = x509.load_pem_x509_certificate(pem_bytes := path.read_bytes())
         key = load_pem_private_key(pem_bytes, None)
-        return cls(certificate=Certificate(cert), private_key=RsaPrivateKey(key))
+        if not is_supported_private_key_type(key):
+            raise ValueError(f"Unsupported private key type {type(key)}")
+        return cls(certificate=Certificate(cert), private_key=PrivateKey(key))
 
     @classmethod
     def load_or_create(
@@ -76,6 +72,7 @@ class RootCA(CertificateWithPrivateKey):
         except FileNotFoundError:
             ca = CertificateWithPrivateKey.generate_self_signed(
                 common_name=name,
+                organization=f"Checkmk Site {omd_site()}",
                 expiry=validity,
                 key_size=key_size,
                 is_ca=True,
@@ -88,8 +85,8 @@ class RootCA(CertificateWithPrivateKey):
         common_name: str,
         validity: relativedelta = _DEFAULT_VALIDITY,
         key_size: int = _DEFAULT_KEY_SIZE,
-    ) -> tuple[Certificate, RsaPrivateKey]:
-        new_cert_key = RsaPrivateKey.generate(key_size)
+    ) -> tuple[Certificate, PrivateKey]:
+        new_cert_key = PrivateKey.generate_rsa(key_size)
         new_cert_csr = CertificateSigningRequest.create(
             subject_name=X509Name.create(common_name=common_name),
             subject_private_key=new_cert_key,
@@ -129,7 +126,7 @@ def write_cert_store(source_dir: Path, store_path: Path) -> None:
 def _save_cert_chain(
     path_pem: Path,
     certificate_chain: Iterable[Certificate],
-    key: RsaPrivateKey,
+    key: PrivateKey,
 ) -> None:
     path_pem.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
     with path_pem.open(mode="wb") as f:
@@ -154,3 +151,36 @@ class RemoteSiteCertsStore:
 
     def _make_file_name(self, site_id: SiteId) -> Path:
         return self.path / f"{site_id}.pem"
+
+
+@dataclass
+class CertManagementEvent(SecurityEvent):
+    """Indicates a certificate has been added or removed"""
+
+    ComponentType = Literal["saml", "agent controller", "backup encryption keys", "agent bakery"]
+
+    def __init__(
+        self,
+        *,
+        event: Literal["certificate created", "certificate removed", "certificate uploaded"],
+        component: CertManagementEvent.ComponentType,
+        actor: UserId | str | None,
+        cert: Certificate | None,
+    ) -> None:
+        details = {
+            "component": component,
+            "actor": str(actor or "unknown user"),
+        }
+        if cert is not None:
+            details |= {
+                "issuer": str(cert.issuer.common_name or "none"),
+                "subject": str(cert.subject.common_name or "none"),
+                "not_valid_before": str(cert.not_valid_before.isoformat()),
+                "not_valid_after": str(cert.not_valid_after.isoformat()),
+                "fingerprint": cert.fingerprint(HashAlgorithm.Sha256).hex(sep=":").upper(),
+            }
+        super().__init__(
+            event,
+            details,
+            SecurityEvent.Domain.cert_management,
+        )

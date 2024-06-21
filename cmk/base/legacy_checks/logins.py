@@ -11,7 +11,8 @@ from collections.abc import Iterable, Mapping
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from cmk.agent_based.v2 import StringTable
 
 DiscoveryResult = Iterable[tuple[None, dict]]
 CheckResult = Iterable[tuple[int, str, list]]
@@ -44,6 +45,7 @@ def check_logins(
 
 check_info["logins"] = LegacyCheckDefinition(
     service_name="Logins",
+    parse_function=parse_logins,
     discovery_function=discover_logins,
     check_function=check_logins,
     check_ruleset_name="logins",

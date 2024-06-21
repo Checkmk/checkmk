@@ -1,4 +1,4 @@
-Title: wmi.include: Removed <tt>inventory_wmi_table</tt>
+Title: wmi.include: Removed inventory_wmi_table
 Class: fix
 Compatible: incomp
 Component: checks

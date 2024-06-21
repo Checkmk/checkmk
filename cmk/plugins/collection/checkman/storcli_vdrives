@@ -1,0 +1,16 @@
+title: LSI MegaRAID: State of Virtual Drives (via StorCLI)
+agents: windows
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the state of the virtual drives of an LSI
+ MegaRAID controller. The corresponding agent plug-in uses the
+ {storcli64.exe} utility, provided its location has been correctly
+ entered in the script.
+
+item:
+ The controller number and the ID of the virtual drive.
+
+discovery:
+ One service is created for each found virtual drive on each controller.

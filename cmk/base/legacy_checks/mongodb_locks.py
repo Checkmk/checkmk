@@ -15,6 +15,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_mongodb_locks(info):
     return [(None, {})]
@@ -38,7 +40,12 @@ def check_mongodb_locks(_no_item, params, info):
         ]
 
 
+def parse_mongodb_locks(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mongodb_locks"] = LegacyCheckDefinition(
+    parse_function=parse_mongodb_locks,
     service_name="MongoDB Locks",
     discovery_function=inventory_mongodb_locks,
     check_function=check_mongodb_locks,

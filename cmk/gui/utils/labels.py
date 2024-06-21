@@ -12,9 +12,9 @@ from typing import Literal, NamedTuple
 
 from livestatus import LivestatusResponse, lqencode, quote_dict, SiteId
 
-from cmk.utils.labels import AndOrNotLiteral, LabelGroups
+from cmk.utils.labels import AndOrNotLiteral, LabelGroups, single_label_group_from_labels
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -260,17 +260,6 @@ def _parse_label_groups_to_http_vars(
     return filter_vars
 
 
-def _single_label_group_from_labels(
-    labels: Sequence[str], operator: AndOrNotLiteral = "and"
-) -> LabelGroups:
-    return [
-        (
-            "and",
-            [(operator, label) for label in labels],
-        )
-    ]
-
-
 def filter_http_vars_for_simple_label_group(
     labels: Sequence[str],
     object_type: Literal["host", "service"],
@@ -283,6 +272,6 @@ def filter_http_vars_for_simple_label_group(
     {'host_labels_count': '1', 'host_labels_1_vs_count': '2', 'host_labels_1_bool': 'and', 'host_labels_1_vs_1_bool': 'and', 'host_labels_1_vs_1_vs': 'foo:bar', 'host_labels_1_vs_2_bool': 'and', 'host_labels_1_vs_2_vs': 'check:mk'}
     """
     return _parse_label_groups_to_http_vars(
-        _single_label_group_from_labels(labels, operator),
+        single_label_group_from_labels(labels, operator),
         object_type,
     )

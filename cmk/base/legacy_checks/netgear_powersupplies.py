@@ -13,8 +13,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.netgear import DETECT_NETGEAR
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.plugins.lib.netgear import DETECT_NETGEAR
 
 
 def parse_netgear_powersupplies(string_table):

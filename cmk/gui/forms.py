@@ -7,7 +7,6 @@ import base64
 from collections.abc import Callable
 from typing import NamedTuple
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.foldable_container import (
     foldable_container_id,
     foldable_container_img_id,
@@ -17,6 +16,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme
 
@@ -114,7 +114,7 @@ def _table_head(
     else:
         html.open_td(id_=f"nform.{treename}.{id_}", colspan=2)
 
-    html.write_text(title)
+    html.write_text_permissive(title)
     html.help(help_text)
     if show_more_toggle:
         html.more_button("foldable_" + id_, dom_levels_up=4, with_text=True)
@@ -134,6 +134,15 @@ def container() -> None:
 
 def space() -> None:
     html.tr(HTMLWriter.render_td("", colspan=2, style="height:15px;"))
+
+
+def warning_message(message: str) -> None:
+    html.tr(
+        HTMLWriter.render_td(
+            html.render_div(html.render_div(message, class_="content"), class_="warning_container"),
+            colspan=2,
+        )
+    )
 
 
 def section(
@@ -164,13 +173,13 @@ def section(
                 class_=["title"] + (["withcheckbox"] if checkbox else []),
                 title=escaping.strip_tags(title),
             )
-            html.write_text(title)
+            html.write_text_permissive(title)
             html.span("." * 200, class_=["dots"] + (["required"] if is_required else []))
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")
             if isinstance(checkbox, (str, HTML)):
-                html.write_text(checkbox)
+                html.write_text_permissive(checkbox)
             else:
                 name, active, attrname = checkbox
                 html.checkbox(
@@ -178,7 +187,9 @@ def section(
                 )
             html.close_div()
         html.close_td()
-    html.open_td(class_=["content"] + (["simple"] if simple else []))
+    html.open_td(
+        class_=["content"] + (["simple"] if simple else []), colspan=2 if not legend else None
+    )
     g_section_open = True
 
 
@@ -229,3 +240,11 @@ def remove_unused_vars(
             form_prefix, varname, value
         ):
             request.del_var(varname)
+
+
+def open_submit_button_container_div(tooltip: str) -> None:
+    html.open_div(
+        class_="submit_button_container",
+        data_title=tooltip,
+        title=tooltip,
+    )

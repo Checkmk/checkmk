@@ -251,7 +251,7 @@ TEST(PluginTest, JobStartStopComponent) {
 }
 
 TEST(PluginTest, Extensions) {
-    auto pshell = MakePowershellWrapper();
+    auto pshell = MakePowershellWrapper("a");
     EXPECT_TRUE(pshell.find(L"powershell.exe") != std::wstring::npos);
 
     auto p = ConstructCommandToExec(L"a.exe");
@@ -627,8 +627,7 @@ TEST(PluginTest, FilesAndFoldersComponent) {
 
         auto yaml_units = cfg::GetArray<YAML::Node>(
             cfg::groups::kPlugins, cfg::vars::kPluginsExecution);
-        std::vector<cfg::Plugins::ExeUnit> exe_units;
-        cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
+        const auto exe_units = cfg::LoadExeUnitsFromYaml(yaml_units);
         ASSERT_EQ(exe_units.size(), 4);
 
         EXPECT_EQ(exe_units[2].async(), false);
@@ -650,8 +649,7 @@ TEST(PluginTest, FilesAndFoldersComponent) {
         auto files = cma::GatherAllFiles(pv);
         auto yaml_units = cfg::GetArray<YAML::Node>(
             cfg::groups::kLocal, cfg::vars::kPluginsExecution);
-        std::vector<cfg::Plugins::ExeUnit> exe_units;
-        cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
+        const auto exe_units = cfg::LoadExeUnitsFromYaml(yaml_units);
         // no local files
         PluginMap pm;
         UpdatePluginMap(nullptr, pm, ExecType::local, files, exe_units, true);

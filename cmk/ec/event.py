@@ -9,10 +9,10 @@ from logging import Logger
 from re import findall
 from time import localtime, mktime, strptime
 from time import time as _time
+from typing import TypedDict
 
 from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
-from typing_extensions import TypedDict
 
 from livestatus import SiteId
 
@@ -84,20 +84,20 @@ def create_event_from_syslog_message(
 ) -> Event:
     if logger:
         adr = "" if address is None else f" from host {address[0]}, port {address[1]}:"
-        logger.info(f"processing message{adr} {message!r}")
+        logger.info("processing message %s %s", adr, message)
     # TODO: Is it really never a domain name?
     ipaddress = "" if address is None else address[0]
     try:
         event = parse_syslog_message_into_event(scrub_string(message.decode("utf-8")), ipaddress)
     except Exception:
         if logger:
-            logger.info(f"could not parse message {message!r}")
+            logger.info("could not parse message %s", message)
         event = _make_event(scrub_string(message.decode("utf-8", "replace")), ipaddress)
     if logger:
-        width = max(len(k) for k in event.keys()) + 1
+        width = max(len(k) for k in event) + 1
         logger.info(
             "parsed message: %s",
-            "".join(f'\n {k+":":{width}} {v}' for k, v in sorted(event.items())),
+            "".join(f'\n {k + ":":{width}} {v}' for k, v in sorted(event.items())),
         )
     return event
 
@@ -150,12 +150,17 @@ def parse_syslog_message_into_event(  # pylint: disable=too-many-branches
     2016 May 26 15:41:47 IST XYZ Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet45 (XXX.ASAD.Et45), changed state to up
     year month day hh:mm:ss timezone HOSTNAME KeyAgent:
 
+    Variant 11: TP-Link T1500G-8T 2.0
+        - space separated date and time instead of "T"
+        - no ": " between header and message
+        - https://github.com/rsyslog/rsyslog/issues/5148
+    <133>2023-09-29 18:41:55 host 51890 Login the web by user on web (x.x.x.x).....
+
     FIXME: Would be better to parse the syslog messages in another way:
     Split the message by the first ":", then split the syslog header part
     and detect which information are present. Take a look at the syslog RFCs
     for details.
     """
-
     event = _make_event(line, ipaddress)
     # Variant 2,2a,3,4,5,6,7,7a,8
     if line.startswith("<"):
@@ -171,7 +176,7 @@ def parse_syslog_message_into_event(  # pylint: disable=too-many-branches
         event["priority"] = 5  # notice
 
     # Variant 7 and 7a
-    if line[0] == "@" and line[11] in [" ", ";"] and line.split(" ", 1)[0].count(";") <= 1:
+    if line[0] == "@" and line[11] in {" ", ";"} and line.split(" ", 1)[0].count(";") <= 1:
         details, host, line = line.split(" ", 2)
         event["host"] = HostName(host)
         detail_tokens = details.split(";")
@@ -191,6 +196,14 @@ def parse_syslog_message_into_event(  # pylint: disable=too-many-branches
         event["host"] = HostName(host)
         event["time"] = parse_iso_8601_timestamp(timestamp)
         event.update(parse_syslog_info(rest))
+
+    # Variant 11
+    elif line[10] == " " and line[19] == " ":
+        date, time, host, pid, rest = line.split(" ", 4)
+        event["host"] = HostName(host)
+        event["pid"] = int(pid)
+        event["time"] = parse_iso_8601_timestamp(f"{date}T{time}")
+        event["text"] = rest
 
     # Variant 9
     elif len(line) > 24 and line[12] == "T":
@@ -313,15 +326,15 @@ def parse_syslog_info(content: str) -> Event:
         application = parts[0]
         pid = 0
         text = parts[1].strip()
-    return {
-        "application": application,
-        "pid": pid,
-        "text": text,
-    }
+    return Event(
+        application=application,
+        pid=pid,
+        text=text,
+    )
 
 
 def parse_monitoring_info(line: str) -> Event:
-    event: Event = {}
+    event = Event()
     # line starts with '@'
     if line[11] == ";":
         timestamp_str, sl, contact, rest = line[1:].split(";", 3)
@@ -343,7 +356,7 @@ def parse_monitoring_info(line: str) -> Event:
 
 
 def parse_rfc5424_syslog_info(line: str) -> Event:
-    event: Event = {}
+    event = Event()
     (
         _unused_version,
         timestamp,
@@ -370,9 +383,9 @@ def parse_rfc5424_syslog_info(line: str) -> Event:
         # TODO: What about the other non-string attributes of an event?
         if (service_level := event.get("sl")) is not None:
             event["sl"] = int(service_level)
-        event[
-            "text"
-        ] = f"{(remaining_structured_data +  ' ') if remaining_structured_data else ''}{message}"
+        event["text"] = (
+            f"{(remaining_structured_data + ' ') if remaining_structured_data else ''}{message}"
+        )
     else:
         event["text"] = message
     return event
@@ -383,9 +396,7 @@ def parse_iso_8601_timestamp(timestamp: str) -> float:
 
 
 def fix_broken_sophos_timestamp(timestamp: str) -> str:
-    """
-    Sophos firewalls use a braindead non-standard timestamp format with funny separators and without a timezone.
-    """
+    """Sophos firewalls use a braindead non-standard timestamp format with funny separators and without a timezone."""
     # Step 1: Fix separator between date and time
     timestamp = timestamp.replace("-", "T", 1)
     # Step 2: Fix separators between date parts
@@ -409,7 +420,7 @@ def remove_leading_bom(message: str) -> str:
 
 
 def split_syslog_structured_data_and_message(sd_and_message: str) -> tuple[str | None, str]:
-    """Split a string containing structured data and the message into the two parts"""
+    """Split a string containing structured data and the message into the two parts."""
     if sd_and_message.startswith("["):
         return _split_syslog_nonnil_sd_and_message(sd_and_message)
     nil_value = "-"  # SyslogMessage.nilvalue()
@@ -434,7 +445,7 @@ def _split_syslog_nonnil_sd_and_message(sd_and_message: str) -> tuple[str, str]:
 
 
 def parse_syslog_message_structured_data(structured_data: str) -> tuple[dict[str, str], str]:
-    """Checks if the structured data contains Checkmk-specific data and extracts it if found"""
+    """Checks if the structured data contains Checkmk-specific data and extracts it if found."""
     checkmk_id = "Checkmk@18662"
     if not (checkmk_elements := findall(rf"\[{checkmk_id}.*?(?<!\\)\]", structured_data)):
         return {}, structured_data
@@ -456,7 +467,7 @@ def _unescape_parsed_struc(parsed_structured_data: Mapping[str, str]) -> dict[st
 
 
 def _unescape_structured_data_value(v: str, /) -> str:
-    """Undo the escaping done in cmk.ec.forward.StructuredDataValue"""
+    """Undo the escaping done in cmk.ec.forward.StructuredDataValue."""
     v_unescaped = v
     for escaped_char in ("\\", '"', "]"):
         v_unescaped = v_unescaped.replace(rf"\{escaped_char}", escaped_char)
@@ -469,8 +480,8 @@ def scrub_string(s: str) -> str:
     necessary, because there are a bunch of bytes which are not contained in any
     valid UTF-8 string, but following Murphy's Law, those are not used in
     Checkmk. To keep backwards compatibility with old history files, we have no
-    choice and continue to do it wrong... :-/"""
-
+    choice and continue to do it wrong... :-/.
+    """
     return s.translate(_scrub_string_unicode_table)
 
 

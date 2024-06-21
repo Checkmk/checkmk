@@ -18,7 +18,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 
 def inventory_ibm_rsa_health(info):
@@ -47,7 +48,12 @@ def check_ibm_rsa_health(_no_item, _no_params, info):
     return 3, infotext
 
 
+def parse_ibm_rsa_health(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ibm_rsa_health"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_rsa_health,
     detect=contains(".1.3.6.1.2.1.1.1.0", "Remote Supervisor Adapter"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.1.2",

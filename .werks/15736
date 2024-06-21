@@ -1,4 +1,4 @@
-Title: <tt>check_traceroute</tt>: Report correct number of hops
+Title: check_traceroute: Report correct number of hops
 Class: fix
 Compatible: compat
 Component: checks

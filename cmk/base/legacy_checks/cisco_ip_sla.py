@@ -8,14 +8,8 @@ from collections.abc import Callable, Sequence
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    contains,
-    exists,
-    OIDBytes,
-    OIDEnd,
-    SNMPTree,
-)
+
+from cmk.agent_based.v2 import all_of, contains, exists, OIDBytes, OIDEnd, SNMPTree
 
 
 def parse_cisco_ip_sla(string_table):

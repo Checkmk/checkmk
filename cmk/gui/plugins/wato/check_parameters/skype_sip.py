@@ -18,7 +18,7 @@ def _parameter_valuespec_skype_sip():
             (
                 "message_processing_time",
                 Dictionary(
-                    title=_("Average Incoming Message Processing Time"),
+                    title=_("Average incoming message processing time"),
                     elements=[
                         (
                             "upper",
@@ -206,7 +206,7 @@ def _parameter_valuespec_skype_sip():
             (
                 "holding_time_incoming",
                 Dictionary(
-                    title=_("Average Holding Time For Incoming Messages"),
+                    title=_("Average holding time for incoming messages"),
                     elements=[
                         (
                             "upper",
@@ -294,7 +294,7 @@ def _parameter_valuespec_skype_sip():
             (
                 "authentication_errors",
                 Dictionary(
-                    title=_("Authentication System Errors"),
+                    title=_("Authentication system errors"),
                     elements=[
                         (
                             "upper",

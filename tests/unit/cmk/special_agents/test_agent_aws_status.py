@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pytest
 import requests
 
@@ -42,7 +44,9 @@ def test_write_sections(capsys: pytest.CaptureFixture[str]) -> None:
     captured = capsys.readouterr()
     assert captured.out.split("\n") == [
         "<<<aws_status:sep(0)>>>",
-        agent_aws_status.AgentOutput(discovery_param=discovery_param, rss_str=RSS_STR).json(),
+        agent_aws_status.AgentOutput(
+            discovery_param=discovery_param, rss_str=RSS_STR
+        ).model_dump_json(),
         "",
     ]
     assert captured.err == ""

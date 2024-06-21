@@ -1,0 +1,19 @@
+title: Docker: Container Uptime
+agents: linux
+catalog: containerization/docker
+license: GPLv2
+distribution: check_mk
+description:
+ This check outputs the uptime of the monitored containers
+ (when the last start was and how much time has elapsed since).
+ This check can go WARN or CRIT when the uptime is below or above certain
+ configurable levels.
+
+ To make this check work the agent plug-in {{mk_docker.py}} has to be installed.
+ If you are using agent bakery rules, you must enable "Piggybacked docker containers".
+ If you are configuring the plug-in via the configuration file, make sure you do not skip the
+ section "docker_container_status" (the default setting is fine).
+
+discovery:
+ One service is created for each active container (running or restart policy 'always'),
+ unless the {uptime} plug-in has discovered a service.

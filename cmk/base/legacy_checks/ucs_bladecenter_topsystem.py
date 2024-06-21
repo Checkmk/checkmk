@@ -10,6 +10,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_ucs_bladecenter_topsystem(info):
     yield None, None
@@ -22,7 +24,12 @@ def check_ucs_bladecenter_topsystem(item, _no_params, info):
             yield 0, "%s: %s" % tuple(tokens)
 
 
+def parse_ucs_bladecenter_topsystem(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ucs_bladecenter_topsystem"] = LegacyCheckDefinition(
+    parse_function=parse_ucs_bladecenter_topsystem,
     service_name="UCS TopSystem Info",
     discovery_function=inventory_ucs_bladecenter_topsystem,
     check_function=check_ucs_bladecenter_topsystem,

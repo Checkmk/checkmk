@@ -33,7 +33,7 @@ def _parameter_valuespec_msexch_copyqueue():
                     "levels",
                     SimpleLevels(
                         spec=Integer,
-                        title=_("Upper Levels for CopyQueue Length"),
+                        title=_("Upper levels for CopyQueue length"),
                     ),
                 ),
             ],

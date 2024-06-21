@@ -10,6 +10,7 @@ import copy
 import sys
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 if sys.version_info[0] == 2:
     from mock import Mock, patch
@@ -18,7 +19,7 @@ if sys.version_info[0] == 2:
 else:
     from unittest.mock import Mock, patch
 
-    import agents.plugins.mk_postgres as mk_postgres
+    from agents.plugins import mk_postgres
 
 
 #   .--defines-------------------------------------------------------------.
@@ -61,7 +62,7 @@ PG_PASSFILE = ["myhost:myport:mydb:myusr:mypw"]
 
 class TestNotImplementedOS:
     @pytest.fixture(autouse=True)
-    def is_not_implemented_os(self, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    def is_not_implemented_os(self, monkeypatch: MonkeyPatch) -> None:
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
 
@@ -76,7 +77,7 @@ class TestNotImplementedOS:
 
 class TestLinux:
     @pytest.fixture(autouse=True)
-    def is_linux(self, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    def is_linux(self, monkeypatch: MonkeyPatch) -> None:
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", True)
         monkeypatch.setattr(
@@ -372,7 +373,7 @@ class TestLinux:
 
 class TestWindows:
     @pytest.fixture(autouse=True)
-    def is_windows(self, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    def is_windows(self, monkeypatch: MonkeyPatch) -> None:
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", True)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
         monkeypatch.setattr(

@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="no-untyped-def"
-
-from collections.abc import Iterable
-from typing import NamedTuple
+from collections.abc import Iterable, Mapping
+from typing import Any, NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 
 class WaterflowReading(NamedTuple):
@@ -26,7 +25,7 @@ class WaterflowReading(NamedTuple):
 Section = WaterflowReading | None
 
 
-def parse_cmciii_lcp_waterflow(string_table) -> Section:
+def parse_cmciii_lcp_waterflow(string_table: StringTable) -> Section:
     if not string_table:
         return None
 
@@ -62,7 +61,9 @@ def inventory_cmciii_lcp_waterflow(section: Section) -> Iterable[tuple[None, dic
         yield None, {}
 
 
-def check_cmciii_lcp_waterflow(item, params, section: Section):
+def check_cmciii_lcp_waterflow(
+    item: str, params: Mapping[str, Any], section: Section
+) -> tuple[int, str, list] | None:
     if not section:
         return None
 

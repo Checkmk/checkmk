@@ -6,7 +6,9 @@
 import enum
 import sys
 from collections.abc import Callable, Sequence
+from logging import Logger
 from pathlib import Path
+from termios import tcflush, TCIFLUSH
 from typing import Final
 
 from cmk.utils import paths
@@ -16,56 +18,63 @@ from cmk.utils.visuals import invalidate_visuals_cache
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
+from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import (
     disable,
     Installer,
     make_post_package_change_actions,
     Manifest,
     PackageID,
-    PackageOperationCallbacks,
-    PackagePart,
     PackageStore,
     PathConfig,
     reload_apache,
 )
 
-_PATH_CONFIG = PathConfig(
-    agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
-    agents_dir=paths.local_agents_dir,
-    alert_handlers_dir=paths.local_alert_handlers_dir,
-    bin_dir=paths.local_bin_dir,
-    check_manpages_dir=paths.local_check_manpages_dir,
-    checks_dir=paths.local_checks_dir,
-    doc_dir=paths.local_doc_dir,
-    gui_plugins_dir=paths.local_gui_plugins_dir,
-    installed_packages_dir=paths.installed_packages_dir,
-    inventory_dir=paths.local_inventory_dir,
-    lib_dir=paths.local_lib_dir,
-    locale_dir=paths.local_locale_dir,
-    local_root=paths.local_root,
-    mib_dir=paths.local_mib_dir,
-    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
-    notifications_dir=paths.local_notifications_dir,
-    packages_enabled_dir=paths.local_enabled_packages_dir,
-    packages_local_dir=paths.local_optional_packages_dir,
-    packages_shipped_dir=paths.optional_packages_dir,
-    pnp_templates_dir=paths.local_pnp_templates_dir,
-    tmp_dir=paths.tmp_dir,
-    web_dir=paths.local_web_dir,
+AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX = 30
+GUI_PLUGINS_PREACTION_SORT_INDEX = 20
+
+AUTOCHECK_REWRITE_PREACTION_SORT_INDEX = (  # autocheck rewrite *must* run after these two!
+    max(AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX, GUI_PLUGINS_PREACTION_SORT_INDEX) + 10
 )
 
-_CALLBACKS: Final = {
-    PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
-        install=ec.install_packaged_rule_packs,
-        uninstall=ec.uninstall_packaged_rule_packs,
-        release=ec.release_packaged_rule_packs,
-    ),
-}
 
-_PACKAGE_STORE = PackageStore(
-    shipped_dir=_PATH_CONFIG.packages_shipped_dir,
-    local_dir=_PATH_CONFIG.packages_local_dir,
-    enabled_dir=_PATH_CONFIG.packages_enabled_dir,
+def prompt(message: str) -> str:
+    tcflush(sys.stdin, TCIFLUSH)
+    return input(message)
+
+
+def get_path_config() -> PathConfig:
+    return PathConfig(
+        cmk_plugins_dir=plugins_local_path(),
+        cmk_addons_plugins_dir=addons_plugins_local_path(),
+        agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
+        agents_dir=paths.local_agents_dir,
+        alert_handlers_dir=paths.local_alert_handlers_dir,
+        bin_dir=paths.local_bin_dir,
+        check_manpages_dir=paths.local_legacy_check_manpages_dir,
+        checks_dir=paths.local_checks_dir,
+        doc_dir=paths.local_doc_dir,
+        gui_plugins_dir=paths.local_gui_plugins_dir,
+        installed_packages_dir=paths.installed_packages_dir,
+        inventory_dir=paths.local_inventory_dir,
+        lib_dir=paths.local_lib_dir,
+        locale_dir=paths.local_locale_dir,
+        local_root=paths.local_root,
+        mib_dir=paths.local_mib_dir,
+        mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+        notifications_dir=paths.local_notifications_dir,
+        pnp_templates_dir=paths.local_pnp_templates_dir,
+        manifests_dir=paths.tmp_dir,
+        web_dir=paths.local_web_dir,
+    )
+
+
+_CALLBACKS: Final = ec.mkp_callbacks()
+
+PACKAGE_STORE = PackageStore(
+    enabled_dir=paths.local_enabled_packages_dir,
+    local_dir=paths.local_optional_packages_dir,
+    shipped_dir=paths.optional_packages_dir,
 )
 
 
@@ -76,33 +85,31 @@ class ConflictMode(enum.StrEnum):
     ABORT = "abort"
 
 
-NEED_USER_INPUT_MODES: Final[Sequence] = [
-    ConflictMode.INSTALL,
-    ConflictMode.KEEP_OLD,
-    ConflictMode.ASK,
-]
-
 USER_INPUT_CONTINUE: Final[Sequence] = ["c", "continue"]
 USER_INPUT_DISABLE: Final[Sequence] = ["d", "disable"]
 
 
 def disable_incomp_mkp(
+    logger: Logger,
     conflict_mode: ConflictMode,
     module_name: str,
     error: BaseException,
     package_id: PackageID,
     installer: Installer,
+    package_store: PackageStore,
+    path_config: PathConfig,
+    path: Path,
 ) -> bool:
-    if (
-        conflict_mode in NEED_USER_INPUT_MODES
-        and _request_user_input_on_incompatible_file(module_name, package_id, error).lower()
-        in USER_INPUT_DISABLE
+    logger.error(error_message_incomp_package(path, package_id, error))
+    if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
+        conflict_mode is ConflictMode.ASK
+        and _request_user_input_on_incompatible_file().lower() in USER_INPUT_DISABLE
     ):
         if (
             disabled := disable(
                 installer,
-                _PACKAGE_STORE,
-                _PATH_CONFIG,
+                package_store,
+                path_config,
                 _CALLBACKS,
                 package_id,
             )
@@ -114,58 +121,52 @@ def disable_incomp_mkp(
     return False
 
 
-def _request_user_input_on_incompatible_file(
-    module_name: str, package_id: PackageID, error: BaseException
-) -> str:
-    return input(
-        f"Incompatible file '{module_name}' of extension package '{package_id.name} {package_id.version}'\n"
-        f"Error: {error}\n\n"
+def _request_user_input_on_incompatible_file() -> str:
+    return prompt(
         "You can abort the update process (A) or disable the "
         "extension package (d) and continue the update process.\n"
         "Abort the update process? [A/d] \n"
     )
 
 
+def error_message_incomp_package(path: Path, package_id: PackageID, error: BaseException) -> str:
+    return (
+        f"Incompatible file '{path}' of extension package '{package_id.name} "
+        f"{package_id.version}'\nError: {error}\n\n"
+    )
+
+
 def _make_post_change_actions() -> Callable[[Sequence[Manifest]], None]:
     return make_post_package_change_actions(
-        ((PackagePart.GUI, PackagePart.WEB), reload_apache),
-        (
-            (PackagePart.GUI, PackagePart.WEB),
-            invalidate_visuals_cache,
-        ),
-        (
-            (
-                PackagePart.GUI,
-                PackagePart.WEB,
-                PackagePart.EC_RULE_PACKS,
-            ),
-            request_index_rebuild,
-        ),
+        on_any_change=(reload_apache, invalidate_visuals_cache, request_index_rebuild)
     )
 
 
-def continue_on_incomp_local_file(
-    conflict_mode: ConflictMode,
-    module_name: str,
-    error: BaseException,
-) -> bool:
-    return (
-        conflict_mode in NEED_USER_INPUT_MODES
-        and input(
-            f"Incompatible local file '{module_name}'.\n"
-            f"Error: {error}\n\n"
-            "You can abort the update process (A) and try to fix "
-            "the incompatibilities or continue the update (c).\n\n"
-            "Abort the update process? [A/c] \n"
-        ).lower()
-        in USER_INPUT_CONTINUE
+def continue_on_incomp_local_file(conflict_mode: ConflictMode) -> bool:
+    return continue_per_users_choice(
+        conflict_mode,
+        "You can abort the update process (A) and try to fix "
+        "the incompatibilities or continue the update (c).\n\n"
+        "Abort the update process? [A/c] \n",
     )
 
 
-def get_installer_and_package_map() -> tuple[Installer, dict[Path, PackageID]]:
+def error_message_incomp_local_file(path: Path, error: BaseException) -> str:
+    return f"Incompatible local file '{path}'.\nError: {error}\n\n"
+
+
+def continue_per_users_choice(conflict_mode: ConflictMode, propt_text: str) -> bool:
+    if conflict_mode is ConflictMode.ASK:
+        return prompt(propt_text).lower() in USER_INPUT_CONTINUE
+    return False
+
+
+def get_installer_and_package_map(
+    path_config: PathConfig,
+) -> tuple[Installer, dict[Path, PackageID]]:
     installer = Installer(paths.installed_packages_dir)
     installed_files_package_map = {
-        Path(_PATH_CONFIG.get_path(part)).resolve() / file: manifest.id
+        Path(path_config.get_path(part)).resolve() / file: manifest.id
         for manifest in installer.get_installed_manifests()
         for part, files in manifest.files.items()
         for file in files

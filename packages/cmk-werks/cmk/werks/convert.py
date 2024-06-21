@@ -20,13 +20,20 @@ def werkv1_metadata_to_werkv2_metadata(metadata: dict[str, str]) -> dict[str, st
     metadata.pop("state", None)  # removed field
     metadata.pop("targetversion", None)  # removed field
 
-    if (compatible := metadata.get("compatible")) is not None:
-        metadata["compatible"] = "yes" if compatible == "compat" else "no"
+    match metadata.get("compatible"):
+        case None:
+            pass
+        case "compat":
+            metadata["compatible"] = "yes"
+        case "incomp":
+            metadata["compatible"] = "no"
+        case value:
+            raise ValueError(
+                f"compatible of werkv1 has to be either 'compat' or 'incomp', got {value!r}"
+            )
 
     if (date := metadata.get("date")) is not None:
-        metadata["date"] = datetime.datetime.fromtimestamp(
-            float(date), tz=datetime.timezone.utc
-        ).isoformat()
+        metadata["date"] = datetime.datetime.fromtimestamp(float(date), tz=datetime.UTC).isoformat()
 
     return metadata
 
@@ -40,8 +47,6 @@ def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
     def generator() -> Iterator[str]:
         yield "[//]: # (werk v2)"
         if (title := metadata.pop("title", None)) is not None:
-            # TODO: wait for CMK-14546: we might need to markdown escape the title
-            # yield f"# {_escape_markdown(title)}"
             yield f"# {title}"
         yield ""
         yield _table_entry("key", "value")

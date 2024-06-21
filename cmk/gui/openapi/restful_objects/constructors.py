@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import contextlib
+
 import hashlib
 import re
 from http import HTTPStatus
@@ -15,9 +15,10 @@ from cmk.utils.site import omd_site
 
 from cmk.gui.config import active_config
 from cmk.gui.http import HTTPMethod, request, Response
-from cmk.gui.livestatus_utils.testing import mock_site
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.restful_objects.type_defs import (
+    ActionObject,
+    ActionResult,
     CollectionItem,
     CollectionObject,
     DomainObject,
@@ -33,46 +34,7 @@ from cmk.gui.openapi.utils import EXT, ProblemException
 ETagHash = NewType("ETagHash", str)
 
 
-@contextlib.contextmanager
-def _request_context(secure=True):
-    from werkzeug.test import create_environ
-
-    from cmk.gui.utils.script_helpers import application_and_request_context
-
-    if secure:
-        protocol = "https"
-    else:
-        protocol = "http"
-    # Previous tests already set the site to "heute", which makes this test fail.
-    omd_site.cache_clear()
-    with mock_site(), application_and_request_context(
-        create_environ(base_url=f"{protocol}://localhost:5000/")
-    ):
-        yield
-
-
-def absolute_url(href):
-    """Give an absolute URL.
-
-    Examples:
-
-        This function has to be used within a request context.
-
-        >>> with _request_context(secure=False):
-        ...     absolute_url("objects/host_config/example.com")
-        'http://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com'
-
-        >>> with _request_context(secure=True):
-        ...     absolute_url("objects/host_config/example.com")
-        'https://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com'
-
-    Args:
-        href:
-
-    Returns:
-        An absolute URL.
-
-    """
+def absolute_url(href: str) -> str:
     if href.startswith("/"):
         href = href.lstrip("/")
 
@@ -117,30 +79,15 @@ def link_rel(
             (Optional) Parameters for the rel-value. e.g. rel='foo', parameters={'baz': 'bar'}
             will result in a rel-value of 'foo;baz="bar"'
 
-    Examples:
-
-        >>> expected = {
-        ...     'domainType': 'link',
-        ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
-        ...     'method': 'GET',
-        ...     'rel': 'urn:org.restfulobjects:rels/update',
-        ...     'title': 'Update the object',
-        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/1.0/objects/foo/update'
-        ... }
-        >>> with _request_context():
-        ...     link = link_rel('.../update', '/objects/foo/update',
-        ...                     method='get', profile='.../object', title='Update the object')
-        >>> assert link == expected, link
-
     Returns:
-        A dict representing the link
+        A LinkType
 
     """
     content_type_params = {}
     if profile is not None:
         content_type_params["profile"] = expand_rel(profile)
 
-    link_obj = {
+    link_obj: LinkType = {
         "rel": expand_rel(rel, parameters),
         "href": absolute_url(href),
         "method": method.upper(),
@@ -231,23 +178,8 @@ def require_etag(
     )
 
 
-def object_action(name: str, parameters: dict, base: str) -> dict[str, Any]:
-    """A action description to be used as an object member.
-
-    Examples:
-
-        >>> with _request_context():
-        ...     action = object_action('move', {'from': 'to'}, '')
-        >>> assert len(action['links']) > 0
-
-    Args:
-        name:
-        parameters:
-        base:
-
-    Returns:
-
-    """
+def object_action(name: str, parameters: dict, base: str) -> ActionObject:
+    """An action description to be used as an object member"""
 
     return {
         "id": name,
@@ -286,25 +218,6 @@ def object_collection(
         base:
             The base-level URI. May be an object's URI for example
 
-    Examples:
-        >>> expected = {
-        ...     'id': 'all',
-        ...     'memberType': 'collection',
-        ...     'value': [],
-        ...     'links': [
-        ...         {
-        ...             'rel': 'self',
-        ...             'href': 'https://localhost:5000/NO_SITE/check_mk/api/1.0/domain-types/host/collections/all',
-        ...             'method': 'GET',
-        ...             'type': 'application/json',
-        ...             'domainType': 'link',
-        ...         }
-        ...     ]
-        ... }
-        >>> with _request_context():
-        ...     result = object_collection('all', 'host', [], '')
-        >>> assert result == expected, result
-
     Returns:
         The object_collection structure.
 
@@ -327,7 +240,7 @@ def action_result(
     result_type: ResultType,
     result_value: Any | None = None,
     result_links: list[LinkType] | None = None,
-) -> dict:
+) -> ActionResult:
     """Construct an Action Result resource
 
     Described in Restful Objects, chapter 19.1-4"""
@@ -343,34 +256,11 @@ def action_result(
     }
 
 
-class DomainObjectMembers:
-    def __init__(self, base) -> None:  # type: ignore[no-untyped-def]
-        self.base = base
-        self.members: dict[str, dict[str, Any]] = {}
-
-    def object_property(  # type: ignore[no-untyped-def]
-        self,
-        name: str,
-        value: Any,
-        prop_format: PropertyFormat,
-        title: str | None = None,
-        linkable=True,
-        links: list[LinkType] | None = None,
-    ):
-        self.members[name] = object_property(
-            name, value, prop_format, self.base, title, linkable, links
-        )
-        return self.members[name]
-
-    def to_dict(self):
-        return self.members
-
-
-def object_property_href(  # type: ignore[no-untyped-def]
+def object_property_href(
     domain_type: DomainType,
     identifier: str,
     property_name: str,
-):
+) -> str:
     return f"/objects/{domain_type}/{identifier}/properties/{property_name}"
 
 
@@ -403,11 +293,11 @@ def object_sub_property(
     return ret
 
 
-def collection_property(  # type: ignore[no-untyped-def]
+def collection_property(
     name: str,
     value: list[Any],
     base: str,
-):
+) -> dict[str, str | list | list[LinkType]]:
     """Represent a collection property.
 
     This is a property on an object which hols a collection. This has to be stored in the "member"
@@ -421,18 +311,6 @@ def collection_property(  # type: ignore[no-untyped-def]
 
         base:
             The base url, i.e. the URL under which the collection is located.
-
-        >>> with _request_context(secure=False):
-        ...     _base = '/objects/host_config/example.com'
-        ...     _hosts = [{'name': 'host1'}, {'name': 'host2'}]
-        ...     collection_property('hosts', _hosts, _base)
-        {'id': 'hosts', 'memberType': 'collection', 'value': [{'name': 'host1'}, {'name': 'host2'}], \
-'links': [{'rel': 'self', \
-'href': 'http://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com/collections/hosts', \
-'method': 'GET', 'type': 'application/json', 'domainType': 'link'}]}
-
-    Returns:
-
     """
     return {
         "id": name,
@@ -701,6 +579,7 @@ def domain_object(
     deletable: bool = True,
     links: list[LinkType] | None = None,
     self_link: LinkType | None = None,
+    include_links: bool = True,
 ) -> DomainObject:
     """Renders a domain-object dict structure.
 
@@ -737,6 +616,10 @@ def domain_object(
             (optional) The manually provided self link. If not provided, the self link is
             automatically generated
 
+        include_links:
+            (optional) A flag which governs if the links should be included in the output. Defaults
+            to True.
+
     """
     uri = object_href(domain_type, identifier)
     if extensions is None:
@@ -744,14 +627,16 @@ def domain_object(
     if members is None:
         members = {}
 
-    _links = [self_link if self_link is not None else link_rel("self", uri, method="get")]
+    _links = []
+    if include_links:
+        _links.append(self_link if self_link is not None else link_rel("self", uri, method="get"))
+        if editable:
+            _links.append(link_rel(".../update", uri, method="put"))
+        if deletable:
+            _links.append(link_rel(".../delete", uri, method="delete"))
+        if links:
+            _links.extend(links)
 
-    if editable:
-        _links.append(link_rel(".../update", uri, method="put"))
-    if deletable:
-        _links.append(link_rel(".../delete", uri, method="delete"))
-    if links:
-        _links.extend(links)
     return {
         "domainType": domain_type,
         "id": identifier,
@@ -764,7 +649,7 @@ def domain_object(
 
 def collection_object(
     domain_type: DomainType,
-    value: list[CollectionItem | LinkType],
+    value: list[CollectionItem] | list[LinkType] | list[DomainObject],
     links: list[LinkType] | None = None,
     extensions: dict[str, Any] | None = None,
 ) -> CollectionObject:
@@ -835,7 +720,7 @@ def collection_item(
     identifier: str,
     title: str,
     collection_name: str = "all",
-) -> CollectionItem:
+) -> LinkType:
     """A link for use in a collection object.
 
     Args:
@@ -852,22 +737,8 @@ def collection_item(
             The name of the collection. Domain types can have multiple collections, this enables
             us to link to the correct one properly.
 
-    Examples:
-
-        >>> expected = {
-        ...     'domainType': 'link',
-        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/1.0/objects/folder_config/3',
-        ...     'method': 'GET',
-        ...     'rel': 'urn:org.restfulobjects:rels/value;collection="all"',
-        ...     'title': 'Foo',
-        ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
-        ... }
-        >>> with _request_context():
-        ...     res = collection_item('folder_config', identifier="3", title='Foo')
-        >>> assert res == expected, res
-
     Returns:
-        A dict representation of the collection link-entry.
+        A LinkType
 
     """
     return link_rel(
@@ -914,18 +785,17 @@ def hash_of_dict(dict_: dict[str, Any]) -> ETagHash:
         if isinstance(_d, (list, tuple)):
             for value in _d:
                 _update(_hash_obj, value)
+        elif isinstance(_d, dict):
+            for key, value in sorted(_d.items()):
+                _hash_obj.update(key.encode("utf-8"))
+                if isinstance(value, (dict, list, tuple)):
+                    _update(_hash_obj, value)
+                elif isinstance(value, bool):
+                    _hash_obj.update(str(value).lower().encode("utf-8"))
+                else:
+                    _hash_obj.update(str(value).encode("utf-8"))
         else:
-            if isinstance(_d, dict):
-                for key, value in sorted(_d.items()):
-                    _hash_obj.update(key.encode("utf-8"))
-                    if isinstance(value, (dict, list, tuple)):
-                        _update(_hash_obj, value)
-                    elif isinstance(value, bool):
-                        _hash_obj.update(str(value).lower().encode("utf-8"))
-                    else:
-                        _hash_obj.update(str(value).encode("utf-8"))
-            else:
-                _hash_obj.update(str(_d).encode("utf-8"))
+            _hash_obj.update(str(_d).encode("utf-8"))
 
     _hash = hashlib.sha256()
     _update(_hash, dict_)

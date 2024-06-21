@@ -17,12 +17,14 @@ class User;
 
 class TableServiceGroups : public Table {
 public:
-    explicit TableServiceGroups(ICore *mc);
+    TableServiceGroups();
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query &query, const User &user) override;
-    [[nodiscard]] Row get(const std::string &primary_key) const override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
+    [[nodiscard]] Row get(const std::string &primary_key,
+                          const ICore &core) const override;
 
     static void addColumns(Table *table, const std::string &prefix,
                            const ColumnOffsets &offsets);

@@ -9,7 +9,7 @@ from datetime import datetime
 
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -143,11 +143,10 @@ class ModeUserMigrate(WatoMode):
             )
         )
 
-        html.begin_form("user_migrate", method="POST")
-        self._valuespec().render_input_as_form("_user_migrate", {})
+        with html.form_context("user_migrate", method="POST"):
+            self._valuespec().render_input_as_form("_user_migrate", {})
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
         html.footer()
 
     def _show_result_page(self) -> None:

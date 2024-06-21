@@ -10,9 +10,11 @@ import json
 import time
 from calendar import timegm
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_azure_ad(string_table):
@@ -124,7 +126,7 @@ def check_azure_sync(item, params, parsed):
         time_delta,
         None,
         params.get("age"),
-        human_readable_func=get_age_human_readable,
+        human_readable_func=render.timespan,
         infoname="Time since last synchronization",
     )
 

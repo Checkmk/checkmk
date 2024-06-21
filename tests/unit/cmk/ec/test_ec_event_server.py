@@ -5,19 +5,15 @@
 
 import logging
 
-import pytest
-
-from tests.testlib import CMKEventConsole
+from tests.unit.cmk.ec.helpers import new_event
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.ec.config import Config, Rule, ServiceLevel
-from cmk.ec.defaults import default_rule_pack
-from cmk.ec.event import Event
+import cmk.ec.export as ec
+from cmk.ec.config import Config, MatchGroups, ServiceLevel
 from cmk.ec.main import create_history, EventServer, StatusTableEvents, StatusTableHistory
-from cmk.ec.settings import Settings
 
-RULE = Rule(
+RULE = ec.Rule(
     actions=[],
     actions_in_downtime=True,
     autodelete=False,
@@ -34,33 +30,26 @@ RULE = Rule(
 )
 
 
-@pytest.fixture(name="config_with_host_patterns")
-def fixture_config_with_host_patterns(config: Config) -> Config:
-    """Return a config with a rule with specific host patterns inside the default rule_pack."""
-    with_host_patterns: Config = config.copy()
-    with_host_patterns["rule_packs"] = [default_rule_pack([RULE])]
-    return with_host_patterns
-
-
 def test_event_rewrite(
     event_server: EventServer,
-    settings: Settings,
-    config_with_host_patterns: Config,
+    settings: ec.Settings,
+    config: Config,
 ) -> None:
     """
     Event server rewrite_event() method should change event state
     even if incomplete StatePatterns are given in rule["State"].
     """
+    config_rule_packs: Config = config | {"rule_packs": [ec.default_rule_pack([RULE])]}
     history = create_history(
         settings,
-        config_with_host_patterns,
+        config_rule_packs,
         logging.getLogger("cmk.mkeventd"),
         StatusTableEvents.columns,
         StatusTableHistory.columns,
     )
-    event_server.reload_configuration(config=config_with_host_patterns, history=history)
-    event = CMKEventConsole.new_event(
-        Event(
+    event_server.reload_configuration(config_rule_packs, history=history)
+    event = new_event(
+        ec.Event(
             host=HostName("heute"),
             text="SUPERWARN",
             core_host=HostName("heute"),
@@ -68,7 +57,7 @@ def test_event_rewrite(
     )
     assert "state" not in event
 
-    event_server.rewrite_event(rule=RULE, event=event, match_groups={})
+    event_server.rewrite_event(rule=RULE, event=event, match_groups=MatchGroups())
 
     assert event["text"] == "SUPERWARN"
     assert event["state"] == 2

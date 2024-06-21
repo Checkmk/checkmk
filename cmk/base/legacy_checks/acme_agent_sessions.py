@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.acme import DETECT_ACME
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.acme import DETECT_ACME
 
 
 def inventory_acme_agent_sessions(info):
@@ -31,7 +32,12 @@ def check_acme_agent_sessions(item, _no_params, info):
     return None
 
 
+def parse_acme_agent_sessions(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["acme_agent_sessions"] = LegacyCheckDefinition(
+    parse_function=parse_acme_agent_sessions,
     detect=DETECT_ACME,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.2.1.2.2.1",

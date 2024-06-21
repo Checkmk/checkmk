@@ -1,49 +1,47 @@
-ARG IMAGE_UBUNTU_20_04
+ARG DISTRO_IMAGE_BASE
+
 # hadolint ignore=DL3006
 # Create base image
-FROM ${IMAGE_UBUNTU_20_04} as base
+FROM ${DISTRO_IMAGE_BASE} as base
 
 SHELL ["/bin/bash", "-c"]
-ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
+ENV \
+    DEBIAN_FRONTEND=noninteractive \
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    PATH="/opt/bin:${PATH}"
 
-RUN apt-get update \
-    && apt-get install -y \
+RUN apt-get update
+
+RUN apt-get install -y \
     dialog \
     git \
     graphviz \
-    libenchant1c2a \
     librrd-dev \
     libsasl2-dev \
     libxml2 \
     make \
     nullmailer \
-    php7.4-common \
-    python-dev \
     python3-pip \
     rrdtool \
     strace \
     sudo \
-    vim \
-    && rm -rf /var/lib/apt/lists/*
+    vim
 
-RUN apt-get update \
-    && apt-get install -y \
+RUN apt-get install -y --fix-missing \
     apache2 \
     apache2-dev \
     autoconf \
     build-essential \
     bison \
     curl \
-    default-jdk \
     devscripts \
     dnsutils \
-    dpatch \
     flex \
     gawk \
     gettext \
     git-buildpackage \
     gtk-doc-tools \
-    golang-go \
     iputils-ping \
     joe \
     libc6-dbg \
@@ -71,7 +69,7 @@ RUN apt-get update \
     libtool \
     libxml2-dev \
     libxmlsec1-dev \
-    msitools \
+    netcat-openbsd \
     openssh-client \
     patch \
     rpcbind \
@@ -80,9 +78,11 @@ RUN apt-get update \
     software-properties-common \
     texinfo \
     tk-dev \
-    uuid-dev \
-    upx-ucl \
-    && rm -rf /var/lib/apt/lists/*
+    uuid-dev
+
+# remove apt service because we don't need it and we run into problems, see
+# https://jira.lan.tribe29.com/browse/CMK-16607
+RUN rm /etc/cron.daily/apt-compat
 
 # Install our standard tool chain for building in seperate container
 # - gnu-toolchain is needed for compiling all the C++ stuff
@@ -95,51 +95,61 @@ ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD
 ARG DISTRO
 ARG BRANCH_VERSION
-ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+ENV \
+    NEXUS_ARCHIVES_URL="${NEXUS_ARCHIVES_URL}" \
+    NEXUS_USERNAME="${NEXUS_USERNAME}" \
+    NEXUS_PASSWORD="${NEXUS_PASSWORD}" \
+    DISTRO="${DISTRO}" \
+    BRANCH_VERSION="${BRANCH_VERSION}"
 
+# Copy over stuff that's needed by lots of scripts (has to be copied to context before)
+COPY \
+    .bazelversion \
+    package_versions.bzl \
+    static_variables.bzl \
+    defines.make \
+    /opt/
 
-COPY scripts/.bazelversion /opt/
-COPY scripts/install-iwyu.sh /opt/
-COPY scripts/Check_MK-pubkey.gpg /opt/
+COPY --from=scripts \
+    build_lib.sh \
+    Check_MK-pubkey.gpg \
+    /opt/
 
-# used by lots of scripts (has to be copied to `scripts/` before)
-COPY scripts/package_versions.bzl /opt/
-COPY scripts/defines.make /opt/
-
-# used by install scripts
-COPY scripts/build_lib.sh /opt/
-
-COPY scripts/install-gnu-toolchain.sh /opt/
+COPY --from=scripts install-gnu-toolchain.sh /opt/
 RUN /opt/install-gnu-toolchain.sh
 
-COPY scripts/install-valgrind.sh /opt/
+COPY --from=scripts install-valgrind.sh /opt/
 RUN /opt/install-valgrind.sh
 
-COPY scripts/install-cmake.sh /opt/
+COPY --from=scripts install-cmake.sh /opt/
 RUN /opt/install-cmake.sh
 
-COPY scripts/install-protobuf-cpp.sh /opt/
+COPY --from=scripts install-protobuf-cpp.sh /opt/
 RUN /opt/install-protobuf-cpp.sh
 
-COPY scripts/install-openssl.sh /opt/
+COPY --from=scripts install-openssl.sh /opt/
 RUN /opt/install-openssl.sh
 
-COPY scripts/install-python.sh /opt/
+COPY --from=scripts install-python.sh /opt/
 RUN /opt/install-python.sh
 
-COPY scripts/install-freetds.sh /opt/
+# install GDB after Python as it requires shared object files, see CMK-15854
+COPY --from=scripts install-gdb.sh /opt/
+RUN /opt/install-gdb.sh
+
+COPY --from=scripts install-freetds.sh /opt/
 RUN /opt/install-freetds.sh
 
-COPY scripts/install-rust-cargo.sh /opt/
+COPY --from=scripts install-rust-cargo.sh /opt/
 RUN /opt/install-rust-cargo.sh
 
 # Now shrink all the binaries and libraries we produced to build a small image
 # in the next step
-COPY scripts/strip_binaries /opt/
+COPY strip_binaries /opt/
 RUN /opt/strip_binaries /opt
 
 # Run this AFTER strip_binaries!!
-COPY scripts/install-bazel.sh /opt/
+COPY --from=scripts install-bazel.sh /opt/
 RUN /opt/install-bazel.sh
 
 ### Actual Build Image ###
@@ -149,8 +159,11 @@ FROM base
 COPY --from=builder /opt /opt
 
 ARG DISTRO
+ARG DISTRO_MK_FILE
 ARG BRANCH_VERSION
-ENV DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+ENV \
+    DISTRO="${DISTRO}" \
+    BRANCH_VERSION="${BRANCH_VERSION}"
 
 # Set symlinks
 RUN /opt/install-gnu-toolchain.sh link-only
@@ -160,65 +173,25 @@ RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-freetds.sh link-only
 RUN /opt/install-bazel.sh link-only
-
-# Exclusively for this distro at the moment, because it is used by several CI
-# jobs for special tasks (checking out git, "make dist", orchestrating other
-# containers, ...). Scripts should be usable with other Ubuntu versions.
-COPY scripts/install-docker.sh /opt/
-RUN /opt/install-docker.sh
-
-COPY scripts/install-make-dist-deps.sh /opt/
-RUN /opt/install-make-dist-deps.sh
-
-COPY scripts/install-nodejs.sh /opt/
-RUN /opt/install-nodejs.sh
-
-COPY scripts/install-clang.sh /opt/
-RUN /opt/install-clang.sh
-
-COPY scripts/install-shellcheck.sh /opt/
-RUN /opt/install-shellcheck.sh
-
-COPY scripts/install-rust-cargo.sh /opt/
 RUN /opt/install-rust-cargo.sh link-only
 
-COPY scripts/install-musl-tools.sh /opt/
-RUN /opt/install-musl-tools.sh
-
 # Install non cached dependencies
-COPY scripts/install-pipenv.sh /opt/
+COPY --from=scripts install-pipenv.sh /opt/
 RUN /opt/install-pipenv.sh
 
-COPY scripts/UBUNTU_20.04.mk /opt/
-COPY scripts/install-cmk-dependencies.sh /opt/
+COPY --from=omd_distros "${DISTRO_MK_FILE}" /opt/
+COPY --from=scripts install-cmk-dependencies.sh /opt/
 RUN /opt/install-cmk-dependencies.sh
 
-COPY scripts/install-patchelf.sh /opt/
+COPY --from=scripts install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh
 
-COPY scripts/install-packer.sh /opt/
-RUN /opt/install-packer.sh
-
-COPY scripts/install-aws-cli.sh /opt/
-RUN /opt/install-aws-cli.sh
-
-COPY scripts/install-buildifier.sh /opt/
-RUN /opt/install-buildifier.sh
-
-# save a massive 108kB of space
-RUN rm /opt/*.sh /opt/strip_binaries /opt/*.mk
-
-# Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
-# jobs will be executed as this user in the container
-RUN groupadd -g 1000 jenkins \
-    && useradd -m -u 1001 -g 1000 -s /bin/bash jenkins
-
-RUN mkdir -p /home/jenkins/.cache/ \
-    && chown jenkins:jenkins /home/jenkins/.cache/
-
 ARG VERS_TAG
-RUN echo $VERS_TAG > /version.txt
+RUN echo "${VERS_TAG}" > /version.txt
 
 ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \
-    com.tribe29.image_type="build-image"
+    com.checkmk.image_type="build-image"
+
+COPY --from=dev_images entrypoint.sh /opt/
+ENTRYPOINT ["/opt/entrypoint.sh"]

@@ -14,8 +14,8 @@ mock_item_state = {
         "mysql.sessions": (0, 2),
     },
     "innodb_io": {
-        "diskstat.innodb_iomysql.read": (0.0, 2),
-        "diskstat.innodb_iomysql.write": (0.0, 4),
+        "read": (0.0, 1024),
+        "write": (0.0, 2048),
     }
 }
 
@@ -310,7 +310,17 @@ checks = {
             [
                 (
                     0,
-                    "read: 0.00 B/s, write: 0.00 B/s",
+                    "Read: 0.00 B/s",
+                    [],
+                ),
+                (
+                    0,
+                    "Write: 0.00 B/s",
+                    [],
+                ),
+                (
+                    0,
+                    "",
                     [
                         ("read", 0.0, None, None, None, None),
                         ("write", 0.0, None, None, None, None),

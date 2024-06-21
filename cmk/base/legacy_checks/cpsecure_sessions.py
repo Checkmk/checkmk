@@ -14,26 +14,23 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
-cpsecure_sessions_default_levels = (2500, 5000)
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 
 def inventory_cpsecure_sessions(info):
-    inventory = []
     for service, enabled, _sessions in info:
         if enabled == "1":
-            inventory.append((service, cpsecure_sessions_default_levels))
-    return inventory
+            yield service, {}
 
 
-def check_cpsecure_sessions(item, params, info):
+def check_cpsecure_sessions(item, _no_params, info):
     for service, enabled, sessions in info:
         if item == service:
             if enabled != "1":
                 return 1, "service not enabled"
             num_sessions = int(sessions)
-            warn, crit = params
+            warn, crit = (2500, 5000)
             perfdata = [("sessions", num_sessions, warn, crit, 0)]
 
             if num_sessions >= crit:
@@ -45,7 +42,12 @@ def check_cpsecure_sessions(item, params, info):
     return 3, "service not found"
 
 
+def parse_cpsecure_sessions(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cpsecure_sessions"] = LegacyCheckDefinition(
+    parse_function=parse_cpsecure_sessions,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.26546.1.1.2"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.26546.3.1.2.1.1.1",

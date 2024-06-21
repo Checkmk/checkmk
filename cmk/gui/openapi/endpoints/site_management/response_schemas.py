@@ -11,7 +11,7 @@ from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, Domai
 from cmk import fields
 
 
-class Heartbeat(BaseSchema):
+class HeartbeatOutput(BaseSchema):
     interval = fields.Integer(
         required=False,
         description="The heartbeat interval for the TCP connection.",
@@ -25,14 +25,14 @@ class Heartbeat(BaseSchema):
     )
 
 
-class ProxyParams(BaseSchema):
+class ProxyParamsOutput(BaseSchema):
     channels = fields.Integer(
         required=False,
         description="The number of channels to keep open.",
         example=5,
     )
     heartbeat = fields.Nested(
-        Heartbeat,
+        HeartbeatOutput,
         required=False,
         description="The heartbeat interval and timeout configuration.",
     )
@@ -61,7 +61,7 @@ class ProxyParams(BaseSchema):
     )
 
 
-class ProxyTcp(BaseSchema):
+class ProxyTCPOutput(BaseSchema):
     port = fields.Integer(
         minimum=1,
         maximum=65535,
@@ -82,7 +82,7 @@ class ProxyTcp(BaseSchema):
     )
 
 
-class ProxyAttributes(BaseSchema):
+class ProxyAttributesOutput(BaseSchema):
     use_livestatus_daemon = fields.String(
         required=True,
         description="Use livestatus daemon with direct connection or with livestatus proxy.",
@@ -94,18 +94,18 @@ class ProxyAttributes(BaseSchema):
         example=True,
     )
     tcp = fields.Nested(
-        ProxyTcp,
+        ProxyTCPOutput,
         required=False,
         description="Allow access via TCP configuration.",
     )
     params = fields.Nested(
-        ProxyParams,
+        ProxyParamsOutput,
         required=False,
         description="The live status proxy daemon parameters.",
     )
 
 
-class SocketAttributes(BaseSchema):
+class SocketAttributesOutput(BaseSchema):
     socket_type = fields.String(
         required=True,
         description="The connection name. This can be tcp, tcp6, unix or local.",
@@ -170,14 +170,14 @@ class BasicSettingsAttributes(BaseSchema):
     customer = gui_fields.customer_field()
 
 
-class StatusConnectionAttributes(BaseSchema):
+class StatusConnectionAttributesOutput(BaseSchema):
     connection = fields.Nested(
-        SocketAttributes,
+        SocketAttributesOutput,
         required=True,
         description="When connecting to remote site please make sure that Livestatus over TCP is activated there. You can use UNIX sockets to connect to foreign sites on localhost.",
     )
     proxy = fields.Nested(
-        ProxyAttributes,
+        ProxyAttributesOutput,
         required=True,
         description="The Livestatus proxy daemon configuration attributes.",
     )
@@ -208,7 +208,7 @@ class StatusConnectionAttributes(BaseSchema):
     )
 
 
-class UserSyncAttributes(BaseSchema):
+class UserSyncAttributesOutput(BaseSchema):
     sync_with_ldap_connections = fields.String(
         required=True,
         description="Sync with ldap connections. The options are ldap, all, disabled.",
@@ -222,7 +222,7 @@ class UserSyncAttributes(BaseSchema):
     )
 
 
-class ConfigurationConnectionAttributes(BaseSchema):
+class ConfigurationConnectionAttributesOutput(BaseSchema):
     enable_replication = fields.Boolean(
         required=False,
         description="Replication allows you to manage several monitoring sites with a logically centralized setup. Remote sites receive their configuration from the central sites.",
@@ -248,12 +248,12 @@ class ConfigurationConnectionAttributes(BaseSchema):
 
     direct_login_to_web_gui_allowed = fields.Boolean(
         required=False,
-        description="When enabled, this site is marked for synchronisation every time a Web GUI related option is changed and users are allowed to login to the Web GUI of this site.",
+        description="When enabled, this site is marked for synchronisation every time a web GUI related option is changed and users are allowed to login to the web GUI of this site.",
         example=True,
     )
 
     user_sync = fields.Nested(
-        UserSyncAttributes,
+        UserSyncAttributesOutput,
         required=True,
         description="By default the users are synchronized automatically in the interval configured in the connection. For example the LDAP connector synchronizes the users every five minutes by default. The interval can be changed for each connection individually in the connection settings. Please note that the synchronization is only performed on the master site in distributed setups by default.",
     )
@@ -276,10 +276,10 @@ class SiteConfigAttributes(BaseSchema):
         BasicSettingsAttributes,
     )
     status_connection = fields.Nested(
-        StatusConnectionAttributes,
+        StatusConnectionAttributesOutput,
     )
     configuration_connection = fields.Nested(
-        ConfigurationConnectionAttributes,
+        ConfigurationConnectionAttributesOutput,
     )
     secret = fields.String(
         required=False,

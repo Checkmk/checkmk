@@ -20,8 +20,8 @@
 .testmondata
 .venv.lock
 /.venv/
-/.docker_workspace/
-/build_user_home/
+/container_shadow_workspace*/
+/shared_cargo_folder/
 *.cookie
 *.gcno
 *.gcov
@@ -61,6 +61,7 @@ GPATH
 GRTAGS
 GTAGS
 htmlcov/
+logback.log
 mk-livestatus-*.tar.gz
 node_modules/
 omd/bazel-*
@@ -76,9 +77,10 @@ tests/var/*
 tests/results/*
 tests/.hypothesis/
 /results
-/buildscripts/infrastructure/build-nodes/scripts/defines.make
 /buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
 /bazel-*
+/MODULE.bazel
+/MODULE.bazel.lock
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode
@@ -99,3 +101,7 @@ tests/.hypothesis/
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode
+
+# gui-e2e tests: playwright specific ignores
+test-results/
+*.png

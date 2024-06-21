@@ -11,7 +11,7 @@ Don't add new stuff here!
 
 import logging
 import subprocess
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -29,28 +29,16 @@ from ._mkp import (
     PackagePart,
 )
 from ._parts import PackageOperationCallbacks, PathConfig, permissions
-from ._reporter import all_local_files, all_rule_pack_files
+from ._reporter import all_packable_files
 from ._type_defs import PackageError, PackageID, PackageName
 
 _logger = logging.getLogger(__name__)
 
 
 class ComparableVersion(Protocol):
-    def __ge__(self, other: Self) -> bool:
-        ...
+    def __ge__(self, other: Self) -> bool: ...
 
-    def __lt__(self, other: Self) -> bool:
-        ...
-
-
-def _get_permissions(part: PackagePart, rel_path: Path) -> int:
-    """Determine permissions by the first matching beginning of 'path'"""
-
-    # I guess this shows that nagios plugins ought to be their own package part.
-    # For now I prefer to stay compatible.
-    if part is PackagePart.LIB and rel_path.parts[:2] == ("nagios", "plugins"):
-        return 0o755
-    return permissions(part)
+    def __lt__(self, other: Self) -> bool: ...
 
 
 def format_file_name(package_id: PackageID) -> str:
@@ -83,7 +71,7 @@ def _uninstall(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     manifest: Manifest,
 ) -> None:
-    if err := list(_remove_files(manifest, keep_files={}, path_config=path_config)):
+    if err := remove_files(manifest, keep_files={}, path_config=path_config):
         raise PackageError(", ".join(err))
 
     for part in set(manifest.files) & set(callbacks):
@@ -106,7 +94,7 @@ class PackageStore:
     def store(
         self,
         file_content: bytes,
-        persisting_function: Callable[[str, bytes], None],
+        persisting_function: Callable[[str, bytes], object],
         overwrite: bool = False,
     ) -> Manifest:
         package = extract_manifest(file_content)
@@ -217,18 +205,13 @@ def create(
     installer: Installer,
     manifest: Manifest,
     path_config: PathConfig,
-    persisting_function: Callable[[str, bytes], None],
+    package_store: PackageStore,
+    persisting_function: Callable[[str, bytes], object],
     *,
     version_packaged: str,
 ) -> None:
     if installer.is_installed(manifest.name):
         raise PackageError("Package already exists.")
-
-    package_store = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    )
 
     _raise_for_nonexisting_files(manifest, path_config)
     _validate_package_files(manifest, installer)
@@ -243,7 +226,8 @@ def edit(
     pacname: PackageName,
     new_manifest: Manifest,
     path_config: PathConfig,
-    persisting_function: Callable[[str, bytes], None],
+    package_store: PackageStore,
+    persisting_function: Callable[[str, bytes], object],
     *,
     version_packaged: str,
 ) -> None:
@@ -254,11 +238,6 @@ def edit(
     if pacname != new_manifest.name:
         if installer.is_installed(new_manifest.name):
             raise PackageError("Cannot rename package: a package with that name already exists.")
-    package_store = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    )
 
     _raise_for_nonexisting_files(new_manifest, path_config)
     _validate_package_files(new_manifest, installer)
@@ -285,7 +264,7 @@ def _create_enabled_mkp_from_installed_package(
     package_store: PackageStore,
     manifest: Manifest,
     path_config: PathConfig,
-    persisting_function: Callable[[str, bytes], None],
+    persisting_function: Callable[[str, bytes], object],
     *,
     version_packaged: str,
 ) -> None:
@@ -366,7 +345,7 @@ def _install(
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
-        for err in _remove_files(old_manifest, keep_files=manifest.files, path_config=path_config):
+        for err in remove_files(old_manifest, keep_files=manifest.files, path_config=path_config):
             _logger.error(err)
 
         for part in set(old_manifest.files) & set(callbacks):
@@ -381,20 +360,21 @@ def _install(
     return manifest
 
 
-def _remove_files(
+def remove_files(
     manifest: Manifest, keep_files: Mapping[PackagePart, Iterable[Path]], path_config: PathConfig
-) -> Iterator[str]:
+) -> tuple[str, ...]:
+    errors = []
     for part, files in manifest.files.items():
         _logger.debug("  Part '%s':", part.ident)
-        remove_files = set(files) - set(keep_files.get(part, []))
-        for fn in remove_files:
+        for fn in set(files) - set(keep_files.get(part, [])):
             path = path_config.get_path(part) / fn
             try:
                 path.unlink(missing_ok=True)
             except OSError as e:
-                yield f"[{manifest.name} {manifest.version}]: Error removing {path}: {e}"
+                errors.append(f"[{manifest.name} {manifest.version}]: Error removing {path}: {e}")
             else:
-                _logger.info("[%s %s]: Removed %s", manifest.name, manifest.version, path)
+                _logger.info("[%s %s]: Removed file %s", manifest.name, manifest.version, path)
+    return tuple(errors)
 
 
 def _raise_for_installability(
@@ -451,8 +431,10 @@ def _conflicting_files(
 def _fix_files_permissions(manifest: Manifest, path_config: PathConfig) -> None:
     for part, filenames in manifest.files.items():
         for filename in filenames:
+            if (desired_perm := permissions(part, filename)) is None:
+                continue
+
             path = path_config.get_path(part) / filename
-            desired_perm = _get_permissions(part, filename)
             has_perm = path.stat().st_mode & 0o7777
             if has_perm != desired_perm:
                 _logger.debug(
@@ -567,12 +549,7 @@ def get_unpackaged_files(
     installer: Installer, path_config: PathConfig
 ) -> dict[PackagePart, list[Path]]:
     packaged = installer.get_packaged_files()
-    present: dict[PackagePart | None, set[Path]] = {
-        **all_local_files(path_config),
-        PackagePart.EC_RULE_PACKS: all_rule_pack_files(
-            path_config.get_path(PackagePart.EC_RULE_PACKS)
-        ),
-    }
+    present = all_packable_files(path_config)
     return {
         part: sorted(set(present.get(part, ())) - set(packaged.get(part, ())))
         for part in PackagePart
@@ -600,16 +577,12 @@ def id_to_mkp(
 def update_active_packages(
     installer: Installer,
     path_config: PathConfig,
+    package_store: PackageStore,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     site_version: str,
     parse_version: Callable[[str], ComparableVersion],
 ) -> tuple[Sequence[Manifest], Sequence[Manifest]]:
     """Update which of the enabled packages are actually active (installed)"""
-    package_store = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    )
     # order matters here (deinstall, then install)!
     return (
         _deinstall_inapplicable_active_packages(
@@ -760,13 +733,21 @@ def disable_outdated(
 
 def make_post_package_change_actions(
     *callbacks: tuple[tuple[PackagePart, ...], Callable[[], object]],
+    on_any_change: tuple[Callable[[], object], ...],
 ) -> Callable[[Sequence[Manifest]], None]:
     def _execute_post_package_change_actions(
         packages: Sequence[Manifest],
     ) -> None:
+        if not any(package.files for package in packages):
+            # nothing changed at all
+            return
+
         for triggers, callback in callbacks:
             if any(package.files.get(t) for t in triggers for package in packages):
                 callback()
+
+        for callback in on_any_change:
+            callback()
 
     return _execute_post_package_change_actions
 

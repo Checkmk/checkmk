@@ -12,8 +12,8 @@
 
 include ../../../defines.make
 # commandline
-PY_VER             ?= $(PYTHON_MAJOR_DOT_MINOR)
-PY_SUBVER          ?= $(PYTHON_VERSION_PATCH)
+PY_VER             ?= $(PYTHON_VERSION_WINDOWS_MAJOR_DOT_MINOR)
+PY_SUBVER          ?= $(PYTHON_VERSION_WINDOWS_PATCH)
 #MSBUILD            ?= C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe
 MSBUILD            ?= C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe
 
@@ -110,7 +110,9 @@ $(PYTHON_PIPFILE_LOCK): $(PYTHON_PIPFILE) ## piplock building
 	@powershell Write-Host "Target $@" -foreground white
 	@call exec_cmd.bat build_pipfile_lock.cmd $(PY_VER) $(PY_SUBVER)
 
-venv: python_install $(PYTHON_PIPFILE_LOCK) ## venv building
+python_pipfile: $(PYTHON_PIPFILE_LOCK)
+
+venv: python_install python_pipfile ## venv building
 	@powershell Write-Host "Target '$@'" -foreground white
 	exec_cmd.bat build_environment.cmd $(PY_VER) $(PY_SUBVER)
 	exec_cmd.bat clean_environment.cmd $(PY_VER) $(PY_SUBVER)

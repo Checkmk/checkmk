@@ -8,10 +8,11 @@
 
 import datetime
 
-import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.plugins.lib import sap_hana
 
 # With reference to SQL sample output (see internal ticket SUP-253)
 sap_hana_ess_migration_state_map = {

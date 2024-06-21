@@ -19,6 +19,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_winperf_ts_sessions(info):
     if len(info) > 1:
@@ -54,7 +56,12 @@ def check_winperf_ts_sessions(_unused, params, info):
     return state, ", ".join(state_txt), perfdata
 
 
+def parse_winperf_ts_sessions(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["winperf_ts_sessions"] = LegacyCheckDefinition(
+    parse_function=parse_winperf_ts_sessions,
     service_name="Sessions",
     discovery_function=inventory_winperf_ts_sessions,
     check_function=check_winperf_ts_sessions,

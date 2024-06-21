@@ -106,7 +106,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         "lsnode": {"section_header": "ibm_svc_node", "command": "lsnode -delim :"},
         "lsnodestats": {
             "section_header": "ibm_svc_nodestats",
-            "command": "lsnodestats -delim :",
+            "command": "if [ -f ./bin/shortcuts/lsnodestats ]; then lsnodestats -delim :; else lsnodecanisterstats -delim :; fi",
         },
         "lssystem": {
             "section_header": "ibm_svc_system",

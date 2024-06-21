@@ -664,23 +664,23 @@ class Hostsbygroup(Table):
     last_time_down = Column(
         'last_time_down',
         col_type='time',
-        description='The last time the host was DOWN (Unix timestamp)',
+        description='Last time the host was DOWN (Unix timestamp)',
     )
-    """The last time the host was DOWN (Unix timestamp)"""
+    """Last time the host was DOWN (Unix timestamp)"""
 
     last_time_unreachable = Column(
         'last_time_unreachable',
         col_type='time',
-        description='The last time the host was UNREACHABLE (Unix timestamp)',
+        description='Last time the host was UNREACHABLE (Unix timestamp)',
     )
-    """The last time the host was UNREACHABLE (Unix timestamp)"""
+    """Last time the host was UNREACHABLE (Unix timestamp)"""
 
     last_time_up = Column(
         'last_time_up',
         col_type='time',
-        description='The last time the host was UP (Unix timestamp)',
+        description='Last time the host was UP (Unix timestamp)',
     )
-    """The last time the host was UP (Unix timestamp)"""
+    """Last time the host was UP (Unix timestamp)"""
 
     latency = Column(
         'latency',
@@ -961,6 +961,13 @@ class Hostsbygroup(Table):
         description='Optional performance data of the last check',
     )
     """Optional performance data of the last check"""
+
+    performance_data = Column(
+        'performance_data',
+        col_type='dictdouble',
+        description='Optional performance data as a dict',
+    )
+    """Optional performance data as a dict"""
 
     plugin_output = Column(
         'plugin_output',

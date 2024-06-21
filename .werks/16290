@@ -1,0 +1,14 @@
+Title: Limit login to single session: modify sessions lookup to enable the option
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1700659867
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the user got logged out from the UI as soon as the global
+setting option 'Limit login to single session at a time' was enabled. This was
+due to the fact that the active sessions lookup returned an empty result which
+prevented any further notification. This werk fixes this behaviour and reinstates
+the behaviour of the 2.1 version.

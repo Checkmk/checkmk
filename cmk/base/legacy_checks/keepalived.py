@@ -4,9 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
+
+from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
 
 
 def hex2ip(hexstr):
@@ -46,10 +49,15 @@ def check_keepalived(item, params, info):
                 map_state[str(entry[1])],
                 hex2ip(hexaddr),
             )
-    yield int(status), infotext
+    yield status, infotext
+
+
+def parse_keepalived(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
 
 
 check_info["keepalived"] = LegacyCheckDefinition(
+    parse_function=parse_keepalived,
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.9586.100.5.1.1.0")),
     fetch=[
         SNMPTree(
@@ -66,10 +74,10 @@ check_info["keepalived"] = LegacyCheckDefinition(
     check_function=check_keepalived,
     check_ruleset_name="keepalived",
     check_default_parameters={
-        "master": "0",
-        "unknown": "3",
-        "init": "0",
-        "backup": "0",
-        "fault": "2",
+        "master": 0,
+        "unknown": 3,
+        "init": 0,
+        "backup": 0,
+        "fault": 2,
     },
 )

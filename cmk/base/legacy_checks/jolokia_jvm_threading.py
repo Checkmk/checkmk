@@ -14,7 +14,8 @@ from cmk.base.check_legacy_includes.jolokia import (
     parse_jolokia_json_output,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
+
+from cmk.agent_based.v2 import get_rate, get_value_store
 
 
 def parse_jolokia_jvm_threading(string_table):

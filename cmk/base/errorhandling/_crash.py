@@ -9,10 +9,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Literal
 
-import cmk.utils.crash_reporting as crash_reporting
 import cmk.utils.debug
 import cmk.utils.encoding
 import cmk.utils.paths
+from cmk.utils import crash_reporting
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
@@ -20,7 +20,9 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPBackendEnum
 
-from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
+from cmk.checkengine.checking import CheckPluginName
+
+from cmk.piggyback import get_piggyback_raw_data
 
 CrashReportStore = crash_reporting.CrashReportStore
 
@@ -62,7 +64,7 @@ def create_check_crash_dump(
     host_name: HostName,
     service_name: ServiceName,
     *,
-    plugin_name: CheckPluginNameStr | CheckPluginName,
+    plugin_name: str | CheckPluginName,
     plugin_kwargs: Mapping[str, Any],
     is_cluster: bool,
     is_enforced: bool,
@@ -90,9 +92,9 @@ def create_check_crash_dump(
             },
             type_specific_attributes={
                 "snmp_info": _read_snmp_info(host_name),
-                "agent_output": _read_agent_output(host_name)
-                if rtc_package is None
-                else rtc_package,
+                "agent_output": (
+                    _read_agent_output(host_name) if rtc_package is None else rtc_package
+                ),
             },
         )
         CrashReportStore().save(crash)
@@ -144,7 +146,7 @@ class CheckCrashReport(CrashReportWithAgentOutput):
 
 
 def _read_snmp_info(hostname: str) -> bytes | None:
-    cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", hostname)
+    cache_path = Path(cmk.utils.paths.snmpwalks_dir, hostname)
     try:
         with cache_path.open(mode="rb") as f:
             return f.read()
@@ -153,11 +155,18 @@ def _read_snmp_info(hostname: str) -> bytes | None:
     return None
 
 
-def _read_agent_output(hostname: str) -> AgentRawData | None:
+def _read_agent_output(hostname: HostName) -> AgentRawData | None:
+    agent_outputs = []
+
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
     try:
-        with cache_path.open(mode="rb") as f:
-            return AgentRawData(f.read())
+        agent_outputs.append(cache_path.read_bytes())
     except OSError:
         pass
+
+    # Note: this is not quite what the fetcher does :(
+    agent_outputs.extend(r.raw_data for r in get_piggyback_raw_data(hostname))
+
+    if agent_outputs:
+        return AgentRawData(b"\n".join(agent_outputs))
     return None

@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.knuerr import DETECT_KNUERR
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.knuerr import DETECT_KNUERR
 
 
 def inventory_knuerr_sensors(info):
@@ -25,7 +26,12 @@ def check_knuerr_sensors(item, _no_params, info):
     return 3, "Sensor no longer found"
 
 
+def parse_knuerr_sensors(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["knuerr_sensors"] = LegacyCheckDefinition(
+    parse_function=parse_knuerr_sensors,
     detect=DETECT_KNUERR,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3711.15.1.1.2",

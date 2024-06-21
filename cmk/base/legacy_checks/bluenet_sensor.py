@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 #   .--Temperature---------------------------------------------------------.
 #   |     _____                                   _                        |
@@ -45,8 +46,13 @@ def check_bluenet_sensor_temp(item, params, info):
     return None
 
 
+def parse_bluenet_sensor(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["bluenet_sensor"] = LegacyCheckDefinition(
-    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
+    parse_function=parse_bluenet_sensor,
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21695.1.10.7.3.1",
         oids=["1", "2", "4", "5"],

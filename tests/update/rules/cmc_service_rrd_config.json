@@ -1,0 +1,15 @@
+[
+  {
+    "ruleset": "cmc_service_rrd_config",
+    "folder": "/",
+    "properties": {
+      "description": "Default RRD configuration, using new single RRD format"
+    },
+    "value_raw": "{'format': 'cmc_single', 'cfs': ['MIN', 'MAX', 'AVERAGE'], 'step': 60, 'rras': [(50.0, 1, 2880), (50.0, 5, 2880), (50.0, 30, 4320), (50.0, 360, 5840)]}",
+    "conditions": {
+      "host_tags": [],
+      "host_label_groups": [],
+      "service_label_groups": []
+    }
+  }
+]

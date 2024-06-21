@@ -10,21 +10,16 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, NewType, NotRequired
+from typing import Any, Literal, NamedTuple, NewType, NotRequired, TypedDict
 
 from pydantic import BaseModel
-from typing_extensions import TypedDict
 
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.crypto import HashAlgorithm
-from cmk.utils.crypto.certificate import (
-    Certificate,
-    CertificatePEM,
-    CertificateWithPrivateKey,
-    EncryptedPrivateKeyPEM,
-    RsaPrivateKey,
-)
+from cmk.utils.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
+from cmk.utils.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey
 from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.utils.crypto.secrets import Secret
+from cmk.utils.crypto.types import HashAlgorithm
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
@@ -48,25 +43,9 @@ Choice = tuple[ChoiceId, ChoiceText]
 Choices = list[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
 
 
-@dataclass
-class UserRole:
-    name: str
-    alias: str
-    builtin: bool = False
-    permissions: dict[str, bool] = field(default_factory=dict)
-    basedon: str | None = None
-
-    def to_dict(self) -> dict:
-        userrole_dict = {
-            "alias": self.alias,
-            "permissions": self.permissions,
-            "builtin": self.builtin,
-        }
-
-        if not self.builtin:
-            userrole_dict["basedon"] = self.basedon
-
-        return userrole_dict
+class TrustedCertificateAuthorities(TypedDict):
+    use_system_wide_cas: bool
+    trusted_cas: Sequence[str]
 
 
 class ChoiceGroup(NamedTuple):
@@ -104,7 +83,15 @@ class WebAuthnActionState(TypedDict):
 
 
 SessionId = str
-AuthType = Literal["automation", "cookie", "web_server", "http_header", "bearer", "basic_auth"]
+AuthType = Literal[
+    "automation",
+    "basic_auth",
+    "bearer",
+    "cookie",
+    "http_header",
+    "internal_token",
+    "web_server",
+]
 
 
 @dataclass
@@ -113,7 +100,8 @@ class SessionInfo:
     started_at: int
     last_activity: int
     csrf_token: str = field(default_factory=lambda: str(uuid.uuid4()))
-    flashes: list[str] = field(default_factory=list)
+    flashes: list[tuple[str, str]] = field(default_factory=list)
+    encrypter_secret: str = field(default_factory=lambda: Secret.generate(32).b64_str)
     # In case it is enabled: Was it already authenticated?
     two_factor_completed: bool = False
     # We don't care about the specific object, because it's internal to the fido2 library
@@ -152,6 +140,12 @@ class SessionInfo:
         self.last_activity = int(now.timestamp())
 
 
+class LastLoginInfo(TypedDict, total=False):
+    auth_type: AuthType
+    timestamp: int
+    remote_address: str
+
+
 class UserSpec(TypedDict, total=False):
     """This is not complete, but they don't yet...  Also we have a
     user_attribute_registry (cmk/gui/plugins/userdb/utils.py)
@@ -174,7 +168,8 @@ class UserSpec(TypedDict, total=False):
     idle_timeout: Any  # TODO: Improve this
     language: str
     last_pw_change: int
-    locked: bool | None
+    last_login: LastLoginInfo | None
+    locked: bool
     mail: str  # TODO: Why do we have "email" *and* "mail"?
     notification_method: Any  # TODO: Improve this
     notification_period: str
@@ -191,6 +186,7 @@ class UserSpec(TypedDict, total=False):
     start_url: str | None
     two_factor_credentials: TwoFactorCredentials
     ui_sidebar_position: Any  # TODO: Improve this
+    ui_saas_onboarding_button_toggle: Literal["invisible"] | None
     ui_theme: Any  # TODO: Improve this
     user_id: UserId
     user_scheme_serial: int
@@ -242,6 +238,7 @@ class Visual(TypedDict):
     public: bool | tuple[Literal["contact_groups"], Sequence[str]]
     packaged: bool
     link_from: LinkFromSpec
+    megamenu_search_terms: Sequence[str]
 
 
 class VisualLinkSpec(NamedTuple):
@@ -291,9 +288,9 @@ class PainterParameters(TypedDict, total=False):
     color_levels: tuple[Literal["abs_vals"], tuple[MetricName, tuple[float, float]]]
     # From historic metric painters
     rrd_consolidation: Literal["average", "min", "max"]
-    time_range: tuple[str, int]
+    time_range: tuple[str | int, int] | Literal["report"]
     # From graph painters
-    graph_render_options: GraphRenderOptions
+    graph_render_options: GraphRenderOptionsVS
     set_default_time_range: int
 
 
@@ -449,7 +446,7 @@ class SorterSpec:
         return str(self.to_raw())
 
 
-class _InventoryJoinMacrosSpec(TypedDict):
+class InventoryJoinMacrosSpec(TypedDict):
     macros: list[tuple[str, str]]
 
 
@@ -470,7 +467,7 @@ class ViewSpec(Visual):
     force_checkboxes: NotRequired[bool]
     user_sortable: NotRequired[bool]
     play_sounds: NotRequired[bool]
-    inventory_join_macros: NotRequired[_InventoryJoinMacrosSpec]
+    inventory_join_macros: NotRequired[InventoryJoinMacrosSpec]
 
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]
@@ -527,8 +524,7 @@ class ABCMegaMenuSearch(ABC):
         return 'cmk.popup_menu.focus_search_field("mk_side_search_field_%s");' % self.name
 
     @abstractmethod
-    def show_search_field(self) -> None:
-        ...
+    def show_search_field(self) -> None: ...
 
 
 class _Icon(TypedDict):
@@ -548,7 +544,7 @@ class TopicMenuItem(NamedTuple):
     is_show_more: bool = False
     icon: Icon | None = None
     button_title: str | None = None
-    additional_matches_setup_search: Sequence[str] = ()
+    megamenu_search_terms: Sequence[str] = ()
 
 
 class TopicMenuTopic(NamedTuple):
@@ -588,11 +584,10 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 # Metric & graph specific
 
 
-GraphTitleFormat = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
-
-
-class PerfDataTuple(NamedTuple):
+@dataclass(frozen=True)
+class PerfDataTuple:
     metric_name: MetricName
+    lookup_metric_name: MetricName
     value: float | int
     unit_name: str
     warn: float | None
@@ -612,7 +607,10 @@ class RowShading(TypedDict):
     heading: RGBColor
 
 
-class GraphRenderOptions(TypedDict, total=False):
+GraphTitleFormatVS = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
+
+
+class GraphRenderOptionsBase(TypedDict, total=False):
     border_width: SizeMM
     color_gradient: float
     editing: bool
@@ -631,8 +629,11 @@ class GraphRenderOptions(TypedDict, total=False):
     show_title: bool | Literal["inline"]
     show_vertical_axis: bool
     size: tuple[int, int]
-    title_format: Sequence[GraphTitleFormat]
     vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT]
+
+
+class GraphRenderOptionsVS(GraphRenderOptionsBase, total=False):
+    title_format: Sequence[GraphTitleFormatVS]
 
 
 ActionResult = FinalizeRequest | None
@@ -646,16 +647,6 @@ class ViewProcessTracking:
     duration_fetch_rows: Snapshot = Snapshot.null()
     duration_filter_rows: Snapshot = Snapshot.null()
     duration_view_render: Snapshot = Snapshot.null()
-
-
-class CustomAttr(TypedDict):
-    title: str
-    help: str
-    name: str
-    topic: str
-    type: str
-    add_custom_macro: bool
-    show_in_table: bool
 
 
 class Key(BaseModel):
@@ -672,11 +663,13 @@ class Key(BaseModel):
 
     def to_certificate_with_private_key(self, passphrase: Password) -> CertificateWithPrivateKey:
         return CertificateWithPrivateKey(
-            certificate=Certificate.load_pem(CertificatePEM(self.certificate)),
-            private_key=RsaPrivateKey.load_pem(
-                EncryptedPrivateKeyPEM(self.private_key), passphrase
-            ),
+            certificate=self.to_certificate(),
+            private_key=PrivateKey.load_pem(EncryptedPrivateKeyPEM(self.private_key), passphrase),
         )
+
+    def to_certificate(self) -> Certificate:
+        """convert the string certificate to Certificate object"""
+        return Certificate.load_pem(CertificatePEM(self.certificate))
 
     def fingerprint(self, algorithm: HashAlgorithm) -> str:
         """return the fingerprint aka hash of the certificate as a hey string"""

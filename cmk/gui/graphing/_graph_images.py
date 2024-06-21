@@ -9,15 +9,16 @@ import base64
 import json
 import time
 import traceback
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from typing import Any
+
+from pydantic import ValidationError as PydanticValidationError
 
 import livestatus
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.pdf as pdf
+from cmk.gui import pdf
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUnauthenticatedException, MKUserError
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
@@ -25,8 +26,9 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.pages import Page, PageResult
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import GraphRenderOptions, SizePT
+from cmk.gui.type_defs import SizePT
 
 from ._artwork import compute_graph_artwork, compute_graph_artwork_curves, GraphArtwork
 from ._graph_pdf import (
@@ -35,45 +37,40 @@ from ._graph_pdf import (
     graph_legend_height,
     render_graph_pdf,
 )
-from ._graph_render_config import GraphRenderConfigImage
-from ._graph_specification import (
-    CombinedSingleMetricSpec,
-    GraphDataRange,
-    GraphMetric,
-    GraphRecipe,
-    parse_raw_graph_specification,
-)
+from ._graph_render_config import GraphRenderConfigImage, GraphRenderOptions, GraphTitleFormat
+from ._graph_specification import GraphDataRange, GraphRecipe, parse_raw_graph_specification
 from ._html_render import GraphDestinations
 from ._utils import get_graph_data_from_livestatus
 
 
+# NOTE
+# No AjaxPage, as ajax-pages have a {"result_code": [1|0], "result": ..., ...} result structure,
+# while these functions do not have that. In order to preserve the functionality of the JS side
+# of things, we keep it.
+# TODO: Migrate this to a real AjaxPage
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
 # of a host or service.
-#    # Needed by mail notification plugin (-> no authentication from localhost)
-def ajax_graph_images_for_notifications(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
-    """Registered as `noauth:ajax_graph_images`."""
-    if request.remote_ip not in ["127.0.0.1", "::1"]:
-        raise MKUnauthenticatedException(
-            _("You are not allowed to access this page (%s).") % request.remote_ip
-        )
+#    # Needed by mail notification plug-in (-> no authentication from localhost)
+class AjaxGraphImagesForNotifications(Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "noauth:ajax_graph_images"
 
-    with SuperUserContext():
-        _answer_graph_image_request(resolve_combined_single_metric_spec)
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        """Registered as `noauth:ajax_graph_images`."""
+        if request.remote_ip not in ["127.0.0.1", "::1"]:
+            raise MKUnauthenticatedException(
+                _("You are not allowed to access this page (%s).") % request.remote_ip
+            )
+
+        with SuperUserContext():
+            _answer_graph_image_request()
+        return None
 
 
-def _answer_graph_image_request(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
+def _answer_graph_image_request() -> None:
     try:
-        host_name = HostName(request.get_ascii_input_mandatory("host"))
-        if not host_name:
-            raise MKGeneralException(_('Missing mandatory "host" parameter'))
+        host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
         service_description = request.get_str_input_mandatory("service", "_HOST_")
 
@@ -98,9 +95,9 @@ def _answer_graph_image_request(
         end_time = int(time.time())
         start_time = end_time - (25 * 3600)
 
-        graph_render_config = GraphRenderConfigImage.from_render_options_and_context(
-            graph_image_render_options(),
+        graph_render_config = GraphRenderConfigImage.from_user_context_and_options(
             user,
+            **graph_image_render_options(),
         )
 
         graph_data_range = graph_image_data_range(graph_render_config, start_time, end_time)
@@ -119,7 +116,6 @@ def _answer_graph_image_request(
                 graph_recipe,
                 graph_data_range,
                 graph_render_config.size,
-                resolve_combined_single_metric_spec,
             )
             graph_png = render_graph_image(graph_artwork, graph_render_config)
 
@@ -146,7 +142,12 @@ def graph_image_render_options(api_request: dict[str, Any] | None = None) -> Gra
         font_size=SizePT(8.0),
         resizable=False,
         show_controls=False,
-        title_format=("plain", "add_service_description"),
+        title_format=GraphTitleFormat(
+            plain=True,
+            add_host_name=False,
+            add_host_alias=False,
+            add_service_description=True,
+        ),
         interaction=False,
         size=(80, 30),  # ex
         # Specific for PDF rendering.
@@ -235,31 +236,25 @@ def graph_recipes_for_api_request(
 
     if consolidation_function := api_request.get("consolidation_function"):
         graph_recipes = [
-            graph_recipe.copy(update={"consolidation_function": consolidation_function})
+            graph_recipe.model_copy(update={"consolidation_function": consolidation_function})
             for graph_recipe in graph_recipes
         ]
 
     return GraphDataRange.model_validate(raw_graph_data_range), graph_recipes
 
 
-def graph_spec_from_request(
-    api_request: dict[str, Any],
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> dict[str, Any]:
-    graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
-
+def graph_spec_from_request(api_request: dict[str, Any]) -> dict[str, Any]:
     try:
+        graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
         graph_recipe = graph_recipes[0]
+
+    except PydanticValidationError as e:
+        raise MKUserError(None, str(e))
+
     except IndexError:
         raise MKUserError(None, _("The requested graph does not exist"))
 
-    curves = compute_graph_artwork_curves(
-        graph_recipe,
-        graph_data_range,
-        resolve_combined_single_metric_spec,
-    )
+    curves = compute_graph_artwork_curves(graph_recipe, graph_data_range)
 
     api_curves = []
     (start_time, end_time), step = graph_data_range.time_range, 60  # empty graph

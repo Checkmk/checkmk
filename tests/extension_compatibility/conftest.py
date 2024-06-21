@@ -7,8 +7,8 @@ from collections.abc import Iterator
 
 import pytest
 
+from tests.testlib.repo import current_base_branch_name
 from tests.testlib.site import get_site_factory, Site
-from tests.testlib.utils import current_base_branch_name
 
 
 @pytest.fixture(name="site", scope="session")

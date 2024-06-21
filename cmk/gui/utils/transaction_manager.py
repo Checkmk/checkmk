@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-import random
+import secrets
 import time
 from collections.abc import Callable
 from typing import Protocol
@@ -15,8 +15,7 @@ from cmk.gui.http import request
 
 
 class ReaderProtocol(Protocol):
-    def __call__(self, lock: bool) -> list[str]:
-        ...
+    def __call__(self, lock: bool) -> list[str]: ...
 
 
 class TransactionManager:
@@ -51,7 +50,7 @@ class TransactionManager:
         return self._current_transid
 
     def fresh_transid(self) -> str:
-        """Compute a (hopefully) unique transaction id.
+        """Compute a unique transaction id.
 
         This is generated during rendering of a form or an action link, stored
         in a user specific file for later validation, sent to the users browser
@@ -59,7 +58,7 @@ class TransactionManager:
         (link / form) and then validated if it is a known transid. When it is a
         known transid, it will be used and invalidated. If the id is not known,
         the action will not be processed."""
-        transid = "%d/%d" % (int(time.time()), random.getrandbits(32))
+        transid = "%d/%s" % (int(time.time()), secrets.token_urlsafe(8))
         self._new_transids.append(transid)
         return transid
 

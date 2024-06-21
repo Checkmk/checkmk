@@ -43,7 +43,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree, startswith
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, startswith, StringTable
 
 
 def inventory_cisco_stackpower(info):
@@ -71,7 +72,12 @@ def check_cisco_stackpower(item, params, info):
             yield map_status[port_link_status]
 
 
+def parse_cisco_stackpower(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cisco_stackpower"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_stackpower,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.516"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.500.1.3.2.1",

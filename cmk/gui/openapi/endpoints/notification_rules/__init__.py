@@ -28,17 +28,17 @@ from cmk.gui.openapi.endpoints.notification_rules.response_schemas import (
     NotificationRuleResponse,
     NotificationRuleResponseCollection,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.constructors import domain_object
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.notifications import (
     BulkNotAllowedException,
-    load_notification_rules,
     NotificationRule,
-    save_notification_rules,
+    NotificationRuleConfigFile,
 )
 
 from cmk import fields
@@ -75,10 +75,13 @@ def _create_or_update_rule(
                 title=_("Not found"),
                 detail=_("The rule_id %s does not exist.") % rule_id,
             )
+        rule_from_request.rule_id = rule_id
 
     try:
         all_rules[rule_from_request.rule_id] = rule_from_request
-        save_notification_rules([rule.to_mk_file_format() for rule in all_rules.values()])
+        NotificationRuleConfigFile().save(
+            [rule.to_mk_file_format() for rule in all_rules.values()],
+        )
     except BulkNotAllowedException as exc:
         raise ProblemException(
             status=400,
@@ -93,7 +96,8 @@ NotificationRules = dict[NotificationRuleID, NotificationRule]
 
 def get_notification_rules() -> NotificationRules:
     all_rules: list[NotificationRule] = [
-        NotificationRule.from_mk_file_format(config) for config in load_notification_rules()
+        NotificationRule.from_mk_file_format(config)
+        for config in NotificationRuleConfigFile().load_for_reading()
     ]
     notification_rules = NotificationRules({rule.rule_id: rule for rule in all_rules})
     return notification_rules
@@ -201,7 +205,7 @@ def delete_rule(params: Mapping[str, Any]) -> Response:
     if rule_id in all_rules:
         del all_rules[rule_id]
         updated_rules = [rule.to_mk_file_format() for rule in all_rules.values()]
-        save_notification_rules(updated_rules)
+        NotificationRuleConfigFile().save(updated_rules)
 
     return Response(status=204)
 

@@ -7,9 +7,10 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.df import EXCLUDED_MOUNTPOINTS
-from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.df import EXCLUDED_MOUNTPOINTS
+from cmk.plugins.lib.emc import DETECT_DATADOMAIN
 
 
 def inventory_emc_datadomain_fs(info):
@@ -31,7 +32,12 @@ def check_emc_datadomain_fs(item, params, info):
     return df_check_filesystem_list(item, params, fslist)
 
 
+def parse_emc_datadomain_fs(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["emc_datadomain_fs"] = LegacyCheckDefinition(
+    parse_function=parse_emc_datadomain_fs,
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.3.2.1.1",

@@ -10,6 +10,7 @@ import sys
 
 import pytest
 from _pytest.capture import CaptureFixture
+from _pytest.monkeypatch import MonkeyPatch
 
 if sys.version_info[0] == 2:
     from mock import Mock
@@ -18,7 +19,7 @@ if sys.version_info[0] == 2:
 else:
     from unittest.mock import Mock
 
-    import agents.plugins.apache_status as apache_status
+    from agents.plugins import apache_status
 
 RESPONSE = "\n".join(("1st line", "2nd line", "3rd line"))
 
@@ -79,7 +80,9 @@ def test_https_cfg_versions(cfg: object) -> None:
         [("https", "127.0.0.1", None)],
     ],
 )
-def test_agent(cfg: object, response: str, monkeypatch, capsys: CaptureFixture) -> None:  # type: ignore[no-untyped-def]
+def test_agent(
+    cfg: object, response: str, monkeypatch: MonkeyPatch, capsys: CaptureFixture
+) -> None:
     monkeypatch.setattr(apache_status, "get_config", lambda: {"servers": cfg, "ssl_ports": [443]})
     monkeypatch.setattr(apache_status, "get_response_body", lambda *args: response)
     apache_status.main()

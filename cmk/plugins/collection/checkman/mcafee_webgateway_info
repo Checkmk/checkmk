@@ -1,0 +1,13 @@
+title: McAfee Web Gateway: Product and Revision Infomation
+agents: snmp
+catalog: app/mcafee
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports product and revision information of Skyhigh Security (formerly McAfee) web gateway
+ devices which supports the SKYHIGH-SWG MIB (was MCAFEE-MWG MIB).
+
+ The check is always OK.
+
+discovery:
+ One service is created.

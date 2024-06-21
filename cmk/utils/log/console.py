@@ -3,96 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
-
 import logging
-import sys
-from collections.abc import Generator
-from contextlib import contextmanager
 from typing import TextIO
-
-import cmk.utils.tty as tty
 
 from ._level import VERBOSE as VERBOSE
 
-
-# For StreamHandler.setStream()
-@contextmanager
-def set_stream(
-    logger: logging.Logger, handler: logging.StreamHandler[TextIO], stream: TextIO
-) -> Generator[None, None, None]:
-    # See `https://bugs.python.org/issue6333` for why this is necessary.
-    old = handler.setStream(stream)
-    logger.addHandler(handler)
-    try:
-        yield
-    finally:
-        logger.removeHandler(handler)
-        handler.close()
-        if old:
-            handler.setStream(old)
-
-
-_handler = logging.StreamHandler()
-_handler.terminator = ""  # TODO: let the handler add '\n'
+# NOTE: We abuse the log level of this logger as a global variable!
 _console = logging.getLogger("cmk.base.console")
-_console.propagate = False
-
-isEnabledFor = _console.isEnabledFor
 
 
-def log(level: int, text: str, *args: object, **kwargs: TextIO) -> None:
-    stream = kwargs.pop("stream", sys.stdout)
-    assert not kwargs
-
-    with set_stream(_console, _handler, stream):
-        _console.log(level, text, *args)
+def error(text: str, *, file: TextIO | None = None) -> None:
+    if _console.isEnabledFor(logging.ERROR):
+        print(text, file=file, flush=True)
 
 
-def debug(text: str, *args: object, **kwargs: TextIO) -> None:
-    """Output text if, opt_verbose >= 2 (-vv)."""
-    log(logging.DEBUG, text, *args, **kwargs)
+def warning(text: str, *, file: TextIO | None = None) -> None:
+    if _console.isEnabledFor(logging.WARNING):
+        print(text, file=file, flush=True)
 
 
-vverbose = debug
+def info(text: str, *, file: TextIO | None = None) -> None:
+    if _console.isEnabledFor(logging.INFO):
+        print(text, file=file, flush=True)
 
 
-def verbose(text: str, *args: object, **kwargs: TextIO) -> None:
-    """Output text if opt_verbose is set (-v).
-
-    Adds no linefeed.
-
-    """
-    log(VERBOSE, text, *args, **kwargs)
+# TODO: Figure out where this is used for a "real" console vs. some internal protocol.
+# The latter should really be disentangled from this file here.
+def verbose_no_lf(text: str, *, file: TextIO | None = None) -> None:
+    if _console.isEnabledFor(VERBOSE):
+        print(text, end="", file=file, flush=True)
 
 
-def info(text: str, *args: object, **kwargs: TextIO) -> None:
-    """Output text if opt_verbose is set (-v).
-
-    Adds no linefeed.
-
-    """
-    log(logging.INFO, text, *args, **kwargs)
+def verbose(text: str, *, file: TextIO | None = None) -> None:
+    if _console.isEnabledFor(VERBOSE):
+        print(text, file=file, flush=True)
 
 
-#
-# More top level wrappers
-#
-
-
-def warning(text: str, *args: object, **kwargs: TextIO) -> None:
-    stream = kwargs.pop("stream", sys.stderr)
-    assert not kwargs
-    log(logging.WARNING, _format_warning(text), *args, stream=stream)
-
-
-# TODO: Inconsistent -> Adds newline and other functions don't
-def _format_warning(text: str) -> str:
-    # type (str) -> str
-    stripped = text.lstrip()
-    indent = text[: len(text) - len(stripped)]
-    return f"{indent}{tty.bold}{tty.yellow}WARNING:{tty.normal} {stripped}\n"
-
-
-def error(text: str, *args: object) -> None:
-    log(logging.ERROR, text, *args, stream=sys.stderr)
+def debug(text: str, *, file: TextIO | None = None) -> None:
+    if _console.isEnabledFor(logging.DEBUG):
+        print(text, file=file, flush=True)

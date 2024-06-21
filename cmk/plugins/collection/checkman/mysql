@@ -1,0 +1,19 @@
+title: MySQL: Version
+agents: linux
+catalog: app/mysql
+license: GPLv2
+distribution: check_mk
+description:
+ This check only shows the Version of the runnin MySQL Daemon.
+
+ This check needs the agent plug-in {mk_mysql} to be installed.
+ Further details about this plug-in and monitoring of MySQL can be
+ found in the Checkmk online documentation in the article
+ "Monitoring MySQL with Checkmk".
+
+item:
+ Version of the MySQL service
+
+discovery:
+ One service is created on each instance on a host where the agent plugin
+ {mk_mysql} is being installed  and the MySQL daemon is running.

@@ -16,6 +16,17 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
+
+def parse_vms_system(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["vms_system"] = LegacyCheckDefinition(
+    parse_function=parse_vms_system,
+)
+
 
 def inventory_vms_system(info):
     if len(info) > 0:

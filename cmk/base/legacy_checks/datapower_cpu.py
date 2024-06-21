@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.datapower import DETECT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.datapower import DETECT
 
 
 def inventory_datapower_cpu(info):
@@ -21,7 +22,12 @@ def check_datapower_cpu(_no_item, params, info):
     return check_cpu_util(util, params)
 
 
+def parse_datapower_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["datapower_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_datapower_cpu,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.14",

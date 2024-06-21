@@ -22,4 +22,4 @@ recovery process (MRP0) is not an issue, until the apply_lag has a proper
 WARN/CRIT definition - that is more important than a stopped recovery in the
 standby database.
 
-You have to re-install the agent plugin {{mk_oracle}}.
+You have to re-install the agent plugin "mk_oracle".

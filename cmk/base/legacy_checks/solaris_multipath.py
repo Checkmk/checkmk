@@ -17,6 +17,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_solaris_multipath(info):
     for device, _total, operational in info:
@@ -38,18 +40,17 @@ def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-bra
             if levels is None:
                 state = 1
                 infotext += ", expected paths unknown, please redo service discovery"
-            else:
-                if isinstance(levels, tuple):
-                    warn, crit = levels
-                    warn_num = (warn / 100.0) * total
-                    crit_num = (crit / 100.0) * total
-                    levels = " (Warning/ Critical at %d/ %d)" % (warn_num, crit_num)
-                    info = "paths active: %d" % (operational)
-                    if operational <= crit_num:
-                        return 2, info + levels
-                    if operational <= warn_num:
-                        return 1, info + levels
-                    return 0, info
+            elif isinstance(levels, tuple):
+                warn, crit = levels
+                warn_num = (warn / 100.0) * total
+                crit_num = (crit / 100.0) * total
+                levels = " (Warning/ Critical at %d/ %d)" % (warn_num, crit_num)
+                info = "paths active: %d" % (operational)
+                if operational <= crit_num:
+                    return 2, info + levels
+                if operational <= warn_num:
+                    return 1, info + levels
+                return 0, info
 
             expected = int(levels)  # should be int, just for legacy reasons
             if operational > expected:
@@ -67,9 +68,15 @@ def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-bra
     return None
 
 
+def parse_solaris_multipath(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["solaris_multipath"] = LegacyCheckDefinition(
+    parse_function=parse_solaris_multipath,
     service_name="Multipath %s",
     discovery_function=inventory_solaris_multipath,
     check_function=check_solaris_multipath,
     check_ruleset_name="multipath",
+    check_default_parameters={},  # overwritten by discovery
 )

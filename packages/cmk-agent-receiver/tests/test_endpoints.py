@@ -112,7 +112,7 @@ def test_register_existing_hostname_invalid(
         },
     )
     assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid hostname: 'my/../host'"}
+    assert response.json() == {"detail": "Invalid host name: 'my/../host'"}
 
 
 def test_register_register_with_hostname_host_missing(
@@ -269,7 +269,7 @@ def test_register_register_with_hostname_hostname_validity(
         assert not response.text
     else:
         assert response.status_code == 400
-        assert response.json() == {"detail": f"Invalid hostname: '{hostname}'"}
+        assert response.json() == {"detail": f"Invalid host name: '{hostname}'"}
 
 
 def test_register_new_unauthenticated(
@@ -350,10 +350,11 @@ def _test_register_new(
     client: TestClient,
     uuid: UUID4,
     serialized_csr: str,
+    edition: CMKEdition,
 ) -> None:
     mocker.patch(
         "cmk.agent_receiver.endpoints.cmk_edition",
-        return_value=CMKEdition.cce,
+        return_value=edition,
     )
     response = client.post(
         "/register_new",
@@ -389,12 +390,18 @@ def test_register_new_folder_missing(
     serialized_csr: str,
 ) -> None:
     assert not (site_context.r4r_dir() / "NEW").exists()
-    _test_register_new(
-        mocker,
-        client,
-        uuid,
-        serialized_csr,
-    )
+    _test_register_new(mocker, client, uuid, serialized_csr, CMKEdition.cce)
+    assert oct(stat.S_IMODE((site_context.r4r_dir() / "NEW").stat().st_mode)) == "0o770"
+
+
+def test_register_new_folder_missing_cse(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+    serialized_csr: str,
+) -> None:
+    assert not (site_context.r4r_dir() / "NEW").exists()
+    _test_register_new(mocker, client, uuid, serialized_csr, CMKEdition.cse)
     assert oct(stat.S_IMODE((site_context.r4r_dir() / "NEW").stat().st_mode)) == "0o770"
 
 
@@ -405,12 +412,7 @@ def test_register_new_folder_exists(
     serialized_csr: str,
 ) -> None:
     (site_context.r4r_dir() / "NEW").mkdir(parents=True)
-    _test_register_new(
-        mocker,
-        client,
-        uuid,
-        serialized_csr,
-    )
+    _test_register_new(mocker, client, uuid, serialized_csr, CMKEdition.cce)
 
 
 def test_register_new_ongoing_cre(

@@ -6,19 +6,14 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.apc import DETECT
 
-apc_inrow_airflow_default_levels = {
-    "level_low": (500.0, 200.0),
-    "level_high": (1000.0, 1100.0),
-}
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.apc import DETECT
 
 
 def inventory_apc_inrow_airflow(info):
     if info:
-        return [(None, apc_inrow_airflow_default_levels)]
-    return []
+        yield None, {}
 
 
 def check_apc_inrow_airflow(_no_item, params, info):
@@ -49,11 +44,16 @@ def check_apc_inrow_airflow(_no_item, params, info):
         state = 1
         message = "too high"
 
-    perf = [("flow", flow, warn, crit)]
+    perf = [("airflow", flow, warn, crit)]
     return state, f"Current: {flow:.0f} l/s {message}", perf
 
 
+def parse_apc_inrow_airflow(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["apc_inrow_airflow"] = LegacyCheckDefinition(
+    parse_function=parse_apc_inrow_airflow,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
@@ -63,4 +63,8 @@ check_info["apc_inrow_airflow"] = LegacyCheckDefinition(
     discovery_function=inventory_apc_inrow_airflow,
     check_function=check_apc_inrow_airflow,
     check_ruleset_name="airflow",
+    check_default_parameters={
+        "level_low": (500.0, 200.0),
+        "level_high": (1000.0, 1100.0),
+    },
 )

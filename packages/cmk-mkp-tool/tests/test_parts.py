@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
 
-from cmk.mkp_tool import PathConfig
+from cmk.mkp_tool import PackagePart, PathConfig
+from cmk.mkp_tool._parts import permissions
 
 
 def test_config_from_toml() -> None:
@@ -14,6 +16,8 @@ def test_config_from_toml() -> None:
 this = "this ignored"
 
 [paths]
+cmk_plugins_dir = "cmk_plugins_dir"
+cmk_addons_plugins_dir = "cmk_addons_plugins_dir"
 agent_based_plugins_dir = "local_agent_based_plugins_dir"
 agents_dir = "local_agents_dir"
 alert_handlers_dir = "local_alert_handlers_dir"
@@ -30,13 +34,19 @@ local_root = "local_root"
 mib_dir = "local_mib_dir"
 mkp_rule_pack_dir = "mkp_rule_pack_dir"
 notifications_dir = "local_notifications_dir"
-packages_enabled_dir = "local_enabled_packages_dir"
-packages_local_dir = "local_optional_packages_dir"
-packages_shipped_dir = "optional_packages_dir"
 pnp_templates_dir = "local_pnp_templates_dir"
-tmp_dir = "tmp_dir"
+manifests_dir = "tmp_dir"
 web_dir = "local_web_dir"
 """
         ).web_dir
-        == "local_web_dir"
+        == Path("local_web_dir")
     )
+
+
+def test_permissions() -> None:
+    assert permissions(PackagePart.CMK_PLUGINS, Path("agent_based/foo.py")) == 0o600
+    assert permissions(PackagePart.CMK_PLUGINS, Path("libexec/foo")) == 0o700
+    assert permissions(PackagePart.AGENT_BASED, Path("some_check.py")) == 0o600
+    assert permissions(PackagePart.BIN, Path("some_binary")) == 0o700
+    assert permissions(PackagePart.LIB, Path("nagios/plugins/check_foobar")) == 0o700
+    assert permissions(PackagePart.LIB, Path("something/else/check_foobar")) == 0o600

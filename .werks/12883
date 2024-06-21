@@ -1,4 +1,4 @@
-Title: Fix ALLNET IP Sensoric special agent (check plugins <tt>allnet_ip_sensoric_...</tt>)
+Title: Fix ALLNET IP Sensoric special agent (check plugins allnet_ip_sensoric_...)
 Class: fix
 Compatible: compat
 Component: checks

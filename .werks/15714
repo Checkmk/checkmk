@@ -1,0 +1,9 @@
+Title: Add support for Checkmk Appliance 1.7+
+Class: feature
+Compatible: compat
+Component: distros
+Date: 1701285077
+Edition: cre
+Level: 2
+Version: 2.2.0p17
+

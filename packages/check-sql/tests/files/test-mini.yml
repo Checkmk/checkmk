@@ -1,5 +1,0 @@
----
-mssql:
-  standard: # mandatory, to be used if no specific config
-    authentication: # mandatory
-      username: "f" # mandatory

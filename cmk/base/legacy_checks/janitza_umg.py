@@ -8,7 +8,8 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, render, SNMPTree
+
+from cmk.agent_based.v2 import any_of, equals, render, SNMPTree
 
 # 508 and 604 have the same mib
 janitza_umg_device_map = {
@@ -19,6 +20,9 @@ janitza_umg_device_map = {
 
 
 def parse_janitza_umg_inphase(string_table):
+    if not string_table[0] or not string_table[0][0]:
+        return None
+
     def flatten(line):
         return [x[0] for x in line]
 

@@ -36,6 +36,6 @@ rulespec_registry.register(
         check_group_name="innovaphone_mem",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_innovaphone_mem,
-        title=lambda: _("Innovaphone Memory Usage"),
+        title=lambda: _("Innovaphone memory usage"),
     )
 )

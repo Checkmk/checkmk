@@ -1,0 +1,11 @@
+Title: postfix_mailq_status: Rework discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1700560692
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+With this werk the postfix status service is not discovered if Postfix is not running.
+The default mail queue is now discovered as "Postfix Status default".

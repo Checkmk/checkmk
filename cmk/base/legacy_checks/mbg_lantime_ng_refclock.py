@@ -5,8 +5,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.mbg_lantime import DETECT_MBG_LANTIME_NG
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
 
 #   .--general-------------------------------------------------------------.
 #   |                                                  _                   |
@@ -225,9 +226,6 @@ def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):
 #   |      |___/|_|                                                        |
 #   +----------------------------------------------------------------------+
 
-# number of good satellites
-mbg_lantime_refclock_default_levels = (3, 3)
-
 
 def inventory_lantime_ng_refclock_gps(info):
     for line in info:
@@ -235,7 +233,7 @@ def inventory_lantime_ng_refclock_gps(info):
         if clock_type is None:
             continue
         if clock_type.startswith("gps"):
-            yield (line[0], mbg_lantime_refclock_default_levels)
+            yield (line[0], {})
 
 
 def check_lantime_ng_refclock_gps(item, params, info):
@@ -264,13 +262,13 @@ def check_lantime_ng_refclock_gps(item, params, info):
             if substate in ("1", "2", "3", "4", "5", "6", "150"):
                 state, levels_txt = 0, ""
                 good_sats, total_sats = int(status_a), int(max_status_a)
-                warn, crit = params
-                if good_sats < crit:
+                warn_lower, crit_lower = params["levels_lower"]
+                if good_sats < crit_lower:
                     state = 2
-                    levels_txt = " (warn/crit below %d/%d)" % params
-                elif good_sats < warn:
+                    levels_txt = " (warn/crit below %d/%d)" % (warn_lower, crit_lower)
+                elif good_sats < warn_lower:
                     state = 1
-                    levels_txt = " (warn/crit below %d/%d)" % params
+                    levels_txt = " (warn/crit below %d/%d)" % (warn_lower, crit_lower)
 
                 yield state, "Satellites: %d/%d%s" % (good_sats, total_sats, levels_txt)
 
@@ -280,6 +278,9 @@ check_info["mbg_lantime_ng_refclock.gps"] = LegacyCheckDefinition(
     sections=["mbg_lantime_ng_refclock"],
     discovery_function=inventory_lantime_ng_refclock_gps,
     check_function=check_lantime_ng_refclock_gps,
+    check_default_parameters={
+        "levels_lower": (3, 3),
+    },
 )
 
 # .
@@ -337,7 +338,12 @@ def check_lantime_ng_refclock(item, _no_params, info):
                 yield 0, "Correlation: %d%%" % correlation, perfdata
 
 
+def parse_mbg_lantime_ng_refclock(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mbg_lantime_ng_refclock"] = LegacyCheckDefinition(
+    parse_function=parse_mbg_lantime_ng_refclock,
     detect=DETECT_MBG_LANTIME_NG,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.1.2.1",

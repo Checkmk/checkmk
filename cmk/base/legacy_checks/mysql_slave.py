@@ -6,13 +6,11 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import (
-    get_age_human_readable,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 @mysql_parse_per_item
@@ -41,44 +39,36 @@ def discover_mysql_slave(section):
 def check_mysql_slave(item, params, parsed):
     if not (data := parsed.get(item)):
         return
-    state = 0
-    perfdata = []
-    output = []
 
     if data["Slave_IO_Running"]:
-        output.append("Slave-IO: running")
+        yield 0, "Slave-IO: running"
 
-        if data["Relay_Log_Space"]:
-            output.append("Relay Log: %s" % get_bytes_human_readable(data["Relay_Log_Space"]))
-            perfdata.append(("relay_log_space", data["Relay_Log_Space"]))
+        if rls := data["Relay_Log_Space"]:
+            yield check_levels(
+                rls, "relay_log_space", None, infoname="Relay log", human_readable_func=render.bytes
+            )
 
     else:
-        output.append("Slave-IO: not running(!!)")
-        state = 2
+        yield 2, "Slave-IO: not running"
 
-    if data["Slave_SQL_Running"]:
-        output.append("Slave-SQL: running")
+    if not data["Slave_SQL_Running"]:
+        yield 2, "Slave-SQL: not running"
+        return
 
-        # Makes only sense to monitor the age when the SQL slave is running
-        if data["Seconds_Behind_Master"] == "NULL":
-            output.append("Time behind master: NULL (Lost connection?)(!!)")
-            state = 2
-        else:
-            out = "Time behind Master: %s" % get_age_human_readable(data["Seconds_Behind_Master"])
-            warn, crit = params.get("seconds_behind_master", (None, None))
-            if crit is not None and data["Seconds_Behind_Master"] > crit:
-                state = 2
-                out += "(!!)"
-            elif warn is not None and data["Seconds_Behind_Master"] > warn:
-                state = max(state, 1)
-                out += "(!)"
-            output.append(out)
-            perfdata.append(("sync_latency", data["Seconds_Behind_Master"], warn, crit))
-    else:
-        output.append("Slave-SQL: not running(!!)")
-        state = 2
+    yield 0, "Slave-SQL: running"
 
-    yield state, ", ".join(output), perfdata
+    # Makes only sense to monitor the age when the SQL slave is running
+    if (sbm := data["Seconds_Behind_Master"]) == "NULL":
+        yield 2, "Time behind master: NULL (Lost connection?)"
+        return
+
+    yield check_levels(
+        sbm,
+        "sync_latency",
+        params.get("seconds_behind_master"),
+        infoname="Time behind master",
+        human_readable_func=render.timespan,
+    )
 
 
 check_info["mysql_slave"] = LegacyCheckDefinition(
@@ -87,4 +77,7 @@ check_info["mysql_slave"] = LegacyCheckDefinition(
     discovery_function=discover_mysql_slave,
     check_function=check_mysql_slave,
     check_ruleset_name="mysql_slave",
+    check_default_parameters={
+        "seconds_behind_master": None,
+    },
 )

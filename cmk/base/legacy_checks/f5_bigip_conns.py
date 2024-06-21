@@ -11,7 +11,8 @@ import time
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT, get_conn_rate_params
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
+
+from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
 
 
 def inventory_f5_bigip_conns(info):
@@ -83,7 +84,12 @@ def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branch
             yield check_levels(val, perfkey, params_values, infoname=title)
 
 
+def parse_f5_bigip_conns(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["f5_bigip_conns"] = LegacyCheckDefinition(
+    parse_function=parse_f5_bigip_conns,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1.1.2",

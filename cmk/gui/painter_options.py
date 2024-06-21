@@ -13,13 +13,12 @@ from typing import Any
 import cmk.utils.render
 from cmk.utils.plugin_registry import Registry
 
-import cmk.gui.forms as forms
-import cmk.gui.valuespec as valuespec
+from cmk.gui import forms, valuespec
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ViewSpec
@@ -33,6 +32,10 @@ def register(painter_option_registry_: PainterOptionRegistry) -> None:
 
 
 class PainterOption(abc.ABC):
+    def __init__(self):
+        self.request = request
+        self.config = active_config
+
     @property
     @abc.abstractmethod
     def ident(self) -> str:
@@ -186,22 +189,21 @@ class PainterOptions:
         if not display_options.enabled(display_options.D) or not self.painter_option_form_enabled():
             return
 
-        html.begin_form("painteroptions")
-        forms.header("", show_table_head=False)
-        for name in self._used_option_names:
-            vs = self.get_valuespec_of(name)
-            forms.section(vs.title())
-            if name == "refresh":
-                vs.render_input("po_%s" % name, view_spec.get("browser_reload", self.get(name)))
-                continue
-            vs.render_input("po_%s" % name, self.get(name, view_spec.get(name)))
-        forms.end()
+        with html.form_context("painteroptions"):
+            forms.header("", show_table_head=False)
+            for name in self._used_option_names:
+                vs = self.get_valuespec_of(name)
+                forms.section(vs.title())
+                if name == "refresh":
+                    vs.render_input("po_%s" % name, view_spec.get("browser_reload", self.get(name)))
+                    continue
+                vs.render_input("po_%s" % name, self.get(name, view_spec.get(name)))
+            forms.end()
 
-        html.button(varname="_update_painter_options", title=_("Submit"), cssclass="hot submit")
-        html.button(varname="_reset_painter_options", title=_("Reset"), cssclass="submit")
+            html.button(varname="_update_painter_options", title=_("Submit"), cssclass="hot submit")
+            html.button(varname="_reset_painter_options", title=_("Reset"), cssclass="submit")
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
 
 class PainterOptionRegistry(Registry[type[PainterOption]]):
@@ -220,7 +222,7 @@ class PainterOptionRefresh(PainterOption):
     @property
     def valuespec(self) -> ValueSpec:
         choices = [
-            (x, {0: _("off")}.get(x, str(x) + "s")) for x in active_config.view_option_refreshes
+            (x, {0: _("off")}.get(x, str(x) + "s")) for x in self.config.view_option_refreshes
         ]
         return DropdownChoice(
             title=_("Refresh interval"),
@@ -237,7 +239,7 @@ class PainterOptionNumColumns(PainterOption):
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Entries per row"),
-            choices=[(x, str(x)) for x in active_config.view_option_columns],
+            choices=[(x, str(x)) for x in self.config.view_option_columns],
         )
 
 
@@ -251,34 +253,46 @@ def get_graph_timerange_from_painter_options() -> tuple[int, int]:
     return int(start_time), int(end_time)
 
 
-def paint_age_or_never(
+def paint_age_or_never(  # pylint: disable=redefined-outer-name
     timestamp: int,
     has_been_checked: bool,
     bold_if_younger_than: int,
+    *,
+    request: Request,
+    painter_options: PainterOptions,
     mode: str | None = None,
     what: str = "past",
 ) -> CellSpec:
     if mode is None:
-        painter_options = PainterOptions.get_instance()
         mode = request.var("po_ts_format", painter_options.get("ts_format"))
 
     if timestamp == 0 and has_been_checked and (mode in {"abs", "mixed"}):
         return "age", _("Never")
 
-    return paint_age(timestamp, has_been_checked, bold_if_younger_than, mode, what)
+    return paint_age(
+        timestamp,
+        has_been_checked,
+        bold_if_younger_than,
+        request=request,
+        painter_options=painter_options,
+        mode=mode,
+        what=what,
+    )
 
 
-def paint_age(
+def paint_age(  # pylint: disable=redefined-outer-name
     timestamp: int,
     has_been_checked: bool,
     bold_if_younger_than: int,
+    *,
+    request: Request,
+    painter_options: PainterOptions,
     mode: str | None = None,
     what: str = "past",
 ) -> CellSpec:
     if not has_been_checked:
         return "age", "-"
 
-    painter_options = PainterOptions.get_instance()
     if mode is None:
         mode = request.var("po_ts_format", painter_options.get("ts_format"))
 
@@ -286,8 +300,24 @@ def paint_age(
         return "", str(int(timestamp))
 
     if mode == "both":
-        css, h1 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "abs", what=what)
-        css, h2 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "rel", what=what)
+        css, h1 = paint_age(
+            timestamp,
+            has_been_checked,
+            bold_if_younger_than,
+            request=request,
+            painter_options=painter_options,
+            mode="abs",
+            what=what,
+        )
+        css, h2 = paint_age(
+            timestamp,
+            has_been_checked,
+            bold_if_younger_than,
+            request=request,
+            painter_options=painter_options,
+            mode="rel",
+            what=what,
+        )
         return css, f"{h1} - {h2}"
 
     age = time.time() - timestamp

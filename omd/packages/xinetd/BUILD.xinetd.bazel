@@ -43,4 +43,5 @@ configure_make(
             install -m 644 ${BUILD_TMPDIR}/$file ${INSTALLDIR}/share/doc/xinetd; \
         done
     """,
+    visibility = ["//visibility:public"],
 )

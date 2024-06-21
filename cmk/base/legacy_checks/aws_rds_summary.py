@@ -10,7 +10,8 @@ from typing import Any
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions, inventory_aws_generic, parse_aws
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.aws import aws_rds_service_item
+
+from cmk.plugins.aws.lib import aws_rds_service_item
 
 Section = Mapping[str, Any]
 
@@ -94,9 +95,13 @@ def check_aws_rds_summary_db(item, params, parsed):
         yield 0, f"Availability zone: {AWSRegions[region]} ({zone_info})"
 
 
+def discover_aws_rds_summary_db_status(p):
+    return inventory_aws_generic(p, ["DBInstanceStatus"])
+
+
 check_info["aws_rds_summary.db_status"] = LegacyCheckDefinition(
     service_name="AWS/RDS %s Info",
     sections=["aws_rds_summary"],
-    discovery_function=lambda p: inventory_aws_generic(p, ["DBInstanceStatus"]),
+    discovery_function=discover_aws_rds_summary_db_status,
     check_function=check_aws_rds_summary_db,
 )

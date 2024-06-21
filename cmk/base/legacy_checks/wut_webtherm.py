@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith
 
 _TYPE_TABLE_IDX = (1, 2, 3, 6, 7, 8, 9, 16, 18, 36, 37, 38, 42)
 
@@ -133,15 +134,9 @@ check_info["wut_webtherm.pressure"] = LegacyCheckDefinition(
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
-wut_webtherm_humidity_defaultlevels = (35, 40, 60, 65)
-
 
 def inventory_wut_webtherm_humidity(parsed):
-    return [
-        (sensor_id, wut_webtherm_humidity_defaultlevels)
-        for sensor_id, values in parsed.items()
-        if values["type"] == "humid"
-    ]
+    return [(sensor_id, {}) for sensor_id, values in parsed.items() if values["type"] == "humid"]
 
 
 def check_wut_webtherm_humidity(item, params, parsed):
@@ -156,6 +151,10 @@ check_info["wut_webtherm.humidity"] = LegacyCheckDefinition(
     discovery_function=inventory_wut_webtherm_humidity,
     check_function=check_wut_webtherm_humidity,
     check_ruleset_name="humidity",
+    check_default_parameters={
+        "levels": (60.0, 65.0),
+        "levels_lower": (40.0, 35.0),
+    },
 )
 
 # .

@@ -21,6 +21,8 @@
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"
 
+using row_type = ITimeperiod;
+
 // TODO(sp) This shouldn't live here...
 namespace column::detail {
 template <>
@@ -29,45 +31,45 @@ std::string serialize(const std::chrono::system_clock::time_point &t) {
 }
 }  // namespace column::detail
 
-TableTimeperiods::TableTimeperiods(ICore *mc) : Table(mc) {
+TableTimeperiods::TableTimeperiods() {
     const ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn<ITimeperiod>>(
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "name", "The name of the timeperiod", offsets,
-        [](const ITimeperiod &tp) { return tp.name(); }));
-    addColumn(std::make_unique<StringColumn<ITimeperiod>>(
+        [](const row_type &row) { return row.name(); }));
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "alias", "The alias of the timeperiod", offsets,
-        [](const ITimeperiod &tp) { return tp.alias(); }));
+        [](const row_type &row) { return row.alias(); }));
     // unknown timeperiod is assumed to be 24X7
-    addColumn(std::make_unique<BoolColumn<ITimeperiod, true>>(
+    addColumn(std::make_unique<BoolColumn<row_type, true>>(
         "in", "Wether we are currently in this period (0/1)", offsets,
-        [](const ITimeperiod &tp) { return tp.isActive(); }));
+        [](const row_type &row) { return row.isActive(); }));
     addColumn(std::make_unique<
-              ListColumn<ITimeperiod, std::chrono::system_clock::time_point>>(
+              ListColumn<row_type, std::chrono::system_clock::time_point>>(
         "transitions",
         "The list of future transitions of the timeperiod (only CMC)", offsets,
-        [](const ITimeperiod &tp, std::chrono::seconds /*timezone_offset*/) {
-            return tp.transitions({});
+        [](const row_type &row, std::chrono::seconds /*timezone_offset*/) {
+            return row.transitions({});
         }));
-    addColumn(std::make_unique<IntColumn<ITimeperiod>>(
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "num_transitions",
         "The total number of computed transitions from 0->1 or 1->0", offsets,
-        [](const ITimeperiod &tp) { return tp.numTransitions(); }));
-    addColumn(std::make_unique<IntColumn<ITimeperiod>>(
+        [](const row_type &row) { return row.numTransitions(); }));
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "next_transition_id", "The index of the next transition", offsets,
-        [](const ITimeperiod &tp) { return tp.nextTransitionId(); }));
-    addColumn(std::make_unique<TimeColumn<ITimeperiod>>(
+        [](const row_type &row) { return row.nextTransitionId(); }));
+    addColumn(std::make_unique<TimeColumn<row_type>>(
         "next_transition",
         "The time of the next transition. 0 if there is no further transition.",
-        offsets,
-        [](const ITimeperiod &tp) { return tp.nextTransitionTime(); }));
+        offsets, [](const row_type &row) { return row.nextTransitionTime(); }));
 }
 
 std::string TableTimeperiods::name() const { return "timeperiods"; }
 
 std::string TableTimeperiods::namePrefix() const { return "timeperiod_"; }
 
-void TableTimeperiods::answerQuery(Query &query, const User & /*user*/) {
-    core()->all_of_timeperiods([&query](const ITimeperiod &r) {
-        return query.processDataset(Row{&r});
+void TableTimeperiods::answerQuery(Query &query, const User & /*user*/,
+                                   const ICore &core) {
+    core.all_of_timeperiods([&query](const row_type &row) {
+        return query.processDataset(Row{&row});
     });
 }

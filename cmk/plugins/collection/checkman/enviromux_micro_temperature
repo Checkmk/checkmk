@@ -1,0 +1,17 @@
+title: NTI Enviromux Micro-T: Temperature
+agents: snmp
+catalog: hw/environment/nti
+license: GPLv2
+distribution: check_mk
+description:
+ This check plug-in monitors the temperature of sensors attached to
+ NTI Enviromux Micro-T devices.
+
+item:
+ The item is composed from the description and the sensor index.
+
+perfdata:
+ One graph for the Temperature.
+
+discovery:
+ One service is created for each available temperature sensor.

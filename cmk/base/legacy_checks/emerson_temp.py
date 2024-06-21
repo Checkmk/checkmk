@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 #
 # during inventory we are looking for all temperatures available,
@@ -37,7 +38,12 @@ def check_emerson_temp(item, params, info):
     return check_temperature(temp, params, "emerson_temp_%s" % item)
 
 
+def parse_emerson_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["emerson_temp"] = LegacyCheckDefinition(
+    parse_function=parse_emerson_temp,
     detect=startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6302.2.1.2",

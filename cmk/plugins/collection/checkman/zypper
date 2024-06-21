@@ -1,0 +1,18 @@
+title: Zypper: (Security) Updates
+agents: linux
+catalog: os/misc
+license: GPLv2
+distribution: check_mk
+description:
+ This check checks for available updates via {zypper} and SLES
+ and OPENSUSE distributions. You need to install the plug-in {mk_zypper}
+ into the {plugins} directory of your agent.
+
+ The check gets critical if there are security updates available.
+ It gets warning, if there are other updates available or if package
+ locks exist (created by {zypper addlock}). This is configurable via
+ the rule {Zypper Updates}.
+
+discovery:
+ One service is created for each system where the {mk_zypper}
+ plug-in produces a non-empty output.

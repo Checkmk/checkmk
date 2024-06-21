@@ -6,8 +6,9 @@
 # pylint: disable=redefined-outer-name
 
 import datetime
-from collections.abc import Callable
-from typing import Literal
+from argparse import Namespace as Args
+from collections.abc import Sequence
+from typing import Literal, Protocol
 
 import pytest
 from dateutil.tz import tzutc
@@ -19,6 +20,8 @@ from cmk.special_agents.agent_aws import (
     NamingConvention,
     OverallTags,
     ResultDistributor,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient
@@ -218,18 +221,31 @@ class FakeTaggingClient:
         raise NotImplementedError
 
 
+CloudFrontSectionsOut = tuple[CloudFrontSummary, CloudFront]
+
+
+class CloudFrontSections(Protocol):
+    def __call__(
+        self,
+        names: object | None,
+        tags: OverallTags,
+        assign_to_domain_host: bool,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> CloudFrontSectionsOut: ...
+
+
 @pytest.fixture()
-def get_cloudfront_sections() -> (
-    Callable[
-        [object | None, OverallTags, bool],
-        tuple[CloudFrontSummary, CloudFront],
-    ]
-):
+def get_cloudfront_sections() -> CloudFrontSections:
     def _create_cloudfront_sections(
-        names: object | None, tags: OverallTags, assign_to_domain_host: bool
-    ) -> tuple[CloudFrontSummary, CloudFront]:
+        names: object | None,
+        tags: OverallTags,
+        assign_to_domain_host: bool,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> CloudFrontSectionsOut:
         region = "us-east-1"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig(
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+        )
         config.add_single_service_config("cloudfront_names", names)
         config.add_service_tags("cloudfront_tags", tags)
 
@@ -274,8 +290,12 @@ cloudfront_params = [
 
 @pytest.mark.parametrize("names, tags, use_piggyback, found_distributions", cloudfront_params)
 def test_agent_aws_cloudfront_summary(
-    get_cloudfront_sections, names, tags, use_piggyback, found_distributions
-):
+    get_cloudfront_sections: CloudFrontSections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    use_piggyback: bool,
+    found_distributions: Sequence[str],
+) -> None:
     cloudfront_summary, _cloudfront = get_cloudfront_sections(names, tags, use_piggyback)
     cloudfront_summary_results = cloudfront_summary.run().results
 
@@ -294,8 +314,12 @@ def test_agent_aws_cloudfront_summary(
 
 @pytest.mark.parametrize("names, tags, use_piggyback, found_distributions", cloudfront_params)
 def test_agent_aws_cloudfront(
-    get_cloudfront_sections, names, tags, use_piggyback, found_distributions
-):
+    get_cloudfront_sections: CloudFrontSections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    use_piggyback: bool,
+    found_distributions: Sequence[str],
+) -> None:
     cloudfront_summary, cloudfront = get_cloudfront_sections(names, tags, use_piggyback)
     cloudfront_summary.run()
     cloudfront_results = cloudfront.run().results
@@ -313,3 +337,45 @@ def test_agent_aws_cloudfront(
         assert len(cloudfront_result.content) == 6 * len(found_distributions)
     else:
         assert len(cloudfront_results) == 0
+
+
+@pytest.mark.parametrize(
+    "tag_import, expected_tags",
+    [
+        (
+            TagsImportPatternOption.import_all,
+            {
+                "arn:aws:cloudfront::710145618630:distribution/E2RAYOVSSL6ZM3": [],
+                "arn:aws:cloudfront::710145618630:distribution/EWN6C0UT7HBX0": [
+                    "test-tag-key2",
+                    "test-tag-key",
+                ],
+            },
+        ),
+        (
+            r".*2$",
+            {
+                "arn:aws:cloudfront::710145618630:distribution/E2RAYOVSSL6ZM3": [],
+                "arn:aws:cloudfront::710145618630:distribution/EWN6C0UT7HBX0": ["test-tag-key2"],
+            },
+        ),
+        (
+            TagsImportPatternOption.ignore_all,
+            {
+                "arn:aws:cloudfront::710145618630:distribution/E2RAYOVSSL6ZM3": [],
+                "arn:aws:cloudfront::710145618630:distribution/EWN6C0UT7HBX0": [],
+            },
+        ),
+    ],
+)
+def test_agent_aws_cloudfront_summary_filters_tags(
+    get_cloudfront_sections: CloudFrontSections,
+    tag_import: TagsOption,
+    expected_tags: dict[str, Sequence[str]],
+) -> None:
+    cloudfront_summary, _cloudfront = get_cloudfront_sections(None, (None, None), False, tag_import)
+    cloudfront_summary_results = cloudfront_summary.run().results
+    cloudfront_summary_result = cloudfront_summary_results[0]
+
+    for result in cloudfront_summary_result.content:
+        assert list(result["TagsForCmkLabels"].keys()) == expected_tags[result["ARN"]]

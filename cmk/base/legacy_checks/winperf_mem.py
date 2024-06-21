@@ -42,7 +42,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
+
+from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
 
 
 def inventory_winperf_mem(info):
@@ -79,7 +80,12 @@ def check_winperf_mem(_unused, params, info):
     yield state, "Pages/s: %d" % pages_per_sec, [("mem_pages_rate", pages_per_sec)]
 
 
+def parse_winperf_mem(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["winperf_mem"] = LegacyCheckDefinition(
+    parse_function=parse_winperf_mem,
     service_name="Memory Pages",
     discovery_function=inventory_winperf_mem,
     check_function=check_winperf_mem,

@@ -9,8 +9,8 @@ from itertools import chain
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, OIDEnd, SNMPTree, startswith
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from cmk.agent_based.v2 import any_of, OIDEnd, SNMPTree, startswith, StringTable
 
 # 19:1100, 38:822X
 # .1.3.6.1.4.1.28507.**.1.6.1.1.2.1 225 --> GUDEADS-EPC****-MIB::epc****TempSensor.1

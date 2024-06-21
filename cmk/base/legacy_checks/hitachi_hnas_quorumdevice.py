@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.hitachi_hnas import DETECT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.hitachi_hnas import DETECT
 
 
 def inventory_hitachi_hnas_quorumdevice(info):
@@ -36,7 +37,12 @@ def check_hitachi_hnas_quorumdevice(item, _no_params, info):
     return rc, "Quorum Device reports status %s" % statusmap[status]
 
 
+def parse_hitachi_hnas_quorumdevice(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["hitachi_hnas_quorumdevice"] = LegacyCheckDefinition(
+    parse_function=parse_hitachi_hnas_quorumdevice,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.1.2.5",

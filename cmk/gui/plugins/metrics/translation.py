@@ -1149,7 +1149,7 @@ check_metrics["check_mk-drbd_disk"] = {
     "write": {
         "scale": KB,
         "name": "disk_write_throughput",
-    }
+    },
 }
 check_metrics["check_mk-drbd_net"] = {
     "in": {
@@ -1159,5 +1159,5 @@ check_metrics["check_mk-drbd_net"] = {
     "out": {
         "scale": KB,
         "name": "if_out_octets",
-    }
+    },
 }

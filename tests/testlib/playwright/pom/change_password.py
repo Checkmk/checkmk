@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -20,7 +21,7 @@ class ChangePassword(CmkPage):
     def navigate(self) -> None:
         """Navigate to change password page, like a Checkmk GUI user."""
         self.main_menu.user_change_password.click()
-        self.main_area.page.wait_for_load_state("load")
+        self.page.wait_for_url(url=re.compile("user_change_pw.py$"), wait_until="load")
         self._validate_page()
 
     def _validate_page(self) -> None:

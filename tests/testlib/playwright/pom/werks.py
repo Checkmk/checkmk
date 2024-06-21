@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+
 from playwright.sync_api import Locator
 
 from tests.testlib.playwright.pom.page import CmkPage
@@ -13,7 +15,8 @@ class Werks(CmkPage):
     dropdown_buttons: list[str] = ["Werks", "Display", "Help"]
 
     def navigate(self) -> None:
-        self.click_and_wait(self.main_menu.help_werks, navigate=True)
+        self.main_menu.help_werks.click()
+        self.page.wait_for_url(url=re.compile("change_log.py$"), wait_until="load")
         self._validate_page()
 
     def _validate_page(self) -> None:

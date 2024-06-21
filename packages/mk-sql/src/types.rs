@@ -28,6 +28,12 @@ pub struct MaxQueries(pub u32);
 #[derive(PartialEq, From, Debug, Display, Clone, Default, Into, Hash, Eq)]
 pub struct InstanceName(String);
 
+impl From<&str> for InstanceName {
+    fn from(s: &str) -> Self {
+        InstanceName(s.to_string())
+    }
+}
+
 #[derive(PartialEq, From, Clone, Debug, Display, Default)]
 pub struct InstanceId(String);
 

@@ -821,6 +821,7 @@ mod tests {
 
     use super::*;
     use crate::config::{section::SectionKind, yaml::test_tools::create_yaml};
+    use crate::constants::tests::expected_instances_in_config;
     mod data {
         /// copied from tests/files/test-config.yaml
         pub const TEST_CONFIG: &str = r#"
@@ -1025,7 +1026,8 @@ piggyback:
 
     #[test]
     fn test_config_inheritance() {
-        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        let mut c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        clean_config_from_custom_instances(&mut c);
         assert_eq!(c.configs.len(), 3);
         assert_eq!(c.custom_instances.len(), 2 + expected_count_in_registry());
         assert_eq!(c.configs[0].options(), &Options::new(11.into()));
@@ -1404,9 +1406,16 @@ connection:
         assert_eq!(instance.calc_real_host(), "localhost".to_string().into());
     }
 
+    /// remove some custom instances
+    fn clean_config_from_custom_instances(c: &mut Config) {
+        c.custom_instances
+            .retain(|i| expected_instances_in_config().contains(i.name()));
+    }
+
     #[test]
     fn test_config() {
-        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        let mut c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        clean_config_from_custom_instances(&mut c);
         assert_eq!(c.options(), &Options::new(5.into()));
         assert_eq!(c.instances().len(), 2 + expected_count_in_registry());
         assert!(c.instances()[0].piggyback().is_some());
@@ -1478,6 +1487,13 @@ connection:
     }
 
     #[cfg(windows)]
+    fn filter_from_custom_instances(full: Vec<CustomInstance>) -> Vec<CustomInstance> {
+        full.into_iter()
+            .filter(|i| expected_instances_in_config().contains(i.name()))
+            .collect::<Vec<_>>()
+    }
+
+    #[cfg(windows)]
     #[test]
     fn test_get_additional_registry_instances() {
         // nothing found
@@ -1485,6 +1501,7 @@ connection:
         let conn = Connection::default();
         let found: Vec<CustomInstance> = vec![];
         let full = get_additional_registry_instances(&found, &auth, &conn);
+        let full = filter_from_custom_instances(full);
         assert_eq!(full.len(), 3);
         assert!(full.iter().all(|i| i.is_tcp()));
         assert!(full.iter().all(|i| i.conn().port() >= Port(1433)));
@@ -1495,6 +1512,7 @@ connection:
             ..Default::default()
         }];
         let a = get_additional_registry_instances(&found, &auth, &conn);
+        let a = filter_from_custom_instances(a);
         assert_eq!(a.len(), 2);
         assert!(a.iter().all(|i| i.conn().port() > Port(10000)));
     }

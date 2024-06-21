@@ -941,24 +941,3 @@ def test_check_temperature_ignores_trend_computation() -> None:
             notice="Configuration: prefer user levels over device levels (no levels found)",
         ),
     ]
-
-
-@pytest.mark.parametrize(
-    "unique_name, value_store",
-    [
-        (None, mock_value_store()),
-        ("unique_name", None),
-    ],
-)
-def test_check_temperature_either_unique_name_or_value_store(
-    unique_name: str | None, value_store: MutableMapping[str, Any] | None
-) -> None:
-    with pytest.raises(ValueError):
-        list(
-            temperature.check_temperature(
-                20.0,
-                {},
-                unique_name=unique_name,
-                value_store=value_store,
-            )
-        )

@@ -195,7 +195,7 @@ def main() {
         shout("create_and_upload_bom");
 
         // TODO creates stages - put them on top level
-        create_and_upload_bom(WORKSPACE, branch_version, VERSION);
+        create_and_upload_bom(WORKSPACE, branch_version, VERSION, docker_group_id);
     }
 
     shout("create_source_package");
@@ -478,7 +478,7 @@ def build_linux_agent_updater(agent, edition, branch_version, registry) {
     }
 }
 
-def create_and_upload_bom(workspace, branch_version, version) {
+def create_and_upload_bom(workspace, branch_version, version, docker_group_id) {
     print("FN create_and_upload_bom(workspace=${workspace}, branch_version=${branch_version}, version=${version})");
 
     dir("${workspace}/dependencyscanner") {
@@ -506,18 +506,19 @@ def create_and_upload_bom(workspace, branch_version, version) {
         }
         stage('Create BOM') {
             on_dry_run_omit(LONG_RUNNING, "Create BOM") {
-                inside_container(
-                    image: scanner_image,
-                    args: ["-v ${checkout_dir}:${checkout_dir}"], // why?!
-                ) {
-                    sh("""python3 -m dependencyscanner \
-                    --stage prod \
-                    --outfile '${bom_path}' \
-                    --research_file researched_master.yml \
-                    --license_cache license_cache_master.json \
-                    '${checkout_dir}'""");
+                // TODO: our "inside_container" helper would mount a shadow workspace which does not make sense for the BOM repo / build
+                // Further: the BOM image does not yet have a DISTRO label...
+                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                    scanner_image.inside("${mount_reference_repo_dir} -v ${checkout_dir}:${checkout_dir} --ulimit nofile=1024:1024 --group-add=${docker_group_id} -v /var/run/docker.sock:/var/run/docker.sock") {
+                        sh("""python3 -m dependencyscanner \
+                        --stage prod \
+                        --outfile '${bom_path}' \
+                        --research_file researched_master.yml \
+                        --license_cache license_cache_master.json \
+                        '${checkout_dir}'""");
+                    }
                 }
-            }
+           }
         }
         stage('Upload BOM') {
             withCredentials([string(

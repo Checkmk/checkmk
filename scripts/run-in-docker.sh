@@ -24,6 +24,16 @@ set -e
 
 CHECKOUT_ROOT="$(git rev-parse --show-toplevel)"
 
+: "${IMAGE_ID:="$(
+    if [ -n "${IMAGE_ALIAS}" ]; then
+        "${CHECKOUT_ROOT}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}"
+    else
+        "${CHECKOUT_ROOT}"/defines/dev-images/reference-image-id
+    fi
+)"}"
+
+IMAGE_VERSION="$(docker run -v "${CHECKOUT_ROOT}/omd:/tmp" "${IMAGE_ID}" /tmp/distro '-')"
+
 # in case of worktrees $CHECKOUT_ROOT might not contain the actual repository clone
 GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
 
@@ -37,11 +47,11 @@ CMD="${*:-bash}"
 
 if [ "$USER" == "jenkins" ]; then
     # CI
-    CONTAINER_SHADOW_WORKSPACE="$(dirname "${CHECKOUT_ROOT}")/container_shadow_workspace_ci"
+    CONTAINER_SHADOW_WORKSPACE="$(dirname "${CHECKOUT_ROOT}")/container_shadow_workspace_ci/${IMAGE_VERSION}"
     echo >&2 "WARNING: run-in-docker.sh used in CI. This should not happen. Use CI native tools instead"
 else
     # LOCAL
-    CONTAINER_SHADOW_WORKSPACE="${CHECKOUT_ROOT}/container_shadow_workspace_local"
+    CONTAINER_SHADOW_WORKSPACE="${CHECKOUT_ROOT}/container_shadow_workspace_local/${IMAGE_VERSION}"
 fi
 
 : "${CONTAINER_NAME:="ref-$(basename "$(pwd)")-$(sha1sum <<<"${CONTAINER_SHADOW_WORKSPACE}" | cut -c1-10)"}"
@@ -90,14 +100,6 @@ if [ -d "${GIT_REFERENCE_CLONE_PATH}" ]; then
     mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME}" "${GIT_REFERENCE_CLONE_PATH}")"
     DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}:ro"
 fi
-
-: "${IMAGE_ID:="$(
-    if [ -n "${IMAGE_ALIAS}" ]; then
-        "${CHECKOUT_ROOT}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}"
-    else
-        "${CHECKOUT_ROOT}"/defines/dev-images/reference-image-id
-    fi
-)"}"
 
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
 

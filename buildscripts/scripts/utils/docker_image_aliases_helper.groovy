@@ -24,6 +24,12 @@ docker_reference_image = { ->
     }
 }
 
+image_version = { image ->
+    return cmd_output("""
+        docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' ${image.id} | grep '^DISTRO=' | cut -d'=' -f2
+    """);
+}
+
 /// This function is the CI-equivalent to scripts/run-in-docker.sh. It should do
 /// the same as closely as possible. So if you're editing one of us please also
 /// update the other one, too!
@@ -35,7 +41,6 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     // So we handle both cases here, setting default value for @args manually
     def (args, body) = arg2 == null ? [[:], arg1] : [arg1, arg2];
 
-    def container_shadow_workspace = "${WORKSPACE}/container_shadow_workspace_ci";
     def reference_repo_dir = cmd_output("""
         if [ -f ${checkout_dir}/.git/objects/info/alternates ]; then \
             dirname \$(cat ${checkout_dir}/.git/objects/info/alternates);\
@@ -51,6 +56,11 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     def create_cache_folder = args.get("create_cache_folder", true).asBoolean();
     def mount_host_user_files = args.get("mount_host_user_files", true).asBoolean();
     def run_args = args.args == null ? [] : args.args;
+    // We need to separate the mounts into the container distro-wise, at least for the following tools
+    // - pipenv pip's wheel cache does not separate its cache in terms of platform/distro, see:
+    // https://github.com/pypa/pip/issues/5453
+    // - artifacts built under omd are distro dependend
+    def container_shadow_workspace = "${WORKSPACE}/container_shadow_workspace_ci/${image_version(image)}";
     def run_args_str = (
         run_args
         + (init ? ["--init"] : [])

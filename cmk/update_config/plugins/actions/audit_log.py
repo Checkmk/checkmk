@@ -58,7 +58,7 @@ class SanitizeAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
         logger: Logger,
         audit_log_files: list[Path],
     ) -> None:
-        backup_dir = self._audit_log_path / "sanitize_backup"
+        backup_dir = Path.home() / "audit_log_backup"
         backup_dir.mkdir(mode=0o750, exist_ok=True)
         for l in audit_log_files:
             shutil.copy(src=l, dst=backup_dir / l.name)

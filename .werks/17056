@@ -20,7 +20,7 @@ during the update but please double check that no automation secrets remain in
 the log (see next paragraph for details).
 
 A backup of the original audit log (before automation secrets were removed) is
-copied to "~/var/check_mk/wato/log/sanitize_backup". If anything goes wrong
+copied to "~/audit_log_backup". If anything goes wrong
 during the update, you have to copy the files back to ~var/check_mk/wato/log
 and remove the automation secrets manually. If the update works as expected,
 you can remove the backup files.

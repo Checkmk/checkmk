@@ -1,0 +1,13 @@
+Title: Agent controller on Linux: More informative error message in case of file reading erros in import mode
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1718987988
+Edition: cre
+Level: 1
+Version: 2.1.0p45
+
+On Linux systems, the agent controller always runs as the cmk-agent user, independently of the user
+starting the controller. Hence, in import mode, the input file must readable by the cmk-agent user.
+Otherwise, the import will fail. As of this werk, the controller displays a more informative error
+message in this case, hinting at the point that the input file must be readable by cmk-agent.

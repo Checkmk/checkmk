@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+#[cfg(unix)]
+use crate::constants;
 use crate::modes::registration;
 use crate::{cli, config};
 use anyhow::{Context, Result as AnyhowResult};
@@ -16,8 +18,22 @@ struct JSONFromFile {
 
 impl JSONProvider for JSONFromFile {
     fn provide(&self) -> AnyhowResult<String> {
-        std::fs::read_to_string(&self.path)
-            .context(format!("Failed to read file {}", &self.path.display()))
+        #[cfg(unix)]
+        let additional_error_hint = format!(
+            " In case of permission issues, please keep in mind that the agent controller runs as \
+            the {} user, independently of the user who executed it. Hence, {} must have read \
+            access to the input file. Alternatively, the file content can be passed via STDIN, see \
+            the command-line help of the import mode (-h flag).",
+            constants::CMK_AGENT_USER,
+            constants::CMK_AGENT_USER
+        );
+        #[cfg(not(unix))]
+        let additional_error_hint = String::new();
+        std::fs::read_to_string(&self.path).context(format!(
+            "Failed to read file {}.{}",
+            &self.path.display(),
+            &additional_error_hint
+        ))
     }
 }
 

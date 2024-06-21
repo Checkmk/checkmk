@@ -1,0 +1,13 @@
+Title: check_mk_agent.openwrt: resolve issue when hostname command unavailable
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1731050041
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+Built-in BusyBox shell in OpenWRT has no <code>hostname</code> command available per default.
+While it can be added with additional packages in custom images there are alternative
+ways to determine the machine's hostname without introducing an additional dependency.
+This werk uses one of those alternatives.

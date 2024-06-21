@@ -615,6 +615,17 @@ function render_graph(graph: GraphArtwork) {
         ctx.restore();
     }
 
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.rect(
+        trans_t(t_range_from),
+        trans_v(v_range_to),
+        t_range * t_pixels_per_second,
+        v_range * v_pixels_per_unit
+    );
+    ctx.clip();
+
     // Paint curves
     const curves = graph["curves"];
     const step = graph["step"] / 2.0;
@@ -636,7 +647,6 @@ function render_graph(graph: GraphArtwork) {
         if (curve["type"] == "area") {
             let prev_lower: TimeSeriesValue = null;
             let prev_upper: TimeSeriesValue = null;
-            ctx.save();
             ctx.fillStyle = hex_to_rgba(color + opacity);
             ctx.imageSmoothingEnabled = true; // seems no difference on FF
 
@@ -673,10 +683,8 @@ function render_graph(graph: GraphArtwork) {
                 prev_upper = upper;
                 t += step;
             }
-            ctx.restore();
         } else {
             // "line"
-            ctx.save();
             ctx.beginPath();
             ctx.strokeStyle = color;
             ctx.lineWidth = curve_line_width;
@@ -693,9 +701,9 @@ function render_graph(graph: GraphArtwork) {
             }
             ctx.stroke();
             ctx.closePath();
-            ctx.restore();
         }
     }
+    ctx.restore();
 
     if (!graph.render_config.preview && graph.render_config.show_time_axis) {
         // Paint time axis labels

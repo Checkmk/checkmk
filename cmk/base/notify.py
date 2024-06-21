@@ -281,6 +281,7 @@ def do_notify(
                 spooling=spooling,
                 backlog_size=backlog_size,
                 logging_level=logging_level,
+                all_timeperiods=all_timeperiods,
             )
         elif notify_mode == "replay":
             try:
@@ -655,6 +656,7 @@ def notify_keepalive(
     spooling: Literal["local", "remote", "both", "off"],
     backlog_size: int,
     logging_level: int,
+    all_timeperiods: TimeperiodSpecs,
 ) -> None:
     events.event_keepalive(
         event_function=partial(
@@ -671,6 +673,7 @@ def notify_keepalive(
             spooling=spooling,
             backlog_size=backlog_size,
             logging_level=logging_level,
+            all_timeperiods=all_timeperiods,
         ),
         call_every_loop=partial(
             send_ripe_bulks,

@@ -258,7 +258,12 @@ def main() {
             /// For now make sure, we're on the SAME node (but different WORKDIR)
             /// To make the builds run across different nodes we have to
             /// use `stash` to distribute the source
-            node(env.NODE_NAME) {
+
+            /// Temporary (!) step: Give the new workspaces a unique name and reuse it for the same distro
+            /// This is a prepartion for the next change, where the .venv will be blown away as soon as it does not match
+            /// the distro anymore. If we would not reused the corresponding distro workspace, the .venv is likely to be rebuilt.
+            def distro_workspace = WORKSPACE.split("/")[0..-2].join('/') + "/" + distro;
+            ws(distro_workspace) {
                 /// $WORKSPACE is different now - we must not use variables
                 /// like $checkout_dir which are based on the parent
                 /// workspace accidentally (and

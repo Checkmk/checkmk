@@ -29,7 +29,7 @@ endif
 CI ?= false
 
 .PHONY: announcement all build check-setup \
-        clean dist docker-context-clean documentation \
+        clean dist documentation \
         format format-c test-format-c format-python format-shell \
         help install mrproper mrclean \
         packages setup setversion version openapi \
@@ -216,19 +216,6 @@ mrclean:
 # This helps to speed up "make dist"
 buildclean:
 	git clean -d --force -x $(EXCLUDE_BUILD_CLEAN)
-
-
-# This target should clean up everything which may have been built previously in the same working directory
-# within a specific docker image, which would be *falsely* re-used in another (incompatible) docker image.
-# One example:
-# - python-ldap wheel has been built in docker image ubuntu:20.04
-# - this would include a shared object file which is linked against the system's libldap in version 2.4
-# - switching to another docker image, e.g. ubuntu:22.04, would not have libldap in that version (but in version 2.5)
-# 	ldd .venv/lib/python3.12/site-packages/_ldap.cpython-312-x86_64-linux-gnu.so | grep "ldap"
-#		libldap_r-2.4.so.2 => not found
-# TODO: The list of to-be-cleaned artifacts is by no means complete. Add more as soon we know about them.
-docker-context-clean:
-	rm -rf .cache .venv
 
 setup:
 	sudo buildscripts/infrastructure/build-nodes/scripts/install-development.sh --profile all

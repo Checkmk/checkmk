@@ -41,4 +41,5 @@ configure_make(
         "-C src check_nrpe",
     ],
     visibility = ["//visibility:public"],
+    deps = ["@openssl"],
 )

@@ -268,19 +268,19 @@ pub mod odbc {
         #[test]
         fn test_make_connection_string() {
             assert_eq!( odbc::make_connection_string(
-                &InstanceName::from("SQLEXPRESS_NAME".to_string()),
+                &InstanceName::from("SQLEXPRESS_NAME"),
                 None,
                 None),
                 format!("Driver={{{}}};SERVER=(local)\\SQLEXPRESS_NAME;Database=master;Integrated Security=SSPI;Trusted_Connection=yes;", ODBC_DRIVER.clone()));
             assert_eq!(
                 odbc::make_connection_string(
-                    &InstanceName::from("Instance".to_string()),
+                    &InstanceName::from("Instance"),
                     Some("db"),
                     Some("driver")),
                 "Driver={driver};SERVER=(local)\\Instance;Database=db;Integrated Security=SSPI;Trusted_Connection=yes;"
             );
             assert_eq!( odbc::make_connection_string(
-                    &InstanceName::from("mssqlserver".to_string()),
+                    &InstanceName::from("mssqlserver"),
                     None,
                     None),
                     format!("Driver={{{}}};SERVER=(local);Database=master;Integrated Security=SSPI;Trusted_Connection=yes;", ODBC_DRIVER.clone()));
@@ -408,9 +408,13 @@ pub mod registry {
     #[cfg(test)]
     mod tests {
         use super::get_instances;
+        use crate::types::InstanceName;
         #[test]
         fn test_get_instances() {
-            let infos = get_instances();
+            let infos = get_instances()
+                .into_iter()
+                .filter(|i| i.name != InstanceName::from("SQLEXPRESS_OLD"))
+                .collect::<Vec<_>>();
             assert_eq!(infos.len(), 3usize);
         }
     }

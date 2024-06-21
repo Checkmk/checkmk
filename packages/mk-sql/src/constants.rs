@@ -54,3 +54,21 @@ fn get_conf_dir() -> PathBuf {
 pub fn get_env_value(var: &str, on_lack: &str) -> String {
     std::env::var(var).unwrap_or(on_lack.to_string())
 }
+
+#[cfg(test)]
+pub mod tests {
+    use crate::types::InstanceName;
+    use std::collections::HashSet;
+    pub fn expected_instances_in_config() -> HashSet<InstanceName> {
+        [
+            "MSSQLSERVER",
+            "SQLEXPRESS_NAME",
+            "SQLEXPRESS_WOW",
+            "INST1", // in text
+            "INST2", // in text
+        ]
+        .iter()
+        .map(|&s| InstanceName::from(s))
+        .collect()
+    }
+}

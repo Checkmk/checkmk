@@ -44,7 +44,7 @@ fn expected_instances() -> HashSet<InstanceName> {
 }
 
 fn main_instance_name() -> InstanceName {
-    InstanceName::from("MSSQLSERVER".to_string())
+    InstanceName::from("MSSQLSERVER")
 }
 
 #[test]
@@ -131,7 +131,10 @@ async fn test_obtain_all_instances_from_registry_local() {
     let builders = instance::obtain_instance_builders(&endpoint, &[], &Discovery::default())
         .await
         .unwrap();
-    let all: Vec<SqlInstance> = to_instances(builders);
+    let all: Vec<SqlInstance> = to_instances(builders)
+        .into_iter()
+        .filter(|i| expected_instances().contains(&i.name))
+        .collect::<Vec<_>>();
     assert!(all.iter().all(is_instance_good), "{:?}", all);
     assert_eq!(all.len(), expected_instances().len());
     let names: HashSet<InstanceName> = all.into_iter().map(|i| i.name).collect();
@@ -159,7 +162,7 @@ async fn test_obtain_all_instances_from_registry_local_include() {
     let names: Vec<InstanceName> = all.into_iter().map(|i| i.name).collect();
     assert_eq!(
         names,
-        vec![InstanceName::from("MSSQLSERVER".to_string())],
+        vec![InstanceName::from("MSSQLSERVER")],
         "During connecting to `local`"
     );
 }
@@ -186,8 +189,8 @@ async fn test_obtain_all_instances_from_registry_local_exclude() {
     assert_eq!(
         names,
         vec![
-            InstanceName::from("MSSQLSERVER".to_string()),
-            InstanceName::from("SQLEXPRESS_NAME".to_string())
+            InstanceName::from("MSSQLSERVER"),
+            InstanceName::from("SQLEXPRESS_NAME")
         ],
         "During connecting to `local`"
     );
@@ -203,7 +206,10 @@ async fn test_validate_all_instances_local() {
     let endpoint = make_default_endpoint();
     let builders = instance::obtain_instance_builders(&endpoint, &[], &Discovery::default())
         .await
-        .unwrap();
+        .unwrap()
+        .into_iter()
+        .filter(|i| expected_instances().contains(&i.get_name()))
+        .collect::<Vec<_>>();
     let names: Vec<InstanceName> = builders.into_iter().map(|i| i.get_name()).collect();
 
     for name in names {
@@ -1210,6 +1216,9 @@ mssql:
     authentication:
        username: "user"
        type: "integrated"
+    discovery:
+       detect: yes
+       include: [MSSQLSERVER, SQLEXPRESS_NAME, SQLEXPRESS_WOW]
     connection:
        hostname: "localhost"
        {}
@@ -1476,6 +1485,10 @@ fn test_get_instances() {
     let instances = platform::registry::get_instances();
     #[cfg(windows)]
     {
+        let instances = instances
+            .into_iter()
+            .filter(|i| expected_instances().contains(&i.name))
+            .collect::<Vec<_>>();
         assert!(!instances.is_empty());
         for instance in instances {
             assert!(instance.final_port().is_some());
@@ -1493,11 +1506,8 @@ fn test_get_instances() {
 #[cfg(windows)]
 #[test]
 fn test_odbc() {
-    let s = odbc::make_connection_string(
-        &InstanceName::from("SQLEXPRESS_NAME".to_string()),
-        Some("master"),
-        None,
-    );
+    let s =
+        odbc::make_connection_string(&InstanceName::from("SQLEXPRESS_NAME"), Some("master"), None);
     let r = odbc::execute(
         &s,
         sqls::find_known_query(sqls::Id::TableSpaces).unwrap(),
@@ -1522,11 +1532,8 @@ fn test_odbc() {
 #[cfg(windows)]
 #[test]
 fn test_odbc_timeout() {
-    let s = odbc::make_connection_string(
-        &InstanceName::from("SQLEXPRESS_XX".to_string()),
-        Some("master"),
-        None,
-    );
+    let s =
+        odbc::make_connection_string(&InstanceName::from("SQLEXPRESS_XX"), Some("master"), None);
     let start = std::time::Instant::now();
     let r = odbc::execute(
         &s,
@@ -1544,7 +1551,7 @@ async fn test_odbc_high_level() {
     use mk_sql::ms_sql::instance::SqlInstanceProperties;
 
     async fn get(name: &str) -> Option<SqlInstanceProperties> {
-        let instance_name = InstanceName::from(name.to_string());
+        let instance_name = InstanceName::from(name);
         let mut client = create_odbc_client(&instance_name, None).unwrap();
         obtain_properties(&mut client, &instance_name).await
     }

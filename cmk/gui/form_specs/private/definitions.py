@@ -25,3 +25,8 @@ class DatePicker(form_specs.FormSpec[str]):
 @dataclass(frozen=True, kw_only=True)
 class LegacyValueSpec(FormSpec[Any]):
     valuespec: ValueSpec
+
+
+@dataclass(frozen=True, kw_only=True)
+class UnknownFormSpec(FormSpec[Any]):
+    pass

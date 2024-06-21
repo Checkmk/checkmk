@@ -43,12 +43,10 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
-from cmk.gui.form_specs.vue.vue_formspec_visitor import (
-    DataOrigin,
-    parse_data_from_frontend,
-    render_form_spec,
-)
-from cmk.gui.form_specs.vue.vue_lib import form_spec_registry
+from cmk.gui.form_specs.private.definitions import LegacyValueSpec
+from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
+from cmk.gui.form_specs.vue.registries import form_spec_registry
+from cmk.gui.form_specs.vue.type_defs import DataOrigin
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
@@ -137,7 +135,6 @@ from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
-from ...valuespec.to_formspec import ValueSpecFormSpec
 from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition
 
@@ -2033,7 +2030,7 @@ class ABCEditRuleMode(WatoMode):
             assert form_spec.rule_spec.parameter_form is not None
             return configured_mode, form_spec.rule_spec.parameter_form()
 
-        return configured_mode, ValueSpecFormSpec(valuespec=self._ruleset.rulespec.valuespec)
+        return configured_mode, LegacyValueSpec(valuespec=self._ruleset.rulespec.valuespec)
 
     def _get_condition_type_from_vars(self) -> str | None:
         condition_type = self._vs_condition_type().from_html_vars("condition_type")

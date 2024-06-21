@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+
 from playwright.sync_api import expect
 
 from tests.testlib.playwright.helpers import CmkCredentials
+from tests.testlib.playwright.pom.change_password import ChangePassword
 from tests.testlib.playwright.pom.login import LoginPage
 
 
@@ -74,31 +77,30 @@ def test_user_sidebar_position(logged_in_page: LoginPage, credentials: CmkCreden
 
 
 def test_user_edit_profile(logged_in_page: LoginPage) -> None:
-    response = logged_in_page.go(logged_in_page.main_menu.user_edit_profile.get_attribute("href"))
-    assert response and response.ok
+    logged_in_page.main_menu.user_edit_profile.click()
+    logged_in_page.page.wait_for_url(url=re.compile("user_profile.py$"), wait_until="load")
+    logged_in_page.main_area.check_page_title("Edit profile")
 
 
 def test_user_notification_rules(logged_in_page: LoginPage) -> None:
-    response = logged_in_page.go(
-        logged_in_page.main_menu.user_notification_rules.get_attribute("href")
-    )
-    assert response and response.ok
+    logged_in_page.main_menu.user_notification_rules.click()
+    logged_in_page.page.wait_for_url(url=re.compile("user_notifications_p$"), wait_until="load")
+    logged_in_page.main_area.check_page_title("Your personal notification rules")
 
 
 def test_user_change_password(logged_in_page: LoginPage) -> None:
-    response = logged_in_page.go(
-        logged_in_page.main_menu.user_change_password.get_attribute("href")
-    )
-    assert response and response.ok
+    logged_in_page.main_menu.user_change_password.click()
+    _ = ChangePassword(logged_in_page.page, navigate_to_page=False)
 
 
 def test_user_two_factor_authentication(logged_in_page: LoginPage) -> None:
-    response = logged_in_page.go(
-        logged_in_page.main_menu.user_two_factor_authentication.get_attribute("href")
+    logged_in_page.main_menu.user_two_factor_authentication.click()
+    logged_in_page.page.wait_for_url(
+        url=re.compile("user_two_factor_overview.py$"), wait_until="load"
     )
-    assert response and response.ok
+    logged_in_page.main_area.check_page_title("Two-factor authentication")
 
 
 def test_user_logout(logged_in_page: LoginPage) -> None:
-    logged_in_page.main_menu.user_logout.click()
-    expect(logged_in_page.page.locator("#login_window")).to_be_visible()
+    logged_in_page.main_menu.logout()
+    _ = LoginPage(logged_in_page.page, navigate_to_page=False)

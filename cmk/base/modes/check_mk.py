@@ -54,6 +54,7 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
+from cmk.utils.timeperiod import builtin_timeperiods, TimeperiodSpecs
 
 from cmk.snmplib import (
     get_single_oid,
@@ -130,7 +131,6 @@ from cmk import piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
-from cmk.ccc.i18n import _
 from cmk.discover_plugins import discover_families, PluginGroup
 
 from ._localize import do_localize
@@ -156,23 +156,10 @@ from ._localize import do_localize
 _verbosity = 0
 
 
-def load_timeperiods() -> dict:
+def load_timeperiods() -> TimeperiodSpecs:
     path = Path(cmk.utils.paths.check_mk_config_dir, "wato", "timeperiods.mk")
     timeperiods = store.load_from_mk_file(path, "timeperiods", {})
-    timeperiods.update(
-        {
-            "24X7": {
-                "alias": _("Always"),
-                "monday": [("00:00", "24:00")],
-                "tuesday": [("00:00", "24:00")],
-                "wednesday": [("00:00", "24:00")],
-                "thursday": [("00:00", "24:00")],
-                "friday": [("00:00", "24:00")],
-                "saturday": [("00:00", "24:00")],
-                "sunday": [("00:00", "24:00")],
-            }
-        }
-    )
+    timeperiods.update(builtin_timeperiods())
     return timeperiods
 
 

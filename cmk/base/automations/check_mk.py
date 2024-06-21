@@ -66,7 +66,7 @@ from cmk.utils.paths import (
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
-from cmk.utils.timeperiod import timeperiod_active
+from cmk.utils.timeperiod import builtin_timeperiods, timeperiod_active, TimeperiodSpecs
 
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -187,7 +187,6 @@ import cmk.piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.ccc import store, version
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
-from cmk.ccc.i18n import _
 from cmk.ccc.version import edition_supports_nagvis
 from cmk.discover_plugins import discover_families, PluginGroup
 
@@ -195,23 +194,10 @@ HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
 
 
-def load_timeperiods() -> dict:
+def load_timeperiods() -> TimeperiodSpecs:
     path = Path(cmk.utils.paths.check_mk_config_dir, "wato", "timeperiods.mk")
     timeperiods = store.load_from_mk_file(path, "timeperiods", {})
-    timeperiods.update(
-        {
-            "24X7": {
-                "alias": _("Always"),
-                "monday": [("00:00", "24:00")],
-                "tuesday": [("00:00", "24:00")],
-                "wednesday": [("00:00", "24:00")],
-                "thursday": [("00:00", "24:00")],
-                "friday": [("00:00", "24:00")],
-                "saturday": [("00:00", "24:00")],
-                "sunday": [("00:00", "24:00")],
-            }
-        }
-    )
+    timeperiods.update(builtin_timeperiods())
     return timeperiods
 
 

@@ -821,10 +821,10 @@ def render_nowiki_werk_description(  # pylint: disable=too-many-branches
                     html.close_pre()
                     in_code = False
                 elif line.startswith("OM:"):
-                    html.write_text_permissive("OMD[mysite]:~$ ")
+                    html.write_text("OMD[mysite]:~$ ")
                     html.b(line[3:])
                 elif line.startswith("RP:"):
-                    html.write_text_permissive("root@myhost:~# ")
+                    html.write_text("root@myhost:~# ")
                     html.b(line[3:])
                 elif not line.strip() and not in_code:
                     html.p("")

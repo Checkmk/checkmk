@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import json
 import typing
-from typing import Final, final, Literal
+from typing import assert_never, Final, final, Literal
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -109,6 +109,21 @@ class HTMLWriter:
     def write_text_permissive(self, text: HTMLContent) -> None:
         """Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped."""
         self.write_html(HTML.without_escaping(escaping.escape_text(text)))
+
+    def write_text(self, text: HTMLContent) -> None:
+        """Write text, with strict escaping"""
+
+        match text:
+            case None:
+                self.write_html(HTML.empty())
+            case int():
+                self.write_html(HTML.with_escaping(str(text)))
+            case HTML():
+                self.write_html(text)
+            case str():
+                self.write_html(HTML.with_escaping(text))
+            case _ as unreachable:
+                assert_never(unreachable)
 
     def write_html(self, content: HTML) -> None:
         """Write HTML code directly, without escaping."""

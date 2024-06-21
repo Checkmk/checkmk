@@ -186,6 +186,9 @@ msgstr " of "
 msgid " or int"
 msgstr " of int"
 
+msgid " to get notified once the commercial release is available. "
+msgstr ""
+
 msgid " to:"
 msgstr " naar:"
 
@@ -4285,9 +4288,6 @@ msgstr ""
 
 msgid "Address (name / IP or proxy) -- see also inline help for proxy"
 msgstr "Adres (naam / IP of proxy) -- zie ook inline help voor proxy"
-
-msgid "Address Check mode"
-msgstr "Adres Check mode"
 
 msgid "Address ID errors"
 msgstr "Adres ID fouten"
@@ -10818,10 +10818,8 @@ msgstr "Gemiddelde documentgrootte"
 msgid "Check event state in Event Console"
 msgstr "Controleer gebeurtenisstatus in gebeurtenissen Console"
 
-msgid "Check for Version"
-msgstr "Controleren op versie"
-
-msgid "Check for an Address"
+#, fuzzy
+msgid "Check for an address"
 msgstr "Een adres zoeken"
 
 msgid "Check for correct version"
@@ -11071,6 +11069,10 @@ msgstr ""
 "Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
 "(Agent plugin mk_inventory moet geïnstalleerd zijn)"
 
+#, fuzzy
+msgid "Checkmk Cloud (SaaS) Beta"
+msgstr "Checkmk agent"
+
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk Configuratie Bestanden"
 
@@ -11103,10 +11105,6 @@ msgstr "Checkmk Overzicht"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Overzicht van Checkmk Server"
-
-#, fuzzy
-msgid "Checkmk SaaS Beta"
-msgstr "Checkmk agent"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmk Zijbalk"
@@ -11732,13 +11730,6 @@ msgstr ""
 "invloed hebben op de naam die wordt gebruikt voor de piggyback host die "
 "overeenkomt met de container, en ook op items voor diensten die voor elke "
 "container op de node worden aangemaakt."
-
-msgid ""
-"Choose, whether you just want to query the version number, or if you want to "
-"check the response to an address query."
-msgstr ""
-"Kies of u alleen het versienummer wilt opvragen, of dat u het antwoord op "
-"een adresopvraag wilt controleren."
 
 #, fuzzy
 msgid ""
@@ -14274,6 +14265,10 @@ msgid ""
 "Create a separate graph showing the averaged single-core CPU utilizations."
 msgstr "Maak een aparte grafiek met de gemiddelde single-core CPU-gebruiken."
 
+#, fuzzy
+msgid "Create a service checking the response to an address query"
+msgstr "Creëer een dienst voor elk gepingd IP-adres"
+
 msgid "Create a service for each instance"
 msgstr "Maak een dienst voor elke instantie"
 
@@ -14282,6 +14277,10 @@ msgstr "Maak een service voor elke instantie en backup type"
 
 msgid "Create a service for every pinged IP address"
 msgstr "Creëer een dienst voor elk gepingd IP-adres"
+
+#, fuzzy
+msgid "Create a service showing the version number"
+msgstr "Huidig dienstmededelingsnummer"
 
 #, fuzzy
 msgid "Create a summary over all physical disks"
@@ -18434,6 +18433,10 @@ msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr ""
 "Controleer de leeftijd van nooit geanalyseerde/gezuiverde tabellen niet"
 
+#, fuzzy
+msgid "Do not check for an address"
+msgstr "Een adres zoeken"
+
 msgid "Do not check the node"
 msgstr "Controleer het knooppunt niet"
 
@@ -19453,7 +19456,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s."
+msgid "During the beta phase, the number of services is limited to %s. "
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -53605,6 +53608,9 @@ msgid ""
 msgstr ""
 "Getekende agent-pakketten voor Linux, Windows en andere besturingssystemen"
 
+msgid "Sign up here"
+msgstr ""
+
 msgid "Signal quality of Wireless device"
 msgstr "Signaalkwaliteit van draadloze apparatuur"
 
@@ -81366,6 +81372,19 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Address Check mode"
+#~ msgstr "Adres Check mode"
+
+#~ msgid "Check for Version"
+#~ msgstr "Controleren op versie"
+
+#~ msgid ""
+#~ "Choose, whether you just want to query the version number, or if you want "
+#~ "to check the response to an address query."
+#~ msgstr ""
+#~ "Kies of u alleen het versienummer wilt opvragen, of dat u het antwoord op "
+#~ "een adresopvraag wilt controleren."
 
 #~ msgid "Add warning"
 #~ msgstr "Waarschuwing toevoegen"

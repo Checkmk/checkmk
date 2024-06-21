@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-18 18:41+0000\n"
+"PO-Revision-Date: 2024-06-21 05:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -184,6 +184,9 @@ msgstr " oder "
 
 msgid " or int"
 msgstr " oder int"
+
+msgid " to get notified once the commercial release is available. "
+msgstr ""
 
 msgid " to:"
 msgstr " An:"
@@ -3497,7 +3500,7 @@ msgid "Add & remove hosts"
 msgstr "Hosts ergänzen & löschen"
 
 msgid "Add (sub) path to the URI, ie. [proto]://[host]:[port]/[path]."
-msgstr ""
+msgstr "(Sub-)Pfad zur URI hinzufügen, z.B. [proto]://[host]:[port]/[path]."
 
 msgid "Add Aggregation"
 msgstr "Aggregation hinzufügen"
@@ -3738,7 +3741,7 @@ msgid "Add host to use this action"
 msgstr "Host hinzufügen, um diese Aktion zu nutzen"
 
 msgid "Add host/subfolder to use this action"
-msgstr ""
+msgstr "Host/Unterordner hinzufügen, um diese Aktion zu nutzen"
 
 msgid ""
 "Add hosts to the monitoring and remove hosts from the monitoring. Please "
@@ -4230,9 +4233,6 @@ msgstr ""
 
 msgid "Address (name / IP or proxy) -- see also inline help for proxy"
 msgstr "Adresse (Name / IP oder Proxy) -- siehe auch Inline-Hilfe für Proxy"
-
-msgid "Address Check mode"
-msgstr "Modus für die Adressenprüfung"
 
 msgid "Address ID errors"
 msgstr "Adress-ID-Fehler"
@@ -10609,10 +10609,8 @@ msgstr "Prüfe Größe des Dokuments"
 msgid "Check event state in Event Console"
 msgstr "Prüfe Ereignisstatus in Event Console"
 
-msgid "Check for Version"
-msgstr "Auf Version prüfen"
-
-msgid "Check for an Address"
+#, fuzzy
+msgid "Check for an address"
 msgstr "Auf eine Adresse prüfen"
 
 msgid "Check for correct version"
@@ -10848,6 +10846,10 @@ msgstr ""
 "Status der Daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (Agentenplugin mk_inventory muss installiert sein)"
 
+#, fuzzy
+msgid "Checkmk Cloud (SaaS) Beta"
+msgstr "Checkmk SaaS Beta"
+
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk-Konfigurationsdateien"
 
@@ -10880,10 +10882,6 @@ msgstr "Checkmk Überblick"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Übersicht des Checkmk Server"
-
-#, fuzzy
-msgid "Checkmk SaaS Beta"
-msgstr "Checkmk Cloud (SaaS) Beta"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmk-Seitenleiste"
@@ -11489,13 +11487,6 @@ msgstr ""
 "Dies wirkt sich auf den Namen aus, der für den dem Container entsprechenden "
 "Piggyback-Host verwendet wird, sowie auf die Items für die auf dem Knoten "
 "für jeden Container erstellten Services."
-
-msgid ""
-"Choose, whether you just want to query the version number, or if you want to "
-"check the response to an address query."
-msgstr ""
-"Wählen Sie, ob Sie nur die Versionsnummer abfragen, oder die Antwort auf "
-"eine Adressanfrage überprüfen wollen."
 
 msgid ""
 "Choose, whether you want to use the parent host information for the NetBIOS "
@@ -13976,6 +13967,10 @@ msgstr ""
 "Erstellen Sie ein separates Diagramm, das die gemittelten Single-Core-CPU-"
 "Auslastungen zeigt."
 
+#, fuzzy
+msgid "Create a service checking the response to an address query"
+msgstr "Einen Service für jede angepingte IP-Adresse anlegen"
+
 msgid "Create a service for each instance"
 msgstr "Einen Service für jede Instanz anlegen"
 
@@ -13984,6 +13979,10 @@ msgstr "Einen Service für jede Instanz und jeden Backup-Typ erstellen"
 
 msgid "Create a service for every pinged IP address"
 msgstr "Einen Service für jede angepingte IP-Adresse anlegen"
+
+#, fuzzy
+msgid "Create a service showing the version number"
+msgstr "Aktuelle Service-Benachrichtigungsnummer"
 
 msgid "Create a summary over all physical disks"
 msgstr "Zusammenfassung für alle physischen Festplatten erstellen"
@@ -15820,9 +15819,8 @@ msgstr "Standard Benutzerprofil"
 msgid "Default value"
 msgstr "Standardwert"
 
-#, fuzzy
 msgid "Deferred files age"
-msgstr "Alter von Verzögerte Dateien"
+msgstr "Alter der aufgeschobenen Dateien"
 
 msgid "Deferred files in Spool"
 msgstr "Verzögerte Dateien im Spooler"
@@ -17509,9 +17507,8 @@ msgstr ""
 msgid "Disk backend bytes removed or overwritten"
 msgstr ""
 
-#, fuzzy
 msgid "Disk backend size"
-msgstr "ID-Cachegröße"
+msgstr "Größe des Festplatten-Backends"
 
 msgid "Disk backend uncompressed"
 msgstr ""
@@ -17779,9 +17776,8 @@ msgstr ""
 "man nur den Monitoring-Zustand , aber nicht die Textausgabe des Services, "
 "ändern will."
 
-#, fuzzy
 msgid "Display time for user security messages"
-msgstr "Zusätzliche Meldungen anzeigen"
+msgstr "Anzeigedauer für Benutzersicherheitsmeldungen"
 
 msgid "Display time left in check output"
 msgstr "Restzeit in Ausgabe des Checks anzeigen"
@@ -17868,9 +17864,8 @@ msgstr "Zeigt die Anzahl der Hosts in einem ausgewählten Status an."
 msgid "Displays amount of services in a selected state."
 msgstr "Zeigt die Anzahl der Services in einem ausgewählten Status an."
 
-#, fuzzy
 msgid "Displays an overview of all Checkmk servers and sites\n"
-msgstr "Zeigt einen Überblick über alle Checkmk-Server und -Instanzen an.\n"
+msgstr "Zeigt einen Überblick über alle Checkmk-Server und -Instanzen an\n"
 
 msgid "Displays either sites and states or hosts and states of a site"
 msgstr ""
@@ -18010,6 +18005,10 @@ msgstr "Nicht überprüfen"
 msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr "Alter der niemals ausgewerteten/vakuumierten Tabellen nicht überprüfen"
 
+#, fuzzy
+msgid "Do not check for an address"
+msgstr "Auf eine Adresse prüfen"
+
 msgid "Do not check the node"
 msgstr "Diesen Knoten nicht prüfen"
 
@@ -18073,9 +18072,8 @@ msgstr "Das SUSEConnect Plugin nicht verteilen"
 msgid "Do not deploy Symantec Anti Virus plug-in"
 msgstr "Das Symantec Anti Virus Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Unitrends plug-ins"
-msgstr "Die Unitrends Plugins nicht verteilen"
+msgstr "Unitrends Plugins nicht verteilen"
 
 msgid "Do not deploy VxVM plug-in"
 msgstr "Das VxVM Plugin nicht verteilen"
@@ -18962,8 +18960,8 @@ msgstr ""
 "nach der Aktivierung Ihrer Änderungen hätten Sie %s Services."
 
 #, fuzzy, python-format
-msgid "During the beta phase, the number of services is limited to %s."
-msgstr "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt. "
+msgid "During the beta phase, the number of services is limited to %s. "
+msgstr "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt."
 
 msgid "During this time period no monitoring data is available"
 msgstr "Während dieser Zeitperiode sind keine Monitoring-Daten verfügbar"
@@ -52768,6 +52766,9 @@ msgstr ""
 "Angepasste Pakete von Monitoring-Agenten für Linux, Windows und andere "
 "Betriebssysteme signieren"
 
+msgid "Sign up here"
+msgstr ""
+
 msgid "Signal quality of Wireless device"
 msgstr "Signalqualität eines Wireless-Geräts"
 
@@ -79952,6 +79953,19 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Address Check mode"
+#~ msgstr "Modus für die Adressenprüfung"
+
+#~ msgid "Check for Version"
+#~ msgstr "Auf Version prüfen"
+
+#~ msgid ""
+#~ "Choose, whether you just want to query the version number, or if you want "
+#~ "to check the response to an address query."
+#~ msgstr ""
+#~ "Wählen Sie, ob Sie nur die Versionsnummer abfragen, oder die Antwort auf "
+#~ "eine Adressanfrage überprüfen wollen."
 
 #~ msgid "Add warning"
 #~ msgstr "Warnung hinzufügen"

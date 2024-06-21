@@ -181,6 +181,9 @@ msgstr " または "
 msgid " or int"
 msgstr " またはint"
 
+msgid " to get notified once the commercial release is available. "
+msgstr ""
+
 msgid " to:"
 msgstr " まで:"
 
@@ -4174,9 +4177,6 @@ msgid "Address (name / IP or proxy) -- see also inline help for proxy"
 msgstr ""
 "アドレス (名前 / IP またはプロキシ) -- プロキシについてはインラインヘルプも参"
 "照"
-
-msgid "Address Check mode"
-msgstr "アドレスチェックモード"
 
 msgid "Address ID errors"
 msgstr "アドレスIDエラー"
@@ -10574,10 +10574,8 @@ msgstr "ドキュメントの平均サイズ"
 msgid "Check event state in Event Console"
 msgstr "イベントコンソールでイベントの状態を確認する"
 
-msgid "Check for Version"
-msgstr "バージョンを確認する"
-
-msgid "Check for an Address"
+#, fuzzy
+msgid "Check for an address"
 msgstr "アドレスを確認する"
 
 msgid "Check for correct version"
@@ -10822,6 +10820,10 @@ msgstr ""
 "Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached (エー"
 "ジェントプラグインmk_inventoryをインストールする必要があります)"
 
+#, fuzzy
+msgid "Checkmk Cloud (SaaS) Beta"
+msgstr "Checkmkエージェント"
+
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk設定ファイル"
 
@@ -10854,10 +10856,6 @@ msgstr "Checkmkの概要"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "CheckmkサーバーのCheckmk概要"
-
-#, fuzzy
-msgid "Checkmk SaaS Beta"
-msgstr "Checkmkエージェント"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmkサイドバー"
@@ -11456,13 +11454,6 @@ msgstr ""
 "監視対象のコンテナに使用する識別子を選択します。これは、コンテナに対応するピ"
 "ギーバックホストに使用される名前、および各コンテナのノードで作成されるサービ"
 "スのアイテムに影響します。"
-
-msgid ""
-"Choose, whether you just want to query the version number, or if you want to "
-"check the response to an address query."
-msgstr ""
-"バージョン番号の問い合わせだけなのか、アドレスの問い合わせに対する応答を確認"
-"したいのか、選択してください。"
 
 msgid ""
 "Choose, whether you want to use the parent host information for the NetBIOS "
@@ -13933,6 +13924,10 @@ msgid ""
 "Create a separate graph showing the averaged single-core CPU utilizations."
 msgstr "シングルコアCPU使用率の平均を示す別のグラフを作成します。"
 
+#, fuzzy
+msgid "Create a service checking the response to an address query"
+msgstr "Pingを送信したIPアドレスごとにサービスを作成する"
+
 msgid "Create a service for each instance"
 msgstr "インスタンスごとにサービスを作成する"
 
@@ -13941,6 +13936,10 @@ msgstr "インスタンスとバックアップの種類ごとにサービスを
 
 msgid "Create a service for every pinged IP address"
 msgstr "Pingを送信したIPアドレスごとにサービスを作成する"
+
+#, fuzzy
+msgid "Create a service showing the version number"
+msgstr "現在のサービス通知番号"
 
 #, fuzzy
 msgid "Create a summary over all physical disks"
@@ -18040,6 +18039,10 @@ msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr ""
 "分析/バキュームされたことがないテーブルの経過日数をチェックしないでください"
 
+#, fuzzy
+msgid "Do not check for an address"
+msgstr "アドレスを確認する"
+
 msgid "Do not check the node"
 msgstr "ノードを確認しない"
 
@@ -19046,7 +19049,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s."
+msgid "During the beta phase, the number of services is limited to %s. "
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -52596,6 +52599,9 @@ msgstr ""
 "Linux、Windows、およびその他のオペレーティング・システム用のベイクエージェン"
 "ト・パッケージに署名します"
 
+msgid "Sign up here"
+msgstr ""
+
 msgid "Signal quality of Wireless device"
 msgstr "ワイヤレスデバイスの信号品質"
 
@@ -79411,6 +79417,19 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Address Check mode"
+#~ msgstr "アドレスチェックモード"
+
+#~ msgid "Check for Version"
+#~ msgstr "バージョンを確認する"
+
+#~ msgid ""
+#~ "Choose, whether you just want to query the version number, or if you want "
+#~ "to check the response to an address query."
+#~ msgstr ""
+#~ "バージョン番号の問い合わせだけなのか、アドレスの問い合わせに対する応答を確"
+#~ "認したいのか、選択してください。"
 
 #~ msgid "Add warning"
 #~ msgstr "警告を追加"

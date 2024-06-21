@@ -187,6 +187,9 @@ msgstr " ou "
 msgid " or int"
 msgstr " ou inteiro"
 
+msgid " to get notified once the commercial release is available. "
+msgstr ""
+
 msgid " to:"
 msgstr " para:"
 
@@ -4277,9 +4280,6 @@ msgstr ""
 msgid "Address (name / IP or proxy) -- see also inline help for proxy"
 msgstr ""
 "Endereço (nome / IP ou proxy) -- ver também a ajuda em linha para proxy"
-
-msgid "Address Check mode"
-msgstr "Modo de Verificação de Endereço"
 
 msgid "Address ID errors"
 msgstr "Erros de identificação de endereço"
@@ -10817,10 +10817,8 @@ msgstr "Tamanho médio dos documentos"
 msgid "Check event state in Event Console"
 msgstr "Verificar o estado do evento no Console de Eventos"
 
-msgid "Check for Version"
-msgstr "Verificar a Versão"
-
-msgid "Check for an Address"
+#, fuzzy
+msgid "Check for an address"
 msgstr "Verificar um endereço"
 
 msgid "Check for correct version"
@@ -11068,6 +11066,10 @@ msgstr ""
 "Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached (o "
 "plugin Agent mk_inventory precisa ser instalado)"
 
+#, fuzzy
+msgid "Checkmk Cloud (SaaS) Beta"
+msgstr "agente Checkmk"
+
 msgid "Checkmk Configuration Files"
 msgstr "Arquivos de configuração Checkmk"
 
@@ -11100,10 +11102,6 @@ msgstr "Visão geral da Checkmk"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Visão geral do Checkmk Server"
-
-#, fuzzy
-msgid "Checkmk SaaS Beta"
-msgstr "agente Checkmk"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmk Sidebar"
@@ -11732,13 +11730,6 @@ msgstr ""
 "Escolha qual identificador é usado para os recipientes monitorados. Isso "
 "afetará o nome usado para o hospedeiro piggyback correspondente ao "
 "recipiente, bem como itens para serviços criados no nó para cada recipiente."
-
-msgid ""
-"Choose, whether you just want to query the version number, or if you want to "
-"check the response to an address query."
-msgstr ""
-"Escolha se pretende apenas consultar o número da versão ou se pretende "
-"verificar a resposta a uma consulta de endereço."
 
 msgid ""
 "Choose, whether you want to use the parent host information for the NetBIOS "
@@ -14270,6 +14261,10 @@ msgstr ""
 "Crie um gráfico separado mostrando a média de utilizações da CPU de núcleo "
 "único."
 
+#, fuzzy
+msgid "Create a service checking the response to an address query"
+msgstr "Criar um serviço para cada endereço IP objecto de ping"
+
 msgid "Create a service for each instance"
 msgstr "Criar um serviço para cada instância"
 
@@ -14278,6 +14273,10 @@ msgstr "Criar um serviço para cada instância e tipo de backup"
 
 msgid "Create a service for every pinged IP address"
 msgstr "Criar um serviço para cada endereço IP objecto de ping"
+
+#, fuzzy
+msgid "Create a service showing the version number"
+msgstr "Número da notificação de serviço actual"
 
 #, fuzzy
 msgid "Create a summary over all physical disks"
@@ -18432,6 +18431,10 @@ msgstr "Não verificar"
 msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr "Não verificar a idade das tabelas nunca analisadas/vacuumed"
 
+#, fuzzy
+msgid "Do not check for an address"
+msgstr "Verificar um endereço"
+
 msgid "Do not check the node"
 msgstr "Não verificar o nó"
 
@@ -19440,7 +19443,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s."
+msgid "During the beta phase, the number of services is limited to %s. "
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -53590,6 +53593,9 @@ msgstr ""
 "Assinar pacotes de agentes cozidos para Linux, Windows e outros sistemas "
 "operativos"
 
+msgid "Sign up here"
+msgstr ""
+
 msgid "Signal quality of Wireless device"
 msgstr "Qualidade do sinal do dispositivo sem fio"
 
@@ -81253,6 +81259,19 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "Address Check mode"
+#~ msgstr "Modo de Verificação de Endereço"
+
+#~ msgid "Check for Version"
+#~ msgstr "Verificar a Versão"
+
+#~ msgid ""
+#~ "Choose, whether you just want to query the version number, or if you want "
+#~ "to check the response to an address query."
+#~ msgstr ""
+#~ "Escolha se pretende apenas consultar o número da versão ou se pretende "
+#~ "verificar a resposta a uma consulta de endereço."
 
 #~ msgid "Add warning"
 #~ msgstr "Adicionar aviso"

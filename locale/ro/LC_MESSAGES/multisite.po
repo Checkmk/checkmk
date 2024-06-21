@@ -184,6 +184,9 @@ msgstr " sau "
 msgid " or int"
 msgstr " sau int"
 
+msgid " to get notified once the commercial release is available. "
+msgstr ""
+
 msgid " to:"
 msgstr " către:"
 
@@ -4287,9 +4290,6 @@ msgid "Address (name / IP or proxy) -- see also inline help for proxy"
 msgstr ""
 "Adresă (nume / IP sau proxy) -- a se vedea, de asemenea, ajutorul în linie "
 "pentru proxy"
-
-msgid "Address Check mode"
-msgstr "Mod de verificare adresă"
 
 msgid "Address ID errors"
 msgstr "Erori de identificare a adresei"
@@ -10836,10 +10836,8 @@ msgstr "Verificați dimensiunea documentului"
 msgid "Check event state in Event Console"
 msgstr "Verificați starea evenimentului în Consola de evenimente"
 
-msgid "Check for Version"
-msgstr "Verificarea versiunii"
-
-msgid "Check for an Address"
+#, fuzzy
+msgid "Check for an address"
 msgstr "Verificați o adresă"
 
 msgid "Check for correct version"
@@ -11084,6 +11082,10 @@ msgstr ""
 "starea demonilor: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (trebuie instalat pluginul agentului mk_inventory)"
 
+#, fuzzy
+msgid "Checkmk Cloud (SaaS) Beta"
+msgstr "Agent Checkmk"
+
 msgid "Checkmk Configuration Files"
 msgstr "Fișiere de configurare Checkmk"
 
@@ -11116,10 +11118,6 @@ msgstr "Checkmk Prezentare generală"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Prezentare generală a serverului Checkmk"
-
-#, fuzzy
-msgid "Checkmk SaaS Beta"
-msgstr "Agent Checkmk"
 
 msgid "Checkmk Sidebar"
 msgstr "Bara laterală Checkmk"
@@ -11749,13 +11747,6 @@ msgstr ""
 "Acest lucru va afecta numele utilizat pentru gazda piggyback corespunzătoare "
 "containerului, precum și elementele pentru serviciile create pe nod pentru "
 "fiecare container."
-
-msgid ""
-"Choose, whether you just want to query the version number, or if you want to "
-"check the response to an address query."
-msgstr ""
-"Alegeți dacă doriți doar să interogați numărul versiunii sau dacă doriți să "
-"verificați răspunsul la o interogare de adresă."
 
 msgid ""
 "Choose, whether you want to use the parent host information for the NetBIOS "
@@ -14280,6 +14271,10 @@ msgstr ""
 "Creați un grafic separat care să arate media utilizărilor CPU cu un singur "
 "nucleu."
 
+#, fuzzy
+msgid "Create a service checking the response to an address query"
+msgstr "Creați un serviciu pentru fiecare adresă IP pingată"
+
 msgid "Create a service for each instance"
 msgstr "Creați un serviciu pentru fiecare instanță"
 
@@ -14288,6 +14283,10 @@ msgstr "Creați un serviciu pentru fiecare instanță și tip de backup"
 
 msgid "Create a service for every pinged IP address"
 msgstr "Creați un serviciu pentru fiecare adresă IP pingată"
+
+#, fuzzy
+msgid "Create a service showing the version number"
+msgstr "Numărul curent de notificare a serviciului"
 
 #, fuzzy
 msgid "Create a summary over all physical disks"
@@ -18462,6 +18461,10 @@ msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr ""
 "Nu verificați vechimea tabelelor care nu au fost niciodată analizate/vacuate"
 
+#, fuzzy
+msgid "Do not check for an address"
+msgstr "Verificați o adresă"
+
 msgid "Do not check the node"
 msgstr "Nu verificați nodul"
 
@@ -19474,7 +19477,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s."
+msgid "During the beta phase, the number of services is limited to %s. "
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -53699,6 +53702,9 @@ msgstr ""
 "Semnați pachete de agenți copți pentru Linux, Windows și alte sisteme de "
 "operare"
 
+msgid "Sign up here"
+msgstr ""
+
 msgid "Signal quality of Wireless device"
 msgstr "Calitatea semnalului dispozitivului fără fir"
 
@@ -81491,6 +81497,19 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Address Check mode"
+#~ msgstr "Mod de verificare adresă"
+
+#~ msgid "Check for Version"
+#~ msgstr "Verificarea versiunii"
+
+#~ msgid ""
+#~ "Choose, whether you just want to query the version number, or if you want "
+#~ "to check the response to an address query."
+#~ msgstr ""
+#~ "Alegeți dacă doriți doar să interogați numărul versiunii sau dacă doriți "
+#~ "să verificați răspunsul la o interogare de adresă."
 
 #~ msgid "Add warning"
 #~ msgstr "Adăugați un avertisment"

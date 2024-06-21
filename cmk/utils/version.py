@@ -148,18 +148,18 @@ class _BuildDate:
 
 @dataclass(order=True)
 class _Release:
-    r_type: ReleaseType
+    release_type: ReleaseType
     value: int | _BuildDate
 
     def suffix(self) -> str:
-        if self.r_type is ReleaseType.na:
+        if self.release_type is ReleaseType.na:
             return ""
-        if self.r_type is ReleaseType.daily:
+        if self.release_type is ReleaseType.daily:
             return f"-{self.value}"
-        return f"{self.r_type.name}{self.value}"
+        return f"{self.release_type.name}{self.value}"
 
     def is_unspecified(self) -> bool:
-        return self.r_type is ReleaseType.na
+        return self.release_type is ReleaseType.na
 
     @classmethod
     def unspecified(cls) -> Self:
@@ -206,10 +206,10 @@ class Version:
         match match.group(1, 2, 3, 4, 5):
             case major, minor, sub, None, None:
                 return cls(_BaseVersion(int(major), int(minor), int(sub)), _Release.unspecified())
-            case major, minor, sub, r_type, patch:
+            case major, minor, sub, release_type, patch:
                 return cls(
                     _BaseVersion(int(major), int(minor), int(sub)),
-                    _Release(ReleaseType[r_type], int(patch)),
+                    _Release(ReleaseType[release_type], int(patch)),
                 )
 
         raise ValueError(f'Cannot parse version string "{vstring}".')

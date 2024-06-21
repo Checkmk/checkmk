@@ -84,18 +84,18 @@ def main(args: argparse.Namespace) -> None:
     version = Version.from_str(args.version)
     feedback_mail = None
 
-    if version.release.r_type == ReleaseType.b:
+    if version.release.release_type == ReleaseType.b:
         release_type = "beta"
         assert (
             version.base is not None
         ), f"Expected version.base to be not None for release type beta: {version}"
         feedback_mail = f"feedback-{version.base.major}.{version.base.minor}-beta@checkmk.com"
-    elif version.release.r_type == ReleaseType.p or version.release.is_unspecified():
+    elif version.release.release_type == ReleaseType.p or version.release.is_unspecified():
         release_type = "stable"
-    elif version.release.r_type == ReleaseType.daily:
+    elif version.release.release_type == ReleaseType.daily:
         release_type = "daily"
     else:
-        raise NotImplementedError(f"Can not create announcement for {version.release.r_type}")
+        raise NotImplementedError(f"Can not create announcement for {version.release.release_type}")
 
     template = env.get_template(f"announce.{args.format}.jinja2")
     print(

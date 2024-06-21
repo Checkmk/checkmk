@@ -58,19 +58,19 @@ class TestVersion:
         [
             (
                 Version.from_str("1.2.3"),
-                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(r_type=ReleaseType.na, value=0))",
+                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(release_type=ReleaseType.na, value=0))",
             ),
             (
                 Version.from_str("2024.03.14"),
-                "Version(None, _Release(r_type=ReleaseType.daily, value=_BuildDate(year=2024, month=3, day=14)))",
+                "Version(None, _Release(release_type=ReleaseType.daily, value=_BuildDate(year=2024, month=3, day=14)))",
             ),
             (
                 Version.from_str("3.4.5p8"),
-                "Version(_BaseVersion(major=3, minor=4, sub=5), _Release(r_type=ReleaseType.p, value=8))",
+                "Version(_BaseVersion(major=3, minor=4, sub=5), _Release(release_type=ReleaseType.p, value=8))",
             ),
             (
                 Version.from_str("1.2.3-2024.09.09"),
-                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(r_type=ReleaseType.daily, value=_BuildDate(year=2024, month=9, day=9)))",
+                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(release_type=ReleaseType.daily, value=_BuildDate(year=2024, month=9, day=9)))",
             ),
         ],
     )

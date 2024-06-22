@@ -25064,6 +25064,9 @@ msgstr "Courriel HTML"
 msgid "HTML output"
 msgstr "Sortie HTML"
 
+msgid "HTML output can not be rendered because of truncated data. "
+msgstr ""
+
 msgid "HTTP"
 msgstr "HTTP"
 
@@ -31723,6 +31726,9 @@ msgstr ""
 msgid "Increase limit"
 msgstr "Ignorer la limite des requêtes"
 
+msgid "Increase limit for future entries"
+msgstr ""
+
 msgid ""
 "Increase this value if WMI-based services are switching constantly into "
 "stale state. Default value is 3."
@@ -33239,6 +33245,14 @@ msgstr "Indiquez simplement la disponibilité (c'est-à-dire OK/UP)"
 
 msgid "KByte"
 msgstr "KByte"
+
+#, fuzzy
+msgid "KPI"
+msgstr "DPI"
+
+#, fuzzy
+msgid "KPI runtime"
+msgstr "Durée d'exécution du processus"
 
 msgid ""
 "K_g BMC key to use when authenticating with the remote host for IPMI 2.0"
@@ -35899,6 +35913,9 @@ msgstr ""
 msgid "Loss of signal errors"
 msgstr "Erreurs de perte de signal"
 
+msgid "Lost data due to truncation of long output to "
+msgstr ""
+
 msgid "Lost synchronization errors"
 msgstr "Erreurs de synchronisation perdues"
 
@@ -37301,6 +37318,10 @@ msgstr "Maximum"
 #, python-format
 msgid "Maximum %s instances of duration greater than %s"
 msgstr "Maximum %s instances de durée supérieure à %s"
+
+#, fuzzy
+msgid "Maximum KPI runtime"
+msgstr "Durée d'exécution du processus"
 
 msgid "Maximum PGA allocated"
 msgstr "PGA maximum alloué"
@@ -44925,6 +44946,10 @@ msgstr "Modèle (Regex)"
 msgid "Pattern analyzer"
 msgstr "Analyseur de motifs"
 
+#, fuzzy
+msgid "Patterns"
+msgstr "Patronage"
+
 msgid "Patterns for each node"
 msgstr "Modèles pour chaque nœud"
 
@@ -44932,6 +44957,12 @@ msgid "Patterns for logfiles to monitor (allowing <tt>*</tt> and <tt>?</tt>)"
 msgstr ""
 "Modèles de fichiers journaux à surveiller (autorisant <tt>*</tt> et <tt>?</"
 "tt>)"
+
+msgid ""
+"Patterns to identify Robot Framework keywords as Robotmk KPIs. Note that if "
+"a pattern matches multiple keywords from the same test with the same name, "
+"the service will report UNKNOWN."
+msgstr ""
 
 msgid "Paused"
 msgstr "En pause"
@@ -50182,6 +50213,14 @@ msgid "Robotmk Enterprise features are hidden."
 msgstr ""
 
 #, fuzzy
+msgid "Robotmk KPI discovery"
+msgstr "Découverte de l'IO des disques"
+
+#, fuzzy
+msgid "Robotmk KPI monitoring"
+msgstr "Surveillance du réseau"
+
+#, fuzzy
 msgid "Robotmk logs"
 msgstr "Journaux de RobotMK"
 
@@ -53340,11 +53379,17 @@ msgstr ""
 "dernière remise à zéro du compteur."
 
 msgid ""
-"Sets the runtime threshold for the runtime of a test. Note that runtime "
-"monitoring is not a feature of Robot Framework, but of Robotmk. That means "
-"that even when a Robot suite has ended with a PASS result, the states of "
-"Robotmk test and plan services can be other than OK if runtimes were "
-"exceeded. "
+"Sets the thresholds for the runtime of a test. Note that runtime monitoring "
+"is not a feature of Robot Framework, but of Robotmk. That means that even "
+"when a Robot suite has ended with a PASS result, the states of Robotmk test "
+"and plan services can be other than OK if runtimes were exceeded."
+msgstr ""
+
+msgid ""
+"Sets thresholds for the runtime of a KPI. Note that runtime monitoring is "
+"not a feature of Robot Framework, but of Robotmk. This means that even if a "
+"keyword has PASSed, the corresponding KPI service can still report WARN or "
+"CRIT if the runtime thresholds are exceeded."
 msgstr ""
 
 msgid "Setting"
@@ -67129,9 +67174,7 @@ msgstr ""
 msgid ""
 "This ruleset will deploy the agent plug-in <tt>mk_sap</tt> for (locally) "
 "monitoring SAP R/3 instances. Note: you still need to manually deploy the "
-"SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc. Both is "
-"explained in an <a href='http://mathias-kettner.de/checkmk_sap_r3."
-"html'>article in the Checkmk documentation</a>."
+"SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc."
 msgstr ""
 "Ce jeu de règles déploiera l'agent plugin <tt>mk_sap</tt> pour la "
 "surveillance (locale) des instances SAP R/3. Remarque : vous devez toujours "

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2024-06-21 14:17+0000\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/dev/"
@@ -25057,6 +25057,9 @@ msgstr "Correo electrónico HTML"
 msgid "HTML output"
 msgstr "Salida HTML"
 
+msgid "HTML output can not be rendered because of truncated data. "
+msgstr ""
+
 msgid "HTTP"
 msgstr "HTTP"
 
@@ -31685,6 +31688,9 @@ msgstr "Usuario o contraseña incorrectos. Por favor, inténtelo de nuevo."
 msgid "Increase limit"
 msgstr "Ignorar el límite de consulta dura"
 
+msgid "Increase limit for future entries"
+msgstr ""
+
 msgid ""
 "Increase this value if WMI-based services are switching constantly into "
 "stale state. Default value is 3."
@@ -33193,6 +33199,14 @@ msgstr "Sólo muestra la disponibilidad (es decir, OK/UP)"
 
 msgid "KByte"
 msgstr "KByte"
+
+#, fuzzy
+msgid "KPI"
+msgstr "DPI"
+
+#, fuzzy
+msgid "KPI runtime"
+msgstr "Tiempo de ejecución del proceso"
 
 msgid ""
 "K_g BMC key to use when authenticating with the remote host for IPMI 2.0"
@@ -35866,6 +35880,9 @@ msgstr ""
 msgid "Loss of signal errors"
 msgstr "Errores de pérdida de señal"
 
+msgid "Lost data due to truncation of long output to "
+msgstr ""
+
 msgid "Lost synchronization errors"
 msgstr "Errores de sincronización perdidos"
 
@@ -37277,6 +37294,10 @@ msgstr "Máximo"
 #, python-format
 msgid "Maximum %s instances of duration greater than %s"
 msgstr "Máximo %s instancias de duración superior a %s"
+
+#, fuzzy
+msgid "Maximum KPI runtime"
+msgstr "Tiempo de ejecución del proceso"
 
 msgid "Maximum PGA allocated"
 msgstr "PGA máxima asignada"
@@ -44910,6 +44931,10 @@ msgstr "Patrón (Regex)"
 msgid "Pattern analyzer"
 msgstr "Analizador de patrones"
 
+#, fuzzy
+msgid "Patterns"
+msgstr "Patrón"
+
 msgid "Patterns for each node"
 msgstr "Patrones para cada nodo"
 
@@ -44917,6 +44942,12 @@ msgid "Patterns for logfiles to monitor (allowing <tt>*</tt> and <tt>?</tt>)"
 msgstr ""
 "Patrones para los archivos de registro a supervisar (permitiendo <tt>*</tt> "
 "y <tt>?</tt>)"
+
+msgid ""
+"Patterns to identify Robot Framework keywords as Robotmk KPIs. Note that if "
+"a pattern matches multiple keywords from the same test with the same name, "
+"the service will report UNKNOWN."
+msgstr ""
 
 msgid "Paused"
 msgstr "En pausa"
@@ -50164,6 +50195,14 @@ msgid "Robotmk Enterprise features are hidden."
 msgstr "Característica de la empresa"
 
 #, fuzzy
+msgid "Robotmk KPI discovery"
+msgstr "Descubrimiento de IO de disco"
+
+#, fuzzy
+msgid "Robotmk KPI monitoring"
+msgstr "Supervisión de la red"
+
+#, fuzzy
 msgid "Robotmk logs"
 msgstr "Registros de RobotMK"
 
@@ -53318,11 +53357,17 @@ msgstr ""
 "reinicio del contador."
 
 msgid ""
-"Sets the runtime threshold for the runtime of a test. Note that runtime "
-"monitoring is not a feature of Robot Framework, but of Robotmk. That means "
-"that even when a Robot suite has ended with a PASS result, the states of "
-"Robotmk test and plan services can be other than OK if runtimes were "
-"exceeded. "
+"Sets the thresholds for the runtime of a test. Note that runtime monitoring "
+"is not a feature of Robot Framework, but of Robotmk. That means that even "
+"when a Robot suite has ended with a PASS result, the states of Robotmk test "
+"and plan services can be other than OK if runtimes were exceeded."
+msgstr ""
+
+msgid ""
+"Sets thresholds for the runtime of a KPI. Note that runtime monitoring is "
+"not a feature of Robot Framework, but of Robotmk. This means that even if a "
+"keyword has PASSed, the corresponding KPI service can still report WARN or "
+"CRIT if the runtime thresholds are exceeded."
 msgstr ""
 
 msgid "Setting"
@@ -67074,9 +67119,7 @@ msgstr ""
 msgid ""
 "This ruleset will deploy the agent plug-in <tt>mk_sap</tt> for (locally) "
 "monitoring SAP R/3 instances. Note: you still need to manually deploy the "
-"SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc. Both is "
-"explained in an <a href='http://mathias-kettner.de/checkmk_sap_r3."
-"html'>article in the Checkmk documentation</a>."
+"SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc."
 msgstr ""
 "Este conjunto de reglas desplegará el plugin de agente <tt>mk_sap</tt> para "
 "la monitorización (local) de instancias SAP R/3. Nota: aún es necesario "

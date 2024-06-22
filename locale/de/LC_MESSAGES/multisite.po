@@ -24309,6 +24309,9 @@ msgstr "HTML E-Mail"
 msgid "HTML output"
 msgstr "HTML-Ausgabe"
 
+msgid "HTML output can not be rendered because of truncated data. "
+msgstr ""
+
 msgid "HTTP"
 msgstr "HTTP"
 
@@ -30841,6 +30844,9 @@ msgstr ""
 msgid "Increase limit"
 msgstr "Ignoriere hartes Abfragelimit"
 
+msgid "Increase limit for future entries"
+msgstr ""
+
 msgid ""
 "Increase this value if WMI-based services are switching constantly into "
 "stale state. Default value is 3."
@@ -32334,6 +32340,14 @@ msgstr "Nur die Verfügbarkeit zeigen (d.h. OK/UP)"
 
 msgid "KByte"
 msgstr "KByte"
+
+#, fuzzy
+msgid "KPI"
+msgstr "DPI"
+
+#, fuzzy
+msgid "KPI runtime"
+msgstr "Testlaufzeit"
 
 msgid ""
 "K_g BMC key to use when authenticating with the remote host for IPMI 2.0"
@@ -34933,6 +34947,9 @@ msgstr ""
 msgid "Loss of signal errors"
 msgstr "Signalverlust-Fehler"
 
+msgid "Lost data due to truncation of long output to "
+msgstr ""
+
 msgid "Lost synchronization errors"
 msgstr "Synchronisationsverlust-Fehler"
 
@@ -36288,6 +36305,10 @@ msgstr "Maximum"
 #, python-format
 msgid "Maximum %s instances of duration greater than %s"
 msgstr "Maximale Anzahl von %s Instanzen mit einer Dauer grösser als %s"
+
+#, fuzzy
+msgid "Maximum KPI runtime"
+msgstr "Maximale Testlaufzeit"
 
 msgid "Maximum PGA allocated"
 msgstr "Maximal zugewiesener PGA"
@@ -43767,12 +43788,22 @@ msgstr "Muster (Regex)"
 msgid "Pattern analyzer"
 msgstr "Muster Analyse"
 
+#, fuzzy
+msgid "Patterns"
+msgstr "Muster"
+
 msgid "Patterns for each node"
 msgstr "Muster für jeden Knoten"
 
 msgid "Patterns for logfiles to monitor (allowing <tt>*</tt> and <tt>?</tt>)"
 msgstr ""
 "Muster für zu monitorende Logdateien (<tt>*</tt> und <tt>?</tt> erlaubt)"
+
+msgid ""
+"Patterns to identify Robot Framework keywords as Robotmk KPIs. Note that if "
+"a pattern matches multiple keywords from the same test with the same name, "
+"the service will report UNKNOWN."
+msgstr ""
 
 msgid "Paused"
 msgstr "Angehalten"
@@ -48898,6 +48929,14 @@ msgstr ""
 msgid "Robotmk Enterprise features are hidden."
 msgstr "Robotmk Enterprise Funktionen sind verborgen."
 
+#, fuzzy
+msgid "Robotmk KPI discovery"
+msgstr "Erkennung Disk-IO"
+
+#, fuzzy
+msgid "Robotmk KPI monitoring"
+msgstr "Rauch-Monitoring"
+
 msgid "Robotmk logs"
 msgstr "Robotmk-Protokolle"
 
@@ -51982,12 +52021,25 @@ msgstr ""
 "Legt die Level für die gesamten Betriebsfehler seit dem letzten Zurücksetzen "
 "des Zählers fest."
 
+#, fuzzy
 msgid ""
-"Sets the runtime threshold for the runtime of a test. Note that runtime "
-"monitoring is not a feature of Robot Framework, but of Robotmk. That means "
-"that even when a Robot suite has ended with a PASS result, the states of "
-"Robotmk test and plan services can be other than OK if runtimes were "
-"exceeded. "
+"Sets the thresholds for the runtime of a test. Note that runtime monitoring "
+"is not a feature of Robot Framework, but of Robotmk. That means that even "
+"when a Robot suite has ended with a PASS result, the states of Robotmk test "
+"and plan services can be other than OK if runtimes were exceeded."
+msgstr ""
+"Legt den Laufzeitschwellwert für die Laufzeit eines Tests fest. Beachten "
+"Sie, dass die Laufzeitüberwachung keine Funktion von Robot Framework, "
+"sondern von Robotmk ist. Das bedeutet, dass selbst wenn eine Robot-Suite mit "
+"einem PASS-Ergebnis beendet wurde, die Zustände der Robotmk-Test- und -Plan-"
+"Services anders als OK sein können, wenn Laufzeiten überschritten wurden. "
+
+#, fuzzy
+msgid ""
+"Sets thresholds for the runtime of a KPI. Note that runtime monitoring is "
+"not a feature of Robot Framework, but of Robotmk. This means that even if a "
+"keyword has PASSed, the corresponding KPI service can still report WARN or "
+"CRIT if the runtime thresholds are exceeded."
 msgstr ""
 "Legt den Laufzeitschwellwert für die Laufzeit eines Tests fest. Beachten "
 "Sie, dass die Laufzeitüberwachung keine Funktion von Robot Framework, "
@@ -65607,12 +65659,11 @@ msgstr ""
 "Status haben, wenn der Host nicht erreichbar ist. Hinweis: Die Einstellung "
 "<i>Timeout</i> funktioniert nur bei Verwendung des Checkmk Micro Core."
 
+#, fuzzy
 msgid ""
 "This ruleset will deploy the agent plug-in <tt>mk_sap</tt> for (locally) "
 "monitoring SAP R/3 instances. Note: you still need to manually deploy the "
-"SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc. Both is "
-"explained in an <a href='http://mathias-kettner.de/checkmk_sap_r3."
-"html'>article in the Checkmk documentation</a>."
+"SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc."
 msgstr ""
 "Dieser Regelsatz verteilt das Agenten-Plugin <tt>mk_sap</tt> für das "
 "(lokale) Monitoring von SAP R/3-Instanzen. Hinweis: Sie müssen dennoch "

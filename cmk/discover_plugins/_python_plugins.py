@@ -154,8 +154,10 @@ def _deduplicate(iterable: Iterable[_T]) -> Iterable[_T]:
 def _import_optionally(module_name: str, raise_errors: bool) -> ModuleType | None:
     try:
         return importlib.import_module(module_name)
-    except ModuleNotFoundError:
-        return None  # never choke upon empty/non-existing folders.
+    except ModuleNotFoundError as exc:
+        if module_name.startswith(str(exc.name)):
+            return None  # never choke upon empty/non-existing folders.
+        raise  # re-raise exeptions of wrong imports in the module we're importing
     except Exception:
         if raise_errors:
             raise

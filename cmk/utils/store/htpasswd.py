@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 from pathlib import Path
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.crypto.password import PasswordHash
 from cmk.utils.user import UserId
 

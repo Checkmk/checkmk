@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use super::query::UniAnswer;
 use super::sqls::{self, find_known_query};
 use crate::config::section::get_plain_section_names;
 use crate::config::{self, section, section::names};
@@ -11,8 +12,6 @@ use anyhow::Result;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
-
-use tiberius::Row;
 
 #[derive(Debug, PartialEq)]
 pub enum SectionKind {
@@ -159,7 +158,7 @@ impl Section {
         .map(|s| s.to_string())
     }
 
-    pub fn validate_rows(&self, rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
+    pub fn validate_rows(&self, rows: Vec<UniAnswer>) -> Result<Vec<UniAnswer>> {
         const ALLOW_TO_HAVE_EMPTY_OUTPUT: [&str; 2] = [
             section::names::MIRRORING,
             section::names::AVAILABILITY_GROUPS,
@@ -253,7 +252,9 @@ mod tests {
         assert_eq!(section.to_work_header(), "<<<mssql_instance:sep(124)>>>\n");
 
         let section = Section::new(
-            &section::SectionBuilder::new("backup").set_async().build(),
+            &section::SectionBuilder::new("backup")
+                .set_async(true)
+                .build(),
             Some(100),
         );
         assert_eq!(section.to_plain_header(), "<<<mssql_backup:sep(124)>>>\n");
@@ -261,6 +262,18 @@ mod tests {
             .to_work_header()
             .starts_with("<<<mssql_backup:cached("));
         assert!(section.to_work_header().ends_with("100):sep(124)>>>\n"));
+
+        let section = Section::new(&section::SectionBuilder::new("jobs").build(), Some(100));
+        assert!(section
+            .to_work_header()
+            .starts_with("<<<mssql_jobs:cached("));
+        let section = Section::new(
+            &section::SectionBuilder::new("jobs")
+                .set_async(false)
+                .build(),
+            Some(100),
+        );
+        assert_eq!(section.to_work_header(), "<<<mssql_jobs:sep(09)>>>\n");
     }
 
     #[test]

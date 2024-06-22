@@ -4,15 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,no-untyped-def"
+# mypy: disable-error-code="var-annotated"
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from typing import Any
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, CheckResult, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
 from cmk.base.check_legacy_includes.transforms import transform_cpu_iowait
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.lparstat_aix import Section
+
+from cmk.plugins.collection.agent_based.lparstat_aix import Section
 
 # +------------------------------------------------------------------+
 # | This file has been contributed and is copyrighted by:            |
@@ -26,7 +28,7 @@ def inventory_lparstat(section: Section) -> Iterable[tuple[None, dict]]:
         yield None, {}
 
 
-def check_lparstat(_no_item, _no_params, section: Section):
+def check_lparstat(_no_item: int, _no_params: Mapping[str, Any], section: Section) -> CheckResult:
     if section.get("update_required"):
         yield 3, "Please upgrade your AIX agent."
         return
@@ -43,7 +45,7 @@ check_info["lparstat_aix"] = LegacyCheckDefinition(
 )
 
 
-def inventory_lparstat_aix_cpu(section: Section):
+def inventory_lparstat_aix_cpu(section: Section) -> list[tuple[None, dict]]:
     if section.get("update_required"):
         return [(None, {})]
     if all(k in section.get("cpu", {}) for k in ("user", "sys", "wait", "idle")):
@@ -51,7 +53,9 @@ def inventory_lparstat_aix_cpu(section: Section):
     return []
 
 
-def check_lparstat_aix_cpu(_no_item, params, section: Section):
+def check_lparstat_aix_cpu(
+    _no_item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     if section.get("update_required"):
         yield 3, "Please upgrade your AIX agent."
         return

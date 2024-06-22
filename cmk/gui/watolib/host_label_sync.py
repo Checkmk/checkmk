@@ -16,12 +16,12 @@ from typing import Any
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
-import cmk.gui.log as log
+from cmk.gui import log
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,
@@ -124,7 +124,14 @@ def execute_host_label_sync_job() -> DiscoveredHostLabelSyncJob | None:
     job = DiscoveredHostLabelSyncJob()
 
     try:
-        job.start(job.do_sync)
+        job.start(
+            job.do_sync,
+            InitialStatusArgs(
+                title=DiscoveredHostLabelSyncJob.gui_title(),
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
     except BackgroundJobAlreadyRunning:
         logger.debug("Another synchronization job is already running: Skipping this sync")
 
@@ -134,7 +141,7 @@ def execute_host_label_sync_job() -> DiscoveredHostLabelSyncJob | None:
 class DiscoveredHostLabelSyncJob(BackgroundJob):
     """This job synchronizes the discovered host labels from remote sites to the central site
 
-    Currently they are only needed for the agent bakery, but may be used in other places in the
+    Currently they are only needed for the Agent Bakery, but may be used in other places in the
     future.
     """
 
@@ -145,14 +152,7 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
         return _("Discovered host label synchronization")
 
     def __init__(self) -> None:
-        super().__init__(
-            job_id=self.job_prefix,
-            initial_status_args=InitialStatusArgs(
-                title=self.gui_title(),
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def do_sync(self, job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Synchronization started..."))

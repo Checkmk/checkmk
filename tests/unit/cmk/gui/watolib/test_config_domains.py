@@ -7,10 +7,10 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 from pytest_mock import MockerFixture
-from typing_extensions import TypedDict
 
 from livestatus import SiteId
 
@@ -19,7 +19,7 @@ from omdlib.contexts import SiteContext  # pylint: disable=wrong-import-order
 
 from cmk.utils.store import load_text_from_file
 
-import cmk.gui.watolib.config_domains as config_domains
+from cmk.gui.watolib import config_domains
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 
 remote1_newer = (

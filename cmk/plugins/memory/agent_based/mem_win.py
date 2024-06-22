@@ -70,7 +70,7 @@ def check_mem_windows_static(
 
     for title, prefix, metric_prefix, levels in (
         ("RAM", "Mem", "mem", params["memory"]),
-        ("Commit charge", "Page", "pagefile", params["pagefile"]),
+        ("Virtual memory", "Page", "pagefile", params["pagefile"]),
     ):
         try:
             total = section["%sTotal" % prefix]

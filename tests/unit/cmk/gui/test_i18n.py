@@ -14,11 +14,11 @@ from pathlib import Path
 import flask
 import pytest
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 
 import cmk.utils.paths
 
-import cmk.gui.i18n as i18n
+from cmk.gui import i18n
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 
@@ -92,6 +92,7 @@ def test_underscore_without_localization(flask_app: flask.Flask) -> None:
         assert i18n.get_current_language() == "en"
         assert isinstance(i18n._("bla"), str)
         assert i18n._("bla") == "bla"
+        assert i18n._("") == ""
 
 
 def test_underscore_localization(flask_app: flask.Flask) -> None:
@@ -99,6 +100,7 @@ def test_underscore_localization(flask_app: flask.Flask) -> None:
         i18n.localize("de")
         assert i18n.get_current_language() == "de"
         assert i18n._("Age") == "Alter"
+        assert i18n._("") == ""
 
     with application_and_request_context():
         i18n._unlocalize()

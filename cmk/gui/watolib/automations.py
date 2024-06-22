@@ -34,8 +34,7 @@ from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
-import cmk.gui.hooks as hooks
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import hooks
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
@@ -51,6 +50,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config
+from cmk.gui.utils import escaping
 from cmk.gui.utils.compatibility import (
     EditionsIncompatible,
     is_distributed_setup_compatible_for_licensing,
@@ -675,8 +675,17 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
         )
 
     def execute(self, api_request: CheckmkAutomationRequest) -> str:
-        job = CheckmkAutomationBackgroundJob(api_request=api_request)
-        job.start(lambda job_interface: job.execute_automation(job_interface, api_request))
+        automation_id = str(uuid.uuid4())
+        job_id = f"{CheckmkAutomationBackgroundJob.job_prefix}{api_request.command}-{automation_id}"
+        job = CheckmkAutomationBackgroundJob(job_id)
+        job.start(
+            lambda job_interface: job.execute_automation(job_interface, api_request),
+            InitialStatusArgs(
+                title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
+                user=str(user.id) if user.id else None,
+            ),
+        )
+
         return job.get_job_id()
 
 
@@ -712,26 +721,6 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
     @classmethod
     def gui_title(cls) -> str:
         return _("Checkmk automation")
-
-    def __init__(
-        self, job_id: str | None = None, api_request: CheckmkAutomationRequest | None = None
-    ) -> None:
-        if job_id is not None:
-            # Loading an existing job
-            super().__init__(job_id=job_id)
-            return
-
-        assert api_request is not None
-
-        # A new job is started
-        automation_id = str(uuid.uuid4())
-        super().__init__(
-            f"{self.job_prefix}{api_request.command}-{automation_id}",
-            InitialStatusArgs(
-                title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
-                user=str(user.id) if user.id else None,
-            ),
-        )
 
     @staticmethod
     def _store_result(

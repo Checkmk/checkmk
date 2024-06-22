@@ -14,7 +14,7 @@ __all__ = ["ValidatedString"]
 class ValidatedString:
     """Base class for validated strings."""
 
-    # A plugin name must be a non-empty string consisting only
+    # A plug-in name must be a non-empty string consisting only
     # of letters A-z, digits and the underscore.
     VALID_CHARACTERS: Final = string.ascii_letters + "_" + string.digits
 

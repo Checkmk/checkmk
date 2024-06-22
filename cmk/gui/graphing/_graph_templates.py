@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import ClassVar, Literal
+from typing import assert_never, ClassVar, Literal
 
 from livestatus import SiteId
 
@@ -34,6 +34,7 @@ from ._expression import (
     Sum,
 )
 from ._graph_specification import (
+    FixedVerticalRange,
     GraphMetric,
     GraphRecipe,
     GraphSpecification,
@@ -41,13 +42,16 @@ from ._graph_specification import (
     MetricOpConstant,
     MetricOpOperator,
     MetricOpRRDSource,
+    MinimalVerticalRange,
 )
 from ._type_defs import GraphConsoldiationFunction, TranslatedMetric
 from ._utils import (
+    FixedGraphTemplateRange,
     get_graph_data_from_livestatus,
     get_graph_templates,
     GraphTemplate,
     MetricDefinition,
+    MinimalGraphTemplateRange,
     ScalarDefinition,
     translated_metrics_from_row,
 )
@@ -59,7 +63,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         Callable[[GraphTemplate, TemplateGraphSpecification], GraphTemplate | None]
     ] = lambda graph_template, _spec: graph_template
 
-    graph_type: Literal["template"] = "template"
     site: SiteId | None
     host_name: HostName
     service_description: ServiceName
@@ -68,8 +71,8 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     destination: str | None = None
 
     @staticmethod
-    def name() -> str:
-        return "template_graph_specification"
+    def graph_type_name() -> Literal["template"]:
+        return "template"
 
     def recipes(self) -> list[GraphRecipe]:
         row = get_graph_data_from_livestatus(self.site, self.host_name, self.service_description)
@@ -238,7 +241,10 @@ def create_graph_recipe_from_template(
         title=title,
         metrics=metrics,
         unit=units.pop(),
-        explicit_vertical_range=graph_template.compute_range(translated_metrics),
+        explicit_vertical_range=evaluate_graph_template_range(
+            graph_template.range,
+            translated_metrics,
+        ),
         horizontal_rules=_horizontal_rules_from_thresholds(
             graph_template.scalars, translated_metrics
         ),  # e.g. lines for WARN and CRIT
@@ -246,6 +252,36 @@ def create_graph_recipe_from_template(
         consolidation_function=graph_template.consolidation_function or "max",
         specification=specification,
     )
+
+
+def evaluate_graph_template_range(
+    graph_template_range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> FixedVerticalRange | MinimalVerticalRange | None:
+    match graph_template_range:
+        case FixedGraphTemplateRange(min=min_, max=max_):
+            return FixedVerticalRange(
+                min=_evaluate_graph_template_range_boundary(min_, translated_metrics),
+                max=_evaluate_graph_template_range_boundary(max_, translated_metrics),
+            )
+        case MinimalGraphTemplateRange(min=min_, max=max_):
+            return MinimalVerticalRange(
+                min=_evaluate_graph_template_range_boundary(min_, translated_metrics),
+                max=_evaluate_graph_template_range_boundary(max_, translated_metrics),
+            )
+        case None:
+            return None
+        case _:
+            assert_never(graph_template_range)
+
+
+def _evaluate_graph_template_range_boundary(
+    boundary: MetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
+) -> float | None:
+    try:
+        return boundary.evaluate(translated_metrics).value
+    except Exception:
+        return None
 
 
 def _to_metric_operation(

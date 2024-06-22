@@ -7,7 +7,7 @@ New in this version
 -------------------
 
 This section lists the most important changes you have to be
-aware of when migrating your plugin to this API version.
+aware of when migrating your plug-in to this API version.
 
 Note that changes are expressed in relation to the API version 1.
 
@@ -40,7 +40,7 @@ To realize this, we introduced four new classes:
 
 * :class:`AgentSection` replacing :func:`register.agent_section`
 * :class:`SimpleSNMPSection` and :class:`SNMPSection` replacing :func:`register.snmp_section`
-* :class:`Checkplugin` replacing :func:`register.check_plugin`
+* :class:`CheckPlugin` replacing :func:`register.check_plugin`
 * :class:`InventoryPlugin` replacing :func:`register.inventory_plugin`
 
 The arguments of these have barely changed (see next paragraph), resulting
@@ -51,7 +51,7 @@ for instance).
 Changed arguments and validation for Agent and SNMP sections
 ************************************************************
 
-We slightly adopted the arguments to the above mentioned `Section` classes.
+We slightly adopted the arguments to the above-mentioned `Section` classes.
 We now favor type annotations over runtime validation.
 To get slightly easier type annotations, `parse_function` is no longer optional.
 

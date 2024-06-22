@@ -151,21 +151,21 @@ class TestCollector:
         assert not collector.plugins
 
     def test_unknown_name_ignored(self) -> None:
-        """Do not load a plugin with name prefix missmatch"""
+        """Do not load a plug-in with name prefix missmatch"""
         collector = Collector({MyTestPlugin: "your_"}, raise_errors=False)
         collector.add_from_module("my_module", self._importer)
         assert not collector.errors
         assert not collector.plugins
 
     def test_wrong_type_raise(self) -> None:
-        """Raise if a plugin has the wrong type"""
+        """Raise if a plug-in has the wrong type"""
         collector = Collector({MyTestPlugin: "my_"}, raise_errors=True)
 
         with pytest.raises(TypeError):
             collector.add_from_module("my_other_type", self._importer)
 
     def test_wrong_type_recorded(self) -> None:
-        """Record the error if a plugin has the wrong type"""
+        """Record the error if a plug-in has the wrong type"""
         collector = Collector({MyTestPlugin: "my_"}, raise_errors=False)
         collector.add_from_module("my_other_type", self._importer)
         assert len(collector.errors) == 1

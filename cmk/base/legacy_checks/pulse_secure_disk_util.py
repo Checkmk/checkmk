@@ -8,8 +8,8 @@ from collections.abc import Iterable, Mapping
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-import cmk.plugins.lib.pulse_secure as pulse_secure
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.plugins.lib import pulse_secure
 
 Section = Mapping[str, int]
 

@@ -67,7 +67,7 @@ def get_oneof_default_values(
 
 
 @match_on(valuespec.Tuple)
-def get_tuple_default_values(vs_instance: valuespec.Tuple) -> typing.Dict[str, typing.Any]:
+def get_tuple_default_values(vs_instance: valuespec.Tuple) -> dict[str, typing.Any]:
     return {
         f"tuple_entry_{str(id_)}": get_default_value(vs)
         for id_, vs in enumerate(vs_instance._elements)
@@ -88,7 +88,7 @@ def get_alternative_default_values(
 
 
 @match_on(valuespec.Dictionary)
-def get_dict_default_values(vs_instance: valuespec.Dictionary) -> typing.Dict[str, typing.Any]:
+def get_dict_default_values(vs_instance: valuespec.Dictionary) -> dict[str, typing.Any]:
     default_dict = {}
     for name, vs in maybe_lazy(vs_instance._elements):
         default_value = get_default_value(vs)

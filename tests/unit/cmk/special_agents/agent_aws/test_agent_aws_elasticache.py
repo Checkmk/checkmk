@@ -8,6 +8,7 @@
 # pylint: disable=redefined-outer-name
 
 import datetime
+from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
 from typing import Final, Protocol
 
@@ -358,7 +359,7 @@ def get_elasticache_sections() -> ElasticacheSections:
     ) -> ElasticacheSectionsOut:
         region = "region"
         config = AWSConfig(
-            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
         )
         config.add_single_service_config("elasticache_names", names)
         config.add_service_tags("elasticache_tags", tags)
@@ -426,7 +427,7 @@ def test_agent_aws_elasticache_limits(
 
 def test_agent_aws_elasticache_limits_without_quota_client() -> None:
     region = "region"
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
     fake_elasticache_client = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
     # TODO: FakeElastiCacheClient shoud actually subclass ElastiCacheClient.
     elasticache_limits = ElastiCacheLimits(fake_elasticache_client, region, config)  # type: ignore[arg-type]

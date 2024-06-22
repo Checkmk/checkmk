@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # List of modules for main menu and Setup snapin. These modules are
-# defined in a plugin because they contain cmk.gui.i18n strings.
+# defined in a plug-in because they contain cmk.gui.i18n strings.
 # fields: mode, title, icon, permission, help
 
 import time
@@ -68,9 +68,9 @@ def register(main_module_registry: MainModuleRegistry) -> None:
     main_module_registry.register(MainModuleVMCloudContainer)
     main_module_registry.register(MainModuleOtherIntegrations)
 
-    # Register the built-in agent download page on the top level of Setup only when the agent bakery
+    # Register the built-in agent download page on the top level of Setup only when the Agent Bakery
     # does not exist (e.g. when using CRE)
-    if cmk_version.edition() in (cmk_version.Edition.CRE, cmk_version.Edition.CSE):
+    if cmk_version.edition() in (cmk_version.Edition.CRE,):
         main_module_registry.register(MainModuleAgentsWindows)
         main_module_registry.register(MainModuleAgentsLinux)
 
@@ -373,7 +373,7 @@ class MainModuleNetworkingServices(ABCMainModule):
     @property
     def description(self) -> str:
         return _(
-            "Configure monitoring of networking services using classical nagios plugins"
+            "Configure monitoring of networking services using classical nagios plug-ins"
             " (so called active checks)"
         )
 
@@ -410,7 +410,7 @@ class MainModuleOtherServices(ABCMainModule):
     @property
     def description(self) -> str:
         return _(
-            "Integrate [active_checks#mrpe|custom nagios plugins] into the "
+            "Integrate [active_checks#mrpe|custom nagios plug-ins] into the "
             "monitoring as active checks."
         )
 
@@ -434,7 +434,7 @@ class MainModuleCheckPlugins(ABCMainModule):
 
     @property
     def title(self) -> str:
-        return _("Catalog of check plugins")
+        return _("Catalog of check plug-ins")
 
     @property
     def icon(self) -> Icon:
@@ -1097,7 +1097,7 @@ class MainModuleAgentsWindows(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Downloads Checkmk agent and plugins for Windows")
+        return _("Downloads Checkmk agent and plug-ins for Windows")
 
     @property
     def sort_index(self) -> int:
@@ -1131,7 +1131,7 @@ class MainModuleAgentsLinux(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Downloads Checkmk agent and plugins for Linux")
+        return _("Downloads Checkmk agent and plug-ins for Linux")
 
     @property
     def sort_index(self) -> int:

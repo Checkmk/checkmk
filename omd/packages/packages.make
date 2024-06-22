@@ -16,11 +16,59 @@ TAR_GZ := $(shell which tar) xzf
 TEST := $(shell which test)
 TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
-BAZEL_BUILD := "../scripts/run-bazel-build.sh"
+BAZEL_BUILD := $(if $(CI),../scripts/run-bazel-build.sh,bazel build)
 
 # Bazel paths
 BAZEL_BIN := "$(REPO_PATH)/bazel-bin"
 BAZEL_BIN_EXT := "$(BAZEL_BIN)/external"
+
+ ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4),)
+	 OPTIONAL_BUILD_ARGS := BAZEL_EXTRA_ARGS="--define git-ssl-no-verify=true"
+ endif
+
+# Intermediate Install Target
+# intermediate_install used to be necessary to link external dependecies with each other.
+# This is now done inside of Bazel
+# This target can be removed once `dest` is created inside of Bazel
+INTERMEDIATE_INSTALL_BAZEL := '$(BUILD_HELPER_DIR)/intermediate_install_bazel'
+
+# Human make target
+.PHONY: intermediate_install_bazel
+intermediate_install_bazel: $(INTERMEDIATE_INSTALL_BAZEL)
+
+$(INTERMEDIATE_INSTALL_BAZEL):
+	$(OPTIONAL_BUILD_ARGS) $(BAZEL_BUILD) //omd:intermediate_install
+	tar -C $(BUILD_BASE_DIR) -xf $(BAZEL_BIN)/omd/intermediate_install.tar.gz
+
+	#TODO: The following code should be executed by Bazel instead of make
+	# Fix sysconfigdata
+	$(SED) -i "s|/replace-me|$(PACKAGE_PYTHON_DESTDIR)|g" $(PACKAGE_PYTHON_SYSCONFIGDATA)
+	# set RPATH for all ELF binaries we find
+	find "$(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)" -maxdepth 2 -type f -exec file {} \; \
+	    | grep ELF | cut -d ':' -f1 \
+	    | xargs patchelf --set-rpath "\$$ORIGIN/../lib"
+	find "$(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/lib-dynload" -name "*.so" -exec file {} \; \
+	    | grep ELF | cut -d ':' -f1 \
+	    | xargs patchelf --set-rpath "\$$ORIGIN/../.."
+	chmod +x $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)/bin/pip*
+
+	# This will replace forced absolute paths determined at build time by
+	# Bazel/foreign_cc. Note that this step depends on $OMD_ROOT which is different
+	# each time
+	# Note: Concurrent builds with dependency to OpenSSL seem to trigger the
+	#openssl-install-intermediate target simultaneously enough to run into
+	#string-replacements which have been done before. So we don't add `--strict`
+	# for now
+	../scripts/run-pipenv run cmk-dev binreplace \
+	    --regular-expression \
+	    --inplace \
+	    "/home/.*?/openssl.build_tmpdir/openssl/" \
+	    "$(OMD_ROOT)/" \
+	    "$(OPENSSL_INSTALL_DIR)/lib/libcrypto.so.3"
+
+	mkdir -p $(BUILD_HELPER_DIR)/
+	touch $@
+
 
 HUMAN_INSTALL_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -install,$(package)))
 HUMAN_BUILD_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -build,$(package)))
@@ -55,6 +103,7 @@ $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 	    fi ; \
 	    if [ -d "$$PACKAGE_PATH/skel" ]; then \
 		tar cf - -C "$$PACKAGE_PATH/skel" \
+		    --exclude="BUILD" \
 		    --exclude="*~" \
 		    --exclude=".gitignore" \
 		    --exclude=".f12" \

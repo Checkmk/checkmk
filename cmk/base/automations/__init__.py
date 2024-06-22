@@ -6,13 +6,13 @@
 import abc
 import os
 import signal
-from contextlib import redirect_stdout
+import sys
+from contextlib import redirect_stdout, suppress
 from types import FrameType
 from typing import Any, NoReturn
 
 import cmk.utils.debug
-import cmk.utils.log as log
-import cmk.utils.paths as paths
+from cmk.utils import log, paths
 from cmk.utils import version as cmk_version
 from cmk.utils.exceptions import MKException, MKTimeout
 from cmk.utils.log import console
@@ -20,10 +20,7 @@ from cmk.utils.plugin_loader import import_plugins
 
 from cmk.automations.results import ABCAutomationResult
 
-import cmk.base.check_api as check_api
-import cmk.base.config as config
-import cmk.base.obsolete_output as out
-import cmk.base.profiling as profiling
+from cmk.base import check_api, config, profiling
 
 
 # TODO: Inherit from MKGeneralException
@@ -65,7 +62,7 @@ class Automations:
             result = automation.execute(args)
 
         except (MKAutomationError, MKTimeout) as e:
-            console.error("%s\n" % e)
+            console.error(f"{e}", file=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
             return 1
@@ -73,14 +70,18 @@ class Automations:
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            console.error("%s\n" % e)
+            console.error(f"{e}", file=sys.stderr)
             return 2
 
         finally:
             profiling.output_profile()
 
-        out.output(result.serialize(cmk_version.Version.from_str(cmk_version.__version__)))
-        out.output("\n")
+        with suppress(IOError):
+            print(
+                result.serialize(cmk_version.Version.from_str(cmk_version.__version__)),
+                flush=True,
+                file=sys.stdout,
+            )
 
         return 0
 

@@ -13,8 +13,8 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.register import section_plugins
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -181,7 +181,7 @@ def test_create_snmp_section_plugin_single_tree() -> None:
     )
 
     assert plugin.trees == [single_tree]
-    # the plugin only specified a single tree (not a list),
+    # the plug-in only specified a single tree (not a list),
     # so a wrapper should unpack the argument:
     assert plugin.parse_function([[["A", "B"]]]) == [["A", "B"]]
 

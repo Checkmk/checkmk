@@ -15,17 +15,12 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 
 """
 
-import socket
-import time
-from collections.abc import Callable
-from typing import Any, Generator, Literal
-
-import cmk.utils.debug as _debug
+from collections.abc import Callable, Generator
+from typing import Any
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
 # check context.
-from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 
 # pylint: disable=unused-import
@@ -37,9 +32,8 @@ from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 from cmk.checkengine.checkresults import state_markers as state_markers
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
-import cmk.base.config as _config
-from cmk.base.plugin_contexts import host_name as host_name  # pylint: disable=unused-import
-from cmk.base.plugin_contexts import service_description  # pylint: disable=unused-import
+from cmk.base.config import CheckContext as _CheckContext
+from cmk.base.config import get_http_proxy as _get_http_proxy
 
 from cmk.agent_based import v1 as _v1
 
@@ -63,7 +57,7 @@ ServiceCheckResult = tuple[ServiceState, ServiceDetails, list[_MetricTuple]]
 CheckResult = Generator[tuple[int, str] | tuple[int, str, list[_MetricTuple]], None, None]
 
 
-def get_check_api_context() -> _config.CheckContext:
+def get_check_api_context() -> _CheckContext:
     """This is called from cmk.base code to get the Check API things. Don't
     use this from checks."""
     return {k: v for k, v in globals().items() if not k.startswith("_")}
@@ -106,40 +100,6 @@ def savefloat(f: Any) -> float:
         return float(f)
     except (TypeError, ValueError):
         return 0.0
-
-
-# These functions were used in some specific checks until 1.6. Don't add it to
-# the future check API. It's kept here for compatibility reasons for now.
-def is_ipv6_primary(hostname: str) -> bool:
-    return _config.get_config_cache().default_address_family(HostName(hostname)) is socket.AF_INET6
-
-
-def get_age_human_readable(seconds: float) -> str:
-    return _v1.render.timespan(seconds) if seconds >= 0 else f"-{_v1.render.timespan(-seconds)}"
-
-
-def get_bytes_human_readable(
-    bytes_: int,
-    base: Literal[1000, 1024] = 1024,
-    precision: object = None,  # for legacy compatibility
-    unit: str = "B",
-) -> str:
-    if not (
-        renderer := {
-            1000: _v1.render.disksize,
-            1024: _v1.render.bytes,
-        }.get(int(base))
-    ):
-        raise ValueError(f"Unsupported value for 'base' in get_bytes_human_readable: {base=}")
-    return renderer(bytes_)[:-1] + unit
-
-
-def get_timestamp_human_readable(timestamp: float) -> str:
-    """Format a time stamp for humans in "%Y-%m-%d %H:%M:%S" format.
-    In case None is given or timestamp is 0, it returns "never"."""
-    if timestamp:
-        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(timestamp)))
-    return "never"
 
 
 def _normalize_levels(levels: Levels) -> Levels:
@@ -217,7 +177,7 @@ def check_levels(  # pylint: disable=too-many-branches
              Dict containing "upper" or "levels_upper_min" as key -> upper level checking.
              Dict containing "lower" and "upper"/"levels_upper_min" as key ->
              lower and upper level checking.
-    unit:    unit to be displayed in the plugin output.
+    unit:    unit to be displayed in the plug-in output.
              Be aware: if a (builtin) human_readable_func is stated which already
              provides a unit info, then this unit is not necessary. An additional
              unit info is useful if a rate is calculated, eg.
@@ -246,12 +206,12 @@ def check_levels(  # pylint: disable=too-many-branches
     if human_readable_func is None:
 
         def render_func(x: float) -> str:
-            return "%.2f%s" % (x, unit_info)
+            return f"{x:.2f}{unit_info}"
 
     else:
 
         def render_func(x: float) -> str:
-            return "%s%s" % (human_readable_func(x), unit_info)
+            return f"{human_readable_func(x)}{unit_info}"
 
     if params and isinstance(params, dict):
         if not dsname:
@@ -306,7 +266,7 @@ def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
 
     Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
     """
-    return _config.get_http_proxy(http_proxy)
+    return _get_http_proxy(http_proxy)
 
 
 # NOTE: Currently this is not really needed, it is just here to keep any start

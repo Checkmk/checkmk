@@ -6,9 +6,7 @@
 import datetime as dt
 import time
 from collections.abc import Mapping
-from typing import Any, Literal
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, TypedDict
 
 from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
@@ -414,9 +412,9 @@ class ContactOptions(TypedDict, total=False):
     fallback_contact: bool
 
 
-def _contact_options_to_internal_format(  # type: ignore[no-untyped-def]
+def _contact_options_to_internal_format(
     contact_options: ContactOptions, current_email: str | None = None
-):
+) -> dict[str, str | bool]:
     updated_details: dict[str, str | bool] = {}
     if not contact_options:
         return updated_details
@@ -576,7 +574,9 @@ class IdleDetails(TypedDict, total=False):
     duration: int
 
 
-def _update_idle_options(internal_attrs, idle_details: IdleDetails):  # type: ignore[no-untyped-def]
+def _update_idle_options(
+    internal_attrs: dict[str, Any], idle_details: IdleDetails
+) -> dict[str, Any]:
     if not idle_details:
         return internal_attrs
 
@@ -680,9 +680,9 @@ class NotificationDetails(TypedDict, total=False):
     disable: bool
 
 
-def _update_notification_options(  # type: ignore[no-untyped-def]
-    internal_attrs, notification_options: NotificationDetails
-):
+def _update_notification_options(
+    internal_attrs: dict[str, Any], notification_options: NotificationDetails
+) -> dict[str, Any]:
     internal_attrs["disable_notifications"] = _notification_options_to_internal_format(
         internal_attrs.get("disable_notifications", {}), notification_options
     )

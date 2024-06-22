@@ -10,8 +10,7 @@ import sys
 from pathlib import Path
 
 import cmk.utils.paths
-import cmk.utils.store as store
-import cmk.utils.tty as tty
+from cmk.utils import store, tty
 from cmk.utils.exceptions import MKException
 from cmk.utils.log import VERBOSE
 

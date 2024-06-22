@@ -11,7 +11,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    HTTPProxy,
     replace_macros,
 )
 
@@ -33,7 +32,8 @@ def get_mkevents_description(params: MKEventsParams, macros: Mapping[str, str]) 
 
 
 def generate_mkevents_command(
-    params: MKEventsParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
+    params: MKEventsParams,
+    host_config: HostConfig,
 ) -> Iterator[ActiveCheckCommand]:
     args = []
     if params.remote is not None:

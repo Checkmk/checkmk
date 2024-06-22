@@ -25,7 +25,7 @@ config_setting(
         "@python",
     ],
     outs = [
-        "compiled_%s" % module,
+        "compiled_%s.tar" % module,
     ],
     cmd = select({
         "//conditions:default": build_cmd.format(
@@ -62,7 +62,7 @@ config_setting(
         "@python",
     ],
     outs = [
-        "compiled_%s" % module,
+        "compiled_%s.tar" % module,
     ],
     cmd = select({
         "//conditions:default": build_cmd.format(
@@ -95,7 +95,7 @@ config_setting(
 ]]
 
 genrule(
-    name = "python3-modules-modify",
+    name = "python3-modules",
     srcs = [
         "%s_compile" % module
         for module in all_requirements + [
@@ -111,46 +111,45 @@ genrule(
         ]
     ],
     outs = [
-        "python3-modules",
+        "python3-modules.tar",
     ],
     cmd = """
-        mkdir -p $(RULEDIR)/python3-modules
+        mkdir -p python3-modules
         for MODULE in $(SRCS); do
-            if ls $$MODULE/* >/dev/null 2>&1; then
-                rsync -a $$MODULE/* $(RULEDIR)/python3-modules/
-            fi
+            tar --strip-components 1 -xf $$MODULE -C python3-modules/
         done
 
         # For some highly obscure unknown reason some files end up world-writable. Fix that!
-        chmod -R o-w $(RULEDIR)/python3-modules/lib/python{pyMajMin}/site-packages
+        chmod -R o-w python3-modules/lib/python{pyMajMin}/site-packages
 
         # Cleanup some unwanted files (example scripts)
-        find $(RULEDIR)/python3-modules/bin -name "*.py" ! -name snmpsimd.py -exec rm -f {{}} \\;
+        find python3-modules/bin -name "*.py" ! -name snmpsimd.py -exec rm -f {{}} \\;
 
         # These files break the integration tests on the CI server. Don't know exactly
         # why this happens only there, but should be a working fix.
-        rm -r -f $(RULEDIR)/python3-modules/snmpsim
+        rm -r -f python3-modules/snmpsim
 
         # Cleanup unneeded test files of numpy
-        rm -r -f $(RULEDIR)/python3-modules/lib/python{pyMajMin}/site-packages/numpy/*/tests
+        rm -r -f python3-modules/lib/python{pyMajMin}/site-packages/numpy/*/tests
 
         # Fix python interpreter for kept scripts
-        sed -E -i '1s|^#!.*/python3?$$|#!/usr/bin/env python3|' $(RULEDIR)/python3-modules/bin/[!_]*
+        sed -E -i '1s|^#!.*/python3?$$|#!/usr/bin/env python3|' python3-modules/bin/[!_]*
 
         # pip is using pip._vendor.distlib.scripts.ScriptMaker._build_shebang() to
         # build the shebang of the scripts installed to bin. When executed via our CI
         # containers, the shebang exceeds the max_shebang_length of 127 bytes. For this
         # case, it adds a #!/bin/sh wrapper in front of the python code o_O to make it
         # fit into the shebang. Let's also cleanup this case.
-        sed -i -z "s|^#\\!/bin/sh\\n.*exec.*python3[^\\n]*\\n[^\\n]*|#\\!/usr/bin/env python3|" $(RULEDIR)/python3-modules/bin/[!_]*
+        sed -i -z "s|^#\\!/bin/sh\\n.*exec.*python3[^\\n]*\\n[^\\n]*|#\\!/usr/bin/env python3|" python3-modules/bin/[!_]*
 
         # Fix rpath for all .so libs
-        cd $(RULEDIR)/python3-modules/lib/
+        cd python3-modules/lib/
         for F in $$(find -name "*.so");
             do patchelf --set-rpath \\
             $$(echo $$F | sed 's|[^/]*/|../|g' | sed 's|\\.\\./|\\$$ORIGIN/|' | sed 's|[^/]*$$||') $$F ;
         done
         cd -
+	tar cf $@ python3-modules
     """.format(pyMajMin = PYTHON_MAJOR_DOT_MINOR),
     visibility = ["//visibility:public"],
 )

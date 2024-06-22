@@ -5,17 +5,15 @@
 
 import time
 from collections.abc import Sequence
-from typing import Any, Literal, Protocol
+from typing import Literal, Protocol
 
 import livestatus
 
 import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
-from cmk.utils.render import SecondsRenderer
 from cmk.utils.servicename import ServiceName
 
-import cmk.gui.sites as sites
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.forms import open_submit_button_container_div
@@ -32,6 +30,7 @@ from cmk.gui.permissions import (
     PermissionSectionRegistry,
 )
 from cmk.gui.type_defs import Choices, Row, Rows
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.time import timezone_utc_offset_str
@@ -39,6 +38,8 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
 from cmk.gui.view_utils import render_cre_upgrade_button
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
+
+from cmk.bi.trees import CompiledAggrLeaf, CompiledAggrRule, CompiledAggrTree
 
 from .base import Command, CommandActionResult, CommandConfirmDialogOptions, CommandSpec
 from .group import CommandGroup, CommandGroupRegistry
@@ -153,7 +154,7 @@ class CommandReschedule(Command):
         return PermissionActionReschedule
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     def confirm_dialog_additions(
@@ -162,15 +163,19 @@ class CommandReschedule(Command):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML("<br><br>") + "Spreading: %s minutes" % request.var("_resched_spread")
+        return (
+            HTMLWriter.render_br()
+            + HTMLWriter.render_br()
+            + "Spreading: %s minutes" % request.var("_resched_spread")
+        )
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
-        html.write_text(_("Spread over") + " ")
+        html.write_text_permissive(_("Spread over") + " ")
         html.text_input(
             "_resched_spread", default_value="5", size=3, cssclass="number", required=True
         )
-        html.write_text(" " + _("minutes"))
+        html.write_text_permissive(" " + _("minutes"))
         html.help(
             _(
                 "Spreading distributes checks evenly over the specified period. "
@@ -259,7 +264,7 @@ class CommandNotifications(Command):
         return PermissionActionNotifications
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     def confirm_dialog_additions(
@@ -268,8 +273,9 @@ class CommandNotifications(Command):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML(
-            "<br><br>"
+        return (
+            HTMLWriter.render_br()
+            + HTMLWriter.render_br()
             + (
                 _("Notifications will be sent according to the notification rules")
                 if request.var("_enable_notifications")
@@ -282,7 +288,7 @@ class CommandNotifications(Command):
             return "question"
         return "warning"
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_enable_notifications", _("Enable"), cssclass="border_hot")
         html.button("_disable_notifications", _("Disable"), cssclass="border_hot")
@@ -364,13 +370,13 @@ class CommandToggleActiveChecks(Command):
         return PermissionActionEnableChecks
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
         return "warning"
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_enable_checks", _("Enable"), cssclass="border_hot")
         html.button("_disable_checks", _("Disable"), cssclass="border_hot")
@@ -444,13 +450,13 @@ class CommandTogglePassiveChecks(Command):
         return PermissionActionEnableChecks
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
         return "warning"
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_enable_passive_checks", _("Enable"), cssclass="border_hot")
         html.button("_disable_passive_checks", _("Disable"), cssclass="border_hot")
@@ -527,10 +533,10 @@ class CommandClearModifiedAttributes(Command):
         return PermissionActionClearModifiedAttributes
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_clear_modattr", _("Reset attributes"), cssclass="hot")
         html.button("_cancel", _("Cancel"))
@@ -542,8 +548,9 @@ class CommandClearModifiedAttributes(Command):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML(
-            "<br><br>"
+        return (
+            HTMLWriter.render_br()
+            + HTMLWriter.render_br()
             + _("Resets the commands '%s', '%s' and '%s' to the default state")
             % (
                 CommandToggleActiveChecks().title,
@@ -632,7 +639,7 @@ class CommandFakeCheckResult(Command):
         return PermissionActionFakeChecks
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     @property
@@ -652,7 +659,7 @@ class CommandFakeCheckResult(Command):
     def _render_test_notification_tip(self):
         html.open_div(class_="info")
         html.icon("toggle_details")
-        html.write_text(
+        html.write_text_permissive(
             " &nbsp; "
             + _(
                 "If you are looking for a way to test your notification settings, try '%s' in Setup > Notifications"
@@ -667,7 +674,7 @@ class CommandFakeCheckResult(Command):
 
         return [(0, _("OK")), (1, _("Warning")), (2, _("Critical")), (3, _("Unknown"))]
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         self._render_test_notification_tip()
 
         html.open_div(class_="group")
@@ -675,7 +682,7 @@ class CommandFakeCheckResult(Command):
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Result") + " &nbsp; ")
+        html.write_text_permissive(_("Result") + " &nbsp; ")
         html.close_td()
         html.open_td()
         html.open_span(class_="inline_radio_group")
@@ -688,7 +695,7 @@ class CommandFakeCheckResult(Command):
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Plugin output") + " &nbsp; ")
+        html.write_text_permissive(_("Plug-in output") + " &nbsp; ")
         html.close_td()
         html.open_td()
         html.text_input("_fake_output", "", size=60, placeholder=_("What is the purpose?"))
@@ -697,7 +704,7 @@ class CommandFakeCheckResult(Command):
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Performance data") + " &nbsp; ")
+        html.write_text_permissive(_("Performance data") + " &nbsp; ")
         html.close_td()
         html.open_td()
         html.text_input(
@@ -805,14 +812,14 @@ class CommandCustomNotification(Command):
         return PermissionActionCustomNotification
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     @property
     def is_show_more(self) -> bool:
         return True
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_cusnot_comment",
@@ -951,7 +958,7 @@ class CommandAcknowledge(Command):
         return CommandGroupAcknowledge
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service", "aggr"]
 
     def confirm_dialog_additions(
@@ -993,7 +1000,7 @@ class CommandAcknowledge(Command):
             class_="confirm_block",
         )
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         submit_id = "_acknowledge"
         html.open_div(class_="group")
         html.text_input(
@@ -1017,9 +1024,9 @@ class CommandAcknowledge(Command):
         html.heading(_("Options"))
         if user.may("wato.global"):
             html.open_span()
-            html.write_text("(")
+            html.write_text_permissive("(")
             html.a(_("Edit defaults"), self._action_defaults_url())
-            html.write_text(")")
+            html.write_text_permissive(")")
             html.close_span()
 
         date, time_ = self._expiration_date_and_time(
@@ -1186,13 +1193,13 @@ class CommandAcknowledge(Command):
 
     def _vs_date(self) -> DatePicker:
         return DatePicker(
-            title=_("Acknowledge problems datepicker"),
+            title=_("Acknowledge problems date picker"),
             onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
         )
 
     def _vs_time(self) -> TimePicker:
         return TimePicker(
-            title=_("Acknowledge problems timepicker"),
+            title=_("Acknowledge problems time picker"),
             onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
         )
 
@@ -1227,7 +1234,7 @@ class CommandRemoveAcknowledgments(Command):
         return CommandGroupAcknowledge
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service", "aggr"]
 
     @property
@@ -1243,7 +1250,7 @@ class CommandRemoveAcknowledgments(Command):
         return (
             html.render_div(_("Acknowledgments: ") + str(self._number_of_acknowledgments))
             if self._number_of_acknowledgments
-            else HTML()
+            else HTML.empty()
         )
 
     def _action(
@@ -1332,10 +1339,10 @@ class CommandAddComment(Command):
         return PermissionActionAddComment
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_comment",
@@ -1494,7 +1501,7 @@ class CommandScheduleDowntimes(Command):
         return CommandGroupDowntimes
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service", "aggr"]
 
     def user_confirm_options(
@@ -1511,7 +1518,7 @@ class CommandScheduleDowntimes(Command):
             ]
         return super().user_confirm_options(len_rows, cmdtag)
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         if self._adhoc_downtime_configured():
             self._render_adhoc_comment(what)
         self._render_comment()
@@ -1519,13 +1526,13 @@ class CommandScheduleDowntimes(Command):
         self._render_advanced_options(what)
         self._render_confirm_buttons(what)
 
-    def _render_adhoc_comment(self, what) -> None:  # type: ignore[no-untyped-def]
+    def _render_adhoc_comment(self, what: str) -> None:
         adhoc_duration = active_config.adhoc_downtime.get("duration")
         adhoc_comment = active_config.adhoc_downtime.get("comment", "")
         html.open_div(class_="group")
         html.button("_down_adhoc", _("Ad hoc for %d minutes") % adhoc_duration)
         html.nbsp()
-        html.write_text(_("Comment") + ": " + adhoc_comment)
+        html.write_text_permissive(_("Comment") + ": " + adhoc_comment)
         html.hr()
         html.close_div()
 
@@ -1564,7 +1571,7 @@ class CommandScheduleDowntimes(Command):
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Start"))
+        html.write_text_permissive(_("Start"))
         html.close_td()
         html.open_td()
         self._vs_date().render_input("_down_from_date", time.strftime("%Y-%m-%d"))
@@ -1581,7 +1588,7 @@ class CommandScheduleDowntimes(Command):
         # End section
         html.open_tr()
         html.open_td()
-        html.write_text(_("End"))
+        html.write_text_permissive(_("End"))
         html.close_td()
         html.open_td()
         self._vs_date().render_input("_down_to_date", time.strftime("%Y-%m-%d"))
@@ -1598,7 +1605,7 @@ class CommandScheduleDowntimes(Command):
         # Repeat section
         html.open_tr()
         html.open_td()
-        html.write_text(_("Repeat"))
+        html.write_text_permissive(_("Repeat"))
         html.close_td()
         html.open_td()
         self.recurring_downtimes.show_input_elements(default="0")
@@ -1609,14 +1616,14 @@ class CommandScheduleDowntimes(Command):
         html.close_div()
 
     def _get_duration_options(self) -> HTML:
-        duration_options = HTML("")
+        duration_options = HTML.empty()
         for nr, time_range in enumerate(active_config.user_downtime_timeranges):
             css_class = ["button", "duration"]
             time_range_end = time_range["end"]
             if nr == 0:
                 end_time = time_interval_end(time_range_end, self._current_local_time())
                 html.final_javascript(
-                    f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d",time.localtime(end_time))}");'
+                    f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d", time.localtime(end_time))}");'
                 )
                 html.final_javascript(
                     f'cmk.utils.update_time("time__down_to_time","{time.strftime("%H:%M", time.localtime(end_time))}");'
@@ -1643,13 +1650,13 @@ class CommandScheduleDowntimes(Command):
 
     def _vs_date(self) -> DatePicker:
         return DatePicker(
-            title=_("Downtime datepicker"),
+            title=_("Downtime date picker"),
             onchange="cmk.page_menu.update_down_duration_button();",
         )
 
     def _vs_time(self) -> TimePicker:
         return TimePicker(
-            title=_("Downtime timepicker"),
+            title=_("Downtime time picker"),
             onchange="cmk.page_menu.update_down_duration_button();",
         )
 
@@ -1663,13 +1670,13 @@ class CommandScheduleDowntimes(Command):
 
         return (
             f'cmk.page_menu.update_down_duration_button("{id_}");'
-            f'cmk.utils.update_time("date__down_from_date","{time.strftime("%Y-%m-%d",time.localtime(start_time))}");'
-            f'cmk.utils.update_time("time__down_from_time","{time.strftime("%H:%M",time.localtime(start_time))}");'
-            f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d",time.localtime(end_time))}");'
+            f'cmk.utils.update_time("date__down_from_date","{time.strftime("%Y-%m-%d", time.localtime(start_time))}");'
+            f'cmk.utils.update_time("time__down_from_time","{time.strftime("%H:%M", time.localtime(start_time))}");'
+            f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d", time.localtime(end_time))}");'
             f'cmk.utils.update_time("time__down_to_time","{time.strftime("%H:%M", time.localtime(end_time))}");'
         )
 
-    def _render_advanced_options(self, what) -> None:  # type: ignore[no-untyped-def]
+    def _render_advanced_options(self, what: str) -> None:
         html.open_div(class_="group")
         html.open_div(class_="down_advanced")
         with foldable_container(
@@ -1689,7 +1696,7 @@ class CommandScheduleDowntimes(Command):
         html.close_div()
         html.close_div()
 
-    def _render_confirm_buttons(self, what) -> None:  # type: ignore[no-untyped-def]
+    def _render_confirm_buttons(self, what: str) -> None:
         html.open_div(class_="group")
         tooltip_submission_disabled = _("Enter a comment to schedule downtime")
         open_submit_button_container_div(tooltip=tooltip_submission_disabled)
@@ -1781,7 +1788,7 @@ class CommandScheduleDowntimes(Command):
             downtime = DowntimeSchedule(start_time, end_time, mode, delayed_duration, comment)
             cmdtag, specs, len_action_rows = self._downtime_specs(cmdtag, row, action_rows, spec)
             if "aggr_tree" in row:  # BI mode
-                node = row["aggr_tree"]
+                node: CompiledAggrTree = row["aggr_tree"]
                 return (
                     _bi_commands(downtime, node),
                     self.confirm_dialog_options(
@@ -1847,7 +1854,7 @@ class CommandScheduleDowntimes(Command):
             )
         )
 
-        attributes = HTML("")
+        attributes = HTML.empty()
         if recurring_number_from_html := self.recurring_downtimes.number():
             attributes += HTMLWriter.render_li(
                 _("Repeats every %s")
@@ -1914,7 +1921,7 @@ class CommandScheduleDowntimes(Command):
             delayed_duration = 0
         return delayed_duration
 
-    def _comment(self):
+    def _comment(self) -> str:
         comment = (
             active_config.adhoc_downtime.get("comment", "")
             if request.var("_down_adhoc")
@@ -1924,10 +1931,10 @@ class CommandScheduleDowntimes(Command):
             raise MKUserError("_down_comment", _("You need to supply a comment for your downtime."))
         return comment
 
-    def _current_local_time(self):
+    def _current_local_time(self) -> float:
         return time.time()
 
-    def _custom_start_time(self):
+    def _custom_start_time(self) -> float:
         vs_date = self._vs_date()
         raw_start_date = vs_date.from_html_vars("_down_from_date")
         vs_date.validate_value(raw_start_date, "_down_from_date")
@@ -1942,7 +1949,7 @@ class CommandScheduleDowntimes(Command):
         self._vs_down_from().validate_value(down_from, "_down_from")
         return down_from
 
-    def _custom_end_time(self, start_time):
+    def _custom_end_time(self, start_time: float) -> float:
         vs_date = self._vs_date()
         raw_end_date = vs_date.from_html_vars("_down_to_date")
         vs_date.validate_value(raw_end_date, "_down_to_date")
@@ -2033,7 +2040,7 @@ class CommandScheduleDowntimes(Command):
         return bool(active_config.adhoc_downtime and active_config.adhoc_downtime.get("duration"))
 
 
-def _bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]:
+def _bi_commands(downtime: DowntimeSchedule, node: CompiledAggrTree) -> Sequence[CommandSpec]:
     """Generate the list of downtime command strings for the BI module"""
     commands_aggr = []
     for site, host, service in _find_all_leaves(node):
@@ -2047,17 +2054,17 @@ def _bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]
     return commands_aggr
 
 
-def _find_all_leaves(  # type: ignore[no-untyped-def]
-    node,
+def _find_all_leaves(
+    node: CompiledAggrRule | CompiledAggrLeaf,
 ) -> list[tuple[livestatus.SiteId | None, HostName, ServiceName | None]]:
-    # leaf node
+    # From BICompiledLeaf (see also eval_result_node)
     if node["type"] == 1:
         site, host = node["host"]
         return [(livestatus.SiteId(site), host, node.get("service"))]
 
-    # rule node
+    # From BICompiledRule (see also eval_result_node)
     if node["type"] == 2:
-        entries: list[Any] = []
+        entries: list[tuple[livestatus.SiteId | None, HostName, ServiceName | None]] = []
         for n in node["nodes"]:
             entries += _find_all_leaves(n)
         return entries
@@ -2097,39 +2104,6 @@ def time_interval_end(
     return None
 
 
-def time_interval_to_human_readable(next_time_interval, prefix):
-    """Generate schedule downtime text from next time interval information
-
-    Args:
-        next_time_interval:
-            string representing the next time interval. Can either be a periodic interval or the
-            duration value
-        prefix:
-            prefix for the downtime title
-
-    Examples:
-        >>> time_interval_to_human_readable("next_day", "schedule an immediate downtime")
-        '<b>schedule an immediate downtime until 24:00:00</b>?'
-        >>> time_interval_to_human_readable("next_year", "schedule an immediate downtime")
-        '<b>schedule an immediate downtime until end of year</b>?'
-
-    Returns:
-        string representing the schedule downtime title
-    """
-    downtime_titles = {
-        "next_day": _("<b>%s until 24:00:00</b>?"),
-        "next_week": _("<b>%s until sunday night</b>?"),
-        "next_month": _("<b>%s until end of month</b>?"),
-        "next_year": _("<b>%s until end of year</b>?"),
-    }
-    try:
-        title = downtime_titles[next_time_interval]
-    except KeyError:
-        duration = int(next_time_interval)
-        title = _("<b>%%s of %s length</b>?") % SecondsRenderer.detailed_str(duration)
-    return title % prefix
-
-
 class CommandRemoveDowntime(Command):
     @property
     def ident(self) -> str:
@@ -2156,7 +2130,7 @@ class CommandRemoveDowntime(Command):
         return CommandGroupDowntimes
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service", "downtime"]
 
     # we only want to show the button and shortcut in the explicit downtime
@@ -2187,7 +2161,7 @@ class CommandRemoveDowntime(Command):
             self.deny_js_function,
         )
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.button("_remove_downtimes", _("Remove"))
 
     def _action(  # pylint: disable=too-many-arguments
@@ -2271,11 +2245,11 @@ class CommandRemoveComments(Command):
         return PermissionActionAddComment
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["comment"]
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML("")
+        return HTML.empty()
 
     def confirm_dialog_additions(
         self,
@@ -2284,10 +2258,10 @@ class CommandRemoveComments(Command):
         len_action_rows: int,
     ) -> HTML:
         if len_action_rows > 1:
-            return HTML(_("Total comments: %d") % len_action_rows)
-        return HTML(_("Author: %s") % row["comment_author"])
+            return HTML.without_escaping(_("Total comments: %d") % len_action_rows)
+        return HTML.without_escaping(_("Author: ")) + row["comment_author"]
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_delete_comments", _("Delete"), cssclass="hot")
         html.button("_cancel", _("Cancel"))

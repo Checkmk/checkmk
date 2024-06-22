@@ -173,7 +173,7 @@ def test_omd_version_reads_from_version_link(
     link_path = tmp_path / "version"
     monkeypatch.setattr(cmk.utils.paths, "omd_root", link_path.parent)
     link_path.symlink_to("/omd/versions/2016.09.12.cee")
-    # Is set dynamically by testlib.fake_version_and_paths
+    # Is set dynamically by fake_version_and_paths
     assert cmk_version.orig_omd_version() == "2016.09.12.cee"  # type: ignore[attr-defined]
     link_path.unlink()
 

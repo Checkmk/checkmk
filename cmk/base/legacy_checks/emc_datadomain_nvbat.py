@@ -33,7 +33,7 @@ def check_emc_datadomain_nvbat(item, _no_params, info):
             dev_state_str = state_table.get(dev_state, ("Unknown", 3))[0]
             dev_state_rc = state_table.get(dev_state, ("Unknown", 3))[1]
             infotext = f"Status {dev_state_str} Charge Level {dev_charge}%"
-            perfdata = [("charge", dev_charge + "%")]
+            perfdata = [("battery_capacity", dev_charge + "%")]
             return dev_state_rc, infotext, perfdata
     return None
 

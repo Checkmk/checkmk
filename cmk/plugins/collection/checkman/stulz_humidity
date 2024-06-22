@@ -4,7 +4,7 @@ catalog: hw/environment/stulz
 license: GPLv2
 distribution: check_mk
 description:
- This plugin polls the air humidity of all connected clima units on a stulz management.
+ This plug-in polls the air humidity of all connected clima units on a stulz management.
  It is possible to define levels for high and low warning/ critical.
 
 item:

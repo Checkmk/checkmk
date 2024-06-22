@@ -327,7 +327,6 @@ def test_registered_painters() -> None:
         "inv_software_applications_check_mk_cluster",
         "inv_software_applications_check_mk_cluster_is_cluster",
         "inv_software_applications_check_mk_cluster_nodes",
-        "inv_software_applications_check_mk_host_labels",
         "inv_software_applications_check_mk_num_hosts",
         "inv_software_applications_check_mk_num_services",
         "inv_software_applications_check_mk_sites",
@@ -434,6 +433,7 @@ def test_registered_painters() -> None:
         "inv_software_applications_oracle_systemparameter",
         "inv_software_applications_oracle_tablespaces",
         "inv_software_applications_synthetic_monitoring",
+        "inv_software_applications_synthetic_monitoring_plans",
         "inv_software_applications_synthetic_monitoring_tests",
         "inv_software_applications_vmwareesx",
         "inv_software_bios",
@@ -688,13 +688,18 @@ def test_registered_painters() -> None:
         "invswpac_summary",
         "invswpac_vendor",
         "invswpac_version",
-        "invsyntheticmonitoring_application",
-        "invsyntheticmonitoring_bottom_level_suite_name",
-        "invsyntheticmonitoring_rmk_id",
-        "invsyntheticmonitoring_test_item",
-        "invsyntheticmonitoring_test_name",
-        "invsyntheticmonitoring_top_level_suite_name",
-        "invsyntheticmonitoring_variant",
+        "invsyntheticmonitoringtests_application",
+        "invsyntheticmonitoringtests_bottom_level_suite_name",
+        "invsyntheticmonitoringtests_plan_id",
+        "invsyntheticmonitoringtests_suite_name",
+        "invsyntheticmonitoringtests_test_item",
+        "invsyntheticmonitoringtests_test_name",
+        "invsyntheticmonitoringtests_top_level_suite_name",
+        "invsyntheticmonitoringtests_variant",
+        "invsyntheticmonitoringplans_application",
+        "invsyntheticmonitoringplans_plan_id",
+        "invsyntheticmonitoringplans_suite_name",
+        "invsyntheticmonitoringplans_variant",
         "invtunnels_index",
         "invtunnels_linkpriority",
         "invtunnels_peerip",
@@ -1770,6 +1775,36 @@ def _painter_name_spec(painter_ident):
         return painter_ident, {"uuid": "e13957f5-1b0b-43a7-a452-3bff7187542e"}
     if painter_ident == "svc_metrics_forecast":
         return painter_ident, {"uuid": "3c659189-29f3-411a-8456-6a07fdae4d51"}
+    if painter_ident == "sla_fixed":
+        return painter_ident, {
+            "layout_options": {"full_title": False, "hide_subresults": False, "summary": "off"},
+            "sla_config": (
+                "sla_configuration_1",
+                {
+                    "service_outage_count_painter": {"display_type": "timespan"},
+                    "service_state_percentage_painter": {
+                        "display_type": "timespan",
+                        "float_precision": 0,
+                    },
+                },
+            ),
+            "timerange_spec": "m1",
+        }
+    if painter_ident == "sla_specific":
+        return painter_ident, {
+            "layout_options": {"full_title": False, "hide_subresults": False, "summary": "off"},
+            "sla_config": (
+                "sla_configuration_1",
+                {
+                    "service_outage_count_painter": {"display_type": "timespan"},
+                    "service_state_percentage_painter": {
+                        "display_type": "timespan",
+                        "float_precision": 0,
+                    },
+                },
+            ),
+            "timerange_spec": "m1",
+        }
     return painter_ident, {}
 
 
@@ -2118,6 +2153,6 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
     assert isinstance(displayed_custom_notes, HTML)
 
     notes_as_string = str(displayed_custom_notes)
-    expected_string = str(HTML("<hr>".join(expected_notes)))
+    expected_string = str(HTML.without_escaping("<hr>".join(expected_notes)))
 
     assert expected_string == notes_as_string

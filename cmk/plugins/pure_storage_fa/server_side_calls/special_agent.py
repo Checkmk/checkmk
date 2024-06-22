@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 
 from pydantic import BaseModel
 
@@ -25,7 +25,6 @@ class Params(BaseModel, frozen=True):
 def commands_function(
     params: Params,
     host_config: HostConfig,
-    _http_proxies: Mapping[str, object],
 ) -> Iterator[SpecialAgentCommand]:
     command_arguments: list[str | Secret] = (
         ["--timeout", str(params.timeout)] if params.timeout else []
@@ -40,7 +39,7 @@ def commands_function(
         ssl_server = replace_macros(str(ssl_config_value), host_config.macros)
         command_arguments += ["--cert-server-name", ssl_server]
 
-    command_arguments += ["--api-token", params.api_token]
+    command_arguments += ["--api-token", params.api_token.unsafe()]
 
     yield SpecialAgentCommand(
         command_arguments=[*command_arguments, host_config.primary_ip_config.address]

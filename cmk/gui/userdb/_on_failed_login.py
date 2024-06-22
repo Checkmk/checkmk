@@ -10,6 +10,7 @@ from cmk.utils.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.log import logger as gui_logger
+from cmk.gui.type_defs import UserSpec
 
 from .store import load_users, save_users
 
@@ -18,11 +19,9 @@ auth_logger = gui_logger.getChild("auth")
 
 def on_failed_login(username: UserId, now: datetime) -> None:
     users = load_users(lock=True)
-    if user := users.get(username):
-        user["num_failed_logins"] = user.get("num_failed_logins", 0) + 1
-        if active_config.lock_on_logon_failures:
-            if user["num_failed_logins"] >= active_config.lock_on_logon_failures:
-                user["locked"] = True
+
+    if (user := users.get(username)) and not _is_automation_user(user):
+        _increment_failed_logins_and_lock(user)
         save_users(users, now)
 
     if active_config.log_logon_failures:
@@ -31,7 +30,7 @@ def on_failed_login(username: UserId, now: datetime) -> None:
             log_msg_until_locked = str(
                 bool(active_config.lock_on_logon_failures) - user["num_failed_logins"]
             )
-            if not user.get("locked"):
+            if not user["locked"]:
                 log_msg_locked = "No"
             elif log_msg_until_locked == "0":
                 log_msg_locked = "Yes (now)"
@@ -49,3 +48,18 @@ def on_failed_login(username: UserId, now: datetime) -> None:
             log_msg_until_locked,
             request.remote_ip,
         )
+
+
+def _is_automation_user(user: UserSpec) -> bool:
+    return "automation_secret" in user
+
+
+def _increment_failed_logins_and_lock(user: UserSpec) -> None:
+    """Increment the number of failed logins for the user and lock the user if necessary."""
+    user["num_failed_logins"] = user.get("num_failed_logins", 0) + 1
+
+    if (
+        active_config.lock_on_logon_failures
+        and user["num_failed_logins"] >= active_config.lock_on_logon_failures
+    ):
+        user["locked"] = True

@@ -8,10 +8,8 @@
 # available 51132
 # totalCreated 108141
 
-
-# mypy: disable-error-code="no-untyped-def"
-
 import time
+from typing import Sequence
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -60,7 +58,7 @@ def check_mongodb_connections(item, params, info):
     yield 0, "Rate: %s/sec" % rate, [("connections_rate", rate)]
 
 
-def _is_int(key_list, info_dict) -> bool:
+def _is_int(key_list: Sequence[str], info_dict: dict[str, object]) -> bool:
     """
     check if key is in dict and value is an integer
     :param key_list: list of keys
@@ -69,7 +67,7 @@ def _is_int(key_list, info_dict) -> bool:
     """
     for key in key_list:
         try:
-            int(info_dict[key])
+            int(info_dict[key])  # type: ignore[call-overload]
         except (KeyError, ValueError, TypeError):
             return False
     return True

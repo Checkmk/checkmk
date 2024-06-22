@@ -19,8 +19,7 @@ import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site, url_prefix
 
-import cmk.gui.log as log
-import cmk.gui.utils as utils
+from cmk.gui import log, utils
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
@@ -151,7 +150,7 @@ def _load_config_file_to(path: str, raw_config: dict[str, Any]) -> None:
 # for *each* HTTP request.
 # FIXME: Optimize this to cache the config etc. until either the config files or plugins
 # have changed. We could make this being cached for multiple requests just like the
-# plugins of other modules. This may save significant time in case of small requests like
+# plug-ins of other modules. This may save significant time in case of small requests like
 # the graph ajax page or similar.
 def load_config() -> None:
     # Set default values for all user-changable configuration settings
@@ -247,14 +246,14 @@ def get_default_config() -> dict[str, Any]:
 
 
 def _get_default_config_from_legacy_plugins() -> dict[str, Any]:
-    """Plugins from local/share/check_mk/web/plugins/config are loaded here"""
+    """Plug-ins from local/share/check_mk/web/plugins/config are loaded here"""
     default_config: dict[str, Any] = {}
     utils.load_web_plugins("config", default_config)
     return default_config
 
 
 def _get_default_config_from_module_plugins() -> dict[str, Any]:
-    """Plugins from the config plugin package are loaded here
+    """Plug-ins from the config plug-in package are loaded here
 
     These are `cmk.gui.plugins.config`, `cmk.gui.cee.plugins.config` and
     `cmk.gui.cme.plugins.config`.

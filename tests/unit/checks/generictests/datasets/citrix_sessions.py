@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
 # mypy: disable-error-code=var-annotated
 
 
@@ -15,10 +14,16 @@ info = [["sessions", "1"], ["active_sessions", "1"], ["inactive_sessions", "0"]]
 
 discovery = {
     "": [
-        (None, {"total": (60, 65), "active": (60, 65), "inactive": (10, 15), }),
+        (
+            None,
+            {
+                "total": (60, 65),
+                "active": (60, 65),
+                "inactive": (10, 15),
+            },
+        ),
     ],
 }
-
 
 
 checks = {

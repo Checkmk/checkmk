@@ -58,7 +58,7 @@ def fixture_config() -> Config:
 def fixture_history(settings: ec.Settings, config: Config) -> FileHistory:
     history = create_history(
         settings,
-        config,
+        config | {"archive_mode": "file"},
         logging.getLogger("cmk.mkeventd"),
         StatusTableEvents.columns,
         StatusTableHistory.columns,
@@ -83,7 +83,7 @@ def fixture_history_mongo(settings: ec.Settings, config: Config) -> Iterator[Mon
     ):
         history = create_history(
             settings,
-            {**config, "archive_mode": "mongodb"},
+            config | {"archive_mode": "mongodb"},
             logging.getLogger("cmk.mkeventd"),
             StatusTableEvents.columns,
             StatusTableHistory.columns,
@@ -99,7 +99,7 @@ def fixture_history_sqlite(settings: ec.Settings, config: Config) -> Iterator[SQ
 
     history = SQLiteHistory(
         SQLiteSettings.from_settings(settings, database=":memory:"),
-        {**config, "archive_mode": "sqlite"},
+        config | {"archive_mode": "sqlite"},
         logging.getLogger("cmk.mkeventd"),
         StatusTableEvents.columns,
         StatusTableHistory.columns,

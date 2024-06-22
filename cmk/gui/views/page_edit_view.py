@@ -10,9 +10,7 @@ from __future__ import annotations
 import ast
 import string
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Literal, NamedTuple, overload
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, NamedTuple, overload, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import SDPath
@@ -62,7 +60,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.views.inventory import DISPLAY_HINTS, DisplayHints
+from cmk.gui.views.inventory import inv_display_hints, NodeDisplayHint
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 
@@ -136,7 +134,7 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
             (
                 "layout",
                 DropdownChoice(
-                    title=_("Basic Layout"),
+                    title=_("Basic layout"),
                     choices=layout_registry.get_choices(),
                     default_value="table",
                     sorted=True,
@@ -183,18 +181,6 @@ def view_inventory_join_macros(ds_name: str) -> Dictionary:
                 ),
             )
 
-    column_choices: list[tuple[str, str]] = []
-    for hints in DISPLAY_HINTS:
-        if hints.table_hint.view_spec is None or hints.table_hint.view_spec.view_name != ds_name:
-            continue
-
-        column_choices.extend(
-            _get_inventory_column_infos(
-                hints=hints,
-                table_view_name=hints.table_hint.view_spec.view_name,
-            )
-        )
-
     return Dictionary(
         title=_("Macros for joining service data or inventory tables"),
         render="form",
@@ -207,7 +193,12 @@ def view_inventory_join_macros(ds_name: str) -> Dictionary:
                         elements=[
                             DropdownChoice(
                                 title=_("Use value from"),
-                                choices=column_choices,
+                                choices=[
+                                    col_info
+                                    for node_hint in inv_display_hints
+                                    if node_hint.table_view_name == ds_name
+                                    for col_info in _get_inventory_column_infos(node_hint)
+                                ],
                             ),
                             TextInput(
                                 title=_("as macro named"),
@@ -295,7 +286,7 @@ def _get_join_vs_column_choice(ds_name: str) -> None | _VSColumnChoice:
             help=_(
                 "A joined column can display information about specific services for "
                 "host objects in a view showing host objects. You need to specify the "
-                "service description of the service you like to show the data for."
+                "service name of the service you like to show the data for."
             ),
             elements=[
                 _get_vs_column_dropdown(ds_name, "join_painter", join_painters),
@@ -308,7 +299,7 @@ def _get_join_vs_column_choice(ds_name: str) -> None | _VSColumnChoice:
                             "If multiple entries are found, the first one of the sorted entries"
                             " is used. If you use macros within inventory based views these"
                             " macros are replaced <tt>before</tt> the regex evaluation."
-                            "<br>Note: If a service description contains special characters like"
+                            "<br>Note: If a service name contains special characters like"
                             " <tt>%s</tt> you have to escape them in order to get reliable"
                             " results. Macros don't need to be escaped. If a macro could not be"
                             " found then it stays as it is."
@@ -411,36 +402,31 @@ class InventoryColumnInfo(NamedTuple):
 
 def _get_inventory_column_infos_by_table(
     ds_name: str,
-) -> Iterator[tuple[InventoryTableInfo, list[InventoryColumnInfo]]]:
-    for hints in DISPLAY_HINTS:
-        if hints.table_hint.view_spec is None or ds_name == hints.table_hint.view_spec.view_name:
+) -> Iterator[tuple[InventoryTableInfo, Sequence[InventoryColumnInfo]]]:
+    for node_hint in inv_display_hints:
+        if node_hint.table_view_name in ("", ds_name):
             # No view, no choices; Also skip in case of same data source:
             # columns are already avail in "normal" column.
             continue
 
         yield (
             InventoryTableInfo(
-                table_view_name=hints.table_hint.view_spec.view_name,
-                path=hints.abc_path,
-                title=hints.node_hint.long_title,
+                table_view_name=node_hint.table_view_name,
+                path=node_hint.path,
+                title=node_hint.long_title,
             ),
-            _get_inventory_column_infos(
-                hints=hints,
-                table_view_name=hints.table_hint.view_spec.view_name,
-            ),
+            _get_inventory_column_infos(node_hint),
         )
 
 
-def _get_inventory_column_infos(
-    *, hints: DisplayHints, table_view_name: str
-) -> list[InventoryColumnInfo]:
+def _get_inventory_column_infos(hint: NodeDisplayHint) -> Sequence[InventoryColumnInfo]:
     return [
         InventoryColumnInfo(
             column_name=column_name,
             title=str(column_hint.title),
         )
-        for column_name, column_hint in hints.column_hints.items()
-        if painter_registry.get(f"{table_view_name}_{column_name}")
+        for column_name, column_hint in hint.columns.items()
+        if (col_ident := hint.column_ident(column_name)) and painter_registry.get(col_ident)
     ]
 
 

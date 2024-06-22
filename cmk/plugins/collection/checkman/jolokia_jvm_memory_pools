@@ -7,10 +7,12 @@ description:
  This check allows to monitor the usage of memory pools
  on web application servers.
 
- To use this plugin, Jolokia and the agent plugin need to be installed
+ To use this plugin, Jolokia and the agent plug-in need to be installed
  on the monitored server, or the special agent Jolokia must be configured.
  It will then fetch the memory usage from the JMX status info of the remote
  Java Virtual Machine.
+
+ Both, version 1.7 and 2.0 of Jolokia are supported.
 
 item:
  The name of the application server instance followed by the statement {{Memory Pool}}

@@ -10,24 +10,21 @@ from cmk.agent_based.v1 import check_levels, check_levels_predictive
 from cmk.agent_based.v2 import CheckResult, get_average, IgnoreResultsError, Metric, render
 
 
-class CPUInfo(
-    NamedTuple(  # pylint: disable=typing-namedtuple-call
-        "_CPUInfo",
-        [
-            ("name", str),
-            ("user", float),
-            ("nice", float),
-            ("system", float),
-            ("idle", float),
-            ("iowait", float),
-            ("irq", float),
-            ("softirq", float),
-            ("steal", float),
-            ("guest", float),
-            ("guest_nice", float),
-        ],
-    )
-):
+class _CPUInfo(NamedTuple):
+    name: str
+    user: float
+    nice: float
+    system: float
+    idle: float
+    iowait: float
+    irq: float
+    softirq: float
+    steal: float
+    guest: float
+    guest_nice: float
+
+
+class CPUInfo(_CPUInfo):
     """Handle CPU measurements
 
     name: name of core
@@ -136,7 +133,7 @@ def check_cpu_util(
         yield Metric(
             "util",
             util,
-            levels=levels if isinstance(levels, tuple) else None,  # type: ignore[arg-type]
+            levels=levels if isinstance(levels, tuple) else None,
             boundaries=(0, perf_max),
         )
         value_checked = get_average(

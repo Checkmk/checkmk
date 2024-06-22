@@ -8,11 +8,12 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.event_console import CMKEventConsole
 from tests.testlib.openapi_session import RequestSessionRequestHandler
 from tests.testlib.rest_api_client import ClientRegistry, get_client_registry, RestApiClient
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.web_session import CMKWebSession
+
+from .event_console import CMKEventConsole
 
 logger = logging.getLogger(__name__)
 

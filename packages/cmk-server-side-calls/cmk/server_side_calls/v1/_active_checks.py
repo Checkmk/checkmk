@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-from ._utils import HostConfig, HTTPProxy, Secret
+from ._utils import HostConfig, Secret
 
 _ParsedParameters = TypeVar("_ParsedParameters")
 
@@ -39,7 +39,7 @@ class ActiveCheckCommand:
         ...     ]
         ... )
         ActiveCheckCommand(service_description='Example description', command_arguments=['--user', \
-'example-user', '--password', Secret(id=0, format='%s')])
+'example-user', '--password', Secret(id=0, format='%s', pass_safely=True)])
     """
 
     service_description: str
@@ -80,7 +80,6 @@ class ActiveCheckConfig(
         >>> def generate_example_commands(
         ...     params: Mapping[str, object],
         ...     host_config: HostConfig,
-        ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[ActiveCheckCommand]:
         ...     args = ["--service", str(params["service"])]
         ...     yield ActiveCheckCommand(
@@ -110,9 +109,7 @@ class ActiveCheckConfig(
         *,
         name: str,
         parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters],
-        commands_function: Callable[
-            [_ParsedParameters, HostConfig, Mapping[str, HTTPProxy]], Iterable[ActiveCheckCommand]
-        ],
+        commands_function: Callable[[_ParsedParameters, HostConfig], Iterable[ActiveCheckCommand]],
     ):
         self.name = name
         self._parameter_parser = parameter_parser
@@ -122,10 +119,8 @@ class ActiveCheckConfig(
         self,
         parameters: Mapping[str, object],
         host_config: HostConfig,
-        http_proxies: Mapping[str, HTTPProxy],
     ) -> Iterable[ActiveCheckCommand]:
         return self._commands_function(
             self._parameter_parser(parameters),
             host_config,
-            http_proxies,
         )

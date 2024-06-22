@@ -6,10 +6,11 @@
 import abc
 import json
 import urllib.parse
-from collections.abc import Callable, Iterable
-from typing import Any, Generic, Literal, Sequence, TypeVar
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any, Generic, Literal, TypeVar
 
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
+from cmk.utils.user import UserId
 
 from cmk.gui import visuals
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
@@ -164,12 +165,14 @@ class Dashlet(abc.ABC, Generic[T]):
     def __init__(
         self,
         dashboard_name: DashboardName,
+        dashboard_owner: UserId,
         dashboard: DashboardConfig,
         dashlet_id: DashletId,
         dashlet: T,
     ) -> None:
         super().__init__()
         self._dashboard_name = dashboard_name
+        self._dashboard_owner = dashboard_owner
         self._dashboard = dashboard
         self._dashlet_id = dashlet_id
         self._dashlet_spec = dashlet
@@ -205,6 +208,10 @@ class Dashlet(abc.ABC, Generic[T]):
     @property
     def dashboard_name(self) -> str:
         return self._dashboard_name
+
+    @property
+    def dashboard_owner(self) -> UserId:
+        return self._dashboard_owner
 
     def default_display_title(self) -> str:
         return self.title()
@@ -348,6 +355,7 @@ class Dashlet(abc.ABC, Generic[T]):
             request,
             [
                 ("name", self._dashboard_name),
+                ("owner", self._dashboard_owner),
                 ("id", self._dashlet_id),
                 ("mtime", self._dashboard["mtime"]),
             ],

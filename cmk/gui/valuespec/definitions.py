@@ -61,27 +61,22 @@ from six import ensure_str
 
 from livestatus import SiteId
 
-import cmk.utils.crypto.certificate as certificate
-import cmk.utils.crypto.keys as keys
-import cmk.utils.dateutils as dateutils
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.regex
+from cmk.utils import dateutils
+from cmk.utils.crypto import certificate, keys
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress as HostAddressType
 from cmk.utils.images import CMKImage, ImageType
-from cmk.utils.labels import AndOrNotLiteral
+from cmk.utils.labels import AndOrNotLiteral, LabelSources
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 from cmk.utils.version import Version
 
-import cmk.gui.forms as forms
-import cmk.gui.site_config as site_config
-import cmk.gui.user_sites as user_sites
-import cmk.gui.utils as utils
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import forms, site_config, user_sites, utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -100,6 +95,7 @@ from cmk.gui.type_defs import (
     GroupedChoices,
     Icon,
 )
+from cmk.gui.utils import escaping
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.html import HTML
@@ -246,7 +242,8 @@ class ValueSpec(abc.ABC, Generic[T]):
         if isinstance(self._help, LazyString):
             return str(self._help)
 
-        assert isinstance(self._help, str)
+        if not isinstance(self._help, str):
+            raise ValueError(self._help)
         return self._help
 
     def allow_empty(self) -> bool:
@@ -280,10 +277,7 @@ class ValueSpec(abc.ABC, Generic[T]):
         This is optional and only used in the value editor for same cases where
         the default value is known."""
         if callable(self._default_value):
-            try:
-                value = self._default_value()
-            except Exception:
-                value = DEF_VALUE
+            value = self._default_value()
         else:
             value = self._default_value
 
@@ -390,7 +384,7 @@ class FixedValue(ValueSpec[T]):
         return self._value
 
     def render_input(self, varprefix: str, value: T) -> None:
-        html.write_text(self.value_to_html(value))
+        html.span(self.value_to_html(value), class_="vs_fixed_value")
 
     def value_to_html(self, value: T) -> ValueSpecText:
         if self._totext is not None:
@@ -472,7 +466,7 @@ class Age(ValueSpec[int]):
                 html.text_input(
                     varprefix + "_" + uid, default_value=str(val), size=4, cssclass="number"
                 )
-                html.write_text(" %s " % title)
+                html.write_text_permissive(" %s " % title)
             else:
                 takeover = (takeover + val) * tkovr_fac
 
@@ -508,7 +502,7 @@ class Age(ValueSpec[int]):
         if not isinstance(value, int):
             raise MKUserError(
                 varprefix,
-                _("The value %r has type %s, but must be of type int") % (value, _type_name(value)),
+                _("The value %r has type %s, but must be of type int") % (value, type_name(value)),
             )
 
     def _validate_value(self, value: int, varprefix: str) -> None:
@@ -580,7 +574,7 @@ class TimeSpan(ValueSpec[float]):
                 html.text_input(
                     varprefix + "_" + uid, default_value=str(round(val)), size=4, cssclass="number"
                 )
-                html.write_text(" %s " % title)
+                html.write_text_permissive(" %s " % title)
             else:
                 takeover = (takeover + val) * tkovr_fac
 
@@ -621,7 +615,7 @@ class TimeSpan(ValueSpec[float]):
             raise MKUserError(
                 varprefix,
                 _("The value %r has type %s, but must be of type float")
-                % (value, _type_name(value)),
+                % (value, type_name(value)),
             )
 
     def _validate_value(self, value: float, varprefix: str) -> None:
@@ -745,7 +739,7 @@ class Integer(ValueSpec[int]):
         raise MKUserError(
             varprefix,
             _("The value %r has the wrong type %s, but must be of type int")
-            % (value, _type_name(value)),
+            % (value, type_name(value)),
         )
 
     def _validate_value(self, value: int, varprefix: str) -> None:
@@ -767,7 +761,8 @@ class Filesize(Integer):
 
     def render_input(self, varprefix: str, value: int | None) -> None:
         # The value type is only Optional to be compatible with the base class
-        assert value is not None
+        if value is None:
+            raise TypeError(value)
         exp, count = self.get_exponent(value)
         self._renderer.text_input(varprefix + "_size", str(count))
         html.nbsp()
@@ -850,20 +845,30 @@ class LegacyDataSize(Integer):
             ]
         )
 
-    def scale_value(self, value: int) -> tuple[LegacyBinaryUnit, int]:
+    def _scale_value(self, value: int) -> tuple[LegacyBinaryUnit, str]:
         sorted_units = sorted(self._units, key=lambda x: x.value)
         for unit in reversed(sorted_units):
             if value == 0:
-                return sorted_units[0], value
-            if value % unit.value == 0:
-                return unit, int(value / unit.value)
-        raise ValueError("Invalid value: %r" % value)
+                return sorted_units[0], "0"
+            scaled, remainder = divmod(value, unit.value)
+            if remainder == 0:
+                return unit, f"{scaled}"
+
+        # "0.5 GB" for instance.
+        # This might in fact change the value slightly, and/or look ugly.
+        # Try to do better in the native implementation.
+        # Compare to TimeSpan, which is an analogous construct when seen from cmk.rulesets.v1,
+        # but quite different in rendering / UX currently.
+        return (u := sorted_units[-1]), f"{value / u.value!r}"
 
     def render_input(self, varprefix: str, value: int | None) -> None:
+        # This is utterly inconsistent with what TimeSpan does :-(
+
         # The value type is only Optional to be compatible with the base class
-        assert value is not None
-        selected_unit, scaled_value = self.scale_value(value)
-        self._renderer.text_input(varprefix + "_size", str(scaled_value))
+        if value is None:
+            raise TypeError(value)
+        selected_unit, scaled_value = self._scale_value(value)
+        self._renderer.text_input(varprefix + "_size", scaled_value)
         html.nbsp()
         choices: Choices = [(str(unit.value), unit.name) for unit in self._units]
         html.dropdown(varprefix + "_unit", choices, deflt=str(selected_unit.value))
@@ -875,7 +880,7 @@ class LegacyDataSize(Integer):
         )
 
     def value_to_html(self, value: int) -> ValueSpecText:
-        selected_unit, scaled_value = self.scale_value(value)
+        selected_unit, scaled_value = self._scale_value(value)
         return f"{scaled_value} {selected_unit.name}"
 
     def value_to_json(self, value: int) -> JSONValue:
@@ -996,7 +1001,7 @@ class TextInput(ValueSpec[str]):
         if not isinstance(value, str):
             raise MKUserError(
                 varprefix,
-                _("The value must be of type str, but it has type %s") % _type_name(value),
+                _("The value must be of type str, but it has type %s") % type_name(value),
             )
 
     def _validate_value(self, value: str, varprefix: str) -> None:
@@ -1050,7 +1055,7 @@ class UUID(TextInput):
         html.hidden_field(varprefix, value, add_var=True)
 
 
-def ID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def ID(  # pylint: disable=redefined-builtin
     label: str | None = None,
     size: int | Literal["max"] = 25,
     try_max_width: bool = False,
@@ -1070,7 +1075,7 @@ def ID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     validate: ValueSpecValidateFunc[str] | None = None,
-):
+) -> TextInput:
     """Internal ID as used in many places (for contact names, group name, an so on)"""
     return TextInput(
         label=label,
@@ -1099,7 +1104,7 @@ def ID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     )
 
 
-def UserID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def UserID(  # pylint: disable=redefined-builtin
     label: str | None = None,
     size: int | Literal["max"] = 25,
     try_max_width: bool = False,
@@ -1118,7 +1123,7 @@ def UserID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
-):
+) -> TextInput:
     """Internal ID as used in many places (for contact names, group name, an so on)"""
 
     def _validate(userid_str: str, varprefix: str) -> None:
@@ -1268,7 +1273,7 @@ class RegExp(TextInput):
 
         return " ".join("%s" % h for h in help_text)
 
-    def _css_classes(self, case_sensitive: bool, mode: str | None):  # type: ignore[no-untyped-def]
+    def _css_classes(self, case_sensitive: bool, mode: str | None) -> str:
         classes = ["text", "regexp"]
 
         if case_sensitive is True:
@@ -1431,9 +1436,8 @@ def IPNetwork(  # pylint: disable=redefined-builtin
         elif issubclass(ip_class, ipaddress.IPv4Network):
             if (e4 := _try(ipaddress.IPv4Network, value)) is not None:
                 raise MKUserError(varprefix, _("Invalid IPv4 address: %s") % e4)
-        else:
-            if (e6 := _try(ipaddress.IPv6Network, value)) is not None:
-                raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
+        elif (e6 := _try(ipaddress.IPv6Network, value)) is not None:
+            raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
 
     return TextInput(
         validate=_validate_value,
@@ -1483,9 +1487,8 @@ def IPAddress(  # pylint: disable=redefined-builtin
         elif issubclass(ip_class, ipaddress.IPv4Address):
             if (e4 := _try(ipaddress.IPv4Address, value)) is not None:
                 raise MKUserError(varprefix, _("Invalid IPv4 address: %s") % e4)
-        else:
-            if (e6 := _try(ipaddress.IPv6Address, value)) is not None:
-                raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
+        elif (e6 := _try(ipaddress.IPv6Address, value)) is not None:
+            raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
 
     return TextInput(
         validate=_validate_value,
@@ -1518,21 +1521,21 @@ def _validate_hostname(text: str | None, varprefix: str) -> None:
         raise MKUserError(
             varprefix,
             _(
-                "Please enter a valid hostname or IPv4 address. "
+                "Please enter a valid host name or IPv4 address. "
                 "Only letters, digits, dash, underscore and dot are allowed."
             ),
         ) from exception
 
 
-def Hostname(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def Hostname(  # pylint: disable=redefined-builtin
     # TextInput
-    allow_empty=False,
+    allow_empty: bool = False,
     # ValueSpec
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     size: int = 38,
-):
+) -> TextInput:
     """A host name with or without domain part. Also allow IP addresses"""
     return TextInput(
         size=size,
@@ -1755,7 +1758,8 @@ class Url(TextInput):
         self._link_target = target
 
     def _validate_value(self, value: str, varprefix: str) -> None:
-        assert value is not None
+        if value is None:
+            raise TypeError(value)
         super()._validate_value(value, varprefix)
 
         if self._allow_empty and value == "":
@@ -1770,6 +1774,8 @@ class Url(TextInput):
                 varprefix,
                 _("Invalid URL scheme. Must be one of: %s") % ", ".join(self._allowed_schemes),
             )
+        if not is_allowed_url(value, cross_domain=True, schemes=self._allowed_schemes):
+            raise MKUserError(varprefix, _("Invalid URL given"))
 
     def from_html_vars(self, varprefix: str) -> str:
         value = super().from_html_vars(varprefix)
@@ -1925,7 +1931,7 @@ class TextAreaUnicode(TextInput):
 
     def value_to_html(self, value: str) -> ValueSpecText:
         if self._monospaced:
-            return HTMLWriter.render_pre(HTML(value), class_="ve_textarea")
+            return HTMLWriter.render_pre(value, class_="ve_textarea")
         return value.replace("\n", "<br>")
 
     def render_input(self, varprefix: str, value: str | None) -> None:
@@ -2132,7 +2138,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             self._valuespec.render_input(varprefix + "_%d" % nr, s)  # type: ignore[arg-type]
             if not self._vertical and self._separator:
                 html.nbsp()
-                html.write_text(self._separator)
+                html.write_text_permissive(self._separator)
                 html.nbsp()
             html.close_div()
         html.close_div()
@@ -2158,8 +2164,8 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
                 HTMLWriter.render_tr(HTMLWriter.render_td(self._valuespec.value_to_html(v)))
                 for v in value
             ]
-            return HTMLWriter.render_table(HTML().join(s))
-        return HTML(", ").join(self._valuespec.value_to_html(v) for v in value)
+            return HTMLWriter.render_table(HTML.empty().join(s))
+        return HTML.without_escaping(", ").join(self._valuespec.value_to_html(v) for v in value)
 
     def from_html_vars(self, varprefix: str) -> Sequence[str]:
         list_prefix = varprefix + "_"
@@ -2175,7 +2181,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
     def validate_datatype(self, value: Sequence[str], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
-                varprefix, _("Expected data type is list, but your type is %s.") % _type_name(value)
+                varprefix, _("Expected data type is list, but your type is %s.") % type_name(value)
             )
         for nr, s in enumerate(value):
             self._valuespec.validate_datatype(s, varprefix + "_%d" % nr)
@@ -2518,7 +2524,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
             return self._text_if_empty
 
         return HTMLWriter.render_table(
-            HTML().join(
+            HTML.empty().join(
                 HTMLWriter.render_tr(HTMLWriter.render_td(self._valuespec.value_to_html(v)))
                 for v in value
             )
@@ -2547,7 +2553,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
 
     def validate_datatype(self, value: ListOfModel[T], varprefix: str) -> None:
         if not isinstance(value, list):
-            raise MKUserError(varprefix, _("The type must be list, but is %s") % _type_name(value))
+            raise MKUserError(varprefix, _("The type must be list, but is %s") % type_name(value))
         for n, v in enumerate(value):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n + 1))
 
@@ -2732,7 +2738,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         return {ident: self._choice_dict[ident].mask(val) for ident, val in value.items()}
 
     def value_to_html(self, value: ListOfMultipleModel) -> ValueSpecText:
-        table_content = HTML()
+        table_content = HTML.empty()
         for ident, val in value.items():
             vs = self._choice_dict[ident]
             table_content += HTMLWriter.render_tr(
@@ -2762,7 +2768,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
 
     def validate_datatype(self, value: ListOfMultipleModel, varprefix: str) -> None:
         if not isinstance(value, dict):
-            raise MKUserError(varprefix, _("The type must be dict, but is %s") % _type_name(value))
+            raise MKUserError(varprefix, _("The type must be dict, but is %s") % type_name(value))
         for ident, val in value.items():
             self._choice_dict[ident].validate_datatype(val, varprefix + "_" + ident)
 
@@ -2846,7 +2852,7 @@ class Float(ValueSpec[float]):
         raise MKUserError(
             varprefix,
             _("The value %r has type %s, but must be of type float%s")
-            % (value, _type_name(value), _(" or int") if self._allow_int else ""),
+            % (value, type_name(value), _(" or int") if self._allow_int else ""),
         )
 
     def validate_value(self, value: float, varprefix: str) -> None:
@@ -2898,7 +2904,7 @@ class Percentage(Float):
                 raise MKUserError(
                     varprefix,
                     _("The value %r has type %s, but must be either float or int")
-                    % (value, _type_name(value)),
+                    % (value, type_name(value)),
                 )
         else:
             super().validate_datatype(value, varprefix)
@@ -2954,8 +2960,7 @@ class Checkbox(ValueSpec[bool]):
         if not isinstance(value, bool):
             raise MKUserError(
                 varprefix,
-                _("The value %r has type %s, but must be of type bool")
-                % (value, _type_name(value)),
+                _("The value %r has type %s, but must be of type bool") % (value, type_name(value)),
             )
 
 
@@ -3078,11 +3083,11 @@ class DropdownChoice(ValueSpec[T | None]):
             )
 
         if value is None and not options:
-            html.write_text(self._empty_text)
+            html.write_text_permissive(self._empty_text)
             return
 
         if len(options) == 0:
-            html.write_text(self._empty_text)
+            html.write_text_permissive(self._empty_text)
             return
 
         html.dropdown(
@@ -3108,7 +3113,7 @@ class DropdownChoice(ValueSpec[T | None]):
         raise MKUserError(
             varprefix,
             _("The value %r has type %s, but does not match any of the available choice types.")
-            % (value, _type_name(value)),
+            % (value, type_name(value)),
         )
 
     def _get_invalid_choice_text(self, tmpl: str, value: object) -> str:
@@ -3165,7 +3170,7 @@ class DropdownChoice(ValueSpec[T | None]):
         return [(self._option_for_html(val), title) for val, title in orig_options]
 
     @staticmethod
-    def option_id(val) -> str:  # type: ignore[no-untyped-def]
+    def option_id(val: object) -> str:
         return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
 
     def _validate_value(self, value: T | None, varprefix: str) -> None:
@@ -3249,7 +3254,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
         if not isinstance(value, str):
             raise MKUserError(
                 varprefix,
-                _("The value must be of type str, but it has type %s") % _type_name(value),
+                _("The value must be of type str, but it has type %s") % type_name(value),
             )
 
     def _validate_value(self, value: str | None, varprefix: str) -> None:
@@ -3261,7 +3266,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
 
     def render_input(self, varprefix: str, value: str | None) -> None:
         if self._label:
-            html.write_text(self._label)
+            html.write_text_permissive(self._label)
 
         clean_choices = [(value, value)] if value else self.choices()
 
@@ -3328,7 +3333,7 @@ class MonitoredHostname(AjaxDropdownChoice):
 class MonitoredServiceDescription(AjaxDropdownChoice):
     """Unfiltered Service Descriptions for input with dropdown completion
 
-    Renders an input field for entering a service description while providing an auto completion dropdown field.
+    Renders an input field for entering a service name while providing an auto completion dropdown field.
     Fetching the choices from the current live config via livestatus"""
 
     ident = "monitored_service_description"
@@ -3390,7 +3395,7 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
         )
 
         vs_host = MonitoredHostname(
-            label=_("Filter %s selection by hostname: ") % self._hint_label,
+            label=_("Filter %s selection by host name: ") % self._hint_label,
             strict="True",
         )
         html.br()
@@ -3413,7 +3418,7 @@ MonitoringStateValue = Literal[0, 1, 2, 3]
 
 
 # TODO: Rename to ServiceState() or something like this
-def MonitoringState(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def MonitoringState(  # pylint: disable=redefined-builtin
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -3434,7 +3439,7 @@ def MonitoringState(  # type: ignore[no-untyped-def] # pylint: disable=redefined
     default_value: ValueSpecDefault[int] = 0,  # NOTE: Different!
     validate: ValueSpecValidateFunc[int | None] | None = None,
     deprecated_choices: Sequence[int] = (),
-):
+) -> DropdownChoice[int]:
     """Special convenience variant for monitoring states"""
     return DropdownChoice[int](
         choices=[
@@ -3468,7 +3473,7 @@ HostStateValue = Literal[0, 1, 2]
 
 
 class HostState(DropdownChoice):
-    def __init__(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+    def __init__(  # pylint: disable=redefined-builtin
         self,
         # DropdownChoice
         sorted: bool = False,
@@ -3684,7 +3689,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         options: Choices = []
         choices = self.choices()
         if not choices:
-            html.write_text(self._no_elements_text)
+            html.write_text_permissive(self._no_elements_text)
             return
 
         for nr, (val, title, vs) in enumerate(choices):
@@ -3731,19 +3736,17 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
                     except MKUserError:
                         pass  # Fallback to default value here
 
-            else:
-                # Form painted the first time
-                if nr == int(def_val):
-                    # This choice is the one choosen by the given value
-                    if isinstance(value, tuple) and len(value) == 2:
-                        def_val_2 = value[1]
-                    else:
-                        def_val_2 = vs.default_value()
-
-                    show = True
+            elif nr == int(def_val):
+                # This choice is the one choosen by the given value
+                if isinstance(value, tuple) and len(value) == 2:
+                    def_val_2 = value[1]
                 else:
                     def_val_2 = vs.default_value()
-                    show = False
+
+                show = True
+            else:
+                def_val_2 = vs.default_value()
+                show = False
 
             if not self._render_sub_vs_page_name or show:
                 html.open_span(id_="%s_sub" % vp, style="display:%s;" % ("" if show else "none"))
@@ -3835,12 +3838,12 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
                     indent=False,
                 ),
             ):
-                html.write_text(rendered_value)
-            return HTML(output_funnel.drain())
+                html.write_text_permissive(rendered_value)
+            return HTML.without_escaping(output_funnel.drain())
 
         return (
-            HTML(escaping.escape_text(choice.title))
-            + HTML(escaping.escape_text(self._separator))
+            HTML.without_escaping(escaping.escape_text(choice.title))
+            + HTML.without_escaping(escaping.escape_text(self._separator))
             + rendered_value
         )
 
@@ -3855,7 +3858,8 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             value: CascadingDropdownChoiceValue = (json_value[0], json_value[1])
             choice = self._choice_from_value(value)
             # we already know this will be with value, because we explicitly passed a value one line above
-            assert isinstance(choice, CascadingDropdownChoiceWithValue)
+            if not isinstance(choice, CascadingDropdownChoiceWithValue):
+                raise TypeError(choice)
             value = choice.vs.value_from_json(choice.value)
             return (choice.ident, value)
         # no value, just a ident:
@@ -3896,7 +3900,8 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         for nr, (val, _title, vs) in enumerate(choices):
             if value == val or (isinstance(value, tuple) and value[0] == val):
                 if vs:
-                    assert isinstance(value, tuple)
+                    if not isinstance(value, tuple):
+                        raise TypeError(value)
                     vs.validate_value(value[1], varprefix + "_%d" % nr)
                 return
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
@@ -4012,7 +4017,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
     def render_input(self, varprefix: str, value: ListChoiceModel) -> None:
         self.load_elements()
         if not self._elements:
-            html.write_text(self._no_elements_text)
+            html.write_text_permissive(self._no_elements_text)
             return
 
         self._draw_listchoice(varprefix, value)
@@ -4054,7 +4059,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
     def validate_datatype(self, value: ListChoiceModel, varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
-                varprefix, _("The datatype must be list, but is %s") % _type_name(value)
+                varprefix, _("The datatype must be list, but is %s") % type_name(value)
             )
 
     def _validate_value(self, value: ListChoiceModel, varprefix: str) -> None:
@@ -4154,7 +4159,7 @@ class DualListChoice(ListChoice):
     ) -> None:
         self.load_elements()
         if not self._elements:
-            html.write_text(_("There are no elements for selection."))
+            html.write_text_permissive(_("There are no elements for selection."))
             return
 
         # Use values from HTTP request in complain mode (value is empty or None)
@@ -4196,13 +4201,13 @@ class DualListChoice(ListChoice):
 
         html.open_tr()
         html.open_td(class_="head")
-        html.write_text(_("Available"))
+        html.write_text_permissive(_("Available"))
         if not self._instant_add:
             html.a(">", href="javascript:%s;" % select_func, class_=["control", "add"])
         html.close_td()
 
         html.open_td(class_="head")
-        html.write_text(_("Selected"))
+        html.write_text_permissive(_("Selected"))
         if not self._instant_add:
             html.a("<", href="javascript:%s;" % unselect_func, class_=["control", "del"])
         html.close_td()
@@ -4415,7 +4420,7 @@ def _today() -> int:
 _sorted = sorted
 
 
-def Weekday(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def Weekday(  # pylint: disable=redefined-builtin
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -4436,7 +4441,7 @@ def Weekday(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     validate: ValueSpecValidateFunc[str | None] | None = None,
     deprecated_choices: Sequence[str] = (),
-):
+) -> DropdownChoice:
     return DropdownChoice(
         choices=_sorted(dateutils.weekdays().items()),
         sorted=sorted,
@@ -4529,12 +4534,14 @@ class RelativeDate(OptionalDropdownChoice[int]):
         return self.default_value()
 
     def render_input(self, varprefix: str, value: int | None) -> None:
-        assert isinstance(value, (int, float))
+        if not isinstance(value, (int, float)):
+            raise TypeError(value)
         reldays = int((_round_date(value) - _today()) / seconds_per_day)  # fixed: true-division
         super().render_input(varprefix, reldays)
 
     def value_to_html(self, value: int | None) -> ValueSpecText:
-        assert isinstance(value, (int, float))
+        if not isinstance(value, (int, float)):
+            raise TypeError(value)
         reldays = int((_round_date(value) - _today()) / seconds_per_day)  # fixed: true-division
         if reldays == -1:
             return _("yesterday")
@@ -4684,7 +4691,7 @@ class AbsoluteDate(ValueSpec[None | float]):
         else:
             for count, val in enumerate(values):
                 if count > 0:
-                    html.write_text(" ")
+                    html.write_text_permissive(" ")
                 if val is None:
                     html.nbsp()
                 else:
@@ -4783,7 +4790,7 @@ class AbsoluteDate(ValueSpec[None | float]):
         if not isinstance(value, (int, float)):
             raise MKUserError(
                 varprefix,
-                _("The type of the timestamp must be int or float, but is %s") % _type_name(value),
+                _("The type of the timestamp must be int or float, but is %s") % type_name(value),
             )
 
     def _validate_value(self, value: float | None, varprefix: str) -> None:
@@ -4864,7 +4871,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
 
         if not isinstance(value, tuple):
             raise MKUserError(
-                varprefix, _("The datatype must be tuple, but ist %s") % _type_name(value)
+                varprefix, _("The datatype must be tuple, but ist %s") % type_name(value)
             )
 
         if len(value) != 2:
@@ -4876,7 +4883,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
             if not isinstance(x, int):
                 raise MKUserError(
                     varprefix,
-                    _("All elements of the tuple must be of type int, you have %s") % _type_name(x),
+                    _("All elements of the tuple must be of type int, you have %s") % type_name(x),
                 )
 
     def _validate_value(self, value: TimeofdayValue, varprefix: str) -> None:
@@ -4938,7 +4945,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
     def render_input(self, varprefix: str, value: TimeofdayRangeValue) -> None:
         self._bounds[0].render_input(varprefix + "_from", value[0] if value is not None else None)
         html.nbsp()
-        html.write_text("-")
+        html.write_text_permissive("-")
         html.nbsp()
         self._bounds[1].render_input(varprefix + "_until", value[1] if value is not None else None)
 
@@ -4973,7 +4980,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
 
         if not isinstance(value, tuple):
             raise MKUserError(
-                varprefix, _("The datatype must be tuple, but ist %s") % _type_name(value)
+                varprefix, _("The datatype must be tuple, but ist %s") % type_name(value)
             )
 
         if len(value) != 2:
@@ -5223,11 +5230,26 @@ class Timerange(CascadingDropdown):
         def _month_edge_days(now: float, day_id: str) -> ComputedTimerange:
             # base time is current time rounded down to month
             from_time = TimeHelper.round(now, "m")
-            if day_id == "f1":
+            if day_id in ["f1", "fwd1"]:  # first (work) day of last month
                 from_time = TimeHelper.add(from_time, -1, "m")
-            if day_id == "l1":
+            if day_id in ["l1", "lwd1"]:  # last (work) day of last month
                 from_time = TimeHelper.add(from_time, -1, "d")
+            if day_id == "lwd0":  # last work day of this month
+                from_time = TimeHelper.add(from_time, 1, "m")
+                from_time = TimeHelper.add(from_time, -1, "d")
+
+            if (
+                "wd" in day_id
+                and (weekday_number := datetime.datetime.fromtimestamp(from_time).weekday()) > 4
+            ):
+                # find first/last work day. we're ignoring holidays here
+                if day_id.startswith("fwd"):
+                    from_time = TimeHelper.add(from_time, 7 - weekday_number, "d")
+                elif day_id.startswith("lwd"):
+                    from_time = TimeHelper.add(from_time, 4 - weekday_number, "d")
+
             end_time = TimeHelper.add(from_time, 1, "d")
+
             return ComputedTimerange(
                 (int(from_time), int(end_time)),
                 time.strftime("%d/%m/%Y", time.localtime(from_time)),
@@ -5279,7 +5301,8 @@ class Timerange(CascadingDropdown):
 
             raise NotImplementedError()
 
-        assert isinstance(rangespec, str)
+        if not isinstance(rangespec, str):
+            raise TypeError(rangespec)
 
         if rangespec[0].isdigit():  # 4h, 400d
             count = int(rangespec[:-1])
@@ -5288,7 +5311,7 @@ class Timerange(CascadingDropdown):
             title = _("Last %d %s") % (count, unit_name)
             return ComputedTimerange((int(from_time), int(now)), title)
 
-        if rangespec in ["f0", "f1", "l1"]:
+        if rangespec in ["f0", "f1", "l1", "fwd0", "lwd0", "fwd1", "lwd1"]:
             return _month_edge_days(now, rangespec)
 
         # base time is current time rounded down to the nearest unit (day, week, ...)
@@ -5311,7 +5334,8 @@ class Timerange(CascadingDropdown):
         # day and week spans for historic data
         if rangespec[0] in ["d", "w"]:
             end_time = TimeHelper.add(prev_time, 1, rangespec[0])
-            assert isinstance(titles[1], str)
+            if not isinstance(titles[1], str):
+                raise TypeError(titles[1])
             title = _date_span(prev_time, end_time) if span > 1 else titles[1]
             return ComputedTimerange((int(prev_time), int(end_time)), title)
 
@@ -5506,7 +5530,7 @@ class Optional(ValueSpec[None | T]):
             value = self._valuespec.default_value()
         if self._valuespec.title():
             the_title = self._valuespec.title()
-            html.write_text(("???" if the_title is None else the_title) + " ")
+            html.write_text_permissive(("???" if the_title is None else the_title) + " ")
         self._valuespec.render_input(varprefix + "_value", value)
         html.close_span()
 
@@ -5682,9 +5706,9 @@ class Alternative(ValueSpec[AlternativeModel]):
     def value_to_html(self, value: AlternativeModel) -> ValueSpecText:
         vs = self._matching_alternative(value)
         if vs:
-            output = HTML()
+            output = HTML.empty()
             if self._show_alternative_title and (title := vs.title()):
-                output = escaping.escape_to_html(title) + HTMLWriter.render_br()
+                output = HTML.with_escaping(title) + HTMLWriter.render_br()
             return output + vs.value_to_html(value)
         return _("invalid:") + " " + str(value)
 
@@ -5790,14 +5814,13 @@ class Tuple(ValueSpec[TT]):
             if self._orientation == "vertical":
                 html.open_tr()
             elif self._orientation == "float":
-                html.write_text(self._separator)
+                html.write_text_permissive(self._separator)
 
+            title = ""
             if self._show_titles:
                 elem_title = element.title()
                 if elem_title:
                     title = elem_title[0].upper() + elem_title[1:]
-                else:
-                    title = ""
                 if self._orientation == "vertical":
                     html.open_td(class_="tuple_left")
                     if title:
@@ -5812,16 +5835,15 @@ class Tuple(ValueSpec[TT]):
                     if self._title_br and title:
                         html.br()
                     else:
-                        html.write_text(" ")
+                        html.write_text_permissive(" ")
                 else:
-                    html.write_text(" ")
+                    html.write_text_permissive(" ")
 
-            else:
-                if self._orientation == "horizontal":
-                    html.open_td(class_="tuple_td")
+            elif self._orientation == "horizontal":
+                html.open_td(class_="tuple_td")
 
             if self._orientation == "vertical":
-                html.open_td(class_="tuple_right")
+                html.open_td(class_="tuple_right" + (" has_title" if title else ""))
 
             html.help(element.help())
             element.render_input(vp, val)
@@ -5845,7 +5867,9 @@ class Tuple(ValueSpec[TT]):
         return tuple(el.mask(val) for _, el, val in self._iter_value(value))  # type: ignore[return-value]
 
     def value_to_html(self, value: TT) -> ValueSpecText:
-        return HTML(", ").join(el.value_to_html(val) for _, el, val in self._iter_value(value))
+        return HTML.without_escaping(", ").join(
+            el.value_to_html(val) for _, el, val in self._iter_value(value)
+        )
 
     def value_to_json(self, value: TT) -> JSONValue:
         return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
@@ -5863,7 +5887,7 @@ class Tuple(ValueSpec[TT]):
     def validate_datatype(self, value: TT, varprefix: str) -> None:
         if not isinstance(value, tuple):
             raise MKUserError(
-                varprefix, _("The datatype must be a tuple, but is %s") % _type_name(value)
+                varprefix, _("The datatype must be a tuple, but is %s") % type_name(value)
             )
         if len(value) != len(self._elements):
             raise MKUserError(
@@ -5875,7 +5899,8 @@ class Tuple(ValueSpec[TT]):
             el.validate_datatype(val, f"{varprefix}_{idx}")
 
     def transform_value(self, value: TT) -> TT:
-        assert isinstance(value, tuple), f"Tuple.transform_value() got a non-tuple: {value!r}"
+        if not isinstance(value, tuple):
+            raise TypeError(f"Tuple.transform_value() got a non-tuple: {value!r}")
         return tuple(vs.transform_value(value[index]) for index, vs in enumerate(self._elements))  # type: ignore[return-value]
 
 
@@ -6025,8 +6050,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if visible is None:
                 visible = param in value
             if two_columns:
-                assert isinstance(label, str)
-                label += ":"
+                label = f"{label}:"
                 colon_printed = True
             html.checkbox(
                 checkbox_varname,
@@ -6037,8 +6061,8 @@ class Dictionary(ValueSpec[DictionaryModel]):
         else:
             visible = True
             if label:
-                html.write_text(" ")
-                html.write_text(label)
+                html.write_text_permissive(" ")
+                html.write_text_permissive(label)
             # two_columns are used for space efficiency in very few places like e.g. filters
             # where it is clear from the context if values are required or not. Therefore, we
             # dont add a required label in this case.
@@ -6053,11 +6077,11 @@ class Dictionary(ValueSpec[DictionaryModel]):
         if not is_required_plain_checkbox:
             if two_columns:
                 if label and not colon_printed:
-                    html.write_text(":")
+                    html.write_text_permissive(":")
                 html.help(vs.help())
                 html.close_td()
                 html.open_td(class_="dictright")
-            else:
+            elif label:
                 html.br()
 
             html.open_div(
@@ -6109,7 +6133,9 @@ class Dictionary(ValueSpec[DictionaryModel]):
             forms.end()
 
     @staticmethod
-    def _normalize_header(header):
+    def _normalize_header(
+        header: tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]
+    ) -> tuple[str, str | None, Sequence[str]]:
         if isinstance(header, tuple):
             if len(header) == 2:
                 return header[0], None, header[1]
@@ -6131,8 +6157,13 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if param in section_elements
         )
 
-    def render_input_form_header(  # type: ignore[no-untyped-def]
-        self, varprefix, value, title, section_elements, css
+    def render_input_form_header(
+        self,
+        varprefix: str,
+        value: DictionaryModel,
+        title: str,
+        section_elements: Sequence[str],
+        css: str | None,
     ) -> None:
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
@@ -6208,12 +6239,17 @@ class Dictionary(ValueSpec[DictionaryModel]):
         return self._value_to_html_multiline(elem, value)
 
     def _value_to_html_multiline(self, elem: DictionaryElements, value: DictionaryModel) -> HTML:
-        s = HTML()
+        s = HTML.empty()
         for param, vs in elem:
             if param in value:
-                title = vs.title() if vs.title() else vs.label()
+                if vs.title():
+                    title = "%s:&nbsp;" % vs.title()
+                elif vs.label():
+                    title = "%s:&nbsp;" % vs.label()
+                else:
+                    title = "&nbsp;"
                 s += HTMLWriter.render_tr(
-                    HTMLWriter.render_td("%s:&nbsp;" % title, class_="title")
+                    HTMLWriter.render_td(title, class_="title")
                     + HTMLWriter.render_td(vs.value_to_html(value[param]))
                 )
         return HTMLWriter.render_table(s)
@@ -6248,7 +6284,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
 
         if not isinstance(value, dict):
             raise MKUserError(
-                varprefix, _("The type must be a dictionary, but it is a %s") % _type_name(value)
+                varprefix, _("The type must be a dictionary, but it is a %s") % type_name(value)
             )
 
         for param, vs in self._get_elements():
@@ -6282,7 +6318,8 @@ class Dictionary(ValueSpec[DictionaryModel]):
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
     def transform_value(self, value: DictionaryModel) -> DictionaryModel:
-        assert isinstance(value, dict), f"Dictionary.transform_value() got a non-dict: {value!r}"
+        if not isinstance(value, dict):
+            raise TypeError(f"Dictionary.transform_value() got a non-dict: {value!r}")
         return {
             **{
                 param: vs.transform_value(value[param])
@@ -6350,7 +6387,7 @@ class ElementSelection(ValueSpec[None | str]):
     def render_input(self, varprefix: str, value: str | None) -> None:
         self.load_elements()
         if len(self._elements) == 0:
-            html.write_text(self._empty_text)
+            html.write_text_permissive(self._empty_text)
         else:
             if self._label:
                 html.span(self._label, class_="vs_floating_text")
@@ -6388,7 +6425,7 @@ class ElementSelection(ValueSpec[None | str]):
 
         if not isinstance(value, str):
             raise MKUserError(
-                varprefix, _("The datatype must be str (string), but is %s") % _type_name(value)
+                varprefix, _("The datatype must be str (string), but is %s") % type_name(value)
             )
 
 
@@ -6924,7 +6961,7 @@ class PasswordSpec(Password):
             )
         html.icon_button(
             "#",
-            _("Show/Hide password"),
+            _("Show/hide password"),
             "showhide",
             onclick="cmk.valuespecs.toggle_hidden(this);",
         )
@@ -6964,7 +7001,8 @@ class FileUpload(ValueSpec[FileUploadModel]):
     def _validate_value(self, value: FileUploadModel, varprefix: str) -> None:
         if not value:
             raise MKUserError(varprefix, _("Please select a file."))
-        assert isinstance(value, tuple)  # Hmmm...
+        if not isinstance(value, tuple):  # Hmmm...
+            raise TypeError(value)
 
         file_name, mime, content = value
 
@@ -7045,7 +7083,8 @@ class ImageUpload(FileUpload):
             # since latin_1 only uses one byte, we can use it for str->byte conversion
             value = value.encode("latin_1")
         if self._show_current_image and value:
-            assert isinstance(value, bytes)  # Hmmm...
+            if not isinstance(value, bytes):  # Hmmm...
+                raise TypeError(value)
             html.open_table()
             html.open_tr()
             html.td(_("Current image:"))
@@ -7067,7 +7106,8 @@ class ImageUpload(FileUpload):
         super()._validate_value(value, varprefix)
         if not value:
             raise MKUserError(varprefix, _("Please choose a PNG image."))
-        assert isinstance(value, tuple)  # Hmmm...
+        if not isinstance(value, tuple):  # Hmmm...
+            raise TypeError(value)
 
         content = value[2]
 
@@ -7274,7 +7314,9 @@ class Labels(ValueSpec[LabelsModel]):
         return value
 
     def value_to_html(self, value: LabelsModel) -> ValueSpecText:
-        label_sources = {k: self._label_source.value for k in value} if self._label_source else {}
+        label_sources: LabelSources = (
+            {k: self._label_source.value for k in value} if self._label_source else {}
+        )
         return render_labels(
             value, "host", with_links=False, label_sources=label_sources, request=request
         )
@@ -7287,8 +7329,10 @@ class Labels(ValueSpec[LabelsModel]):
             default_value=encode_labels_for_http(value.items()),
             cssclass="labels" + " " + label_type,
             placeholder=_("Add some label"),
-            data_world=self._world.value,
-            data_max_labels=self._max_labels,
+            data_attrs={
+                "data-world": self._world.value,
+                "data-max-labels": None if self._max_labels is None else str(self._max_labels),
+            },
         )
 
     def value_to_json(self, value: LabelsModel) -> JSONValue:
@@ -7377,30 +7421,6 @@ class AndOrNotDropdown(DropdownChoice):
         vs_validate_value = getattr(self._valuespec, "_validate_value", None)
         if callable(vs_validate_value):
             vs_validate_value(value[1], varprefix_vs)
-
-
-# TODO: Nuke this, there is only a single call site, and we just fix a single kwarg.
-# Is it used in user code?
-def SingleLabel(  # pylint: disable=redefined-builtin
-    # Labels
-    world: Labels.World,
-    label_source: Labels.Source | None = None,
-    # ValueSpec
-    title: str | None = None,
-    help: ValueSpecHelp | None = None,
-    default_value: ValueSpecDefault[LabelsModel] = DEF_VALUE,
-    validate: ValueSpecValidateFunc[LabelsModel] | None = None,
-) -> Labels:
-    """Input element for a single label"""
-    return Labels(
-        world=world,
-        label_source=label_source,
-        max_labels=1,
-        title=title,
-        help=help,
-        default_value=default_value,
-        validate=validate,
-    )
 
 
 class _SingleLabel(AjaxDropdownChoice):
@@ -7693,7 +7713,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
 
         if id_.endswith("_emblem_img"):
             icon_tag = html.render_emblem(icon, title=title, id_=id_)
-            html.write_text(" + ")
+            html.write_text_permissive(" + ")
         else:
             icon_tag = html.render_icon(icon, title=title, id_=id_)
 
@@ -7730,7 +7750,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             selection_text = _("Choose another %s") % ("Emblem" if is_emblem else "Icon")
             content = self._render_icon(value, "", selection_text, id_=varprefix + "_img")
         else:
-            content = escaping.escape_to_html(_("Select an Icon"))
+            content = HTML.with_escaping(_("Select an Icon"))
 
         html.popup_trigger(
             content,
@@ -7875,7 +7895,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
     def _validate_value(self, value: IconSelectorModel, varprefix: str) -> None:
         icon_dict = self._transform_icon_str(value)
 
-        if not self._allow_empty and not icon_dict["icon"]:
+        if not self._allow_empty and (not icon_dict["icon"] or icon_dict["icon"] == "empty"):
             raise MKUserError(varprefix, _("You need to select an icon."))
 
         if icon_dict["icon"] and icon_dict["icon"] not in self.available_icons():
@@ -8072,10 +8092,10 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
 
     def render_input(self, varprefix: str, value: SSHKeyPairValue | None) -> None:
         if value:
-            html.write_text(_("Fingerprint: %s") % self.value_to_html(value))
+            html.write_text_permissive(_("Fingerprint: %s") % self.value_to_html(value))
             html.hidden_field(varprefix, self._encode_key_for_url(value), add_var=True)
         else:
-            html.write_text(_("Key pair will be generated when you save."))
+            html.write_text_permissive(_("Key pair will be generated when you save."))
 
     def canonical_value(self) -> SSHKeyPairValue | None:
         return None
@@ -8132,8 +8152,8 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
         return ":".join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 
-def SchedulePeriod(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
-    from_end=True,
+def SchedulePeriod(  # pylint: disable=redefined-builtin
+    from_end: bool = True,
     # CascadingDropdown
     label: str | None = None,
     separator: str = ", ",
@@ -8376,13 +8396,13 @@ class _CAorCAChain(UploadOrPasteTextFile):
                 HTMLWriter.render_tr(
                     HTMLWriter.render_td("%s:" % title)
                     + HTMLWriter.render_td(
-                        HTML().join(
+                        HTML.empty().join(
                             f"{title1}: {val}" for title1, val in sorted(cert_info[what].items())
                         )
                     )
                 )
             )
-        return HTMLWriter.render_table(HTML().join(rows))
+        return HTMLWriter.render_table(HTML.empty().join(rows))
 
 
 def ListOfCAs(  # pylint: disable=redefined-builtin
@@ -8637,7 +8657,7 @@ def DocumentationURL() -> TextInput:
 
     return TextInput(
         title=_("Documentation URL"),
-        help=HTML(
+        help=HTML.without_escaping(
             _(
                 "Optionally, add a URL linking to a documentation or any other "
                 "page. An icon links to the page and opens in a new tab when "
@@ -8653,7 +8673,7 @@ def DocumentationURL() -> TextInput:
     )
 
 
-def _type_name(v):
+def type_name(v):
     try:
         return type(v).__name__
     except Exception:

@@ -19,10 +19,9 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, S
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol
+from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, TypedDict
 
 from redis.client import Pipeline
-from typing_extensions import TypedDict
 
 from livestatus import SiteId
 
@@ -57,8 +56,7 @@ from cmk.utils.user import UserId
 
 from cmk.automations.results import ABCAutomationResult
 
-import cmk.gui.hooks as hooks
-import cmk.gui.userdb as userdb
+from cmk.gui import hooks, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -2119,7 +2117,7 @@ class Folder(FolderProtocol):
     # .-----------------------------------------------------------------------.
     # | MODIFICATIONS                                                         |
     # |                                                                       |
-    # | These methods are for being called by actual Setup modules when they   |
+    # | These methods are for being called by actual Setup modules when they  |
     # | want to modify folders and hosts. They all check permissions and      |
     # | locking. They may raise MKAuthException or MKUserError.               |
     # |                                                                       |
@@ -2134,11 +2132,11 @@ class Folder(FolderProtocol):
     # | - locked()       -> .wato file in the folder must not be modified     |
     # | - locked_subfolders() -> No subfolders may be created/deleted         |
     # |                                                                       |
-    # | Sidebar: some sidebar snapins show the Setup folder tree. Everytime    |
+    # | Sidebar: some sidebar snap-ins show the Setup folder tree. Everytime  |
     # | the tree changes the sidebar needs to be reloaded. This is done here. |
     # |                                                                       |
     # | Validation: these methods do *not* validate the parameters for syntax.|
-    # | This is the task of the actual Setup modes or the API.                 |
+    # | This is the task of the actual Setup modes or the API.                |
     # '-----------------------------------------------------------------------'
 
     def create_subfolder(self, name: str, title: str, attributes: HostAttributes) -> Folder:
@@ -2497,7 +2495,7 @@ class Folder(FolderProtocol):
             hosts_by_site.setdefault(host.site_id(), []).append(host_name)
         return hosts_by_site
 
-    def move_hosts(self, host_names, target_folder: Folder):  # type: ignore[no-untyped-def]
+    def move_hosts(self, host_names: Collection[HostName], target_folder: Folder) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
         user.need_permission("wato.edit_hosts")
@@ -3383,10 +3381,9 @@ class Host:
             if not self.attributes.get("inventory_failed"):
                 self.attributes["inventory_failed"] = True
                 self.folder().save_hosts()
-        else:
-            if self.attributes.get("inventory_failed"):
-                del self.attributes["inventory_failed"]
-                self.folder().save_hosts()
+        elif self.attributes.get("inventory_failed"):
+            del self.attributes["inventory_failed"]
+            self.folder().save_hosts()
 
     def rename_cluster_node(self, oldname: HostName, newname: HostName) -> bool:
         # We must not check permissions here. Permissions
@@ -3514,8 +3511,8 @@ def call_hook_hosts_changed(folder: Folder) -> None:
 # hostnames. These informations are used for displaying warning
 # symbols in the host list and the host detail view
 # Returns dictionary { hostname: [errors] }
-def validate_all_hosts(  # type: ignore[no-untyped-def]
-    hostnames: Sequence[HostName], force_all=False
+def validate_all_hosts(
+    hostnames: Sequence[HostName], force_all: bool = False
 ) -> dict[HostName, list[str]]:
     if hooks.registered("validate-all-hosts") and (len(hostnames) > 0 or force_all):
         hosts_errors: dict[HostName, list[str]] = {}
@@ -3702,7 +3699,7 @@ def ajax_popup_host_action_menu() -> None:
     if request.get_str_input("show_clone_link"):
         html.open_a(href=host.clone_url())
         html.icon("insert")
-        html.write_text(_("Clone host"))
+        html.write_text_permissive(_("Clone host"))
         html.close_a()
 
     form_name: str = "hosts"
@@ -3715,7 +3712,7 @@ def ajax_popup_host_action_menu() -> None:
             % json.dumps([form_name, "_parentscan"]),
         )
         html.icon("parentscan")
-        html.write_text(_("Detect network parents"))
+        html.write_text_permissive(_("Detect network parents"))
         html.close_a()
 
     # Remove TLS registration
@@ -3738,7 +3735,7 @@ def ajax_popup_host_action_menu() -> None:
             ),
         )
         html.icon({"icon": "tls", "emblem": "remove"})
-        html.write_text(_("Remove TLS registration"))
+        html.write_text_permissive(_("Remove TLS registration"))
         html.close_a()
 
     # Delete host
@@ -3760,7 +3757,7 @@ def ajax_popup_host_action_menu() -> None:
             ),
         )
         html.icon("delete")
-        html.write_text(_("Delete host"))
+        html.write_text_permissive(_("Delete host"))
         html.close_a()
 
 

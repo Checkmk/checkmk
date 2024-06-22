@@ -111,6 +111,6 @@ check_info["eltek_fans"] = LegacyCheckDefinition(
     check_function=check_eltek_fans,
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={
-        "levels": (99, 100),
+        "levels": (99.0, 100.0),
     },
 )

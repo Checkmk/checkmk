@@ -40,13 +40,13 @@ def _parameter_form() -> Dictionary:
         elements={
             "hosts": DictElement(
                 parameter_form=List(
-                    title=Title("Hostnames to query"),
+                    title=Title("Host names to query"),
                     help_text=Help(
                         "Use this option to set which host should be checked by the special agent. If the "
                         "connection to the first server fails, the next server will be queried (fallback). "
                         "The check will only output data from the first host that sends a response."
                     ),
-                    element_template=String(),
+                    element_template=String(macro_support=True),
                     custom_validate=(LengthInRange(min_value=1),),
                 ),
                 required=True,
@@ -103,7 +103,7 @@ def _parameter_form() -> Dictionary:
                     title=Title("Informations to query"),
                     help_text=Help(
                         "Defines what information to query. "
-                        "Checks for Cluster, Indices and Shard statistics follow soon."
+                        "Checks for cluster, indices and shard statistics follow soon."
                     ),
                     elements=[
                         MultipleChoiceElement(
@@ -116,7 +116,7 @@ def _parameter_form() -> Dictionary:
                         ),
                         MultipleChoiceElement(
                             name="stats",
-                            title=Title("Cluster, Indices and Shard statistics"),
+                            title=Title("Cluster, indices and shard statistics"),
                         ),
                     ],
                     custom_validate=(LengthInRange(min_value=1),),

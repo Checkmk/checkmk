@@ -10,6 +10,7 @@ from typing import Any
 import hypothesis
 import schemathesis
 from requests import Response
+from schemathesis.stateful.state_machine import APIStateMachine
 
 from tests.schemathesis_openapi import settings
 from tests.schemathesis_openapi.hooks import hook_after_call
@@ -273,11 +274,11 @@ def run_state_machine_test(
     checks: Any | None = None,
 ) -> None:
     """Get a state machine for stateful testing."""
+    state_machine: type[APIStateMachine]
     if endpoint or checks or method:
         cloned_schema = schema.clone(endpoint=endpoint, method=method)
-        state_machine: Any = cloned_schema.as_state_machine()
 
-        class APIWorkflow(state_machine):
+        class APIWorkflow(cloned_schema.as_state_machine()):  # type: ignore[misc]
             def validate_response(self, response, case):
                 case.validate_response(response, checks=checks)
 

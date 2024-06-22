@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import abc
 import math
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Callable, Literal, NotRequired, TypeAlias, TypedDict
+from typing import Any, Literal, NotRequired, TypeAlias, TypedDict
 
 from cmk.utils import plugin_registry
 from cmk.utils.exceptions import MKGeneralException
@@ -534,16 +534,14 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
         return first_segment.unit["render"](
             first_segment.value
             + sum(
-                (
-                    evaluate_quantity(s, self.translated_metrics).value
-                    for s in self.perfometer.segments[1:]
-                )
+                evaluate_quantity(s, self.translated_metrics).value
+                for s in self.perfometer.segments[1:]
             )
         )
 
     def get_sort_value(self) -> float:
         return sum(
-            (evaluate_quantity(s, self.translated_metrics).value for s in self.perfometer.segments)
+            evaluate_quantity(s, self.translated_metrics).value for s in self.perfometer.segments
         )
 
 

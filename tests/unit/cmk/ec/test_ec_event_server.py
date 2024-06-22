@@ -5,12 +5,12 @@
 
 import logging
 
-from tests.testlib import CMKEventConsole
+from tests.unit.cmk.ec.helpers import new_event
 
 from cmk.utils.hostaddress import HostName
 
 import cmk.ec.export as ec
-from cmk.ec.config import Config, ServiceLevel
+from cmk.ec.config import Config, MatchGroups, ServiceLevel
 from cmk.ec.main import create_history, EventServer, StatusTableEvents, StatusTableHistory
 
 RULE = ec.Rule(
@@ -39,7 +39,7 @@ def test_event_rewrite(
     Event server rewrite_event() method should change event state
     even if incomplete StatePatterns are given in rule["State"].
     """
-    config_rule_packs: Config = {**config, "rule_packs": [ec.default_rule_pack([RULE])]}
+    config_rule_packs: Config = config | {"rule_packs": [ec.default_rule_pack([RULE])]}
     history = create_history(
         settings,
         config_rule_packs,
@@ -48,7 +48,7 @@ def test_event_rewrite(
         StatusTableHistory.columns,
     )
     event_server.reload_configuration(config_rule_packs, history=history)
-    event = CMKEventConsole.new_event(
+    event = new_event(
         ec.Event(
             host=HostName("heute"),
             text="SUPERWARN",
@@ -57,7 +57,7 @@ def test_event_rewrite(
     )
     assert "state" not in event
 
-    event_server.rewrite_event(rule=RULE, event=event, match_groups={})
+    event_server.rewrite_event(rule=RULE, event=event, match_groups=MatchGroups())
 
     assert event["text"] == "SUPERWARN"
     assert event["state"] == 2

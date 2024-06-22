@@ -31,10 +31,15 @@ from cmk.gui.openapi.endpoints.user_config import (
     _load_user,
 )
 from cmk.gui.openapi.endpoints.utils import complement_customer
-from cmk.gui.type_defs import UserObject, UserRole
-from cmk.gui.userdb import ConnectorType
+from cmk.gui.type_defs import UserObject
+from cmk.gui.userdb import ConnectorType, UserRole
+from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
-from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
+from cmk.gui.watolib.custom_attributes import (
+    CustomUserAttrSpec,
+    save_custom_attrs_to_mk_file,
+    update_user_custom_attrs,
+)
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
 
@@ -820,7 +825,7 @@ def test_show_all_users_with_no_email(clients: ClientRegistry, monkeypatch: Monk
     # We remove all the contact information to mimic the no email case
     monkeypatch.setattr(
         "cmk.gui.userdb.store.load_contacts",
-        lambda: {},
+        lambda flag: {},
     )
 
     resp = clients.User.get_all()
@@ -971,13 +976,13 @@ def test_openapi_new_user_with_non_existing_role(clients: ClientRegistry) -> Non
 
 
 @contextmanager
-def custom_user_attributes_ctx(attrs: list[Mapping[str, str | bool]]) -> Iterator:
+def custom_user_attributes_ctx(attrs: list[CustomUserAttrSpec]) -> Iterator:
     try:
-        save_custom_attrs_to_mk_file({"user": attrs})
+        save_custom_attrs_to_mk_file({"user": attrs, "host": []})
         update_user_custom_attrs(datetime.datetime.today())
         yield
     finally:
-        save_custom_attrs_to_mk_file({})
+        save_custom_attrs_to_mk_file({"user": attrs, "host": []})
 
 
 def add_default_customer_in_managed_edition(params: dict[str, Any]) -> None:
@@ -998,14 +1003,18 @@ def test_openapi_custom_attributes_of_user(
     username = "rob_halford"
 
     # TODO: Ask what to do with attributes creation
-    attr: Mapping[str, str | bool] = {
-        "name": "judas",
-        "title": "judas",
-        "help": "help",
-        "topic": "basic",
-        "type": "TextAscii",
-        "user_editable": True,
-    }
+    attr = CustomUserAttrSpec(
+        {
+            "name": "judas",
+            "title": "judas",
+            "help": "help",
+            "topic": "basic",
+            "type": "TextAscii",
+            "show_in_table": False,
+            "add_custom_macro": False,
+            "user_editable": True,
+        }
+    )
 
     with custom_user_attributes_ctx([attr]):
         clients.User.create(
@@ -1037,14 +1046,18 @@ def test_openapi_custom_attributes_of_user(
 def test_edit_custom_attributes_of_user(_mock: None, clients: ClientRegistry) -> None:
     username = "rob_halford"
 
-    attr: Mapping[str, str | bool] = {
-        "name": "judas",
-        "title": "judas",
-        "help": "help",
-        "topic": "basic",
-        "type": "TextAscii",
-        "user_editable": True,
-    }
+    attr = CustomUserAttrSpec(
+        {
+            "name": "judas",
+            "title": "judas",
+            "help": "help",
+            "topic": "basic",
+            "type": "TextAscii",
+            "show_in_table": False,
+            "add_custom_macro": False,
+            "user_editable": True,
+        }
+    )
 
     with custom_user_attributes_ctx([attr]):
         clients.User.create(
@@ -1291,29 +1304,34 @@ def test_create_user_with_contact_group(clients: ClientRegistry) -> None:
 @pytest.fixture(name="mock_ldap_locked_attributes")
 def fixture_mock_ldap_locked_attributes(mocker: MockerFixture) -> MagicMock:
     """Mock the locked attributes of a LDAP user"""
-    ldap_config = {
-        "id": "CMKTest",
-        "description": "",
-        "comment": "",
-        "docu_url": "",
-        "disabled": False,
-        "directory_type": (
+    ldap_config = LDAPUserConnectionConfig(
+        id="CMKTest",
+        description="",
+        comment="",
+        docu_url="",
+        disabled=False,
+        directory_type=(
             "ad",
-            {"connect_to": ("fixed_list", {"server": "some.domain.com"})},
+            LDAPConnectionConfigFixed(
+                connect_to=(
+                    "fixed_list",
+                    Fixed(server="some.domain.com"),
+                )
+            ),
         ),
-        "bind": (
+        bind=(
             "CN=svc_checkmk,OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
             ("store", "AD_svc_checkmk"),
         ),
-        "port": 636,
-        "use_ssl": True,
-        "user_dn": "OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
-        "user_scope": "sub",
-        "user_filter": "(&(objectclass=user)(objectcategory=person)(|(memberof=CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com)))",
-        "user_id_umlauts": "keep",
-        "group_dn": "OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
-        "group_scope": "sub",
-        "active_plugins": {
+        port=636,
+        use_ssl=True,
+        user_dn="OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
+        user_scope="sub",
+        user_filter="(&(objectclass=user)(objectcategory=person)(|(memberof=CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com)))",
+        user_id_umlauts="keep",
+        group_dn="OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
+        group_scope="sub",
+        active_plugins={
             "alias": {},
             "auth_expire": {},
             "groups_to_contactgroups": {"nested": True},
@@ -1337,9 +1355,9 @@ def fixture_mock_ldap_locked_attributes(mocker: MockerFixture) -> MagicMock:
             "ui_theme": {"attr": "msDS-cloudExtensionAttribute7"},
             "force_authuser": {"attr": "msDS-cloudExtensionAttribute8"},
         },
-        "cache_livetime": 300,
-        "type": "ldap",
-    }
+        cache_livetime=300,
+        type="ldap",
+    )
 
     return mocker.patch(
         "cmk.gui.openapi.endpoints.user_config.locked_attributes",
@@ -1389,3 +1407,35 @@ def test_edit_ldap_user_with_locked_attributes(
         roles=["admin"],
         expect_ok=False,
     ).assert_status_code(403)
+
+
+def test_openapi_minimum_configuration(clients: ClientRegistry) -> None:
+    create_resp = clients.User.create(username="user", fullname="User Test")
+    get_resp = clients.User.get(username="user")
+
+    print(create_resp.json)
+    print(get_resp.json)
+    assert create_resp.json == get_resp.json
+    assert create_resp.json["id"] == "user"
+    assert create_resp.json["extensions"]["fullname"] == "User Test"
+
+
+def test_openapi_full_configuration(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(name="group_one", alias="Group")
+    create_resp = clients.User.create(
+        username="user",
+        fullname="User Test",
+        authorized_sites=["NO_SITE"],
+        contactgroups=["group_one"],
+        temperature_unit="fahrenheit",
+        disable_login=True,
+        pager_address="LMP",
+        language="de",
+        contact_options={"email": "test@example.com", "fallback_contact": True},
+        auth_option={"auth_type": "automation", "secret": "TopSecret!"},
+        roles=["guest"],
+    )
+
+    get_resp = clients.User.get(username="user")
+
+    assert create_resp.json == get_resp.json

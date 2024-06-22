@@ -10,7 +10,67 @@ We are working towards a more staight forward solution.
 import shlex
 import sys
 from collections.abc import Callable, Iterable, Mapping
+from pathlib import Path
 from typing import NoReturn
+
+from ._pwstore import lookup
+
+HACK_AGENTS = {
+    # For the plugins developed against the cmk.server_side_calls.v1 we
+    # need to know whether they support the password store natively, or
+    # if we have to apply the password store hack.
+    # Make sure to have *all* special agent plugins listed here, so we
+    # can test for it
+    "aws": True,
+    "aws_status": False,  # needs no secret
+    "azure_status": False,  # needs no secret
+    "bazel_cache": True,
+    "bi": False,  # needs no secret
+    "cisco_meraki": True,
+    "cisco_prime": True,
+    "datadog": True,
+    "elasticsearch": True,
+    "fritzbox": False,  # needs no secret
+    "gcp": True,
+    "jenkins": True,
+    "mobileiron": True,
+    "netapp_ontap": True,
+    "prism": True,
+    "proxmox_ve": True,
+    "pure_storage_fa": True,
+    "three_par": True,
+}
+
+
+HACK_CHECKS = {
+    # For the plugins developed against the cmk.server_side_calls.v1 we
+    # need to know whether they support the password store natively, or
+    # if we have to apply the password store hack.
+    # Make sure to have *all* active check plug-ins listed here, so we
+    # can test for it
+    "by_ssh": False,  # has no secret
+    "cert": False,  # has no secret
+    "cmk_inv": False,  # has no secret
+    "dns": False,  # has no secret
+    "elasticsearch_query": False,
+    "form_submit": False,  # has no secret
+    "ftp": False,  # has no secret
+    "http": True,
+    "httpv2": False,  # yay!
+    "icmp": False,  # has no secret
+    "ldap": True,
+    "mail_loop": True,  # TODO
+    "mailboxes": True,  # TODO
+    "mail": True,  # TODO
+    "mkevents": False,  # has no secret
+    "notify_count": False,  # has no secret
+    "smtp": True,
+    "sql": True,
+    "ssh": False,  # has no secret
+    "tcp": False,  # has no secret
+    "traceroute": False,  # has no secret
+    "uniserv": False,  # has no secret
+}
 
 
 def _bail_out(s: str) -> NoReturn:
@@ -19,8 +79,9 @@ def _bail_out(s: str) -> NoReturn:
     sys.exit(3)
 
 
-def resolve_password_hack(input_argv: Iterable[str], passwords: Mapping[str, str]) -> list[str]:
-
+def resolve_password_hack(
+    input_argv: Iterable[str], password_lookup: Callable[[Path, str], str]
+) -> list[str]:
     argv = list(input_argv)
 
     if len(argv) < 2:
@@ -29,10 +90,10 @@ def resolve_password_hack(input_argv: Iterable[str], passwords: Mapping[str, str
     if not [a for a in argv if a.startswith("--pwstore")]:
         return argv  # no password store in use
 
-    # --pwstore=4@4@web,6@0@foo
+    # --pwstore=4@4@file@web,6@0@file@foo
     #  In the 4th argument at char 4 replace the following bytes
-    #  with the passwords stored under the ID 'web'
-    #  In the 6th argument at char 0 insert the password with the ID 'foo'
+    #  with the passwords stored in 'file' under the ID 'web'
+    #  In the 6th argument at char 0 insert the password from 'file' with the ID 'foo'
 
     # Extract first argument and parse it
 
@@ -40,13 +101,18 @@ def resolve_password_hack(input_argv: Iterable[str], passwords: Mapping[str, str
 
     for password_spec in pwstore_args.split(","):
         parts = password_spec.split("@")
-        if len(parts) != 3:
+        if len(parts) != 4:
             _bail_out(f"pwstore: Invalid --pwstore entry: {password_spec}")
 
         try:
-            num_arg, pos_in_arg, password_id = int(parts[0]), int(parts[1]), parts[2]
+            num_arg, pos_in_arg, pw_file, pw_id = (
+                int(parts[0]),
+                int(parts[1]),
+                Path(parts[2]),
+                parts[3],
+            )
         except ValueError:
-            _bail_out(f"pwstore: Invalid format: {password_spec}")
+            _bail_out(f"pwstore: Invalid --pwstore entry: {password_spec}")
 
         try:
             arg = argv[num_arg]
@@ -54,9 +120,9 @@ def resolve_password_hack(input_argv: Iterable[str], passwords: Mapping[str, str
             _bail_out("pwstore: Argument %d does not exist" % num_arg)
 
         try:
-            password = passwords[password_id]
-        except KeyError:
-            _bail_out(f"pwstore: Password '{password_id}' does not exist")
+            password = password_lookup(pw_file, pw_id)
+        except ValueError as exc:
+            _bail_out(f"pwstore: {exc}")
 
         argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
 
@@ -66,6 +132,7 @@ def resolve_password_hack(input_argv: Iterable[str], passwords: Mapping[str, str
 def apply_password_hack(
     command_spec: Iterable[str | tuple[str, str, str]],
     passwords: Mapping[str, str],
+    pw_file: Path,
     logger: Callable[[str], None],
     log_label: str,
 ) -> list[str]:
@@ -85,7 +152,6 @@ def apply_password_hack(
         try:
             password = passwords[pw_ident]
         except KeyError:
-
             logger(f'The stored password "{pw_ident}"{log_label} does not exist (anymore).')
             password = "%%%"
 
@@ -94,8 +160,20 @@ def apply_password_hack(
         replacements.append((str(len(formatted)), pw_start_index, pw_ident))
 
     if replacements:
-        pw = ",".join(["@".join(p) for p in replacements])
+        pw = ",".join(
+            (
+                f"{num_arg}@{pos_in_arg}@{pw_file}@{pw_id}"
+                for num_arg, pos_in_arg, pw_id in replacements
+            )
+        )
         pw_store_arg = f"--pwstore={pw}"
         formatted = [shlex.quote(pw_store_arg)] + formatted
 
     return formatted
+
+
+# This function and its questionable bahavior of operating in-place on sys.argv is quasi-public.
+# Many third party plugins rely on it, so we must not change it.
+# One day, when we have a more official versioned API we can hopefully remove it.
+def replace_passwords() -> None:
+    sys.argv[:] = resolve_password_hack(sys.argv, lookup)

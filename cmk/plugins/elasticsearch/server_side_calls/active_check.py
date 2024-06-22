@@ -28,11 +28,12 @@ class Params(BaseModel):
     pattern: str
     fieldname: list[str] | None = None
     timerange: int
-    count: tuple[int, int] | None = None
+    count: tuple[Literal["fixed"], int, int] | tuple[Literal["no_levels"], None] | None = None
 
 
 def commands_function(
-    params: Params, host_config: HostConfig, _http_proxies: object
+    params: Params,
+    host_config: HostConfig,
 ) -> Iterator[ActiveCheckCommand]:
     args: list[str | Secret] = ["-q", params.pattern, "-t", str(params.timerange)]
 
@@ -41,15 +42,15 @@ def commands_function(
     if params.user is not None:
         args += ["-u", params.user]
     if params.password is not None:
-        args += ["-s", params.password]
+        args += ["--password-id", params.password]
     if params.port is not None:
         args += ["-p", str(params.port)]
     if params.index:
         args += ["-i", " ".join(params.index)]
     if params.fieldname is not None:
         args += ["-f", " ".join(params.fieldname)]
-    if params.count is not None:
-        warn, crit = params.count
+    if params.count is not None and params.count[0] == "fixed":
+        _ty, warn, crit = params.count
         args += ["--warn=%d" % warn, "--crit=%d" % crit]
 
     if params.hostname is not None:

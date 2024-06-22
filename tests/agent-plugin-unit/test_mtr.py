@@ -11,7 +11,7 @@ import pytest
 if sys.version_info[0] == 2:
     import agents.plugins.mtr_2 as mtr  # pylint: disable=syntax-error
 else:
-    import agents.plugins.mtr as mtr
+    from agents.plugins import mtr
 
 
 @pytest.mark.parametrize(

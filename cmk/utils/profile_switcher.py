@@ -35,7 +35,7 @@ import threading
 import typing
 import urllib.parse
 
-import pyprof2calltree  # type: ignore[import]
+import pyprof2calltree  # type: ignore[import-untyped]
 
 if typing.TYPE_CHECKING:
     from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment

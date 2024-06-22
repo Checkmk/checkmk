@@ -78,7 +78,7 @@ pub fn collect_response_checks(
 ) -> Vec<CheckResult> {
     let response = match response {
         Ok(resp) => resp,
-        Err(err) => return check_reqwest_error(err),
+        Err(err) => return check_reqwest_error(err, request_information),
     };
 
     let (body, body_check_results) = check_body(response.body);
@@ -134,9 +134,19 @@ fn check_urls(url: Url, final_url: Url) -> Vec<Option<CheckResult>> {
     results
 }
 
-fn check_reqwest_error(err: reqwest::Error) -> Vec<CheckResult> {
+fn check_reqwest_error(
+    err: reqwest::Error,
+    request_information: RequestInformation,
+) -> Vec<CheckResult> {
     if err.is_timeout() {
-        notice(State::Crit, "timeout")
+        notice(
+            State::Crit,
+            &format!(
+                "Could not connect to {} within specified timeout: {}",
+                request_information.request_url,
+                render_seconds_with_ms(&request_information.timeout.as_secs_f64()),
+            ),
+        )
     } else if err.is_connect()
         // Hit one of max_redirs, sticky, stickyport
         | err.is_redirect()
@@ -420,17 +430,6 @@ fn check_response_time(
     response_time_levels: Option<UpperLevels<f64>>,
     timeout: Duration,
 ) -> Vec<Option<CheckResult>> {
-    fn render_response_time(val: &f64) -> String {
-        // Format to three digits to get a sense of milliseconds,
-        // but crop unnecessary trailing zeros/decimal point
-        format!(
-            "{} seconds",
-            format!("{:.3}", val)
-                .trim_end_matches('0')
-                .trim_end_matches('.')
-        )
-    }
-
     let response_time = if let Some(time_body) = time_body {
         time_header + time_body
     } else {
@@ -440,7 +439,7 @@ fn check_response_time(
     let mut ret = check_upper_levels(
         "Response time",
         response_time.as_secs_f64(),
-        render_response_time,
+        render_seconds_with_ms,
         &response_time_levels,
     );
     ret.push(CheckResult::metric(
@@ -535,6 +534,17 @@ fn check_user_agent(user_agent: String) -> Vec<Option<CheckResult>> {
         State::Ok,
         &format!("User agent: {}", user_agent),
     )]
+}
+
+fn render_seconds_with_ms(val: &f64) -> String {
+    // Format to three digits to get a sense of milliseconds,
+    // but crop unnecessary trailing zeros/decimal point
+    format!(
+        "{} seconds",
+        format!("{:.3}", val)
+            .trim_end_matches('0')
+            .trim_end_matches('.')
+    )
 }
 
 #[cfg(test)]

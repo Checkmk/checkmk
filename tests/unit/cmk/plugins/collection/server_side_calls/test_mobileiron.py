@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.mobileiron import special_agent_mobileiron
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, URLProxy
 
 HOST_CONFIG = HostConfig(
     name="mobileironhostname",
@@ -23,10 +23,7 @@ HOST_CONFIG = HostConfig(
             {
                 "username": "mobileironuser",
                 "password": Secret(23),
-                "proxy": (
-                    "url",
-                    "abc:8567",
-                ),
+                "proxy": URLProxy(url="abc:8567"),
                 "partition": ["10"],
                 "key_fields": "deviceModel_serialNumber",
                 "android_regex": ["asdf", "foo", "^bar"],
@@ -37,7 +34,7 @@ HOST_CONFIG = HostConfig(
                 "-u",
                 "mobileironuser",
                 "-p",
-                Secret(23),
+                Secret(23).unsafe(),
                 "--partition",
                 "10",
                 "--hostname",
@@ -63,7 +60,7 @@ def test_agent_mobileiron_arguments(
     expected_args: Sequence[str | Secret],
 ) -> None:
     """Tests if all required arguments are present."""
-    commands = list(special_agent_mobileiron(params, HOST_CONFIG, {}))
+    commands = list(special_agent_mobileiron(params, HOST_CONFIG))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_args

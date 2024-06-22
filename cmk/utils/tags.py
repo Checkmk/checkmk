@@ -8,9 +8,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator, Mapping, Sequence
-from typing import NamedTuple, NewType
-
-from typing_extensions import TypedDict
+from typing import NamedTuple, NewType, NotRequired, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
@@ -26,25 +24,19 @@ class GroupedTagSpec(TypedDict):
     aux_tags: list[TagID]
 
 
-class _AuxTagSpecOpt(TypedDict, total=False):
-    topic: str
-    help: str
-
-
-class AuxTagSpec(_AuxTagSpecOpt):
+class AuxTagSpec(TypedDict):
     id: TagID
     title: str
+    topic: NotRequired[str]
+    help: NotRequired[str]
 
 
-class _TagGroupSpecOpt(TypedDict, total=False):
-    topic: str
-    help: str
-
-
-class TagGroupSpec(_TagGroupSpecOpt):
+class TagGroupSpec(TypedDict):
     id: TagGroupID
     title: str
     tags: list[GroupedTagSpec]
+    topic: NotRequired[str]
+    help: NotRequired[str]
 
 
 class TagConfigSpec(TypedDict):
@@ -165,6 +157,11 @@ class AuxTagList:
             if builtin_config.aux_tag_list.exists(aux_tag.id):
                 raise MKGeneralException(
                     _('You can not override the builtin auxiliary tag "%s".') % aux_tag.id
+                )
+
+            if builtin_config.tag_group_exists(TagGroupID(aux_tag.id)):
+                raise MKGeneralException(
+                    _('You can not override the builtin tag group "%s".') % aux_tag.id
                 )
 
             if aux_tag.id in seen:
@@ -491,6 +488,11 @@ class TagConfig:
         if builtin_config.tag_group_exists(tag_group.id):
             raise MKGeneralException(
                 _('You can not override the builtin tag group "%s".') % tag_group.id
+            )
+
+        if builtin_config.aux_tag_list.exists(TagID(tag_group.id)):
+            raise MKGeneralException(
+                _('You can not override the builtin auxiliary tag "%s".') % tag_group.id
             )
 
         if not tag_group.title:

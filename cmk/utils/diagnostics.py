@@ -7,9 +7,7 @@ import os
 from collections.abc import Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
-from typing import Any, Literal, NamedTuple
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from livestatus import SiteId
 
@@ -33,6 +31,7 @@ DiagnosticsElementFilepaths = Iterator[Path]
 class DiagnosticsParameters(TypedDict):
     site: SiteId
     general: Literal[True]
+    timeout: int
     opt_info: DiagnosticsOptionalParameters | None
     comp_specific: DiagnosticsOptionalParameters | None
 
@@ -716,7 +715,7 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
     "redis-server.log": CheckmkFileInfo(
         components=[],
         sensitivity=CheckmkFileSensitivity.sensitive,
-        description="The log file of the redis-server of the Checkmk instance.",
+        description="The log file of the redis-server of the Checkmk site.",
         encryption=CheckmkFileEncryption.none,
     ),
     "agent-receiver/access.log": CheckmkFileInfo(

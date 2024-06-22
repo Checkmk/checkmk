@@ -7,13 +7,17 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
 import cmk.utils.paths
+from cmk.utils import config_warnings, password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
-from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, SpecialAgentConfig
+from cmk.server_side_calls.v1 import HostConfig, SpecialAgentConfig
+from cmk.server_side_calls_backend.config_processing import (
+    process_configuration_to_parameters,
+    ProxyConfig,
+)
 
 from ._commons import (
     commandline_arguments,
@@ -22,13 +26,19 @@ from ._commons import (
     replace_passwords,
     SpecialAgentInfoFunctionResult,
 )
-from ._config_processing import process_configuration_into_parameters
 
 
 @dataclass(frozen=True)
 class SpecialAgentCommandLine:
     cmdline: str
     stdin: str | None = None
+
+
+def _ensure_mapping_str_object(value: object) -> Mapping[str, object]:
+    # for the new API, we can be sure that there are only Mappings.
+    if not isinstance(value, dict):
+        raise TypeError(value)
+    return value
 
 
 class SpecialAgent:
@@ -42,6 +52,7 @@ class SpecialAgent:
         host_attrs: Mapping[str, str],
         http_proxies: Mapping[str, Mapping[str, str]],
         stored_passwords: Mapping[str, str],
+        password_store_file: Path,
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
@@ -52,6 +63,7 @@ class SpecialAgent:
         self.host_attrs = host_attrs
         self._http_proxies = http_proxies
         self.stored_passwords = stored_passwords
+        self.password_store_file = password_store_file
 
     def _make_source_path(self, agent_name: str) -> Path | str:
         file_name = f"agent_{agent_name}"
@@ -71,11 +83,17 @@ class SpecialAgent:
         agent_configuration: SpecialAgentInfoFunctionResult,
     ) -> str:
         path = self._make_source_path(agent_name)
-        args = commandline_arguments(self.host_name, None, agent_configuration)
+        args = commandline_arguments(
+            self.host_name,
+            None,
+            agent_configuration,
+            self.stored_passwords,
+            self.password_store_file,
+        )
         return replace_macros(f"{path} {args}", self.host_config.macros)
 
     def _iter_legacy_commands(
-        self, agent_name: str, info_func: InfoFunc, params: Mapping[str, object]
+        self, agent_name: str, info_func: InfoFunc, params: object
     ) -> Iterator[SpecialAgentCommandLine]:
         agent_configuration = info_func(params, self.host_name, self.host_address)
 
@@ -90,29 +108,34 @@ class SpecialAgent:
     def _iter_commands(
         self, special_agent: SpecialAgentConfig, conf_dict: Mapping[str, object]
     ) -> Iterator[SpecialAgentCommandLine]:
-        http_proxies = {
-            id: HTTPProxy(id=id, name=proxy["title"], url=proxy["proxy_url"])
-            for id, proxy in self._http_proxies.items()
-        }
 
-        params, surrogated_secrets = process_configuration_into_parameters(conf_dict)
+        proxy_config = ProxyConfig(self.host_name, self._http_proxies)
+        processed = process_configuration_to_parameters(conf_dict, proxy_config)
 
-        for command in special_agent(params, self.host_config, http_proxies):
+        for command in special_agent(processed.value, self.host_config):
             args = replace_passwords(
-                self.host_name, self.stored_passwords, command.command_arguments, surrogated_secrets
+                self.host_name,
+                command.command_arguments,
+                self.stored_passwords,
+                self.password_store_file,
+                processed.surrogates,
+                apply_password_store_hack=password_store.hack.HACK_AGENTS.get(
+                    special_agent.name, False
+                ),
             )
             # there's a test that currently prevents us from moving this out of the loop
             path = self._make_source_path(special_agent.name)
             yield SpecialAgentCommandLine(f"{path} {args}", command.stdin)
 
     def iter_special_agent_commands(
-        self, agent_name: str, params: Mapping[str, object]
+        self, agent_name: str, params: Mapping[str, object] | object
     ) -> Iterator[SpecialAgentCommandLine]:
         try:
             if (info_func := self._legacy_plugins.get(agent_name)) is not None:
                 yield from self._iter_legacy_commands(agent_name, info_func, params)
 
             if (special_agent := self._plugins.get(agent_name.replace("agent_", ""))) is not None:
+                params = _ensure_mapping_str_object(params)
                 yield from self._iter_commands(special_agent, params)
         except Exception as e:
             if cmk.utils.debug.enabled():

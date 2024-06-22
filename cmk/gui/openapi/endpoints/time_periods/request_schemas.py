@@ -2,6 +2,8 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Callable, Collection
 from typing import Any, Literal
 
 import marshmallow
@@ -25,18 +27,18 @@ class TimePeriodName(fields.String):
         "should_not_be_builtin": "Time period alias {name!r} can't be a built-in",
     }
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
-        example,
+        example: str,
         presence: Literal[
             "should_exist",
             "should_not_exist",
             "should_exist_and_should_not_be_builtin",
         ] = "should_exist",
-        required=True,
-        validate=None,
+        required: bool = True,
+        validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
         should_exist: bool = True,
-        **kwargs,
+        **kwargs: Any,
     ):
         self._should_exist = should_exist
         self._presence = presence
@@ -75,17 +77,17 @@ class TimePeriodAlias(fields.String):
         "should_not_be_builtin": "Time period alias {name!r} can't be a built-in",
     }
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
-        example,
-        required=True,
-        validate=None,
+        example: str,
+        required: bool = True,
+        validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
         presence: Literal[
             "should_exist",
             "should_not_exist",
             "should_exist_and_should_not_be_builtin",
         ] = "should_exist",
-        **kwargs,
+        **kwargs: Any,
     ):
         self._presence = presence
         super().__init__(

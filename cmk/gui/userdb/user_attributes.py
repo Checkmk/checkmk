@@ -40,6 +40,10 @@ def register(user_attribute_registry: UserAttributeRegistry) -> None:
     user_attribute_registry.register(UIBasicAdvancedToggle)
 
 
+def saas_register(saas_user_attribute_registry: UserAttributeRegistry) -> None:
+    saas_user_attribute_registry.register(UISaaSOnboardingButtonToggle)
+
+
 class TemperatureUnitUserAttribute(UserAttribute):
     @classmethod
     def name(cls) -> str:
@@ -106,9 +110,9 @@ class ForceAuthUserUserAttribute(UserAttribute):
             title=_("Visibility of hosts/services"),
             label=_("Only show hosts and services the user is a contact for"),
             help=_(
-                "When this option is checked, then the status GUI will only "
+                "When this option is checked, the status GUI will only "
                 "display hosts and services that the user is a contact for - "
-                "even if he has the permission for seeing all objects."
+                "even they have the permission for seeing all objects."
             ),
         )
 
@@ -156,7 +160,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
                     ),
                 ],
             ),
-            migrate=_transform_disable_notification,
+            migrate=lambda x: {} if x is None else x,
         )
 
     def permission(self) -> None | str:
@@ -164,19 +168,6 @@ class DisableNotificationsUserAttribute(UserAttribute):
 
     def domain(self) -> str:
         return "check_mk"
-
-
-def _transform_disable_notification(p: None | bool | dict) -> dict:
-    # The typing of this function may be lying. The config may contain more values, but there is no
-    # way to know. This typing is based on the orginal transform, see change with ID
-    # Ic0bd327d128833b1551c21ad52c8a1dabb118875
-    if p is None:
-        return {}
-    if isinstance(p, bool):
-        if p:
-            return {"disable": True}
-        return {}
-    return p
 
 
 class StartURLUserAttribute(UserAttribute):
@@ -272,6 +263,25 @@ class UISidebarPosition(UserAttribute):
             title=_("Sidebar position"),
             # FIXME: Why isn't this simply a bool instead of an Optional[Literal["left"]]?
             choices=[(None, _("Right")), ("left", _("Left"))],
+        )
+
+    def domain(self) -> str:
+        return "multisite"
+
+
+class UISaaSOnboardingButtonToggle(UserAttribute):
+    @classmethod
+    def name(cls) -> str:
+        return "ui_saas_onboarding_button_toggle"
+
+    def topic(self) -> str:
+        return "interface"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Toggle onboarding button"),
+            # FIXME: Why isn't this simply a bool instead of an Optional[Literal["Invisible"]]?
+            choices=[(None, _("Visible")), ("invisible", _("Invisible"))],
         )
 
     def domain(self) -> str:

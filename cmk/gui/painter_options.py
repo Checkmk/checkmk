@@ -13,8 +13,7 @@ from typing import Any
 import cmk.utils.render
 from cmk.utils.plugin_registry import Registry
 
-import cmk.gui.forms as forms
-import cmk.gui.valuespec as valuespec
+from cmk.gui import forms, valuespec
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.hooks import request_memoize

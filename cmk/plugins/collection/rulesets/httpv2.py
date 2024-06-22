@@ -11,6 +11,7 @@ from cmk.rulesets.v1.form_specs import (
     DataSize,
     DefaultValue,
     DictElement,
+    DictGroup,
     Dictionary,
     FixedValue,
     InputHint,
@@ -18,6 +19,7 @@ from cmk.rulesets.v1.form_specs import (
     LevelDirection,
     List,
     MatchingScope,
+    migrate_to_proxy,
     Password,
     Proxy,
     RegularExpression,
@@ -34,6 +36,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 _DAY = 24.0 * 3600.0
+_DEFAULT_USER_AGENT = "checkmk-active-httpv2/2.4.0"
 
 
 def _valuespec_response() -> Dictionary:
@@ -68,7 +71,6 @@ def _valuespec_document() -> Dictionary:
         elements={
             "document_body": DictElement(
                 parameter_form=SingleChoice(
-                    title=Title("Document body"),
                     help_text=Help(
                         "As an alternative to fetch the complete document including the actual web site or application (document body), you may also choose to fetch only the header. Please note, that in this case still the HTTP methods GET or POST will be used by default and not HEAD."
                     ),
@@ -147,6 +149,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                 parameter_form=Dictionary(
                     elements={
                         "header_name_pattern": DictElement[str](
+                            group=DictGroup(),
                             parameter_form=RegularExpression(
                                 label=Label("Header name pattern"),
                                 predefined_help_text=MatchingScope.INFIX,
@@ -155,6 +158,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                             required=True,
                         ),
                         "header_value_pattern": DictElement[str](
+                            group=DictGroup(),
                             parameter_form=RegularExpression(
                                 label=Label("Header value pattern"),
                                 predefined_help_text=MatchingScope.INFIX,
@@ -243,15 +247,14 @@ def _send_data() -> Dictionary:
                                 elements=[
                                     CascadingSingleChoiceElement(
                                         name="common",
-                                        title=Title("Type selection"),
+                                        title=Title("Select type from list"),
                                         parameter_form=SingleChoice(
-                                            title=Title("Select type from list"),
                                             elements=[
                                                 SingleChoiceElement(
                                                     name=content_type.lower()
                                                     .replace("/", "_")
                                                     .replace("-", "_"),
-                                                    title=Title(content_type),
+                                                    title=Title("%s") % content_type,
                                                 )
                                                 for content_type in [
                                                     "application/json",
@@ -284,10 +287,12 @@ def _send_data() -> Dictionary:
 
 header_dict_elements = {
     "header_name": DictElement(
+        group=DictGroup(),
         parameter_form=String(label=Label("Name"), prefill=InputHint("Accept-Language")),
         required=True,
     ),
     "header_value": DictElement(
+        group=DictGroup(),
         parameter_form=String(label=Label("Value"), prefill=InputHint("en-US,en;q=0.5")),
         required=True,
     ),
@@ -296,7 +301,7 @@ header_dict_elements = {
 
 def _valuespec_connection() -> Dictionary:
     return Dictionary(
-        title=Title("Connection details"),
+        title=Title("Connection buildup"),
         help_text=Help(
             "Options in this group define how the connection to the web server is established."
         ),
@@ -376,10 +381,11 @@ def _valuespec_connection() -> Dictionary:
                         "at all. TLS 1.0 and 1.1 is supported by the underlying plug-in but not "
                         "on this rule set as the plug-in needs to be called with an unsafe "
                         "configuration of OpenSSL 3. This requires a direct call via "
-                        "<i>Integrate Nagios plugins.</i>"
+                        "<i>Integrate Nagios plug-ins.</i>"
                     ),
                     elements={
                         "min_version": DictElement(
+                            group=DictGroup(),
                             parameter_form=SingleChoice(
                                 elements=[
                                     SingleChoiceElement(name="auto", title=Title("Negotiate")),
@@ -394,13 +400,14 @@ def _valuespec_connection() -> Dictionary:
                             required=True,
                         ),
                         "allow_higher": DictElement(
+                            group=DictGroup(),
                             parameter_form=BooleanChoice(label=Label("Allow higher versions")),
                             required=True,
                         ),
                     },
                 ),
             ),
-            "proxy": DictElement(parameter_form=Proxy()),
+            "proxy": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy)),
             "redirects": DictElement(
                 parameter_form=SingleChoice(
                     title=Title("How to handle redirects"),
@@ -432,7 +439,7 @@ def _valuespec_connection() -> Dictionary:
                         ),
                         SingleChoiceElement(
                             name="stickyport",
-                            title=Title("Follow, but stay to same IP-address and port"),
+                            title=Title("Follow, but stay to same IP address and port"),
                         ),
                     ],
                     prefill=DefaultValue("follow"),
@@ -458,7 +465,7 @@ def _valuespec_connection() -> Dictionary:
                         "checkmk/check_http, but you may use your own. The entry needs to be a "
                         "valid string for a header value."
                     ),
-                    prefill=DefaultValue("checkmk/check_http"),
+                    prefill=DefaultValue(_DEFAULT_USER_AGENT),
                 ),
             ),
             "add_headers": DictElement(
@@ -538,10 +545,10 @@ def _valuespec_content() -> Dictionary:
                 parameter_form=CascadingSingleChoice(
                     title=Title("Search for header"),
                     help_text=Help(
-                        "The provided header key and value need to be exact as in the "
+                        "The provided header key and value need to match exactly with the "
                         "actual header of the response. Please note that the service will "
-                        "get WARN if any, the key or the value, is not matching. If looking"
-                        "for a regular expression the first match will considered as success."
+                        "get a WARN if any, the key or the value, is not matching. If searching "
+                        "for a regular expression, the first match is considered a success."
                     ),
                     prefill=DefaultValue("string"),
                     elements=[
@@ -617,35 +624,13 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                 ),
             ),
             "server_response": DictElement(parameter_form=_valuespec_response()),
-            "cert": DictElement(
-                parameter_form=CascadingSingleChoice(
+            "cert": DictElement[SimpleLevelsConfigModel[float]](
+                parameter_form=SimpleLevels[float](
                     title=Title("Certificate validity"),
-                    prefill=DefaultValue("validate"),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="validate",
-                            title=Title("Check certificate"),
-                            parameter_form=SimpleLevels[float](
-                                title=Title("Check validity"),
-                                form_spec_template=TimeSpan(
-                                    displayed_magnitudes=(TimeMagnitude.DAY,)
-                                ),
-                                level_direction=LevelDirection.LOWER,
-                                prefill_fixed_levels=InputHint((90.0 * _DAY, 60.0 * _DAY)),
-                                help_text=Help(
-                                    "Minimum number of days a certificate has to be valid."
-                                ),
-                            ),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="no_validation",
-                            title=Title("Do not check certificate"),
-                            parameter_form=FixedValue(
-                                value=None,
-                                title=Title("Do not check certificate"),
-                            ),
-                        ),
-                    ],
+                    form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.DAY]),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=DefaultValue((40.0 * _DAY, 20.0 * _DAY)),
+                    help_text=Help("Minimum number of days a certificate has to be valid."),
                 )
             ),
             "document": DictElement(parameter_form=_valuespec_document()),
@@ -668,18 +653,19 @@ def _valuespec_endpoints() -> List:
             elements={
                 "service_name": DictElement(
                     parameter_form=Dictionary(
-                        title=Title("Service description"),
+                        title=Title("Service name"),
                         elements={
                             "prefix": DictElement(
+                                group=DictGroup(),
                                 parameter_form=SingleChoice(
                                     title=Title("Prefix"),
                                     help_text=Help(
-                                        "The prefix is automatically to each service to be able to organize them. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose to not use the prefix option."
+                                        "The prefix is automatically added to each service to be able to organize them. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose not to use the prefix option."
                                     ),
                                     elements=[
                                         SingleChoiceElement(
                                             name="auto",
-                                            title=Title("Use protocol name: HTTP(S)"),
+                                            title=Title('Use "HTTP(S)" as service name prefix'),
                                         ),
                                         SingleChoiceElement(
                                             name="none",
@@ -691,13 +677,14 @@ def _valuespec_endpoints() -> List:
                                 required=True,
                             ),
                             "name": DictElement(
+                                group=DictGroup(),
                                 parameter_form=String(
-                                    title=Title("Suffix"),
+                                    title=Title("Name"),
                                     help_text=Help(
-                                        "The suffix is the individual part of the used service description. Choose a human readable and unique title to be able to find your service later in Checkmk."
+                                        "The name is the individual part of the used service name. Choose a human readable and unique title to be able to find your service later in Checkmk."
                                     ),
                                     custom_validate=(validators.LengthInRange(min_value=1),),
-                                    prefill=InputHint("My HTTP service"),
+                                    prefill=InputHint("My service name"),
                                 ),
                                 required=True,
                             ),
@@ -709,9 +696,23 @@ def _valuespec_endpoints() -> List:
                     parameter_form=String(
                         title=Title("URL"),
                         help_text=Help(
-                            "The URL to monitor. This URL should include the protocol (HTTP or HTTPS), the full address and, if needed, also the port the endpoint should not be monitoring using a standard port (80 or 443). Please note, that authentication must not added here as it exposes sensible information. Please add a potential authentication in the connection details."
+                            "The URL to monitor. This URL must include the protocol (HTTP or "
+                            "HTTPS), the full address and, if needed, also the port the endpoint "
+                            "if using a non standard port. The URL may also include query "
+                            "parameters or anchors. You may use macros in this field. The most "
+                            "common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$. "
+                            "Please note, that authentication must "
+                            "not be added here as it exposes sensible information. Use "
+                            "'authentication' in the connection buildup options, instead. "
                         ),
-                        prefill=InputHint("https://subdomain.domain.tld:port/path/to/filename"),
+                        prefill=InputHint(
+                            "https://subdomain.domain.tld:port/path/to/filename?parameter=value#anchor"
+                        ),
+                        custom_validate=(
+                            validators.Url(
+                                [validators.UrlProtocol.HTTP, validators.UrlProtocol.HTTPS],
+                            ),
+                        ),
                     ),
                     required=True,
                 ),

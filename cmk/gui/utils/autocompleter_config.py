@@ -20,7 +20,7 @@ AutocompleterConfigJson = Mapping[
     str, str | int | float | bool | Collection[str] | AutocompleterParams
 ]
 DynamicParamsCallbackName = Literal[
-    # see dynamicParamsCallbacks object in web/htdocs/js/modules/valuespecs.js
+    # see dynamicParamsCallbacks object in packages/frontend-vue/js/modules/valuespecs.js
     "nop",
     "tag_group_options_autocompleter",
     "host_and_service_hinted_autocompleter",

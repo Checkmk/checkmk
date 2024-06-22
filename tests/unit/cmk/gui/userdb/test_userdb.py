@@ -15,7 +15,7 @@ import pytest
 from flask import Flask
 from pytest import MonkeyPatch
 
-from tests.testlib.utils import is_managed_repo
+from tests.testlib.repo import is_managed_repo
 
 import cmk.utils.paths
 import cmk.utils.version
@@ -40,6 +40,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.userdb import ldap_connector as ldap
 from cmk.gui.userdb import UserAttributeRegistry
+from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import load_custom_attr, save_two_factor_credentials, save_users
@@ -531,20 +532,60 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
         assert "vip" in ldap.ldap_attribute_plugin_registry
 
         connection = ldap.LDAPUserConnector(
-            {
-                "id": "ldp",
-                "directory_type": (
+            LDAPUserConnectionConfig(
+                id="ldp",
+                description="",
+                comment="",
+                docu_url="",
+                disabled=False,
+                directory_type=(
                     "ad",
-                    {
-                        "connect_to": (
+                    LDAPConnectionConfigFixed(
+                        connect_to=(
                             "fixed_list",
-                            {
-                                "server": "127.0.0.1",
-                            },
+                            Fixed(server="127.0.0.1"),
                         )
-                    },
+                    ),
                 ),
-            }
+                bind=(
+                    "CN=svc_checkmk,OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
+                    ("store", "AD_svc_checkmk"),
+                ),
+                port=636,
+                use_ssl=True,
+                user_dn="OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
+                user_scope="sub",
+                user_filter="(&(objectclass=user)(objectcategory=person)(|(memberof=CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com)))",
+                user_id_umlauts="keep",
+                group_dn="OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
+                group_scope="sub",
+                active_plugins={
+                    "alias": {},
+                    "auth_expire": {},
+                    "groups_to_contactgroups": {"nested": True},
+                    "disable_notifications": {"attr": "msDS-cloudExtensionAttribute1"},
+                    "email": {"attr": "mail"},
+                    "icons_per_item": {"attr": "msDS-cloudExtensionAttribute3"},
+                    "nav_hide_icons_title": {"attr": "msDS-cloudExtensionAttribute4"},
+                    "pager": {"attr": "mobile"},
+                    "groups_to_roles": {
+                        "admin": [
+                            (
+                                "CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
+                                None,
+                            )
+                        ]
+                    },
+                    "show_mode": {"attr": "msDS-cloudExtensionAttribute2"},
+                    "ui_sidebar_position": {"attr": "msDS-cloudExtensionAttribute5"},
+                    "start_url": {"attr": "msDS-cloudExtensionAttribute9"},
+                    "temperature_unit": {"attr": "msDS-cloudExtensionAttribute6"},
+                    "ui_theme": {"attr": "msDS-cloudExtensionAttribute7"},
+                    "force_authuser": {"attr": "msDS-cloudExtensionAttribute8"},
+                },
+                cache_livetime=300,
+                type="ldap",
+            )
         )
 
         ldap_plugin = ldap.ldap_attribute_plugin_registry["vip"]()
@@ -625,7 +666,7 @@ def make_cme(
 def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserId, str]) -> None:
     user_id, password = with_user
     now = datetime.now()
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+    from cmk.gui.cme import managed  # pylint: disable=no-name-in-module
 
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = managed.SCOPE_GLOBAL

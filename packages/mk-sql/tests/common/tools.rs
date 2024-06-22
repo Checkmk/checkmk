@@ -6,14 +6,14 @@ use assert_cmd::output::OutputError;
 use assert_cmd::Command;
 use flexi_logger::{self, DeferredNow, FileSpec, LogSpecification, Record};
 use mk_sql::config::ms_sql::{Authentication, Connection, Endpoint};
-use mk_sql::ms_sql::client::Client;
+use mk_sql::ms_sql::client::UniClient;
 use mk_sql::ms_sql::query;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Output;
 use tempfile::NamedTempFile;
 use tempfile::{Builder, TempDir};
-use yaml_rust::YamlLoader;
+use yaml_rust2::YamlLoader;
 
 pub fn run_bin() -> Command {
     Command::cargo_bin("mk-sql").unwrap()
@@ -181,15 +181,19 @@ pub fn skip_on_lack_of_ms_sql_endpoint() {
     .unwrap();
 }
 
-pub async fn run_get_version(client: &mut Client) -> Option<String> {
-    let rows = query::run_custom_query(client, "select @@VERSION")
+pub async fn run_get_version(client: &mut UniClient) -> Option<String> {
+    let answers = query::run_custom_query(client, "select @@VERSION")
         .await
         .unwrap();
-    let row = &rows[0];
-    row[0]
-        .try_get::<&str, usize>(0)
-        .unwrap()
-        .map(str::to_string)
+    let answer = &answers[0];
+    match answer {
+        query::UniAnswer::Rows(rows) => rows
+            .first()
+            .and_then(|v| v.try_get::<&str, usize>(0).ok()) // drop error
+            .flatten()
+            .map(str::to_string),
+        query::UniAnswer::Block(block) => block.get_first_row_column(0),
+    }
 }
 
 #[allow(dead_code)]

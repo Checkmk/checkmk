@@ -9,13 +9,12 @@ from logging import Logger
 from cmk.utils.site import get_omd_config
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateCoreConfig(UpdateAction):
-    """Ensure we have a fresh microcore config after all update actions were executed"""
+    """Ensure we have a fresh Micro Core config after all update actions were executed"""
 
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         if get_omd_config()["CONFIG_CORE"] == "none":
             return  # No core config is needed in this case
         subprocess.check_call(["cmk", "-U"], shell=False)

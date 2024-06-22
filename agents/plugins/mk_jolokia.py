@@ -10,6 +10,7 @@ USER_AGENT = "checkmk-agent-mk_jolokia-" + __version__
 
 import io
 import os
+import re
 import socket
 import sys
 import urllib.parse
@@ -25,8 +26,8 @@ if sys.version_info[0] >= 3:
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from collections.abc import Callable  # noqa: F401 # pylint: disable=unused-import
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from collections.abc import Callable  # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -444,7 +445,8 @@ class JolokiaInstance:
         return session
 
     def get_post_data(self, path, function, use_target):
-        segments = path.strip("/").split("/")
+        segments = re.split(r"(?<!!)/", path.strip("/"))
+        segments[0] = segments[0].replace("!/", "/")
         # we may have one to three segments:
         data = dict(zip(("mbean", "attribute", "path"), segments))
 
@@ -653,6 +655,22 @@ def query_instance(inst):
     write_section("jolokia_generic", generate_values(inst, inst.custom_vars))
 
 
+def _parse_fetched_data(data):
+    # type: (dict[str, Any]) -> tuple[str, str, str]
+    if "details" in data:
+        info = data["details"]
+        # https://github.com/jolokia/jolokia/blob/2.0/src/documentation/manual/modules/ROOT/pages/jolokia_mbeans.adoc
+        product = info.get("server_product", "unknown")
+        version = info.get("server_version", "unknown")
+    else:  # jolokia version 1.7.2 or lower
+        # https://github.com/jolokia/jolokia/blob/v1.7.2/src/docbkx/protocol/version.xml
+        info = data.get("info", {})
+        product = info.get("product", "unknown")
+        version = info.get("version", "unknown")
+    agentversion = data.get("agent", "unknown")
+    return product, version, agentversion
+
+
 def generate_jolokia_info(inst):
     # Determine type of server
     try:
@@ -661,15 +679,13 @@ def generate_jolokia_info(inst):
         yield inst.name, "ERROR", str(exc)
         raise SkipInstance(exc)
 
-    info = data.get("info", {})
-    version = info.get("version", "unknown")
-    product = info.get("product", "unknown")
+    product, version, agentversion = _parse_fetched_data(data)
+
     if inst.product is not None:
         product = inst.product
     else:
         inst.product = product
 
-    agentversion = data.get("agent", "unknown")
     yield inst.name, product, version, agentversion
 
 

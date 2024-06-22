@@ -150,7 +150,7 @@ function Invoke-UnitTest([bool]$run, [String]$name, [String]$cmdline) {
     }
 
     Write-Host "Running $name test..." -Foreground White
-    $results = "$name_unit_tests_results.zip"
+    $results = "${name}_tests_results.zip"
     $wnx_test_root = ""
     $prefix = "checkmk_$name_"
     try {
@@ -386,8 +386,7 @@ catch {
     Write-Host "Trace stack: " -ForegroundColor Yellow
     Write-Host $_.ScriptStackTrace -ForegroundColor Yellow
 }
-finally {
-    Write-Host "Exit code: " $result
+if ($result -eq 0) {
+    Write-Host "SUCCESS" -ForegroundColor Green
 }
 exit $result
-

@@ -53,6 +53,8 @@ from .main_menu import ABCMainModule, MainModuleRegistry
 from .search import ABCMatchItemGenerator, match_item_generator_registry, MatchItem, MatchItems
 from .timeperiods import TimeperiodSelection
 
+MatchType = Literal["first", "all", "list", "dict", "varies"]
+
 
 class AllowAll:
     def is_visible(self, _rulespec_name: str) -> bool:
@@ -310,7 +312,7 @@ class Rulespec(abc.ABC):
         group: type[RulespecBaseGroup],
         title: Callable[[], str] | None,
         valuespec: Callable[[], ValueSpec],
-        match_type: str,
+        match_type: MatchType,
         item_type: Literal["service", "item"] | None,
         # WATCH OUT: passing a Callable[[], Transform] will not work (see the
         # isinstance check in the item_spec property)!
@@ -462,7 +464,7 @@ class Rulespec(abc.ABC):
         return self.group_name.split("/")[1] if "/" in self.group_name else ""
 
     @property
-    def match_type(self) -> str:
+    def match_type(self) -> MatchType:
         return self._match_type
 
     @property
@@ -497,7 +499,7 @@ class HostRulespec(Rulespec):
         group: type[Any],
         valuespec: Callable[[], ValueSpec],
         title: Callable[[], str] | None = None,
-        match_type: str = "first",
+        match_type: MatchType = "first",
         is_optional: bool = False,
         is_deprecated: bool = False,
         is_binary_ruleset: bool = False,
@@ -540,7 +542,7 @@ class ServiceRulespec(Rulespec):
         valuespec: Callable[[], ValueSpec],
         item_type: Literal["item", "service"],
         title: Callable[[], str] | None = None,
-        match_type: str = "first",
+        match_type: MatchType = "first",
         item_name: Callable[[], str] | None = None,
         item_spec: Callable[[], ValueSpec] | None = None,
         item_help: Callable[[], str] | None = None,
@@ -581,7 +583,7 @@ class BinaryHostRulespec(HostRulespec):
         name: str,
         group: type[RulespecBaseGroup],
         title: Callable[[], str] | None = None,
-        match_type: str = "first",
+        match_type: MatchType = "first",
         is_optional: bool = False,
         is_deprecated: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
@@ -620,7 +622,7 @@ class BinaryServiceRulespec(ServiceRulespec):
         name: str,
         group: type[RulespecBaseGroup],
         title: Callable[[], str] | None = None,
-        match_type: str = "first",
+        match_type: MatchType = "first",
         item_type: Literal["item", "service"] = "service",
         item_name: Callable[[], str] | None = None,
         item_spec: Callable[[], ValueSpec] | None = None,
@@ -732,7 +734,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         parameter_valuespec: Callable[[], ValueSpec],
         item_spec: Callable[[], ValueSpec] | None = None,  # CMK-12228
         title: Callable[[], str] | None = None,
-        match_type: str | None = None,
+        match_type: MatchType | None = None,
         item_type: Literal["item", "service"] = "item",
         is_optional: bool = False,
         is_deprecated: bool = False,
@@ -804,7 +806,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
         group: type[RulespecBaseGroup],
         parameter_valuespec: Callable[[], ValueSpec],
         title: Callable[[], str] | None = None,
-        match_type: str | None = None,
+        match_type: MatchType | None = None,
         is_optional: bool = False,
         is_deprecated: bool = False,
         is_cloud_and_managed_edition_only: bool = False,
@@ -885,7 +887,7 @@ class ManualCheckParameterRulespec(HostRulespec):
         is_deprecated: bool = False,
         is_cloud_and_managed_edition_only: bool = False,
         name: str | None = None,
-        match_type: str = "all",
+        match_type: MatchType = "all",
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
     ):
         # Mandatory keys
@@ -945,8 +947,8 @@ class ManualCheckParameterRulespec(HostRulespec):
             elements=[
                 CheckTypeGroupSelection(
                     self.check_group_name,
-                    title=_("Checktype"),
-                    help=_("Please choose the check plugin"),
+                    title=_("Check type"),
+                    help=_("Please choose the check plug-in"),
                 ),
                 self._get_item_spec(),
                 parameter_vs,
@@ -1086,7 +1088,7 @@ def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -
 
 
 class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
-    def __init__(self, group_registry) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, group_registry: RulespecGroupRegistry) -> None:
         super().__init__()
         self._group_registry = group_registry
 
@@ -1209,9 +1211,9 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
             is_active = self.is_active(value)
 
         # Set the actual used mode
-        html.hidden_field(self.tp_current_mode, "%d" % is_active)
+        html.hidden_field(self.tp_current_mode, str(int(is_active)))
 
-        vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
+        vars_copy[self.tp_toggle_var] = str(int(not is_active))
 
         url_vars: HTTPVariables = []
         url_vars += vars_copy.items()

@@ -1,4 +1,4 @@
-load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION_MAJOR")
+load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION", "PYTHON_VERSION_MAJOR")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 package(default_visibility = ["//visibility:public"])
@@ -58,6 +58,7 @@ configure_make(
     out_data_dirs = [
         "lib",
         "share",
+        "tar",
     ],
     out_include_dir = "include/python%s" % PYTHON_MAJOR_DOT_MINOR,
     postfix_script = """
@@ -100,10 +101,16 @@ configure_make(
         # Tests are not needed in final package
         rm -rf $INSTALLDIR/lib/python{pyMajMin}/test ; \
 
+        mkdir $BUILD_TMPDIR/tar
+        cp -R $INSTALLDIR $BUILD_TMPDIR/Python-{pyVers}
+        rm -rf $BUILD_TMPDIR/Python-{pyVers}/tar
+        tar -C $BUILD_TMPDIR -cf $INSTALLDIR/tar/python.tar Python-{pyVers}
     """.format(
         installPrefix = INSTALL_PREFIX,
         pyMaj = PYTHON_VERSION_MAJOR,
         pyMajMin = PYTHON_MAJOR_DOT_MINOR,
+        pyVers = PYTHON_VERSION,
     ),
+    visibility = ["//visibility:public"],
     deps = ["@openssl"],
 )

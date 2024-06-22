@@ -36,6 +36,9 @@ build_cmd = """
     # Needed because RULEDIR is relative and we need absolute paths as prefix
     export HOME=$$PWD
     export TMPDIR="/tmp"
+   
+    # output needs to be an archive for bazel 7
+    MODULE_NAME=$$(basename $@)
 
     # Path to external dependencies
     # SRCS contains a whitespace seperated list of paths to dependencies.
@@ -49,12 +52,12 @@ build_cmd = """
     export PYTHON_EXECUTABLE=$$PWD/$$EXT_DEPS_PATH/python/python/bin/python3
 
     # Workaround for git execution issue
-    mkdir -p $$TMPDIR/workdir/$(OUTS)
-    install -m 755 "$(execpath @omd_packages//omd/packages/omd:use_system_openssl)" "$$TMPDIR/workdir/$(OUTS)/git"
-    export PATH="$$TMPDIR/workdir/$(OUTS):$$PATH"
+    mkdir -p $$TMPDIR/workdir/$$MODULE_NAME
+    install -m 755 "$(execpath @omd_packages//omd/packages/omd:use_system_openssl)" "$$TMPDIR/workdir/$$MODULE_NAME/git"
+    export PATH="$$TMPDIR/workdir/$$MODULE_NAME:$$PATH"
 
     # Build directory
-    mkdir -p $$HOME/$(OUTS)
+    mkdir -p $$HOME/$$MODULE_NAME
 
     export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include/"
 
@@ -76,7 +79,7 @@ build_cmd = """
     if [[ "{requirements}" = -r* || "{requirements}" = git+* ]]; then
         REQUIREMENTS="{requirements}"
     else
-        REQUIREMENTS=$$HOME/tmp/$(OUTS)
+        REQUIREMENTS=$$HOME/tmp/$$MODULE_NAME
 	rm -rf $$REQUIREMENTS
 	mkdir -p $$REQUIREMENTS
         echo "Copy package sources"
@@ -109,8 +112,10 @@ build_cmd = """
       --isolated \\
       --ignore-installed \\
       --no-warn-script-location \\
-      --prefix="$$HOME/$(OUTS)" \\
+      --prefix="$$HOME/$$MODULE_NAME" \\
       -i {pypi_mirror} \\
       {pip_add_opts} \\
-      $$REQUIREMENTS 2>&1 | tee "$$HOME/$(OUTS)_pip_install.stdout"
+      $$REQUIREMENTS 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
+
+    tar cf $@ $$MODULE_NAME
 """

@@ -16,8 +16,8 @@ import http.client
 from collections.abc import Mapping
 from typing import Any, cast
 
-import cmk.utils.dateutils as dateutils
-from cmk.utils.timeperiod import load_timeperiods, TimeperiodSpec
+from cmk.utils import dateutils
+from cmk.utils.timeperiod import TimeperiodSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -39,6 +39,7 @@ from cmk.gui.watolib.timeperiods import create_timeperiod as _create_timeperiod
 from cmk.gui.watolib.timeperiods import (
     delete_timeperiod,
     load_timeperiod,
+    load_timeperiods,
     modify_timeperiod,
     TimePeriodBuiltInError,
     TimePeriodInUseError,
@@ -238,9 +239,7 @@ def _serve_time_period(time_period: DomainObject) -> Response:
     return constructors.response_with_etag_created_from_dict(response, timeperiod_dict)
 
 
-def _to_api_format(  # type: ignore[no-untyped-def]
-    time_period: TimeperiodSpec, builtin_period: bool = False
-):
+def _to_api_format(time_period: TimeperiodSpec, builtin_period: bool = False) -> dict[str, Any]:
     """Convert time_period to API format as specified in request schema
 
     Args:

@@ -22,9 +22,8 @@ from collections.abc import Collection
 
 from marshmallow import ValidationError
 
-import cmk.gui.forms as forms
-import cmk.gui.userdb as userdb
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -49,7 +48,8 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserRole
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName
+from cmk.gui.userdb import UserRole
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link
@@ -134,7 +134,7 @@ class ModeRoles(WatoMode):
                 table.row()
 
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
 
                 # Actions
                 table.cell(_("Actions"), css=["buttons"])
@@ -172,7 +172,7 @@ class ModeRoles(WatoMode):
                 # Users
                 table.cell(
                     _("Users"),
-                    HTML(", ").join(
+                    HTML.without_escaping(", ").join(
                         [
                             HTMLWriter.render_a(
                                 user.get("alias", user_id),
@@ -267,7 +267,7 @@ class ModeEditRole(WatoMode):
         forms.section(_("Internal ID"), simple=self._role.builtin, is_required=True)
 
         if self._role.builtin:
-            html.write_text("{} ({})".format(self._role_id, _("built-in role")))
+            html.write_text_permissive("{} ({})".format(self._role_id, _("built-in role")))
             html.hidden_field("id", self._role_id)
         else:
             html.text_input("id", self._role_id)

@@ -5,9 +5,7 @@
 
 from dataclasses import asdict, dataclass
 from enum import Enum, unique
-from typing import Final
-
-from typing_extensions import TypedDict
+from typing import Final, TypedDict
 
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
@@ -36,6 +34,7 @@ DETECT_UPS_GENERIC = any_of(
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1"),
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.818.1.100.1"),
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.935"),
+    startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.534.10"),
 )
 
 

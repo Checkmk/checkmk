@@ -14,9 +14,8 @@ import flask
 import pytest
 from werkzeug.test import create_environ
 
-from tests.testlib.users import create_and_destroy_user
-
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.users import create_and_destroy_user
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.user import UserId
@@ -140,7 +139,7 @@ def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": f"Bearer {with_user[0]} {with_user[1]}"}
     ):
-        assert type(session.user) == LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert type(session.user) is LoggedInUser  # pylint: disable=unidiomatic-typecheck
         assert session.user.id == with_user[0]
 
 
@@ -149,7 +148,7 @@ def test_login_with_basic_auth(with_user: tuple[UserId, str], flask_app: flask.F
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": f"Basic {token}"}
     ):
-        assert type(session.user) == LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert type(session.user) is LoggedInUser  # pylint: disable=unidiomatic-typecheck
         assert session.user.id == with_user[0]
 
 
@@ -159,7 +158,7 @@ def test_login_with_webserver(with_user: tuple[UserId, str], flask_app: flask.Fl
         method="GET",
         environ_overrides={"REMOTE_USER": with_user[0]},
     ):
-        assert type(session.user) == LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert type(session.user) is LoggedInUser  # pylint: disable=unidiomatic-typecheck
         assert session.user.id == with_user[0]
 
 

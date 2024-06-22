@@ -13,9 +13,7 @@ import pprint
 import queue
 import urllib.parse
 from collections.abc import Mapping, Sequence
-from typing import Any, cast, Literal, NoReturn, TYPE_CHECKING
-
-from typing_extensions import TypedDict
+from typing import Any, cast, Literal, NoReturn, NotRequired, TYPE_CHECKING, TypedDict
 
 from cmk.utils import version
 
@@ -62,6 +60,8 @@ API_DOMAIN = Literal[
     "service_discovery",
     "discovery_run",
     "ldap_connection",
+    "saml_connection",
+    "parent_scan",
 ]
 
 
@@ -174,16 +174,16 @@ class RestApiException(Exception):
 def get_link(resp: dict, rel: str) -> Mapping:
     for link in resp.get("links", []):
         if link["rel"].startswith(rel):
-            return link  # type: ignore[no-any-return]
+            return link
     if "result" in resp:
         for link in resp["result"].get("links", []):
             if link["rel"].startswith(rel):
-                return link  # type: ignore[no-any-return]
+                return link
     for member in resp.get("members", {}).values():
         if member["memberType"] == "action":
             for link in member["links"]:
                 if link["rel"].startswith(rel):
-                    return link  # type: ignore[no-any-return]
+                    return link
     raise KeyError(f"{rel!r} not found")
 
 
@@ -252,7 +252,7 @@ class LabelCondition(TypedDict):
 
 
 class LabelGroupCondition(TypedDict):
-    operator: Literal["and", "or", "not"]
+    operator: NotRequired[Literal["and", "or", "not"]]
     label_group: list[LabelCondition]
 
 
@@ -701,11 +701,19 @@ class HostConfigClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(self, effective_attributes: bool = False, expect_ok: bool = True) -> Response:
+    def get_all(
+        self,
+        effective_attributes: bool = False,
+        include_links: bool = False,
+        expect_ok: bool = True,
+    ) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
-            query_params={"effective_attributes": "true" if effective_attributes else "false"},
+            query_params={
+                "effective_attributes": "true" if effective_attributes else "false",
+                "include_links": "true" if include_links else "false",
+            },
             expect_ok=expect_ok,
         )
 
@@ -1291,10 +1299,22 @@ class HostTagGroupClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def delete(self, ident: str, repair: bool = False, expect_ok: bool = True) -> Response:
+    def delete(
+        self,
+        ident: str,
+        repair: bool | None = None,
+        mode: Literal["abort", "delete", "remove"] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        params: dict[str, Any] = {}
+        if repair is not None:
+            params["repair"] = repair
+        if mode is not None:
+            params["mode"] = mode
         return self.request(
             "delete",
-            url=f"/objects/{self.domain}/{ident}?repair={repair}",
+            url=f"/objects/{self.domain}/{ident}",
+            query_params=params,
             expect_ok=expect_ok,
         )
 
@@ -1525,7 +1545,7 @@ class DowntimeClient(RestApiClient):
 
     def delete(
         self,
-        delete_type: "FindByType",
+        delete_type: FindByType,
         site_id: str | None = None,
         downtime_id: str | None = None,
         query: str | None = None,
@@ -1559,7 +1579,7 @@ class DowntimeClient(RestApiClient):
 
     def modify(
         self,
-        modify_type: "FindByType",
+        modify_type: FindByType,
         site_id: str | None = None,
         downtime_id: str | None = None,
         query: str | None = None,
@@ -1603,7 +1623,7 @@ class DowntimeClient(RestApiClient):
     @staticmethod
     def _update_find_by_type(
         body: dict,
-        find_type: "FindByType",
+        find_type: FindByType,
         site_id: str | None = None,
         downtime_id: str | None = None,
         query: str | None = None,
@@ -2512,6 +2532,58 @@ class AutocompleteClient(RestApiClient):
         )
 
 
+class SAMLConnectionClient(RestApiClient):
+    domain: API_DOMAIN = "saml_connection"
+
+    def get(self, saml_connection_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{saml_connection_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def create(
+        self,
+        saml_data: dict[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=saml_data,
+            expect_ok=expect_ok,
+        )
+
+    def delete(
+        self,
+        saml_connection_id: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{saml_connection_id}",
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(saml_connection_id, etag),
+        )
+
+    def _set_etag_header(
+        self,
+        saml_connection_id: str,
+        etag: IF_MATCH_HEADER_OPTIONS,
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(saml_connection_id).headers["ETag"]}
+        return set_if_match_header(etag)
+
+
 class ServiceDiscoveryClient(RestApiClient):
     service_discovery_domain: API_DOMAIN = "service_discovery"
     discovery_run_domain: API_DOMAIN = "discovery_run"
@@ -2634,8 +2706,49 @@ class LDAPConnectionClient(RestApiClient):
         return set_if_match_header(etag)
 
 
+class ParentScanClient(RestApiClient):
+    domain: API_DOMAIN = "parent_scan"
+
+    def start(
+        self,
+        host_names: Sequence[str],
+        gateway_hosts: Any,
+        performance_settings: dict | None = None,
+        force_explicit_parents: bool | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body = {
+            "host_names": host_names,
+            "gateway_hosts": gateway_hosts,
+            "configuration": {},
+            "performance": {},
+        }
+        if force_explicit_parents is not None:
+            body["configuration"]["force_explicit_parents"] = force_explicit_parents
+
+        if performance_settings:
+            body["performance"] = performance_settings
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/start/invoke",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
+    """Overall client registry for all available endpoint family clients.
+
+    Guidelines for individual clients:
+        1) Keep in mind that this is a test client rather than a user client.
+        This implies that not all fields must be made available as function arguments. This
+        applies especially to nested fields where a top-level dict definition should be enough.
+        Take a look at the 'performance_settings' of the ParentScan.start method.
+
+    """
+
     Licensing: LicensingClient
     ActivateChanges: ActivateChangesClient
     User: UserClient
@@ -2666,6 +2779,8 @@ class ClientRegistry:
     AutoComplete: AutocompleteClient
     ServiceDiscovery: ServiceDiscoveryClient
     LdapConnection: LDAPConnectionClient
+    SamlConnection: SAMLConnectionClient
+    ParentScan: ParentScanClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -2700,4 +2815,6 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         AutoComplete=AutocompleteClient(request_handler, url_prefix),
         ServiceDiscovery=ServiceDiscoveryClient(request_handler, url_prefix),
         LdapConnection=LDAPConnectionClient(request_handler, url_prefix),
+        SamlConnection=SAMLConnectionClient(request_handler, url_prefix),
+        ParentScan=ParentScanClient(request_handler, url_prefix),
     )

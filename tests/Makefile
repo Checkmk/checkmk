@@ -50,21 +50,23 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
 	test-docker test-docker-docker test-format-python test-format-python-docker \
-	test-format-shell test-format-js test-format-js-docker test-format-css test-format-css-docker \
+	test-format-shell \
 	$(SYSTEM_TESTS) \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
+	container-debug \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-unit-omdlib test-unit-doctests \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
-	test-unit-neb test-unit-core
+	test-unit-neb test-unit-core test-flake8
 
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
 
 help:
+	@echo "container-debug                     - Run container for manual test debugging"
 	@echo "format-shell                        - Format shell agents"
 	@for i in $(AGENT_PLUGIN_PYTHON_VERSIONS); do \
 	    echo "test-agent-plugin-unit-py$${i}-docker - Run Agent plugin tests in container with Python $${i}"; \
@@ -72,13 +74,10 @@ help:
 	@for i in $(SYSTEM_TESTS); do \
 	    echo "$${i}              - Run $${i} locally"; \
 	    echo "$${i}-docker       - Run $${i} in container"; \
-	    echo "$${i}-docker-debug - Run $${i} in container for manual debugging"; \
 	done
 	@echo "test-bandit                         - Run bandit (security) tests"
 	@echo "test-bandit-docker                  - Run bandit (security) tests in docker"
 	@echo "test-bandit-nosec-markers           - Check if all bandit #nosec markers are annotated properly"
-	@echo "test-build-js                       - Run NPM build"
-	@echo "test-build-js-docker                - Run NPM build in docker"
 	@echo "test-code-quality                   - Run code quality tests locally"
 	@echo "test-code-quality-docker            - Run code quality tests in container"
 	@echo "test-cycles                         - Run cycles check"
@@ -87,10 +86,6 @@ help:
 	@echo "test-docker-docker                  - Run docker tests in docker"
 	@echo "test-format-bazel                   - Run the Bazel formatting"
 	@echo "test-format-bazel-docker            - Run the Bazel formatting in docker"
-	@echo "test-format-css                     - Run the CSS formatting"
-	@echo "test-format-css-docker              - Run the CSS formatting in docker"
-	@echo "test-format-js                      - Run the JavaScript formatting"
-	@echo "test-format-js-docker               - Run the JavaScript formatting in docker"
 	@echo "test-format-python                  - Run formatting tests"
 	@echo "test-format-python-docker           - Run formatting tests in docker"
 	@echo "test-format-shell                   - Run the shell formatting"
@@ -102,8 +97,6 @@ help:
 	@echo "test-lint-bazel-docker              - Run the Bazel linting in docker"
 	@echo "test-lint-groovy                    - Run the Groovy linting"
 	@echo "test-lint-groovy-docker             - Run the Groovy linting in docker"
-	@echo "test-lint-js                        - Run the JavaScript linting"
-	@echo "test-lint-js-docker                 - Run the JavaScript linting in docker"
 	@echo "test-mypy                           - Run mypy"
 	@echo "test-mypy-docker                    - Run mypy in docker"
 	@echo "test-mypy-raw                       - Run mypy with raw edition config"
@@ -123,9 +116,13 @@ help:
 	@echo "test-unit-docker                    - Run unit tests in docker"
 	@echo "test-unit-neb                       - Run unit tests for neb"
 	@echo "test-unit-resilience                - Run unit tests multiple times and in random order"
-	@echo "test-unit-resilience                - Run unit tests multiple times and in random order in docker"
+	@echo "test-unit-resilience-docker         - Run unit tests multiple times and in random order in docker"
 	@echo "test-unit-shell                     - Run shell unit tests"
 	@echo "test-unit-shell-docker              - Run shell unit tests in docker"
+	@echo "test-unit-xdist                     - Run parallelized unit tests"
+	@echo "test-unit-xdist-docker              - Run parallelized unit tests in docker"
+	@echo "test-unit-testlib                   - Run doctests present in testlib-modules"
+	@echo "test-unit-testlib-docker            - Run doctests present in testlib-modules within docker container."
 	@echo "test-werks                          - Run Werks tests"
 	@echo "test-werks-docker                   - Run Werks tests in docker"
 
@@ -220,36 +217,6 @@ test-format-python-docker:
 test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $$($(FIND_SHELL_FILES))
 
-test-format-js:
-	cd ..; scripts/npm-ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "{web/htdocs/js/**/,}*.{j,t}s"
-
-test-typescript-types:
-	cd ..; scripts/npm-ci && scripts/check-typescript-types.sh
-
-test-lint-js:
-	cd ..; scripts/npm-ci && scripts/check-js-lint.sh
-
-test-build-js:
-	cd ..; scripts/npm-ci && ENTERPRISE=yes MANAGED=no npm run build
-
-test-lint-js-docker:
-	../scripts/run-in-docker.sh make --quiet test-lint-js
-
-test-build-js-docker:
-	../scripts/run-in-docker.sh make --quiet test-build-js
-
-test-format-js-docker:
-	../scripts/run-in-docker.sh make --quiet test-format-js
-
-test-typescript-types-docker:
-	../scripts/run-in-docker.sh make --quiet test-typescript-types
-
-test-format-css:
-	cd ..; scripts/npm-ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "web/htdocs/themes/**/*.scss"
-
-test-format-css-docker:
-	../scripts/run-in-docker.sh make --quiet test-format-css
-
 test-lint-bazel:
 	../scripts/run-buildifier --lint=warn --mode=check
 
@@ -263,7 +230,7 @@ test-format-bazel-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-bazel
 
 test-lint-groovy:
-	cd ..; scripts/npm-ci && scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
+	cd ..; scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
 
 test-lint-groovy-docker:
 	../scripts/run-in-docker.sh make --quiet test-lint-groovy
@@ -304,7 +271,7 @@ test-plugins:
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"
 
-$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug):
+container-debug $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug):
 	$(PIPENV) run scripts/run-dockerized.py debug
 
 test-license-headers:
@@ -322,10 +289,10 @@ test-pipfile-docker:
 	../scripts/run-in-docker.sh make --quiet test-pipfile
 
 test-file-content:
-	if test -z "$$CHANGED_FILES_REL"; then \
+	if test -z "$$CHANGED_FILES_REL_FILE"; then \
 	    $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
 	else \
-	    echo "$$CHANGED_FILES_REL" | xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
+	    cat "$$CHANGED_FILES_REL_FILE" | xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
 	fi \
 
 test-file-content-docker:
@@ -409,7 +376,6 @@ test-unit-doctests: prepare-protobuf-files
 		--override-ini="pythonpath=." \
 		--override-ini="consider_namespace_packages=true" \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		--ignore cmk/plugins \
 		-- \
 		cmk/
 
@@ -421,11 +387,19 @@ test-unit: prepare-protobuf-files test-unit-doctests
 		--override-ini="pythonpath=." \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
 		--ignore=tests/unit/omdlib/ \
+		$(PYTEST_OPTS_UNIT_PARALLEL) \
 		-- \
 		tests/unit
 
+test-unit-xdist:
+	PYTEST_OPTS_UNIT_PARALLEL="--numprocesses=4 --dist=loadfile" \
+	make --quiet test-unit
+
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
+
+test-unit-xdist-docker:
+	../scripts/run-in-docker.sh make --quiet test-unit-xdist
 
 test-unit-slow: prepare-protobuf-files
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
@@ -457,6 +431,21 @@ test-unit-resilience: prepare-protobuf-files
 
 test-unit-resilience-docker:
 	../scripts/run-in-docker.sh make test-unit-resilience
+
+test-unit-testlib:
+	find -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T testlib \
+		--config-file=pyproject.toml \
+		--doctest-modules \
+		--override-ini="pythonpath=." \
+		--override-ini="consider_namespace_packages=true" \
+		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
+		-- \
+		tests/testlib/
+
+test-unit-testlib-docker:
+	../scripts/run-in-docker.sh make test-unit-testlib
 
 test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
@@ -491,6 +480,9 @@ test-unit-cmc:
 
 test-find-dirty-files-in-git:
 	scripts/find_dirty_files_in_git
+
+test-flake8: ../.flake8
+	cd ..; $(PIPENV) run flake8 --jobs=6 $$($(FIND_PYTHON_FILES))
 
 # Run `validate_changes` in live-mode i.e. not creating a JSON file
 # containing build steps to be executed by Jenkins but directly running

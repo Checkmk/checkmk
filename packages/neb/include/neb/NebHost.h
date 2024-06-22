@@ -33,7 +33,7 @@ public:
     }
 
     [[nodiscard]] bool hasContact(const IContact &contact) const override {
-        auto ctc = static_cast<const NebContact &>(contact).handle();
+        const auto &ctc = static_cast<const NebContact &>(contact).handle();
         // Older Nagios headers are not const-correct... :-P
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         auto *h = const_cast<::host *>(&host_);

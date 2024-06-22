@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """
 Special agent azure: Monitoring Azure cloud applications with Checkmk
+
+Resources and resourcegroups are all treated lowercase because of:
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
 """
 
 from __future__ import annotations
@@ -20,10 +23,11 @@ import sys
 from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from multiprocessing import Lock, Process, Queue
+from pathlib import Path
 from queue import Empty as QueueEmpty
 from typing import Any, Literal, NamedTuple
 
-import msal  # type: ignore[import]
+import msal  # type: ignore[import-untyped]
 import requests
 
 from cmk.utils import password_store
@@ -41,7 +45,7 @@ AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / "agent_azure"
 
 NOW = datetime.datetime.now(tz=datetime.UTC)
 
-ALL_METRICS: dict[str, list[tuple]] = {
+ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
     # to add a new metric, just add a made up name, run the
     # agent, and you'll get a error listing available metrics!
     # key: list of (name(s), interval, aggregation, filter)
@@ -735,7 +739,7 @@ class MgmtApiClient(BaseApiClient):
 
 
 class GroupConfig:
-    def __init__(self, name) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, name: str) -> None:
         super().__init__()
         if not name:
             raise ValueError("falsey group name: %r" % name)
@@ -759,7 +763,7 @@ class GroupConfig:
 
 
 class ExplicitConfig:
-    def __init__(self, raw_list=()) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, raw_list: Sequence[str]) -> None:
         super().__init__()
         self.groups: dict = {}
         self.current_group = None
@@ -845,14 +849,14 @@ class Selector:
 class Section:
     LOCK = Lock()
 
-    def __init__(  # type: ignore[no-untyped-def]
-        self, name, piggytargets, separator, options
+    def __init__(
+        self, name: str, piggytargets: Sequence[str], separator: int, options: Sequence[str]
     ) -> None:
         super().__init__()
         self._sep = chr(separator)
         self._piggytargets = list(piggytargets)
         self._cont: list = []
-        section_options = ":".join(["sep(%d)" % separator] + options)
+        section_options = ":".join(["sep(%d)" % separator, *options])
         self._title = f"<<<{name.replace('-', '_')}:{section_options}>>>\n"
 
     def formatline(self, tokens):
@@ -880,12 +884,12 @@ class Section:
 
 
 class AzureSection(Section):
-    def __init__(self, name, piggytargets=("",)) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, name: str, piggytargets: Sequence[str] = ("",)) -> None:
         super().__init__("azure_%s" % name, piggytargets, separator=124, options=[])
 
 
 class LabelsSection(Section):
-    def __init__(self, piggytarget) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, piggytarget: str) -> None:
         super().__init__("azure_labels", [piggytarget], separator=0, options=[])
 
 
@@ -894,7 +898,7 @@ class IssueCollecter:
         super().__init__()
         self._list: list[tuple[str, str]] = []
 
-    def add(self, issue_type, issued_by, issue_msg) -> None:  # type: ignore[no-untyped-def]
+    def add(self, issue_type: str, issued_by: str, issue_msg: str) -> None:
         issue = {"type": issue_type, "issued_by": issued_by, "msg": issue_msg}
         self._list.append(("issue", json.dumps(issue)))
 
@@ -959,9 +963,9 @@ def get_attrs_from_uri(uri):
 
 
 class AzureResource:
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
-        info,
+        info: Mapping[str, Any],
         tag_key_pattern: TagsOption,
     ) -> None:
         super().__init__()
@@ -971,9 +975,9 @@ class AzureResource:
 
         self.section = info["type"].split("/")[-1].lower()
         self.piggytargets = []
-        group = self.info.get("group")
-        if group:
-            self.piggytargets.append(group)
+        if group := self.info.get("group"):
+            self.info["group"] = group.lower()
+            self.piggytargets.append(group.lower())
         self.metrics: list = []
 
     def dumpinfo(self):
@@ -1258,8 +1262,12 @@ def process_recovery_services_vaults(mgmt_client: MgmtApiClient, resource: Azure
 
 
 class MetricCache(DataCache):
-    def __init__(  # type: ignore[no-untyped-def]
-        self, resource, metric_definition, ref_time, debug=False
+    def __init__(
+        self,
+        resource: AzureResource,
+        metric_definition: tuple[str, str, str, None],
+        ref_time: datetime.datetime,
+        debug: bool = False,
     ) -> None:
         self.metric_definition = metric_definition
         metricnames = metric_definition[0]
@@ -1282,7 +1290,7 @@ class MetricCache(DataCache):
         )
 
     @staticmethod
-    def get_cache_path(resource):
+    def get_cache_path(resource: AzureResource) -> Path:
         valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
         subdir = "".join(c if c in valid_chars else "_" for c in resource.info["id"])
         return AZURE_CACHE_FILE_PATH / subdir
@@ -1351,7 +1359,9 @@ def write_section_app_registrations(graph_client: GraphApiClient, args: argparse
     section.write()
 
 
-def gather_metrics(mgmt_client, resource, debug=False):
+def gather_metrics(
+    mgmt_client: MgmtApiClient, resource: AzureResource, debug: bool = False
+) -> IssueCollecter:
     """
     Gather all metrics for a resource. These metrics have different time
     resolutions, so every metric needs its own cache.
@@ -1439,7 +1449,7 @@ def get_group_labels(
     group_labels: dict[str, dict[str, str]] = {}
 
     for group in mgmt_client.resourcegroups():
-        name = group["name"]
+        name = group["name"].lower()
 
         if tag_key_pattern == TagsImportPatternOption.ignore_all:
             tags = {}
@@ -1583,7 +1593,7 @@ def main_graph_client(args: Args) -> None:
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
-def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[object]:
+def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[Mapping[str, Any]]:
     NO_CONSUMPTION_API = (
         "offer MS-AZR-0145P",
         "offer MS-AZR-0146P",
@@ -1614,7 +1624,7 @@ def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[object]:
 
 
 def write_usage_section(
-    usage_data: Sequence[object],
+    usage_data: Sequence[Mapping[str, Any]],
     monitored_groups: list[str],
     tag_key_pattern: TagsOption,
 ) -> None:
@@ -1702,7 +1712,7 @@ def process_resource_health(
         health_section[group].append(json.dumps(health_data))
 
     for group, values in health_section.items():
-        section = AzureSection("resource_health", [group])
+        section = AzureSection("resource_health", [group.lower()])
         for value in values:
             section.add([value])
         yield section

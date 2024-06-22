@@ -14,7 +14,7 @@ from pathlib import Path
 
 import requests
 import urllib3
-from requests_kerberos import HTTPKerberosAuth  # type: ignore[import]
+from requests_kerberos import HTTPKerberosAuth  # type: ignore[import-untyped]
 
 import cmk.utils.password_store
 from cmk.utils.crypto.secrets import AutomationUserSecret

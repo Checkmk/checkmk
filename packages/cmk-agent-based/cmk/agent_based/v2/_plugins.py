@@ -10,7 +10,7 @@
 import functools
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Generic, overload, TypeVar
+from typing import Any, Generic, Literal, overload, TypeVar
 
 from cmk.agent_based.v1 import SNMPTree
 from cmk.agent_based.v1._detection import SNMPDetectSpecification  # sorry
@@ -26,6 +26,11 @@ from cmk.agent_based.v1.type_defs import (
 
 _Section = TypeVar("_Section", bound=object)  # yes, object.
 _TableTypeT = TypeVar("_TableTypeT", StringByteTable, StringTable)
+_HostLabelFunctionNoParams = Callable[[_Section], HostLabelGenerator]
+_HostLabelFunctionMergedParams = Callable[[Mapping[str, object], _Section], HostLabelGenerator]
+_HostLabelFunctionAllParams = Callable[
+    [Sequence[Mapping[str, object]], _Section], HostLabelGenerator
+]
 
 InventoryFunction = Callable[..., InventoryResult]  # type: ignore[misc]
 
@@ -56,13 +61,19 @@ class AgentSection(Generic[_Section]):
                            This function may raise arbitrary exceptions, which will be dealt with
                            by the checking engine. You should expect well formatted data.
 
-      parsed_section_name: The name under which the parsed section will be available to the plugins.
+      parsed_section_name: The name under which the parsed section will be available to the
+                           plug-ins.
                            Defaults to the original name.
 
       host_label_function: The function responsible for extracting host labels from the parsed data.
-                           It must accept exactly one argument by the name 'section'.
-                           When the function is called, it will be passed the parsed data as
-                           returned by the parse function.
+                           For unparameterized host label functions, it must accept exactly one
+                           argument by the name 'section'.
+                           When used in conjunction with a ruleset, it must accept two arguments:
+                           'params' and 'section'.
+                           The type of 'params' depends on the ruleset type. It will be a single
+                           mapping for `MERGED` rulesets and a sequence of mappings for `ALL`
+                           rulesets.
+                           'section will be the parsed data as returned by the parse function.
                            It is expected to yield objects of type :class:`HostLabel`.
 
       host_label_default_parameters: Default parameters for the host label function. Must match
@@ -72,7 +83,7 @@ class AgentSection(Generic[_Section]):
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugin needs the merged result of the
+                           It describes whether this plug-in needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this section. If this
@@ -85,8 +96,9 @@ class AgentSection(Generic[_Section]):
     parse_function: Callable[[StringTable], _Section | None]
     parsed_section_name: str | None = None
     host_label_function: (
-        Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
-        | Callable[[_Section], HostLabelGenerator]
+        _HostLabelFunctionNoParams[_Section]
+        | _HostLabelFunctionMergedParams[_Section]
+        | _HostLabelFunctionAllParams[_Section]
         | None
     ) = None
     host_label_default_parameters: Mapping[str, object] | None = None
@@ -100,7 +112,7 @@ class AgentSection(Generic[_Section]):
         *,
         name: str,
         parse_function: Callable[[StringTable], _Section | None],
-        host_label_function: Callable[[_Section], HostLabelGenerator] | None = None,
+        host_label_function: _HostLabelFunctionNoParams[_Section] | None = None,
         host_label_default_parameters: None = None,
         host_label_ruleset_name: None = None,
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
@@ -114,10 +126,24 @@ class AgentSection(Generic[_Section]):
         *,
         name: str,
         parse_function: Callable[[StringTable], _Section | None],
-        host_label_function: Callable[[_Section, Mapping[str, object]], HostLabelGenerator],
+        host_label_function: _HostLabelFunctionMergedParams[_Section],
         host_label_default_parameters: Mapping[str, object],
         host_label_ruleset_name: str,
-        host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+        host_label_ruleset_type: Literal[RuleSetType.MERGED] = RuleSetType.MERGED,
+        parsed_section_name: str | None = None,
+        supersedes: list[str] | None = None,
+    ): ...
+
+    @overload
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        parse_function: Callable[[StringTable], _Section | None],
+        host_label_function: _HostLabelFunctionAllParams[_Section],
+        host_label_default_parameters: Mapping[str, object],
+        host_label_ruleset_name: str,
+        host_label_ruleset_type: Literal[RuleSetType.ALL],
         parsed_section_name: str | None = None,
         supersedes: list[str] | None = None,
     ): ...
@@ -129,8 +155,9 @@ class AgentSection(Generic[_Section]):
         parse_function: Callable[[StringTable], _Section | None],
         parsed_section_name: str | None = None,
         host_label_function: (
-            Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
-            | Callable[[_Section], HostLabelGenerator]
+            _HostLabelFunctionNoParams[_Section]
+            | _HostLabelFunctionMergedParams[_Section]
+            | _HostLabelFunctionAllParams[_Section]
             | None
         ) = None,
         host_label_default_parameters: Mapping[str, object] | None = None,
@@ -182,13 +209,19 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
                            This function may raise arbitrary exceptions, which will be dealt with
                            by the checking engine. You should expect well formatted data.
 
-      parsed_section_name: The name under which the parsed section will be available to the plugins.
+      parsed_section_name: The name under which the parsed section will be available to the
+                           plug-ins.
                            Defaults to the original name.
 
       host_label_function: The function responsible for extracting host labels from the parsed data.
-                           It must accept exactly one argument by the name 'section'.
-                           When the function is called, it will be passed the parsed data as
-                           returned by the parse function.
+                           For unparameterized host label functions, it must accept exactly one
+                           argument by the name 'section'.
+                           When used in conjunction with a ruleset, it must accept two arguments:
+                           'params' and 'section'.
+                           The type of 'params' depends on the ruleset type. It will be a single
+                           mapping for `MERGED` rulesets and a sequence of mappings for `ALL`
+                           rulesets.
+                           'section will be the parsed data as returned by the parse function.
                            It is expected to yield objects of type :class:`HostLabel`.
 
       host_label_default_parameters: Default parameters for the host label function. Must match
@@ -198,7 +231,7 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugin needs the merged result of the
+                           It describes whether this plug-in needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this section. If this
@@ -213,8 +246,9 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
     parse_function: Callable[[Sequence[_TableTypeT]], _Section | None]
     parsed_section_name: str | None = None
     host_label_function: (
-        Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
-        | Callable[[_Section], HostLabelGenerator]
+        _HostLabelFunctionNoParams[_Section]
+        | _HostLabelFunctionMergedParams[_Section]
+        | _HostLabelFunctionAllParams[_Section]
         | None
     ) = None
     host_label_default_parameters: Mapping[str, object] | None = None
@@ -240,7 +274,7 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         detect: SNMPDetectSpecification,
         fetch: SNMPTree,
         parse_function: Callable[[_TableTypeT], _Section | None],
-        host_label_function: Callable[[_Section], HostLabelGenerator] | None = None,
+        host_label_function: _HostLabelFunctionNoParams[_Section] | None = None,
         host_label_default_parameters: None = None,
         host_label_ruleset_name: None = None,
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
@@ -256,10 +290,26 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         detect: SNMPDetectSpecification,
         fetch: SNMPTree,
         parse_function: Callable[[_TableTypeT], _Section | None],
-        host_label_function: Callable[[_Section, Mapping[str, object]], HostLabelGenerator],
+        host_label_function: _HostLabelFunctionMergedParams[_Section],
         host_label_default_parameters: Mapping[str, object],
         host_label_ruleset_name: str,
-        host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+        host_label_ruleset_type: Literal[RuleSetType.MERGED] = RuleSetType.MERGED,
+        parsed_section_name: str | None = None,
+        supersedes: list[str] | None = None,
+    ): ...
+
+    @overload
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        detect: SNMPDetectSpecification,
+        fetch: SNMPTree,
+        parse_function: Callable[[_TableTypeT], _Section | None],
+        host_label_function: _HostLabelFunctionAllParams[_Section],
+        host_label_default_parameters: Mapping[str, object],
+        host_label_ruleset_name: str,
+        host_label_ruleset_type: Literal[RuleSetType.ALL],
         parsed_section_name: str | None = None,
         supersedes: list[str] | None = None,
     ): ...
@@ -273,8 +323,9 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         parse_function: Callable[[_TableTypeT], _Section | None],
         parsed_section_name: str | None = None,
         host_label_function: (
-            Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
-            | Callable[[_Section], HostLabelGenerator]
+            _HostLabelFunctionNoParams[_Section]
+            | _HostLabelFunctionMergedParams[_Section]
+            | _HostLabelFunctionAllParams[_Section]
             | None
         ) = None,
         host_label_default_parameters: Mapping[str, object] | None = None,
@@ -330,7 +381,8 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
                            This function may raise arbitrary exceptions, which will be dealt with
                            by the checking engine. You should expect well formatted data.
 
-      parsed_section_name: The name under which the parsed section will be available to the plugins.
+      parsed_section_name: The name under which the parsed section will be available to the
+                           plug-ins.
                            Defaults to the original name.
 
       host_label_function: The function responsible for extracting host labels from the parsed data.
@@ -346,7 +398,7 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugin needs the merged result of the
+                           It describes whether this plug-in needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this section. If this
@@ -361,8 +413,9 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
     parse_function: Callable[[Sequence[_TableTypeT]], _Section | None]
     parsed_section_name: str | None = None
     host_label_function: (
-        Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
-        | Callable[[_Section], HostLabelGenerator]
+        _HostLabelFunctionNoParams[_Section]
+        | _HostLabelFunctionMergedParams[_Section]
+        | _HostLabelFunctionAllParams[_Section]
         | None
     ) = None
     host_label_default_parameters: Mapping[str, object] | None = None
@@ -378,7 +431,7 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
         detect: SNMPDetectSpecification,
         fetch: Sequence[SNMPTree],
         parse_function: Callable[[Sequence[_TableTypeT]], _Section | None],
-        host_label_function: Callable[[_Section], HostLabelGenerator] | None = None,
+        host_label_function: _HostLabelFunctionNoParams[_Section] | None = None,
         host_label_default_parameters: None = None,
         host_label_ruleset_name: None = None,
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
@@ -394,10 +447,26 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
         detect: SNMPDetectSpecification,
         fetch: Sequence[SNMPTree],
         parse_function: Callable[[Sequence[_TableTypeT]], _Section | None],
-        host_label_function: Callable[[_Section, Mapping[str, object]], HostLabelGenerator],
+        host_label_function: _HostLabelFunctionAllParams[_Section],
         host_label_default_parameters: Mapping[str, object],
         host_label_ruleset_name: str,
-        host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+        host_label_ruleset_type: Literal[RuleSetType.MERGED] = RuleSetType.MERGED,
+        parsed_section_name: str | None = None,
+        supersedes: list[str] | None = None,
+    ): ...
+
+    @overload
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        detect: SNMPDetectSpecification,
+        fetch: Sequence[SNMPTree],
+        parse_function: Callable[[Sequence[_TableTypeT]], _Section | None],
+        host_label_function: _HostLabelFunctionAllParams[_Section],
+        host_label_default_parameters: Mapping[str, object],
+        host_label_ruleset_name: str,
+        host_label_ruleset_type: Literal[RuleSetType.ALL],
         parsed_section_name: str | None = None,
         supersedes: list[str] | None = None,
     ): ...
@@ -411,8 +480,9 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
         parse_function: Callable[[Sequence[_TableTypeT]], _Section | None],
         parsed_section_name: str | None = None,
         host_label_function: (
-            Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
-            | Callable[[_Section], HostLabelGenerator]
+            _HostLabelFunctionNoParams[_Section]
+            | _HostLabelFunctionMergedParams[_Section]
+            | _HostLabelFunctionAllParams[_Section]
             | None
         ) = None,
         host_label_default_parameters: Mapping[str, object] | None = None,
@@ -441,23 +511,23 @@ class CheckPlugin:
 
     Args:
 
-      name:                     The unique name of the check plugin. It must only contain the
+      name:                     The unique name of the check plug-in. It must only contain the
                                 characters 'A-Z', 'a-z', '0-9' and the underscore.
 
-      sections:                 An optional list of section names that this plugin subscribes to.
+      sections:                 An optional list of section names that this plug-in subscribes to.
                                 They correspond to the 'parsed_section_name' specified in
                                 :meth:`agent_section` and :meth:`snmp_section`.
                                 The corresponding sections are passed to the discovery and check
                                 function. The functions arguments must be called 'section_<name1>,
                                 section_<name2>' ect. Defaults to a list containing as only element
-                                a name equal to the name of the check plugin.
+                                a name equal to the name of the check plug-in.
 
       service_name:             The template for the service name. The check function must accept
                                 'item' as first argument if and only if "%s" is present in the value
                                 of "service_name".
 
       discovery_function:       The discovery_function. Arguments must be 'params' (if discovery
-                                parameters are defined) and 'section' (if the plugin subscribes
+                                parameters are defined) and 'section' (if the plug-in subscribes
                                 to a single section), or 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Service` instances.
@@ -469,13 +539,13 @@ class CheckPlugin:
 
       discovery_ruleset_type:   The ruleset type is either :class:`RuleSetType.ALL` or
                                 :class:`RuleSetType.MERGED`.
-                                It describes whether this plugin needs the merged result of the
+                                It describes whether this plug-in needs the merged result of the
                                 effective rules, or every individual rule matching for the current
                                 host.
 
       check_function:           The check_function. Arguments must be 'item' (if the service has an
                                 item), 'params' (if check default parameters are defined) and
-                                'section' (if the plugin subscribes to a single section), or
+                                'section' (if the plug-in subscribes to a single section), or
                                 'section_<name1>, section_<name2>' ect. corresponding to the
                                 `sections`.
 
@@ -514,19 +584,19 @@ class InventoryPlugin:
 
     Args:
 
-      name:                     The unique name of the plugin. It must only contain the
+      name:                     The unique name of the plug-in. It must only contain the
                                 characters 'A-Z', 'a-z', '0-9' and the underscore.
 
-      sections:                 An optional list of section names that this plugin subscribes to.
+      sections:                 An optional list of section names that this plug-in subscribes to.
                                 They correspond to the 'parsed_section_name' specified in
                                 :meth:`agent_section` and :meth:`snmp_section`.
                                 The corresponding sections are passed to the discovery and check
                                 function. The functions arguments must be called 'section_<name1>,
                                 section_<name2>' ect. Defaults to a list containing as only element
-                                a name equal to the name of the inventory plugin.
+                                a name equal to the name of the inventory plug-in.
 
       inventory_function:       The inventory_function. Arguments must be 'params' (if inventory
-                                parameters are defined) and 'section' (if the plugin subscribes
+                                parameters are defined) and 'section' (if the plug-in subscribes
                                 to a single section), or 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Attributes` or
@@ -558,10 +628,10 @@ def entry_point_prefixes() -> (  # type: ignore[misc]  # explicit Any
         str,
     ]
 ):
-    """Return the types of plugins and their respective prefixes that can be discovered by Checkmk.
+    """Return the types of plug-ins and their respective prefixes that can be discovered by Checkmk.
 
-    These types can be used to create plugins that can be discovered by Checkmk.
-    To be discovered, the plugin must be of one of the types returned by this function and its name
+    These types can be used to create plug-ins that can be discovered by Checkmk.
+    To be discovered, the plug-in must be of one of the types returned by this function and its name
     must start with the corresponding prefix.
 
     Example:

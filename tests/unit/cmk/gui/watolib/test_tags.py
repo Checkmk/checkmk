@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
-import cmk.utils.tags as tags
+from cmk.utils import tags
 from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.gui.watolib.tags

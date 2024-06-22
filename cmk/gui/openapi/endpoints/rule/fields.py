@@ -5,11 +5,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast, Literal, TYPE_CHECKING
+from typing import Any, cast, Literal, TYPE_CHECKING, TypedDict
 
 import marshmallow_oneofschema
 from marshmallow import post_load, pre_dump, types, validates_schema, ValidationError
-from typing_extensions import TypedDict
 
 from cmk.utils.rulesets.conditions import (
     HostOrServiceConditions,
@@ -635,6 +634,7 @@ class LabelGroupCondition(base.BaseSchema):
     operator = fields.String(
         enum=["and", "or", "not"],
         description="Boolean operator that connects the label group to other label groups",
+        load_default="and",
     )
     label_group = fields.List(
         fields.Nested(LabelCondition),
@@ -687,8 +687,17 @@ class Conditions(base.BaseSchema):
     )
     host_label_groups = fields.List(
         fields.Nested(LabelGroupCondition),
-        description="Further restrict this rule by applying host label conditions.",
+        description="Further restrict this rule by applying host label conditions. Although all items in this list"
+        " have a default operator value, the operator value for the the first item in the list does not have any effect.",
         example=[
+            {
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "db:mssql",
+                    }
+                ],
+            },
             {
                 "operator": "and",
                 "label_group": [
@@ -697,15 +706,22 @@ class Conditions(base.BaseSchema):
                         "label": "os:windows",
                     }
                 ],
-            }
+            },
         ],
     )
     service_label_groups = fields.List(
         fields.Nested(LabelGroupCondition),
-        description=(
-            "Restrict the application of the rule, by checking against service label conditions."
-        ),
+        description="Restrict the application of the rule, by checking against service label conditions. Although all items in"
+        " this list have a default operator value, the operator value for the the first item in the list does not have any effect.",
         example=[
+            {
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "db:mssql",
+                    }
+                ],
+            },
             {
                 "operator": "and",
                 "label_group": [
@@ -714,7 +730,7 @@ class Conditions(base.BaseSchema):
                         "label": "os:windows",
                     }
                 ],
-            }
+            },
         ],
     )
     service_description = fields.Nested(
@@ -729,7 +745,7 @@ class Conditions(base.BaseSchema):
             " * The pattern is matched from the beginning.\n"
             " * The match is performed case sensitive.\n"
             "BE AWARE: Depending on the service ruleset the service_description of "
-            "the rules is only a check item or a full service description. For "
+            "the rules is only a check item or a full service name. For "
             "example the check parameters rulesets only use the item, and other "
             "service rulesets like disabled services ruleset use full service"
             "descriptions."
@@ -918,7 +934,25 @@ class UpdateRuleObject(base.BaseSchema):
     conditions = fields.Nested(
         Conditions,
         description="Conditions.",
-        example={},
+        example={
+            "host_name": {"match_on": ["host1", "host2"], "operator": "one_of"},
+            "host_tags": [{"key": "criticality", "operator": "is", "value": "prod"}],
+            "host_labels": [{"key": "os", "operator": "is", "value": "windows"}],
+            "service_labels": [{"key": "os", "operator": "is", "value": "windows"}],
+            "host_label_groups": [
+                {
+                    "operator": "and",
+                    "label_group": [{"operator": "and", "label": "os:windows"}],
+                }
+            ],
+            "service_label_groups": [
+                {
+                    "operator": "and",
+                    "label_group": [{"operator": "and", "label": "os:windows"}],
+                }
+            ],
+            "service_description": {"match_on": ["foo1", "bar2"], "operator": "none_of"},
+        },
     )
 
 
@@ -1112,7 +1146,7 @@ class RuleSearchOptions(base.BaseSchema):
     )
 
 
-def _unpack_operator(v) -> ApiOperator:  # type: ignore[no-untyped-def]
+def _unpack_operator(v: HostOrServiceConditions) -> ApiOperator:
     """Unpacks the operator from a condition value
 
     Examples:

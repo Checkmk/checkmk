@@ -8,8 +8,6 @@ from contextlib import contextmanager
 
 import time_machine
 
-from tests.testlib import Check, MissingCheckInfoError
-
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.hostaddress import HostName
 
@@ -22,9 +20,11 @@ from ..checktestlib import (
     assertCheckResultsEqual,
     assertDiscoveryResultsEqual,
     assertEqual,
+    Check,
     CheckResult,
     DiscoveryResult,
     Immutables,
+    MissingCheckInfoError,
     mock_item_state,
     MockHostExtraConf,
 )
@@ -179,7 +179,7 @@ def optional_freeze_time(dataset):
 def run(check_info, dataset):
     """Run all possible tests on 'dataset'"""
     checklist = checkhandler.get_applicables(dataset.checkname, check_info)
-    assert checklist, f"Found no check plugin for {dataset.checkname!r}"
+    assert checklist, f"Found no check plug-in for {dataset.checkname!r}"
 
     immu = Immutables()
 

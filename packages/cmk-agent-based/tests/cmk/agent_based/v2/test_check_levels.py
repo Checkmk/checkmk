@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import typing
-from collections.abc import Sequence
-from typing import Callable
+from collections.abc import Callable, Sequence
 
 import pytest
 
@@ -115,7 +113,7 @@ def test__check_levels(
 def test__check_levels_errors(
     value: float,
     levels: LevelsT[float] | None,
-    error_type: typing.Type[Exception],
+    error_type: type[Exception],
     error_message: str,
 ) -> None:
     with pytest.raises(error_type, match=error_message):

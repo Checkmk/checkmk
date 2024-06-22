@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pathlib
 import shutil
-from typing import Iterator
+from collections.abc import Iterator
 from unittest.mock import MagicMock
 
 import pytest
@@ -61,6 +61,7 @@ def test_scan_parents_job(mocker: MagicMock, host: Host) -> None:
         max_ttl=3,
         force_explicit=True,
         ping_probes=4,
+        gateway_folder_path=None,
     )
 
     # WHEN

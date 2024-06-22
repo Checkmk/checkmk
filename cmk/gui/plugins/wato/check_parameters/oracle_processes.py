@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 def _parameter_valuespec_oracle_processes():
     return Dictionary(
         help=_(
-            "Here you can override the default levels for the ORACLE Processes check. The levels "
+            "Here you can override the default levels for the Oracle processes check. The levels "
             "are applied on the number of used processes in percentage of the configured limit."
         ),
         elements=[
@@ -41,6 +41,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_processes,
-        title=lambda: _("Oracle Processes"),
+        title=lambda: _("Oracle processes"),
     )
 )

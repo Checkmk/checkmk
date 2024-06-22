@@ -24,11 +24,11 @@ def check_apc_mod_pdu_modules(item, _no_params, info):
     for name, status, current_power in info:
         if name == item:
             status = saveint(status)
-            # As per the device's MIB, the values are measured in tenths of KW
+            # As per the device's MIB, the values are measured in tenths of kW
             current_power = savefloat(current_power) / 10
-            message = f"Status {apc_states.get(status, 6)}, current: {current_power:.2f}kw "
+            message = f"Status {apc_states.get(status, 6)}, current: {current_power:.2f} kW "
 
-            perf = [("current_power", current_power)]
+            perf = [("power", current_power * 1000)]
             if status == 2:
                 return 1, message, perf
             if status in [3, 6]:

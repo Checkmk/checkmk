@@ -10,7 +10,7 @@ description:
  start and end date of the SLES license are shown. The information is
  also shown in the Hardware/Software Inventory.
 
- As a preparation you need to install the agent plugin {SUSEConnect}
+ As a preparation you need to install the agent plug-in {SUSEConnect}
  into your agent's plugins directory (usually {/usr/lib/check_mk_agent/plugins}).
 
  The check can be configured via the corresponding WATO rule {SLES License}.

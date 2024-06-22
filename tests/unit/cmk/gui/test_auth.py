@@ -30,6 +30,9 @@ def test_check_internal_token(
         request.environ["HTTP_AUTHORIZATION"] = "Zm9v"  # foo
         assert _check_internal_token() is None
 
+        request.environ["HTTP_AUTHORIZATION"] = "InternalToken foo"  # invalid base64
+        assert _check_internal_token() is None
+
         request.environ["HTTP_AUTHORIZATION"] = "InternalToken Zm9v"
         assert _check_internal_token() is None
 

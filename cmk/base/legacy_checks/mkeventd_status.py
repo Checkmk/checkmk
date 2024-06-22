@@ -27,7 +27,7 @@ def parse_mkeventd_status(string_table):
         try:
             data = json.loads(line[0])
         except ValueError:
-            # The agent plugin asks the event console for json OutputFormat, but
+            # The agent plug-in asks the event console for json OutputFormat, but
             # older versions always provide python format - even when other format
             # was requested. Skipping the site. Won't eval data from other systems.
             continue

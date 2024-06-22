@@ -34,7 +34,7 @@ def test_check_elasticsearch_query(
     expected_description: str,
 ) -> None:
     # Act
-    commands = list(config(params, host_config, {}))
+    commands = list(config(params, host_config))
     # Assert
     assert len(commands) == 1
     assert commands[0].service_description == expected_description

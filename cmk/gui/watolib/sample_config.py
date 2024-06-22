@@ -12,7 +12,7 @@ from uuid import uuid4
 from cmk.utils import store
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
-from cmk.utils.notify_types import EventRule, NotificationRuleID
+from cmk.utils.notify_types import EventRule, MailPluginModel, NotificationRuleID
 from cmk.utils.paths import site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
 
@@ -25,9 +25,9 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import save_global_settings
-from cmk.gui.watolib.group_writer import save_group_information
+from cmk.gui.watolib.groups_io import save_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-from cmk.gui.watolib.notifications import save_notification_rules
+from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
@@ -103,7 +103,7 @@ def get_default_notification_rule() -> EventRule:
         contact_object=True,
         description="Notify all contacts of a host/service via HTML email",
         disabled=False,
-        notify_plugin=("mail", {}),
+        notify_plugin=("mail", MailPluginModel()),
     )
 
 
@@ -206,7 +206,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 },
             ],
             # Enable HW/SW inventory + status data inventory for docker
-            # containers, kubernetes objects and Check-MK servers by default to
+            # containers, kubernetes objects, robotmk and Check-MK servers by default to
             # simplify the setup procedure for them
             "active_checks": {
                 "cmk_inv": [
@@ -216,6 +216,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                             "host_label_groups": [("and", [("and", "cmk/docker_object:node")])]
                         },
                         "value": {"status_data_inventory": True},
+                        "options": {
+                            "description": "Factory default. Required for the shipped dashboards.",
+                        },
                     },
                     {
                         "id": "b4b151f9-c7cc-4127-87a6-9539931fcd73",
@@ -223,6 +226,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                             "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
                         },
                         "value": {"status_data_inventory": True},
+                        "options": {
+                            "description": "Factory default. Required for the shipped dashboards.",
+                        },
                     },
                     {
                         "id": "2527cb37-e9da-4a15-a7d9-80825a7f6661",
@@ -230,6 +236,19 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                             "host_label_groups": [("and", [("and", "cmk/kubernetes:yes")])]
                         },
                         "value": {"status_data_inventory": True},
+                        "options": {
+                            "description": "Factory default. Required for the shipped dashboards.",
+                        },
+                    },
+                    {
+                        "id": "bea23477-f13a-4e9f-a472-08be507aac9e",
+                        "condition": {
+                            "host_label_groups": [("and", [("and", "cmk/rmk/node_type:local")])]
+                        },
+                        "value": {"status_data_inventory": True},
+                        "options": {
+                            "description": "Factory default. Required for the shipped dashboards.",
+                        },
                     },
                 ]
             },
@@ -293,7 +312,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         rulesets.save_folder()
 
         notification_rules = [get_default_notification_rule()]
-        save_notification_rules(notification_rules)
+        NotificationRuleConfigFile().save(notification_rules)
 
     def _initial_global_settings(self) -> dict[str, Any]:
         settings = {
@@ -326,6 +345,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "fortigate_node_memory",
                 "hr_fs",
                 "hr_mem",
+                # TODO: can be removed when
+                #  cmk.update_config.plugins.actions.rulesets._force_old_http_service_description
+                #  can be removed
                 "http",
                 "huawei_switch_mem",
                 "hyperv_vms",
@@ -420,7 +442,7 @@ class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
 
     def generate(self) -> None:
         # Local import has been added to quick-fix an import cycle between cmk.gui.werks and watolib
-        import cmk.gui.werks as werks
+        from cmk.gui import werks
 
         werks.acknowledge_all_werks(check_permission=False)
 

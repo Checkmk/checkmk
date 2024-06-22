@@ -296,6 +296,11 @@ Call startSection("win_computersystem",58,timeUntil)
 systemVars = Array( "Manufacturer","Name","Model","InstallDate" )
 Call getWMIObject("Win32_ComputerSystem",systemVars)
 
+' ComputerSystemProduct
+Call startSection("win_computersystemproduct",58,timeUntil)
+computerSystemProductVars = Array( "UUID" )
+Call getWMIObject("Win32_ComputerSystemProduct",computerSystemProductVars)
+
 ' Hard-Disk
 Call startSection("win_disks",58,timeUntil)
 diskVars = Array( "Manufacturer","InterfaceType","Model","Name","SerialNumber","Size","MediaType","Signature" )

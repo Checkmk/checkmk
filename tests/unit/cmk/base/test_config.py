@@ -11,7 +11,7 @@ import shutil
 import socket
 from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, NoReturn
 
 import pytest
 from pytest import MonkeyPatch
@@ -19,11 +19,11 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 import cmk.utils.paths
-import cmk.utils.piggyback as piggyback
 import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
@@ -41,11 +41,10 @@ from cmk.checkengine.parameters import TimespecificParameters, TimespecificParam
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
+from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
-from cmk.base.config import ConfigCache, ip_address_of
-from cmk.base.ip_lookup import AddressFamily
+from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 
 from cmk.agent_based.v1 import HostLabel
 
@@ -256,7 +255,7 @@ def test_host_folder_matching(
     )
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache._agent_port(hostname) == result
+    assert config_cache.fetcher_factory()._agent_port(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -275,7 +274,7 @@ def test_is_ipv4_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert (AddressFamily.IPv4 in config_cache.address_family(hostname)) is result
+    assert (IPStackConfig.IPv4 in config_cache.ip_stack_config(hostname)) is result
 
 
 @pytest.mark.parametrize(
@@ -294,7 +293,7 @@ def test_is_ipv6_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert (AddressFamily.IPv6 in config_cache.address_family(hostname)) is result
+    assert (IPStackConfig.IPv6 in config_cache.ip_stack_config(hostname)) is result
 
 
 @pytest.mark.parametrize(
@@ -313,7 +312,11 @@ def test_is_ipv4v6_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert (config_cache.address_family(hostname) is AddressFamily.DUAL_STACK) is result
+    assert (config_cache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK) is result
+
+
+def _assert_not_called(*args: object) -> NoReturn:
+    raise AssertionError(f"Unexpected call with {args}")
 
 
 def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
@@ -343,50 +346,93 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert config_cache.default_address_family(localhost) is socket.AddressFamily.AF_INET
-    assert config_cache.address_family(localhost) is AddressFamily.IPv4
-    assert ip_address_of(config_cache, localhost, socket.AddressFamily.AF_INET) == "127.0.0.1"
-    assert ip_address_of(config_cache, localhost, socket.AddressFamily.AF_INET6) == "::1"
+    assert config_cache.ip_stack_config(localhost) is IPStackConfig.IPv4
+
+    ip_address_of = ConfiguredIPLookup(config_cache, error_handler=handle_ip_lookup_failure)
+
+    assert (
+        ip_address_of(
+            localhost,
+            socket.AddressFamily.AF_INET,
+        )
+        == "127.0.0.1"
+    )
+    assert (
+        ip_address_of(
+            localhost,
+            socket.AddressFamily.AF_INET6,
+        )
+        == "::1"
+    )
 
     assert config_cache.default_address_family(no_ip) is socket.AddressFamily.AF_INET
-    assert config_cache.address_family(no_ip) is AddressFamily.NO_IP
-    assert ip_address_of(config_cache, no_ip, socket.AddressFamily.AF_INET) is None
-    assert ip_address_of(config_cache, no_ip, socket.AddressFamily.AF_INET6) is None
+    assert config_cache.ip_stack_config(no_ip) is IPStackConfig.NO_IP
 
     assert config_cache.default_address_family(dual_stack) is socket.AddressFamily.AF_INET
-    assert config_cache.address_family(dual_stack) is AddressFamily.DUAL_STACK
+    assert config_cache.ip_stack_config(dual_stack) is IPStackConfig.DUAL_STACK
     assert (
-        ip_address_of(config_cache, dual_stack, socket.AddressFamily.AF_INET)
+        ip_address_of(
+            dual_stack,
+            socket.AddressFamily.AF_INET,
+        )
         == _FALLBACK_ADDRESS_IPV4
     )
     assert (
-        ip_address_of(config_cache, dual_stack, socket.AddressFamily.AF_INET6)
+        ip_address_of(
+            dual_stack,
+            socket.AddressFamily.AF_INET6,
+        )
         == _FALLBACK_ADDRESS_IPV6
     )
 
     assert config_cache.default_address_family(cluster) is socket.AddressFamily.AF_INET
-    assert config_cache.address_family(cluster) is AddressFamily.IPv4  # That's strange
-    assert ip_address_of(config_cache, cluster, socket.AddressFamily.AF_INET) == ""
-    assert ip_address_of(config_cache, cluster, socket.AddressFamily.AF_INET6) == ""
+    assert config_cache.ip_stack_config(cluster) is IPStackConfig.IPv4  # That's strange
+    assert (
+        ip_address_of(
+            cluster,
+            socket.AddressFamily.AF_INET,
+        )
+        == ""
+    )
+    assert (
+        ip_address_of(
+            cluster,
+            socket.AddressFamily.AF_INET6,
+        )
+        == ""
+    )
 
     assert config_cache.default_address_family(bad_host) is socket.AddressFamily.AF_INET
-    assert config_cache.address_family(bad_host) is AddressFamily.IPv4  # That's strange
+    assert config_cache.ip_stack_config(bad_host) is IPStackConfig.IPv4  # That's strange
     assert (
-        ip_address_of(config_cache, bad_host, socket.AddressFamily.AF_INET)
+        ip_address_of(
+            bad_host,
+            socket.AddressFamily.AF_INET,
+        )
         == _FALLBACK_ADDRESS_IPV4
     )
     assert (
-        ip_address_of(config_cache, bad_host, socket.AddressFamily.AF_INET6)
+        ip_address_of(
+            bad_host,
+            socket.AddressFamily.AF_INET6,
+        )
         == _FALLBACK_ADDRESS_IPV6
     )
 
     assert config_cache.default_address_family(undiscoverable) is socket.AddressFamily.AF_INET
-    assert config_cache.address_family(undiscoverable) is AddressFamily.IPv4  # That's strange
+    assert config_cache.ip_stack_config(undiscoverable) is IPStackConfig.IPv4  # That's strange
     assert (
-        ip_address_of(config_cache, undiscoverable, socket.AddressFamily.AF_INET)
+        ip_address_of(
+            undiscoverable,
+            socket.AddressFamily.AF_INET,
+        )
         == _FALLBACK_ADDRESS_IPV4
     )
     assert (
-        ip_address_of(config_cache, undiscoverable, socket.AddressFamily.AF_INET6)
+        ip_address_of(
+            undiscoverable,
+            socket.AddressFamily.AF_INET6,
+        )
         == _FALLBACK_ADDRESS_IPV6
     )
 
@@ -427,10 +473,12 @@ def test_is_piggyback_host_auto(
     with_data: bool,
     result: bool,
 ) -> None:
-    monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda *args, **kw: with_data)
     ts = Scenario()
     ts.add_host(hostname, tags)
-    assert ts.apply(monkeypatch).is_piggyback_host(hostname) == result
+    config_cache = ts.apply(monkeypatch)
+
+    config_cache._host_has_piggyback_data_right_now = lambda host_name: with_data  # type: ignore[method-assign]
+    assert config_cache.is_piggyback_host(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -449,7 +497,7 @@ def test_is_no_ip_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert (config_cache.address_family(hostname) is AddressFamily.NO_IP) is result
+    assert (config_cache.ip_stack_config(hostname) is IPStackConfig.NO_IP) is result
 
 
 @pytest.mark.parametrize(
@@ -781,7 +829,7 @@ def test_agent_port(monkeypatch: MonkeyPatch, hostname: HostName, result: int) -
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache._agent_port(hostname) == result
+    assert config_cache.fetcher_factory()._agent_port(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -806,7 +854,7 @@ def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname: HostName, resul
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache._tcp_connect_timeout(hostname) == result
+    assert config_cache.fetcher_factory()._tcp_connect_timeout(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -832,7 +880,7 @@ def test_encryption_handling(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache._encryption_handling(hostname) is result
+    assert config_cache.fetcher_factory()._encryption_handling(hostname) is result
 
 
 @pytest.mark.parametrize(
@@ -858,7 +906,7 @@ def test_symmetric_agent_encryption(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache._symmetric_agent_encryption(hostname) is result
+    assert config_cache.fetcher_factory()._symmetric_agent_encryption(hostname) is result
 
 
 @pytest.mark.parametrize(
@@ -1142,7 +1190,7 @@ def test_host_config_inventory_parameters(
         },
     )
     plugin = InventoryPlugin(
-        sections=(), function=lambda *args, **kw: (), ruleset_name=RuleSetName("if")
+        sections=(), function=lambda *args, **kw: (), ruleset_name=RuleSetName("if"), defaults={}
     )
     assert ts.apply(monkeypatch).inventory_parameters(hostname, plugin) == result
 
@@ -2491,7 +2539,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
     obj = matcher._service_match_object(xyz_host, "bla blä")
     assert obj == RulesetMatchObject(HostName("xyz"), "bla blä", {})
 
-    # Funny service description because the plugin isn't loaded.
+    # Funny service name because the plug-in isn't loaded.
     # We could patch config.service_description, but this is easier:
     description = "Unimplemented check cpu_load"
 
@@ -2879,13 +2927,13 @@ def test_save_packed_config(monkeypatch: MonkeyPatch, config_path: VersionedConf
 
 
 def test_load_packed_config(config_path: VersionedConfigPath) -> None:
-    config.PackedConfigStore.from_serial(config_path).write({"abc": 1})
+    config.PackedConfigStore.from_serial(config_path).write({"abcd": 1})
 
-    assert "abc" not in config.__dict__
+    assert "abcd" not in config.__dict__
     config.load_packed_config(config_path)
     # Mypy does not understand that we add some new member for testing
-    assert config.abc == 1  # type: ignore[attr-defined]
-    del config.__dict__["abc"]
+    assert config.abcd == 1  # type: ignore[attr-defined]
+    del config.__dict__["abcd"]
 
 
 class TestPackedConfigStore:
@@ -2916,7 +2964,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
     registered_plugin = CheckPluginAPI(
         name=CheckPluginName("duplicate_plugin"),
         sections=[],
-        service_name="Duplicate Plugin",
+        service_name="Duplicate Plug-in",
         discovery_function=lambda: [],
         discovery_default_parameters=None,
         discovery_ruleset_name=None,
@@ -2979,3 +3027,35 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
         agent_based_register.get_section_plugin(SectionName("duplicate_plugin"))
         == registered_section
     )
+
+
+@pytest.mark.parametrize(
+    ["input_rulesets", "expected"],
+    [
+        pytest.param({}, {}, id="empty"),
+        pytest.param(
+            {
+                "plugin_name": [
+                    {"cmk-match-type": "dict", "normal_key": 2},
+                    {"cmk-match-type": "dict"},
+                ]
+            },
+            {"plugin_name": {"normal_key": 2}},
+            id="cmk-match-type exists",
+        ),
+        pytest.param(
+            {"mk_logwatch": [{"normal_key": 2}, {"normal_key": 3}]},
+            {"mk_logwatch": [{"normal_key": 2}, {"normal_key": 3}]},
+            id="special matchtype configured",
+        ),
+        pytest.param(
+            {"old_plugin_name": [{"normal_key": 2}, {"normal_key": 3}]},
+            {"old_plugin_name": {"normal_key": 2}},
+            id="default matchtype",
+        ),
+    ],
+)
+def test_boil_down_agent_rules(
+    input_rulesets: Mapping[str, Any], expected: Mapping[str, Any]
+) -> None:
+    assert config.boil_down_agent_rules(defaults={}, rulesets=input_rulesets) == expected

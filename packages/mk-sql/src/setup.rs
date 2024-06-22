@@ -63,7 +63,7 @@ impl Env {
     }
 
     /// guaranteed to return cache dir or None
-    pub fn cache_dir(&self) -> Option<PathBuf> {
+    pub fn base_cache_dir(&self) -> Option<PathBuf> {
         self.state_dir()
             .map(|state_dir| state_dir.join("mk-sql-cache"))
     }
@@ -78,20 +78,20 @@ impl Env {
         .filter(|p| Path::is_dir(p))
     }
 
-    pub fn calc_cache_sub_dir(&self, sub: &str) -> Option<PathBuf> {
-        self.cache_dir().map(|d| d.join(sub))
+    pub fn calc_cache_sub_dir(&self, sub_dir: &str) -> Option<PathBuf> {
+        self.base_cache_dir().map(|d| d.join(sub_dir))
     }
 
-    pub fn obtain_cache_sub_dir(&self, sub: &str) -> Option<PathBuf> {
-        if let Some(cache_dir) = self.calc_cache_sub_dir(sub) {
+    pub fn obtain_cache_sub_dir(&self, sub_dir: &str) -> Option<PathBuf> {
+        if let Some(cache_dir) = self.calc_cache_sub_dir(sub_dir) {
             if cache_dir.is_dir() {
-                log::info!("Cache dir exists");
+                log::info!("Cache dir exists {:?}", cache_dir);
                 Some(cache_dir)
             } else if cache_dir.exists() {
                 log::error!("Cache dir exists but isn't usable(not a directory)");
                 None
             } else {
-                log::info!("Cache dir to be created");
+                log::info!("Cache dir {:?} to be created", cache_dir);
                 std::fs::create_dir_all(&cache_dir).unwrap_or_else(|e| {
                     log::error!("Failed to create root cache dir: {e}");
                 });
@@ -198,14 +198,28 @@ fn custom_format(
     )
 }
 
+fn dec_level(level: log::Level) -> log::Level {
+    match level {
+        log::Level::Error => log::Level::Error,
+        log::Level::Warn => log::Level::Error,
+        log::Level::Info => log::Level::Warn,
+        log::Level::Debug => log::Level::Info,
+        log::Level::Trace => log::Level::Debug,
+    }
+}
+
 fn apply_logging_parameters(
     level: log::Level,
     log_dir: Option<&Path>,
     send_to: SendTo,
     logging: Logging,
 ) -> Result<flexi_logger::LoggerHandle> {
-    let spec =
-        LogSpecification::parse(format!("{}, tiberius=warn", level.as_str().to_lowercase()))?;
+    let spec = LogSpecification::parse(format!(
+        "{}, tiberius={}, odbc={}",
+        level.as_str().to_lowercase(),
+        dec_level(level).as_str().to_lowercase(),
+        dec_level(dec_level(level)).as_str().to_lowercase(),
+    ))?;
     let mut logger = flexi_logger::Logger::with(spec);
 
     logger = if let Some(dir) = log_dir {
@@ -261,7 +275,10 @@ mod tests {
         let e = Env::new(&args);
         assert_eq!(e.log_dir(), Some(Path::new(".")));
         assert_eq!(e.temp_dir(), Some(Path::new(".")));
-        assert_eq!(e.cache_dir(), Some(PathBuf::from(".").join("mk-sql-cache")));
+        assert_eq!(
+            e.base_cache_dir(),
+            Some(PathBuf::from(".").join("mk-sql-cache"))
+        );
         assert_eq!(
             e.calc_cache_sub_dir("aa"),
             Some(PathBuf::from(".").join("mk-sql-cache").join("aa"))
@@ -277,7 +294,7 @@ mod tests {
         let e = Env::new(&args);
         assert!(e.log_dir().is_none());
         assert!(e.temp_dir().is_none());
-        assert!(e.cache_dir().is_none());
+        assert!(e.base_cache_dir().is_none());
         assert!(e.calc_cache_sub_dir("aa").is_none());
         assert!(e.obtain_cache_sub_dir("a").is_none());
     }

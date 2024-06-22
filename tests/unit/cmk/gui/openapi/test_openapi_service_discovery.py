@@ -909,6 +909,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
     ],
+    nodes_check_table={},
     host_labels={"cmk/check_mk_server": {"plugin_name": "labels", "value": "yes"}},
     output="+ FETCHING DATA\n [agent] Using data from cache file /omd/sites/heute/tmp/check_mk/cache/heute\n [agent] Use cached data\n [piggyback] Execute data source\nNo piggyback files for 'heute'. Skip processing.\nNo piggyback files for '127.0.0.1'. Skip processing.\n+ EXECUTING DISCOVERY PLUGINS (29)\nkernel does not support discovery. Skipping it.\n+ EXECUTING HOST LABEL DISCOVERY\n",
     new_labels={},
@@ -1047,7 +1048,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
     mocker.patch(
         # one would like to mock the call in the library and not the import. WHY????
         "cmk.gui.watolib.rulesets.get_services_labels",
-        return_value=GetServicesLabelsResult(labels=defaultdict(lambda: {})),
+        return_value=GetServicesLabelsResult(labels=defaultdict(dict)),
     )
     aut_user_auth_wsgi_app.call_method(
         "post",

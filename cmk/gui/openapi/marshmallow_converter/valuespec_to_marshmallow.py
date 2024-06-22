@@ -60,9 +60,8 @@ from cmk.gui.openapi.marshmallow_converter.type_defs import (
 from cmk.gui.userdb._user_selection import _UserSelection
 from cmk.gui.valuespec.definitions import _CAInput
 from cmk.gui.valuespec.to_formspec import maybe_lazy
-from cmk.gui.wato import FullPathFolderChoice
+from cmk.gui.wato import DictHostTagCondition, FullPathFolderChoice
 from cmk.gui.wato._group_selection import _GroupSelection
-from cmk.gui.wato.pages._match_conditions import HostTagCondition
 from cmk.gui.watolib.sites import LivestatusViaTCP
 from cmk.gui.watolib.tags import load_all_tag_config_read_only
 
@@ -659,9 +658,9 @@ def get_host_tag_schema(name: str | None) -> BaseOrOneOfSchemaType:
     )
 
 
-@match_on(HostTagCondition)
+@match_on(DictHostTagCondition)
 def valuespec_host_tag_condition(
-    vs_instance: HostTagCondition,
+    vs_instance: DictHostTagCondition,
     name: str | None,
     required: bool = False,
 ) -> fields.Nested:
@@ -743,7 +742,7 @@ def get_schema_from_precalculated_schemas(
     PRECALCULATED_SCHEMAS[schema_name] = schema_cls.from_dict(
         schema_fields,
         name=schema_name,
-    )  # type: ignore
+    )
     return PRECALCULATED_SCHEMAS[schema_name]
 
 

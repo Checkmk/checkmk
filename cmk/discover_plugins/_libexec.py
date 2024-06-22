@@ -16,8 +16,8 @@ def family_libexec_dir(module_name: str) -> Path:
     """Return the libexec dir corresponding to the passed module.
 
     Args:
-      module_name: The name of a module that implements a plugin of any
-        of the well-known plugin groups, i.e. two levels into the plugin
+      module_name: The name of a module that implements a plug-in of any
+        of the well-known plug-in groups, i.e. two levels into the plugin
         families namespace.
 
     Example:

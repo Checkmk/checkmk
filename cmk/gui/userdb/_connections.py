@@ -4,32 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from collections.abc import Callable, Sequence
-from typing import Any, cast, Literal, NotRequired
+from collections.abc import Callable, Mapping, Sequence
+from pathlib import Path
+from typing import Any, cast, Literal, NotRequired, TypedDict
 
-from typing_extensions import TypedDict
-
-import cmk.utils.plugin_registry
-import cmk.utils.store as store
-from cmk.utils.config_validation_layer.user_connections import (
-    PrivateKeyPath,
-    PublicKeyPath,
-    validate_user_connections,
-)
+from cmk.utils import store
+from cmk.utils.config_validation_layer.user_connections import PrivateKeyPath, PublicKeyPath
 
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
+from cmk.gui.watolib.utils import multisite_dir
 
-from ._connector import ConnectorType, user_connector_registry, UserConnector
-
-
-class UserConnectionTypedDictBase(TypedDict):
-    id: str
-    disabled: bool
+from ._connector import ConnectorType, user_connector_registry, UserConnectionConfig, UserConnector
 
 
-class UserConnection(UserConnectionTypedDictBase):
-    type: str
+class HtpasswdUserConnectionConfig(UserConnectionConfig):
+    type: Literal["htpasswd"]
 
 
 class Fixed(TypedDict):
@@ -126,7 +117,7 @@ OPEN_LDAP = tuple[Literal["openldap"], LDAPConnectionConfigFixed]
 ACTIVE_DIR = tuple[Literal["ad"], LDAPConnectionConfigFixed | LDAPConnectionConfigDiscover]
 
 
-class LDAPConnectionTypedDict(UserConnectionTypedDictBase):
+class LDAPUserConnectionConfig(UserConnectionConfig):
     description: str
     comment: str
     docu_url: str
@@ -153,18 +144,11 @@ class LDAPConnectionTypedDict(UserConnectionTypedDictBase):
     group_member: NotRequired[str]
     active_plugins: ActivePlugins
     cache_livetime: int
-    customer: NotRequired[str]
+    customer: NotRequired[str | None]
     type: Literal["ldap"]
 
 
-class UserRoleMapping(TypedDict, total=False):
-    user: list[str]
-    admin: list[str]
-    guest: list[str]
-    agent_registration: list[str]
-
-
-class SAMLConnectionTypedDict(UserConnectionTypedDictBase):
+class SAMLUserConnectionConfig(UserConnectionConfig):
     name: str
     description: str
     comment: str
@@ -185,14 +169,16 @@ class SAMLConnectionTypedDict(UserConnectionTypedDictBase):
     user_alias_attribute_name: str
     email_attribute_name: str
     contactgroups_mapping: str
-    role_membership_mapping: Literal[False] | tuple[Literal[True], tuple[str, UserRoleMapping]]
+    role_membership_mapping: (
+        Literal[False] | tuple[Literal[True], tuple[str, Mapping[str, Sequence[str]]]]
+    )
     type: Literal["saml2"]
     version: Literal["1.0.0"]
     owned_by_site: str
     customer: NotRequired[str]
 
 
-UserConnectionSpec = LDAPConnectionTypedDict | SAMLConnectionTypedDict
+ConfigurableUserConnectionSpec = LDAPUserConnectionConfig | SAMLUserConnectionConfig
 
 
 @request_memoize(maxsize=None)
@@ -249,25 +235,27 @@ def _get_connection_configs() -> list[dict[str, Any]]:
     return builtin_connections + active_config.user_connections
 
 
-_HTPASSWD_CONNECTION: UserConnection = {
-    "type": "htpasswd",
-    "id": "htpasswd",
-    "disabled": False,
-}
+_HTPASSWD_CONNECTION = HtpasswdUserConnectionConfig(
+    {
+        "type": "htpasswd",
+        "id": "htpasswd",
+        "disabled": False,
+    }
+)
 # The htpasswd connector is enabled by default and always executed first.
 # NOTE: This list may be appended to in edition specific registration functions.
-builtin_connections: list[UserConnection] = [_HTPASSWD_CONNECTION]
+builtin_connections: list[UserConnectionConfig] = [_HTPASSWD_CONNECTION]
 
 
-def get_ldap_connections() -> dict[str, LDAPConnectionTypedDict]:
+def get_ldap_connections() -> dict[str, LDAPUserConnectionConfig]:
     ldap_connections = cast(
-        dict[str, LDAPConnectionTypedDict],
+        dict[str, LDAPUserConnectionConfig],
         {c["id"]: c for c in active_config.user_connections if c["type"] == "ldap"},
     )
     return ldap_connections
 
 
-def get_active_ldap_connections() -> dict[str, LDAPConnectionTypedDict]:
+def get_active_ldap_connections() -> dict[str, LDAPUserConnectionConfig]:
     return {
         ldap_id: ldap_connection
         for ldap_id, ldap_connection in get_ldap_connections().items()
@@ -275,15 +263,15 @@ def get_active_ldap_connections() -> dict[str, LDAPConnectionTypedDict]:
     }
 
 
-def get_saml_connections() -> dict[str, SAMLConnectionTypedDict]:
+def get_saml_connections() -> dict[str, SAMLUserConnectionConfig]:
     saml_connections = cast(
-        dict[str, SAMLConnectionTypedDict],
+        dict[str, SAMLUserConnectionConfig],
         {c["id"]: c for c in active_config.user_connections if c["type"] == "saml2"},
     )
     return saml_connections
 
 
-def get_active_saml_connections() -> dict[str, SAMLConnectionTypedDict]:
+def get_active_saml_connections() -> dict[str, SAMLUserConnectionConfig]:
     return {
         saml_id: saml_connection
         for saml_id, saml_connection in get_saml_connections().items()
@@ -325,27 +313,16 @@ def _get_attributes(
     return selector(connection) if connection else []
 
 
-def _multisite_dir() -> str:
-    return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
+UserConnections = list[ConfigurableUserConnectionSpec] | Sequence[ConfigurableUserConnectionSpec]
 
 
-def load_connection_config(lock: bool = False) -> list[UserConnectionSpec]:
-    """Load the configured connections for the Setup
-
-    Note:
-        This function should only be used in the Setup context, when configuring
-        the connections. During UI rendering, `active_config.user_connections` must
-        be used.
-    """
-    filename = os.path.join(_multisite_dir(), "user_connections.mk")
-    connections = store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
-    validate_user_connections(connections)
-    return connections
+def load_connection_config(lock: bool = False) -> UserConnections:
+    if lock:
+        return UserConnectionConfigFile().load_for_modification()
+    return UserConnectionConfigFile().load_for_reading()
 
 
-def save_connection_config(
-    connections: list[UserConnectionSpec], base_dir: str | None = None
-) -> None:
+def save_connection_config(connections: list[ConfigurableUserConnectionSpec]) -> None:
     """Save the connections for the Setup
 
     Note:
@@ -353,15 +330,47 @@ def save_connection_config(
         the connections. During UI rendering, `active_config.user_connections` must
         be used.
     """
-    validate_user_connections(connections)
-    if not base_dir:
-        base_dir = _multisite_dir()
-    store.mkdir(base_dir)
+    UserConnectionConfigFile().save(connections)
+
+
+def save_snapshot_user_connection_config(
+    connections: list[Mapping[str, Any]],
+    snapshot_work_dir: str,
+) -> None:
+    save_dir = os.path.join(snapshot_work_dir, "etc/check_mk/multisite.d/wato")
+    store.makedirs(save_dir)
     store.save_to_mk_file(
-        os.path.join(base_dir, "user_connections.mk"), "user_connections", connections
+        os.path.join(save_dir, "user_connections.mk"), "user_connections", connections
     )
 
     for connector_class in user_connector_registry.values():
         connector_class.config_changed()
 
     clear_user_connection_cache()
+
+
+class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec]):
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(multisite_dir() + "user_connections.mk"),
+            config_variable="user_connections",
+            spec_class=ConfigurableUserConnectionSpec,
+        )
+
+    def save(self, cfg: list[ConfigurableUserConnectionSpec]) -> None:
+        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        store.save_to_mk_file(
+            str(self._config_file_path),
+            self._config_variable,
+            cfg,
+            pprint_value=active_config.wato_pprint_config,
+        )
+
+        for connector_class in user_connector_registry.values():
+            connector_class.config_changed()
+
+        clear_user_connection_cache()
+
+
+def register_config_file(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(UserConnectionConfigFile())

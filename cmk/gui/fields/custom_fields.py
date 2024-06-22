@@ -10,11 +10,13 @@ from typing import Any, Literal
 
 from marshmallow import validate, ValidationError
 
-from cmk.utils.tags import BuiltinTagConfig, TagID
+from cmk.utils.crypto import certificate, keys
+from cmk.utils.tags import BuiltinTagConfig, TagGroupID, TagID
 
 from cmk.gui.config import active_config
-from cmk.gui.groups import load_contact_group_information
-from cmk.gui.userdb import connection_choices
+from cmk.gui.userdb import connection_choices, get_saml_connections
+from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.tags import (
     load_all_tag_config_read_only,
@@ -193,10 +195,86 @@ class LDAPConnectionID(fields.String):
                 raise self.make_error("should_not_exist", path=value)
 
 
+class SAMLConnectionID(fields.String):
+    default_error_messages = {
+        "should_exist": "The SAML connection {path!r} should exist but it doesn't.",
+        "should_not_exist": "The SAML connection {path!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
+        required: bool = True,
+        description: str = "A SAML connection ID string.",
+        minLength: int = 1,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(required=required, description=description, minLength=minLength, **kwargs)
+        self.presence = presence
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+
+        if self.presence == "should_exist":
+            if value not in get_saml_connections():
+                raise self.make_error("should_exist", path=value)
+
+        elif self.presence == "should_not_exist":
+            if value in get_saml_connections():
+                raise self.make_error("should_not_exist", path=value)
+
+
+class CertPublicKey(fields.String):
+    default_error_messages = {
+        "invalid_key": "Invalid certificate",
+    }
+
+    def __init__(
+        self,
+        description: str = "Public key in PEM format. Must be a single certificate, not a chain.",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(description=description, **kwargs)
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+
+        try:
+            certificate.Certificate.load_pem(certificate.CertificatePEM(value))
+        except Exception:
+            raise self.make_error("invalid_key")
+
+
+class CertPrivateKey(fields.String):
+    default_error_messages = {
+        "encrypted_key": "Encrypted private keys are not supported",
+        "invalid_key": "Invalid private key",
+    }
+
+    def __init__(
+        self,
+        description: str = "Private key in PEM format.",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(description=description, **kwargs)
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+
+        if value.startswith("-----BEGIN ENCRYPTED PRIVATE KEY"):
+            raise self.make_error("encrypted_key")
+
+        try:
+            keys.PrivateKey.load_pem(keys.PlaintextPrivateKeyPEM(value))
+        except Exception:
+            raise self.make_error("invalid_key")
+
+
 class AuxTagIDField(fields.String):
     default_error_messages = {
         "should_exist": "The aux_tag {aux_tag_id!r} should exist but it doesn't.",
         "should_not_exist": "The aux_tag {aux_tag_id!r} should not exist but it does.",
+        "should_not_exist_tag_group": "The id {aux_tag_id!r} is already in use by a tag group.",
         "should_exist_and_should_be_builtin": "The aux_tag {aux_tag_id!r} should be an existing built-in aux tag but it's not.",
         "should_exist_and_should_be_custom": "The aux_tag {aux_tag_id!r} should be an existing custom aux tag but it's not.",
     }
@@ -218,6 +296,7 @@ class AuxTagIDField(fields.String):
             description=description,
             example=example,
             pattern=r"^[-0-9a-zA-Z_]+\Z",
+            allow_none=True,
             **kwargs,
         )
         self.presence = presence
@@ -235,8 +314,15 @@ class AuxTagIDField(fields.String):
                 raise self.make_error("should_exist_and_should_be_custom", aux_tag_id=tag_id)
 
         if self.presence == "should_not_exist":
-            if load_all_tag_config_read_only().aux_tag_list.exists(tag_id):
+            ro_config = load_tag_config_read_only()
+            builtin_config = BuiltinTagConfig()
+            if ro_config.aux_tag_list.exists(tag_id) or builtin_config.aux_tag_list.exists(tag_id):
                 raise self.make_error("should_not_exist", aux_tag_id=tag_id)
+
+            if ro_config.tag_group_exists(TagGroupID(tag_id)) or builtin_config.tag_group_exists(
+                TagGroupID(tag_id)
+            ):
+                raise self.make_error("should_not_exist_tag_group", aux_tag_id=tag_id)
 
         if self.presence == "should_exist":
             if not load_all_tag_config_read_only().aux_tag_list.exists(tag_id):
@@ -496,3 +582,42 @@ class TagGroupIDField(fields.String):
 
         if self.presence == "should_not_exist" and tag_group_exists(value, builtin_included=True):
             raise self.make_error("should_exist", name=value)
+
+
+def _global_proxy_choices() -> list[str]:
+    return [p["ident"] for p in ConfigDomainCore().load().get("http_proxies", {}).values()]
+
+
+class GlobalHTTPProxyField(fields.String):
+    default_error_messages = {
+        "should_exist": "The global http proxy {http_proxy!r} should exist but it doesn't.",
+        "should_not_exist": "The global http proxy {http_proxy!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal[
+            "should_exist",
+            "should_not_exist",
+            "ignore",
+        ] = "ignore",
+        description: str = "A global http proxy",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            description=description,
+            example="proxy_id_1",
+            **kwargs,
+        )
+        self.presence = presence
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+
+        if self.presence == "should_exist":
+            if value not in _global_proxy_choices():
+                raise self.make_error("should_exist", http_proxy=value)
+
+        if self.presence == "should_not_exist":
+            if value in _global_proxy_choices():
+                raise self.make_error("should_not_exist", http_proxy=value)

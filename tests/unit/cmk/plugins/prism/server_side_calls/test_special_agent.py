@@ -20,42 +20,43 @@ HOST_CONFIG = HostConfig(
     ["params", "expected_args"],
     [
         pytest.param(
-            {"username": "", "password": Secret(12)},
+            {"username": "", "password": Secret(12), "no_cert_check": False},
             [
                 "--server",
                 "address",
                 "--username",
                 "",
                 "--password",
-                Secret(12, "%s"),
+                Secret(12).unsafe(),
             ],
             id="explicit password and no port",
         ),
         pytest.param(
-            {"username": "userid", "password": Secret(23), "port": 9440},
+            {"username": "userid", "password": Secret(23), "no_cert_check": False, "port": 9440},
             [
                 "--server",
                 "address",
                 "--username",
                 "userid",
                 "--password",
-                Secret(23, format="%s"),
+                Secret(23).unsafe(),
                 "--port",
                 "9440",
             ],
             id="explicit password and port",
         ),
         pytest.param(
-            {"username": "userid", "password": Secret(42), "port": 9440},
+            {"username": "userid", "password": Secret(42), "no_cert_check": True, "port": 9440},
             [
                 "--server",
                 "address",
                 "--username",
                 "userid",
                 "--password",
-                Secret(42),
+                Secret(42).unsafe(),
                 "--port",
                 "9440",
+                "--no-cert-check",
             ],
             id="password from store and port",
         ),
@@ -63,5 +64,5 @@ HOST_CONFIG = HostConfig(
 )
 def test_prism_argument_parsing(params: Mapping[str, object], expected_args: Sequence[str]) -> None:
     """Tests if all required arguments are present."""
-    command = list(generate_prism_command(params, HOST_CONFIG, {}))[0]
+    command = list(generate_prism_command(params, HOST_CONFIG))[0]
     assert command.command_arguments == expected_args

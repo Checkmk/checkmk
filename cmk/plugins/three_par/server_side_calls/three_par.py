@@ -4,17 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Sequence
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    HTTPProxy,
-    Secret,
-    SpecialAgentCommand,
-    SpecialAgentConfig,
-)
+from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
 class ThreeParParams(BaseModel):
@@ -26,13 +20,14 @@ class ThreeParParams(BaseModel):
 
 
 def generate_three_par_command(
-    params: ThreeParParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
+    params: ThreeParParams,
+    host_config: HostConfig,
 ) -> Iterator[SpecialAgentCommand]:
     args: list[str | Secret] = [
         "--user",
         params.user,
         "--password",
-        params.password,
+        params.password.unsafe(),
         "--port",
         str(params.port),
     ]

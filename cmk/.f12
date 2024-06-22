@@ -10,12 +10,7 @@ ROOT=/omd/sites/$SITE
 
 CMK_VERSION=$(basename "$(readlink "$ROOT"/version)")
 CMK_VERSION=${CMK_VERSION%.*}
-
-# Needed by {managed,cloud,saas}/cmk/.f12 to set the correct edition after .f12
-if [ -z "$ORIG_EDITION" ]; then
-    ORIG_EDITION=$("$ROOT/bin/python3" -c 'import cmk.utils.version; print(cmk.utils.version.edition().short)')
-    export ORIG_EDITION
-fi
+CMK_EDITION=${CMK_VERSION##*.}
 
 echo "Update site $SITE..."
 
@@ -130,9 +125,8 @@ rm -f \
 # Restore site version after .f12
 sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/utils/version.py
 
-# Make the target a CME version in case the version is already a CME version
-# (The dev is working on CME files)
-if [ "$ORIG_EDITION" = "cme" ]; then
+# Make the target a CME edition again if it was before after replacing the version.py from the git
+if [ "$CMK_EDITION" = "cme" ]; then
     echo "Make the target version a CME version..."
     sed -i "/^def edition() -> Edition:/{n;n;s/.*/        return Edition.CME/}" "$ROOT/lib/python3/cmk/utils/version.py"
 fi

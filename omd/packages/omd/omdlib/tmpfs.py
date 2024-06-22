@@ -25,10 +25,9 @@ from omdlib.utils import (
 )
 from omdlib.version_info import VersionInfo
 
-import cmk.utils.tty as tty
+from cmk.utils import tty
 
 
-# TODO: Use site context?
 def tmpfs_mounted(sitename: str) -> bool:
     # Problem here: if /omd is a symbolic link somewhere else,
     # then in /proc/mounts the physical path will appear and be
@@ -174,11 +173,6 @@ def unmount_tmpfs_without_save(  # pylint: disable=too-many-branches
     return False
 
 
-# Extracted to separate function to be able to monkeypatch the path for tests
-def fstab_path() -> Path:
-    return Path("/etc/fstab")
-
-
 def _unmount(tmp_dir: str) -> bool:
     return subprocess.call(["umount", tmp_dir]) == 0
 
@@ -199,13 +193,17 @@ def _tmpfs_is_managed_by_node(site_name: str, tmp_dir: str) -> bool:
     ) in [1, 32]
 
 
-def add_to_fstab(site: SiteContext, tmpfs_size: str | None = None) -> None:
-    if not (path_fstab := fstab_path()).exists():
+def add_to_fstab(
+    site_name: str,
+    mount_point: str,
+    tmpfs_size: str | None = None,
+    fstab_path: Path = Path("/etc/fstab"),
+) -> None:
+    if not fstab_path.exists():
         return  # Don't do anything in case there is no fstab
 
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
-    mountpoint = site.real_tmp_dir
-    sys.stdout.write(f"Adding {mountpoint} to {path_fstab}.\n")
+    sys.stdout.write(f"Adding {mount_point} to {fstab_path}.\n")
 
     # No size option: using up to 50% of the RAM
     sizespec = ""
@@ -213,34 +211,34 @@ def add_to_fstab(site: SiteContext, tmpfs_size: str | None = None) -> None:
         sizespec = ",size=%s" % tmpfs_size
 
     # Ensure the fstab has a newline char at it's end before appending
-    previous_fstab = path_fstab.read_text()
+    previous_fstab = fstab_path.read_text()
     complete_last_line = previous_fstab and not previous_fstab.endswith("\n")
 
-    with path_fstab.open(mode="a+") as fstab:
+    with fstab_path.open(mode="a+") as fstab:
         if complete_last_line:
             fstab.write("\n")
 
         fstab.write(
-            f"tmpfs  {mountpoint} tmpfs noauto,user,mode=751,uid={site.name},gid={site.name}{sizespec} 0 0\n"
+            f"tmpfs  {mount_point} tmpfs noauto,user,mode=751,uid={site_name},gid={site_name}{sizespec} 0 0\n"
         )
 
 
-def remove_from_fstab(site: SiteContext) -> None:
-    if not (path_fstab := fstab_path()).exists():
+def remove_from_fstab(site: SiteContext, fstab_path: Path = Path("/etc/fstab")) -> None:
+    if not fstab_path.exists():
         return  # Don't do anything in case there is no fstab
 
     mountpoint = site.tmp_dir
-    sys.stdout.write(f"Removing {mountpoint} from {path_fstab}...")
+    sys.stdout.write(f"Removing {mountpoint} from {fstab_path}...")
 
     with (
-        (path_new_fstab := Path(str(path_fstab) + ".new")).open(mode="w") as newtab,
-        path_fstab.open() as current_fstab,
+        (path_new_fstab := Path(str(fstab_path) + ".new")).open(mode="w") as newtab,
+        fstab_path.open() as current_fstab,
     ):
         for line in current_fstab:
             if "uid=%s," % site.name in line and mountpoint in line:
                 continue
             newtab.write(line)
-    path_new_fstab.rename(path_fstab)
+    path_new_fstab.rename(fstab_path)
     ok()
 
 
@@ -280,7 +278,7 @@ def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext, ske
     prepare_tmpfs(version_info, site.name, site.tmp_dir, site.conf["TMPFS"])
 
     if not os.listdir(site.tmp_dir):
-        create_skeleton_files(site.dir, site.replacements, skelroot, site.skel_permissions, "tmp")
+        create_skeleton_files(site.dir, site.replacements(), skelroot, site.skel_permissions, "tmp")
         chown_tree(site.tmp_dir, site.name)
         mark_tmpfs_initialized(site)
         _restore_tmpfs_dump(site.dir, site.tmp_dir)
@@ -301,3 +299,17 @@ def _create_livestatus_tcp_socket_link(site: SiteContext) -> None:
         os.makedirs(parent_dir)
 
     os.symlink(target, link_path)
+
+
+def fstab_verify(site_name: str, mountpoint: str) -> bool:
+    """Ensure that there is an fstab entry for the tmpfs of the site.
+    In case there is no fstab (seen in some containers) assume everything
+    is OK without fstab entry."""
+    if not (fstab_path := Path("/etc", "fstab")).exists():
+        return True
+
+    with fstab_path.open() as opened_file:
+        for line in opened_file:
+            if "uid=%s," % site_name in line and mountpoint in line:
+                return True
+    sys.exit(tty.error + ": fstab entry for %s does not exist" % mountpoint)

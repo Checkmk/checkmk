@@ -519,8 +519,8 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                     id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
                     scalars=[],
-                    conflicting_metrics=[],
-                    optional_metrics=[],
+                    conflicting_metrics=(),
+                    optional_metrics=(),
                     consolidation_function=None,
                     range=None,
                     omit_zero_metrics=False,
@@ -528,10 +528,12 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                         MetricDefinition(
                             expression=Metric(name="messages_outbound"),
                             line_type="stack",
+                            title="Outbound messages",
                         ),
                         MetricDefinition(
                             expression=Metric(name="messages_inbound"),
                             line_type="stack",
+                            title="Inbound messages",
                         ),
                         MetricDefinition(
                             expression=Metric(name="predict_messages_outbound"),
@@ -572,8 +574,8 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                     id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
                     scalars=[],
-                    conflicting_metrics=[],
-                    optional_metrics=[],
+                    conflicting_metrics=(),
+                    optional_metrics=(),
                     consolidation_function=None,
                     range=None,
                     omit_zero_metrics=False,
@@ -581,10 +583,12 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                         MetricDefinition(
                             expression=Metric(name="messages_outbound"),
                             line_type="stack",
+                            title="Outbound messages",
                         ),
                         MetricDefinition(
                             expression=Metric(name="messages_inbound"),
                             line_type="stack",
+                            title="Inbound messages",
                         ),
                     ],
                 ),
@@ -1046,7 +1050,7 @@ def test_get_graph_templates_with_predictive_metrics(
     ],
 )
 def test_conflicting_metrics(metric_names: Sequence[str], graph_ids: Sequence[str]) -> None:
-    # Hard to find all avail metric names of a check plugin.
+    # Hard to find all avail metric names of a check plug-in.
     # We test conflicting metrics as following:
     # 1. write test for expected metric names of a graph template if it has "conflicting_metrics"
     # 2. use metric names from (1) and conflicting metrics
@@ -1058,7 +1062,7 @@ def test_conflicting_metrics(metric_names: Sequence[str], graph_ids: Sequence[st
 def test_graph_titles() -> None:
     graphs_without_title = sorted(
         graph_id
-        for graph_id, graph_info in utils.graph_templates_internal().items()
+        for graph_id, graph_info in utils._graph_templates_internal().items()
         if not graph_info.title
     )
     assert (
@@ -1417,12 +1421,12 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         WarningOf(Metric("metric-name-2")),
                         "stack",
-                        "metric-name-2",
+                        "Warning of metric-name-2",
                     ),
                     MetricDefinition(
                         CriticalOf(Metric("metric-name-3")),
                         "stack",
-                        "metric-name-3",
+                        "Critical of metric-name-3",
                     ),
                     MetricDefinition(
                         MinimumOf(
@@ -1535,11 +1539,11 @@ COLOR_HEX = "#1e90ff"
                 scalars=[
                     utils.ScalarDefinition(
                         WarningOf(Metric("metric-name-2")),
-                        "metric-name-2",
+                        "Warning of metric-name-2",
                     ),
                     utils.ScalarDefinition(
                         CriticalOf(Metric("metric-name-3")),
-                        "metric-name-3",
+                        "Critical of metric-name-3",
                     ),
                     utils.ScalarDefinition(
                         MinimumOf(
@@ -1627,7 +1631,7 @@ COLOR_HEX = "#1e90ff"
             utils.GraphTemplate(
                 id="name",
                 title="Title",
-                range=(Constant(0), Constant(100.0)),
+                range=utils.MinimalGraphTemplateRange(min=Constant(0), max=Constant(100.0)),
                 scalars=[],
                 conflicting_metrics=(),
                 optional_metrics=(),
@@ -1738,11 +1742,11 @@ def test_graph_template_from_graph(
                 scalars=[
                     utils.ScalarDefinition(
                         WarningOf(Metric("metric-name-l3"), "warn"),
-                        "metric-name-l3",
+                        "Warning of metric-name-l3",
                     ),
                     utils.ScalarDefinition(
                         CriticalOf(Metric("metric-name-l4"), "crit"),
-                        "metric-name-l4",
+                        "Critical of metric-name-l4",
                     ),
                     utils.ScalarDefinition(
                         MinimumOf(Metric("metric-name-l5"), "min", explicit_color=COLOR_HEX),
@@ -1754,11 +1758,11 @@ def test_graph_template_from_graph(
                     ),
                     utils.ScalarDefinition(
                         WarningOf(Metric("metric-name-u3"), "warn"),
-                        "metric-name-u3",
+                        "Warning of metric-name-u3",
                     ),
                     utils.ScalarDefinition(
                         CriticalOf(Metric("metric-name-u4"), "crit"),
-                        "metric-name-u4",
+                        "Critical of metric-name-u4",
                     ),
                     utils.ScalarDefinition(
                         MinimumOf(Metric("metric-name-u5"), "min", explicit_color=COLOR_HEX),
@@ -1803,7 +1807,10 @@ def test_graph_template_from_graph(
             utils.GraphTemplate(
                 id="name",
                 title="Title",
-                range=(Minimum([Constant(1), Constant(2)]), Maximum([Constant(10), Constant(11)])),
+                range=utils.MinimalGraphTemplateRange(
+                    min=Minimum([Constant(1), Constant(2)]),
+                    max=Maximum([Constant(10), Constant(11)]),
+                ),
                 scalars=[],
                 conflicting_metrics=[],
                 optional_metrics=[],
@@ -1836,7 +1843,10 @@ def test_graph_template_from_graph(
             utils.GraphTemplate(
                 id="name",
                 title="Title",
-                range=(Minimum([Constant(1)]), Maximum([Constant(10)])),
+                range=utils.MinimalGraphTemplateRange(
+                    min=Minimum([Constant(1)]),
+                    max=Maximum([Constant(10)]),
+                ),
                 scalars=[],
                 conflicting_metrics=[],
                 optional_metrics=[],
@@ -1869,7 +1879,10 @@ def test_graph_template_from_graph(
             utils.GraphTemplate(
                 id="name",
                 title="Title",
-                range=(Minimum([Constant(2)]), Maximum([Constant(11)])),
+                range=utils.MinimalGraphTemplateRange(
+                    min=Minimum([Constant(2)]),
+                    max=Maximum([Constant(11)]),
+                ),
                 scalars=[],
                 conflicting_metrics=[],
                 optional_metrics=[],

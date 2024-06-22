@@ -1,5 +1,6 @@
 workspace(name = "omd_packages")
 
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
@@ -147,6 +148,20 @@ load("//omd/packages/redis:redis_http.bzl", "redis")
 redis(
     sha256 = REDIS_SHA256,
     version_str = REDIS_VERSION,
+)
+
+load("//omd/packages/asio:asio.bzl", "asio")
+
+asio(
+    sha256 = "09b9fe5c670c7bd47c7ee957cd9c184b4c8f0620d5b08b38ce837a24df971bca",
+    version = "1.24.0-patched",
+)
+
+load("//omd/packages/re2:re2.bzl", "re2")
+
+re2(
+    sha256 = "665b65b6668156db2b46dddd33405cd422bd611352c5052ab3dae6a5fbac5506",
+    version = "2022-12-01",
 )
 
 load("//omd/packages/openssl:openssl_http.bzl", "openssl")
@@ -322,6 +337,63 @@ rrdtool(
     sha256 = RRDTOOL_SHA256,
     version_str = RRDTOOL_VERSION,
 )
+
+load("//omd/packages/httplib:httplib.bzl", "httplib")
+
+httplib(
+    sha256 = "2a4503f9f2015f6878baef54cd94b01849cc3ed19dfe95f2c9775655bea8b73f",
+    version = "0.13.3",
+)
+
+load("//omd/packages/googletest:gtest_http.bzl", "googletest")
+
+googletest(
+    # Googletest doesn't provide releases anymore, it uses a "Abseil Live at Head philosophy" nowadays.
+    commit = "71140c3ca7a87bb1b5b9c9f1500fea8858cce344",
+)
+
+http_archive(
+    name = "rules_cc",
+    sha256 = "35f2fb4ea0b3e61ad64a369de284e4fbbdcdba71836a5555abb5e194cf119509",
+    strip_prefix = "rules_cc-624b5d59dfb45672d4239422fa1e3de1822ee110",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_cc/archive/624b5d59dfb45672d4239422fa1e3de1822ee110.tar.gz",
+        "https://github.com/bazelbuild/rules_cc/archive/624b5d59dfb45672d4239422fa1e3de1822ee110.tar.gz",
+    ],
+)
+
+load("@rules_cc//cc:repositories.bzl", "rules_cc_dependencies")
+
+rules_cc_dependencies()
+
+http_archive(
+    name = "rules_proto",
+    sha256 = "6fb6767d1bef535310547e03247f7518b03487740c11b6c6adb7952033fe1295",
+    strip_prefix = "rules_proto-6.0.2",
+    url = "https://github.com/bazelbuild/rules_proto/releases/download/6.0.2/rules_proto-6.0.2.tar.gz",
+)
+
+load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies")
+
+rules_proto_dependencies()
+
+load("@rules_proto//proto:setup.bzl", "rules_proto_setup")
+
+rules_proto_setup()
+
+load("@rules_proto//proto:toolchains.bzl", "rules_proto_toolchains")
+
+rules_proto_toolchains()
+
+git_repository(
+    name = "com_google_protobuf",
+    commit = "3d9f7c430a5ae1385512908801492d4421c3cdb7",  # v27.1
+    remote = "https://github.com/protocolbuffers/protobuf.git",
+)
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
 
 load("//omd/packages/redfish_mkp:redfish_mkp_http.bzl", "redfish_mkp")
 

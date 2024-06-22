@@ -20,4 +20,5 @@ configure_make(
     ],
     out_shared_libs = [
     ],
+    visibility = ["//visibility:public"],
 )

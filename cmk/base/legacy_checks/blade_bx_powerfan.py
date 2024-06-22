@@ -96,7 +96,7 @@ check_info["blade_bx_powerfan"] = LegacyCheckDefinition(
     check_function=check_blade_bx_powerfan,
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={
-        "levels_lower": (20, 10),
-        "levels": (80, 90),
+        "levels_lower": (20.0, 10.0),
+        "levels": (80.0, 90.0),
     },
 )

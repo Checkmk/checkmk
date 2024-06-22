@@ -45,7 +45,7 @@ class _CheckTypeHostSelection(DualListChoice):
         return [
             (str(cn), (str(cn) + " - " + c["title"])[:60])
             for (cn, c) in checks.items()
-            # filter out plugins implemented *explicitly* for management boards
+            # filter out plug-ins implemented *explicitly* for management boards
             if not cn.is_management_name()
         ]
 

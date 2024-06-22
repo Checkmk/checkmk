@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import Any
 
 import pytest
 
@@ -20,7 +19,7 @@ def fixture_host_config() -> HostConfig:
     return HostConfig(logging.getLogger("cmk.mkeventd.EventServer"))
 
 
-def _heute_config() -> dict[str, Any]:
+def _heute_config() -> dict[str, object]:
     return {
         "name": "heute",
         "alias": "heute alias",
@@ -37,7 +36,7 @@ def _heute_config() -> dict[str, Any]:
     }
 
 
-def _example_com_config() -> dict[str, Any]:
+def _example_com_config() -> dict[str, object]:
     return {
         "name": "example.com",
         "alias": "example.com alias",
@@ -54,7 +53,7 @@ def _example_com_config() -> dict[str, Any]:
     }
 
 
-def _test_table() -> list[dict[str, Any]]:
+def _test_table() -> list[dict[str, object]]:
     return [
         _heute_config(),
         _example_com_config(),

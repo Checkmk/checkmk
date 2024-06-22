@@ -26,15 +26,14 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from textwrap import wrap
-from typing import Literal, NewType, overload, Protocol
+from typing import Literal, NewType, overload, Protocol, TypedDict
 
-from reportlab.lib.units import mm  # type: ignore[import]
-from reportlab.lib.utils import ImageReader  # type: ignore[import]
+from reportlab.lib.units import mm  # type: ignore[import-untyped]
+from reportlab.lib.utils import ImageReader  # type: ignore[import-untyped]
 
 # Import software from reportlab (thanks to them!)
-from reportlab.pdfgen import canvas  # type: ignore[import]
+from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
 from six import ensure_str
-from typing_extensions import TypedDict
 
 import cmk.utils.paths
 from cmk.utils.images import CMKImage, ImageType
@@ -763,6 +762,7 @@ class Document:
         top = top_mm * mm + (height_mm * mm - ex_height) / 2.0
         if valign == "middle":
             top -= ex_height * 0.5  # estimate
+
         if align == "center":
             self._canvas.drawCentredString((left_mm + width_mm / 2.0) * mm, top, text)
         elif align == "left":

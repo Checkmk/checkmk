@@ -7,7 +7,7 @@ import contextlib
 import datetime
 import os
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
 from typing import Any, Literal
 
@@ -115,7 +115,7 @@ class MongoDBHistory(History):
         """Not needed in mongo since the lifetime of DB entries is taken care automatically."""
 
     def _reload_configuration_mongodb(self) -> None:
-        """Configure the auto deleting indexes in the DB"""
+        """Configure the auto deleting indexes in the DB."""
         _update_mongodb_indexes(self._settings, self._mongodb)
         _update_mongodb_history_lifetime(self._settings, self._config, self._mongodb)
 
@@ -128,10 +128,7 @@ class MongoDBHistory(History):
 def filters_to_mongo_query(
     filters: Iterable[QueryFilter],
 ) -> dict[str, str | dict[str, str]]:
-    """
-    Construct the mongodb filtering specification.
-    """
-
+    """Construct the mongodb filtering specification."""
     mongo_query = {}
     for f in filters:
         mongo_filter: str | dict[str, str] = {
@@ -169,7 +166,7 @@ except ImportError:
 
 class MongoDB:
     def __init__(self) -> None:
-        self.connection: pymongo.MongoClient | None = None
+        self.connection: pymongo.MongoClient[Mapping[str, object]] | None = None
         self.db: Any = None
 
 

@@ -13,4 +13,4 @@ description:
  service rediscovery can be performed.
 
 discovery:
- One service is created for each system if the agent plugin mk_iptables was deployed.
+ One service is created for each system if the agent plug-in mk_iptables was deployed.

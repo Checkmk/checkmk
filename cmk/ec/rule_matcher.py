@@ -44,7 +44,7 @@ def compile_matching_value(key: str, val: str) -> TextPattern | None:
     value = val.strip()
     # Remove leading .* from regex. This is redundant and
     # dramatically destroys performance when doing an infix search.
-    if key in ["match", "match_ok"]:
+    if key in {"match", "match_ok"}:
         while value.startswith(".*") and not value.startswith(".*?"):
             value = value[2:]
     if not value:
@@ -84,9 +84,7 @@ def compile_state_pattern(state_patterns: StatePatterns, key: Literal["0", "1", 
 
 
 def compile_rule(rule: Rule) -> None:
-    """
-    Tries to convert strings to compiled regex patterns.
-    """
+    """Tries to convert strings to compiled regex patterns."""
     compile_rule_attribute(rule, "match")
     compile_rule_attribute(rule, "match_ok")
     compile_rule_attribute(rule, "match_host")
@@ -100,10 +98,11 @@ def compile_rule(rule: Rule) -> None:
 
 
 def match(pattern: TextPattern | None, text: str, complete: bool) -> TextMatchResult:
-    """Performs an EC style matching test of pattern on text
+    """Performs an EC style matching test of pattern on text.
 
     Returns False in case of no match or a tuple with the match groups.
-    In case no match group is produced, it returns an empty tuple."""
+    In case no match group is produced, it returns an empty tuple.
+    """
     if pattern is None:
         return ()
     if isinstance(pattern, str):
@@ -155,7 +154,7 @@ class RuleMatcher:
         self._is_active_time_period = is_active_time_period
 
     def _log_rule_matching(self, message: str, *args: object, indent: bool = True) -> None:
-        """Check if logger is present and log the message as info level"""
+        """Check if logger is present and log the message as info level."""
         if self._logger:
             self._logger.info(f"  {message}" if indent else message, *args)
 
@@ -190,9 +189,7 @@ class RuleMatcher:
         return self._check_match_outcome(rule, match_groups, match_priority)
 
     def event_rule_matches(self, rule: Rule, event: Event) -> MatchResult:
-        """
-        Matches the rule and inverts the match if invert_matching is true
-        """
+        """Matches the rule and inverts the match if invert_matching is true."""
         result = self.event_rule_matches_non_inverted(rule, event)
         if rule.get("invert_matching"):
             if isinstance(result, MatchFailure):
@@ -208,8 +205,7 @@ class RuleMatcher:
     def _check_match_outcome(
         self, rule: Rule, match_groups: MatchGroups, match_priority: MatchPriority
     ) -> MatchResult:
-        """Decide or not a event is created, canceled or nothing is done"""
-
+        """Decide or not a event is created, canceled or nothing is done."""
         # Check canceling-event
         has_canceling_condition = bool(
             [x for x in ["match_ok", "cancel_application", "cancel_priority"] if x in rule]

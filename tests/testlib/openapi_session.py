@@ -12,6 +12,7 @@ from typing import Any, AnyStr, NamedTuple
 import requests
 
 from tests.testlib.rest_api_client import RequestHandler, Response
+from tests.testlib.version import CMKVersion
 
 from cmk.gui.http import HTTPMethod
 
@@ -83,16 +84,16 @@ class CMKOpenApiSession(requests.Session):
         host: str,
         user: str,
         password: str,
+        site_version: CMKVersion,
         port: int = 80,
         site: str = "heute",
         api_version: str = "1.0",
-        site_version_spec: str = "",
     ):
         super().__init__()
         self.host = host
         self.port = port
         self.site = site
-        self.site_version_spec = site_version_spec
+        self.site_version = site_version
         self.api_version = api_version
         self.headers["Accept"] = "application/json"
         self.set_authentication_header(user, password)
@@ -396,6 +397,29 @@ class CMKOpenApiSession(requests.Session):
         with self._wait_for_completion(timeout, "post"):
             self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
 
+    def create_host_group(self, name: str, alias: str) -> requests.Response:
+        response = self.post(
+            "/domain-types/host_group_config/collections/all",
+            json={"name": name, "alias": alias},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def get_host_group(self, name: str) -> tuple[dict[Any, str], str]:
+        response = self.get(f"/objects/host_group_config/{name}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def delete_host_group(self, name: str) -> None:
+        response = self.delete(f"/objects/host_group_config/{name}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
     def discover_services(
         self,
         hostname: str,
@@ -433,18 +457,16 @@ class CMKOpenApiSession(requests.Session):
             "bulk_size": bulk_size,
             "ignore_errors": ignore_errors,
         }
-        # TODO: this should be removed once the 2.3.0b3 is available as this
-        # will introduce the options field to the api call. Until then the test should
-        # use the deprecated mode field
-        if self.site_version_spec in ["2.3.0b1", "2.3.0b2"]:
-            body["mode"] = "new"
-        else:
+
+        if self.site_version >= CMKVersion("2.3.0", self.site_version.edition):
             body["options"] = {
                 "monitor_undecided_services": monitor_undecided_services,
                 "remove_vanished_services": remove_vanished_services,
                 "update_service_labels": update_service_labels,
                 "update_host_labels": update_host_labels,
             }
+        else:
+            body["mode"] = "new"
 
         response = self.post(
             "/domain-types/discovery_run/actions/bulk-discovery-start/invoke", json=body
@@ -563,22 +585,26 @@ class CMKOpenApiSession(requests.Session):
 
     def create_rule(
         self,
-        ruleset_name: str,
         value: object,
+        ruleset_name: str | None = None,
         folder: str = "/",
         conditions: dict[str, Any] | None = None,
     ) -> str:
         response = self.post(
             "/domain-types/rule/collections/all",
-            json={
-                "ruleset": ruleset_name,
-                "folder": folder,
-                "properties": {
-                    "disabled": False,
-                },
-                "value_raw": repr(value),
-                "conditions": conditions or {},
-            },
+            json=(
+                {
+                    "ruleset": ruleset_name,
+                    "folder": folder,
+                    "properties": {
+                        "disabled": False,
+                    },
+                    "value_raw": repr(value),
+                    "conditions": conditions or {},
+                }
+                if ruleset_name
+                else value
+            ),
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
@@ -610,6 +636,15 @@ class CMKOpenApiSession(requests.Session):
         response = self.get(
             "/domain-types/rule/collections/all",
             params={"ruleset_name": ruleset_name},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def get_rulesets(self) -> list[dict[str, Any]]:
+        response = self.get(
+            "/domain-types/ruleset/collections/all",
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

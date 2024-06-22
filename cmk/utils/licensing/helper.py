@@ -10,8 +10,7 @@ from uuid import UUID
 
 import livestatus
 
-from cmk.utils import paths, store
-from cmk.utils.licensing.handler import LicenseState
+from cmk.utils import paths
 from cmk.utils.paths import log_dir
 
 
@@ -74,11 +73,9 @@ def get_licensed_state_file_path() -> Path:
     return paths.licensing_dir / "licensed_state"
 
 
-def write_licensed_state(file_path: Path, state: LicenseState) -> None:
-    state_repr = 1 if state is LicenseState.LICENSED else 0
-    with store.locked(file_path):
-        file_path.write_text(str(state_repr))
-
-
 def get_state_file_created_file_path() -> Path:
     return paths.licensing_dir / "state_file_created"
+
+
+def get_state_change_path() -> Path:
+    return paths.licensing_dir / "state_change"

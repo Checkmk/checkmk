@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Generic, TypeVar
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.exceptions import MKUserError

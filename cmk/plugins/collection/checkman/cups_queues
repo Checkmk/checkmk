@@ -18,7 +18,7 @@ description:
  queue will be preferred. Even if e.g. "disabled since" would result in {CRIT}
  but the length of queue is {OK} and vice versa.
 
- To be able to use this check, please deploy the agent plugin {mk_cups_queues}.
+ To be able to use this check, please deploy the agent plug-in {mk_cups_queues}.
 
 item:
  The name of the printer in CUPS as printed by {lpstat -p}.

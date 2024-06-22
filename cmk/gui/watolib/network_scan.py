@@ -86,7 +86,7 @@ def execute_network_scan_job() -> None:
             if not isinstance(found, list):
                 raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
 
-            _add_scanned_hosts_to_folder(folder, found)
+            _add_scanned_hosts_to_folder(folder, found, run_as)
 
             result.update(
                 {
@@ -121,7 +121,9 @@ def _find_folder_to_scan() -> Folder | None:
     return folder_to_scan
 
 
-def _add_scanned_hosts_to_folder(folder: Folder, found: NetworkScanFoundHosts) -> None:
+def _add_scanned_hosts_to_folder(
+    folder: Folder, found: NetworkScanFoundHosts, username: UserId
+) -> None:
     if (network_scan_properties := folder.attributes.get("network_scan")) is None:
         return
 
@@ -131,7 +133,7 @@ def _add_scanned_hosts_to_folder(folder: Folder, found: NetworkScanFoundHosts) -
     else:
         translation = TranslationOptions(
             {
-                "case": translate_names["case"],
+                "case": translate_names.get("case"),
                 "mapping": translate_names.get("mapping", []),
                 "drop_domain": translate_names.get("drop_domain", False),
                 "regex": translate_names.get("regex", []),
@@ -142,7 +144,7 @@ def _add_scanned_hosts_to_folder(folder: Folder, found: NetworkScanFoundHosts) -
     for host_name, ipaddr in found:
         host_name = translate_hostname(translation, host_name)
 
-        attrs = update_metadata(HostAttributes(), created_by=UserId(_("Network scan")))
+        attrs = update_metadata(HostAttributes(), created_by=username)
 
         if "tag_criticality" in network_scan_properties:
             attrs["tag_criticality"] = network_scan_properties.get("tag_criticality", "offline")

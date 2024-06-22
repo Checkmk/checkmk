@@ -144,9 +144,15 @@ class StructuredDataName:
         return hash(self.name)
 
     def __eq__(self, o: object) -> bool:
-        if not isinstance(o, StructuredDataName):
-            raise NotImplementedError
-        return self.name == o.name
+        if isinstance(o, StructuredDataName):
+            return self.name == o.name
+        return NotImplemented
+
+    def __ne__(self, other: object) -> bool:
+        result = self.__eq__(other)
+        if result is NotImplemented:
+            return result
+        return not result
 
 
 class StructuredDataID:
@@ -169,7 +175,7 @@ class StructuredDataID:
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, StructuredDataID):
-            raise NotImplementedError
+            return NotImplemented
         return self.id == o.id
 
     @staticmethod
@@ -230,7 +236,8 @@ class StructuredData(dict[StructuredDataID, StructuredDataParameters]):
 
 class SyslogMessage:
     """Represents a syslog message which can be sent to the EC. Sticks to the Syslog Message Format,
-    see https://tools.ietf.org/html/rfc5424."""
+    see https://tools.ietf.org/html/rfc5424.
+    """
 
     _CHECKMK_SD_ID = StructuredDataID("Checkmk@18662")
     _ENCODING = "utf-8"

@@ -7,6 +7,8 @@ description:
  monitor the uptime of a Java application server like
  Tomcat or JBoss.
 
+ Both, version 1.7 and 2.0 of Jolokia are supported.
+
 item:
  The name of the application server instance as configured by the agent.
 

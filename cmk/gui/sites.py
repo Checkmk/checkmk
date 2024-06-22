@@ -7,9 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import cast, Literal, NamedTuple, NewType
-
-from typing_extensions import TypedDict
+from typing import cast, Literal, NamedTuple, NewType, TypedDict
 
 from livestatus import (
     ConnectedSite,
@@ -185,8 +183,10 @@ def _ensure_connected(user: LoggedInUser | None, force_authuser: UserId | None) 
         user = global_user
 
     if force_authuser is None:
-        request_force_authuser = request.get_str_input("force_authuser")
-        force_authuser = UserId(request_force_authuser) if request_force_authuser else None
+        # This makes also sure force_authuser is not the builtin user aka UserId("")
+        force_authuser = (
+            u if (u := request.get_validated_type_input(UserId, "force_authuser")) else None
+        )
 
     logger.debug(
         "Initializing livestatus connections as user %s (forced auth user: %s)",
@@ -386,9 +386,8 @@ def _site_config_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -
     if site_spec.get("proxy") is not None:
         assert site_spec["proxy"] is not None
         copied_site["cache"] = site_spec["proxy"].get("cache", True)
-    else:
-        if isinstance(site_spec["socket"], tuple) and site_spec["socket"][0] in ["tcp", "tcp6"]:
-            copied_site["tls"] = cast(NetworkSocketDetails, site_spec["socket"][1])["tls"]
+    elif isinstance(site_spec["socket"], tuple) and site_spec["socket"][0] in ["tcp", "tcp6"]:
+        copied_site["tls"] = cast(NetworkSocketDetails, site_spec["socket"][1])["tls"]
     copied_site["socket"] = encode_socket_for_livestatus(site_id, site_spec)
 
     return copied_site

@@ -30,42 +30,42 @@ metric_omd_pnp4nagios_size = metrics.Metric(
 
 metric_omd_tmp_size = metrics.Metric(
     name="omd_tmp_size",
-    title=Title("Size of Tmp"),
+    title=Title("Size of tmp"),
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_CYAN,
 )
 
 metric_omd_local_size = metrics.Metric(
     name="omd_local_size",
-    title=Title("Size of Local"),
+    title=Title("Size of local"),
     unit=UNIT_BYTES,
     color=metrics.Color.LIGHT_PINK,
 )
 
 metric_omd_agents_size = metrics.Metric(
     name="omd_agents_size",
-    title=Title("Size of Agents"),
+    title=Title("Size of agents"),
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_PINK,
 )
 
 metric_omd_history_size = metrics.Metric(
     name="omd_history_size",
-    title=Title("Size of History"),
+    title=Title("Size of history"),
     unit=UNIT_BYTES,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_omd_core_size = metrics.Metric(
     name="omd_core_size",
-    title=Title("Size of Core"),
+    title=Title("Size of core"),
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_omd_inventory_size = metrics.Metric(
     name="omd_inventory_size",
-    title=Title("Size of Inventory"),
+    title=Title("Size of inventory"),
     unit=UNIT_BYTES,
     color=metrics.Color.LIGHT_BROWN,
 )

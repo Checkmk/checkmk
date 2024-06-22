@@ -53,18 +53,18 @@ from cmk.base.config import check_info
 
 def parse_emcvnx_info(string_table):
     parsed = {
-        "string_table": [],
+        "info": [],
         "storage": [],
         "link": [],
         "config": [],
         "io": [],
     }
     key_to_subcheck = {
-        "System Fault LED": "string_table",
-        "Server IP Address": "string_table",
-        "System Date": "string_table",
-        "System Time": "string_table",
-        "Serial Number For The SP": "string_table",
+        "System Fault LED": "info",
+        "Server IP Address": "info",
+        "System Date": "info",
+        "System Time": "info",
+        "Serial Number For The SP": "info",
         "Storage Processor": "storage",
         "Storage Processor Network Name": "storage",
         "Storage Processor IP Address": "storage",

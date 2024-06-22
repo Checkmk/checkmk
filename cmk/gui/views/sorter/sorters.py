@@ -8,7 +8,7 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.helpers import get_tag_groups
 from cmk.gui.painter.v1.helpers import get_perfdata_nth_value
@@ -54,21 +54,17 @@ def register_sorters(registry: SorterRegistry) -> None:
     registry.register(SorterHostIpv4Address)
     registry.register(SorterNumProblems)
 
-    declare_simple_sorter(
-        "svcdescr", _("Service description"), "service_description", cmp_service_name
-    )
+    declare_simple_sorter("svcdescr", _("Service name"), "service_description", cmp_service_name)
     declare_simple_sorter(
         "svcdispname",
         _("Service alternative display name"),
         "service_display_name",
         cmp_simple_string,
     )
-    declare_simple_sorter(
-        "svcoutput", _("Service plugin output"), "service_plugin_output", cmp_simple_string
-    )
+    declare_simple_sorter("svcoutput", _("Summary"), "service_plugin_output", cmp_simple_string)
     declare_simple_sorter(
         "svc_long_plugin_output",
-        _("Long output of check plugin"),
+        _("Long output of check plug-in"),
         "service_long_plugin_output",
         cmp_simple_string,
     )

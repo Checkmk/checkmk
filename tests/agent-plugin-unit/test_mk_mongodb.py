@@ -17,7 +17,7 @@ import pytest
 if sys.version_info[0] == 2:
     import agents.plugins.mk_mongodb_2 as mk_mongodb  # pylint: disable=syntax-error
 else:
-    import agents.plugins.mk_mongodb as mk_mongodb
+    from agents.plugins import mk_mongodb
 
 
 def read_dataset(filename):

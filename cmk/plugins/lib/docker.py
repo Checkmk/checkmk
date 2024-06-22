@@ -81,9 +81,7 @@ def parse_multiline(string_table: StringTable) -> DockerParseMultilineResult:
     return DockerParseMultilineResult(generator(), version)
 
 
-def parse(  # type: ignore[no-untyped-def]
-    string_table: StringTable, *, strict=True
-) -> DockerParseResult:
+def parse(string_table: StringTable, *, strict: bool = True) -> DockerParseResult:
     """
     expected layout of string_table:
 
@@ -157,30 +155,50 @@ class MemorySection(NamedTuple):
         }
 
 
-def _mem_bytes(line: list[str]) -> int:
+def _mem_bytes(line: list[str]) -> int | None:
+    if len(line) == 0:
+        return None
     if len(line) == 2 and line[1] == "kB":
         return int(line[0]) * 1024
     return int(line[0])
 
 
-def parse_container_memory(string_table: StringTable, cgroup: int = 1) -> MemorySection:
+def parse_container_memory(string_table: StringTable, cgroup: int = 1) -> MemorySection | None:
     parsed = {line[0]: line[1:] for line in string_table}
 
-    host_memory_total = _mem_bytes(parsed["MemTotal:"])
+    if (host_memory_total := _mem_bytes(parsed["MemTotal:"])) is None:
+        return None
+
+    container_memory_total: int | None
     if cgroup == 1:
+        if not {"usage_in_bytes", "limit_in_bytes", "total_inactive_file"}.issubset(parsed.keys()):
+            return None
+
         container_memory_usage = _mem_bytes(parsed["usage_in_bytes"])
         # we use the docker way and remove total_inactive_file:
         # https://github.com/docker/cli/blob/70a00157f161b109be77cd4f30ce0662bfe8cc32/cli/command/container/stats_helpers.go#L227-L238
         container_memory_total_inactive_file = _mem_bytes(parsed["total_inactive_file"])
         # cgroup v1 uses a huge value to signal unlimited: https://unix.stackexchange.com/a/421182
-        container_memory_total = min(host_memory_total, _mem_bytes(parsed["limit_in_bytes"]))
+        if (mem_limit := _mem_bytes(parsed["limit_in_bytes"])) is None:
+            return None
+        container_memory_total = min(host_memory_total, mem_limit)
     else:
+        if not {"memory.current", "memory.max", "inactive_file"}.issubset(parsed.keys()):
+            return None
+
         container_memory_usage = _mem_bytes(parsed["memory.current"])
         if (memory_max := parsed["memory.max"]) == ["max"]:
             container_memory_total = host_memory_total
         else:
             container_memory_total = _mem_bytes(memory_max)
         container_memory_total_inactive_file = _mem_bytes(parsed["inactive_file"])
+
+    if (
+        container_memory_usage is None
+        or container_memory_total is None
+        or container_memory_total_inactive_file is None
+    ):  # mypy unhappy with "None in" syntax
+        return None
 
     return MemorySection(
         mem_total=container_memory_total,

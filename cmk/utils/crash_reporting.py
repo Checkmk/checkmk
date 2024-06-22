@@ -25,9 +25,8 @@ from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.plugin_registry
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.exceptions import MKParseFunctionError
+from cmk.utils import store
 
 CrashInfo = dict[str, Any]  # TODO: improve this type
 
@@ -202,7 +201,7 @@ class ABCCrashReport(abc.ABC):
 
         The parts are separated with "@" signs. The "@" signs found in the parts are
         replaced with "~" which is not allowed to be in the single parts. E.g.
-        service descriptions don't have such signs."""
+        service names don't have such signs."""
         return "@".join([p.replace("@", "~") for p in self.ident()])
 
     def crash_dir(self, ident_text: str | None = None) -> Path:
@@ -227,39 +226,13 @@ def _get_generic_crash_info(type_name: str, details: Mapping[str, Any]) -> Crash
 
     tb_list = traceback.extract_tb(exc_traceback)
 
-    # TODO: This ma be cleaned up by using reraising with python 3
-    # MKParseFunctionError() are re raised exceptions originating from the
-    # parse functions of checks. They have the original traceback object saved.
-    # The formated stack of these tracebacks is somehow relative to the calling
-    # function. To get the full stack trace instead of this relative one we need
-    # to concatenate the traceback of the MKParseFunctionError() and the original
-    # exception.
-    # Re-raising exceptions will be much easier with Python 3.x.
-    if isinstance(exc_value, MKParseFunctionError):
-        tb_list += traceback.extract_tb(exc_value.exc_info()[2])
-
-    # Unify different string types from exception messages to a unicode string
-    # HACK: copy-n-paste from cmk.utils.exception.MKException.__str__ below.
-    # Remove this after migration...
-    if exc_value is None or not exc_value.args:
-        exc_txt = ""
-    elif len(exc_value.args) == 1 and isinstance(exc_value.args[0], bytes):
-        try:
-            exc_txt = exc_value.args[0].decode("utf-8")
-        except UnicodeDecodeError:
-            exc_txt = f"b{repr(exc_value.args[0])}"
-    elif len(exc_value.args) == 1:
-        exc_txt = str(exc_value.args[0])
-    else:
-        exc_txt = str(exc_value.args)
-
     infos = cmk_version.get_general_version_infos()
     infos.update(
         {
             "id": str(uuid.uuid1()),
             "crash_type": type_name,
             "exc_type": exc_type.__name__ if exc_type else None,
-            "exc_value": exc_txt,
+            "exc_value": str(exc_value),
             # Py3: Make traceback.FrameSummary serializable
             "exc_traceback": [tuple(e) for e in tb_list],
             "local_vars": _get_local_vars_of_last_exception(),

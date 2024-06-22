@@ -10,8 +10,7 @@ from typing import Literal
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import algorithms, Cipher, modes
 
-import cmk.utils.crypto.certificate as certificate
-import cmk.utils.crypto.keys as keys
+from cmk.utils.crypto import certificate, keys
 from cmk.utils.crypto.types import HashAlgorithm
 
 

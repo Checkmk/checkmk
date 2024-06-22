@@ -13,16 +13,16 @@ from pathlib import Path
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
-import tests.testlib.utils as testlibutils
+from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
-import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.utils
 from cmk.gui.http import Request
+from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.activate_changes import ConfigSyncFileInfo
 from cmk.gui.watolib.config_sync import ReplicationPath
 
@@ -143,8 +143,8 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
     # We cannot fix that in the short (or even mid) term because the
     # precondition is a more cleanly separated structure.
 
-    if testlibutils.is_enterprise_repo() and edition is cmk_version.Edition.CRE:
-        # CEE paths are added when the CEE plugins for WATO are available, i.e.
+    if is_enterprise_repo() and edition is cmk_version.Edition.CRE:
+        # CEE paths are added when the CEE plug-ins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected += [
             ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
@@ -152,8 +152,8 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
         ]
 
-    if testlibutils.is_managed_repo() and edition is not cmk_version.Edition.CME:
-        # CME paths are added when the CME plugins for WATO are available, i.e.
+    if is_managed_repo() and edition is not cmk_version.Edition.CME:
+        # CME paths are added when the CME plug-ins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected += [
             ReplicationPath(

@@ -15,7 +15,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.statename import short_service_state_name
 from cmk.utils.user import UserId
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
@@ -42,6 +41,7 @@ from cmk.gui.type_defs import (
     VisualContext,
     VisualLinkSpec,
 )
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.theme import Theme
@@ -234,13 +234,13 @@ class RowTableEC(RowTableLivestatus):
 # This should be handled in the core, but the core does not know anything about
 # the "mkeventd.seeall" permissions. So it is simply not possible to do this on
 # core level at the moment.
-def _ec_filter_host_information_of_not_permitted_hosts(rows):
+def _ec_filter_host_information_of_not_permitted_hosts(rows: Rows) -> None:
     if user.may("mkeventd.seeall"):
         return  # Don't remove anything. The user may see everything
 
     user_groups = set(user.contact_groups)
 
-    def is_contact(row) -> bool:  # type: ignore[no-untyped-def]
+    def is_contact(row: Row) -> bool:
         return bool(user_groups.intersection(row["host_contact_groups"]))
 
     if rows:
@@ -393,7 +393,7 @@ class PainterSvcServicelevel(Painter):
         return _("Service service level")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Service Level")
+        return _("Service level")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -421,7 +421,7 @@ class PainterHostServicelevel(Painter):
         return _("Host service level")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Service Level")
+        return _("Service level")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -494,7 +494,9 @@ class PainterEventText(Painter):
         return ["event_text"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return "", HTML(escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>"))
+        return "", HTML.without_escaping(
+            escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>")
+        )
 
 
 class PainterEventMatchGroups(Painter):
@@ -515,11 +517,11 @@ class PainterEventMatchGroups(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         groups = row["event_match_groups"]
         if groups:
-            code = HTML("")
+            code = HTML.empty()
             for text in groups:
                 code += HTMLWriter.render_span(text)
             return "matchgroups", code
-        return "", HTML("")
+        return "", HTML.empty()
 
 
 class PainterEventFirst(Painter):
@@ -627,7 +629,7 @@ class PainterEventHost(Painter):
         return "event_host"
 
     def title(self, cell: "Cell") -> str:
-        return _("Hostname")
+        return _("Host name")
 
     def short_title(self, cell: "Cell") -> str:
         return _("Host")
@@ -643,10 +645,8 @@ class PainterEventHost(Painter):
     def render(self, row: Row, cell: "Cell") -> CellSpec:
         host_name = row.get("host_name", row["event_host"])
 
-        return "", HTML(
-            html.render_a(
-                host_name, _get_event_host_link(host_name, row, cell, request=self.request)
-            )
+        return "", html.render_a(
+            host_name, _get_event_host_link(host_name, row, cell, request=self.request)
         )
 
 
@@ -963,7 +963,7 @@ def render_delete_event_icons(  # pylint: disable=redefined-outer-name
     if _is_rendered_from_view_dashlet():
         ident = request.get_integer_input_mandatory("id")
 
-        import cmk.gui.dashboard as dashboard
+        from cmk.gui import dashboard
 
         # With the typed dicts we currently don't have an easy way of determining the type
         dashlet_config = dashboard.get_dashlet(request.get_str_input_mandatory("name"), ident)
@@ -1278,11 +1278,11 @@ PermissionECUpdateContact = Permission(
 
 class ECCommand(Command):
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["event"]
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML(
+        return HTML.with_escaping(
             _("Affected %s: %s")
             % (
                 ungettext(
@@ -1326,7 +1326,7 @@ class CommandECUpdateEvent(ECCommand):
     def permission(self) -> Permission:
         return PermissionECUpdateEvent
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_table(border="0", cellpadding="0", cellspacing="3")
         if user.may("mkeventd.update_comment"):
             html.open_tr()
@@ -1418,18 +1418,21 @@ class CommandECChangeState(ECCommand):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML(
-            "<br><br>"
+        value = MonitoringState().from_html_vars("_mkeventd_state")
+        assert value is not None
+        return (
+            HTMLWriter.render_br()
+            + HTMLWriter.render_br()
             + _("New state: %s")
             % {
                 0: _("OK"),
                 1: _("WARN"),
                 2: _("CRIT"),
                 3: _("UNKNOWN"),
-            }[MonitoringState().from_html_vars("_mkeventd_state")]
+            }[value]
         )
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         MonitoringState(label="Select new event state").render_input("_mkeventd_state", 2)
         html.br()
         html.br()
@@ -1484,7 +1487,7 @@ class CommandECCustomAction(ECCommand):
     def permission(self) -> Permission:
         return PermissionECCustomActions
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         for action_id, title in action_choices(omit_hidden=True):
             html.button("_action_" + action_id, title, cssclass="border_hot")
@@ -1536,7 +1539,7 @@ class CommandECArchiveEvent(ECCommand):
     def permission(self) -> Permission:
         return PermissionECArchiveEvent
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_delete_event", _("Archive Event"), cssclass="hot")
         html.button("_cancel", _("Cancel"))
@@ -1583,7 +1586,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
         return PermissionECArchiveEventsOfHost
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["service"]
 
     def confirm_dialog_additions(
@@ -1592,17 +1595,14 @@ class CommandECArchiveEventsOfHost(ECCommand):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML(
-            _(
-                "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."
-            )
-            % request.var("host")
-        )
+        return HTML.empty() + _(
+            "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."
+        ) % request.var("host")
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML("")
+        return HTML.empty()
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.help(
             _(
                 "Note: With this command you can archive all events of one host. "
@@ -1645,7 +1645,7 @@ class SorterServicelevel(Sorter):
 
     @property
     def title(self) -> str:
-        return _("Servicelevel")
+        return _("Service level")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -1655,7 +1655,7 @@ class SorterServicelevel(Sorter):
         return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
 
 
-def cmp_simple_state(column, ra, rb):
+def cmp_simple_state(column: ColumnName, ra: Row, rb: Row) -> int:
     a = ra.get(column, -1)
     b = rb.get(column, -1)
     if a == 3:

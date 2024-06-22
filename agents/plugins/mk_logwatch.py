@@ -45,13 +45,13 @@ import socket
 import time
 
 try:
-    from collections.abc import (  # noqa: F401 # pylint: disable=unused-import
+    from collections.abc import (  # pylint: disable=unused-import
         Collection,
         Iterable,
         Iterator,
         Sequence,
     )
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     # We need typing only for testing
     pass
@@ -91,7 +91,7 @@ TTY_COLORS = {
     "normal": "\033[0m",
 }
 
-CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plugin
+CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plug-in
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -101,7 +101,7 @@ if PY3:
     text_type = str
     binary_type = bytes
 else:
-    text_type = unicode  # pylint: disable=undefined-variable
+    text_type = unicode  # pylint: disable=undefined-variable # noqa: F821
     binary_type = str
 
 
@@ -827,7 +827,7 @@ class Options:
         "overflow": "C",
         "nocontext": None,
         "maxcontextlines": None,
-        "maxoutputsize": 500000,  # same as logwatch_max_filesize in check plugin
+        "maxoutputsize": 500000,  # same as logwatch_max_filesize in check plug-in
         "fromstart": False,
         "skipconsecutiveduplicated": False,
     }

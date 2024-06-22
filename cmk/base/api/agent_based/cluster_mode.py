@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Compute the cluster check function from the plugin and parameters."""
+"""Compute the cluster check function from the plug-in and parameters."""
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence

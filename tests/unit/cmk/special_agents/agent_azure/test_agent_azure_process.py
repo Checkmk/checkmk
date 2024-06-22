@@ -92,8 +92,8 @@ class MockMgmtApiClient(MgmtApiClient):
             MockMgmtApiClient(
                 [],
                 {
-                    "BurningMan": {
-                        "MyVM": {
+                    "burningman": {
+                        "myvm": {
                             "statuses": [
                                 {
                                     "code": "ProvisioningState/succeeded",
@@ -109,18 +109,18 @@ class MockMgmtApiClient(MgmtApiClient):
             ),
             {
                 "id": "myid",
-                "name": "MyVM",
+                "name": "myvm",
                 "type": "Microsoft.Compute/virtualMachines",
                 "location": "westeurope",
                 "tags": {"my-unique-tag": "unique", "tag4all": "True"},
-                "group": "BurningMan",
+                "group": "burningman",
             },
             Args(piggyback_vms="self"),
             {
-                "group": "BurningMan",
+                "group": "burningman",
                 "id": "myid",
                 "location": "westeurope",
-                "name": "MyVM",
+                "name": "myvm",
                 "specific_info": {
                     "statuses": [
                         {
@@ -141,13 +141,13 @@ class MockMgmtApiClient(MgmtApiClient):
                 "my-unique-tag": "unique",
                 "tag4all": "True",
             },
-            ["MyVM"],
+            ["myvm"],
         ),
         (
             MockMgmtApiClient(
                 [],
                 {
-                    "BurningMan": {
+                    "burningman": {
                         "MyVM": {
                             "statuses": [
                                 {
@@ -168,11 +168,11 @@ class MockMgmtApiClient(MgmtApiClient):
                 "type": "Microsoft.Compute/virtualMachines",
                 "location": "westeurope",
                 "tags": {"my-unique-tag": "unique", "tag4all": "True"},
-                "group": "BurningMan",
+                "group": "burningman",
             },
             Args(piggyback_vms="grouphost"),
             {
-                "group": "BurningMan",
+                "group": "burningman",
                 "id": "myid",
                 "location": "westeurope",
                 "name": "MyVM",
@@ -196,7 +196,7 @@ class MockMgmtApiClient(MgmtApiClient):
                 "my-unique-tag": "unique",
                 "tag4all": "True",
             },
-            ["BurningMan"],
+            ["burningman"],
         ),
     ],
 )
@@ -232,14 +232,15 @@ def test_process_vm(
                 TagsImportPatternOption.import_all,
             ),
             {
-                "BurningMan": {
+                "burningman": {
                     "my-resource-tag": "my-resource-value",
+                    "resource_group": "burningman",
                 }
             },
             (
                 [
-                    '{"group_name": "BurningMan", "vm_instance": true}\n',
-                    '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value"}\n',
+                    '{"group_name": "burningman", "vm_instance": true}\n',
+                    '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "burningman"}\n',
                 ],
                 ["MyVM"],
             ),
@@ -263,7 +264,7 @@ def test_get_vm_labels_section(
             MockMgmtApiClient(
                 [],
                 {
-                    "BurningMan": {
+                    "burningman": {
                         "MyVM": {
                             "statuses": [
                                 {
@@ -287,8 +288,9 @@ def test_get_vm_labels_section(
                 "group": "BurningMan",
             },
             {
-                "BurningMan": {
+                "burningman": {
                     "my-resource-tag": "my-resource-value",
+                    "resource_group": "burningman",
                 }
             },
             Args(
@@ -302,8 +304,8 @@ def test_get_vm_labels_section(
                     LabelsSection,
                     ["MyVM"],
                     [
-                        '{"group_name": "BurningMan", "vm_instance": true}\n',
-                        '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value"}\n',
+                        '{"group_name": "burningman", "vm_instance": true}\n',
+                        '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "burningman"}\n',
                     ],
                 ),
                 (
@@ -311,7 +313,7 @@ def test_get_vm_labels_section(
                     ["MyVM"],
                     [
                         "Resource\n",
-                        '{"id": "myid", "name": "MyVM", "type": "Microsoft.Compute/virtualMachines", "location": "westeurope", "tags": {"my-unique-tag": "unique", "tag4all": "True"}, "group": "BurningMan", "specific_info": {"statuses": [{"code": "ProvisioningState/succeeded", "level": "Info", "displayStatus": "Provisioning succeeded", "time": "2019-11-25T07:38:14.6999403+00:00"}]}}\n',
+                        '{"id": "myid", "name": "MyVM", "type": "Microsoft.Compute/virtualMachines", "location": "westeurope", "tags": {"my-unique-tag": "unique", "tag4all": "True"}, "group": "burningman", "specific_info": {"statuses": [{"code": "ProvisioningState/succeeded", "level": "Info", "displayStatus": "Provisioning succeeded", "time": "2019-11-25T07:38:14.6999403+00:00"}]}}\n',
                     ],
                 ),
             ],
@@ -321,7 +323,7 @@ def test_get_vm_labels_section(
             MockMgmtApiClient(
                 [],
                 {
-                    "BurningMan": {
+                    "burningman": {
                         "MyVM": {
                             "statuses": [
                                 {
@@ -359,10 +361,10 @@ def test_get_vm_labels_section(
             [
                 (
                     AzureSection,
-                    ["BurningMan"],
+                    ["burningman"],
                     [
                         "Resource\n",
-                        '{"id": "myid", "name": "MyVM", "type": "Microsoft.Compute/virtualMachines", "location": "westeurope", "tags": {"my-unique-tag": "unique", "tag4all": "True"}, "group": "BurningMan", "specific_info": {"statuses": [{"code": "ProvisioningState/succeeded", "level": "Info", "displayStatus": "Provisioning succeeded", "time": "2019-11-25T07:38:14.6999403+00:00"}]}}\n',
+                        '{"id": "myid", "name": "MyVM", "type": "Microsoft.Compute/virtualMachines", "location": "westeurope", "tags": {"my-unique-tag": "unique", "tag4all": "True"}, "group": "burningman", "specific_info": {"statuses": [{"code": "ProvisioningState/succeeded", "level": "Info", "displayStatus": "Provisioning succeeded", "time": "2019-11-25T07:38:14.6999403+00:00"}]}}\n',
                     ],
                 ),
             ],
@@ -372,8 +374,8 @@ def test_get_vm_labels_section(
             MockMgmtApiClient(
                 [],
                 {
-                    "BurningMan": {
-                        "MyVM": {
+                    "burningman": {
+                        "myvm": {
                             "statuses": [
                                 {
                                     "code": "ProvisioningState/succeeded",
@@ -438,8 +440,8 @@ def test_process_resource(
             MockMgmtApiClient(
                 [{"name": "BurningMan", "tags": {"my-resource-tag": "my-resource-value"}}], {}, 2.0
             ),
-            ["BurningMan"],
-            {"BurningMan": {"my-resource-tag": "my-resource-value"}},
+            ["burningman"],
+            {"burningman": {"my-resource-tag": "my-resource-value"}},
         )
     ],
 )
@@ -454,7 +456,7 @@ def test_get_group_labels(
     "monitored_groups, monitored_resources, group_tags, expected_result",
     [
         (
-            ["BurningMan"],
+            ["burningman"],
             [
                 AzureResource(
                     {
@@ -469,19 +471,19 @@ def test_get_group_labels(
                 ),
             ],
             {
-                "BurningMan": {
+                "burningman": {
                     "my-resource-tag": "my-resource-value",
                     "cmk/azure/resource_group": "BurningMan",
                 }
             },
-            "<<<<BurningMan>>>>\n"
+            "<<<<burningman>>>>\n"
             "<<<azure_labels:sep(0)>>>\n"
-            '{"group_name": "BurningMan"}\n'
+            '{"group_name": "burningman"}\n'
             '{"my-resource-tag": "my-resource-value", "cmk/azure/resource_group": "BurningMan"}\n'
             "<<<<>>>>\n"
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
-            'monitored-groups|["BurningMan"]\n'
+            'monitored-groups|["burningman"]\n'
             'monitored-resources|["MyVM"]\n'
             "<<<<>>>>\n",
         )

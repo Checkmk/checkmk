@@ -7,7 +7,7 @@ from cmk.graphing.v1 import metrics, Title
 
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 UNIT_SECOND = metrics.Unit(metrics.TimeNotation())
-UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("1/s"))
+UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.IECNotation("B/s"))
 UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
@@ -345,2989 +345,2989 @@ metric_aws_ec2_spot_fleet_total_target_capacity = metrics.Metric(
 
 metric_aws_ec2_running_ondemand_instances_total = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_total",
-    title=Title("Total running On-Demand instances"),
+    title=Title("Total running on-demand instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_a1_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_a1.2xlarge",
-    title=Title("Total running On-Demand a1.2xlarge instances"),
+    title=Title("Total running on-demand a1.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_a1_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_a1.4xlarge",
-    title=Title("Total running On-Demand a1.4xlarge instances"),
+    title=Title("Total running on-demand a1.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_a1_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_a1.large",
-    title=Title("Total running On-Demand a1.large instances"),
+    title=Title("Total running on-demand a1.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_a1_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_a1.medium",
-    title=Title("Total running On-Demand a1.medium instances"),
+    title=Title("Total running on-demand a1.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_a1_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_a1.metal",
-    title=Title("Total running On-Demand a1.metal instances"),
+    title=Title("Total running on-demand a1.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_a1_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_a1.xlarge",
-    title=Title("Total running On-Demand a1.xlarge instances"),
+    title=Title("Total running on-demand a1.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c1_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c1.medium",
-    title=Title("Total running On-Demand c1.medium instances"),
+    title=Title("Total running on-demand c1.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c1_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c1.xlarge",
-    title=Title("Total running On-Demand c1.xlarge instances"),
+    title=Title("Total running on-demand c1.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c3_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c3.2xlarge",
-    title=Title("Total running On-Demand c3.2xlarge instances"),
+    title=Title("Total running on-demand c3.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c3_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c3.4xlarge",
-    title=Title("Total running On-Demand c3.4xlarge instances"),
+    title=Title("Total running on-demand c3.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c3_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c3.8xlarge",
-    title=Title("Total running On-Demand c3.8xlarge instances"),
+    title=Title("Total running on-demand c3.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c3_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c3.large",
-    title=Title("Total running On-Demand c3.large instances"),
+    title=Title("Total running on-demand c3.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c3_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c3.xlarge",
-    title=Title("Total running On-Demand c3.xlarge instances"),
+    title=Title("Total running on-demand c3.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_ORANGE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c4_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c4.2xlarge",
-    title=Title("Total running On-Demand c4.2xlarge instances"),
+    title=Title("Total running on-demand c4.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c4_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c4.4xlarge",
-    title=Title("Total running On-Demand c4.4xlarge instances"),
+    title=Title("Total running on-demand c4.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c4_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c4.8xlarge",
-    title=Title("Total running On-Demand c4.8xlarge instances"),
+    title=Title("Total running on-demand c4.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c4_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c4.large",
-    title=Title("Total running On-Demand c4.large instances"),
+    title=Title("Total running on-demand c4.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.ORANGE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c4_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c4.xlarge",
-    title=Title("Total running On-Demand c4.xlarge instances"),
+    title=Title("Total running on-demand c4.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5.12xlarge",
-    title=Title("Total running On-Demand c5.12xlarge instances"),
+    title=Title("Total running on-demand c5.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5_18xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5.18xlarge",
-    title=Title("Total running On-Demand c5.18xlarge instances"),
+    title=Title("Total running on-demand c5.18xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5.24xlarge",
-    title=Title("Total running On-Demand c5.24xlarge instances"),
+    title=Title("Total running on-demand c5.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_ORANGE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5.2xlarge",
-    title=Title("Total running On-Demand c5.2xlarge instances"),
+    title=Title("Total running on-demand c5.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5.4xlarge",
-    title=Title("Total running On-Demand c5.4xlarge instances"),
+    title=Title("Total running on-demand c5.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5_9xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5.9xlarge",
-    title=Title("Total running On-Demand c5.9xlarge instances"),
+    title=Title("Total running on-demand c5.9xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5.large",
-    title=Title("Total running On-Demand c5.large instances"),
+    title=Title("Total running on-demand c5.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5.metal",
-    title=Title("Total running On-Demand c5.metal instances"),
+    title=Title("Total running on-demand c5.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5.xlarge",
-    title=Title("Total running On-Demand c5.xlarge instances"),
+    title=Title("Total running on-demand c5.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5a_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5a.12xlarge",
-    title=Title("Total running On-Demand c5a.12xlarge instances"),
+    title=Title("Total running on-demand c5a.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5a_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5a.16xlarge",
-    title=Title("Total running On-Demand c5a.16xlarge instances"),
+    title=Title("Total running on-demand c5a.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5a_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5a.24xlarge",
-    title=Title("Total running On-Demand c5a.24xlarge instances"),
+    title=Title("Total running on-demand c5a.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5a_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5a.2xlarge",
-    title=Title("Total running On-Demand c5a.2xlarge instances"),
+    title=Title("Total running on-demand c5a.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5a_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5a.4xlarge",
-    title=Title("Total running On-Demand c5a.4xlarge instances"),
+    title=Title("Total running on-demand c5a.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5a_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5a.8xlarge",
-    title=Title("Total running On-Demand c5a.8xlarge instances"),
+    title=Title("Total running on-demand c5a.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5a_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5a.large",
-    title=Title("Total running On-Demand c5a.large instances"),
+    title=Title("Total running on-demand c5a.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5a_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5a.xlarge",
-    title=Title("Total running On-Demand c5a.xlarge instances"),
+    title=Title("Total running on-demand c5a.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5ad_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5ad.12xlarge",
-    title=Title("Total running On-Demand c5ad.12xlarge instances"),
+    title=Title("Total running on-demand c5ad.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5ad_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5ad.16xlarge",
-    title=Title("Total running On-Demand c5ad.16xlarge instances"),
+    title=Title("Total running on-demand c5ad.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_ORANGE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5ad_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5ad.24xlarge",
-    title=Title("Total running On-Demand c5ad.24xlarge instances"),
+    title=Title("Total running on-demand c5ad.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5ad_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5ad.2xlarge",
-    title=Title("Total running On-Demand c5ad.2xlarge instances"),
+    title=Title("Total running on-demand c5ad.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5ad_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5ad.4xlarge",
-    title=Title("Total running On-Demand c5ad.4xlarge instances"),
+    title=Title("Total running on-demand c5ad.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5ad_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5ad.8xlarge",
-    title=Title("Total running On-Demand c5ad.8xlarge instances"),
+    title=Title("Total running on-demand c5ad.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.ORANGE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5ad_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5ad.large",
-    title=Title("Total running On-Demand c5ad.large instances"),
+    title=Title("Total running on-demand c5ad.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5ad_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5ad.xlarge",
-    title=Title("Total running On-Demand c5ad.xlarge instances"),
+    title=Title("Total running on-demand c5ad.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5d_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5d.12xlarge",
-    title=Title("Total running On-Demand c5d.12xlarge instances"),
+    title=Title("Total running on-demand c5d.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5d_18xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5d.18xlarge",
-    title=Title("Total running On-Demand c5d.18xlarge instances"),
+    title=Title("Total running on-demand c5d.18xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_ORANGE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5d_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5d.24xlarge",
-    title=Title("Total running On-Demand c5d.24xlarge instances"),
+    title=Title("Total running on-demand c5d.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5d_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5d.2xlarge",
-    title=Title("Total running On-Demand c5d.2xlarge instances"),
+    title=Title("Total running on-demand c5d.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5d_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5d.4xlarge",
-    title=Title("Total running On-Demand c5d.4xlarge instances"),
+    title=Title("Total running on-demand c5d.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5d_9xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5d.9xlarge",
-    title=Title("Total running On-Demand c5d.9xlarge instances"),
+    title=Title("Total running on-demand c5d.9xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5d_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5d.large",
-    title=Title("Total running On-Demand c5d.large instances"),
+    title=Title("Total running on-demand c5d.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5d_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5d.metal",
-    title=Title("Total running On-Demand c5d.metal instances"),
+    title=Title("Total running on-demand c5d.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5d_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5d.xlarge",
-    title=Title("Total running On-Demand c5d.xlarge instances"),
+    title=Title("Total running on-demand c5d.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5n_18xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5n.18xlarge",
-    title=Title("Total running On-Demand c5n.18xlarge instances"),
+    title=Title("Total running on-demand c5n.18xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5n_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5n.2xlarge",
-    title=Title("Total running On-Demand c5n.2xlarge instances"),
+    title=Title("Total running on-demand c5n.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5n_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5n.4xlarge",
-    title=Title("Total running On-Demand c5n.4xlarge instances"),
+    title=Title("Total running on-demand c5n.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5n_9xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5n.9xlarge",
-    title=Title("Total running On-Demand c5n.9xlarge instances"),
+    title=Title("Total running on-demand c5n.9xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5n_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5n.large",
-    title=Title("Total running On-Demand c5n.large instances"),
+    title=Title("Total running on-demand c5n.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5n_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5n.metal",
-    title=Title("Total running On-Demand c5n.metal instances"),
+    title=Title("Total running on-demand c5n.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c5n_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c5n.xlarge",
-    title=Title("Total running On-Demand c5n.xlarge instances"),
+    title=Title("Total running on-demand c5n.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6g_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6g.12xlarge",
-    title=Title("Total running On-Demand c6g.12xlarge instances"),
+    title=Title("Total running on-demand c6g.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6g_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6g.16xlarge",
-    title=Title("Total running On-Demand c6g.16xlarge instances"),
+    title=Title("Total running on-demand c6g.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6g_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6g.2xlarge",
-    title=Title("Total running On-Demand c6g.2xlarge instances"),
+    title=Title("Total running on-demand c6g.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6g_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6g.4xlarge",
-    title=Title("Total running On-Demand c6g.4xlarge instances"),
+    title=Title("Total running on-demand c6g.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6g_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6g.8xlarge",
-    title=Title("Total running On-Demand c6g.8xlarge instances"),
+    title=Title("Total running on-demand c6g.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6g_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6g.large",
-    title=Title("Total running On-Demand c6g.large instances"),
+    title=Title("Total running on-demand c6g.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6g_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6g.medium",
-    title=Title("Total running On-Demand c6g.medium instances"),
+    title=Title("Total running on-demand c6g.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6g_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6g.metal",
-    title=Title("Total running On-Demand c6g.metal instances"),
+    title=Title("Total running on-demand c6g.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6g_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6g.xlarge",
-    title=Title("Total running On-Demand c6g.xlarge instances"),
+    title=Title("Total running on-demand c6g.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gd_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gd.12xlarge",
-    title=Title("Total running On-Demand c6gd.12xlarge instances"),
+    title=Title("Total running on-demand c6gd.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gd_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gd.16xlarge",
-    title=Title("Total running On-Demand c6gd.16xlarge instances"),
+    title=Title("Total running on-demand c6gd.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gd_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gd.2xlarge",
-    title=Title("Total running On-Demand c6gd.2xlarge instances"),
+    title=Title("Total running on-demand c6gd.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gd_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gd.4xlarge",
-    title=Title("Total running On-Demand c6gd.4xlarge instances"),
+    title=Title("Total running on-demand c6gd.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gd_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gd.8xlarge",
-    title=Title("Total running On-Demand c6gd.8xlarge instances"),
+    title=Title("Total running on-demand c6gd.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gd_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gd.large",
-    title=Title("Total running On-Demand c6gd.large instances"),
+    title=Title("Total running on-demand c6gd.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gd_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gd.medium",
-    title=Title("Total running On-Demand c6gd.medium instances"),
+    title=Title("Total running on-demand c6gd.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gd_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gd.metal",
-    title=Title("Total running On-Demand c6gd.metal instances"),
+    title=Title("Total running on-demand c6gd.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gd_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gd.xlarge",
-    title=Title("Total running On-Demand c6gd.xlarge instances"),
+    title=Title("Total running on-demand c6gd.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gn_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gn.12xlarge",
-    title=Title("Total running On-Demand c6gn.12xlarge instances"),
+    title=Title("Total running on-demand c6gn.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gn_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gn.16xlarge",
-    title=Title("Total running On-Demand c6gn.16xlarge instances"),
+    title=Title("Total running on-demand c6gn.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gn_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gn.2xlarge",
-    title=Title("Total running On-Demand c6gn.2xlarge instances"),
+    title=Title("Total running on-demand c6gn.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gn_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gn.4xlarge",
-    title=Title("Total running On-Demand c6gn.4xlarge instances"),
+    title=Title("Total running on-demand c6gn.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gn_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gn.8xlarge",
-    title=Title("Total running On-Demand c6gn.8xlarge instances"),
+    title=Title("Total running on-demand c6gn.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gn_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gn.large",
-    title=Title("Total running On-Demand c6gn.large instances"),
+    title=Title("Total running on-demand c6gn.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gn_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gn.medium",
-    title=Title("Total running On-Demand c6gn.medium instances"),
+    title=Title("Total running on-demand c6gn.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_c6gn_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_c6gn.xlarge",
-    title=Title("Total running On-Demand c6gn.xlarge instances"),
+    title=Title("Total running on-demand c6gn.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_cc1_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_cc1.4xlarge",
-    title=Title("Total running On-Demand cc1.4xlarge instances"),
+    title=Title("Total running on-demand cc1.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_cc2_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_cc2.8xlarge",
-    title=Title("Total running On-Demand cc2.8xlarge instances"),
+    title=Title("Total running on-demand cc2.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_cg1_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_cg1.4xlarge",
-    title=Title("Total running On-Demand cg1.4xlarge instances"),
+    title=Title("Total running on-demand cg1.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_cr1_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_cr1.8xlarge",
-    title=Title("Total running On-Demand cr1.8xlarge instances"),
+    title=Title("Total running on-demand cr1.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_d2_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d2.2xlarge",
-    title=Title("Total running On-Demand d2.2xlarge instances"),
+    title=Title("Total running on-demand d2.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_d2_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d2.4xlarge",
-    title=Title("Total running On-Demand d2.4xlarge instances"),
+    title=Title("Total running on-demand d2.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_d2_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d2.8xlarge",
-    title=Title("Total running On-Demand d2.8xlarge instances"),
+    title=Title("Total running on-demand d2.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_d2_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d2.xlarge",
-    title=Title("Total running On-Demand d2.xlarge instances"),
+    title=Title("Total running on-demand d2.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_d3_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d3.2xlarge",
-    title=Title("Total running On-Demand d3.2xlarge instances"),
+    title=Title("Total running on-demand d3.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_d3_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d3.4xlarge",
-    title=Title("Total running On-Demand d3.4xlarge instances"),
+    title=Title("Total running on-demand d3.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_d3_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d3.8xlarge",
-    title=Title("Total running On-Demand d3.8xlarge instances"),
+    title=Title("Total running on-demand d3.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_d3_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d3.xlarge",
-    title=Title("Total running On-Demand d3.xlarge instances"),
+    title=Title("Total running on-demand d3.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_d3en_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d3en.12xlarge",
-    title=Title("Total running On-Demand d3en.12xlarge instances"),
+    title=Title("Total running on-demand d3en.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_d3en_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d3en.2xlarge",
-    title=Title("Total running On-Demand d3en.2xlarge instances"),
+    title=Title("Total running on-demand d3en.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_d3en_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d3en.4xlarge",
-    title=Title("Total running On-Demand d3en.4xlarge instances"),
+    title=Title("Total running on-demand d3en.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_d3en_6xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d3en.6xlarge",
-    title=Title("Total running On-Demand d3en.6xlarge instances"),
+    title=Title("Total running on-demand d3en.6xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_d3en_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d3en.8xlarge",
-    title=Title("Total running On-Demand d3en.8xlarge instances"),
+    title=Title("Total running on-demand d3en.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_d3en_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_d3en.xlarge",
-    title=Title("Total running On-Demand d3en.xlarge instances"),
+    title=Title("Total running on-demand d3en.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_f1_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_f1.16xlarge",
-    title=Title("Total running On-Demand f1.16xlarge instances"),
+    title=Title("Total running on-demand f1.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_f1_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_f1.2xlarge",
-    title=Title("Total running On-Demand f1.2xlarge instances"),
+    title=Title("Total running on-demand f1.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_f1_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_f1.4xlarge",
-    title=Title("Total running On-Demand f1.4xlarge instances"),
+    title=Title("Total running on-demand f1.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_g2_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g2.2xlarge",
-    title=Title("Total running On-Demand g2.2xlarge instances"),
+    title=Title("Total running on-demand g2.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_g2_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g2.8xlarge",
-    title=Title("Total running On-Demand g2.8xlarge instances"),
+    title=Title("Total running on-demand g2.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_g3_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g3.16xlarge",
-    title=Title("Total running On-Demand g3.16xlarge instances"),
+    title=Title("Total running on-demand g3.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_g3_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g3.4xlarge",
-    title=Title("Total running On-Demand g3.4xlarge instances"),
+    title=Title("Total running on-demand g3.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_g3_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g3.8xlarge",
-    title=Title("Total running On-Demand g3.8xlarge instances"),
+    title=Title("Total running on-demand g3.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_g3s_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g3s.xlarge",
-    title=Title("Total running On-Demand g3s.xlarge instances"),
+    title=Title("Total running on-demand g3s.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_g4ad_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g4ad.16xlarge",
-    title=Title("Total running On-Demand g4ad.16xlarge instances"),
+    title=Title("Total running on-demand g4ad.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_g4ad_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g4ad.2xlarge",
-    title=Title("Total running On-Demand g4ad.2xlarge instances"),
+    title=Title("Total running on-demand g4ad.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_g4ad_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g4ad.4xlarge",
-    title=Title("Total running On-Demand g4ad.4xlarge instances"),
+    title=Title("Total running on-demand g4ad.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_g4ad_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g4ad.8xlarge",
-    title=Title("Total running On-Demand g4ad.8xlarge instances"),
+    title=Title("Total running on-demand g4ad.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_g4ad_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g4ad.xlarge",
-    title=Title("Total running On-Demand g4ad.xlarge instances"),
+    title=Title("Total running on-demand g4ad.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_g4dn_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g4dn.12xlarge",
-    title=Title("Total running On-Demand g4dn.12xlarge instances"),
+    title=Title("Total running on-demand g4dn.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_g4dn_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g4dn.16xlarge",
-    title=Title("Total running On-Demand g4dn.16xlarge instances"),
+    title=Title("Total running on-demand g4dn.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_g4dn_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g4dn.2xlarge",
-    title=Title("Total running On-Demand g4dn.2xlarge instances"),
+    title=Title("Total running on-demand g4dn.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_g4dn_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g4dn.4xlarge",
-    title=Title("Total running On-Demand g4dn.4xlarge instances"),
+    title=Title("Total running on-demand g4dn.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_g4dn_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g4dn.8xlarge",
-    title=Title("Total running On-Demand g4dn.8xlarge instances"),
+    title=Title("Total running on-demand g4dn.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_g4dn_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g4dn.metal",
-    title=Title("Total running On-Demand g4dn.metal instances"),
+    title=Title("Total running on-demand g4dn.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_g4dn_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g4dn.xlarge",
-    title=Title("Total running On-Demand g4dn.xlarge instances"),
+    title=Title("Total running on-demand g4dn.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_h1_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_h1.16xlarge",
-    title=Title("Total running On-Demand h1.16xlarge instances"),
+    title=Title("Total running on-demand h1.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_h1_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_h1.2xlarge",
-    title=Title("Total running On-Demand h1.2xlarge instances"),
+    title=Title("Total running on-demand h1.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_h1_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_h1.4xlarge",
-    title=Title("Total running On-Demand h1.4xlarge instances"),
+    title=Title("Total running on-demand h1.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_h1_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_h1.8xlarge",
-    title=Title("Total running On-Demand h1.8xlarge instances"),
+    title=Title("Total running on-demand h1.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_hi1_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_hi1.4xlarge",
-    title=Title("Total running On-Demand hi1.4xlarge instances"),
+    title=Title("Total running on-demand hi1.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_hs1_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_hs1.8xlarge",
-    title=Title("Total running On-Demand hs1.8xlarge instances"),
+    title=Title("Total running on-demand hs1.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_i2_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i2.2xlarge",
-    title=Title("Total running On-Demand i2.2xlarge instances"),
+    title=Title("Total running on-demand i2.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_i2_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i2.4xlarge",
-    title=Title("Total running On-Demand i2.4xlarge instances"),
+    title=Title("Total running on-demand i2.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_i2_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i2.8xlarge",
-    title=Title("Total running On-Demand i2.8xlarge instances"),
+    title=Title("Total running on-demand i2.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_i2_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i2.xlarge",
-    title=Title("Total running On-Demand i2.xlarge instances"),
+    title=Title("Total running on-demand i2.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3.16xlarge",
-    title=Title("Total running On-Demand i3.16xlarge instances"),
+    title=Title("Total running on-demand i3.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3.2xlarge",
-    title=Title("Total running On-Demand i3.2xlarge instances"),
+    title=Title("Total running on-demand i3.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3.4xlarge",
-    title=Title("Total running On-Demand i3.4xlarge instances"),
+    title=Title("Total running on-demand i3.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3.8xlarge",
-    title=Title("Total running On-Demand i3.8xlarge instances"),
+    title=Title("Total running on-demand i3.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3.large",
-    title=Title("Total running On-Demand i3.large instances"),
+    title=Title("Total running on-demand i3.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3.metal",
-    title=Title("Total running On-Demand i3.metal instances"),
+    title=Title("Total running on-demand i3.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3.xlarge",
-    title=Title("Total running On-Demand i3.xlarge instances"),
+    title=Title("Total running on-demand i3.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3en_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3en.12xlarge",
-    title=Title("Total running On-Demand i3en.12xlarge instances"),
+    title=Title("Total running on-demand i3en.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3en_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3en.24xlarge",
-    title=Title("Total running On-Demand i3en.24xlarge instances"),
+    title=Title("Total running on-demand i3en.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3en_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3en.2xlarge",
-    title=Title("Total running On-Demand i3en.2xlarge instances"),
+    title=Title("Total running on-demand i3en.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3en_3xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3en.3xlarge",
-    title=Title("Total running On-Demand i3en.3xlarge instances"),
+    title=Title("Total running on-demand i3en.3xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3en_6xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3en.6xlarge",
-    title=Title("Total running On-Demand i3en.6xlarge instances"),
+    title=Title("Total running on-demand i3en.6xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3en_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3en.large",
-    title=Title("Total running On-Demand i3en.large instances"),
+    title=Title("Total running on-demand i3en.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3en_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3en.metal",
-    title=Title("Total running On-Demand i3en.metal instances"),
+    title=Title("Total running on-demand i3en.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_i3en_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i3en.xlarge",
-    title=Title("Total running On-Demand i3en.xlarge instances"),
+    title=Title("Total running on-demand i3en.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_inf1_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_inf1.24xlarge",
-    title=Title("Total running On-Demand inf1.24xlarge instances"),
+    title=Title("Total running on-demand inf1.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_inf1_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_inf1.2xlarge",
-    title=Title("Total running On-Demand inf1.2xlarge instances"),
+    title=Title("Total running on-demand inf1.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_inf1_6xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_inf1.6xlarge",
-    title=Title("Total running On-Demand inf1.6xlarge instances"),
+    title=Title("Total running on-demand inf1.6xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_inf1_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_inf1.xlarge",
-    title=Title("Total running On-Demand inf1.xlarge instances"),
+    title=Title("Total running on-demand inf1.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m1_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m1.large",
-    title=Title("Total running On-Demand m1.large instances"),
+    title=Title("Total running on-demand m1.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m1_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m1.medium",
-    title=Title("Total running On-Demand m1.medium instances"),
+    title=Title("Total running on-demand m1.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m1_small = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m1.small",
-    title=Title("Total running On-Demand m1.small instances"),
+    title=Title("Total running on-demand m1.small instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m1_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m1.xlarge",
-    title=Title("Total running On-Demand m1.xlarge instances"),
+    title=Title("Total running on-demand m1.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_m2_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m2.2xlarge",
-    title=Title("Total running On-Demand m2.2xlarge instances"),
+    title=Title("Total running on-demand m2.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m2_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m2.4xlarge",
-    title=Title("Total running On-Demand m2.4xlarge instances"),
+    title=Title("Total running on-demand m2.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m2_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m2.xlarge",
-    title=Title("Total running On-Demand m2.xlarge instances"),
+    title=Title("Total running on-demand m2.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m3_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m3.2xlarge",
-    title=Title("Total running On-Demand m3.2xlarge instances"),
+    title=Title("Total running on-demand m3.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m3_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m3.large",
-    title=Title("Total running On-Demand m3.large instances"),
+    title=Title("Total running on-demand m3.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m3_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m3.medium",
-    title=Title("Total running On-Demand m3.medium instances"),
+    title=Title("Total running on-demand m3.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m3_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m3.xlarge",
-    title=Title("Total running On-Demand m3.xlarge instances"),
+    title=Title("Total running on-demand m3.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_m4_10xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m4.10xlarge",
-    title=Title("Total running On-Demand m4.10xlarge instances"),
+    title=Title("Total running on-demand m4.10xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m4_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m4.16xlarge",
-    title=Title("Total running On-Demand m4.16xlarge instances"),
+    title=Title("Total running on-demand m4.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m4_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m4.2xlarge",
-    title=Title("Total running On-Demand m4.2xlarge instances"),
+    title=Title("Total running on-demand m4.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m4_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m4.4xlarge",
-    title=Title("Total running On-Demand m4.4xlarge instances"),
+    title=Title("Total running on-demand m4.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m4_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m4.large",
-    title=Title("Total running On-Demand m4.large instances"),
+    title=Title("Total running on-demand m4.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m4_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m4.xlarge",
-    title=Title("Total running On-Demand m4.xlarge instances"),
+    title=Title("Total running on-demand m4.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5.12xlarge",
-    title=Title("Total running On-Demand m5.12xlarge instances"),
+    title=Title("Total running on-demand m5.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5.16xlarge",
-    title=Title("Total running On-Demand m5.16xlarge instances"),
+    title=Title("Total running on-demand m5.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5.24xlarge",
-    title=Title("Total running On-Demand m5.24xlarge instances"),
+    title=Title("Total running on-demand m5.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5.2xlarge",
-    title=Title("Total running On-Demand m5.2xlarge instances"),
+    title=Title("Total running on-demand m5.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5.4xlarge",
-    title=Title("Total running On-Demand m5.4xlarge instances"),
+    title=Title("Total running on-demand m5.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5.8xlarge",
-    title=Title("Total running On-Demand m5.8xlarge instances"),
+    title=Title("Total running on-demand m5.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5.large",
-    title=Title("Total running On-Demand m5.large instances"),
+    title=Title("Total running on-demand m5.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5.metal",
-    title=Title("Total running On-Demand m5.metal instances"),
+    title=Title("Total running on-demand m5.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5.xlarge",
-    title=Title("Total running On-Demand m5.xlarge instances"),
+    title=Title("Total running on-demand m5.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5a_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5a.12xlarge",
-    title=Title("Total running On-Demand m5a.12xlarge instances"),
+    title=Title("Total running on-demand m5a.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5a_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5a.16xlarge",
-    title=Title("Total running On-Demand m5a.16xlarge instances"),
+    title=Title("Total running on-demand m5a.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5a_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5a.24xlarge",
-    title=Title("Total running On-Demand m5a.24xlarge instances"),
+    title=Title("Total running on-demand m5a.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5a_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5a.2xlarge",
-    title=Title("Total running On-Demand m5a.2xlarge instances"),
+    title=Title("Total running on-demand m5a.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5a_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5a.4xlarge",
-    title=Title("Total running On-Demand m5a.4xlarge instances"),
+    title=Title("Total running on-demand m5a.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5a_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5a.8xlarge",
-    title=Title("Total running On-Demand m5a.8xlarge instances"),
+    title=Title("Total running on-demand m5a.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5a_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5a.large",
-    title=Title("Total running On-Demand m5a.large instances"),
+    title=Title("Total running on-demand m5a.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5a_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5a.xlarge",
-    title=Title("Total running On-Demand m5a.xlarge instances"),
+    title=Title("Total running on-demand m5a.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5ad_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5ad.12xlarge",
-    title=Title("Total running On-Demand m5ad.12xlarge instances"),
+    title=Title("Total running on-demand m5ad.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5ad_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5ad.16xlarge",
-    title=Title("Total running On-Demand m5ad.16xlarge instances"),
+    title=Title("Total running on-demand m5ad.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5ad_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5ad.24xlarge",
-    title=Title("Total running On-Demand m5ad.24xlarge instances"),
+    title=Title("Total running on-demand m5ad.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5ad_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5ad.2xlarge",
-    title=Title("Total running On-Demand m5ad.2xlarge instances"),
+    title=Title("Total running on-demand m5ad.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5ad_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5ad.4xlarge",
-    title=Title("Total running On-Demand m5ad.4xlarge instances"),
+    title=Title("Total running on-demand m5ad.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5ad_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5ad.8xlarge",
-    title=Title("Total running On-Demand m5ad.8xlarge instances"),
+    title=Title("Total running on-demand m5ad.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5ad_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5ad.large",
-    title=Title("Total running On-Demand m5ad.large instances"),
+    title=Title("Total running on-demand m5ad.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5ad_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5ad.xlarge",
-    title=Title("Total running On-Demand m5ad.xlarge instances"),
+    title=Title("Total running on-demand m5ad.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5d_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5d.12xlarge",
-    title=Title("Total running On-Demand m5d.12xlarge instances"),
+    title=Title("Total running on-demand m5d.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5d_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5d.16xlarge",
-    title=Title("Total running On-Demand m5d.16xlarge instances"),
+    title=Title("Total running on-demand m5d.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5d_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5d.24xlarge",
-    title=Title("Total running On-Demand m5d.24xlarge instances"),
+    title=Title("Total running on-demand m5d.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5d_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5d.2xlarge",
-    title=Title("Total running On-Demand m5d.2xlarge instances"),
+    title=Title("Total running on-demand m5d.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5d_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5d.4xlarge",
-    title=Title("Total running On-Demand m5d.4xlarge instances"),
+    title=Title("Total running on-demand m5d.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5d_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5d.8xlarge",
-    title=Title("Total running On-Demand m5d.8xlarge instances"),
+    title=Title("Total running on-demand m5d.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5d_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5d.large",
-    title=Title("Total running On-Demand m5d.large instances"),
+    title=Title("Total running on-demand m5d.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5d_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5d.metal",
-    title=Title("Total running On-Demand m5d.metal instances"),
+    title=Title("Total running on-demand m5d.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5d_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5d.xlarge",
-    title=Title("Total running On-Demand m5d.xlarge instances"),
+    title=Title("Total running on-demand m5d.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5dn_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5dn.12xlarge",
-    title=Title("Total running On-Demand m5dn.12xlarge instances"),
+    title=Title("Total running on-demand m5dn.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5dn_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5dn.16xlarge",
-    title=Title("Total running On-Demand m5dn.16xlarge instances"),
+    title=Title("Total running on-demand m5dn.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5dn_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5dn.24xlarge",
-    title=Title("Total running On-Demand m5dn.24xlarge instances"),
+    title=Title("Total running on-demand m5dn.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5dn_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5dn.2xlarge",
-    title=Title("Total running On-Demand m5dn.2xlarge instances"),
+    title=Title("Total running on-demand m5dn.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5dn_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5dn.4xlarge",
-    title=Title("Total running On-Demand m5dn.4xlarge instances"),
+    title=Title("Total running on-demand m5dn.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5dn_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5dn.8xlarge",
-    title=Title("Total running On-Demand m5dn.8xlarge instances"),
+    title=Title("Total running on-demand m5dn.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5dn_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5dn.large",
-    title=Title("Total running On-Demand m5dn.large instances"),
+    title=Title("Total running on-demand m5dn.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5dn_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5dn.metal",
-    title=Title("Total running On-Demand m5dn.metal instances"),
+    title=Title("Total running on-demand m5dn.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5dn_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5dn.xlarge",
-    title=Title("Total running On-Demand m5dn.xlarge instances"),
+    title=Title("Total running on-demand m5dn.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5n_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5n.12xlarge",
-    title=Title("Total running On-Demand m5n.12xlarge instances"),
+    title=Title("Total running on-demand m5n.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5n_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5n.16xlarge",
-    title=Title("Total running On-Demand m5n.16xlarge instances"),
+    title=Title("Total running on-demand m5n.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5n_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5n.24xlarge",
-    title=Title("Total running On-Demand m5n.24xlarge instances"),
+    title=Title("Total running on-demand m5n.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5n_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5n.2xlarge",
-    title=Title("Total running On-Demand m5n.2xlarge instances"),
+    title=Title("Total running on-demand m5n.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5n_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5n.4xlarge",
-    title=Title("Total running On-Demand m5n.4xlarge instances"),
+    title=Title("Total running on-demand m5n.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5n_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5n.8xlarge",
-    title=Title("Total running On-Demand m5n.8xlarge instances"),
+    title=Title("Total running on-demand m5n.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5n_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5n.large",
-    title=Title("Total running On-Demand m5n.large instances"),
+    title=Title("Total running on-demand m5n.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5n_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5n.metal",
-    title=Title("Total running On-Demand m5n.metal instances"),
+    title=Title("Total running on-demand m5n.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5n_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5n.xlarge",
-    title=Title("Total running On-Demand m5n.xlarge instances"),
+    title=Title("Total running on-demand m5n.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5zn_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5zn.12xlarge",
-    title=Title("Total running On-Demand m5zn.12xlarge instances"),
+    title=Title("Total running on-demand m5zn.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5zn_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5zn.2xlarge",
-    title=Title("Total running On-Demand m5zn.2xlarge instances"),
+    title=Title("Total running on-demand m5zn.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5zn_3xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5zn.3xlarge",
-    title=Title("Total running On-Demand m5zn.3xlarge instances"),
+    title=Title("Total running on-demand m5zn.3xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5zn_6xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5zn.6xlarge",
-    title=Title("Total running On-Demand m5zn.6xlarge instances"),
+    title=Title("Total running on-demand m5zn.6xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5zn_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5zn.large",
-    title=Title("Total running On-Demand m5zn.large instances"),
+    title=Title("Total running on-demand m5zn.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5zn_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5zn.metal",
-    title=Title("Total running On-Demand m5zn.metal instances"),
+    title=Title("Total running on-demand m5zn.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m5zn_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m5zn.xlarge",
-    title=Title("Total running On-Demand m5zn.xlarge instances"),
+    title=Title("Total running on-demand m5zn.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6g_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6g.12xlarge",
-    title=Title("Total running On-Demand m6g.12xlarge instances"),
+    title=Title("Total running on-demand m6g.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6g_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6g.16xlarge",
-    title=Title("Total running On-Demand m6g.16xlarge instances"),
+    title=Title("Total running on-demand m6g.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6g_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6g.2xlarge",
-    title=Title("Total running On-Demand m6g.2xlarge instances"),
+    title=Title("Total running on-demand m6g.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6g_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6g.4xlarge",
-    title=Title("Total running On-Demand m6g.4xlarge instances"),
+    title=Title("Total running on-demand m6g.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6g_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6g.8xlarge",
-    title=Title("Total running On-Demand m6g.8xlarge instances"),
+    title=Title("Total running on-demand m6g.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6g_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6g.large",
-    title=Title("Total running On-Demand m6g.large instances"),
+    title=Title("Total running on-demand m6g.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6g_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6g.medium",
-    title=Title("Total running On-Demand m6g.medium instances"),
+    title=Title("Total running on-demand m6g.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6g_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6g.metal",
-    title=Title("Total running On-Demand m6g.metal instances"),
+    title=Title("Total running on-demand m6g.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6g_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6g.xlarge",
-    title=Title("Total running On-Demand m6g.xlarge instances"),
+    title=Title("Total running on-demand m6g.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6gd_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6gd.12xlarge",
-    title=Title("Total running On-Demand m6gd.12xlarge instances"),
+    title=Title("Total running on-demand m6gd.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6gd_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6gd.16xlarge",
-    title=Title("Total running On-Demand m6gd.16xlarge instances"),
+    title=Title("Total running on-demand m6gd.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6gd_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6gd.2xlarge",
-    title=Title("Total running On-Demand m6gd.2xlarge instances"),
+    title=Title("Total running on-demand m6gd.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6gd_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6gd.4xlarge",
-    title=Title("Total running On-Demand m6gd.4xlarge instances"),
+    title=Title("Total running on-demand m6gd.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6gd_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6gd.8xlarge",
-    title=Title("Total running On-Demand m6gd.8xlarge instances"),
+    title=Title("Total running on-demand m6gd.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6gd_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6gd.large",
-    title=Title("Total running On-Demand m6gd.large instances"),
+    title=Title("Total running on-demand m6gd.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6gd_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6gd.medium",
-    title=Title("Total running On-Demand m6gd.medium instances"),
+    title=Title("Total running on-demand m6gd.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6gd_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6gd.metal",
-    title=Title("Total running On-Demand m6gd.metal instances"),
+    title=Title("Total running on-demand m6gd.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6gd_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6gd.xlarge",
-    title=Title("Total running On-Demand m6gd.xlarge instances"),
+    title=Title("Total running on-demand m6gd.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6i_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6i.12xlarge",
-    title=Title("Total running On-Demand m6i.12xlarge instances"),
+    title=Title("Total running on-demand m6i.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6i_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6i.16xlarge",
-    title=Title("Total running On-Demand m6i.16xlarge instances"),
+    title=Title("Total running on-demand m6i.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6i_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6i.24xlarge",
-    title=Title("Total running On-Demand m6i.24xlarge instances"),
+    title=Title("Total running on-demand m6i.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6i_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6i.2xlarge",
-    title=Title("Total running On-Demand m6i.2xlarge instances"),
+    title=Title("Total running on-demand m6i.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6i_32xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6i.32xlarge",
-    title=Title("Total running On-Demand m6i.32xlarge instances"),
+    title=Title("Total running on-demand m6i.32xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6i_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6i.4xlarge",
-    title=Title("Total running On-Demand m6i.4xlarge instances"),
+    title=Title("Total running on-demand m6i.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6i_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6i.8xlarge",
-    title=Title("Total running On-Demand m6i.8xlarge instances"),
+    title=Title("Total running on-demand m6i.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6i_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6i.large",
-    title=Title("Total running On-Demand m6i.large instances"),
+    title=Title("Total running on-demand m6i.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_m6i_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_m6i.xlarge",
-    title=Title("Total running On-Demand m6i.xlarge instances"),
+    title=Title("Total running on-demand m6i.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_mac1_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_mac1.metal",
-    title=Title("Total running On-Demand mac1.metal instances"),
+    title=Title("Total running on-demand mac1.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_p2_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_p2.16xlarge",
-    title=Title("Total running On-Demand p2.16xlarge instances"),
+    title=Title("Total running on-demand p2.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_p2_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_p2.8xlarge",
-    title=Title("Total running On-Demand p2.8xlarge instances"),
+    title=Title("Total running on-demand p2.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_p2_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_p2.xlarge",
-    title=Title("Total running On-Demand p2.xlarge instances"),
+    title=Title("Total running on-demand p2.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_p3_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_p3.16xlarge",
-    title=Title("Total running On-Demand p3.16xlarge instances"),
+    title=Title("Total running on-demand p3.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_p3_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_p3.2xlarge",
-    title=Title("Total running On-Demand p3.2xlarge instances"),
+    title=Title("Total running on-demand p3.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_p3_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_p3.8xlarge",
-    title=Title("Total running On-Demand p3.8xlarge instances"),
+    title=Title("Total running on-demand p3.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_p3dn_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_p3dn.24xlarge",
-    title=Title("Total running On-Demand p3dn.24xlarge instances"),
+    title=Title("Total running on-demand p3dn.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_p4d_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_p4d.24xlarge",
-    title=Title("Total running On-Demand p4d.24xlarge instances"),
+    title=Title("Total running on-demand p4d.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r3_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r3.2xlarge",
-    title=Title("Total running On-Demand r3.2xlarge instances"),
+    title=Title("Total running on-demand r3.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r3_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r3.4xlarge",
-    title=Title("Total running On-Demand r3.4xlarge instances"),
+    title=Title("Total running on-demand r3.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r3_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r3.8xlarge",
-    title=Title("Total running On-Demand r3.8xlarge instances"),
+    title=Title("Total running on-demand r3.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r3_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r3.large",
-    title=Title("Total running On-Demand r3.large instances"),
+    title=Title("Total running on-demand r3.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r3_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r3.xlarge",
-    title=Title("Total running On-Demand r3.xlarge instances"),
+    title=Title("Total running on-demand r3.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r4_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r4.16xlarge",
-    title=Title("Total running On-Demand r4.16xlarge instances"),
+    title=Title("Total running on-demand r4.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r4_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r4.2xlarge",
-    title=Title("Total running On-Demand r4.2xlarge instances"),
+    title=Title("Total running on-demand r4.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r4_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r4.4xlarge",
-    title=Title("Total running On-Demand r4.4xlarge instances"),
+    title=Title("Total running on-demand r4.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r4_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r4.8xlarge",
-    title=Title("Total running On-Demand r4.8xlarge instances"),
+    title=Title("Total running on-demand r4.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r4_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r4.large",
-    title=Title("Total running On-Demand r4.large instances"),
+    title=Title("Total running on-demand r4.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r4_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r4.xlarge",
-    title=Title("Total running On-Demand r4.xlarge instances"),
+    title=Title("Total running on-demand r4.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5.12xlarge",
-    title=Title("Total running On-Demand r5.12xlarge instances"),
+    title=Title("Total running on-demand r5.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5.16xlarge",
-    title=Title("Total running On-Demand r5.16xlarge instances"),
+    title=Title("Total running on-demand r5.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5.24xlarge",
-    title=Title("Total running On-Demand r5.24xlarge instances"),
+    title=Title("Total running on-demand r5.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5.2xlarge",
-    title=Title("Total running On-Demand r5.2xlarge instances"),
+    title=Title("Total running on-demand r5.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5.4xlarge",
-    title=Title("Total running On-Demand r5.4xlarge instances"),
+    title=Title("Total running on-demand r5.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5.8xlarge",
-    title=Title("Total running On-Demand r5.8xlarge instances"),
+    title=Title("Total running on-demand r5.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5.large",
-    title=Title("Total running On-Demand r5.large instances"),
+    title=Title("Total running on-demand r5.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5.metal",
-    title=Title("Total running On-Demand r5.metal instances"),
+    title=Title("Total running on-demand r5.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5.xlarge",
-    title=Title("Total running On-Demand r5.xlarge instances"),
+    title=Title("Total running on-demand r5.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5a_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5a.12xlarge",
-    title=Title("Total running On-Demand r5a.12xlarge instances"),
+    title=Title("Total running on-demand r5a.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5a_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5a.16xlarge",
-    title=Title("Total running On-Demand r5a.16xlarge instances"),
+    title=Title("Total running on-demand r5a.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5a_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5a.24xlarge",
-    title=Title("Total running On-Demand r5a.24xlarge instances"),
+    title=Title("Total running on-demand r5a.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5a_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5a.2xlarge",
-    title=Title("Total running On-Demand r5a.2xlarge instances"),
+    title=Title("Total running on-demand r5a.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5a_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5a.4xlarge",
-    title=Title("Total running On-Demand r5a.4xlarge instances"),
+    title=Title("Total running on-demand r5a.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5a_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5a.8xlarge",
-    title=Title("Total running On-Demand r5a.8xlarge instances"),
+    title=Title("Total running on-demand r5a.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5a_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5a.large",
-    title=Title("Total running On-Demand r5a.large instances"),
+    title=Title("Total running on-demand r5a.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5a_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5a.xlarge",
-    title=Title("Total running On-Demand r5a.xlarge instances"),
+    title=Title("Total running on-demand r5a.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5ad_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5ad.12xlarge",
-    title=Title("Total running On-Demand r5ad.12xlarge instances"),
+    title=Title("Total running on-demand r5ad.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5ad_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5ad.16xlarge",
-    title=Title("Total running On-Demand r5ad.16xlarge instances"),
+    title=Title("Total running on-demand r5ad.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5ad_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5ad.24xlarge",
-    title=Title("Total running On-Demand r5ad.24xlarge instances"),
+    title=Title("Total running on-demand r5ad.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5ad_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5ad.2xlarge",
-    title=Title("Total running On-Demand r5ad.2xlarge instances"),
+    title=Title("Total running on-demand r5ad.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5ad_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5ad.4xlarge",
-    title=Title("Total running On-Demand r5ad.4xlarge instances"),
+    title=Title("Total running on-demand r5ad.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5ad_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5ad.8xlarge",
-    title=Title("Total running On-Demand r5ad.8xlarge instances"),
+    title=Title("Total running on-demand r5ad.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5ad_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5ad.large",
-    title=Title("Total running On-Demand r5ad.large instances"),
+    title=Title("Total running on-demand r5ad.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5ad_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5ad.xlarge",
-    title=Title("Total running On-Demand r5ad.xlarge instances"),
+    title=Title("Total running on-demand r5ad.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5b_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5b.12xlarge",
-    title=Title("Total running On-Demand r5b.12xlarge instances"),
+    title=Title("Total running on-demand r5b.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5b_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5b.16xlarge",
-    title=Title("Total running On-Demand r5b.16xlarge instances"),
+    title=Title("Total running on-demand r5b.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5b_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5b.24xlarge",
-    title=Title("Total running On-Demand r5b.24xlarge instances"),
+    title=Title("Total running on-demand r5b.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5b_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5b.2xlarge",
-    title=Title("Total running On-Demand r5b.2xlarge instances"),
+    title=Title("Total running on-demand r5b.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5b_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5b.4xlarge",
-    title=Title("Total running On-Demand r5b.4xlarge instances"),
+    title=Title("Total running on-demand r5b.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5b_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5b.8xlarge",
-    title=Title("Total running On-Demand r5b.8xlarge instances"),
+    title=Title("Total running on-demand r5b.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5b_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5b.large",
-    title=Title("Total running On-Demand r5b.large instances"),
+    title=Title("Total running on-demand r5b.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5b_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5b.metal",
-    title=Title("Total running On-Demand r5b.metal instances"),
+    title=Title("Total running on-demand r5b.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5b_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5b.xlarge",
-    title=Title("Total running On-Demand r5b.xlarge instances"),
+    title=Title("Total running on-demand r5b.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5d_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5d.12xlarge",
-    title=Title("Total running On-Demand r5d.12xlarge instances"),
+    title=Title("Total running on-demand r5d.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5d_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5d.16xlarge",
-    title=Title("Total running On-Demand r5d.16xlarge instances"),
+    title=Title("Total running on-demand r5d.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5d_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5d.24xlarge",
-    title=Title("Total running On-Demand r5d.24xlarge instances"),
+    title=Title("Total running on-demand r5d.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5d_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5d.2xlarge",
-    title=Title("Total running On-Demand r5d.2xlarge instances"),
+    title=Title("Total running on-demand r5d.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5d_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5d.4xlarge",
-    title=Title("Total running On-Demand r5d.4xlarge instances"),
+    title=Title("Total running on-demand r5d.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5d_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5d.8xlarge",
-    title=Title("Total running On-Demand r5d.8xlarge instances"),
+    title=Title("Total running on-demand r5d.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5d_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5d.large",
-    title=Title("Total running On-Demand r5d.large instances"),
+    title=Title("Total running on-demand r5d.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5d_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5d.metal",
-    title=Title("Total running On-Demand r5d.metal instances"),
+    title=Title("Total running on-demand r5d.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5d_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5d.xlarge",
-    title=Title("Total running On-Demand r5d.xlarge instances"),
+    title=Title("Total running on-demand r5d.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5dn_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5dn.12xlarge",
-    title=Title("Total running On-Demand r5dn.12xlarge instances"),
+    title=Title("Total running on-demand r5dn.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5dn_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5dn.16xlarge",
-    title=Title("Total running On-Demand r5dn.16xlarge instances"),
+    title=Title("Total running on-demand r5dn.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5dn_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5dn.24xlarge",
-    title=Title("Total running On-Demand r5dn.24xlarge instances"),
+    title=Title("Total running on-demand r5dn.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5dn_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5dn.2xlarge",
-    title=Title("Total running On-Demand r5dn.2xlarge instances"),
+    title=Title("Total running on-demand r5dn.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5dn_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5dn.4xlarge",
-    title=Title("Total running On-Demand r5dn.4xlarge instances"),
+    title=Title("Total running on-demand r5dn.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5dn_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5dn.8xlarge",
-    title=Title("Total running On-Demand r5dn.8xlarge instances"),
+    title=Title("Total running on-demand r5dn.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5dn_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5dn.large",
-    title=Title("Total running On-Demand r5dn.large instances"),
+    title=Title("Total running on-demand r5dn.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5dn_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5dn.metal",
-    title=Title("Total running On-Demand r5dn.metal instances"),
+    title=Title("Total running on-demand r5dn.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5dn_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5dn.xlarge",
-    title=Title("Total running On-Demand r5dn.xlarge instances"),
+    title=Title("Total running on-demand r5dn.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5n_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5n.12xlarge",
-    title=Title("Total running On-Demand r5n.12xlarge instances"),
+    title=Title("Total running on-demand r5n.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5n_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5n.16xlarge",
-    title=Title("Total running On-Demand r5n.16xlarge instances"),
+    title=Title("Total running on-demand r5n.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5n_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5n.24xlarge",
-    title=Title("Total running On-Demand r5n.24xlarge instances"),
+    title=Title("Total running on-demand r5n.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5n_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5n.2xlarge",
-    title=Title("Total running On-Demand r5n.2xlarge instances"),
+    title=Title("Total running on-demand r5n.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5n_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5n.4xlarge",
-    title=Title("Total running On-Demand r5n.4xlarge instances"),
+    title=Title("Total running on-demand r5n.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5n_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5n.8xlarge",
-    title=Title("Total running On-Demand r5n.8xlarge instances"),
+    title=Title("Total running on-demand r5n.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5n_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5n.large",
-    title=Title("Total running On-Demand r5n.large instances"),
+    title=Title("Total running on-demand r5n.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5n_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5n.metal",
-    title=Title("Total running On-Demand r5n.metal instances"),
+    title=Title("Total running on-demand r5n.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r5n_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r5n.xlarge",
-    title=Title("Total running On-Demand r5n.xlarge instances"),
+    title=Title("Total running on-demand r5n.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6g_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6g.12xlarge",
-    title=Title("Total running On-Demand r6g.12xlarge instances"),
+    title=Title("Total running on-demand r6g.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6g_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6g.16xlarge",
-    title=Title("Total running On-Demand r6g.16xlarge instances"),
+    title=Title("Total running on-demand r6g.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6g_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6g.2xlarge",
-    title=Title("Total running On-Demand r6g.2xlarge instances"),
+    title=Title("Total running on-demand r6g.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6g_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6g.4xlarge",
-    title=Title("Total running On-Demand r6g.4xlarge instances"),
+    title=Title("Total running on-demand r6g.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6g_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6g.8xlarge",
-    title=Title("Total running On-Demand r6g.8xlarge instances"),
+    title=Title("Total running on-demand r6g.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6g_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6g.large",
-    title=Title("Total running On-Demand r6g.large instances"),
+    title=Title("Total running on-demand r6g.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6g_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6g.medium",
-    title=Title("Total running On-Demand r6g.medium instances"),
+    title=Title("Total running on-demand r6g.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6g_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6g.metal",
-    title=Title("Total running On-Demand r6g.metal instances"),
+    title=Title("Total running on-demand r6g.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6g_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6g.xlarge",
-    title=Title("Total running On-Demand r6g.xlarge instances"),
+    title=Title("Total running on-demand r6g.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6gd_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6gd.12xlarge",
-    title=Title("Total running On-Demand r6gd.12xlarge instances"),
+    title=Title("Total running on-demand r6gd.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6gd_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6gd.16xlarge",
-    title=Title("Total running On-Demand r6gd.16xlarge instances"),
+    title=Title("Total running on-demand r6gd.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6gd_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6gd.2xlarge",
-    title=Title("Total running On-Demand r6gd.2xlarge instances"),
+    title=Title("Total running on-demand r6gd.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6gd_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6gd.4xlarge",
-    title=Title("Total running On-Demand r6gd.4xlarge instances"),
+    title=Title("Total running on-demand r6gd.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6gd_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6gd.8xlarge",
-    title=Title("Total running On-Demand r6gd.8xlarge instances"),
+    title=Title("Total running on-demand r6gd.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6gd_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6gd.large",
-    title=Title("Total running On-Demand r6gd.large instances"),
+    title=Title("Total running on-demand r6gd.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6gd_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6gd.medium",
-    title=Title("Total running On-Demand r6gd.medium instances"),
+    title=Title("Total running on-demand r6gd.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6gd_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6gd.metal",
-    title=Title("Total running On-Demand r6gd.metal instances"),
+    title=Title("Total running on-demand r6gd.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_r6gd_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_r6gd.xlarge",
-    title=Title("Total running On-Demand r6gd.xlarge instances"),
+    title=Title("Total running on-demand r6gd.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_t1_micro = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t1.micro",
-    title=Title("Total running On-Demand t1.micro instances"),
+    title=Title("Total running on-demand t1.micro instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_t2_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t2.2xlarge",
-    title=Title("Total running On-Demand t2.2xlarge instances"),
+    title=Title("Total running on-demand t2.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_t2_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t2.large",
-    title=Title("Total running On-Demand t2.large instances"),
+    title=Title("Total running on-demand t2.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_t2_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t2.medium",
-    title=Title("Total running On-Demand t2.medium instances"),
+    title=Title("Total running on-demand t2.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_t2_micro = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t2.micro",
-    title=Title("Total running On-Demand t2.micro instances"),
+    title=Title("Total running on-demand t2.micro instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_t2_nano = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t2.nano",
-    title=Title("Total running On-Demand t2.nano instances"),
+    title=Title("Total running on-demand t2.nano instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_t2_small = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t2.small",
-    title=Title("Total running On-Demand t2.small instances"),
+    title=Title("Total running on-demand t2.small instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_t2_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t2.xlarge",
-    title=Title("Total running On-Demand t2.xlarge instances"),
+    title=Title("Total running on-demand t2.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3.2xlarge",
-    title=Title("Total running On-Demand t3.2xlarge instances"),
+    title=Title("Total running on-demand t3.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3.large",
-    title=Title("Total running On-Demand t3.large instances"),
+    title=Title("Total running on-demand t3.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3.medium",
-    title=Title("Total running On-Demand t3.medium instances"),
+    title=Title("Total running on-demand t3.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3_micro = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3.micro",
-    title=Title("Total running On-Demand t3.micro instances"),
+    title=Title("Total running on-demand t3.micro instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3_nano = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3.nano",
-    title=Title("Total running On-Demand t3.nano instances"),
+    title=Title("Total running on-demand t3.nano instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3_small = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3.small",
-    title=Title("Total running On-Demand t3.small instances"),
+    title=Title("Total running on-demand t3.small instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3.xlarge",
-    title=Title("Total running On-Demand t3.xlarge instances"),
+    title=Title("Total running on-demand t3.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3a_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3a.2xlarge",
-    title=Title("Total running On-Demand t3a.2xlarge instances"),
+    title=Title("Total running on-demand t3a.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3a_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3a.large",
-    title=Title("Total running On-Demand t3a.large instances"),
+    title=Title("Total running on-demand t3a.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3a_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3a.medium",
-    title=Title("Total running On-Demand t3a.medium instances"),
+    title=Title("Total running on-demand t3a.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3a_micro = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3a.micro",
-    title=Title("Total running On-Demand t3a.micro instances"),
+    title=Title("Total running on-demand t3a.micro instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3a_nano = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3a.nano",
-    title=Title("Total running On-Demand t3a.nano instances"),
+    title=Title("Total running on-demand t3a.nano instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3a_small = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3a.small",
-    title=Title("Total running On-Demand t3a.small instances"),
+    title=Title("Total running on-demand t3a.small instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_t3a_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t3a.xlarge",
-    title=Title("Total running On-Demand t3a.xlarge instances"),
+    title=Title("Total running on-demand t3a.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_t4g_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t4g.2xlarge",
-    title=Title("Total running On-Demand t4g.2xlarge instances"),
+    title=Title("Total running on-demand t4g.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_t4g_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t4g.large",
-    title=Title("Total running On-Demand t4g.large instances"),
+    title=Title("Total running on-demand t4g.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_t4g_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t4g.medium",
-    title=Title("Total running On-Demand t4g.medium instances"),
+    title=Title("Total running on-demand t4g.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_t4g_micro = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t4g.micro",
-    title=Title("Total running On-Demand t4g.micro instances"),
+    title=Title("Total running on-demand t4g.micro instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_t4g_nano = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t4g.nano",
-    title=Title("Total running On-Demand t4g.nano instances"),
+    title=Title("Total running on-demand t4g.nano instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )
 
 metric_aws_ec2_running_ondemand_instances_t4g_small = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t4g.small",
-    title=Title("Total running On-Demand t4g.small instances"),
+    title=Title("Total running on-demand t4g.small instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_t4g_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_t4g.xlarge",
-    title=Title("Total running On-Demand t4g.xlarge instances"),
+    title=Title("Total running on-demand t4g.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_u_12tb1_112xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_u-12tb1.112xlarge",
-    title=Title("Total running On-Demand u-12tb1.112xlarge instances"),
+    title=Title("Total running on-demand u-12tb1.112xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_u_12tb1_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_u-12tb1.metal",
-    title=Title("Total running On-Demand u-12tb1.metal instances"),
+    title=Title("Total running on-demand u-12tb1.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_u_18tb1_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_u-18tb1.metal",
-    title=Title("Total running On-Demand u-18tb1.metal instances"),
+    title=Title("Total running on-demand u-18tb1.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_u_24tb1_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_u-24tb1.metal",
-    title=Title("Total running On-Demand u-24tb1.metal instances"),
+    title=Title("Total running on-demand u-24tb1.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_u_6tb1_112xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_u-6tb1.112xlarge",
-    title=Title("Total running On-Demand u-6tb1.112xlarge instances"),
+    title=Title("Total running on-demand u-6tb1.112xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_u_6tb1_56xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_u-6tb1.56xlarge",
-    title=Title("Total running On-Demand u-6tb1.56xlarge instances"),
+    title=Title("Total running on-demand u-6tb1.56xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_u_6tb1_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_u-6tb1.metal",
-    title=Title("Total running On-Demand u-6tb1.metal instances"),
+    title=Title("Total running on-demand u-6tb1.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_u_9tb1_112xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_u-9tb1.112xlarge",
-    title=Title("Total running On-Demand u-9tb1.112xlarge instances"),
+    title=Title("Total running on-demand u-9tb1.112xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_u_9tb1_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_u-9tb1.metal",
-    title=Title("Total running On-Demand u-9tb1.metal instances"),
+    title=Title("Total running on-demand u-9tb1.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_vt1_24xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_vt1.24xlarge",
-    title=Title("Total running On-Demand vt1.24xlarge instances"),
+    title=Title("Total running on-demand vt1.24xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_vt1_3xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_vt1.3xlarge",
-    title=Title("Total running On-Demand vt1.3xlarge instances"),
+    title=Title("Total running on-demand vt1.3xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_vt1_6xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_vt1.6xlarge",
-    title=Title("Total running On-Demand vt1.6xlarge instances"),
+    title=Title("Total running on-demand vt1.6xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_x1_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x1.16xlarge",
-    title=Title("Total running On-Demand x1.16xlarge instances"),
+    title=Title("Total running on-demand x1.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_x1_32xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x1.32xlarge",
-    title=Title("Total running On-Demand x1.32xlarge instances"),
+    title=Title("Total running on-demand x1.32xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_x1e_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x1e.16xlarge",
-    title=Title("Total running On-Demand x1e.16xlarge instances"),
+    title=Title("Total running on-demand x1e.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_x1e_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x1e.2xlarge",
-    title=Title("Total running On-Demand x1e.2xlarge instances"),
+    title=Title("Total running on-demand x1e.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_x1e_32xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x1e.32xlarge",
-    title=Title("Total running On-Demand x1e.32xlarge instances"),
+    title=Title("Total running on-demand x1e.32xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_x1e_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x1e.4xlarge",
-    title=Title("Total running On-Demand x1e.4xlarge instances"),
+    title=Title("Total running on-demand x1e.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_x1e_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x1e.8xlarge",
-    title=Title("Total running On-Demand x1e.8xlarge instances"),
+    title=Title("Total running on-demand x1e.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_x1e_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x1e.xlarge",
-    title=Title("Total running On-Demand x1e.xlarge instances"),
+    title=Title("Total running on-demand x1e.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_x2gd_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x2gd.12xlarge",
-    title=Title("Total running On-Demand x2gd.12xlarge instances"),
+    title=Title("Total running on-demand x2gd.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_x2gd_16xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x2gd.16xlarge",
-    title=Title("Total running On-Demand x2gd.16xlarge instances"),
+    title=Title("Total running on-demand x2gd.16xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_x2gd_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x2gd.2xlarge",
-    title=Title("Total running On-Demand x2gd.2xlarge instances"),
+    title=Title("Total running on-demand x2gd.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_x2gd_4xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x2gd.4xlarge",
-    title=Title("Total running On-Demand x2gd.4xlarge instances"),
+    title=Title("Total running on-demand x2gd.4xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_x2gd_8xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x2gd.8xlarge",
-    title=Title("Total running On-Demand x2gd.8xlarge instances"),
+    title=Title("Total running on-demand x2gd.8xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_x2gd_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x2gd.large",
-    title=Title("Total running On-Demand x2gd.large instances"),
+    title=Title("Total running on-demand x2gd.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_x2gd_medium = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x2gd.medium",
-    title=Title("Total running On-Demand x2gd.medium instances"),
+    title=Title("Total running on-demand x2gd.medium instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_x2gd_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x2gd.metal",
-    title=Title("Total running On-Demand x2gd.metal instances"),
+    title=Title("Total running on-demand x2gd.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_x2gd_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x2gd.xlarge",
-    title=Title("Total running On-Demand x2gd.xlarge instances"),
+    title=Title("Total running on-demand x2gd.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_z1d_12xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_z1d.12xlarge",
-    title=Title("Total running On-Demand z1d.12xlarge instances"),
+    title=Title("Total running on-demand z1d.12xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GREEN,
 )
 
 metric_aws_ec2_running_ondemand_instances_z1d_2xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_z1d.2xlarge",
-    title=Title("Total running On-Demand z1d.2xlarge instances"),
+    title=Title("Total running on-demand z1d.2xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BLUE,
 )
 
 metric_aws_ec2_running_ondemand_instances_z1d_3xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_z1d.3xlarge",
-    title=Title("Total running On-Demand z1d.3xlarge instances"),
+    title=Title("Total running on-demand z1d.3xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_BROWN,
 )
 
 metric_aws_ec2_running_ondemand_instances_z1d_6xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_z1d.6xlarge",
-    title=Title("Total running On-Demand z1d.6xlarge instances"),
+    title=Title("Total running on-demand z1d.6xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_z1d_large = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_z1d.large",
-    title=Title("Total running On-Demand z1d.large instances"),
+    title=Title("Total running on-demand z1d.large instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_z1d_metal = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_z1d.metal",
-    title=Title("Total running On-Demand z1d.metal instances"),
+    title=Title("Total running on-demand z1d.metal instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_GRAY,
 )
 
 metric_aws_ec2_running_ondemand_instances_z1d_xlarge = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_z1d.xlarge",
-    title=Title("Total running On-Demand z1d.xlarge instances"),
+    title=Title("Total running on-demand z1d.xlarge instances"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_RED,
 )
 
 metric_aws_ec2_running_ondemand_instances_f_vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_f_vcpu",
-    title=Title("Total running On-Demand F instances vCPUs"),
+    title=Title("Total running on-demand F instances vCPUs"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_g_vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g_vcpu",
-    title=Title("Total running On-Demand G instances vCPUs"),
+    title=Title("Total running on-demand G instances vCPUs"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_i_vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i_vcpu",
-    title=Title("Total running On-Demand Inf instances vCPUs"),
+    title=Title("Total running on-demand Inf instances vCPUs"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_p_vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_p_vcpu",
-    title=Title("Total running On-Demand P instances vCPUs"),
+    title=Title("Total running on-demand P instances vCPUs"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_x_vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x_vcpu",
-    title=Title("Total running On-Demand X instances vCPUs"),
+    title=Title("Total running on-demand X instances vCPUs"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances___vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances___vcpu",
-    title=Title("Total running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances vCPUs"),
+    title=Title("Total running on-demand Standard (A, C, D, H, I, M, R, T, Z) instances vCPUs"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )

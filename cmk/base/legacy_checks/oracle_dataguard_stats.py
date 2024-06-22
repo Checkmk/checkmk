@@ -147,8 +147,8 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
         and dgdata["dgstat"]["apply lag"] == ""
     ):
         # old sql cannot detect a started standby database without running media recovery
-        # => add an information for old plugin with possible wrong result
-        yield 0, "old plugin data found, recovery active?"
+        # => add an information for old plug-in with possible wrong result
+        yield 0, "old plug-in data found, recovery active?"
 
 
 check_info["oracle_dataguard_stats"] = LegacyCheckDefinition(

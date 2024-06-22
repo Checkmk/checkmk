@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
+import re
+from collections.abc import Sequence
 from typing import NamedTuple
 
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
-from cmk.utils.translations import translate_hostname, TranslationOptions
+from cmk.utils.translations import translate_raw_host_name, TranslationOptions
 
 __all__ = ["PiggybackMarker", "SectionMarker"]
 
@@ -17,40 +18,41 @@ __all__ = ["PiggybackMarker", "SectionMarker"]
 class PiggybackMarker(NamedTuple):
     hostname: HostName | None
 
-    @staticmethod
-    def is_header(line: bytes) -> bool:
-        return (
-            line.strip().startswith(b"<<<<")
-            and line.strip().endswith(b">>>>")
-            and not PiggybackMarker.is_footer(line)
-        )
-
-    @staticmethod
-    def is_footer(line: bytes) -> bool:
-        return line.strip() == b"<<<<>>>>"
-
     @classmethod
-    def from_headerline(
+    def from_header(
         cls,
-        line: bytes,
+        header: bytes,
         translation: TranslationOptions,
         *,
         encoding_fallback: str,
     ) -> "PiggybackMarker":
         # ? ensure_str called on a bytes object with different possible encodings
-        raw_host_name = ensure_str_with_fallback(
-            line.strip()[4:-4],
-            encoding="utf-8",
-            fallback=encoding_fallback,
+        raw_host_name = translate_raw_host_name(
+            translation,
+            ensure_str_with_fallback(
+                header,
+                encoding="utf-8",
+                fallback=encoding_fallback,
+            ),
         )
-        assert raw_host_name
+
+        if not raw_host_name:
+            # NOTE: We are never called with an empty header (otherwise we would be a footer), and
+            # decoding won't make a non-empty header empty, so raw_host_name is never empty, either.
+            # Nevertheless, host name translation *can* result in an empty name.
+            return cls(None)
 
         try:
-            hostname = translate_hostname(translation, raw_host_name)
-            # Note: hostname can be empty here, even though raw_host_name was not.
-            return cls(hostname or None)
+            return cls(HostAddress.project_valid(raw_host_name))
         except ValueError:
             return cls(None)
+
+    def should_be_ignored(self) -> bool:
+        return self.hostname is None or not HostAddress.is_valid(self.hostname)
+
+
+# option values of the form "FOO(BAR, BAZ)"
+_OPTION = re.compile(r"([^(]*?)\((.*)\)")
 
 
 class SectionMarker(NamedTuple):
@@ -61,70 +63,41 @@ class SectionMarker(NamedTuple):
     persist: int | None
     separator: str | None
 
-    @staticmethod
-    def is_header(line: bytes) -> bool:
-        line = line.strip()
-        return (
-            line.startswith(b"<<<")
-            and line.endswith(b">>>")
-            and not SectionMarker.is_footer(line)
-            and not PiggybackMarker.is_header(line)
-            and not PiggybackMarker.is_footer(line)
-        )
-
-    @staticmethod
-    def is_footer(line: bytes) -> bool:
-        # There is no section footer in the protocol but some non-compliant
-        # plugins still add one and we accept it.
-        return (
-            len(line) >= 6
-            and line == b"<<<>>>"
-            or (line.startswith(b"<<<:") and line.endswith(b">>>"))
-        )
-
     @classmethod
-    def default(cls, name: SectionName):  # type: ignore[no-untyped-def]
+    def default(cls, name: SectionName) -> "SectionMarker":
         return cls(name, None, "ascii", True, None, None)
 
     @classmethod
-    def from_headerline(cls, headerline: bytes) -> "SectionMarker":
-        def parse_options(elems: Iterable[str]) -> Iterable[tuple[str, str]]:
-            for option in elems:
-                if "(" not in option:
-                    continue
-                name, value = option.split("(", 1)
-                assert value[-1] == ")", value
-                yield name, value[:-1]
+    def from_header(cls, header: bytes) -> "SectionMarker":
+        section_name, *elems = header.decode().split(":")
+        # NOTE: We silenty ignore some syntactically invalid options below, but throw for others. Hmmm...
+        options = {
+            name_and_value[1]: name_and_value[2]
+            for option in elems
+            if (name_and_value := re.fullmatch(_OPTION, option))
+        }
 
-        if not SectionMarker.is_header(headerline):
-            raise ValueError(headerline)
-
-        headerparts = headerline[3:-3].decode().split(":")
-        options = dict(parse_options(headerparts[1:]))
-        cached: tuple[int, int] | None
         try:
             cached_ = tuple(map(int, options["cached"].split(",")))
-            cached = cached_[0], cached_[1]
+            cached: tuple[int, int] | None = cached_[0], cached_[1]
         except KeyError:
             cached = None
 
         encoding = options.get("encoding", "utf-8")
         nostrip = options.get("nostrip") is not None
 
-        persist: int | None
         try:
-            persist = int(options["persist"])
+            persist: int | None = int(options["persist"])
         except KeyError:
             persist = None
 
-        separator: str | None
         try:
-            separator = chr(int(options["sep"]))
+            separator: str | None = chr(int(options["sep"]))
         except KeyError:
             separator = None
 
         return SectionMarker(
-            name=SectionName(headerparts[0]),
+            name=SectionName(section_name),
             cached=cached,
             encoding=encoding,
             nostrip=nostrip,

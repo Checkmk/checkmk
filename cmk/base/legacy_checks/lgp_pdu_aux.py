@@ -81,7 +81,7 @@ def lgp_pdu_aux_fmt(info):
     new_info = {}
     for oid, value in info:
         type_, id_ = oid.split(".", 1)
-        if not id_ in new_info:
+        if id_ not in new_info:
             new_info[id_] = {"TypeIndex": id_.split(".")[-1]}
 
         try:

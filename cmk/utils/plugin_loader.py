@@ -28,7 +28,7 @@ def load_plugins(
 
     Returns:
         A generator of 2-tuples of plugin-name and module or exception,
-        when a plugin failed to import.
+        when a plug-in failed to import.
 
     Raises:
         Nothing explicit. Possibly ImportErrors.
@@ -66,7 +66,7 @@ def load_plugins_with_exceptions(package_name: str) -> PluginFailures:
             A valid module path in Python's dotted syntax.
 
     Returns:
-        A generator of 2-tuples of plugin-name and exception, when a plugin failed to
+        A generator of 2-tuples of plugin-name and exception, when a plug-in failed to
         import. An empty generator if everything succeeded.
 
     Raises:

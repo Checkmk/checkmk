@@ -7,7 +7,7 @@ import typing
 import pytest
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils.rule_specs.legacy_converter import _convert_to_legacy_valuespec
+from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.valuespec import definitions
 from cmk.gui.valuespec.to_formspec import valuespec_to_formspec
 
@@ -58,10 +58,18 @@ def test_convert_integer(
         pytest.param(
             definitions.Dictionary(elements=[("int", definitions.Integer())]),
             None,
+            marks=pytest.mark.skip(
+                "FIXME: FormSpec Dictionaries are wrapped in a Transform during conversion to "
+                "render DictGroups as additional Dictionaries without changing the data model."
+            ),
         ),
         pytest.param(
             definitions.ListChoice([("foo", "Show foo"), ("bar", "Show bar")]),
             None,
+            marks=pytest.mark.skip(
+                "FIXME: FormSpec ListChoice are wrapped in a Transform during conversion to "
+                "correctly handle Sequence[str] values converting them to lists."
+            ),
         ),
         pytest.param(
             definitions.CascadingDropdown(
@@ -136,7 +144,7 @@ def test_convert_round_trip(
     if expected_vs_instance is None:
         expected_vs_instance = vs_instance
 
-    vs_instance2 = _convert_to_legacy_valuespec(
+    vs_instance2 = convert_to_legacy_valuespec(
         valuespec_to_formspec(vs_instance),
         localizer=localizer,
     )

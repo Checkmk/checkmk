@@ -200,13 +200,12 @@ class ListExpression(UnaryExpression):
         if not other:
             # Check for empty list
             op = "="
+        elif ignore_case:
+            # case-insensitive equality
+            op = "<="
         else:
-            if ignore_case:
-                # case-insensitive equality
-                op = "<="
-            else:
-                # equality
-                op = ">="
+            # equality
+            op = ">="
         return self.op(op, other)
 
     def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:

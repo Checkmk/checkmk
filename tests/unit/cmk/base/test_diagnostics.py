@@ -20,7 +20,7 @@ import livestatus
 
 import cmk.utils.paths
 
-import cmk.base.diagnostics as diagnostics
+from cmk.base import diagnostics
 
 
 @pytest.fixture(autouse=True)
@@ -142,9 +142,9 @@ def test_diagnostics_element_general_content(
 def test_diagnostics_element_perfdata() -> None:
     diagnostics_element = diagnostics.PerfDataDiagnosticsElement()
     assert diagnostics_element.ident == "perfdata"
-    assert diagnostics_element.title == "Performance Data"
+    assert diagnostics_element.title == "Performance data"
     assert diagnostics_element.description == (
-        "Performance Data related to sizing, e.g. number of helpers, hosts, services"
+        "Performance data related to sizing, e.g. number of helpers, hosts, services"
     )
 
 
@@ -362,11 +362,11 @@ def test_diagnostics_element_checkmk_overview() -> None:
     assert diagnostics_element.ident == "checkmk_overview"
     assert diagnostics_element.title == "Checkmk Overview of Checkmk Server"
     assert diagnostics_element.description == (
-        "Checkmk Agent, Number, version and edition of sites, Cluster host; "
-        "Number of hosts, services, CMK Helper, Live Helper, "
-        "Helper usage; State of daemons: Apache, Core, Crontag, "
+        "Checkmk Agent, Number, version and edition of sites, cluster host; "
+        "number of hosts, services, CMK Helper, Live Helper, "
+        "Helper usage; state of daemons: Apache, Core, Crontab, "
         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-        "(Agent plugin mk_inventory needs to be installed)"
+        "(Agent plug-in mk_inventory needs to be installed)"
     )
 
 
@@ -577,6 +577,7 @@ def test_diagnostics_element_checkmk_files_error(
         ),
         (diagnostics.CheckmkLogFilesDiagnosticsElement, cmk.utils.paths.log_dir, "test.log"),
     ],
+    ids=["conf", "log"],
 )
 def test_diagnostics_element_checkmk_files_content(tmp_path, diag_elem, test_dir, test_filename):
     test_conf_dir = Path(test_dir) / "test"
@@ -795,7 +796,7 @@ def test_diagnostics_element_crash_dumps_content(tmp_path):
 
     relative_path = cmk.utils.paths.crash_dir.relative_to(cmk.utils.paths.omd_root)
     test_filename = f"{test_uuid}.tar.gz"
-    assert filepath == tmppath.joinpath(relative_path).joinpath("%s/%s" % (category, test_filename))
+    assert filepath == tmppath.joinpath(relative_path).joinpath(f"{category}/{test_filename}")
 
     import tarfile
 

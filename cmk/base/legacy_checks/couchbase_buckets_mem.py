@@ -25,14 +25,14 @@ def discover_couchbase_buckets_mem(section: Section) -> DiscoveryResult:
 def check_couchbase_bucket_mem(item, params, parsed):
     if not (data := parsed.get(item)):
         return
-    warn, crit = params.get("levels", (None, None))
-    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    levels = params.get("levels")
+    mode = "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used"
     try:
         yield check_memory_element(
             "Usage",
             data["mem_total"] - data["mem_free"],
             data["mem_total"],
-            (mode, (warn, crit)),
+            (mode, levels),
             metric_name="memused_couchbase_bucket",
         )
     except (KeyError, TypeError):
@@ -65,4 +65,5 @@ check_info["couchbase_buckets_mem"] = LegacyCheckDefinition(
     discovery_function=discover_couchbase_buckets_mem,
     check_function=check_couchbase_bucket_mem,
     check_ruleset_name="memory_multiitem",
+    check_default_parameters={"levels": None},
 )

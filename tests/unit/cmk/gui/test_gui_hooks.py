@@ -13,7 +13,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.hooks as hooks
+from cmk.gui import hooks
 from cmk.gui.pages import Page, page_registry
 
 
@@ -102,7 +102,7 @@ def test_request_memoize_request_integration(
 
 
 def test_request_memoize_unregister() -> None:
-    # Make sure request-start hooks are still called, after plugin hooks are
+    # Make sure request-start hooks are still called, after plug-in hooks are
     # unregistered. In previous versions unregister_plugin_hooks also
     # unregistered hooks used by memoize.
 

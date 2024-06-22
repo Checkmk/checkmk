@@ -70,16 +70,17 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
                         ),
                         CascadingSingleChoiceElement(
                             name="hostname",
-                            title=Title("Use hostname"),
+                            title=Title("Use host name"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(
                             name="custom_hostname",
-                            title=Title("Use other hostname"),
+                            title=Title("Use other host name"),
                             parameter_form=String(
                                 help_text=Help(
                                     "Use a custom name for the SSL certificate validation"
                                 ),
+                                macro_support=True,
                             ),
                         ),
                     ],

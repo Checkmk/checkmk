@@ -8,7 +8,7 @@
 
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
-from cmk.gui.valuespec import Dictionary, Transform
+from cmk.gui.valuespec import Dictionary, Migrate, Transform, ValueSpec
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
@@ -19,6 +19,12 @@ from cmk.gui.watolib.rulespecs import (
 _KNOWN_OFFENDERS = {
     "inv_retention_intervals",
 }
+
+
+def _get_first_actual_valuespec(vspec: ValueSpec) -> ValueSpec:
+    if isinstance(vspec, (Transform, Migrate)):
+        return _get_first_actual_valuespec(vspec._valuespec)
+    return vspec
 
 
 def test_plugin_parameters_are_dict() -> None:
@@ -38,9 +44,7 @@ def test_plugin_parameters_are_dict() -> None:
         if isinstance(vspec, TimeperiodValuespec):
             vspec = vspec._enclosed_valuespec
 
-        if isinstance(vspec, Dictionary):
-            continue
-        if isinstance(vspec, Transform) and isinstance(vspec._valuespec, Dictionary):
+        if isinstance(_get_first_actual_valuespec(vspec), Dictionary):
             continue
 
         findings.add(element.name)

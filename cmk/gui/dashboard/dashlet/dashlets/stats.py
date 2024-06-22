@@ -10,9 +10,8 @@ from typing import Generic, NamedTuple, TypeVar
 
 from livestatus import MKLivestatusNotFoundError
 
-import cmk.gui.sites as sites
-import cmk.gui.visuals as visuals
-from cmk.gui.dashboard.type_defs import DashletConfig
+from cmk.gui import sites, visuals
+from cmk.gui.dashboard.type_defs import DashletConfig, DashletSize
 from cmk.gui.figures import FigureResponseData
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -78,9 +77,7 @@ class ServiceStats(NamedTuple):
     unknown: int
     critical: int
 
-    def get_parts_data(  # type: ignore[no-untyped-def]
-        self, general_url_vars
-    ) -> list[tuple[str, str, int, str]]:
+    def get_parts_data(self, general_url_vars: HTTPVariables) -> list[tuple[str, str, int, str]]:
         return [
             (
                 _("OK"),
@@ -138,9 +135,7 @@ class EventStats(NamedTuple):
     unknown: int
     critical: int
 
-    def get_parts_data(  # type: ignore[no-untyped-def]
-        self, general_url_vars
-    ) -> list[tuple[str, str, int, str]]:
+    def get_parts_data(self, general_url_vars: HTTPVariables) -> list[tuple[str, str, int, str]]:
         return [
             (
                 _("Ok"),
@@ -199,15 +194,15 @@ class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
         )
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "hoststats"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Host statistics")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Displays statistics about host states as a hexagon and a table.")
 
     @classmethod
@@ -219,7 +214,7 @@ class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
         return False
 
     @classmethod
-    def initial_size(cls):
+    def initial_size(cls) -> DashletSize:
         return (30, 18)
 
     def infos(self) -> SingleInfos:
@@ -233,15 +228,15 @@ class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
         )
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "servicestats"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Service statistics")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Displays statistics about service states as a hexagon and a table.")
 
     @classmethod
@@ -253,7 +248,7 @@ class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
         return False
 
     @classmethod
-    def initial_size(cls):
+    def initial_size(cls) -> DashletSize:
         return (30, 18)
 
 
@@ -264,15 +259,15 @@ class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
         )
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "eventstats"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Event statistics")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Displays statistics about events as a hexagon and a table.")
 
     @classmethod
@@ -284,8 +279,11 @@ class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
         return False
 
     @classmethod
-    def initial_size(cls):
+    def initial_size(cls) -> DashletSize:
         return (30, 18)
+
+    def infos(self) -> SingleInfos:
+        return ["host", "event"]
 
 
 S = TypeVar("S", bound=HostStats | ServiceStats | EventStats)
@@ -335,16 +333,11 @@ class StatsDashletDataGenerator(Generic[S], abc.ABC):
     def _get_stats(
         cls, dashlet_spec: StatsDashletConfig, context: VisualContext, infos: SingleInfos
     ) -> S:
-        filter_headers, only_sites = visuals.get_filter_headers(
-            table=cls._livestatus_table(), infos=infos, context=context
-        )
+        filter_headers, only_sites = visuals.get_filter_headers(infos=infos, context=context)
         query = cls._stats_query() + "\n" + filter_headers
         try:
-            if only_sites:
-                with sites.only_sites(only_sites):
-                    result: list[int] = sites.live().query_row(query)
-            else:
-                result = sites.live().query_summed_stats(query)
+            with sites.only_sites(only_sites):
+                result: list[int] = sites.live().query_summed_stats(query)
         except MKLivestatusNotFoundError:
             result = []
 

@@ -16,17 +16,21 @@ GCC_MINOR=$(get_version "$SCRIPT_DIR" GCC_VERSION_MINOR)
 GCC_PATCHLEVEL=$(get_version "$SCRIPT_DIR" GCC_VERSION_PATCHLEVEL)
 GCC_VERSION="${GCC_MAJOR}.${GCC_MINOR}.${GCC_PATCHLEVEL}"
 
+PYTHON_VERSION=$(get_version "$SCRIPT_DIR" PYTHON_VERSION)
+
 GDB_VERSION="13.2"
 GDB_ARCHIVE_NAME="gdb-${GDB_VERSION}.tar.gz"
 GDB_URL="${MIRROR_URL}gdb/${GDB_ARCHIVE_NAME}"
 
-DIR_NAME=gcc-${GCC_VERSION}
+DIR_NAME=gdb-${GDB_VERSION}
 TARGET_DIR="${TARGET_DIR:-/opt}"
 PREFIX=${TARGET_DIR}/${DIR_NAME}
+GCC_PREFIX=${TARGET_DIR}/gcc-${GCC_VERSION}
 BUILD_DIR="${TARGET_DIR}/src"
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID="${GDB_VERSION}-1"
+# GDB requires libpython3.12.so.1.0, depending on the Python version
+BUILD_ID="${GDB_VERSION}-${PYTHON_VERSION}-1"
 
 download_sources() {
     # Get the sources from nexus or upstream
@@ -45,8 +49,8 @@ build_gdb() {
     cd gdb-${GDB_VERSION}-build
     ../gdb-${GDB_VERSION}/configure \
         --prefix="${PREFIX}" \
-        CC="${PREFIX}/bin/gcc-${GCC_MAJOR}" \
-        CXX="${PREFIX}/bin/g++-${GCC_MAJOR}" \
+        CC="${GCC_PREFIX}/bin/gcc-${GCC_MAJOR}" \
+        CXX="${GCC_PREFIX}/bin/g++-${GCC_MAJOR}" \
         "$(python -V 2>&1 | grep -q 'Python 2\.4\.' && echo "--with-python=no")"
     make -j4
     make install

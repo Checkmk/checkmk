@@ -7,7 +7,7 @@
 from contextlib import suppress
 from typing import cast
 
-import cmk.gui.visuals as visuals
+from cmk.gui import visuals
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.hooks import request_memoize

@@ -30,9 +30,11 @@
 #pragma comment(lib, "iphlpapi.lib")
 
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 using namespace std::chrono_literals;
 
 namespace wtools {
+
 bool ChangeAccessRights(
     const wchar_t *object_name,   // name of object
     SE_OBJECT_TYPE object_type,   // type of object
@@ -615,8 +617,8 @@ void ServiceController::setServiceStatus(DWORD current_state,
             : check_point++;
 
     const auto ret = ::SetServiceStatus(status_handle_, &status_);
-    XLOG::l("Setting state {} result {}", current_state,
-            ret != 0 ? 0 : GetLastError());
+    XLOG::l.i("Setting service state {} result {}", current_state,
+              ret != 0 ? 0 : GetLastError());
 }
 
 void ServiceController::initStatus(bool can_stop, bool can_shutdown,
@@ -2663,8 +2665,16 @@ std::wstring GenerateCmaUserNameInGroup(std::wstring_view group,
         return {};
     }
 
-    return prefix.empty() ? std::wstring{}
-                          : std::wstring{prefix} + group.data();
+    auto group_name = std::wstring{group};
+    rs::replace(group_name, ' ', '_');
+    auto name =
+        prefix.empty() ? std::wstring{} : std::wstring{prefix} + group_name;
+    // sometimes some Windows may restrict user name length
+    if (name.size() > 20) {
+        XLOG::l("User name '{}' is too long", ToUtf8(name));
+        name = name.substr(0, 20);
+    }
+    return name;
 }
 
 std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
@@ -2685,29 +2695,41 @@ InternalUser CreateCmaUserInGroup(const std::wstring &group_name,
 
     auto pwd = GenerateRandomString(12);
 
-    uc::LdapControl primary_dc;
-    const auto ret = primary_dc.userDel(name);
-    XLOG::t(ret == uc::Status::success ? "delete success" : "delete fail");
+    const uc::LdapControl primary_dc;
     const auto add_user_status = primary_dc.userAdd(name, pwd);
-    if (add_user_status != uc::Status::success) {
-        XLOG::l("Can't add user '{}'", ToUtf8(name));
+    switch (add_user_status) {
+        case uc::Status::success:
+            break;
+        case uc::Status::exists:
+            XLOG::d.i("User '{}' already exists, updating credentials",
+                      ToUtf8(name));
+            if (primary_dc.changeUserPassword(name, pwd) !=
+                uc::Status::success) {
+                XLOG::l("Failed to change password for user '{}'",
+                        ToUtf8(name));
+                return {};
+            }
+            return {name, pwd};
+        case uc::Status::error:
+        case uc::Status::no_domain_service:
+        case uc::Status::absent:
+            XLOG::l("Can't add user '{}' status = {}", ToUtf8(name),
+                    static_cast<int>(add_user_status));
+            return {};
+    }
+
+    if (primary_dc.localGroupAddMembers(group_name, name) ==
+        uc::Status::error) {
+        XLOG::l("Can't add user '{}' to group_name '{}'", ToUtf8(name),
+                ToUtf8(group_name));
+        if (add_user_status == uc::Status::success) {
+            const auto del_ret = primary_dc.userDel(name);
+            XLOG::t("recover delete state {}", static_cast<int>(del_ret));
+        }
+
         return {};
     }
-
-    if (primary_dc.localGroupAddMembers(group_name, name) !=
-        uc::Status::error) {
-        return {name, pwd};
-    }
-
-    XLOG::l("Can't add user '{}' to group_name '{}'", ToUtf8(name),
-            ToUtf8(group_name));
-    if (add_user_status == uc::Status::success) {
-        const auto primary_ret = primary_dc.userDel(name);
-        XLOG::t(primary_ret == uc::Status::success ? "delete success"
-                                                   : "delete faid");
-    }
-
-    return {};
+    return {name, pwd};
 }
 
 bool RemoveCmaUser(const std::wstring &user_name) noexcept {
@@ -3644,6 +3666,11 @@ InternalUser InternalUsersDb::obtainUser(std::wstring_view group) {
 }
 
 void InternalUsersDb::killAll() {
+    if (cma::GetModus() == cma::Modus::service) {
+        XLOG::d.i("service doesn't delete own users");
+        return;
+    }
+
     std::lock_guard lk(users_lock_);
     for (const auto &iu : users_ | std::views::values) {
         RemoveCmaUser(iu.first);

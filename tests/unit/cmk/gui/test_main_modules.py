@@ -52,7 +52,7 @@ def test_load_local_plugin(main_module_name: str) -> None:
     assert "ding" not in main_module.__dict__
 
     try:
-        # Special case: watolib plugin loading is triggered by wato main module
+        # Special case: watolib plug-in loading is triggered by wato main module
         main_modules._call_load_plugins_hooks(
             [
                 (
@@ -92,7 +92,7 @@ def fixture_plugin_module_dir(request):
 
 def test_plugins_loaded(plugin_module_dir: str) -> None:
     if plugin_module_dir == "bi":
-        raise pytest.skip("No plugin at the moment")
+        raise pytest.skip("No plug-in at the moment")
 
     loaded_module_names = [
         name  #

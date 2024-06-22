@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # SIGNL4 Alerting
 
 # (c) 2023 Derdack GmbH - License: GNU Public License v2
@@ -40,12 +39,11 @@ def _signl4_msg(context: dict[str, str]) -> dict[str, object]:
             description += " (" + service_desc + ")"
         else:
             description += " (" + service_desc + ")"
+    elif notification_type in ["PROBLEM", "RECOVERY"]:
+        host_state = context.get("HOSTSTATE", "") or ""
+        description += " (" + host_state + ")"
     else:
-        if notification_type in ["PROBLEM", "RECOVERY"]:
-            host_state = context.get("HOSTSTATE", "") or ""
-            description += " (" + host_state + ")"
-        else:
-            description += " (" + host_state + ")"
+        description += " (" + host_state + ")"
     # Remove placeholder "$SERVICEPROBLEMID$" if exists
     if service_problem_id.find("$") != -1:
         service_problem_id = ""

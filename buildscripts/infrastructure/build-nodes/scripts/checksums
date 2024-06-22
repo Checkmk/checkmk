@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Outputs details with checksums of files contained in provided directories.
+# To be used to find differences in directories.
+
+print_details() {
+    if [ -d "$1" ]; then
+        stat --printf="%n %A %s" "$1"
+    else
+        echo "$(stat --printf="%n %A %s" "$1") $(sha1sum "$1" | cut -d' ' -f1)"
+    fi
+}
+export -f print_details
+
+for path in "$@"; do
+    find "${path}" -print0 |
+        xargs -0 -n 1 -P 10 -I {} bash -c 'print_details "$@"' _ {} |
+        sort
+done

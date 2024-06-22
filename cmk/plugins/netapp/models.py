@@ -15,7 +15,7 @@ Docs:
 """
 import datetime
 from collections.abc import Sequence
-from typing import Any, Literal, Union
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -585,7 +585,7 @@ class EnvironmentDiscreteSensorModel(EnvironmentSensorModel):
 
 
 class DiscrimnatorEnvSensorModel(BaseModel):
-    sensor: Union[EnvironmentThresholdSensorModel, EnvironmentDiscreteSensorModel] = Field(
+    sensor: EnvironmentThresholdSensorModel | EnvironmentDiscreteSensorModel = Field(
         discriminator="sensor_type"
     )
 

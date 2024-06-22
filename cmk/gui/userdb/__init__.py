@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.type_defs import Users, UserSpec
 
 from ._check_credentials import (
@@ -21,6 +21,7 @@ from ._connections import (
     ActivePlugins,
     builtin_connections,
     clear_user_connection_cache,
+    ConfigurableUserConnectionSpec,
     connection_choices,
     connections_by_type,
     CUSTOM_USER_ATTRIBUTE,
@@ -37,31 +38,34 @@ from ._connections import (
     GroupsToAttributes,
     GroupsToContactGroups,
     GroupsToSync,
+    HtpasswdUserConnectionConfig,
     ICONS_PER_ITEM,
     LDAPConnectionConfigDiscover,
     LDAPConnectionConfigFixed,
-    LDAPConnectionTypedDict,
+    LDAPUserConnectionConfig,
     load_connection_config,
     locked_attributes,
     multisite_attributes,
     NAV_HIDE_ICONS_TITLE,
     non_contact_attributes,
     OPEN_LDAP,
-    SAMLConnectionTypedDict,
+    register_config_file,
+    SAMLUserConnectionConfig,
     save_connection_config,
+    save_snapshot_user_connection_config,
     SHOW_MODE,
     START_URL,
     SyncAttribute,
     TEMP_UNIT,
     UI_SIDEBAR_POSITIONS,
     UI_THEME,
-    UserConnection,
-    UserConnectionSpec,
+    UserConnectionConfigFile,
 )
 from ._connector import (
     CheckCredentialsResult,
     ConnectorType,
     user_connector_registry,
+    UserConnectionConfig,
     UserConnector,
     UserConnectorRegistry,
 )
@@ -69,7 +73,7 @@ from ._custom_attributes import update_config_based_user_attributes
 from ._find_usage import find_timeperiod_usage_in_notification_rule
 from ._need_to_change_pw import is_automation_user, need_to_change_pw
 from ._on_failed_login import on_failed_login
-from ._roles import load_roles, load_roles_from_file
+from ._roles import load_roles, register_userroles_config_file, UserRole, UserRolesConfigFile
 from ._two_factor import (
     disable_two_factor_authentication,
     is_two_factor_backup_code_valid,
@@ -163,7 +167,6 @@ __all__ = [
     "load_custom_attr",
     "load_multisite_users",
     "load_roles",
-    "load_roles_from_file",
     "load_session_infos",
     "load_two_factor_credentials",
     "load_user",
@@ -171,7 +174,7 @@ __all__ = [
     "locked_attributes",
     "LDAPConnectionConfigDiscover",
     "LDAPConnectionConfigFixed",
-    "LDAPConnectionTypedDict",
+    "LDAPUserConnectionConfig",
     "make_two_factor_backup_codes",
     "multisite_attributes",
     "need_to_change_pw",
@@ -180,18 +183,23 @@ __all__ = [
     "NAV_HIDE_ICONS_TITLE",
     "on_failed_login",
     "OPEN_LDAP",
+    "UserConnectionConfigFile",
+    "register_config_file",
+    "register_userroles_config_file",
     "release_users_lock",
     "remove_custom_attr",
     "rewrite_users",
     "save_connection_config",
     "save_custom_attr",
+    "save_snapshot_user_connection_config",
     "save_two_factor_credentials",
     "save_users",
     "show_mode_choices",
     "SyncAttribute",
     "SHOW_MODE",
     "START_URL",
-    "SAMLConnectionTypedDict",
+    "SAMLUserConnectionConfig",
+    "HtpasswdUserConnectionConfig",
     "TEMP_UNIT",
     "update_config_based_user_attributes",
     "user_attribute_registry",
@@ -203,8 +211,10 @@ __all__ = [
     "user_sync_default_config",
     "UserAttribute",
     "UserAttributeRegistry",
-    "UserConnection",
-    "UserConnectionSpec",
+    "UserConnectionConfig",
+    "ConfigurableUserConnectionSpec",
+    "UserRole",
+    "UserRolesConfigFile",
     "UserConnector",
     "UserConnectorRegistry",
     "UserSelection",

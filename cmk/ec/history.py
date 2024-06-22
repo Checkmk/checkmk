@@ -130,7 +130,7 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
     # compute currently active period
     if active_history_period.value is None or timestamp > active_history_period.value:
         # Look if newer files exist
-        timestamps = sorted(int(str(path.name)[:-4]) for path in log_dir.glob("*.log"))
+        timestamps = sorted(int(path.stem) for path in log_dir.glob("*.log"))
         if len(timestamps) > 0:
             timestamp = max(timestamps[-1], timestamp)
 
@@ -141,7 +141,6 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
 
 def _current_history_period(config: Config) -> int:
     """Return timestamp of the beginning of the current history period."""
-
     today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
     return int(

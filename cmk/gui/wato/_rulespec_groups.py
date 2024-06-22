@@ -48,9 +48,9 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
         return _(
             "Rules that influence the discovery of services. These rules "
             "allow, for example, the execution of a periodic service "
-            "discovery or the deactivation of check plugins and services. "
-            "Additionally, the discovery of individual check plugins like "
-            "for example the interface check plugin can "
+            "discovery or the deactivation of check plug-ins and services. "
+            "Additionally, the discovery of individual check plug-ins like "
+            "for example the interface check plug-in can "
             "be customized."
         )
 
@@ -331,8 +331,8 @@ class RulespecGroupIntegrateOtherServices(RulespecGroup):
     @property
     def help(self):
         return _(
-            "This services are provided by so called active checks. "
-            "You can also integrate custom nagios plugins."
+            "These services are provided by so called active checks. "
+            "You can also integrate custom Nagios plug-ins."
         )
 
 

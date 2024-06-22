@@ -13,7 +13,7 @@
 # db2taddm:CMDBS6 deadlocks 99
 # db2taddm:CMDBS6 lockwaits 91
 # db2taddm:CMDBS6 sortoverflows 237
-#### Example for database in DPF mode
+# Example for database in DPF mode ##
 # TIMESTAMP 1439976757
 # db2ifa:DDST1 node 0 iasv0091 0
 # db2ifa:DDST1 node 1 iasv0091 1

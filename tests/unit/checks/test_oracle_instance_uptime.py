@@ -20,9 +20,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.oracle_instance_section import parse_oracle_instance
 
 from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData
+from cmk.plugins.oracle.agent_based.oracle_instance_section import parse_oracle_instance
 
 
 def test_discover_oracle_instance_uptime(fix_register: FixRegister) -> None:

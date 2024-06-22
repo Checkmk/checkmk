@@ -23,6 +23,7 @@ import cmk.gui.userdb.session  # NOQA  # pylint: disable=unused-import
 from cmk.gui import config, userdb
 from cmk.gui.auth import check_auth, parse_and_check_cookie, SiteInternalPseudoUser
 from cmk.gui.exceptions import MKAuthException
+from cmk.gui.i18n import _
 from cmk.gui.log import AuthenticationSuccessEvent
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.type_defs import AuthType, SessionId, SessionInfo
@@ -224,7 +225,9 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         ):
             self._flash_message(
                 "warning",
-                "Maximum session duration almost reached. Re-authenticate session to prevent dataloss.",
+                _(
+                    "Maximum session duration almost reached. Re-authenticate session to prevent data loss."
+                ),
             )
 
     def _flash_message(self, msg_type: MSG_TYPET, message: str) -> None:

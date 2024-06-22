@@ -12,7 +12,6 @@ case "$DISTRO" in
 
         apt-get update
         apt-get install -y musl-tools
-        rm -rf /var/lib/apt/lists/*
 
         # Test the installation
         musl-gcc --version || exit $?

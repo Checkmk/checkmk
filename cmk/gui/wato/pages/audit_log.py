@@ -7,7 +7,7 @@
 import time
 from collections.abc import Collection, Iterator
 
-import cmk.utils.render as render
+from cmk.utils import render
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.display_options import display_options
@@ -43,6 +43,7 @@ from cmk.gui.valuespec import (
     Integer,
     RegExp,
     TextInput,
+    ValueSpec,
 )
 from cmk.gui.wato.pages.activate_changes import render_object_ref
 from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
@@ -258,7 +259,7 @@ class ModeAuditLog(WatoMode):
     def _render_filter_form(self) -> HTML:
         with output_funnel.plugged():
             self._display_audit_log_options()
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
@@ -279,7 +280,7 @@ class ModeAuditLog(WatoMode):
     def page(self) -> None:
         with html.form_context("fileselection_form", method="POST"):
             if not request.has_var("file_selection"):
-                html.write_text(_("Please choose an audit log to view:"))
+                html.write_text_permissive(_("Please choose an audit log to view:"))
                 html.br()
                 html.br()
             self._vs_file_selection().render_input("file_selection", None)
@@ -394,11 +395,13 @@ class ModeAuditLog(WatoMode):
                         _("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"]
                     )
 
-                text = HTML(escaping.escape_text(entry.text).replace("\n", "<br>\n"))
+                text = HTML.without_escaping(
+                    escaping.escape_text(entry.text).replace("\n", "<br>\n")
+                )
                 table.cell(_("Summary"), text)
 
                 if self._show_details:
-                    diff_text = HTML(
+                    diff_text = HTML.without_escaping(
                         escaping.escape_text(entry.diff_text).replace("\n", "<br>\n")
                         if entry.diff_text
                         else ""
@@ -543,7 +546,7 @@ class ModeAuditLog(WatoMode):
 
             for name, vs in self._audit_log_options():
 
-                def renderer(name=name, vs=vs) -> None:  # type: ignore[no-untyped-def]
+                def renderer(name: str = name, vs: ValueSpec = vs) -> None:
                     vs.render_input("options_" + name, self._options[name])
 
                 html.render_floating_option(name, "single", vs.title(), renderer)

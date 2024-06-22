@@ -17,12 +17,14 @@ configure_make(
         "gsf-office-thumbnailer",
         "gsf-vba-dump",
     ],
-    out_data_dirs = ["share"],
+    out_data_dirs = [
+        "share",
+        "lib/pkgconfig",
+    ],
     out_shared_libs = [
         "libgsf-1.so",
         "libgsf-1.so.114",
         "libgsf-1.so.114.0.44",
-        "pkgconfig",
     ],
     out_static_libs = [
         "libgsf-1.a",

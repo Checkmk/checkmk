@@ -5,6 +5,8 @@
 
 from typing import Final
 
+import pytest
+
 from cmk.graphing.v1 import Title
 
 _TRANSLATABLE_STRINGS: Final = {
@@ -15,6 +17,7 @@ _TRANSLATABLE_STRINGS: Final = {
     "horst": "This should not be used.",
     "One sentence. ": "blah",
     "Another sentence.": "blah",
+    "is %s": "I am %s",
 }
 
 
@@ -41,3 +44,25 @@ class TestTitle:
         assert (Title("One sentence. ") + Title("Another sentence.")).localize(
             _localizer
         ) == "blahblah"
+
+    @pytest.mark.parametrize(
+        ["title1", "title2", "expected_equality"],
+        [
+            pytest.param(Title("same"), Title("same"), True, id="equal"),
+            pytest.param(Title("same"), Title("different"), False, id="not equal"),
+            pytest.param(
+                (Title("is %s") % "same").localize(_localizer),
+                (Title("is %s") % "same").localize(_localizer),
+                True,
+                id="localized equal",
+            ),
+            pytest.param(
+                (Title("is %s") % "same").localize(_localizer),
+                (Title("is %s") % "different").localize(_localizer),
+                False,
+                id="localized unequal",
+            ),
+        ],
+    )
+    def test_eq(self, title1: Title, title2: Title, expected_equality: bool) -> None:
+        assert (title1 == title2) is expected_equality

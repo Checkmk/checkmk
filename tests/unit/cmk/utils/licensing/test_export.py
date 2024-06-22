@@ -9,10 +9,10 @@ from typing import Any, Literal
 import pytest
 
 from cmk.utils.licensing.export import (
-    LicenseUsageExtensions,
+    _parse_extensions,
+    make_parser,
     RawSubscriptionDetailsForAggregation,
     SubscriptionDetails,
-    SubscriptionDetailsError,
     SubscriptionDetailsForAggregation,
     SubscriptionDetailsLimit,
     SubscriptionDetailsLimitType,
@@ -20,24 +20,35 @@ from cmk.utils.licensing.export import (
 
 
 @pytest.mark.parametrize(
+    "protocol_version", ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"]
+)
+@pytest.mark.parametrize(
     "raw_subscription_details",
     [
         {},
         ("manual", {}),
     ],
 )
-def test_subscription_details_broken(raw_subscription_details: Mapping[str, Any]) -> None:
-    with pytest.raises(SubscriptionDetailsError):
-        SubscriptionDetails.parse(raw_subscription_details)
+def test_subscription_details_broken(
+    protocol_version: Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"],
+    raw_subscription_details: Mapping[str, Any],
+) -> None:
+    with pytest.raises(KeyError):
+        make_parser(protocol_version).parse_subscription_details(raw_subscription_details)
 
 
-def test_subscription_details_empty_source() -> None:
-    assert SubscriptionDetails.parse(
+@pytest.mark.parametrize(
+    "protocol_version", ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"]
+)
+def test_subscription_details_empty_source(
+    protocol_version: Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"]
+) -> None:
+    assert make_parser(protocol_version).parse_subscription_details(
         {
             "subscription_start": 1,
             "subscription_end": 2,
             "subscription_limit": ("custom", "3"),
-        }
+        },
     ) == SubscriptionDetails(
         start=1,
         end=2,
@@ -49,20 +60,26 @@ def test_subscription_details_empty_source() -> None:
 
 
 @pytest.mark.parametrize(
+    "protocol_version", ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"]
+)
+@pytest.mark.parametrize(
     "raw_subscription_details_source",
     [
         "empty",
         "manual",
     ],
 )
-def test_subscription_details_source(raw_subscription_details_source: str) -> None:
-    assert SubscriptionDetails.parse(
+def test_subscription_details_source(
+    protocol_version: Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"],
+    raw_subscription_details_source: str,
+) -> None:
+    assert make_parser(protocol_version).parse_subscription_details(
         {
             "source": raw_subscription_details_source,
             "subscription_start": 1,
             "subscription_end": 2,
             "subscription_limit": ("custom", "3"),
-        }
+        },
     ) == SubscriptionDetails(
         start=1,
         end=2,
@@ -73,6 +90,9 @@ def test_subscription_details_source(raw_subscription_details_source: str) -> No
     )
 
 
+@pytest.mark.parametrize(
+    "protocol_version", ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"]
+)
 @pytest.mark.parametrize(
     "raw_subscription_details_limit, subscription_details_limit",
     [
@@ -149,15 +169,17 @@ def test_subscription_details_source(raw_subscription_details_source: str) -> No
     ],
 )
 def test_subscription_details_limit(
-    raw_subscription_details_limit: Any, subscription_details_limit: SubscriptionDetailsLimit
+    protocol_version: Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"],
+    raw_subscription_details_limit: Any,
+    subscription_details_limit: SubscriptionDetailsLimit,
 ) -> None:
-    assert SubscriptionDetails.parse(
+    assert make_parser(protocol_version).parse_subscription_details(
         {
             "source": "empty",
             "subscription_start": 1,
             "subscription_end": 2,
             "subscription_limit": raw_subscription_details_limit,
-        }
+        },
     ) == SubscriptionDetails(
         start=1,
         end=2,
@@ -365,18 +387,7 @@ def test_subscription_details_for_config(
 def test_LicenseUsageExtensions_parse_from_sample(
     raw_sample: dict, expected_ntop_enabled: bool
 ) -> None:
-    extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
-    assert extensions.ntop is expected_ntop_enabled
-
-
-@pytest.mark.parametrize(
-    "expected_ntop_enabled",
-    [pytest.param(True, id="ntop enabled"), pytest.param(False, id="ntop disabled")],
-)
-def test_LicenseUsageExtensions_parse(expected_ntop_enabled: bool) -> None:
-    extensions = LicenseUsageExtensions.parse(
-        LicenseUsageExtensions(ntop=expected_ntop_enabled).for_report()
-    )
+    extensions = _parse_extensions(raw_sample)
     assert extensions.ntop is expected_ntop_enabled
 
 

@@ -10,18 +10,12 @@ from typing import NewType
 
 from marshmallow import ValidationError
 
-from cmk.utils import store
-from cmk.utils.config_validation_layer.user_roles import validate_userroles
-
-from cmk.gui import hooks
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import UserRole, Users
-from cmk.gui.userdb import load_roles, load_users, save_users
+from cmk.gui.type_defs import Users
+from cmk.gui.userdb import load_roles, load_users, save_users, UserRole, UserRolesConfigFile
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.watolib.utils import multisite_dir
 
 RoleID = NewType("RoleID", str)
 
@@ -51,7 +45,7 @@ def clone_role(
         permissions=role_to_clone.permissions,
     )
     all_roles[RoleID(new_role_id)] = cloned_user_role
-    save_all_roles(all_roles)
+    UserRolesConfigFile().save({role.name: role.to_dict() for role in all_roles.values()})
 
     return cloned_user_role
 
@@ -96,22 +90,7 @@ def delete_role(role_id: RoleID) -> None:
     rename_user_role(role_id, None)  # Remove from existing users
 
     del all_roles[role_id]
-    save_all_roles(all_roles)
-
-
-def save_all_roles(all_roles: dict[RoleID, UserRole]) -> None:
-    roles_as_dicts: dict[str, dict] = {role.name: role.to_dict() for role in all_roles.values()}
-    validate_userroles(roles_as_dicts)
-    active_config.roles.update(roles_as_dicts)
-    store.mkdir(multisite_dir())
-    store.save_to_mk_file(
-        multisite_dir() + "roles.mk",
-        "roles",
-        roles_as_dicts,
-        pprint_value=active_config.wato_pprint_config,
-    )
-
-    hooks.call("roles-saved", roles_as_dicts)
+    UserRolesConfigFile().save({role.name: role.to_dict() for role in all_roles.values()})
 
 
 def rename_user_role(role_id: RoleID, new_role_id: RoleID | None) -> None:
@@ -175,4 +154,4 @@ def update_role(role: UserRole, old_roleid: RoleID, new_roleid: RoleID) -> None:
     all_roles: dict[RoleID, UserRole] = get_all_roles()
     del all_roles[old_roleid]
     all_roles[new_roleid] = role
-    save_all_roles(all_roles)
+    UserRolesConfigFile().save({role.name: role.to_dict() for role in all_roles.values()})

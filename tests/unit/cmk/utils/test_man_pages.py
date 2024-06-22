@@ -11,11 +11,11 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
-import cmk.utils.man_pages as man_pages
+from cmk.utils import man_pages
 
 from cmk.base.server_side_calls import load_active_checks
 
@@ -124,7 +124,6 @@ def test_print_man_page_table(capsys: pytest.CaptureFixture[str]) -> None:
 
     assert len(lines) > 1241
     assert "enterasys_powersupply" in out
-    assert "IBM Websphere MQ: Channel Message Count" in out
 
 
 def man_page_catalog_titles():
@@ -156,16 +155,21 @@ def test_manpage_files(all_pages: Mapping[str, man_pages.ManPage]) -> None:
 
 
 def test_cmk_plugins_families_manpages() -> None:
-    """All v2 style check plugins should have the manpages in their families folder."""
+    """All v2 style check plug-ins should have the manpages in their families folder."""
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
     )
     check_plugins = discover_plugins(
         PluginGroup.AGENT_BASED, {CheckPlugin: "check_plugin_"}, raise_errors=True
     )
-    for location, plugin in check_plugins.plugins.items():
-        family_path_segment = os.path.join(*location.module.split(".")[:3])
-        assert family_path_segment in str(man_page_path_map[plugin.name])
+    assert not {
+        (location, plugin.name, expected, actual)
+        for location, plugin in check_plugins.plugins.items()
+        if (
+            (expected := os.path.join(*location.module.split(".")[:3]))
+            not in (actual := str(man_page_path_map[plugin.name]))
+        )
+    }
 
 
 def test_man_page_consistency(

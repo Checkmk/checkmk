@@ -31,6 +31,5 @@ def test_check_mkevents_argument_parsing(
             name="hostname",
             macros={"$HOSTNAME$": "hostname", "$HOSTADDRESS$": "ipaddress"},
         ),
-        {},
     )
     assert command.command_arguments == expected_args

@@ -21,7 +21,7 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.version import parse_check_mk_version
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.i18n import _
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.type_defs import ColumnName

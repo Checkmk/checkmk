@@ -19,11 +19,12 @@ import pytest
 from pydantic import BaseModel
 from pytest import MonkeyPatch
 
-from tests.testlib import import_module_hack
 from tests.testlib.utils import wait_until
 
+from tests.unit.import_module_hack import import_module_hack
+
 import cmk.utils.debug
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.store import ObjectStore, TextSerializer
 from cmk.utils.store._file import FileIo, RealIo

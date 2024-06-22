@@ -12,9 +12,8 @@ import cmk.utils.tags
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.forms as forms
-import cmk.gui.watolib.bakery as bakery
 import cmk.gui.watolib.sites as watolib_sites
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -38,6 +37,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings, ValueSpec
 from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts, update_dns_cache
@@ -379,7 +379,7 @@ class ModeEditHost(ABCHostMode):
                 % update_dns_cache_result.n_updated
             )
             if update_dns_cache_result.failed_hosts:
-                infotext += "<br><br><b>Hostnames failed to lookup:</b> " + ", ".join(
+                infotext += "<br><br><b>Host names failed to lookup:</b> " + ", ".join(
                     ["<tt>%s</tt>" % h for h in update_dns_cache_result.failed_hosts]
                 )
             flash(infotext)
@@ -423,7 +423,7 @@ class ModeEditHost(ABCHostMode):
     def _vs_host_name(self):
         return FixedValue(
             value=self._host.name(),
-            title=_("Hostname"),
+            title=_("Host name"),
         )
 
 
@@ -682,7 +682,7 @@ class CreateHostMode(ABCHostMode):
 
     def _vs_host_name(self):
         return Hostname(
-            title=_("Hostname"),
+            title=_("Host name"),
         )
 
 

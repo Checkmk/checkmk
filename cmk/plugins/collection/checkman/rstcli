@@ -11,7 +11,7 @@ description:
  state, all others are treated as critical. Please let us know about other states
  you encounter.
 
- For this check to work, the rstcli tool and the matching agent plugin have to
+ For this check to work, the rstcli tool and the matching agent plug-in have to
  be installed.
 
  The utility {rstcli} can be downloaded from

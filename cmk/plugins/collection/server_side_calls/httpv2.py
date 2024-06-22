@@ -11,10 +11,12 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
+    EnvProxy,
     HostConfig,
-    HTTPProxy,
-    parse_http_proxy,
+    NoProxy,
     replace_macros,
+    Secret,
+    URLProxy,
 )
 
 _DAY: Final[int] = 24 * 3600
@@ -30,13 +32,6 @@ class TlsVersion(StrEnum):
     AUTO = "auto"
     TLS_1_2 = "tls_1_2"
     TLS_1_3 = "tls_1_3"
-
-
-class ProxyMode(StrEnum):
-    ENVIRONMENT = "environment"
-    NO_PROXY = "no_proxy"
-    GLOBAL = "global"
-    URL = "url"
 
 
 class RedirectPolicy(StrEnum):
@@ -56,11 +51,6 @@ class DocumentBodyOption(StrEnum):
 class LevelsType(StrEnum):
     NO_LEVELS = "no_levels"
     FIXED = "fixed"
-
-
-class Validation(StrEnum):
-    NO_VALIDATION = "no_validation"
-    VALIDATE = "validate"
 
 
 class HttpMethod(StrEnum):
@@ -90,11 +80,6 @@ class ContentType(StrEnum):
     TEXT_HTML = "text_html"
 
 
-class PasswordType(StrEnum):
-    PASSWORD = "password"
-    STORE = "store"
-
-
 class ServicePrefix(StrEnum):
     AUTO = "auto"
     NONE = "none"
@@ -104,15 +89,6 @@ class MatchType(StrEnum):
     STRING = "string"
     REGEX = "regex"
 
-
-ProxySpec = (
-    tuple[Literal[ProxyMode.ENVIRONMENT], Literal[ProxyMode.ENVIRONMENT]]
-    | tuple[Literal[ProxyMode.NO_PROXY], None]
-    | tuple[Literal[ProxyMode.GLOBAL], str]
-    | tuple[Literal[ProxyMode.URL], str]
-)
-
-PasswordSpec = tuple[PasswordType, str]
 
 FloatLevels = (
     tuple[Literal[LevelsType.NO_LEVELS], None]
@@ -148,19 +124,19 @@ class HeaderRegexSpec(BaseModel):
 
 class UserAuth(BaseModel):
     user: str
-    password: PasswordSpec
+    password: Secret
 
 
 class TokenAuth(BaseModel):
     header: str
-    token: PasswordSpec
+    token: Secret
 
 
 class Connection(BaseModel):
     method: tuple[HttpMethod, SendData | None]
     http_versions: HttpVersion | None = None
     tls_versions: EnforceTlsVersion | None = None
-    proxy: ProxySpec | None = None
+    proxy: URLProxy | EnvProxy | NoProxy | None = None
     redirects: RedirectPolicy | None = None
     timeout: float | None = None
     user_agent: str | None = None
@@ -215,11 +191,7 @@ class HttpSettings(BaseModel):
     connection: Connection | None = None
     response_time: FloatLevels | None = None
     server_response: ServerResponse | None = None
-    cert: (
-        tuple[Literal[Validation.NO_VALIDATION], None]
-        | tuple[Literal[Validation.VALIDATE], FloatLevels]
-        | None
-    ) = None
+    cert: FloatLevels | None = None
     document: Document | None = None
     content: Content | None = None
 
@@ -273,21 +245,20 @@ def _merge_settings(
 
 
 def generate_http_services(
-    params: Sequence[HttpEndpoint], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+    params: Sequence[HttpEndpoint], host_config: HostConfig
 ) -> Iterator[ActiveCheckCommand]:
+    macros = host_config.macros
     for endpoint in params:
         protocol = "HTTPS" if endpoint.url.startswith("https://") else "HTTP"
         prefix = f"{protocol} " if endpoint.service_name.prefix is ServicePrefix.AUTO else ""
-        endpoint.url = replace_macros(endpoint.url, host_config.macros)
+        endpoint.url = replace_macros(endpoint.url, macros)
         yield ActiveCheckCommand(
-            service_description=f"{prefix}{endpoint.service_name.name}",
-            command_arguments=list(_command_arguments(endpoint, http_proxies)),
+            service_description=f"{prefix}{replace_macros(endpoint.service_name.name, macros)}",
+            command_arguments=list(_command_arguments(endpoint)),
         )
 
 
-def _command_arguments(
-    endpoint: HttpEndpoint, http_proxies: Mapping[str, HTTPProxy]
-) -> Iterator[str]:
+def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str | Secret]:
     yield "--url"
     yield endpoint.url
 
@@ -295,7 +266,7 @@ def _command_arguments(
         return
 
     if (connection := settings.connection) is not None:
-        yield from _connection_args(connection, http_proxies)
+        yield from _connection_args(connection)
     if (response_time := settings.response_time) is not None:
         yield from _response_time_arguments(response_time)
     if (server_response := settings.server_response) is not None:
@@ -308,16 +279,14 @@ def _command_arguments(
         yield from _content_args(content)
 
 
-def _connection_args(
-    connection: Connection, http_proxies: Mapping[str, HTTPProxy]
-) -> Iterator[str]:
+def _connection_args(connection: Connection) -> Iterator[str | Secret]:
     yield from _method_args(connection.method)
     if (auth := connection.auth) is not None:
         yield from _auth_args(auth)
     if (tls_versions := connection.tls_versions) is not None:
         yield from _tls_version_arg(tls_versions)
-    if (proxy_spec := connection.proxy) is not None:
-        yield from _proxy_args(proxy_spec, http_proxies)
+    if (proxy := connection.proxy) is not None:
+        yield from _proxy_args(proxy)
     if (redirects := connection.redirects) is not None:
         yield from _redirect_args(redirects)
     if (http_versions := connection.http_versions) is not None:
@@ -335,26 +304,13 @@ def _auth_args(
         tuple[Literal[AuthMode.BASIC_AUTH], UserAuth]
         | tuple[Literal[AuthMode.TOKEN_AUTH], TokenAuth]
     )
-) -> Iterator[str]:
+) -> tuple[str | Secret, ...]:
     match auth:
         case (AuthMode.BASIC_AUTH, UserAuth(user=user, password=password)):
-            yield "--auth-user"
-            yield user
-            yield from _password_args(password, "--auth-pw-plain", "--auth-pw-pwstore")
+            return ("--auth-user", user, "--auth-pw-pwstore", password)
         case (AuthMode.TOKEN_AUTH, TokenAuth(header=header, token=token)):
-            yield "--token-header"
-            yield header
-            yield from _password_args(token, "--token-key-plain", "--token-key-pwstore")
-
-
-def _password_args(password: PasswordSpec, plain_arg: str, store_arg: str) -> Iterator[str]:
-    match password:
-        case (PasswordType.PASSWORD, pw):
-            yield plain_arg
-            yield pw
-        case (PasswordType.STORE, ident):
-            yield store_arg
-            yield ident
+            return ("--token-header", header, "--token-key-pwstore", token)
+    raise ValueError(auth)
 
 
 def _tls_version_arg(tls_versions: EnforceTlsVersion) -> Iterator[str]:
@@ -370,23 +326,20 @@ def _tls_version_arg(tls_versions: EnforceTlsVersion) -> Iterator[str]:
     yield tls_version_arg
 
 
-def _proxy_args(proxy_spec: ProxySpec, http_proxies: Mapping[str, HTTPProxy]) -> Iterator[str]:
-    match proxy_spec:
-        case (ProxyMode.ENVIRONMENT, ProxyMode.ENVIRONMENT):
+def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str]:
+    match proxy:
+        case EnvProxy():
             return
-        case (ProxyMode.NO_PROXY, None):
+        case NoProxy():
             yield "--ignore-proxy-env"
         # Note: check_httpv2 is capable of taking the credentials separately,
         # and to read the password from password store, with arguments
         # --proxy-user and --proxy-pw-plain/--proxy-pw-pwstore.
         # However, if everthing is passed via url, as it's done now, check_httpv2 is
         # also capable of handling that correctly.
-        case (ProxyMode.URL, str(url)):
+        case URLProxy(url=url):
             yield "--proxy-url"
             yield url
-        case (ProxyMode.GLOBAL, _):
-            yield "--proxy-url"
-            yield parse_http_proxy(proxy_spec, http_proxies)
 
 
 def _method_args(method_spec: tuple[HttpMethod, SendData | None]) -> Iterator[str]:
@@ -473,14 +426,9 @@ def _status_code_args(response_codes: ServerResponse) -> Iterator[str]:
         yield str(code)
 
 
-def _cert_args(
-    cert_validation: (
-        tuple[Literal[Validation.NO_VALIDATION], None]
-        | tuple[Literal[Validation.VALIDATE], FloatLevels]
-    )
-) -> Iterator[str]:
+def _cert_args(cert_validation: FloatLevels) -> Iterator[str]:
     match cert_validation:
-        case (Validation.VALIDATE, (LevelsType.FIXED, (float(warn), float(crit)))):
+        case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--certificate-levels"
             yield f"{round(warn / _DAY)},{round(crit / _DAY)}"
 

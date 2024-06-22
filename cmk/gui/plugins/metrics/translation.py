@@ -739,7 +739,7 @@ check_metrics["check_mk-brocade_mlx_module_cpu"] = {
     "cpu_util1": {"name": "util1s"},
     "cpu_util5": {"name": "util5s"},
     "cpu_util60": {"name": "util1"},
-    "cpu_util200": {"name": "util5"},
+    "cpu_util300": {"name": "util5"},
 }
 check_metrics["check_mk-dell_powerconnect_cpu"] = {
     "load": {"name": "util", "deprecated": "2.0.0p4"},
@@ -959,8 +959,6 @@ mq_translation: dict[str, CheckMetricEntry] = {
     "queue": {"name": "messages_in_queue"},
 }
 check_metrics["check_mk-mq_queues"] = mq_translation
-check_metrics["check_mk-websphere_mq_channels"] = mq_translation
-check_metrics["check_mk-websphere_mq_queues"] = mq_translation
 check_metrics["check_mk-printer_pages"] = {
     "pages": {"name": "pages_total"},
 }
@@ -1139,4 +1137,7 @@ check_metrics["check_mk-ups_capacity"] = {
         "name": "battery_capacity",
         "deprecated": "2.0.0b2",
     },
+}
+check_metrics["check_mk-hp_proliant_power"] = {
+    "watt": {"name": "power"},
 }

@@ -4,7 +4,7 @@ catalog: os/services
 license: GPLv2
 distribution: check_mk
 description:
- This checks queries a Microsoft Hyper-V Server via an agent plugin (hyperv_vms_guestinfos.ps1).
+ This checks queries a Microsoft Hyper-V Server via an agent plug-in (hyperv_vms_guestinfos.ps1).
  It returns for each VM a list of Checkpoints (Snapshots) and the age using pickyback.
  Leves for {WARN} and {CRIT} can be set using Wato.
 

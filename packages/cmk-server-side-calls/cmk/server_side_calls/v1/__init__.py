@@ -9,25 +9,26 @@ from typing import Any
 from ._active_checks import ActiveCheckCommand, ActiveCheckConfig
 from ._special_agents import SpecialAgentCommand, SpecialAgentConfig
 from ._utils import (
+    EnvProxy,
     HostConfig,
-    HTTPProxy,
     IPAddressFamily,
     IPv4Config,
     IPv6Config,
     noop_parser,
-    parse_http_proxy,
+    NoProxy,
     replace_macros,
     Secret,
+    URLProxy,
 )
 
 
 def entry_point_prefixes() -> (
     Mapping[type[ActiveCheckConfig[Any]] | type[SpecialAgentConfig[Any]], str]
 ):
-    """Return the types of plugins and their respective prefixes that can be discovered by Checkmk.
+    """Return the types of plug-ins and their respective prefixes that can be discovered by Checkmk.
 
-    These types can be used to create plugins that can be discovered by Checkmk.
-    To be discovered, the plugin must be of one of the types returned by this function and its name
+    These types can be used to create plug-ins that can be discovered by Checkmk.
+    To be discovered, the plug-in must be of one of the types returned by this function and its name
     must start with the corresponding prefix.
 
     Example:
@@ -48,15 +49,16 @@ __all__ = [
     "entry_point_prefixes",
     "ActiveCheckConfig",
     "ActiveCheckCommand",
-    "parse_http_proxy",
+    "EnvProxy",
     "HostConfig",
-    "HTTPProxy",
     "IPAddressFamily",
     "IPv4Config",
     "IPv6Config",
     "noop_parser",
+    "NoProxy",
     "replace_macros",
     "Secret",
     "SpecialAgentCommand",
     "SpecialAgentConfig",
+    "URLProxy",
 ]

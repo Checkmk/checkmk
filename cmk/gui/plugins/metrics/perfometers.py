@@ -210,25 +210,7 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "licenses",
-        "half_value": 500,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "sync_latency",
-        "half_value": 5,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "mail_latency",
         "half_value": 5,
         "exponent": 2,
     }
@@ -313,26 +295,8 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "oracle_count",
-        "half_value": 250,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "database_apply_lag",
         "half_value": 2500,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "processes",
-        "half_value": 100,
         "exponent": 2,
     }
 )
@@ -505,92 +469,10 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["citrix_load"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "database_size",
         "half_value": GB,
         "exponent": 5.0,
-    }
-)
-
-# Filesystem check with over-provisioning
-perfometer_info.append(
-    {
-        "type": "linear",
-        "condition": "fs_provisioning(%),100,>",
-        "segments": [
-            "fs_used(%)",
-            "100,fs_used(%),-#e3fff9",
-            "fs_provisioning(%),100.0,-#ffc030",
-        ],
-        "total": "fs_provisioning(%)",
-        "label": ("fs_used(%)", "%"),
-    }
-)
-
-# Filesystem check with provisioning, but not over-provisioning
-perfometer_info.append(
-    {
-        "type": "linear",
-        "condition": "fs_provisioning(%),100,<=",
-        "segments": [
-            "fs_used(%)",
-            "fs_provisioning(%),fs_used(%),-#ffc030",
-            "100,fs_provisioning(%),fs_used(%),-,-#e3fff9",
-        ],
-        "total": 100,
-        "label": ("fs_used(%)", "%"),
-    }
-)
-
-# Filesystem check without overcommittment
-perfometer_info.append(
-    {
-        "type": "linear",
-        "condition": "fs_used,uncommitted,+,fs_size,<",
-        "segments": [
-            "fs_used",
-            "uncommitted",
-            "fs_size,fs_used,-,uncommitted,-#e3fff9",  # free
-            "0.1#559090",  # fs_size marker
-        ],
-        "total": "fs_size",
-        "label": ("fs_used(%)", "%"),
-    }
-)
-
-# Filesystem check with overcommittment
-perfometer_info.append(
-    {
-        "type": "linear",
-        "condition": "fs_used,uncommitted,+,fs_size,>=",
-        "segments": [
-            "fs_used",
-            "fs_size,fs_used,-#e3fff9",  # free
-            "0.1#559090",  # fs_size marker
-            "overprovisioned,fs_size,-#ffa000",  # overcommittment
-        ],
-        "total": "overprovisioned",
-        "label": (
-            "fs_used,fs_used,uncommitted,+,/,100,*",  # percent used scaled
-            "%",
-        ),
-    }
-)
-
-# Filesystem without over-provisioning
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["fs_used(%)"],
-        "total": 100,
     }
 )
 
@@ -716,66 +598,6 @@ perfometer_info.append(
             {
                 "type": "logarithmic",
                 "metric": "net_data_sent",
-                "half_value": 5000000,
-                "exponent": 5,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "if_in_bps",
-                "half_value": 5000000,
-                "exponent": 5,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "if_out_bps",
-                "half_value": 5000000,
-                "exponent": 5,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "if_in_octets",
-                "half_value": 5000000,
-                "exponent": 5,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "if_out_octets",
-                "half_value": 5000000,
-                "exponent": 5,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "if_out_unicast_octets,if_out_non_unicast_octets,+",
-                "half_value": 5000000,
-                "exponent": 5,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "if_in_octets",
                 "half_value": 5000000,
                 "exponent": 5,
             },
@@ -939,22 +761,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["varnish_worker_thread_ratio"],
-        "total": 100,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["varnish_backend_success_ratio"],
-        "total": 100,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["zfs_l2_hit_ratio"],
         "total": 100,
     }
@@ -998,64 +804,6 @@ perfometer_info.append(
         "metric": "disk_capacity",
         "half_value": 25 * TB,
         "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "printer_queue",
-        "half_value": 10,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "pages_total",
-        "half_value": 60000,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["supply_toner_cyan"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["supply_toner_magenta"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["supply_toner_yellow"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["supply_toner_black"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["supply_toner_other"],
-        "total": 100.0,
     }
 )
 
@@ -1223,36 +971,9 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "messages_inbound,messages_outbound,+",
-        "half_value": 100,
-        "exponent": 5,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["tapes_util"],
         "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "linear",
-                "segments": ["qos_dropped_bits_rate"],
-                "total": "qos_dropped_bits_rate:max",
-            },
-            {
-                "type": "linear",
-                "segments": ["qos_outbound_bits_rate"],
-                "total": "qos_outbound_bits_rate:max",
-            },
-        ],
     }
 )
 
@@ -1268,7 +989,7 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "segments",
+        "metric": "shared_memory_segments",
         "half_value": 10,
         "exponent": 2,
     }
@@ -1361,100 +1082,6 @@ register_hop_perfometers()
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["oracle_db_cpu", "oracle_db_wait_time"],
-        "total": "50",
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "oracle_ios_f_total_s_rb,oracle_ios_f_total_l_rb,+",
-                "half_value": 50.0,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "oracle_ios_f_total_s_wb,oracle_ios_f_total_l_wb,+",
-                "half_value": 50.0,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "oracle_ios_f_total_s_r,oracle_ios_f_total_l_r,+",
-                "half_value": 50.0,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "oracle_ios_f_total_s_w,oracle_ios_f_total_l_w,+",
-                "half_value": 50.0,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "linear",
-                "segments": ["oracle_buffer_hit_ratio"],
-                "total": 100.0,
-            },
-            {
-                "type": "linear",
-                "segments": ["oracle_library_cache_hit_ratio"],
-                "total": 100.0,
-            },
-        ],
-    }
-)
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "oracle_wait_class_total#00b0c0",
-                "half_value": 50.0,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "oracle_wait_class_total_fg#30e0f0",
-                "half_value": 50.0,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "oracle_sga_size,oracle_pga_total_pga_allocated,+",
-        "half_value": 16589934592.0,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["filehandler_perc"],
         "total": 100.0,
     }
@@ -1488,33 +1115,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "emcvnx_consumed_capacity",
-        "half_value": 20 * TB,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "emcvnx_dedupl_remaining_size",
-        "half_value": 20 * TB,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "emcvnx_move_completed",
-        "half_value": 250 * GB,
-        "exponent": 3,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["read_hits"],
         "total": 100.0,
@@ -1543,42 +1143,6 @@ perfometer_info.append(
         "type": "linear",
         "segments": ["quarantine"],
         "total": 100,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "total_rate",
-        "half_value": 50.0,
-        "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "bypass_rate",
-        "half_value": 2.0,
-        "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "fireeye_stat_attachment",
-        "half_value": 50.0,
-        "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "messages_in_queue",
-        "half_value": 1.0,
-        "exponent": 2.0,
     }
 )
 
@@ -1629,90 +1193,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["license_percentage"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "elasticsearch_size_rate",
-                "half_value": 5000,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "elasticsearch_count_rate",
-                "half_value": 10,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "number_of_pending_tasks_rate",
-        "half_value": 10,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "linear",
-                "segments": ["active_primary_shards"],
-                "total": "active_shards",
-            },
-            {
-                "type": "linear",
-                "segments": ["active_shards"],
-                "total": "active_shards",
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["active_shards_percent_as_number"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": [
-            "docker_running_containers",
-            "docker_paused_containers",
-            "docker_stopped_containers",
-        ],
-        "total": "docker_all_containers",
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "docker_size",
-        "half_value": GB,
-        "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "nimble_read_latency_total",
         "half_value": 10,
@@ -1751,26 +1231,6 @@ perfometer_info.append(
         "type": "linear",
         "segments": ["disk_utilization"],
         "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "kube_cpu_usage",
-        "half_value": 0.5,  # no clear guidance was available for chosing these values. If more
-        # information becomes available, we will update them.
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "kube_memory_usage",
-        "half_value": 512 * MB,  # no clear guidance was available for chosing these values. If more
-        # information becomes available, we will update them.
-        "exponent": 2,
     }
 )
 
@@ -1829,54 +1289,11 @@ perfometer_info.append(
 )
 
 perfometer_info.append(
-    {"type": "linear", "segments": ["mobileiron_non_compliant_summary"], "total": 100.0}
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "mobileiron_policyviolationcount",
-        "half_value": 4.0,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
     {
         "type": "logarithmic",
         "metric": "requests",
         "half_value": 100.0,
         "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {"type": "logarithmic", "metric": "mobileiron_last_patched", "half_value": 45.0, "exponent": 2}
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["gpu_utilization"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "linear",
-                "segments": ["encoder_utilization"],
-                "total": 100.0,
-            },
-            {
-                "type": "linear",
-                "segments": ["decoder_utilization"],
-                "total": 100.0,
-            },
-        ],
     }
 )
 
@@ -1918,42 +1335,4 @@ perfometer_info.append(
         "segments": ["sms_success_rate"],
         "total": 100.0,
     }
-)
-
-# The SNS delivery rate perfometer needs to have a value of 100% if there are no messages to deliver
-# so we are using a condition to calculate its value in different scenarios (with and without
-# messages to deliver)
-perfometer_info.append(
-    {
-        "type": "linear",
-        # This condition is a weird way to say
-        # "delivered_notifications + failed_notifications <= 0".
-        # It is stated that way due to a limitation of the condition engine: you can't compare a
-        # metric with a constant but you have to compare it with another metric
-        "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
-        "segments": [
-            "delivered_notifications,failed_notifications,+,100,+",
-        ],
-        "label": ("delivered_notifications,failed_notifications,+,100,+", "%"),
-        "total": 100.0,
-    },
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        # This condition is a weird way to say
-        # "delivered_notifications + failed_notifications > 0".
-        # It is stated that way due to a limitation of the condition engine: you can't compare a
-        # metric with a constant but you have to compare it with another metric
-        "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,<",
-        "segments": [
-            "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*",
-        ],
-        "label": (
-            "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*",
-            "%",
-        ),
-        "total": 100.0,
-    },
 )

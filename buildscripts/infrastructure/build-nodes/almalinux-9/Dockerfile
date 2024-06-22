@@ -60,6 +60,7 @@ RUN yum -y makecache \
     libxcrypt-compat \
     mariadb-devel \
     mpfr-devel \
+    nc \
     ncurses-devel \
     openssh-clients \
     openssl-devel \
@@ -143,52 +144,52 @@ ENV \
 
 # Copy over stuff that's needed by lots of scripts (has to be copied to context before)
 COPY \
-    scripts/.bazelversion \
-    scripts/package_versions.bzl \
-    scripts/static_variables.bzl \
-    scripts/defines.make \
+    .bazelversion \
+    package_versions.bzl \
+    static_variables.bzl \
+    defines.make \
     /opt/
 
-COPY \
-    scripts/build_lib.sh \
-    scripts/Check_MK-pubkey.gpg \
+COPY --from=scripts \
+    build_lib.sh \
+    Check_MK-pubkey.gpg \
     /opt/
 
-COPY scripts/install-gnu-toolchain.sh /opt/
+COPY --from=scripts install-gnu-toolchain.sh /opt/
 RUN /opt/install-gnu-toolchain.sh
 
-COPY scripts/install-valgrind.sh /opt/
+COPY --from=scripts install-valgrind.sh /opt/
 RUN /opt/install-valgrind.sh
 
-COPY scripts/install-cmake.sh /opt/
+COPY --from=scripts install-cmake.sh /opt/
 RUN /opt/install-cmake.sh
 
-COPY scripts/install-protobuf-cpp.sh /opt/
+COPY --from=scripts install-protobuf-cpp.sh /opt/
 RUN /opt/install-protobuf-cpp.sh
 
-COPY scripts/install-openssl.sh /opt/
+COPY --from=scripts install-openssl.sh /opt/
 RUN /opt/install-openssl.sh
 
-COPY scripts/install-python.sh /opt/
+COPY --from=scripts install-python.sh /opt/
 RUN /opt/install-python.sh
 
 # install GDB after Python as it requires shared object files, see CMK-15854
-COPY scripts/install-gdb.sh /opt/
+COPY --from=scripts install-gdb.sh /opt/
 RUN /opt/install-gdb.sh
 
-COPY scripts/install-freetds.sh /opt/
+COPY --from=scripts install-freetds.sh /opt/
 RUN /opt/install-freetds.sh
 
-COPY scripts/install-rust-cargo.sh /opt/
+COPY --from=scripts install-rust-cargo.sh /opt/
 RUN /opt/install-rust-cargo.sh
 
 # Now shrink all the binaries and libraries we produced to build a small image
 # in the next step
-COPY scripts/strip_binaries /opt/
+COPY strip_binaries /opt/
 RUN /opt/strip_binaries /opt
 
 # Run this AFTER strip_binaries!!
-COPY scripts/install-bazel.sh /opt/
+COPY --from=scripts install-bazel.sh /opt/
 RUN /opt/install-bazel.sh
 
 ### Actual Build Image ###
@@ -215,14 +216,14 @@ RUN /opt/install-bazel.sh link-only
 RUN /opt/install-rust-cargo.sh link-only
 
 # Install non cached dependencies
-COPY scripts/install-pipenv.sh /opt/
+COPY --from=scripts install-pipenv.sh /opt/
 RUN /opt/install-pipenv.sh
 
-COPY scripts/"${DISTRO_MK_FILE}" /opt/
-COPY scripts/install-cmk-dependencies.sh /opt/
+COPY --from=omd_distros "${DISTRO_MK_FILE}" /opt/
+COPY --from=scripts install-cmk-dependencies.sh /opt/
 RUN /opt/install-cmk-dependencies.sh
 
-COPY scripts/install-patchelf.sh /opt/
+COPY --from=scripts install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh
 
 # The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from
@@ -230,17 +231,12 @@ RUN /opt/install-patchelf.sh
 # simply solve this by pre-creating the empty file here.
 RUN touch /etc/fstab
 
-# Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
-# jobs will be executed as this user in the container
-RUN groupadd -g 1000 jenkins \
-    && useradd -m -u 1001 -g 1000 -s /bin/bash jenkins
-
-RUN mkdir -p /home/jenkins/.cache/ \
-    && chown jenkins:jenkins /home/jenkins/.cache/
-
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt
 
 ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \
-    com.tribe29.image_type="build-image"
+    com.checkmk.image_type="build-image"
+
+COPY --from=dev_images entrypoint.sh /opt/
+ENTRYPOINT ["/opt/entrypoint.sh"]

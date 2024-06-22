@@ -112,7 +112,8 @@ def _migrate_to_levels(
         case (int(warn), int(crit)) | (float(warn), float(crit)):
             return "fixed", (ntype(warn * scale), ntype(crit * scale))
 
-        case dict(val_dict):
+        # 2.2. format + format released in 2.3.0b3
+        case dict(val_dict) | ("predictive", dict(val_dict)):
             if (
                 pred_levels := _parse_to_predictive_levels(
                     val_dict,  # type: ignore[misc] # Expression type contains "Any"
@@ -122,7 +123,7 @@ def _migrate_to_levels(
                 )
             ) is None:
                 return "no_levels", None
-            return "predictive", pred_levels
+            return "cmk_postprocessed", "predictive_levels", pred_levels
 
         case _:
             raise TypeError(
@@ -141,13 +142,13 @@ def _parse_already_migrated(
         case ("fixed", (int(w), int(c)) | (float(w), float(c))):
             return "fixed", (ntype(w), ntype(c))
 
-        case ("predictive", val_dict):
+        case ("cmk_postprocessed", "predictive_levels", val_dict):
             # do not scale, but for the typing we still need to parse.
             if (
                 pred_levels := _parse_to_predictive_levels(val_dict, 1.0, ntype, level_dir)
             ) is None:
                 return "no_levels", None
-            return "predictive", pred_levels
+            return "cmk_postprocessed", "predictive_levels", pred_levels
     return None
 
 
@@ -212,22 +213,19 @@ def _migrate_to_simple_levels(
         case None | (None, None) | ("no_levels", None):
             return "no_levels", None
 
-        case (
-            ("fixed", (int(warn), int(crit)) | (float(warn), float(crit)))
-            | (
-                int(warn),
-                int(crit),
-            )
-            | (float(warn), float(crit))
-        ):
+        case ("fixed", (int(warn), int(crit)) | (float(warn), float(crit))):
+            return "fixed", (ntype(warn), ntype(crit))
+
+        case (int(warn), int(crit)) | (float(warn), float(crit)):
             return "fixed", (ntype(warn * scale), ntype(crit * scale))
 
-        case ("predictive", val_dict) | val_dict if isinstance(val_dict, dict):
+        case ("cmk_postprocessed", "predictive_levels", val_dict) | val_dict if isinstance(
+            val_dict, dict
+        ):
             raise TypeError(
                 f"Could not migrate {model!r} to SimpleLevelsConfigModel. "
                 "Consider using Levels instead of SimpleLevels."
             )
-
         case _:
             raise TypeError(f"Could not migrate {model!r} to SimpleLevelsConfigModel.")
 
@@ -263,24 +261,94 @@ def migrate_to_float_simple_levels(
 
 def migrate_to_password(
     model: object,
-) -> tuple[Literal["explicit_password", "stored_password"], str, str]:
+) -> tuple[
+    Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
+]:
     """
     Transform a previous password configuration represented by ("password", <password>) or
     ("store", <password-store-id>) to a model of the `Password` FormSpec, represented by
-    ("explicit_password", <password-id>, <password>) or
-    ("stored_password", <password-store-id>, "").
+    ("cmk_postprocessed", "explicit_password", (<password-id>, <password>)) or
+    ("cmk_postprocessed", "stored_password", (<password-store-id>, "")).
 
     Args:
         model: Old value presented to the consumers to be migrated
     """
     match model:
+        # old password format
         case "password", str(password):
-            return "explicit_password", "throwaway-id", password
+            return "cmk_postprocessed", "explicit_password", ("throwaway-id", password)
         case "store", str(password_store_id):
-            return "stored_password", password_store_id, ""
+            return "cmk_postprocessed", "stored_password", (password_store_id, "")
+
+        # password format released in 2.3.0 beta
         case "explicit_password", str(password_id), str(password):
-            return "explicit_password", password_id, password
+            return "cmk_postprocessed", "explicit_password", (password_id, password)
         case "stored_password", str(password_store_id), str(password):
-            return "stored_password", password_store_id, password
+            return "cmk_postprocessed", "stored_password", (password_store_id, password)
+
+        # already migrated passwords
+        case "cmk_postprocessed", "explicit_password", (str(password_id), str(password)):
+            return "cmk_postprocessed", "explicit_password", (password_id, password)
+        case "cmk_postprocessed", "stored_password", (str(password_store_id), str(password)):
+            return "cmk_postprocessed", "stored_password", (password_store_id, password)
 
     raise TypeError(f"Could not migrate {model!r} to Password.")
+
+
+def migrate_to_proxy(  # pylint: disable=too-many-return-statements
+    model: object,
+) -> tuple[
+    Literal["cmk_postprocessed"],
+    Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+    str,
+]:
+    """
+    Transform a previous proxy configuration to a model of the `Proxy` FormSpec.
+    Previous configurations are transformed in the following way:
+        ("global", <stored-proxy-id>) -> ("cmk_postprocessed", "stored_proxy", <stored-proxy-id>)
+        ("environment", "environment") -> ("cmk_postprocessed", "environment_proxy", "")
+        ("url", <url>) -> ("cmk_postprocessed", "explicit_proxy", <url>)
+        ("no_proxy", None) -> ("cmk_postprocessed", "no_proxy", "")
+
+    Args:
+        model: Old value presented to the consumers to be migrated
+    """
+    match model:
+        case "global", str(stored_proxy_id):
+            return "cmk_postprocessed", "stored_proxy", stored_proxy_id
+        case "environment", "environment":
+            return "cmk_postprocessed", "environment_proxy", ""
+        case "url", str(url):
+            return "cmk_postprocessed", "explicit_proxy", url
+        case "no_proxy", None:
+            return "cmk_postprocessed", "no_proxy", ""
+        case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
+            return "cmk_postprocessed", "stored_proxy", stored_proxy_id
+        case "cmk_postprocessed", "environment_proxy", str():
+            return "cmk_postprocessed", "environment_proxy", ""
+        case "cmk_postprocessed", "explicit_proxy", str(url):
+            return "cmk_postprocessed", "explicit_proxy", url
+        case "cmk_postprocessed", "no_proxy", str():
+            return "cmk_postprocessed", "no_proxy", ""
+
+    raise TypeError(f"Could not migrate {model!r} to Proxy.")
+
+
+def migrate_to_time_period(
+    model: object,
+) -> tuple[Literal["cmk_postprocessed"], Literal["stored_time_period"], str]:
+    """
+    Transform a previous time period configuration to a model of the `TimePeriod` FormSpec.
+    Previous configurations are transformed in the following way:
+        <time-period> -> ("time_period", "preconfigured", <time-period>)
+
+    Args:
+        model: Old value presented to the consumers to be migrated
+    """
+    match model:
+        case str(time_period):
+            return "cmk_postprocessed", "stored_time_period", time_period
+        case "cmk_postprocessed", "stored_time_period", str(time_period):
+            return "cmk_postprocessed", "stored_time_period", time_period
+
+    raise TypeError(f"Could not migrate {model!r} to TimePeriod.")

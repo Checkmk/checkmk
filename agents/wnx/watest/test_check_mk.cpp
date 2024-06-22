@@ -8,9 +8,23 @@
 
 namespace cma::provider {
 
+namespace {
+
+/// This function is used to calculate the current timezone offset
+std::string CalcCurrentOffset() {
+    int hours = 0;
+    _get_daylight(&hours);
+    long tz = 0;
+    _get_timezone(&tz);
+    return fmt::format("{:+05}", tz * -100 / 60 / 60 + hours * 100);
+}
+
+}  // namespace
+
 TEST(CheckMkHeader, IsoTime) {
     constexpr std::chrono::system_clock::time_point tp;
-    EXPECT_EQ(PrintIsoTime(tp), "1970-01-01T01:00:00+0100");
+    EXPECT_EQ(PrintIsoTime(tp),
+              fmt::format("1970-01-01T01:00:00{}", CalcCurrentOffset()));
 }
 
 TEST(CheckMkHeader, Convert) {

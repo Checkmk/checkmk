@@ -24,9 +24,9 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
             },
             (
                 "--hostname",
-                "ipaddress",
+                "1.2.3.4",
                 "-u",
-                Secret(123, "bla:%s"),
+                Secret(123).unsafe("bla:%s"),
                 "--port",
                 "8080",
                 "--no-tls",
@@ -39,16 +39,25 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
             {},
             (
                 "--hostname",
-                "ipaddress",
+                "1.2.3.4",
             ),
         ),
         (
             {
-                "host": "host_name",
+                "host": ("host_name", None),
             },
             (
                 "--hostname",
                 "hostname",
+            ),
+        ),
+        (
+            {
+                "host": ("ip_address", None),
+            },
+            (
+                "--hostname",
+                "1.2.3.4",
             ),
         ),
         (
@@ -68,8 +77,7 @@ def test_cisco_prime_argument_parsing(
         params,
         HostConfig(
             name="hostname",
-            ipv4_config=IPv4Config(address="ipaddress"),
+            ipv4_config=IPv4Config(address="1.2.3.4"),
         ),
-        {},
     )
     assert command.command_arguments == expected_args

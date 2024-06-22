@@ -45,19 +45,21 @@ def main() {
 
     // TODO: don't run make test-composition-docker but use docker.inside() instead
     stage('test cmk-docker integration') {
-        testing_helper.run_make_targets(
-            DOCKER_GROUP_ID: get_docker_group_id(),
-            DISTRO_LIST: distros,
-            EDITION: EDITION,
-            VERSION: VERSION,
-            DOCKER_TAG: versioning.select_docker_tag(
-                branch_name,
-                DOCKER_TAG,
-                DOCKER_TAG),   // FIXME was DOCKER_TAG_DEFAULT before
-            MAKE_TARGET: "test-composition-docker",
-            BRANCH: branch_name,  // FIXME was BRANCH before
-            cmk_version: versioning.get_cmk_version(branch_name, branch_version, VERSION),
-        );
+        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+            testing_helper.run_make_targets(
+                DOCKER_GROUP_ID: get_docker_group_id(),
+                DISTRO_LIST: distros,
+                EDITION: EDITION,
+                VERSION: VERSION,
+                DOCKER_TAG: versioning.select_docker_tag(
+                    branch_name,
+                    DOCKER_TAG,
+                    DOCKER_TAG),   // FIXME was DOCKER_TAG_DEFAULT before
+                MAKE_TARGET: "test-composition-docker",
+                BRANCH: branch_name,  // FIXME was BRANCH before
+                cmk_version: versioning.get_cmk_version(branch_name, branch_version, VERSION),
+            );
+        }
     }
 }
 

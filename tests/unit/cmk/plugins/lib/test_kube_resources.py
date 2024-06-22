@@ -6,15 +6,16 @@
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.agent_based.v2 import Result, State
+from cmk.plugins.kube.schemata.section import AllocatableResource, Resources
 from cmk.plugins.lib import kube_resources
 
 
 class ResourcesFactory(ModelFactory):
-    __model__ = kube_resources.Resources
+    __model__ = Resources
 
 
 class AllocatableResourceFactory(ModelFactory):
-    __model__ = kube_resources.AllocatableResource
+    __model__ = AllocatableResource
 
 
 def test_requirements_for_object_has_request_limit_ordered_as_per_kubernetes_convention() -> None:

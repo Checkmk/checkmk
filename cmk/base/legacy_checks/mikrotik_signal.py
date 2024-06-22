@@ -51,6 +51,6 @@ check_info["mikrotik_signal"] = LegacyCheckDefinition(
     check_function=check_mikrotik_signal,
     check_ruleset_name="signal_quality",
     check_default_parameters={
-        "levels_lower": (80, 70),
+        "levels_lower": (80.0, 70.0),
     },
 )

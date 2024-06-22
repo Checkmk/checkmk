@@ -9,4 +9,4 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 npm run build-only
-cp ./dist/assets/vue_min.js* "$ROOT/share/check_mk/web/htdocs/js/"
+cp ./dist/assets/*.js* "$ROOT/share/check_mk/web/htdocs/js/"

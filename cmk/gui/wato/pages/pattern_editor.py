@@ -15,7 +15,7 @@ from cmk.utils.servicename import Item, ServiceName
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -31,7 +31,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import PermissionName
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
@@ -165,7 +164,7 @@ class ModePatternEditor(WatoMode):
     def _show_try_form(self):
         with html.form_context("try"):
             forms.header(_("Try pattern match"))
-            forms.section(_("Hostname"))
+            forms.section(_("Host name"))
             self._vs_host().render_input("host", self._hostname)
             forms.section(_("Logfile"))
             html.help(_("Here you need to insert the original file or pathname"))
@@ -188,7 +187,7 @@ class ModePatternEditor(WatoMode):
         return ConfigHostname()
 
     def _show_patterns(self):  # pylint: disable=too-many-branches
-        import cmk.gui.logwatch as logwatch
+        from cmk.gui import logwatch
 
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively("logwatch_rules").get(
             "logwatch_rules"
@@ -197,7 +196,7 @@ class ModePatternEditor(WatoMode):
         html.h3(_("Logfile patterns"))
         if ruleset.is_empty():
             html.open_div(class_="info")
-            html.write_text(
+            html.write_text_permissive(
                 "There are no logfile patterns defined. You may create "
                 'logfile patterns using the <a href="%s">Rule Editor</a>.'
                 % folder_preserving_link(
@@ -269,7 +268,7 @@ class ModePatternEditor(WatoMode):
                     # Each rule can hold no, one or several patterns. Loop them all here
                     for state, pattern, comment in pattern_list:
                         match_class = ""
-                        disp_match_txt = HTML("")
+                        disp_match_txt = HTML.empty()
                         match_img = ""
                         if rule_matches:
                             # Applies to the given host/service
@@ -279,11 +278,11 @@ class ModePatternEditor(WatoMode):
                                 match_start = matched.start()
                                 match_end = matched.end()
                                 disp_match_txt = (
-                                    escape_to_html(self._match_txt[:match_start])
+                                    HTML.with_escaping(self._match_txt[:match_start])
                                     + HTMLWriter.render_span(
                                         self._match_txt[match_start:match_end], class_="match"
                                     )
-                                    + escape_to_html(self._match_txt[match_end:])
+                                    + HTML.with_escaping(self._match_txt[match_end:])
                                 )
 
                                 if not already_matched:
@@ -314,7 +313,7 @@ class ModePatternEditor(WatoMode):
 
                         table.row()
                         table.cell("#", css=["narrow nowrap"])
-                        html.write_text(rulenr)
+                        html.write_text_permissive(rulenr)
                         table.cell(_("Match"))
                         html.icon(match_img, match_title)
 
@@ -338,7 +337,7 @@ class ModePatternEditor(WatoMode):
                         table.cell(_("Comment"), comment)
                         table.cell(_("Matched line"), disp_match_txt)
 
-                    table.row(fixed=True)
+                    table.row(fixed=True, collect_headers=False)
                     table.cell(colspan=7)
                     edit_url = folder_preserving_link(
                         [

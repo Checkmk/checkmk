@@ -22,6 +22,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.aws.constants import AWSRegions
 from cmk.plugins.lib.labels import custom_tags_to_valid_labels
 
 GenericAWSSection = Sequence[Any]
@@ -179,11 +180,11 @@ def check_aws_metrics(metric_infos: Sequence[AWSMetric]) -> CheckResult:
         )
 
 
-def extract_aws_metrics_by_labels(  # type: ignore[no-untyped-def]
+def extract_aws_metrics_by_labels(
     expected_metric_names: Iterable[str],
     section: GenericAWSSection,
     extra_keys: Iterable[str] | None = None,
-    convert_sum_stats_to_rate=True,
+    convert_sum_stats_to_rate: bool = True,
 ) -> Mapping[str, dict[str, Any]]:
     if extra_keys is None:
         extra_keys = []
@@ -258,7 +259,6 @@ def discover_aws_generic_single(
     """
     if requirement(required_metric in section for required_metric in required_metrics):
         yield Service()
-    return []
 
 
 def get_number_with_precision(
@@ -302,6 +302,17 @@ def function_arn_to_item(function_arn: str) -> str:
         if len(splitted) == 8
         else f"{splitted[6]} [{splitted[3]}]"
     )
+
+
+def aws_region_to_monitor() -> list[tuple[str, str]]:
+    def key(regionid_display: tuple[str, str]) -> str:
+        return regionid_display[1]
+
+    regions_by_display_order = [
+        *sorted((r for r in AWSRegions if "GovCloud" not in r[1]), key=key),
+        *sorted((r for r in AWSRegions if "GovCloud" in r[1]), key=key),
+    ]
+    return [(id_, " | ".join((region, id_))) for id_, region in regions_by_display_order]
 
 
 def get_region_from_item(item: str) -> str:

@@ -21,7 +21,7 @@ from cmk.snmplib import (
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
 try:
-    from .cee.snmp_backend import inline  # type: ignore[import]
+    from .cee.snmp_backend import inline  # type: ignore[import,unused-ignore]
 except ImportError:
     inline = None  # type: ignore[assignment]
 

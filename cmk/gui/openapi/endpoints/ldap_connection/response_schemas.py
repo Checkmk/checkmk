@@ -10,7 +10,7 @@ from marshmallow_oneofschema import OneOfSchema
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
-from cmk.gui.userdb import get_user_attributes, load_roles_from_file
+from cmk.gui.userdb import get_user_attributes, UserRolesConfigFile
 
 from cmk import fields
 
@@ -60,7 +60,7 @@ class LDAPDirectoryTypeConnection(BaseSchema):
     )
     ldap_server = fields.String(
         description="Set the host address of the LDAP server. Might be an IP address or "
-        "resolvable hostname.",
+        "resolvable host name.",
         example="your_ldap_server.example.com",
     )
     failover_servers = fields.List(
@@ -415,7 +415,7 @@ class LDAPSyncPluginVisibilityOfHostsOrServices(LDAPCheckbox):
 
 class LDAPContactGroupMembership(LDAPCheckbox):
     handle_nested = fields.Boolean(
-        description="When enabled, this plugin will not only handle direct group memberships, "
+        description="When enabled, this plug-in will not only handle direct group memberships, "
         "instead it will also dig into nested groups and treat the members of those groups as "
         "contact group members as well. Please mind that this feature might increase the "
         "execution time of your LDAP sync.",
@@ -494,7 +494,7 @@ class LDAPGroupsToSyncSelector(OneOfSchema):
 
 class LDAPGroupsToAttributes(LDAPCheckbox):
     handle_nested = fields.Boolean(
-        description="Once you enable this option, this plugin will not only handle direct group "
+        description="Once you enable this option, this plug-in will not only handle direct group "
         "memberships, instead it will also dig into nested groups and treat the members of those "
         "groups as contact group members as well. Please mind that this feature might increase the "
         "execution time of your LDAP sync. (Active Directory only at the moment)",
@@ -511,7 +511,7 @@ class LDAPGroupsToAttributes(LDAPCheckbox):
         description="Specify the groups to control the value of a given user attribute. If a user is "
         "not a member of a group, the attribute will be left at it's default value. When a single "
         "attribute is set by multiple groups and a user is member of multiple of these groups, the "
-        "later plugin in the list will override the others.",
+        "later plug-in in the list will override the others.",
         example=[
             {
                 "group_cn": "group_cn_example",
@@ -542,7 +542,10 @@ class LDAPGroupsToRoles(LDAPCheckbox):
 
 def ldap_group_to_roles_schema() -> type[LDAPGroupsToRoles]:
     return LDAPGroupsToRoles.from_dict(
-        {name: fields.List(fields.Nested(LDAPRoleElement)) for name in load_roles_from_file()},
+        {
+            name: fields.List(fields.Nested(LDAPRoleElement))
+            for name in UserRolesConfigFile().load_for_reading()
+        },
         name="LDAPGroupsToRolesWithCustomRoles",
     )
 
@@ -555,7 +558,7 @@ class LDAPSyncPlugins(BaseSchema):
     )
     authentication_expiration = fields.Nested(
         LDAPSyncPluginAuthExp,
-        description="This plugin fetches all information which are needed to check whether or not an "
+        description="This plug-in fetches all information which are needed to check whether or not an "
         "already authenticated user should be deauthenticated, e.g. because the password has changed "
         "in LDAP or the account has been locked.",
     )
@@ -583,7 +586,7 @@ class LDAPSyncPlugins(BaseSchema):
     )
     pager = fields.Nested(
         LDAPSyncPluginPager,
-        description="This plugin synchronizes a field of the users LDAP account to the pager attribute "
+        description="This plug-in synchronizes a field of the users LDAP account to the pager attribute "
         "of the Setup user accounts, which is then forwarded to the monitoring core and can be used for "
         "notifications. By default the LDAP attribute mobile is used.",
     )
@@ -614,18 +617,18 @@ class LDAPSyncPlugins(BaseSchema):
     )
     visibility_of_hosts_or_services = fields.Nested(
         LDAPSyncPluginVisibilityOfHostsOrServices,
-        description="When this option is checked, then the status GUI will only display hosts and "
-        "services that the user is a contact for - even if he has the permission for seeing all objects.",
+        description="When this option is checked, the status GUI will only display hosts and "
+        "services that the user is a contact for - even if they have the permission for seeing all objects.",
     )
     contact_group_membership = fields.Nested(
         LDAPContactGroupMembership,
-        description="Adds the user to contactgroups based on the group memberships in LDAP. This plugin "
+        description="Adds the user to contact groups based on the group memberships in LDAP. This plug-in "
         "adds the user only to existing contactgroups while the name of the contactgroup must match the "
         "common name (cn) of the LDAP group.",
     )
     groups_to_custom_user_attributes = fields.Nested(
         LDAPGroupsToAttributes,
-        description="Sets custom user attributes based on the group memberships in LDAP. This plugin can "
+        description="Sets custom user attributes based on the group memberships in LDAP. This plug-in can "
         "be used to set custom user attributes to specified values for all users which are member of a "
         "group in LDAP. The specified group name must match the common name (CN) of the LDAP group.",
     )

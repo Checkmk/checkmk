@@ -82,7 +82,7 @@ def discovery_netapp_ontap_disk_summary(section: Section) -> DiscoveryResult:
 def check_netapp_ontap_disk_summary(params: Mapping[str, Any], section: Section) -> CheckResult:
     """
     Unlike the old netapp api with the new api "physical-space" and "disk-type" are missing.
-    Cfr the old plugin to see where they were used.
+    Cfr the old plug-in to see where they were used.
     """
 
     if "broken_spare_ratio" in params:

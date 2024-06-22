@@ -54,7 +54,7 @@ check_plugin_arbor_peakflow_sp_disk_usage = CheckPlugin(
     service_name="Disk Usage %s",
     discovery_function=discover_arbor_disk_usage,
     check_function=check_arbor_disk_usage,
-    # I lack the time to fix this. The plugin ignores most of the parameters,
+    # I lack the time to fix this. The plug-in ignores most of the parameters,
     # and it applies some of them wrongly. There might be a configration that works.
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
@@ -81,7 +81,7 @@ check_plugin_arbor_peakflow_tms_disk_usage = CheckPlugin(
     service_name="Disk Usage %s",
     discovery_function=discover_arbor_disk_usage,
     check_function=check_arbor_disk_usage,
-    # I lack the time to fix this. The plugin ignores most of the parameters,
+    # I lack the time to fix this. The plug-in ignores most of the parameters,
     # and it applies some of them wrongly. There might be a configration that works.
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
@@ -103,7 +103,7 @@ check_plugin_arbor_pravail_disk_usage = CheckPlugin(
     service_name="Disk Usage %s",
     discovery_function=discover_arbor_disk_usage,
     check_function=check_arbor_disk_usage,
-    # I lack the time to fix this. The plugin ignores most of the parameters,
+    # I lack the time to fix this. The plug-in ignores most of the parameters,
     # and it applies some of them wrongly. There might be a configration that works.
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

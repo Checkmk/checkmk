@@ -6,12 +6,17 @@
 from collections.abc import Sequence
 from typing import Literal
 
-from ._graph_specification import GraphMetric, GraphRecipe, GraphSpecification, HorizontalRule
+from ._graph_specification import (
+    FixedVerticalRange,
+    GraphMetric,
+    GraphRecipe,
+    GraphSpecification,
+    HorizontalRule,
+)
 from ._type_defs import GraphConsoldiationFunction
 
 
 class ExplicitGraphSpecification(GraphSpecification, frozen=True):
-    graph_type: Literal["explicit"] = "explicit"
     title: str
     unit: str
     consolidation_function: GraphConsoldiationFunction | None
@@ -22,8 +27,8 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     mark_requested_end_time: bool = False
 
     @staticmethod
-    def name() -> str:
-        return "explicit_graph_specification"
+    def graph_type_name() -> Literal["explicit"]:
+        return "explicit"
 
     def recipes(self) -> list[GraphRecipe]:
         return [
@@ -31,10 +36,13 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
                 title=self.title,
                 unit=self.unit,
                 consolidation_function=self.consolidation_function,
-                explicit_vertical_range=self.explicit_vertical_range,
+                explicit_vertical_range=FixedVerticalRange(
+                    min=self.explicit_vertical_range[0],
+                    max=self.explicit_vertical_range[1],
+                ),
                 omit_zero_metrics=self.omit_zero_metrics,
                 horizontal_rules=self.horizontal_rules,
-                metrics=self.metrics,
+                metrics=list(self.metrics),  # TODO: pydantic-9319
                 specification=self,
                 mark_requested_end_time=self.mark_requested_end_time,
             )

@@ -20,4 +20,5 @@ make(
         "all",
         "install",
     ],
+    visibility = ["//visibility:public"],
 )

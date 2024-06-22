@@ -98,7 +98,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
             " (pureadmin create --api-token)"
         ),
     )
-    parser.add_argument("server", type=str, help="Hostname or IP address")
+    parser.add_argument("server", type=str, help="Host name or IP address")
     return parser.parse_args(argv)
 
 

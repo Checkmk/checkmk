@@ -24,7 +24,7 @@ from cmk.gui.openapi.utils import param_description
 from cmk import fields
 
 MONITORED_HOST = gui_fields.HostField(
-    description="The hostname or IP address itself.",
+    description="The host name or IP address itself.",
     example="example.com",
     should_exist=None,
     should_be_monitored=True,
@@ -181,7 +181,11 @@ class CreateHostQueryDowntime(CreateHostDowntimeBase):
 
 
 class CreateServiceQueryDowntime(CreateServiceDowntimeBase):
-    query = gui_fields.query_field(tables.Services, required=True)
+    query = gui_fields.query_field(
+        tables.Services,
+        required=True,
+        example='{"op": "=", "left": "description", "right": "Service description"}',
+    )
     duration = SERVICE_DURATION
 
 
@@ -241,7 +245,11 @@ class DeleteDowntimeByName(DeleteDowntimeBase):
 
 
 class DeleteDowntimeByQuery(DeleteDowntimeBase):
-    query = gui_fields.query_field(tables.Downtimes, required=True)
+    query = gui_fields.query_field(
+        tables.Downtimes,
+        required=True,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    )
 
 
 class DeleteDowntimeByHostGroup(DeleteDowntimeBase):
@@ -323,7 +331,7 @@ class ModifyEndTimeByDelta(ModifyEndTimeBaseSchema):
     @post_load
     def prefix_value(self, data, **kwargs):
         # Livestatus is expectind seconds, so we convert the minutes to seconds and then add + or - sign
-        data["value"] = f"{'+' if data['value'] >= 0 else '-'}{abs(data['value'])*60}"
+        data["value"] = f"{'+' if data['value'] >= 0 else '-'}{abs(data['value']) * 60}"
         return data
 
 
@@ -367,7 +375,11 @@ class ModifyDowntimeById(ModifyDowntimeFieldsSchema):
 
 
 class ModifyDowntimeByQuery(ModifyDowntimeFieldsSchema):
-    query = gui_fields.query_field(tables.Downtimes, required=True)
+    query = gui_fields.query_field(
+        tables.Downtimes,
+        required=True,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    )
 
 
 class ModifyDowntimeByName(ModifyDowntimeFieldsSchema):

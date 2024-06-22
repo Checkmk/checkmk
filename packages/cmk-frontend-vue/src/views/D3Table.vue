@@ -1,11 +1,13 @@
-<script setup lang="ts" xmlns="http://www.w3.org/1999/html">
+<script setup lang="ts">
+// eslint-disable-next-line
+// @ts-nocheck
 import { type TableCell, type TableRow, type VueTableSpec } from '@/types'
-import { computed, ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import crossfilter from 'crossfilter2'
 import * as d3 from 'd3'
 
 const props = defineProps<{
-  table_spec: VueTableSpec
+  tableSpec: VueTableSpec
 }>()
 
 const search_text = ref<string>('')
@@ -16,7 +18,9 @@ const search_text_dimension = row_crossfilter.dimension<string>((d: TableRow) =>
   let combined_text: string[] = []
   d.columns.forEach((column) => {
     column.content.forEach((content) => {
-      if (content.type == 'text') combined_text.push(content.content!.toLowerCase())
+      if (content.type == 'text') {
+        combined_text.push(content.content!.toLowerCase())
+      }
     })
   })
   return combined_text.join('#')
@@ -31,16 +35,23 @@ function get_rows(): TableRow[] {
     }
   }
 
-  if (search_value) search_text_dimension.filterFunction(get_custom_filter(search_value))
-  else search_text_dimension.filterAll()
+  if (search_value) {
+    search_text_dimension.filterFunction(get_custom_filter(search_value))
+  } else {
+    search_text_dimension.filterAll()
+  }
   let records = row_crossfilter.allFiltered()
 
   function get_custom_sorter_function(index: number, direction: number) {
     return function (a: TableRow, b: TableRow) {
       const a_content = a.columns[index].content[0]!.content!.toLowerCase()
       const b_content = b.columns[index].content[0]!.content!.toLowerCase()
-      if (a_content == b_content) return 0
-      if (a_content > b_content) return direction
+      if (a_content == b_content) {
+        return 0
+      }
+      if (a_content > b_content) {
+        return direction
+      }
       return -direction
     }
   }
@@ -66,7 +77,7 @@ function replace_inpage_search() {
 
 onMounted(() => {
   console.log('table on mounted')
-  row_crossfilter.add(props.table_spec.rows)
+  row_crossfilter.add(props.tableSpec.rows)
   force_render.value += 1
   replace_inpage_search()
   update_d3js_table()
@@ -75,8 +86,11 @@ onMounted(() => {
 let current_sort_index: null | [number, number] = null
 
 function set_sort_index(index: number) {
-  if (current_sort_index == null || current_sort_index[0] != index) current_sort_index = [index, 1]
-  else if (current_sort_index[0] == index) current_sort_index = [index, current_sort_index[1] * -1]
+  if (current_sort_index == null || current_sort_index[0] != index) {
+    current_sort_index = [index, 1]
+  } else if (current_sort_index[0] == index) {
+    current_sort_index = [index, current_sort_index[1] * -1]
+  }
   force_render.value += 1
   update_d3js_table()
 }
@@ -84,7 +98,9 @@ function set_sort_index(index: number) {
 const d3_anchor = ref<HTMLDivElement | undefined>()
 
 function update_d3js_table() {
-  if (d3_anchor.value == undefined) return
+  if (d3_anchor.value == undefined) {
+    return
+  }
 
   const update_start = performance.now()
 
@@ -92,9 +108,9 @@ function update_d3js_table() {
   const root_div = d3.select(d3_anchor.value)
   const table = root_div
     .selectAll<HTMLTableElement, VueTableSpec>('table')
-    .data([props.table_spec])
+    .data([props.tableSpec])
     .join('table')
-  const tbody = table.join('tbody').attr('class', props.table_spec.classes.join(' '))
+  const tbody = table.join('tbody').attr('class', props.tableSpec.classes.join(' '))
 
   // Headers
   const header_row = tbody

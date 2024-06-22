@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-import cmk.utils.crypto.secrets as secrets
+from cmk.utils.crypto import secrets
 from cmk.utils.user import UserId
 
 

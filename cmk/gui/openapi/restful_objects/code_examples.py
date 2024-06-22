@@ -11,9 +11,9 @@ be referenced in the result of _build_code_templates.
 import functools
 import json
 import re
+from collections.abc import Sequence
 from typing import Any, cast, NamedTuple, TypeAlias
 
-import black
 import jinja2
 from apispec import APISpec
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
@@ -23,8 +23,9 @@ from cmk.utils.site import omd_site
 
 from cmk.gui import fields
 from cmk.gui.fields.base import BaseSchema
+from cmk.gui.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.openapi.restful_objects.params import fill_out_path_template, to_openapi
-from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
+from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter, RawParameter
 
 CODE_TEMPLATE_MACROS = """
 {%- macro comments(comment_format="# ", request_schema_multiple=False) %}
@@ -111,11 +112,13 @@ request = urllib.request.Request(
             indent(skip_lines=1, spaces=4) }}).encode('utf-8'),
     {%- endif %}
 )
+# Will raise an HTTPError if status code is >= 400
 resp = urllib.request.urlopen(request)
 {{ formatted_if_statement }}
 """
 
 CODE_TEMPLATE_CURL = """
+{%- set downloadable = endpoint.content_type == 'application/octet-stream' %}
 #!/bin/bash
 
 # NOTE: We recommend all shell users to use the "httpie" examples instead.
@@ -133,9 +136,12 @@ PASSWORD="{{ password }}"
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 curl {%- if includes_redirect %} -L {%- endif %} \\
-{%- if query_params %}
+  {%- if query_params %}
   -G \\
-{%- endif %}
+  {%- endif %}
+  {%- if downloadable %}
+  -JO \\
+  {%- endif %}
   {%- if not includes_redirect %}
   --request {{ request_method | upper }} \\
   {%- endif %}
@@ -281,7 +287,7 @@ TEMPLATES = {
 }
 
 
-def _to_env(value) -> str:  # type: ignore[no-untyped-def]
+def _to_env(value: list | dict | str) -> str:
     if isinstance(value, (list, dict)):
         return json.dumps(value)
 
@@ -435,12 +441,12 @@ def httpie_request_body(examples: JsonObject) -> str:
     return "\\\n".join(_httpie_request_body_lines("", examples, []))
 
 
-def code_samples(  # type: ignore[no-untyped-def]
-    spec,
-    endpoint,
-    header_params,
-    path_params,
-    query_params,
+def code_samples(
+    spec: APISpec,
+    endpoint: Endpoint,
+    header_params: Sequence[RawParameter],
+    path_params: Sequence[RawParameter],
+    query_params: Sequence[RawParameter],
 ) -> list[CodeSample]:
     """Create a list of rendered code sample Objects
 
@@ -487,7 +493,7 @@ def code_samples(  # type: ignore[no-untyped-def]
                     request_schema=schema,
                     request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
                     formatted_if_statement=formatted_if_statement_for_responses(
-                        endpoint.expected_status_codes,
+                        list(endpoint.expected_status_codes),
                         endpoint.content_type == "application/octet-stream",
                         example.label,
                     ),
@@ -499,25 +505,31 @@ def code_samples(  # type: ignore[no-untyped-def]
     return result
 
 
-def format_nicely(obj: object) -> str:
-    """Format the object nicely.
+def format_nicely(value: Any, indent_level: int = 0) -> str:
+    if isinstance(value, dict):
+        out = "{\n"
+        indent_prefix = (indent_level + 1) * 4 * " "
+        for key, val in value.items():
+            out += f"{indent_prefix}{format_nicely(key)}: {format_nicely(val, indent_level + 1)},\n"
+        return f"{out}{indent_level * 4 * ' '}}}"
 
-    Examples:
+    if isinstance(value, list):
+        if (
+            len(list_str := ", ".join(format_nicely(v) for v in value)) < 35
+            and "\n" not in list_str
+        ):
+            return f"[{list_str}]"
 
-        While this should format in a stable manner, I'm not quite sure about it.
+        out = "[\n"
+        indent_prefix = (indent_level + 1) * 4 * " "
+        for val in value:
+            out += f"{indent_prefix}{format_nicely(val, indent_level + 1)},\n"
+        return f"{out}{indent_level * 4 * ' '}]"
 
-        >>> format_nicely({'password': 'foo', 'username': 'bar'})
-        '{"password": "foo", "username": "bar"}\\n'
+    if isinstance(value, str):
+        return json.dumps(value)
 
-    Args:
-        obj:
-            A python object, which gets represented as valid Python-code when a str() is applied.
-
-    Returns:
-        A string of the object, formatted nicely.
-
-    """
-    return black.format_str(str(obj), mode=black.Mode(line_length=50))  # type: ignore[attr-defined]
+    return repr(value)
 
 
 def _get_schema(schema: str | type[Schema] | None) -> Schema | None:
@@ -632,19 +644,26 @@ def formatted_if_statement_for_responses(
 
     """
     formatted_str = ""
+    target_requests = "requests" == code_example
+    status_code_field = "status_code" if target_requests else "status"
+    retrieve_data_code = (
+        "    pprint.pprint(resp.json())\n"
+        if target_requests
+        else "    pprint.pprint(json.loads(resp.read().decode()))\n"
+    )
     for status_code in sorted(expected_response_status_codes):
         if status_code < 400:
             if len(formatted_str) == 0:
-                formatted_str += f"if resp.status_code == {status_code}:\n"
+                formatted_str += f"if resp.{status_code_field} == {status_code}:\n"
             else:
-                formatted_str += f"elif resp.status_code == {status_code}:\n"
+                formatted_str += f"elif resp.{status_code_field} == {status_code}:\n"
 
             if status_code == 200:
                 if downloadable:
                     formatted_str += "    file_name = resp.headers['content-disposition'].split('filename=')[1].strip('\"')\n"
                     formatted_str += "    with open(file_name, 'wb') as out_file:\n"
 
-                    if code_example == "requests":
+                    if target_requests:
                         formatted_str += "        resp.raw.decode_content = True\n"
                         formatted_str += "        shutil.copyfileobj(resp.raw, out_file)\n"
                     else:
@@ -653,14 +672,16 @@ def formatted_if_statement_for_responses(
                     formatted_str += "    print('Done')\n"
 
                 else:
-                    formatted_str += "    pprint.pprint(resp.json())\n"
+                    formatted_str += retrieve_data_code
             elif status_code == 204:
                 formatted_str += "    print('Done')\n"
             elif status_code == 302:
                 formatted_str += "    print('Redirected to', resp.headers['location'])\n"
 
-    formatted_str += "else:\n"
-    formatted_str += "    raise RuntimeError(pprint.pformat(resp.json()))\n"
+    if target_requests:
+        formatted_str += "else:\n"
+        formatted_str += "    raise RuntimeError(pprint.pformat(resp.json()))\n"
+
     return formatted_str
 
 
@@ -689,7 +710,7 @@ def to_param_dict(params: list[OpenAPIParameter]) -> dict[str, OpenAPIParameter]
 
 
 @jinja2.pass_context
-def fill_out_parameters(ctx: dict[str, Any], val) -> str:  # type: ignore[no-untyped-def]
+def fill_out_parameters(ctx: dict[str, Any], val: str) -> str:
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 
     This assumes the parameters to be defined as such:

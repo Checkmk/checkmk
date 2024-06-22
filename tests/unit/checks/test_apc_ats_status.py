@@ -5,8 +5,6 @@
 
 import pytest
 
-from tests.testlib import Check
-
 from cmk.base.check_legacy_includes.apc_ats import (
     CommunictionStatus,
     OverCurrentStatus,
@@ -16,6 +14,8 @@ from cmk.base.check_legacy_includes.apc_ats import (
     Source,
     Status,
 )
+
+from .checktestlib import Check
 
 STRING_TABLE_1 = [["2", "2", "2", "2", "2", "2", "", ""]]
 STRING_TABLE_2 = [["1", "2", "1", "2", "1", "2", "", ""]]

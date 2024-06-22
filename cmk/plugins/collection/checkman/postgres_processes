@@ -10,7 +10,7 @@ description:
  name is specified by the mk_postgres configuration, then any PostgreSQL process
  (as determined by mk_postgres) is counted.
 
- This check needs the Checkmk mk_postgres plugin installed in the agent.
+ This check needs the Checkmk mk_postgres plug-in installed in the agent.
 
 discovery:
  One service is created.

@@ -3,25 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import logging
 import os
 import subprocess
 import time
 import uuid
+from collections.abc import Mapping
 from logging import Logger
 from pathlib import Path
-from typing import Final, Literal, NewType
-
-from typing_extensions import TypedDict
+from typing import Final, Literal, NewType, TypedDict
 
 import livestatus
 
-import cmk.utils.statename as statename
-from cmk.utils import store
+from cmk.utils import statename, store
+from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.i18n import _
-from cmk.utils.notify_types import EventContext
+from cmk.utils.labels import Labels
+from cmk.utils.notify_types import EnrichedEventContext
 from cmk.utils.notify_types import NotificationContext as NotificationContext
+from cmk.utils.paths import core_helper_config_dir
+from cmk.utils.servicename import ServiceName
+from cmk.utils.store import load_object_from_file, save_object_to_file
+from cmk.utils.tags import TagGroupID, TagID
 
 logger = logging.getLogger("cmk.utils.notify")
 
@@ -49,12 +55,19 @@ class NotificationResult(TypedDict, total=False):
 
 class NotificationForward(TypedDict):
     forward: Literal[True]
-    context: EventContext
+    context: EnrichedEventContext
 
 
 class NotificationViaPlugin(TypedDict):
     plugin: str
     context: NotificationContext
+
+
+@dataclasses.dataclass(frozen=True)
+class NotificationHostConfig:
+    host_labels: Labels
+    service_labels: Mapping[ServiceName, Labels]
+    tags: Mapping[TagGroupID, TagID]
 
 
 def _state_for(exit_code: NotificationResultCode) -> str:
@@ -85,7 +98,7 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
         spec = hostname
         state = context["HOSTSTATE"]
         output = context["HOSTOUTPUT"]
-    # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plugin output.
+    # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plug-in output.
     return "{}: {};{};{};{};{}".format(
         what,
         contact,
@@ -230,3 +243,44 @@ def transform_flexible_and_plain_plugin(
     plugin: NotificationPluginName | None,
 ) -> NotificationPluginName:
     return plugin or NotificationPluginName("mail")
+
+
+def write_notify_host_file(
+    config_path: VersionedConfigPath,
+    config_per_host: Mapping[HostName, NotificationHostConfig],
+) -> None:
+    notify_config_path: Path = _get_host_file_path(config_path)
+    for host, labels in config_per_host.items():
+        host_path = notify_config_path / host
+        save_object_to_file(
+            host_path,
+            dataclasses.asdict(
+                NotificationHostConfig(
+                    host_labels=labels.host_labels,
+                    service_labels={k: v for k, v in labels.service_labels.items() if v.values()},
+                    tags=labels.tags,
+                )
+            ),
+        )
+
+
+def read_notify_host_file(
+    host_name: HostName,
+) -> NotificationHostConfig:
+    host_file_path: Path = _get_host_file_path(host_name=host_name)
+    return NotificationHostConfig(
+        **load_object_from_file(
+            path=host_file_path,
+            default={"host_labels": {}, "service_labels": {}, "tags": {}},
+        )
+    )
+
+
+def _get_host_file_path(
+    config_path: VersionedConfigPath | None = None,
+    host_name: HostName | None = None,
+) -> Path:
+    root_path = Path(config_path) if config_path else core_helper_config_dir / Path("latest")
+    if host_name:
+        return root_path / "notify" / "host_config" / host_name
+    return root_path / "notify" / "host_config"

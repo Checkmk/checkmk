@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Background tools required to register a check plugin
+"""Background tools required to register a check plug-in
 """
 import functools
 from collections.abc import Callable, Generator
@@ -42,7 +42,7 @@ def _validate_service_name(plugin_name: CheckPluginName, service_name: str) -> N
         raise ValueError(
             "service name and description inconsistency: Please neither have your plugins "
             "name start with %r, nor the description with %r. In the rare case that you want to "
-            "implement a check plugin explicitly designed for management boards (and nothing else),"
+            "implement a check plug-in explicitly designed for management boards (and nothing else),"
             " you must do both of the above."
             % (CheckPluginName.MANAGEMENT_PREFIX, MANAGEMENT_DESCR_PREFIX)
         )

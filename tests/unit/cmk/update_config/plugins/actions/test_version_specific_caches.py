@@ -23,7 +23,7 @@ def fixture_plugin() -> VersionSpecificCachesCleaner:
 
 
 def test_cleanup_missing_directory(plugin: VersionSpecificCachesCleaner) -> None:
-    plugin(logging.getLogger(), {})
+    plugin(logging.getLogger())
 
 
 def test_cleanup(plugin: VersionSpecificCachesCleaner) -> None:
@@ -38,6 +38,6 @@ def test_cleanup(plugin: VersionSpecificCachesCleaner) -> None:
         cached_file = base_dir / "if"
         with cached_file.open("w", encoding="utf-8") as f:
             f.write("\n")
-        plugin(logging.getLogger(), {})
+        plugin(logging.getLogger())
         assert not cached_file.exists()
         assert base_dir.exists()

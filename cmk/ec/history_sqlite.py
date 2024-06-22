@@ -2,7 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""EC History sqlite backend"""
+"""EC History sqlite backend."""
 import itertools
 import json
 import sqlite3
@@ -53,11 +53,21 @@ TABLE_COLUMNS: Final = (
     "match_groups_syslog_application",
 )
 
+INDEXED_COLUMNS: Final = (
+    "time",
+    "id",
+    "host",
+)
+
 SQLITE_PRAGMAS = {
     "PRAGMA journal_mode=WAL;": "WAL mode for concurrent reads and writes",
     "PRAGMA synchronous = NORMAL;": "Writes should not blocked by reads",
     "PRAGMA busy_timeout = 2000;": "2 seconds timeout for busy handler. Avoids database is locked errors",
 }
+
+SQLITE_INDEXES = [
+    f"CREATE INDEX IF NOT EXISTS idx_{column} ON history ({column});" for column in INDEXED_COLUMNS
+]
 
 
 def configure_sqlite_types() -> None:
@@ -83,7 +93,6 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
     Used in SQLiteHistory.get() method.
     Always return all columns, since they are filtered elsewhere.
     """
-
     query_columns: set[str] = set()
     query_conditions: list[str] = []
     query_arguments: list[object] = []
@@ -148,6 +157,7 @@ class SQLiteHistory(History):
         self._event_columns = event_columns
         self._history_columns = history_columns
         self._last_housekeeping = 0.0
+        self._page_size = 4096
 
         if isinstance(self._settings.database, Path):
             self._settings.database.parent.mkdir(parents=True, exist_ok=True)
@@ -166,6 +176,7 @@ class SQLiteHistory(History):
         with self.conn as connection:
             for pragma_string in SQLITE_PRAGMAS:
                 connection.execute(pragma_string)
+            self._page_size = connection.execute("PRAGMA page_size").fetchone()[0]
 
         with self.conn as connection:
             cur = connection.cursor()
@@ -204,16 +215,20 @@ class SQLiteHistory(History):
                         match_groups_syslog_application JSON
                     );"""
             )
+        with self.conn as connection:
+            for index_statement in SQLITE_INDEXES:
+                connection.execute(index_statement)
 
     def flush(self) -> None:
-        """Drop the history table."""
-        self.conn.execute("DROP TABLE IF EXISTS history;")
-        self.conn.commit()
+        """Delete all entries the history table."""
+        with self.conn as connection:
+            connection.execute("DELETE FROM history;")
 
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
         """Add a single entry to the history table.
 
-        No need to include the line column, as it is autoincremented."""
+        No need to include the line column, as it is autoincremented.
+        """
         with self.conn as connection:
             cur = connection.cursor()
             cur.execute(
@@ -254,7 +269,7 @@ class SQLiteHistory(History):
         sqlite_query, sqlite_arguments = filters_to_sqlite_query(query.filters)
         if query.limit:
             sqlite_query += " LIMIT ?"
-            sqlite_arguments += f" {query.limit+1}"
+            sqlite_arguments += f" {query.limit + 1}"
         with self.conn as connection:
             cur = connection.cursor()
             cur.execute(sqlite_query, sqlite_arguments)
@@ -266,14 +281,23 @@ class SQLiteHistory(History):
         And performs a vacuum to shrink the database file.
         """
         now = time.time()
-        if now - self._last_housekeeping > 3600:
+        if now - self._last_housekeeping > self._config["sqlite_housekeeping_interval"]:
             delta = now - timedelta(days=self._config["history_lifetime"]).total_seconds()
             with self.conn as connection:
                 cur = connection.cursor()
                 cur.execute("DELETE FROM history WHERE time <= ?;", (delta,))
             # should be executed outside of the transaction
-            self.conn.execute("VACUUM;")
+            self._vacuum()
             self._last_housekeeping = now
+
+    def _vacuum(self) -> None:
+        """Run VACUUM command only if the free pages in DB are greater than 50 Mb."""
+        with self.conn as connection:
+            freelist_count = connection.execute("PRAGMA freelist_count").fetchone()[0]
+            freelist_size = freelist_count * self._page_size
+
+        if freelist_size > self._config["sqlite_freelist_size"]:
+            self.conn.execute("VACUUM;")
 
     def close(self) -> None:
         """Explicitly close the connection to the sqlite database.

@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from . import load_werk
-from .config import load_config
+from .config import load_config, try_load_current_version_from_defines_make
 
 
 def main(
@@ -29,7 +29,8 @@ def main(
             if path.name.isdigit() or path.name.endswith(".md")
         )
 
-    config = load_config(werks_config, defines_make)
+    current_version = try_load_current_version_from_defines_make(defines_make)
+    config = load_config(werks_config, current_version=current_version)
     choices_component = {e[0] for e in config.all_components()}
 
     for werk_path in werks_to_check:

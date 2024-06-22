@@ -11,9 +11,9 @@ from typing import Literal, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
+from cmk.gui.utils import escaping
 
 from ._type_defs import LineType, Operators, RRDData
 

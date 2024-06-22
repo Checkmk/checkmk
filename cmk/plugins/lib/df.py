@@ -514,8 +514,8 @@ def check_filesystem_levels(
     if warn_mb < 0.0:
         # Negative levels, so user configured thresholds based on space left. Calculate the
         # upper thresholds based on the size of the filesystem
-        crit_mb = int(allocatable_filesystem_size + crit_mb)
-        warn_mb = int(allocatable_filesystem_size + warn_mb)
+        crit_mb = allocatable_filesystem_size + crit_mb
+        warn_mb = allocatable_filesystem_size + warn_mb
 
     status = (
         State.CRIT if used_space >= crit_mb else State.WARN if used_space >= warn_mb else State.OK

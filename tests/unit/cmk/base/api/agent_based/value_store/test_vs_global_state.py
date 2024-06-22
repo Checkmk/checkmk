@@ -5,7 +5,7 @@
 
 from pytest import MonkeyPatch
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID

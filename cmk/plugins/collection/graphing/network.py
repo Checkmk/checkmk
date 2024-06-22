@@ -9,6 +9,13 @@ UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.SINotation("B/s"))
 UNIT_BYTES_PER_REQUEST = metrics.Unit(metrics.SINotation("B/req"))
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 
+metric_clients_connected = metrics.Metric(
+    name="clients_connected",
+    title=Title("Clients connected"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.PURPLE,
+)
+
 metric_data_transfer_rate = metrics.Metric(
     name="data_transfer_rate",
     title=Title("Data transfer rate"),
@@ -189,4 +196,16 @@ perfometer_busy_workers_requests_per_second = perfometers.Stacked(
         focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(20)),
         segments=["requests_per_second"],
     ),
+)
+
+perfometer_op_s = perfometers.Perfometer(
+    name="op_s",
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(1000)),
+    segments=["op_s"],
+)
+
+perfometer_active_connections = perfometers.Perfometer(
+    name="active_connections",
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(90)),
+    segments=["active_connections"],
 )

@@ -90,7 +90,7 @@ def main(args: argparse.Namespace) -> None:
             version.base is not None
         ), f"Expected version.base to be not None for release type beta: {version}"
         feedback_mail = f"feedback-{version.base.major}.{version.base.minor}-beta@checkmk.com"
-    elif version.release.r_type == RType.p:
+    elif version.release.r_type == RType.p or version.release.is_unspecified():
         release_type = "stable"
     elif version.release.r_type == RType.daily:
         release_type = "daily"

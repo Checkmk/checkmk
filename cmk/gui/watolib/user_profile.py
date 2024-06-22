@@ -15,9 +15,7 @@ from livestatus import SiteConfiguration, SiteId
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.user import UserId
 
-import cmk.gui.hooks as hooks
-import cmk.gui.sites as sites
-import cmk.gui.userdb as userdb
+from cmk.gui import hooks, sites, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import request
@@ -45,8 +43,13 @@ from cmk.gui.watolib.utils import mk_eval, mk_repr
 
 
 class SynchronizationResult:
-    def __init__(  # type: ignore[no-untyped-def]
-        self, site_id, error_text=None, disabled=False, succeeded=False, failed=False
+    def __init__(
+        self,
+        site_id: SiteId,
+        error_text: str | None = None,
+        disabled: bool = False,
+        succeeded: bool = False,
+        failed: bool = False,
     ) -> None:
         self.site_id = site_id
         self.error_text = error_text

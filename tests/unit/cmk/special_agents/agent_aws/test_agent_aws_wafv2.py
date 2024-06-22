@@ -7,6 +7,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
 from typing import Literal, Protocol
 
@@ -67,7 +68,7 @@ Wafv2Sections = Mapping[str, WAFV2Limits | WAFV2Summary | WAFV2WebACL]
 def test_search_string_bytes_handling_in_get_wafv2_web_acls() -> None:
     fake_wafv2_client = FakeWAFV2Client()
 
-    def get_response_content(response, key, dflt=None):  # type: ignore[no-untyped-def]
+    def get_response_content(response, key, dflt=None):
         if dflt is None:
             dflt = []
         if key in response:
@@ -80,10 +81,14 @@ def test_search_string_bytes_handling_in_get_wafv2_web_acls() -> None:
 
     for rule in res[0]["Rules"]:  # type: ignore[attr-defined]
         if "RateBasedStatement" in rule["Statement"]:
-            search_string = rule["Statement"]["RateBasedStatement"]["ScopeDownStatement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+            search_string = rule["Statement"]["RateBasedStatement"]["ScopeDownStatement"][
+                "ByteMatchStatement"
+            ]["SearchString"]
             assert isinstance(search_string, str)
         if "NotStatement" in rule["Statement"]:
-            search_string = rule["Statement"]["NotStatement"]["ScopeDownStatement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+            search_string = rule["Statement"]["NotStatement"]["ScopeDownStatement"][
+                "ByteMatchStatement"
+            ]["SearchString"]
             assert isinstance(search_string, str)
         if "AndStatement" in rule["Statement"]:
             search_string = rule["Statement"]["AndStatement"]["Statements"][0][
@@ -101,7 +106,9 @@ def create_sections(
     region = "region" if is_regional else "us-east-1"
     scope: Literal["REGIONAL", "CLOUDFRONT"] = "REGIONAL" if is_regional else "CLOUDFRONT"
 
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import)
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+    )
     config.add_single_service_config("wafv2_names", names)
     config.add_service_tags("wafv2_tags", tags)
 
@@ -196,7 +203,7 @@ wafv2_params = [
 
 
 def test_agent_aws_wafv2_regional_cloudfront() -> None:
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
 
     region = "region"
     # TODO: This is plainly wrong, the client can't be None.

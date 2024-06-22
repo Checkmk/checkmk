@@ -127,7 +127,7 @@ class PageValidateFilter(AjaxPage):
 def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> None:
     filter_registry.register(
         RegexAjaxDropdownFilter(
-            title=_l("Hostname (regex)"),
+            title=_l("Host name (regex)"),
             sort_index=100,
             info="host",
             autocompleter=AutocompleterConfig(ident="monitored_hostname", escape_regex=True),
@@ -144,7 +144,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
 
     filter_registry.register(
         AjaxDropdownFilter(
-            title=_l("Hostname (exact match)"),
+            title=_l("Host name (exact match)"),
             sort_index=101,
             info="host",
             autocompleter=AutocompleterConfig(ident="monitored_hostname", strict=True),
@@ -238,7 +238,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
 
     filter_registry.register(
         RegexFilter(
-            title=_l("Hostname or alias (regex)"),  # HostnameOrAliasQuery implements a regex match
+            title=_l("Host name or alias (regex)"),  # HostnameOrAliasQuery implements a regex match
             sort_index=102,
             info="host",
             description=_l("Search field allowing regular expressions and partial matches"),
@@ -1039,7 +1039,7 @@ def register_site_filters(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         MultipleSitesFilter(
-            title=_l("Multiple Sites"),
+            title=_l("Multiple sites"),
             sort_index=502,
             query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
             description=_l("Associative selection of multiple sites"),
@@ -1050,7 +1050,7 @@ def register_site_filters(filter_registry: FilterRegistry) -> None:
 def register_host_and_service_detail_filters(filter_registry: FilterRegistry) -> None:
     filter_registry.register(
         FilterNumberRange(
-            title=_l("Current Host Notification Number"),
+            title=_l("Current host notification number"),
             sort_index=232,
             info="host",
             query_filter=query_filters.NumberRangeQuery(
@@ -1061,7 +1061,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
 
     filter_registry.register(
         FilterNumberRange(
-            title=_l("Current Service Notification Number"),
+            title=_l("Current service notification number"),
             sort_index=232,
             info="service",
             query_filter=query_filters.NumberRangeQuery(
@@ -1072,7 +1072,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
 
     filter_registry.register(
         FilterNumberRange(
-            title=_l("Number of Services of the Host"),
+            title=_l("Number of services of the host"),
             sort_index=234,
             info="host",
             query_filter=query_filters.NumberRangeQuery(
@@ -1231,7 +1231,7 @@ def register_log_filters(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         RegexFilter(
-            title=_l("Log: plugin output (regex)"),
+            title=_l("Log: plug-in output (regex)"),
             sort_index=202,
             info="log",
             query_filter=query_filters.TextQuery(
@@ -1395,7 +1395,7 @@ class TagFilter(Filter):
         html.open_table()
         # Show at least three rows of tag filters (hard coded self.query_filter.count) and add more
         # rows if respective values are given via the URL.
-        # E.g. links from the virtual host tree snapin may contain multiple tag filter values
+        # E.g. links from the virtual host tree snap-in may contain multiple tag filter values
         num = 0
         while num < self.query_filter.count or value.get(
             "%s_%d_grp" % (self.query_filter.var_prefix, num)
@@ -1541,7 +1541,7 @@ def register_tag_and_label_filters(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         TagFilter(
-            title=_l("Tags"),
+            title=_l("Service tags"),
             query_filter=query_filters.TagsQuery(object_type="service"),
             is_show_more=True,
         )
@@ -1770,7 +1770,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        return html.write_text(
+        return html.write_text_permissive(
             _(
                 "Used in the host and service problems graphs of the main dashboard. Not intended "
                 "for any other purposes."
@@ -1847,7 +1847,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
                         "As soon as you add your Checkmk server to the "
                         "monitoring, a graph showing the history of your host "
                         "problems will appear here.\n Please also be aware that "
-                        "message might appear as a result of a filtered "
+                        "this message might appear as a result of a filtered "
                         "dashboard. This dashlet currently only supports "
                         "filtering for sites."
                     )

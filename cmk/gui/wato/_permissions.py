@@ -25,7 +25,7 @@ def register(
                 "This permissions allows users to use Setup - Checkmk's "
                 "Web Administration Tool. Without this "
                 "permission all references to Setup (buttons, links, "
-                "snapins) will be invisible."
+                "snap-ins) will be invisible."
             ),
             defaults=["admin", "user"],
         )
@@ -95,9 +95,9 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="discard",
-            title=_l("Discard changes"),
+            title=_l("Revert changes"),
             description=_l(
-                "This permission allows to discard pending changes. Beware that this holds only for "
+                "This permission allows to revert pending changes. Beware that this holds only for "
                 "the user's own pending changes, not for those of other users (foreign changes)."
             ),
             defaults=["admin", "user"],
@@ -108,11 +108,11 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="discardforeign",
-            title=_l("Discard foreign changes"),
+            title=_l("Revert foreign changes"),
             description=_l(
                 "When several users work in parallel with Setup then several pending changes of "
                 "different users might pile up before changes are activated. Only with this permission "
-                "a user will be allowed to discard all pending changes, including foreign ones."
+                "a user will be allowed to revert all pending changes, including foreign ones."
             ),
             defaults=["admin"],
         )
@@ -627,11 +627,11 @@ def register(
             title=_l("Add or modify executables"),
             description=_l(
                 "There are different places in Checkmk where an admin can use the GUI to add "
-                "executable code to Checkmk. For example when configuring "
+                "executable code to a Checkmk site or agent. For example when configuring "
                 "datasource programs, the user inserts a command line for gathering monitoring data. "
                 "This command line is then executed during monitoring by Checkmk. Another example is "
                 "the upload of extension packages (MKPs). All these functions have in "
-                "common that the user provides data that is executed by Checkmk. "
+                "common that the user provides data that is executed by Checkmk or the agent. "
                 'If you want to ensure that your Setup users cannot "inject" arbitrary executables '
                 "into your Checkmk installation, you only need to remove this permission for them. "
                 "This permission is needed in addition to the other component related permissions. "
@@ -687,8 +687,8 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="check_plugins",
-            title=_l("Catalog of check plugins"),
-            description=_l("Use the catalog of check plugins."),
+            title=_l("Catalog of check plug-ins"),
+            description=_l("Use the catalog of check plug-ins."),
             defaults=["admin", "user"],
         )
     )

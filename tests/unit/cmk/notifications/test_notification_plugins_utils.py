@@ -322,6 +322,25 @@ def test_api_endpoint_url(monkeypatch: MonkeyPatch, value: str, result: str) -> 
                 "HOST_ESCAPE_PLUGIN_OUTPUT": "0",  # variable set via the rule
             },
         ),
+        # special case 'check_mk-ps' with HTML Long output
+        (
+            {
+                "SERVICE_ESCAPE_PLUGIN_OUTPUT": "0",
+                "SERVICECHECKCOMMAND": "check_mk-ps",
+                "SERVICEOUTPUT": "<h1>A</h1>",
+                "LONGSERVICEOUTPUT": r"Processes: 1\nVirtual memory: 2.02 MiB\nResident memory: 10.2 MiB\nCPU: 0%\nProcess handles: 223\nRunning for: 11 days 12 hours\n<table><tr><th>name</th><th>user</th><th>virtual size</th><th>resident size</th><th>creation time</th><th>cpu usage (user space)</th><th>cpu usage (kernel space)</th><th>pid</th><th>cpu usage</th><th>pagefile usage</th><th>handle count</th></tr><tr><td>C:&bsol;Windows&bsol;system32&bsol;winlogon.exe</td><td>&bsol;&bsol;NT AUTHORITY&bsol;SYSTEM</td><td>2.02 MiB</td><td>10.2 MiB</td><td>Apr 20 2024 21:19:21</td><td>0.0%</td><td>0.0%</td><td>620</td><td>0.0%</td><td>2</td><td>223</td></tr></table>",
+                "HOSTOUTPUT": "<h1>C</h1>",
+                "LONGHOSTOUTPUT": "<h1>D</h1>",
+            },
+            {
+                "SERVICECHECKCOMMAND": "check_mk-ps",
+                "SERVICEOUTPUT": "<h1>A</h1>",
+                "LONGSERVICEOUTPUT": r"Processes: 1\nVirtual memory: 2.02 MiB\nResident memory: 10.2 MiB\nCPU: 0%\nProcess handles: 223\nRunning for: 11 days 12 hours\n<table><tr><th>name</th><th>user</th><th>virtual size</th><th>resident size</th><th>creation time</th><th>cpu usage (user space)</th><th>cpu usage (kernel space)</th><th>pid</th><th>cpu usage</th><th>pagefile usage</th><th>handle count</th></tr><tr><td>C:\Windows\system32\winlogon.exe</td><td>\\NT AUTHORITY\SYSTEM</td><td>2.02 MiB</td><td>10.2 MiB</td><td>Apr 20 2024 21:19:21</td><td>0.0%</td><td>0.0%</td><td>620</td><td>0.0%</td><td>2</td><td>223</td></tr></table>",
+                "HOSTOUTPUT": "&lt;h1&gt;C&lt;/h1&gt;",
+                "LONGHOSTOUTPUT": "&lt;h1&gt;D&lt;/h1&gt;",
+                "SERVICE_ESCAPE_PLUGIN_OUTPUT": "0",  # variable set via the rule
+            },
+        ),
     ],
 )
 def test_escape_context(input_context: dict[str, str], expected_context: Mapping[str, str]) -> None:

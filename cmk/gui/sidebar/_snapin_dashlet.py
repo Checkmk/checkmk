@@ -18,7 +18,7 @@ class SnapinDashletConfig(DashletConfig):
 
 
 class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
-    """Dashlet that displays a sidebar snapin"""
+    """Dashlet that displays a sidebar snap-in"""
 
     @classmethod
     def type_name(cls):

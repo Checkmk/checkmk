@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.testlib.utils import is_cloud_repo, is_enterprise_repo
+from tests.testlib.repo import is_cloud_repo, is_enterprise_repo
 
 from cmk.post_rename_site import main
 from cmk.post_rename_site.registry import rename_action_registry
@@ -30,12 +30,12 @@ def fixture_expected_plugins() -> list[str]:
     # We cannot fix that in the short (or even mid) term because the
     # precondition is a more cleanly separated structure.
     if is_enterprise_repo():
-        # The CEE plugins are loaded when the CEE plugins are available, i.e.
+        # The CEE plug-ins are loaded when the CEE plug-ins are available, i.e.
         # when the "enterprise/" path is present.
         expected.append("dcd_connections")
 
     if is_cloud_repo():
-        # The CCE plugins are loaded when the CCE plugins are available
+        # The CCE plug-ins are loaded when the CCE plug-ins are available
         expected.append("agent_controller_connections")
 
     return expected

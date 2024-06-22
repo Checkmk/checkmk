@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer
 
 
 def _parameter_valuespec_cisco_prime_wifi_connections():
@@ -17,12 +18,9 @@ def _parameter_valuespec_cisco_prime_wifi_connections():
         elements=[
             (
                 "levels_lower",
-                Tuple(
+                SimpleLevels(
                     title=_("Minimum number of connections"),
-                    elements=[
-                        Integer(title=_("Warning at")),
-                        Integer(title=_("Critical at")),
-                    ],
+                    spec=Integer,
                 ),
             ),
         ],

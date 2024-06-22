@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Final, NamedTuple
 
-import telnetlib3  # type: ignore[import]
+import telnetlib3  # type: ignore[import-untyped]
 import yaml
 
 # check_mk section, example of output
@@ -206,7 +206,7 @@ def unpack_modules(root_dir: Path, *, module_dir: Path) -> int:
         subprocess.Popen(
             [
                 "expand.exe",
-                f"{root_dir / PYTHON_CAB_NAME }",
+                f"{root_dir / PYTHON_CAB_NAME}",
                 "-F:*",
                 f"{module_dir}",
             ],

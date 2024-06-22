@@ -33,7 +33,7 @@ HOST_CONFIG = HostConfig(
                         "--user",
                         "user",
                         "--password",
-                        Secret(42),
+                        Secret(42).unsafe(),
                         "--port",
                         "8080",
                         "--no-cert-check",
@@ -57,7 +57,7 @@ HOST_CONFIG = HostConfig(
                         "--user",
                         "user",
                         "--password",
-                        Secret(42),
+                        Secret(42).unsafe(),
                         "--port",
                         "1234",
                         "--no-cert-check",
@@ -82,7 +82,7 @@ HOST_CONFIG = HostConfig(
                         "--user",
                         "user",
                         "--password",
-                        Secret(42),
+                        Secret(42).unsafe(),
                         "--port",
                         "8090",
                         "--values",
@@ -105,7 +105,7 @@ HOST_CONFIG = HostConfig(
                         "--user",
                         "user",
                         "--password",
-                        Secret(42),
+                        Secret(42).unsafe(),
                         "--port",
                         "500",
                         "address",
@@ -126,7 +126,7 @@ HOST_CONFIG = HostConfig(
                         "--user",
                         "user",
                         "--password",
-                        Secret(23),
+                        Secret(23).unsafe(),
                         "--port",
                         "8079",
                         "address",
@@ -137,4 +137,4 @@ HOST_CONFIG = HostConfig(
     ],
 )
 def test_3par(params: Mapping[str, object], result: Sequence[SpecialAgentCommand]) -> None:
-    assert list(special_agent_three_par(params, HOST_CONFIG, {})) == result
+    assert list(special_agent_three_par(params, HOST_CONFIG)) == result

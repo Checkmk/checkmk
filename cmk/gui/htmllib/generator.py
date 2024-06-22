@@ -28,12 +28,12 @@ from __future__ import annotations
 
 import json
 import typing
-from typing import Final, final, Literal
+from typing import assert_never, Final, final, Literal
 
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 
@@ -48,10 +48,11 @@ from .tag_rendering import (
 FinalJavaScript = typing.Callable[[], str] | str
 
 
-# See web/htdocs/js/index.ts:callable_functions
+# See packages/cmk-frontend/src/js/index.ts:callable_functions
 KnownTSFunction = typing.Literal[
     "render_qr_code",
     "render_stats_table",
+    "insert_before",
 ]
 
 
@@ -105,9 +106,24 @@ class HTMLWriter:
         self.browser_reload = 0.0
         self._final_javascript: list[FinalJavaScript] = []
 
-    def write_text(self, text: HTMLContent) -> None:
+    def write_text_permissive(self, text: HTMLContent) -> None:
         """Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped."""
-        self.write_html(HTML(escaping.escape_text(text)))
+        self.write_html(HTML.without_escaping(escaping.escape_text(text)))
+
+    def write_text(self, text: HTMLContent) -> None:
+        """Write text, with strict escaping"""
+
+        match text:
+            case None:
+                self.write_html(HTML.empty())
+            case int():
+                self.write_html(HTML.with_escaping(str(text)))
+            case HTML():
+                self.write_html(text)
+            case str():
+                self.write_html(HTML.with_escaping(text))
+            case _ as unreachable:
+                assert_never(unreachable)
 
     def write_html(self, content: HTML) -> None:
         """Write HTML code directly, without escaping."""
@@ -158,7 +174,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_javascript(code: str, **attrs: HTMLTagAttributeValue) -> HTML:
-        return render_element("script", HTML(code), **attrs)
+        return render_element("script", HTML.without_escaping(code), **attrs)
 
     def final_javascript(self, code: FinalJavaScript) -> None:
         self._final_javascript.append(code)
@@ -173,6 +189,12 @@ class HTMLWriter:
 
     def javascript(self, code: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(HTMLWriter.render_javascript(code, **attrs))
+
+    def js_entrypoint(self, data: str, *, type_: str, **attrs: HTMLTagAttributeValue) -> None:
+        """generic way to transport data from the backend to the frontend,
+        without the need to directly invoke javascript code"""
+        attrs_type: dict[str, HTMLTagAttributeValue] = {"type": type_}
+        self.write_html(HTMLWriter.render_javascript(data, **(attrs_type | attrs)))
 
     def javascript_file(self, src: str, *, type_: str = "text/javascript") -> None:
         """<script type="text/javascript" src="%(name)"/>\n"""
@@ -261,7 +283,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_br() -> HTML:
-        return HTML("<br />")
+        return HTML.without_escaping("<br />")
 
     def br(self) -> None:
         self.write_html(HTMLWriter.render_br())
@@ -278,7 +300,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_nbsp() -> HTML:
-        return HTML("&nbsp;")
+        return HTML.without_escaping("&nbsp;")
 
     def nbsp(self) -> None:
         self.write_html(HTMLWriter.render_nbsp())
@@ -621,6 +643,16 @@ class HTMLWriter:
         function_name: KnownTSFunction,
         options: dict[str, str] | None = None,
     ) -> None:
+        self.open_ts_container(container=container, function_name=function_name, options=options)
+        self.write_html(render_end_tag(container))
+
+    def open_ts_container(
+        self,
+        *,
+        container: str,
+        function_name: KnownTSFunction,
+        options: dict[str, str] | None = None,
+    ) -> None:
         json_options: str
         if options is None:
             json_options = "{}"
@@ -633,7 +665,6 @@ class HTMLWriter:
                 data_cmk_call_ts_options=json_options,
             )
         )
-        self.write_html(render_end_tag(container))
 
     def open_div(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("div", close_tag=False, **kwargs))

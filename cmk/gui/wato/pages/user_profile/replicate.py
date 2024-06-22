@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -37,7 +37,7 @@ class UserProfileReplicate(Page):
         if not active_config.wato_enabled:
             raise MKAuthException(_("User profiles can not be edited (Setup is disabled)."))
 
-    def _page_menu(self, breadcrumb) -> PageMenu:  # type: ignore[no-untyped-def]
+    def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Profile"), breadcrumb, form_name="profile", button_name="_save"
         )

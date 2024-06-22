@@ -20,8 +20,8 @@ from cmk.agent_based.v2 import Service
 from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
 
 
-@get_data_or_go_stale
-def check_azure_storageaccounts(_item, params, resource):
+def check_azure_storageaccounts(item, params, section):
+    resource = get_data_or_go_stale(item, section)
     iter_attrs = iter_resource_attributes(resource, include_keys=("kind", "location"))
     # kind first
     try:
@@ -71,8 +71,8 @@ check_info["azure_storageaccounts"] = LegacyCheckDefinition(
 )
 
 
-@get_data_or_go_stale
-def check_azure_storageaccounts_flow(_item, params, resource):
+def check_azure_storageaccounts_flow(item, params, section):
+    resource = get_data_or_go_stale(item, section)
     for metric_key in ("total_Ingress", "total_Egress", "total_Transactions"):
         cmk_key = metric_key[6:].lower()
         displ = cmk_key.title()
@@ -108,8 +108,8 @@ check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
 )
 
 
-@get_data_or_go_stale
-def check_azure_storageaccounts_performance(_item, params, resource):
+def check_azure_storageaccounts_performance(item, params, section):
+    resource = get_data_or_go_stale(item, section)
     for key, cmk_key, displ in (
         ("average_SuccessServerLatency", "server_latency", "Success server latency"),
         ("average_SuccessE2ELatency", "e2e_latency", "End-to-end server latency"),

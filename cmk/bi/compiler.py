@@ -10,9 +10,9 @@ import os
 import pickle
 import time
 from pathlib import Path
+from typing import TypedDict
 
 from redis import Redis
-from typing_extensions import TypedDict
 
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException

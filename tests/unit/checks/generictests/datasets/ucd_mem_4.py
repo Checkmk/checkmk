@@ -5,7 +5,7 @@
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
-from cmk.base.plugins.agent_based.ucd_mem import parse_ucd_mem
+from cmk.plugins.collection.agent_based.ucd_mem import parse_ucd_mem
 
 checkname = "ucd_mem"
 

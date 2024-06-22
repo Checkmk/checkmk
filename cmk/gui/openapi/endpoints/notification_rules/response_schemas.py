@@ -7,11 +7,13 @@
 from collections.abc import Mapping
 from typing import Any, cast, get_args
 
-from marshmallow import post_dump, pre_dump
+from marshmallow import post_dump
+from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.notify_types import (
     BuiltInPluginNames,
     EmailBodyElementsType,
+    get_builtin_plugin_names,
     GroupbyType,
     IlertPriorityType,
     OpsGeniePriorityStrType,
@@ -26,6 +28,7 @@ from cmk.utils.notify_types import (
 from cmk.gui.fields import (
     AuxTagIDField,
     FolderIDField,
+    GlobalHTTPProxyField,
     IPField,
     PasswordStoreIDField,
     ServiceLevelField,
@@ -37,7 +40,6 @@ from cmk.gui.openapi.endpoints.notification_rules.request_example import (
 )
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
 from cmk.gui.rest_api_types.notifications_rule_types import PluginType
-from cmk.gui.watolib.tags import load_all_tag_config_read_only
 
 from cmk import fields
 
@@ -154,17 +156,13 @@ class CheckboxWithFolderStrOutput(CheckboxOutput):
     )
 
 
-class MatchHostTags(BaseSchema):
-    tag_type = fields.String(
-        example="aux_tag",
-        description="If it's an aux tag id or a group tag tag id.",
-    )
-    tag_group_id = TagGroupIDField(
-        example="agent",
-        required=False,
-        description="If the tag_type is 'tag_group', the id of that group is shown here.",
+class AuxTagOutput(BaseSchema):
+    tag_type = fields.Constant(
+        "aux_tag",
+        description="Identifies the type of host tag.",
     )
     operator = fields.String(
+        enum=["is_not_set", "is_set"],
         description="This describes the matching action",
     )
     tag_id = AuxTagIDField(
@@ -173,41 +171,90 @@ class MatchHostTags(BaseSchema):
     )
 
 
+class TagGroupBaseOutput(BaseSchema):
+    tag_type = fields.String(
+        enum=["aux_tag", "tag_group"],
+        example="tag_group",
+        description="Identifies the type of host tag.",
+    )
+    tag_group_id = TagGroupIDField(
+        example="agent",
+        required=False,
+        description="If the tag_type is 'tag_group', the id of that group is shown here.",
+    )
+
+
+class TagGroupNoneOfOrOneOfOutput(TagGroupBaseOutput):
+    operator = fields.String(enum=["one_of", "none_of"])
+    tag_ids = fields.List(
+        AuxTagIDField(
+            example="checkmk-agent",
+            description="Tag groups tag ids are available via the host tag group endpoint.",
+        ),
+        example=["ip-v4-only", "ip-v6-only"],
+    )
+
+
+class TagGroupIsNotOrIsOutput(TagGroupBaseOutput):
+    operator = fields.String(enum=["is", "is_not"])
+    tag_id = AuxTagIDField(
+        example="checkmk-agent",
+        description="Tag groups tag ids are available via the host tag group endpoint.",
+    )
+
+
+class TagGroupSelectorOutput(OneOfSchema):
+    type_field = "operator"
+    type_schemas = {
+        "one_of": TagGroupNoneOfOrOneOfOutput,
+        "none_of": TagGroupNoneOfOrOneOfOutput,
+        "is_not": TagGroupIsNotOrIsOutput,
+        "is": TagGroupIsNotOrIsOutput,
+    }
+    type_field_remove = False
+
+    def get_obj_type(self, obj):
+        operator = obj.get("operator")
+        if operator in self.type_schemas:
+            return operator
+
+        raise Exception("Unknown object type: %s" % repr(obj))
+
+
+class TagTypeSelectorOutput(OneOfSchema):
+    type_field = "tag_type"
+    type_schemas = {
+        "aux_tag": AuxTagOutput,
+        "tag_group": TagGroupSelectorOutput,
+    }
+    type_field_remove = False
+
+    def get_obj_type(self, obj):
+        tag_type = obj.get("tag_type")
+        if tag_type in self.type_schemas:
+            return tag_type
+
+        raise Exception("Unknown object type: %s" % repr(obj))
+
+
 class CheckboxMatchHostTagsOutput(CheckboxOutput):
-    value = fields.List(fields.Nested(MatchHostTags))
-
-    @pre_dump(pass_many=True)
-    def pre_dump(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        tag_config = load_all_tag_config_read_only()
-        aux_tags = [tag.id for tag in tag_config.aux_tag_list]
-        tag_groups_n_tags = [
-            (group.id, [tag.id for tag in group.tags]) for group in tag_config.tag_groups
-        ]
-
-        if (raw_value := data.get("value")) is not None:
-            data["value"] = []
-
-            for tag_id in raw_value:
-                raw_id = tag_id.replace("!", "")
-                if raw_id in aux_tags:
-                    auxtag = {
-                        "tag_type": "aux_tag",
-                        "tag_id": raw_id,
-                        "operator": "is_not_set" if tag_id[0] == "!" else "is_set",
-                    }
-                    data["value"].append(auxtag)
-
-                for tag_group_id, tag_ids in tag_groups_n_tags:
-                    if raw_id in tag_ids:
-                        grouptag = {
-                            "tag_type": "tag_group",
-                            "tag_group_id": tag_group_id,
-                            "operator": "is_not" if tag_id[0] == "!" else "is",
-                            "tag_id": raw_id,
-                        }
-                        data["value"].append(grouptag)
-
-        return data
+    value = fields.List(
+        fields.Nested(TagTypeSelectorOutput),
+        example=[
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "agent",
+                "operator": "is",
+                "tag_id": "checkmk-agent",
+            },
+            {
+                "tag_type": "aux_tag",
+                "operator": "is_set",
+                "tag_id": "snmp",
+            },
+        ],
+        description="A list of tag groups or aux tags with conditions",
+    )
 
 
 class FromToNotificationNumbersOutput(BaseSchema):
@@ -309,8 +356,8 @@ class CheckboxServiceEventTypeOutput(CheckboxOutput):
 # Plugin Responses --------------------------------------------------
 class PluginName(BaseSchema):
     plugin_name = fields.String(
-        enum=list(get_args(BuiltInPluginNames)),
-        description="The plugin name.",
+        enum=get_builtin_plugin_names(),
+        description="The plug-in name.",
         example="mail",
     )
 
@@ -318,7 +365,7 @@ class PluginName(BaseSchema):
 class EmailAndDisplayName(BaseSchema):
     address = fields.String(
         description="",
-        example="mat@tribe29.com",
+        example="mail@example.com",
     )
     display_name = fields.String(
         description="",
@@ -423,16 +470,16 @@ class URLPrefixForLinksToCheckMkCheckbox(CheckboxOutput):
 class Authentication(BaseSchema):
     method = fields.String(
         enum=["plaintext"],
-        description="",
+        description="The authentication method is fixed at 'plaintext' for now.",
         example="plaintext",
     )
     user = fields.String(
-        description="",
-        example="",
+        description="The username for the SMTP connection",
+        example="user_1",
     )
     password = fields.String(
-        description="",
-        example="",
+        description="The password for the SMTP connection.",
+        example="password",
     )
 
 
@@ -445,8 +492,9 @@ class EnableSynchronousDeliveryViaSMTP(BaseSchema):
         AuthenticationValue,
     )
     encryption = fields.String(
-        description="",
-        example="ssl/tls",
+        enum=["ssl_tls", "starttls"],
+        description="The encryption type for the SMTP connection.",
+        example="ssl_tls",
     )
     port = fields.Integer(
         description="",
@@ -471,7 +519,7 @@ class GraphsPerNotification(CheckboxOutput):
 
 class BulkNotificationsWithGraphs(CheckboxOutput):
     value = fields.Integer(
-        description="Sets a limit for the number of notifications in a bulk for which graphs are displayed. If you do not use bulk notifications this option is ignored. Note that each graph increases the size of the mail and takes time to renderon the monitoring server. Therefore, large bulks may exceed the maximum size for attachements or the plugin may run into a timeout so that a failed notification is produced",
+        description="Sets a limit for the number of notifications in a bulk for which graphs are displayed. If you do not use bulk notifications this option is ignored. Note that each graph increases the size of the mail and takes time to renderon the monitoring server. Therefore, large bulks may exceed the maximum size for attachements or the plug-in may run into a timeout so that a failed notification is produced",
         example=5,
     )
 
@@ -516,11 +564,14 @@ URL_PREFIX_FOR_LINKS_TO_CHECKMK_RESPONSE = fields.Nested(
 
 class HttpProxy(BaseSchema):
     option = fields.String(
-        enum=["no_proxy", "environment", "url"],
-        example="",
+        enum=["no_proxy", "environment", "url", "global"],
+        example="no_proxy",
     )
     url = fields.String(
         example="http://example_proxy",
+    )
+    global_proxy_id = GlobalHTTPProxyField(
+        presence="should_exist",
     )
 
 
@@ -533,8 +584,8 @@ class HttpProxyValue(CheckboxOutput):
 
 HTTP_PROXY_RESPONSE = fields.Nested(
     HttpProxyValue,
-    example={},
-    description="",
+    example={"state": "enabled", "value": "no_proxy"},
+    description="The http proxy settings for the plugin",
 )
 
 
@@ -582,7 +633,7 @@ class IlertPluginResponse(PluginName):
 class JiraPluginResponse(PluginName):
     jira_url = fields.String(
         example="http://jira_url_example.com",
-        description="Configure the JIRA URL here",
+        description="Configure the Jira URL here",
     )
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     username = fields.String(
@@ -595,23 +646,23 @@ class JiraPluginResponse(PluginName):
     )
     project_id = fields.String(
         example="",
-        description="The numerical JIRA project ID. If not set, it will be retrieved from a custom user attribute named jiraproject. If that is not set, the notification will fail",
+        description="The numerical Jira project ID. If not set, it will be retrieved from a custom user attribute named jiraproject. If that is not set, the notification will fail",
     )
     issue_type_id = fields.String(
         example="",
-        description="The numerical JIRA issue type ID. If not set, it will be retrieved from a custom user attribute named jiraissuetype. If that is not set, the notification will fail",
+        description="The numerical Jira issue type ID. If not set, it will be retrieved from a custom user attribute named jiraissuetype. If that is not set, the notification will fail",
     )
     host_custom_id = fields.String(
         example="",
-        description="The numerical JIRA custom field ID for host problems",
+        description="The numerical Jira custom field ID for host problems",
     )
     service_custom_id = fields.String(
         example="",
-        description="The numerical JIRA custom field ID for service problems",
+        description="The numerical Jira custom field ID for service problems",
     )
     monitoring_url = fields.String(
         example="",
-        description="Configure the base URL for the Monitoring Web-GUI here. Include the site name. Used for link to check_mk out of jira",
+        description="Configure the base URL for the monitoring web-GUI here. Include the site name. Used for link to Checkmk out of Jira",
     )
     site_custom_id = fields.Nested(CheckboxWithStrValueOutput)
     priority_id = fields.Nested(CheckboxWithStrValueOutput)
@@ -908,11 +959,11 @@ class SMSPluginResponse(PluginName):
 class SpectrumPluginResponse(PluginName):
     destination_ip = IPField(
         ip_type_allowed="ipv4",
-        description="IP Address of the Spectrum server receiving the SNMP trap",
+        description="IP address of the Spectrum server receiving the SNMP trap",
     )
     snmp_community = fields.String(
         example="",
-        description="SNMP Community for the SNMP trap. The password entered here is stored in plain text within the monitoring site. This usually needed because the monitoring process needs to have access to the unencrypted password because it needs to submit it to authenticate with remote systems",
+        description="SNMP community for the SNMP trap. The password entered here is stored in plain text within the monitoring site. This usually needed because the monitoring process needs to have access to the unencrypted password because it needs to submit it to authenticate with remote systems",
     )
     base_oid = fields.String(
         example="1.3.6.1.4.1.1234",
@@ -976,11 +1027,11 @@ class PluginBase(BaseSchema):
     )
 
     plugin_params = fields.Dict(
-        description="The plugin name and configuration parameters defined.",
+        description="The plug-in name and configuration parameters defined.",
     )
 
     def dump(self, obj: dict[str, Any], *args: Any, **kwargs: Any) -> Mapping:
-        if obj["plugin_params"]["plugin_name"] not in list(get_args(BuiltInPluginNames)):
+        if obj["plugin_params"]["plugin_name"] not in get_builtin_plugin_names():
             return obj
 
         schema_mapper: Mapping[BuiltInPluginNames, type[BaseSchema]] = {
@@ -1016,7 +1067,7 @@ class NotificationBulkingCommonAttributes(CheckboxOutput):
         example=60,
     )
     max_bulk_size = fields.Integer(
-        description="At most that many Notifications are kept back for bulking. A value of 1 essentially turns off notification bulking.",
+        description="At most that many notifications are kept back for bulking. A value of 1 essentially turns off notification bulking.",
         example="1000",
     )
     notification_bulks_based_on = fields.List(

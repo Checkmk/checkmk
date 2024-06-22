@@ -1341,7 +1341,7 @@ void SelfConfigure() {
     auto *handle = SelfOpen();
     ON_OUT_OF_SCOPE(::CloseServiceHandle(handle));
     if (!IsServiceConfigured(handle)) {
-        XLOG::l.i("Configure check mk service");
+        XLOG::l.i("Configure Checkmk service");
         ConfigureServiceAsRestartable(handle);
     }
 }

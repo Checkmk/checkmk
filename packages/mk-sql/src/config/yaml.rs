@@ -5,12 +5,12 @@
 use crate::utils::read_file;
 use anyhow::{anyhow, Result};
 use std::path::{Path, PathBuf};
-use yaml_rust::YamlLoader;
-pub type Yaml = yaml_rust::yaml::Yaml;
+use yaml_rust2::YamlLoader;
+pub type Yaml = yaml_rust2::yaml::Yaml;
 
 pub mod trace_tools {
     use std::io::{self, Write};
-    use yaml_rust::{Yaml, YamlEmitter};
+    use yaml_rust2::{Yaml, YamlEmitter};
     #[allow(dead_code)]
     pub fn dump_yaml(yaml: &Yaml) -> String {
         let mut writer = String::new();
@@ -48,9 +48,11 @@ pub trait Get {
 
     fn get_yaml_vector(&self, key: &str) -> Vec<Yaml>;
 
-    /// load a string from using key with default.
-    /// If obtained string is not bool-like -> error
-    fn get_bool(&self, key: &str, default: bool) -> bool;
+    fn get_bool(&self, key: &str, default: bool) -> bool {
+        self.get_optional_bool(key).unwrap_or(default)
+    }
+
+    fn get_optional_bool(&self, key: &str) -> Option<bool>;
 }
 
 impl Get for Yaml {
@@ -113,21 +115,23 @@ impl Get for Yaml {
         self[key].as_vec().unwrap_or(&vec![]).to_vec()
     }
 
-    fn get_bool(&self, key: &str, default: bool) -> bool {
+    fn get_optional_bool(&self, key: &str) -> Option<bool> {
         let result = &self[key];
-        if self[key].is_badvalue() {
-            return default;
+        if result.is_badvalue() {
+            return None;
         }
-        if let Some(v) = result.as_bool() {
-            return v;
+
+        let ret = result.as_bool();
+        if ret.is_some() {
+            return ret;
         }
+
         // for some reason yaml rust doesn't accept yes/no either True/False as bool
-        if let Some(v) = result.as_str().map(to_bool).transpose().ok().flatten() {
-            v
-        } else {
-            log::warn!("{key} is not bool like, using default {default:?}");
-            default
+        let ret = result.as_str().map(to_bool).transpose().ok().flatten();
+        if ret.is_none() {
+            log::warn!("{key} is not bool like");
         }
+        ret
     }
 }
 
@@ -158,7 +162,7 @@ fn to_bool(value: &str) -> Result<bool> {
 
 #[cfg(test)]
 pub mod test_tools {
-    use yaml_rust::{Yaml, YamlLoader};
+    use yaml_rust2::{Yaml, YamlLoader};
     pub fn create_yaml(source: &str) -> Yaml {
         YamlLoader::load_from_str(source).expect("fix test string!")[0].clone()
     }

@@ -19,13 +19,17 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.rulesets.tuple_rulesets import (
+    ALL_HOSTS,
+    get_rule_options,
+    hosttags_match_taglist,
+    in_extraconf_hostlist,
+    in_extraconf_servicelist,
+)
 from cmk.utils.tags import TagGroupID, TagID
-
-import cmk.base.config as config
 
 
 @pytest.fixture(autouse=True)
@@ -456,70 +460,66 @@ def test_all_matching_hosts(ts: Scenario) -> None:
 
 
 def test_in_extraconf_hostlist() -> None:
-    assert tuple_rulesets.in_extraconf_hostlist(tuple_rulesets.ALL_HOSTS, "host1") is True
-    assert tuple_rulesets.in_extraconf_hostlist([], "host1") is False
+    assert in_extraconf_hostlist(ALL_HOSTS, "host1") is True
+    assert in_extraconf_hostlist([], "host1") is False
 
-    assert tuple_rulesets.in_extraconf_hostlist(["host2", "host1"], "host1") is True
-    assert tuple_rulesets.in_extraconf_hostlist(["host1", "host2"], "host1") is True
+    assert in_extraconf_hostlist(["host2", "host1"], "host1") is True
+    assert in_extraconf_hostlist(["host1", "host2"], "host1") is True
 
-    assert tuple_rulesets.in_extraconf_hostlist(["host1"], "host1") is True
-    assert tuple_rulesets.in_extraconf_hostlist(["!host1", "host1", "!host1"], "host1") is False
-    assert tuple_rulesets.in_extraconf_hostlist(["!host1"], "host1") is False
-    assert tuple_rulesets.in_extraconf_hostlist(["!host2"], "host1") is False
-    assert tuple_rulesets.in_extraconf_hostlist(["host1", "!host2"], "host1") is True
-    assert tuple_rulesets.in_extraconf_hostlist(["!host2", "host1"], "host1") is True
-    assert tuple_rulesets.in_extraconf_hostlist(["~h"], "host1") is True
-    assert tuple_rulesets.in_extraconf_hostlist(["~h"], "host1") is True
-    assert tuple_rulesets.in_extraconf_hostlist(["~h$"], "host1") is False
-    assert tuple_rulesets.in_extraconf_hostlist(["~1"], "host1") is False
-    assert tuple_rulesets.in_extraconf_hostlist(["~.*1"], "host1") is True
-    assert tuple_rulesets.in_extraconf_hostlist(["~.*1$"], "host1") is True
+    assert in_extraconf_hostlist(["host1"], "host1") is True
+    assert in_extraconf_hostlist(["!host1", "host1", "!host1"], "host1") is False
+    assert in_extraconf_hostlist(["!host1"], "host1") is False
+    assert in_extraconf_hostlist(["!host2"], "host1") is False
+    assert in_extraconf_hostlist(["host1", "!host2"], "host1") is True
+    assert in_extraconf_hostlist(["!host2", "host1"], "host1") is True
+    assert in_extraconf_hostlist(["~h"], "host1") is True
+    assert in_extraconf_hostlist(["~h"], "host1") is True
+    assert in_extraconf_hostlist(["~h$"], "host1") is False
+    assert in_extraconf_hostlist(["~1"], "host1") is False
+    assert in_extraconf_hostlist(["~.*1"], "host1") is True
+    assert in_extraconf_hostlist(["~.*1$"], "host1") is True
 
 
 def test_get_rule_options_regular_rule() -> None:
     options = {"description": 'Put all hosts into the contact group "all"'}
-    entry: tuple[str, list[str], list[str], dict] = ("all", [], tuple_rulesets.ALL_HOSTS, options)
-    assert tuple_rulesets.get_rule_options(entry) == (entry[:-1], options)
+    entry: tuple[str, list[str], list[str], dict] = ("all", [], ALL_HOSTS, options)
+    assert get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_empty_options() -> None:
     options: dict = {}
-    entry: tuple[str, list[str], list[str], dict] = ("all", [], tuple_rulesets.ALL_HOSTS, options)
-    assert tuple_rulesets.get_rule_options(entry) == (entry[:-1], options)
+    entry: tuple[str, list[str], list[str], dict] = ("all", [], ALL_HOSTS, options)
+    assert get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_missing_options() -> None:
-    entry: tuple[str, list[str], list[str]] = ("all", [], tuple_rulesets.ALL_HOSTS)
-    assert tuple_rulesets.get_rule_options(entry) == (entry, {})
+    entry: tuple[str, list[str], list[str]] = ("all", [], ALL_HOSTS)
+    assert get_rule_options(entry) == (entry, {})
 
 
 def test_hosttags_match_taglist() -> None:
-    assert tuple_rulesets.hosttags_match_taglist([TagID("no-agent")], [TagID("no-agent")])
-    assert tuple_rulesets.hosttags_match_taglist(
-        [TagID("no-agent"), TagID("test")], [TagID("no-agent")]
-    )
-    assert tuple_rulesets.hosttags_match_taglist(
+    assert hosttags_match_taglist([TagID("no-agent")], [TagID("no-agent")])
+    assert hosttags_match_taglist([TagID("no-agent"), TagID("test")], [TagID("no-agent")])
+    assert hosttags_match_taglist(
         [TagID("no-agent"), TagID("test")], [TagID("no-agent"), TagID("test")]
     )
 
 
 def test_hosttags_match_taglist_not_matching() -> None:
-    assert not tuple_rulesets.hosttags_match_taglist([TagID("no-agent")], [TagID("test")])
-    assert not tuple_rulesets.hosttags_match_taglist(
+    assert not hosttags_match_taglist([TagID("no-agent")], [TagID("test")])
+    assert not hosttags_match_taglist(
         [TagID("tag"), TagID("no-agent"), TagID("test2")], [TagID("test")]
     )
-    assert not tuple_rulesets.hosttags_match_taglist(
+    assert not hosttags_match_taglist(
         [TagID("no-agent"), TagID("test")], [TagID("test"), TagID("tag3")]
     )
 
 
 def test_hosttags_match_taglist_negate() -> None:
-    assert not tuple_rulesets.hosttags_match_taglist(
+    assert not hosttags_match_taglist(
         [TagID("no-agent"), TagID("test")], [TagID("no-agent"), TagID("!test")]
     )
-    assert tuple_rulesets.hosttags_match_taglist(
-        [TagID("no-agent")], [TagID("no-agent"), TagID("!test")]
-    )
+    assert hosttags_match_taglist([TagID("no-agent")], [TagID("no-agent"), TagID("!test")])
 
 
 @pytest.mark.parametrize(
@@ -564,4 +564,4 @@ def test_hosttags_match_taglist_negate() -> None:
 def test_in_extraconf_servicelist(
     service_patterns: list[str], service: str, expected: bool
 ) -> None:
-    assert config.in_extraconf_servicelist(service_patterns, service) == expected
+    assert in_extraconf_servicelist(service_patterns, service) == expected

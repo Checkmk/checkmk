@@ -46,10 +46,6 @@ def delete_directory_contents(d: str) -> None:
         delete_user_file(d + "/" + f)
 
 
-def omd_base_path() -> str:
-    return "/"
-
-
 def get_editor() -> str:
     alternative = os.environ.get("EDITOR", "/usr/bin/vi")
     editor = os.environ.get("VISUAL", alternative)
@@ -143,3 +139,20 @@ def replace_tags(content: bytes, replacements: Replacements) -> bytes:
     for var, value in replacements.items():
         content = content.replace(var.encode("utf-8"), value.encode("utf-8"))
     return content
+
+
+# TODO: move to sites.py, this is currently not possible due to circular import
+def site_exists(site_dir: Path) -> bool:
+    # In container environments the tmpfs may be managed by the container runtime (when
+    # using the --tmpfs option).  In this case the site directory is
+    # created as parent of the tmp directory to mount the tmpfs during
+    # container initialization. Detect this situation and don't treat the
+    # site as existing in that case.
+    if is_containerized():
+        if not os.path.exists(site_dir):
+            return False
+        if os.listdir(site_dir) == ["tmp"]:
+            return False
+        return True
+
+    return os.path.exists(site_dir)

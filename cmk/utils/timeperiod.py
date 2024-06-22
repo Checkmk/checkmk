@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from datetime import datetime
-from pathlib import Path
-from typing import TypeAlias
+from typing import TypeAlias, TypeGuard
 
 from dateutil.tz import tzlocal
 
@@ -13,9 +13,8 @@ import livestatus
 
 import cmk.utils.cleanup
 import cmk.utils.debug
-import cmk.utils.store as store
 from cmk.utils.caching import cache_manager
-from cmk.utils.config_validation_layer.timeperiods import validate_timeperiods
+from cmk.utils.dateutils import Weekday
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.i18n import _
 
@@ -31,7 +30,31 @@ TimeperiodName: TypeAlias = str
 # TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
 # can easily transform back and forth for serialization.
 TimeperiodSpec = dict[str, str | list[str] | list[tuple[str, str]]]
+# class TimeperiodSpec(TypedDict):
+#    alias: str
+#    monday: NotRequired[list[tuple[str, str]]]
+#    tuesday: NotRequired[list[tuple[str, str]]]
+#    wednesday: NotRequired[list[tuple[str, str]]]
+#    thursday: NotRequired[list[tuple[str, str]]]
+#    friday: NotRequired[list[tuple[str, str]]]
+#    saturday: NotRequired[list[tuple[str, str]]]
+#    sunday: NotRequired[list[tuple[str, str]]]
+#    exclude: NotRequired[list[TimeperiodName]]
+#    # In addition to the above fields the data structures allows arbitrary
+#    # fields in the following format. This is not supported by typed dicts,
+#    # so we definetely should use something else during runtime.
+#    # %Y-%m-%d: list[tuple[str, str]]
+
 TimeperiodSpecs = dict[TimeperiodName, TimeperiodSpec]
+
+
+def is_time_range_list(obj: object) -> TypeGuard[list[tuple[str, str]]]:
+    return isinstance(obj, list) and all(
+        isinstance(item, tuple)
+        and len(item) == 2
+        and all(isinstance(subitem, str) for subitem in item)
+        for item in obj
+    )
 
 
 # TODO: We should really parse our configuration file and use a
@@ -112,39 +135,11 @@ def builtin_timeperiods() -> TimeperiodSpecs:
     }
 
 
-def load_timeperiods() -> TimeperiodSpecs:
-    timeperiods = store.load_from_mk_file(_get_timeperiods_conf_file_path(), "timeperiods", {})
-    validate_timeperiods(timeperiods)
-    timeperiods.update(builtin_timeperiods())
-    return timeperiods
-
-
-def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
-    validate_timeperiods(timeperiods)
-    store.mkdir(Path(cmk.utils.paths.check_mk_config_dir, "wato"))
-    store.save_to_mk_file(
-        _get_timeperiods_conf_file_path(),
-        "timeperiods",
-        _filter_builtin_timeperiods(timeperiods),
-    )
-    cleanup_timeperiod_caches()
-
-
-def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
-    builtin_keys = set(builtin_timeperiods().keys())
-    return {k: v for k, v in timeperiods.items() if k not in builtin_keys}
-
-
-def _get_timeperiods_conf_file_path() -> Path:
-    return Path(cmk.utils.paths.check_mk_config_dir, "wato", "timeperiods.mk")
-
-
-# TODO improve typing of time_tuple_list, it's a list[tuple[str, str]]
 def _is_time_in_timeperiod(
     current_time: str,
-    time_tuple_list: str | list[str] | list[tuple[str, str]],
+    time_tuple_list: Sequence[tuple[str, str]],
 ) -> bool:
-    for start, end in time_tuple_list:  # type: ignore[misc]
+    for start, end in time_tuple_list:
         if start <= current_time <= end:
             return True
     return False
@@ -165,7 +160,7 @@ def is_timeperiod_active(
     ):
         return False
 
-    days = [
+    days: list[Weekday] = [
         "monday",
         "tuesday",
         "wednesday",
@@ -184,7 +179,9 @@ def is_timeperiod_active(
         return False
 
     if (weekday := days[current_datetime.weekday()]) in timeperiod_definition:
-        return _is_time_in_timeperiod(current_time, timeperiod_definition[weekday])
+        time_ranges = timeperiod_definition[weekday]
+        assert is_time_range_list(time_ranges)
+        return _is_time_in_timeperiod(current_time, time_ranges)
 
     return False
 
@@ -207,16 +204,19 @@ def _is_timeperiod_excluded_via_timeperiod(
 
 def _is_timeperiod_excluded_via_exception(
     timeperiod_definition: TimeperiodSpec,
-    days: list[str],
+    days: Sequence[Weekday],
     current_time: str,
 ) -> bool:
     for key, value in timeperiod_definition.items():
-        if key in days + ["alias", "exclude"]:
+        if key in [*days, "alias", "exclude"]:
             continue
 
         try:
             datetime.strptime(key, "%Y-%m-%d")
         except ValueError:
+            continue
+
+        if not is_time_range_list(value):
             continue
 
         if _is_time_in_timeperiod(current_time, value):

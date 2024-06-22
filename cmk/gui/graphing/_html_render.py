@@ -16,6 +16,7 @@ from livestatus import MKLivestatusNotFoundError, SiteId
 import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.config import active_config
@@ -26,7 +27,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import SizePT
@@ -159,14 +160,14 @@ def _render_graph_html(
 ) -> HTML:
     with output_funnel.plugged():
         _show_graph_html_content(graph_artwork, graph_data_range, graph_render_config)
-        html_code = HTML(output_funnel.drain())
+        html_code = HTML.without_escaping(output_funnel.drain())
 
     return HTMLWriter.render_javascript(
         "cmk.graphs.create_graph(%s, %s, %s, %s);"
         % (
             json.dumps(html_code),
-            graph_artwork.model_dump_json(),
-            graph_render_config.model_dump_json(),
+            json.dumps(graph_artwork.model_dump()),
+            json.dumps(graph_render_config.model_dump()),
             json.dumps(_graph_ajax_context(graph_artwork, graph_data_range, graph_render_config)),
         )
     )
@@ -273,7 +274,7 @@ def _show_html_graph_title(
             graph_render_config,
             explicit_title=graph_render_config.explicit_title,
         ),
-        separator=" / ",
+        separator=HTML.without_escaping(" / "),
     )
     if not title:
         return
@@ -335,7 +336,7 @@ def _show_graph_html_content(
     if additional_html := graph_artwork.definition.additional_html:
         html.open_div(align="center")
         html.h2(additional_html.title)
-        html.write_html(HTML(additional_html.html))
+        html.write_html(HTML.without_escaping(additional_html.html))
         html.close_div()
 
     html.close_div()
@@ -346,7 +347,7 @@ def _show_graph_add_to_icon_for_popup(
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
 ) -> None:
-    icon_html = html.render_icon("menu", _("Add this graph to..."))
+    icon_html = html.render_icon("menu", _("Add to ..."))
     element_type_name = "pnpgraph"
 
     # Data will be transferred via URL and Javascript magic eventually
@@ -483,7 +484,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
         html.open_tr()
         html.open_td(style=font_size_style)
         html.write_html(render_color_icon(curve["color"]))
-        html.write_text(curve["title"])
+        html.write_text_permissive(curve["title"])
         html.close_td()
 
         for scalar, title, inactive in scalars:
@@ -505,7 +506,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
             html.open_tr(class_=["scalar"] + (["first"] if first else []))
             html.open_td(style=font_size_style)
             html.write_html(render_color_icon(horizontal_rule.color))
-            html.write_text(str(horizontal_rule.title))
+            html.write_text_permissive(str(horizontal_rule.title))
             html.close_td()
 
             # A colspan of 5 has to be used here, since the pin that is added by a click into
@@ -640,9 +641,11 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
         step=step,
     )
 
-    # Persist the current data range for the graph editor
-    if graph_render_config.editing:
-        _save_user_graph_data_range(graph_data_range)
+    # Persist the current data range for the graph editor.
+    if graph_render_config.editing and (
+        specification_id := context.get("definition", {}).get("specification", {}).get("id")
+    ):
+        UserGraphDataRangeStore(user).save(specification_id, graph_data_range)
 
     graph_artwork = compute_graph_artwork(
         graph_recipe,
@@ -652,7 +655,7 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
 
     with output_funnel.plugged():
         _show_graph_html_content(graph_artwork, graph_data_range, graph_render_config)
-        html_code = HTML(output_funnel.drain())
+        html_code = HTML.without_escaping(output_funnel.drain())
 
     return {
         "html": html_code,
@@ -666,34 +669,37 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def load_user_graph_data_range() -> GraphDataRange:
-    return (
-        GraphDataRange.model_validate(raw_range)
-        if (
-            raw_range := user.load_file(
-                "graph_range",
-                None,
+def _user_graph_data_range_file_name(custom_graph_id: str) -> str:
+    return f"graph_range_{custom_graph_id}"
+
+
+class UserGraphDataRangeStore:
+    def __init__(self, user_: LoggedInUser) -> None:
+        self.user = user_
+
+    def save(self, custom_graph_id: str, graph_data_range: GraphDataRange) -> None:
+        self.user.save_file(
+            _user_graph_data_range_file_name(custom_graph_id),
+            graph_data_range.model_dump(),
+        )
+
+    def load(self, custom_graph_id: str) -> GraphDataRange | None:
+        return (
+            GraphDataRange.model_validate(raw_range)
+            if (
+                raw_range := self.user.load_file(
+                    _user_graph_data_range_file_name(custom_graph_id), None
+                )
             )
+            else None
         )
-        else GraphDataRange(
-            time_range=(int(time.time() - 86400), int(time.time())),
-            step="86400:80000",
-        )
-    )
 
-
-def _save_user_graph_data_range(graph_data_range: GraphDataRange) -> None:
-    user.save_file("graph_range", graph_data_range.model_dump())
-
-
-def forget_manual_vertical_zoom() -> None:
-    user_range = load_user_graph_data_range()
-    _save_user_graph_data_range(
-        GraphDataRange(
-            time_range=user_range.time_range,
-            step=user_range.step,
-        )
-    )
+    def remove(self, custom_graph_id: str) -> None:
+        (
+            profile_dir
+            / self.user.ident
+            / f"{_user_graph_data_range_file_name(custom_graph_id)}.mk"
+        ).unlink(missing_ok=True)
 
 
 def _resolve_graph_recipe_with_error_handling(
@@ -744,7 +750,7 @@ def _render_graphs_from_definitions(
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
-    output = HTML()
+    output = HTML.empty()
     for graph_recipe in graph_recipes:
         recipe_specific_render_config = graph_render_config.model_copy(
             update=dict(graph_recipe.render_options)
@@ -796,9 +802,9 @@ def _render_graph_container_html(
     output += HTMLWriter.render_javascript(
         "cmk.graphs.load_graph_content(%s, %s, %s, %s)"
         % (
-            graph_recipe.model_dump_json(),
-            graph_data_range.model_dump_json(),
-            graph_render_config.model_dump_json(),
+            json.dumps(graph_recipe.model_dump()),
+            json.dumps(graph_data_range.model_dump()),
+            json.dumps(graph_render_config.model_dump()),
             json.dumps(graph_display_id),
         )
     )
@@ -833,7 +839,7 @@ def _render_graph_content_html(
     *,
     graph_display_id: str = "",
 ) -> HTML:
-    output = HTML()
+    output = HTML.empty()
 
     try:
         graph_artwork = compute_graph_artwork(
@@ -916,7 +922,7 @@ def _render_time_range_selection(
             )
         )
     return HTMLWriter.render_table(
-        HTML().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
+        HTML.empty().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
     )
 
 

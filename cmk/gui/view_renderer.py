@@ -6,17 +6,14 @@
 import abc
 import collections
 import json
-from collections.abc import Iterator
-from typing import Callable
+from collections.abc import Callable, Iterator
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 import cmk.gui.pages
-import cmk.gui.sites as sites
 import cmk.gui.view_utils
-import cmk.gui.visuals as visuals
-import cmk.gui.weblib as weblib
+from cmk.gui import sites, visuals, weblib
 from cmk.gui.alarm import play_alarm_sounds
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -103,20 +100,20 @@ class GUIViewRenderer(ABCViewRenderer):
         super().__init__(view)
         self._show_buttons = show_buttons
 
-    def render(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
+    def render(  # pylint: disable=too-many-branches
         self,
         rows: Rows,
         show_checkboxes: bool,
         num_columns: int,
         show_filters: list[Filter],
         unfiltered_amount_of_rows: int,
-    ):
+    ) -> None:
         view_spec = self.view.spec
 
         if transactions.transaction_valid() and html.do_actions():
             html.browser_reload = 0.0
 
-        # Show/Hide the header with page title, MK logo, etc.
+        # Show/hide the header with page title, MK logo, etc.
         if display_options.enabled(display_options.H):
             html.body_start(view_title(view_spec, self.view.context))
 
@@ -596,22 +593,22 @@ class GUIViewRenderer(ABCViewRenderer):
 
     def _render_filter_form(self, show_filters: list[Filter]) -> HTML:
         if not display_options.enabled(display_options.F):
-            return HTML()
+            return HTML.empty()
 
         with output_funnel.plugged():
             show_filter_form(self.view, show_filters)
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _render_painter_options_form(self) -> HTML:
         with output_funnel.plugged():
             painter_options = PainterOptions.get_instance()
             painter_options.show_form(self.view.spec, self.view.painter_options)
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _render_command_form(self, info_name: InfoName, command: Command) -> HTML:
         with output_funnel.plugged():
             if not should_show_command_form(self.view.datasource):
-                return HTML()
+                return HTML.empty()
 
             # TODO: Make unique form names (object IDs), investigate whether or not something
             # depends on the form name "actions"
@@ -624,7 +621,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
                 html.hidden_fields()
 
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _extend_help_dropdown(self, menu: PageMenu) -> None:
         # TODO

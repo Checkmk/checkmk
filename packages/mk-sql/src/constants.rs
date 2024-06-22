@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 pub const VERSION: &str = "2.4.0b1";
+use crate::types::HostName;
 
 use lazy_static::lazy_static;
 use std::path::{Path, PathBuf};
@@ -24,7 +25,10 @@ pub mod environment {
     pub const VAR_DIR_ENV_VAR: &str = "MK_VARDIR";
 }
 
+pub const ODBC_CONNECTION_TIMEOUT: u32 = 2;
+
 lazy_static! {
+    pub static ref LOCAL_HOST: HostName = "localhost".to_owned().into();
     pub static ref DEFAULT_CONFIG_FILE: PathBuf =
         Path::new(&get_env_value(environment::CONFIG_DIR_ENV_VAR, "."))
             .join(environment::CONFIG_NAME);

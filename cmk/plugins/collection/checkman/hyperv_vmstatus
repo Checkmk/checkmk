@@ -4,7 +4,7 @@ catalog: os/services
 license: GPLv2
 distribution: check_mk
 description:
- This checks queries a Microsoft Hyper-V Server via an agent plugin ({hyperv_vms_guestinfos.ps1}).
+ This checks queries a Microsoft Hyper-V Server via an agent plug-in ({hyperv_vms_guestinfos.ps1}).
  It returns for each VM the status of the Integration Services using pickyback.
  It will automaticly throw an {CRITICAL} state if there any errors.
 

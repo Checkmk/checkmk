@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from typing import Any
 
 from cmk.gui import bi
@@ -12,7 +13,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.sidebar import bulletlink, SidebarSnapin, SnapinRegistry
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless, urlencode
 
 
@@ -55,12 +55,17 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
         return _("A direct link to all groups of BI aggregations organized as tree")
 
     def show(self) -> None:
-        tree: dict[tuple[str, ...], dict[str, Any]] = {}
+        tree: dict[str, dict[str, Any]] = {}
         for group in bi.get_aggregation_group_trees():
-            self._build_tree(group.split("/"), tree, tuple())
+            self._build_tree(tuple(group.split("/")), tree, tuple())
         self._render_tree(tree)
 
-    def _build_tree(self, group, parent, path):
+    def _build_tree(
+        self,
+        group: tuple[str, ...],
+        parent: dict[str, dict[str, Any]],
+        path: tuple[str, ...],
+    ) -> None:
         this_node = group[0]
         path = path + (this_node,)
         child = parent.setdefault(this_node, {"__path__": path})
@@ -69,7 +74,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
             child = child.setdefault("__children__", {})
             self._build_tree(children, child, path)
 
-    def _render_tree(self, tree) -> None:  # type: ignore[no-untyped-def]
+    def _render_tree(self, tree: Mapping[str, dict[str, Any]]) -> None:
         for group, attrs in tree.items():
             aggr_group_tree = "/".join(attrs["__path__"])
             fetch_url = makeuri_contextless(
@@ -86,12 +91,10 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
                     treename="bi_aggregation_group_trees",
                     id_=aggr_group_tree,
                     isopen=False,
-                    title=HTML(
-                        HTMLWriter.render_a(
-                            group,
-                            href=fetch_url,
-                            target="main",
-                        )
+                    title=HTMLWriter.render_a(
+                        group,
+                        href=fetch_url,
+                        target="main",
                     ),
                 ):
                     self._render_tree(attrs["__children__"])

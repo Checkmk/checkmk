@@ -2,9 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -111,7 +111,7 @@ def parse_oracle_sql(string_table: StringTable) -> Section:
         infotext = ":".join(line[1:]).strip()
         if key.endswith("ERROR") or key.startswith("ERROR at line") or "|FAILURE|" in key:
             instance.parsing_error.setdefault(("instance", "PL/SQL failure", 2), []).append(
-                "%s: %s" % (key.split("|")[-1], infotext)
+                "{}: {}".format(key.split("|")[-1], infotext)
             )
 
         elif key in ["details"]:
@@ -155,7 +155,7 @@ def check_oracle_sql(item: str, params: Mapping[str, Any], section: Section) -> 
     for (error_key, error_title, error_state), error_lines in data.parsing_error.items():
         yield Result(
             state=State(params.get("%s_error_state" % error_key, error_state)),
-            summary="%s: %s" % (error_title, " ".join(error_lines)),
+            summary="{}: {}".format(error_title, " ".join(error_lines)),
         )
 
     metrics = data.metrics

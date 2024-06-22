@@ -21,8 +21,8 @@ import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.redis import get_redis_client
 
-import cmk.gui.sites as sites
 import cmk.gui.utils
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
@@ -174,9 +174,9 @@ class ABCQuicksearchConductor(abc.ABC):
 
 
 class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
-    """Passes queries through to a non livestatus plugin
+    """Passes queries through to a non livestatus plug-in
 
-    There is no aggregation done by this conductor. It deals with a single search plugin."""
+    There is no aggregation done by this conductor. It deals with a single search plug-in."""
 
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         super().__init__(used_filters, filter_behaviour)
@@ -214,17 +214,17 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
 
 
 class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
-    """Executes the livestatus search plugins and collects results
+    """Executes the livestatus search plug-ins and collects results
 
     It cares about aggregating the queries of different filters together to a single livestatus
     query (see _generate_livestatus_command) in case they are given with "used_filters".
 
-    Based on all the given plugin selection expressions it decides which one to use. There is only a
-    single table selected and queried! This means that incompatible search plugins in a single
+    Based on all the given plug-in selection expressions it decides which one to use. There is only a
+    single table selected and queried! This means that incompatible search plug-ins in a single
     search query (e.g. service group and host name) are not both executed.
 
     Based on the used_filters it selects a livestatus table to query. Then it constructs the
-    livestatus query with the help of all search plugins that support searching the previously
+    livestatus query with the help of all search plug-ins that support searching the previously
     selected table.
     """
 
@@ -575,7 +575,7 @@ class QuicksearchManager:
                 )
             ]
 
-        # No explicit filters specified by search expression. Execute the quicksearch plugins in
+        # No explicit filters specified by search expression. Execute the quicksearch plug-ins in
         # the order they are configured to let them answer the query.
         return [
             self._make_conductor(
@@ -588,9 +588,9 @@ class QuicksearchManager:
 
     @staticmethod
     def _find_search_object_expressions(query: SearchQuery) -> list[tuple[str, int]]:
-        """Extract a list of search plugin expressions from the search query
+        """Extract a list of search plug-in expressions from the search query
 
-        The returned list contains the name of the search plugin and the character
+        The returned list contains the name of the search plug-in and the character
         at which the search starts
         """
 
@@ -793,7 +793,7 @@ class QuicksearchResultRenderer:
 
             for result in sorted(results, key=lambda x: x.title):
                 html.open_a(id_="result_%s" % query, href=result.url, target="main")
-                html.write_text(
+                html.write_text_permissive(
                     result.title
                     + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")
                 )
@@ -1054,18 +1054,18 @@ match_plugin_registry.register(ServiceMatchPlugin())
 
 
 class HostMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self, livestatus_field, name) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, livestatus_field: LivestatusColumn, name: str) -> None:
         super().__init__(["hosts", "services"], "hosts", name)
         self._livestatus_field = livestatus_field  # address, name or alias
 
     def get_match_topic(self) -> str:
         if self._livestatus_field == "name":
-            return _("Hostname")
+            return _("Host name")
         if self._livestatus_field == "address":
             return _("Hostaddress")
         return _("Hostalias")
 
-    def _get_real_fieldname(self, livestatus_table):
+    def _get_real_fieldname(self, livestatus_table: LivestatusTable) -> LivestatusColumn:
         if livestatus_table != "hosts":
             return "host_%s" % self._livestatus_field
         return self._livestatus_field
@@ -1410,7 +1410,7 @@ class MenuSearchResultsRenderer(abc.ABC):
     def _render_error(self, error: MKException) -> str:
         with output_funnel.plugged():
             html.open_div(class_="error")
-            html.write_text(f"{error}")
+            html.write_text_permissive(f"{error}")
             html.close_div()
             error_as_html = output_funnel.drain()
         return error_as_html
@@ -1494,7 +1494,7 @@ class MenuSearchResultsRenderer(abc.ABC):
                         href="",
                         onclick=f"cmk.search.on_click_show_all_results({json.dumps(topic)}, 'popup_menu_{self.search_type}');",
                     )
-                    html.write_text(_("Show all results"))
+                    html.write_text_permissive(_("Show all results"))
                     html.close_a()
                     html.close_li()
 
@@ -1503,7 +1503,7 @@ class MenuSearchResultsRenderer(abc.ABC):
                         class_="hidden warning",
                         **{"data-extended": "false"},
                     )
-                    html.write_text(
+                    html.write_text_permissive(
                         _("More than %d results available, please refine your search.")
                         % self.max_results_after_show_all
                     )
@@ -1533,7 +1533,7 @@ class MenuSearchResultsRenderer(abc.ABC):
         html.span(topic)
         html.close_h2()
 
-    def _render_result(self, result, hidden=False) -> None:  # type: ignore[no-untyped-def]
+    def _render_result(self, result: SearchResult, hidden: bool = False) -> None:
         html.open_li(
             class_="hidden" if hidden else "",
             **{"data-extended": "false" if hidden else ""},
@@ -1544,7 +1544,7 @@ class MenuSearchResultsRenderer(abc.ABC):
             onclick=f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');",
             title=result.title + (" %s" % result.context if result.context else ""),
         )
-        html.write_text(
+        html.write_text_permissive(
             result.title + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")
         )
         html.close_a()
@@ -1609,7 +1609,15 @@ class PageSearchSetup(AjaxPage):
             with output_funnel.plugged():
                 html.open_div(class_="topic")
                 html.open_ul()
-                html.write_text(_("Currently indexing, please try again shortly."))
+                html.write_text_permissive(_("Currently indexing, please try again shortly."))
+                html.close_ul()
+                html.close_div()
+                return output_funnel.drain()
+        except RuntimeError:
+            with output_funnel.plugged():
+                html.open_div(class_="error")
+                html.open_ul()
+                html.write_text_permissive(_("Redis server is not reachable."))
                 html.close_ul()
                 html.close_div()
                 return output_funnel.drain()

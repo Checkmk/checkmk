@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -10,9 +10,13 @@ import pytest
 
 from cmk.rulesets.v1.form_specs import (
     LevelsConfigModel,
+    migrate_to_float_simple_levels,
+    migrate_to_integer_simple_levels,
     migrate_to_lower_float_levels,
     migrate_to_lower_integer_levels,
     migrate_to_password,
+    migrate_to_proxy,
+    migrate_to_time_period,
     migrate_to_upper_float_levels,
     migrate_to_upper_integer_levels,
 )
@@ -50,6 +54,34 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             (
                 "predictive",
                 {
+                    "period": "minute",
+                    "horizon": 90,
+                    "levels": ("absolute", (ntype(10), ntype(20))),
+                    "bound": (ntype(10), ntype(15)),
+                    "__reference_metric__": "pagefile_used",
+                    "__direction__": "upper",
+                },
+            ),
+            does_not_raise(),
+            (
+                "cmk_postprocessed",
+                "predictive_levels",
+                {
+                    "horizon": 90,
+                    "levels": ("absolute", (ntype(10), ntype(20))),
+                    "period": "minute",
+                    "bound": (ntype(10), ntype(15)),
+                    "__reference_metric__": "pagefile_used",
+                    "__direction__": "upper",
+                },
+            ),
+            id="2.3.0b3 format absolute predictive_levels",
+        ),
+        pytest.param(
+            (
+                "cmk_postprocessed",
+                "predictive_levels",
+                {
                     "horizon": 90,
                     "levels": ("absolute", (ntype(10), ntype(20))),
                     "period": "wday",
@@ -58,7 +90,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             ),
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (ntype(10), ntype(20))),
@@ -70,7 +103,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
         ),
         pytest.param(
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("relative", (10.0, 20.0)),
@@ -80,7 +114,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             ),
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("relative", (10.0, 20.0)),
@@ -92,7 +127,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
         ),
         pytest.param(
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("stdev", (10.0, 20.0)),
@@ -102,7 +138,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             ),
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("stdev", (10.0, 20.0)),
@@ -114,7 +151,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
         ),
         pytest.param(
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (10.0, 20.0)),
@@ -183,7 +221,8 @@ def _to_lower_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (ntype(10), ntype(20))),
@@ -203,7 +242,8 @@ def _to_lower_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("relative", (10.0, 20.0)),
@@ -223,7 +263,8 @@ def _to_lower_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("stdev", (10.0, 20.0)),
@@ -248,7 +289,8 @@ def _to_upper_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (ntype(10), ntype(20))),
@@ -268,7 +310,8 @@ def _to_upper_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("relative", (10.0, 20.0)),
@@ -288,7 +331,8 @@ def _to_upper_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("stdev", (10.0, 20.0)),
@@ -314,7 +358,8 @@ def _to_upper_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (10.0, 20.0)),
@@ -347,7 +392,8 @@ def test_migrate_to_upper_float_levels(
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (10.0, 20.0)),
@@ -380,7 +426,8 @@ def test_migrate_to_lower_float_levels(
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (10, 20)),
@@ -414,7 +461,8 @@ def test_migrate_to_lower_integer_levels(
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (10, 20)),
@@ -435,6 +483,22 @@ def test_migrate_to_upper_int_levels(
         assert expected_value == migrate_to_upper_integer_levels(input_value)
 
 
+def test_migrate_to_integer_simple_levels_scaled() -> None:
+    old = (50, 60)
+    scale = 0.1
+    new = ("fixed", (5, 6))
+    assert migrate_to_integer_simple_levels(old, scale) == new
+    assert migrate_to_integer_simple_levels(new, scale) == new
+
+
+def test_migrate_to_simple_float_levels_scaled() -> None:
+    old = (50.0, 60.0)
+    scale = 0.1
+    new = ("fixed", (5.0, 6.0))
+    assert migrate_to_float_simple_levels(old, scale) == new
+    assert migrate_to_float_simple_levels(new, scale) == new
+
+
 def test_migrate_to_upper_integer_levels_scaled() -> None:
     old = (50, 60)
     scale = 0.1
@@ -447,7 +511,8 @@ def test_migrate_to_upper_integer_levels_scaled_predictive_absolute() -> None:
     old = {"horizon": 90, "levels_upper": ("absolute", (1.0, 2.0)), "period": "wday"}
     scale = 1024**3
     new = (
-        "predictive",
+        "cmk_postprocessed",
+        "predictive_levels",
         {
             "horizon": 90,
             "period": "wday",
@@ -468,7 +533,8 @@ def test_migrate_to_upper_integer_levels_scaled_predictive_relative() -> None:
     }
     scale = 1024**3
     new = (
-        "predictive",
+        "cmk_postprocessed",
+        "predictive_levels",
         {
             "horizon": 90,
             "levels": ("relative", (10.0, 20.0)),
@@ -489,7 +555,8 @@ def test_migrate_to_upper_integer_levels_scaled_predictive_stdev() -> None:
     }
     scale = 1024**3
     new = (
-        "predictive",
+        "cmk_postprocessed",
+        "predictive_levels",
         {
             "horizon": 90,
             "levels": ("stdev", (2.0, 4.0)),
@@ -506,28 +573,135 @@ def test_migrate_to_upper_integer_levels_scaled_predictive_stdev() -> None:
     [
         pytest.param(
             ("password", "secret-password"),
-            ("explicit_password", "throwaway-id", "secret-password"),
+            ("cmk_postprocessed", "explicit_password", ("throwaway-id", "secret-password")),
             id="migrate explicit password",
         ),
         pytest.param(
             ("store", "password_1"),
-            ("stored_password", "password_1", ""),
+            ("cmk_postprocessed", "stored_password", ("password_1", "")),
             id="migrate stored password",
         ),
         pytest.param(
             ("explicit_password", "067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
-            ("explicit_password", "067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
-            id="already migrated explicit password",
+            (
+                "cmk_postprocessed",
+                "explicit_password",
+                ("067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
+            ),
+            id="old 3-tuple explicit password",
         ),
         pytest.param(
             ("stored_password", "password_1", ""),
-            ("stored_password", "password_1", ""),
+            ("cmk_postprocessed", "stored_password", ("password_1", "")),
+            id="old 3-tuple stored password",
+        ),
+        pytest.param(
+            (
+                "cmk_postprocessed",
+                "explicit_password",
+                ("067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
+            ),
+            (
+                "cmk_postprocessed",
+                "explicit_password",
+                ("067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
+            ),
+            id="already migrated explicit password",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "stored_password", ("password_1", "")),
+            ("cmk_postprocessed", "stored_password", ("password_1", "")),
             id="already migrated stored password",
         ),
     ],
 )
 def test_migrate_to_password(
-    old: object, new: tuple[Literal["explicit_password", "stored_password"], str, str]
+    old: object,
+    new: tuple[
+        Literal["cmk_postprocessed"],
+        Literal["explicit_password", "stored_password"],
+        tuple[str, str],
+    ],
 ) -> None:
     assert migrate_to_password(old) == new
     assert migrate_to_password(new) == new
+
+
+@pytest.mark.parametrize(
+    ["old", "new"],
+    [
+        pytest.param(
+            ("environment", "environment"),
+            ("cmk_postprocessed", "environment_proxy", ""),
+            id="migrate environment proxy",
+        ),
+        pytest.param(
+            ("no_proxy", None),
+            ("cmk_postprocessed", "no_proxy", ""),
+            id="migrate no proxy",
+        ),
+        pytest.param(
+            ("global", "global-proxy-id"),
+            ("cmk_postprocessed", "stored_proxy", "global-proxy-id"),
+            id="migrate stored proxy",
+        ),
+        pytest.param(
+            ("url", "proxy_url"),
+            ("cmk_postprocessed", "explicit_proxy", "proxy_url"),
+            id="migrate explicit proxy",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "environment_proxy", ""),
+            ("cmk_postprocessed", "environment_proxy", ""),
+            id="already migrated environment proxy",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "no_proxy", ""),
+            ("cmk_postprocessed", "no_proxy", ""),
+            id="already migrated no proxy",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "stored_proxy", "global-proxy-id"),
+            ("cmk_postprocessed", "stored_proxy", "global-proxy-id"),
+            id="already migrated stored proxy",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "explicit_proxy", "proxy_url"),
+            ("cmk_postprocessed", "explicit_proxy", "proxy_url"),
+            id="already migrated explicit proxy",
+        ),
+    ],
+)
+def test_migrate_to_proxy(
+    old: object,
+    new: tuple[
+        Literal["cmk_postprocessed"],
+        Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+        str,
+    ],
+) -> None:
+    assert migrate_to_proxy(old) == new
+    assert migrate_to_proxy(new) == new
+
+
+@pytest.mark.parametrize(
+    ["old", "new"],
+    [
+        pytest.param(
+            "24X7",
+            ("cmk_postprocessed", "stored_time_period", "24X7"),
+            id="migrate time period",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "stored_time_period", "24X7"),
+            ("cmk_postprocessed", "stored_time_period", "24X7"),
+            id="already migrated time period",
+        ),
+    ],
+)
+def test_migrate_to_time_period(
+    old: object,
+    new: tuple[Literal["cmk_postprocessed"], Literal["stored_time_period"], str],
+) -> None:
+    assert migrate_to_time_period(old) == new
+    assert migrate_to_time_period(new) == new

@@ -5,7 +5,7 @@
 
 import tarfile
 import uuid
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from pathlib import Path
 
 from livestatus import SiteId
@@ -48,6 +48,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
 )
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -74,6 +75,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     DualListChoice,
     FixedValue,
+    Integer,
     ValueSpec,
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
@@ -84,9 +86,11 @@ from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 _CHECKMK_FILES_NOTE = _(
     "<br>Note: Some files may contain highly sensitive data like"
     " passwords. These files are marked with 'H'."
-    " Other files may include IP adresses, hostnames, usernames,"
-    " mail adresses or phone numbers and are marked with 'M'."
+    " Other files may include IP addresses, host names, user names,"
+    " mail addresses or phone numbers and are marked with 'M'."
 )
+
+timeout_default = 110
 
 
 def register(
@@ -124,6 +128,7 @@ class ModeDiagnostics(WatoMode):
             params = self._vs_diagnostics().from_html_vars("diagnostics")
             return {
                 "site": params["site"],
+                "timeout": params.get("timing", {}).get("timeout", timeout_default),
                 "general": params["general"],
                 "opt_info": params["opt_info"],
                 "comp_specific": params["comp_specific"],
@@ -133,7 +138,7 @@ class ModeDiagnostics(WatoMode):
     def title(self) -> str:
         return _("Support diagnostics")
 
-    def page_menu(self, breadcrumb) -> PageMenu:  # type: ignore[no-untyped-def]
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Diagnostics"),
             breadcrumb,
@@ -172,7 +177,15 @@ class ModeDiagnostics(WatoMode):
 
         params = self._diagnostics_parameters
         assert params is not None
-        self._job.start(lambda job_interface: self._job.do_execute(params, job_interface))
+        self._job.start(
+            lambda job_interface: self._job.do_execute(params, job_interface),
+            InitialStatusArgs(
+                title=self._job.gui_title(),
+                lock_wato=False,
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
 
         return redirect(self._job.detail_url())
 
@@ -239,6 +252,37 @@ class ModeDiagnostics(WatoMode):
                 #    )
                 # ),
                 (
+                    "timing",
+                    Dictionary(
+                        title=_("Timeout"),
+                        elements=[
+                            (
+                                "timeout",
+                                Integer(
+                                    title=_(
+                                        "If exceeded, an exception will appear. "
+                                        "In extraordinary cases, consider calling "
+                                        "Support Diagnostics from command line "
+                                        "(see inline help)."
+                                    ),
+                                    help=_(
+                                        "The timeout in seconds when gathering the Support "
+                                        "Diagnostics Data. The default is 110 seconds. When "
+                                        "very large files are collected, it's also possible to "
+                                        "call the support diagnostics from command line using "
+                                        "the command 'cmk --create-diagnostics-dump' with "
+                                        " appropriate parameters in the context of the affected "
+                                        "site."
+                                    ),
+                                    default_value=timeout_default,
+                                    minvalue=60,
+                                    unit=_("seconds"),
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+                (
                     "general",
                     FixedValue(
                         value=True,
@@ -303,11 +347,11 @@ class ModeDiagnostics(WatoMode):
                     totext="",
                     title=_("Checkmk Overview"),
                     help=_(
-                        "Checkmk Agent, Number, version and edition of sites, Cluster host; "
-                        "Number of hosts, services, CMK Helper, Live Helper, "
-                        "Helper usage; State of daemons: Apache, Core, Crontag, "
+                        "Checkmk Agent, Number, version and edition of sites, cluster host; "
+                        "number of hosts, services, CMK Helper, Live Helper, "
+                        "Helper usage; state of daemons: Apache, Core, Crontab, "
                         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-                        "(Agent plugin mk_inventory needs to be installed)"
+                        "(Agent plug-in mk_inventory needs to be installed)"
                     ),
                 ),
             ),
@@ -419,7 +463,7 @@ class ModeDiagnostics(WatoMode):
                 (
                     OPT_COMP_CMC,
                     Dictionary(
-                        title=_("CMC (Checkmk Microcore)"),
+                        title=_("CMC (Checkmk Micro Core)"),
                         help=_("Core files (config, state and history) from var/check_mk/core.%s")
                         % _CHECKMK_FILES_NOTE,
                         elements=self._get_component_specific_checkmk_files_elements(
@@ -448,9 +492,8 @@ class ModeDiagnostics(WatoMode):
             )
         return elements
 
-    def _get_component_specific_checkmk_files_elements(  # type: ignore[no-untyped-def]
-        self,
-        component,
+    def _get_component_specific_checkmk_files_elements(
+        self, component: str
     ) -> list[tuple[str, ValueSpec]]:
         elements = []
         config_files = [
@@ -605,15 +648,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         return _("Diagnostics dump")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def _back_url(self) -> str:
         return makeuri(request, [])
@@ -631,13 +666,12 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         # sites = diagnostics_parameters["sites"][1]
         site = diagnostics_parameters["site"]
 
-        timeout = request.request_timeout - 2
         results = []
         for chunk in chunks:
             chunk_result = create_diagnostics_dump(
                 site,
                 chunk,
-                timeout,
+                diagnostics_parameters["timeout"],
             )
             results.append(chunk_result)
 
@@ -652,7 +686,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         #        results.append(chunk_result)
 
         if len(results) > 1:
-            result = _merge_results(site, results)
+            result = _merge_results(site, results, diagnostics_parameters["timeout"])
             # The remote tarfiles will be downloaded and the link will point to the local site.
             download_site_id = omd_site()
         elif len(results) == 1:
@@ -669,7 +703,11 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
             tarfile_path = result.tarfile_path
             download_url = makeuri_contextless(
                 request,
-                [("site", download_site_id), ("tarfile_name", str(Path(tarfile_path).name))],
+                [
+                    ("site", download_site_id),
+                    ("tarfile_name", str(Path(tarfile_path).name)),
+                    ("timeout", diagnostics_parameters["timeout"]),
+                ],
                 filename="download_diagnostics_dump.py",
             )
             button = html.render_icon_button(download_url, _("Download"), "diagnostics_dump_file")
@@ -681,7 +719,9 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
             job_interface.send_result_message(_("Creating dump file failed"))
 
 
-def _merge_results(site, results) -> CreateDiagnosticsDumpResult:  # type: ignore[no-untyped-def]
+def _merge_results(
+    site: SiteId, results: Sequence[CreateDiagnosticsDumpResult], timeout: int
+) -> CreateDiagnosticsDumpResult:
     output: str = ""
     tarfile_created: bool = False
     tarfile_paths: list[str] = []
@@ -695,6 +735,7 @@ def _merge_results(site, results) -> CreateDiagnosticsDumpResult:  # type: ignor
                 tarfile_localpath = _get_tarfile_from_remotesite(
                     SiteId(site),
                     Path(result.tarfile_path).name,
+                    timeout,
                 )
             tarfile_paths.append(tarfile_localpath)
 
@@ -705,14 +746,14 @@ def _merge_results(site, results) -> CreateDiagnosticsDumpResult:  # type: ignor
     )
 
 
-def _get_tarfile_from_remotesite(site: SiteId, tarfile_name: str) -> str:
+def _get_tarfile_from_remotesite(site: SiteId, tarfile_name: str, timeout: int) -> str:
     tarfile_localpath = _create_file_path()
     with open(tarfile_localpath, "wb") as file:
-        file.write(_get_diagnostics_dump_file(site, tarfile_name))
+        file.write(_get_diagnostics_dump_file(site, tarfile_name, timeout))
     return tarfile_localpath
 
 
-def _join_sub_tars(tarfile_paths: list[str]) -> str:
+def _join_sub_tars(tarfile_paths: Sequence[str]) -> str:
     tarfile_path = _create_file_path()
     with tarfile.open(name=tarfile_path, mode="w:gz") as dest:
         for filepath in tarfile_paths:
@@ -742,7 +783,8 @@ class PageDownloadDiagnosticsDump(Page):
 
         site = SiteId(request.get_ascii_input_mandatory("site"))
         tarfile_name = request.get_ascii_input_mandatory("tarfile_name")
-        file_content = _get_diagnostics_dump_file(site, tarfile_name)
+        timeout = request.get_integer_input_mandatory("timeout")
+        file_content = _get_diagnostics_dump_file(site, tarfile_name, timeout)
 
         response.set_content_type("application/x-tgz")
         response.set_content_disposition(ContentDispositionType.ATTACHMENT, tarfile_name)
@@ -760,7 +802,7 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand):
         return request.get_ascii_input_mandatory("tarfile_name")
 
 
-def _get_diagnostics_dump_file(site: SiteId, tarfile_name: str) -> bytes:
+def _get_diagnostics_dump_file(site: SiteId, tarfile_name: str, timeout: int) -> bytes:
     if site_is_local(active_config, site):
         return _get_local_diagnostics_dump_file(tarfile_name)
 
@@ -770,6 +812,7 @@ def _get_diagnostics_dump_file(site: SiteId, tarfile_name: str) -> bytes:
         [
             ("tarfile_name", tarfile_name),
         ],
+        timeout=timeout,
     )
     assert isinstance(raw_response, bytes)
     return raw_response

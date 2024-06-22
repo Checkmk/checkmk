@@ -35,7 +35,8 @@ def build(Map args) {
                 "python-3.cab"] :
             (args.TARGET == "agent_with_sign") ? [
                 "agents/wnx",
-                "call run.cmd --all --sign tribe29.pfx ${args.PASSWORD}",
+                // The deprecated_unused_param's have to be present or the script will fail.
+                "call run.cmd --all --sign deprecated_unused_param1 deprecated_unused_param2",
                 [
                     "cmk-agent-ctl.exe",
                     "check_mk_agent-64.exe",

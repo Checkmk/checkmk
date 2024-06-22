@@ -6,7 +6,7 @@ use crate::config::yaml::{Get, Yaml};
 use crate::utils;
 use anyhow::Result;
 use std::path::Path;
-use yaml_rust::YamlLoader;
+use yaml_rust2::YamlLoader;
 
 mod keys {
     pub const SYSTEM: &str = "system";
@@ -101,7 +101,7 @@ impl SystemConfig {
     }
 
     pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
-        let system: &yaml_rust::Yaml = yaml.get(keys::SYSTEM);
+        let system: &yaml_rust2::Yaml = yaml.get(keys::SYSTEM);
         if system.is_badvalue() {
             return Ok(Self::default());
         }

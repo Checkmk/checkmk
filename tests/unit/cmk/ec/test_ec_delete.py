@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC delete methods with one or more event IDs"""
-from tests.testlib import CMKEventConsole
 
-from tests.unit.cmk.ec.helpers import FakeStatusSocket
+from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
 
 from cmk.utils.hostaddress import HostName
 
@@ -20,7 +19,7 @@ def test_delete_event(event_status: EventStatus, status_server: StatusServer) ->
         "text": "not important",
         "core_host": HostName("ABC"),
     }
-    event_status.new_event(CMKEventConsole.new_event(event))
+    event_status.new_event(new_event(event))
 
     assert len(event_status.events()) == 1
 
@@ -45,7 +44,7 @@ def test_delete_multiple_events(event_status: EventStatus, status_server: Status
         },
     ]
     for event in events:
-        event_status.new_event(CMKEventConsole.new_event(event))
+        event_status.new_event(new_event(event))
 
     assert len(event_status.events()) == 2
 
@@ -72,7 +71,7 @@ def test_delete_partially_existing_multiple_events(
         },
     ]
     for event in events:
-        event_status.new_event(CMKEventConsole.new_event(event))
+        event_status.new_event(new_event(event))
 
     assert len(event_status.events()) == 2
 
@@ -102,7 +101,7 @@ def test_delete_events_of_host(event_status: EventStatus, status_server: StatusS
         },
     ]
     for event in events:
-        event_status.new_event(CMKEventConsole.new_event(event))
+        event_status.new_event(new_event(event))
 
     assert len(event_status.events()) == 2
 

@@ -3,17 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    HTTPProxy,
-    Secret,
-    SpecialAgentCommand,
-    SpecialAgentConfig,
-)
+from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
 class Params(BaseModel):
@@ -28,13 +22,12 @@ class Params(BaseModel):
 def commands_function(
     params: Params,
     host_config: HostConfig,
-    _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
     command_arguments: list[str | Secret] = []
     if params.username is not None:
         command_arguments += ["-u", params.username]
     if params.password is not None:
-        command_arguments += ["-p", params.password]
+        command_arguments += ["-p", params.password.unsafe()]
     if params.port is not None:
         command_arguments += ["--port", str(params.port)]
     if params.no_cert_check:

@@ -57,6 +57,6 @@ class StaticTextDashlet(Dashlet[StaticTextDashletConfig]):
     def show(self):
         html.open_div(class_="nodata")
         html.open_div(class_="msg")
-        html.write_text(self._dashlet_spec.get("text", ""))
+        html.write_text_permissive(self._dashlet_spec.get("text", ""))
         html.close_div()
         html.close_div()

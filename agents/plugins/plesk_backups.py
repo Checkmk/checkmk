@@ -18,12 +18,12 @@ import time
 from ftplib import FTP  # nosec B402 # BNS:97f639
 
 try:
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     pass
 
 try:
-    import MySQLdb  # type: ignore[import] # pylint: disable=import-error
+    import MySQLdb  # type: ignore[import-untyped] # pylint: disable=import-error
 except ImportError as e:
     sys.stdout.write(
         "<<<plesk_backups>>>\n%s. Please install missing module via pip install <module>." % e

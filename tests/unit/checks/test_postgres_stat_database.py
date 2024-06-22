@@ -8,9 +8,9 @@ from typing import Any
 
 import pytest
 
-from tests.testlib import Check
-
 from cmk.agent_based.v1.type_defs import StringTable
+
+from .checktestlib import Check
 
 pytestmark = pytest.mark.checks
 
@@ -84,6 +84,7 @@ STRING_TABLE = [
             STRING_TABLE,
             [(1, "Database size is not available.")],
             id="If the database size is not available, the check result is WARN and a description is provided that the database size is not available.",
+            # NOTE: for postgres_stat_database_size the "access_to_shared_objects" is no longer discovered
         ),
     ],
 )

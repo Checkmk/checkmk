@@ -4,21 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Sequence
 
 from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
+    EnvProxy,
     HostConfig,
-    HTTPProxy,
-    parse_http_proxy,
+    NoProxy,
     replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
+    URLProxy,
 )
-
-from .utils import ProxyType
 
 KEY_FIELD_MAP = {
     "serialNumber": ("serialNumber",),
@@ -34,7 +33,7 @@ KEY_FIELD_MAP = {
 class MobileIronParams(BaseModel):
     username: str
     password: Secret
-    proxy: tuple[ProxyType, str | None] | None = None
+    proxy: URLProxy | EnvProxy | NoProxy | None = None
     partition: Sequence[str]
     key_fields: str
     android_regex: Sequence[str] = Field(default_factory=list)
@@ -43,24 +42,28 @@ class MobileIronParams(BaseModel):
 
 
 def generate_mobileiron_command(
-    params: MobileIronParams, host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+    params: MobileIronParams,
+    host_config: HostConfig,
 ) -> Iterator[SpecialAgentCommand]:
     partitions = [replace_macros(p, host_config.macros) for p in params.partition]
     args: list[str | Secret] = [
         "-u",
         params.username,
         "-p",
-        params.password,
+        params.password.unsafe(),
         "--partition",
         ",".join(partitions),
         "--hostname",
         host_config.name,
     ]
-    if params.proxy:
-        args += [
-            "--proxy",
-            parse_http_proxy(params.proxy, http_proxies),
-        ]
+
+    match params.proxy:
+        case URLProxy(url=url):
+            args += ["--proxy", url]
+        case EnvProxy():
+            args += ["--proxy", "FROM_ENVIRONMENT"]
+        case NoProxy():
+            args += ["--proxy", "NO_PROXY"]
 
     for expression in params.android_regex:
         args.append(f"--android-regex={expression}")

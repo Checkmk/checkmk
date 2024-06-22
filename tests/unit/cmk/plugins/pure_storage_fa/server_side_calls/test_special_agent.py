@@ -29,7 +29,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 "--cert-server-name",
                 "host",
                 "--api-token",
-                Secret(23),
+                Secret(23).unsafe(),
                 "1.2.3.4",
             ],
             id="Available timeout and ssl True and stored api token and hostip available",
@@ -45,7 +45,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 "--cert-server-name",
                 "something_else",
                 "--api-token",
-                Secret(23),
+                Secret(23).unsafe(),
                 "1.2.3.4",
             ],
             id="No timeout and ssl custom and hostip available",
@@ -66,6 +66,5 @@ def test_commands_function(
                 alias="host",
                 ipv4_config=IPv4Config(address=host_ip_address),
             ),
-            {},
         )
     ) == [SpecialAgentCommand(command_arguments=expected_arguments)]

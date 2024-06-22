@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig, HTTPProxy
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
 
 
 class Address(BaseModel):
@@ -22,13 +22,13 @@ class Address(BaseModel):
 class Parameters(BaseModel):
     port: int
     service: str
-    job: Literal["version"] | tuple[Literal["address"], Address]
+    check_version: bool
+    check_address: tuple[Literal["no"], None] | tuple[Literal["yes"], Address]
 
 
 def commands_check_uniserv(
     params: Parameters,
     host_config: HostConfig,
-    _proxies: Mapping[str, HTTPProxy],
 ) -> Iterable[ActiveCheckCommand]:
     args: list[str] = [
         host_config.primary_ip_config.address,
@@ -36,18 +36,24 @@ def commands_check_uniserv(
         params.service,
     ]
 
-    job = params.job
-    if isinstance(job, str):
-        args.append(job.upper())
-        desc = f"Uniserv {params.service} Version"
-    else:
-        tag, addr = job
-        args.extend((tag.upper(), addr.street, str(addr.street_no), addr.city, addr.search_regex))
-        desc = f"Uniserv {params.service} Address {addr.city}"
-    yield ActiveCheckCommand(
-        service_description=desc,
-        command_arguments=args,
-    )
+    if params.check_version:
+        yield ActiveCheckCommand(
+            service_description=f"Uniserv {params.service} Version",
+            command_arguments=(*args, "VERSION"),
+        )
+
+    if isinstance((addr := params.check_address[1]), Address):
+        yield ActiveCheckCommand(
+            service_description=f"Uniserv {params.service} Address {addr.city}",
+            command_arguments=(
+                *args,
+                "ADDRESS",
+                addr.street,
+                str(addr.street_no),
+                addr.city,
+                addr.search_regex,
+            ),
+        )
 
 
 active_check_uniserv = ActiveCheckConfig(

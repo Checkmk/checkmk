@@ -9,10 +9,11 @@ import importlib
 import io
 import itertools
 import os
+import socket
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 from pytest import MonkeyPatch
@@ -25,9 +26,23 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry
 
-import cmk.base.config as config
-import cmk.base.core_nagios as core_nagios
+from cmk.base import config, core_nagios
+
+
+def ip_address_of_never_called(
+    _h: HostName, _f: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+) -> HostAddress:
+    raise AssertionError(
+        "It seems you unmocked some things in the test? This used to not be called."
+    )
+
+
+def ip_address_of_return_local(
+    _h: HostName, _f: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+) -> HostAddress:
+    return HostAddress("127.0.0.1")
 
 
 def test_format_nagios_object() -> None:
@@ -37,7 +52,7 @@ def test_format_nagios_object() -> None:
         "check_interval": "hüch",
         "_HÄÄÄÄ": "XXXXXX_YYYY",
     }
-    cfg = core_nagios._format_nagios_object("service", spec)
+    cfg = core_nagios.format_nagios_object("service", spec)
     assert isinstance(cfg, str)
     assert (
         cfg
@@ -275,9 +290,15 @@ def test_create_nagios_host_spec(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
 
     config_cache = ts.apply(monkeypatch)
-    host_attrs = config_cache.get_host_attributes(hostname)
+    ip_address_of = config.ConfiguredIPLookup(
+        config_cache, error_handler=config.handle_ip_lookup_failure
+    )
 
-    host_spec = core_nagios._create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
+    host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
+
+    host_spec = core_nagios.create_nagios_host_spec(
+        cfg, config_cache, hostname, host_attrs, ip_address_of
+    )
     assert host_spec == result
 
 
@@ -334,16 +355,13 @@ def test_dump_precompiled_hostcheck(
     hostname = HostName("localhost")
     ts = Scenario()
     ts.add_host(hostname)
+    ts.set_autochecks(
+        hostname,
+        [AutocheckEntry(CheckPluginName("uptime"), None, {}, {})],
+    )
     config_cache = ts.apply(monkeypatch)
 
-    # Ensure a host check is created
-    monkeypatch.setattr(
-        core_nagios,
-        "_get_needed_plugin_names",
-        lambda *args, **kw: (set(), {CheckPluginName("uptime")}, set()),
-    )
-
-    host_check = core_nagios._dump_precompiled_hostcheck(
+    host_check = core_nagios.dump_precompiled_hostcheck(
         config_cache,
         config_path,
         hostname,
@@ -359,7 +377,7 @@ def test_dump_precompiled_hostcheck_without_check_mk_service(
     ts = Scenario()
     ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
-    host_check = core_nagios._dump_precompiled_hostcheck(
+    host_check = core_nagios.dump_precompiled_hostcheck(
         config_cache,
         config_path,
         hostname,
@@ -371,7 +389,7 @@ def test_dump_precompiled_hostcheck_not_existing_host(
     monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
 ) -> None:
     config_cache = Scenario().apply(monkeypatch)
-    host_check = core_nagios._dump_precompiled_hostcheck(
+    host_check = core_nagios.dump_precompiled_hostcheck(
         config_cache,
         config_path,
         HostName("not-existing"),
@@ -541,7 +559,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
                 "http": {
                     "command_line": "some_command $ARG1$",
                     "argument_function": mock_argument_function,
-                    "service_description": mock_service_description,
+                    "service_description": lambda x: "HTTP my special HTTP",
                 }
             },
             {
@@ -584,8 +602,8 @@ def test_create_nagios_servicedefs_active_check(
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios._create_nagios_servicedefs(
-        cfg, config_cache, hostname, host_attrs, {}, license_counter
+    core_nagios.create_nagios_servicedefs(
+        cfg, config_cache, hostname, host_attrs, {}, license_counter, ip_address_of_return_local
     )
 
     assert outfile.getvalue() == expected_result
@@ -632,9 +650,9 @@ def test_create_nagios_servicedefs_active_check(
             "}\n"
             "\n",
             "\n"
-            "WARNING: ERROR: Duplicate service description (active check) 'My description' for host 'my_host'!\n"
-            " - 1st occurrence: check plugin / item: active(my_active_check) / 'My description'\n"
-            " - 2nd occurrence: check plugin / item: active(my_active_check2) / None\n"
+            "WARNING: ERROR: Duplicate service name (active check) 'My description' for host 'my_host'!\n"
+            " - 1st occurrence: check plug-in / item: active(my_active_check) / 'My description'\n"
+            " - 2nd occurrence: check plug-in / item: active(my_active_check2) / None\n"
             "\n",
             id="duplicate_descriptions",
         ),
@@ -674,7 +692,6 @@ def test_create_nagios_servicedefs_with_warnings(
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
-    monkeypatch.setattr(config, "ip_address_of", lambda *args: HostAddress("127.0.0.1"))
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
@@ -683,8 +700,14 @@ def test_create_nagios_servicedefs_with_warnings(
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios._create_nagios_servicedefs(
-        cfg, config_cache, HostName("my_host"), host_attrs, {}, license_counter
+    core_nagios.create_nagios_servicedefs(
+        cfg,
+        config_cache,
+        HostName("my_host"),
+        host_attrs,
+        {},
+        license_counter,
+        ip_address_of_return_local,
     )
 
     assert outfile.getvalue() == expected_result
@@ -737,8 +760,8 @@ def test_create_nagios_servicedefs_omit_service(
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios._create_nagios_servicedefs(
-        cfg, config_cache, hostname, host_attrs, {}, license_counter
+    core_nagios.create_nagios_servicedefs(
+        cfg, config_cache, hostname, host_attrs, {}, license_counter, ip_address_of_return_local
     )
 
     assert outfile.getvalue() == expected_result
@@ -782,24 +805,19 @@ def test_create_nagios_servicedefs_invalid_args(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
-    monkeypatch.setattr(config, "ip_address_of", lambda *args: HostAddress("127.0.0.1"))
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
-    monkeypatch.setattr(
-        cmk.utils.debug,
-        "enabled",
-        lambda: False,
-    )
+    monkeypatch.setattr(cmk.utils.debug, "enabled", lambda: False)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
 
-    core_nagios._create_nagios_servicedefs(
-        cfg, config_cache, hostname, host_attrs, {}, license_counter
+    core_nagios.create_nagios_servicedefs(
+        cfg, config_cache, hostname, host_attrs, {}, license_counter, ip_address_of_return_local
     )
 
     out, _ = capsys.readouterr()
@@ -866,14 +884,18 @@ def test_create_nagios_config_commands(
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
+    ip_address_of = config.ConfiguredIPLookup(
+        config_cache, error_handler=config.handle_ip_lookup_failure
+    )
+
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios._create_nagios_servicedefs(
-        cfg, config_cache, hostname, host_attrs, {}, license_counter
+    core_nagios.create_nagios_servicedefs(
+        cfg, config_cache, hostname, host_attrs, {}, license_counter, ip_address_of
     )
-    core_nagios._create_nagios_config_commands(cfg)
+    core_nagios.create_nagios_config_commands(cfg)
 
     assert license_counter["services"] == 1
     assert outfile.getvalue() == expected_result

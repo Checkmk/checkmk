@@ -5,6 +5,8 @@
 
 from collections.abc import Mapping, Sequence
 
+from cryptography.x509.oid import ObjectIdentifier, SignatureAlgorithmOID
+
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -12,6 +14,7 @@ from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoiceElement,
     DefaultValue,
     DictElement,
+    DictGroup,
     Dictionary,
     FixedValue,
     InputHint,
@@ -20,6 +23,8 @@ from cmk.rulesets.v1.form_specs import (
     List,
     SimpleLevels,
     SimpleLevelsConfigModel,
+    SingleChoice,
+    SingleChoiceElement,
     String,
     TimeMagnitude,
     TimeSpan,
@@ -57,7 +62,7 @@ def _valuespec_validity() -> Dictionary:
                 parameter_form=TimeSpan(
                     title=Title("Maximum allowed validity"),
                     help_text=Help(
-                        "Any certificate should be expire at some point. Usual values "
+                        "Any certificate should expire at some point. Usual values "
                         "are within 90 and 365 days."
                     ),
                     displayed_magnitudes=[TimeMagnitude.DAY],
@@ -95,46 +100,7 @@ def _valuespec_specific_values() -> Dictionary:
                 )
             ),
             "signature_algorithm": DictElement[tuple[str, object]](
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Certificate signature algorithm"),
-                    help_text=Help(
-                        "The signature algorithm and the message digest algorithm for the "
-                        "certificate's signature. Please note that an exact match is expected if "
-                        "this option is used."
-                    ),
-                    prefill=DefaultValue("rsa"),
-                    elements=[
-                        CascadingSingleChoiceElement[tuple[str, object]](
-                            name="rsa",
-                            title=Title("RSA"),
-                            parameter_form=_hash_algorithm_choice(),
-                        ),
-                        CascadingSingleChoiceElement[tuple[str, object]](
-                            name="ecdsa",
-                            title=Title("ECDSA"),
-                            parameter_form=_hash_algorithm_choice(),
-                        ),
-                        CascadingSingleChoiceElement[None](
-                            name="ed25519",
-                            title=Title("Ed25519"),
-                            parameter_form=FixedValue[None](
-                                value=None,
-                                title=Title("Ed25519"),
-                                label=Label("SHA-512 (fixed)"),
-                            ),
-                        ),
-                        CascadingSingleChoiceElement[tuple[str, object]](
-                            name="rsassa_pss",
-                            title=Title("RSASSA-PSS"),
-                            parameter_form=_hash_algorithm_choice(),
-                        ),
-                        CascadingSingleChoiceElement[tuple[str, object]](
-                            name="dsa",
-                            title=Title("DSA"),
-                            parameter_form=_hash_algorithm_choice(),
-                        ),
-                    ],
-                )
+                parameter_form=_signature_algorithm_choice(),
             ),
             "issuer": DictElement[Mapping[str, object]](
                 parameter_form=Dictionary(
@@ -150,7 +116,6 @@ def _valuespec_specific_values() -> Dictionary:
                     elements={
                         "common_name": DictElement[str](
                             parameter_form=String(title=Title("Common name (CN)")),
-                            required=True,
                         ),
                         "organization": DictElement[str](
                             parameter_form=String(title=Title("Organization (O)"))
@@ -178,7 +143,6 @@ def _valuespec_specific_values() -> Dictionary:
                     elements={
                         "common_name": DictElement[str](
                             parameter_form=String(title=Title("Common name (CN)")),
-                            required=True,
                         ),
                         "organization": DictElement[str](
                             parameter_form=String(title=Title("Organization (O)"))
@@ -265,9 +229,9 @@ def _valuespec_port() -> Integer:
     return Integer(
         title=Title("Port"),
         help_text=Help(
-            "Any valid TCP port may entered here. The host needs to provide a "
+            "Any valid TCP port may be entered here. The host needs to provide a "
             "certificate on this port. Otherwise the service will be CRIT and "
-            "report a handshakre error."
+            "report a handshake error."
         ),
         prefill=DefaultValue(443),
         custom_validate=(validators.NetworkPort(),),
@@ -287,17 +251,65 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
         custom_validate=(validators.LengthInRange(min_value=1),),
         element_template=Dictionary(
             elements={
+                "service_name": DictElement(
+                    parameter_form=Dictionary(
+                        title=Title("Service name"),
+                        elements={
+                            "prefix": DictElement(
+                                parameter_form=SingleChoice(
+                                    title=Title("Prefix"),
+                                    help_text=Help(
+                                        "The prefix is automatically attached to each service "
+                                        "name to be able to organize them. The prefix is static "
+                                        "and will be CERT. Alternatively, you may choose not to "
+                                        "use the prefix option."
+                                    ),
+                                    elements=[
+                                        SingleChoiceElement(
+                                            name="auto",
+                                            title=Title('Use "CERT" as service name prefix'),
+                                        ),
+                                        SingleChoiceElement(
+                                            name="none",
+                                            title=Title("Do not use a prefix"),
+                                        ),
+                                    ],
+                                    prefill=DefaultValue("auto"),
+                                ),
+                                required=True,
+                                group=DictGroup(),
+                            ),
+                            "name": DictElement(
+                                parameter_form=String(
+                                    title=Title("Name"),
+                                    help_text=Help(
+                                        "The name is the individual part of the used service "
+                                        "description. Choose a human readable and unique "
+                                        "title to be able to find your service later in "
+                                        "Checkmk. You may use macros in this field. The most "
+                                        "common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
+                                    ),
+                                    custom_validate=(validators.LengthInRange(min_value=1),),
+                                    prefill=InputHint("My service name"),
+                                ),
+                                required=True,
+                                group=DictGroup(),
+                            ),
+                        },
+                    ),
+                    required=True,
+                ),
                 "address": DictElement[str](
                     parameter_form=String(
                         title=Title("Host address or name"),
                         help_text=Help(
                             "You may enter any fully qualified domain name or valid "
-                            "IP address here. The name does must not contain any further "
+                            "IP address here. The name must not contain any further "
                             "information, like port or protocol. You may use macros in "
                             "this field. The most common ones are $HOSTNAME$, $HOSTALIAS$ "
                             "or $HOSTADDRESS$."
                         ),
-                        prefill=InputHint("my.host.tld | 192.168.0.73"),
+                        prefill=InputHint("my.host.tld or 192.168.0.73"),
                         custom_validate=(validators.LengthInRange(min_value=1),),
                     ),
                     required=True,
@@ -366,31 +378,65 @@ def _form_active_checks_cert() -> Dictionary:
     )
 
 
-def _hash_algorithm_choice() -> CascadingSingleChoice:
-    choices = [
-        ("sha224", Title("SHA-224")),
-        ("sha256", Title("SHA-256")),
-        ("sha384", Title("SHA-384")),
-        ("sha512", Title("SHA-512")),
-        ("sha3_224", Title("SHA3-224")),
-        ("sha3_256", Title("SHA3-256")),
-        ("sha3_384", Title("SHA3-384")),
-        ("sha3_512", Title("SHA3-512")),
-    ]
+def _signature_algorithm_choice() -> CascadingSingleChoice:
+    def fmt(sa: ObjectIdentifier) -> Title:
+        return Title("%s (%s)") % (
+            sa._name,  # pylint: disable=protected-access
+            sa.dotted_string,
+        )
+
+    choices = (
+        # The algorithms commented out are defined upstream
+        # https://github.com/pyca/cryptography/blob/main/src/cryptography/hazmat/_oid.py
+        # but give "Unknown OID" for name.
+        ("RSA_WITH_MD5", SignatureAlgorithmOID.RSA_WITH_MD5),
+        ("RSA_WITH_SHA1", SignatureAlgorithmOID.RSA_WITH_SHA1),
+        # ("RSA_WITH_SHA1_alt", SignatureAlgorithmOID._RSA_WITH_SHA1),
+        ("RSA_WITH_SHA224", SignatureAlgorithmOID.RSA_WITH_SHA224),
+        ("RSA_WITH_SHA256", SignatureAlgorithmOID.RSA_WITH_SHA256),
+        ("RSA_WITH_SHA384", SignatureAlgorithmOID.RSA_WITH_SHA384),
+        ("RSA_WITH_SHA512", SignatureAlgorithmOID.RSA_WITH_SHA512),
+        # ("RSA_WITH_SHA3_224", SignatureAlgorithmOID.RSA_WITH_SHA3_224),
+        # ("RSA_WITH_SHA3_256", SignatureAlgorithmOID.RSA_WITH_SHA3_256),
+        # ("RSA_WITH_SHA3_384", SignatureAlgorithmOID.RSA_WITH_SHA3_384),
+        # ("RSA_WITH_SHA3_512", SignatureAlgorithmOID.RSA_WITH_SHA3_512),
+        ("RSASSA_PSS", SignatureAlgorithmOID.RSASSA_PSS),
+        ("ECDSA_WITH_SHA1", SignatureAlgorithmOID.ECDSA_WITH_SHA1),
+        ("ECDSA_WITH_SHA224", SignatureAlgorithmOID.ECDSA_WITH_SHA224),
+        ("ECDSA_WITH_SHA256", SignatureAlgorithmOID.ECDSA_WITH_SHA256),
+        ("ECDSA_WITH_SHA384", SignatureAlgorithmOID.ECDSA_WITH_SHA384),
+        ("ECDSA_WITH_SHA512", SignatureAlgorithmOID.ECDSA_WITH_SHA512),
+        # ("ECDSA_WITH_SHA3_224", SignatureAlgorithmOID.ECDSA_WITH_SHA3_224),
+        # ("ECDSA_WITH_SHA3_256", SignatureAlgorithmOID.ECDSA_WITH_SHA3_256),
+        # ("ECDSA_WITH_SHA3_384", SignatureAlgorithmOID.ECDSA_WITH_SHA3_384),
+        # ("ECDSA_WITH_SHA3_512", SignatureAlgorithmOID.ECDSA_WITH_SHA3_512),
+        ("DSA_WITH_SHA1", SignatureAlgorithmOID.DSA_WITH_SHA1),
+        ("DSA_WITH_SHA224", SignatureAlgorithmOID.DSA_WITH_SHA224),
+        ("DSA_WITH_SHA256", SignatureAlgorithmOID.DSA_WITH_SHA256),
+        # ("DSA_WITH_SHA384", SignatureAlgorithmOID.DSA_WITH_SHA384),
+        # ("DSA_WITH_SHA512", SignatureAlgorithmOID.DSA_WITH_SHA512),
+        ("ED25519", SignatureAlgorithmOID.ED25519),
+        ("ED448", SignatureAlgorithmOID.ED448),
+    )
     return CascadingSingleChoice(
-        title=Title("Hashing algorithm"),
+        title=Title("Certificate signature algorithm"),
+        help_text=Help(
+            "The signature algorithm algorithm for the "
+            "certificate's signature. Please note that an matching is done on "
+            "the OID"
+        ),
         elements=[
             CascadingSingleChoiceElement[str](
-                name=value,
-                title=title,
+                name=key,
+                title=fmt(sa),
                 parameter_form=FixedValue[str](
-                    value=value,
-                    title=title,
+                    value=sa.dotted_string,
+                    title=fmt(sa),
                 ),
             )
-            for value, title in choices
+            for key, sa in choices
         ],
-        prefill=DefaultValue("sha256"),
+        prefill=DefaultValue("RSA_WITH_SHA256"),
     )
 
 

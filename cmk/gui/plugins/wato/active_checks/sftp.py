@@ -36,7 +36,7 @@ def _valuespec_active_checks_sftp():
             elements=[
                 (
                     "host",
-                    TextInput(title=_("Hostname"), allow_empty=False),
+                    TextInput(title=_("Host name"), allow_empty=False),
                 ),
                 (
                     "user",
@@ -86,12 +86,14 @@ def _valuespec_active_checks_sftp():
                                     TextInput(
                                         title=_("Local file"),
                                         size=30,
-                                        default_value="tmp/check_mk_testfile",
+                                        default_value="check_mk_testfile",
                                         help=_(
-                                            "Local path including filename. Base directory for this relative path "
-                                            "will be the home directory of your site. The testfile will be created "
-                                            "if it does not exist. Examples: 'tmp/testfile' (file will be located in "
-                                            "$OMD_ROOT/tmp/testfile )"
+                                            "Local path to the file to be uploaded. The path is "
+                                            'relative to "var/check_mk/active_checks/check_sftp" '
+                                            "within the home directory of your site. If the file "
+                                            "does not exist, it will be created. Example: "
+                                            "'testfile.txt' (The file $OMD_ROOT/var/check_mk/"
+                                            "active_checks/check_sftp/testfile.txt will be uploaded)."
                                         ),
                                     ),
                                 ),
@@ -102,8 +104,12 @@ def _valuespec_active_checks_sftp():
                                         size=30,
                                         default_value="",
                                         help=_(
-                                            "Remote path where to put the file. If you leave this empty, the file will be placed "
-                                            "in the home directory of the user. Example: 'myDirectory' "
+                                            "Remote path to the directory where to put the file. "
+                                            "If left empty, the file will be placed in the home "
+                                            "directory of the user. The directory has to exist "
+                                            "on the remote or the check will fail. "
+                                            "Example: 'myDirectory' (The file will be uploaded to "
+                                            "'~/myDirectory')."
                                         ),
                                     ),
                                 ),
@@ -128,9 +134,10 @@ def _valuespec_active_checks_sftp():
                                         size=30,
                                         default_value="check_mk_testfile",
                                         help=_(
-                                            "Remote path including filename "
-                                            "(e.g. 'testfile'). If you also enabled "
-                                            "'Put file to SFTP server', you can use the same file for both tests."
+                                            "Remote path to the file to be downloaded. The path is "
+                                            "relative to the home directory of the user. If you "
+                                            "also enabled 'Put file to SFTP server', you can use "
+                                            "the same file for both tests."
                                         ),
                                     ),
                                 ),
@@ -139,10 +146,13 @@ def _valuespec_active_checks_sftp():
                                     TextInput(
                                         title=_("Local destination"),
                                         size=30,
-                                        default_value="tmp",
+                                        default_value="",
                                         help=_(
-                                            "Local path where to put the downloaded file "
-                                            "(e.g. 'tmp' )."
+                                            "Local path to the directory where to put the file, "
+                                            'relative to "var/check_mk/active_checks/check_sftp" '
+                                            "within the home directory of your site. If left empty, "
+                                            "the file will be placed directly in "
+                                            '"var/check_mk/active_checks/check_sftp".'
                                         ),
                                     ),
                                 ),

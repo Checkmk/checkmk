@@ -8,16 +8,14 @@ use crate::check::{
 };
 use std::collections::HashSet;
 use std::convert::AsRef;
-use std::fmt::{Display, Formatter, Result as FormatResult};
 use time::Duration;
 use typed_builder::TypedBuilder;
 use x509_parser::certificate::{BasicExtension, Validity, X509Certificate};
 use x509_parser::error::X509Error;
 use x509_parser::extensions::{GeneralName, SubjectAlternativeName};
 use x509_parser::prelude::FromDer;
-use x509_parser::prelude::{oid2sn, oid_registry, AlgorithmIdentifier};
+use x509_parser::prelude::{oid2sn, oid_registry};
 use x509_parser::public_key::PublicKey;
-use x509_parser::signature_algorithm::SignatureAlgorithm as X509SignatureAlgorithm;
 use x509_parser::time::ASN1Time;
 use x509_parser::x509::{AttributeTypeAndValue, SubjectPublicKeyInfo};
 
@@ -31,50 +29,10 @@ macro_rules! unwrap_into {
     };
 }
 
-macro_rules! check_eq {
-    ($name:tt, $left:expr, $right:expr $(,)?) => {
-        if &$left == &$right {
-            SimpleCheckResult::notice(format!("{}: {}", $name, $left))
-        } else {
-            SimpleCheckResult::warn(format!("{} is {} but expected {}", $name, $left, $right))
-        }
-    };
-}
-
 fn first_of<'a>(iter: &mut impl Iterator<Item = &'a AttributeTypeAndValue<'a>>) -> &'a str {
     iter.next()
         .and_then(|a| a.as_str().ok())
         .unwrap_or_default()
-}
-
-#[allow(non_camel_case_types)]
-#[allow(clippy::upper_case_acronyms)]
-#[derive(Debug, PartialEq)]
-pub enum SignatureAlgorithm {
-    RSA,
-    RSASSA_PSS(String),
-    RSAAES_OAEP(String),
-    DSA,
-    ECDSA,
-    ED25519,
-}
-
-impl Display for SignatureAlgorithm {
-    fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::RSA => "RSA".to_string(),
-                Self::RSASSA_PSS(hash) => format!("RSASSA_PSS-{}", hash.to_uppercase()),
-                Self::RSAAES_OAEP(hash) => format!("RSAAES_OAEP-{}", hash.to_uppercase()),
-                Self::DSA => "DSA".to_string(),
-                Self::ECDSA => "ECDSA".to_string(),
-                Self::ED25519 => "ED25519".to_string(),
-            }
-        )?;
-        Ok(())
-    }
 }
 
 #[derive(Debug, TypedBuilder)]
@@ -83,7 +41,7 @@ pub struct Config {
     pubkey_algorithm: Option<String>,
     pubkey_size: Option<usize>,
     serial: Option<String>,
-    signature_algorithm: Option<SignatureAlgorithm>,
+    signature_algorithm: Option<String>,
     subject_cn: Option<String>,
     subject_alt_names: Option<Vec<String>>,
     subject_o: Option<String>,
@@ -97,6 +55,21 @@ pub struct Config {
     max_validity: Option<Duration>,
 }
 
+fn handle_empty(s: &str) -> &str {
+    if s.trim().is_empty() {
+        "empty"
+    } else {
+        s
+    }
+}
+
+fn format_oid(oid: &oid_registry::Oid) -> String {
+    match oid2sn(oid, oid_registry()) {
+        Ok(s) => s.to_owned(),
+        _ => format!("{}", oid),
+    }
+}
+
 pub fn check(der: &[u8], config: Config) -> Collection {
     let cert = match X509Certificate::from_der(der) {
         Ok((_rem, cert)) => cert,
@@ -105,71 +78,137 @@ pub fn check(der: &[u8], config: Config) -> Collection {
 
     Collection::from(&mut unwrap_into!(
         config.subject_cn.map(|expected| {
-            let subject_cn = first_of(&mut cert.subject().iter_common_name());
-            if subject_cn == expected {
+            let name = "Subject CN";
+            let value = first_of(&mut cert.subject().iter_common_name());
+            if expected == value {
                 SimpleCheckResult::ok_with_details(
-                    format!("CN={}", subject_cn),
-                    format!("Subject CN: {}", subject_cn),
+                    format!("CN={}", value),
+                    format!("{}: {}", name, value),
                 )
             } else {
                 SimpleCheckResult::warn(format!(
-                    "Subject CN is {} but expected {}",
-                    subject_cn, expected
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
                 ))
             }
         }),
         check_subject_alt_names(cert.subject_alternative_name(), config.subject_alt_names),
         config.subject_o.map(|expected| {
-            check_eq!(
-                "Subject O",
-                first_of(&mut cert.subject().iter_organization()),
-                expected
-            )
+            let name = "Subject O";
+            let value = first_of(&mut cert.subject().iter_organization());
+            if expected == value {
+                SimpleCheckResult::notice(format!("{}: {}", name, value))
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
+            }
         }),
         config.subject_ou.map(|expected| {
-            check_eq!(
-                "Subject OU",
-                first_of(&mut cert.subject().iter_organizational_unit()),
-                expected
-            )
+            let name = "Subject OU";
+            let value = first_of(&mut cert.subject().iter_organizational_unit());
+            if expected == value {
+                SimpleCheckResult::notice(format!("{}: {}", name, value))
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
+            }
         }),
         check_serial(cert.raw_serial_as_string(), config.serial),
         config.issuer_cn.map(|expected| {
-            check_eq!(
-                "Issuer CN",
-                first_of(&mut cert.issuer().iter_common_name()),
-                expected
-            )
+            let name = "Issuer CN";
+            let value = first_of(&mut cert.issuer().iter_common_name());
+            if expected == value {
+                SimpleCheckResult::notice(format!("{}: {}", name, value))
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
+            }
         }),
         config.issuer_o.map(|expected| {
-            check_eq!(
-                "Issuer O",
-                first_of(&mut cert.issuer().iter_organization()),
-                expected
-            )
+            let name = "Issuer O";
+            let value = first_of(&mut cert.issuer().iter_organization());
+            if expected == value {
+                SimpleCheckResult::notice(format!("{}: {}", name, value))
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
+            }
         }),
         config.issuer_ou.map(|expected| {
-            check_eq!(
-                "Issuer OU",
-                first_of(&mut cert.issuer().iter_organizational_unit()),
-                expected
-            )
+            let name = "Issuer OU";
+            let value = first_of(&mut cert.issuer().iter_organizational_unit());
+            if expected == value {
+                SimpleCheckResult::notice(format!("{}: {}", name, value))
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
+            }
         }),
         config.issuer_st.map(|expected| {
-            check_eq!(
-                "Issuer ST",
-                first_of(&mut cert.issuer().iter_state_or_province()),
-                expected
-            )
+            let name = "Issuer ST";
+            let value = first_of(&mut cert.issuer().iter_state_or_province());
+            if expected == value {
+                SimpleCheckResult::notice(format!("{}: {}", name, value))
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
+            }
         }),
         config.issuer_c.map(|expected| {
-            check_eq!(
-                "Issuer C",
-                first_of(&mut cert.issuer().iter_country()),
-                expected
-            )
+            let name = "Issuer C";
+            let value = first_of(&mut cert.issuer().iter_country());
+            if expected == value {
+                SimpleCheckResult::notice(format!("{}: {}", name, value))
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
+            }
         }),
-        check_signature_algorithm(&cert.signature_algorithm, config.signature_algorithm),
+        config.signature_algorithm.map(|expected| {
+            let name = "Signature algorithm";
+            let value = &cert.signature_algorithm.algorithm;
+            if expected == value.to_string() {
+                SimpleCheckResult::notice(format!("{}: {}", name, format_oid(value)))
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "{} is {} ({}) but expected {}",
+                    name,
+                    handle_empty(&format_oid(value)),
+                    value,
+                    expected
+                ))
+            }
+        }),
         check_pubkey_algorithm(cert.public_key(), config.pubkey_algorithm),
         check_pubkey_size(cert.public_key(), config.pubkey_size),
         check_validity_not_after(
@@ -183,7 +222,14 @@ pub fn check(der: &[u8], config: Config) -> Collection {
 }
 
 fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
-    expected.map(|expected| check_eq!("Serial", serial.to_lowercase(), expected.to_lowercase()))
+    expected.map(|expected| {
+        let name = "Serial";
+        if serial.to_lowercase() == expected.to_lowercase() {
+            SimpleCheckResult::notice(format!("{}: {}", name, serial))
+        } else {
+            SimpleCheckResult::warn(format!("{} is {} but expected {}", name, serial, expected))
+        }
+    })
 }
 
 fn check_subject_alt_names(
@@ -223,58 +269,26 @@ fn check_subject_alt_names(
     })
 }
 
-fn check_signature_algorithm(
-    signature_algorithm: &AlgorithmIdentifier,
-    expected: Option<SignatureAlgorithm>,
-) -> Option<SimpleCheckResult> {
-    expected.map(|expected| {
-        fn format_oid(oid: &oid_registry::Oid) -> String {
-            match oid2sn(oid, oid_registry()) {
-                Ok(s) => s.to_owned(),
-                _ => format!("{}", oid),
-            }
-        }
-
-        check_eq!(
-            "Signature algorithm",
-            match X509SignatureAlgorithm::try_from(signature_algorithm) {
-                Ok(X509SignatureAlgorithm::RSA) => "RSA".to_string(),
-                Ok(X509SignatureAlgorithm::RSASSA_PSS(params)) => format!(
-                    "RSASSA_PSS-{}",
-                    format_oid(params.hash_algorithm_oid()).to_uppercase()
-                ),
-                Ok(X509SignatureAlgorithm::RSAAES_OAEP(params)) => format!(
-                    "RSAAES_OAEP-{}",
-                    format_oid(params.hash_algorithm_oid()).to_uppercase()
-                ),
-                Ok(X509SignatureAlgorithm::DSA) => "DSA".to_string(),
-                Ok(X509SignatureAlgorithm::ECDSA) => "ECDSA".to_string(),
-                Ok(X509SignatureAlgorithm::ED25519) => "ED25519".to_string(),
-                Err(_) => return SimpleCheckResult::warn("Signature algorithm: Parser failed"),
-            },
-            expected.to_string()
-        )
-    })
-}
-
 fn check_pubkey_algorithm(
     pubkey: &SubjectPublicKeyInfo,
     expected: Option<String>,
 ) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
-        check_eq!(
-            "Public key algorithm",
-            match pubkey.parsed() {
-                Ok(PublicKey::RSA(_)) => "RSA",
-                Ok(PublicKey::EC(_)) => "EC",
-                Ok(PublicKey::DSA(_)) => "DSA",
-                Ok(PublicKey::GostR3410(_)) => "GostR3410",
-                Ok(PublicKey::GostR3410_2012(_)) => "GostR3410_2012",
-                Ok(PublicKey::Unknown(_)) => "Unknown",
-                Err(_) => return SimpleCheckResult::warn("Invalid public key"),
-            },
-            expected
-        )
+        let name = "Public key algorithm";
+        let value = match pubkey.parsed() {
+            Ok(PublicKey::RSA(_)) => "RSA",
+            Ok(PublicKey::EC(_)) => "EC",
+            Ok(PublicKey::DSA(_)) => "DSA",
+            Ok(PublicKey::GostR3410(_)) => "GostR3410",
+            Ok(PublicKey::GostR3410_2012(_)) => "GostR3410_2012",
+            Ok(PublicKey::Unknown(_)) => "Unknown",
+            Err(_) => return SimpleCheckResult::warn("Invalid public key"),
+        };
+        if expected == value {
+            SimpleCheckResult::notice(format!("{}: {}", name, value))
+        } else {
+            SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+        }
     })
 }
 
@@ -283,20 +297,22 @@ fn check_pubkey_size(
     expected: Option<usize>,
 ) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
-        check_eq!(
-            "Public key size",
-            match pubkey.parsed() {
-                // more or less stolen from upstream `examples/print-cert.rs`.
-                Ok(PublicKey::RSA(rsa)) => rsa.key_size(),
-                Ok(PublicKey::EC(ec)) => ec.key_size(),
-                Ok(PublicKey::DSA(k))
-                | Ok(PublicKey::GostR3410(k))
-                | Ok(PublicKey::GostR3410_2012(k))
-                | Ok(PublicKey::Unknown(k)) => 8 * k.len(),
-                Err(_) => return SimpleCheckResult::warn("Invalid public key"),
-            },
-            expected
-        )
+        let name = "Public key size";
+        let value = match pubkey.parsed() {
+            // more or less stolen from upstream `examples/print-cert.rs`.
+            Ok(PublicKey::RSA(rsa)) => rsa.key_size(),
+            Ok(PublicKey::EC(ec)) => ec.key_size(),
+            Ok(PublicKey::DSA(k))
+            | Ok(PublicKey::GostR3410(k))
+            | Ok(PublicKey::GostR3410_2012(k))
+            | Ok(PublicKey::Unknown(k)) => 8 * k.len(),
+            Err(_) => return SimpleCheckResult::warn("Invalid public key"),
+        };
+        if expected == value {
+            SimpleCheckResult::notice(format!("{}: {}", name, value))
+        } else {
+            SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+        }
     })
 }
 
@@ -309,7 +325,7 @@ fn check_validity_not_after(
         None => SimpleCheckResult::crit(format!("Certificate expired ({})", not_after)).into(),
         Some(time_to_expiration) => levels.check(
             time_to_expiration,
-            OutputType::Notice(format!(
+            OutputType::Summary(format!(
                 "Certificate expires in {} day(s) ({})",
                 time_to_expiration.whole_days(),
                 not_after
@@ -352,23 +368,21 @@ mod test_check_serial {
 
     #[test]
     fn test_case_insensitive() {
-        let result = Some(SimpleCheckResult::notice("Serial: aa:11:bb:22:cc"));
-
         assert_eq!(
             check_serial(s("aa:11:bb:22:cc"), Some(s("aa:11:bb:22:cc"))),
-            result
+            Some(SimpleCheckResult::notice("Serial: aa:11:bb:22:cc"))
         );
         assert_eq!(
             check_serial(s("AA:11:BB:22:CC"), Some(s("aa:11:bb:22:cc"))),
-            result
+            Some(SimpleCheckResult::notice("Serial: AA:11:BB:22:CC"))
         );
         assert_eq!(
             check_serial(s("aa:11:bb:22:cc"), Some(s("AA:11:BB:22:CC"))),
-            result
+            Some(SimpleCheckResult::notice("Serial: aa:11:bb:22:cc"))
         );
         assert_eq!(
             check_serial(s("AA:11:bb:22:CC"), Some(s("aa:11:BB:22:cc"))),
-            result
+            Some(SimpleCheckResult::notice("Serial: AA:11:bb:22:CC"))
         );
     }
 }

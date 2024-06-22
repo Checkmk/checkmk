@@ -9,14 +9,14 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.userdb import SAMLConnectionTypedDict
+from cmk.gui.userdb import SAMLUserConnectionConfig
 from cmk.gui.userdb.type_defs import RelayState
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 
 
 def show_saml2_login(
-    saml_connections: list[SAMLConnectionTypedDict],
+    saml_connections: list[SAMLUserConnectionConfig],
     saml2_user_error: str | None,
     origtarget: str,
 ) -> str | None:

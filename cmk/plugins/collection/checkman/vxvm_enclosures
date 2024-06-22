@@ -15,7 +15,7 @@ description:
  the local disks under Veritas control, you can add these to
  {ignored_services}.
 
- You need to install the agent plugin {vxvm}.
+ You need to install the agent plug-in {vxvm}.
 
 item:
  Name of the disk enclosure

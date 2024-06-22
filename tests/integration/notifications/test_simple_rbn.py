@@ -10,10 +10,11 @@ from typing import Final
 
 import pytest
 
-from tests.testlib import WatchLog
 from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostName
+
+from .watch_log import WatchLog
 
 
 @pytest.fixture(name="fake_sendmail")
@@ -69,10 +70,10 @@ def fixture_host(site: Site) -> Iterator[HostName]:
 @pytest.mark.usefixtures("disable_checks")
 @pytest.mark.usefixtures("disable_flap_detection")
 def test_simple_rbn_host_notification(host: HostName, site: Site) -> None:
-    site.send_host_check_result(host, 1, "FAKE DOWN", expected_state=1)
-
     with WatchLog(site, default_timeout=20) as log:
         # This checks the following log files: `var/log/nagios.log` or `var/check_mk/core/history`.
+        site.send_host_check_result(host, 1, "FAKE DOWN", expected_state=1)
+
         log.check_logged(
             f"] HOST NOTIFICATION: check-mk-notify;{host};DOWN;check-mk-notify;FAKE DOWN"
         )
@@ -99,11 +100,11 @@ def test_simple_rbn_service_notification(host: HostName, site: Site) -> None:
     # But keep the site up or the service notifications will be postponed.
     site.send_host_check_result(host, 0, "FAKE UP", expected_state=0)
 
-    # Now generate the service notification.
-    site.send_service_check_result(host, service, 2, "FAKE CRIT")
-
     # And check that the notifications are recorded in the log.
     with WatchLog(site, default_timeout=30) as log:
+        # Now generate the service notification.
+        site.send_service_check_result(host, service, 2, "FAKE CRIT")
+
         # This checks the following log files: `var/log/nagios.log` or `var/check_mk/core/history`.
         log.check_logged(
             f"] SERVICE NOTIFICATION: check-mk-notify;{host};{service};CRITICAL;check-mk-notify;FAKE CRIT"

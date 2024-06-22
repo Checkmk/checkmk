@@ -14,7 +14,7 @@ from collections.abc import Callable, Generator, Iterable
 from contextlib import suppress
 from typing import Any
 
-from cmk.utils.check_utils import maincheckify, unwrap_parameters
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 
 from cmk.checkengine.parameters import Parameters
@@ -106,7 +106,7 @@ def _create_check_function(
 
     # 2) unwrap parameters and ensure it is a generator of valid instances
     @functools.wraps(sig_function)
-    def check_result_generator(*args, **kwargs) -> CheckResult:  # type: ignore[no-untyped-def]
+    def check_result_generator(*args: Any, **kwargs: Any) -> CheckResult:
         assert not args, "pass arguments as keywords to check function"
         assert "params" in kwargs, f"'params' is missing in kwargs: {kwargs!r}"
         parameters = kwargs["params"]
@@ -115,12 +115,12 @@ def _create_check_function(
             # instead of a dict. However, we have way too many 'if isinsance(params, dict)'
             # call sites to introduce this into legacy code, so use the plain dict.
             parameters = copy.deepcopy(parameters._data)
-        kwargs["params"] = unwrap_parameters(parameters)
+        kwargs["params"] = parameters
 
         if not requires_item:
-            # this handles a very weird case, in which check plugins do not have an '%s'
+            # this handles a very weird case, in which check plug-ins do not have an '%s'
             # in their description (^= no item) but do in fact discover an empty string.
-            # We cannot just append "%s" to the service description, because in that case
+            # We cannot just append "%s" to the service name, because in that case
             # our tests complain about the ruleset not being for plugins with item :-(
             kwargs = {k: v for k, v in kwargs.items() if k != "item"}
 

@@ -45,16 +45,15 @@
 #   (PackageHub/12.5/x86_64)
 
 
-# mypy: disable-error-code="no-untyped-def"
-
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.suseconnect import get_data, Section
 
 from cmk.agent_based.v2 import render
+from cmk.plugins.collection.agent_based.suseconnect import get_data, Section
 
 
 def inventory_suseconnect(section: Section) -> Iterable[tuple[None, dict]]:
@@ -62,7 +61,9 @@ def inventory_suseconnect(section: Section) -> Iterable[tuple[None, dict]]:
         yield None, {}
 
 
-def check_suseconnect(_no_item, params, section: Section):
+def check_suseconnect(
+    _no_item: str, params: Mapping[str, Any], section: Section
+) -> Iterable[tuple[int, str]]:
     # we assume here that the parsed data contains all required keys
 
     if (specs := get_data(section)) is None:

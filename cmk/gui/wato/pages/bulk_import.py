@@ -17,13 +17,12 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.pages
-import cmk.gui.watolib.bakery as bakery
-import cmk.gui.weblib as weblib
+from cmk.gui import weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -54,6 +53,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
 from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
@@ -303,8 +303,10 @@ class ModeBulkImport(WatoMode):
                         # Remove host_name from attributes
                         del entry["host_name"]
                         _host_name = HostName(attr_value)
-
-                    if attr_name != "alias":
+                    elif attr_name in ("-", ""):
+                        # Don't import / No select
+                        del entry[attr_name]
+                    elif attr_name != "alias":
                         host_attribute_inst = host_attributes[attr_name]
 
                         if not attr_value.isascii():
@@ -433,7 +435,7 @@ class ModeBulkImport(WatoMode):
                 _(
                     "Using this page you can import several hosts at once into the choosen folder. You can "
                     "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
-                    "into the textarea or simply enter a list of hostnames (one per line) to the textarea."
+                    "into the textarea or simply enter a list of host names (one per line) to the textarea."
                 )
             )
 
@@ -585,7 +587,7 @@ class ModeBulkImport(WatoMode):
         attributes = [
             (None, _("(please select)")),
             ("-", _("Don't import")),
-            ("host_name", _("Hostname")),
+            ("host_name", _("Host name")),
             ("alias", _("Alias")),
             ("site", _("Monitored on site")),
             ("ipaddress", _("IPv4 address")),

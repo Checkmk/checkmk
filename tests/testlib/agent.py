@@ -7,6 +7,7 @@ import contextlib
 import json
 import logging
 import os
+import re
 import socketserver
 import subprocess
 import time
@@ -16,11 +17,13 @@ from pathlib import Path
 from typing import Any
 
 from tests.testlib.site import Site
-from tests.testlib.utils import run, wait_until
+from tests.testlib.utils import execute, run, wait_until
 
 from cmk.utils.hostaddress import HostName
 
 logger = logging.getLogger(__name__)
+
+OMD_STATUS_CACHE = Path("/var/lib/check_mk_agent/cache/omd_status.cache")
 
 
 def get_package_type() -> str:
@@ -57,14 +60,23 @@ def install_agent_package(package_path: Path) -> Path:
 
 
 def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
-    agent_download_resp = site.openapi.get(
-        "domain-types/agent/actions/download_by_host/invoke",
-        params={
-            "agent_type": "generic",
-            "os_type": get_package_type(),
-        },
-        headers={"Accept": "application/octet-stream"},
-    )
+    if site.version.is_raw_edition():
+        agent_download_resp = site.openapi.get(
+            "domain-types/agent/actions/download/invoke",
+            params={
+                "os_type": get_package_type(),
+            },
+            headers={"Accept": "application/octet-stream"},
+        )
+    else:
+        agent_download_resp = site.openapi.get(
+            "domain-types/agent/actions/download_by_host/invoke",
+            params={
+                "agent_type": "generic",
+                "os_type": get_package_type(),
+            },
+            headers={"Accept": "application/octet-stream"},
+        )
     assert agent_download_resp.ok
 
     path_agent_package = tmp_dir / ("agent." + get_package_type())
@@ -213,16 +225,7 @@ def wait_until_host_receives_data(
 
 
 def controller_status_json(contoller_path: Path) -> Mapping[str, Any]:
-    return json.loads(  # type: ignore[no-any-return]
-        run(
-            [
-                "sudo",
-                contoller_path.as_posix(),
-                "status",
-                "--json",
-            ]
-        ).stdout
-    )
+    return json.loads(run(["sudo", contoller_path.as_posix(), "status", "--json"]).stdout)
 
 
 def wait_until_host_has_services(
@@ -267,5 +270,55 @@ def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
         if baking_status.state == "finished":
             return
     raise AssertionError(
-        f"Now waiting {waiting_cycles*waiting_time} seconds for baking job to finish, giving up..."
+        f"Now waiting {waiting_cycles * waiting_time} seconds for baking job to finish, giving up..."
     )
+
+
+def _remove_omd_status_cache() -> None:
+    logger.info("Removing omd status agent cache...")
+    with execute(
+        ["rm", "-f", str(OMD_STATUS_CACHE)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as p:
+        rc = p.wait()
+        p_out, p_err = p.communicate()
+        assert rc == 0, f"Failed to remove agent cache.\nSTDOUT: {p_out}\nSTDERR: {p_err}"
+
+
+def _all_omd_services_running_from_cache(site: Site) -> tuple[bool, str]:
+    stdout = site.read_file(OMD_STATUS_CACHE)
+    assert f"[{site.id}]" in stdout
+    assert "OVERALL" in stdout
+
+    # extract text between '[<site.id>]' and 'OVERALL'
+    match_extraction = re.findall(rf"\[{site.id}\]([^\\]*?)OVERALL", stdout)
+    sub_stdout = match_extraction[0] if match_extraction else ""
+
+    # find all occurrences of one or more digits in the extracted stdout
+    match_assertion = re.findall(r"\d+", sub_stdout)
+    return all(int(match) == 0 for match in match_assertion), stdout
+
+
+def wait_for_agent_cache_omd_status(site: Site, max_count: int = 20, waiting_time: int = 5) -> None:
+    """Force re-generation of the omd status agent cache until it matches the current omd status."""
+    count = 0
+
+    while site.is_running() and count < max_count:
+        if OMD_STATUS_CACHE.exists():
+            fully_running, cache_content = _all_omd_services_running_from_cache(site)
+            if fully_running:
+                logger.info("Agent cache reports site to be fully running")
+                return
+            logger.info(
+                "Agent cache reports site NOT to be fully running. Agent cache content:\n%s",
+                cache_content,
+            )
+            # to force agent cache regeneration we remove the cache file
+            _remove_omd_status_cache()
+
+        logger.info("Waiting for agent cache to be generated...")
+        time.sleep(waiting_time)
+        count += 1
+
+    logger.info("Agent cache not matching the current OMD status")

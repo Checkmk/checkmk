@@ -8,15 +8,15 @@ from collections.abc import Iterator
 
 from livestatus import lq_logic
 
-import cmk.gui.site_config as site_config
-import cmk.gui.sites as sites
+from cmk.gui import site_config, sites
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
-from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables
+from cmk.gui.type_defs import Choices, ColumnName, FilterHeader, FilterHTTPVariables
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DualListChoice, ValueSpec
 from cmk.gui.visuals.filter import Filter, FilterRegistry
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 
 
 def register(filter_registry: FilterRegistry) -> None:
@@ -59,23 +59,38 @@ def _wato_folders_to_lq_regex(path: str) -> str:
 
 
 class FilterWatoFolder(Filter):
-    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        ident: str,
+        title: str | LazyString,
+        sort_index: int,
+        info: str,
+        htmlvars: list[str],
+        link_columns: list[ColumnName],
+    ) -> None:
+        super().__init__(
+            ident=ident,
+            title=title,
+            sort_index=sort_index,
+            info=info,
+            htmlvars=htmlvars,
+            link_columns=link_columns,
+        )
         self.last_wato_data_update: None | float = None
 
-    def available(self):
+    def available(self) -> bool:
         # This filter is also available on slave sites with disabled WATO
         # To determine if this site is a slave we check the existance of the distributed_wato.mk
         # file and the absence of any site configuration
         return active_config.wato_enabled or site_config.is_wato_slave_site()
 
-    def load_wato_data(self):
+    def load_wato_data(self) -> None:
         self.tree = folder_tree().root_folder()
         self.path_to_tree: dict[str, str] = {}  # will be filled by self.folder_selection
         self.selection = list(self.folder_selection(self.tree))
         self.last_wato_data_update = time.time()
 
-    def check_wato_data_update(self):
+    def check_wato_data_update(self) -> None:
         if not self.last_wato_data_update or time.time() - self.last_wato_data_update > 5:
             self.load_wato_data()
 
@@ -118,9 +133,7 @@ class FilterWatoFolder(Filter):
     # by the HTML selection box. This also updates self.path_to_tree,
     # a dictionary from the path to the title, by recursively scanning the
     # folders
-    def folder_selection(  # type: ignore[no-untyped-def]
-        self, folder, depth=0
-    ) -> Iterator[tuple[str, str]]:
+    def folder_selection(self, folder: Folder, depth: int = 0) -> Iterator[tuple[str, str]]:
         my_path: str = folder.path()
         self.path_to_tree[my_path] = folder.title()
 
@@ -161,7 +174,7 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
             return folders.split("|")
         return []
 
-    def display(self, value: FilterHTTPVariables):  # type: ignore[no-untyped-def]
+    def display(self, value: FilterHTTPVariables) -> None:
         self.valuespec().render_input(self.ident, self._to_list(value))
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:

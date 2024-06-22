@@ -150,7 +150,7 @@ def test_agent_handles_exceptions(
     )
     responses.get(
         f"https://{args.hostname}:/api/v1/device?rows=200&start=0&dmPartitionId={args.partition[0]}",
-        body=exception("exception_message"),  # type: ignore[call-arg]
+        body=exception("exception_message"),
     )
 
     return_code = agent_mobileiron_main(args)

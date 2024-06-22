@@ -22,8 +22,7 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
-import cmk.gui.log as log
-import cmk.gui.visuals as visuals
+from cmk.gui import log, visuals
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.data_source import data_source_registry
@@ -64,7 +63,7 @@ from .store import get_all_views, get_permitted_views
 
 def page_show_view() -> None:
     """Central entry point for the initial HTML page rendering of a view"""
-    with CPUTracker() as page_view_tracker:
+    with CPUTracker(log.logger.debug) as page_view_tracker:
         view_name = request.get_ascii_input_mandatory("view_name", "")
         view_spec = visuals.get_permissioned_visual(
             view_name,
@@ -289,7 +288,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
             aggr_rows=rows,
         )
 
-    with CPUTracker() as view_render_tracker:
+    with CPUTracker(log.logger.debug) as view_render_tracker:
         show_view_func()
     view.process_tracking.duration_view_render = view_render_tracker.duration
 
@@ -317,7 +316,7 @@ def get_row_count(view: View) -> int:
 def _get_view_rows(
     view: View, all_active_filters: list[Filter], only_count: bool = False
 ) -> tuple[int, Rows]:
-    with CPUTracker() as fetch_rows_tracker:
+    with CPUTracker(log.logger.debug) as fetch_rows_tracker:
         # Fetch data. Some views show data only after pressing [Search]
         if (
             only_count
@@ -334,7 +333,7 @@ def _get_view_rows(
     # Sorting - use view sorters and URL supplied sorters
     _sort_data(rows, view.sorters)
 
-    with CPUTracker() as filter_rows_tracker:
+    with CPUTracker(log.logger.debug) as filter_rows_tracker:
         # Apply non-Livestatus filters
         for filter_ in all_active_filters:
             try:
@@ -408,7 +407,7 @@ def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, r
 
     # Until now no single byte of HTML code has been output.
     # Now let's render the view
-    with CPUTracker() as view_render_tracker:
+    with CPUTracker(log.logger.debug) as view_render_tracker:
         view_renderer.render(
             rows, show_checkboxes, num_columns, show_filters, unfiltered_amount_of_rows
         )

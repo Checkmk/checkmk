@@ -11,11 +11,10 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from datetime import datetime
 from functools import partial
 from itertools import zip_longest
-from typing import assert_never, Final, Literal, NamedTuple, TypeVar
+from typing import assert_never, Literal, NamedTuple, TypedDict, TypeVar
 
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
-from typing_extensions import TypedDict
 
 import cmk.utils.render
 
@@ -27,14 +26,20 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 from cmk.graphing.v1.metrics import AutoPrecision
 
 from ._color import fade_color, parse_color, render_color
-from ._graph_specification import GraphDataRange, GraphMetric, GraphRecipe, HorizontalRule
+from ._graph_specification import (
+    FixedVerticalRange,
+    GraphDataRange,
+    GraphMetric,
+    GraphRecipe,
+    HorizontalRule,
+    MinimalVerticalRange,
+)
 from ._loader import get_unit_info
 from ._parser import (
     DecimalFormatter,
     EngineeringScientificFormatter,
     IECFormatter,
     Label,
-    NumLabelRange,
     SIFormatter,
     StandardScientificFormatter,
     TimeFormatter,
@@ -81,7 +86,6 @@ LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea
 
 class VerticalAxis(TypedDict):
     range: tuple[float, float]
-    real_range: tuple[float, float]
     axis_label: str | None
     labels: Sequence[VerticalAxisLabel]
     max_label_length: int
@@ -115,7 +119,7 @@ class GraphArtwork(BaseModel):
     start_time: Timestamp
     end_time: Timestamp
     step: Seconds
-    explicit_vertical_range: tuple[float | None, float | None]
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     requested_vrange: tuple[float, float] | None
     requested_start_time: Timestamp
     requested_end_time: Timestamp
@@ -494,20 +498,6 @@ def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesVal
 #   '----------------------------------------------------------------------'
 
 
-_MAX_NUM_LABELS: Final = 8
-
-
-def _compute_num_labels(min_y: float, max_y: float) -> tuple[NumLabelRange, NumLabelRange]:
-    if abs(min_y) == abs(max_y):
-        return NumLabelRange(2, 4), NumLabelRange(2, 4)
-    min_max_num_labels = round(_MAX_NUM_LABELS * abs(min_y) / (abs(min_y) + abs(max_y)))
-    max_max_num_labels = _MAX_NUM_LABELS - min_max_num_labels
-    return (
-        NumLabelRange(round(min_max_num_labels / 3.0), min_max_num_labels),
-        NumLabelRange(round(max_max_num_labels / 3.0), max_max_num_labels),
-    )
-
-
 def _make_formatter(
     formatter_ident: Literal[
         "Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"
@@ -537,7 +527,7 @@ def _make_formatter(
             return TimeFormatter(symbol, precision)
 
 
-def _render_labels_from_api(
+def _compute_labels_from_api(
     formatter: (
         DecimalFormatter
         | SIFormatter
@@ -546,42 +536,40 @@ def _render_labels_from_api(
         | EngineeringScientificFormatter
         | TimeFormatter
     ),
+    height_ex: SizeEx,
     mirrored: bool,
     *,
     min_y: float,
     max_y: float,
-) -> Sequence[VerticalAxisLabel]:
+) -> Sequence[Label]:
+    abs_min_y = abs(min_y)
+    abs_max_y = abs(max_y)
     match min_y >= 0, max_y >= 0:
         case True, True:
-            labels = list(formatter.render_y_labels(max_y, NumLabelRange(3, _MAX_NUM_LABELS)))
-        case True, False:
-            raise ValueError((min_y, max_y))
+            return formatter.render_y_labels(max(abs_min_y, abs_max_y), height_ex / 4.0 + 1)
         case False, True:
-            min_y_num_label_range, max_y_num_label_range = _compute_num_labels(min_y, max_y)
-            labels = [
-                Label(-1 * l.position, l.text if mirrored else f"-{l.text}")
-                for l in formatter.render_y_labels(abs(min_y), min_y_num_label_range)
-            ] + list(formatter.render_y_labels(max_y, max_y_num_label_range))
+            if mirrored or abs_min_y == abs_max_y:
+                labels = formatter.render_y_labels(max(abs_min_y, abs_max_y), height_ex / 8.0 + 1)
+                return [Label(-1 * l.position, l.text) for l in labels] + list(labels)
+            mean_num_labels = height_ex / 4.0 + 1
+            min_mean_num_labels = round(mean_num_labels * abs_min_y / (abs_min_y + abs_max_y))
+            max_mean_num_labels = mean_num_labels - min_mean_num_labels
+            return [
+                Label(-1 * l.position, f"-{l.text}")
+                for l in formatter.render_y_labels(abs_min_y, min_mean_num_labels)
+            ] + list(formatter.render_y_labels(abs_max_y, max_mean_num_labels))
         case False, False:
-            labels = [
+            return [
                 Label(-1 * l.position, l.text)
-                for l in formatter.render_y_labels(abs(max_y), NumLabelRange(3, _MAX_NUM_LABELS))
+                for l in formatter.render_y_labels(max(abs_min_y, abs_max_y), height_ex / 4.0 + 1)
             ]
-
-    return sorted(
-        [
-            VerticalAxisLabel(position=label.position, text=label.text, line_width=2)
-            for label in [Label(0, "0")] + list(labels)
-        ],
-        key=lambda v: v.position,
-    )
+        case _:
+            raise ValueError((min_y, max_y))
 
 
 class _VAxisMinMax(NamedTuple):
-    real_range: tuple[float, float]
     distance: float
-    min_value: float
-    max_value: float
+    label_range: tuple[float, float]
 
 
 def _render_legacy_labels(
@@ -620,11 +608,11 @@ def _render_legacy_labels(
         ]
 
     elif stepping == "time":
-        if v_axis_min_max.max_value > 3600 * 24:
+        if v_axis_min_max.label_range[1] > 3600 * 24:
             divide_by = 86400.0
             base = 10
             steps = [(2, 0.5), (5, 1), (10, 2)]
-        elif v_axis_min_max.max_value >= 10:
+        elif v_axis_min_max.label_range[1] >= 10:
             base = 60
             steps = [(2, 0.5), (3, 0.5), (5, 1), (10, 2), (20, 5), (30, 5), (60, 10)]
         else:  # ms
@@ -661,8 +649,7 @@ def _render_legacy_labels(
     # Adds "labels", "max_label_length" and updates "axis_label" in case
     # of units which use a graph global unit
     return _create_vertical_axis_labels(
-        v_axis_min_max.min_value,
-        v_axis_min_max.max_value,
+        v_axis_min_max.label_range,
         unit,
         label_distance,
         sub_distance,
@@ -687,26 +674,31 @@ def _compute_graph_v_axis(
     unit = get_unit_info(graph_recipe.unit)
 
     # Calculate the the value range
-    # real_range -> physical range, without extra margin or zooming
-    #               tuple of (min_value, max_value)
     # distance   -> amount of values visible in vaxis (max_value - min_value)
     # min_value  -> value of lowest v axis label (taking extra margin and zooming into account)
     # max_value  -> value of highest v axis label (taking extra margin and zooming into account)
     v_axis_min_max = _compute_v_axis_min_max(
         graph_recipe.explicit_vertical_range,
-        _get_min_max_from_curves(layouted_curves),
+        layouted_curves,
         graph_data_range.vertical_range,
         mirrored,
         height_ex,
     )
 
     if formatter_ident := unit.get("formatter_ident"):
-        rendered_labels = _render_labels_from_api(
-            _make_formatter(formatter_ident, unit["symbol"]),
-            mirrored,
-            min_y=v_axis_min_max.min_value,
-            max_y=v_axis_min_max.max_value,
-        )
+        rendered_labels: Sequence[VerticalAxisLabel] = [
+            VerticalAxisLabel(position=label.position, text=label.text, line_width=2)
+            for label in [Label(0, "0")]
+            + list(
+                _compute_labels_from_api(
+                    _make_formatter(formatter_ident, unit["symbol"]),
+                    height_ex,
+                    mirrored,
+                    min_y=v_axis_min_max.label_range[0],
+                    max_y=v_axis_min_max.label_range[1],
+                )
+            )
+        ]
         max_label_length = max(len(l.text) for l in rendered_labels)
         graph_unit = None
     else:
@@ -718,8 +710,7 @@ def _compute_graph_v_axis(
         )
 
     v_axis = VerticalAxis(
-        range=(v_axis_min_max.min_value, v_axis_min_max.max_value),
-        real_range=v_axis_min_max.real_range,
+        range=v_axis_min_max.label_range,
         axis_label=None,
         labels=rendered_labels,
         max_label_length=max_label_length,
@@ -737,55 +728,62 @@ def _apply_mirrored(min_value: float, max_value: float) -> tuple[float, float]:
 
 
 def _compute_min_max(
-    explicit_vertical_range: tuple[float | None, float | None],
-    layouted_curves_range: tuple[float | None, float | None],
-    mirrored: bool,
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
+    layouted_curves: Sequence[LayoutedCurve],
 ) -> tuple[float, float]:
-    min_values = [0.0]
+    def _extract_lc_values() -> Iterator[float]:
+        for curve in layouted_curves:
+            for point in curve["points"]:
+                if isinstance(point, float):
+                    # Line points
+                    yield point
+                elif isinstance(point, tuple):
+                    # Area points
+                    lower, higher = point
+                    if lower is not None:
+                        yield lower
+                    if higher is not None:
+                        yield higher
+
+    lc_min_value, lc_max_value = (
+        (min(lc_values), max(lc_values))
+        if (lc_values := list(_extract_lc_values()))
+        else (None, None)
+    )
+
+    min_values = []
     max_values = []
 
-    # Apply explicit range if defined in graph
-    explicit_min_value, explicit_max_value = explicit_vertical_range
-    if explicit_min_value is not None:
-        min_values.append(explicit_min_value)
-    if explicit_max_value is not None:
-        max_values.append(explicit_max_value)
+    match explicit_vertical_range:
+        case FixedVerticalRange(min=min_value, max=max_value):
+            min_values = [min_value if min_value is not None else lc_min_value]
+            max_values = [max_value if max_value is not None else lc_max_value]
+        case MinimalVerticalRange(min=min_value, max=max_value):
+            min_values = [min_value, lc_min_value]
+            max_values = [max_value, lc_max_value]
+        case None:
+            min_values = [lc_min_value, 0]
+            max_values = [lc_max_value]
+        case _:
+            assert_never(explicit_vertical_range)
 
-    lc_min_value, lc_max_value = layouted_curves_range
-    if lc_min_value is not None:
-        min_values.append(lc_min_value)
-    if lc_max_value is not None:
-        max_values.append(lc_max_value)
-
-    min_value = min(min_values)
-    max_value = max(max_values) if max_values else 1.0
-
-    # In case the graph is mirrored, the 0 line is always exactly in the middle
-    if mirrored:
-        return _apply_mirrored(min_value, max_value)
-    return min_value, max_value
+    return (
+        min([min_value for min_value in min_values if min_value is not None] or [0.0]),
+        max([max_value for max_value in max_values if max_value is not None] or [1.0]),
+    )
 
 
 def _compute_v_axis_min_max(
-    explicit_vertical_range: tuple[float | None, float | None],
-    layouted_curves_range: tuple[float | None, float | None],
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
+    layouted_curves: Sequence[LayoutedCurve],
     graph_data_vrange: tuple[float, float] | None,
     mirrored: bool,
     height: SizeEx,
 ) -> _VAxisMinMax:
-    min_value, max_value = _compute_min_max(
-        explicit_vertical_range,
-        layouted_curves_range,
-        mirrored,
+    # An explizit range set by user zoom has always precedence!
+    min_value, max_value = graph_data_vrange or _compute_min_max(
+        explicit_vertical_range, layouted_curves
     )
-
-    # physical range, without extra margin or zooming
-    real_range = min_value, max_value
-
-    # An explizit range set by user zoom has always
-    # precedence!
-    if graph_data_vrange:
-        min_value, max_value = graph_data_vrange
 
     # In case the graph is mirrored, the 0 line is always exactly in the middle
     if mirrored:
@@ -813,56 +811,18 @@ def _compute_v_axis_min_max(
         if max_value != 0:
             max_value += 0.5 * distance_per_ex
 
-    return _VAxisMinMax(real_range, distance, min_value, max_value)
-
-
-def _get_min_max_from_curves(
-    layouted_curves: Sequence[LayoutedCurve],
-) -> tuple[float | None, float | None]:
-    min_value, max_value = None, None
-
-    # Now make sure that all points are within the range.
-    # Enlarge a given range if necessary.
-    for curve in layouted_curves:
-        for point in curve["points"]:
-            # Line points
-            if isinstance(point, (float, int)):
-                if max_value is None:
-                    max_value = point
-                elif point is not None:
-                    max_value = max(max_value, point)
-
-                if min_value is None:
-                    min_value = point
-                elif point is not None:
-                    min_value = min(min_value, point)
-
-            # Area points
-            elif isinstance(point, tuple):
-                lower, higher = point
-
-                if max_value is None:
-                    max_value = higher
-                elif higher is not None:
-                    max_value = max(max_value, higher)
-
-                if min_value is None:
-                    min_value = lower
-                elif lower is not None:
-                    min_value = min(min_value, lower)
-
-    return min_value, max_value
+    return _VAxisMinMax(distance, (min_value, max_value))
 
 
 # Create labels for the necessary range
 def _create_vertical_axis_labels(
-    min_value: float,
-    max_value: float,
+    label_range: tuple[float, float],
     unit: UnitInfo,
     label_distance: float,
     sub_distance: float,
     mirrored: bool,
 ) -> tuple[list[VerticalAxisLabel], int, str | None]:
+    min_value, max_value = label_range
     # round_to is the precision (number of digits after the decimal point)
     # that we round labels to.
     round_to = max(0, 3 - math.trunc(math.log10(max(abs(min_value), abs(max_value)))))

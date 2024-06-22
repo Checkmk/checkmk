@@ -7,11 +7,10 @@ from logging import Logger
 
 from cmk.update_config.plugins.lib.autochecks import rewrite_yielding_errors
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateAutochecks(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         # just consume to trigger rewriting. We already warned in pre-action.
         for _error in rewrite_yielding_errors(write=True):
             pass

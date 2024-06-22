@@ -230,6 +230,9 @@ def test_registered_pages() -> None:
             "download_robotmk_suite_report",
         ]
 
+    if cmk_version.edition() is cmk_version.Edition.CSE:
+        expected_pages += ["ajax_saas_onboarding_button_toggle"]
+
     # TODO: Depending on how we call the test (single test or whole package) we
     # see this page or we don't...
     actual_set = {p for p in cmk.gui.pages.page_registry.keys() if p != "switch_customer"}  #

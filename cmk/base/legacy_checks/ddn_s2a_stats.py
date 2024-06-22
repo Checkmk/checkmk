@@ -129,7 +129,7 @@ check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
     check_function=check_ddn_s2a_stats_io,
     check_ruleset_name="storage_iops",
     check_default_parameters={
-        "total": (28000, 33000),
+        "total": (28000.0, 33000.0),
     },
 )
 

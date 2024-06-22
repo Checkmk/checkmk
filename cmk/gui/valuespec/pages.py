@@ -5,7 +5,7 @@
 
 import abc
 import socket
-from typing import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from six import ensure_str
 

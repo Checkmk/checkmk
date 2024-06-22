@@ -108,8 +108,8 @@ impl SectionBuilder {
         }
         self
     }
-    pub fn set_async(mut self) -> Self {
-        self.is_async = true;
+    pub fn set_async(mut self, value: bool) -> Self {
+        self.is_async = value;
         self
     }
 
@@ -220,7 +220,7 @@ impl Section {
     /// - databases:     # name
     ///   is_async: true    # option
     ///   disabled: true # option
-    /// Note: yaml_rust represents such entry as a LinkedHashMap
+    /// Note: yaml_rust2 represents such entry as a LinkedHashMap
     pub fn from_yaml(entry: &Yaml) -> Result<Self> {
         let mut section = entry
             .as_hash()
@@ -245,10 +245,10 @@ impl Section {
         let c = yaml.get_string(keys::SEP).and_then(|s| s.chars().next());
         let builder = SectionBuilder::new(name).sep(c);
 
-        if yaml.get_bool(keys::DISABLED, false) {
+        if yaml.get_optional_bool(keys::DISABLED) == Some(true) {
             builder.set_disabled()
-        } else if yaml.get_bool(keys::IS_ASYNC, false) {
-            builder.set_async()
+        } else if let Some(v) = yaml.get_optional_bool(keys::IS_ASYNC) {
+            builder.set_async(v)
         } else {
             builder
         }

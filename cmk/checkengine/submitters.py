@@ -10,11 +10,12 @@ import os
 import time
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from random import Random
-from typing import final, Final, IO, Literal, NamedTuple
+from typing import final, Final, IO, Literal
 
 import cmk.utils.paths
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
@@ -107,18 +108,20 @@ def get_submitter(
     raise MKGeneralException(f"Invalid setting {check_submission=} (expected 'pipe' or 'file')")
 
 
-class Submittee(NamedTuple):
+@dataclass(frozen=True)
+class Submittee:
     name: ServiceName
     result: ServiceCheckResult
     cache_info: _CacheInfo | None
-    pending: bool
 
 
-class FormattedSubmittee(NamedTuple):
+@dataclass(frozen=True)
+class FormattedSubmittee:
     name: ServiceName
     state: ServiceState
     details: ServiceDetails
     cache_info: _CacheInfo | None
+    pending: bool
 
 
 class Submitter(abc.ABC):
@@ -136,32 +139,32 @@ class Submitter(abc.ABC):
     @final
     def submit(self, submittees: Iterable[Submittee]) -> None:
         formatted_submittees = [
-            (
-                FormattedSubmittee(
-                    name=s.name,
-                    state=s.result.state,
-                    details="%s|%s"
-                    % (
-                        # The vertical bar indicates end of service output and start of metrics.
-                        # Replace the ones in the output by a Uniocode "Light vertical bar"
-                        s.result.output.replace("|", "\u2758"),
-                        _sanitize_perftext(s.result, self.perfdata_format),
-                    ),
-                    cache_info=s.cache_info,
-                ),
-                s.pending,
+            FormattedSubmittee(
+                name=s.name,
+                state=s.result.state,
+                details=self._make_details(s.result),
+                cache_info=s.cache_info,
+                pending=not s.result.is_submittable(),
             )
             for s in submittees
         ]
 
-        for submittee, pending in formatted_submittees:
-            _output_check_result(submittee, show_perfdata=self.show_perfdata, pending=pending)
+        for submittee in formatted_submittees:
+            _output_check_result(submittee, show_perfdata=self.show_perfdata)
 
         if formatted_submittees:
-            self._submit((submittee for submittee, pending in formatted_submittees if not pending))
+            self._submit((s for s in formatted_submittees if not s.pending))
 
     @abc.abstractmethod
     def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None: ...
+
+    def _make_details(self, result: ServiceCheckResult) -> str:
+        return "%s|%s" % (
+            # The vertical bar indicates end of service output and start of metrics.
+            # Replace the ones in the output by a Uniocode "Light vertical bar"
+            result.output.replace("|", "\u2758"),
+            _sanitize_perftext(result, self.perfdata_format),
+        )
 
 
 class NoOpSubmitter(Submitter):
@@ -199,13 +202,13 @@ class PipeSubmitter(Submitter):
         if not (pipe := PipeSubmitter._open_command_pipe()):
             return
 
-        for service, state, output, _cache_info in formatted_submittees:
+        for submittee in formatted_submittees:
             msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (
                 time.time(),
                 self.host_name,
-                service,
-                state,
-                output.replace("\n", "\\n"),
+                submittee.name,
+                submittee.state,
+                submittee.details.replace("\n", "\\n"),
             )
             pipe.write(msg.encode())
             # Important: Nagios needs the complete command in one single write() block!
@@ -248,20 +251,20 @@ class FileSubmitter(Submitter):
         now = time.time()
 
         with self._open_checkresult_file() as fd:
-            for service, state, output, _cache_info in formatted_submittees:
-                output = output.replace("\n", "\\n")
+            for submittee in formatted_submittees:
+                output = submittee.details.replace("\n", "\\n")
                 os.write(
                     fd,
                     (
                         f"host_name={self.host_name}\n"
-                        f"service_description={service}\n"
+                        f"service_description={submittee.name}\n"
                         "check_type=1\n"
                         "check_options=0\n"
                         "reschedule_check\n"
                         "latency=0.0\n"
                         f"start_time={now:.1f}\n"
                         f"finish_time={now:.1f}\n"
-                        f"return_code={state}\n"
+                        f"return_code={submittee.state}\n"
                         f"output={output}\n"
                         "\n"
                     ).encode(),
@@ -306,15 +309,10 @@ def _output_check_result(
     submittee: FormattedSubmittee,
     *,
     show_perfdata: bool,
-    pending: bool,
 ) -> None:
-    weight, state_txt = ("", "PEND ") if pending else (tty.bold, tty.states[submittee.state])
-    console.verbose(
-        "%-20s %s%s%s%s%s\n",
-        submittee.name,
-        weight,
-        state_txt,
-        submittee.details.split("|", 1)[0].split("\n", 1)[0],
-        tty.normal,
-        f" ({submittee.details.split('|', 1)[1]})" if show_perfdata else "",
+    weight, state_txt = (
+        ("", "PEND ") if submittee.pending else (tty.bold, tty.states[submittee.state])
     )
+    details = submittee.details.split("|", 1)[0].split("\n", 1)[0]
+    perfdata = f" ({submittee.details.split('|', 1)[1]})" if show_perfdata else ""
+    console.verbose(f"{submittee.name:<20} {weight}{state_txt}{details}{tty.normal}{perfdata}")

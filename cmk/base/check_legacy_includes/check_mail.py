@@ -8,6 +8,7 @@ from typing import Any
 from cmk.base.check_api import passwordstore_get_cmdline
 
 
+# Note: this is already migrated in cmk.plugins.emailchecks.server_side_calls.commons!
 def general_check_mail_args_from_params(
     check_ident: str, params: dict[str, Any]
 ) -> list[str | tuple[str, str, str]]:

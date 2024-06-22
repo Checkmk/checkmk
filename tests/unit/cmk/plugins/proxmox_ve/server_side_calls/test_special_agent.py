@@ -10,7 +10,7 @@ import pytest
 from cmk.plugins.proxmox_ve.server_side_calls.special_agent import (
     special_agent_proxmox_ve as config,
 )
-from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, Secret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 
 @pytest.mark.parametrize(
@@ -29,7 +29,7 @@ from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, Secret
                 "-u",
                 "user",
                 "-p",
-                Secret(23),
+                Secret(23).unsafe(),
                 "--port",
                 "443",
                 "--no-cert-check",
@@ -51,9 +51,8 @@ def test_agent_proxmox_ve_arguments(
         name="testhost",
         ipv4_config=IPv4Config(address="hurz"),
     )
-    http_proxies = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy.com")}
     # Act
-    commands = list(config(params, host_config, http_proxies))
+    commands = list(config(params, host_config))
     # Assert
     assert len(commands) == 1
     command = commands[0].command_arguments

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from tests.testlib import Check
+from .checktestlib import Check
 
 # Taken from https://forum.checkmk.com/t/monitoring-intel-vroc-with-rstcli/38613
 INFO = [

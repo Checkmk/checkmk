@@ -22,7 +22,7 @@ from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
+from cmk.checkengine.checkresults import ActiveCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import HostKey, SourceInfo
 from cmk.checkengine.inventory import (
@@ -72,7 +72,8 @@ def execute_checkmk_checks(
 ) -> Sequence[ActiveCheckResult]:
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
-        (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
+        ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
+        console.debug,
     )
     store_piggybacked_sections(host_sections_by_host)
     providers = make_providers(
@@ -91,8 +92,7 @@ def execute_checkmk_checks(
         )
     )
     submitter.submit(
-        Submittee(s.service.description, s.result, s.cache_info, pending=not s.submit)
-        for s in service_results
+        Submittee(s.service.description, s.result, s.cache_info) for s in service_results
     )
 
     if run_plugin_names is EVERYTHING:
@@ -156,7 +156,7 @@ def check_plugins_missing_data(
 
     # NOTE:
     # The keys used here are 'missing_sections' and 'specific_missing_sections'.
-    # They are from a time where the distinction between section and plugin was unclear.
+    # They are from a time where the distinction between section and plug-in was unclear.
     # They are kept for compatibility.
     missing_status = exit_spec.get("missing_sections", 1)
     specific_plugins_missing_data_spec = exit_spec.get("specific_missing_sections", [])
@@ -206,9 +206,8 @@ def check_host_services(
         if service.check_plugin_name not in check_plugins:
             yield AggregatedResult(
                 service=service,
-                submit=True,
                 data_received=True,
-                result=ServiceCheckResult.check_not_implemented(),
+                result=SubmittableServiceCheckResult.check_not_implemented(),
                 cache_info=None,
             )
         else:
@@ -220,7 +219,7 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
     if period is None:
         return False
     if check_timeperiod(period):
-        console.vverbose("Service %s: time period %s is currently active.\n", description, period)
+        console.debug(f"Service {description}: time period {period} is currently active.")
         return False
-    console.verbose("Skipping service %s: currently not in time period %s.\n", description, period)
+    console.verbose(f"Skipping service {description}: currently not in time period {period}.")
     return True

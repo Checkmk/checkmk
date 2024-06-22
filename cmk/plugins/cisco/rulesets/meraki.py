@@ -11,6 +11,7 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     List,
     migrate_to_password,
+    migrate_to_proxy,
     MultipleChoice,
     MultipleChoiceElement,
     Password,
@@ -41,7 +42,7 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                 parameter_form=Password(title=Title("API Key"), migrate=migrate_to_password),
                 required=True,
             ),
-            "proxy": DictElement(parameter_form=Proxy()),
+            "proxy": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy)),
             "sections": DictElement(
                 parameter_form=MultipleChoice(
                     title=Title("Sections"),
@@ -60,7 +61,9 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                 )
             ),
             "orgs": DictElement(
-                parameter_form=List(element_template=String(), title=Title("Organizations"))
+                parameter_form=List(
+                    element_template=String(macro_support=True), title=Title("Organizations")
+                )
             ),
         },
     )

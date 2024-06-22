@@ -12,7 +12,8 @@ else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-make mo
+./compile_mo_files
+
 for lang in ?? ??_??; do
     mkdir -p "$ROOT"/share/check_mk/locale/"$lang"/LC_MESSAGES
     # Install the alias file

@@ -16,7 +16,7 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-import cmk.base.api.agent_based.register.check_plugins as check_plugins
+from cmk.base.api.agent_based.register import check_plugins
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     validate_function_arguments,
@@ -224,4 +224,6 @@ def test_create_check_plugin() -> None:
 
 def test_module_attribute(fix_register: FixRegister) -> None:
     local_check = fix_register.check_plugins[CheckPluginName("local")]
-    assert local_check.location == PluginLocation("cmk.base.plugins.agent_based.local")
+    assert local_check.location == PluginLocation(
+        "cmk.plugins.collection.agent_based.local", "check_plugin_local"
+    )

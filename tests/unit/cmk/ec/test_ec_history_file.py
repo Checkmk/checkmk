@@ -2,7 +2,6 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# flake8: noqa
 """EC History file backend"""
 
 import datetime
@@ -63,9 +62,7 @@ def test_current_history_period(config: Config) -> None:
         assert _current_history_period(config=config) == 1549929600
 
     with time_machine.travel(datetime.datetime.fromtimestamp(1550000000.0, tz=ZoneInfo("CET"))):
-        assert (
-            _current_history_period(config={**config, "history_rotation": "weekly"}) == 1549843200
-        )
+        assert _current_history_period(config=config | {"history_rotation": "weekly"}) == 1549843200
 
 
 def test_convert_history_line() -> None:

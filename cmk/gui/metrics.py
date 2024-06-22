@@ -26,7 +26,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pages
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.config import Config
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _unit_info as graphing_unit_info
@@ -58,31 +58,31 @@ from cmk.gui.pages import PageResult
 #   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
 #   |                                 |___/                                |
 #   +----------------------------------------------------------------------+
-#   |  Typical code for loading Multisite plugins of this module           |
+#   |  Typical code for loading Multisite plug-ins of this module           |
 #   '----------------------------------------------------------------------'
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("metrics", globals())
     add_graphing_plugins(load_graphing_plugins())
 
 
 def _register_pre_21_plugin_api() -> None:
-    """Register pre 2.1 "plugin API"
+    """Register pre 2.1 "plug-in API"
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our built-in plugin have been changed to directly import from the .utils module. We add these old
-    names to remain compatible with 3rd party plugins for now.
+    Our built-in plug-in have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plug-ins for now.
 
-    In the moment we define an official plugin API, we can drop this and require all plugins to
+    In the moment we define an official plug-in API, we can drop this and require all plug-ins to
     switch to the new API. Until then let's not bother the users with it.
 
     CMK-12228
     """
-    # Needs to be a local import to not influence the regular plugin loading order
+    # Needs to be a local import to not influence the regular plug-in loading order
     import cmk.gui.plugins.metrics as legacy_api_module  # pylint: disable=cmk-module-layer-violation
     import cmk.gui.plugins.metrics.utils as legacy_plugin_utils  # pylint: disable=cmk-module-layer-violation
 

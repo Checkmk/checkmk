@@ -144,7 +144,7 @@ def load_mk_file(
 
 # A simple wrapper for cases where you only have to read a single value from a .mk file.
 def load_from_mk_file(path: Path | str, key: str, default: Any, lock: bool = False) -> Any:
-    return load_mk_file(path, {key: default}, lock=False)[key]
+    return load_mk_file(path, {key: default}, lock=lock)[key]
 
 
 def save_mk_file(path: Path | str, mk_content: str, add_header: bool = True) -> None:

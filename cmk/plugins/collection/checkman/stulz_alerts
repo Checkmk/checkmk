@@ -4,7 +4,7 @@ catalog: hw/environment/stulz
 license: GPLv2
 distribution: check_mk
 description:
- This plugin checks all connected clima units on a stulz management for an alert state.
+ This plug-in checks all connected clima units on a stulz management for an alert state.
  If the state not equal to zero, {CRIT} will be returned. No configuration is needed.
 
 item:

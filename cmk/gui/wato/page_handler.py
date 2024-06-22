@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.watolib.read_only as read_only
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
@@ -19,6 +18,7 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
+from cmk.gui.watolib import read_only
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.mode import mode_registry, WatoMode

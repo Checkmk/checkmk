@@ -38,10 +38,8 @@ from collections import defaultdict
 from urllib.parse import quote_plus
 
 try:
-    from collections.abc import (  # noqa: F401 # pylint: disable=unused-import,ungrouped-imports
-        Iterable,
-    )
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from collections.abc import Iterable  # pylint: disable=unused-import,ungrouped-imports
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     pass
 

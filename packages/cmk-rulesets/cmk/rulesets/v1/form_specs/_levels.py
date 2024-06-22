@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Generic, Literal, TypedDict, TypeVar
+from typing import Generic, Literal, TypedDict, TypeVar
 
 from .._localize import Help, Title
 from ._base import DefaultValue, FormSpec, Prefill
@@ -26,7 +27,7 @@ class PredictiveLevels(Generic[_NumberT]):
     ...     reference_metric="mem_used_percent",
     ...     prefill_abs_diff=DefaultValue((5.0, 10.0)),
     ...     prefill_rel_diff=DefaultValue((10.0, 20.0)),
-    ...     prefill_stddev_diff=DefaultValue((2.0, 4.0)),
+    ...     prefill_stdev_diff=DefaultValue((2.0, 4.0)),
     ... )
 
     Arguments:
@@ -37,7 +38,7 @@ class PredictiveLevels(Generic[_NumberT]):
     """The name of the metric that should be used to compute the prediction.
 
     This value is hardcoded by you, the developer.
-    It is your responsibility to make sure that all plugins subscribing to the ruleset actually
+    It is your responsibility to make sure that all plug-ins subscribing to the ruleset actually
     create this metric.
     Failing to do so will prevent the backend from providing a prediction, currently leading to an
     always OK service.
@@ -51,7 +52,7 @@ class PredictiveLevels(Generic[_NumberT]):
     """Value to pre-populate the form fields with when the levels depend on the
     relative difference to the predicted value. If None, the backend will decide whether to
     leave the field empty or to prefill it with a canonical value."""
-    prefill_stddev_diff: Prefill[tuple[float, float]] = DefaultValue((2.0, 4.0))
+    prefill_stdev_diff: Prefill[tuple[float, float]] = DefaultValue((2.0, 4.0))
     """Value to pre-populate the form fields with when the levels depend on
     the relation of the predicted value to the standard deviation. If None, the backend will
     decide whether to leave the field empty or to prefill it with a canonical value.
@@ -82,7 +83,10 @@ SimpleLevelsConfigModel = (
 
 
 LevelsConfigModel = (
-    SimpleLevelsConfigModel[_NumberT] | tuple[Literal["predictive"], _PredictiveLevelsT[_NumberT]]
+    SimpleLevelsConfigModel[_NumberT]
+    | tuple[
+        Literal["cmk_postprocessed"], Literal["predictive_levels"], _PredictiveLevelsT[_NumberT]
+    ]
 )
 
 

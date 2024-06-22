@@ -14,7 +14,7 @@ import pytest
 import responses
 from pytest_mock import MockerFixture
 
-from tests.testlib.utils import is_enterprise_repo, is_managed_repo
+from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 
@@ -23,10 +23,9 @@ import cmk.utils.version as cmk_version
 from cmk.utils.user import UserId
 
 import cmk.gui.mkeventd.wato
-import cmk.gui.watolib.activate_changes as activate_changes
-import cmk.gui.watolib.config_sync as config_sync
 from cmk.gui.config import active_config
 from cmk.gui.nodevis.utils import topology_dir
+from cmk.gui.watolib import activate_changes, config_sync
 
 from cmk.bi.type_defs import frozen_aggregations_dir
 
@@ -383,7 +382,7 @@ def _get_expected_paths(
     # precondition is a more cleanly separated structure.
 
     if is_enterprise_repo() and edition is cmk_version.Edition.CRE:
-        # CEE paths are added when the CEE plugins for WATO are available, i.e.
+        # CEE paths are added when the CEE plug-ins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected_paths += [
             "etc/check_mk/dcd.d",
@@ -398,7 +397,7 @@ def _get_expected_paths(
         ]
 
     if is_managed_repo() and edition is not cmk_version.Edition.CME:
-        # CME paths are added when the CME plugins for WATO are available, i.e.
+        # CME paths are added when the CME plug-ins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected_paths += [
             "local/share",

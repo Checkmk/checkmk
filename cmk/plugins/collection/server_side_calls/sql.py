@@ -13,7 +13,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    HTTPProxy,
     replace_macros,
     Secret,
 )
@@ -38,7 +37,8 @@ class SQLParams(BaseModel):
 
 
 def generate_sql_command(
-    params: SQLParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
+    params: SQLParams,
+    host_config: HostConfig,
 ) -> Iterator[ActiveCheckCommand]:  # pylint: disable=too-many-branches
     args: list[str | Secret] = []
 
@@ -49,8 +49,8 @@ def generate_sql_command(
 
     args.append(f"--dbms={params.dbms}")
     args.append(f"--name={replace_macros(params.name, host_config.macros)}")
-    args.append(f"--user={params.user}")
-    args.append(params.password.with_format("--password=%s"))
+    args.append(f"--user={replace_macros(params.user, host_config.macros)}")
+    args.append(params.password.unsafe("--password=%s"))
 
     match params.port:
         case "explicit", int(value):
@@ -79,7 +79,8 @@ def generate_sql_command(
     if params.text:
         args.append(f"--text={params.text}")
 
-    args.append("%s" % params.sql.replace("\n", r"\n").replace(";", r"\;"))
+    sql = replace_macros(params.sql, host_config.macros)
+    args.append("%s" % sql.replace("\n", r"\n").replace(";", r"\;"))
 
     yield ActiveCheckCommand(
         service_description=replace_macros(params.description, host_config.macros),

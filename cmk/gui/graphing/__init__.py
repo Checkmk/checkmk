@@ -14,6 +14,7 @@ from ._graph_specification import (
     graph_specification_registry,
     metric_operation_registry,
     MetricOpConstant,
+    MetricOpConstantNA,
     MetricOpOperator,
     MetricOpRRDSource,
 )
@@ -38,6 +39,7 @@ def register(
 ) -> None:
     page_registry.register_page("ajax_vs_unit_resolver")(PageVsAutocomplete)
     metric_operation_registry.register(MetricOpConstant)
+    metric_operation_registry.register(MetricOpConstantNA)
     metric_operation_registry.register(MetricOpOperator)
     metric_operation_registry.register(MetricOpRRDSource)
     graph_specification_registry.register(ExplicitGraphSpecification)

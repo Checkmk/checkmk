@@ -5,26 +5,19 @@
 
 import copy
 import re
-from typing import Any, Callable, Literal
+from collections.abc import Callable
+from typing import Any, Literal
 
 import cmk.utils.version as cmk_version
 from cmk.utils.notify_types import EventRule
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.regex import GROUP_NAME_PATTERN
-from cmk.utils.timeperiod import load_timeperiods, timeperiod_spec_alias
+from cmk.utils.timeperiod import timeperiod_spec_alias
 
-import cmk.gui.hooks as hooks
+from cmk.gui import hooks
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import (
-    AllGroupSpecs,
-    GroupName,
-    GroupSpec,
-    GroupSpecs,
-    GroupType,
-    load_contact_group_information,
-    load_group_information,
-)
+from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs, GroupType
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -38,7 +31,11 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.group_writer import save_group_information
+from cmk.gui.watolib.groups_io import (
+    load_contact_group_information,
+    load_group_information,
+    save_group_information,
+)
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     HostAttributeTopic,
@@ -47,6 +44,7 @@ from cmk.gui.watolib.host_attributes import (
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.gui.watolib.timeperiods import load_timeperiods
 
 ContactGroupUsageFinder = Callable[[GroupName, GlobalSettings], list[tuple[str, str]]]
 
@@ -367,7 +365,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
                         ),
                     )
                 )
-        result: HTML = HTML(", ").join(texts)
+        result: HTML = HTML.without_escaping(", ").join(texts)
         if texts and value["use"]:
             result += HTMLWriter.render_span(
                 HTMLWriter.render_b("*"),

@@ -26,6 +26,8 @@ from pathlib import Path
 from re import Pattern
 from typing import TYPE_CHECKING
 
+import pydantic
+
 from omdlib.type_defs import ConfigChoiceHasError
 
 import cmk.utils.resulttype as result
@@ -67,6 +69,23 @@ class IpAddressListHasError(ConfigChoiceHasError):
             except ValueError:
                 return result.Error(f"The IP address {ip_address} does match the expected format.")
         return result.OK(None)
+
+
+class ApacheTCPAddrHasError(ConfigChoiceHasError):
+    def __call__(self, value: str) -> result.Result[None, str]:
+        class _Parser(pydantic.RootModel):
+            root: pydantic.HttpUrl
+
+        url = f"http://{value}:80"
+        try:
+            _Parser.model_validate(url)
+            return result.OK(None)
+        except pydantic.ValidationError as e:
+            message = f"""OMD uses APACHE_TCP_ADDR and APACHE_TCP_PORT to construct an Apache
+Listen directive. For example, setting APACHE_TCP_PORT to 80 results in: {url}.
+This is invalid because of: """
+            message += ", ".join([error["ctx"]["error"] for error in e.errors()])
+            return result.Error(message)
 
 
 # Put all site configuration (explicit and defaults) into environment
@@ -161,6 +180,8 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
             raise MKTerminate("Invalid output of hook: empty output")
         case ["@{IP_ADDRESS_LIST}"]:
             return IpAddressListHasError()
+        case ["@{APACHE_TCP_ADDR}"]:
+            return ApacheTCPAddrHasError()
         case [regextext]:
             return re.compile(regextext + "$")
         case choices_list:

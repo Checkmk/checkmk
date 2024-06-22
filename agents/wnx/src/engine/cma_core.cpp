@@ -1216,27 +1216,25 @@ tools::UtfConversionMode PluginEntry::getUtfConversionMode() const {
                                : tools::UtfConversionMode::basic;
 }
 
-void PluginEntry::fillInternalUser(wtools::InternalUsersDb *iu) {
-    // reset all to be safe due to possible future errors in logic
-    iu_.first.clear();
-    iu_.second.clear();
-
-    // group is coming first
-    if (!group_.empty() && (iu != nullptr)) {
-        iu_ = iu->obtainUser(wtools::ConvertToUtf16(group_));
+/// try to build user from fields group and user
+wtools::InternalUser PluginEntry::getInternalUser(
+    wtools::InternalUsersDb *user_database) const {
+    if (!group_.empty() && (user_database != nullptr)) {
+        const auto iu =
+            user_database->obtainUser(wtools::ConvertToUtf16(group_));
         XLOG::t("Entry '{}' uses user '{}' as group config", path(),
                 wtools::ToUtf8(iu_.first));
-        return;
+        return iu;
     }
 
     if (user_.empty()) {
-        return;  // situation when both fields are empty
+        return {};
     }
 
-    // user
-    iu_ = PluginsExecutionUser2Iu(user_);
+    const auto iu = PluginsExecutionUser2Iu(user_);
     XLOG::t("Entry '{}' uses user '{}' as direct config", path(),
             wtools::ToUtf8(iu_.first));
+    return iu;
 }
 
 // if thread finished join old and start new thread again

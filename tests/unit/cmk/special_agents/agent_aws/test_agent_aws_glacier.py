@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Sequence
 from typing import Protocol
 
@@ -61,7 +62,7 @@ def get_glacier_sections() -> GetGlacierSections:
     ) -> GlacierSections:
         region = "eu-central-1"
         config = AWSConfig(
-            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
         )
         config.add_single_service_config("glacier_names", names)
         config.add_service_tags("glacier_tags", tags)

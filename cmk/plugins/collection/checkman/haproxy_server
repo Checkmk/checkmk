@@ -7,7 +7,7 @@ description:
 
  This check monitors the status of the servers of the HAProxy loadbalancer
  for TCP and HTTP connections. It requires the mk_haproxy.freebsd agent
- plugin to be installed on the FreeBSD host to be monitored. On linux it
+ plug-in to be installed on the FreeBSD host to be monitored. On linux it
  works with the standard agent.
 
  The check is {OK} if server is either {active} or {backup}. It is {CRIT} otherwise.

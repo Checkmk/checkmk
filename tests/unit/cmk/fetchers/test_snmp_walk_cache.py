@@ -5,6 +5,7 @@
 
 # pylint: disable=protected-access
 
+import logging
 from collections.abc import Iterable, MutableMapping
 from pathlib import Path
 
@@ -15,7 +16,7 @@ from cmk.fetchers._snmp import WalkCache
 
 class MockWalkCache(WalkCache):
     def __init__(self, mockdata: MutableMapping[str, SNMPRowInfo], path: Path) -> None:
-        super().__init__(path)
+        super().__init__(path, logging.getLogger("test"))
         self.mock_stored_on_fs = mockdata
 
     def _read_row(self, path: Path) -> SNMPRowInfo:

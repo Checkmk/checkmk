@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Iterator, Mapping
+from collections.abc import Iterator
 
 from pydantic import BaseModel
 
@@ -10,7 +10,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    HTTPProxy,
     replace_macros,
 )
 
@@ -32,9 +31,7 @@ class Params(BaseModel):
     url_details: UrlParams
 
 
-def commands_function(
-    params: Params, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
-) -> Iterator[ActiveCheckCommand]:
+def commands_function(params: Params, host_config: HostConfig) -> Iterator[ActiveCheckCommand]:
     details = params.url_details
     args = []
 

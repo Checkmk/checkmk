@@ -5,6 +5,7 @@
 import datetime
 import re
 import typing
+from collections.abc import Mapping
 
 from marshmallow import ValidationError
 from marshmallow.decorators import post_load, pre_dump, validates_schema
@@ -382,7 +383,7 @@ class DirectMapping(BaseSchema, CheckmkTuple):
     tuple_fields = ("hostname", "replace_with")
 
     hostname = String(
-        description="The hostname to be replaced.",
+        description="The host name to be replaced.",
         required=True,
     )
     replace_with = String(
@@ -394,12 +395,12 @@ class DirectMapping(BaseSchema, CheckmkTuple):
 class TranslateNames(BaseSchema):
     case = String(
         data_key="convert_case",
-        description="Convert all detected hostnames to upper- or lower-case.\n\n"
+        description="Convert all detected host names to upper- or lower-case.\n\n"
         + _enum_options(
             [
                 ("nop", "Do not convert anything"),
-                ("lower", "Convert all hostnames to lowercase."),
-                ("upper", "Convert all hostnames to uppercase."),
+                ("lower", "Convert all host names to lowercase."),
+                ("upper", "Convert all host names to uppercase."),
             ]
         ),
         enum=["nop", "lower", "upper"],
@@ -407,7 +408,7 @@ class TranslateNames(BaseSchema):
     )
     drop_domain = Boolean(
         description=(
-            "Drop the rest of the domain, only keep the hostname. Will not affect "
+            "Drop the rest of the domain, only keep the host name. Will not affect "
             "IP addresses.\n\n"
             "Examples:\n\n"
             " * `192.168.0.1` -> `192.168.0.1`\n"
@@ -422,7 +423,7 @@ class TranslateNames(BaseSchema):
         Nested(RegexpRewrites),
         data_key="regexp_rewrites",
         description=(
-            "Rewrite discovered hostnames with multiple regular expressions. The "
+            "Rewrite discovered host names with multiple regular expressions. The "
             "replacements will be done one after another in the order they appear "
             "in the list. If not anchored at the end by a `$` character, the regexp"
             "will be anchored at the end implicitly by adding a `$` character.\n\n"
@@ -667,13 +668,13 @@ class MappingConverter(Converter):
 
     """
 
-    def __init__(self, mapping) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, mapping: Mapping[str, str]) -> None:
         self.mapping = mapping
 
-    def to_checkmk(self, data):
+    def to_checkmk(self, data: str) -> str:
         return self.mapping[data]
 
-    def from_checkmk(self, data):
+    def from_checkmk(self, data: str) -> str:
         for key, value in self.mapping.items():
             if data == value:
                 return key
@@ -924,16 +925,16 @@ class HostAttributeManagementBoardField(String):
             enum=["none", "snmp", "ipmi"],
         )
 
-    def _deserialize(  # type: ignore[no-untyped-def]
-        self, value, attr, data, **kwargs
-    ) -> typing.Any:
+    def _deserialize(
+        self, value: object, attr: object, data: object, **kwargs: typing.Any
+    ) -> str | None:
         # get value from api, convert it to cmk/python
         deserialized = super()._deserialize(value, attr, data, **kwargs)
         if deserialized == "none":
             return None
         return deserialized
 
-    def _serialize(self, value, attr, obj, **kwargs) -> str | None:  # type: ignore[no-untyped-def]
+    def _serialize(self, value: str | None, attr: object, obj: object, **kwargs: typing.Any) -> str:
         # get value from cmk/python, convert it to api side
         serialized = super()._serialize(value, attr, obj, **kwargs)
         if serialized is None:

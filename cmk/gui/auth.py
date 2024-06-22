@@ -6,6 +6,8 @@
 from __future__ import annotations
 
 import base64
+import binascii
+import contextlib
 import hmac
 import re
 import uuid
@@ -109,7 +111,7 @@ def check_auth() -> tuple[UserId | SiteInternalPseudoUser, AuthType]:
 def is_site_login() -> bool:
     """Determine if login is a site login for connecting central and remote
     site. This login has to be allowed even if site login on remote site is not
-    permitted by rule "Direct login to Web GUI allowed".  This also applies to
+    permitted by rule "Direct login to web GUI allowed".  This also applies to
     all rest-api requests, they should also be allowed in this scenario otherwise
     the agent-receiver won't work."""
 
@@ -217,11 +219,16 @@ def _check_auth_by_header(
     try:
         password = Password(passwd)
     except ValueError as e:
+        # Note: not wrong, invalid. E.g. contains null bytes or is empty
         raise MKAuthException(f"Invalid password: {e}")
 
     # Could be an automation user or a regular user
     if _verify_automation_login(user_id, password.raw) or _verify_user_login(user_id, password):
         return user_id
+
+    # At this point: invalid credentials. Could be user, password or both.
+    # on_failed_login wants to be informed about non-existing users as well.
+    userdb.on_failed_login(user_id, datetime.now())
 
     raise MKAuthException(f"Wrong credentials ({token_name} header)")
 
@@ -296,8 +303,10 @@ def _check_internal_token() -> SiteInternalPseudoUser | None:
 
     _tokenname, token = auth_header.split("InternalToken ", maxsplit=1)
 
-    if SiteInternalSecret().check(Secret.from_b64(token)):
-        return SiteInternalPseudoUser()
+    with contextlib.suppress(binascii.Error):  # base64 decoding failure
+        if SiteInternalSecret().check(Secret.from_b64(token)):
+            return SiteInternalPseudoUser()
+
     return None
 
 

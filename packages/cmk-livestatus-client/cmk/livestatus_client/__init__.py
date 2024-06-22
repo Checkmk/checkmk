@@ -186,6 +186,10 @@ class MKLivestatusTableNotFoundError(MKLivestatusException):
     pass
 
 
+class MKLivestatusPayloadTooLargeError(MKLivestatusQueryError):
+    pass
+
+
 class MKLivestatusBadGatewayError(MKLivestatusException):
     """Raised when connection errors from CMC <> EC happen"""
 
@@ -765,6 +769,9 @@ class SingleSiteConnection(Helpers):
             error_info = data.decode("utf-8")
             if code == "404":
                 raise MKLivestatusTableNotFoundError(f"Not Found ({code}): {error_info!r}")
+
+            if code == "413":
+                raise MKLivestatusPayloadTooLargeError(error_info)
 
             if code == "502":
                 raise MKLivestatusBadGatewayError(error_info)

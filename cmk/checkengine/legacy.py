@@ -10,4 +10,6 @@ from typing import Any
 
 __all__ = ["LegacyCheckParameters"]
 
-LegacyCheckParameters = None | Mapping[Any, Any] | tuple[Any, ...] | list[Any] | str | int | bool
+LegacyCheckParameters = (
+    None | Mapping[Any, Any] | tuple[Any, ...] | list[Any] | str | int | bool | object
+)

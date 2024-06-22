@@ -617,6 +617,16 @@ run_cached() {
     _run_cached_internal "${NAME}" "${REFRESH_INTERVAL}" "${MAXAGE}" "${OUTPUT_TIMEOUT}" "${CREATION_TIMEOUT}" "$@"
 }
 
+if inpath setsid; then
+    # we can kill the whole process group, including children.
+    _nohup_kill_id() { printf "0"; }
+    _nohup() { setsid nohup "$@"; }
+else
+    # we can only the main process, children will survive :-/
+    _nohup_kill_id() { printf "\$\$"; }
+    _nohup() { nohup "$@"; }
+fi
+
 _run_cached_internal() {
     # Run a command asynchronous by use of a cache file.
     # Usage: _run_cached_internal NAME REFRESH_INTERVAL MAXAGE OUTPUT_TIMEOUT OUTPUT_TIMEOUT CREATION_TIMEOUT [COMMAND ...]
@@ -678,32 +688,6 @@ _run_cached_internal() {
     fi
 
     if ${MK_RUN_ASYNC_PARTS}; then
-        # Kill the process if it is running too long (cache file not accessed for more than CREATION_TIMEOUT seconds).
-        # If killing succeeds, remove CACHFILE.new.PID.
-        # Write info about the timed out process and the kill attempt to the SPOOLDIR.
-        # It will be reported to the server in the next (synchronous) agent execution.
-        # The file will be deleted as soon as the plugin/local check is functional again.
-        # Do not output the file here, it will interrupt the local and mrpe sections, as well as any other
-        # partially cached section.
-        for cfile in "${CACHEFILE}.new."*; do
-            [ -e "${cfile}" ] || break # no match
-            TRYING_SINCE="$(get_file_atime "${cfile}")"
-            [ -n "${TRYING_SINCE}" ] || break # race condition: file vanished
-            if [ $((NOW - TRYING_SINCE)) -ge "${CREATION_TIMEOUT}" ]; then
-                {
-                    printf "<<<checkmk_cached_plugins:sep(124)>>>\n"
-                    pid="${cfile##*.new.}"
-                    printf "timeout|%s|%s|%s\n" "${NAME}" "${CREATION_TIMEOUT}" "${pid}"
-                    kill -9 "${pid}" >/dev/null 2>&1 && sleep 2 # TODO: what about child processes?
-                    if [ -n "$(ps -o args= -p "${pid}")" ]; then
-                        printf "killfailed|%s|%s|%s\n" "${NAME}" "${CREATION_TIMEOUT}" "${pid}"
-                    else
-                        rm -f "${cfile}"
-                    fi
-                } >"${FAIL_REPORT_FILE}" 2>&1
-            fi
-        done
-
         # This does the right thing, regardless whether the pattern matches!
         _cfile_in_use() {
             for cfile in "${CACHEFILE}.new."*; do
@@ -714,11 +698,29 @@ _run_cached_internal() {
 
         # Time to refresh cache file and new job not yet running?
         if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
-            # Start it. If the command fails the output is thrown away
-            cat <<HERE | nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
-eval '${MK_DEFINE_LOG_SECTION_TIME}'
-exec > "${CACHEFILE}.new.\$\$" || exit 1
-$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}" || rm -f "${CACHEFILE}.new.\$\$"
+
+            # Start it.
+            # We're running two parrallel blocks, implementing a timeout. Roughly:
+            # First block: Run command then kill ourselves (including the other block!)
+            # Second block: Sleep for a while. If I survive: Handle the fact that block one did not kill me.
+            cat <<HERE | _nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
+             {
+                eval '${MK_DEFINE_LOG_SECTION_TIME}'
+                exec > "${CACHEFILE}.new.\$\$" || exit 1
+                $* \
+                && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}" \
+                || rm -f "${CACHEFILE}.new.\$\$"
+                kill $(_nohup_kill_id)
+             } &
+             {
+                sleep ${CREATION_TIMEOUT}
+                {
+                      printf "<<<checkmk_cached_plugins:sep(124)>>>\\n"
+                      printf "timeout|${NAME}|${CREATION_TIMEOUT}|\$\$\\n"
+                } >"${FAIL_REPORT_FILE}" 2>&1
+                rm -f "${CACHEFILE}.new.\$\$"
+                kill -9 $(_nohup_kill_id)
+             } &
 HERE
         fi
 

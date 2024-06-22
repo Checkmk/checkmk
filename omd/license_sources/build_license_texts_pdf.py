@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -85,7 +85,7 @@ def used_licenses_from_csv(path_licenses_csv):
 def main():
     try:
         path_omd = Path(__file__).resolve().parent.parent
-    except:
+    except BaseException:
         raise OSError
 
     path_license_texts = path_omd / "license_sources/license_texts/"

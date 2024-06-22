@@ -4,19 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from argparse import Namespace
+from collections.abc import Mapping
 from types import ModuleType
-from typing import Final, Mapping
+from typing import Final
 
 import pytest
 
+from cmk.utils import password_store
+
 from cmk.base.server_side_calls import load_special_agents
 
+from cmk.plugins.alertmanager.special_agents import agent_alertmanager
+from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
 from cmk.special_agents import (
     agent_activemq,
-    agent_alertmanager,
     agent_allnet_ip_sensoric,
     agent_aws,
     agent_aws_status,
@@ -35,7 +39,6 @@ from cmk.special_agents import (
     agent_mqtt,
     agent_netapp,
     agent_netapp_ontap,
-    agent_prometheus,
     agent_proxmox_ve,
     agent_pure_storage_fa,
     agent_rabbitmq,
@@ -55,6 +58,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "aws_status": agent_aws_status,
     "azure": agent_azure,
     "azure_status": agent_azure_status,
+    "bazel_cache": agent_bazel,
     "bi": None,
     "cisco_meraki": agent_cisco_meraki,
     "cisco_prime": agent_cisco_prime,
@@ -81,7 +85,6 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "netapp": agent_netapp,
     "netapp_ontap": agent_netapp_ontap,
     "prism": None,
-    "prometheus": agent_prometheus,
     "proxmox_ve": agent_proxmox_ve,
     "pure_storage_fa": agent_pure_storage_fa,
     "rabbitmq": agent_rabbitmq,
@@ -105,11 +108,8 @@ UNMIGRATED = {
     "alertmanager",
     "allnet_ip_sensoric",
     "appdynamics",
-    "aws",
-    "aws_status",
     "azure",
     "couchbase",
-    "datadog",
     "ddn_s2a",
     "emcvnx",
     "gcp_status",
@@ -246,6 +246,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "aws_status": [],
     "gcp_status": [],
     "pure_storage_fa": ["--api-token", "API-TOKEN", "SERVER"],
+    "bazel_cache": ["--host", "SERVER"],
 }
 
 
@@ -259,7 +260,8 @@ def test_all_agents_tested() -> None:
 @pytest.mark.parametrize(
     "name, module", [(n, m) for n, m in TESTED_SA_MODULES.items() if m is not None]
 )
-def test_parse_arguments(name: str, module: ModuleType) -> None:
+def test_parse_arguments(monkeypatch: pytest.MonkeyPatch, name: str, module: ModuleType) -> None:
+    monkeypatch.setattr(password_store, "lookup", lambda x: x)
     minimal_args_list = REQUIRED_ARGUMENTS[name]
 
     # Special agents should process their arguments in a function called parse_arguments

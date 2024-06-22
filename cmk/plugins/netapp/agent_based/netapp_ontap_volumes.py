@@ -150,12 +150,12 @@ def _check_single_netapp_volume(
     item: str,
     params: Mapping[str, Any],
     volume: models.VolumeModel,
-    volume_counter: models.VolumeCountersModel,
+    volume_counter: models.VolumeCountersModel | None,
+    value_store: MutableMapping[str, Any],
+    now: float,
 ) -> CheckResult:
     if volume.incomplete():
         return
-
-    value_store = get_value_store()
 
     assert volume.files_used is not None  # to avoid my-py complaining about this being None
     assert volume.files_maximum is not None  # to avoid my-py complaining about this being None
@@ -174,7 +174,6 @@ def _check_single_netapp_volume(
     assert volume.space_total is not None  # to avoid my-py complaining about this being None
     assert volume.logical_used is not None  # to avoid my-py complaining about this being None
     assert volume.space_available is not None  # to avoid my-py complaining about this being None
-    yield from _generate_volume_metrics(value_store, params, volume_counter)
     if not volume.logical_enforcement:
         logical_available = volume.space_total - volume.logical_used
         yield Metric(
@@ -188,14 +187,16 @@ def _check_single_netapp_volume(
             boundaries=(0.0, volume.space_total),
         )
 
+    if volume_counter:
+        yield from _generate_volume_metrics(value_store, params, volume_counter, now)
+
 
 def _generate_volume_metrics(
     value_store: MutableMapping[str, Any],
     params: Mapping[str, Any],
     volume_counter: models.VolumeCountersModel,
+    now: float,
 ) -> Iterable[Metric]:
-    now = time.time()
-
     for protocol in params.get("perfdata", []):
         # build the actual keys
         # tuple format: (protocol, mode, field)
@@ -250,16 +251,14 @@ def _deserialize_volume(
     return models.VolumeModel.model_validate(combined_volumes), None
 
 
-def check_netapp_ontap_volumes(
+def check_volumes(
     item: str,
     params: Mapping[str, Any],
     section_netapp_ontap_volumes: VolumesSection | None,
     section_netapp_ontap_volumes_counters: VolumesCountersSection | None,
+    value_store: MutableMapping[str, Any],
+    now: float,
 ) -> CheckResult:
-    """
-    The API is responding with no counters for some online volumes.
-    """
-
     if not section_netapp_ontap_volumes or not section_netapp_ontap_volumes_counters:
         return
 
@@ -288,7 +287,7 @@ def check_netapp_ontap_volumes(
 
         if combined_volumes and combined_volumes_counters:
             yield from _check_single_netapp_volume(
-                item, params, combined_volumes, combined_volumes_counters
+                item, params, combined_volumes, combined_volumes_counters, value_store, now
             )
             yield Result(state=State.OK, notice="%d volume(s) in group" % len(volumes_in_group))
 
@@ -305,13 +304,28 @@ def check_netapp_ontap_volumes(
     if not section_netapp_ontap_volumes_counters:
         return
 
-    if (
-        volume_counter := section_netapp_ontap_volumes_counters.get(
-            _get_volume_counters_key(volume)
-        )
-    ) is None:
-        return
-    yield from _check_single_netapp_volume(item, params, volume, volume_counter)
+    volume_counter = section_netapp_ontap_volumes_counters.get(_get_volume_counters_key(volume))
+    yield from _check_single_netapp_volume(item, params, volume, volume_counter, value_store, now)
+
+
+def check_netapp_ontap_volumes(
+    item: str,
+    params: Mapping[str, Any],
+    section_netapp_ontap_volumes: VolumesSection | None,
+    section_netapp_ontap_volumes_counters: VolumesCountersSection | None,
+) -> CheckResult:
+    """
+    The Netapp API is responding with no counters for some online volumes.
+    """
+
+    yield from check_volumes(
+        item,
+        params,
+        section_netapp_ontap_volumes,
+        section_netapp_ontap_volumes_counters,
+        get_value_store(),
+        time.time(),
+    )
 
 
 check_plugin_netapp_ontap_volumes = CheckPlugin(

@@ -4,7 +4,7 @@ catalog: os/services
 license: GPLv2
 distribution: check_mk
 description:
- This checks queries a Microsoft Hyper-V Server via an agent plugin (hyperv_vms.ps1) and
+ This checks queries a Microsoft Hyper-V Server via an agent plug-in (hyperv_vms.ps1) and
  checks the current state of the VM. The state is then mapped to a monitoring state. The
  default mapping is:
 

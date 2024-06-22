@@ -15,9 +15,33 @@ use tokio::net::TcpStream;
 use tokio_util::compat::{Compat, TokioAsyncWriteCompatExt};
 
 use super::defaults;
-pub type Client = tiberius::Client<Compat<TcpStream>>;
+pub type StdClient = tiberius::Client<Compat<TcpStream>>;
+#[derive(Debug)]
+pub struct OdbcClient {
+    conn_string: String,
+}
 
-pub struct Remote<'a> {
+#[cfg(windows)]
+const LOCAL_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(1);
+
+impl OdbcClient {
+    pub fn new(conn_string: impl ToString) -> Self {
+        Self {
+            conn_string: conn_string.to_string(),
+        }
+    }
+    pub fn conn_string(&self) -> &str {
+        &self.conn_string
+    }
+}
+
+#[derive(Debug)]
+pub enum UniClient {
+    Std(StdClient),
+    Odbc(OdbcClient),
+}
+
+pub struct RemoteConnection<'a> {
     pub host: HostName,
     pub port: Option<Port>,
     pub credentials: Credentials<'a>,
@@ -25,22 +49,31 @@ pub struct Remote<'a> {
 
 #[cfg(windows)]
 #[derive(Default)]
-pub struct Local {
+pub struct LocalConnection {
+    pub host: HostName,
     pub port: Option<Port>,
 }
 
 #[cfg(windows)]
-pub struct LocalInstance {
+impl LocalConnection {
+    pub fn host(&self) -> &HostName {
+        &self.host
+    }
+}
+
+#[cfg(windows)]
+pub struct NamedConnection {
+    pub host: HostName,
     pub instance_name: InstanceName,
     pub browser_port: Option<Port>,
 }
 
 enum ClientConnection<'a> {
-    Remote(Remote<'a>),
+    Remote(RemoteConnection<'a>),
     #[cfg(windows)]
-    LocalInstance(LocalInstance),
+    Named(NamedConnection),
     #[cfg(windows)]
-    Local(Local),
+    Local(LocalConnection),
 }
 
 pub struct ClientBuilder<'a> {
@@ -67,13 +100,21 @@ impl<'a> ClientBuilder<'a> {
         ClientBuilder::default()
     }
 
-    pub fn remote(
+    pub fn logon_on_port(
         mut self,
         host: &HostName,
         port: Option<Port>,
         credentials: Credentials<'a>,
     ) -> Self {
-        let r = ClientConnection::Remote(Remote {
+        log::info!(
+            "Logon at port `{}:{}`",
+            &host,
+            &port
+                .clone()
+                .map(|p| p.value().to_string())
+                .unwrap_or_default()
+        );
+        let r = ClientConnection::Remote(RemoteConnection {
             host: host.to_owned(),
             port,
             credentials,
@@ -83,23 +124,43 @@ impl<'a> ClientBuilder<'a> {
     }
 
     #[cfg(windows)]
-    pub fn local_instance<P: Into<Port>>(
+    pub fn browse<P: Into<Port>>(
         mut self,
+        host: &HostName,
         instance: &InstanceName,
         browser_port: Option<P>,
     ) -> Self {
-        let i = LocalInstance {
+        let p = browser_port.map(|p| p.into());
+        log::info!(
+            "Browse connection at port `{}:{}`",
+            &host,
+            &p.clone().map(|p| p.value().to_string()).unwrap_or_default()
+        );
+        let i = NamedConnection {
+            host: host.to_owned(),
             instance_name: instance.to_owned(),
-            browser_port: browser_port.map(|p| p.into()),
+            browser_port: p,
         };
-        self.client_connection = Some(ClientConnection::LocalInstance(i));
+        self.client_connection = Some(ClientConnection::Named(i));
         self
     }
 
     #[cfg(windows)]
-    pub fn local(mut self, port: Option<Port>) -> Self {
-        let l = ClientConnection::Local(Local { port });
-        self.client_connection = Some(l);
+    pub fn local_by_port(mut self, port: Option<Port>, host: Option<HostName>) -> Self {
+        let local_connection = LocalConnection {
+            host: host.unwrap_or(crate::constants::LOCAL_HOST.clone()),
+            port,
+        };
+        log::info!(
+            "Local connection by port `{}:{}`",
+            &local_connection.host,
+            &local_connection
+                .port
+                .as_ref()
+                .map(|p| p.value().to_string())
+                .unwrap_or_default()
+        );
+        self.client_connection = Some(ClientConnection::Local(local_connection));
         self
     }
 
@@ -120,16 +181,16 @@ impl<'a> ClientBuilder<'a> {
 
     pub fn make_config(&self) -> Result<Config> {
         let mut config = Config::new();
+        if let Some(db) = &self.database {
+            config.database(db);
+        }
 
         match &self.client_connection {
-            Some(ClientConnection::Remote(r)) => {
-                let port = r.port.as_ref().map(|p| p.value());
-                config.host(&r.host);
+            Some(ClientConnection::Remote(connection)) => {
+                let port = connection.port.as_ref().map(|p| p.value());
+                config.host(&connection.host);
                 config.port(port.unwrap_or(defaults::STANDARD_PORT));
-                if let Some(db) = &self.database {
-                    config.database(db);
-                }
-                config.authentication(match r.credentials {
+                config.authentication(match connection.credentials {
                     Credentials::SqlServer { user, password } => {
                         AuthMethod::sql_server(user, password)
                     }
@@ -143,19 +204,20 @@ impl<'a> ClientBuilder<'a> {
                 });
             }
             #[cfg(windows)]
-            Some(ClientConnection::LocalInstance(i)) => {
-                let port = i.browser_port.as_ref().map(|p| p.value());
-                config.host("localhost");
+            Some(ClientConnection::Named(connection)) => {
+                let port = connection.browser_port.as_ref().map(|p| p.value());
+                config.host(connection.host.clone());
                 config.port(port.unwrap_or(defaults::SQL_BROWSER_PORT));
                 config.authentication(AuthMethod::Integrated);
                 if let Some(db) = &self.database {
                     config.database(db);
                 }
-                config.instance_name(&i.instance_name);
+                config.instance_name(&connection.instance_name);
             }
             #[cfg(windows)]
-            Some(ClientConnection::Local(l)) => {
-                let port = l.port.as_ref().map(|p| p.value());
+            Some(ClientConnection::Local(connection)) => {
+                let port = connection.port.as_ref().map(|p| p.value());
+                config.host(connection.host.clone());
                 config.port(port.unwrap_or(defaults::STANDARD_PORT));
                 config.authentication(AuthMethod::Integrated);
             }
@@ -169,14 +231,12 @@ impl<'a> ClientBuilder<'a> {
         Ok(config)
     }
 
-    pub async fn build(self) -> Result<Client> {
+    pub async fn build(self) -> Result<UniClient> {
         let tiberius_config = self.make_config()?;
         match self.client_connection {
-            Some(ClientConnection::Remote(_)) => create_remote(tiberius_config).await,
+            Some(ClientConnection::Remote(_)) => create_remote_client(tiberius_config).await,
             #[cfg(windows)]
-            Some(ClientConnection::LocalInstance(_)) => {
-                create_instance_local(tiberius_config).await
-            }
+            Some(ClientConnection::Named(_)) => create_named_instance_client(tiberius_config).await,
             #[cfg(windows)]
             Some(ClientConnection::Local(_)) => connect_via_tcp(tiberius_config).await,
             _ => anyhow::bail!("No client connection provided"),
@@ -192,17 +252,15 @@ pub enum Credentials<'a> {
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
 pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 
-pub async fn connect_main_endpoint(endpoint: &Endpoint) -> Result<Client> {
+pub async fn connect_main_endpoint(endpoint: &Endpoint) -> Result<UniClient> {
     connect_custom_endpoint(endpoint, endpoint.port()).await
 }
 
-pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<Client> {
+pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<UniClient> {
     let (auth, conn) = endpoint.split();
     let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
-        anyhow::anyhow!(
-            "Timeout: {e} when creating client from config {:?}",
-            conn.timeout()
-        )
+        log::warn!("Timeout: {e} when creating client from config");
+        anyhow::anyhow!("Timeout: {e} when creating client from config")
     };
     let client = match auth.auth_type() {
         AuthType::SqlServer | AuthType::Windows => {
@@ -210,7 +268,7 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
                 tokio::time::timeout(
                     conn.timeout(),
                     ClientBuilder::new()
-                        .remote(conn.hostname(), Some(port), credentials)
+                        .logon_on_port(&conn.hostname(), Some(port), credentials)
                         .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
                         .trust_server_certificate(conn.trust_server_certificate())
                         .build(),
@@ -224,9 +282,58 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
 
         #[cfg(windows)]
         AuthType::Integrated => tokio::time::timeout(
+            LOCAL_TIMEOUT,
+            ClientBuilder::new()
+                .local_by_port(Some(port), Some(conn.hostname()))
+                .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
+                .trust_server_certificate(conn.trust_server_certificate())
+                .build(),
+        )
+        .await
+        .map_err(map_elapsed_to_anyhow)?,
+
+        _ => anyhow::bail!("Not supported authorization type"),
+    };
+
+    client
+}
+
+#[cfg(windows)]
+pub async fn connect_custom_instance(
+    endpoint: &Endpoint,
+    instance: &InstanceName,
+) -> Result<UniClient> {
+    use crate::constants;
+
+    let (auth, conn) = endpoint.split();
+    let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
+        anyhow::anyhow!(
+            "Timeout: {e} when creating client from config {:?}",
+            conn.timeout()
+        )
+    };
+    let client = match auth.auth_type() {
+        AuthType::SqlServer | AuthType::Windows => {
+            if let Some(_credentials) = obtain_config_credentials(auth) {
+                tokio::time::timeout(
+                    conn.timeout(),
+                    ClientBuilder::new()
+                        .browse(&conn.hostname(), instance, conn.sql_browser_port())
+                        .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
+                        .trust_server_certificate(conn.trust_server_certificate())
+                        .build(),
+                )
+                .await
+                .map_err(map_elapsed_to_anyhow)?
+            } else {
+                anyhow::bail!("Not provided credentials")
+            }
+        }
+
+        AuthType::Integrated => tokio::time::timeout(
             conn.timeout(),
             ClientBuilder::new()
-                .local(Some(port))
+                .browse(&constants::LOCAL_HOST, instance, conn.sql_browser_port())
                 .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
                 .trust_server_certificate(conn.trust_server_certificate())
                 .build(),
@@ -255,15 +362,8 @@ pub fn obtain_config_credentials(auth: &config::ms_sql::Authentication) -> Optio
     }
 }
 
-/// Create connection to remote MS SQL
-///
-/// # Arguments
-///
-/// * `host` - Hostname of MS SQL server
-/// * `port` - Port of MS SQL server
-/// * `credentials` - defines connection type and credentials itself
-/// * `instance_name` - name of the instance to connect to
-async fn create_remote(tiberius_config: Config) -> Result<Client> {
+/// Create client for remote MS SQL
+async fn create_remote_client(tiberius_config: Config) -> Result<UniClient> {
     let mut config = tiberius_config.clone();
     config.encryption(tiberius::EncryptionLevel::Required);
     match connect_via_tcp(config).await {
@@ -289,31 +389,27 @@ async fn create_remote(tiberius_config: Config) -> Result<Client> {
     }
 }
 
-/// Create `local` connection to MS SQL `instance`
-///
-/// # Arguments
-///
-/// * `instance_name` - name of the instance to connect to
-/// * `port` - Port of MS SQL server BROWSER,  1434 - default
+/// Create client for `named` MS SQL `instance`
 #[cfg(windows)]
-async fn create_instance_local(config: Config) -> anyhow::Result<Client> {
-    log::info!("Connection to addr {}", config.get_addr());
+async fn create_named_instance_client(config: Config) -> anyhow::Result<UniClient> {
+    log::info!("Named connection to addr {}", config.get_addr());
+
     // This will create a new `TcpStream` from `async-std`, connected to the
     // right port of the named instance.
     // The logic is based on SQL browser mechanic
     let tcp = TcpStream::connect_named(&config)
         .await
-        .map_err(|e| anyhow::anyhow!("{} {}", SQL_TCP_ERROR_TAG, e))?;
+        .map_err(|e| anyhow::anyhow!("Failed to connect to SQL Browser {}", e))?;
+    tcp.set_nodelay(true)?; // in documentation and examples
 
-    // And from here on continue the connection process in a normal way.
-    let s = Client::connect(config, tcp.compat_write())
+    StdClient::connect(config, tcp.compat_write())
         .await
-        .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e))?;
-    Ok(s)
+        .map_err(|e| anyhow::anyhow!("Failed to access SQL Browser {}", e))
+        .map(UniClient::Std)
 }
 
-async fn connect_via_tcp(config: Config) -> Result<Client> {
-    log::info!("Connection to addr {}", config.get_addr());
+async fn connect_via_tcp(config: Config) -> Result<UniClient> {
+    log::info!("Connecting to addr '{}'...", config.get_addr());
     let tcp = TcpStream::connect(config.get_addr()).await.map_err(|e| {
         anyhow::anyhow!(
             "{} address:{} error:`{}`",
@@ -322,14 +418,18 @@ async fn connect_via_tcp(config: Config) -> Result<Client> {
             e
         )
     })?;
-    tcp.set_nodelay(true)?;
+    log::info!("Connected to addr '{}'", config.get_addr());
+    tcp.set_nodelay(true)?; // in documentation and examples
 
     // To be able to use Tokio's tcp, we're using the `compat_write` from
     // the `TokioAsyncWriteCompatExt` to get a stream compatible with the
     // traits from the `futures` crate. The same is for upcoming NamedPipe
-    Client::connect(config, tcp.compat_write())
+    let result = StdClient::connect(config, tcp.compat_write())
         .await
-        .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e))
+        .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e));
+    log::info!("Connection success {}", result.is_ok());
+
+    result.map(UniClient::Std)
 }
 
 /// Create `local` connection to MS SQL `instance`
@@ -343,7 +443,7 @@ pub async fn create_instance_local(
     _instance_name: &str,
     _port: Option<u16>,
     _database: Option<String>,
-) -> anyhow::Result<Client> {
+) -> anyhow::Result<UniClient> {
     anyhow::bail!("not supported");
 }
 
@@ -412,20 +512,23 @@ mssql:
         pub const MS_SQL_DB_CERT: &str = "CI_TEST_MS_SQL_DB_CERT";
         if let Ok(certificate_path) = std::env::var(MS_SQL_DB_CERT) {
             ClientBuilder::new()
-                .local(Some(1433u16.into()))
+                .local_by_port(Some(1433u16.into()), None)
                 .certificate(Some(certificate_path))
                 .trust_server_certificate(false)
                 .build()
                 .await
                 .unwrap();
             assert!(ClientBuilder::new()
-                .local(Some(1433u16.into()))
+                .local_by_port(Some(1433u16.into()), None)
                 .trust_server_certificate(false)
                 .build()
                 .await
                 .is_err());
             assert!(ClientBuilder::new()
-                .local(Some(1433u16.into()))
+                .local_by_port(
+                    Some(1433u16.into()),
+                    Some(HostName::from("localhost".to_string()))
+                )
                 .trust_server_certificate(true)
                 .build()
                 .await
@@ -445,10 +548,10 @@ mssql:
         assert!(remote.client_connection.is_none());
         let host: HostName = "host".to_owned().into();
         let port: Option<Port> = Some(123u16.into());
-        let builder = remote.remote(&host, port, credentials);
+        let builder = remote.logon_on_port(&host, port, credentials);
         assert!(matches!(
             builder.client_connection,
-            Some(ClientConnection::Remote(Remote {
+            Some(ClientConnection::Remote(RemoteConnection {
                 host: _,
                 port: _,
                 credentials: _
@@ -458,13 +561,15 @@ mssql:
     #[cfg(windows)]
     #[test]
     fn test_client_builder_local_instance() {
+        use crate::constants;
         let local = ClientBuilder::new();
         let instance_name: InstanceName = "i".to_owned().into();
         let browser_port: Option<Port> = Some(123u16.into());
-        let builder = local.local_instance(&instance_name, browser_port);
+        let builder = local.browse(&constants::LOCAL_HOST, &instance_name, browser_port);
         assert!(matches!(
             builder.client_connection,
-            Some(ClientConnection::LocalInstance(LocalInstance {
+            Some(ClientConnection::Named(NamedConnection {
+                host: _,
                 instance_name: _,
                 browser_port: _,
             }))
@@ -475,10 +580,13 @@ mssql:
     fn test_client_builder_local() {
         let local = ClientBuilder::new();
         let port: Option<Port> = Some(123u16.into());
-        let builder = local.local(port);
+        let builder = local.local_by_port(port, None);
         assert!(matches!(
             builder.client_connection,
-            Some(ClientConnection::Local(Local { port: _ }))
+            Some(ClientConnection::Local(LocalConnection {
+                host: _,
+                port: _
+            }))
         ));
     }
 }

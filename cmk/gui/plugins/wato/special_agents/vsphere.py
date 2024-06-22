@@ -166,7 +166,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
                         ("alias", _("Use the name specified in the ESX system")),
                         (
                             "hostname",
-                            _("Use the VMs hostname if set, otherwise fall back to ESX name"),
+                            _("Use the VMs host name if set, otherwise fall back to ESX name"),
                         ),
                     ],
                     default_value="alias",
@@ -175,7 +175,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
             (
                 "spaces",
                 DropdownChoice(
-                    title=_("Spaces in hostnames"),
+                    title=_("Spaces in host names"),
                     choices=[
                         ("cut", _("Cut everything after first space")),
                         ("underscore", _("Replace with underscores")),

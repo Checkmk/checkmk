@@ -148,6 +148,7 @@ def page_list(  # pylint: disable=too-many-branches
                 table.cell(_("Actions"), css=["buttons visuals"])
 
                 is_packaged = visual["packaged"]
+                backurl = urlencode(makeuri(request, []))
 
                 # Edit
                 if (
@@ -157,6 +158,7 @@ def page_list(  # pylint: disable=too-many-branches
                     edit_vars: HTTPVariables = [
                         ("mode", "edit"),
                         ("load_name", visual_name),
+                        ("back", backurl),
                     ]
                     if owner != user.id:
                         edit_vars.append(("owner", owner))
@@ -173,7 +175,6 @@ def page_list(  # pylint: disable=too-many-branches
 
                 # Clone / Customize
                 buttontext = _("Create a private copy of this")
-                backurl = urlencode(makeuri(request, []))
                 clone_url = makeuri_contextless(
                     request,
                     [
@@ -241,7 +242,7 @@ def page_list(  # pylint: disable=too-many-branches
                         target="_blank" if what_s == "report" else None,
                     )
                 else:
-                    html.write_text(title2)
+                    html.write_text_permissive(title2)
                 html.help(_u(str(visual["description"])))
 
                 # Custom cols

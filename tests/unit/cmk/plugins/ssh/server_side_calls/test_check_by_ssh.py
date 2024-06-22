@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-from typing import Mapping
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -21,13 +20,13 @@ TEST_HOST_CONFIG = HostConfig(
     "params,expected_args",
     [
         ({"options": ("foo", {})}, ["-H", "1.2.3.4", "-C", "foo"]),
-        ({"options": ("foo", {"port": 22})}, ["-H", "1.2.3.4", "-C", "foo", "-p", 22]),
+        ({"options": ("foo", {"port": 22})}, ["-H", "1.2.3.4", "-C", "foo", "-p", "22"]),
     ],
 )
 def test_check_by_ssh_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[object]
 ) -> None:
     """Tests if all required arguments are present."""
-    (cmd,) = active_check_by_ssh(params, TEST_HOST_CONFIG, {})
+    (cmd,) = active_check_by_ssh(params, TEST_HOST_CONFIG)
 
     assert cmd.command_arguments == expected_args

@@ -170,7 +170,7 @@ def _expected_rulespec_group_choices():
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected += [
-            ("agents/agent_plugins", "&nbsp;&nbsp;\u2319 Agent Plugins"),
+            ("agents/agent_plugins", "&nbsp;&nbsp;\u2319 Agent plug-ins"),
             ("agents/automatic_updates", "&nbsp;&nbsp;\u2319 Automatic Updates"),
             ("agents/linux_agent", "&nbsp;&nbsp;\u2319 Linux Agent"),
             ("agents/windows_agent", "&nbsp;&nbsp;\u2319 Windows Agent"),
@@ -293,7 +293,6 @@ def test_rulespec_get_all_groups() -> None:
         "static/virtualization",
         "static/hardware",
         "datasource_programs/apps",
-        "datasource_programs/cloud",
         "datasource_programs/custom",
         "datasource_programs/hw",
         "datasource_programs/os",
@@ -531,7 +530,7 @@ def test_register_check_parameters(patch_rulespec_registries: None) -> None:
 
     # Static checks wrap the valuespec into a 3-element tuple
     # - check type selection
-    # - item spec for the service description
+    # - item spec for the service name
     # - original valuespec (TimeperiodSelection)
     assert isinstance(rulespec.valuespec, Tuple)
     assert len(rulespec.valuespec._elements) == 3

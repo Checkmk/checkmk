@@ -5,9 +5,8 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.cpu_utilization_os import check_cpu_utilization_os
-
 from cmk.agent_based.v1 import GetRateError, Metric, Result, State
+from cmk.plugins.collection.agent_based.cpu_utilization_os import check_cpu_utilization_os
 from cmk.plugins.lib.container_cgroupv2 import parse_cpu
 from cmk.plugins.lib.cpu_utilization_os import SectionCpuUtilizationOs
 

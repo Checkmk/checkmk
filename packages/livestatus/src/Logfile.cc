@@ -8,6 +8,7 @@
 #include <fcntl.h>
 
 #include <algorithm>
+#include <bitset>
 #include <cerrno>
 #include <compare>
 #include <fstream>
@@ -19,7 +20,7 @@
 
 namespace {
 std::chrono::system_clock::time_point firstTimestampOf(
-    const std::filesystem::path &path, Logger *logger) {
+    const std::filesystem::path &path) {
     std::string line;
     if (std::ifstream is{path}; is && std::getline(is, line)) {
         try {
@@ -28,10 +29,7 @@ std::chrono::system_clock::time_point firstTimestampOf(
             errno = EINVAL;
         }
     }
-    const generic_error ge{"cannot determine first timestamp of " +
-                           path.string()};
-    Warning(logger) << ge;
-    return {};
+    throw generic_error{"cannot determine first timestamp of " + path.string()};
 }
 }  // namespace
 
@@ -40,14 +38,15 @@ Logfile::Logfile(Logger *logger, LogCache *log_cache,
     : _logger(logger)
     , _log_cache(log_cache)
     , _path(std::move(path))
-    , _since(firstTimestampOf(_path, _logger))
+    , _since(firstTimestampOf(_path))
     , _watch(watch)
     , _read_pos{}
     , _lineno(0)
     , _logclasses_read(0) {}
 
-void Logfile::load(size_t max_lines_per_logfile, unsigned logclasses) {
-    const unsigned missing_types = logclasses & ~_logclasses_read;
+void Logfile::load(const LogFilter &log_filter) {
+    const unsigned missing_types = log_filter.log_entry_classes.to_ulong() &
+                                   ~_logclasses_read;  // TODO(sp)
     // The current logfile has the _watch flag set to true.
     // In that case, if the logfile has grown, we need to
     // load the rest of the file, even if no logclasses
@@ -70,14 +69,13 @@ void Logfile::load(size_t max_lines_per_logfile, unsigned logclasses) {
         // have read to the end of the file
         if (_logclasses_read != 0U) {
             (void)fsetpos(file, &_read_pos);  // continue at previous end
-            loadRange(max_lines_per_logfile, file, _logclasses_read,
-                      logclasses);
+            loadRange(log_filter, file, _logclasses_read);
             (void)fgetpos(file, &_read_pos);
         }
         if (missing_types != 0U) {
             (void)fseek(file, 0, SEEK_SET);
             _lineno = 0;
-            loadRange(max_lines_per_logfile, file, missing_types, logclasses);
+            loadRange(log_filter, file, missing_types);
             _logclasses_read |= missing_types;
             (void)fgetpos(file, &_read_pos);  // remember current end of file
         }
@@ -95,20 +93,20 @@ void Logfile::load(size_t max_lines_per_logfile, unsigned logclasses) {
         }
 
         _lineno = 0;
-        loadRange(max_lines_per_logfile, file, missing_types, logclasses);
+        loadRange(log_filter, file, missing_types);
         _logclasses_read |= missing_types;
         (void)fclose(file);
     }
 }
 
-void Logfile::loadRange(size_t max_lines_per_logfile, FILE *file,
-                        unsigned missing_types, unsigned logclasses) {
+void Logfile::loadRange(const LogFilter &log_filter, FILE *file,
+                        unsigned missing_types) {
     std::vector<char> linebuffer(65536);
     // TODO(sp) We should really use C++ I/O here...
     while (fgets(linebuffer.data(), static_cast<int>(linebuffer.size()),
                  file) != nullptr) {
-        if (_lineno >= max_lines_per_logfile) {
-            Error(_logger) << "more than " << max_lines_per_logfile
+        if (_lineno >= log_filter.max_lines_per_log_file) {
+            Error(_logger) << "more than " << log_filter.max_lines_per_log_file
                            << " lines in " << _path << ", ignoring the rest!";
             return;
         }
@@ -121,7 +119,7 @@ void Logfile::loadRange(size_t max_lines_per_logfile, FILE *file,
             *it = '\0';
         }
         if (processLogLine(_lineno, linebuffer.data(), missing_types)) {
-            _log_cache->logLineHasBeenAdded(this, logclasses);
+            _log_cache->logLineHasBeenAdded(this, log_filter.log_entry_classes);
         }
     }
 }
@@ -166,10 +164,8 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
     return true;
 }
 
-const Logfile::map_type *Logfile::getEntriesFor(size_t max_lines_per_logfile,
-                                                unsigned logclasses) {
-    // make sure all messages are present
-    load(max_lines_per_logfile, logclasses);
+const Logfile::map_type *Logfile::getEntriesFor(const LogFilter &log_filter) {
+    load(log_filter);  // make sure all messages are present
     return &_entries;
 }
 

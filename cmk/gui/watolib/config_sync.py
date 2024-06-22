@@ -14,13 +14,13 @@ import tarfile
 import time
 import traceback
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import SiteConfiguration, SiteGlobals, SiteId
 
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.i18n import _
@@ -31,17 +31,16 @@ from cmk.gui.watolib.config_domain_name import wato_fileheader
 Command = list[str]
 
 
-class ReplicationPath(
-    NamedTuple(  # pylint: disable=typing-namedtuple-call
-        "ReplicationPath",
-        [
-            ("ty", str),
-            ("ident", str),
-            ("site_path", str),
-            ("excludes", list[str]),
-        ],
-    )
-):
+class _BaseReplicationPath(NamedTuple):
+    """Needed for the ReplicationPath class to call __new__ method."""
+
+    ty: str
+    ident: str
+    site_path: str
+    excludes: list[str]
+
+
+class ReplicationPath(_BaseReplicationPath):
     def __new__(cls, ty: str, ident: str, site_path: str, excludes: list[str]) -> "ReplicationPath":
         if site_path.startswith("/"):
             raise Exception("ReplicationPath.path must be a path relative to the site root")
@@ -453,12 +452,12 @@ class SnapshotCreator(SnapshotCreationBase):
         )
 
 
-def is_user_file(filepath) -> bool:  # type: ignore[no-untyped-def]
+def is_user_file(filepath: str) -> bool:
     entry = os.path.basename(filepath)
     return entry.startswith("user_") or entry in ["tableoptions.mk", "treestates.mk", "sidebar.mk"]
 
 
-def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> dict[str, Any]:
+def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> SiteGlobals:
     site_globals = site_config.get("globals", {}).copy()
     site_globals.update(
         {

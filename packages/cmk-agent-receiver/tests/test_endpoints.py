@@ -112,7 +112,7 @@ def test_register_existing_hostname_invalid(
         },
     )
     assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid hostname: 'my/../host'"}
+    assert response.json() == {"detail": "Invalid host name: 'my/../host'"}
 
 
 def test_register_register_with_hostname_host_missing(
@@ -269,7 +269,7 @@ def test_register_register_with_hostname_hostname_validity(
         assert not response.text
     else:
         assert response.status_code == 400
-        assert response.json() == {"detail": f"Invalid hostname: '{hostname}'"}
+        assert response.json() == {"detail": f"Invalid host name: '{hostname}'"}
 
 
 def test_register_new_unauthenticated(

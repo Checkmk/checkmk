@@ -1,5 +1,5 @@
 {
-  "checksum": "68a31d07efea99987665935ca68bcea6c09f4391734655110088bc4752bfe561",
+  "checksum": "6c10cbe48bde67ce66778de228e2648d15fd78121a031ec1fb6ceadf1674a115",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -5607,6 +5607,13 @@
               "target": "vcpkg"
             }
           ],
+          "selects": {}
+        },
+        "build_script_env": {
+          "common": {
+            "OPENSSL_NO_VENDOR": "1",
+            "OPENSSL_STATIC": "0"
+          },
           "selects": {}
         },
         "links": "openssl"

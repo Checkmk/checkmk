@@ -64,6 +64,10 @@ def is_ntop_configured() -> bool:
     )
 
 
+def use_ntopng_host_filter() -> bool:
+    return get_ntop_connection_mandatory().get("is_host_filter_activated", True)
+
+
 def get_ntop_misconfiguration_reason() -> str:
     if not is_ntop_available():
         return _("ntopng integration is only available in CEE")

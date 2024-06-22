@@ -4,13 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import NamedTuple, NewType
-
-from typing_extensions import TypedDict
+from typing import NamedTuple, NewType, TypedDict
 
 from livestatus import SiteId
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
@@ -84,11 +82,7 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                                 "update_everything",
                                 _("Refresh all services and host labels (tabula rasa)"),
                                 FixedValue(
-                                    value={
-                                        "add_new_services": True,
-                                        "remove_vanished_services": True,
-                                        "update_host_labels": True,
-                                    },
+                                    value=None,
                                     title=_("Refresh all services and host labels (tabula rasa)"),
                                     totext="",
                                 ),
@@ -150,7 +144,7 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                 "error_handling",
                 Checkbox(
                     title=_("Error handling"),
-                    label=_("Ignore errors in single check plugins"),
+                    label=_("Ignore errors in single check plug-ins"),
                     default_value=True,
                 ),
             ),
@@ -217,15 +211,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         return _("Bulk Discovery")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def _back_url(self) -> str:
         return disk_or_search_folder_from_request(
@@ -323,10 +309,10 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
         self._num_hosts_processed += len(task.host_names)
 
-    def _process_discovery_results(  # type: ignore[no-untyped-def]
+    def _process_discovery_results(
         self,
         task: DiscoveryTask,
-        job_interface,
+        job_interface: BackgroundProcessInterface,
         response: AutomationDiscoveryResult,
     ) -> None:
         # The following code updates the host config. The progress from loading the Setup folder
@@ -463,7 +449,13 @@ def start_bulk_discovery(
     job.start(
         lambda job_interface: job.do_execute(
             discovery_mode, do_full_scan, ignore_errors, tasks, job_interface
-        )
+        ),
+        InitialStatusArgs(
+            title=job.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
     )
 
 

@@ -9,8 +9,8 @@ from unittest import mock
 
 import pytest
 import time_machine
-from smb.base import NotConnectedError, SharedFile  # type: ignore[import]
-from smb.smb_structs import OperationFailure  # type: ignore[import]
+from smb.base import NotConnectedError, SharedFile  # type: ignore[import-untyped]
+from smb.smb_structs import OperationFailure  # type: ignore[import-untyped]
 
 from cmk.special_agents.agent_smb_share import (
     connect,
@@ -707,7 +707,7 @@ def test_get_all_shared_files(
     [
         (
             ["\\\\INCORRECT_HOSTNAME\\SharedFolder1\\Subfolder1\\File1"],
-            r"Pattern \\\\INCORRECT_HOSTNAME\\SharedFolder1\\Subfolder1\\File1 doesn't match HOSTNAME hostname",
+            r"Pattern \\\\INCORRECT_HOSTNAME\\SharedFolder1\\Subfolder1\\File1 doesn't match HOSTNAME host name",
         ),
         (
             ["\\\\HOSTNAME\\SharedFolder1\\Subfolder1\\File1"],

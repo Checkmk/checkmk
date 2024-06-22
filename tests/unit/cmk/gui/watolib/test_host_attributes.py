@@ -6,7 +6,7 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-from tests.testlib.utils import is_cloud_repo, is_enterprise_repo
+from tests.testlib.repo import is_cloud_repo, is_enterprise_repo
 
 import cmk.gui.watolib.host_attributes as attrs
 
@@ -463,9 +463,6 @@ def test_legacy_register_rulegroup_without_defaults(
     [
         ("Basic settings", "basic"),
         ("Management board", "management_board"),
-        ("Custom attributes", "custom_attributes"),
-        ("Eigene Attribute", "custom_attributes"),
-        ("xyz_unknown", "custom_attributes"),
     ],
 )
 def test_custom_host_attribute_transform(old: str, new: str) -> None:

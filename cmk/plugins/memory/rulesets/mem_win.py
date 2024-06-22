@@ -130,7 +130,7 @@ def _perc_used_levels(title: Title, metric: str) -> Dictionary:
                     prefill_fixed_levels=DefaultValue((20.0, 10.0)),
                     predictive=PredictiveLevels(
                         reference_metric=metric,
-                        prefill_abs_diff=DefaultValue((1.0 * _GiB, 2.0 * _GiB)),
+                        prefill_abs_diff=DefaultValue((10.0, 20.0)),
                     ),
                 ),
                 required=True,

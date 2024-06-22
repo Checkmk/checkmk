@@ -13,12 +13,15 @@ import time
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
-import docker  # type: ignore[import-untyped]
+import docker.client  # type: ignore[import-untyped]
+import docker.errors  # type: ignore[import-untyped]
+import docker.models  # type: ignore[import-untyped]
+import docker.models.containers  # type: ignore[import-untyped]
 import requests
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 from tests.testlib.utils import wait_until
 from tests.testlib.version import CMKVersion, version_from_env
 
@@ -36,7 +39,11 @@ def cleanup_old_packages() -> None:
         p.unlink()
 
 
-def copy_to_container(c: docker.models.containers.Container, source: str, target: str) -> bool:
+def copy_to_container(
+    c: docker.models.containers.Container,
+    source: str | Path,
+    target: str | Path,
+) -> bool:
     """Copy a source file to the target folder in the container."""
     stream = io.BytesIO()
     with tarfile.open(fileobj=stream, mode="w|") as tar, open(source, "rb") as f:
@@ -44,7 +51,7 @@ def copy_to_container(c: docker.models.containers.Container, source: str, target
         info.name = os.path.basename(source)
         tar.addfile(info, f)
 
-    return bool(c.put_archive(target, stream.getvalue()))
+    return bool(c.put_archive(Path(target).as_posix(), stream.getvalue()))
 
 
 def get_container_ip(c: docker.models.containers.Container) -> str:
@@ -103,7 +110,7 @@ def prepare_package(version: CMKVersion) -> None:
 
 
 def pull_checkmk(
-    client: docker.DockerClient, version: CMKVersion
+    client: docker.client.DockerClient, version: CMKVersion
 ) -> docker.models.containers.Image:
     if not version.is_raw_edition():
         raise Exception("Can only fetch raw edition at the moment")
@@ -125,7 +132,7 @@ def resolve_image_alias(alias: str) -> str:
 
 
 def build_checkmk(
-    client: docker.DockerClient,
+    client: docker.client.DockerClient,
     version: CMKVersion,
     prepare_pkg: bool = True,
 ) -> tuple[docker.models.containers.Image, Mapping[str, str]]:
@@ -152,9 +159,7 @@ def build_checkmk(
         for entry in e.build_log:
             if "stream" in entry:
                 logger.error(entry["stream"].rstrip())
-            elif "errorDetail" in entry:
-                continue  # Is already part of the exception message
-            else:
+            elif "errorDetail" not in entry:
                 logger.error("UNEXPECTED FORMAT: %r", entry)
         logger.error("= Build log ==================")
         raise
@@ -195,21 +200,12 @@ def build_checkmk(
 
     assert "Healthcheck" in config
 
-    assert attrs["ContainerConfig"]["Entrypoint"] == ["/docker-entrypoint.sh"]
+    assert config["Entrypoint"] == ["/docker-entrypoint.sh"]
 
-    assert attrs["ContainerConfig"]["ExposedPorts"] == {
+    assert config["ExposedPorts"] == {
         "5000/tcp": {},
         "6557/tcp": {},
     }
-
-    # 2018-11-14: 900 -> 920
-    # 2018-11-22: 920 -> 940
-    # 2019-04-10: 940 -> 950
-    # 2019-07-12: 950 -> 1040 (python3)
-    # 2019-07-27: 1040 -> 1054 (numpy)
-    # 2019-11-15: Temporarily disabled because of Python2 => Python3 transition
-    #    assert attrs["Size"] < 1110955410.0, \
-    #        "Docker image size increased: Please verify that this is intended"
 
     assert len(attrs["RootFS"]["Layers"]) == 6
 
@@ -218,14 +214,14 @@ def build_checkmk(
 
 @contextmanager
 def start_checkmk(
-    client: docker.DockerClient,
+    client: docker.client.DockerClient,
     version: CMKVersion | None = None,
     is_update: bool = False,
     site_id: str = "cmk",
     name: str | None = None,
     hostname: str | None = None,
     environment: dict[str, str] | None = None,
-    ports: dict[str, Union[int, None, tuple[str, int] | list[int]]] | None = None,
+    ports: dict[str, int | None | tuple[str, int] | list[int]] | None = None,
     volumes: list[str] | None = None,
     volumes_from: list[str] | None = None,
 ) -> Iterator[docker.models.containers.Container]:
@@ -265,10 +261,13 @@ def start_checkmk(
     try:
         c: docker.models.containers.Container = client.containers.get(name)
         if os.getenv("REUSE") == "1":
+            logger.info("Reusing existing container %s", c.short_id)
             c.start()
             c.exec_run(["omd", "start"], user=site_id)
         else:
+            logger.info("Removing existing container %s", c.short_id)
             c.remove(force=True)
+            raise docker.errors.NotFound(name)
     except (docker.errors.NotFound, docker.errors.NullResource):
         c = client.containers.run(image=_image.id, detach=True, **kwargs)
         logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
@@ -442,7 +441,8 @@ def checkmk_docker_add_host(
     ipv4: str,
 ) -> None:
     """Create a host in a Checkmk docker instance."""
-    checkmk_docker_api_request(
+    logger.info('Add host "%s" to Checkmk at %s...', hostname, ipv4)
+    response = checkmk_docker_api_request(
         checkmk,
         "post",
         "/domain-types/host_config/collections/all",
@@ -455,6 +455,7 @@ def checkmk_docker_add_host(
             },
         },
     )
+    assert response.status_code == 200, f'Failed to add host "{hostname}" to Checkmk at {ipv4}!'
     checkmk_docker_activate_changes(checkmk)
 
 
@@ -465,6 +466,7 @@ def checkmk_docker_wait_for_services(
     attempts: int = 15,
 ) -> None:
     """Repeatedly discover services in a Checkmk docker instance until min_services are found."""
+    logger.info("Wait for service discovery...")
     for _ in range(attempts):
         if len(checkmk_docker_get_host_services(checkmk, hostname)) > min_services:
             break
@@ -502,14 +504,6 @@ def checkmk_install_agent(
     assert (
         install_agent_rc == 0
     ), f"Error during agent installation: {install_agent_output.decode('utf-8')}"
-
-    logger.info("Installing mk_oracle.cfg")
-    setup_agent_rc, setup_agent_output = app.exec_run(
-        """bash -c 'cp -f "/opt/oracle/oraenv/mk_oracle.cfg" "/etc/check_mk/mk_oracle.cfg"'""",
-        user="root",
-        privileged=True,
-    )
-    assert setup_agent_rc == 0, f"Error during agent setup: {setup_agent_output.decode('utf-8')}"
 
 
 def checkmk_register_agent(

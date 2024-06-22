@@ -16,7 +16,7 @@ import time
 from email.message import Message as POPIMAPMessage
 from pathlib import Path
 
-from exchangelib import Message as EWSMessage  # type: ignore[import]
+from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
 from cmk.utils.mailbox import (
     active_check_main,

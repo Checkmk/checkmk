@@ -3,26 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from logging import getLogger
+import sys
+from logging import Formatter, getLogger, StreamHandler
 
-import cmk.utils.log as log
+from cmk.utils import log
 
 logger = getLogger("cmk.post_rename_site")
 
 
-def setup_logging(*, verbose: bool) -> None:
-    level = log.verbosity_to_log_level(verbose)
-
-    log.setup_console_logging()
-    log.logger.setLevel(level)
-
-    logger.setLevel(level)
-
-    # TODO: Fix this cruel hack caused by our funny mix of GUI + console
-    # stuff. Currently, we just move the console handler to the top, so
-    # both worlds are happy. We really, really need to split business logic
-    # from presentation code... :-/
-    if log.logger.handlers:
-        console_handler = log.logger.handlers[0]
-        del log.logger.handlers[:]
-        getLogger().addHandler(console_handler)
+# TODO: Fix this cruel hack caused by our funny mix of GUI + console stuff.
+def setup_logging(*, verbose: int) -> None:
+    log.logger.setLevel(log.verbosity_to_log_level(verbose))
+    logger.setLevel(log.logger.level)
+    handler = StreamHandler(sys.stdout)
+    handler.setFormatter(Formatter("%(message)s"))
+    getLogger().addHandler(handler)

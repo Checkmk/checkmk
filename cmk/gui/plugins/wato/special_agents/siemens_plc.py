@@ -147,7 +147,7 @@ def _valuespec_special_agents_siemens_plc():
                                     title=_("Name of the PLC"),
                                     allow_empty=False,
                                     help=_(
-                                        "Specify the logical name, e.g. the hostname, of the PLC. This name "
+                                        "Specify the logical name, e.g. the host name, of the PLC. This name "
                                         "is used to name the resulting services."
                                     ),
                                 ),
@@ -158,7 +158,7 @@ def _valuespec_special_agents_siemens_plc():
                                     title=_("Network address"),
                                     allow_empty=False,
                                     help=_(
-                                        "Specify the hostname or IP address of the PLC to communicate with."
+                                        "Specify the host name or IP address of the PLC to communicate with."
                                     ),
                                 ),
                             ),

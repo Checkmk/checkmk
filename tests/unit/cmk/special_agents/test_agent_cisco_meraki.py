@@ -9,6 +9,8 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
+from cmk.utils import password_store
+
 from cmk.special_agents import agent_cisco_meraki
 
 _ORGANISATIONS = [
@@ -222,12 +224,17 @@ def test_agent_cisco_meraki_main(
         "GetOrganisationsCache",
         lambda *args, **kwargs: FakeGetOrganisationsCache(),
     )
+    monkeypatch.setattr(
+        password_store,
+        "lookup",
+        lambda f, k: {("/file", "my-api-key-id"): "my-api-key"}[(str(f), k)],
+    )
 
     agent_cisco_meraki.agent_cisco_meraki_main(
         agent_cisco_meraki.parse_arguments(
             [
                 "testhost",
-                "my-api-key",
+                "my-api-key-id:/file",
             ]
             + list(orgs)
             + list(args)

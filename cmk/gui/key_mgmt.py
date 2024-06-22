@@ -12,11 +12,13 @@ from typing import Any, Literal
 from livestatus import SiteId
 
 import cmk.utils.render
-import cmk.utils.store as store
-from cmk.utils.crypto.certificate import CertificateWithPrivateKey
+from cmk.utils import store
+from cmk.utils.certs import CertManagementEvent
+from cmk.utils.crypto.certificate import Certificate, CertificateWithPrivateKey
 from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError
+from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
@@ -179,8 +181,19 @@ class PageKeyManagement:
             self.key_store.save(keys)
         return None
 
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        raise NotImplementedError()
+
     def _log_delete_action(self, key_id: int, key: Key) -> None:
-        pass
+        log_security_event(
+            CertManagementEvent(
+                event="certificate removed",
+                component=self.component_name,
+                actor=user.id,
+                cert=key.to_certificate(),
+            )
+        )
 
     def _delete_confirm_msg(self) -> str:
         raise NotImplementedError()
@@ -199,7 +212,7 @@ class PageKeyManagement:
             for nr, (key_id, key) in enumerate(sorted(self.key_store.load().items())):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 if self._may_edit_config():
                     message = self._delete_confirm_msg()
@@ -263,8 +276,24 @@ class PageEditKey:
             new_id = max(new_id, key_id + 1)
 
         assert user.id is not None
-        keys[new_id] = generate_key(alias, passphrase, user.id, omd_site())
+        key = generate_key(alias, passphrase, user.id, omd_site())
+        self._log_create_key(key.to_certificate())
+        keys[new_id] = key
         self.key_store.save(keys)
+
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        raise NotImplementedError()
+
+    def _log_create_key(self, cert: Certificate) -> None:
+        log_security_event(
+            CertManagementEvent(
+                event="certificate created",
+                component=self.component_name,
+                actor=user.id,
+                cert=cert,
+            )
+        )
 
     def page(self) -> None:
         # Currently only "new" is supported
@@ -361,9 +390,10 @@ class PageUploadKey:
             _rsa_key = key_pair.private_key.get_raw_rsa_key()
         except ValueError:
             raise MKUserError("key_p_key_file_0", "Only RSA keys are supported at this time")
-
+        cert = key_pair.certificate
+        self._log_upload_key(cert)
         key = Key(
-            certificate=key_pair.certificate.dump_pem().str,
+            certificate=cert.dump_pem().str,
             private_key=key_pair.private_key.dump_pem(passphrase).str,
             alias=alias,
             owner=user.ident,
@@ -371,6 +401,20 @@ class PageUploadKey:
             not_downloaded=False,
         )
         self.key_store.add(key)
+
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        raise NotImplementedError()
+
+    def _log_upload_key(self, cert: Certificate) -> None:
+        log_security_event(
+            CertManagementEvent(
+                event="certificate uploaded",
+                component=self.component_name,
+                actor=user.id,
+                cert=cert,
+            )
+        )
 
     def page(self) -> None:
         # Note about the cert/key requirements:
@@ -383,7 +427,7 @@ class PageUploadKey:
         #   encrypted (using that passphrase) and have the '-----BEGIN ENCRYPTED PRIVATE KEY-----'
         #   form. The positive side effect is that the user proves that they know the passphrase
         #   now, rather than later whenever the key is used.
-        html.write_text(
+        html.write_text_permissive(
             _(
                 "Here you can upload an existing certificate and private key. "
                 "The key must be an RSA key and it must be password protected."

@@ -5,9 +5,8 @@
 
 from abc import abstractmethod
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
 from enum import auto, Enum
-from typing import Final, Literal, NamedTuple, Self, TypeVar
+from typing import Final, Literal, NamedTuple, Self
 
 
 class IPAddressFamily(Enum):
@@ -109,13 +108,12 @@ class HostConfig:
 
         >>> from collections.abc import Iterable, Mapping
 
-        >>> from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, SpecialAgentCommand
+        >>> from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand
 
 
         >>> def generate_example_commands(
         ...     params: Mapping[str, object],
         ...     host_config: HostConfig,
-        ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     args = ["--hostname", host_config.name, "--address", host_config.address]
         ...     yield SpecialAgentCommand(command_arguments=args)
@@ -175,53 +173,52 @@ class HostConfig:
         )
 
 
-@dataclass(frozen=True, kw_only=True)
-class HTTPProxy:
+class URLProxy(NamedTuple):
     """
-    Defines a HTTP proxy
+    Surrogate for a HTTP proxy defined by the user
 
-    This object represents a HTTP proxy configured in the global settings.
-    A mapping of HTTPProxy objects will be created by the backend and passed to
-    the `commands_function`.
-    The mapping consists of a proxy ids as keys and HTTPProxy objects as values.
-
-    Args:
-        id: Id of the proxy
-        name: Name of the proxy
-        url: Url of the proxy
+    This is a surrogate for a HTTP proxy defined globally or explicitly in the setup.
 
     Example:
 
-        >>> from collections.abc import Iterable, Mapping
-        >>> from typing import Literal
+        >>> proxy = URLProxy('proxy.com')  # don't create it, it's passed by the backend
+        >>> if isinstance(proxy, URLProxy):
+        ...     argv = ["--proxy", proxy.url]
 
-        >>> from pydantic import BaseModel
-
-        >>> from cmk.server_side_calls.v1 import (
-        ...     HostConfig,
-        ...     HTTPProxy,
-        ...     SpecialAgentCommand,
-        ...     parse_http_proxy
-        ... )
-
-        >>> class ExampleParams(BaseModel):
-        ...     proxy: tuple[Literal["global", "environment", "url", "no_proxy"], str | None]
-
-        >>> def generate_example_commands(
-        ...     params: ExampleParams,
-        ...     host_config: HostConfig,
-        ...     http_proxies: Mapping[str, HTTPProxy]
-        ... ) -> Iterable[SpecialAgentCommand]:
-        ...     args = [
-        ...         "--proxy",
-        ...         parse_http_proxy(params.proxy, http_proxies)
-        ...     ]
-        ...     yield SpecialAgentCommand(command_arguments=args)
     """
 
-    id: str
-    name: str
-    url: str
+    type: Literal["url_proxy"] = "url_proxy"
+    url: str = ""
+
+
+class EnvProxy(NamedTuple):
+    """
+    Surrogate for a HTTP proxy defined in the process environment
+
+    Example:
+
+        >>> proxy = EnvProxy()  # don't create it, it's passed by the backend
+        >>> if isinstance(proxy, EnvProxy):
+        ...     argv = ["--use-environment-proxy"]
+
+    """
+
+    type: Literal["env_proxy"] = "env_proxy"
+
+
+class NoProxy(NamedTuple):
+    """
+    Surrogate for a connection without proxy
+
+    Example:
+
+        >>> proxy = NoProxy()  # don't create it, it's passed by the backend
+        >>> if isinstance(proxy, NoProxy):
+        ...     argv = ["--no-proxy"]
+
+    """
+
+    type: Literal["no_proxy"] = "no_proxy"
 
 
 class Secret(NamedTuple):
@@ -231,24 +228,52 @@ class Secret(NamedTuple):
     Surrogate for a secret defined by the user
 
     This is a surrogate for a secret defined in the setup.
-    You, the developer if the plugin, can use it to define the place and formatting
-    of the secrets usage.
+    You, the developer of the plug-in, can use it to define
+
+     * where in the argv list the password will be
+     * how it might have to be formatted
+     * whether to pass the secret itself, or preferable, only the
+       name of the secret in the password store
+
+    If you pass the name of the secret to the special agents / active check,
+    it needs to look up the corresponding secret from the password store using
+    :func:`cmk.utils.password_store.lookup`.
+    There is no API for the password store (yet) that provides the desirable
+    stability, so the above might change location and name in the future.
+
+    Neither the passord itself nor the name of the password is contained
+    in this object.
 
     Example:
 
-        >>> my_secret = Secret(id=42)  # don't create it, it is passed by the backend
-        >>> argv = ["--basicauth",  my_secret.with_format("my_username:%s")]
+        >>> my_secret = Secret(42)  # don't create it, it is passed by the backend
+        >>> # ideally, you just pass the reference for the password store
+        >>> argv = ["--secret-from-store",  my_secret]
+        >>> # plug-ins might not support the password store, and have special formatting needs:
+        >>> argv = ["--basicauth", my_secret.unsafe("user:%s")]
 
     """
     id: int
     format: str = "%s"
+    pass_safely: bool = True
 
-    def with_format(self, /, template: str) -> Self:
+    def unsafe(self, /, template: str = "%s") -> Self:
         """
-        Returns a new Secret with a different format
+        Returns a new :class:`Secret` that will be passed along as plain text.
 
         Args:
             template: The new formatting template
+
+        Example:
+
+            If include the the secret like this in the command line:
+
+                >>> my_secret = Secret(42)  # don't create it, it is passed by the backend
+                >>> args = ["--basicauth", my_secret.unsafe("user:%s")]
+
+            What the plug-in will receive as argv is `[`'--basicauth', 'user:myS3cret!123']``
+
+
         """
         try:
             # we don't have this validation upon creation, but at least prevent errors here.
@@ -256,81 +281,12 @@ class Secret(NamedTuple):
         except TypeError as e:
             raise ValueError(f"Invalid formatting template: {template}") from e
 
-        return self.__class__(self.id, template)
+        return self.__class__(id=self.id, pass_safely=False, format=template)
 
 
-def parse_http_proxy(
-    proxy: object,
-    http_proxies: Mapping[str, HTTPProxy],
-) -> str:
-    """
-    Parses a proxy configuration into a proxy string
-
-    The function will check if proxy argument has the expected type.
-
-    Args:
-        proxy: An object created by the HTTPProxy form spec
-        http_proxies: Mapping of globally defined HTTP proxies
-
-    Returns:
-        String representing a proxy configuration
-
-    Example:
-
-        >>> from collections.abc import Iterable, Mapping
-
-        >>> from cmk.server_side_calls.v1 import (
-        ...     SpecialAgentCommand,
-        ...     HostConfig,
-        ...     HTTPProxy,
-        ...     parse_http_proxy
-        ... )
-
-
-        >>> def generate_example_commands(
-        ...     params: Mapping[str, object],
-        ...     host_config: HostConfig,
-        ...     http_proxies: Mapping[str, HTTPProxy]
-        ... ) -> Iterable[SpecialAgentCommand]:
-        ...     proxy = parse_http_proxy(("global", "example_proxy"), http_proxies)
-        ...     args = ["--proxy", proxy]
-        ...     yield SpecialAgentCommand(command_arguments=args)
-    """
-    if not isinstance(proxy, tuple):
-        raise ValueError("proxy object has to be a tuple")
-
-    proxy_type, proxy_value = proxy
-
-    if not isinstance(proxy_type, str) or proxy_type not in (
-        "global",
-        "environment",
-        "url",
-        "no_proxy",
-    ):
-        raise ValueError(
-            "proxy type has to be one of: 'global', 'environment', 'url' or 'no_proxy'"
-        )
-
-    if not isinstance(proxy_value, str) and proxy_value is not None:
-        raise ValueError("proxy value has to be a string or None")
-
-    if proxy_type == "url":
-        return str(proxy_value)
-
-    if proxy_type == "no_proxy":
-        return "NO_PROXY"
-
-    if proxy_type == "global":
-        if (global_proxy := http_proxies.get(str(proxy_value))) is not None:
-            return str(global_proxy.url)
-
-    return "FROM_ENVIRONMENT"
-
-
-_T_co = TypeVar("_T_co", covariant=True)
-
-
-def noop_parser(params: Mapping[str, _T_co]) -> Mapping[str, _T_co]:
+def noop_parser(params: Mapping[str, object]) -> Mapping[str, object]:
+    # NOTE: please do not add a TypeVar here. The only intended use case is Mapping[str, object],
+    # and using a TypeVar in the return type hinders mypy's type inference at the callsites.
     """
     Parameter parser that doesn't perform a transformation
 
@@ -353,7 +309,6 @@ def noop_parser(params: Mapping[str, _T_co]) -> Mapping[str, _T_co]:
         >>> def generate_example_commands(
         ...     params: Mapping[str, object],
         ...     host_config: HostConfig,
-        ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     args = ["--service", str(params["service"])]
         ...     yield SpecialAgentCommand(command_arguments=args)
@@ -374,7 +329,7 @@ def replace_macros(value: str, macros: Mapping[str, str]) -> str:
 
     Args:
         value: String in which macros are replaced
-        macros: Mapping of host macros names and values. In the plugins, host macros are
+        macros: Mapping of host macros names and values. In the plug-ins, host macros are
                 provided through the host_config.macros attribute.
 
     Example:

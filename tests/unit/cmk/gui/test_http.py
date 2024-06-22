@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from pytest import MonkeyPatch
 from werkzeug.test import create_environ
 
-import cmk.gui.http as http
+from cmk.gui import http
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.utils.script_helpers import application_and_request_context

@@ -4,15 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Default configuration settings for the Checkmk GUI"""
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 
 from livestatus import SiteConfigurations
 
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.version import edition, Edition
 
-from cmk.gui.type_defs import GroupSpec, UserSpec
+from cmk.gui.type_defs import GroupSpec, TrustedCertificateAuthorities, UserSpec
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
@@ -66,6 +67,13 @@ def make_default_user_profile() -> UserSpec:
 
 
 ActivateChangesCommentMode = Literal["enforce", "optional", "disabled"]
+
+
+class VirtualHostTreeSpec(TypedDict):
+    id: str
+    title: str
+    exclude_empty_tag_choices: bool
+    tree_spec: Sequence[str]
 
 
 @dataclass
@@ -130,7 +138,7 @@ class CREConfig:
         ]
     )
 
-    # Interval of snapin updates in seconds
+    # Interval of snap-in updates in seconds
     sidebar_update_interval: float = 30.0
 
     # It is possible (but ugly) to enable a scrollbar in the sidebar
@@ -238,7 +246,7 @@ class CREConfig:
     liveproxyd_enabled: bool = False
 
     # Set this to a list in order to globally control which views are
-    # being displayed in the sidebar snapin "Views"
+    # being displayed in the sidebar snap-in "Views"
     visible_views: list[str] | None = None
 
     # Set this list in order to actively hide certain views
@@ -305,11 +313,11 @@ class CREConfig:
     # appear in a stale state
     staleness_threshold: float = 1.5
 
-    # Escape HTML in plugin output / log messages
+    # Escape HTML in plug-in output / log messages
     escape_plugin_output: bool = True
 
-    # Virtual host trees for the "Virtual Host Trees" snapin
-    virtual_host_trees: list = field(default_factory=list)
+    # Virtual host trees for the "Virtual Host Trees" snap-in
+    virtual_host_trees: Sequence[VirtualHostTreeSpec] = field(default_factory=list)
 
     # Target URL for sending crash reports to
     crash_report_url: str = "https://crash.checkmk.com"
@@ -395,6 +403,10 @@ class CREConfig:
         }
     )
 
+    # Individual changes to user's authentication security will trigger either emails or use notifications
+    # Default is 7 days
+    user_security_notification_duration: int = 604800
+
     user_localizations: dict[str, dict[str, str]] = field(
         default_factory=lambda: {
             "Agent type": {
@@ -470,11 +482,13 @@ class CREConfig:
     # Override toplevel and sort_index settings of built-in icons
     builtin_icon_visibility: dict = field(default_factory=dict)
 
-    trusted_certificate_authorities: dict[str, Any] = field(
-        default_factory=lambda: {
-            "use_system_wide_cas": True,
-            "trusted_cas": [],
-        }
+    trusted_certificate_authorities: TrustedCertificateAuthorities = field(
+        default_factory=lambda: TrustedCertificateAuthorities(
+            {
+                "use_system_wide_cas": True,
+                "trusted_cas": [],
+            }
+        )
     )
 
     # .

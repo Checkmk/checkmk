@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 from datetime import datetime
+from pathlib import Path
 from typing import cast
 
+from cmk.utils.config_validation_layer.users.contacts import validate_contacts
+from cmk.utils.config_validation_layer.users.users import validate_users
 from cmk.utils.crypto.password import Password, PasswordPolicy
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
@@ -19,15 +22,18 @@ from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import UserObject, Users, UserSpec
 from cmk.gui.userdb import add_internal_attributes, get_user_attributes
+from cmk.gui.userdb._connections import get_connection
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.user_scripts import (
     declare_notification_plugin_permissions,
     user_script_choices,
     user_script_title,
 )
+from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
 def delete_users(users_to_delete: Sequence[UserId]) -> None:
@@ -42,6 +48,17 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
     for entry in users_to_delete:
         if entry in all_users:  # Silently ignore not existing users
             deleted_users.append(entry)
+            connection_id = all_users[entry].get("connector", None)
+            connection = get_connection(connection_id)
+            log_security_event(
+                UserManagementEvent(
+                    event="user deleted",
+                    affected_user=entry,
+                    acting_user=user.id,
+                    connector=connection.type() if connection else None,
+                    connection_id=connection_id,
+                )
+            )
             del all_users[entry]
         else:
             raise MKUserError(None, _("Unknown user: %s") % entry)
@@ -52,13 +69,6 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
                 "edit-user",
                 "Deleted user: %s" % user_id,
                 object_ref=make_user_object_ref(user_id),
-            )
-            log_security_event(
-                UserManagementEvent(
-                    event="user deleted",
-                    affected_user=user_id,
-                    acting_user=user.id,
-                )
             )
         add_change("edit-users", _l("Deleted user: %s") % ", ".join(deleted_users))
         userdb.save_users(all_users, datetime.now())
@@ -93,12 +103,16 @@ def edit_users(changed_users: UserObject) -> None:
             diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)),
             object_ref=make_user_object_ref(user_id),
         )
+        connection_id = user_attrs.get("connector", None)
+        connection = get_connection(connection_id)
 
         log_security_event(
             UserManagementEvent(
                 event="user created" if is_new_user else "user modified",
                 affected_user=user_id,
                 acting_user=user.id,
+                connector=connection.type() if connection else None,
+                connection_id=connection_id,
             )
         )
 
@@ -171,9 +185,8 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
             raise MKUserError("user_id", _("This username is already being used by another user."))
         vs_user_id = UserID(allow_empty=False)
         vs_user_id.validate_value(user_id, "user_id")
-    else:
-        if user_id not in all_users:
-            raise MKUserError(None, _("The user you are trying to edit does not exist."))
+    elif user_id not in all_users:
+        raise MKUserError(None, _("The user you are trying to edit does not exist."))
 
     # Full name
     alias = user_attrs.get("alias")
@@ -183,7 +196,7 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
         )
 
     # Locking
-    locked = user_attrs.get("locked")
+    locked = user_attrs["locked"]
     if user_id == user.id and locked:
         raise MKUserError("locked", _("You cannot lock your own account!"))
 
@@ -255,8 +268,8 @@ def vs_idle_timeout_duration() -> Age:
             "to login sessions which is applied when the user stops interacting with "
             "the GUI for a given amount of time. When a user is exceeding the configured "
             "maximum idle time, the user will be logged out and redirected to the login "
-            "screen to renew the login session. This setting can be overridden for each "
-            "user individually in the profile of the users."
+            "screen to renew the login session. This setting can be overridden in each "
+            "individual user's profile."
         ),
         default_value=5400,
     )
@@ -297,3 +310,38 @@ def verify_password_policy(password: Password, varname: str = "password") -> Non
             )
             % num_groups,
         )
+
+
+class UsersConfigFile(WatoSingleConfigFile[dict]):
+    """Handles reading and writing users.mk file"""
+
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(multisite_dir()) / "users.mk",
+            config_variable="multisite_users",
+            spec_class=dict,
+        )
+
+    def read_file_and_validate(self) -> None:
+        cfg = self.load_for_reading()
+        validate_users(cfg)
+
+
+class ContactsConfigFile(WatoSingleConfigFile[dict]):
+    """Handles reading and writing contacts.mk file"""
+
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(wato_root_dir()) / "contacts.mk",
+            config_variable="contacts",
+            spec_class=dict,
+        )
+
+    def read_file_and_validate(self) -> None:
+        cfg = self.load_for_reading()
+        validate_contacts(cfg)
+
+
+def register(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(UsersConfigFile())
+    config_file_registry.register(ContactsConfigFile())

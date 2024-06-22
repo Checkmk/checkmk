@@ -693,6 +693,8 @@ section_zfs() {
 }
 
 section_nfs_mounts() {
+    proc_mounts_file=${1}
+
     if inpath waitmax; then
         STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
         STAT_BROKE="5.3.0"
@@ -706,9 +708,10 @@ section_nfs_mounts() {
 
         echo '<<<nfsmounts_v2:sep(0)>>>'
 
-        sed -n '/ nfs4\? /s/\([^ ]*\) \([^ ]*\) .*/\1 \2/p' </proc/mounts |
-            sed 's/\\040/ /g' |
+        sed -n '/ nfs4\? /s/\([^ ]*\) \([^ ]*\) .*/\1 \2/p' <"${proc_mounts_file}" |
             while read -r MD MP; do
+                MD="$(printf "%s" "${MD}" | sed 's/\\040/ /g')"
+                MP="$(printf "%s" "${MP}" | sed 's/\\040/ /g')"
                 if [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
                     waitmax -s 9 5 stat -f -c "$(json_templ "${MP}" "${MD}")" "${MP}" ||
                         json_templ_empty "${MP}" "${MD}"
@@ -719,9 +722,9 @@ section_nfs_mounts() {
             done
 
         echo '<<<cifsmounts>>>'
-        sed -n -e '/ cifs /s/.*\ \([^ ]*\)\ cifs\ .*/\1/p' </proc/mounts |
-            sed 's/\\040/ /g' |
+        sed -n -e '/ cifs /s/.*\ \([^ ]*\)\ cifs\ .*/\1/p' <"${proc_mounts_file}" |
             while read -r MP; do
+                MP="$(printf "%s" "${MP}" | sed 's/\\040/ /g')"
                 if [ ! -r "${MP}" ]; then
                     echo "${MP} Permission denied"
                 elif [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
@@ -832,6 +835,15 @@ section_diskstat() {
             echo '[vx_dsk]'
             stat -c "%t %T %n" /dev/vx/dsk/*/*
         fi
+        if [ -d /dev/disk/by-id ]; then
+            echo '[device_wwn]'
+            for F in /dev/disk/by-id/*; do
+                if echo "${F}" | grep -E "nvme-eui|wwn" >/dev/null; then
+                    echo "${F##*/} $(readlink -f "${F}")"
+                fi
+            done
+
+        fi
     else
         echo "<<<docker_container_diskstat${CGROUP_SECTION_SUFFIX}>>>"
         echo "[time]"
@@ -881,13 +893,7 @@ section_ipmitool() {
 
 section_ipmisensors() {
     inpath ipmi-sensors && ls /dev/ipmi* >/dev/null || return
-    ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
-    # Newer ipmi-sensors version have new output format; Legacy format can be used
-    if ipmi-sensors --help | grep -q legacy-output; then
-        IPMI_FORMAT="--legacy-output"
-    else
-        IPMI_FORMAT=""
-    fi
+
     if ipmi-sensors --help | grep -q " \-\-groups"; then
         IPMI_GROUP_OPT="-g"
     else
@@ -895,8 +901,8 @@ section_ipmisensors() {
     fi
 
     # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
-    _run_cached_internal "ipmi_sensors" 300 300 900 600 "echo '<<<ipmi_sensors>>>'; for class in Temperature Power_Unit Fan; do
-        ipmi-sensors ${IPMI_FORMAT} --sdr-cache-directory /var/cache ${IPMI_GROUP_OPT} \"\${class}\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+    _run_cached_internal "ipmi_sensors" 300 300 900 600 "echo '<<<ipmi_sensors:sep(124)>>>'; for class in Temperature Power_Unit Fan; do
+        ipmi-sensors --sdr-cache-directory /var/cache ${IPMI_GROUP_OPT} \"\${class}\"
         # In case of a timeout immediately leave loop.
         if [ $? = 255 ]; then break; fi
     done"
@@ -1717,6 +1723,16 @@ run_cached() {
     _run_cached_internal "${NAME}" "${REFRESH_INTERVAL}" "${MAXAGE}" "${OUTPUT_TIMEOUT}" "${CREATION_TIMEOUT}" "$@"
 }
 
+if inpath setsid; then
+    # we can kill the whole process group, including children.
+    _nohup_kill_id() { printf "0"; }
+    _nohup() { setsid nohup "$@"; }
+else
+    # we can only the main process, children will survive :-/
+    _nohup_kill_id() { printf "\$\$"; }
+    _nohup() { nohup "$@"; }
+fi
+
 _run_cached_internal() {
     # Run a command asynchronous by use of a cache file.
     # Usage: _run_cached_internal NAME REFRESH_INTERVAL MAXAGE OUTPUT_TIMEOUT OUTPUT_TIMEOUT CREATION_TIMEOUT [COMMAND ...]
@@ -1778,32 +1794,6 @@ _run_cached_internal() {
     fi
 
     if ${MK_RUN_ASYNC_PARTS}; then
-        # Kill the process if it is running too long (cache file not accessed for more than CREATION_TIMEOUT seconds).
-        # If killing succeeds, remove CACHFILE.new.PID.
-        # Write info about the timed out process and the kill attempt to the SPOOLDIR.
-        # It will be reported to the server in the next (synchronous) agent execution.
-        # The file will be deleted as soon as the plugin/local check is functional again.
-        # Do not output the file here, it will interrupt the local and mrpe sections, as well as any other
-        # partially cached section.
-        for cfile in "${CACHEFILE}.new."*; do
-            [ -e "${cfile}" ] || break # no match
-            TRYING_SINCE="$(get_file_atime "${cfile}")"
-            [ -n "${TRYING_SINCE}" ] || break # race condition: file vanished
-            if [ $((NOW - TRYING_SINCE)) -ge "${CREATION_TIMEOUT}" ]; then
-                {
-                    printf "<<<checkmk_cached_plugins:sep(124)>>>\n"
-                    pid="${cfile##*.new.}"
-                    printf "timeout|%s|%s|%s\n" "${NAME}" "${CREATION_TIMEOUT}" "${pid}"
-                    kill -9 "${pid}" >/dev/null 2>&1 && sleep 2 # TODO: what about child processes?
-                    if [ -n "$(ps -o args= -p "${pid}")" ]; then
-                        printf "killfailed|%s|%s|%s\n" "${NAME}" "${CREATION_TIMEOUT}" "${pid}"
-                    else
-                        rm -f "${cfile}"
-                    fi
-                } >"${FAIL_REPORT_FILE}" 2>&1
-            fi
-        done
-
         # This does the right thing, regardless whether the pattern matches!
         _cfile_in_use() {
             for cfile in "${CACHEFILE}.new."*; do
@@ -1814,11 +1804,29 @@ _run_cached_internal() {
 
         # Time to refresh cache file and new job not yet running?
         if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
-            # Start it. If the command fails the output is thrown away
-            cat <<HERE | nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
-eval '${MK_DEFINE_LOG_SECTION_TIME}'
-exec > "${CACHEFILE}.new.\$\$" || exit 1
-$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}" || rm -f "${CACHEFILE}.new.\$\$"
+
+            # Start it.
+            # We're running two parrallel blocks, implementing a timeout. Roughly:
+            # First block: Run command then kill ourselves (including the other block!)
+            # Second block: Sleep for a while. If I survive: Handle the fact that block one did not kill me.
+            cat <<HERE | _nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
+             {
+                eval '${MK_DEFINE_LOG_SECTION_TIME}'
+                exec > "${CACHEFILE}.new.\$\$" || exit 1
+                $* \
+                && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}" \
+                || rm -f "${CACHEFILE}.new.\$\$"
+                kill $(_nohup_kill_id)
+             } &
+             {
+                sleep ${CREATION_TIMEOUT}
+                {
+                      printf "<<<checkmk_cached_plugins:sep(124)>>>\\n"
+                      printf "timeout|${NAME}|${CREATION_TIMEOUT}|\$\$\\n"
+                } >"${FAIL_REPORT_FILE}" 2>&1
+                rm -f "${CACHEFILE}.new.\$\$"
+                kill -9 $(_nohup_kill_id)
+             } &
 HERE
         fi
 
@@ -2058,7 +2066,7 @@ run_purely_synchronous_sections() {
     # Check NFS mounts by accessing them with stat -f (System
     # call statfs()). If this lasts more then 2 seconds we
     # consider it as hanging. We need waitmax.
-    [ -z "${MK_SKIP_NFS_MOUNTS}" ] && _log_section_time section_nfs_mounts
+    [ -z "${MK_SKIP_NFS_MOUNTS}" ] && _log_section_time section_nfs_mounts "/proc/mounts"
 
     # Check mount options. Filesystems may switch to 'ro' in case
     # of a read error.

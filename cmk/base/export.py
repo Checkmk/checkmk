@@ -18,7 +18,7 @@ from cmk.utils.servicename import Item, ServiceName
 
 from cmk.checkengine.checking import CheckPluginName
 
-import cmk.base.config as config
+from cmk.base import config
 
 _config_loaded = False
 

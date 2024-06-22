@@ -11,21 +11,13 @@ backend business and persistence logic, which is also shared with the REST API.
 
 # A huge number of imports are here to be compatible with old GUI plugins. Once we dropped support
 # for them, we can remove this here and the imports
-# flake8: noqa
 # pylint: disable=unused-import
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.background_job as background_job
-import cmk.gui.forms as forms
-import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.sites as sites
-import cmk.gui.userdb as userdb
-import cmk.gui.utils as utils
 import cmk.gui.valuespec
 import cmk.gui.view_utils
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.attributes
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.config_domain_name
@@ -41,7 +33,7 @@ import cmk.gui.watolib.timeperiods
 import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
-import cmk.gui.weblib as weblib
+from cmk.gui import background_job, forms, gui_background_job, sites, userdb, utils, watolib, weblib
 from cmk.gui.cron import register_job
 from cmk.gui.hooks import register_hook as register_hook
 from cmk.gui.htmllib.html import html
@@ -174,7 +166,7 @@ from .pages._simple_modes import SimpleModeType as SimpleModeType
 from .pages._tile_menu import TileMenuRenderer as TileMenuRenderer
 
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
-# calls in the Setup plugin context
+# calls in the Setup plug-in context
 subgroup_networking = RulespecGroupCheckParametersNetworking().sub_group_name
 subgroup_storage = RulespecGroupCheckParametersStorage().sub_group_name
 subgroup_os = RulespecGroupCheckParametersOperatingSystem().sub_group_name
@@ -187,7 +179,7 @@ subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     # Initialize watolib things which are needed before loading the Setup plugins.
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()

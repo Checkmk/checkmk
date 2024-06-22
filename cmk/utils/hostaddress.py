@@ -11,7 +11,7 @@ import re
 from collections import Counter
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
-from typing import TypeAlias
+from typing import Final, Self, TypeAlias
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema, CoreSchema
@@ -35,8 +35,9 @@ class Hosts:
 class HostAddress(str):
     """A Checkmk HostAddress or HostName"""
 
-    # The `_` is officially not allowed but our dear unittests...
-    REGEX_HOST_NAME = re.compile(r"^\w[-0-9a-zA-Z_.]*$", re.ASCII)
+    _ALLOWED_CHARS_CLASS: Final = r"-0-9a-zA-Z_."
+    REGEX_HOST_NAME: Final = re.compile(rf"^\w[{_ALLOWED_CHARS_CLASS}]*$", re.ASCII)
+    REGEX_INVALID_CHAR: Final = re.compile(rf"[^{_ALLOWED_CHARS_CLASS}]")
 
     @classmethod
     def __get_pydantic_core_schema__(
@@ -73,7 +74,7 @@ class HostAddress(str):
 
         if len(text) > 254:
             # ext4 and others allow filenames of up to 255 bytes
-            raise ValueError(f"HostName too long: {text[:16]+'…'!r}")
+            raise ValueError(f"HostName too long: {text[:16] + '…'!r}")
 
         try:
             ipaddress.ip_address(text)
@@ -94,7 +95,21 @@ class HostAddress(str):
         except ValueError:
             return False
 
-    def __new__(cls, text: str) -> HostAddress:
+    @classmethod
+    def project_valid(cls, text: str) -> Self:
+        """Create a valid host name from input.
+
+        This is a projection in the sense that the function is not injective.
+        Different input might be projected onto the same output.
+
+        Raises:
+            - ValueError: whenever the given text is not a valid HostAddress
+            even after replacing invalid characters.
+
+        """
+        return cls(cls.REGEX_INVALID_CHAR.sub("_", text))
+
+    def __new__(cls, text: str) -> Self:
         """Construct a new HostAddress object
 
         Raises:

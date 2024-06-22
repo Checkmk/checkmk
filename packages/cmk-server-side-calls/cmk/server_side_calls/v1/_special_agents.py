@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-from ._utils import HostConfig, HTTPProxy, Secret
+from ._utils import HostConfig, Secret
 
 _ParsedParameters = TypeVar("_ParsedParameters")
 
@@ -77,7 +77,6 @@ class SpecialAgentConfig(Generic[_ParsedParameters]):  # pylint: disable=too-few
         >>> def generate_example_commands(
         ...     params: ExampleParams,
         ...     host_config: HostConfig,
-        ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     args = ["--protocol", params.protocol, "--services", "logs", "errors", "stats"]
         ...     yield SpecialAgentCommand(command_arguments=args)
@@ -104,9 +103,7 @@ class SpecialAgentConfig(Generic[_ParsedParameters]):  # pylint: disable=too-few
         *,
         name: str,
         parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters],
-        commands_function: Callable[
-            [_ParsedParameters, HostConfig, Mapping[str, HTTPProxy]], Iterable[SpecialAgentCommand]
-        ],
+        commands_function: Callable[[_ParsedParameters, HostConfig], Iterable[SpecialAgentCommand]],
     ):
         self.name = name
         self._parameter_parser = parameter_parser
@@ -116,10 +113,5 @@ class SpecialAgentConfig(Generic[_ParsedParameters]):  # pylint: disable=too-few
         self,
         parameters: Mapping[str, object],
         host_config: HostConfig,
-        http_proxies: Mapping[str, HTTPProxy],
     ) -> Iterable[SpecialAgentCommand]:
-        return self._commands_function(
-            self._parameter_parser(parameters),
-            host_config,
-            http_proxies,
-        )
+        return self._commands_function(self._parameter_parser(parameters), host_config)

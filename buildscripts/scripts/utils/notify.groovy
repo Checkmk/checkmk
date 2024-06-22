@@ -9,9 +9,9 @@ def get_author_email() {
     // Bug: https://issues.jenkins-ci.org/browse/JENKINS-39838
     return (
         onWindows ?
-        /// windows will replace %ae with ae..
-        cmd_output('git log -1 --pretty=format:%%ae') :
-        cmd_output('git log -1 --pretty=format:%ae'));
+            /// windows will replace %ae with ae..
+            cmd_output('git log -1 --pretty=format:%%ae') :
+            cmd_output('git log -1 --pretty=format:%ae'));
 }
 
 // Send a build failed massage to jenkins
@@ -26,6 +26,25 @@ def slack_build_failed(error) {
             |    ${error}
             |""".stripMargin()),
     );
+}
+
+def notify_maintainer_of_package(maintainers, package_name, build_url) {
+    try {
+        mail(
+            to: maintainers.join(","),  // TODO: Add the commmiter
+            cc: maintainers.join(","),
+            bcc: "",
+            from: "\"CI\" <${JENKINS_MAIL}>",
+            replyTo: "${TEAM_CI_MAIL}",
+            subject: "[${package_name} failed]",
+            body: ("""
+    |The following package has failed - check the console log here:
+    |    ${build_url}
+    |""".stripMargin()),
+        );
+    } catch (Exception exc) {    // groovylint-disable CatchException
+        println("Could not sent mail to package owner - got ${exc}");
+    }
 }
 
 def notify_error(error) {
@@ -57,7 +76,7 @@ def notify_error(error) {
                 "jonas.scharpf@checkmk.com",
             ];
             currentBuild.changeSets.each { changeSet ->
-                def culprits_emails = changeSet.items.collect {e -> e.authorEmail};
+                def culprits_emails = changeSet.items.collect { e -> e.authorEmail };
                 print(
                     """
                     ||==========================================================================================
@@ -77,7 +96,7 @@ def notify_error(error) {
 
             /// Inform cloud devs if cloud burns
             if (projectname.contains("build-cmk-cloud-images") || projectname.contains("saas")) {
-                notify_emails.addAll(TEAM_SAAS_MAIL.split(","));
+                notify_emails += "aws-saas-checkmk-dev@checkmk.com";
             }
 
             /// Inform nile devs if our extensions fail
@@ -125,9 +144,9 @@ def notify_error(error) {
     |
     |If you feel you got this mail by mistake, please reply and let's fix this together.
     |""".stripMargin()),
-           );
+            );
         }
-    } catch(Exception exc) {    // groovylint-disable CatchException
+    } catch (Exception exc) {    // groovylint-disable CatchException
         print("Could not report error by mail - got ${exc}");
     }
 
@@ -152,7 +171,7 @@ def notify_error(error) {
     print("ERROR: ${error.stackTrace.head()}: ${error}");
     currentBuild.description += (
         "<br>The build failed due to an exception (at ${error.stackTrace.head()}):" +
-        "<br><strong style='color:red'>${error}</strong>");
+            "<br><strong style='color:red'>${error}</strong>");
     throw error;
 }
 

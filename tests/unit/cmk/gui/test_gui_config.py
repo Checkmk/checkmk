@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.utils import is_enterprise_repo, is_managed_repo
+from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 
 import cmk.utils.paths
 
@@ -99,6 +99,7 @@ def test_default_config_from_plugins() -> None:
         "user_downtime_timeranges",
         "builtin_icon_visibility",
         "trusted_certificate_authorities",
+        "user_security_notification_duration",
         "mkeventd_enabled",
         "mkeventd_pprint_rules",
         "mkeventd_notify_contactgroup",
@@ -160,7 +161,7 @@ def test_default_config_from_plugins() -> None:
     # precondition is a more cleanly separated structure.
 
     if is_enterprise_repo():
-        # CEE plugins are added when the CEE plugins for WATO are available, i.e.
+        # CEE plug-ins are added when the CEE plug-ins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected += [
             "agent_deployment_enabled",
@@ -190,7 +191,7 @@ def test_default_config_from_plugins() -> None:
         ]
 
     if is_managed_repo():
-        # CME plugins are added when the CEE plugins for WATO are available, i.e.
+        # CME plug-ins are added when the CEE plug-ins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected += [
             "customers",

@@ -12,4 +12,4 @@ info = [["150"]]
 
 discovery = {"": [(None, {})]}
 
-checks = {"": [(None, {}, [(0, "15.00 Watt", [("power", 15.0)])])]}
+checks = {"": [(None, {}, [(0, "15.00 W", [("power", 15.0)])])]}

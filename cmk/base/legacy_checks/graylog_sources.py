@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="arg-type,no-untyped-def"
+# mypy: disable-error-code="arg-type"
 
 import json
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Iterable, Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -59,7 +59,7 @@ def parse_graylog_sources(string_table: StringTable) -> SourceInfoSection:
     return parsed
 
 
-def _handle_graylog_sources_messages(item_data: SourceInfo, params: Mapping[str, Any]):
+def _handle_graylog_sources_messages(item_data: SourceInfo, params: Mapping[str, Any]) -> Iterable:
     total_messages, average_messages, total_new_messages = handle_graylog_messages(
         item_data.num_messages, params
     )
@@ -79,7 +79,9 @@ def _handle_graylog_sources_messages(item_data: SourceInfo, params: Mapping[str,
     )
 
 
-def check_graylog_sources(item: str, params: Mapping[str, Any], section: SourceInfoSection):
+def check_graylog_sources(
+    item: str, params: Mapping[str, Any], section: SourceInfoSection
+) -> Iterable:
     if (item_data := section.get(item)) is None:
         return
 

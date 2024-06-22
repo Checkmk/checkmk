@@ -7,16 +7,14 @@
 import base64
 import json
 from collections.abc import Collection
-from typing import NotRequired
-
-from typing_extensions import TypedDict
+from typing import NotRequired, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -319,7 +317,7 @@ class ModeDiagHost(WatoMode):
                     "hostname",
                     FixedValue(
                         value=self._hostname,
-                        title=_("Hostname"),
+                        title=_("Host name"),
                     ),
                 ),
                 (
@@ -432,7 +430,7 @@ class PageAjaxDiagHost(AjaxPage):
 
         hostname = api_request.get("host")
         if not hostname:
-            raise MKGeneralException(_("The hostname is missing."))
+            raise MKGeneralException(_("The host name is missing."))
 
         host = Host.host(hostname)
 

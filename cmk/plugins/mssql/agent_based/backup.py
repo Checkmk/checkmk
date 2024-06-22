@@ -87,7 +87,7 @@ def _parse_date_and_time(b_date: str, b_time: str | None) -> float | None:
         result = datetime.datetime.strptime(f"{b_date} {b_time}", "%Y-%m-%d %H:%M:%S")
 
         if tz == "00:00":  # only +00:00 is currently supported
-            result = result.replace(tzinfo=datetime.timezone.utc)
+            result = result.replace(tzinfo=datetime.UTC)
 
         return result.timestamp()
     except ValueError:

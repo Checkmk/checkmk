@@ -24,6 +24,10 @@ class RuleGroup:
         return f"{RuleGroupType.ACTIVE_CHECKS.value}:{name}"
 
     @staticmethod
+    def is_active_checks_rule(rule_name: str) -> bool:
+        return rule_name.startswith(f"{RuleGroupType.ACTIVE_CHECKS.value}:")
+
+    @staticmethod
     def AgentConfig(name: str | None) -> str:
         return f"{RuleGroupType.AGENT_CONFIG.value}:{name}"
 
@@ -50,6 +54,10 @@ class RuleGroup:
     @staticmethod
     def SpecialAgents(name: str | None) -> str:
         return f"{RuleGroupType.SPECIAL_AGENTS.value}:{name}"
+
+    @staticmethod
+    def is_special_agents_rule(rule_name: str) -> bool:
+        return rule_name.startswith(f"{RuleGroupType.SPECIAL_AGENTS.value}:")
 
     @staticmethod
     def StaticChecks(name: str | None) -> str:

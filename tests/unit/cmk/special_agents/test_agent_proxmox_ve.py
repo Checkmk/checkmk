@@ -480,7 +480,7 @@ def test_parse_backup_logs(
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
-    from tests.testlib.utils import repo_path
+    from tests.testlib.repo import repo_path
 
     assert not pytest.main(
         [

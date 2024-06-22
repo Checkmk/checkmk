@@ -518,7 +518,7 @@ public:
         }
 
         correctRetry();
-        fillInternalUser(iu);
+        iu_ = getInternalUser(iu);
 
         exec_type_ = exec_type;
         defined_ = true;
@@ -555,7 +555,8 @@ public:
 
 protected:
     tools::UtfConversionMode getUtfConversionMode() const;
-    void fillInternalUser(wtools::InternalUsersDb *iu);
+    [[nodiscard]] wtools::InternalUser getInternalUser(
+        wtools::InternalUsersDb *user_database) const;
     std::optional<std::string> startProcessName();
     void restartAsyncThreadIfFinished(const std::wstring &id);
     void markAsForRestart() {

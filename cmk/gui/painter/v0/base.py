@@ -322,8 +322,7 @@ class PainterRegistry(Registry[type[Painter]]):
 painter_registry = PainterRegistry()
 
 
-# Kept for pre 1.6 compatibility. But also the inventory.py uses this to
-# register some painters dynamically
+# Kept for pre 1.6 compatibility.
 def register_painter(ident: str, spec: dict[str, Any]) -> None:
     paint_function = spec["paint"]
     cls = type(
@@ -568,7 +567,7 @@ class Cell:
         classes += self.painter().title_classes()
 
         html.open_th(class_=classes, onclick=onclick, title=title)
-        html.write_text(self.title())
+        html.write_text_permissive(self.title())
         html.close_th()
 
     def render(
@@ -642,7 +641,7 @@ class Cell:
             # Current limitation: *one* image
             assert not isinstance(txt, tuple)
             if (isinstance(txt, str) and txt.lower().startswith("<img")) or (
-                isinstance(txt, HTML) and txt.lower().startswith(HTML("<img"))
+                isinstance(txt, HTML) and txt.lower().startswith(HTML.without_escaping("<img"))
             ):
                 img_filename = re.sub(".*src=[\"']([^'\"]*)[\"'].*", "\\1", str(txt))
                 img_path = find_htdocs_image_path(img_filename)

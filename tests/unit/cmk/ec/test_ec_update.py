@@ -5,9 +5,7 @@
 """EC UPDATE methods with one or more event IDs"""
 import pytest
 
-from tests.testlib import CMKEventConsole
-
-from tests.unit.cmk.ec.helpers import FakeStatusSocket
+from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
 
 from cmk.utils.hostaddress import HostName
 
@@ -31,7 +29,7 @@ def test_update_event(
         "phase": start_phase,
         "core_host": HostName("ABC"),
     }
-    event_status.new_event(CMKEventConsole.new_event(event))
+    event_status.new_event(new_event(event))
     s = FakeStatusSocket(
         bytes(f"COMMAND UPDATE;1;testuser;{set_phase_to};test_comment;test_contact_name", "utf-8")
     )
@@ -54,7 +52,7 @@ def test_update_events_that_cant_be_acked(
         "phase": test_phase,
         "core_host": HostName("ABC"),
     }
-    event_status.new_event(CMKEventConsole.new_event(event))
+    event_status.new_event(new_event(event))
     s = FakeStatusSocket(b"COMMAND UPDATE;1;testuser;1;test_comment;test_contact_name")
     with pytest.raises(MKClientError) as excinfo:
         status_server.handle_client(s, True, "127.0.0.1")
@@ -74,7 +72,7 @@ def test_update_multiple_evens(event_status: EventStatus, status_server: StatusS
     ]
 
     for event in events:
-        event_status.new_event(CMKEventConsole.new_event(event))
+        event_status.new_event(new_event(event))
 
     event_ids = ",".join(str(n + 1) for n, _ in enumerate(event_status.events()))
     s = FakeStatusSocket(

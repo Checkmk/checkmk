@@ -14,15 +14,6 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
 PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
 BLACK              := scripts/run-black
 
-JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
-                          $(wildcard \
-                              $(foreach subdir,* */* */*/* */*/*/* */*/*/*/*,web/htdocs/js/$(subdir).[jt]s)))
-
-SCSS_SOURCES := $(wildcard $(foreach subdir,* */* */*/*,web/htdocs/themes/$(subdir)/*.scss))
-
-
-WEBPACK_MODE       ?= production
-
 OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
 LOCK_FD := 200
@@ -38,9 +29,9 @@ endif
 CI ?= false
 
 .PHONY: announcement all build check-setup \
-        clean css dist documentation \
+        clean dist documentation \
         format format-c test-format-c format-python format-shell \
-        format-js help install mrproper mrclean \
+        help install mrproper mrclean \
         packages setup setversion version openapi \
         protobuf-files frontend-vue
 
@@ -93,15 +84,11 @@ $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-#
-# We added frontend-vue as a dependency here, so both $(JAVASCRIPT_MINI) and
-# frontend-vue can be build independently of each other. Otherwise f12ing
-# `./web` would also build frontend-vue
-dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES) frontend-vue
+dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files cmk-frontend frontend-vue
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
-	    git rev-parse --short HEAD > COMMIT ; \
+	    git rev-parse HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
 	    if [[ ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
 		    EXCLUDES+=" --exclude $${X%*/}" ; \
@@ -133,9 +120,11 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVA
 	    check-mk-$(EDITION)-$(OMD_VERSION)
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
+cmk-frontend:
+	ENTERPRISE=$(ENTERPRISE) packages/cmk-frontend/run --setup-environment --all
+
 frontend-vue:
-	cd packages/cmk-frontend-vue && ./run
-	cp packages/cmk-frontend-vue/dist/assets/vue_min.js* web/htdocs/js/
+	packages/cmk-frontend-vue/run --setup-environment --all
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
@@ -181,38 +170,6 @@ openapi-clean:
 openapi: $(OPENAPI_SPEC)
 
 
-# NOTE 1: What we actually want are grouped targets, but this would require GNU
-# make >= 4.3, so we use the common workaround of an intermediate target.
-#
-# NOTE 2: NPM people have a totally braindead idea about reproducible builds
-# which almost all other people consider a bug, so we have to touch our target
-# files. Read https://github.com/npm/npm/issues/20439 and be amazed...
-#
-# NOTE 3: NPM sometimes terminates with a very unhelpful "npm ERR! cb() never
-# called!" message, where the underlying reason seems to be quite obscure, see
-# https://npm.community/t/crash-npm-err-cb-never-called/858.
-.INTERMEDIATE: .ran-npm
-node_modules/.bin/webpack: .ran-npm
-node_modules/.bin/prettier: .ran-npm
-.ran-npm: package.json package-lock.json
-	./scripts/npm-ci
-	touch node_modules/.bin/webpack node_modules/.bin/prettier
-
-# NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we
-# list all targets separately.
-#
-# NOTE 2: For the touch command refer to the notes above.
-#
-# NOTE 3: The cma_facelift.scss target is used to generate a css file for the virtual
-# appliance. It is called from the cma git's makefile and the built css file is moved
-# to ~/git/cma/skel/usr/share/cma/webconf/htdocs/
-.INTERMEDIATE: .ran-webpack
-$(JAVASCRIPT_MINI): .ran-webpack
-$(THEME_CSS_FILES): .ran-webpack
-.ran-webpack: node_modules/.bin/webpack webpack.config.js postcss.config.js $(JAVASCRIPT_SOURCES) $(SCSS_SOURCES)
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
-	touch $(JAVASCRIPT_MINI) $(THEME_CSS_FILES)
-
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In
 # fact, we should really clean up all this cleaning-chaos and finally follow the
@@ -222,10 +179,7 @@ clean:
 	$(MAKE) -C omd clean
 	rm -rf *.rpm *.deb *.exe \
 	       *~ counters autochecks \
-	       precompiled cache web/htdocs/js/*_min.js \
-	       web/htdocs/themes/*/theme.css announce*
-
-css: .ran-webpack
+	       precompiled cache announce*
 
 EXCLUDE_PROPER= \
 	    --exclude="**/.vscode" \
@@ -263,7 +217,6 @@ mrclean:
 buildclean:
 	git clean -d --force -x $(EXCLUDE_BUILD_CLEAN)
 
-
 setup:
 	sudo buildscripts/infrastructure/build-nodes/scripts/install-development.sh --profile all
 	sudo bash -c 'usermod -a -G docker $$SUDO_USER'
@@ -277,7 +230,7 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C non-free/cmc-protocols protobuf-files
 endif
 
-format: format-python format-c format-shell format-js format-css format-bazel
+format: format-python format-c format-shell format-bazel
 
 format-c:
 	packages/livestatus/run --format
@@ -310,13 +263,6 @@ format-shell:
 
 what-gerrit-makes:
 	$(MAKE)	-C tests what-gerrit-makes
-
-format-js:
-	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "{{enterprise/web,web}/htdocs/js/**/,}*.{js,ts,vue}"
-	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "packages/cmk-frontend-vue/src/**/*.{js,ts,vue}"
-
-format-css:
-	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "web/htdocs/themes/**/*.scss"
 
 format-bazel:
 	scripts/run-buildifier --lint=fix --mode=fix

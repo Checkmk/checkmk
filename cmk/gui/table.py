@@ -15,8 +15,7 @@ from contextlib import contextmanager, nullcontext
 from enum import auto, Enum
 from typing import Any, ContextManager, Final, Literal, NamedTuple
 
-import cmk.gui.utils.escaping as escaping
-import cmk.gui.weblib as weblib
+from cmk.gui import weblib
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -27,6 +26,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
 from cmk.gui.type_defs import CSSSpec
+from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -281,7 +281,7 @@ class Table:
                 str(text) if not isinstance(text, str) else text, escape_links=False
             )
 
-        htmlcode: HTML = content + HTML(output_funnel.drain())
+        htmlcode: HTML = content + HTML.without_escaping(output_funnel.drain())
 
         if isinstance(title, HTML):
             header_title = title
@@ -642,7 +642,9 @@ class Table:
                 first_col = False
                 if actions_enabled:
                     if not header_title:
-                        header_title = HTML("&nbsp;")  # Fixes layout problem with white triangle
+                        header_title = (
+                            HTMLWriter.render_nbsp()
+                        )  # Fixes layout problem with white triangle
 
                     if actions_visible:
                         state = "0"
@@ -663,9 +665,9 @@ class Table:
                     html.span(header_title)
                     html.close_div()
                 else:
-                    html.write_text(header_title)
+                    html.write_text_permissive(header_title)
             else:
-                html.write_text(header_title)
+                html.write_text_permissive(header_title)
 
             html.close_th()
         html.close_tr()

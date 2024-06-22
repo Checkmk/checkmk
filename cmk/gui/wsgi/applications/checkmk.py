@@ -11,6 +11,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import flask
+from werkzeug.exceptions import RequestEntityTooLarge
 
 import livestatus
 
@@ -72,9 +73,9 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
         except HTTPRedirect:
             raise
         except Exception as e:
-            html.write_text(str(e))
+            html.write_text_permissive(str(e))
             if active_config.debug:
-                html.write_text(traceback.format_exc())
+                html.write_text_permissive(traceback.format_exc())
 
         return response
 
@@ -85,7 +86,7 @@ def _page_not_found() -> Response:
     # TODO: This is a page handler. It should not be located in generic application
     # object. Move it to another place
     if request.has_var("_plain_error"):
-        html.write_text(_("Page not found"))
+        html.write_text_permissive(_("Page not found"))
     else:
         title = _("Page not found")
         make_header(
@@ -122,7 +123,13 @@ def _render_exception(e: Exception, title: str) -> Response:
 
     if not fail_silently():
         make_header(html, title, Breadcrumb())
+        html.open_ts_container(
+            container="div",
+            function_name="insert_before",
+            options={"targetElementId": "main_page_content"},
+        )
         html.show_error(str(e))
+        html.close_div()
         html.footer()
 
     return response
@@ -219,6 +226,9 @@ def _process_request(  # pylint: disable=too-many-branches
     except MKException as e:
         resp = _render_exception(e, title=_("General error"))
         logger.error("%s: %s", e.__class__.__name__, e)
+
+    except RequestEntityTooLarge as e:
+        resp = _render_exception(e, title=_("Request too large"))
 
     except Exception:
         resp = handle_unhandled_exception()

@@ -235,7 +235,7 @@ def schedule_service_downtime(
             The host-name for which this downtime is for.
 
         service_description:
-            The service description of the service, whose problems shall be acknowledged.
+            The service name of the service, whose problems shall be acknowledged.
 
         start_time:
             When the downtime shall begin.
@@ -819,7 +819,7 @@ def _schedule_downtime(
         params = [host_or_group]
     elif command == DOWNTIME.SCHEDULE_SERVICE:
         if not service_description:
-            raise ValueError("Service description necessary.")
+            raise ValueError("Service name necessary.")
         params = [host_or_group, service_description]
     else:
         raise ValueError(f"Unsupported command: {command}")

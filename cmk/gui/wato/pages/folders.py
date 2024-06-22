@@ -14,13 +14,12 @@ from cmk.utils.labels import Labels
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.tags import TagGroupID, TagID
 
-import cmk.gui.forms as forms
 import cmk.gui.view_utils
-import cmk.gui.weblib as weblib
+from cmk.gui import forms, weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import GroupSpecs, load_contact_group_information
+from cmk.gui.groups import GroupSpecs
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import mandatory_parameter, request
@@ -72,6 +71,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.host_attributes import (
     collect_attributes,
     host_attribute_registry,
@@ -172,7 +172,7 @@ class ModeFolder(WatoMode):
             return self._search_folder_page_menu(breadcrumb)
         assert not isinstance(self._folder, SearchFolder)
 
-        has_hosts = bool(self._folder.has_hosts())
+        has_hosts = self._folder.has_hosts()
 
         menu = PageMenu(
             dropdowns=[
@@ -279,7 +279,7 @@ class ModeFolder(WatoMode):
                         ),
                         make_checkbox_selection_topic(
                             "wato-folder-/%s" % self._folder.path(),
-                            is_enabled=bool(self._folder.has_hosts()),
+                            is_enabled=self._folder.has_hosts(),
                         ),
                     ],
                 ),
@@ -305,13 +305,19 @@ class ModeFolder(WatoMode):
         )
 
     def _page_menu_entries_hosts_in_folder(self) -> Iterator[PageMenuEntry]:
+        folder_has_hosts = self._folder.has_hosts()
+        folder_or_subfolder_has_hosts = folder_has_hosts or (  # has hosts in any of its subfolders
+            isinstance(self._folder, Folder)
+            and any(sub.has_hosts() for sub in self._folder.subfolders())
+        )
+        add_host_tooltip_text = _("Add host to use this action")
+        add_host_or_subfolder_tooltip_text = _("Add host/subfolder to use this action")
+
         if (
             not self._folder.locked_hosts()
             and user.may("wato.manage_hosts")
             and self._folder.permissions.may("write")
         ):
-            is_enabled = bool(self._folder.has_hosts())
-
             yield PageMenuEntry(
                 title=_("Add host"),
                 icon_name="new",
@@ -335,8 +341,8 @@ class ModeFolder(WatoMode):
                 title=_("Run bulk service discovery"),
                 icon_name="services",
                 item=make_simple_link(self._folder.url([("mode", "bulkinventory"), ("all", "1")])),
-                disabled_tooltip="Add host/subfolder to use this action",
-                is_enabled=is_enabled,
+                disabled_tooltip=add_host_tooltip_text,
+                is_enabled=folder_or_subfolder_has_hosts,
             )
 
         if user.may("wato.rename_hosts"):
@@ -344,8 +350,8 @@ class ModeFolder(WatoMode):
                 title=_("Rename multiple hosts"),
                 icon_name="rename_host",
                 item=make_simple_link(self._folder.url([("mode", "bulk_rename_host")])),
-                disabled_tooltip="Add host/subfolder to use this action",
-                is_enabled=is_enabled,
+                disabled_tooltip=add_host_tooltip_text,
+                is_enabled=folder_or_subfolder_has_hosts,
             )
 
         if user.may("wato.manage_hosts") and not isinstance(self._folder, SearchFolder):
@@ -363,8 +369,8 @@ class ModeFolder(WatoMode):
                     confirm_button=_("Remove"),
                     warning=True,
                 ),
-                disabled_tooltip="Add host/subfolder to use this action",
-                is_enabled=is_enabled,
+                disabled_tooltip=add_host_or_subfolder_tooltip_text,
+                is_enabled=folder_has_hosts,
             )
 
         if (
@@ -376,8 +382,8 @@ class ModeFolder(WatoMode):
                 title=_("Detect network parent hosts"),
                 icon_name="parentscan",
                 item=make_simple_link(self._folder.url([("mode", "parentscan"), ("all", "1")])),
-                disabled_tooltip="Add host/subfolder to use this action",
-                is_enabled=is_enabled,
+                disabled_tooltip=add_host_tooltip_text,
+                is_enabled=folder_or_subfolder_has_hosts,
             )
 
         if user.may("wato.random_hosts"):
@@ -393,7 +399,8 @@ class ModeFolder(WatoMode):
         if not user.may("wato.edit_hosts") and not user.may("wato.manage_hosts"):
             return
 
-        is_enabled = bool(self._folder.has_hosts())
+        is_enabled = self._folder.has_hosts()
+        add_host_or_subfolder_tooltip_text = _("Add host/subfolder to use this action")
 
         if not self._folder.locked_hosts() and user.may("wato.edit_hosts"):
             yield PageMenuEntry(
@@ -403,7 +410,7 @@ class ModeFolder(WatoMode):
                     form_name="hosts",
                     button_name="_bulk_edit",
                 ),
-                disabled_tooltip="Add host/subfolder to use this action",
+                disabled_tooltip=add_host_or_subfolder_tooltip_text,
                 is_enabled=is_enabled,
             )
 
@@ -415,7 +422,7 @@ class ModeFolder(WatoMode):
                     form_name="hosts",
                     button_name="_bulk_inventory",
                 ),
-                disabled_tooltip="Add host/subfolder to use this action",
+                disabled_tooltip=add_host_or_subfolder_tooltip_text,
                 is_enabled=is_enabled,
             )
 
@@ -426,7 +433,7 @@ class ModeFolder(WatoMode):
                     icon_name="move",
                     name="move_rules",
                     item=PageMenuPopup(self._render_bulk_move_form()),
-                    disabled_tooltip="Add host/subfolder to use this action",
+                    disabled_tooltip=add_host_or_subfolder_tooltip_text,
                     is_enabled=is_enabled,
                 )
 
@@ -438,7 +445,7 @@ class ModeFolder(WatoMode):
                         form_name="hosts",
                         button_name="_parentscan",
                     ),
-                    disabled_tooltip="Add host/subfolder to use this action",
+                    disabled_tooltip=add_host_or_subfolder_tooltip_text,
                     is_enabled=is_enabled,
                 )
 
@@ -450,7 +457,7 @@ class ModeFolder(WatoMode):
                         form_name="hosts",
                         button_name="_bulk_cleanup",
                     ),
-                    disabled_tooltip="Add host/subfolder to use this action",
+                    disabled_tooltip=add_host_or_subfolder_tooltip_text,
                     is_enabled=is_enabled,
                 )
 
@@ -466,7 +473,7 @@ class ModeFolder(WatoMode):
                     confirm_button=_("Remove"),
                     warning=True,
                 ),
-                disabled_tooltip="Add host/subfolder to use this action",
+                disabled_tooltip=add_host_or_subfolder_tooltip_text,
                 is_enabled=is_enabled,
             )
 
@@ -479,7 +486,7 @@ class ModeFolder(WatoMode):
                     button_name="_bulk_delete",
                     title=_("Delete selected hosts"),
                 ),
-                disabled_tooltip="Add host/subfolder to use this action",
+                disabled_tooltip=add_host_or_subfolder_tooltip_text,
                 is_enabled=is_enabled,
             )
 
@@ -793,7 +800,7 @@ class ModeFolder(WatoMode):
                 class_=["floatfolder", "unlocked", "newfolder"],
                 onclick="location.href='%s'" % self._folder.url([("mode", "newfolder")]),
             )
-            html.write_text("+")
+            html.write_text_permissive("+")
             html.close_div()
             html.div("", class_="folder_foot")
 
@@ -833,7 +840,7 @@ class ModeFolder(WatoMode):
         if subfolder.permissions.may("read"):
             html.a(subfolder.title(), href=subfolder.url())
         else:
-            html.write_text(subfolder.title())
+            html.write_text_permissive(subfolder.title())
         html.close_div()
 
     def _show_subfolder_buttons(self, subfolder: Folder) -> None:
@@ -889,20 +896,20 @@ class ModeFolder(WatoMode):
         permitted_groups, _folder_contact_groups, _use_for_services = subfolder.groups()
         for num, pg in enumerate(permitted_groups):
             cgalias = groups.get(pg, {"alias": pg})["alias"]
-            html.icon("contactgroups", _("Contactgroups that have permission on this folder"))
-            html.write_text(" %s" % cgalias)
+            html.icon("contactgroups", _("Contact groups that have permission on this folder"))
+            html.write_text_permissive(" %s" % cgalias)
             html.br()
             if num > 1 and len(permitted_groups) > 4:
-                html.write_text(
+                html.write_text_permissive(
                     _("<i>%d more contact groups</i><br>") % (len(permitted_groups) - num - 1)
                 )
                 break
 
         num_hosts = subfolder.num_hosts_recursively()
         if num_hosts == 1:
-            html.write_text(_("1 Host"))
+            html.write_text_permissive(_("1 Host"))
         elif num_hosts > 0:
-            html.write_text("%d %s" % (num_hosts, _("Hosts")))
+            html.write_text_permissive("%d %s" % (num_hosts, _("Hosts")))
         else:
             html.i(_("(no hosts)"))
         html.close_div()
@@ -1035,7 +1042,7 @@ class ModeFolder(WatoMode):
         self._show_host_actions(host)
 
         # Hostname with link to details page (edit host)
-        table.cell(_("Hostname"))
+        table.cell(_("Host name"))
         errors = host_errors.get(hostname, []) + host.validation_errors()
         if errors:
             msg = _("Warning: This host has an invalid configuration: ")
@@ -1082,13 +1089,13 @@ class ModeFolder(WatoMode):
         permitted_groups, host_contact_groups, _use_for_services = host.groups()
         table.cell(
             _("Permissions"),
-            HTML(", ").join(
+            HTML.without_escaping(", ").join(
                 [self._render_contact_group(contact_group_names, g) for g in permitted_groups]
             ),
         )
         table.cell(
             _("Contact Groups"),
-            HTML(", ").join(
+            HTML.without_escaping(", ").join(
                 [self._render_contact_group(contact_group_names, g) for g in host_contact_groups]
             ),
         )
@@ -1123,9 +1130,9 @@ class ModeFolder(WatoMode):
             html.a(host.folder().alias_path(), href=host.folder().url())
 
     def _limit_labels(self, labels: TagsOrLabels) -> tuple[TagsOrLabels, HTML]:
-        show_all, limit = HTML(""), 3
+        show_all, limit = HTML.empty(), 3
         if len(labels) > limit and request.var("_show_all") != "1":
-            show_all = HTML(" ") + HTMLWriter.render_a(
+            show_all = HTML.without_escaping(" ") + HTMLWriter.render_a(
                 "... (%s)" % _("show all"), href=makeuri(request, [("_show_all", "1")])
             )
             labels = dict(sorted(labels.items())[:limit])
@@ -1196,7 +1203,7 @@ class ModeFolder(WatoMode):
             dropdown = WatoFolderChoices(html_attrs={"form": form_name})
             dropdown.render_input("_bulk_moveto", "")
             html.button("_bulk_move", _("Move"), form=form_name)
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
 
 # TODO: Split this into one base class and one subclass for folder and hosts
@@ -1224,7 +1231,7 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
 
         choices = self._get_choices()
         if not choices:
-            html.write_text(_("No valid target folder."))
+            html.write_text_permissive(_("No valid target folder."))
             return None
 
         html.dropdown(

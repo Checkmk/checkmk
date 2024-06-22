@@ -30,7 +30,7 @@ Downtime object can have the following relations:
 import datetime as dt
 import json
 from collections.abc import Callable, Mapping
-from typing import Any, Literal, Optional, Tuple
+from typing import Any, Literal
 
 from livestatus import SiteId
 
@@ -70,7 +70,7 @@ FindByType = Literal["query", "by_id", "params", "hostgroup", "servicegroup"]
 
 SERVICE_DESCRIPTION_SHOW = {
     "service_description": fields.String(
-        description="The service description. No exception is raised when the specified service "
+        description="The service name. No exception is raised when the specified service "
         "description does not exist. This parameter can be combined with the host_name parameter "
         "to only filter for service downtimes of on a specific host. Cannot be used "
         "together with the query parameter.",
@@ -528,7 +528,7 @@ def modify_host_downtime(params: Mapping[str, Any]) -> Response:
 
 def _generate_target_downtimes_query(
     find_type: FindByType, body: Mapping[str, Any]
-) -> Tuple[QueryExpression, Optional[SiteId]]:
+) -> tuple[QueryExpression, SiteId | None]:
     site_id: SiteId | None = None
 
     if find_type == "query":
@@ -610,10 +610,10 @@ def _downtime_properties(info):
         "site_id": info["site"],
         "host_name": info["host_name"],
         "author": info["author"],
-        "is_service": "yes" if info["is_service"] else "no",
+        "is_service": bool(info["is_service"]),
         "start_time": info["start_time"],
         "end_time": info["end_time"],
-        "recurring": "yes" if info["recurring"] else "no",
+        "recurring": bool(info["recurring"]),
         "comment": info["comment"],
     }
 

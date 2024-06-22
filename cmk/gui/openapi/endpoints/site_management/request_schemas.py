@@ -342,7 +342,7 @@ class ConfigurationConnectionAttributes(BaseSchema):
     )
     direct_login_to_web_gui_allowed = fields.Boolean(
         required=True,
-        description="When enabled, this site is marked for synchronisation every time a Web GUI related option is changed and users are allowed to login to the Web GUI of this site.",
+        description="When enabled, this site is marked for synchronisation every time a web GUI related option is changed and users are allowed to login to the web GUI of this site.",
         example=True,
     )
     user_sync = fields.Nested(

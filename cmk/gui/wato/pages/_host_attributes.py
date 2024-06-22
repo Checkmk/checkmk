@@ -18,7 +18,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML as HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import ValueSpec
@@ -179,9 +178,9 @@ def configure_attributes(  # pylint: disable=too-many-branches
                     if attrname in container.attributes:
                         assert not isinstance(container, SearchFolder)
                         url = container.edit_url()
-                        inherited_from = escape_to_html(_("Inherited from ")) + HTMLWriter.render_a(
-                            container.title(), href=url
-                        )
+                        inherited_from = HTML.with_escaping(
+                            _("Inherited from ")
+                        ) + HTMLWriter.render_a(container.title(), href=url)
 
                         # Mypy can not help here with the dynamic key
                         inherited_value = container.attributes[attrname]  # type: ignore[literal-required]
@@ -193,7 +192,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
                     container = container.parent()
 
             if not container:  # We are the root folder - we inherit the default values
-                inherited_from = escape_to_html(_("Default value"))
+                inherited_from = HTML.with_escaping(_("Default value"))
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
                 if attr.is_tag_attribute:
@@ -319,14 +318,15 @@ def configure_attributes(  # pylint: disable=too-many-branches
             #
 
             # in bulk mode we show inheritance only if *all* hosts inherit
-            explanation: HTML = HTML("")
+            explanation: HTML = HTML.empty()
+            value: object = None
             if for_what == "bulk":
                 if num_haveit == 0:
                     assert inherited_from is not None
-                    explanation = HTML(" (") + inherited_from + HTML(")")
+                    explanation = " (" + inherited_from + ")"
                     value = inherited_value
                 elif not unique:
-                    explanation = escape_to_html(
+                    explanation = HTML.with_escaping(
                         _("This value differs between the selected hosts.")
                     )
                 else:
@@ -347,14 +347,14 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
                 if isinstance(attr, ABCHostAttributeValueSpec):
                     html.open_b()
-                    html.write_text(content)
+                    html.write_text_permissive(content)
                     html.close_b()
                 elif isinstance(attr, str):
                     html.b(_u(cast(str, content)))
                 else:
                     html.b(content)
 
-            html.write_text(explanation)
+            html.write_text_permissive(explanation)
             html.close_div()
 
         if topic_is_volatile:

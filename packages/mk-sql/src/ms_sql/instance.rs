@@ -2,9 +2,12 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::client::{self, Client};
+#[cfg(windows)]
+use super::client::OdbcClient;
+use super::client::{self, UniClient};
 use super::custom::get_sql_dir;
 use super::section::{Section, SectionKind};
+use crate::config::ms_sql::{is_local_host, is_use_tcp};
 use crate::config::section;
 use crate::config::{
     self,
@@ -14,21 +17,26 @@ use crate::config::{
 };
 use crate::emit;
 use crate::ms_sql::query::{
-    obtain_computer_name, obtain_instance_name, run_custom_query, run_known_query, Answer, Column,
+    obtain_computer_name, obtain_instance_name, obtain_system_user, run_custom_query,
+    run_known_query, Column, UniAnswer,
 };
 use crate::ms_sql::sqls;
+#[cfg(windows)]
+use crate::platform::odbc;
 use crate::setup::Env;
 use crate::types::{
     ComputerName, HostName, InstanceAlias, InstanceCluster, InstanceEdition, InstanceId,
     InstanceName, InstanceVersion, PiggybackHostName, Port,
 };
-use crate::utils;
+use crate::utils::{self, prepare_error};
+use core::fmt;
 
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
+use crate::platform::{get_row_value_by_idx, Block};
 use tiberius::Row;
 
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
@@ -110,7 +118,7 @@ impl SqlInstanceBuilder {
         self
     }
 
-    pub fn row(self, row: &Row) -> Self {
+    pub fn from_row(self, row: &Row) -> Self {
         self.name(row.get_value_by_idx(0))
             .id(row.get_value_by_idx(1))
             .edition(&row.get_value_by_idx(2).into())
@@ -126,6 +134,16 @@ impl SqlInstanceBuilder {
                     .and_then(|s| s.parse::<u16>().ok())
                     .map(Port),
             )
+    }
+
+    pub fn from_strings(self, row: &[String]) -> Self {
+        self.name(get_row_value_by_idx(row, 0))
+            .id(get_row_value_by_idx(row, 1))
+            .edition(&get_row_value_by_idx(row, 2).into())
+            .version(&get_row_value_by_idx(row, 3).into())
+            .cluster(row.get(4).map(|s| s.to_string().into()))
+            .port(row.get(5).and_then(|s| s.parse::<u16>().ok()).map(Port))
+            .dynamic_port(row.get(6).and_then(|s| s.parse::<u16>().ok()).map(Port))
     }
 
     pub fn get_name(&self) -> InstanceName {
@@ -146,9 +164,12 @@ impl SqlInstanceBuilder {
 
     pub fn build(self) -> SqlInstance {
         let version_table = parse_version(&self.version);
+        let endpoint = self.endpoint.unwrap_or_default();
+        let name = self.name.unwrap_or_default();
+        let tcp = is_use_tcp(&name, endpoint.auth(), endpoint.conn());
         SqlInstance {
             alias: self.alias,
-            name: self.name.unwrap_or_default(),
+            name,
             id: self.id.unwrap_or_default(),
             edition: self.edition.unwrap_or_default(),
             version: self.version.unwrap_or_default(),
@@ -156,12 +177,13 @@ impl SqlInstanceBuilder {
             port: self.port,
             dynamic_port: self.dynamic_port,
             available: None,
-            endpoint: self.endpoint.unwrap_or_default(),
+            endpoint,
             computer_name: self.computer_name,
             environment: self.environment.unwrap_or_default(),
             cache_dir: self.cache_dir.unwrap_or_default(),
             piggyback: self.piggyback,
             version_table,
+            tcp,
         }
     }
 }
@@ -196,11 +218,32 @@ pub struct SqlInstance {
     cache_dir: String,
     piggyback: Option<PiggybackHostName>,
     version_table: [u32; 3],
+    pub tcp: bool,
 }
 
 impl AsRef<SqlInstance> for SqlInstance {
     fn as_ref(&self) -> &SqlInstance {
         self
+    }
+}
+
+impl fmt::Display for SqlInstance {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{} `{}` `{}` [{}:{}]",
+            self.full_name(),
+            self.version,
+            self.edition,
+            self.port
+                .clone()
+                .map(|p| u16::from(p).to_string())
+                .unwrap_or("None".to_string()),
+            self.dynamic_port
+                .clone()
+                .map(|p| u16::from(p).to_string())
+                .unwrap_or("None".to_string())
+        )
     }
 }
 
@@ -301,24 +344,51 @@ impl SqlInstance {
 
         // if yes - call generate_section with database parameter
         // else - call generate_section without database parameter
-
+        log::trace!("{:?} @ {:?}", self, endpoint);
         let body = match self.create_client(endpoint, None).await {
             Ok(mut client) => {
-                self._generate_sections(&mut client, endpoint, sections)
+                let real_name = obtain_instance_name(&mut client)
                     .await
+                    .ok()
+                    .unwrap_or_default()
+                    .unwrap_or(InstanceName::from("???".to_string()));
+                log::info!(
+                    "PROCESSING instance '{:?}' by '{}' sql name: '{}'",
+                    self.full_name(),
+                    obtain_system_user(&mut client)
+                        .await
+                        .ok()
+                        .unwrap_or_default()
+                        .unwrap_or("???".to_string()),
+                    real_name
+                );
+                if real_name.to_string().to_uppercase() != self.name.to_string().to_uppercase() {
+                    let error_text = format!(
+                        "Instance name mismatch: expected '{}', got '{}'",
+                        self.name, real_name
+                    );
+                    log::error!("{}", error_text);
+                    let instance_section = Section::make_instance_section(); // this is important section always present
+                    instance_section.to_plain_header()
+                        + &self.generate_bad_state_entry(instance_section.sep(), &error_text)
+                } else {
+                    self._generate_sections(&mut client, endpoint, sections)
+                        .await
+                }
             }
             Err(err) => {
                 log::warn!("Can't access {} instance with err {err}\n", self.id);
                 let instance_section = Section::make_instance_section(); // this is important section always present
                 instance_section.to_plain_header()
-                    + &self.generate_state_entry(false, instance_section.sep())
+                    + &self
+                        .generate_bad_state_entry(instance_section.sep(), format!("{err}").as_str())
             }
         };
         header + &body + &self.generate_footer()
     }
 
     /// Gather databases based on sections content: only if any of sections is database based
-    async fn gather_databases(&self, client: &mut Client, sections: &[Section]) -> Vec<String> {
+    async fn gather_databases(&self, client: &mut UniClient, sections: &[Section]) -> Vec<String> {
         let database_based_sections = section::get_per_database_sections();
         let need = database_based_sections.iter().any(|s| {
             sections
@@ -334,9 +404,9 @@ impl SqlInstance {
         }
     }
 
-    pub async fn _generate_sections(
+    async fn _generate_sections(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         endpoint: &Endpoint,
         sections: &[Section],
     ) -> String {
@@ -356,30 +426,16 @@ impl SqlInstance {
         &self,
         endpoint: &Endpoint,
         database: Option<String>,
-    ) -> Result<Client> {
-        let (auth, conn) = endpoint.split();
-        let client = match auth.auth_type() {
-            AuthType::SqlServer | AuthType::Windows => {
-                if let Some(credentials) = client::obtain_config_credentials(auth) {
-                    client::ClientBuilder::new()
-                        .remote(conn.hostname(), self.port(), credentials)
-                        .database(database)
-                } else {
-                    anyhow::bail!("Not provided credentials")
-                }
-            }
-
-            #[cfg(windows)]
-            AuthType::Integrated => client::ClientBuilder::new()
-                .local_instance(&self.name, conn.sql_browser_port())
-                .database(database),
-
-            _ => anyhow::bail!("Not supported authorization type"),
-        };
-        client.build().await
+    ) -> Result<UniClient> {
+        log::info!("create client {}", self.name);
+        if self.tcp {
+            create_tcp_client(endpoint, database, self.port()).await
+        } else {
+            create_odbc_client(&self.name, database)
+        }
     }
 
-    pub async fn generate_details_entry(&self, client: &mut Client, sep: char) -> String {
+    pub async fn generate_details_entry(&self, client: &mut UniClient, sep: char) -> String {
         let r = SqlInstanceProperties::obtain_by_query(client).await;
         match r {
             Ok(properties) => self.process_details_rows(&properties, sep),
@@ -390,13 +446,17 @@ impl SqlInstance {
         }
     }
 
-    pub fn generate_state_entry(&self, accessible: bool, sep: char) -> String {
-        format!("{}{sep}state{sep}{}\n", self.mssql_name(), accessible as u8)
+    pub fn generate_good_state_entry(&self, sep: char) -> String {
+        format!("{}{sep}state{sep}1{sep}\n", self.mssql_name(),)
+    }
+
+    pub fn generate_bad_state_entry(&self, sep: char, message: &str) -> String {
+        format!("{}{sep}state{sep}0{sep}{}\n", self.mssql_name(), message)
     }
 
     pub async fn generate_section(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         endpoint: &Endpoint,
         section: &Section,
         databases: &[String],
@@ -418,7 +478,7 @@ impl SqlInstance {
 
     async fn generate_section_body(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         endpoint: &Endpoint,
         section: &Section,
         databases: &[String],
@@ -427,7 +487,7 @@ impl SqlInstance {
             let sep = section.sep();
             match section.name() {
                 names::INSTANCE => {
-                    self.generate_state_entry(true, sep)
+                    self.generate_good_state_entry(sep)
                         + &self.generate_details_entry(client, sep).await
                 }
                 names::COUNTERS => self.generate_counters_section(client, &query, sep).await,
@@ -509,16 +569,16 @@ impl SqlInstance {
 
     pub async fn generate_counters_section(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         query: &str,
         sep: char,
     ) -> String {
         let x = run_custom_query(client, query)
             .await
             .and_then(validate_rows_has_two_blocks)
-            .and_then(|rows| {
-                Ok(self.process_utc_rows(&rows[0], sep)?
-                    + &self.process_counters_rows(&rows[1], sep)?)
+            .and_then(|answers| {
+                Ok(self.process_utc_rows(&answers[0], sep)?
+                    + &self.process_counters_rows(&answers[1], sep)?)
             });
         match x {
             Ok(result) => result,
@@ -529,11 +589,11 @@ impl SqlInstance {
         }
     }
 
-    pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
+    pub async fn generate_counters_entry(&self, client: &mut UniClient, sep: char) -> String {
         let x = run_known_query(client, sqls::Id::CounterEntries)
             .await
             .and_then(validate_rows)
-            .and_then(|rows| self.process_counters_rows(&rows[0], sep));
+            .and_then(|answers| self.process_counters_rows(&answers[0], sep));
         match x {
             Ok(result) => result,
             Err(err) => {
@@ -543,14 +603,30 @@ impl SqlInstance {
         }
     }
 
-    fn process_counters_rows(&self, rows: &[Row], sep: char) -> Result<String> {
-        let z: Vec<String> = rows.iter().map(|row| to_counter_entry(row, sep)).collect();
+    fn process_counters_rows(&self, answer: &UniAnswer, sep: char) -> Result<String> {
+        let z: Vec<String> = match answer {
+            UniAnswer::Rows(rows) => rows
+                .iter()
+                .map(|row| {
+                    let counter = Counter::from_row(row);
+                    counter.into_string(sep)
+                })
+                .collect(),
+            UniAnswer::Block(block) => block
+                .rows
+                .iter()
+                .map(|row| {
+                    let counter = Counter::from_block(row);
+                    counter.into_string(sep)
+                })
+                .collect(),
+        };
         Ok(z.join(""))
     }
 
     pub async fn generate_sessions_section(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         query: &str,
         sep: char,
     ) -> String {
@@ -578,22 +654,29 @@ impl SqlInstance {
     ) -> String {
         let format_error = |d: &str, e: &anyhow::Error| {
             format!(
-                "{} {} - - - - - - - - - - - - {:?}\n",
+                "{} {} - - - - - - - - - - - - {}\n",
                 self.mssql_name(),
                 d.replace(' ', "_"),
-                e
+                prepare_error(e)
             )
             .to_string()
         };
         let mut result = String::new();
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
-                Ok(mut c) => {
-                    result += &run_custom_query(&mut c, query)
-                        .await
-                        .map(|rows| to_table_spaces_entry(&self.mssql_name(), d, &rows, sep))
-                        .unwrap_or_else(|e| format_error(d, &e));
-                }
+                Ok(mut c) => match run_custom_query(&mut c, query).await {
+                    Ok(rows) => {
+                        result += &to_table_spaces_entry(&self.mssql_name(), d, &rows, sep);
+                    }
+                    Err(err) => {
+                        // fallback on simple query sp_spaceused for very old SQL Servers
+                        log::info!("Failed to get table spaces: {}", err);
+                        result += &run_custom_query(&mut c, sqls::query::SPACE_USED_SIMPLE)
+                            .await
+                            .map(|rows| to_table_spaces_entry(&self.mssql_name(), d, &rows, sep))
+                            .unwrap_or_else(|e| format_error(d, &e));
+                    }
+                },
                 Err(err) => {
                     result += &format_error(d, &err);
                 }
@@ -604,7 +687,7 @@ impl SqlInstance {
 
     pub async fn generate_backup_section(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         query: &str,
         sep: char,
     ) -> String {
@@ -621,10 +704,10 @@ impl SqlInstance {
                     .iter()
                     .map(|d| {
                         format!(
-                            "{}{sep}{}{sep}-{sep}-{sep}-{sep}{:?}\n",
+                            "{}{sep}{}{sep}-{sep}-{sep}-{sep}{}\n",
                             self.mssql_name(),
                             d.replace(' ', "_"),
-                            err
+                            prepare_error(&err)
                         )
                     })
                     .collect::<Vec<String>>()
@@ -691,7 +774,7 @@ impl SqlInstance {
             "{}{sep}{}|-|-|-|-|-|-|{:?}\n",
             self.name,
             d.replace(' ', "_"),
-            e
+            prepare_error(e)
         )
         .to_string()
     }
@@ -722,7 +805,7 @@ impl SqlInstance {
 
     pub async fn generate_databases_section(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         databases: &[String],
         query: &str,
         sep: char,
@@ -744,13 +827,13 @@ impl SqlInstance {
             "{}{sep}{}{sep}{}{}\n",
             self.name,
             d.replace(' ', "_"),
-            e,
+            prepare_error(e),
             format!("{sep}-").repeat(3),
         )
     }
 
     /// doesn't return error - the same behavior as plugin
-    pub async fn generate_databases(&self, client: &mut Client) -> Vec<String> {
+    pub async fn generate_databases(&self, client: &mut UniClient) -> Vec<String> {
         let result = run_known_query(client, sqls::Id::DatabaseNames)
             .await
             .and_then(validate_rows)
@@ -801,7 +884,7 @@ impl SqlInstance {
 
     async fn generate_clusters_entry(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         database: &str,
         query: &str,
         sep: char,
@@ -819,63 +902,69 @@ impl SqlInstance {
         )))
     }
 
-    async fn is_database_clustered(&self, client: &mut Client) -> Result<bool> {
-        let rows = &run_known_query(client, sqls::Id::IsClustered)
+    async fn is_database_clustered(&self, client: &mut UniClient) -> Result<bool> {
+        let answers = &run_known_query(client, sqls::Id::IsClustered)
             .await
             .and_then(validate_rows)?;
-        Ok(&rows[0][0].get_value_by_name("is_clustered") != "0")
+        Ok(answers[0].get_is_clustered())
     }
 
     async fn get_cluster_nodes(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         query: &str,
     ) -> Result<(String, String)> {
-        let rows = &run_custom_query(client, query).await?;
-        if rows.len() > 2 && !rows[0].is_empty() && !rows[1].is_empty() {
-            return Ok((
-                rows[0]
-                    .iter()
-                    .map(|r| r.get_value_by_name("nodename"))
-                    .collect::<Vec<String>>()
-                    .join(","),
-                rows[1]
-                    .last() // as in legacy plugin
-                    .expect("impossible")
-                    .get_value_by_name("active_node"),
-            ));
+        let answers = &run_custom_query(client, query).await?;
+        if answers.len() > 2 && !answers[0].is_empty() && !answers[1].is_empty() {
+            return Ok((answers[0].get_node_names(), answers[1].get_active_node()));
         }
         Ok((String::default(), String::default()))
     }
 
     pub async fn generate_connections_section(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         query: &str,
         sep: char,
     ) -> String {
         run_custom_query(client, query)
             .await
             .map(|rows| self.to_connections_entries(&rows, sep))
-            .unwrap_or_else(|e| format!("{}{sep}{}\n", self.name, e))
+            .unwrap_or_else(|e| format!("{}{sep}{}\n", self.name, prepare_error(&e)))
     }
 
-    fn to_connections_entries(&self, rows: &[Vec<Row>], sep: char) -> String {
-        if rows.is_empty() {
-            return String::new();
+    fn to_connections_entries(&self, answers: &[UniAnswer], sep: char) -> String {
+        match &answers.first() {
+            Some(UniAnswer::Rows(rows)) => rows
+                .iter()
+                .map(|row| {
+                    format!(
+                        "{}{sep}{}{sep}{}\n",
+                        self.name,
+                        row.get_value_by_idx(0).replace(' ', "_"), // for unknown reason we can't get it by name
+                        row.get_bigint_by_name("NumberOfConnections")
+                    )
+                })
+                .collect::<Vec<String>>()
+                .join(""),
+            Some(UniAnswer::Block(block)) => block
+                .rows
+                .iter()
+                .map(|row| {
+                    format!(
+                        "{}{sep}{}{sep}{}\n",
+                        self.name,
+                        get_row_value_by_idx(row, 0).replace(' ', "_"), // for unknown reason we can't get it by name
+                        block
+                            .get_value_by_name(row, "NumberOfConnections")
+                            .parse::<i64>()
+                            .unwrap_or_default()
+                    )
+                })
+                .collect::<Vec<String>>()
+                .join(""),
+            None => String::new(),
         }
-        let rows = &rows[0];
-        rows.iter()
-            .map(|row| {
-                format!(
-                    "{}{sep}{}{sep}{}\n",
-                    self.name,
-                    row.get_value_by_idx(0).replace(' ', "_"), // for unknown reason we can't get it by name
-                    row.get_bigint_by_name("NumberOfConnections")
-                )
-            })
-            .collect::<Vec<String>>()
-            .join("")
     }
 
     /// NOTE: uses ' ' instead of '\t' in error messages
@@ -902,7 +991,7 @@ impl SqlInstance {
                             self.to_entries(rows, section.sep())
                         )
                     })
-                    .unwrap_or_else(|e| format!("{} {}\n", self.name, e))
+                    .unwrap_or_else(|e| format!("{} {}\n", self.name, prepare_error(&e)))
             }
             Err(err) => format!("{} {}\n", self.name, err),
         }
@@ -929,7 +1018,7 @@ impl SqlInstance {
                                     self.to_entries(rows, section.sep())
                                 )
                             })
-                            .unwrap_or_else(|e| format!("{} {}\n", self.name, e)),
+                            .unwrap_or_else(|e| format!("{} {}\n", self.name, prepare_error(&e))),
                     )
                 } else {
                     None
@@ -940,19 +1029,27 @@ impl SqlInstance {
     }
 
     /// rows must be not empty
-    fn to_entries(&self, rows: Vec<Vec<Row>>, sep: char) -> String {
+    fn to_entries(&self, answers: Vec<UniAnswer>, sep: char) -> String {
         // just a safety guard, the function should not get empty rows
-        if rows.is_empty() {
+        if answers.is_empty() {
             return String::new();
         }
 
-        let mut r = rows;
-        let rows = r.remove(0);
-        let result = rows
-            .into_iter()
-            .map(|r| r.get_all(sep))
-            .collect::<Vec<String>>()
-            .join("\n");
+        let mut answers_copy = answers;
+        let answer = answers_copy.remove(0);
+        let result = match answer {
+            UniAnswer::Rows(rows) => rows
+                .into_iter()
+                .map(|r| r.get_all(sep))
+                .collect::<Vec<String>>()
+                .join("\n"),
+            UniAnswer::Block(block) => block
+                .rows
+                .iter()
+                .map(|r| r.join(&sep.to_string()))
+                .collect::<Vec<String>>()
+                .join("\n"),
+        };
 
         if result.is_empty() {
             result
@@ -961,24 +1058,53 @@ impl SqlInstance {
         }
     }
 
-    fn process_blocked_sessions_rows(&self, rows: &[Vec<Row>], sep: char) -> String {
-        let rows = &rows[0];
-        rows.iter()
-            .map(|row| to_blocked_session_entry(&self.name, row, sep))
-            .collect::<Vec<String>>()
-            .join("")
+    fn process_blocked_sessions_rows(&self, answers: &[UniAnswer], sep: char) -> String {
+        match answers.first() {
+            Some(UniAnswer::Rows(rows)) => rows
+                .iter()
+                .map(|row| to_blocked_session_entry(&self.name, row, sep))
+                .collect::<Vec<String>>()
+                .join(""),
+            Some(UniAnswer::Block(block)) => block
+                .rows
+                .iter()
+                .map(|row| to_blocked_session_entry_odbc(&self.name, row, sep))
+                .collect::<Vec<String>>()
+                .join(""),
+            None => {
+                log::error!("Process blocked sessions answer is empty");
+                String::new()
+            }
+        }
     }
 
-    fn process_utc_rows(&self, rows: &[Row], sep: char) -> Result<String> {
-        let utc = rows[0].get_value_by_name(sqls::UTC_DATE_FIELD);
+    fn process_utc_rows(&self, answer: &UniAnswer, sep: char) -> Result<String> {
+        let utc = match answer {
+            UniAnswer::Rows(rows) => rows[0].get_value_by_name(sqls::UTC_DATE_FIELD),
+            UniAnswer::Block(block) => block.get_value_by_name(
+                block.first().unwrap_or(&Vec::<String>::new()),
+                sqls::UTC_DATE_FIELD,
+            ),
+        };
         Ok(format!("None{sep}utc_time{sep}None{sep}{utc}\n"))
     }
 
-    fn process_databases_rows(&self, rows: &[Vec<Row>]) -> Vec<String> {
-        let row = &rows[0];
-        row.iter()
-            .map(|row| row.get_value_by_idx(0))
-            .collect::<Vec<String>>()
+    fn process_databases_rows(&self, answers: &[UniAnswer]) -> Vec<String> {
+        match answers.first() {
+            Some(UniAnswer::Rows(rows)) => rows
+                .iter()
+                .map(|row| row.get_value_by_idx(0))
+                .collect::<Vec<String>>(),
+            Some(UniAnswer::Block(block)) => block
+                .rows
+                .iter()
+                .map(|row| row.first().cloned().unwrap_or_default())
+                .collect::<Vec<String>>(),
+            None => {
+                log::error!("Databases answer is empty");
+                vec![]
+            }
+        }
     }
 
     fn process_details_rows(&self, properties: &SqlInstanceProperties, sep: char) -> String {
@@ -991,7 +1117,7 @@ impl SqlInstance {
         )
     }
 
-    fn process_backup_rows(&self, rows: &Vec<Vec<Row>>, databases: &[String], sep: char) -> String {
+    fn process_backup_rows(&self, rows: &[UniAnswer], databases: &[String], sep: char) -> String {
         let (mut ready, missing_data) = self.process_backup_rows_partly(rows, databases, sep);
         let missing: Vec<String> = self.process_missing_backup_rows(&missing_data, sep);
         ready.extend(missing);
@@ -1001,35 +1127,53 @@ impl SqlInstance {
     /// generates lit of correct backup entries + list of missing required backups
     fn process_backup_rows_partly(
         &self,
-        rows: &Vec<Vec<Row>>,
+        answers: &[UniAnswer],
         databases: &[String],
         sep: char,
     ) -> (Vec<String>, HashSet<String>) {
-        let mut only_databases: HashSet<String> = databases.iter().cloned().collect();
-        let s: Vec<String> = if !rows.is_empty() {
-            rows[0]
+        let mut found_databases: HashSet<String> = HashSet::new();
+        let s: Vec<String> = match answers.first() {
+            Some(UniAnswer::Rows(rows)) => rows
                 .iter()
                 .filter_map(|row| {
-                    let backup_database = row.get_value_by_name("database_name");
-                    if only_databases.contains(&backup_database) {
-                        only_databases.remove(&backup_database);
-                        to_backup_entry(&self.mssql_name(), &backup_database, row, sep)
+                    let database_name = row.get_value_by_name("database_name");
+                    if databases.contains(&database_name) {
+                        found_databases.insert(database_name.to_lowercase());
+                        to_backup_entry(&self.mssql_name(), &database_name, row, sep)
                     } else {
                         None
                     }
                 })
-                .collect()
-        } else {
-            vec![]
+                .collect(),
+            Some(UniAnswer::Block(block)) => block
+                .rows
+                .iter()
+                .filter_map(|row| {
+                    let database_name = block.get_value_by_name(row, "database_name");
+                    if databases.contains(&database_name) {
+                        found_databases.insert(database_name.to_lowercase());
+                        to_backup_entry_odbc(&self.mssql_name(), &database_name, block, row, sep)
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
+            None => vec![],
         };
-        (s, only_databases)
+
+        let missing_databases = databases
+            .iter()
+            .filter(|&s| !found_databases.contains(&s.to_lowercase()))
+            .cloned()
+            .collect();
+        (s, missing_databases)
     }
 
     fn process_missing_backup_rows(&self, data: &HashSet<String>, sep: char) -> Vec<String> {
         data.iter()
             .map(|db| {
                 format!(
-                    "{}{sep}{}{sep}-{sep}-{sep}-{sep}No backup found\n",
+                    "{}{sep}{}{sep}-{sep}-{sep}-{sep}no backup found\n",
                     self.mssql_name(),
                     db.replace(' ', "_")
                 )
@@ -1038,11 +1182,52 @@ impl SqlInstance {
     }
 
     pub fn port(&self) -> Option<Port> {
-        self.port.clone().or(self.dynamic_port.clone())
+        self.dynamic_port.clone().or(self.port.clone())
     }
 
     pub fn computer_name(&self) -> &Option<ComputerName> {
         &self.computer_name
+    }
+}
+
+pub async fn create_tcp_client(
+    endpoint: &Endpoint,
+    database: Option<String>,
+    port: Option<Port>,
+) -> Result<UniClient> {
+    let (auth, conn) = endpoint.split();
+    let client = match auth.auth_type() {
+        AuthType::SqlServer | AuthType::Windows => {
+            if let Some(credentials) = client::obtain_config_credentials(auth) {
+                client::ClientBuilder::new()
+                    .logon_on_port(&conn.hostname(), port, credentials)
+                    .database(database)
+            } else {
+                anyhow::bail!("Not provided credentials")
+            }
+        }
+
+        #[cfg(windows)]
+        AuthType::Integrated => client::ClientBuilder::new()
+            .local_by_port(port, Some(conn.hostname()))
+            .database(database),
+
+        _ => anyhow::bail!("Not supported authorization type"),
+    };
+    client.build().await
+}
+
+pub fn create_odbc_client(
+    instance_name: &InstanceName,
+    database: Option<String>,
+) -> Result<UniClient> {
+    #[cfg(unix)]
+    anyhow::bail!("ODBC Not supported `{}` db:`{:?}`", instance_name, database);
+    #[cfg(windows)]
+    {
+        let connection_string =
+            odbc::make_connection_string(instance_name, database.as_deref(), None);
+        Ok(UniClient::Odbc(OdbcClient::new(connection_string)))
     }
 }
 
@@ -1056,33 +1241,61 @@ pub struct SqlInstanceProperties {
     pub net_bios: String,
 }
 
-impl From<&Vec<Row>> for SqlInstanceProperties {
-    fn from(row: &Vec<Row>) -> Self {
-        let row = &row[0];
-        let name = row.get_value_by_name("InstanceName");
-        let version: InstanceVersion = row.get_value_by_name("ProductVersion").into();
-        let computer_name: ComputerName = row.get_value_by_name("MachineName").into();
-        let edition: InstanceEdition = row.get_value_by_name("Edition").into();
-        let product_level = row.get_value_by_name("ProductLevel");
-        let net_bios = row.get_value_by_name("NetBios");
-        Self {
-            name: (if name.is_empty() {
-                "MSSQLSERVER".to_string()
-            } else {
-                name.to_uppercase()
-            })
-            .into(),
-            version,
-            computer_name,
-            edition,
-            product_level,
-            net_bios,
+impl From<&UniAnswer> for SqlInstanceProperties {
+    fn from(answer: &UniAnswer) -> Self {
+        match answer {
+            UniAnswer::Rows(rows) => {
+                let row = &rows[0];
+                let name = row.get_value_by_name("InstanceName");
+                let version: InstanceVersion = row.get_value_by_name("ProductVersion").into();
+                let computer_name: ComputerName = row.get_value_by_name("MachineName").into();
+                let edition: InstanceEdition = row.get_value_by_name("Edition").into();
+                let product_level = row.get_value_by_name("ProductLevel");
+                let net_bios = row.get_value_by_name("NetBios");
+                Self {
+                    name: (if name.is_empty() {
+                        "MSSQLSERVER".to_string()
+                    } else {
+                        name.to_uppercase()
+                    })
+                    .into(),
+                    version,
+                    computer_name,
+                    edition,
+                    product_level,
+                    net_bios,
+                }
+            }
+            UniAnswer::Block(block) => {
+                let row = block.first().unwrap();
+                let name = block.get_value_by_name(row, "InstanceName");
+                let version: InstanceVersion =
+                    block.get_value_by_name(row, "ProductVersion").into();
+                let computer_name: ComputerName =
+                    block.get_value_by_name(row, "MachineName").into();
+                let edition: InstanceEdition = block.get_value_by_name(row, "Edition").into();
+                let product_level = block.get_value_by_name(row, "ProductLevel");
+                let net_bios = block.get_value_by_name(row, "NetBios");
+                Self {
+                    name: (if name.is_empty() {
+                        "MSSQLSERVER".to_string()
+                    } else {
+                        name.to_uppercase()
+                    })
+                    .into(),
+                    version,
+                    computer_name,
+                    edition,
+                    product_level,
+                    net_bios,
+                }
+            }
         }
     }
 }
 
 impl SqlInstanceProperties {
-    pub async fn obtain_by_query(client: &mut Client) -> Result<Self> {
+    pub async fn obtain_by_query(client: &mut UniClient) -> Result<Self> {
         let r = run_known_query(client, sqls::Id::InstanceProperties).await?;
         if r.is_empty() {
             anyhow::bail!("Empty answer from server on query instance_properties");
@@ -1091,7 +1304,7 @@ impl SqlInstanceProperties {
     }
 }
 
-fn validate_rows(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
+fn validate_rows(rows: Vec<UniAnswer>) -> Result<Vec<UniAnswer>> {
     if rows.is_empty() || rows[0].is_empty() {
         Err(anyhow::anyhow!("No output from query"))
     } else {
@@ -1099,7 +1312,7 @@ fn validate_rows(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
     }
 }
 
-fn validate_rows_has_two_blocks(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
+fn validate_rows_has_two_blocks(rows: Vec<UniAnswer>) -> Result<Vec<UniAnswer>> {
     if rows.len() != 2 || rows[0].is_empty() || rows[1].is_empty() {
         Err(anyhow::anyhow!("Output from query is invalid"))
     } else {
@@ -1107,25 +1320,52 @@ fn validate_rows_has_two_blocks(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
     }
 }
 
+fn calc_unused(reserved: &str, data: &str, index_size: &str) -> Option<String> {
+    fn decode(s: &str) -> Option<i64> {
+        s.split(' ').next()?.parse::<i64>().ok()
+    }
+
+    let reserved = decode(reserved)?;
+    let data = decode(data)?;
+    let index_size = decode(index_size)?;
+    let unused = std::cmp::max(0, reserved - data - index_size);
+    Some(unused.to_string() + " KB")
+}
+
 fn to_table_spaces_entry(
     instance_name: &str,
     database_name: &str,
-    rows: &Vec<Vec<Row>>,
+    answers: &[UniAnswer],
     sep: char,
 ) -> String {
-    let extract = |rows: &Vec<Vec<Row>>, part: usize, name: &str| {
-        if (rows.len() < part) || rows[part].is_empty() {
-            String::new()
-        } else {
-            rows[part][0].get_value_by_name(name).trim().to_string()
+    let extract = |answers: &[UniAnswer], part: usize, name: &str| {
+        if (answers.len() < part) || answers[part].is_empty() {
+            return String::new();
+        }
+        match &answers[part] {
+            UniAnswer::Rows(rows) => rows[0].get_value_by_name(name).trim().to_string(),
+            UniAnswer::Block(b) => b
+                .get_value_by_name(b.first().unwrap_or(&Vec::<String>::new()), name)
+                .trim()
+                .to_string(),
         }
     };
-    let db_size = extract(rows, 0, "database_size");
-    let unallocated = extract(rows, 0, "unallocated space");
-    let reserved = extract(rows, 1, "reserved");
-    let data = extract(rows, 1, "data");
-    let index_size = extract(rows, 1, "index_size");
-    let unused = extract(rows, 1, "unused");
+    let db_size = extract(answers, 0, "database_size");
+    let unallocated = extract(answers, 0, "unallocated_space");
+    let reserved = extract(answers, 1, "reserved");
+    let data = extract(answers, 1, "data");
+    let index_size = extract(answers, 1, "index_size");
+    let mut unused = extract(answers, 1, "unused").trim().to_string();
+    if !unused.ends_with('B') {
+        // in some cases ODBC may skip some fields in compound statements
+        // unused is an example, we calculate then value manually
+        unused = calc_unused(&reserved, &data, &index_size).unwrap_or("0 KB".to_string());
+    }
+
+    if unused.is_empty() {
+        unused = "0 KB".to_string();
+    }
+
     format!(
         "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
         instance_name,
@@ -1142,17 +1382,27 @@ fn to_table_spaces_entry(
 fn to_transaction_logs_entries(
     instance_name: &InstanceName,
     database_name: &str,
-    rows: &[Vec<Row>],
+    answers: &[UniAnswer],
     sep: char,
 ) -> String {
-    if rows.is_empty() {
+    if answers.is_empty() {
         return String::new();
     }
-    rows[0]
-        .iter()
-        .map(|row| to_transaction_logs_entry(row, instance_name, database_name, sep))
-        .collect::<Vec<String>>()
-        .join("")
+    match &answers[0] {
+        UniAnswer::Rows(rows) => rows
+            .iter()
+            .map(|row| to_transaction_logs_entry(row, instance_name, database_name, sep))
+            .collect::<Vec<String>>()
+            .join(""),
+        UniAnswer::Block(block) => block
+            .rows
+            .iter()
+            .map(|row| {
+                to_transaction_logs_entry_odbc(block, row, instance_name, database_name, sep)
+            })
+            .collect::<Vec<String>>()
+            .join(""),
+    }
 }
 
 fn to_transaction_logs_entry(
@@ -1166,48 +1416,7 @@ fn to_transaction_logs_entry(
     let max_size = row.get_bigint_by_name("MaxSize");
     let allocated_size = row.get_bigint_by_name("AllocatedSize");
     let used_size = row.get_bigint_by_name("UsedSize");
-    let unlimited = row.get_bigint_by_name("Unlimited");
-    format!(
-        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
-        instance_name,
-        database_name.replace(' ', "_"),
-        name,
-        physical_name,
-        max_size,
-        allocated_size,
-        used_size,
-        unlimited
-    )
-}
-
-fn to_datafiles_entries(
-    instance_name: &InstanceName,
-    database_name: &str,
-    rows: &[Vec<Row>],
-    sep: char,
-) -> String {
-    if rows.is_empty() {
-        return String::new();
-    }
-    rows[0]
-        .iter()
-        .map(|row| to_datafiles_entry(row, instance_name, database_name, sep))
-        .collect::<Vec<String>>()
-        .join("")
-}
-
-fn to_datafiles_entry(
-    row: &Row,
-    instance_name: &InstanceName,
-    database_name: &str,
-    sep: char,
-) -> String {
-    let name = row.get_value_by_name("name");
-    let physical_name = row.get_value_by_name("physical_name");
-    let max_size = row.get_bigint_by_name("MaxSize");
-    let allocated_size = row.get_bigint_by_name("AllocatedSize");
-    let used_size = row.get_bigint_by_name("UsedSize");
-    let unlimited = row.get_bigint_by_name("Unlimited");
+    let unlimited = row.get_value_by_name("Unlimited");
     format!(
         "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
         instance_name,
@@ -1221,15 +1430,124 @@ fn to_datafiles_entry(
     )
 }
 
-fn to_databases_entries(instance_name: &InstanceName, rows: &[Vec<Row>], sep: char) -> String {
-    if rows.is_empty() {
+fn to_transaction_logs_entry_odbc(
+    block: &Block,
+    row: &[String],
+    instance_name: &InstanceName,
+    database_name: &str,
+    sep: char,
+) -> String {
+    let name = block.get_value_by_name(row, "name");
+    let physical_name = block.get_value_by_name(row, "physical_name");
+    let max_size = block.get_bigint_by_name(row, "MaxSize");
+    let allocated_size = block.get_bigint_by_name(row, "AllocatedSize");
+    let used_size = block.get_bigint_by_name(row, "UsedSize");
+    let unlimited = block.get_value_by_name(row, "Unlimited");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        database_name.replace(' ', "_"),
+        name.replace(' ', "_"),
+        physical_name.replace(' ', "_"),
+        max_size,
+        allocated_size,
+        used_size,
+        unlimited
+    )
+}
+
+fn to_datafiles_entries(
+    instance_name: &InstanceName,
+    database_name: &str,
+    answers: &[UniAnswer],
+    sep: char,
+) -> String {
+    if answers.is_empty() {
         return String::new();
     }
-    rows[0]
-        .iter()
-        .map(|row| to_databases_entry(row, instance_name, sep))
-        .collect::<Vec<String>>()
-        .join("")
+    match &answers[0] {
+        UniAnswer::Rows(rows) => rows
+            .iter()
+            .map(|row| to_datafiles_entry(row, instance_name, database_name, sep))
+            .collect::<Vec<String>>()
+            .join(""),
+        UniAnswer::Block(block) => block
+            .rows
+            .iter()
+            .map(|row| to_datafiles_entry_odbc(block, row, instance_name, database_name, sep))
+            .collect::<Vec<String>>()
+            .join(""),
+    }
+}
+
+fn to_datafiles_entry(
+    row: &Row,
+    instance_name: &InstanceName,
+    database_name: &str,
+    sep: char,
+) -> String {
+    let name = row.get_value_by_name("name");
+    let physical_name = row.get_value_by_name("physical_name");
+    let max_size = row.get_bigint_by_name("MaxSize");
+    let allocated_size = row.get_bigint_by_name("AllocatedSize");
+    let used_size = row.get_bigint_by_name("UsedSize");
+    let unlimited = row.get_value_by_name("Unlimited");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        database_name.replace(' ', "_"),
+        name.replace(' ', "_"),
+        physical_name.replace(' ', "_"),
+        max_size,
+        allocated_size,
+        used_size,
+        unlimited
+    )
+}
+
+fn to_datafiles_entry_odbc(
+    block: &Block,
+    row: &[String],
+    instance_name: &InstanceName,
+    database_name: &str,
+    sep: char,
+) -> String {
+    let name = block.get_value_by_name(row, "name");
+    let physical_name = block.get_value_by_name(row, "physical_name");
+    let max_size = block.get_bigint_by_name(row, "MaxSize");
+    let allocated_size = block.get_bigint_by_name(row, "AllocatedSize");
+    let used_size = block.get_bigint_by_name(row, "UsedSize");
+    let unlimited = block.get_value_by_name(row, "Unlimited");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        database_name.replace(' ', "_"),
+        name.replace(' ', "_"),
+        physical_name.replace(' ', "_"),
+        max_size,
+        allocated_size,
+        used_size,
+        unlimited
+    )
+}
+
+fn to_databases_entries(instance_name: &InstanceName, answers: &[UniAnswer], sep: char) -> String {
+    if answers.is_empty() {
+        return String::new();
+    }
+    match &answers[0] {
+        UniAnswer::Rows(rows) => rows
+            .iter()
+            .map(|row| to_databases_entry(row, instance_name, sep))
+            .collect::<Vec<String>>()
+            .join(""),
+        UniAnswer::Block(block) => block
+            .rows
+            .iter()
+            .map(|row| to_databases_entry_odbc(block, row, instance_name, sep))
+            .collect::<Vec<String>>()
+            .join(""),
+    }
 }
 
 fn to_databases_entry(row: &Row, instance_name: &InstanceName, sep: char) -> String {
@@ -1238,6 +1556,28 @@ fn to_databases_entry(row: &Row, instance_name: &InstanceName, sep: char) -> Str
     let recovery = row.get_value_by_name("Recovery");
     let auto_close = row.get_bigint_by_name("auto_close");
     let auto_shrink = row.get_bigint_by_name("auto_shrink");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        name.replace(' ', "_").trim(),
+        status.trim(),
+        recovery.trim(),
+        auto_close,
+        auto_shrink,
+    )
+}
+
+fn to_databases_entry_odbc(
+    block: &Block,
+    row: &[String],
+    instance_name: &InstanceName,
+    sep: char,
+) -> String {
+    let name = block.get_value_by_name(row, "name");
+    let status = block.get_value_by_name(row, "Status");
+    let recovery = block.get_value_by_name(row, "Recovery");
+    let auto_close = block.get_bigint_by_name(row, "auto_close");
+    let auto_shrink = block.get_bigint_by_name(row, "auto_shrink");
     format!(
         "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
         instance_name,
@@ -1270,9 +1610,51 @@ fn to_backup_entry(
         .get_value_by_name("is_primary_replica")
         .trim()
         .to_string();
-    if replica_id.is_empty() && is_primary_replica == "True" {
+    if replica_id.is_empty() || is_primary_replica == "True" {
         format!(
-            "{}{sep}{}{sep}{}{sep}{}\n",
+            "{}{sep}{}{sep}{}+00:00{sep}{}\n",
+            instance_name,
+            database_name.replace(' ', "_"),
+            last_backup_date.replace(' ', "|"),
+            backup_type,
+        )
+        .into()
+    } else {
+        None
+    }
+}
+
+fn to_backup_entry_odbc(
+    instance_name: &str,
+    database_name: &str,
+    block: &Block,
+    row: &[String],
+    sep: char,
+) -> Option<String> {
+    let last_backup_date = block
+        .get_value_by_name(row, "last_backup_date")
+        .trim()
+        .to_string();
+    if last_backup_date.is_empty() {
+        return None;
+    }
+    let backup_type = block.get_value_by_name(row, "type").trim().to_string();
+    let backup_type = if backup_type.is_empty() {
+        "-".to_string()
+    } else {
+        backup_type
+    };
+    let replica_id = block
+        .get_value_by_name(row, "replica_id")
+        .trim()
+        .to_string();
+    let is_primary_replica = block
+        .get_value_by_name(row, "is_primary_replica")
+        .trim()
+        .to_string();
+    if replica_id.is_empty() || is_primary_replica == "True" {
+        format!(
+            "{}{sep}{}{sep}{}+00:00{sep}{}\n",
             instance_name,
             database_name.replace(' ', "_"),
             last_backup_date.replace(' ', "|"),
@@ -1291,17 +1673,51 @@ struct Counter {
     value: String,
 }
 
-impl From<&Row> for Counter {
-    fn from(row: &Row) -> Self {
+impl Counter {
+    pub fn from_row(row: &Row) -> Self {
+        let instance = row.get_value_by_idx(2).trim().replace(' ', "_").to_string();
         Self {
-            name: row.get_value_by_idx(0).trim().replace(' ', "_").to_string(),
+            name: row
+                .get_value_by_idx(0)
+                .trim()
+                .replace(' ', "_")
+                .to_string()
+                .to_lowercase(),
             object: row
                 .get_value_by_idx(1)
                 .trim()
                 .replace([' ', '$'], "_")
                 .to_string(),
-            instance: row.get_value_by_idx(2).trim().replace(' ', "_").to_string(),
+            instance: if instance.is_empty() {
+                "None".to_string()
+            } else {
+                instance
+            },
             value: row.get_bigint_by_idx(3).to_string(),
+        }
+    }
+
+    pub fn from_block(values: &[String]) -> Self {
+        let instance = get_row_value_by_idx(values, 2)
+            .trim()
+            .replace(' ', "_")
+            .to_string();
+        Self {
+            name: get_row_value_by_idx(values, 0)
+                .trim()
+                .replace(' ', "_")
+                .to_string()
+                .to_lowercase(),
+            object: get_row_value_by_idx(values, 1)
+                .trim()
+                .replace([' ', '$'], "_")
+                .to_string(),
+            instance: if instance.is_empty() {
+                "None".to_string()
+            } else {
+                instance
+            },
+            value: values.get(3).cloned().unwrap_or("0".to_string()),
         }
     }
 }
@@ -1322,11 +1738,6 @@ impl Counter {
     }
 }
 
-fn to_counter_entry(row: &Row, sep: char) -> String {
-    let counter = Counter::from(row);
-    counter.into_string(sep)
-}
-
 fn to_blocked_session_entry(instance_name: &InstanceName, row: &Row, sep: char) -> String {
     let session_id = row.get_value_by_idx(0).trim().to_string();
     let wait_duration_ms = row.get_bigint_by_idx(1).to_string();
@@ -1335,10 +1746,25 @@ fn to_blocked_session_entry(instance_name: &InstanceName, row: &Row, sep: char) 
     format!("{instance_name}{sep}{session_id}{sep}{wait_duration_ms}{sep}{wait_type}{sep}{blocking_session_id}\n",)
 }
 
+fn to_blocked_session_entry_odbc(
+    instance_name: &InstanceName,
+    row: &[String],
+    sep: char,
+) -> String {
+    let session_id = get_row_value_by_idx(row, 0).trim().to_string();
+    let wait_duration_ms = get_row_value_by_idx(row, 1)
+        .parse::<i64>()
+        .unwrap_or_default()
+        .to_string();
+    let wait_type = get_row_value_by_idx(row, 2).trim().to_string();
+    let blocking_session_id = get_row_value_by_idx(row, 3).trim().to_string();
+    format!("{instance_name}{sep}{session_id}{sep}{wait_duration_ms}{sep}{wait_type}{sep}{blocking_session_id}\n",)
+}
+
 impl CheckConfig {
     pub async fn exec(&self, environment: &Env) -> Result<String> {
         if let Some(ms_sql) = self.ms_sql() {
-            CheckConfig::prepare_cache_sub_dir(environment, ms_sql.hash());
+            CheckConfig::prepare_cache_sub_dir(environment, &ms_sql.config_cache_dir());
             log::info!("Generating main data");
             let mut output: Vec<String> = Vec::new();
             output.push(
@@ -1351,7 +1777,7 @@ impl CheckConfig {
             );
             for (num, config) in std::iter::zip(0.., ms_sql.configs()) {
                 log::info!("Generating configs data");
-                CheckConfig::prepare_cache_sub_dir(environment, &config.cache_dir());
+                CheckConfig::prepare_cache_sub_dir(environment, &config.config_cache_dir());
                 let configs_data = generate_data(config, environment)
                     .await
                     .unwrap_or_else(|e| {
@@ -1412,12 +1838,20 @@ fn generate_signaling_block(
 /// Generate data as defined by config
 /// Consists from two parts: instance entries + sections for every instance
 async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Result<String> {
-    let instances = find_usable_instances(ms_sql, environment).await?;
+    let instances = find_working_instances(ms_sql, environment).await?;
     if instances.is_empty() {
-        return Ok("ERROR: Failed to gather SQL server instances".to_string());
-    } else {
-        log::info!("Found {} SQL server instances", instances.len())
+        return Ok(generate_signaling_block(ms_sql, &None)
+            + "ERROR: Failed to gather SQL server instances\n");
     }
+    log::info!(
+        "Found {} SQL server instances: [ {} ]",
+        instances.len(),
+        instances
+            .iter()
+            .map(|i| format!("{}", i))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 
     let sections = ms_sql
         .valid_sections()
@@ -1461,32 +1895,32 @@ fn generate_instance_entry<P: AsRef<SqlInstance>>(instance: &P) -> String {
     .join("")
 }
 
-async fn find_usable_instances(
+async fn find_working_instances(
     ms_sql: &config::ms_sql::Config,
     environment: &Env,
 ) -> Result<Vec<SqlInstance>> {
-    let builders = find_usable_instance_builders(ms_sql).await?;
+    let builders = find_allowed_instance_builders(ms_sql).await?;
     if builders.is_empty() {
+        log::warn!("Found NO allowed SQL server instances");
         return Ok(Vec::new());
-    } else {
-        log::info!("Found {} SQL server instances", builders.len());
     }
 
+    log::info!("Found {} working SQL server instances", builders.len());
     Ok(builders
         .into_iter()
         .map(|b: SqlInstanceBuilder| {
             b.environment(environment)
-                .cache_dir(&ms_sql.cache_dir())
+                .cache_dir(&ms_sql.config_cache_dir())
                 .build()
         })
         .collect::<Vec<SqlInstance>>())
 }
 
-async fn find_usable_instance_builders(
+async fn find_allowed_instance_builders(
     ms_sql: &config::ms_sql::Config,
 ) -> Result<Vec<SqlInstanceBuilder>> {
-    Ok(find_all_instance_builders(ms_sql)
-        .await?
+    let builders = find_all_instance_builders(ms_sql).await?;
+    Ok(builders
         .into_iter()
         .filter(|i| ms_sql.is_instance_allowed(&i.get_name()))
         .collect::<Vec<SqlInstanceBuilder>>())
@@ -1495,8 +1929,19 @@ async fn find_usable_instance_builders(
 pub async fn find_all_instance_builders(
     ms_sql: &config::ms_sql::Config,
 ) -> Result<Vec<SqlInstanceBuilder>> {
+    let found = find_detectable_instance_builders(ms_sql).await;
+    log::info!(
+        "Found {} instances by discovery: [ {} ]",
+        found.len(),
+        found
+            .iter()
+            .map(|i| format!("{}", i.get_name()))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+
     let detected = if ms_sql.discovery().detect() {
-        find_detectable_instance_builders(ms_sql).await
+        found
     } else {
         ms_sql
             .discovery()
@@ -1530,10 +1975,10 @@ async fn find_detectable_instance_builders(
 /// find instances described in the config but not detected by the discovery
 /// may NOT work - should be approved during testing
 async fn add_custom_instance_builders(
-    builders: Vec<SqlInstanceBuilder>,
+    input_builders: Vec<SqlInstanceBuilder>,
     customizations: &HashMap<&InstanceName, &CustomInstance>,
 ) -> Result<Vec<SqlInstanceBuilder>> {
-    let reconnects = determine_reconnect(builders, customizations);
+    let reconnects = determine_reconnect(input_builders, customizations);
 
     let mut builders: Vec<SqlInstanceBuilder> = Vec::new();
     for (builder, endpoint) in reconnects.into_iter() {
@@ -1552,9 +1997,24 @@ async fn get_custom_instance_builder(
     builder: &SqlInstanceBuilder,
     endpoint: &Endpoint,
 ) -> Option<SqlInstanceBuilder> {
-    let port = get_reasonable_port(builder, endpoint);
     let instance_name = &builder.get_name();
-    match client::connect_custom_endpoint(endpoint, port).await {
+    let auth = endpoint.auth();
+    let conn = endpoint.conn();
+    if is_local_host(auth, conn) && !is_use_tcp(instance_name, auth, conn) {
+        if let Ok(mut client) = create_odbc_client(instance_name, None) {
+            log::debug!("Trying to connect to `{instance_name}` using ODBC");
+            let b = obtain_properties(&mut client, instance_name)
+                .await
+                .map(|p| to_instance_builder(endpoint, &p));
+            return b;
+        } else {
+            log::error!("Can't use ODBC for `{instance_name}`");
+            return None;
+        }
+    }
+    let port = get_reasonable_port(builder, endpoint);
+    log::debug!("Trying to connect to `{instance_name}` using config port {port}");
+    let result = match client::connect_custom_endpoint(endpoint, port.clone()).await {
         Ok(mut client) => {
             let b = obtain_properties(&mut client, instance_name)
                 .await
@@ -1570,6 +2030,33 @@ async fn get_custom_instance_builder(
             log::error!("Error creating client for `{instance_name}`: {e}");
             None
         }
+    };
+    #[cfg(unix)]
+    return result;
+
+    #[cfg(windows)]
+    if result.is_none() {
+        log::info!(
+            "Instance `{instance_name}` at port {} not found. Try to use named connection.",
+            port.clone()
+        );
+        match client::connect_custom_instance(endpoint, instance_name).await {
+            Ok(mut client) => {
+                let b = obtain_properties(&mut client, instance_name)
+                    .await
+                    .map(|p| to_instance_builder(endpoint, &p));
+                if b.is_none() {
+                    log::error!("Instance `{instance_name}` not found. Impossible.");
+                }
+                b
+            }
+            Err(e) => {
+                log::warn!("Error creating client for `{instance_name}`: {e}");
+                find_custom_instance(endpoint, instance_name).await
+            }
+        }
+    } else {
+        result
     }
 }
 
@@ -1585,10 +2072,11 @@ async fn find_custom_instance(
         });
     match detect_instance_port(instance_name, &builders) {
         Some(port) => {
-            if let Ok(mut client) = client::connect_custom_endpoint(endpoint, port).await {
+            log::info!("Instance `{instance_name}` found at port {port}");
+            if let Ok(mut client) = client::connect_custom_endpoint(endpoint, port.clone()).await {
                 obtain_properties(&mut client, instance_name)
                     .await
-                    .map(|p| to_instance_builder(endpoint, &p))
+                    .map(|p| to_instance_builder(endpoint, &p).port(Some(port)))
             } else {
                 None
             }
@@ -1627,14 +2115,14 @@ fn get_reasonable_port(builder: &SqlInstanceBuilder, endpoint: &Endpoint) -> Por
     }
 }
 
-async fn obtain_properties(
-    client: &mut Client,
+pub async fn obtain_properties(
+    client: &mut UniClient,
     name: &InstanceName,
 ) -> Option<SqlInstanceProperties> {
     match SqlInstanceProperties::obtain_by_query(client).await {
         Ok(properties) => {
             if properties.name == *name {
-                log::info!("Custom instance `{name}` added");
+                log::info!("Custom instance `{name}` added in query");
                 return Some(properties);
             }
             log::error!(
@@ -1659,6 +2147,7 @@ fn to_instance_builder(
         .computer_name(Some(properties.computer_name.clone()))
         .version(&properties.version)
         .edition(&properties.edition)
+        .endpoint(endpoint)
         .port(Some(endpoint.conn().port()))
 }
 /// returns
@@ -1676,12 +2165,7 @@ fn determine_reconnect(
                 Some(customization)
                     if Some(&customization.endpoint()) != instance_builder.get_endpoint() =>
                 {
-                    log::info!(
-                        "Instance {} to be reconnected `{:?}` `{:?}`",
-                        instance_builder.get_name(),
-                        customization.endpoint(),
-                        instance_builder.get_endpoint()
-                    );
+                    log::info!("Instance {} to be reconnected", instance_builder.get_name(),);
                     (instance_builder, Some(customization.endpoint()))
                 }
                 _ => {
@@ -1767,6 +2251,7 @@ pub async fn obtain_instance_builders(
     endpoint: &Endpoint,
     instances: &[&InstanceName],
 ) -> Result<Vec<SqlInstanceBuilder>> {
+    log::info!("Finding instances...");
     match client::connect_main_endpoint(endpoint).await {
         Ok(mut client) => Ok(_obtain_instance_builders(&mut client, endpoint).await),
         Err(err) => {
@@ -1781,9 +2266,14 @@ pub async fn obtain_instance_builders_by_sql_browser(
     endpoint: &Endpoint,
     instances: &[&InstanceName],
 ) -> Result<Vec<SqlInstanceBuilder>> {
+    log::info!("Finding instances by SQL Browser");
     for instance in instances {
         match client::ClientBuilder::new()
-            .local_instance(instance, endpoint.conn().sql_browser_port())
+            .browse(
+                &endpoint.conn().hostname(),
+                instance,
+                endpoint.conn().sql_browser_port(),
+            )
             .build()
             .await
         {
@@ -1805,12 +2295,12 @@ pub async fn obtain_instance_builders_by_sql_browser(
 }
 
 async fn _obtain_instance_builders(
-    client: &mut Client,
+    client: &mut UniClient,
     endpoint: &Endpoint,
 ) -> Vec<SqlInstanceBuilder> {
     let mut builders = try_find_instances_in_registry(client).await;
     if builders.is_empty() {
-        log::warn!("No instances found in registry, this means you have porblem with permissions");
+        log::warn!("No instances found in registry, this means you have problem with permissions");
         log::warn!("Trying to add current instance");
         match obtain_instance_name(client).await {
             Ok(Some(name)) => {
@@ -1824,8 +2314,13 @@ async fn _obtain_instance_builders(
                 }
                 builders = vec![builder];
             }
-            _ => {
-                log::error!("Can't add current instance");
+            Ok(None) => {
+                log::warn!(
+                    "No instance found in registry, this means you have problem with permissions"
+                );
+            }
+            Err(err) => {
+                log::error!("Can't confirm current instance: {err}");
                 return vec![];
             }
         };
@@ -1843,7 +2338,7 @@ async fn _obtain_instance_builders(
 
 /// returns instances found in registry
 /// if registry is unavailable returns empty list, this is ok too
-async fn try_find_instances_in_registry(client: &mut Client) -> Vec<SqlInstanceBuilder> {
+async fn try_find_instances_in_registry(client: &mut UniClient) -> Vec<SqlInstanceBuilder> {
     let mut result: Vec<SqlInstanceBuilder> = vec![];
     for q in [
         &sqls::get_win_registry_instances_query(),
@@ -1857,18 +2352,22 @@ async fn try_find_instances_in_registry(client: &mut Client) -> Vec<SqlInstanceB
             });
         result.extend(instances);
     }
+    log::debug!("Found in registry {:#?}", result);
     result
 }
 
 /// return all MS SQL instances installed
 async fn exec_win_registry_sql_instances_query(
-    client: &mut Client,
+    client: &mut UniClient,
     query: &str,
 ) -> Result<Vec<SqlInstanceBuilder>> {
     let answers = run_custom_query(client, query).await?;
     if let Some(rows) = answers.first() {
         let instances = to_sql_instance(rows);
-        log::info!("Instances found {}", instances.len());
+        log::info!(
+            "Instances found in registry by SQL query on main instance {}",
+            instances.len()
+        );
         Ok(instances)
     } else {
         log::warn!("Empty answer by query: {query}");
@@ -1876,11 +2375,20 @@ async fn exec_win_registry_sql_instances_query(
     }
 }
 
-fn to_sql_instance(rows: &Answer) -> Vec<SqlInstanceBuilder> {
-    rows.iter()
-        .map(|r| SqlInstanceBuilder::new().row(r))
-        .collect::<Vec<SqlInstanceBuilder>>()
-        .to_vec()
+fn to_sql_instance(answers: &UniAnswer) -> Vec<SqlInstanceBuilder> {
+    match answers {
+        UniAnswer::Rows(rows) => rows
+            .iter()
+            .map(|r| SqlInstanceBuilder::new().from_row(r))
+            .collect::<Vec<SqlInstanceBuilder>>()
+            .to_vec(),
+        UniAnswer::Block(block) => block
+            .rows
+            .iter()
+            .map(|r| SqlInstanceBuilder::new().from_strings(r))
+            .collect::<Vec<SqlInstanceBuilder>>()
+            .to_vec(),
+    }
 }
 
 #[cfg(test)]
@@ -1898,12 +2406,12 @@ mod tests {
         let i = SqlInstanceBuilder::new().name("test_name").build();
 
         assert_eq!(
-            i.generate_state_entry(false, '.'),
-            format!("MSSQL_TEST_NAME.state.0\n")
+            i.generate_bad_state_entry('.', "bad"),
+            format!("MSSQL_TEST_NAME.state.0.bad\n")
         );
         assert_eq!(
-            i.generate_state_entry(true, '.'),
-            format!("MSSQL_TEST_NAME.state.1\n")
+            i.generate_good_state_entry('.'),
+            format!("MSSQL_TEST_NAME.state.1.\n")
         );
     }
 
@@ -2000,6 +2508,21 @@ mssql:
             .build();
         assert_eq!(piggyback.generate_header(), "<<<<y>>>>\n");
         assert_eq!(piggyback.generate_footer(), "<<<<>>>>\n");
+    }
+
+    #[test]
+    fn test_calc_unused() {
+        use crate::ms_sql::instance::calc_unused;
+        assert_eq!(
+            calc_unused("500 KB", "100 KB", "10 KB").unwrap(),
+            "390 KB".to_owned()
+        );
+        assert_eq!(
+            calc_unused("500 KB", "100 KB", "500 KB").unwrap(),
+            "0 KB".to_owned()
+        );
+        assert!(calc_unused("500 KB", "", "500 KB").is_none());
+        assert!(calc_unused("500 KB", "A", "500 KB").is_none());
     }
 
     #[test]

@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 """
-Server-side Calls API is used for active check and special agent plugin development.
+Server-side Calls API is used for active check and special agent plug-in development.
 It provides a way to specify subprocess commands that are used to call special agents
 and active checks from the configured rules.
 
-Each plugin can create multiple commands. One command results in one call of an active check
+Each plug-in can create multiple commands. One command results in one call of an active check
 or special agent script. For active checks, one command will result in exactly one service.
 
 Quick Guide
@@ -19,7 +19,7 @@ Special agent
 -------------
     * Create a SpecialAgentConfig object
     * Variable name of a SpecialAgentConfig object has to start with the `special_agent_` prefix
-    * The file with the plugin has to be placed in the `server_side_calls` folder
+    * The file with the plug-in has to be placed in the `server_side_calls` folder
 
 
     >>> from collections.abc import Iterator, Mapping, Sequence
@@ -28,7 +28,6 @@ Special agent
     ...
     >>> from cmk.server_side_calls.v1 import (
     ...     HostConfig,
-    ...     HTTPProxy,
     ...     Secret,
     ...     SpecialAgentCommand,
     ...     SpecialAgentConfig,
@@ -44,7 +43,6 @@ Special agent
     >>> def generate_example_commands(
     ...     params: ExampleParams,
     ...     _host_config: HostConfig,
-    ...     _http_proxies: Mapping[str, HTTPProxy],
     ... ) -> Iterator[SpecialAgentCommand]:
     ...     args: Sequence[str | Secret] = [
     ...         "-p",
@@ -70,7 +68,7 @@ Active check
 ------------
     * Create a ActiveCheckConfig object
     * Variable name of a ActiveCheckConfig object has to start with the `active_check_` prefix
-    * The file with the plugin has to be placed in the `server_side_calls` folder
+    * The file with the plug-in has to be placed in the `server_side_calls` folder
 
 
     >>> from collections.abc import Iterator, Mapping, Sequence
@@ -81,7 +79,6 @@ Active check
     ...     ActiveCheckCommand,
     ...     ActiveCheckConfig,
     ...     HostConfig,
-    ...     HTTPProxy,
     ...     Secret,
     ... )
     ...
@@ -95,7 +92,6 @@ Active check
     >>> def generate_example_commands(
     ...     params: ExampleParams,
     ...     _host_config: HostConfig,
-    ...     _http_proxies: Mapping[str, HTTPProxy],
     ... ) -> Iterator[ActiveCheckCommand]:
     ...     args: Sequence[str | Secret] = [
     ...         "-p",

@@ -26,21 +26,20 @@ def inventory_unitrends_backup(info):
 
 
 def check_unitrends_backup(item, _no_params, info):
-    found = False
-    details = []
+    message = None
+    details: list[str] = []
     for line in info:
-        if line[0] == "HEADER" and found:
+        if line[0] == "HEADER" and message is not None:
             # We are finish collection detail informatoinen
             break
 
-        if found is True:
+        if message is not None:
             # Collection Backup deatils
             app_type, bid, backup_type, status = line
             details.append(f"Application Type: {app_type} ({bid}), {backup_type}: {status}")
             continue
 
         if line[0] == "HEADER" and line[1] == item:
-            found = True
             _head, _sched_name, app_name, sched_desc, failures = line
             message = "{} Errors in last 24/h for Application {} ({}) ".format(
                 failures,
@@ -48,7 +47,7 @@ def check_unitrends_backup(item, _no_params, info):
                 sched_desc,
             )
 
-    if found is True:
+    if message is not None:
         message += "\n" + "\n".join(details)
         if failures == "0":
             return 0, message

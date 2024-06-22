@@ -16,7 +16,7 @@ description:
  The check uses the status information retrieved from the device to determine
  the state of the service.
 
- The check requires the mk_sap.aix agent plugin to be installed on your AIX system.
+ The check requires the mk_sap.aix agent plug-in to be installed on your AIX system.
 
 item:
  The description and instance number of each process.

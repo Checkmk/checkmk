@@ -8,7 +8,7 @@
 # This script will install the llvm toolchain on the different
 # Debian and Ubuntu versions
 
-set -eux
+set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
@@ -66,6 +66,7 @@ case "$DIST_VERSION" in
     Ubuntu_22.10) REPO_NAME="deb http://apt.llvm.org/kinetic/ llvm-toolchain-kinectic$CLANG_VERSION_STRING main" ;;
     Ubuntu_23.04) REPO_NAME="deb http://apt.llvm.org/lunar/ llvm-toolchain-lunar$CLANG_VERSION_STRING main" ;;
     Ubuntu_23.10) REPO_NAME="deb http://apt.llvm.org/mantic/ llvm-toolchain-mantic$CLANG_VERSION_STRING main" ;;
+    Ubuntu_24.04) REPO_NAME="deb http://apt.llvm.org/noble/ llvm-toolchain-mantic$CLANG_VERSION_STRING main" ;;
     *) failure "Distribution '$DISTRO' in version '$VERSION' is not supported by this script (${DIST_VERSION})." >&2 ;;
 esac
 
@@ -87,7 +88,6 @@ apt-get install -y \
     "lld-$CLANG_VERSION" \
     "lldb-$CLANG_VERSION" \
     "libclang-$CLANG_VERSION-dev"
-rm -rf /var/lib/apt/lists/*
 
 # Workaround for https://github.com/llvm/llvm-project/issues/61550
 if [ "$CLANG_VERSION" = 16 ]; then

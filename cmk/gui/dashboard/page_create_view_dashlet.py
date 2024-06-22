@@ -7,8 +7,7 @@
 
 from collections.abc import Callable
 
-import cmk.gui.visuals as visuals
-from cmk.gui import forms
+from cmk.gui import forms, visuals
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import HTTPRedirect, MKUserError

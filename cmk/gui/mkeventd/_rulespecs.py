@@ -62,15 +62,8 @@ def _valuespec_logwatch_rules() -> Dictionary:
                                     ("I", _("IGNORE")),
                                 ],
                             ),
-                            RegExp(
-                                title=_("Pattern (Regex)"),
-                                size=40,
-                                mode=RegExp.infix,
-                            ),
-                            TextInput(
-                                title=_("Comment"),
-                                size=40,
-                            ),
+                            RegExp(title=_("Pattern (Regex)"), size=40, mode=RegExp.infix),
+                            TextInput(title=_("Comment"), size=40),
                         ],
                     ),
                     title=_("Reclassify state matching regex pattern"),

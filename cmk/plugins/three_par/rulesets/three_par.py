@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
+from cmk.plugins.three_par.lib.special_agent import DEFAULT_VALUES, VALID_VALUES
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -10,8 +13,9 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     Integer,
-    List,
     migrate_to_password,
+    MultipleChoice,
+    MultipleChoiceElement,
     Password,
     String,
     validators,
@@ -19,9 +23,21 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
+def _migrate_values(params: object) -> Mapping[str, object]:
+    match params:
+        case {"values": list(values), **rest}:
+            return {
+                "values": [v for v in values if v in VALID_VALUES],
+                **{str(k): v for k, v in rest.items()},
+            }
+        case dict():
+            return {**params, "values": list(DEFAULT_VALUES)}
+    raise ValueError(f"Invalid parameters: {params!r}")
+
+
 def _form_special_agents_3par() -> Dictionary:
     return Dictionary(
-        title=Title("3PAR Configuration"),
+        title=Title("3PAR configuration"),
         elements={
             "user": DictElement(
                 parameter_form=String(
@@ -53,24 +69,24 @@ def _form_special_agents_3par() -> Dictionary:
                 required=True,
             ),
             "values": DictElement(
-                parameter_form=List(
-                    element_template=String(),
+                required=True,
+                parameter_form=MultipleChoice(
                     title=Title("Values to fetch"),
-                    help_text=Help(
-                        "Possible values are the following: cpgs, volumes, hosts, capacity, "
-                        "system, ports, remotecopy, hostsets, volumesets, vluns, flashcache, "
-                        "users, roles, qos.\n"
-                        "If you do not specify any value the first seven are used as default."
-                    ),
-                )
+                    elements=[
+                        MultipleChoiceElement(name=name, title=title)
+                        for name, title in VALID_VALUES.items()
+                    ],
+                    prefill=DefaultValue(list(DEFAULT_VALUES)),
+                ),
             ),
         },
+        migrate=_migrate_values,
     )
 
 
 rule_spec_three_par = SpecialAgent(
     name="three_par",
-    title=Title("3PAR Configuration"),
+    title=Title("3PAR configuration"),
     topic=Topic.SERVER_HARDWARE,
     parameter_form=_form_special_agents_3par,
 )

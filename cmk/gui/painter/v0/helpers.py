@@ -10,9 +10,8 @@ from livestatus import SiteId
 
 import cmk.utils.render
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import Labels
+from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.rulesets.ruleset_matcher import LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.gui import http
@@ -79,13 +78,11 @@ def render_cache_info(what: str, row: Row) -> str:
 
 
 def paint_host_list(site: SiteId, hosts: list[HostName], *, request: Request) -> CellSpec:
-    return "", HTML(
-        ", ".join(
-            get_host_list_links(
-                site,
-                [str(host) for host in hosts],
-                request=request,
-            )
+    return "", HTML.without_escaping(", ").join(
+        get_host_list_links(
+            site,
+            [str(host) for host in hosts],
+            request=request,
         )
     )
 
@@ -143,7 +140,7 @@ class RenderLink:
         **attributes: HTMLTagAttributeValue,
     ) -> HTML:
         if self.display_options.disabled(self.display_options.I):
-            return HTML()
+            return HTML.empty()
 
         return HTMLWriter.render_a(html_text, href=url, **attributes)
 

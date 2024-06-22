@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Script to validate if all available plugins can be loaded"""
+"""Script to validate if all available plug-ins can be loaded"""
 
 import enum
 import os
@@ -24,7 +24,6 @@ from cmk.base import server_side_calls  # pylint: disable=cmk-module-layer-viola
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
     iter_all_check_plugins,
     iter_all_discovery_rulesets,
-    iter_all_host_label_rulesets,
     iter_all_inventory_plugins,
 )
 from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
@@ -43,6 +42,13 @@ from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-viol
 from cmk.agent_based import v2 as agent_based_v2
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.rulesets.v1 import entry_point_prefixes
+from cmk.rulesets.v1.rule_specs import (
+    ActiveCheck,
+    CheckParameters,
+    DiscoveryParameters,
+    InventoryParameters,
+    SpecialAgent,
+)
 
 _AgentBasedPlugins = (
     agent_based_v2.SimpleSNMPSection
@@ -127,24 +133,40 @@ def _validate_rule_spec_form_creation() -> ActiveCheckResult:
 
 def _validate_agent_based_plugin_v2_ruleset_ref(
     plugin: _AgentBasedPlugins,
+    *,
     rule_group: Callable[[str | None], str],
+    fallback_rule_group: Callable[[str | None], str] | None = None,
     ruleset_ref_attr: str,
     default_params_attr: str,
 ) -> str | None:
     if (ruleset_ref := getattr(plugin, ruleset_ref_attr)) is None:
         return None
 
-    if (rule_spec := rulespec_registry.get(rule_group(ruleset_ref))) is None:
+    if (default_params := getattr(plugin, default_params_attr)) is None:
         return (
-            f"'{ruleset_ref_attr}' of {type(plugin).__name__} '{plugin.name}' references "
-            f"non-existent rule spec '{ruleset_ref}'"
+            f"Default parameters '{default_params_attr}' specified by {type(plugin).__name__} "
+            f"'{plugin.name}' should not be `None` since there is a ruleset ('{ruleset_ref}')"
         )
 
-    if (default_params := getattr(plugin, default_params_attr)) is None:
-        return None
+    if (rule_spec := rulespec_registry.get(rule_group(ruleset_ref))) is None:
+        if (
+            fallback_rule_group is None
+            or (rule_spec := rulespec_registry.get(fallback_rule_group(ruleset_ref))) is None
+        ):
+            return (
+                f"'{ruleset_ref_attr}' of {type(plugin).__name__} '{plugin.name}' references "
+                f"non-existent rule spec '{ruleset_ref}'"
+            )
+        # we're validating against the enforces service rule in this case
+        assert isinstance(plugin, agent_based_v2.CheckPlugin)
+        params = (plugin.name, "item" if "%s" in plugin.service_name else None, default_params)
+
+    else:
+        params = default_params
+
     try:
-        rule_spec.valuespec.validate_datatype(default_params, "")
-        rule_spec.valuespec.validate_value(default_params, "")
+        rule_spec.valuespec.validate_datatype(params, "")
+        rule_spec.valuespec.validate_value(params, "")
     except Exception as e:
         if debug.enabled():
             raise e
@@ -188,6 +210,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
                     error := _validate_agent_based_plugin_v2_ruleset_ref(
                         plugin,
                         rule_group=RuleGroup.CheckgroupParameters,
+                        fallback_rule_group=RuleGroup.StaticChecks,
                         ruleset_ref_attr="check_ruleset_name",
                         default_params_attr="check_default_parameters",
                     )
@@ -197,7 +220,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
                 if (
                     error := _validate_agent_based_plugin_v2_ruleset_ref(
                         plugin,
-                        rule_group=lambda x: f"{x}",
+                        rule_group=RuleGroup.InvParameters,
                         ruleset_ref_attr="inventory_ruleset_name",
                         default_params_attr="inventory_default_parameters",
                     )
@@ -224,49 +247,104 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
     return to_result(ValidationStep.RULE_SPEC_REFERENCED, errors)
 
 
-def _validate_rule_spec_usage() -> ActiveCheckResult:
-    # only for ruleset API v1
-    discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
-        PluginGroup.RULESETS,
-        entry_point_prefixes(),
-        raise_errors=False,  # already raised during loading validation if enabled
-    )
-
-    referenced_ruleset_names = set(
-        [
-            str(plugin.check_ruleset_name)
-            for plugin in iter_all_check_plugins()
-            if plugin.check_ruleset_name is not None
-        ]
-        + [
-            str(plugin.inventory_ruleset_name)
-            for plugin in iter_all_inventory_plugins()
-            if plugin.inventory_ruleset_name is not None
-        ]
-        + [str(ruleset_name) for ruleset_name in iter_all_host_label_rulesets()]
-        + [active_check.name for active_check in server_side_calls.load_active_checks()[1].values()]
-        + [str(ruleset_name) for ruleset_name in iter_all_discovery_rulesets()]
-        + [
-            check.check_ruleset_name
-            for check in check_info.values()
-            if hasattr(check, "check_ruleset_name")
-        ]
-        + [
-            special_agent.name
-            for special_agent in server_side_calls.load_special_agents()[1].values()
-        ]
-    )
-
-    errors = []
+def _check_if_referenced(
+    discovered_plugins: DiscoveredPlugins[RuleSpec], referenced_ruleset_names: set[str]
+) -> list[str]:
+    reference_errors = []
     for plugin in discovered_plugins.plugins.values():
         if plugin.is_deprecated:
             continue
 
         if plugin.name not in referenced_ruleset_names:
-            errors.append(
+            reference_errors.append(
                 f"{type(plugin).__name__} rule set '{plugin.name}' is not used anywhere. Ensure "
-                f"the correct spelling at the referencing plugin or deprecate the ruleset"
+                f"the correct spelling at the referencing plug-in or deprecate the ruleset"
             )
+    return reference_errors
+
+
+def _validate_check_parameters_usage() -> Sequence[str]:
+    discovered_check_parameters: DiscoveredPlugins[RuleSpec] = discover_plugins(
+        PluginGroup.RULESETS,
+        {CheckParameters: entry_point_prefixes()[CheckParameters]},
+        raise_errors=False,
+    )
+
+    agent_based_api_referenced_ruleset_names = [
+        str(plugin.check_ruleset_name)
+        for plugin in iter_all_check_plugins()
+        if plugin.check_ruleset_name is not None
+    ]
+    legacy_checks_referenced_ruleset_names = [
+        str(check.check_ruleset_name)
+        for check in check_info.values()
+        if hasattr(check, "check_ruleset_name")
+    ]
+
+    referenced_ruleset_names = set(
+        agent_based_api_referenced_ruleset_names + legacy_checks_referenced_ruleset_names
+    )
+    return _check_if_referenced(discovered_check_parameters, referenced_ruleset_names)
+
+
+def _validate_discovery_parameters_usage() -> Sequence[str]:
+    discovered_discovery_parameters: DiscoveredPlugins[RuleSpec] = discover_plugins(
+        PluginGroup.RULESETS,
+        {DiscoveryParameters: entry_point_prefixes()[DiscoveryParameters]},
+        raise_errors=False,
+    )
+    referenced_ruleset_names = {str(ruleset_name) for ruleset_name in iter_all_discovery_rulesets()}
+    return _check_if_referenced(discovered_discovery_parameters, referenced_ruleset_names)
+
+
+def _validate_inventory_parameters_usage() -> Sequence[str]:
+    discovered_inventory_parameters: DiscoveredPlugins[RuleSpec] = discover_plugins(
+        PluginGroup.RULESETS,
+        {InventoryParameters: entry_point_prefixes()[InventoryParameters]},
+        raise_errors=False,
+    )
+    referenced_ruleset_names = {
+        str(plugin.inventory_ruleset_name)
+        for plugin in iter_all_inventory_plugins()
+        if plugin.inventory_ruleset_name is not None
+    }
+    return _check_if_referenced(discovered_inventory_parameters, referenced_ruleset_names)
+
+
+def _validate_active_check_usage() -> Sequence[str]:
+    discovered_active_checks: DiscoveredPlugins[RuleSpec] = discover_plugins(
+        PluginGroup.RULESETS,
+        {ActiveCheck: entry_point_prefixes()[ActiveCheck]},
+        raise_errors=False,
+    )
+    referenced_ruleset_names = {
+        active_check.name for active_check in server_side_calls.load_active_checks()[1].values()
+    }
+    return _check_if_referenced(discovered_active_checks, referenced_ruleset_names)
+
+
+def _validate_special_agent_usage() -> Sequence[str]:
+    discovered_special_agents: DiscoveredPlugins[RuleSpec] = discover_plugins(
+        PluginGroup.RULESETS,
+        {SpecialAgent: entry_point_prefixes()[SpecialAgent]},
+        raise_errors=False,
+    )
+    referenced_ruleset_names = {
+        active_check.name for active_check in server_side_calls.load_special_agents()[1].values()
+    }
+    return _check_if_referenced(discovered_special_agents, referenced_ruleset_names)
+
+
+def _validate_rule_spec_usage() -> ActiveCheckResult:
+    # only for ruleset API v1
+    errors: list[str] = []
+
+    errors.extend(_validate_check_parameters_usage())
+    errors.extend(_validate_discovery_parameters_usage())
+    errors.extend(_validate_inventory_parameters_usage())
+    errors.extend(_validate_active_check_usage())
+    errors.extend(_validate_special_agent_usage())
+
     return to_result(ValidationStep.RULE_SPEC_USED, errors)
 
 

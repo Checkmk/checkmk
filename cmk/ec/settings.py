@@ -15,14 +15,14 @@ from typing import NamedTuple
 
 
 class AnnotatedPath(NamedTuple):
-    """a filesystem path with a user-presentable description"""
+    """a filesystem path with a user-presentable description."""
 
     description: str
     value: Path
 
 
 class Paths(NamedTuple):
-    """filesystem paths related to the event console"""
+    """filesystem paths related to the event console."""
 
     active_config_dir: AnnotatedPath
     unix_socket: AnnotatedPath
@@ -43,7 +43,7 @@ class Paths(NamedTuple):
 
 
 def create_paths(omd_root: Path) -> Paths:
-    """Returns all default filesystem paths related to the event console"""
+    """Returns all default filesystem paths related to the event console."""
     run_dir = omd_root / "tmp/run/mkeventd"
     state_dir = omd_root / "var/mkeventd"
     return Paths(
@@ -75,13 +75,13 @@ def create_paths(omd_root: Path) -> Paths:
 
 
 class PortNumber(NamedTuple):
-    """a network port number"""
+    """a network port number."""
 
     value: int
 
 
 class PortNumbers(NamedTuple):
-    """network port numbers related to the event console"""
+    """network port numbers related to the event console."""
 
     syslog_udp: PortNumber
     syslog_tcp: PortNumber
@@ -89,20 +89,20 @@ class PortNumbers(NamedTuple):
 
 
 def _default_port_numbers() -> PortNumbers:
-    """Returns all port numbers related to the event console"""
+    """Returns all port numbers related to the event console."""
     return PortNumbers(
         syslog_udp=PortNumber(514), syslog_tcp=PortNumber(514), snmptrap_udp=PortNumber(162)
     )
 
 
 class FileDescriptor(NamedTuple):
-    """a Unix file descriptor number"""
+    """a Unix file descriptor number."""
 
     value: int
 
 
 class ECArgumentParser(ArgumentParser):
-    """An argument parser for the event console"""
+    """An argument parser for the event console."""
 
     def __init__(self, prog: str, version: str, paths: Paths, port_numbers: PortNumbers) -> None:
         super().__init__(
@@ -182,7 +182,7 @@ class ECArgumentParser(ArgumentParser):
 
     @staticmethod
     def _file_descriptor(value: str) -> FileDescriptor:
-        """A custom argument type for file descriptors, i.e. non-negative integers"""
+        """A custom argument type for file descriptors, i.e. non-negative integers."""
         try:
             file_desc = int(value)
             if file_desc < 0:
@@ -197,9 +197,11 @@ EndPoint = PortNumber | FileDescriptor
 
 
 def _endpoint(
-    enabled: bool, file_descriptor: FileDescriptor, default_port_number: PortNumber
+    enabled: bool,
+    file_descriptor: FileDescriptor | None,
+    default_port_number: PortNumber,
 ) -> EndPoint | None:
-    """Returns a communication endpoint based on given commandline arguments"""
+    """Returns a communication endpoint based on given commandline arguments."""
     if not enabled:
         return None
     if file_descriptor is None:
@@ -208,7 +210,7 @@ def _endpoint(
 
 
 class Options(NamedTuple):
-    """various post-processed commandline options"""
+    """various post-processed commandline options."""
 
     verbosity: int
     syslog_udp: EndPoint | None
@@ -221,14 +223,14 @@ class Options(NamedTuple):
 
 
 class Settings(NamedTuple):
-    """all settings of the event console"""
+    """all settings of the event console."""
 
     paths: Paths
     options: Options
 
 
 def create_settings(version: str, omd_root: Path, argv: list[str]) -> Settings:
-    """Returns all event console settings"""
+    """Returns all event console settings."""
     paths = create_paths(omd_root)
     port_numbers = _default_port_numbers()
     parser = ECArgumentParser(Path(argv[0]).name, version, paths, port_numbers)

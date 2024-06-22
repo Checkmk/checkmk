@@ -7,25 +7,30 @@
 import base64
 import time
 import traceback
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Iterable, Iterator
 from typing import cast, Literal, overload
 
-import cmk.utils.render as render
+from cmk.utils import render
 from cmk.utils.crypto.password import Password
-from cmk.utils.timeperiod import load_timeperiods
 from cmk.utils.user import UserId
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
-import cmk.gui.background_job as background_job
-import cmk.gui.forms as forms
-import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.userdb as userdb
-import cmk.gui.weblib as weblib
-from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui import background_job, forms, gui_background_job, userdb, weblib
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
-from cmk.gui.customer import customer_api
+from cmk.gui.customer import ABCCustomerAPI, customer_api
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import load_contact_group_information
+from cmk.gui.form_specs.vue.vue_table import (
+    build_checkbox,
+    build_href,
+    build_html,
+    build_icon_button,
+    build_row,
+    build_table,
+    build_table_cell,
+    build_text,
+    render_vue_table,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
 from cmk.gui.http import request
@@ -55,8 +60,10 @@ from cmk.gui.userdb import (
     load_roles,
     new_user_template,
     UserAttribute,
+    UserConnector,
 )
 from cmk.gui.userdb.htpasswd import hash_password
+from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
@@ -69,21 +76,20 @@ from cmk.gui.utils.urls import (
     makeuri,
     makeuri_contextless,
 )
-from cmk.gui.validation.visitors.vue_table import (
-    build_checkbox,
-    build_href,
-    build_html,
-    build_icon_button,
-    build_row,
-    build_table,
-    build_table_cell,
-    build_text,
-    render_vue_table,
+from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
+from cmk.gui.valuespec import (
+    Alternative,
+    DualListChoice,
+    EmailAddress,
+    FixedValue,
+    TextInput,
+    UserID,
 )
-from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import (
     delete_users,
@@ -98,6 +104,20 @@ from cmk.gui.watolib.utils import ldap_connections_are_configurable
 def register(_mode_registry: ModeRegistry) -> None:
     _mode_registry.register(ModeUsers)
     _mode_registry.register(ModeEditUser)
+
+
+def has_customer(
+    user_cxn: UserConnector | None,
+    cust_api: ABCCustomerAPI,
+    user_spec: UserSpec,
+) -> str | None:
+    if edition() is not Edition.CME:
+        return None
+
+    if isinstance(user_cxn, LDAPUserConnector):
+        if user_cxn.customer_id is not None:
+            return cust_api.get_customer_name_by_id(user_cxn.customer_id)
+    return cust_api.get_customer_name(user_spec)
 
 
 class ModeUsers(WatoMode):
@@ -118,9 +138,12 @@ class ModeUsers(WatoMode):
     def title(self) -> str:
         return _("Users")
 
+    def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
+        # Since we are in the users mode, we don't need to add the
+        # "Users" topic to the breadcrumb. Else we get "Users > Users"
+        return ()
+
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        # Remove the last breadcrumb entry here to avoid the breadcrumb "Users > Users"
-        del breadcrumb[-1]
         topics = (
             [
                 PageMenuTopic(
@@ -282,7 +305,12 @@ class ModeUsers(WatoMode):
                             enforce_sync=True,
                             load_users_func=userdb.load_users,
                             save_users_func=userdb.save_users,
-                        )
+                        ),
+                        background_job.InitialStatusArgs(
+                            title=job.gui_title(),
+                            stoppable=False,
+                            user=str(user.id) if user.id else None,
+                        ),
                     )
                 except background_job.BackgroundJobAlreadyRunning as e:
                     raise MKUserError(
@@ -330,7 +358,7 @@ class ModeUsers(WatoMode):
         elif self._job_snapshot.is_active:
             # Still running
             html.show_message(
-                HTML(_("User synchronization currently running: ")) + self._job_details_link()
+                _("User synchronization currently running: ") + self._job_details_link()
             )
             url = makeuri(request, [])
             html.immediate_browser_redirect(2, url)
@@ -346,8 +374,7 @@ class ModeUsers(WatoMode):
         elif not self._job_snapshot.acknowledged_by and self._job_snapshot.has_exception:
             # Finished, but not OK - show info message with links to details
             html.show_warning(
-                HTML(_("Last user synchronization ran into an exception: "))
-                + self._job_details_link()
+                _("Last user synchronization ran into an exception: ") + self._job_details_link()
             )
 
         users = userdb.load_users()
@@ -492,10 +519,8 @@ class ModeUsers(WatoMode):
                 add_header(_("Last seen"))
                 cells.append(build_table_cell(content=[build_text(shown_text)]))
 
-            if edition() is Edition.CME:
-                cells.append(
-                    build_table_cell(content=[build_text(customer.get_customer_name(user_spec))])
-                )
+            if cust := has_customer(user_cxn=connection, cust_api=customer, user_spec=user_spec):
+                cells.append(build_table_cell(content=[build_text(cust)]))
 
             # Connection
             add_header(_("Connection"))
@@ -527,7 +552,7 @@ class ModeUsers(WatoMode):
 
             add_header(_("State"))
             state_content = []
-            if user_spec.get("locked", False):
+            if user_spec["locked"]:
                 state_content.append(
                     build_icon_button("", _("The login is currently locked"), "user_locked")
                 )
@@ -578,7 +603,7 @@ class ModeUsers(WatoMode):
                     folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)])
                     for c in cgs
                 ]
-                cg_html = HTML(", ").join(
+                cg_html = HTML.without_escaping(", ").join(
                     HTMLWriter.render_a(content, href=url)
                     for (content, url) in zip(cg_aliases, cg_urls)
                 )
@@ -701,12 +726,16 @@ class ModeUsers(WatoMode):
 
                     table.cell(_("Last seen"))
                     if last_seen != 0:
-                        html.write_text(f"{render.date(last_seen)} {render.time_of_day(last_seen)}")
+                        html.write_text_permissive(
+                            f"{render.date(last_seen)} {render.time_of_day(last_seen)}"
+                        )
                     else:
-                        html.write_text(_("Never"))
+                        html.write_text_permissive(_("Never"))
 
-                if edition() is Edition.CME:
-                    table.cell(_("Customer"), customer.get_customer_name(user_spec))
+                if cust := has_customer(
+                    user_cxn=connection, cust_api=customer, user_spec=user_spec
+                ):
+                    table.cell(_("Customer"), cust)
 
                 # Connection
                 if connection:
@@ -736,7 +765,7 @@ class ModeUsers(WatoMode):
                 table.cell(_("Authentication"), auth_method)
 
                 table.cell(_("State"), sortable=False)
-                if user_spec.get("locked", False):
+                if user_spec["locked"]:
                     html.icon("user_locked", _("The login is currently locked"))
 
                 if "disable_notifications" in user_spec and isinstance(
@@ -766,7 +795,7 @@ class ModeUsers(WatoMode):
                         for role in user_spec["roles"]
                     ]
                     html.write_html(
-                        HTML(", ").join(
+                        HTML.without_escaping(", ").join(
                             HTMLWriter.render_a(alias, href=link) for (link, alias) in role_links
                         )
                     )
@@ -783,7 +812,7 @@ class ModeUsers(WatoMode):
                         for c in cgs
                     ]
                     html.write_html(
-                        HTML(", ").join(
+                        HTML.without_escaping(", ").join(
                             HTMLWriter.render_a(content, href=url)
                             for (content, url) in zip(cg_aliases, cg_urls)
                         )
@@ -796,7 +825,9 @@ class ModeUsers(WatoMode):
                     vs = attr.valuespec()
                     vs_title = vs.title()
                     table.cell(_u(vs_title) if isinstance(vs_title, str) else vs_title)
-                    html.write_text(vs.value_to_html(user_spec.get(name, vs.default_value())))
+                    html.write_text_permissive(
+                        vs.value_to_html(user_spec.get(name, vs.default_value()))
+                    )
 
         html.hidden_field("selection", weblib.selection_id())
         html.hidden_fields()
@@ -811,7 +842,7 @@ class ModeUsers(WatoMode):
         if not load_contact_group_information():
             url = "wato.py?mode=contact_groups"
             html.open_div(class_="info")
-            html.write_text(
+            html.write_text_permissive(
                 _(
                     "Note: you haven't defined any contact groups yet. If you <a href='%s'>"
                     "create some contact groups</a> you can assign users to them und thus "
@@ -820,7 +851,7 @@ class ModeUsers(WatoMode):
                 )
                 % url
             )
-            html.write_text(
+            html.write_text_permissive(
                 " you can assign users to them und thus "
                 "make them monitoring contacts. Only monitoring contacts can receive "
                 "notifications."
@@ -1128,6 +1159,7 @@ class ModeEditUser(WatoMode):
                 verify_password_policy(password, password_field_name)
                 user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
+                send_security_message(self._user_id, SecurityNotificationEvent.password_change)
                 increase_serial = True  # password changed, reflect in auth serial
 
             # PW change enforcement
@@ -1141,7 +1173,7 @@ class ModeEditUser(WatoMode):
 
     def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
         # Locking
-        user_attrs["locked"] = html.get_checkbox("locked")
+        user_attrs["locked"] = html.get_checkbox("locked") or False
         if (  # toggled for an existing user
             self._user_id in self._users
             and self._users[self._user_id]["locked"] != user_attrs["locked"]
@@ -1214,7 +1246,7 @@ class ModeEditUser(WatoMode):
         )
 
         if not self._contact_groups:
-            html.write_text(
+            html.write_text_permissive(
                 _("Please first create some <a href='%s'>contact groups</a>") % groups_page_url
             )
         else:
@@ -1303,7 +1335,7 @@ class ModeEditUser(WatoMode):
         # ID
         forms.section(_("Username"), simple=not self._is_new_user, is_required=True)
         if self._is_new_user:
-            vs_user_id = UserID(allow_empty=False, size=73)
+            vs_user_id: TextInput | FixedValue = UserID(allow_empty=False, size=73)
         else:
             vs_user_id = FixedValue(value=self._user_id)
         vs_user_id.render_input("user_id", self._user_id)
@@ -1319,7 +1351,7 @@ class ModeEditUser(WatoMode):
         if not self._is_locked("email"):
             EmailAddress(size=73).render_input("email", email)
         else:
-            html.write_text(email)
+            html.write_text_permissive(email)
             html.hidden_field("email", email)
 
         html.help(
@@ -1346,7 +1378,7 @@ class ModeEditUser(WatoMode):
         if not self._is_locked("authorized_sites"):
             vs_sites.render_input("authorized_sites", authorized_sites)
         else:
-            html.write_text(vs_sites.value_to_html(authorized_sites))
+            html.write_text_permissive(vs_sites.value_to_html(authorized_sites))
         html.help(vs_sites.help())
 
         self._show_custom_user_attributes(custom_user_attr_topics.get("ident", []))
@@ -1408,7 +1440,7 @@ class ModeEditUser(WatoMode):
                 html.td(_("repeat:"))
                 html.open_td()
                 html.password_input("_password2_" + self._pw_suffix(), autocomplete="new-password")
-                html.write_text(" (%s)" % _("optional"))
+                html.write_text_permissive(" (%s)" % _("optional"))
                 html.close_td()
                 html.close_tr()
 
@@ -1426,7 +1458,7 @@ class ModeEditUser(WatoMode):
                         label=_("Change password at next login or access"),
                     )
                 else:
-                    html.write_text(
+                    html.write_text_permissive(
                         _("Not permitted to change the password. Change can not be enforced.")
                     )
             else:
@@ -1452,9 +1484,9 @@ class ModeEditUser(WatoMode):
                 placeholder="******" if "automation_secret" in self._user else "",
                 autocomplete="off",
             )
-            html.write_text(" ")
+            html.write_text_permissive(" ")
             html.open_b(style=["position: relative", "top: 4px;"])
-            html.write_text(" &nbsp;")
+            html.write_text_permissive(" &nbsp;")
             html.icon_button(
                 "javascript:cmk.wato.randomize_secret('automation_secret', 20, '%s');"
                 % _("Copied secret to clipboard"),
@@ -1475,7 +1507,7 @@ class ModeEditUser(WatoMode):
                     "data from views for further procession), set the method to "
                     "<u>secret</u>. The secret will be stored in a local file. Processes "
                     "with read access to that file will be able to use Multisite as "
-                    "a webservice without any further configuration."
+                    "a web service without any further configuration."
                 )
             )
 
@@ -1485,14 +1517,14 @@ class ModeEditUser(WatoMode):
             if not self._is_locked("locked"):
                 html.checkbox(
                     "locked",
-                    bool(self._user.get("locked")),
+                    bool(self._user["locked"]),
                     label=_("disable the login to this account"),
                 )
             else:
-                html.write_text(
-                    _("Login disabled") if self._user.get("locked", False) else _("Login possible")
+                html.write_text_permissive(
+                    _("Login disabled") if self._user["locked"] else _("Login possible")
                 )
-                html.hidden_field("locked", "1" if self._user.get("locked", False) else "")
+                html.hidden_field("locked", "1" if self._user["locked"] else "")
             html.help(
                 _(
                     "Disabling the password will prevent a user from logging in while "
@@ -1507,7 +1539,7 @@ class ModeEditUser(WatoMode):
             if not self._is_locked("idle_timeout"):
                 get_vs_user_idle_timeout().render_input("idle_timeout", idle_timeout)
             else:
-                html.write_text(idle_timeout)
+                html.write_text_permissive(idle_timeout)
                 html.hidden_field("idle_timeout", idle_timeout)
 
         if "roles" in options_to_render:
@@ -1543,7 +1575,7 @@ class ModeEditUser(WatoMode):
         # TODO: The cast is a big fat lie: value can be None, but things somehow seem to "work" even then. :-/
         value = cast(str, self._user.get(name, dflt))
         if self._is_locked(name):
-            html.write_text(value)
+            html.write_text_permissive(value)
             html.hidden_field(name, value)
         else:
             html.text_input(name, value, size=73)
@@ -1554,7 +1586,7 @@ class ModeEditUser(WatoMode):
         assert self._user_id is not None
         return base64.b64encode(self._user_id.encode("utf-8")).decode("ascii")
 
-    def _is_locked(self, attr) -> bool:  # type: ignore[no-untyped-def]
+    def _is_locked(self, attr: str) -> bool:
         """Returns true if an attribute is locked and should be read only. Is only
         checked when modifying an existing user"""
         return not self._is_new_user and attr in self._locked_attributes
@@ -1585,7 +1617,9 @@ class ModeEditUser(WatoMode):
             if not self._is_locked(name):
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))
             else:
-                html.write_text(vs.value_to_html(self._user.get(name, vs.default_value())))
+                html.write_text_permissive(
+                    vs.value_to_html(self._user.get(name, vs.default_value()))
+                )
                 # Render hidden to have the values kept after saving
                 html.open_div(style="display:none")
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))

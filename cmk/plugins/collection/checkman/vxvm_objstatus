@@ -16,7 +16,7 @@ description:
 
  The check should be extensible for tracking status in multiple layers.
 
- You need to install the agent plugin {vxvm}.
+ You need to install the agent plug-in {vxvm}.
 
 item:
  Name of the diskgroup

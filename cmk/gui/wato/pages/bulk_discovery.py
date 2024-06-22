@@ -13,8 +13,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.discovery import DiscoverySettings
 
-import cmk.gui.forms as forms
-import cmk.gui.sites as sites
+from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
@@ -183,7 +182,7 @@ class ModeBulkDiscovery(WatoMode):
                 )
             )
             html.open_p()
-            html.write_text(" ".join(msgs))
+            html.write_text_permissive(" ".join(msgs))
             vs.render_input("bulkinventory", self._bulk_discovery_params)
             forms.end()
 

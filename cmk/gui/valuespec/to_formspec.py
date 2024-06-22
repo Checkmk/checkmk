@@ -38,16 +38,16 @@ Module Attributes:
 """
 import re
 import typing
+from dataclasses import dataclass
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.html import HTML
 
 from cmk.rulesets.v1 import form_specs, Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, InputHint, validators
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, NumberInRange
 
 from . import definitions
-from .formspec_plus import definitions as formspec_definitions
-from .formspec_plus import validators as formspec_validators
-from .formspec_plus.validators import ModelT
 
 #
 # NOTE
@@ -62,6 +62,8 @@ from .formspec_plus.validators import ModelT
 #    `datastructures.NestedDictConverter`.
 #
 
+
+ModelT = typing.TypeVar("ModelT")
 
 T = typing.TypeVar("T")
 
@@ -124,41 +126,65 @@ class FormSpecProtocolDefault(typing.Protocol[ModelT]):
     ) -> typing.Self: ...
 
 
-def _simple_case(
-    vs_instance: definitions.ValueSpec,
-    *,
-    migrate_func: MigrateFunc | None,
-    form_spec_class: type[T],
-) -> T:
-    if isinstance(form_spec_class, FormSpecProtocolPrefill) and isinstance(
-        vs_instance, definitions.TextInput
-    ):
-        return form_spec_class(
-            title=optional_text(vs_instance.title(), Title),
-            help_text=optional_text(vs_instance.help(), Help),
-            custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
-            prefill=default_or_placeholder(vs_instance),
-            migrate=migrate_func,
-        )
-
-    if isinstance(form_spec_class, FormSpecProtocolDefault):
-        return form_spec_class(
-            title=optional_text(vs_instance.title(), Title),
-            help_text=optional_text(vs_instance.help(), Help),
-            custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
-            prefill=default_value(vs_instance, default=form_spec_class.prefill),
-            migrate=migrate_func,
-        )
-
-    if isinstance(form_spec_class, FormSpecProtocol):
-        return form_spec_class(
-            title=optional_text(vs_instance.title(), Title),
-            help_text=optional_text(vs_instance.help(), Help),
-            custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
-            migrate=migrate_func,
-        )
-
-    raise RuntimeError(f"{type(form_spec_class)} is not supported.")
+# @match_on(definitions.Color)
+# def valuespec_color(
+#    vs_instance: definitions.Color,
+#    migrate_func: MigrateFunc | None = None,
+# ) -> Color:
+#    return _simple_case(
+#        vs_instance,
+#        migrate_func=migrate_func,
+#        form_spec_class=formspec_definitions.Color,
+#    )
+#
+#
+# @match_on(definitions.DatePicker)
+# def valuespec_date_picker(
+#    vs_instance: definitions.DatePicker,
+#    migrate_func: MigrateFunc | None = None,
+# ) -> formspec_definitions.DatePicker:
+#    return _simple_case(
+#        vs_instance,
+#        migrate_func=migrate_func,
+#        form_spec_class=formspec_definitions.DatePicker,
+#    )
+#
+#
+# def _simple_case(
+#     vs_instance: definitions.ValueSpec,
+#     *,
+#     migrate_func: MigrateFunc | None,
+#     form_spec_class: type[T],
+# ) -> T:
+#     if isinstance(form_spec_class, FormSpecProtocolPrefill) and isinstance(
+#         vs_instance, definitions.TextInput
+#     ):
+#         return form_spec_class(
+#             title=optional_text(vs_instance.title(), Title),
+#             help_text=optional_text(vs_instance.help(), Help),
+#             custom_validate=(ValueSpecValidator(vs_instance),),
+#             prefill=default_or_placeholder(vs_instance),
+#             migrate=migrate_func,
+#         )
+#
+#     if isinstance(form_spec_class, FormSpecProtocolDefault):
+#         return form_spec_class(
+#             title=optional_text(vs_instance.title(), Title),
+#             help_text=optional_text(vs_instance.help(), Help),
+#             custom_validate=(ValueSpecValidator(vs_instance),),
+#             prefill=default_value(vs_instance, default=form_spec_class.prefill),
+#             migrate=migrate_func,
+#         )
+#
+#     if isinstance(form_spec_class, FormSpecProtocol):
+#         return form_spec_class(
+#             title=optional_text(vs_instance.title(), Title),
+#             help_text=optional_text(vs_instance.help(), Help),
+#             custom_validate=(ValueSpecValidator(vs_instance),),
+#             migrate=migrate_func,
+#         )
+#
+#     raise RuntimeError(f"{type(form_spec_class)} is not supported.")
 
 
 def optional_text(text: str | HTML | None, output_type: type[T_L]) -> T_L | None:
@@ -245,15 +271,21 @@ def valuespec_to_formspec(
     return match_entry.match_func(to_convert, migrate_func)
 
 
+@dataclass(frozen=True, kw_only=True)
+class ValueSpecFormSpec(form_specs.FormSpec[definitions.ValueSpec]):
+    valuespec: definitions.ValueSpec
+    prefill: DefaultValue[typing.Any] | InputHint[Title] = InputHint(Title(""))
+
+
 def generic_valuespec_to_formspec(
     vs_instance: definitions.ValueSpec,
     migrate_func: MigrateFunc | None = None,
-) -> formspec_definitions.ValueSpecFormSpec:
-    return formspec_definitions.ValueSpecFormSpec(
+) -> ValueSpecFormSpec:
+    return ValueSpecFormSpec(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
         valuespec=vs_instance,
-        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
+        custom_validate=(ValueSpecValidator(vs_instance),),
         migrate=migrate_func,
     )
 
@@ -299,10 +331,10 @@ def valuespec_listof(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
         element_template=valuespec_to_formspec(vs_instance._valuespec),
-        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
-        add_element_label=Label(vs_instance._add_label),
-        remove_element_label=Label(vs_instance._del_label),
-        no_element_label=Label(vs_instance._text_if_empty),
+        custom_validate=(ValueSpecValidator(vs_instance),),
+        add_element_label=Label("%s") % vs_instance._add_label,
+        remove_element_label=Label("%s") % vs_instance._del_label,
+        no_element_label=Label("%s") % vs_instance._text_if_empty,
         editable_order=vs_instance._movable,
         migrate=migrate_func,
     )
@@ -318,7 +350,7 @@ def valuespec_host_state(
         help_text=optional_text(vs_instance.help(), Help),
         # FIXME: This requires Literal[0, 1, 2, 3] as type, but I don't want to cast this.
         prefill=default_or_input_hint(vs_instance, default=form_specs.HostState.prefill),  # type: ignore[arg-type]
-        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
+        custom_validate=(ValueSpecValidator(vs_instance),),
         migrate=migrate_func,
     )
 
@@ -328,15 +360,15 @@ def valuespec_listofstrings(
     vs_instance: definitions.ListOfStrings,
     migrate_func: MigrateFunc | None = None,
 ) -> form_specs.List:
-    validator_list: list[typing.Callable[[typing.Sequence], None]] = [
-        formspec_validators.ValueSpecValidator(vs_instance)
+    list_validators: list[typing.Callable[[typing.Sequence], None]] = [
+        ValueSpecValidator(vs_instance)
     ]
     if vs_instance._max_entries is not None:
-        validator_list.append(
-            formspec_validators.ListValidator(
-                max_entries=vs_instance._max_entries,
-                min_entries=None,
-            ).__call__
+        list_validators.append(
+            LengthInRange(
+                min_value=None,
+                max_value=vs_instance._max_entries,
+            )
         )
 
     return form_specs.List(
@@ -345,7 +377,7 @@ def valuespec_listofstrings(
         element_template=valuespec_to_formspec(
             vs_instance._valuespec
         ),  # may not necessarily be a String, e.g. NetworkPort
-        custom_validate=(formspec_validators.all_of(validator_list),),
+        custom_validate=tuple(list_validators),
         migrate=migrate_func,
     )
 
@@ -378,23 +410,23 @@ def valuespec_timespan(
     )
 
 
-@match_on(definitions.LDAPDistinguishedName)
-def valuespec_ldap_distinguished_name(
-    vs_instance: definitions.LDAPDistinguishedName,
-    migrate_func: MigrateFunc | None = None,
-) -> form_specs.String:
-    return form_specs.String(
-        title=optional_text(vs_instance.title(), Title),
-        help_text=optional_text(vs_instance.help(), Help),
-        label=optional_text(vs_instance._label, Label),
-        custom_validate=(
-            (formspec_validators.EnforceSuffix(vs_instance.enforce_suffix, case="ignore"),)
-            if vs_instance.enforce_suffix
-            else None
-        ),
-        prefill=default_or_placeholder(vs_instance),
-        migrate=migrate_func,
-    )
+# @match_on(definitions.LDAPDistinguishedName)
+# def valuespec_ldap_distinguished_name(
+#    vs_instance: definitions.LDAPDistinguishedName,
+#    migrate_func: MigrateFunc | None = None,
+# ) -> form_specs.String:
+#    return form_specs.String(
+#        title=optional_text(vs_instance.title(), Title),
+#        help_text=optional_text(vs_instance.help(), Help),
+#        label=optional_text(vs_instance._label, Label),
+#        custom_validate=(
+#            EnforceSuffix(vs_instance.enforce_suffix, case="ignore"),
+#        )
+#        if vs_instance.enforce_suffix
+#        else None,
+#        prefill=default_or_placeholder(vs_instance),
+#        migrate=migrate_func,
+#    )
 
 
 LBU: typing.TypeAlias = definitions.LegacyBinaryUnit
@@ -445,7 +477,7 @@ def valuespec_legacy_data_size(
         help_text=optional_text(vs_instance.help(), Help),
         label=optional_text(vs_instance._renderer._label, Label),
         displayed_magnitudes=displayed_magnitudes,
-        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
+        custom_validate=(ValueSpecValidator(vs_instance),),
         migrate=migrate_func,
     )
 
@@ -469,7 +501,7 @@ def valuespec_filesize(
         help_text=optional_text(vs_instance.help(), Help),
         label=optional_text(vs_instance._renderer._label, Label),
         displayed_magnitudes=displayed_magnitudes,
-        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
+        custom_validate=(ValueSpecValidator(vs_instance),),
         migrate=migrate_func,
     )
 
@@ -480,23 +512,19 @@ def valuespec_integer(
     migrate_func: MigrateFunc | None = None,
 ) -> form_specs.Integer:
     validator_list: list[typing.Callable[[int], None]] = []
-
     if vs_instance._bounds._upper is not None or vs_instance._bounds._lower is not None:
         validator_list.append(
-            formspec_validators.NumberValidator[int](
-                lt=vs_instance._bounds._upper,
-                gt=vs_instance._bounds._lower,
-                ge=None,
-                le=None,
-            ).__call__
+            NumberInRange(
+                min_value=vs_instance._bounds._lower,
+                max_value=vs_instance._bounds._upper,
+            )
         )
-
-    validator_list.append(formspec_validators.ValueSpecValidator(vs_instance).__call__)
+    validator_list.append(ValueSpecValidator(vs_instance))
 
     return form_specs.Integer(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
-        custom_validate=(formspec_validators.all_of(validator_list),),
+        custom_validate=tuple(validator_list),
         label=optional_text(vs_instance._renderer._label, Label),
         prefill=default_or_input_hint(vs_instance, default=form_specs.Integer.prefill),
         migrate=migrate_func,
@@ -515,13 +543,14 @@ def valuespec_textinput(
 
     max_len = vs_instance._maxlen
 
-    custom_validators: list[typing.Callable[[str], None]] = [
-        formspec_validators.TextValidator(
-            min_length=min_len,
-            max_length=max_len,
-        ),
-        formspec_validators.ValueSpecValidator(vs_instance),
-    ]
+    custom_validators: list[typing.Callable[[str], None]] = [ValueSpecValidator(vs_instance)]
+    if min_len or max_len:
+        custom_validators.append(
+            LengthInRange(
+                min_value=min_len,
+                max_value=max_len,
+            ),
+        )
 
     if vs_instance._forbidden_chars:
         custom_validators.append(
@@ -536,7 +565,7 @@ def valuespec_textinput(
         custom_validators.append(
             validators.MatchRegex(
                 vs_instance._regex,
-                error_msg=Message(vs_instance._regex_error),
+                error_msg=Message("%s") % vs_instance._regex_error,
             )
         )
 
@@ -544,7 +573,7 @@ def valuespec_textinput(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
         label=optional_text(vs_instance._label, Label),
-        custom_validate=(formspec_validators.CompoundValidator[str](custom_validators),),
+        custom_validate=tuple(custom_validators),
         prefill=default_or_placeholder(vs_instance),
         migrate=migrate_func,
     )
@@ -570,7 +599,7 @@ def valuespec_dictionary(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
         elements=dictionary_elements,
-        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
+        custom_validate=(ValueSpecValidator(vs_instance),),
         migrate=migrate_func,
     )
 
@@ -611,16 +640,16 @@ def valuespec_dropdown_choice(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
         label=optional_text(vs_instance._label, Label),
-        no_elements_text=Message(vs_instance._empty_text),
+        no_elements_text=Message("%s") % vs_instance._empty_text,
         elements=[
             form_specs.SingleChoiceElement(
                 name=name,
-                title=Title(title),
+                title=Title("%s") % title,
             )
             for name, title in vs_instance.choices()
         ],
         prefill=default_or_input_hint(vs_instance, default=form_specs.SingleChoice.prefill),
-        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
+        custom_validate=(ValueSpecValidator(vs_instance),),
         migrate=migrate_func,
     )
 
@@ -664,7 +693,7 @@ def valuespec_cascading_dropdown(
     # FormSpec combinations is intentionally broken.
     prefill: form_specs.Prefill
     if vs_instance._no_preselect_title is not None:
-        prefill = InputHint(Title(vs_instance._no_preselect_title))
+        prefill = InputHint(Title("%s") % vs_instance._no_preselect_title)
     elif not isinstance(vs_instance._default_value, definitions.Sentinel):
         prefill = DefaultValue(vs_instance._default_value)
     else:
@@ -679,7 +708,7 @@ def valuespec_cascading_dropdown(
         elements=[
             form_specs.CascadingSingleChoiceElement(
                 name=enforce_str(name),
-                title=Title(title),
+                title=Title("%s") % title,
                 parameter_form=valuespec_to_formspec(enforce_valuespec(sub_vs_instance)),
             )
             for name, title, sub_vs_instance in maybe_lazy(vs_instance._choices)
@@ -710,30 +739,6 @@ def valuespec_regexp(
     )
 
 
-@match_on(definitions.Color)
-def valuespec_color(
-    vs_instance: definitions.Color,
-    migrate_func: MigrateFunc | None = None,
-) -> formspec_definitions.Color:
-    return _simple_case(
-        vs_instance,
-        migrate_func=migrate_func,
-        form_spec_class=formspec_definitions.Color,
-    )
-
-
-@match_on(definitions.DatePicker)
-def valuespec_date_picker(
-    vs_instance: definitions.DatePicker,
-    migrate_func: MigrateFunc | None = None,
-) -> formspec_definitions.DatePicker:
-    return _simple_case(
-        vs_instance,
-        migrate_func=migrate_func,
-        form_spec_class=formspec_definitions.DatePicker,
-    )
-
-
 @match_on(definitions.Url)
 def valuespec_url(
     vs_instance: definitions.Url,
@@ -745,25 +750,18 @@ def valuespec_url(
         prefill=default_or_placeholder(vs_instance),
         migrate=migrate_func,
         custom_validate=(
-            formspec_validators.CompoundValidator[str](
-                [
-                    validators.Url(
-                        protocols=[
-                            validators.UrlProtocol(scheme)
-                            for scheme in vs_instance._allowed_schemes
-                        ]
-                    ),
-                    formspec_validators.TextValidator(
-                        min_length=None,
-                        max_length=(
-                            int(vs_instance._size)
-                            if vs_instance._size not in ("max", None)
-                            else None
-                        ),
-                    ),
-                    formspec_validators.ValueSpecValidator(vs_instance),
+            validators.Url(
+                protocols=[
+                    validators.UrlProtocol(scheme) for scheme in vs_instance._allowed_schemes
                 ]
             ),
+            LengthInRange(
+                min_value=None,
+                max_value=(
+                    int(vs_instance._size) if vs_instance._size not in ("max", None) else None
+                ),
+            ),
+            ValueSpecValidator(vs_instance),
         ),
     )
 
@@ -774,19 +772,20 @@ def valuespec_float(
     migrate_func: MigrateFunc | None = None,
 ) -> form_specs.Float:
     # FIXME: missing decimal separator
-    validator_list: list[typing.Callable[[float], None]] = [
-        formspec_validators.NumberValidator[float](
-            gt=vs_instance._bounds._lower,
-            lt=vs_instance._bounds._upper,
-            ge=None,
-            le=None,
-        ).__call__,
-        formspec_validators.ValueSpecValidator(vs_instance).__call__,
-    ]
+    validator_list: list[typing.Callable[[float], None]] = []
+    if vs_instance._bounds._upper is not None or vs_instance._bounds._lower is not None:
+        validator_list.append(
+            NumberInRange(
+                min_value=vs_instance._bounds._lower,
+                max_value=vs_instance._bounds._upper,
+            )
+        )
+
+    validator_list.append(ValueSpecValidator(vs_instance))
     return form_specs.Float(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
-        custom_validate=(formspec_validators.CompoundValidator(validator_list),),
+        custom_validate=tuple(validator_list),
         label=optional_text(vs_instance._renderer._label, Label),
         migrate=migrate_func,
         prefill=default_or_input_hint(vs_instance, default=form_specs.Float.prefill),
@@ -858,7 +857,7 @@ def valuespec_list_choice(
         elements.append(
             form_specs.MultipleChoiceElement(
                 name=str(ident),
-                title=Title(label),
+                title=Title("%s") % label,
             )
         )
 
@@ -867,7 +866,7 @@ def valuespec_list_choice(
         help_text=optional_text(vs_instance.help(), Help),
         elements=elements,
         show_toggle_all=vs_instance._toggle_all,
-        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
+        custom_validate=(ValueSpecValidator(vs_instance),),
         prefill=default_value(vs_instance, default=form_specs.MultipleChoice.prefill),
         migrate=migrate_func,
     )
@@ -906,3 +905,17 @@ def maybe_lazy(
     if callable(entry):
         return entry()
     return entry
+
+
+class ValueSpecValidator:
+    def __init__(self, vs_instance: definitions.ValueSpec) -> None:
+        self.vs_instance = vs_instance
+
+    def __call__(self, value: typing.Any) -> None:
+        try:
+            # NOTE
+            # validators given to the instance via validate=... are also called by validate_value
+            self.vs_instance.validate_datatype(value, "")
+            self.vs_instance.validate_value(value, "")
+        except MKUserError as exc:
+            raise validators.ValidationError(Message("%s") % str(exc))

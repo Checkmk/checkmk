@@ -6,7 +6,7 @@
 # fmt: off
 # mypy: disable-error-code=var-annotated
 
-from cmk.base.plugins.agent_based.ucs_c_rack_server_led import parse_ucs_c_rack_server_led
+from cmk.plugins.collection.agent_based.ucs_c_rack_server_led import parse_ucs_c_rack_server_led
 
 checkname = "ucs_c_rack_server_led"
 

@@ -11,7 +11,7 @@ from typing import Final
 
 import pytest
 
-import cmk.utils.msi_engine as msi_engine
+from cmk.utils import msi_engine
 
 EXPECTED_P_WITH_HASH: Final = msi_engine._Parameters(
     msi=Path("msi"),

@@ -38,7 +38,11 @@ from email.message import Message as POPIMAPMessage
 from typing import Any, Literal
 
 import urllib3
-from exchangelib import (  # type: ignore[import]
+
+# Isort messes with the type annotation and creates a unused-ignore for the
+# OAUTH2 and OAuth2Credentials imports.
+# isort: off
+from exchangelib import (  # type: ignore[import-untyped]
     Account,
     Configuration,
     Credentials,
@@ -50,8 +54,10 @@ from exchangelib import (  # type: ignore[import]
     IMPERSONATION,
 )
 from exchangelib import Message as EWSMessage
-from exchangelib import OAUTH2, OAuth2Credentials  # type: ignore[import]
+from exchangelib import OAUTH2, OAuth2Credentials
 from exchangelib import protocol as ews_protocol
+
+# isort: on
 
 import cmk.utils.password_store
 
@@ -247,7 +253,7 @@ def extract_folder_names(folder_list: Iterable[bytes]) -> Iterable[str]:
         for mb in mb_list
         for match in (pattern.search(mb),)
         if match is not None
-    ]  #  #  #
+    ]
 
 
 def verified_result(data: tuple[bytes | str, list[bytes | str]] | bytes) -> list[bytes | str]:
@@ -496,13 +502,13 @@ class Mailbox:
                 return {
                     num: msg
                     for num, msg in _fetch_mails_pop3().items()
-                    if matches(msg.get("Subject"), pattern)  # type: ignore[attr-defined]
+                    if matches(msg.get("Subject"), pattern)
                 }
             if protocol == "IMAP":
                 return {
                     num: msg
                     for num, msg in _fetch_mails_imap().items()
-                    if matches(msg.get("Subject"), pattern)  # type: ignore[attr-defined]
+                    if matches(msg.get("Subject"), pattern)
                 }
             if protocol == "EWS":
                 return {

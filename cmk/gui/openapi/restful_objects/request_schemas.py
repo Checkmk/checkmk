@@ -13,7 +13,7 @@ from cmk.gui.openapi.utils import param_description
 from cmk import fields
 
 MONITORED_HOST = gui_fields.HostField(
-    description="The hostname or IP address itself.",
+    description="The host name or IP address itself.",
     example="example.com",
     should_exist=None,
     should_be_monitored=True,

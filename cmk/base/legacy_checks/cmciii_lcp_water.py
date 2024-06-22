@@ -52,9 +52,8 @@ def parse_cmciii_lcp_water(string_table: StringTable) -> Section:
             unit_name = line[0].split(" ")[0]
             unit_lines = []
             units[unit_name] = unit_lines
-        else:
-            if unit_lines is not None:
-                unit_lines.append(line[0])
+        elif unit_lines is not None:
+            unit_lines.append(line[0])
 
     if "Water" in units:
         return units["Water"]

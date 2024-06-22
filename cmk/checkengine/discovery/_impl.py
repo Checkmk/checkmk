@@ -15,6 +15,7 @@ from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import Item, ServiceName
 
@@ -29,7 +30,7 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
 from ._autochecks import AutocheckServiceWithNodes, DiscoveredService
-from ._autodiscovery import get_host_services, ServicesByTransition
+from ._autodiscovery import get_host_services_by_host_name, ServicesByTransition
 from ._discovery import DiscoveryPlugin
 from ._filters import ServiceFilter as _ServiceFilter
 from ._filters import ServiceFilters as _ServiceFilters
@@ -101,7 +102,8 @@ def execute_check_discovery(
 
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
-        (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
+        ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
+        console.debug,
     )
     store_piggybacked_sections(host_sections_by_host)
     providers = make_providers(
@@ -140,7 +142,7 @@ def execute_check_discovery(
             ),
         )
 
-    services = get_host_services(
+    services_by_host = get_host_services_by_host_name(
         host_name,
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
@@ -156,7 +158,7 @@ def execute_check_discovery(
 
     services_result, services_need_rediscovery = _check_service_lists(
         host_name=host_name,
-        services_by_transition=services,
+        services_by_transition=services_by_host[host_name],
         params=params,
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
         discovery_mode=discovery_mode,

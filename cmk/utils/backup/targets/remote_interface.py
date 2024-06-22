@@ -6,9 +6,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import Final, Generic, Protocol, TypeVar
-
-from typing_extensions import TypedDict
+from typing import Final, Generic, Protocol, TypedDict, TypeVar
 
 from cmk.utils.backup.targets.local import LocalTarget
 from cmk.utils.backup.type_defs import Backup, SiteBackupInfo

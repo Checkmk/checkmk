@@ -32,6 +32,8 @@ def _migrate(value: object) -> Mapping[str, object]:
     if "basicauth" in value and isinstance(value["basicauth"], tuple):
         username, password = value.pop("basicauth")
         value["basicauth"] = {"username": username, "password": migrate_to_password(password)}
+    if "host" in value and value["host"] in ("ip_address", "host_name"):
+        value["host"] = (value.pop("host"), None)
     return value
 
 
@@ -43,7 +45,7 @@ def _parameter_form_special_agents_cisco_prime() -> Dictionary:
                     elements=[
                         CascadingSingleChoiceElement(
                             name="ip_address",
-                            title=Title("IP Address"),
+                            title=Title("IP address"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(
@@ -53,13 +55,14 @@ def _parameter_form_special_agents_cisco_prime() -> Dictionary:
                         ),
                         CascadingSingleChoiceElement(
                             name="custom",
-                            title=Title("Custom Host"),
+                            title=Title("Custom host"),
                             parameter_form=Dictionary(
                                 elements={
                                     "host": DictElement(
                                         parameter_form=String(
-                                            title=Title("Custom Host"),
+                                            title=Title("Custom host"),
                                             custom_validate=(LengthInRange(min_value=1),),
+                                            macro_support=True,
                                         ),
                                         required=True,
                                     ),

@@ -54,6 +54,6 @@ check_info["cisco_prime_wifi_access_points"] = LegacyCheckDefinition(
     check_function=check_cisco_prime_wifi_access_points,
     check_ruleset_name="cisco_prime_wifi_access_points",
     check_default_parameters={
-        "levels": (20, 40),
+        "levels": (20.0, 40.0),
     },
 )

@@ -21,16 +21,16 @@ class ProxySchema(enum.StrEnum):
     SOCKS5H = "socks5h"
 
 
-ProxyModelT = (
-    tuple[Literal["environment"], Literal["environment"]]
-    | tuple[Literal["no_proxy"], None]
-    | tuple[Literal["global"], str]
-    | tuple[Literal["url"], str]
-)
-
-
 @dataclass(frozen=True, kw_only=True)
-class Proxy(FormSpec[ProxyModelT]):
+class Proxy(
+    FormSpec[
+        tuple[
+            Literal["cmk_postprocessed"],
+            Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+            str,
+        ]
+    ]
+):
     """Specifies a form for configuring a proxy
 
     Args:
@@ -65,10 +65,18 @@ class MonitoredService(FormSpec[str]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Password(FormSpec[tuple[Literal["explicit_password", "stored_password"], str, str]]):
+class Password(
+    FormSpec[
+        tuple[
+            Literal["cmk_postprocessed"],
+            Literal["explicit_password", "stored_password"],
+            tuple[str, str],
+        ]
+    ]
+):
     """Specifies a form for configuring passwords (explicit or from password store)"""
 
 
 @dataclass(frozen=True, kw_only=True)
-class TimePeriod(FormSpec[str]):
+class TimePeriod(FormSpec[tuple[Literal["cmk_postprocessed"], Literal["stored_time_period"], str]]):
     """Specifies a form selecting from a list of time periods configured in Checkmk"""

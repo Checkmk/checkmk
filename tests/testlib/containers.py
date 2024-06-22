@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import shlex
 import subprocess
 import sys
 import tarfile
@@ -16,16 +17,15 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TypedDict
 
 import docker  # type: ignore[import-untyped]
 import dockerpty  # type: ignore[import-untyped]
 import requests
 from docker.models.images import Image  # type: ignore[import-untyped]
-from typing_extensions import TypedDict
 
-import tests.testlib as testlib
-from tests.testlib import get_cmk_download_credentials
+from tests.testlib.repo import git_commit_id, git_essential_directories, repo_path
+from tests.testlib.utils import get_cmk_download_credentials, package_hash_path
 from tests.testlib.version import CMKVersion
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
@@ -75,12 +75,6 @@ def execute_tests_in_container(
                 docker.types.Ulimit(name="nofile", soft=2048, hard=2048),
             ],
             binds=_runtime_binds(),
-            # Our SNMP integration tests need SNMP. For this reason we enable the IPv6 support
-            # docker daemon wide, but set some fixed local network which is not being routed.
-            # This makes it possible to use IPv6 on the "lo" interface. Externally IPv4 is used
-            sysctls={
-                "net.ipv6.conf.eth0.disable_ipv6": 1,
-            },
         ),
         stdin_open=True,
         tty=True,
@@ -140,7 +134,7 @@ def execute_tests_in_container(
         )
 
         # Collect the test results located in /results of the container. The
-        # jenkins job will make it available as artifact later
+        # CI job will make it available as artifact later
         _copy_directory(container, Path("/results"), result_path)
 
         return exit_code
@@ -216,7 +210,7 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
     """Checks package_download folder for a Checkmk package and returns True if
     exactly one package is available and meets some requirements. If there are
     invalid packages, the application terminates."""
-    packages_dir = testlib.repo_path() / "package_download"
+    packages_dir = repo_path() / "package_download"
     if available_packages := [
         p for p in packages_dir.glob("*") if re.match("^.*check-mk.*(rpm|deb)$", p.name)
     ]:
@@ -238,6 +232,7 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
             "ubuntu-20.04": "focal",
             "ubuntu-22.04": "jammy",
             "ubuntu-23.10": "mantic",
+            "ubuntu-24.04": "noble",
             "centos-8": "el8",
             "almalinux-9": "el9",
             "sles-15sp3": "sles15sp3",
@@ -264,7 +259,7 @@ def container_name_suffix(distro_name: str, docker_tag: str) -> str:
     Pipfile.lock) but make it 'unique' for now by adding a timestamp"""
     return (
         f"{distro_name}-{docker_tag}"
-        f"-{testlib.utils.git_commit_id('Pipfile.lock')[:10]}"
+        f"-{git_commit_id('Pipfile.lock')[:10]}"
         f"-{time.strftime('%Y%m%d%H%M%S')}"
     )
 
@@ -315,15 +310,15 @@ def _create_cmk_image(
         # name=f"testbase-{container_name_suffix(distro_name, docker_tag)}",
         image=base_image_name_with_tag,
         labels={
-            "org.tribe29.build_time": f"{int(time.time()):d}",
-            "org.tribe29.build_id": base_image.short_id,
-            "org.tribe29.base_image": base_image_name_with_tag,
-            "org.tribe29.base_image_hash": base_image.short_id,
-            "org.tribe29.cmk_edition_short": version.edition.short,
-            "org.tribe29.cmk_version": version.version,
-            "org.tribe29.cmk_branch": version.branch,
+            "com.checkmk.build_time": f"{int(time.time()):d}",
+            "com.checkmk.build_id": base_image.short_id,
+            "com.checkmk.base_image": base_image_name_with_tag,
+            "com.checkmk.base_image_hash": base_image.short_id,
+            "com.checkmk.cmk_edition_short": version.edition.short,
+            "com.checkmk.cmk_version": version.version,
+            "com.checkmk.cmk_branch": version.branch,
             # override the base image label
-            "com.tribe29.image_type": "cmk-image",
+            "com.checkmk.image_type": "cmk-image",
         },
         command=["tail", "-f", "/dev/null"],  # keep running
         host_config=client.api.create_host_config(
@@ -336,8 +331,10 @@ def _create_cmk_image(
         logger.info(
             "Building in container %s (from [%s])", container.short_id, base_image_name_with_tag
         )
-
-        _exec_run(container, ["mkdir", "-p", "/results"])
+        _exec_run(container, f"groupadd -g {os.getgid()} testuser")
+        _exec_run(container, f"useradd -m -u {os.getuid()} -g {os.getgid()} -s /bin/bash testuser")
+        _exec_run(container, "mkdir -p /home/testuser/.cache")
+        _exec_run(container, "mkdir -p /results")
 
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
@@ -360,7 +357,7 @@ def _create_cmk_image(
         # image labels.
         logger.info("Get Checkmk package hash")
         _exit_code, output = container.exec_run(
-            ["cat", str(testlib.utils.package_hash_path(version.version, version.edition))],
+            ["cat", str(package_hash_path(version.version, version.edition))],
         )
         hash_entry = output.decode("ascii").strip()
         logger.info("Checkmk package hash entry: %s", hash_entry)
@@ -370,7 +367,7 @@ def _create_cmk_image(
         tmp_image = container.commit()
 
         new_labels = container.labels.copy()
-        new_labels["org.tribe29.cmk_hash"] = hash_entry
+        new_labels["com.checkmk.cmk_hash"] = hash_entry
 
         logger.info("Finalizing image")
         labeled_container = client.containers.run(tmp_image, labels=new_labels, detach=True)
@@ -397,7 +394,7 @@ def _is_based_on_current_base_image(image: Image, base_image: Image | None) -> b
         logger.info("  Base image not available, assuming it's up-to-date")
         return False
 
-    image_base_hash = image.labels.get("org.tribe29.base_image_hash")
+    image_base_hash = image.labels.get("com.checkmk.base_image_hash")
     if base_image.short_id != image_base_hash:
         logger.info(
             "  Is based on an outdated base image (%s), current is (%s)",
@@ -413,9 +410,9 @@ def _is_based_on_current_base_image(image: Image, base_image: Image | None) -> b
 def _is_using_current_cmk_package(image: Image, version: CMKVersion) -> bool:
     logger.info("  Check whether or not image is using the current Checkmk package")
 
-    cmk_hash_entry = image.labels.get("org.tribe29.cmk_hash")
+    cmk_hash_entry = image.labels.get("com.checkmk.cmk_hash")
     if not cmk_hash_entry:
-        logger.info("  Checkmk package hash label missing (org.tribe29.cmk_hash). Trigger rebuild.")
+        logger.info("  Checkmk package hash label missing (com.checkmk.cmk_hash). Trigger rebuild.")
         return False
 
     cmk_hash_image, package_name_image = cmk_hash_entry.split()
@@ -456,26 +453,23 @@ def get_current_cmk_hash_for_artifact(version: CMKVersion, package_name: str) ->
 
 
 def _image_build_binds() -> Mapping[str, DockerBind]:
+    """This function is left here in case we need different handling for
+    image builds. Currently we don't"""
     if "WORKSPACE" in os.environ:
         logger.info("WORKSPACE set to %s", os.environ["WORKSPACE"])
-        return {
-            **_runtime_binds(),
-            os.path.join(os.environ["WORKSPACE"], "packages"): DockerBind(
-                bind="/packages", mode="ro"
-            ),
-        }
-    logger.info("WORKSPACE not set")
+    else:
+        logger.info("WORKSPACE not set")
     return _runtime_binds()
 
 
 def _git_repos() -> Mapping[str, DockerBind]:
-    checkout_dir = testlib.repo_path()
+    checkout_dir = repo_path()
     return {
         **{
             # This ensures that we can also work with git-worktrees and reference clones.
             # For this, the original git repository needs to be mapped into the container as well.
             path: DockerBind(bind=path, mode="ro")
-            for path in testlib.utils.git_essential_directories(checkout_dir)
+            for path in git_essential_directories(checkout_dir)
         },
         **{
             # To get access to the test scripts and for updating the version from
@@ -501,7 +495,7 @@ def _runtime_binds() -> Mapping[str, DockerBind]:
     }
 
 
-def _container_env(version: CMKVersion) -> dict[str, str]:
+def _container_env(version: CMKVersion) -> Mapping[str, str]:
     return {
         "LANG": "C",
         "PIPENV_PIPFILE": "/git/Pipfile",
@@ -540,22 +534,22 @@ def _start(client: docker.DockerClient, **kwargs) -> Iterator[docker.Container]:
         yield c
     finally:
         # Do not leave inactive containers and anonymous volumes behind
-        c.remove(v=True, force=True)
+        if os.getenv("CLEANUP", "1") == "1":
+            c.stop()
+            c.remove(v=True, force=True)
 
 
 # pep-0692 is not yet finished in mypy...
-def _exec_run(c: docker.Container, cmd: list[str], check: bool = True, **kwargs) -> int:  # type: ignore[no-untyped-def]
-    if kwargs:
-        logger.info(
-            "Execute in container %s: %r (kwargs: %r)",
-            c.short_id,
-            subprocess.list2cmdline(cmd),
-            kwargs,
-        )
-    else:
-        logger.info("Execute in container %s: %r", c.short_id, subprocess.list2cmdline(cmd))
+def _exec_run(c: docker.Container, cmd: str | Sequence[str], check: bool = True, **kwargs) -> int:  # type: ignore[no-untyped-def]
+    cmd_list = shlex.split(cmd) if isinstance(cmd, str) else cmd
+    cmd_str = subprocess.list2cmdline(cmd_list)
 
-    result = container_exec(c, cmd, **kwargs)
+    if kwargs:
+        logger.info("Execute in container %s: %r (kwargs: %r)", c.short_id, cmd_str, kwargs)
+    else:
+        logger.info("Execute in container %s: %r", c.short_id, cmd_str)
+
+    result = container_exec(c, cmd_list, **kwargs)
 
     if kwargs.get("stream"):
         return result.communicate(line_prefix=b"%s: " % c.short_id.encode("ascii"))
@@ -569,7 +563,7 @@ def _exec_run(c: docker.Container, cmd: list[str], check: bool = True, **kwargs)
 
     returncode = result.poll()
     if check and returncode != 0:
-        raise RuntimeError(f"Command `{' '.join(cmd)}` returned with nonzero exit code")
+        raise RuntimeError(f"Command `{cmd_str}` returned with nonzero exit code")
     return returncode
 
 
@@ -624,7 +618,7 @@ class ContainerExec:
         self.output = output
 
     def inspect(self) -> Mapping:
-        return self.client.api.exec_inspect(self.id)  # type: ignore[no-any-return]
+        return self.client.api.exec_inspect(self.id)
 
     def poll(self) -> int:
         return int(self.inspect()["ExitCode"])
@@ -702,7 +696,7 @@ def _prepare_git_overlay(container: docker.Container, lower_path: str, target_pa
         ],
     )
 
-    # target_path belongs to root, but its content belong to jenkins. Newer git versions don't like
+    # target_path belongs to root, but its content belong to testuser. Newer git versions don't like
     # that by default, so we explicitly say that this is ok.
     _exec_run(
         container,

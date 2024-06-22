@@ -11,7 +11,7 @@ import time
 import traceback
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 import livestatus
 
@@ -765,6 +765,9 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             if icon := image_metadata.get(icon_type):
                 result.setdefault("node_images", {})[icon_type] = theme.detect_icon_path(icon, "")
 
+        if tooltip := node.metadata.get("tooltip"):
+            result["tooltip"] = tooltip
+
         if custom_settings := self._topology_configuration.frontend.custom_node_settings.get(
             node.id
         ):
@@ -996,7 +999,7 @@ class Topology:
         self._growth_root_nodes = self._topology_configuration.frontend.growth_root_nodes_set.union(
             self._root_hostnames_from_core
         )
-        self._compare_to_topology: Optional[Topology] = None
+        self._compare_to_topology: Topology | None = None
         ds_config = self._topology_configuration.frontend.datasource_configuration
         used_datasource = enforce_datasource if enforce_datasource else ds_config.reference
         self._computed_layers = self._get_computed_layers(topology_data_dir / used_datasource)
@@ -1039,16 +1042,15 @@ class Topology:
                     data_folder,
                     add_data_root_node=len(active_layer_ids) > 1,
                 )
-            else:
+            elif layer_id.startswith(_dynamic_network_data_id("")):
                 # Create generic class instances for dynamic layers
-                if layer_id.startswith(_dynamic_network_data_id("")):
-                    layer = GenericNetworkDataGenerator(
-                        layer_id.removeprefix("network@"),
-                        self._root_hostnames_from_core,
-                        self._topology_configuration,
-                        data_folder,
-                        add_data_root_node=len(active_layer_ids) > 1,
-                    )
+                layer = GenericNetworkDataGenerator(
+                    layer_id.removeprefix("network@"),
+                    self._root_hostnames_from_core,
+                    self._topology_configuration,
+                    data_folder,
+                    add_data_root_node=len(active_layer_ids) > 1,
+                )
             if layer:
                 computed_layers[layer_id] = layer
             else:
@@ -1420,7 +1422,7 @@ def _register_builtin_views():
                 "browser_reload": 0,
                 "column_headers": "pergroup",
                 "datasource": "hosts",
-                "description": _l("Host hover menu shown in topolgoy visualization"),
+                "description": _l("Host hover menu shown in topology visualization"),
                 "hidden": True,
                 "hidebutton": True,
                 "group_painters": [],
@@ -1592,7 +1594,7 @@ def get_topology_configuration(
     query_identifier = TopologyQueryIdentifier(topology_type, filter_configuration)
     serialized_settings = _get_topology_config_for_query(query_identifier)
     if serialized_settings:
-        topology_configuration = TopologyConfiguration.parse(serialized_settings)
+        topology_configuration = TopologyConfiguration.parse(serialized_settings, query_identifier)
         # Since we do not save the available_overlays in the settings we have to add them
         topology_configuration.frontend.overlays_config.available_layers = (
             default_overlays.available_layers

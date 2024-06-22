@@ -21,8 +21,8 @@ Related documentation
 
 
 """
-
 from collections.abc import Mapping
+from datetime import datetime
 from typing import Any
 
 from livestatus import SiteId
@@ -76,6 +76,10 @@ def _serialize_comment(comment: Comment) -> DomainObject:
     if "site" in dict_comment:
         dict_comment["site_id"] = dict_comment.pop("site")
 
+    dict_comment["entry_time"] = (
+        datetime.strptime(dict_comment["entry_time"], "%b %d %Y %H:%M:%S").isoformat() + "+00:00"
+    )
+
     return constructors.domain_object(
         domain_type="comment",
         identifier=str(comment.id),
@@ -106,7 +110,7 @@ COLLECTION_NAME = {
 
 SERVICE_DESCRIPTION_SHOW = {
     "service_description": fields.String(
-        description="The service description. No exception is raised when the specified service "
+        description="The service name. No exception is raised when the specified service "
         "description does not exist",
         example="Memory",
         required=False,
@@ -141,7 +145,11 @@ OPTIONAL_SITE_ID = {
 
 
 class GetCommentsByQuery(BaseSchema):
-    query = gui_fields.query_field(Comments, required=False)
+    query = gui_fields.query_field(
+        Comments,
+        required=False,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    )
 
 
 @Endpoint(
@@ -315,7 +323,7 @@ def create_service_comment(params: Mapping[str, Any]) -> Response:
             except CommentQueryException:
                 return problem(
                     status=400,
-                    title="The query did not match any service descriptions",
+                    title="The query did not match any service names",
                     detail="The provided query returned an empty list so no comment was created",
                 )
 

@@ -13,6 +13,7 @@ from cmk.rulesets.v1.form_specs import (
     List,
     MatchingScope,
     migrate_to_password,
+    migrate_to_proxy,
     Password,
     Proxy,
     RegularExpression,
@@ -27,7 +28,7 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 def _validate_regex_choices(value: Mapping[str, object]) -> None:
     """At least one device type should be monitored."""
 
-    if not any(regex in value for regex in ["android-regex", "ios-regex", "other-regex"]):
+    if not {"android_regex", "ios_regex", "other_regex"}.intersection(value):
         raise ValidationError(
             Message(
                 "Please activate the monitoring of at least one device type: Android, iOS or other devices"
@@ -74,10 +75,10 @@ def _parameter_form_special_agents_mobileiron() -> Dictionary:
                 ),
                 required=True,
             ),
-            "proxy": DictElement(parameter_form=Proxy(), required=False),
+            "proxy": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy), required=False),
             "partition": DictElement(
                 parameter_form=List(
-                    element_template=String(),
+                    element_template=String(macro_support=True),
                     title=Title("Retrieve information about the following partitions"),
                     custom_validate=(LengthInRange(min_value=1),),
                 ),
@@ -121,7 +122,7 @@ def _parameter_form_special_agents_mobileiron() -> Dictionary:
                         "You can specify a list of regex patterns for android host names. "
                         "Several patterns can be provided. "
                         "Only those that match any of the patterns will be monitored. "
-                        "By default all hostnames are accepted"
+                        "By default all host names are accepted"
                     ),
                     add_element_label=Label("Add new pattern"),
                     custom_validate=(LengthInRange(min_value=1),),

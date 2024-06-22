@@ -28,8 +28,7 @@
 
 import time
 from collections.abc import Mapping
-
-from typing_extensions import TypedDict
+from typing import TypedDict
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -54,7 +53,7 @@ def parse_cups_queues(string_table: list[list[str]]) -> Section:
                 "output": " ".join(line[2:]),
                 "jobs": [],
             }
-            if len(string_table) > num + 1 and not string_table[num + 1][0] in ["printer", "---"]:
+            if len(string_table) > num + 1 and string_table[num + 1][0] not in ["printer", "---"]:
                 parsed[line[1]]["output"] += " (%s)" % " ".join(string_table[num + 1])
         elif line[0] == "---":
             break

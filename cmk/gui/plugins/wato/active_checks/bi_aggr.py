@@ -47,7 +47,7 @@ def _valuespec_active_checks_bi_aggr() -> Dictionary:
                 TextInput(
                     title=_("Aggregation Name"),
                     help=_(
-                        "The name of the aggregation to fetch. It will be added to the service description. You can "
+                        "The name of the aggregation to fetch. It will be added to the service name. You can "
                         "use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this parameter to "
                         "make them be replaced by the hosts values. The aggregation name is the title in the "
                         "top-level-rule of your BI pack."
@@ -66,7 +66,7 @@ def _valuespec_active_checks_bi_aggr() -> Dictionary:
                             Tuple(
                                 elements=[
                                     TextInput(
-                                        title=_("Automation Username"),
+                                        title=_("Automation user name"),
                                         allow_empty=True,
                                         help=_(
                                             "The name of the automation account to use for fetching the BI aggregation via HTTP. Note: You may "

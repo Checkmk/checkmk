@@ -74,7 +74,7 @@ PARAMETERS = [
 
 HOST_NAME = {
     "host_name": HostField(
-        description="A hostname.",
+        description="A host name.",
         should_exist=True,
         permission_type="monitor",
     )
@@ -82,7 +82,7 @@ HOST_NAME = {
 
 OPTIONAL_HOST_NAME = {
     "host_name": HostField(
-        description="A hostname.",
+        description="A host name.",
         should_exist=True,
         required=False,
         permission_type="monitor",
@@ -98,30 +98,35 @@ OPTIONAL_HOST_NAME = {
     query_params=[
         {
             "service_description": fields.String(
-                description="The service description of the selected host",
+                description="The service name of the selected host",
                 example="Filesystem /boot",
                 required=True,
             ),
-        }
+            "columns": gui_fields.column_field(
+                Services,
+                default=[
+                    Services.host_name,
+                    Services.description,
+                    Services.state,
+                    Services.state_type,
+                    Services.last_check,
+                ],
+                example=["state", "state_type"],
+            ),
+        },
     ],
     tag_group="Monitoring",
-    response_schema=response_schemas.DomainObject,
+    response_schema=response_schemas.DomainObject,  # TODO: response schema
     permissions_required=PERMISSIONS,
 )
 def show_service(params: Mapping[str, Any]) -> Response:
-    """Show the monitored service of a host"""
+    """Show a single service of a specific host"""
     service_description = params["service_description"]
     host_name = params["host_name"]
     live = sites.live()
     try:
         q = Query(
-            [
-                Services.description,
-                Services.host_name,
-                Services.state_type,
-                Services.state,
-                Services.last_check,
-            ],
+            params["columns"],
             filter_expr=And(
                 Services.host_name.op("=", params["host_name"]),
                 Services.description.op("=", service_description),
@@ -132,7 +137,7 @@ def show_service(params: Mapping[str, Any]) -> Response:
         return problem(
             status=404,
             title="The requested service was not found",
-            detail=f"The service description {service_description} did not match any service",
+            detail=f"The service name {service_description} did not match any service",
         )
     return serve_json(
         constructors.domain_object(
@@ -184,6 +189,8 @@ def _list_all_services(params: Mapping[str, Any]) -> Response:
 
 def _list_services(params: Mapping[str, Any]) -> Response:
     live = sites.live()
+    if only_sites := params.get("sites"):
+        live.set_only_sites(only_sites)
 
     q = Query(params["columns"])
 

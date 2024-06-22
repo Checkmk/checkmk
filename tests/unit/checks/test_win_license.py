@@ -4,14 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import NamedTuple
+from typing import NamedTuple, TypedDict
 
 import pytest
-from typing_extensions import TypedDict
 
-from tests.testlib import Check
-
-from .checktestlib import assertCheckResultsEqual, CheckResult
+from .checktestlib import assertCheckResultsEqual, Check, CheckResult
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks

@@ -16,7 +16,7 @@ from typing import NamedTuple
 
 import psutil
 import pytest
-from pysnmp.hlapi import (  # type: ignore[import]
+from pysnmp.hlapi import (  # type: ignore[import-untyped]
     CommunityData,
     ContextData,
     getCmd,
@@ -26,12 +26,11 @@ from pysnmp.hlapi import (  # type: ignore[import]
     UdpTransportTarget,
 )
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
 from tests.testlib.utils import wait_until
 
-import cmk.utils.debug as debug
-import cmk.utils.log as log
+from cmk.utils import debug, log
 
 from cmk.snmplib import SNMPBackendEnum
 
@@ -57,10 +56,10 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
     with_sudo = os.geteuid() == 0
 
     # In the CI the tests are started as root and snmpsimd needs to be started as
-    # "jenkins" user. We need to provide a tmp path which is writable by that user.
+    # "testuser" user. We need to provide a tmp path which is writable by that user.
     with TemporaryDirectory(prefix="snmpsim_") as d:
         if with_sudo:
-            shutil.chown(d, "jenkins", "jenkins")
+            shutil.chown(d, "testuser", "testuser")
 
         process_definitions = [
             _define_process(idx, auth, Path(d), snmp_data_dir, with_sudo)
@@ -88,16 +87,16 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
 def _define_process(index, auth, tmp_path, snmp_data_dir, with_sudo):
     port = 1337 + index
 
-    # The tests are executed as root user in the containerized environmen, which snmpsimd does not
-    # like. Switch the user context to the jenkins user to execute the daemon.
+    # The tests are executed as root user in the containerized environment, which snmpsimd does not
+    # like. Switch the user context to 'testuser' to execute the daemon.
     # When executed on a dev system, we run as lower privileged user and don't have to switch the
     # context.
-    sudo = ["sudo", "-u", "jenkins"] if with_sudo else []
+    sudo = ["sudo", "-u", "testuser"] if with_sudo else []
 
     proc_tmp_path = tmp_path / f"snmpsim{index}"
     proc_tmp_path.mkdir(parents=True, exist_ok=True)
     if with_sudo:
-        shutil.chown(proc_tmp_path, "jenkins", "jenkins")
+        shutil.chown(proc_tmp_path, "testuser", "testuser")
 
     return ProcessDef(
         with_sudo=with_sudo,
@@ -225,7 +224,7 @@ def _is_listening(process_def: ProcessDef) -> bool:
         # assert p.stdout is not None
         # output = p.stdout.read()
         output = "foobar"
-        raise Exception("snmpsimd died. Exit code: %s; output: %s" % (exitcode, output))
+        raise Exception(f"snmpsimd died. Exit code: {exitcode}; output: {output}")
 
     logger.debug("snmpsimd is running")
 
@@ -243,7 +242,7 @@ def _is_listening(process_def: ProcessDef) -> bool:
         ContextData(),
         ObjectType(ObjectIdentity("SNMPv2-MIB", "sysDescr", 0)),
     )
-    _error_indication, _error_status, _error_index, var_binds = next(g)
+    _error_indication, _error_status, _error_index, var_binds = g
     logger.debug("SNMP get response")
     logger.debug(repr((_error_indication, _error_status, _error_index, var_binds)))
     assert len(var_binds) == 1

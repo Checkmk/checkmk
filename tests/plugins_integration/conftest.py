@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -8,10 +9,12 @@ from collections.abc import Iterator
 import pytest
 
 from tests.testlib.site import get_site_factory, Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, current_branch_version, run
-from tests.testlib.version import CMKVersion, Edition, get_min_version
+from tests.testlib.utils import run
+from tests.testlib.version import get_min_version
 
 from tests.plugins_integration import checks
+
+from cmk.utils.version import Edition
 
 logger = logging.getLogger(__name__)
 
@@ -118,9 +121,9 @@ def pytest_configure(config):
     checks.config.mode = (
         checks.CheckModes.UPDATE
         if config.getoption("--update-checks")
-        else checks.CheckModes.ADD
-        if config.getoption("--add-checks")
-        else checks.CheckModes.DEFAULT
+        else (
+            checks.CheckModes.ADD if config.getoption("--add-checks") else checks.CheckModes.DEFAULT
+        )
     )
     checks.config.skip_masking = config.getoption("--skip-masking")
     checks.config.skip_cleanup = config.getoption("--skip-cleanup")
@@ -169,13 +172,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
 
 @pytest.fixture(name="site_factory_update", scope="session")
 def _get_sf_update():
-    base_version = CMKVersion(
-        get_min_version(),
-        branch=current_base_branch_name(),
-        branch_version=current_branch_version(),
-        edition=Edition.CEE,
-    )
-
+    base_version = get_min_version(Edition.CEE)
     return get_site_factory(prefix="update_", version=base_version)
 
 
@@ -241,7 +238,7 @@ def _periodic_service_discovery_rule() -> dict:
 
 
 @pytest.fixture(name="create_periodic_service_discovery_rule", scope="function")
-def _create_periodic_service_discovery_rule(test_site_update: Site) -> None:
+def _create_periodic_service_discovery_rule(test_site_update: Site) -> Iterator[None]:
     existing_rules_ids = []
     for rule in test_site_update.openapi.get_rules("periodic_discovery"):
         existing_rules_ids.append(rule["id"])

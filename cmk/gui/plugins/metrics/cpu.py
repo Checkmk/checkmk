@@ -34,12 +34,6 @@ metric_info["load_instant"] = {
     "color": "42/a",
 }
 
-metric_info["processes"] = {
-    "title": _l("Processes"),
-    "unit": "count",
-    "color": "#8040f0",
-}
-
 metric_info["threads_idle"] = {
     "title": _l("Idle threads"),
     "unit": "count",
@@ -249,6 +243,12 @@ metric_info["util5"] = {
     "title": _l("CPU utilization last 5 minutes"),
     "unit": "%",
     "color": "#80f040",
+}
+
+metric_info["util15"] = {
+    "title": _l("CPU utilization last 15 minutes"),
+    "unit": "%",
+    "color": "#008000",
 }
 
 metric_info["util_50"] = {

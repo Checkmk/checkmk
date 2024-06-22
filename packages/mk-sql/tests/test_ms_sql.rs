@@ -3,17 +3,24 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 mod common;
+use mk_sql::platform;
+#[cfg(windows)]
+use mk_sql::platform::odbc;
 use mk_sql::types::InstanceName;
+
 use std::path::PathBuf;
 use std::{collections::HashSet, fs::create_dir_all};
 
 use mk_sql::ms_sql::{
-    client::{self, Client},
+    client::{self, UniClient},
     instance::{self, SqlInstance, SqlInstanceBuilder},
     query,
     section::Section,
     sqls::{self, find_known_query},
 };
+
+#[cfg(windows)]
+use mk_sql::ms_sql::instance::{create_odbc_client, obtain_properties};
 
 use mk_sql::setup::Env;
 
@@ -71,8 +78,10 @@ fn test_section_select_query() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {
+    use mk_sql::ms_sql::defaults;
+
     let mut client = client::ClientBuilder::new()
-        .local(Some(mk_sql::ms_sql::defaults::STANDARD_PORT.into()))
+        .local_by_port(Some(defaults::STANDARD_PORT.into()), None)
         .certificate(std::env::var(tools::MS_SQL_DB_CERT).ok())
         .build()
         .await
@@ -104,7 +113,7 @@ mssql:
       username: u
       type: integrated
     connection:
-      hostname: your_host
+      hostname: ''
       {}
 "#,
         tools::make_tls_block()
@@ -131,6 +140,8 @@ async fn test_obtain_all_instances_from_registry_local() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_local() {
+    use mk_sql::constants;
+
     let l = tools::LogMe::new("test_validate_all_instances_local").start(log::Level::Debug);
     log::info!("{:#?}", l.dir());
     let endpoint = make_default_endpoint();
@@ -141,7 +152,7 @@ async fn test_validate_all_instances_local() {
 
     for name in names {
         let c = client::ClientBuilder::new()
-            .local_instance(&name, None::<u16>)
+            .browse(&constants::LOCAL_HOST, &name, None::<u16>)
             .build()
             .await;
         match c {
@@ -252,7 +263,7 @@ fn make_section<S: Into<String>>(name: S) -> Section {
     Section::new(&config_section, Some(100))
 }
 
-async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
+async fn validate_all(i: &SqlInstance, c: &mut UniClient, e: &Endpoint) {
     validate_database_names(i, c).await;
     assert!(
         tools::run_get_version(c).await.is_some()
@@ -288,14 +299,14 @@ async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
     validate_availability_groups_section(i, e).await;
 }
 
-async fn validate_database_names(instance: &SqlInstance, client: &mut Client) {
+async fn validate_database_names(instance: &SqlInstance, client: &mut UniClient) {
     let databases = instance.generate_databases(client).await;
     let expected = expected_databases();
     // O^2, but good enough for testing
     assert!(expected.iter().all(|item| databases.contains(item)),);
 }
 
-async fn validate_counters(instance: &SqlInstance, client: &mut Client) {
+async fn validate_counters(instance: &SqlInstance, client: &mut UniClient) {
     let counters = instance
         .generate_counters_section(client, find_known_query(sqls::Id::Counters).unwrap(), '|')
         .await;
@@ -306,7 +317,7 @@ async fn validate_counters(instance: &SqlInstance, client: &mut Client) {
     assert!(!counters[result[0].len()..].contains(' '));
 }
 
-async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut Client) {
+async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut UniClient) {
     let blocked_sessions = &instance
         .generate_sessions_section(
             client,
@@ -320,7 +331,7 @@ async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut Client) 
     );
 }
 
-async fn validate_all_sessions_to_check_format(instance: &SqlInstance, client: &mut Client) {
+async fn validate_all_sessions_to_check_format(instance: &SqlInstance, client: &mut UniClient) {
     let all_sessions = &instance
         .generate_sessions_section(
             client,
@@ -348,7 +359,11 @@ async fn validate_all_sessions_to_check_format(instance: &SqlInstance, client: &
     }
 }
 
-async fn validate_table_spaces(instance: &SqlInstance, client: &mut Client, endpoint: &Endpoint) {
+async fn validate_table_spaces(
+    instance: &SqlInstance,
+    client: &mut UniClient,
+    endpoint: &Endpoint,
+) {
     let databases = instance.generate_databases(client).await;
     let expected = expected_databases();
 
@@ -375,7 +390,7 @@ async fn validate_table_spaces(instance: &SqlInstance, client: &mut Client, endp
     }
 }
 
-async fn validate_backup(instance: &SqlInstance, client: &mut Client) {
+async fn validate_backup(instance: &SqlInstance, client: &mut UniClient) {
     let mut to_be_found: HashSet<&str> = ["master", "model", "msdb"].iter().cloned().collect();
 
     let result = instance
@@ -395,14 +410,14 @@ async fn validate_backup(instance: &SqlInstance, client: &mut Client) {
     }
     assert_eq!(
         lines[lines.len() - 2],
-        format!("{}|tempdb|-|-|-|No backup found", instance.mssql_name())
+        format!("{}|tempdb|-|-|-|no backup found", instance.mssql_name())
     );
     assert!(to_be_found.is_empty());
 }
 
 async fn validate_transaction_logs(
     instance: &SqlInstance,
-    client: &mut Client,
+    client: &mut UniClient,
     endpoint: &Endpoint,
 ) {
     let expected: HashSet<String> = expected_databases();
@@ -438,7 +453,7 @@ async fn validate_transaction_logs(
     assert_eq!(found, expected);
 }
 
-async fn validate_datafiles(instance: &SqlInstance, client: &mut Client, endpoint: &Endpoint) {
+async fn validate_datafiles(instance: &SqlInstance, client: &mut UniClient, endpoint: &Endpoint) {
     let expected: HashSet<String> = expected_databases();
     let databases = instance.generate_databases(client).await;
 
@@ -476,7 +491,7 @@ async fn validate_datafiles(instance: &SqlInstance, client: &mut Client, endpoin
     assert_eq!(found, expected);
 }
 
-async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
+async fn validate_databases(instance: &SqlInstance, client: &mut UniClient) {
     let expected: HashSet<String> = expected_databases();
 
     let databases = instance.generate_databases(client).await;
@@ -514,7 +529,7 @@ async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
     assert_eq!(found, expected);
 }
 
-async fn validate_databases_error(instance: &SqlInstance, client: &mut Client) {
+async fn validate_databases_error(instance: &SqlInstance, client: &mut UniClient) {
     let expected: HashSet<String> = expected_databases();
 
     let databases = instance.generate_databases(client).await;
@@ -539,12 +554,13 @@ async fn validate_databases_error(instance: &SqlInstance, client: &mut Client) {
             found.insert(values[1].to_string());
         }
         assert!(values[2].contains(" error: "), "wrong: {l}");
+        assert!(values[2].starts_with("ERROR: "), "wrong: {l}");
         assert_eq!(values[3..6], ["-", "-", "-"], "wrong: {l}");
     }
     assert_eq!(found, expected);
 }
 
-async fn validate_connections(instance: &SqlInstance, client: &mut Client) {
+async fn validate_connections(instance: &SqlInstance, client: &mut UniClient) {
     let expected: HashSet<String> = expected_databases();
 
     let result = instance
@@ -572,7 +588,7 @@ async fn validate_connections(instance: &SqlInstance, client: &mut Client) {
     assert_eq!(found, expected);
 }
 
-async fn validate_connections_error(instance: &SqlInstance, client: &mut Client) {
+async fn validate_connections_error(instance: &SqlInstance, client: &mut UniClient) {
     let result = instance
         .generate_connections_section(client, find_known_query(sqls::Id::BadQuery).unwrap(), ' ')
         .await;
@@ -584,7 +600,7 @@ async fn validate_connections_error(instance: &SqlInstance, client: &mut Client)
     assert!(lines[0].contains(" error: "));
 }
 
-async fn validate_clusters(_instance: &SqlInstance, _client: &mut Client, _endpoint: &Endpoint) {
+async fn validate_clusters(_instance: &SqlInstance, _client: &mut UniClient, _endpoint: &Endpoint) {
     // TODO(sk): implement it on arriving config
 }
 
@@ -714,6 +730,19 @@ async fn test_get_computer_name() {
             .to_string()
             .to_lowercase()
             .starts_with("agentbuild"),);
+    } else {
+        tools::skip_on_lack_of_ms_sql_endpoint();
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_get_user_name() {
+    if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
+        let mut client = client::connect_main_endpoint(&endpoint.make_ep())
+            .await
+            .unwrap();
+        let name = query::obtain_system_user(&mut client).await.unwrap();
+        assert_eq!(name.unwrap().to_lowercase(), endpoint.user.to_lowercase());
     } else {
         tools::skip_on_lack_of_ms_sql_endpoint();
     }
@@ -1090,12 +1119,15 @@ fn validate_stdout(stdout: &str, label: &str) {
     assert_eq!(contains(&lines, "|state|1"), 3, "{}\n{}", &label, stdout);
     // - details entries: one per engine
     assert_eq!(contains(&lines, "|details|"), 3, "{}\n{}", &label, stdout);
-    let rtm_count = contains(&lines, "RTM|Express Edition");
-    let sp3_count = contains(&lines, "SP3|Express Edition");
+
+    let rtm_count = contains(&lines, "|RTM|Express Edition");
+    let sp3_count = contains(&lines, "|SP3|Express Edition");
     assert_eq!(rtm_count + sp3_count, 2, "{}\n{}", &label, stdout);
-    let rtm_count = contains(&lines, "RTM|Express Edition (64-bit)");
-    let sp3_count = contains(&lines, "SP3|Express Edition (64-bit)");
+
+    let rtm_count = contains(&lines, "|RTM|Express Edition (64-bit)");
+    let sp3_count = contains(&lines, "|SP3|Express Edition (64-bit)");
     assert_eq!(rtm_count + sp3_count, 1, "{}\n{}", &label, stdout);
+
     assert_eq!(
         contains(&lines, "|RTM|Standard Edition"),
         1,
@@ -1163,6 +1195,38 @@ async fn test_check_config_exec_piggyback_remote() {
     let check_config = CheckConfig::load_file(&dir.path().join("mk-sql.yml")).unwrap();
     let output = check_config.exec(&Env::default()).await.unwrap();
     assert!(!output.is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_lack_of_sql_db() {
+    let dir = tools::create_temp_process_dir();
+    let content = std::fs::read_to_string(
+        PathBuf::new()
+            .join("tests")
+            .join("files")
+            .join("test-no-ms-sql.yml"),
+    )
+    .unwrap();
+    tools::create_file_with_content(dir.path(), "mk-sql.yml", &content);
+    let check_config = CheckConfig::load_file(&dir.path().join("mk-sql.yml")).unwrap();
+    let output = check_config.exec(&Env::default()).await.unwrap();
+    let awaited = "<<<mssql_instance:sep(124)>>>
+<<<mssql_databases:sep(124)>>>
+<<<mssql_counters:sep(124)>>>
+<<<mssql_blocked_sessions:sep(124)>>>
+<<<mssql_transactionlogs:sep(124)>>>
+<<<mssql_clusters:sep(124)>>>
+<<<mssql_mirroring:sep(09)>>>
+<<<mssql_availability_groups:sep(09)>>>
+<<<mssql_connections>>>
+<<<mssql_tablespaces>>>
+<<<mssql_datafiles:sep(124)>>>
+<<<mssql_backup:sep(124)>>>
+<<<mssql_jobs:sep(09)>>>
+<<<mssql_instance:sep(124)>>>
+ERROR: Failed to gather SQL server instances\n"
+        .to_owned();
+    assert_eq!(output.to_owned(), awaited);
 }
 
 #[cfg(windows)]
@@ -1309,7 +1373,7 @@ mssql:
 }
 
 #[test]
-fn test_din_provided_query() {
+fn test_find_provided_query() {
     let s_a = make_section("A");
     let s_a2 = make_section("A2");
     let s_jobs = make_section("jobs");
@@ -1346,4 +1410,90 @@ fn test_din_provided_query() {
         s_jobs.find_provided_query(dir_to_check(), 100).unwrap(),
         "jobs@100.sql"
     );
+}
+
+#[test]
+fn test_get_instances() {
+    let instances = platform::registry::get_instances();
+    #[cfg(windows)]
+    {
+        assert!(!instances.is_empty());
+        for instance in instances {
+            assert!(instance.final_port().is_some());
+            assert!(instance.is_shared_memory());
+            assert!(!instance.is_pipe());
+            assert!(instance.is_tcp());
+            assert!(!instance.is_odbc_only());
+        }
+    }
+
+    #[cfg(unix)]
+    assert!(instances.is_empty());
+}
+
+#[cfg(windows)]
+#[test]
+fn test_odbc() {
+    let s = odbc::make_connection_string(
+        &InstanceName::from("SQLEXPRESS_NAME".to_string()),
+        Some("master"),
+        None,
+    );
+    let r = odbc::execute(
+        &s,
+        sqls::find_known_query(sqls::Id::TableSpaces).unwrap(),
+        None,
+    )
+    .unwrap();
+    assert_eq!(r.len(), 2);
+    assert_eq!(r[0].headline.len(), 3);
+    assert_eq!(r[1].headline.len(), 4);
+
+    let r = odbc::execute(
+        &s,
+        sqls::find_known_query(sqls::Id::ComputerName).unwrap(),
+        None,
+    )
+    .unwrap();
+    assert_eq!(r.len(), 1);
+    assert_eq!(r[0].headline[0], "MachineName");
+    assert!(!r[0].rows[0][0].is_empty());
+}
+
+#[cfg(windows)]
+#[test]
+fn test_odbc_timeout() {
+    let s = odbc::make_connection_string(
+        &InstanceName::from("SQLEXPRESS_XX".to_string()),
+        Some("master"),
+        None,
+    );
+    let start = std::time::Instant::now();
+    let r = odbc::execute(
+        &s,
+        sqls::find_known_query(sqls::Id::TableSpaces).unwrap(),
+        Some(1),
+    );
+    assert!(r.is_err());
+    let end = std::time::Instant::now();
+    assert!(end - start < std::time::Duration::from_secs(2));
+}
+
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_odbc_high_level() {
+    use mk_sql::ms_sql::instance::SqlInstanceProperties;
+
+    async fn get(name: &str) -> Option<SqlInstanceProperties> {
+        let instance_name = InstanceName::from(name.to_string());
+        let mut client = create_odbc_client(&instance_name, None).unwrap();
+        obtain_properties(&mut client, &instance_name).await
+    }
+
+    let odbc_name = get("SQLEXPRESS_NAME").await;
+    assert!(odbc_name.is_some());
+    let odbc_wow = get("SQLEXPRESS_WOW").await;
+    assert!(odbc_wow.is_some());
+    let odbc_main = get("MSSQLSERVER").await;
+    assert!(odbc_main.is_some());
 }

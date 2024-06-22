@@ -183,7 +183,7 @@ def test_match_priority(
     expected: MatchPriority | None,
 ) -> None:
     m = ec.RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
-    rule: ec.Rule = {}
+    rule = ec.Rule()
     if match_priority is not None:
         rule["match_priority"] = match_priority
     if cancel_priority is not None:

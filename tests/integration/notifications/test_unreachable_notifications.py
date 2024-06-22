@@ -9,11 +9,12 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib import WatchLog
 from tests.testlib.site import Site
 from tests.testlib.utils import wait_until
 
 from cmk.utils.rulesets.definition import RuleGroup
+
+from .watch_log import WatchLog
 
 STATE_UP = 0
 STATE_DOWN = 1

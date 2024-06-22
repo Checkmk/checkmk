@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
 from typing import Protocol
 
@@ -127,7 +128,7 @@ def get_ec2_sections() -> EC2Sections:
     ) -> EC2SectionsOut:
         region = "region"
         config = AWSConfig(
-            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
         )
         config.add_single_service_config("ec2_names", names)
         config.add_service_tags("ec2_tags", tags)

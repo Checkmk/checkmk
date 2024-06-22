@@ -14,7 +14,7 @@ from types import ModuleType
 import cmk.utils.version as cmk_version
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.log import logger
 
 
@@ -30,7 +30,7 @@ def suppress_module_not_found(name: str) -> Iterator[None]:
 
 # The following imports trigger loading of built-in main modules.
 # Note: They are loaded once more in `_import_main_module_plugins()` and
-# possibly a third time over the plugin discovery mechanism.
+# possibly a third time over the plug-in discovery mechanism.
 import cmk.gui.plugins.main_modules  # pylint: disable=cmk-module-layer-violation
 
 with suppress_module_not_found("cmk.gui.raw"):
@@ -49,12 +49,12 @@ with suppress_module_not_found("cmk.gui.cme"):
     cmk.gui.cme.registration.register()
 
 with suppress_module_not_found("cmk.gui.cce"):
-    import cmk.gui.cce.registration  # noqa: F401 # pylint: disable=no-name-in-module,cmk-module-layer-violation
+    import cmk.gui.cce.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
     cmk.gui.cce.registration.register()
 
 with suppress_module_not_found("cmk.gui.cse"):
-    import cmk.gui.cse.registration  # noqa: F401 # pylint: disable=no-name-in-module,cmk-module-layer-violation
+    import cmk.gui.cse.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
     cmk.gui.cse.registration.register()
 
@@ -67,7 +67,7 @@ def _imports() -> Iterator[str]:
 
 
 def load_plugins() -> None:
-    """Loads and initializes main modules and plugins into the application
+    """Loads and initializes main modules and plug-ins into the application
     Only built-in main modules are already imported."""
     local_main_modules = _import_local_main_modules()
     main_modules = _cmk_gui_top_level_modules() + local_main_modules
@@ -78,7 +78,7 @@ def load_plugins() -> None:
 def _import_local_main_modules() -> list[ModuleType]:
     """Imports all site local main modules
 
-    We essentially load the site local pages plugins (`local/share/check_mk/web/plugins/pages`)
+    We essentially load the site local pages plug-ins (`local/share/check_mk/web/plugins/pages`)
     which are expected to contain the actual imports of the main modules.
 
     Please note that the built-in main modules are already loaded by the imports of
@@ -103,13 +103,13 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
 
         for plugin_package_name in _plugin_package_names(main_module_name):
             if not _is_plugin_namespace(plugin_package_name):
-                logger.debug("  Skip loading plugins from %s", plugin_package_name)
+                logger.debug("  Skip loading plug-ins from %s", plugin_package_name)
                 continue
 
-            logger.debug("  Importing plugins from %s", plugin_package_name)
+            logger.debug("  Importing plug-ins from %s", plugin_package_name)
             for plugin_name, exc in load_plugins_with_exceptions(plugin_package_name):
                 logger.error(
-                    "  Error in %s plugin '%s'\n", main_module_name, plugin_name, exc_info=exc
+                    "  Error in %s plug-in '%s'\n", main_module_name, plugin_name, exc_info=exc
                 )
                 utils.add_failed_plugin(
                     Path(traceback.extract_tb(exc.__traceback__)[-1].filename),
@@ -118,10 +118,10 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
                     exc,
                 )
 
-    logger.debug("Main module plugins imported")
+    logger.debug("Main module plug-ins imported")
 
 
-# Note: One day, when we have migrated all main module plugins to PEP 420 namespaces, we
+# Note: One day, when we have migrated all main module plug-ins to PEP 420 namespaces, we
 # have no cmk.gui.cee namespaces anymore and can remove them.
 def _plugin_package_names(main_module_name: str) -> Iterator[str]:
     yield f"cmk.gui.plugins.{main_module_name}"

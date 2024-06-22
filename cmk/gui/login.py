@@ -21,7 +21,7 @@ from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
 import cmk.gui.mobile
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -38,7 +38,6 @@ from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.session import session, UserContext
 from cmk.gui.userdb import get_active_saml_connections
 from cmk.gui.userdb.session import auth_cookie_name
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.mobile import is_mobile
@@ -368,18 +367,14 @@ class LoginPage(Page):
                 footer.append(HTMLWriter.render_a(title, href=url, target=target))
 
             if "hide_version" not in active_config.login_screen:
-                footer.append(escape_to_html("Version: %s" % cmk_version.__version__))
+                footer.append(HTML.with_escaping("Version: %s" % cmk_version.__version__))
 
             footer.append(
-                HTML(
-                    "&copy; %s"
-                    % HTMLWriter.render_a(
-                        "Checkmk GmbH", href="https://checkmk.com", target="_blank"
-                    )
-                )
+                HTML.without_escaping("&copy; ")
+                + HTMLWriter.render_a("Checkmk GmbH", href="https://checkmk.com", target="_blank")
             )
 
-            html.write_html(HTML(" - ").join(footer))
+            html.write_html(HTML.without_escaping(" - ").join(footer))
 
             html.close_div()
 

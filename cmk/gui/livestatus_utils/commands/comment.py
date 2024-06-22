@@ -212,7 +212,7 @@ def add_service_comment(
             The host-name where the service is located
 
         service_description:
-            The service description for which the comment is for
+            The service name for which the comment is for
 
         site_id:
             The site name

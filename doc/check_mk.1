@@ -106,7 +106,6 @@ is being checked. This is useful for testing and debugging a check plugin.
  cmk --snmpwalk HOST1 HOST2 ...       Do snmpwalk on one or more hosts
  cmk --snmptranslate HOST             Do snmptranslate on walk
  cmk --snmpget OID HOST1 HOST2 ...    Fetch single OIDs and output them
- cmk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
  cmk -P, --package COMMAND            do package operations
  cmk --localize COMMAND               do localization operations
  cmk --handle-alerts                  used to handle alerts from core
@@ -140,7 +139,6 @@ OPTIONS:
   --interactive  Some errors are only reported in interactive mode, i.e. if stdout
                  is a TTY. This option forces interactive mode even if the output
                  is directed into a pipe or file.
-  --procs N      start up to N processes in parallel during --scan-parents
   --checks A,..  restrict checks/inventory to specified checks (tcp/snmp/check type)
   --keepalive    used by Check_MK Mirco Core: run check and --notify
                  in continous mode. Read data from stdin and from cmd line.
@@ -229,10 +227,6 @@ NOTES:
 
   --snmptranslate does not contact the host again, but reuses the hosts
   walk from the directory %s.%s
-
-  --scan-parents uses traceroute in order to automatically detect
-  hosts's parents. It creates the file conf.d/parents.mk which
-  defines gateway hosts and parent declarations.
 
   -A, --bake-agents creates RPM/DEB/MSI packages with host-specific
   monitoring agents. If you add the option -f, --force then all

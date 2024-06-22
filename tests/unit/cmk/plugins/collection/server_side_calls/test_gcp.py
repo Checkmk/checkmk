@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 import time_machine
 
-from cmk.plugins.collection.server_side_calls.gcp import special_agent_gcp
+from cmk.plugins.gcp.server_side_calls.gcp import special_agent_gcp
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 pytestmark = pytest.mark.checks
@@ -34,7 +34,7 @@ HOST_CONFIG = HostConfig(
                 "--project",
                 "test",
                 "--credentials",
-                Secret(0),
+                Secret(0).unsafe(),
                 "--date",
                 "2022-01-12",
                 "--services",
@@ -56,7 +56,7 @@ HOST_CONFIG = HostConfig(
                 "--project",
                 "test",
                 "--credentials",
-                Secret(0),
+                Secret(0).unsafe(),
                 "--date",
                 "2022-01-12",
                 "--cost_table",
@@ -77,7 +77,7 @@ HOST_CONFIG = HostConfig(
                 "--project",
                 "test",
                 "--credentials",
-                Secret(0),
+                Secret(0).unsafe(),
                 "--date",
                 "2022-01-12",
                 "--cost_table",
@@ -100,7 +100,7 @@ HOST_CONFIG = HostConfig(
                 "--project",
                 "test",
                 "--credentials",
-                Secret(2),
+                Secret(2).unsafe(),
                 "--date",
                 "2022-01-12",
                 "--services",
@@ -116,5 +116,5 @@ def test_gcp_argument_parsing(
     params: Mapping[str, Any],
     expected_result: Sequence[str],
 ) -> None:
-    commands = list(special_agent_gcp(params, HOST_CONFIG, {}))
+    commands = list(special_agent_gcp(params, HOST_CONFIG))
     assert commands[0].command_arguments == expected_result

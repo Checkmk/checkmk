@@ -12,7 +12,6 @@ from functools import partial
 from typing import assert_never
 
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
-from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap as _HostSection
 from cmk.utils.sectionname import SectionName
 
@@ -50,6 +49,7 @@ def get_snmp_table(
     tree: BackendSNMPTree,
     walk_cache: MutableMapping[tuple[str, str, bool], SNMPRowInfo],
     backend: SNMPBackend,
+    log: Callable[[str], None],
 ) -> Sequence[SNMPTable]:
     index_column = -1
     index_format: SpecialColumn | None = None
@@ -85,6 +85,7 @@ def get_snmp_table(
                 walk_cache=walk_cache,
                 save_walk_cache=oid.save_to_cache,
                 backend=backend,
+                log=log,
             )
             if len(rowinfo) > max_len:
                 max_len_col = len(columns)
@@ -183,6 +184,7 @@ def get_snmpwalk(
     walk_cache: MutableMapping[tuple[str, str, bool], SNMPRowInfo],
     save_walk_cache: bool,
     backend: SNMPBackend,
+    log: Callable[[str], None],
 ) -> SNMPRowInfo:
     contexts = backend.config.snmpv3_contexts_of(section_name).contexts
     context_string = "-".join(["no_context" if not c else c for c in contexts])
@@ -192,7 +194,7 @@ def get_snmpwalk(
 
     with contextlib.suppress(KeyError):
         cache_info = walk_cache[(fetchoid, context_hash, save_walk_cache)]
-        console.vverbose(f"Already fetched OID: {fetchoid}\n")
+        log(f"Already fetched OID: {fetchoid}")
         return cache_info
 
     added_oids: set[OID] = set()
@@ -215,7 +217,7 @@ def get_snmpwalk(
             if context_config.timeout_policy == "stop":
                 raise
 
-            console.vverbose(f"Timeout for SNMP context {context}.  Skipping for now.")
+            log(f"Timeout for SNMP context {context}.  Skipping for now.")
             skip.add(context)
             continue
 
@@ -224,14 +226,12 @@ def get_snmpwalk(
         # .1.3.6.1.2.1.1.1.0 was being walked. We try to detect these situations
         # by removing any duplicate OID information
         if len(rows) > 1 and rows[0][0] == rows[1][0]:
-            console.vverbose(
-                "Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rows[0][0]
-            )
+            log("Detected broken SNMP agent. Ignoring duplicate OID {rows[0][0]}.")
             rows = rows[:1]
 
         for row_oid, val in rows:
             if row_oid in added_oids:
-                console.vverbose(f"Duplicate OID found: {row_oid} ({val!r})\n")
+                log(f"Duplicate OID found: {row_oid} ({val!r})")
             else:
                 rowinfo.append((row_oid, val))
                 added_oids.add(row_oid)

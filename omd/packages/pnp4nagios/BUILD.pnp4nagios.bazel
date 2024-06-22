@@ -28,8 +28,9 @@ configure_make(
         "--with-nagios-user=\\$\\$\\(id\\ -un\\)",
         "--with-nagios-group=\\$\\$\\(id\\ -gn\\)",
         "--with-rrdtool=/bin/true",
-        # The perl_lib_path seems to be obsolete (Tested by checking metrics in raw edition)
-        #        "--with-perl_lib_path=$(location @omd_packages//omd/packages/perl-modules:perl-modules)/lib/perl5/lib/perl5",
+        # The perl_lib_path is necessery for performance
+        # we use PLACEHOLDER because OMD_ROOT is not available at this point since it changes daily
+        "--with-perl_lib_path=PLACEHOLDER/lib/perl5/lib/perl5",
         "--with-base-url='/\\#\\#\\#SITE\\#\\#\\#/pnp4nagios'",
     ],
     lib_source = ":all_srcs",
@@ -70,6 +71,7 @@ configure_make(
         "all",
         "install",
     ],
+    visibility = ["//visibility:public"],
 )
 
 genrule(
@@ -81,7 +83,7 @@ genrule(
     ],
     outs = [
         "skel/etc/pnp4nagios/rra.cfg-sample",
-        "skel/etc/pnp4nagios/config.d",
+        "skel/etc/pnp4nagios/config.d/.gitignore",
         "skel/etc/pnp4nagios/templates.special/static.php-sample",
         "skel/etc/pnp4nagios/templates.special/advanced_loop.php-sample",
         "skel/etc/pnp4nagios/templates.special/README",
@@ -100,13 +102,13 @@ genrule(
         "skel/etc/pnp4nagios/nagios_npcdmod.cfg",
         "skel/etc/init.d/npcd",
         "skel/etc/init.d/pnp_gearman_worker",
-        "skel/tmp/pnp4nagios/lock",
-        "skel/var/pnp4nagios/stats",
-        "skel/var/pnp4nagios/perfdata",
-        "skel/var/pnp4nagios/log",
-        "skel/var/pnp4nagios/spool",
-        "skel/tmp/pnp4nagios/stats",
-        "skel/tmp/pnp4nagios/run",
+        "skel/tmp/pnp4nagios/lock/.gitignore",
+        "skel/var/pnp4nagios/stats/.gitignore",
+        "skel/var/pnp4nagios/perfdata/.gitignore",
+        "skel/var/pnp4nagios/log/.gitignore",
+        "skel/var/pnp4nagios/spool/.gitignore",
+        "skel/tmp/pnp4nagios/stats/.gitignore",
+        "skel/tmp/pnp4nagios/run/.gitignore",
         "share/diskspace/pnp4nagios",
         "lib/omd/hooks/PNP4NAGIOS",
     ],
@@ -117,10 +119,21 @@ genrule(
         cp --dereference $(execpath @omd_packages//omd/packages/pnp4nagios:diskspace) $$(realpath $(RULEDIR))/share/diskspace/pnp4nagios
         mkdir -p $$(realpath $(RULEDIR))/lib/omd/hooks/
         cp --dereference $(execpath @omd_packages//omd/packages/pnp4nagios:PNP4NAGIOS) $$(realpath $(RULEDIR))/lib/omd/hooks/
-        mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/stats
-        mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/perfdata
-        mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/log
-        mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/spool
+        mkdir -p $$(realpath $(RULEDIR))/skel/etc/pnp4nagios/config.d
+        mkdir -p $$(realpath $(RULEDIR))/skel/tmp/pnp4nagios/lock
         mkdir -p $$(realpath $(RULEDIR))/skel/tmp/pnp4nagios/run
+        mkdir -p $$(realpath $(RULEDIR))/skel/tmp/pnp4nagios/stats
+        mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/stats
+        mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/log
+        mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/perfdata
+        mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/spool
+        touch $$(realpath $(RULEDIR))/skel/etc/pnp4nagios/config.d/.gitignore
+        touch $$(realpath $(RULEDIR))/skel/tmp/pnp4nagios/lock/.gitignore
+        touch $$(realpath $(RULEDIR))/skel/tmp/pnp4nagios/run/.gitignore
+        touch $$(realpath $(RULEDIR))/skel/tmp/pnp4nagios/stats/.gitignore
+        touch $$(realpath $(RULEDIR))/skel/var/pnp4nagios/stats/.gitignore
+        touch $$(realpath $(RULEDIR))/skel/var/pnp4nagios/log/.gitignore
+        touch $$(realpath $(RULEDIR))/skel/var/pnp4nagios/perfdata/.gitignore
+        touch $$(realpath $(RULEDIR))/skel/var/pnp4nagios/spool/.gitignore
     """,
 )

@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal
+from typing import Any, Literal, NotRequired, TypedDict
 
 from marshmallow import fields, Schema
-from typing_extensions import NotRequired, TypedDict
 
 from cmk.gui.http import HTTPMethod
 
@@ -40,8 +39,10 @@ DomainType = Literal[
     "metric",
     "notification_rule",
     "password",
+    "parent_scan",
     "rule",
     "ruleset",
+    "saml_connection",
     "service",
     "service_discovery",
     "service_discovery_run",

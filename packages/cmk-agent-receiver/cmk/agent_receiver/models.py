@@ -148,7 +148,7 @@ class RegistrationWithHNBody(BaseModel, frozen=True):
         if not _is_valid_hostname_or_ip(v):
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid hostname: '{v}'",
+                detail=f"Invalid host name: '{v}'",
             )
         return v
 
@@ -164,7 +164,7 @@ class RegisterExistingBody(RegistrationWithHNBody, frozen=True):
         if not _is_valid_hostname_or_ip(v):
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid hostname: '{v}'",
+                detail=f"Invalid host name: '{v}'",
             )
         return v
 

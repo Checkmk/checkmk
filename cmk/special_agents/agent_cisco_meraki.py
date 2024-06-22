@@ -12,11 +12,11 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
 from pathlib import Path
-from typing import Final
+from typing import Final, TypedDict
 
-import meraki  # type: ignore[import]
-from typing_extensions import TypedDict
+import meraki  # type: ignore[import-untyped]
 
+from cmk.utils import password_store
 from cmk.utils.paths import tmp_dir
 
 from cmk.special_agents.v0_unstable.agent_common import (
@@ -357,7 +357,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("hostname")
     parser.add_argument(
         "apikey",
-        help="API key for the Meraki API dashboard access.",
+        help="Password store reference to the API key for the Meraki API dashboard access.",
     )
 
     parser.add_argument("--proxy", type=str)
@@ -416,10 +416,15 @@ def _need_devices(section_names: Sequence[str]) -> bool:
     )
 
 
+def _make_secret(args: Args) -> str:
+    pw_id, pw_file = args.apikey.split(":", 1)
+    return password_store.lookup(Path(pw_file), pw_id)
+
+
 def agent_cisco_meraki_main(args: Args) -> int:
     config = MerakiConfig(
         dashboard=_configure_meraki_dashboard(
-            args.apikey,
+            _make_secret(args),
             args.debug,
             args.proxy,
         ),
@@ -439,4 +444,6 @@ def agent_cisco_meraki_main(args: Args) -> int:
 
 
 def main() -> int:
-    return special_agent_main(parse_arguments, agent_cisco_meraki_main)
+    return special_agent_main(
+        parse_arguments, agent_cisco_meraki_main, apply_password_store_hack=False
+    )

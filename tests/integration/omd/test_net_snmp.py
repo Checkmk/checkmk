@@ -18,7 +18,7 @@ def test_net_snmp_mib_search_paths(site: Site) -> None:
     output = p.communicate()[0]
 
     # Match and extract these lines:
-    # init_mib: Seen MIBDIRS: Looking in '/omd/sites/heute/.snmp/mibs:/home/jenkins/.cache/bazel/_bazel_jenkins/df226850ac2f9e0e413ee1714726b897/sandbox/processwrapper-sandbox/875/execroot/omd_packages/bazel-out/k8-fastbuild/bin/external/net-snmp/net-snmp.build_tmpdir/net-snmp/share/snmp/mibs' for mib dirs ...
+    # init_mib: Seen MIBDIRS: Looking in '/omd/sites/heute/.snmp/mibs:<HOME>/.cache/bazel/_bazel_...build_tmpdir/net-snmp/share/snmp/mibs' for mib dirs ...
     matches = re.search(r"init_mib: Seen MIBDIRS: Looking in '(.+)' for mib dirs ...", output)
     assert matches is not None, output
     paths = matches.group(1).split(":")

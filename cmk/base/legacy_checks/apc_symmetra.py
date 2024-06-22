@@ -235,13 +235,12 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
             if battery_capacity < alt_crit_capacity:
                 state = 2
                 levelstxt = " (crit below %d%% in delay after calibration)" % alt_crit_capacity
-        else:
-            if battery_capacity < crit_cap:
-                state = 2
-                levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
-            elif battery_capacity < warn_cap:
-                state = 1
-                levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
+        elif battery_capacity < crit_cap:
+            state = 2
+            levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
+        elif battery_capacity < warn_cap:
+            state = 1
+            levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
 
         yield state, "Capacity: %d%%%s" % (battery_capacity, levelstxt), [
             ("capacity", battery_capacity, warn_cap, crit_cap, 0, 100)
@@ -309,7 +308,7 @@ check_info["apc_symmetra"] = LegacyCheckDefinition(
     check_function=check_apc_symmetra,
     check_ruleset_name="apc_symentra",
     check_default_parameters={
-        "capacity": (95, 80),
+        "capacity": (95.0, 80.0),
         "calibration_state": 0,
         "battery_replace_state": 1,
     },
@@ -354,6 +353,8 @@ check_info["apc_symmetra.temp"] = LegacyCheckDefinition(
     check_function=check_apc_symmetra_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
+        # This is very unorthodox, and requires special handling in the
+        # wato ruleset. A dedicated service would have been the better choice.
         "levels_battery": (50, 60),
         "levels_sensors": (25, 30),
     },

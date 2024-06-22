@@ -146,7 +146,7 @@ class BackupTask:
             for elem in lines_with_numbers
             for line in (elem["t"],)
             if isinstance(line, str) and line.strip()
-        )  #  #  #  #
+        )
 
     def __str__(self) -> str:
         return "BackupTask({!r}, t={!r}, vms={!r})".format(
@@ -694,38 +694,67 @@ class ProxmoxVeSession:
         if self._session:
             self._session.close()
 
-    def get_raw(self, sub_url: str) -> requests.Response:
-        return self._session.request(
-            method="GET",
-            url=self._base_url + sub_url,
-            # todo: generic
-            params=(
-                {"limit": "5000"}
-                if (sub_url.endswith("/log") or sub_url.endswith("/tasks"))
-                else {}
-            ),
-            verify=self._verify_ssl,
-            timeout=self._timeout,
-        )
-
-    def get_api_element(self, path: str) -> Any:
+    def get_api_element(self, path: str) -> object:
         """do an API GET request"""
         try:
-            response = self.get_raw("api2/json/" + path)
-            if response.status_code != requests.codes.ok:
-                return []
-            response_json = response.json()
-            if "errors" in response_json:
-                raise CannotRecover(
-                    "Could not fetch {!r} ({!r})".format(path, response_json["errors"])
-                )
-            return response_json.get("data")
+            return self._get_raw("api2/json/" + path)
         except requests.exceptions.ReadTimeout:
             raise CannotRecover(f"Read timeout after {self._timeout}s when trying to GET {path}")
         except requests.exceptions.ConnectionError as exc:
             raise CannotRecover(f"Could not GET element {path} ({exc})") from exc
         except JSONDecodeError as e:
             raise CannotRecover("Couldn't parse API element %r" % path) from e
+
+    def _get_raw(self, sub_url: str) -> object:
+        return (
+            self._get_logs_or_tasks_paginated(sub_url)
+            if (sub_url.endswith("/log") or sub_url.endswith("/tasks"))
+            else self._validate_response(
+                self._session.get(
+                    url=self._base_url + sub_url,
+                    verify=self._verify_ssl,
+                    timeout=self._timeout,
+                ),
+                sub_url,
+            )
+        )
+
+    def _get_logs_or_tasks_paginated(self, sub_url: str) -> list[object]:
+        url = self._base_url + sub_url
+        data: list[object] = []
+        start = 0
+        page_size = 5000
+
+        while True:
+            response_data = self._validate_response(
+                self._session.get(
+                    url=url,
+                    verify=self._verify_ssl,
+                    timeout=self._timeout,
+                    params={"start": start, "limit": page_size},
+                ),
+                sub_url,
+            )
+            assert isinstance(response_data, Sequence)
+            data += response_data
+
+            if len(response_data) < page_size:
+                break
+
+            start += page_size
+
+        return data
+
+    @staticmethod
+    def _validate_response(response: requests.Response, sub_url: str) -> object:
+        if not response.ok:
+            return []
+        response_json = response.json()
+        if "errors" in response_json:
+            raise CannotRecover(
+                "Could not fetch {!r} ({!r})".format(sub_url, response_json["errors"])
+            )
+        return response_json.get("data")
 
 
 class ProxmoxVeAPI:
@@ -783,7 +812,7 @@ class ProxmoxVeAPI:
                     request_tree
                     if isinstance(request_tree, Mapping)
                     else next(iter(request_tree)) if len(request_tree) > 0 else {}
-                )  #  #
+                )
 
             def extract_variable(st: RequestStructure) -> Mapping[str, Any] | None:
                 """Check if there is exactly one root element with a variable name,

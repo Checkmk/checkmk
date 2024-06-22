@@ -48,6 +48,9 @@ get_candidates_from_filesystem() {
     SEARCH+=" omd/packages/check_mk"
     SEARCH+=" scripts"
     SEARCH+=" tests"
+    # The submodule is not checked out in the CI, so it should also not be checked locally.
+    # The content of that repo needs to be checked by it's own CI
+    PRUNE+=" -path $(realpath tests/qa-test-data) -prune -o"
     SEARCH+=" werk"
 
     # Resolve search paths to real paths before the search for performance reasons

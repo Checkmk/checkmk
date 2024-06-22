@@ -58,7 +58,7 @@ from cmk.gui.openapi.endpoints.host_config.response_schemas import (
 from cmk.gui.openapi.endpoints.utils import folder_slug
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.openapi.restful_objects.type_defs import CollectionObject
+from cmk.gui.openapi.restful_objects.type_defs import CollectionObject, DomainObject
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, folder_tree
@@ -189,7 +189,7 @@ def update(params: Mapping[str, Any]) -> Response:
                 f"not be removed: {', '.join(faulty_attributes)}",
             )
 
-    folder.edit(folder.title() if not "title" in post_body else post_body["title"], attributes)
+    folder.edit(folder.title() if "title" not in post_body else post_body["title"], attributes)
 
     return _serve_folder(folder)
 
@@ -218,7 +218,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     faulty_folders = []
     for update_details in entries:
         folder: Folder = update_details["folder"]
-        title = folder.title() if not "title" in update_details else update_details["title"]
+        title = folder.title() if "title" not in update_details else update_details["title"]
         attributes = folder.attributes.copy()
 
         if replace_attributes := update_details.get("attributes"):
@@ -440,10 +440,10 @@ def show_folder(params: Mapping[str, Any]) -> Response:
     return _serve_folder(folder, show_hosts=params["show_hosts"])
 
 
-def _serve_folder(  # type: ignore[no-untyped-def]
-    folder,
-    profile=None,
-    show_hosts=False,
+def _serve_folder(
+    folder: Folder,
+    profile: dict[str, str] | None = None,
+    show_hosts: bool = False,
 ) -> Response:
     folder_json = _serialize_folder(folder, show_hosts)
     response = serve_json(folder_json, profile=profile)
@@ -451,7 +451,7 @@ def _serve_folder(  # type: ignore[no-untyped-def]
     return response
 
 
-def _serialize_folder(folder: Folder, show_hosts):  # type: ignore[no-untyped-def]
+def _serialize_folder(folder: Folder, show_hosts: bool) -> DomainObject:
     links = []
 
     if not folder.is_root():

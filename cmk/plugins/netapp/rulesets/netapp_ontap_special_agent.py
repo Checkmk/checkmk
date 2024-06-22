@@ -5,14 +5,13 @@
 
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     DefaultValue,
     DictElement,
     Dictionary,
     MultipleChoice,
     MultipleChoiceElement,
     Password,
-    SingleChoice,
-    SingleChoiceElement,
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange
@@ -43,28 +42,14 @@ def _formspec_netapp_ontap() -> Dictionary:
                 parameter_form=Password(
                     help_text=Help("The password of the user."),
                     title=Title("Password of the user"),
-                    custom_validate=[
-                        LengthInRange(min_value=1),
-                    ],
+                    custom_validate=(LengthInRange(min_value=1),),
                 ),
                 required=True,
             ),
             "no_cert_check": DictElement(
-                parameter_form=SingleChoice(
-                    title=Title("SSL certificate verification"),
-                    help_text=Help(
-                        "Here you can configure whether the SSL certificate should get verified."
-                    ),
-                    elements=[
-                        SingleChoiceElement(
-                            name="verify_cert", title=Title("Verify the certificate")
-                        ),
-                        SingleChoiceElement(
-                            name="no_cert_check",
-                            title=Title("Ignore certificate errors (unsecure)"),
-                        ),
-                    ],
-                    prefill=DefaultValue("verify_cert"),
+                parameter_form=BooleanChoice(
+                    title=Title("Skip TLS certificate verification"),
+                    prefill=DefaultValue(False),
                 ),
                 required=True,
             ),

@@ -15,8 +15,8 @@ configure_make(
     name = "rrdtool",
     args = ["%s" % MAKE_PARALLEL],
     build_data = [
-        "@omd_packages//omd/packages/perl-modules:perl-modules",
-        "@omd_packages//omd/packages/python3-modules:python3-modules",
+        "@omd_packages//omd/packages/perl-modules:perl-modules.tar",
+        "@omd_packages//omd/packages/python3-modules:python3-modules.tar",
     ],
     configure_in_place = True,
     configure_options = [
@@ -40,15 +40,24 @@ configure_make(
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
         "RANLIB": "ranlib",
         "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
-        "PERL_DIR": "$(execpath @omd_packages//omd/packages/perl-modules:perl-modules)",
+        "PERL_DIR": "$$(cd $$(dirname $(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar)); tar xf perl-modules.tar;)$$(dirname $(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar))/perl-modules",
         "HOME": "/home/\\$$\\$${USER}/",
-        "CFLAGS": "'-Dredacted=\"redacted\"' -I$$EXT_BUILD_DEPS/python/python/include/python%s" % PYTHON_MAJOR_DOT_MINOR,
-        "PYTHONPATH": "$(execpath @omd_packages//omd/packages/python3-modules:python3-modules)/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
+        "CFLAGS": "'-Dredacted=\"redacted\"' -I$$EXT_BUILD_DEPS/python/include/python%s" % PYTHON_MAJOR_DOT_MINOR,
+        "PYTHONPATH": "$$(cd $$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar)); tar xf python3-modules.tar;)$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/python3-modules/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
+        "PYTHON_3_VERSION": "%s" % PYTHON_MAJOR_DOT_MINOR,
         "PATH": "$$EXT_BUILD_DEPS/python/bin/:$$PATH",
         "top_builddir": ".",
     },
     install_prefix = "$INSTALLDIR",
     lib_source = ":all_srcs",
+    linkopts = [
+        "-lcairo",
+        "-lglib-2.0",
+        "-lgobject-2.0",
+        "-lpango-1.0",
+        "-lpangocairo-1.0",
+        "-lpng",
+    ],
     out_binaries = [
         "rrdcached",
         "rrdcreate",
@@ -58,6 +67,7 @@ configure_make(
     ],
     out_data_dirs = [
         "share",
+        "tar",
         "lib/perl5/lib/perl5/",
         "lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
         "lib/pkgconfig",
@@ -71,10 +81,13 @@ configure_make(
         "librrd.a",
     ],
     postfix_script = """
-        # Python binding configure make is not setting prefix correctly.
-        # Prefix is prefixed with $BUILD_TMPDIR and
-        # variables inside DESTDIR are not resolved.
-        cp -r $BUILD_TMPDIR/$INSTALLDIR $INSTALLDIR
+        chmod u+w -R ${INSTALLDIR}/../
+        tar -C ${INSTALLDIR}/../ \
+            --exclude="rrdtool/home" \
+            --exclude="rrdtool/usr" \
+            --exclude="rrdtool/tar" \
+            -cf ${INSTALLDIR}/tar/rrdtool.tar \
+            rrdtool
     """,
     targets = [
         "-C po all",
@@ -86,7 +99,11 @@ configure_make(
         "-C src install",
         "-C tests install",
         "-C etc install",
+        # DESTDIR for Perl, since the prefix is not honored
+        "DESTDIR=$INSTALLDIR -C bindings install",
+        # DESTDIR for Python, since INSTALLDIR is in prefix
         "DESTDIR=/ -C bindings install",
     ],
+    visibility = ["//visibility:public"],
     deps = ["@python"],
 )

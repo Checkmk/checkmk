@@ -10,10 +10,9 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, NewType, NotRequired
+from typing import Any, Literal, NamedTuple, NewType, NotRequired, TypedDict
 
 from pydantic import BaseModel
-from typing_extensions import TypedDict
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
@@ -44,25 +43,9 @@ Choice = tuple[ChoiceId, ChoiceText]
 Choices = list[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
 
 
-@dataclass
-class UserRole:
-    name: str
-    alias: str
-    builtin: bool = False
-    permissions: dict[str, bool] = field(default_factory=dict)
-    basedon: str | None = None
-
-    def to_dict(self) -> dict:
-        userrole_dict = {
-            "alias": self.alias,
-            "permissions": self.permissions,
-            "builtin": self.builtin,
-        }
-
-        if not self.builtin:
-            userrole_dict["basedon"] = self.basedon
-
-        return userrole_dict
+class TrustedCertificateAuthorities(TypedDict):
+    use_system_wide_cas: bool
+    trusted_cas: Sequence[str]
 
 
 class ChoiceGroup(NamedTuple):
@@ -186,7 +169,7 @@ class UserSpec(TypedDict, total=False):
     language: str
     last_pw_change: int
     last_login: LastLoginInfo | None
-    locked: bool | None
+    locked: bool
     mail: str  # TODO: Why do we have "email" *and* "mail"?
     notification_method: Any  # TODO: Improve this
     notification_period: str
@@ -203,6 +186,7 @@ class UserSpec(TypedDict, total=False):
     start_url: str | None
     two_factor_credentials: TwoFactorCredentials
     ui_sidebar_position: Any  # TODO: Improve this
+    ui_saas_onboarding_button_toggle: Literal["invisible"] | None
     ui_theme: Any  # TODO: Improve this
     user_id: UserId
     user_scheme_serial: int
@@ -462,7 +446,7 @@ class SorterSpec:
         return str(self.to_raw())
 
 
-class _InventoryJoinMacrosSpec(TypedDict):
+class InventoryJoinMacrosSpec(TypedDict):
     macros: list[tuple[str, str]]
 
 
@@ -483,7 +467,7 @@ class ViewSpec(Visual):
     force_checkboxes: NotRequired[bool]
     user_sortable: NotRequired[bool]
     play_sounds: NotRequired[bool]
-    inventory_join_macros: NotRequired[_InventoryJoinMacrosSpec]
+    inventory_join_macros: NotRequired[InventoryJoinMacrosSpec]
 
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]
@@ -665,16 +649,6 @@ class ViewProcessTracking:
     duration_view_render: Snapshot = Snapshot.null()
 
 
-class CustomAttr(TypedDict):
-    title: str
-    help: str
-    name: str
-    topic: str
-    type: str
-    add_custom_macro: bool
-    show_in_table: bool
-
-
 class Key(BaseModel):
     certificate: str
     private_key: str
@@ -689,9 +663,13 @@ class Key(BaseModel):
 
     def to_certificate_with_private_key(self, passphrase: Password) -> CertificateWithPrivateKey:
         return CertificateWithPrivateKey(
-            certificate=Certificate.load_pem(CertificatePEM(self.certificate)),
+            certificate=self.to_certificate(),
             private_key=PrivateKey.load_pem(EncryptedPrivateKeyPEM(self.private_key), passphrase),
         )
+
+    def to_certificate(self) -> Certificate:
+        """convert the string certificate to Certificate object"""
+        return Certificate.load_pem(CertificatePEM(self.certificate))
 
     def fingerprint(self, algorithm: HashAlgorithm) -> str:
         """return the fingerprint aka hash of the certificate as a hey string"""

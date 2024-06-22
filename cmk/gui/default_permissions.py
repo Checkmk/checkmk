@@ -146,7 +146,7 @@ PermissionConfigureSidebar = Permission(
     section=PermissionSectionGeneral,
     name="configure_sidebar",
     title=_l("Configure sidebar"),
-    description=_l("This allows the user to add, move and remove sidebar snapins."),
+    description=_l("This allows the user to add, move and remove sidebar snap-ins."),
     defaults=["admin", "user"],
 )
 
@@ -269,7 +269,7 @@ PermissionSeeFailedNotifications24H = Permission(
     title=_l("See failed notifications (last 24 hours)"),
     description=_l(
         "If Checkmk is unable to notify users about problems, the site will warn about this situation "
-        "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
+        "very visibly inside the UI (both in the tactical overview and the dashboard). This affects only "
         "users with this permission. Users with this permission will only see failed notifications "
         "that occured within the last 24 hours."
     ),
@@ -282,7 +282,7 @@ PermissionSeeFailedNotifications = Permission(
     title=_l("See failed notifications (all)"),
     description=_l(
         "If Checkmk is unable to notify users about problems, the site will warn about this situation "
-        "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
+        "very visibly inside the UI (both in the tactical overview and the dashboard). This affects only "
         "users with this permission. Users with this permission will see failed notifications between now "
         'and the configured <a href="wato.py?mode=edit_configvar&varname=failed_notification_horizon">Failed notification horizon</a>.'
     ),
@@ -294,7 +294,7 @@ PermissionSeeStalesInTacticalOverview = Permission(
     name="see_stales_in_tactical_overview",
     title=_l("See stale objects in tactical overview"),
     description=_l(
-        "Show the column for stale host and service checks in the tactical overview snapin."
+        "Show the column for stale host and service checks in the tactical overview snap-in."
     ),
     defaults=config.default_authorized_builtin_role_ids,
 )

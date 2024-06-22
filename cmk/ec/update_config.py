@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Functions for the cmk-update-config to be used in cmk/update_config/plugins/actions/ec_history.py"""
+"""Functions for the cmk-update-config to be used in cmk/update_config/plugins/actions/ec_history.py."""
 
 import logging
 import time
@@ -31,9 +31,11 @@ def history_files_to_sqlite(omd_root: Path, logger: logging.Logger) -> None:
     """
     tic = time.time()
 
-    Path(omd_root / "etc/check_mk/mkeventd.d/").mkdir(parents=True, exist_ok=True)
+    Path(omd_root / "var/mkeventd/active_config/conf.d/").mkdir(parents=True, exist_ok=True)
     Path(omd_root / "etc/check_mk/mkeventd.d/conf.d/").mkdir(parents=True, exist_ok=True)
-    save_mk_file(omd_root / "etc/check_mk/mkeventd.d/enable_sqlite.mk", "archive_mode='sqlite'")
+    save_mk_file(
+        omd_root / "var/mkeventd/active_config/conf.d/enable_sqlite.mk", "archive_mode='sqlite'"
+    )
     save_mk_file(
         omd_root / "etc/check_mk/mkeventd.d/conf.d/enable_sqlite.mk", "archive_mode='sqlite'"
     )
@@ -44,7 +46,7 @@ def history_files_to_sqlite(omd_root: Path, logger: logging.Logger) -> None:
 
     history_sqlite = create_history_raw(
         settings,
-        {**config, "archive_mode": "sqlite"},
+        config | {"archive_mode": "sqlite"},
         logger,
         StatusTableEvents.columns,
         StatusTableHistory.columns,

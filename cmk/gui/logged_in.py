@@ -15,19 +15,18 @@ from typing import Any, Final
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.user import UserId
-from cmk.utils.version import __version__, Version
+from cmk.utils.version import __version__, edition, Edition, Version
 
-import cmk.gui.permissions as permissions
-import cmk.gui.site_config as site_config
-from cmk.gui import hooks
+from cmk.gui import hooks, permissions, site_config
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
+from cmk.gui.utils.permission_verification import BasePerm
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
 
@@ -378,9 +377,14 @@ class LoggedInUser:
         hooks.call("permission-checked", pname)
         return they_may
 
-    def need_permission(self, pname: str) -> None:
-        if not self.may(pname):
-            perm = permissions.permission_registry[pname]
+    def need_permission(self, permission: str | BasePerm) -> None:
+        if isinstance(permission, BasePerm):
+            for p in permission.iter_perms():
+                self.need_permission(p.name)
+            return
+
+        if not self.may(permission):
+            perm = permissions.permission_registry[permission]
             raise MKAuthException(
                 _(
                     "We are sorry, but you lack the permission "
@@ -419,11 +423,13 @@ class LoggedInUser:
             return 0
 
     def get_docs_base_url(self) -> str:
-        version = Version.from_str(__version__).version_base
-        version = version if version != "" else "master"
-        return "https://docs.checkmk.com/{}/{}".format(
-            version, "de" if self.language == "de" else "en"
+        version = (
+            "saas"
+            if edition() == Edition.CSE
+            else Version.from_str(__version__).version_base or "master"
         )
+        language = "de" if self.language == "de" else "en"
+        return f"https://docs.checkmk.com/{version}/{language}"
 
 
 # Login a user that has all permissions. This is needed for making

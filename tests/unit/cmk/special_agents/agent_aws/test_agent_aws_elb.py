@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Sequence
 from typing import Protocol
 
@@ -92,7 +93,7 @@ def get_elb_sections() -> ELBSections:
     ) -> ELBSectionsOut:
         region = "region"
         config = AWSConfig(
-            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
         )
         config.add_single_service_config("elb_names", names)
         config.add_service_tags("elb_tags", tags)

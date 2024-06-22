@@ -5,17 +5,14 @@
 
 # comNET GmbH, Fabian Binder - 2018-05-07
 
-
-# mypy: disable-error-code="no-untyped-def"
-
 from collections.abc import Iterable, Mapping
-from typing import Final, NamedTuple
+from typing import Any, Final, Iterator, NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import render, SNMPTree
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 
 _HOT_SPARE_VALUES: Final = {3, 4}
 
@@ -34,7 +31,7 @@ class HDD(NamedTuple):
 Section = Mapping[str, HDD]
 
 
-def parse_cisco_ucs_hdd(string_table) -> Section:
+def parse_cisco_ucs_hdd(string_table: StringTable) -> Section:
     return {
         disk_id: HDD(
             disk_id,
@@ -53,7 +50,9 @@ def discover_cisco_ucs_hdd(section: Section) -> Iterable[tuple[str, dict]]:
     yield from ((hdd.disk_id, {}) for hdd in section.values() if hdd.operability != "removed")
 
 
-def check_cisco_ucs_hdd(item: str, _no_params, section: Section):
+def check_cisco_ucs_hdd(
+    item: str, _no_params: Mapping[str, Any], section: Section
+) -> Iterator[tuple[int, str]]:
     hdd = section.get(item)
     if hdd is None:
         return

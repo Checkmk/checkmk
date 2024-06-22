@@ -9,7 +9,7 @@ description:
  It reports how many sessions there are in total and how many of them are
  actively querying something.
 
- This check relies on data reported by the agent-side plugin {mk_postgres}
+ This check relies on data reported by the agent-side plug-in {mk_postgres}
 
 item:
  Name of the category

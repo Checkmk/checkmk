@@ -17,14 +17,21 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     String,
 )
-from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort, ValidationError
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
+
+
+def _validate_sub_path(value: str) -> None:
+    if value.startswith("/"):
+        raise ValidationError(Message("Path is not allowed to start with '/'"))
+    if any(not p for p in value.split("/")):
+        raise ValidationError(Message("Path is not allowed to contain empty parts"))
 
 
 def _formspec_jenkins() -> Dictionary:
     return Dictionary(
         title=Title("Jenkins connection"),
-        help_text=Help("Requests data from a jenkins instance."),
+        help_text=Help("Requests data from a Jenkins instance."),
         elements={
             "instance": DictElement(
                 parameter_form=String(
@@ -32,13 +39,24 @@ def _formspec_jenkins() -> Dictionary:
                     help_text=Help(
                         "Use this option to set which instance should be "
                         "checked by the special agent. Please add the "
-                        "hostname here, eg. my_jenkins.com."
+                        "host name here, eg. my_jenkins.com."
                     ),
                     custom_validate=[
                         LengthInRange(min_value=1, max_value=32),
                     ],
+                    macro_support=True,
                 ),
                 required=True,
+            ),
+            "path": DictElement(
+                parameter_form=String(
+                    title=Title("Path"),
+                    help_text=Help(
+                        "Add (sub) path to the URI, ie. [proto]://[host]:[port]/[path]."
+                    ),
+                    custom_validate=[LengthInRange(min_value=1), _validate_sub_path],
+                ),
+                required=False,
             ),
             "user": DictElement(
                 parameter_form=String(

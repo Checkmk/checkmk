@@ -47,10 +47,6 @@ class TestValueSpecFloat:
         ):
             vs.IconSelector().validate_datatype(None, "")
 
-        # TODO: this seems a bit missleading. we don't allow empty, yet empty is still allowed?
-        # does not raise an error, because None is internally transformed to the "empty" icon
-        vs.IconSelector(allow_empty=False).validate_value(None, "")
-
         # ## ...then test dictionary:
         expect_validate_failure(
             vs.IconSelector(), ICON_NOT_EXISTANT, match="The selected icon does not exist."

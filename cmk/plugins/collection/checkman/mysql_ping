@@ -8,8 +8,8 @@ description:
  Otherwise it returns {CRIT}. This check can also be used to detect wrong or
  unconfigured mk_mysql plugins.
 
- This check needs the agent plugin {mk_mysql} to be installed.
- Further details about this plugin and monitoring of MySQL can be
+ This check needs the agent plug-in {mk_mysql} to be installed.
+ Further details about this plug-in and monitoring of MySQL can be
  found in the Checkmk online documentation in the article
  "Monitoring MySQL with Checkmk".
 

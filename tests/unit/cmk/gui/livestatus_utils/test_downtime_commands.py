@@ -9,9 +9,9 @@ import pytest
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
-import cmk.gui.livestatus_utils.commands.downtimes as downtimes
 from cmk.gui import sites
 from cmk.gui.config import load_config
+from cmk.gui.livestatus_utils.commands import downtimes
 from cmk.gui.session import SuperUserContext
 
 
@@ -48,8 +48,8 @@ def test_host_downtime(
 
 
 @pytest.mark.usefixtures("request_context")
-def test_host_downtime_with_services(  # type: ignore[no-untyped-def]
-    mock_livestatus, dates
+def test_host_downtime_with_services(
+    mock_livestatus: MockLiveStatusConnection, dates: tuple[dt.datetime, dt.datetime]
 ) -> None:
     start_time, end_time = dates
 

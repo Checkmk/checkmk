@@ -9,7 +9,7 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.visuals as visuals
+from cmk.gui import visuals
 from cmk.gui.http import request
 from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.visuals import filters_allowed_for_info, filters_allowed_for_infos
@@ -287,7 +287,8 @@ def test_get_context_specs_no_info_limit() -> None:
         "invoratablespace",
         "invkernelconfig",
         "invswpac",
-        "invsyntheticmonitoring",
+        "invsyntheticmonitoringplans",
+        "invsyntheticmonitoringtests",
     ]
     if cmk_version.edition() is cmk_version.Edition.CME:
         expected += ["customer"]

@@ -20,7 +20,7 @@ from ._user_profile_cleanup import execute_user_profile_cleanup_job, UserProfile
 from ._user_sync import ajax_sync, execute_userdb_job, UserSyncBackgroundJob
 from .htpasswd import HtpasswdUserConnector
 
-__all__ = ["register"]
+__all__ = ["register", "saas_register"]
 
 
 def register(
@@ -47,3 +47,7 @@ def register(
     contact_group_usage_finder_registry.register(find_usages_of_contact_group_in_users)
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_users)
     user_connector_registry.register(HtpasswdUserConnector)
+
+
+def saas_register(saas_user_attribute_registry: UserAttributeRegistry) -> None:
+    user_attributes.saas_register(saas_user_attribute_registry)

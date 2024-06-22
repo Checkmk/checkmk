@@ -28,9 +28,8 @@ def parse_veeam_client(string_table):
                 last_found = line[1]
                 data[last_found] = {}
                 data[last_found]["Status"] = last_status
-        else:
-            if last_status and len(line) == 2:
-                data[last_found][line[0]] = line[1]
+        elif last_status and len(line) == 2:
+            data[last_found][line[0]] = line[1]
     return data
 
 

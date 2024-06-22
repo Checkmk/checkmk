@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
+from collections.abc import Sequence
 from contextlib import suppress
-from typing import NamedTuple, Optional, Sequence
+from typing import NamedTuple
 
 from cmk.agent_based.v2 import any_of, equals
 
@@ -41,10 +42,10 @@ class PowerSource(NamedTuple):
 
 
 class Status(NamedTuple):
-    com_status: Optional[CommunictionStatus]
-    selected_source: Optional[Source]
-    redundancy: Optional[RedunandancyStatus]
-    overcurrent: Optional[OverCurrentStatus]
+    com_status: CommunictionStatus | None
+    selected_source: Source | None
+    redundancy: RedunandancyStatus | None
+    overcurrent: OverCurrentStatus | None
     powersources: Sequence[PowerSource]
 
     @classmethod
@@ -59,7 +60,7 @@ class Status(NamedTuple):
         )
 
     @staticmethod
-    def parse_powersources(raw: list[Optional[int]]) -> Sequence[PowerSource]:
+    def parse_powersources(raw: list[int | None]) -> Sequence[PowerSource]:
         return [
             PowerSource(name=voltage, status=PowerSupplyStatus(value))
             for voltage, value in zip(["5V", "24V", "3.3V", "1.0V"], raw)
@@ -67,7 +68,7 @@ class Status(NamedTuple):
         ]
 
 
-def _parse_int(value: str) -> Optional[int]:
+def _parse_int(value: str) -> int | None:
     with suppress(ValueError):
         return int(value)
     return None

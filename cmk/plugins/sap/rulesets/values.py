@@ -70,7 +70,7 @@ def _formspec_inventory_sap_values():
                     title=Title("Limit path levels for service names"),
                     label=Label("Number of levels:"),
                     help_text=Help(
-                        "The service descriptions of the inventorized services are named like the "
+                        "The service names of the inventorized services are named like the "
                         "paths in SAP. You can use this option to let the inventory function only "
                         "use the last x path levels for naming."
                     ),
@@ -85,7 +85,6 @@ def _formspec_inventory_sap_values():
 rule_spec_inventory_sap_values = rule_specs.DiscoveryParameters(
     title=Title("SAP R/3 single value discovery"),
     name="inventory_sap_values",
-    eval_type=rule_specs.EvalType.ALL,
     parameter_form=_formspec_inventory_sap_values,
     topic=rule_specs.Topic.GENERAL,
 )

@@ -7,6 +7,8 @@ import abc
 import json
 from typing import cast
 
+from cmk.utils.user import UserId
+
 from cmk.gui.dashboard.type_defs import DashletSize
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.figures import create_figures_response, FigureResponseData
@@ -18,7 +20,7 @@ from cmk.gui.type_defs import HTTPVariables, SingleInfos
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.valuespec import Dictionary, DictionaryElements, MigrateNotUpdated
 
-from ..store import get_permitted_dashboards
+from ..store import get_permitted_dashboards_by_owners
 from .base import Dashlet, T
 from .registry import dashlet_registry
 
@@ -28,8 +30,9 @@ __all__ = ["FigureDashletPage", "ABCFigureDashlet"]
 class FigureDashletPage(AjaxPage):
     def page(self) -> PageResult:
         dashboard_name = request.get_ascii_input_mandatory("name")
+        dashboard_owner = request.get_validated_type_input_mandatory(UserId, "owner")
         try:
-            dashboard = get_permitted_dashboards()[dashboard_name]
+            dashboard = get_permitted_dashboards_by_owners()[dashboard_name][dashboard_owner]
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
         # Get context from the AJAX request body (not simply from the dashboard config) to include
@@ -47,7 +50,7 @@ class FigureDashletPage(AjaxPage):
         except KeyError:
             raise MKUserError("type", _("The requested element type does not exist."))
 
-        dashlet = dashlet_type(dashboard_name, dashboard, dashlet_id, dashlet_spec)
+        dashlet = dashlet_type(dashboard_name, dashboard_owner, dashboard, dashlet_id, dashlet_spec)
         return create_figures_response(dashlet.generate_response_data())
 
 
@@ -167,6 +170,7 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
         return [
             ("name", self.dashboard_name),
             ("id", self.dashlet_id),
+            ("owner", self.dashboard_owner),
             # Add context to the dashlet's AJAX request body so any dashboard context that is given
             # via HTTP request is not lost in the AJAX call
             ("context", json.dumps(self._dashboard["context"])),

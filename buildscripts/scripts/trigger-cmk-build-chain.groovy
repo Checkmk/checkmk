@@ -48,6 +48,9 @@ def main() {
         [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY', value: params.PUSH_TO_REGISTRY],
         [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY_ONLY', value: params.PUSH_TO_REGISTRY_ONLY],
         [$class: 'BooleanParameterValue', name: 'BUILD_CLOUD_IMAGES', value: true],
+        [$class: 'StringParameterValue',  name: 'CUSTOM_GIT_REF', value: params.CUSTOM_GIT_REF],
+        [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE],
+        [$class: 'StringParameterValue',  name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE],
         // PUBLISH_IN_MARKETPLACE will only be set during the release process (aka bw-release)
         [$class: 'BooleanParameterValue', name: 'PUBLISH_IN_MARKETPLACE', value: false],
         [$class: 'StringParameterValue',  name: 'USE_CASE', value: use_case],
@@ -58,7 +61,6 @@ def main() {
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}");
 
     def build_image = edition != "managed";
-    def build_cloud_images = edition == "cloud";
 
     // TODO: saas has all tests disabled for now. Need some way to login in those tests, SAASDEV-664
     def run_int_tests = true;
@@ -72,7 +74,6 @@ def main() {
         |edition:............... │${edition}│
         |base_folder:........... │${base_folder}│
         |build_image:........... │${build_image}│
-        |build_cloud_images:.... │${build_cloud_images}│
         |run_comp_tests:........ │${run_comp_tests}│
         |run_int_tests:..........│${run_int_tests}│
         |run_image_tests:....... │${run_image_tests}│
@@ -92,13 +93,6 @@ def main() {
             condition: build_image,
             raiseOnError: false,) {
         build(job: "${base_folder}/build-cmk-image", parameters: job_parameters);
-    }
-
-    success &= smart_stage(
-            name: "Build Cloud Images",
-            condition: build_cloud_images,
-            raiseOnError: false,) {
-        build(job: "${base_folder}/build-cmk-cloud-images", parameters: job_parameters);
     }
 
     parallel([
@@ -132,6 +126,13 @@ def main() {
             condition: run_update_tests,
             raiseOnError: false,) {
         build(job: "${base_folder}/test-update", parameters: job_parameters);
+    }
+
+    success &= smart_stage(
+            name: "Trigger Saas Gitlab jobs",
+            condition: success && edition == "saas",
+            raiseOnError: false,) {
+        build(job: "${base_folder}/trigger-saas-gitlab", parameters: job_parameters);
     }
 
     currentBuild.result = success ? "SUCCESS" : "FAILURE";

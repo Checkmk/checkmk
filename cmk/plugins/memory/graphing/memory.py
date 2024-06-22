@@ -128,42 +128,42 @@ metric_mem_free_avg = Metric(
 
 metric_pagefile_used_percent = Metric(
     name="pagefile_used_percent",
-    title=Title("Commit charge"),
+    title=Title("Used virtual memory"),
     unit=UNIT_PERCENTAGE,
     color=Color.BLUE,
 )
 
 metric_pagefile_used_percent_avg = Metric(
     name="pagefile_used_percent_avg",
-    title=Title("Commit charge (averaged)"),
+    title=Title("Used virtual memory (averaged)"),
     unit=UNIT_PERCENTAGE,
     color=Color.LIGHT_BLUE,
 )
 
 metric_pagefile_used = Metric(
     name="pagefile_used",
-    title=Title("Commit charge"),
+    title=Title("Used virtual memory"),
     unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
 
 metric_pagefile_used_avg = Metric(
     name="pagefile_used_avg",
-    title=Title("Commit charge (averaged)"),
+    title=Title("Used virtual memory (averaged)"),
     unit=UNIT_BYTES,
     color=Color.LIGHT_PURPLE,
 )
 
 metric_pagefile_free = Metric(
     name="pagefile_free",
-    title=Title("Commitable memory"),
+    title=Title("Free virtual memory"),
     unit=UNIT_BYTES,
     color=Color.GREEN,
 )
 
 metric_pagefile_free_avg = Metric(
     name="pagefile_free_avg",
-    title=Title("Commitable memory (averaged)"),
+    title=Title("Free virtual memory (averaged)"),
     unit=UNIT_BYTES,
     color=Color.LIGHT_GREEN,
 )

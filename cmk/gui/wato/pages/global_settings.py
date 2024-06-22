@@ -8,14 +8,13 @@
 settings"""
 
 import abc
-from collections.abc import Collection, Iterable, Iterator
-from typing import Any, Callable, Final
+from collections.abc import Callable, Collection, Iterable, Iterator
+from typing import Any, Final
 
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.forms as forms
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -39,12 +38,12 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.type_defs import ActionResult, GlobalSettings, PermissionName
-from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils import escaping
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
-from cmk.gui.valuespec import Checkbox, Transform
+from cmk.gui.valuespec import Checkbox, Transform, ValueSpec
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_group_registry,
@@ -351,7 +350,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             except KeyError:
                 pass
 
-            msg = escape_to_html(
+            msg = HTML.with_escaping(
                 _("Resetted configuration variable %s to its default.") % self._varname
             )
         else:
@@ -359,7 +358,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             self._valuespec.validate_value(new_value, "ve")
 
             self._current_settings[self._varname] = new_value
-            msg = HTML(
+            msg = HTML.without_escaping(
                 _("Changed global configuration variable %s to %s.")
                 % (
                     escaping.escape_attribute(self._varname),
@@ -429,24 +428,26 @@ class ABCEditGlobalSettingMode(WatoMode):
                 self._show_global_setting()
 
             forms.section(_("Factory setting"))
-            html.write_text(self._valuespec.value_to_html(defvalue))
+            html.write_text_permissive(self._valuespec.value_to_html(defvalue))
 
             forms.section(_("Current state"))
             if is_configured_globally:
-                html.write_text(
+                html.write_text_permissive(
                     _('This variable is configured in <a href="%s">global settings</a>.')
                     % ("wato.py?mode=edit_configvar&varname=%s" % self._varname)
                 )
             elif not is_configured:
-                html.write_text(_("This variable is at factory settings."))
+                html.write_text_permissive(_("This variable is at factory settings."))
             else:
                 curvalue = self._current_settings[self._varname]
                 if is_configured_globally and curvalue == self._global_settings[self._varname]:
-                    html.write_text(_("Site setting and global setting are identical."))
+                    html.write_text_permissive(_("Site setting and global setting are identical."))
                 elif curvalue == defvalue:
-                    html.write_text(_("Your setting and factory settings are identical."))
+                    html.write_text_permissive(
+                        _("Your setting and factory settings are identical.")
+                    )
                 else:
-                    html.write_text(self._valuespec.value_to_html(curvalue))
+                    html.write_text_permissive(self._valuespec.value_to_html(curvalue))
 
             forms.end()
             html.hidden_fields()
@@ -472,7 +473,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     def title(self) -> str:
         if self._search:
-            return _("Global settings matching '%s'") % escape_to_html(self._search)
+            return _("Global settings matching '%s'") % self._search
         return _("Global settings")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -571,7 +572,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditGlobals.mode_url()
 
 
-def is_a_checkbox(vs) -> bool:  # type: ignore[no-untyped-def]
+def is_a_checkbox(vs: ValueSpec) -> bool:
     """Checks if a valuespec is a Checkbox"""
     if isinstance(vs, Checkbox):
         return True

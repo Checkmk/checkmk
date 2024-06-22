@@ -95,10 +95,13 @@ def get_rate(  # type: ignore[misc]
         ):
             pass
         case _other:
-            raise GetRateError(f"Initialized: {key!r}")
+            raise GetRateError(
+                f"Counter {key!r} has been initialized."
+                " Result available on second check execution."
+            )
 
     if time <= last_time:
-        raise GetRateError("No time difference")
+        raise GetRateError("No rate available (time anomaly detected)")
 
     rate = float(value - last_value) / (time - last_time)
     if raise_overflow and rate < 0:
@@ -106,7 +109,7 @@ def get_rate(  # type: ignore[misc]
         # wether they are 32 or 64 bit. It also could happen counter
         # reset (reboot, etc.). Better is to leave this value undefined
         # and wait for the next check interval.
-        raise GetRateError("Value overflow")
+        raise GetRateError(f"Negative rate for {key!r}. Suspecting value overflow.")
 
     return rate
 

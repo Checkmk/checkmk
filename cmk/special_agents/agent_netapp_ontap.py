@@ -29,8 +29,9 @@ def write_section(section_header: str, generator: Iterable, logger: logging.Logg
             writer.append_json(element.model_dump(exclude_unset=True, exclude_none=False))
 
 
-def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
-    field_query = {
+def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: bool) -> Iterable:
+
+    field_query = (
         "uuid",
         "state",
         "name",
@@ -46,12 +47,17 @@ def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
         "space.snapshot.reserve_size",
         "space.snapshot.used",
         "space.snapshot.reserve_percent",
-    }
+    )
 
-    for element in NetAppResource.Volume.get_collection(
-        connection=connection, fields=",".join(field_query)
-    ):
-        element_data = element.to_dict()
+    yield from NetAppResource.Volume.get_collection(
+        connection=connection, is_constituent=is_constituent, fields=",".join(field_query)
+    )
+
+
+def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[models.VolumeModel]:
+
+    for netapp_resources in netapp_volumes:
+        element_data = netapp_resources.to_dict()
 
         yield models.VolumeModel(
             uuid=element_data["uuid"],
@@ -78,6 +84,16 @@ def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
         )
 
 
+def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
+
+    yield from _collect_volume_models(
+        _collect_netapp_resource_volume(connection, is_constituent=True)
+    )
+    yield from _collect_volume_models(
+        _collect_netapp_resource_volume(connection, is_constituent=False)
+    )
+
+
 def fetch_volumes_counters(
     connection: HostConnection, volumes: Sequence[models.VolumeModel]
 ) -> Iterable[models.VolumeCountersModel]:
@@ -89,7 +105,7 @@ def fetch_volumes_counters(
 
     """
 
-    volumes_counters_field_query = {
+    volumes_counters_field_query = (
         "fcp.write_data",
         "fcp.read_latency",
         "iscsi.write_latency",
@@ -120,7 +136,7 @@ def fetch_volumes_counters(
         "total_write_ops",
         "nfs.write_data",
         "cifs.write_latency",
-    }
+    )
 
     for volume in volumes:
         # fcp_write_data -> fcp.write_data
@@ -213,7 +229,7 @@ def fetch_volumes_counters(
 
 
 def fetch_disks(connection: HostConnection) -> Iterable[models.DiskModel]:
-    field_query = {
+    field_query = (
         "uid",
         "serial_number",
         "model",
@@ -223,7 +239,8 @@ def fetch_disks(connection: HostConnection) -> Iterable[models.DiskModel]:
         "bay",
         "bytes_per_sector",
         "sector_count",
-    }
+    )
+
     yield from (
         models.DiskModel.model_validate(element.to_dict())
         for element in NetAppResource.Disk.get_collection(
@@ -233,7 +250,7 @@ def fetch_disks(connection: HostConnection) -> Iterable[models.DiskModel]:
 
 
 def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
-    field_query = {
+    field_query = (
         "name",
         "space.size",
         "space.used",
@@ -241,7 +258,7 @@ def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
         "status.read_only",
         "svm.name",
         "location.volume.name",
-    }
+    )
 
     for element in NetAppResource.Lun.get_collection(
         connection=connection, fields=",".join(field_query)
@@ -260,11 +277,11 @@ def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
 
 
 def fetch_aggr(connection: HostConnection) -> Iterable[models.AggregateModel]:
-    field_query = {
+    field_query = (
         "name",
         "space.block_storage.available",
         "space.block_storage.size",
-    }
+    )
     yield from (
         models.AggregateModel.model_validate(element.to_dict())
         for element in NetAppResource.Aggregate.get_collection(
@@ -274,11 +291,11 @@ def fetch_aggr(connection: HostConnection) -> Iterable[models.AggregateModel]:
 
 
 def fetch_vs_status(connection: HostConnection) -> Iterable[models.SvmModel]:
-    field_query = {
+    field_query = (
         "name",
         "state",
         "subtype",
-    }
+    )
 
     yield from (
         models.SvmModel.model_validate(element.to_dict())
@@ -289,7 +306,7 @@ def fetch_vs_status(connection: HostConnection) -> Iterable[models.SvmModel]:
 
 
 def fetch_interfaces(connection: HostConnection) -> Iterable[models.IpInterfaceModel]:
-    field_query = {
+    field_query = (
         "uuid",
         "name",
         "enabled",
@@ -300,7 +317,7 @@ def fetch_interfaces(connection: HostConnection) -> Iterable[models.IpInterfaceM
         "location.home_node.name",
         "location.home_port.name",
         "location.is_home",
-    }
+    )
 
     for element in NetAppResource.IpInterface.get_collection(
         connection=connection, fields=",".join(field_query)
@@ -322,7 +339,7 @@ def fetch_interfaces(connection: HostConnection) -> Iterable[models.IpInterfaceM
 
 
 def fetch_ports(connection: HostConnection) -> Iterable[models.PortModel]:
-    field_query = {
+    field_query = (
         "uuid",
         "name",
         "node.name",
@@ -331,7 +348,7 @@ def fetch_ports(connection: HostConnection) -> Iterable[models.PortModel]:
         "type",
         "mac_address",
         "broadcast_domain.name",
-    }
+    )
 
     for element in NetAppResource.Port.get_collection(
         connection=connection, fields=",".join(field_query)
@@ -359,14 +376,14 @@ def fetch_interfaces_counters(
     - https://docs.netapp.com/us-en/ontap-pcmap-9141/lif.html
 
     """
-    interfaces_counters_field_query = {
+    interfaces_counters_field_query = (
         "received_data",
         "received_packets",
         "received_errors",
         "sent_data",
         "sent_packets",
         "sent_errors",
-    }
+    )
 
     for interface in interfaces:
         interface_id = (f"{interface.node_name}:{interface.name}:*",)
@@ -394,7 +411,7 @@ def fetch_interfaces_counters(
 
 
 def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
-    field_query = {
+    field_query = (
         "name",
         "version",
         "controller.cpu.count",
@@ -406,7 +423,7 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
         "controller.cpu.processor",
         "statistics.processor_utilization_raw",
         "statistics.processor_utilization_base",
-    }
+    )
 
     for element in NetAppResource.Node.get_collection(
         connection=connection, fields=",".join(field_query)
@@ -430,20 +447,20 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
 
 
 def fetch_fans(connection: HostConnection) -> Iterable[models.ShelfFanModel]:
-    field_query = {
+    field_query = (
         "id",
         "fans.id",
         "fans.state",
         "fans.rpm",
         # "fans.installed",  # ! NOT WORKING
-    }
+    )
 
     for element in NetAppResource.Shelf.get_collection(
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
         list_id = element_data["id"]
-        fans = element_data["fans"]
+        fans = element_data.get("fans", [])
 
         for fan in fans:
             yield models.ShelfFanModel(
@@ -455,19 +472,19 @@ def fetch_fans(connection: HostConnection) -> Iterable[models.ShelfFanModel]:
 
 
 def fetch_psu(connection: HostConnection) -> Iterable[models.ShelfPsuModel]:
-    field_query = {
+    field_query = (
         "id",
         "frus.id",
         "frus.state",
         # "fans.installed",  # ! NOT WORKING
-    }
+    )
 
     for element in NetAppResource.Shelf.get_collection(
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
         list_id = element_data["id"]
-        frus = element_data["frus"]
+        frus = element_data.get("frus", [])
 
         for fan in frus:
             yield models.ShelfPsuModel(
@@ -480,7 +497,7 @@ def fetch_psu(connection: HostConnection) -> Iterable[models.ShelfPsuModel]:
 def fetch_temperatures(
     connection: HostConnection,
 ) -> Iterable[models.ShelfTemperatureModel]:
-    field_query = {
+    field_query = (
         "id",
         "temperature_sensors.id",
         "temperature_sensors.state",
@@ -491,14 +508,14 @@ def fetch_temperatures(
         "temperature_sensors.threshold.low.critical",
         "temperature_sensors.threshold.high.warning",
         "temperature_sensors.threshold.high.critical",
-    }
+    )
 
     for element in NetAppResource.Shelf.get_collection(
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
         list_id = element_data["id"]
-        temperatures = element_data["temperature_sensors"]
+        temperatures = element_data.get("temperature_sensors", [])
 
         for temp in temperatures:
             yield models.ShelfTemperatureModel(
@@ -533,47 +550,47 @@ def fetch_vs_traffic_counters(
 ) -> Iterable[models.SvmTrafficCountersModel]:
     query_data = {
         # table: counters
-        "lif": {
+        "lif": (
             "received_data",
             "sent_data",
             "received_errors",
             "sent_errors",
             "received_packets",
             "sent_packets",
-        },
-        "fcp_lif": {
+        ),
+        "fcp_lif": (
             "average_read_latency",
             "average_write_latency",
             "read_data",
             "write_data",
             "read_ops",
             "write_ops",
-        },
-        "svm_cifs": {
+        ),
+        "svm_cifs": (
             "average_read_latency",
             "average_write_latency",
             "total_read_ops",
             "total_write_ops",
-        },
-        "iscsi_lif": {
+        ),
+        "iscsi_lif": (
             "average_read_latency",
             "average_write_latency",
             "read_data",
             "write_data",
             "iscsi_read_ops",
             "iscsi_write_ops",
-        },
-        "svm_nfs_v3": {"read_throughput", "write_throughput", "read_ops", "write_ops", "ops"},
-        "svm_nfs_v4": {
+        ),
+        "svm_nfs_v3": ("read_throughput", "write_throughput", "read_ops", "write_ops", "ops"),
+        "svm_nfs_v4": (
             "total.read_throughput",
             "total.write_throughput",
             "ops",
-        },
-        "svm_nfs_v41": {
+        ),
+        "svm_nfs_v41": (
             "total.read_throughput",
             "total.write_throughput",
             "ops",
-        },
+        ),
     }
 
     for key, values in query_data.items():
@@ -605,7 +622,7 @@ def fetch_fc_interfaces_counters(
 ) -> Iterable[models.FcInterfaceTrafficCountersModel]:
     query_data = {
         # table: counters
-        "fcp_lif:port": {
+        "fcp_lif:port": (
             "average_read_latency",
             "average_write_latency",
             "read_data",
@@ -613,7 +630,7 @@ def fetch_fc_interfaces_counters(
             "read_ops",
             "write_ops",
             "total_ops",
-        },
+        ),
     }
 
     for key, values in query_data.items():
@@ -648,7 +665,7 @@ def fetch_fc_interfaces_counters(
 
 
 def fetch_environment(connection):
-    field_query = {
+    field_query = (
         "name",
         "node.name",
         "type",
@@ -661,7 +678,7 @@ def fetch_environment(connection):
         "discrete_value",
         "threshold_state",
         "value_units",
-    }
+    )
 
     for element in NetAppResource.Sensors.get_collection(
         connection=connection, fields=",".join(field_query), type="thermal|fan|voltage|current"
@@ -696,14 +713,14 @@ def fetch_environment(connection):
 def fetch_qtree_quota(
     connection: HostConnection,
 ) -> Iterable[models.QtreeQuotaModel]:
-    field_query = {
+    field_query = (
         "type",
         "qtree.name",
         "volume.name",
         "space.hard_limit",
         "space.used.total",
         "users",
-    }
+    )
 
     for element in NetAppResource.QuotaReport.get_collection(
         connection=connection, fields=",".join(field_query)
@@ -722,7 +739,7 @@ def fetch_qtree_quota(
 def fetch_snapmirror(
     connection: HostConnection,
 ) -> Iterable[models.SnapMirrorModel]:
-    field_query = {
+    field_query = (
         "state",
         "policy.name",
         "policy.type",
@@ -731,7 +748,7 @@ def fetch_snapmirror(
         "lag_time",
         "destination.path",
         "destination.svm.name",
-    }
+    )
 
     for element in NetAppResource.SnapmirrorRelationship.get_collection(
         connection=connection, fields=",".join(field_query)
@@ -750,7 +767,7 @@ def fetch_snapmirror(
 
 
 def fetch_fc_ports(connection: HostConnection) -> Iterable[models.FcPortModel]:
-    field_query = {
+    field_query = (
         "supported_protocols",
         "wwpn",
         "wwnn",
@@ -761,7 +778,7 @@ def fetch_fc_ports(connection: HostConnection) -> Iterable[models.FcPortModel]:
         "enabled",
         "node.name",
         "fabric.connected_speed",
-    }
+    )
 
     for element in NetAppResource.FcPort.get_collection(
         connection=connection, fields=",".join(field_query)
@@ -808,9 +825,9 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
-    parser.add_argument("--hostname", help="Hostname or IP-address of NetApp Filer.")
-    parser.add_argument("--username", help="Username for NetApp login")
-    parser.add_argument("--password", help="Secret/Password for NetApp login")
+    parser.add_argument("--hostname", help="Hostname or IP-address of NetApp Filer.", required=True)
+    parser.add_argument("--username", help="Username for NetApp login", required=True)
+    parser.add_argument("--password", help="Secret/Password for NetApp login", required=True)
 
     parser.add_argument(
         "-t",

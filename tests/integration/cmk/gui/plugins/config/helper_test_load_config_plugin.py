@@ -6,6 +6,6 @@
 from cmk.gui import main_modules
 
 main_modules.load_plugins()
-import cmk.gui.config as config
+from cmk.gui import config
 
 print(config.get_default_config()["x"])

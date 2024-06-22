@@ -5,6 +5,7 @@
 
 import json
 from collections.abc import Mapping, Sequence
+from contextlib import suppress
 from typing import Any, Final
 
 from cmk.agent_based.v2 import (
@@ -18,6 +19,7 @@ from cmk.agent_based.v2 import (
     Service,
     ServiceLabel,
     State,
+    StringTable,
 )
 
 from .lib import render_integer
@@ -31,7 +33,7 @@ _MAP_NODE_STATES: Final = {
 Section = Mapping[str, Sequence[Mapping]]
 
 
-def parse_jenkins_nodes(string_table) -> Section:  # type: ignore[no-untyped-def]
+def parse_jenkins_nodes(string_table: StringTable) -> Section:
     parsed: dict[str, list[Mapping]] = {}
 
     for line in string_table:
@@ -89,7 +91,7 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
     for node in item_data:
         node_desc = node.get("description")
         if node_desc and node_desc is not None:
-            yield Result(state=State.OK, summary=f"Description: {node_desc.title()}")
+            yield Result(state=State.OK, summary=f"Description: {node_desc.strip().title()}")
 
         for key, infotext in [
             ("jnlpAgent", "Is JNLP agent"),
@@ -116,61 +118,55 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
                 label="Total number of executors",
             )
 
-        for key, infotext in [
-            ("busyExecutors", "Number of busy executors"),
-            ("idleExecutors", "Number of idle executors"),
-        ]:
-            exec_label_data = node.get("assignedLabels")
+        mode = "Unknown"
+        mode_state = State.UNKNOWN
 
-            if exec_label_data is None:
-                continue
+        assigned_labels = node.get("assignedLabels") or []
+        if assigned_labels:
+            # Select the proper label to base our executor data on
+            # We try to find a good label by looking for one that matches
+            # the name of the currently processed node.
+            # If no match is found we take the first label.
+            for label in assigned_labels:
+                if label.get("name") == item:
+                    break
+            else:
+                label = assigned_labels[0]
 
-            for executor in exec_label_data:
-                # list of two dicts like [{"busyExecutors": 0,
-                # "idleExecutors": 1}, {"busyExecutors": 0,
-                # "idleExecutors": 1}], we only need one entry here
-                executors = executor.get(key)
-                break
+            for key in ("busy", "idle"):
+                if (value := label.get(f"{key}Executors")) is None:
+                    continue
 
-            if executors is None:
-                continue
+                yield from check_levels(
+                    value,
+                    metric_name=f"jenkins_{key}_executors",
+                    levels_upper=params.get(f"jenkins_{key}executors"),
+                    render_func=render_integer,
+                    label=f"Number of {key} executors",
+                )
 
-            executor_name = "jenkins_%s" % key.lower()
+            with suppress(KeyError, ValueError):
+                mode = label["nodes"][0]["mode"]
+                mode_state = State.OK
 
-            yield from check_levels(
-                executors,
-                metric_name="jenkins_%s_executors" % key[0:4],
-                levels_upper=params.get(executor_name),
-                render_func=render_integer,
-                label=infotext,
-            )
+        mode_infotext = [f"Mode: {mode.title()}"]
 
         # get labels for each node
         label_collection = [
             label_name
-            for labels in (node.get("assignedLabels") or [])
+            for labels in assigned_labels
             if (label_name := labels.get("name")) is not None and label_name != item
         ]
 
-        mode = "Unknown"
-        mode_state = State.UNKNOWN
-        try:
-            mode = node["assignedLabels"][0]["nodes"][0]["mode"]
-            mode_state = State.OK
-        except (KeyError, ValueError):
-            pass
-
-        mode_infotext = f"Mode: {mode.title()} "
-
         if mode == "EXCLUSIVE" and label_collection:
-            mode_infotext += f"(Labels: {' '.join(label_collection)})"
+            mode_infotext.append(f"(Labels: {' '.join(label_collection)})")
 
         if (mode_expected := params.get("jenkins_mode")) is not None:
             if mode_expected != mode:
                 mode_state = State.CRIT
-                mode_infotext += f" (expected: {mode_expected.title()})"
+                mode_infotext.append(f"(expected: {mode_expected.title()})")
 
-        yield Result(state=mode_state, summary=mode_infotext)
+        yield Result(state=mode_state, summary=" ".join(mode_infotext))
 
         offline_state = node["offline"]
         state = State(params["jenkins_offline"]) if offline_state else State.OK

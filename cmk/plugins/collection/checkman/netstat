@@ -11,7 +11,7 @@ description:
  The check returns {OK} state if the specified connection/listener is present,
  and {CRIT} if not.
 
- This check needs the respective agent plugin {netstat.linux}, {netstat.aix} or {netstat.solaris} to
+ This check needs the respective agent plug-in {netstat.linux}, {netstat.aix} or {netstat.solaris} to
  be installed.
 
 item:

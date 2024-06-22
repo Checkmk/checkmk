@@ -6,7 +6,7 @@
 import pytest
 from pytest_mock import MockerFixture
 
-import cmk.notification_plugins.mail as mail
+from cmk.notification_plugins import mail
 
 
 @pytest.mark.parametrize(
@@ -327,7 +327,7 @@ def test_mail_content_from_service_context(mocker: MockerFixture) -> None:
     content = mail.SingleEmailContent(mock_service_context)
 
     # The state markers (!) and (!!) as well as the states in EVENT_TXT have to be
-    # replaced with HTML, but raw input from plugins has to be escaped.
+    # replaced with HTML, but raw input from plug-ins has to be escaped.
     # LONGSERVICEOUTPUT_HTML additionally replaces '\n' and '\\n' by '<br>'.
     assert content.context["EVENT_TXT"] == "OK -> WARN"
     assert (

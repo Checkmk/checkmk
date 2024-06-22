@@ -19,11 +19,11 @@ def _valuespec_active_checks_notify_count():
         valuespec=Dictionary(
             title=_("Check notification number per contact"),
             help=_(
-                "Check the number of sent notifications per contact using the plugin <tt>check_notify_count</tt> "
-                "provided with Checkmk. This plugin counts the total number of notifications sent by the local "
+                "Check the number of sent notifications per contact using the plug-in <tt>check_notify_count</tt> "
+                "provided with Checkmk. This plug-in counts the total number of notifications sent by the local "
                 "monitoring core and creates graphs for each individual contact. You can configure thresholds "
                 "on the number of notifications per contact in a defined time interval. "
-                "This plugin queries livestatus to extract the notification related log entries from the "
+                "This plug-in queries livestatus to extract the notification related log entries from the "
                 "log file of your monitoring core."
             ),
             elements=[
@@ -31,7 +31,7 @@ def _valuespec_active_checks_notify_count():
                     "description",
                     TextInput(
                         title=_("Service Description"),
-                        help=_("The name that will be used in the service description"),
+                        help=_("The name that will be used in the service name"),
                         allow_empty=False,
                     ),
                 ),

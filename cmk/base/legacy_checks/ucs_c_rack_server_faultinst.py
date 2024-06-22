@@ -10,7 +10,7 @@ from collections.abc import Iterable
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-import cmk.plugins.lib.ucs_bladecenter as ucs_bladecenter
+from cmk.plugins.lib import ucs_bladecenter
 
 
 def check_ucs_c_rack_server_faultinst(

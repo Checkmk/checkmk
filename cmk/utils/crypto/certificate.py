@@ -41,7 +41,7 @@ from typing import assert_never, NamedTuple, TypeAlias
 
 import cryptography
 import cryptography.hazmat.primitives.asymmetric as asym
-import cryptography.x509 as x509
+from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from dateutil.relativedelta import relativedelta
 
@@ -86,7 +86,7 @@ class CertificateWithPrivateKey(NamedTuple):
         """Generate an RSA private key and create a self-signed certificated for it."""
 
         # Note: Various places in the code expect our own certs to use RSA at the moment.
-        # At least: agent bakery and backups via key_mgmt.py, as well as the license server.
+        # At least: Agent Bakery and backups via key_mgmt.py, as well as the license server.
         private_key = PrivateKey.generate_rsa(key_size)
         name = X509Name.create(
             common_name=common_name,

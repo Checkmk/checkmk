@@ -19,12 +19,14 @@ from uuid import UUID
 
 import livestatus
 
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageSample,
     LicensingProtocolVersion,
+    make_parser,
+    parse_protocol_version,
     RawLicenseUsageExtensions,
     RawLicenseUsageReport,
     RawLicenseUsageSample,
@@ -88,7 +90,7 @@ def try_update_license_usage(
 
     report_file_path = get_license_usage_report_file_path()
     licensing_dir.mkdir(parents=True, exist_ok=True)
-    next_run_file_path = licensing_dir / "next_run"
+    next_run_file_path = get_next_run_file_path()
 
     with store.locked(next_run_file_path), store.locked(report_file_path):
         if now.dt.timestamp() < _get_next_run_ts(next_run_file_path):
@@ -323,6 +325,10 @@ def get_license_usage_report_file_path() -> Path:
     return licensing_dir / "history.json"
 
 
+def get_next_run_file_path() -> Path:
+    return licensing_dir / "next_run"
+
+
 def save_license_usage_report(file_path: Path, raw_report: RawLicenseUsageReport) -> None:
     store.save_bytes_to_file(file_path, _serialize_dump(raw_report))
 
@@ -363,34 +369,24 @@ class LocalLicenseUsageHistory:
     def update(
         cls, raw_report: object, *, instance_id: UUID, site_hash: str
     ) -> LocalLicenseUsageHistory:
-        if not isinstance(raw_report, dict):
-            raise TypeError("Wrong report type: %r" % type(raw_report))
-
         if not raw_report:
             return cls([])
-
-        if not isinstance(protocol_version := raw_report.get("VERSION"), str):
-            raise TypeError("Wrong protocol version type: %r" % type(protocol_version))
-
-        parser = LicenseUsageSample.get_parser(protocol_version)
+        parser = make_parser(parse_protocol_version(raw_report)).parse_sample
+        if not isinstance(raw_report, dict):
+            raise TypeError("Wrong report type: %r" % type(raw_report))
         return cls(
-            parser(raw_sample, instance_id=instance_id, site_hash=site_hash)
+            parser(instance_id, site_hash, raw_sample)
             for raw_sample in raw_report.get("history", [])
         )
 
     @classmethod
     def parse(cls, raw_report: object) -> LocalLicenseUsageHistory:
-        if not isinstance(raw_report, dict):
-            raise TypeError("Wrong report type: %r" % type(raw_report))
-
         if not raw_report:
             return cls([])
-
-        if not isinstance(protocol_version := raw_report.get("VERSION"), str):
-            raise TypeError("Wrong protocol version type: %r" % type(protocol_version))
-
-        parser = LicenseUsageSample.get_parser(protocol_version)
-        return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))
+        parser = make_parser(parse_protocol_version(raw_report)).parse_sample
+        if not isinstance(raw_report, dict):
+            raise TypeError("Wrong report type: %r" % type(raw_report))
+        return cls(parser(None, "", raw_sample) for raw_sample in raw_report.get("history", []))
 
     def add_sample(self, sample: LicenseUsageSample) -> None:
         if sample.sample_time in {s.sample_time for s in self._samples}:
@@ -424,6 +420,12 @@ def save_extensions(extensions: LicenseUsageExtensions) -> None:
         )
 
 
+def _parse_extensions(raw: object) -> LicenseUsageExtensions:
+    if isinstance(raw, dict):
+        return LicenseUsageExtensions(ntop=raw.get("ntop", False))
+    raise TypeError("Wrong extensions type: %r" % type(raw))
+
+
 def _load_extensions() -> LicenseUsageExtensions:
     extensions_file_path = _get_extensions_file_path()
     with store.locked(extensions_file_path):
@@ -433,7 +435,7 @@ def _load_extensions() -> LicenseUsageExtensions:
                 default=b"{}",
             )
         )
-    return LicenseUsageExtensions.parse(raw_extensions)
+    return _parse_extensions(raw_extensions)
 
 
 # .

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from logging import Logger
 from pathlib import Path
 
 from cmk.utils.exceptions import MKGeneralException
@@ -18,6 +19,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_on_incomp_local_file,
     disable_incomp_mkp,
+    error_message_incomp_local_file,
     get_installer_and_package_map,
     get_path_config,
     GUI_PLUGINS_PREACTION_SORT_INDEX,
@@ -37,7 +39,7 @@ def _get_package_id(package_map: Mapping[Path, PackageID], rel_path: str) -> Pac
 class PreUpdateUIExtensions(PreUpdateAction):
     """Load all web plugins before the real update happens"""
 
-    def __call__(self, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         main_modules.load_plugins()
         path_config = get_path_config()
         package_store = PACKAGE_STORE
@@ -47,11 +49,8 @@ class PreUpdateUIExtensions(PreUpdateAction):
             package_id = _get_package_id(package_map, str(path))
             # unpackaged files
             if package_id is None:
-                if continue_on_incomp_local_file(
-                    conflict_mode,
-                    path,
-                    error,
-                ):
+                logger.error(error_message_incomp_local_file(path, error))
+                if continue_on_incomp_local_file(conflict_mode):
                     continue
                 raise MKUserError(None, "incompatible local file")
 
@@ -59,6 +58,7 @@ class PreUpdateUIExtensions(PreUpdateAction):
                 continue  # already dealt with
 
             if disable_incomp_mkp(
+                logger,
                 conflict_mode,
                 module_name,
                 error,

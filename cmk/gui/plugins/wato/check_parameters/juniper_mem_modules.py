@@ -45,6 +45,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         item_spec=_item_spec_juniper_mem_modules,
         parameter_valuespec=_parameter_valuespec_juniper_mem_modules,
-        title=lambda: _("Juniper Modules Memory Usage"),
+        title=lambda: _("Juniper modules memory usage"),
     )
 )

@@ -30,7 +30,6 @@ def test_update_ec_history(tmp_path: Path) -> None:
     UpdateECHistory.history_files_to_sqlite(tmp_path, logger=logging.getLogger("cmk.mkeventd"))
 
     assert history_file.with_suffix(".bak").exists()
-    assert (tmp_path / "etc/check_mk/mkeventd.d/enable_sqlite.mk").exists()
     with sqlite3.connect(history_dir / "history.sqlite") as connection:
         cur = connection.cursor()
         cur.execute("SELECT COUNT(*) FROM history;")

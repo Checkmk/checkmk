@@ -13,7 +13,7 @@ from .query import Columns
 
 
 def lerp(a: float, b: float, t: float) -> float:
-    """Linear interpolation between a and b with weight t"""
+    """Linear interpolation between a and b with weight t."""
     return (1 - t) * a + t * b
 
 
@@ -65,10 +65,7 @@ class Perfcounters:
     def do_statistics(self) -> None:
         with self._lock:
             now = time.time()
-            if self._last_statistics:
-                duration = now - self._last_statistics
-            else:
-                duration = 0
+            duration = now - self._last_statistics if self._last_statistics else 0
             for name, value in self._counters.items():
                 if duration:
                     delta = value - self._old_counters[name]

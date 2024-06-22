@@ -30,7 +30,7 @@ from cmk.base.config import FilterMode, HostCheckTable
 
 @pytest.fixture(autouse=True, scope="module")
 def _use_fix_register(fix_register):
-    """These tests modify the plugin registry. Make sure to load it first."""
+    """These tests modify the plug-in registry. Make sure to load it first."""
 
 
 def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
@@ -570,7 +570,7 @@ def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
     assert len(chk_table) == 1
     # assert static checks won
     effective_params = chk_table[ServiceID(plugin_name, item)].parameters.evaluate(lambda _: True)
-    assert effective_params["source"] == "static"  # type: ignore[index,call-overload]
+    assert effective_params["source"] == "static"
 
 
 @pytest.mark.parametrize(

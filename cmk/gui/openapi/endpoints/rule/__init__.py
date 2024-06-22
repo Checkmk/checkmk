@@ -6,11 +6,16 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.utils.datastructures import denilled
 from cmk.utils.labels import LabelGroups
 from cmk.utils.object_diff import make_diff_text
+from cmk.utils.rulesets.conditions import (
+    allow_host_label_conditions,
+    allow_service_label_conditions,
+)
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec
 
 from cmk.gui import exceptions, http
@@ -273,7 +278,7 @@ def show_rule(param):
     return serve_json(_serialize_rule(rule_entry))
 
 
-def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:  # type: ignore[no-untyped-def]
+def _get_rule_by_id(rule_uuid: str, all_rulesets: AllRulesets | None = None) -> RuleEntry:
     if all_rulesets is None:
         all_rulesets = AllRulesets.load_all_rulesets()
 
@@ -467,10 +472,20 @@ def _create_rule(
         RuleConditions(
             host_folder=folder.path(),
             host_tags=conditions.get("host_tags"),
-            host_label_groups=_api_to_internal(conditions.get("host_label_groups")),
+            host_label_groups=(
+                _api_to_internal(conditions.get("host_label_groups"))
+                if allow_host_label_conditions(ruleset.rulespec.name)
+                else None
+            ),
             host_name=conditions.get("host_name"),
-            service_description=conditions.get("service_description"),
-            service_label_groups=_api_to_internal(conditions.get("service_label_groups")),
+            service_description=(
+                conditions.get("service_description") if ruleset.item_type() else None
+            ),
+            service_label_groups=(
+                _api_to_internal(conditions.get("service_label_groups"))
+                if (ruleset.item_type() and allow_service_label_conditions(ruleset.rulespec.name))
+                else None
+            ),
         ),
         RuleOptions.from_config(properties),
         value,

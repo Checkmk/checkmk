@@ -9,14 +9,6 @@ CHECK_MK_ANNOUNCE_FOLDER := $(REPO_PATH)/announce
 CHECK_MK_ANNOUNCE_MD := $(CHECK_MK_ANNOUNCE_FOLDER)/announce-$(CHECK_MK_ANNOUNCE_VERSION).md
 CHECK_MK_ANNOUNCE_TXT := $(CHECK_MK_ANNOUNCE_FOLDER)/announce-$(CHECK_MK_ANNOUNCE_VERSION).txt
 
-JAVASCRIPT_MINI    := $(foreach jmini,main vue mobile side tracking_entry zxcvbn,$(REPO_PATH)/web/htdocs/js/$(jmini)_min.js)
-
-THEMES             := facelift modern-dark
-THEME_CSS_FILES    := $(addprefix $(REPO_PATH)/web/htdocs/themes/,$(addsuffix /theme.css,$(THEMES)))
-THEME_JSON_FILES   := $(addprefix $(REPO_PATH)/web/htdocs/themes/,$(addsuffix /theme.json,$(THEMES)))
-THEME_IMAGE_DIRS   := $(addprefix $(REPO_PATH)/web/htdocs/themes/,$(addsuffix /images,$(THEMES)))
-THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
-
 # These artifacts are created independent of the distro the Checkmk package is
 # built on either by an "upstream job" or while creating the source package
 SOURCE_BUILT_LINUX_AGENTS := \
@@ -35,8 +27,8 @@ endif
 SOURCE_BUILT_OHM := \
 	$(REPO_PATH)/agents/windows/OpenHardwareMonitorCLI.exe \
 	$(REPO_PATH)/agents/windows/OpenHardwareMonitorLib.dll
-SOURCE_BUILT_EXT := $(REPO_PATH)/agents/windows/robotmk_ext.exe 
-SOURCE_BUILT_MK_SQL := $(REPO_PATH)/agents/windows/mk-sql.exe 
+SOURCE_BUILT_EXT := $(REPO_PATH)/agents/windows/robotmk_ext.exe
+SOURCE_BUILT_MK_SQL := $(REPO_PATH)/agents/windows/mk-sql.exe
 SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/check_mk_agent.msi \
 	$(REPO_PATH)/agents/windows/python-3.cab \

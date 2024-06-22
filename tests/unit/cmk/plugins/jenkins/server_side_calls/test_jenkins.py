@@ -34,7 +34,7 @@ HOST_CONFIG = HostConfig(
                         "-u",
                         "username",
                         "-s",
-                        Secret(0),
+                        Secret(0).unsafe(),
                         "test",
                     ]
                 )
@@ -48,6 +48,7 @@ HOST_CONFIG = HostConfig(
                 "instance": "test",
                 "protocol": "https",
                 "port": 442,
+                "path": "path",
                 "sections": ["instance", "jobs", "nodes", "queue"],
             },
             [
@@ -58,7 +59,9 @@ HOST_CONFIG = HostConfig(
                         "-u",
                         "username",
                         "-s",
-                        Secret(0),
+                        Secret(0).unsafe(),
+                        "--path",
+                        "path",
                         "-m",
                         "instance jobs nodes queue",
                         "-p",
@@ -74,4 +77,4 @@ HOST_CONFIG = HostConfig(
 def test_agent_jenkins_arguments_password_store(
     params: Mapping[str, object], expected_result: Sequence[SpecialAgentCommand]
 ) -> None:
-    assert list(special_agent_jenkins(params, HOST_CONFIG, {})) == expected_result
+    assert list(special_agent_jenkins(params, HOST_CONFIG)) == expected_result

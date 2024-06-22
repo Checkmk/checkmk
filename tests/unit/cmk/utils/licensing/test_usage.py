@@ -19,10 +19,10 @@ from cmk.utils.licensing.export import (
     LicenseUsageSample,
     LicensingProtocolVersion,
     RawLicenseUsageReport,
-    UnknownSampleParserError,
 )
 from cmk.utils.licensing.usage import (
     _load_extensions,
+    _parse_extensions,
     _serialize_dump,
     CLOUD_SERVICE_PREFIXES,
     get_license_usage_report_file_path,
@@ -793,7 +793,7 @@ def test_license_usage_report(
 
 
 def test_license_usage_report_from_remote() -> None:
-    with pytest.raises(UnknownSampleParserError) as e:
+    with pytest.raises(ValueError) as e:
         LocalLicenseUsageHistory.parse(
             {
                 "VERSION": "-1",
@@ -965,3 +965,12 @@ def test_save_load_extensions(expected_extensions: LicenseUsageExtensions) -> No
     save_extensions(expected_extensions)
 
     assert _load_extensions() == expected_extensions
+
+
+@pytest.mark.parametrize(
+    "expected_ntop_enabled",
+    [pytest.param(True, id="ntop enabled"), pytest.param(False, id="ntop disabled")],
+)
+def test_LicenseUsageExtensions_parse(expected_ntop_enabled: bool) -> None:
+    extensions = _parse_extensions(LicenseUsageExtensions(ntop=expected_ntop_enabled).for_report())
+    assert extensions.ntop is expected_ntop_enabled

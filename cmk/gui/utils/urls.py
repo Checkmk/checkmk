@@ -147,14 +147,13 @@ def _file_name_from_path(
         # If we have a "normal" url and not an excessive amount of paths (probably a duplication)
         # and the last part is empty, we have an "index" URL.
         result = "index"
+    elif on_error == "raise":
+        raise MKNotFound("Not found")
+    elif on_error == "ignore":
+        result = default
     else:
-        if on_error == "raise":  # pylint: disable=no-else-raise
-            raise MKNotFound("Not found")
-        elif on_error == "ignore":
-            result = default
-        else:
-            assert_never(on_error)
-            raise RuntimeError("To make pylint happy")
+        assert_never(on_error)
+        raise RuntimeError("To make pylint happy")
 
     return result
 
@@ -325,11 +324,10 @@ def _make_customized_confirm_link(
 ) -> str:
     return "javascript:cmk.forms.confirm_link({}, {}, {}),cmk.popup_menu.close_popup()".format(
         json.dumps(quote_plus(url)),
-        json.dumps(escape_text(message)),
+        json.dumps(escape_text(message, escape_links=True)),
         json.dumps(
             {
-                "title": title,
-                "html": message,
+                "title": escape_text(title, escape_links=True),
                 "confirmButtonText": confirm_button,
                 "cancelButtonText": cancel_button,
                 "icon": icon if icon else "question",

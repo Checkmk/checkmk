@@ -7,18 +7,26 @@
 
 from collections.abc import Iterable
 
-import astroid  # type: ignore[import]
+import astroid  # type: ignore[import-untyped]
 import pytest
 from pylint.lint import PyLinter
+from pytest_mock import MockerFixture
 
-from tests.testlib.pylint_checker_forbidden_objects import (
+from tests.pylint.checker_forbidden_objects import (
     ABCMetaChecker,
     ForbiddenFunctionChecker,
     SixEnsureStrBinChecker,
     TypingNamedTupleChecker,
 )
 
-pytest.skip("triggers RecursionErrors, needs investigation", allow_module_level=True)
+
+# Using astroid within a pytest context causes recursion errors. This fixture avoids these errors,
+# but with unknown side effects.
+# https://github.com/schemathesis/schemathesis/issues/2170
+# https://github.com/pylint-dev/astroid/issues/2427
+@pytest.fixture(autouse=True)
+def deactivate_astroid_bootstrapping(mocker: MockerFixture) -> None:
+    mocker.patch.object(astroid.raw_building.InspectBuilder, "bootstrapped", True)
 
 
 @pytest.fixture(name="abcmeta_checker")

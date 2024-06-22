@@ -16,8 +16,8 @@ from cmk.gui.valuespec import Dictionary
 def _parameter_valuespec():
     return Dictionary(
         help=_(
-            "A Deployment enters various states during its lifecycle. Depending on this a "
-            "Deployment may present different conditions. You can set a time for how long "
+            "A deployment enters various states during its lifecycle. Depending on this a "
+            "deployment may present different conditions. You can set a time for how long "
             "a condition is allowed to be in a certain state before the check alerts."
         ),
         elements=[

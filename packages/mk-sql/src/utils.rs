@@ -11,6 +11,11 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
+pub fn prepare_error(e: &anyhow::Error) -> String {
+    let msg = e.to_string();
+    format!("ERROR: {}", &msg.replace('\n', " "))
+}
+
 pub fn read_file(file_name: &Path) -> Result<String> {
     let mut file = File::open(file_name)?;
     let mut content = String::new();

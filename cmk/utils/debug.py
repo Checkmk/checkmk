@@ -10,10 +10,6 @@ def enabled() -> bool:
     return debug_mode
 
 
-def disabled() -> bool:
-    return not debug_mode
-
-
 def enable() -> None:
     global debug_mode
     debug_mode = True

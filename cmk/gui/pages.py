@@ -78,13 +78,12 @@ class AjaxPage(Page, abc.ABC):
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
-    def _handle_exc(self, method) -> None:  # type: ignore[no-untyped-def]
+    def _handle_exc(self, method: Callable[[], PageResult]) -> None:
         try:
-            # FIXME: These methods write to the response themselves. This needs to be refactored.
             method()
         except MKException as e:
             response.status_code = http_client.BAD_REQUEST
-            html.write_text(str(e))
+            html.write_text_permissive(str(e))
         except Exception as e:
             response.status_code = http_client.INTERNAL_SERVER_ERROR
             if active_config.debug:
@@ -94,7 +93,7 @@ class AjaxPage(Page, abc.ABC):
                 plain_error=True,
                 show_crash_link=getattr(g, "may_see_crash_reports", False),
             )
-            html.write_text(str(e))
+            html.write_text_permissive(str(e))
 
     def handle_page(self) -> None:
         """The page handler, called by the page registry"""

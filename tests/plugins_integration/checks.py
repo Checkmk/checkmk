@@ -18,8 +18,9 @@ from typing import Any
 import pytest
 import yaml
 
+from tests.testlib.repo import qa_test_data_path
 from tests.testlib.site import Site
-from tests.testlib.utils import qa_test_data_path, run
+from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
 
@@ -311,7 +312,7 @@ def process_check_output(
     site: Site,
     host_name: str,
     output_dir: Path,
-) -> list[str]:
+) -> dict[str, str]:
     """Process the check output and either dump or compare it."""
     if host_name in SkippedDumps.SKIPPED_DUMPS:
         pytest.skip(reason=f"{host_name} dumps currently skipped.")
@@ -381,7 +382,7 @@ def process_check_output(
         ) as json_file:
             json.dump(check_canons, json_file, indent=4, sort_keys=True)
 
-    return sorted(diffs.keys())
+    return diffs
 
 
 def setup_site(site: Site, dump_path: str) -> None:

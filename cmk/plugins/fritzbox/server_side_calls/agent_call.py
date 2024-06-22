@@ -3,14 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 
 from cmk.plugins.fritzbox.lib.config import AgentConfigParams
-from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, SpecialAgentCommand, SpecialAgentConfig
+from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
 
 
 def fritzbox_arguments(
-    params: AgentConfigParams, host_config: HostConfig, proxies: Mapping[str, HTTPProxy]
+    params: AgentConfigParams,
+    host_config: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
     yield SpecialAgentCommand(
         command_arguments=(

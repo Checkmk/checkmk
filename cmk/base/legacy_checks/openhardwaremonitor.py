@@ -6,9 +6,7 @@
 
 import collections
 from collections.abc import Mapping
-from typing import NotRequired
-
-from typing_extensions import TypedDict
+from typing import NotRequired, TypedDict
 
 from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.fan import check_fan
@@ -195,15 +193,8 @@ check_info["openhardwaremonitor"] = LegacyCheckDefinition(
 
 
 def check_openhardwaremonitor_temperature(item, params, parsed):
-    if not "levels" in params:
-        found = False
-        for key in params:
-            if key in item:
-                params = params[key]
-                found = True
-                break
-        if not found:
-            params = params["_default"]
+    if "levels" not in params:
+        params = next((v for k, v in params.items() if k in item), params["_default"])
 
     if item in parsed.get("Temperature", {}):
         data = parsed["Temperature"][item]
@@ -223,6 +214,8 @@ check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
     check_function=check_openhardwaremonitor_temperature,
     check_ruleset_name="temperature",
     check_default_parameters={
+        # This is very unorthodox, and requires special handling in the
+        # wato ruleset. Dedicated services would have been the better choice.
         "cpu": {"levels": (60, 70)},
         "hdd": {"levels": (40, 50)},
         "_default": {"levels": (70, 80)},
@@ -284,10 +277,7 @@ check_info["openhardwaremonitor.fan"] = LegacyCheckDefinition(
     discovery_function=discover_openhardwaremonitor_fan,
     check_function=check_openhardwaremonitor_fan,
     check_ruleset_name="hw_fans",
-    check_default_parameters={
-        "lower": (None, None),
-        "upper": (None, None),
-    },
+    check_default_parameters={},
 )
 
 # .
@@ -320,7 +310,7 @@ def check_openhardwaremonitor_smart(item, params, parsed):
         for reading in readings:
             reading_name = "{} {}".format(item, reading["name"])
 
-            if not reading_name in parsed[sensor_type]:
+            if reading_name not in parsed[sensor_type]:
                 # what smart values ohm reports is device dependent
                 continue
 
@@ -350,6 +340,6 @@ check_info["openhardwaremonitor.smart"] = LegacyCheckDefinition(
     check_function=check_openhardwaremonitor_smart,
     check_ruleset_name="openhardwaremonitor_smart",
     check_default_parameters={
-        "remaining_life": (30, 10),  # wild guess
+        "remaining_life": (30.0, 10.0),  # wild guess
     },
 )

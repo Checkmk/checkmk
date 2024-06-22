@@ -6,16 +6,16 @@
 import logging
 import time
 
-import pytest
-
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
+
+from tests.integration.event_console import CMKEventConsole
 
 logger = logging.getLogger(__name__)
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-def test_command_reload(site: Site, ec) -> None:  # type: ignore[no-untyped-def]
+def test_command_reload(site: Site, ec: CMKEventConsole) -> None:
     live = site.live
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
@@ -30,12 +30,9 @@ def test_command_reload(site: Site, ec) -> None:  # type: ignore[no-untyped-def]
     assert new_t > old_t
 
 
-@pytest.mark.parametrize(("via_core"), [True, False])
-@pytest.mark.skip("needs to be analyzed later...")
-def test_status_table_via_core(site: Site, ec, via_core: bool) -> None:  # type: ignore[no-untyped-def]
-    live = site.live if via_core else ec.status
-    prefix = "eventconsole" if via_core else ""
-    result = live.query_table_assoc("GET %sstatus\n" % prefix)
+@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+def test_status_table_via_core(site: Site) -> None:
+    result = site.live.query_table_assoc("GET eventconsolestatus\n")
     assert len(result) == 1
 
     status = result[0]
@@ -78,12 +75,9 @@ def test_status_table_via_core(site: Site, ec, via_core: bool) -> None:  # type:
     assert isinstance(status["status_event_limit_overall"], int)
 
 
-@pytest.mark.parametrize(("via_core"), [True, False])
-@pytest.mark.skip("needs to be analyzed later...")
-def test_rules_table_via_core(site: Site, ec, via_core: bool) -> None:  # type: ignore[no-untyped-def]
-    live = site.live if via_core else ec.status
-    prefix = "eventconsole" if via_core else ""
-    result = live.query_table_assoc("GET %srules\n" % prefix)
+@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+def test_rules_table_via_core(site: Site) -> None:
+    result = site.live.query_table_assoc("GET eventconsolerules\n")
     assert isinstance(result, list)
     # assert len(result) == 0
     # TODO: Add some rule before the test and then check the existing

@@ -10,9 +10,8 @@ from collections.abc import Collection, Iterable, Iterator, Mapping, MutableMapp
 from pathlib import Path
 from typing import Any, Final
 
-import cmk.utils.store as store
-from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
-from cmk.utils.log import console
+from cmk.utils import store
+from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.snmplib import (
@@ -27,10 +26,10 @@ from cmk.snmplib import (
 from cmk.checkengine.parser import SectionStore
 
 from ._abstract import Fetcher, Mode
-from ._snmpscan import gather_available_raw_section_names
+from ._snmpscan import gather_available_raw_section_names, SNMPScanConfig
 from .snmp import make_backend, SNMPPluginStore
 
-__all__ = ["SNMPFetcher", "SNMPSectionMeta"]
+__all__ = ["SNMPFetcher", "SNMPSectionMeta", "SNMPScanConfig"]
 
 
 class WalkCache(
@@ -42,15 +41,16 @@ class WalkCache(
     which means it deduplicates fetch operations across section definitions.
 
     The fetched data is always saved to a file *if* the respective OID is marked as being cached
-    by the plugin using `OIDCached` (that is: if the save_to_cache attribute of the OID object
+    by the plug-in using `OIDCached` (that is: if the save_to_cache attribute of the OID object
     is true).
     """
 
-    __slots__ = ("_store", "_path")
+    __slots__ = ("_store", "_path", "_logger")
 
-    def __init__(self, walk_cache: Path) -> None:
+    def __init__(self, walk_cache: Path, logger: logging.Logger) -> None:
         self._store: dict[tuple[str, str, bool], SNMPRowInfo] = {}
         self._path = walk_cache
+        self._logger = logger
 
     def _read_row(self, path: Path) -> SNMPRowInfo:
         return store.load_object_from_file(path, default=None)
@@ -97,13 +97,13 @@ class WalkCache(
         for path in self._iterfiles():
             fetchoid, context_hash = self._name2oid(path.name)
 
-            console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
+            self._logger.debug(f"  Loading {fetchoid} from walk cache {path}")
             try:
                 read_walk = self._read_row(path)
             except MKTimeout:
                 raise
             except Exception:
-                console.vverbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
+                self._logger.debug(f"  Failed to load {fetchoid} from walk cache {path}")
                 continue
 
             if read_walk is not None:
@@ -117,7 +117,7 @@ class WalkCache(
                 continue
 
             path = self._path / self._oid2name(fetchoid, context_hash)
-            console.vverbose(f"  Saving walk of {fetchoid} to walk cache {path}\n")
+            self._logger.debug(f"  Saving walk of {fetchoid} to walk cache {path}")
             self._write_row(path, rowinfo)
 
 
@@ -163,21 +163,17 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self,
         *,
         sections: SectionMap[SNMPSectionMeta],
-        on_error: OnError,
-        missing_sys_description: bool,
+        scan_config: SNMPScanConfig,
         do_status_data_inventory: bool,
         section_store_path: Path | str,
-        oid_cache_dir: Path | str,
         stored_walk_path: Path | str,
         walk_cache_path: Path | str,
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__()
         self.sections: Final = sections
-        self.on_error: Final = on_error
-        self.missing_sys_description: Final = missing_sys_description
+        self.scan_config: Final = scan_config
         self.do_status_data_inventory: Final = do_status_data_inventory
-        self.oid_cache_dir: Final = Path(oid_cache_dir)
         self.stored_walk_path: Final = Path(stored_walk_path)
         self.walk_cache_path: Final = Path(walk_cache_path)
         self.snmp_config: Final = snmp_config
@@ -193,10 +189,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             return False
         return (
             self.sections == other.sections
-            and self.on_error == other.on_error
-            and self.missing_sys_description == other.missing_sys_description
+            and self.scan_config == other.scan_config
             and self.do_status_data_inventory == other.do_status_data_inventory
-            and self.oid_cache_dir == other.oid_cache_dir
             and self.stored_walk_path == other.stored_walk_path
             and self.walk_cache_path == other.walk_cache_path
             and self.snmp_config == other.snmp_config
@@ -224,8 +218,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             + ", ".join(
                 (
                     f"sections={self.sections!r}",
-                    f"on_error={self.on_error!r}",
-                    f"missing_sys_description={self.missing_sys_description!r}",
+                    f"scan_config={self.scan_config!r}",
                     f"do_status_data_inventory={self.do_status_data_inventory!r}",
                     f"section_store_path={self.section_store_path!r}",
                     f"stored_walk_path={self.stored_walk_path!r}",
@@ -250,10 +243,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         """Detect the applicable sections for the device in question"""
         return gather_available_raw_section_names(
             sections=[(name, self.plugin_store[name].detect_spec) for name in select_from],
-            on_error=self.on_error,
-            missing_sys_description=self.missing_sys_description,
+            scan_config=self.scan_config,
             backend=backend,
-            oid_cache_dir=self.oid_cache_dir,
         )
 
     def _get_selection(self, mode: Mode) -> frozenset[SectionName]:
@@ -323,7 +314,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             # Nothing to discover? That can't be right.
             raise MKFetcherError("Got no data")
 
-        walk_cache = WalkCache(self.walk_cache_path / str(self._backend.hostname))
+        walk_cache = WalkCache(self.walk_cache_path / str(self._backend.hostname), self._logger)
         if mode is Mode.CHECKING:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
             walk_cache.load()
@@ -346,6 +337,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                         tree=tree,
                         walk_cache=walk_cache,
                         backend=self._backend,
+                        log=self._logger.debug,
                     )
                     for tree in self.plugin_store[section_name].trees
                 ]
@@ -359,10 +351,10 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         cls,
         section_names: Iterable[SectionName],
     ) -> Sequence[SectionName]:
-        # In former Checkmk versions (<=1.4.0) CPU check plugins were
-        # checked before other check plugins like interface checks.
+        # In former Checkmk versions (<=1.4.0) CPU check plug-ins were
+        # checked before other check plug-ins like interface checks.
         # In Checkmk 1.5 the order was random and
-        # interface sections where executed before CPU check plugins.
+        # interface sections where executed before CPU check plug-ins.
         # This lead to high CPU utilization sent by device. Thus we have
         # to re-order the section names.
         return sorted(

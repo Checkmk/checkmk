@@ -24,7 +24,7 @@ def render_filter_form(
 ) -> HTML:
     with output_funnel.plugged():
         show_filter_form(info_list, context, page_name, reset_ajax_page)
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def show_filter_form(

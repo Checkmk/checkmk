@@ -2,9 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy};
-use check_cert::checker::certificate::{self, Config as CertChecks, SignatureAlgorithm};
+use check_cert::checker::certificate::{self, Config as CertChecks};
 use check_cert::checker::fetcher::{self as fetcher_check, Config as FetcherChecks};
 use check_cert::checker::verification::{self, Config as VerifChecks};
 use check_cert::fetcher::{self, Config as FetcherConfig};
@@ -12,38 +12,6 @@ use check_cert::truststore;
 use clap::{Parser, ValueEnum};
 use std::time::Duration as StdDuration;
 use time::{Duration, Instant};
-
-#[allow(non_camel_case_types)]
-#[allow(clippy::upper_case_acronyms)]
-#[derive(Debug, Clone, ValueEnum)]
-enum ClapSignatureAlgorithm {
-    RSA,
-    RSASSA_PSS,
-    RSAAES_OAEP,
-    DSA,
-    ECDSA,
-    ED25519,
-}
-
-impl ClapSignatureAlgorithm {
-    fn try_into_signature_algorithm(
-        &self,
-        hash_algorithm: Option<String>,
-    ) -> Result<SignatureAlgorithm> {
-        match self {
-            Self::RSA => Ok(SignatureAlgorithm::RSA),
-            Self::RSASSA_PSS => hash_algorithm
-                .map(SignatureAlgorithm::RSASSA_PSS)
-                .ok_or(anyhow!("Missing signature hash algorithm")),
-            Self::RSAAES_OAEP => hash_algorithm
-                .map(SignatureAlgorithm::RSAAES_OAEP)
-                .ok_or(anyhow!("Missing signature hash algorithm")),
-            Self::DSA => Ok(SignatureAlgorithm::DSA),
-            Self::ECDSA => Ok(SignatureAlgorithm::ECDSA),
-            Self::ED25519 => Ok(SignatureAlgorithm::ED25519),
-        }
-    }
-}
 
 #[allow(non_camel_case_types)]
 #[allow(clippy::upper_case_acronyms)]
@@ -144,13 +112,9 @@ struct Args {
     #[arg(long)]
     issuer_c: Option<String>,
 
-    /// Expected signature algorithm
+    /// Expected signature algorithm (OID)
     #[arg(long)]
-    signature_algorithm: Option<ClapSignatureAlgorithm>,
-
-    /// Expected signature hash algorithm (required for RSA PSS and OAEP, ignored otherwise)
-    #[arg(long)]
-    signature_hash_algorithm: Option<String>,
+    signature_algorithm: Option<String>,
 
     /// Expected public key algorithm
     #[arg(long)]
@@ -227,15 +191,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     info(&format!("loaded {} certificates", trust_store.len()));
 
-    let signature_algorithm = match args
-        .signature_algorithm
-        .map(|algo| algo.try_into_signature_algorithm(args.signature_hash_algorithm))
-        .transpose()
-    {
-        Ok(sa) => sa,
-        Err(err) => check::abort(format!("{}", err)),
-    };
-
     info("contact host...");
     let start = Instant::now();
     let chain = match fetcher::fetch_server_cert(
@@ -292,7 +247,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .issuer_ou(args.issuer_ou)
             .issuer_st(args.issuer_st)
             .issuer_c(args.issuer_c)
-            .signature_algorithm(signature_algorithm)
+            .signature_algorithm(args.signature_algorithm)
             .pubkey_algorithm(args.pubkey_algorithm.map(|sig| String::from(sig.as_str())))
             .pubkey_size(args.pubkey_size)
             .not_after(Some(not_after))

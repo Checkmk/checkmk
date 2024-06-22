@@ -21,8 +21,8 @@ hooks: dict[str, list[Hook]] = {}
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
-    # Cleanup all plugin hooks. They need to be renewed by load_plugins()
+    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    # Cleanup all plug-in hooks. They need to be renewed by load_plugins()
     # of the other modules
     unregister_plugin_hooks()
 
@@ -50,7 +50,7 @@ def register_from_plugin(name: str, func: Callable) -> None:
     register(name, func, is_builtin=False)
 
 
-# Kept public for compatibility with pre 1.6 plugins (is_builtin needs to be optional for pre 1.6)
+# Kept public for compatibility with pre 1.6 plug-ins (is_builtin needs to be optional for pre 1.6)
 def register(name: str, func: Callable, is_builtin: bool = False) -> None:
     hooks.setdefault(name, []).append(Hook(handler=func, is_builtin=is_builtin))
 

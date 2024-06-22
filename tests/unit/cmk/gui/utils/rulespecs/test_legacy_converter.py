@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from functools import partial
-from typing import TypeVar
+from typing import Any, TypeVar
 
 import pytest
 
@@ -17,17 +17,18 @@ import cmk.gui.valuespec as legacy_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.legacy_converter import (
     _convert_to_custom_group,
     _convert_to_legacy_levels,
     _convert_to_legacy_rulespec_group,
-    _convert_to_legacy_valuespec,
     _to_generated_builtin_sub_group,
     convert_to_legacy_rulespec,
+    convert_to_legacy_valuespec,
 )
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import LegacyBinaryUnit, LegacyDataSize
 from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
@@ -91,7 +92,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.Dictionary(elements={}),
-            legacy_valuespecs.Dictionary(elements=[]),
+            legacy_valuespecs.Transform(legacy_valuespecs.Dictionary(elements=[])),
             id="minimal Dictionary",
         ),
         pytest.param(
@@ -108,21 +109,23 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 },
                 title=api_v1.Title("Configuration title"),
                 help_text=api_v1.Help("Helpful description"),
-                deprecated_elements=("old_key", "another_old_key"),
+                ignored_elements=("old_key", "another_old_key"),
                 no_elements_text=api_v1.Message("No elements specified"),
             ),
-            legacy_valuespecs.Dictionary(
-                elements=[
-                    ("key_req", legacy_valuespecs.MonitoringState(title=_("title"))),
-                    ("key_read_only", legacy_valuespecs.MonitoringState(title=_("title"))),
-                ],
-                title=_("Configuration title"),
-                help=_("Helpful description"),
-                empty_text=_("No elements specified"),
-                required_keys=["key_req"],
-                show_more_keys=[],
-                hidden_keys=["key_read_only"],
-                ignored_keys=["old_key", "another_old_key"],
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        ("key_req", legacy_valuespecs.MonitoringState(title=_("title"))),
+                        ("key_read_only", legacy_valuespecs.MonitoringState(title=_("title"))),
+                    ],
+                    title=_("Configuration title"),
+                    help=_("Helpful description"),
+                    empty_text=_("No elements specified"),
+                    required_keys=["key_req"],
+                    show_more_keys=[],
+                    hidden_keys=["key_read_only"],
+                    ignored_keys=["old_key", "another_old_key"],
+                )
             ),
             id="Dictionary",
         ),
@@ -299,7 +302,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=_("spec label"),
                 placeholder="myname",
                 help=_(
-                    "help text This field supports the use of macros. The corresponding plugin replaces the macros with the actual values."
+                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values."
                 ),
                 validate=_legacy_custom_text_validate,
                 allow_empty=False,
@@ -365,7 +368,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     ),
                 ],
                 no_elements_text=api_v1.Message("No elements"),
-                deprecated_elements=(),
+                ignored_elements=(),
                 frozen=True,
                 title=api_v1.Title("title"),
                 label=api_v1.Label("label"),
@@ -425,7 +428,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         pytest.param(
             api_v1.form_specs.List(element_template=api_v1.form_specs.Dictionary(elements={})),
             legacy_valuespecs.ListOf(
-                valuespec=legacy_valuespecs.Dictionary(elements=[]),
+                valuespec=legacy_valuespecs.Transform(legacy_valuespecs.Dictionary(elements=[])),
                 add_label="Add new entry",
                 del_label="Remove this entry",
                 text_if_empty="No entries",
@@ -452,11 +455,13 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 no_element_label=api_v1.Label("No items"),
             ),
             legacy_valuespecs.ListOf(
-                valuespec=legacy_valuespecs.Dictionary(
-                    elements=[
-                        ("key1", legacy_valuespecs.TextInput(placeholder="", size=35)),
-                        ("key2", legacy_valuespecs.Integer(unit="km")),
-                    ]
+                valuespec=legacy_valuespecs.Transform(
+                    legacy_valuespecs.Dictionary(
+                        elements=[
+                            ("key1", legacy_valuespecs.TextInput(placeholder="", size=35)),
+                            ("key2", legacy_valuespecs.Integer(unit="km")),
+                        ]
+                    )
                 ),
                 title="list title",
                 help="list help",
@@ -519,58 +524,60 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.Proxy(),
-            legacy_valuespecs.CascadingDropdown(
-                title=_("HTTP proxy"),
-                default_value=("environment", "environment"),
-                choices=[
-                    (
-                        "environment",
-                        _("Use from environment"),
-                        legacy_valuespecs.FixedValue(
-                            value="environment",
-                            help=_(
-                                "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
-                                "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
-                                "Have a look at the python requests module documentation for further information. Note "
-                                "that these variables must be defined as a site-user in ~/etc/environment and that "
-                                "this might affect other notification methods which also use the requests module."
-                            ),
-                            totext=_(
-                                "Use proxy settings from the process environment. This is the default."
-                            ),
-                        ),
-                    ),
-                    (
-                        "no_proxy",
-                        _("Connect without proxy"),
-                        legacy_valuespecs.FixedValue(
-                            value=None,
-                            totext=_(
-                                "Connect directly to the destination instead of using a proxy."
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.CascadingDropdown(
+                    title=_("HTTP proxy"),
+                    default_value=("environment", "environment"),
+                    choices=[
+                        (
+                            "environment",
+                            _("Use from environment"),
+                            legacy_valuespecs.FixedValue(
+                                value="environment",
+                                help=_(
+                                    "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
+                                    "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
+                                    "Have a look at the python requests module documentation for further information. Note "
+                                    "that these variables must be defined as a site-user in ~/etc/environment and that "
+                                    "this might affect other notification methods which also use the requests module."
+                                ),
+                                totext=_(
+                                    "Use proxy settings from the process environment. This is the default."
+                                ),
                             ),
                         ),
-                    ),
-                    (
-                        "global",
-                        _("Use globally configured proxy"),
-                        legacy_valuespecs.DropdownChoice(
-                            choices=lambda: [],
-                            sorted=True,
-                        ),
-                    ),
-                    (
-                        "url",
-                        _("Use explicit proxy settings"),
-                        legacy_valuespecs.Url(
-                            title=_("Proxy URL"),
-                            default_scheme="http",
-                            allowed_schemes=frozenset(
-                                {"http", "https", "socks4", "socks4a", "socks5", "socks5h"}
+                        (
+                            "no_proxy",
+                            _("Connect without proxy"),
+                            legacy_valuespecs.FixedValue(
+                                value=None,
+                                totext=_(
+                                    "Connect directly to the destination instead of using a proxy."
+                                ),
                             ),
                         ),
-                    ),
-                ],
-                sorted=False,
+                        (
+                            "global",
+                            _("Use globally configured proxy"),
+                            legacy_valuespecs.DropdownChoice(
+                                choices=lambda: [],
+                                sorted=True,
+                            ),
+                        ),
+                        (
+                            "url",
+                            _("Use explicit proxy settings"),
+                            legacy_valuespecs.Url(
+                                title=_("Proxy URL"),
+                                default_scheme="http",
+                                allowed_schemes=frozenset(
+                                    {"http", "https", "socks4", "socks4a", "socks5", "socks5h"}
+                                ),
+                            ),
+                        ),
+                    ],
+                    sorted=False,
+                ),
             ),
             id="minimal HTTPProxy",
         ),
@@ -585,56 +592,58 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Title("age title"),
                 help_text=api_v1.Help("help text"),
             ),
-            legacy_valuespecs.CascadingDropdown(
-                title=_("HTTP proxy"),
-                default_value=("environment", "environment"),
-                choices=[
-                    (
-                        "environment",
-                        _("Use from environment"),
-                        legacy_valuespecs.FixedValue(
-                            value="environment",
-                            help=_(
-                                "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
-                                "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
-                                "Have a look at the python requests module documentation for further information. Note "
-                                "that these variables must be defined as a site-user in ~/etc/environment and that "
-                                "this might affect other notification methods which also use the requests module."
-                            ),
-                            totext=_(
-                                "Use proxy settings from the process environment. This is the default."
-                            ),
-                        ),
-                    ),
-                    (
-                        "no_proxy",
-                        _("Connect without proxy"),
-                        legacy_valuespecs.FixedValue(
-                            value=None,
-                            totext=_(
-                                "Connect directly to the destination instead of using a proxy."
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.CascadingDropdown(
+                    title=_("HTTP proxy"),
+                    default_value=("environment", "environment"),
+                    choices=[
+                        (
+                            "environment",
+                            _("Use from environment"),
+                            legacy_valuespecs.FixedValue(
+                                value="environment",
+                                help=_(
+                                    "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
+                                    "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
+                                    "Have a look at the python requests module documentation for further information. Note "
+                                    "that these variables must be defined as a site-user in ~/etc/environment and that "
+                                    "this might affect other notification methods which also use the requests module."
+                                ),
+                                totext=_(
+                                    "Use proxy settings from the process environment. This is the default."
+                                ),
                             ),
                         ),
-                    ),
-                    (
-                        "global",
-                        _("Use globally configured proxy"),
-                        legacy_valuespecs.DropdownChoice(
-                            choices=lambda: [],
-                            sorted=True,
+                        (
+                            "no_proxy",
+                            _("Connect without proxy"),
+                            legacy_valuespecs.FixedValue(
+                                value=None,
+                                totext=_(
+                                    "Connect directly to the destination instead of using a proxy."
+                                ),
+                            ),
                         ),
-                    ),
-                    (
-                        "url",
-                        _("Use explicit proxy settings"),
-                        legacy_valuespecs.Url(
-                            title=_("Proxy URL"),
-                            default_scheme="http",
-                            allowed_schemes=frozenset({"http", "https"}),
+                        (
+                            "global",
+                            _("Use globally configured proxy"),
+                            legacy_valuespecs.DropdownChoice(
+                                choices=lambda: [],
+                                sorted=True,
+                            ),
                         ),
-                    ),
-                ],
-                sorted=False,
+                        (
+                            "url",
+                            _("Use explicit proxy settings"),
+                            legacy_valuespecs.Url(
+                                title=_("Proxy URL"),
+                                default_scheme="http",
+                                allowed_schemes=frozenset({"http", "https"}),
+                            ),
+                        ),
+                    ],
+                    sorted=False,
+                ),
             ),
             id="HTTPProxy",
         ),
@@ -730,8 +739,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         pytest.param(
             api_v1.form_specs.MonitoredService(),
             legacy_valuespecs.MonitoredServiceDescription(
-                title=_("Service description"),
-                help=_("Select from a list of service descriptions known to Checkmk"),
+                title=_("Service name"),
+                help=_("Select from a list of service names known to Checkmk"),
                 autocompleter=ContextAutocompleterConfig(
                     ident=legacy_valuespecs.MonitoredServiceDescription.ident,
                     strict=True,
@@ -785,7 +794,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     )
                 ]
             ),
-            legacy_valuespecs.ListChoice(choices=[("first", _("First"))], default_value=()),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.ListChoice(choices=[("first", _("First"))], default_value=())
+            ),
             id="minimal MultipleChoice",
         ),
         pytest.param(
@@ -803,12 +814,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 show_toggle_all=True,
                 prefill=api_v1.form_specs.DefaultValue(("first", "second")),
             ),
-            legacy_valuespecs.ListChoice(
-                choices=[("first", _("First")), ("second", _("Second"))],
-                toggle_all=True,
-                title=_("my title"),
-                help=_("help text"),
-                default_value=["first", "second"],
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.ListChoice(
+                    choices=[("first", _("First")), ("second", _("Second"))],
+                    toggle_all=True,
+                    title=_("my title"),
+                    help=_("help text"),
+                    default_value=["first", "second"],
+                )
             ),
             id="MultipleChoice",
         ),
@@ -854,24 +867,27 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 show_toggle_all=True,
                 prefill=api_v1.form_specs.DefaultValue(("first", "third")),
             ),
-            legacy_valuespecs.DualListChoice(
-                choices=[
-                    ("first", _("First")),
-                    ("second", _("Second")),
-                    ("third", _("Third")),
-                    ("fourth", _("Fourth")),
-                    ("fifth", _("Fifth")),
-                    ("sixth", _("Sixth")),
-                    ("seventh", _("Seventh")),
-                    ("eight", _("Eight")),
-                    ("ninth", _("Ninth")),
-                    ("tenth", _("Tenth")),
-                    ("eleventh", _("Eleventh")),
-                ],
-                toggle_all=True,
-                title=_("my title"),
-                help=_("help text"),
-                default_value=["first", "third"],
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.DualListChoice(
+                    choices=[
+                        ("first", _("First")),
+                        ("second", _("Second")),
+                        ("third", _("Third")),
+                        ("fourth", _("Fourth")),
+                        ("fifth", _("Fifth")),
+                        ("sixth", _("Sixth")),
+                        ("seventh", _("Seventh")),
+                        ("eight", _("Eight")),
+                        ("ninth", _("Ninth")),
+                        ("tenth", _("Tenth")),
+                        ("eleventh", _("Eleventh")),
+                    ],
+                    toggle_all=True,
+                    title=_("my title"),
+                    help=_("help text"),
+                    default_value=["first", "third"],
+                    rows=11,
+                )
             ),
             id="large MultipleChoice",
         ),
@@ -893,7 +909,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 monospaced=True,
                 title=_("my title"),
                 help=_(
-                    "help text This field supports the use of macros. The corresponding plugin replaces the macros with the actual values."
+                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values."
                 ),
                 label=_("label"),
                 default_value="default text",
@@ -902,7 +918,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.TimePeriod(),
-            legacy_timeperiods.TimeperiodSelection(),
+            legacy_valuespecs.Transform(legacy_timeperiods.TimeperiodSelection()),
             id="minimal TimePeriod",
         ),
         pytest.param(
@@ -910,9 +926,11 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Title("title"),
                 help_text=api_v1.Help("help text"),
             ),
-            legacy_timeperiods.TimeperiodSelection(
-                title="title",
-                help="help text",
+            legacy_valuespecs.Transform(
+                legacy_timeperiods.TimeperiodSelection(
+                    title="title",
+                    help="help text",
+                ),
             ),
             id="TimePeriod",
         ),
@@ -921,7 +939,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
 def test_convert_to_legacy_valuespec(
     new_valuespec: FormSpec, expected: legacy_valuespecs.ValueSpec
 ) -> None:
-    _compare_specs(_convert_to_legacy_valuespec(new_valuespec, _), expected)
+    _compare_specs(
+        convert_to_legacy_valuespec(new_valuespec, translate_to_current_language), expected
+    )
 
 
 def _get_cascading_single_choice_with_prefill_selection(
@@ -1008,7 +1028,7 @@ def _get_cascading_single_choice_with_prefill_selection(
 def test_cascading_singe_choice_prefill_selection_conversion(
     prefilled_spec: api_v1.form_specs.CascadingSingleChoice, expected_default_value: tuple
 ) -> None:
-    converted_prefilled_spec = _convert_to_legacy_valuespec(prefilled_spec, lambda x: x)
+    converted_prefilled_spec = convert_to_legacy_valuespec(prefilled_spec, lambda x: x)
     assert expected_default_value == converted_prefilled_spec.default_value()
 
 
@@ -1028,7 +1048,12 @@ def test_convert_to_legacy_rulespec_group(
     new_topic: api_v1.rule_specs.Topic,
     expected: type[legacy_rulespecs.RulespecSubGroup],
 ) -> None:
-    assert _convert_to_legacy_rulespec_group(legacy_main_group, new_topic, _) == expected
+    assert (
+        _convert_to_legacy_rulespec_group(
+            legacy_main_group, new_topic, translate_to_current_language
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -1061,10 +1086,12 @@ def test_convert_to_legacy_rulespec_group(
                 item_spec=lambda: legacy_valuespecs.TextInput(
                     title=_("item title"), allow_empty=False
                 ),
-                parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
-                    elements=[
-                        ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
-                    ],
+                parameter_valuespec=lambda: legacy_valuespecs.Transform(
+                    legacy_valuespecs.Dictionary(
+                        elements=[
+                            ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                        ],
+                    )
                 ),
                 match_type="dict",
                 create_manual_check=False,
@@ -1093,10 +1120,12 @@ def test_convert_to_legacy_rulespec_group(
                 check_group_name="test_rulespec",
                 group=legacy_wato_groups.RulespecGroupCheckParametersApplications,
                 title=lambda: _("rulespec title"),
-                parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
-                    elements=[
-                        ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
-                    ],
+                parameter_valuespec=lambda: legacy_valuespecs.Transform(
+                    legacy_valuespecs.Dictionary(
+                        elements=[
+                            ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                        ],
+                    )
                 ),
                 match_type="dict",
                 create_manual_check=False,
@@ -1135,10 +1164,12 @@ def test_convert_to_legacy_rulespec_group(
                     empty_text=_("The minimum allowed length is 1."),
                     validate=lambda x, y: None,  # text only checks it's not None.
                 ),
-                parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
-                    elements=[
-                        ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
-                    ],
+                parameter_valuespec=lambda: legacy_valuespecs.Transform(
+                    legacy_valuespecs.Dictionary(
+                        elements=[
+                            ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                        ],
+                    )
                 ),
                 match_type="dict",
             ),
@@ -1194,10 +1225,12 @@ def test_convert_to_legacy_rulespec_group(
                 check_group_name="test_rulespec",
                 group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
-                parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
-                    elements=[
-                        ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
-                    ],
+                parameter_valuespec=lambda: legacy_valuespecs.Transform(
+                    legacy_valuespecs.Dictionary(
+                        elements=[
+                            ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                        ],
+                    )
                 ),
                 match_type="dict",
             ),
@@ -1268,18 +1301,13 @@ def test_convert_to_legacy_rulespec_group(
             api_v1.rule_specs.AgentConfig(
                 name="test_rulespec",
                 title=api_v1.Title("rulespec title"),
-                topic=api_v1.rule_specs.Topic.AGENT_PLUGINS,
-                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                topic=api_v1.rule_specs.Topic.GENERAL,
                 parameter_form=lambda: api_v1.form_specs.Dictionary(elements={}),
                 help_text=api_v1.Help("help text"),
             ),
             legacy_rulespecs.HostRulespec(
                 name=RuleGroup.AgentConfig("test_rulespec"),
-                group=_to_generated_builtin_sub_group(
-                    legacy_rulespec_groups.RulespecGroupMonitoringAgents,
-                    "Agent plug-ins",
-                    lambda x: x,
-                ),
+                group=legacy_rulespec_groups.RulespecGroupMonitoringAgentsGenericOptions,
                 title=lambda: _("rulespec title"),
                 valuespec=partial(legacy_valuespecs.TextInput),
                 match_type="dict",
@@ -1330,7 +1358,6 @@ def test_convert_to_legacy_rulespec_group(
                 name="test_rulespec",
                 title=api_v1.Title("rulespec title"),
                 topic=api_v1.rule_specs.Topic.NOTIFICATIONS,
-                eval_type=api_v1.rule_specs.EvalType.MERGE,
                 parameter_form=lambda: api_v1.form_specs.Dictionary(elements={}),
                 help_text=api_v1.Help("help text"),
             ),
@@ -1348,7 +1375,6 @@ def test_convert_to_legacy_rulespec_group(
                 name="test_rulespec",
                 title=api_v1.Title("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
-                eval_type=api_v1.rule_specs.EvalType.MERGE,
                 parameter_form=lambda: api_v1.form_specs.Dictionary(elements={}),
                 help_text=api_v1.Help("help text"),
             ),
@@ -1361,7 +1387,7 @@ def test_convert_to_legacy_rulespec_group(
                 ),
                 title=lambda: _("rulespec title"),
                 valuespec=partial(legacy_valuespecs.TextInput),
-                match_type="dict",
+                match_type="varies",
             ),
             id="ServiceDiscoveryRuleSpec",
         ),
@@ -1436,19 +1462,40 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.HostRulespec(
                 name=RuleGroup.SpecialAgents("test_rulespec"),
-                group=legacy_wato_groups.RulespecGroupDatasourceProgramsCloud,
+                group=legacy_wato_groups.RulespecGroupVMCloudContainer,
                 title=lambda: _("rulespec title"),
                 valuespec=partial(legacy_valuespecs.TextInput),
                 match_type="first",
             ),
             id="SpecialAgentRuleSpec",
         ),
+        pytest.param(
+            api_v1.rule_specs.SpecialAgent(
+                name="gcp",
+                title=api_v1.Title("rulespec title"),
+                topic=api_v1.rule_specs.Topic.CLOUD,
+                parameter_form=lambda: api_v1.form_specs.Dictionary(elements={}),
+                help_text=api_v1.Help("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name=RuleGroup.SpecialAgents("gcp"),
+                group=legacy_wato_groups.RulespecGroupVMCloudContainer,
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="first",
+                doc_references={DocReference.GCP: _("Monitoring Google Cloud Platform (GCP)")},
+            ),
+            id="RuleSpec with doc_references",
+        ),
     ],
 )
 def test_convert_to_legacy_rulespec(
     new_rulespec: APIV1RuleSpec, expected: legacy_rulespecs.Rulespec
 ) -> None:
-    _compare_specs(convert_to_legacy_rulespec(new_rulespec, Edition.CRE, _), expected)
+    _compare_specs(
+        convert_to_legacy_rulespec(new_rulespec, Edition.CRE, translate_to_current_language),
+        expected,
+    )
 
 
 def _compare_specs(actual: object, expected: object) -> None:
@@ -1510,6 +1557,12 @@ def _compare_rulespec_groups(actual: object, expected: legacy_rulespecs.Rulespec
         assert expected.name == actual.name
         assert expected.sub_group_name == actual.sub_group_name
         assert expected.title == actual.title
+    elif isinstance(expected, legacy_rulespecs.RulespecGroup):
+        assert isinstance(actual, legacy_rulespecs.RulespecGroup)
+        assert expected.choice_title == actual.choice_title
+        assert expected.help == actual.help
+        assert expected.name == actual.name
+        assert expected.title == actual.title
     else:
         raise NotImplementedError()
 
@@ -1555,9 +1608,9 @@ def test_generated_rulespec_group_single_registration():
 def test_convert_validation(
     input_value: str, validate: tuple[Callable[[str], object], ...]
 ) -> None:
-    converted_spec = _convert_to_legacy_valuespec(
+    converted_spec = convert_to_legacy_valuespec(
         api_v1.form_specs.String(custom_validate=validate),
-        _,
+        translate_to_current_language,
     )
 
     expected_spec = legacy_valuespecs.TextInput(
@@ -1605,15 +1658,11 @@ def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -
             raise api_v1.form_specs.validators.ValidationError(api_v1.Message("Duplicate elements"))
 
     v1_api_list = api_v1.form_specs.List(
-        element_template=api_v1.form_specs.Dictionary(
-            elements={
-                "key1": api_v1.form_specs.DictElement(parameter_form=api_v1.form_specs.String())
-            }
-        ),
+        element_template=api_v1.form_specs.String(),
         custom_validate=(_v1_custom_list_validate,),
     )
 
-    legacy_list = _convert_to_legacy_valuespec(v1_api_list, _)
+    legacy_list = convert_to_legacy_valuespec(v1_api_list, translate_to_current_language)
 
     with pytest.raises(MKUserError, match=expected_error):
         legacy_list.validate_value(input_value, "var_prefix")
@@ -1668,6 +1717,21 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
             ("key_new", "value_new"),
             id="migrate nested and top level element",
         ),
+        pytest.param(
+            api_v1.form_specs.CascadingSingleChoice(
+                elements=[
+                    api_v1.form_specs.CascadingSingleChoiceElement(
+                        name="key_new",
+                        title=api_v1.Title("Spec title"),
+                        parameter_form=api_v1.form_specs.FixedValue(value=None),
+                    )
+                ],
+                migrate=lambda x: ("key_new", None),
+            ),
+            None,
+            ("key_new", None),
+            id="migrate from `None` (Alterative + FixedValue(None))",
+        ),
     ],
 )
 def test_migrate(
@@ -1675,7 +1739,7 @@ def test_migrate(
     old_value: object,
     expected_transformed_value: object,
 ) -> None:
-    legacy_valuespec = _convert_to_legacy_valuespec(parameter_form, localizer=lambda x: x)
+    legacy_valuespec = convert_to_legacy_valuespec(parameter_form, localizer=lambda x: x)
     actual_transformed_value = legacy_valuespec.transform_value(value=old_value)
     assert expected_transformed_value == actual_transformed_value
 
@@ -1764,14 +1828,16 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                 level_direction=api_v1.form_specs.LevelDirection.LOWER,
                 prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
             ),
-            legacy_valuespecs.CascadingDropdown(
-                title=_("Lower levels"),
-                help=_("This is an explanation for lower levels"),
-                choices=[
-                    _get_legacy_no_levels_choice(),
-                    _get_legacy_fixed_levels_choice("below"),
-                ],
-                default_value=("fixed", (1, 2)),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.CascadingDropdown(
+                    title=_("Lower levels"),
+                    help=_("This is an explanation for lower levels"),
+                    choices=[
+                        _get_legacy_no_levels_choice(),
+                        _get_legacy_fixed_levels_choice("below"),
+                    ],
+                    default_value=("fixed", (1, 2)),
+                ),
             ),
             id="lower fixed",
         ),
@@ -1781,12 +1847,14 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                 level_direction=api_v1.form_specs.LevelDirection.UPPER,
                 prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
             ),
-            legacy_valuespecs.CascadingDropdown(
-                choices=[
-                    _get_legacy_no_levels_choice(),
-                    _get_legacy_fixed_levels_choice("at"),
-                ],
-                default_value=("fixed", (1, 2)),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.CascadingDropdown(
+                    choices=[
+                        _get_legacy_no_levels_choice(),
+                        _get_legacy_fixed_levels_choice("at"),
+                    ],
+                    default_value=("fixed", (1, 2)),
+                ),
             ),
             id="upper fixed",
         ),
@@ -1799,30 +1867,32 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                 level_direction=api_v1.form_specs.LevelDirection.LOWER,
                 prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
             ),
-            legacy_valuespecs.CascadingDropdown(
-                title=_("Cast to super type float"),
-                choices=(
-                    _get_legacy_no_levels_choice(),
-                    (
-                        "fixed",
-                        _("Fixed levels"),
-                        legacy_valuespecs.Tuple(
-                            elements=[
-                                legacy_valuespecs.TimeSpan(
-                                    title=_("Warning below"),
-                                    default_value=1,
-                                    display=["seconds"],
-                                ),
-                                legacy_valuespecs.TimeSpan(
-                                    title=_("Critical below"),
-                                    default_value=2,
-                                    display=["seconds"],
-                                ),
-                            ],
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.CascadingDropdown(
+                    title=_("Cast to super type float"),
+                    choices=(
+                        _get_legacy_no_levels_choice(),
+                        (
+                            "fixed",
+                            _("Fixed levels"),
+                            legacy_valuespecs.Tuple(
+                                elements=[
+                                    legacy_valuespecs.TimeSpan(
+                                        title=_("Warning below"),
+                                        default_value=1,
+                                        display=["seconds"],
+                                    ),
+                                    legacy_valuespecs.TimeSpan(
+                                        title=_("Critical below"),
+                                        default_value=2,
+                                        display=["seconds"],
+                                    ),
+                                ],
+                            ),
                         ),
                     ),
+                    default_value=("fixed", (1.0, 2.0)),
                 ),
-                default_value=("fixed", (1.0, 2.0)),
             ),
             # mypy allows passing integers where a float is expected. We cast these to float, "
             # so that CascadingDropdown does not complain.",
@@ -1845,193 +1915,195 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                     reference_metric="my_metric",
                     prefill_abs_diff=api_v1.form_specs.DefaultValue((5, 10)),
                     prefill_rel_diff=api_v1.form_specs.DefaultValue((50.0, 80.0)),
-                    prefill_stddev_diff=api_v1.form_specs.DefaultValue((2.0, 3.0)),
+                    prefill_stdev_diff=api_v1.form_specs.DefaultValue((2.0, 3.0)),
                 ),
             ),
-            legacy_valuespecs.CascadingDropdown(
-                title=_("Upper levels"),
-                help=_("This is an explanation for upper levels"),
-                choices=(
-                    _get_legacy_no_levels_choice(),
-                    (
-                        "fixed",
-                        _("Fixed levels"),
-                        legacy_valuespecs.Tuple(
-                            elements=[
-                                legacy_valuespecs.Integer(
-                                    title=_("Warning at"),
-                                    default_value=1,
-                                    unit="GiB",
-                                    help=_("This is an explanation for a specific value"),
-                                    label=_("This is a label"),
-                                ),
-                                legacy_valuespecs.Integer(
-                                    title=_("Critical at"),
-                                    default_value=2,
-                                    unit="GiB",
-                                    help=_("This is an explanation for a specific value"),
-                                    label=_("This is a label"),
-                                ),
-                            ],
-                        ),
-                    ),
-                    (
-                        "predictive",
-                        _("Predictive levels (only on CMC)"),
-                        legacy_valuespecs.Transform(
-                            valuespec=legacy_valuespecs.Dictionary(
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.CascadingDropdown(
+                    title=_("Upper levels"),
+                    help=_("This is an explanation for upper levels"),
+                    choices=(
+                        _get_legacy_no_levels_choice(),
+                        (
+                            "fixed",
+                            _("Fixed levels"),
+                            legacy_valuespecs.Tuple(
                                 elements=[
-                                    (
-                                        "period",
-                                        legacy_valuespecs.DropdownChoice(
-                                            choices=[
-                                                ("wday", _("Day of the week")),
-                                                ("day", _("Day of the month")),
-                                                ("hour", _("Hour of the day")),
-                                                ("minute", _("Minute of the hour")),
-                                            ],
-                                            title=_("Base prediction on"),
-                                            help=_(
-                                                "Define the periodicity in which the repetition of the measured data is expected (monthly, weekly, daily or hourly)"
-                                            ),
-                                        ),
+                                    legacy_valuespecs.Integer(
+                                        title=_("Warning at"),
+                                        default_value=1,
+                                        unit="GiB",
+                                        help=_("This is an explanation for a specific value"),
+                                        label=_("This is a label"),
                                     ),
-                                    (
-                                        "horizon",
-                                        legacy_valuespecs.Integer(
-                                            title=_("Length of historic data to consider"),
-                                            help=_(
-                                                "How many days in the past Checkmk should evaluate the measurement data"
-                                            ),
-                                            unit=_("days"),
-                                            minvalue=1,
-                                            default_value=90,
-                                        ),
+                                    legacy_valuespecs.Integer(
+                                        title=_("Critical at"),
+                                        default_value=2,
+                                        unit="GiB",
+                                        help=_("This is an explanation for a specific value"),
+                                        label=_("This is a label"),
                                     ),
-                                    (
-                                        "levels",
-                                        legacy_valuespecs.CascadingDropdown(
-                                            title=_(
-                                                "Level definition in relation to the predicted value"
-                                            ),
-                                            choices=[
-                                                (
-                                                    "absolute",
-                                                    _("Absolute difference"),
-                                                    legacy_valuespecs.Tuple(
-                                                        elements=[
-                                                            legacy_valuespecs.Integer(
-                                                                title=_("Warning above"),
-                                                                unit="GiB",
-                                                                default_value=5,
-                                                                help=_(
-                                                                    "This is an explanation for a specific value"
-                                                                ),
-                                                                label=_("This is a label"),
-                                                            ),
-                                                            legacy_valuespecs.Integer(
-                                                                title=_("Critical above"),
-                                                                unit="GiB",
-                                                                default_value=10,
-                                                                help=_(
-                                                                    "This is an explanation for a specific value"
-                                                                ),
-                                                                label=_("This is a label"),
-                                                            ),
-                                                        ],
-                                                        help=_(
-                                                            "The thresholds are calculated by increasing or decreasing the predicted value by a fixed absolute value"
-                                                        ),
-                                                    ),
-                                                ),
-                                                (
-                                                    "relative",
-                                                    _("Relative difference"),
-                                                    legacy_valuespecs.Tuple(
-                                                        elements=[
-                                                            legacy_valuespecs.Percentage(
-                                                                title=_("Warning above"),
-                                                                unit="%",
-                                                                default_value=50.0,
-                                                            ),
-                                                            legacy_valuespecs.Percentage(
-                                                                title=_("Critical above"),
-                                                                unit="%",
-                                                                default_value=80.0,
-                                                            ),
-                                                        ],
-                                                        help=_(
-                                                            "The thresholds are calculated by increasing or decreasing the predicted value by a percentage"
-                                                        ),
-                                                    ),
-                                                ),
-                                                (
-                                                    "stddev",
-                                                    _("Standard deviation difference"),
-                                                    legacy_valuespecs.Tuple(
-                                                        elements=[
-                                                            legacy_valuespecs.Float(
-                                                                title=_("Warning above"),
-                                                                unit=_(
-                                                                    "times the standard deviation"
-                                                                ),
-                                                                default_value=2.0,
-                                                            ),
-                                                            legacy_valuespecs.Float(
-                                                                title=_("Critical above"),
-                                                                unit=_(
-                                                                    "times the standard deviation"
-                                                                ),
-                                                                default_value=3.0,
-                                                            ),
-                                                        ],
-                                                        help=_(
-                                                            "The thresholds are calculated by increasing or decreasing the predicted value by a multiple of the standard deviation"
-                                                        ),
-                                                    ),
-                                                ),
-                                            ],
-                                        ),
-                                    ),
-                                    (
-                                        "bound",
-                                        legacy_valuespecs.Optional(
-                                            title=_("Fixed limits"),
-                                            label=_("Set fixed limits"),
-                                            valuespec=legacy_valuespecs.Tuple(
+                                ],
+                            ),
+                        ),
+                        (
+                            "predictive",
+                            _("Predictive levels (only on CMC)"),
+                            legacy_valuespecs.Transform(
+                                valuespec=legacy_valuespecs.Dictionary(
+                                    elements=[
+                                        (
+                                            "period",
+                                            legacy_valuespecs.DropdownChoice(
+                                                choices=[
+                                                    ("wday", _("Day of the week")),
+                                                    ("day", _("Day of the month")),
+                                                    ("hour", _("Hour of the day")),
+                                                    ("minute", _("Minute of the hour")),
+                                                ],
+                                                title=_("Base prediction on"),
                                                 help=_(
-                                                    "Regardless of how the dynamic levels are computed according to the prediction: they will never be set below the following limits. This avoids false alarms during times where the predicted levels would be very low."
+                                                    "Define the periodicity in which the repetition of the measured data is expected (monthly, weekly, daily or hourly)"
                                                 ),
-                                                elements=[
-                                                    legacy_valuespecs.Integer(
-                                                        title="Warning level is at least",
-                                                        unit="GiB",
-                                                        help=_(
-                                                            "This is an explanation for a specific value"
+                                            ),
+                                        ),
+                                        (
+                                            "horizon",
+                                            legacy_valuespecs.Integer(
+                                                title=_("Length of historic data to consider"),
+                                                help=_(
+                                                    "How many days in the past Checkmk should evaluate the measurement data"
+                                                ),
+                                                unit=_("days"),
+                                                minvalue=1,
+                                                default_value=90,
+                                            ),
+                                        ),
+                                        (
+                                            "levels",
+                                            legacy_valuespecs.CascadingDropdown(
+                                                title=_(
+                                                    "Level definition in relation to the predicted value"
+                                                ),
+                                                choices=[
+                                                    (
+                                                        "absolute",
+                                                        _("Absolute difference"),
+                                                        legacy_valuespecs.Tuple(
+                                                            elements=[
+                                                                legacy_valuespecs.Integer(
+                                                                    title=_("Warning above"),
+                                                                    unit="GiB",
+                                                                    default_value=5,
+                                                                    help=_(
+                                                                        "This is an explanation for a specific value"
+                                                                    ),
+                                                                    label=_("This is a label"),
+                                                                ),
+                                                                legacy_valuespecs.Integer(
+                                                                    title=_("Critical above"),
+                                                                    unit="GiB",
+                                                                    default_value=10,
+                                                                    help=_(
+                                                                        "This is an explanation for a specific value"
+                                                                    ),
+                                                                    label=_("This is a label"),
+                                                                ),
+                                                            ],
+                                                            help=_(
+                                                                "The thresholds are calculated by increasing or decreasing the predicted value by a fixed absolute value"
+                                                            ),
                                                         ),
-                                                        label=_("This is a label"),
                                                     ),
-                                                    legacy_valuespecs.Integer(
-                                                        title="Critical level is at least",
-                                                        unit="GiB",
-                                                        help=_(
-                                                            "This is an explanation for a specific value"
+                                                    (
+                                                        "relative",
+                                                        _("Relative difference"),
+                                                        legacy_valuespecs.Tuple(
+                                                            elements=[
+                                                                legacy_valuespecs.Percentage(
+                                                                    title=_("Warning above"),
+                                                                    unit="%",
+                                                                    default_value=50.0,
+                                                                ),
+                                                                legacy_valuespecs.Percentage(
+                                                                    title=_("Critical above"),
+                                                                    unit="%",
+                                                                    default_value=80.0,
+                                                                ),
+                                                            ],
+                                                            help=_(
+                                                                "The thresholds are calculated by increasing or decreasing the predicted value by a percentage"
+                                                            ),
                                                         ),
-                                                        label=_("This is a label"),
+                                                    ),
+                                                    (
+                                                        "stdev",
+                                                        _("Standard deviation difference"),
+                                                        legacy_valuespecs.Tuple(
+                                                            elements=[
+                                                                legacy_valuespecs.Float(
+                                                                    title=_("Warning above"),
+                                                                    unit=_(
+                                                                        "times the standard deviation"
+                                                                    ),
+                                                                    default_value=2.0,
+                                                                ),
+                                                                legacy_valuespecs.Float(
+                                                                    title=_("Critical above"),
+                                                                    unit=_(
+                                                                        "times the standard deviation"
+                                                                    ),
+                                                                    default_value=3.0,
+                                                                ),
+                                                            ],
+                                                            help=_(
+                                                                "The thresholds are calculated by increasing or decreasing the predicted value by a multiple of the standard deviation"
+                                                            ),
+                                                        ),
                                                     ),
                                                 ],
                                             ),
                                         ),
-                                    ),
-                                ],
-                                required_keys=["period", "horizon", "levels", "bound"],
+                                        (
+                                            "bound",
+                                            legacy_valuespecs.Optional(
+                                                title=_("Fixed limits"),
+                                                label=_("Set fixed limits"),
+                                                valuespec=legacy_valuespecs.Tuple(
+                                                    help=_(
+                                                        "Regardless of how the dynamic levels are computed according to the prediction: they will never be set below the following limits. This avoids false alarms during times where the predicted levels would be very low."
+                                                    ),
+                                                    elements=[
+                                                        legacy_valuespecs.Integer(
+                                                            title="Warning level is at least",
+                                                            unit="GiB",
+                                                            help=_(
+                                                                "This is an explanation for a specific value"
+                                                            ),
+                                                            label=_("This is a label"),
+                                                        ),
+                                                        legacy_valuespecs.Integer(
+                                                            title="Critical level is at least",
+                                                            unit="GiB",
+                                                            help=_(
+                                                                "This is an explanation for a specific value"
+                                                            ),
+                                                            label=_("This is a label"),
+                                                        ),
+                                                    ],
+                                                ),
+                                            ),
+                                        ),
+                                    ],
+                                    required_keys=["period", "horizon", "levels", "bound"],
+                                ),
+                                to_valuespec=lambda x: x,
+                                from_valuespec=lambda x: x,
                             ),
-                            to_valuespec=lambda x: x,
-                            from_valuespec=lambda x: x,
                         ),
                     ),
+                    default_value=("fixed", (1, 2)),
                 ),
-                default_value=("fixed", (1, 2)),
             ),
             id="fixed+predictive Integer",
         ),
@@ -2049,173 +2121,175 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                     reference_metric="my_metric",
                     prefill_abs_diff=api_v1.form_specs.DefaultValue((5.0, 10.0)),
                     prefill_rel_diff=api_v1.form_specs.DefaultValue((50.0, 80.0)),
-                    prefill_stddev_diff=api_v1.form_specs.DefaultValue((2.0, 3.0)),
+                    prefill_stdev_diff=api_v1.form_specs.DefaultValue((2.0, 3.0)),
                 ),
                 title=api_v1.Title("Lower levels"),
             ),
-            legacy_valuespecs.CascadingDropdown(
-                title=_("Lower levels"),
-                choices=(
-                    _get_legacy_no_levels_choice(),
-                    (
-                        "fixed",
-                        _("Fixed levels"),
-                        legacy_valuespecs.Tuple(
-                            elements=[
-                                legacy_valuespecs.TimeSpan(
-                                    title=_("Warning below"),
-                                    default_value=1,
-                                    display=["seconds", "minutes"],
-                                ),
-                                legacy_valuespecs.TimeSpan(
-                                    title=_("Critical below"),
-                                    default_value=2,
-                                    display=["seconds", "minutes"],
-                                ),
-                            ],
-                        ),
-                    ),
-                    (
-                        "predictive",
-                        _("Predictive levels (only on CMC)"),
-                        legacy_valuespecs.Transform(
-                            valuespec=legacy_valuespecs.Dictionary(
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.CascadingDropdown(
+                    title=_("Lower levels"),
+                    choices=(
+                        _get_legacy_no_levels_choice(),
+                        (
+                            "fixed",
+                            _("Fixed levels"),
+                            legacy_valuespecs.Tuple(
                                 elements=[
-                                    (
-                                        "period",
-                                        legacy_valuespecs.DropdownChoice(
-                                            choices=[
-                                                ("wday", _("Day of the week")),
-                                                ("day", _("Day of the month")),
-                                                ("hour", _("Hour of the day")),
-                                                ("minute", _("Minute of the hour")),
-                                            ],
-                                            title=_("Base prediction on"),
-                                            help=_(
-                                                "Define the periodicity in which the repetition of the measured data is expected (monthly, weekly, daily or hourly)"
-                                            ),
-                                        ),
+                                    legacy_valuespecs.TimeSpan(
+                                        title=_("Warning below"),
+                                        default_value=1,
+                                        display=["seconds", "minutes"],
                                     ),
-                                    (
-                                        "horizon",
-                                        legacy_valuespecs.Integer(
-                                            title=_("Length of historic data to consider"),
-                                            help=_(
-                                                "How many days in the past Checkmk should evaluate the measurement data"
-                                            ),
-                                            unit=_("days"),
-                                            minvalue=1,
-                                            default_value=90,
-                                        ),
+                                    legacy_valuespecs.TimeSpan(
+                                        title=_("Critical below"),
+                                        default_value=2,
+                                        display=["seconds", "minutes"],
                                     ),
-                                    (
-                                        "levels",
-                                        legacy_valuespecs.CascadingDropdown(
-                                            title=_(
-                                                "Level definition in relation to the predicted value"
-                                            ),
-                                            choices=[
-                                                (
-                                                    "absolute",
-                                                    _("Absolute difference"),
-                                                    legacy_valuespecs.Tuple(
-                                                        elements=[
-                                                            legacy_valuespecs.TimeSpan(
-                                                                title=_("Warning below"),
-                                                                display=["seconds", "minutes"],
-                                                                default_value=5,
-                                                            ),
-                                                            legacy_valuespecs.TimeSpan(
-                                                                title=_("Critical below"),
-                                                                display=["seconds", "minutes"],
-                                                                default_value=10,
-                                                            ),
-                                                        ],
-                                                        help=_(
-                                                            "The thresholds are calculated by increasing or decreasing the predicted value by a fixed absolute value"
-                                                        ),
-                                                    ),
-                                                ),
-                                                (
-                                                    "relative",
-                                                    _("Relative difference"),
-                                                    legacy_valuespecs.Tuple(
-                                                        elements=[
-                                                            legacy_valuespecs.Percentage(
-                                                                title=_("Warning below"),
-                                                                unit="%",
-                                                                default_value=50.0,
-                                                            ),
-                                                            legacy_valuespecs.Percentage(
-                                                                title=_("Critical below"),
-                                                                unit="%",
-                                                                default_value=80.0,
-                                                            ),
-                                                        ],
-                                                        help=_(
-                                                            "The thresholds are calculated by increasing or decreasing the predicted value by a percentage"
-                                                        ),
-                                                    ),
-                                                ),
-                                                (
-                                                    "stddev",
-                                                    _("Standard deviation difference"),
-                                                    legacy_valuespecs.Tuple(
-                                                        elements=[
-                                                            legacy_valuespecs.Float(
-                                                                title=_("Warning below"),
-                                                                unit=_(
-                                                                    "times the standard deviation"
-                                                                ),
-                                                                default_value=2.0,
-                                                            ),
-                                                            legacy_valuespecs.Float(
-                                                                title=_("Critical below"),
-                                                                unit=_(
-                                                                    "times the standard deviation"
-                                                                ),
-                                                                default_value=3.0,
-                                                            ),
-                                                        ],
-                                                        help=_(
-                                                            "The thresholds are calculated by increasing or decreasing the predicted value by a multiple of the standard deviation"
-                                                        ),
-                                                    ),
-                                                ),
-                                            ],
-                                        ),
-                                    ),
-                                    (
-                                        "bound",
-                                        legacy_valuespecs.Optional(
-                                            title=_("Fixed limits"),
-                                            label=_("Set fixed limits"),
-                                            valuespec=legacy_valuespecs.Tuple(
+                                ],
+                            ),
+                        ),
+                        (
+                            "predictive",
+                            _("Predictive levels (only on CMC)"),
+                            legacy_valuespecs.Transform(
+                                valuespec=legacy_valuespecs.Dictionary(
+                                    elements=[
+                                        (
+                                            "period",
+                                            legacy_valuespecs.DropdownChoice(
+                                                choices=[
+                                                    ("wday", _("Day of the week")),
+                                                    ("day", _("Day of the month")),
+                                                    ("hour", _("Hour of the day")),
+                                                    ("minute", _("Minute of the hour")),
+                                                ],
+                                                title=_("Base prediction on"),
                                                 help=_(
-                                                    "Regardless of how the dynamic levels are computed according to the prediction: they will never be set above the following limits. This avoids false alarms during times where the predicted levels would be very high."
+                                                    "Define the periodicity in which the repetition of the measured data is expected (monthly, weekly, daily or hourly)"
                                                 ),
-                                                elements=[
-                                                    legacy_valuespecs.TimeSpan(
-                                                        title="Warning level is at most",
-                                                        display=["seconds", "minutes"],
+                                            ),
+                                        ),
+                                        (
+                                            "horizon",
+                                            legacy_valuespecs.Integer(
+                                                title=_("Length of historic data to consider"),
+                                                help=_(
+                                                    "How many days in the past Checkmk should evaluate the measurement data"
+                                                ),
+                                                unit=_("days"),
+                                                minvalue=1,
+                                                default_value=90,
+                                            ),
+                                        ),
+                                        (
+                                            "levels",
+                                            legacy_valuespecs.CascadingDropdown(
+                                                title=_(
+                                                    "Level definition in relation to the predicted value"
+                                                ),
+                                                choices=[
+                                                    (
+                                                        "absolute",
+                                                        _("Absolute difference"),
+                                                        legacy_valuespecs.Tuple(
+                                                            elements=[
+                                                                legacy_valuespecs.TimeSpan(
+                                                                    title=_("Warning below"),
+                                                                    display=["seconds", "minutes"],
+                                                                    default_value=5,
+                                                                ),
+                                                                legacy_valuespecs.TimeSpan(
+                                                                    title=_("Critical below"),
+                                                                    display=["seconds", "minutes"],
+                                                                    default_value=10,
+                                                                ),
+                                                            ],
+                                                            help=_(
+                                                                "The thresholds are calculated by increasing or decreasing the predicted value by a fixed absolute value"
+                                                            ),
+                                                        ),
                                                     ),
-                                                    legacy_valuespecs.TimeSpan(
-                                                        title="Critical level is at most",
-                                                        display=["seconds", "minutes"],
+                                                    (
+                                                        "relative",
+                                                        _("Relative difference"),
+                                                        legacy_valuespecs.Tuple(
+                                                            elements=[
+                                                                legacy_valuespecs.Percentage(
+                                                                    title=_("Warning below"),
+                                                                    unit="%",
+                                                                    default_value=50.0,
+                                                                ),
+                                                                legacy_valuespecs.Percentage(
+                                                                    title=_("Critical below"),
+                                                                    unit="%",
+                                                                    default_value=80.0,
+                                                                ),
+                                                            ],
+                                                            help=_(
+                                                                "The thresholds are calculated by increasing or decreasing the predicted value by a percentage"
+                                                            ),
+                                                        ),
+                                                    ),
+                                                    (
+                                                        "stdev",
+                                                        _("Standard deviation difference"),
+                                                        legacy_valuespecs.Tuple(
+                                                            elements=[
+                                                                legacy_valuespecs.Float(
+                                                                    title=_("Warning below"),
+                                                                    unit=_(
+                                                                        "times the standard deviation"
+                                                                    ),
+                                                                    default_value=2.0,
+                                                                ),
+                                                                legacy_valuespecs.Float(
+                                                                    title=_("Critical below"),
+                                                                    unit=_(
+                                                                        "times the standard deviation"
+                                                                    ),
+                                                                    default_value=3.0,
+                                                                ),
+                                                            ],
+                                                            help=_(
+                                                                "The thresholds are calculated by increasing or decreasing the predicted value by a multiple of the standard deviation"
+                                                            ),
+                                                        ),
                                                     ),
                                                 ],
                                             ),
                                         ),
-                                    ),
-                                ],
-                                required_keys=["period", "horizon", "levels", "bound"],
+                                        (
+                                            "bound",
+                                            legacy_valuespecs.Optional(
+                                                title=_("Fixed limits"),
+                                                label=_("Set fixed limits"),
+                                                valuespec=legacy_valuespecs.Tuple(
+                                                    help=_(
+                                                        "Regardless of how the dynamic levels are computed according to the prediction: they will never be set above the following limits. This avoids false alarms during times where the predicted levels would be very high."
+                                                    ),
+                                                    elements=[
+                                                        legacy_valuespecs.TimeSpan(
+                                                            title="Warning level is at most",
+                                                            display=["seconds", "minutes"],
+                                                        ),
+                                                        legacy_valuespecs.TimeSpan(
+                                                            title="Critical level is at most",
+                                                            display=["seconds", "minutes"],
+                                                        ),
+                                                    ],
+                                                ),
+                                            ),
+                                        ),
+                                    ],
+                                    required_keys=["period", "horizon", "levels", "bound"],
+                                ),
+                                to_valuespec=lambda x: x,
+                                from_valuespec=lambda x: x,
                             ),
-                            to_valuespec=lambda x: x,
-                            from_valuespec=lambda x: x,
                         ),
                     ),
+                    default_value=("fixed", (1, 2)),
                 ),
-                default_value=("fixed", (1, 2)),
             ),
             id="fixed+predictive TimeSpan",
         ),
@@ -2225,4 +2299,750 @@ def test_level_conversion(
     api_levels: api_v1.form_specs.Levels,
     legacy_levels: legacy_valuespecs.Dictionary,
 ) -> None:
-    _compare_specs(_convert_to_legacy_levels(api_levels, _), legacy_levels)
+    _compare_specs(
+        _convert_to_legacy_levels(api_levels, translate_to_current_language), legacy_levels
+    )
+
+
+@pytest.mark.parametrize(
+    ["input_elements", "consumer_model", "form_model"],
+    [
+        pytest.param(
+            {
+                "a": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Integer(),
+                    group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+                ),
+                "b": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Integer(),
+                    group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+                ),
+                "c": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Integer(),
+                ),
+            },
+            {"a": 1, "b": 2, "c": 3},
+            {"DictGroup(title=Title('Grouptitle'),help_text=None)": {"a": 1, "b": 2}, "c": 3},
+            id="some elements grouped, some not",
+        ),
+        pytest.param(
+            {
+                "a": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Integer(),
+                    group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+                ),
+                "b": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Integer(),
+                    group=api_v1.form_specs.DictGroup(
+                        title=api_v1.Title("Group title"), help_text=api_v1.Help("Help text")
+                    ),
+                ),
+            },
+            {"a": 1, "b": 2},
+            {
+                "DictGroup(title=Title('Grouptitle'),help_text=None)": {"a": 1},
+                "DictGroup(title=Title('Grouptitle'),help_text=Help('Helptext'))": {"b": 2},
+            },
+            id="different groups",
+        ),
+        pytest.param(
+            {
+                "a": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Integer(),
+                    group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+                ),
+                "b": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Dictionary(
+                        elements={
+                            "a_nested": api_v1.form_specs.DictElement(
+                                parameter_form=api_v1.form_specs.Integer(),
+                                group=api_v1.form_specs.DictGroup(
+                                    title=api_v1.Title("Nested group title")
+                                ),
+                            ),
+                            "b_nested": api_v1.form_specs.DictElement(
+                                parameter_form=api_v1.form_specs.Integer(),
+                                group=api_v1.form_specs.DictGroup(
+                                    title=api_v1.Title("Nested group title")
+                                ),
+                            ),
+                            "c_nested": api_v1.form_specs.DictElement(
+                                parameter_form=api_v1.form_specs.Integer(),
+                            ),
+                        }
+                    ),
+                    group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+                ),
+            },
+            {"a": 1, "b": {"a_nested": 2, "b_nested": 3, "c_nested": 4}},
+            {
+                "DictGroup(title=Title('Grouptitle'),help_text=None)": {
+                    "a": 1,
+                    "b": {
+                        "DictGroup(title=Title('Nestedgrouptitle'),help_text=None)": {
+                            "a_nested": 2,
+                            "b_nested": 3,
+                        },
+                        "c_nested": 4,
+                    },
+                },
+            },
+            id="groups in nested dictionary",
+        ),
+    ],
+)
+def test_dictionary_groups_datamodel_transformation(
+    input_elements: Mapping[str, api_v1.form_specs.DictElement],
+    consumer_model: Mapping[str, object],
+    form_model: Mapping[str, object],
+) -> None:
+    to_convert = api_v1.form_specs.Dictionary(elements=input_elements)
+
+    converted = convert_to_legacy_valuespec(to_convert, translate_to_current_language)
+    assert isinstance(converted, legacy_valuespecs.Transform)
+
+    assert converted.to_valuespec(consumer_model) == form_model
+    assert converted.from_valuespec(form_model) == consumer_model
+
+
+def test_dictionary_groups_ignored_elements() -> None:
+    to_convert = api_v1.form_specs.Dictionary(
+        elements={
+            "a": api_v1.form_specs.DictElement(
+                parameter_form=api_v1.form_specs.Integer(),
+                group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+            ),
+            "b": api_v1.form_specs.DictElement(
+                parameter_form=api_v1.form_specs.Dictionary(
+                    elements={
+                        "a_nested": api_v1.form_specs.DictElement(
+                            parameter_form=api_v1.form_specs.Integer(),
+                            group=api_v1.form_specs.DictGroup(
+                                title=api_v1.Title("Nested group title")
+                            ),
+                        ),
+                        "b_nested": api_v1.form_specs.DictElement(
+                            parameter_form=api_v1.form_specs.Integer(),
+                            group=api_v1.form_specs.DictGroup(
+                                title=api_v1.Title("Nested group title")
+                            ),
+                        ),
+                        "c_nested": api_v1.form_specs.DictElement(
+                            parameter_form=api_v1.form_specs.Integer(),
+                        ),
+                    },
+                    ignored_elements=("d_nested",),
+                ),
+                group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+            ),
+        },
+        ignored_elements=("c",),
+    )
+    consumer_model = {
+        "a": 1,
+        "b": {"a_nested": 2, "b_nested": 3, "c_nested": 4, "d_nested": 5},
+        "c": 6,
+    }
+    form_model = {
+        "DictGroup(title=Title('Grouptitle'),help_text=None)": {
+            "a": 1,
+            "b": {
+                "DictGroup(title=Title('Nestedgrouptitle'),help_text=None)": {
+                    "a_nested": 2,
+                    "b_nested": 3,
+                },
+                "c_nested": 4,
+                "d_nested": 5,
+            },
+        },
+        "c": 6,
+    }
+
+    converted = convert_to_legacy_valuespec(to_convert, translate_to_current_language)
+    assert isinstance(converted, legacy_valuespecs.Transform)
+
+    assert converted.to_valuespec(consumer_model) == form_model
+    assert converted.from_valuespec(form_model) == consumer_model
+
+
+@pytest.mark.parametrize(
+    ["to_convert", "expected"],
+    [
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(parameter_form=api_v1.form_specs.Integer()),
+                    "b": api_v1.form_specs.DictElement(parameter_form=api_v1.form_specs.Integer()),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        ("a", legacy_valuespecs.Integer()),
+                        ("b", legacy_valuespecs.Integer()),
+                    ]
+                )
+            ),
+            id="no groups/dictelement props",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        (
+                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC"),
+                                elements=[
+                                    ("a", legacy_valuespecs.Integer()),
+                                    ("b", legacy_valuespecs.Integer()),
+                                ],
+                            ),
+                        ),
+                    ],
+                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                ),
+            ),
+            id="no dictelement props",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        required=False,
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        required=True,
+                    ),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        (
+                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC"),
+                                elements=[
+                                    ("a", legacy_valuespecs.Integer()),
+                                    ("b", legacy_valuespecs.Integer()),
+                                ],
+                                required_keys=["b"],
+                            ),
+                        ),
+                    ],
+                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                ),
+            ),
+            id="some required dictelements/vertical rendering",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        required=True,
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        required=True,
+                    ),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        (
+                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC"),
+                                elements=[
+                                    ("a", legacy_valuespecs.Integer()),
+                                    ("b", legacy_valuespecs.Integer()),
+                                ],
+                                required_keys=["a", "b"],
+                                horizontal=True,
+                            ),
+                        ),
+                    ],
+                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                ),
+            ),
+            id="all required dictelements/horizontal rendering",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        render_only=True,
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        (
+                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC"),
+                                elements=[
+                                    ("a", legacy_valuespecs.Integer()),
+                                    ("b", legacy_valuespecs.Integer()),
+                                ],
+                                hidden_keys=["a"],
+                            ),
+                        ),
+                    ],
+                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                ),
+            ),
+            id="render_only dictelements",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        render_only=True,
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        render_only=True,
+                    ),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        (
+                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC"),
+                                elements=[
+                                    ("a", legacy_valuespecs.Integer()),
+                                    ("b", legacy_valuespecs.Integer()),
+                                ],
+                                hidden_keys=["a", "b"],
+                            ),
+                        ),
+                    ],
+                    required_keys=[],
+                    hidden_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                ),
+            ),
+            id="render_only all dictelements",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC hidden")),
+                        render_only=True,
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC hidden")),
+                        render_only=True,
+                    ),
+                    "c": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC shown")),
+                        render_only=False,
+                    ),
+                    "d": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC shown")),
+                        render_only=True,
+                    ),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        (
+                            "DictGroup(title=Title('ABChidden'),help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC hidden"),
+                                elements=[
+                                    ("a", legacy_valuespecs.Integer()),
+                                    ("b", legacy_valuespecs.Integer()),
+                                ],
+                                hidden_keys=["a", "b"],
+                            ),
+                        ),
+                        (
+                            "DictGroup(title=Title('ABCshown'),help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC shown"),
+                                elements=[
+                                    ("c", legacy_valuespecs.Integer()),
+                                    ("d", legacy_valuespecs.Integer()),
+                                ],
+                                hidden_keys=["d"],
+                            ),
+                        ),
+                    ],
+                    required_keys=["DictGroup(title=Title('ABCshown'),help_text=None)"],
+                    hidden_keys=["DictGroup(title=Title('ABChidden'),help_text=None)"],
+                ),
+            ),
+            id="render_only some dictelements",
+        ),
+    ],
+)
+def test_dictionary_groups_dict_element_properties(
+    to_convert: api_v1.form_specs.Dictionary, expected: legacy_valuespecs.Dictionary
+) -> None:
+    _compare_specs(convert_to_legacy_valuespec(to_convert, translate_to_current_language), expected)
+
+
+def _inner_migration(values: object) -> dict[str, object]:
+    assert isinstance(values, dict)
+    if "a" in values:
+        values["b"] = values.pop("a")
+    return values
+
+
+def _out_migration(values: object) -> dict[str, object]:
+    assert isinstance(values, dict)
+    if "foo" in values:
+        values["bar"] = values.pop("foo")
+    return values
+
+
+@pytest.mark.parametrize(
+    ["to_convert", "value_to_migrate", "expected"],
+    [
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "a_nested": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Integer(), required=True
+                                ),
+                            }
+                        ),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                },
+                migrate=lambda x: {"a": {"a_nested": x["a"]["a_nested"] * 2}, "b": x["b"] * 2},  # type: ignore[index]
+            ),
+            {"a": {"a_nested": 1}, "b": 2},
+            {"a": {"a_nested": 2}, "b": 4},
+            id="outermost migration",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                migrate=_out_migration,
+                elements={
+                    "bar": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "b": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.FixedValue(value=1),
+                                ),
+                            },
+                            migrate=_inner_migration,
+                        ),
+                    ),
+                },
+            ),
+            {"foo": {"a": 1}},
+            {"bar": {"b": 1}},
+            id="nested key migration",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                migrate=_out_migration,
+                elements={
+                    "bar": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            migrate=_inner_migration,
+                            elements={
+                                "b": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Dictionary(
+                                        migrate=_inner_migration,
+                                        elements={
+                                            "b": api_v1.form_specs.DictElement(
+                                                group=api_v1.form_specs.DictGroup(),
+                                                parameter_form=api_v1.form_specs.String(),
+                                                required=True,
+                                            )
+                                        },
+                                    )
+                                )
+                            },
+                        ),
+                    )
+                },
+            ),
+            {"foo": {"a": {"a": ""}}},
+            {"bar": {"b": {"b": ""}}},
+            id="migration of nested dictionary with inner group",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "a_nested": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Integer(
+                                        migrate=lambda x: x * 2  # type: ignore[operator]
+                                    ),
+                                    required=True,
+                                )
+                            }
+                        ),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                },
+            ),
+            {"a": {"a_nested": 1}, "b": 2},
+            {"a": {"a_nested": 2}, "b": 2},
+            id="migration in group",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Levels(
+                            level_direction=api_v1.form_specs.LevelDirection.UPPER,
+                            form_spec_template=api_v1.form_specs.Integer(
+                                migrate=lambda x: x * 2  # type: ignore[operator]
+                            ),
+                            prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
+                            predictive=api_v1.form_specs.PredictiveLevels(
+                                reference_metric="my_metric",
+                                prefill_abs_diff=api_v1.form_specs.DefaultValue((5, 10)),
+                            ),
+                        ),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                },
+            ),
+            {
+                "a": (
+                    "cmk_postprocessed",
+                    "predictive_levels",
+                    {
+                        "__direction__": "upper",
+                        "__reference_metric__": "my_metric",
+                        "horizon": 90,
+                        "levels": ("absolute", (1, 2)),
+                        "period": "wday",
+                        "bound": None,
+                    },
+                ),
+                "b": 2,
+            },
+            {
+                "a": (
+                    "cmk_postprocessed",
+                    "predictive_levels",
+                    {
+                        "__direction__": "upper",
+                        "__reference_metric__": "my_metric",
+                        "horizon": 90,
+                        "levels": ("absolute", (2, 4)),
+                        "period": "wday",
+                        "bound": None,
+                    },
+                ),
+                "b": 2,
+            },
+            id="migration in non-Dictionary with group",
+        ),
+    ],
+)
+def test_dictionary_groups_migrate(
+    to_convert: api_v1.form_specs.Dictionary, value_to_migrate: object, expected: object
+) -> None:
+    converted = convert_to_legacy_valuespec(to_convert, translate_to_current_language)
+    assert converted.transform_value(value_to_migrate) == expected
+
+
+@pytest.mark.parametrize(
+    ["form_spec", "rule"],
+    [
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "key1": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "key2": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Dictionary(
+                                        elements={
+                                            "key3": api_v1.form_specs.DictElement(
+                                                group=api_v1.form_specs.DictGroup(),
+                                                parameter_form=api_v1.form_specs.String(),
+                                                required=True,
+                                            )
+                                        }
+                                    )
+                                )
+                            }
+                        ),
+                    )
+                }
+            ),
+            {"key1": {"key2": {"key3": ""}}},
+            id="nested dictionary with inner group",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "key1": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "key2": api_v1.form_specs.DictElement(
+                                    group=api_v1.form_specs.DictGroup(),
+                                    parameter_form=api_v1.form_specs.String(),
+                                    required=True,
+                                ),
+                            },
+                        ),
+                    )
+                },
+                migrate=lambda x: x,  # type: ignore
+            ),
+            {"key1": {"key2": ""}},
+            id="inner group with outer migrate",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "key1": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "key2": api_v1.form_specs.DictElement(
+                                    group=api_v1.form_specs.DictGroup(),
+                                    parameter_form=api_v1.form_specs.String(),
+                                    required=True,
+                                ),
+                            },
+                        ),
+                    )
+                },
+                custom_validate=(lambda x: None,),
+            ),
+            {"key1": {"key2": ""}},
+            id="inner group with outer validate",
+        ),
+    ],
+)
+def test_dictionary_groups_legacy_validation(
+    form_spec: api_v1.form_specs.FormSpec, rule: Mapping[str, Any]
+) -> None:
+    converted = convert_to_legacy_valuespec(form_spec, lambda x: x)
+    converted.validate_datatype(rule, "")
+    converted.validate_value(rule, "")
+
+
+@pytest.mark.parametrize(
+    ["to_convert", "value_to_validate"],
+    [
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "a_nested": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Integer(), required=True
+                                ),
+                            }
+                        ),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "c": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                },
+                custom_validate=(api_v1.form_specs.validators.LengthInRange(max_value=2),),
+            ),
+            {"a": {"a_nested": 1}, "b": 2, "c": 3},
+            id="outermost validation",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "a_nested": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Integer(
+                                        custom_validate=(
+                                            api_v1.form_specs.validators.NumberInRange(min_value=1),
+                                        )
+                                    ),
+                                    required=True,
+                                )
+                            },
+                        ),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                },
+            ),
+            {"a": {"a_nested": 0}, "b": 2},
+            id="validation in group",
+        ),
+    ],
+)
+def test_dictionary_groups_validate(
+    to_convert: api_v1.form_specs.Dictionary, value_to_validate: object
+) -> None:
+    converted = convert_to_legacy_valuespec(to_convert, translate_to_current_language)
+    with pytest.raises(MKUserError):
+        converted.validate_value(value_to_validate, "")

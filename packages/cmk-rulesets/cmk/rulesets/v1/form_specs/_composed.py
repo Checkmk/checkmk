@@ -5,11 +5,12 @@
 
 """FormSpecs that can be composed of other FormSpecs"""
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from keyword import iskeyword
-from typing import Any, Generic, Mapping, Sequence
+from typing import Any, Generic
 
-from .._localize import Label, Message, Title
+from .._localize import Help, Label, Message, Title
 from ._base import DefaultValue, FormSpec, InputHint, ModelT
 
 
@@ -72,7 +73,25 @@ class CascadingSingleChoice(FormSpec[tuple[str, object]]):
     def __post_init__(self) -> None:
         avail_idents = {elem.name for elem in self.elements}  # type: ignore[misc]
         if isinstance(self.prefill, DefaultValue) and self.prefill.value not in avail_idents:
-            raise ValueError("Default element is not one of the specified elements")
+            raise ValueError(
+                f"Default element {self.prefill.value!r} is not "
+                f"one of the specified elements {avail_idents!r}"
+            )
+
+
+@dataclass(frozen=True, kw_only=True)
+class DictGroup:
+    """Specification for a group of dictionary elements that are more closely related thematically
+    than the other elements. A group is identified by its title and help text.
+    """
+
+    title: Title | None = None
+    help_text: Help | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class NoGroup:
+    """Default group for dictionary elements that don't belong to any group"""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -93,6 +112,10 @@ class DictElement(Generic[ModelT]):
     """
     render_only: bool = False
     """Element that can't be edited. Can be used to store the discovered parameters."""
+
+    group: DictGroup | NoGroup = NoGroup()
+    """Group this element belongs to. Elements of the same group are displayed together without
+    affecting the data model."""
 
 
 @dataclass(frozen=True, kw_only=True)  # type: ignore[misc]
@@ -117,14 +140,20 @@ class Dictionary(FormSpec[Mapping[str, object]]):
     no_elements_text: Message = Message("(no parameters)")
     """Text to show if no elements are specified"""
 
-    deprecated_elements: tuple[str, ...] = ()
-    """Elements that can no longer be configured, but aren't removed from the old rules that
-    already have them configured. Can be used when deprecating elements, to avoid breaking the
-    old configurations."""
+    ignored_elements: tuple[str, ...] = ()
+    """Elements that can no longer be configured, but aren't removed from rules if they are present.
+    They might be ignored when rendering the ruleset.
+    You can use these to deprecate elements, to avoid breaking the old configurations.
+    """
 
     def __post_init__(self) -> None:
-        for key in self.elements:  # type: ignore[misc]
+        current_elements = set(self.elements)  # type: ignore[misc]
+        for key in current_elements:
             _validate_name(key)
+        if offenders := current_elements.intersection(self.ignored_elements):
+            raise ValueError(
+                f"Elements are marked as 'ignored' but still present: {', '.join(offenders)}"
+            )
 
 
 @dataclass(frozen=True, kw_only=True)

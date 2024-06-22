@@ -229,8 +229,9 @@ get_version() {
 
 test_package() {
     log "Testing for ${1% *} in \$PATH"
-    $1 | grep "$2" >/dev/null 2>&1 || (
-        echo "Invalid version: $($1) expected $2"
+    CMD_OUTPUT="$($1 2>&1 || true)"
+    echo "$CMD_OUTPUT" | grep "$2" >/dev/null || (
+        echo "Invalid output of \"$1\": \"$($1)\" was expected to match with grep \"$2\""
         exit 1
     )
 }

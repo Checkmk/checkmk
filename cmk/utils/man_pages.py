@@ -24,7 +24,7 @@ from typing import Final
 
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
@@ -256,7 +256,6 @@ CATALOG_TITLES: Final = {
     "tsm": "IBM Tivoli Storage Manager (TSM)",
     "unitrends": "Unitrends",
     "vnx": "VNX NAS",
-    "websphere_mq": "WebSphere MQ",
     "zerto": "Zerto",
     "ibm_mq": "IBM MQ",
     "pulse_secure": "Pulse Secure",
@@ -293,7 +292,7 @@ CATALOG_TITLES: Final = {
     "kubernetes": "Kubernetes",
     "lxc": "Linux Container",
     "agentless": "Networking checks without agent",
-    "generic": "Generic check plugins",
+    "generic": "Generic check plug-ins",
     "unsorted": "Uncategorized",
     "zertificon": "Zertificon",
     "mqtt": "MQTT",
@@ -306,6 +305,7 @@ CATALOG_TITLES: Final = {
     "virtual": "Virtualization",
     "pure_storage": "Pure Storage",
     "synthetic_monitoring": "Synthetic Monitoring",
+    "bazel_cache": "Bazel Remote Cache",
 }
 
 # TODO: Do we need a more generic place for this?
@@ -801,7 +801,7 @@ class NowikiManPageRenderer(ManPageRenderer):
         self.__output.write("TI:Check manual page of %s\n" % self.name)
         # It does not make much sense to print the date of the HTML generation
         # of the man page here. More useful would be the Checkmk version where
-        # the plugin first appeared. But we have no access to that - alas.
+        # the plug-in first appeared. But we have no access to that - alas.
         # self.__output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
         self.__output.write("SA:check_plugins_catalog,check_plugins_list\n")
 

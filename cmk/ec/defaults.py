@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Defaults for rule pack and configuration"""
+"""Defaults for rule pack and configuration."""
 
 import logging
 from collections.abc import Collection
@@ -22,7 +22,7 @@ from .config import (
 
 
 def default_rule_pack(rules: Collection[Rule]) -> ECRulePackSpec:
-    """Returns the default rule pack"""
+    """Returns the default rule pack."""
     return ECRulePackSpec(
         id="default",
         title=_("Default rule pack"),
@@ -32,7 +32,7 @@ def default_rule_pack(rules: Collection[Rule]) -> ECRulePackSpec:
 
 
 def default_config() -> ConfigFromWATO:
-    """Returns the default configuration"""
+    """Returns the default configuration."""
     return ConfigFromWATO(
         rules=[],  # old pre 1.2.7i1 format. Only used if rule_packs is empty
         rule_packs=[],  # new format with rule packs
@@ -53,6 +53,8 @@ def default_config() -> ConfigFromWATO:
         log_messages=False,
         retention_interval=60,
         housekeeping_interval=60,
+        sqlite_housekeeping_interval=3600,  # seconds ValueSpec Age
+        sqlite_freelist_size=50 * 1024 * 1024,  # bytes ValueSpec FIlesize
         statistics_interval=5,
         history_lifetime=365,  # days
         history_rotation="daily",
@@ -62,7 +64,7 @@ def default_config() -> ConfigFromWATO:
         eventsocket_queue_len=10,
         hostname_translation=TranslationOptions(),
         archive_orphans=False,
-        archive_mode="file",
+        archive_mode="sqlite",
         translate_snmptraps=False,
         snmp_credentials=[
             SNMPCredential(

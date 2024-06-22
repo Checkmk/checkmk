@@ -16,10 +16,7 @@ from email.message import EmailMessage
 from pathlib import Path
 from typing import NamedTuple
 
-from git.exc import (  # type: ignore[attr-defined] # BadName is defined in gitdb, but does not provide type hints
-    BadName,
-    GitCommandError,
-)
+from git.exc import BadName, GitCommandError
 from git.objects.blob import Blob
 from git.objects.commit import Commit
 from git.repo import Repo
@@ -264,7 +261,7 @@ def has_note(repo: Repo, commit: Commit, args: Args) -> bool:
 
 
 def add_note(repo: Repo, commit: Commit, args: Args) -> None:
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = datetime.datetime.now(datetime.UTC)
     note = f"Mail sent: {now.isoformat()}"
     repo.git.notes(f"--ref={args.ref}", "add", "-m", note, commit.hexsha)
     logger.info("added note to commit %s: %s", commit.hexsha, note)

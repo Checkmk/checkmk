@@ -6,10 +6,10 @@
 import ast
 import logging
 import sys
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -25,7 +25,7 @@ from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-viol
 )
 
 if edition() is not Edition.CRE:
-    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import] # pylint: disable=import-error,no-name-in-module,cmk-module-layer-violation
+    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=import-error,no-name-in-module,cmk-module-layer-violation
         InlineSNMPBackend,
     )
 else:
@@ -62,7 +62,10 @@ print(
     repr(
         (
             get_single_oid(
-                oid, single_oid_cache=snmp_cache.single_oid_cache(), backend=backend(config, logger)
+                oid,
+                single_oid_cache=snmp_cache.single_oid_cache(),
+                backend=backend(config, logger),
+                log=logger.debug,
             ),
             snmp_cache.single_oid_cache(),
         )

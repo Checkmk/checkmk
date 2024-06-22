@@ -11,8 +11,6 @@ from cmk.utils.plugin_registry import Registry
 
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 
-from .update_state import UpdateActionState
-
 
 class UpdateAction(ABC):
     """Base class for all update actions"""
@@ -37,7 +35,7 @@ class UpdateAction(ABC):
         self.continue_on_failure: Final = continue_on_failure
 
     @abstractmethod
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         """
         Execute the update action.
         Raising an exception will abort the config update, unless continue_on_failure is True.
@@ -72,7 +70,7 @@ class PreUpdateAction(ABC):
         self.sort_index: Final = sort_index
 
     @abstractmethod
-    def __call__(self, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         """
         Execute the pre-update action.
         Raising an exception will abort the config update.

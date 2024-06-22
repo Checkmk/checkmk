@@ -129,6 +129,7 @@ class DiscoveryResult(NamedTuple):
     job_status: dict
     check_table_created: int
     check_table: Sequence[CheckPreviewEntry]
+    nodes_check_table: Mapping[HostName, Sequence[CheckPreviewEntry]]
     host_labels: Mapping[str, HostLabelValueDict]
     new_labels: Mapping[str, HostLabelValueDict]
     vanished_labels: Mapping[str, HostLabelValueDict]
@@ -137,28 +138,12 @@ class DiscoveryResult(NamedTuple):
     sources: Mapping[str, tuple[int, str]]
 
     def serialize(self, for_cmk_version: Version) -> str:
-        if for_cmk_version < Version.from_str("2.3.0b1"):
+        if for_cmk_version < Version.from_str("2.4.0b1"):
             return repr(
                 (
                     self.job_status,
                     self.check_table_created,
-                    [
-                        tuple(
-                            (
-                                v
-                                if k != "check_source"
-                                else v.replace("unchanged", "old").replace("changed", "old")
-                            )
-                            for k, v in dataclasses.asdict(cpe).items()
-                            if k
-                            not in [
-                                "new_labels",
-                                "discovery_ruleset_name",
-                                "new_discovered_parameters",
-                            ]
-                        )
-                        for cpe in self.check_table
-                    ],
+                    [dataclasses.astuple(cpe) for cpe in self.check_table],
                     self.host_labels,
                     self.new_labels,
                     self.vanished_labels,
@@ -175,6 +160,10 @@ class DiscoveryResult(NamedTuple):
                 self.job_status,
                 self.check_table_created,
                 [dataclasses.astuple(cpe) for cpe in self.check_table],
+                {
+                    h: [dataclasses.astuple(cpe) for cpe in entries]
+                    for h, entries in self.nodes_check_table.items()
+                },
                 self.host_labels,
                 self.new_labels,
                 self.vanished_labels,
@@ -193,6 +182,7 @@ class DiscoveryResult(NamedTuple):
             job_status,
             check_table_created,
             raw_check_table,
+            raw_nodes_check_table,
             host_labels,
             new_labels,
             vanished_labels,
@@ -204,6 +194,10 @@ class DiscoveryResult(NamedTuple):
             job_status,
             check_table_created,
             [CheckPreviewEntry(*cpe) for cpe in raw_check_table],
+            {
+                h: [CheckPreviewEntry(*cpe) for cpe in entries]
+                for h, entries in raw_nodes_check_table.items()
+            },
             host_labels,
             new_labels,
             vanished_labels,
@@ -875,7 +869,16 @@ def execute_discovery_job(
         DiscoveryAction.REFRESH,
         DiscoveryAction.TABULA_RASA,
     ]:
-        job.start(lambda job_interface: job.discover(action, raise_errors=raise_errors))
+        job.start(
+            lambda job_interface: job.discover(action, raise_errors=raise_errors),
+            InitialStatusArgs(
+                title=_("Service discovery"),
+                stoppable=True,
+                host_name=str(host_name),
+                estimated_duration=job.get_status().duration,
+                user=str(user.id) if user.id else None,
+            ),
+        )
 
     if job.is_active() and action == DiscoveryAction.STOP:
         job.stop()
@@ -895,16 +898,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         return _("Service discovery")
 
     def __init__(self, host_name: HostName) -> None:
-        super().__init__(
-            f"{self.job_prefix}-{host_name}",
-            InitialStatusArgs(
-                title=_("Service discovery"),
-                stoppable=True,
-                host_name=str(host_name),
-                estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(f"{self.job_prefix}-{host_name}")
         self.host_name: Final = host_name
 
         self._preview_store = ObjectStore(
@@ -915,6 +909,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             ServiceDiscoveryPreviewResult(
                 output="",
                 check_table=[],
+                nodes_check_table={},
                 host_labels={},
                 new_labels={},
                 vanished_labels={},
@@ -1002,6 +997,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             job_status=dict(job_status),
             check_table_created=check_table_created,
             check_table=result.check_table,
+            nodes_check_table=result.nodes_check_table,
             host_labels=result.host_labels,
             new_labels=result.new_labels,
             vanished_labels=result.vanished_labels,

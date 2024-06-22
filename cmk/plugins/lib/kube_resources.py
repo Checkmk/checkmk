@@ -10,8 +10,12 @@ from typing import Any, cast, Literal, TypedDict
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import CheckResult, Metric, render, Result
-
-from .kube import PerformanceUsage, Section
+from cmk.plugins.kube.schemata.section import (
+    AllocatableResource,
+    HardResourceRequirement,
+    PerformanceUsage,
+    Resources,
+)
 
 ResourceType = Literal["memory", "cpu"]
 RequirementType = Literal["request", "limit", "allocatable"]
@@ -21,31 +25,6 @@ AllocatableKubernetesObject = Literal["cluster", "node"]
 # TODO: Resources is a bad name, this should be changed to something like Requirements. When
 # choosing a name, other section BaseModel names like AllocatableResource and PerformanceUsage
 # be taken into account
-class Resources(Section):
-    """sections: "[kube_memory_resources_v1, kube_cpu_resources_v1]"""
-
-    request: float
-    limit: float
-    count_unspecified_requests: int
-    count_unspecified_limits: int
-    count_zeroed_limits: int
-    count_total: int
-
-
-class AllocatableResource(Section):
-    """sections: [kube_allocatable_cpu_resource_v1, kube_allocatable_memory_resource_v1]"""
-
-    context: AllocatableKubernetesObject
-    value: float
-
-
-class HardResourceRequirement(Section):
-    """sections: [kube_resource_quota_memory_v1, kube_resource_quota_cpu_v1]"""
-
-    limit: float | None = None
-    request: float | None = None
-
-
 def parse_performance_usage(string_table: StringTable) -> PerformanceUsage:
     """Parses usage value for CPU and memory into PerformanceUsage
 

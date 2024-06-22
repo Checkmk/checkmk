@@ -27,7 +27,7 @@ def _valuespec_active_checks_traceroute() -> Dictionary:
                 "dns",
                 Checkbox(
                     title=_("Name resolution"),
-                    label=_("Use DNS to convert IP addresses into hostnames"),
+                    label=_("Use DNS to convert IP addresses into host names"),
                     help=_(
                         "If you use this option, then <tt>traceroute</tt> is <b>not</b> being "
                         "called with the option <tt>-n</tt>. That means that all IP addresses "
@@ -43,7 +43,7 @@ def _valuespec_active_checks_traceroute() -> Dictionary:
                     valuespec=Tuple(
                         elements=[
                             TextInput(
-                                title=_("Router (FQDN, IP-Address)"),
+                                title=_("Router (FQDN, IP address)"),
                                 allow_empty=False,
                             ),
                             DropdownChoice(

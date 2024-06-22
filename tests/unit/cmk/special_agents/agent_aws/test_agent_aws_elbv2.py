@@ -5,7 +5,9 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import NamedTuple, Protocol, Sequence, Tuple
+from argparse import Namespace as Args
+from collections.abc import Sequence
+from typing import NamedTuple, Protocol
 
 import pytest
 
@@ -101,7 +103,7 @@ class ELBv2SectionsOut(NamedTuple):
     elbv2_summary: ELBSummaryGeneric
     elbv2_labels: ELBLabelsGeneric
     elbv2_target_groups: ELBv2TargetGroups
-    elbv2_application: Tuple[
+    elbv2_application: tuple[
         ELBv2Application, ELBv2ApplicationTargetGroupsHTTP, ELBv2ApplicationTargetGroupsLambda
     ]
     elbv2_network: ELBv2Network
@@ -125,7 +127,7 @@ def get_elbv2_sections() -> ELBv2Sections:
     ) -> ELBv2SectionsOut:
         region = "region"
         config = AWSConfig(
-            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
         )
         config.add_single_service_config("elbv2_names", names)
         config.add_service_tags("elbv2_tags", tags)

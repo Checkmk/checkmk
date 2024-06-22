@@ -26,7 +26,7 @@ from cmk.gui.graphing._perfometer import (
     MetricRendererStack,
     parse_perfometer,
 )
-from cmk.gui.graphing._type_defs import TranslatedMetric, UnitInfo
+from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric, UnitInfo
 
 from cmk.graphing.v1 import metrics, perfometers
 
@@ -138,110 +138,31 @@ def test_get_first_matching_perfometer(
     assert get_first_matching_perfometer(translated_metrics) == perfometer
 
 
-@pytest.mark.parametrize(
-    "translated_metrics, perfometer",
-    [
-        pytest.param(
-            {
-                "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
-                "failed_notifications": {"value": 0, "unit": "", "color": "#456789"},
-            },
-            {
-                "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
-                "label": ("delivered_notifications,failed_notifications,+,100,+", "%"),
-                "segments": ["delivered_notifications,failed_notifications,+,100,+"],
-                "total": 100.0,
-                "type": "linear",
-            },
-            id="second to last",
-        ),
-        pytest.param(
-            {
-                "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
-                "failed_notifications": {"value": 1, "unit": "", "color": "#456789"},
-            },
-            {
-                "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,<",
-                "label": (
-                    "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*",
-                    "%",
+def test_get_first_matching_legacy_perfometer() -> None:
+    assert get_first_matching_perfometer(
+        {
+            "dedup_rate": TranslatedMetric(
+                orig_name=["dedup_rate"],
+                value=10,
+                scalar=ScalarBounds(),
+                scale=[1.0],
+                auto_graph=True,
+                title="Dedup rate",
+                unit=UnitInfo(
+                    title="Count",
+                    symbol="",
+                    render=str,
+                    js_render="v => v.toString()",
                 ),
-                "segments": [
-                    "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*"
-                ],
-                "total": 100.0,
-                "type": "linear",
-            },
-            id="very last perfometer",
-        ),
-        pytest.param(
-            {
-                "fs_used": {"value": 10, "scalar": {"max": 30}, "unit": "", "color": "#123456"},
-                "uncommitted": {"value": 4, "unit": "", "color": "#123456"},
-                "fs_size": {"value": 15, "unit": "", "color": "#123456"},
-            },
-            {
-                "condition": "fs_used,uncommitted,+,fs_size,<",
-                "label": ("fs_used(%)", "%"),
-                "segments": [
-                    "fs_used",
-                    "uncommitted",
-                    "fs_size,fs_used,-,uncommitted,-#e3fff9",
-                    "0.1#559090",
-                ],
-                "total": "fs_size",
-                "type": "linear",
-            },
-            id="filesystem check without overcommittment",
-        ),
-        pytest.param(
-            {
-                "fs_used": {"value": 10, "scalar": {"max": 100}, "unit": "", "color": "#123456"},
-                "uncommitted": {"value": 4, "unit": "", "color": "#123456"},
-                "fs_size": {"value": 15, "unit": "", "color": "#123456"},
-                "overprovisioned": {"value": 7, "unit": "", "color": "#123456"},
-            },
-            {
-                "condition": "fs_used,uncommitted,+,fs_size,<",
-                "label": ("fs_used(%)", "%"),
-                "segments": [
-                    "fs_used",
-                    "uncommitted",
-                    "fs_size,fs_used,-,uncommitted,-#e3fff9",
-                    "0.1#559090",
-                ],
-                "total": "fs_size",
-                "type": "linear",
-            },
-            id="filesystem check without overcommittment (+overprovisioned)",
-        ),
-        pytest.param(
-            {
-                "fs_used": {"value": 10, "scalar": {"max": 100}, "unit": "", "color": "#123456"},
-                "uncommitted": {"value": 5, "unit": "", "color": "#123456"},
-                "fs_size": {"value": 15, "unit": "", "color": "#123456"},
-                "overprovisioned": {"value": 7, "unit": "", "color": "#123456"},
-            },
-            {
-                "condition": "fs_used,uncommitted,+,fs_size,>=",
-                "label": ("fs_used,fs_used,uncommitted,+,/,100,*", "%"),
-                "segments": [
-                    "fs_used",
-                    "fs_size,fs_used,-#e3fff9",
-                    "0.1#559090",
-                    "overprovisioned,fs_size,-#ffa000",
-                ],
-                "total": "overprovisioned",
-                "type": "linear",
-            },
-            id="filesystem check with overcommittment",
-        ),
-    ],
-)
-def test_get_first_matching_legacy_perfometer(
-    translated_metrics: Mapping[str, TranslatedMetric], perfometer: dict
-) -> None:
-    assert get_first_matching_perfometer(translated_metrics) == perfometer
+                color="#ffa000",
+            ),
+        }
+    ) == {
+        "exponent": 1.2,
+        "half_value": 30.0,
+        "metric": "dedup_rate",
+        "type": "logarithmic",
+    }
 
 
 def test_registered_renderers() -> None:
@@ -337,7 +258,7 @@ class TestMetricometerRendererLegacyLinear:
                 id="no dedicated perfometer renderer",
             ),
             pytest.param(
-                lambda v: f"{2*v} U",
+                lambda v: f"{2 * v} U",
                 "120.0 U",
                 id="dedicated perfometer renderer",
             ),
@@ -438,7 +359,7 @@ class TestMetricometerRendererLegacyLogarithmic:
                 id="no dedicated perfometer renderer",
             ),
             pytest.param(
-                lambda v: f"{2*v} U",
+                lambda v: f"{2 * v} U",
                 "246.0 U",
                 id="dedicated perfometer renderer",
             ),

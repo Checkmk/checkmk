@@ -42,7 +42,7 @@ import sys
 import time
 
 try:
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -112,8 +112,8 @@ local_cfg = {
     "passwd": "",
     "trace": "3",
     "loglevel": "warn",
-    #'lang':     'EN',
-    #'host_prefix': 'FOOBAR_',
+    # "lang": "EN",
+    # "host_prefix": "FOOBAR_",
 }
 
 # A list of strings, while the string must match the full path to one or
@@ -477,7 +477,7 @@ def main():  # pylint: disable=too-many-branches
     global state_file_changed
 
     try:
-        import pyrfc  # type: ignore[import]
+        import pyrfc  # type: ignore[import-not-found]
     except ImportError as e:
         if "No module named pyrfc" in str(e):
             sys.stderr.write("Missing the Python module pyrfc.\n")

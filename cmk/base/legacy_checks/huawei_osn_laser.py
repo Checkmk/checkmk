@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
@@ -29,7 +30,7 @@ def check_huawei_osn_laser(item, params, info):
 
         if state:
             return state, f"(warn/crit below {warn}/{crit} dBm)"
-        return 0, None
+        return 0, ""
 
     for line in info:
         if item == line[0]:
@@ -74,7 +75,7 @@ check_info["huawei_osn_laser"] = LegacyCheckDefinition(
     check_function=check_huawei_osn_laser,
     check_ruleset_name="huawei_osn_laser",
     check_default_parameters={
-        "levels_low_in": (-160.0, -180.0),
-        "levels_low_out": (-35.0, -40.0),
+        "levels_low_in": (-160, -180),
+        "levels_low_out": (-35, -40),
     },
 )

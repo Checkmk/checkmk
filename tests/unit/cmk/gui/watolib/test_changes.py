@@ -15,7 +15,7 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import  # noqa: F401
+from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import
     compile_builtin_po_files,
     locale_base_dir,
     locale_paths,
@@ -26,7 +26,7 @@ from livestatus import SiteId
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
 
-import cmk.gui.i18n as i18n
+from cmk.gui import i18n
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib.audit_log import AuditLogStore, log_audit
@@ -104,7 +104,12 @@ class TestAuditLogStore:
     @pytest.mark.usefixtures("request_context")
     def test_transport_html(self, store: AuditLogStore) -> None:
         entry = AuditLogStore.Entry(
-            int(time.time()), None, "user", "action", HTML("Mäss<b>ädsch</b>"), None
+            int(time.time()),
+            None,
+            "user",
+            "action",
+            HTML.without_escaping("Mäss<b>ädsch</b>"),
+            None,
         )
         store.append(entry)
         assert list(store.read()) == [entry]
@@ -232,7 +237,7 @@ def test_log_audit_with_html_message() -> None:
             object_ref=None,
             user_id=UserId("calvin"),
             action="bla",
-            message=HTML("Message <b>bla</b>"),
+            message=HTML.without_escaping("Message <b>bla</b>"),
         )
 
     store = AuditLogStore()
@@ -242,7 +247,7 @@ def test_log_audit_with_html_message() -> None:
             object_ref=None,
             user_id="calvin",
             action="bla",
-            text=HTML("Message <b>bla</b>"),
+            text=HTML.without_escaping("Message <b>bla</b>"),
             diff_text=None,
         ),
     ]

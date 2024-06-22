@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# check_mk plugin to monitor Fujitsu storage systems supporting FJDARY-E60.MIB or FJDARY-E100.MIB
+# check_mk plug-in to monitor Fujitsu storage systems supporting FJDARY-E60.MIB or FJDARY-E100.MIB
 # Copyright (c) 2012 FuH Entwicklungsgesellschaft mbH, Umkirch, Germany. All rights reserved.
 # Author: Philipp Hoefflin, 2012, hoefflin+cmk@fuh-e.de
 
@@ -14,7 +14,7 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping, Sequence
 from typing import NamedTuple
 
 from cmk.agent_based.v1.type_defs import StringTable
@@ -49,7 +49,7 @@ class FjdaryeItem(NamedTuple):
 SectionFjdaryeItem = Mapping[str, FjdaryeItem]
 
 
-def parse_fjdarye_item(string_table: list[StringTable]) -> SectionFjdaryeItem:
+def parse_fjdarye_item(string_table: Sequence[StringTable]) -> SectionFjdaryeItem:
     fjdarye_items: MutableMapping[str, FjdaryeItem] = {}
 
     for device in string_table:

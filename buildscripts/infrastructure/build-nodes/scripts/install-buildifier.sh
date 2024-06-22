@@ -27,7 +27,7 @@ case "$DISTRO" in
         test_package "go version" "go$GO_VERSION\."
         ;;
     *)
-        echo "ERROR: Unhandled DISTRO: $DISTRO - buildifier should only be available in IMAGE_TESTING!"
+        echo "ERROR: Unhandled DISTRO: $DISTRO - buildifier should only be available in reference image!"
         exit 1
         ;;
 esac

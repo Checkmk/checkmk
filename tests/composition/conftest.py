@@ -40,53 +40,72 @@ def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
 @pytest.fixture(name="remote_site", scope="module")
 def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator[Site]:
     site_number = central_site.id.split("_")[1]
-    for remote_site in site_factory.get_test_site(
+    remote_site_generator = site_factory.get_test_site(
         f"{site_number}_remote",
         description=request.node.name,
         auto_restart_httpd=True,
-    ):
-        central_site.open_livestatus_tcp(encrypted=False)
-        central_site.openapi.create_site(
-            {
-                "basic_settings": {
-                    "alias": "Remote Testsite",
-                    "site_id": remote_site.id,
-                },
-                "status_connection": {
-                    "connection": {
-                        "socket_type": "tcp",
-                        "host": remote_site.http_address,
-                        "port": remote_site.livestatus_port,
-                        "encrypted": False,
-                        "verify": False,
-                    },
-                    "proxy": {
-                        "use_livestatus_daemon": "direct",
-                    },
-                    "connect_timeout": 2,
-                    "persistent_connection": False,
-                    "url_prefix": f"/{remote_site.id}/",
-                    "status_host": {"status_host_set": "disabled"},
-                    "disable_in_status_gui": False,
-                },
-                "configuration_connection": {
-                    "enable_replication": True,
-                    "url_of_remote_site": remote_site.internal_url,
-                    "disable_remote_configuration": True,
-                    "ignore_tls_errors": True,
-                    "direct_login_to_web_gui_allowed": True,
-                    "user_sync": {"sync_with_ldap_connections": "all"},
-                    "replicate_event_console": True,
-                    "replicate_extensions": True,
-                },
-            }
-        )
-        central_site.openapi.login_to_site(remote_site.id)
-        central_site.openapi.activate_changes_and_wait_for_completion(
-            # this seems to be necessary to avoid sporadic CI failures
-            force_foreign_changes=True,
-        )
+    )
+    try:  # make pylint happy
+        remote_site = next(remote_site_generator)
+    except StopIteration as e:
+        raise RuntimeError("I should have received a remote site...") from e
+    _add_remote_site_to_central_site(central_site=central_site, remote_site=remote_site)
+
+    try:
         yield remote_site
+    finally:
+        # Teardown of remote site. We first stop the central site to avoid crashes due to
+        # interruptions in the remote-central communication caused by the teardown.
+        central_site.stop()
+        yield from remote_site_generator
+
+
+def _add_remote_site_to_central_site(
+    *,
+    central_site: Site,
+    remote_site: Site,
+) -> None:
+    central_site.open_livestatus_tcp(encrypted=False)
+    central_site.openapi.create_site(
+        {
+            "basic_settings": {
+                "alias": "Remote Testsite",
+                "site_id": remote_site.id,
+            },
+            "status_connection": {
+                "connection": {
+                    "socket_type": "tcp",
+                    "host": remote_site.http_address,
+                    "port": remote_site.livestatus_port,
+                    "encrypted": False,
+                    "verify": False,
+                },
+                "proxy": {
+                    "use_livestatus_daemon": "direct",
+                },
+                "connect_timeout": 2,
+                "persistent_connection": False,
+                "url_prefix": f"/{remote_site.id}/",
+                "status_host": {"status_host_set": "disabled"},
+                "disable_in_status_gui": False,
+            },
+            "configuration_connection": {
+                "enable_replication": True,
+                "url_of_remote_site": remote_site.internal_url,
+                "disable_remote_configuration": True,
+                "ignore_tls_errors": True,
+                "direct_login_to_web_gui_allowed": True,
+                "user_sync": {"sync_with_ldap_connections": "all"},
+                "replicate_event_console": True,
+                "replicate_extensions": True,
+            },
+        }
+    )
+    central_site.openapi.login_to_site(remote_site.id)
+    central_site.openapi.activate_changes_and_wait_for_completion(
+        # this seems to be necessary to avoid sporadic CI failures
+        force_foreign_changes=True,
+    )
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="module")

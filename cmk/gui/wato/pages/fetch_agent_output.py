@@ -8,7 +8,7 @@ import ast
 import os
 from pathlib import Path
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.site import omd_site
@@ -242,10 +242,21 @@ class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
         start_fetch_agent_job(api_request)
 
 
-def start_fetch_agent_job(api_request):
+def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
     job = FetchAgentOutputBackgroundJob(api_request)
     try:
-        job.start(job.fetch_agent_output)
+        job.start(
+            job.fetch_agent_output,
+            InitialStatusArgs(
+                title=_("Fetching %s of %s / %s")
+                % (
+                    api_request.agent_type,
+                    api_request.host.site_id(),
+                    api_request.host.name(),
+                ),
+                user=str(user.id) if user.id else None,
+            ),
+        )
     except BackgroundJobAlreadyRunning:
         pass
 
@@ -284,14 +295,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             host.name(),
             self._request.agent_type,
         )
-        title = _("Fetching %s of %s / %s") % (
-            self._request.agent_type,
-            host.site_id(),
-            host.name(),
-        )
-        super().__init__(
-            job_id, InitialStatusArgs(title=title, user=str(user.id) if user.id else None)
-        )
+        super().__init__(job_id)
 
     def fetch_agent_output(self, job_interface):
         job_interface.send_progress_update(_("Fetching '%s'...") % self._request.agent_type)

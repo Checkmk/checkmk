@@ -15,7 +15,7 @@ import json
 from collections import namedtuple
 from collections.abc import Mapping
 from time import time
-from typing import Any, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -27,6 +27,7 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
 
 from .lib import render_integer
@@ -67,7 +68,7 @@ MAP_BUILD_STATES = {
 Section = Mapping[str, JenkinsJobInfo]
 
 
-def parse_jenkins_jobs(string_table) -> Section:  # type: ignore[no-untyped-def]
+def parse_jenkins_jobs(string_table: StringTable) -> Section:
     parsed: dict[str, JenkinsJobInfo] = {}
 
     for line in string_table:
@@ -94,7 +95,7 @@ def check_jenkins_jobs(item: str, params: Mapping[str, Any], section: Section) -
 
 
 def _check_jenkins_jobs(
-    item: str, params: Mapping[str, Any], section: Section, now: Optional[int | float] = None
+    item: str, params: Mapping[str, Any], section: Section, now: int | float | None = None
 ) -> CheckResult:
     if (item_data := section.get(item)) is None:
         return

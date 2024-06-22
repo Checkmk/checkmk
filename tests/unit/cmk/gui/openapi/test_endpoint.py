@@ -8,6 +8,7 @@
 smth (needed for endpoint registration in test_openapi_endpoint_decorator_resets_used_permissions)
 """
 
+import base64
 import json
 from collections.abc import Mapping
 from typing import Any
@@ -29,6 +30,8 @@ from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.wsgi.blueprints import checkmk, rest_api
 
 from cmk import fields
+
+TEST_TARGZ_FILE = "H4sIAAAAAAAAA+3OQQrCMBCF4aw9RbyAJDVNzxNooIXgyBjR4xvppuBCN0UK/7eYxzCzeNN8qs9qNuWaGMM7/dC7dS58b3yI3RDbDJ1pe/BnY922tRb3W01qrSlZLklHueaqounj79t9p6ZcitiHaBmPh3+XAQAAAAAAAAAAAAAAAAD87AUCVDjzACgAAA=="
 
 
 def test_openapi_accept_header_missing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
@@ -107,6 +110,34 @@ def install_endpoint(fresh_app_instance):
     endpoint_registry.unregister(test)
 
 
+@pytest.fixture(name="test_multiple_accept_endpoint")
+def install_multi_accept_endpoint(fresh_app_instance):
+    @Endpoint(
+        path="/test_multiple_content_types",
+        method="post",
+        link_relation="help",
+        tag_group="Checkmk Internal",
+        content_type="application/json",
+        update_config_generation=False,
+        skip_locking=True,
+        accept=["application/json", "application/gzip"],
+        request_schema=SomeSchema,
+        response_schema=SomeSchema,
+    )
+    def multiaccept_test(param: Mapping[str, Any]) -> Response:
+        response = Response()
+        response.set_content_type("application/json")
+        response.set_data(json.dumps({"permission": param.get("content_type")}))
+        response.status_code = 200
+        return response
+
+    endpoint_registry.register(multiaccept_test)
+
+    yield multiaccept_test
+
+    endpoint_registry.unregister(multiaccept_test)
+
+
 def test_openapi_endpoint_decorator_resets_used_permissions(
     test_endpoint: WrappedEndpoint, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:
@@ -158,6 +189,28 @@ def install_endpoint_raise(fresh_app_instance):
     def test(param: Mapping[str, Any]) -> Response:
         """Smth"""
         raise ProblemException(418, "short", "long")
+
+    endpoint_registry.register(test)
+    yield test
+
+    endpoint_registry.unregister(test)
+
+
+@pytest.fixture(name="test_endpoint_accept_parameter")
+def accept_parameter_endpoint(fresh_app_instance):
+    @Endpoint(
+        path="/test_accept_parameter",
+        method="post",
+        link_relation="help",
+        output_empty=True,
+        tag_group="Checkmk Internal",
+        accept="application/gzip",
+        update_config_generation=False,
+        skip_locking=True,
+    )
+    def test(param: Mapping[str, Any]) -> Response:
+        """Smth"""
+        return Response(status=204)
 
     endpoint_registry.register(test)
     yield test
@@ -361,3 +414,87 @@ def test_crash_report_with_post(clients: ClientRegistry, monkeypatch: pytest.Mon
         "check_mk_info",
         "crash_report_url",
     }
+
+
+# ========= Accept parameter related Tests =========
+def test_invalid_content_type(
+    test_endpoint_accept_parameter: WrappedEndpoint,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    response = aut_user_auth_wsgi_app.call_method(
+        "post",
+        "/NO_SITE/check_mk/api/1.0/test_accept_parameter",
+        "",
+        {"Accept": "application/json", "content-type": "application/i-do-not-exist"},  # headers
+        status=415,
+    )
+
+    assert response.json["title"] == "Content type not valid for this endpoint."
+    assert (
+        response.json["detail"]
+        == "Content-Type 'application/i-do-not-exist' not supported for this endpoint."
+    )
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        "",
+        "I am not a .tar.gz file",
+    ],
+)
+def test_invalid_payload(
+    test_endpoint_accept_parameter: WrappedEndpoint,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    payload: str,
+) -> None:
+
+    response = aut_user_auth_wsgi_app.call_method(
+        "post",
+        "/NO_SITE/check_mk/api/1.0/test_accept_parameter",
+        payload,
+        {"Accept": "application/json", "content-type": "application/gzip"},  # headers
+        status=400,
+    )
+
+    assert response.json["title"] == "Bad Request"
+    assert response.json["detail"] == "Payload is not a valid .tar.gz file"
+
+
+def test_valid_gzip_file(
+    test_endpoint_accept_parameter: WrappedEndpoint,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    payload = base64.b64decode(TEST_TARGZ_FILE)
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        "/NO_SITE/check_mk/api/1.0/test_accept_parameter",
+        payload,
+        {"Accept": "application/json", "content-type": "application/gzip"},  # headers
+        status=204,
+    )
+
+
+@pytest.mark.parametrize(
+    "content_type,payload",
+    [
+        ("application/json", json.dumps({"permission": "granted"})),
+        ("application/gzip", base64.b64decode(TEST_TARGZ_FILE)),
+    ],
+)
+def test_endpoint_accept_multiple_types(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    test_multiple_accept_endpoint: WrappedEndpoint,
+    content_type: str,
+    payload: str,
+) -> None:
+
+    res = aut_user_auth_wsgi_app.call_method(
+        "post",
+        "/NO_SITE/check_mk/api/1.0/test_multiple_content_types",
+        payload,
+        {"Accept": "application/json", "Content-type": content_type},
+        status=200,
+    )
+
+    assert res.json["permission"] == content_type

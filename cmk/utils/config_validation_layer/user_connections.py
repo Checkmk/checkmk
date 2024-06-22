@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Literal, NewType
+from collections.abc import Sequence
+from typing import Literal, NewType, TypedDict
 
 from pydantic import BaseModel, Field
 
-from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
+from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
 
 # these need to be written to a .mk file, so a more complex type like Path will lead to problems
 PrivateKeyPath = NewType("PrivateKeyPath", str)
@@ -24,7 +25,7 @@ class LDAPConnectionConfigDiscover(BaseModel):
 
 class Fixed(BaseModel):
     server: str
-    failover_servers: list[str] = OMITTED_FIELD
+    failover_servers: list[str] | Omitted = OMITTED_FIELD
 
 
 class LDAPConnectionConfigFixed(BaseModel):
@@ -37,8 +38,8 @@ ACTIVE_DIR = tuple[Literal["ad"], LDAPConnectionConfigFixed | LDAPConnectionConf
 
 
 class DisableNotificationsAttribute(BaseModel):
-    disable: Literal[True] = OMITTED_FIELD
-    timerange: tuple[float, float] = OMITTED_FIELD
+    disable: Literal[True] | Omitted = OMITTED_FIELD
+    timerange: tuple[float, float] | Omitted = OMITTED_FIELD
 
 
 DISABLE_NOTIFICATIONS = tuple[Literal["disable_notifications"], DisableNotificationsAttribute]
@@ -76,37 +77,37 @@ class GroupsToSync(BaseModel):
 
 
 class GroupsToAttributes(BaseModel):
-    nested: Literal[True] = OMITTED_FIELD
-    other_connections: list[str] = OMITTED_FIELD
+    nested: Literal[True] | Omitted = OMITTED_FIELD
+    other_connections: list[str] | Omitted = OMITTED_FIELD
     groups: list[GroupsToSync] = Field(min_length=1)
 
 
 class GroupsToContactGroups(BaseModel):
-    nested: Literal[True] = OMITTED_FIELD
-    other_connections: list[str] = OMITTED_FIELD
+    nested: Literal[True] | Omitted = OMITTED_FIELD
+    other_connections: list[str] | Omitted = OMITTED_FIELD
 
 
 class SyncAttribute(BaseModel):
-    attr: str = OMITTED_FIELD
+    attr: str | Omitted = OMITTED_FIELD
 
 
 class ActivePlugins(BaseModel):
-    alias: SyncAttribute = OMITTED_FIELD
-    auth_expire: SyncAttribute = OMITTED_FIELD
-    groups_to_roles: dict[str, list[tuple[str, str | None]]] = OMITTED_FIELD
-    groups_to_contactgroups: GroupsToContactGroups = OMITTED_FIELD
-    groups_to_attributes: GroupsToAttributes = OMITTED_FIELD
-    disable_notifications: SyncAttribute = OMITTED_FIELD
-    email: SyncAttribute = OMITTED_FIELD
-    icons_per_item: SyncAttribute = OMITTED_FIELD
-    nav_hide_icons_title: SyncAttribute = OMITTED_FIELD
-    pager: SyncAttribute = OMITTED_FIELD
-    show_mode: SyncAttribute = OMITTED_FIELD
-    ui_sidebar_position: SyncAttribute = OMITTED_FIELD
-    start_url: SyncAttribute = OMITTED_FIELD
-    temperature_unit: SyncAttribute = OMITTED_FIELD
-    ui_theme: SyncAttribute = OMITTED_FIELD
-    force_authuser: SyncAttribute = OMITTED_FIELD
+    alias: SyncAttribute | Omitted = OMITTED_FIELD
+    auth_expire: SyncAttribute | Omitted = OMITTED_FIELD
+    groups_to_roles: dict[str, list[tuple[str, str | None]]] | Omitted = OMITTED_FIELD
+    groups_to_contactgroups: GroupsToContactGroups | Omitted = OMITTED_FIELD
+    groups_to_attributes: GroupsToAttributes | Omitted = OMITTED_FIELD
+    disable_notifications: SyncAttribute | Omitted = OMITTED_FIELD
+    email: SyncAttribute | Omitted = OMITTED_FIELD
+    icons_per_item: SyncAttribute | Omitted = OMITTED_FIELD
+    nav_hide_icons_title: SyncAttribute | Omitted = OMITTED_FIELD
+    pager: SyncAttribute | Omitted = OMITTED_FIELD
+    show_mode: SyncAttribute | Omitted = OMITTED_FIELD
+    ui_sidebar_position: SyncAttribute | Omitted = OMITTED_FIELD
+    start_url: SyncAttribute | Omitted = OMITTED_FIELD
+    temperature_unit: SyncAttribute | Omitted = OMITTED_FIELD
+    ui_theme: SyncAttribute | Omitted = OMITTED_FIELD
+    force_authuser: SyncAttribute | Omitted = OMITTED_FIELD
 
 
 class LDAPConnectionModel(BaseModel):
@@ -116,73 +117,68 @@ class LDAPConnectionModel(BaseModel):
     docu_url: str
     disabled: bool
     directory_type: DIR_SERVER_389 | OPEN_LDAP | ACTIVE_DIR
-    bind: tuple[str, tuple[Literal["password", "store"], str]] = OMITTED_FIELD
-    port: int = OMITTED_FIELD
-    use_ssl: Literal[True] = OMITTED_FIELD
-    connect_timeout: float = OMITTED_FIELD
-    version: Literal[2, 3] = OMITTED_FIELD
-    page_size: int = OMITTED_FIELD
-    response_timeout: int = OMITTED_FIELD
-    suffix: str = OMITTED_FIELD
+    bind: tuple[str, tuple[Literal["password", "store"], str]] | Omitted = OMITTED_FIELD
+    port: int | Omitted = OMITTED_FIELD
+    use_ssl: Literal[True] | Omitted = OMITTED_FIELD
+    connect_timeout: float | Omitted = OMITTED_FIELD
+    version: Literal[2, 3] | Omitted = OMITTED_FIELD
+    page_size: int | Omitted = OMITTED_FIELD
+    response_timeout: int | Omitted = OMITTED_FIELD
+    suffix: str | Omitted = OMITTED_FIELD
     user_dn: str
     user_scope: Literal["sub", "base", "one"]
     user_id_umlauts: Literal["keep", "replace"]
-    user_filter: str = OMITTED_FIELD
-    user_filter_group: str = OMITTED_FIELD
-    user_id: str = OMITTED_FIELD
-    lower_user_ids: Literal[True] = OMITTED_FIELD
-    create_only_on_login: Literal[True] = OMITTED_FIELD
+    user_filter: str | Omitted = OMITTED_FIELD
+    user_filter_group: str | Omitted = OMITTED_FIELD
+    user_id: str | Omitted = OMITTED_FIELD
+    lower_user_ids: Literal[True] | Omitted = OMITTED_FIELD
+    create_only_on_login: Literal[True] | Omitted = OMITTED_FIELD
     group_dn: str
     group_scope: Literal["sub", "base", "one"]
-    group_filter: str = OMITTED_FIELD
-    group_member: str = OMITTED_FIELD
+    group_filter: str | Omitted = OMITTED_FIELD
+    group_member: str | Omitted = OMITTED_FIELD
     active_plugins: ActivePlugins
     cache_livetime: int
-    customer: str = OMITTED_FIELD
+    customer: str | None | Omitted = OMITTED_FIELD
     type: Literal["ldap"]
 
 
-class UserRoleMapping(BaseModel):
-    user: list[str]
-    admin: list[str]
-    guest: list[str]
-    agent_registration: list[str]
+class ContactGroupMapping(TypedDict):
+    attribute_match_value: str
+    contact_group_ids: Sequence[str]
+
+
+ContactGroupMappingSpec = (
+    str | tuple[str, dict[str, str]] | tuple[str, dict[str, str | Sequence[ContactGroupMapping]]]
+)
+SerializedCertificateSpec = (
+    Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
+)
+IDP_METADATA = tuple[Literal["url"], str] | tuple[Literal["xml"], str]
+ROLE_MAPPING = Literal[False] | tuple[Literal[True], tuple[str, dict[str, list[str]]]]
 
 
 class SAMLConnectionModel(BaseModel):
+    type: Literal["saml2"]
+    version: Literal["1.0.0"]
+    owned_by_site: str
+    customer: str | Omitted = OMITTED_FIELD
     id: str
     name: str
     description: str
     comment: str
     docu_url: str
     disabled: bool
-    idp_metadata: Any
+    idp_metadata: IDP_METADATA
     checkmk_entity_id: str
     checkmk_metadata_endpoint: str
     checkmk_assertion_consumer_service_endpoint: str
     checkmk_server_url: str
-    connection_timeout: tuple[int, int]
-    signature_certificate: (
-        Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
-    )
-    encryption_certificate: (
-        Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
-    ) = OMITTED_FIELD
+    connection_timeout: tuple[int, int]  # connection timeout, read timeout
+    signature_certificate: SerializedCertificateSpec
+    encryption_certificate: SerializedCertificateSpec | Omitted = OMITTED_FIELD
     user_id_attribute_name: str
     user_alias_attribute_name: str
     email_attribute_name: str
-    contactgroups_mapping: str
-    role_membership_mapping: Literal[False] | tuple[Literal[True], tuple[str, UserRoleMapping]]
-
-    type: Literal["saml2"]
-    version: Literal["1.0.0"]
-    owned_by_site: str
-    customer: str = OMITTED_FIELD
-
-
-def validate_user_connections(connections: list) -> None:
-    for connection in connections:
-        if connection["type"] == "ldap":
-            LDAPConnectionModel(**connection)
-        elif connection["type"] == "saml2":
-            pass  # TODO: validate saml connections - model not yet tested
+    contactgroups_mapping: ContactGroupMappingSpec
+    role_membership_mapping: ROLE_MAPPING

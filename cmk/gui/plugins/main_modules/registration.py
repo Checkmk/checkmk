@@ -64,11 +64,13 @@ from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.sidebar import snapin_registry
+from cmk.gui.userdb import register_config_file as user_connections_config
+from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration
 from cmk.gui.userdb import user_attribute_registry, user_connector_registry
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import registration as views_registration
-from cmk.gui.views.command import command_registry
+from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.views.inventory.row_post_processor import inventory_row_post_processor
 from cmk.gui.views.join_service_rows import join_service_row_post_processor
@@ -81,7 +83,14 @@ from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.wato import registration as wato_registration
+from cmk.gui.watolib import groups_io
+from cmk.gui.watolib import notifications as notifications_config
+from cmk.gui.watolib import password_store
 from cmk.gui.watolib import registration as watolib_registration
+from cmk.gui.watolib import rulesets as rule_config
+from cmk.gui.watolib import sites as sites_config
+from cmk.gui.watolib import tags as tag_config
+from cmk.gui.watolib import users as user_config
 from cmk.gui.watolib.analyze_configuration import ac_test_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
@@ -97,6 +106,7 @@ from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_re
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.search import match_item_generator_registry
+from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 
 
@@ -198,6 +208,7 @@ def register() -> None:
             main_module_registry,
             permission_registry,
         )
+
     mobile.register(layout_registry)
     userdb_registration.register(
         page_registry,
@@ -207,6 +218,10 @@ def register() -> None:
         contact_group_usage_finder_registry,
         timeperiod_usage_finder_registry,
     )
+
+    if edition() is Edition.CSE:
+        userdb_registration.saas_register(user_attribute_registry)
+
     wato_registration.register(
         page_registry,
         painter_registry,
@@ -246,6 +261,8 @@ def register() -> None:
         icon_and_action_registry,
         snapin_registry,
         endpoint_registry,
+        command_registry,
+        command_group_registry,
     )
     cron.register(page_registry)
     nodevis.register(page_registry, filter_registry, icon_and_action_registry)
@@ -272,6 +289,16 @@ def register() -> None:
     openapi_registration.register(endpoint_registry, job_registry)
     sites.ConnectionClass = MultiSiteConnection
     customer.CustomerAPIClass = customer.CustomerAPIStub
+
+    register_userroles(config_file_registry)
+    groups_io.register(config_file_registry)
+    password_store.register(config_file_registry)
+    notifications_config.register(config_file_registry)
+    tag_config.register(config_file_registry)
+    sites_config.register(config_file_registry)
+    user_connections_config(config_file_registry)
+    user_config.register(config_file_registry)
+    rule_config.register(config_file_registry)
 
 
 register()

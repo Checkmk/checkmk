@@ -5,9 +5,11 @@
 
 import abc
 import math
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Callable, Final, Literal
+from typing import Final, Literal
+
+from cmk.gui.valuespec import Age, Float, Integer, Percentage
 
 from cmk.graphing.v1 import metrics
 
@@ -36,12 +38,6 @@ def _find_prefix_power(use_prefix: str, prefixes: Sequence[tuple[int, int, str]]
         if use_prefix == prefix:
             return power
     return 1
-
-
-@dataclass(frozen=True)
-class NumLabelRange:
-    left: int
-    right: int
 
 
 @dataclass(frozen=True)
@@ -135,29 +131,22 @@ class NotationFormatter:
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         raise NotImplementedError()
 
-    def render_y_labels(
-        self, max_y: int | float, num_label_range: NumLabelRange
-    ) -> Sequence[Label]:
+    def render_y_labels(self, max_y: int | float, mean_num_labels: float) -> Sequence[Label]:
         assert max_y >= 0
-        if max_y == 0:
+        assert mean_num_labels >= 0
+        if max_y == 0 or mean_num_labels == 0:
             return []
 
         if max_y < 1:
             atoms = self._compute_small_y_label_atoms(max_y)
         else:  # max_y >= 1
-            max_y = math.ceil(max_y)
             atoms = self._compute_large_y_label_atoms(max_y)
 
-        if possible_atoms := [
-            (a, int(q))
-            for a in atoms
-            if num_label_range.left <= (q := max_y // a) <= num_label_range.right
-        ]:
-            # Take the entry with the smallest amount of labels.
-            atom, quotient = min(possible_atoms, key=lambda t: t[1])
+        if possible_atoms := [(a, q) for a in atoms if (q := int(max_y // a))]:
+            atom, quotient = min(possible_atoms, key=lambda t: abs(t[1] - mean_num_labels))
         else:
-            atom = max_y / num_label_range.right
-            quotient = int(max_y / atom)
+            atom = int(max_y / mean_num_labels)
+            quotient = int(max_y // atom)
 
         first = self._preformat(atom)[0]
         return [
@@ -305,7 +294,7 @@ class IECFormatter(NotationFormatter):
 
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         exponent = math.floor(math.log2(max_y))
-        return [pow(2, e) for e in range(1, exponent + 1)]
+        return [pow(2, e) for e in range(exponent + 1)]
 
 
 class StandardScientificFormatter(NotationFormatter):
@@ -473,6 +462,16 @@ class TimeFormatter(NotationFormatter):
         return _BASIC_DECIMAL_ATOMS[:6]
 
 
+def _vs_type(unit: metrics.Unit) -> type[Age] | type[Float] | type[Integer] | type[Percentage]:
+    if isinstance(unit.notation, metrics.TimeNotation):
+        return Age
+    if unit.notation.symbol.startswith("%"):
+        return Percentage
+    if unit.precision.digits == 0:
+        return Integer
+    return Float
+
+
 def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
     if (
         unit_id := (
@@ -523,6 +522,7 @@ def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
     new cmk.number_format.{unit.precision.__class__.__name__}({unit.precision.digits}),
 ).render(v)""",
             formatter_ident=formatter.ident(),
+            valuespec=_vs_type(unit),
         )
     )
 

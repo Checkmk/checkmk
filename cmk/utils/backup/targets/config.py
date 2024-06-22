@@ -8,9 +8,7 @@
 # DO NOT CHANGE!                        #
 #########################################
 
-from typing import Literal
-
-from typing_extensions import TypedDict
+from typing import Literal, TypedDict
 
 from .aws_s3_bucket import S3Params
 from .azure_blob_storage import BlobStorageParams

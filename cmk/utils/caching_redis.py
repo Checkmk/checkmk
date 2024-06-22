@@ -17,7 +17,7 @@ import functools
 import hashlib
 import marshal
 import typing
-from typing import Callable
+from collections.abc import Callable
 
 from redis.exceptions import RedisError
 
@@ -172,3 +172,43 @@ def ensure_bytes(
     if isinstance(inp, str):
         return inp.encode(errors=errors)
     raise ValueError(f"Not a valid type {type(inp)}.")
+
+
+# Example usage:
+# Some redis cache decorator, which can be used throughout the multiple apache processes
+# def user_host_memoize(ttl: int, connection_factory: RedisFactory) -> CacheDecorator:
+#    """Cache the decorated function for some specified time in Redis.
+#
+#    Args:
+#        ttl:
+#            The time-to-live for the cache in seconds.
+#
+#        connection_factory:
+#            A function which returns a Redis instance.
+#
+#    Returns:
+#        A decorator, which takes a function as its single parameter.
+#
+#    """
+#    return scoped_memoize(
+#        clear_events=[
+#            "all-hosts-changed",
+#            "pre-activate-changes",
+#            "contactgroups-saved",
+#            "hosts-changed",
+#            "roles-saved",
+#            "users-saved",
+#        ],
+#        cache_impl=ttl_memoize,
+#        cache_impl_args=(),
+#        cache_impl_kwargs={
+#            "ttl": ttl,
+#            "connection_factory": connection_factory,
+#        },
+#    )
+#
+# @user_host_memoize(1800, connection_factory=_get_redis_client)
+# def _user_has_permission(mode: str, file_name: str, user_id: UserId) -> bool:
+#    """Check if a user has the permission to either the mode or the page.
+#    ...
+#

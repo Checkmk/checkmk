@@ -162,3 +162,9 @@ def _row_template(lengths: list[int], colors: TableColors, indent: str) -> str:
         sep = " "
     fmt += "\n"
     return fmt
+
+
+def format_warning(text: str) -> str:
+    stripped = text.lstrip()
+    indent = text[: len(text) - len(stripped)]
+    return f"{indent}{bold}{yellow}WARNING:{normal} {stripped}"

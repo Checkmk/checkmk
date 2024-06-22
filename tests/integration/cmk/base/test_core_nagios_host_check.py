@@ -10,8 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib import create_linux_test_host
 from tests.testlib.site import Site
+
+from tests.integration.linux_test_host import create_linux_test_host
 
 from cmk.utils.hostaddress import HostName
 
@@ -74,7 +75,7 @@ def _test_compile_delayed_host_check(request: pytest.FixtureRequest, site: Site)
         #
         # Phase 2: Compilation.
         #
-        site.check_output(["cmk", "-R"])
+        site.check_output(["python3", "-P", f"{compiled_file}"])
         # *Now* it has been compiled:
         assert site.resolve_path(compiled_file) != site.resolve_path(source_file)
         assert site.read_binary_file(compiled_file).startswith(importlib.util.MAGIC_NUMBER)

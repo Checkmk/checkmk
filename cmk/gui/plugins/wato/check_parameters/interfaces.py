@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
-import cmk.gui.ifaceoper as ifaceoper
+from cmk.gui import ifaceoper
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.interface_utils import vs_interface_traffic
@@ -130,7 +130,7 @@ def _vs_grouping():
         help=_(
             "Normally, the interface checks create a single service for each interface. By defining "
             "interface groups, multiple interfaces can be combined together. For each group, a "
-            "single service is created. This services reports the total traffic amount summed over "
+            "single service is created. These services report the total traffic amount summed over "
             "all group members."
         ),
         choices=[
@@ -156,7 +156,7 @@ def _vs_grouping():
                                             "group_name",
                                             TextInput(
                                                 title=_("Group name"),
-                                                help=_("Name of group in service description"),
+                                                help=_("Name of group in service name"),
                                                 allow_empty=False,
                                             ),
                                         ),
@@ -423,7 +423,7 @@ vs_elements_if_groups_group: list[DictionaryEntry] = [
         "group_name",
         TextInput(
             title=_("Group name"),
-            help=_("Name of group in service description"),
+            help=_("Name of group in service name"),
             allow_empty=False,
         ),
     ),

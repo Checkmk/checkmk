@@ -8,6 +8,7 @@
 import functools
 import logging
 from collections.abc import Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import NamedTuple
 
 import pytest
@@ -71,7 +72,7 @@ from cmk.checkengine.sectionparser import (
 )
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
+from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import SectionPlugin as SectionPluginAPI
 from cmk.base.checkers import (
     CMKFetcher,
@@ -252,14 +253,7 @@ def test__group_by_transition(
         # https://review.lan.tribe29.com/c/check_mk/+/67447
         # grep for '67447' to find the other 5 places in this test
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {},
             ["New Item 1", "New Item 2"],
             (2, 0, 2),
@@ -306,14 +300,7 @@ def test__group_by_transition(
             (1, 2, 0),
         ),
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {"service_whitelist": ["^Test Description New Item 1"]},
             ["New Item 1", "Vanished Item 1", "Vanished Item 2"],
             (1, 2, 0),
@@ -360,14 +347,7 @@ def test__group_by_transition(
         ),
         # TODO 67447
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {"service_blacklist": ["^Test Description New Item 1"]},
             ["New Item 2"],
             (1, 0, 2),
@@ -419,14 +399,7 @@ def test__group_by_transition(
             (1, 2, 0),
         ),
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
@@ -480,14 +453,7 @@ def test__group_by_transition(
         ),
         # TODO 67447
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {"service_whitelist": ["^Test Description Vanished Item 1"]},
             ["Vanished Item 2"],
             (0, 1, 1),
@@ -534,14 +500,7 @@ def test__group_by_transition(
         ),
         # TODO 67447
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {"service_blacklist": ["^Test Description Vanished Item 1"]},
             ["New Item 1", "New Item 2", "Vanished Item 1"],
             (2, 1, 1),
@@ -594,14 +553,7 @@ def test__group_by_transition(
         ),
         # TODO 67447
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
@@ -729,14 +681,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": (
-                        "update_everything",
-                        {
-                            "add_new_services": True,
-                            "remove_vanished_services": True,
-                            "update_host_labels": True,
-                        },
-                    ),
+                    "mode": ("update_everything", None),
                     "service_whitelist": ["^Test Description New Item 1"],
                 }
             ),
@@ -794,14 +739,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": (
-                        "update_everything",
-                        {
-                            "add_new_services": True,
-                            "remove_vanished_services": True,
-                            "update_host_labels": True,
-                        },
-                    ),
+                    "mode": ("update_everything", None),
                     "service_blacklist": ["^Test Description New Item 1"],
                 }
             ),
@@ -862,14 +800,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": (
-                        "update_everything",
-                        {
-                            "add_new_services": True,
-                            "remove_vanished_services": True,
-                            "update_host_labels": True,
-                        },
-                    ),
+                    "mode": ("update_everything", None),
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
                 }
@@ -929,14 +860,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": (
-                        "update_everything",
-                        {
-                            "add_new_services": True,
-                            "remove_vanished_services": True,
-                            "update_host_labels": True,
-                        },
-                    ),
+                    "mode": ("update_everything", None),
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -994,14 +918,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": (
-                        "update_everything",
-                        {
-                            "add_new_services": True,
-                            "remove_vanished_services": True,
-                            "update_host_labels": True,
-                        },
-                    ),
+                    "mode": ("update_everything", None),
                     "service_blacklist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -1062,14 +979,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": (
-                        "update_everything",
-                        {
-                            "add_new_services": True,
-                            "remove_vanished_services": True,
-                            "update_host_labels": True,
-                        },
-                    ),
+                    "mode": ("update_everything", None),
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
                 }
@@ -1421,20 +1331,28 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     with current_host(testhost):
         file_cache_options = FileCacheOptions()
         parser = CMKParser(
-            config_cache,
+            config_cache.parser_factory(),
+            checking_sections=lambda hostname: config_cache.make_checking_sections(
+                hostname, selected_sections=NO_SELECTION
+            ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("tests"),
         )
         fetcher = CMKFetcher(
             config_cache,
+            config_cache.fetcher_factory(),
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=False,
+            ip_address_of=config.ConfiguredIPLookup(
+                config_cache, error_handler=config.handle_ip_lookup_failure
+            ),
             mode=Mode.DISCOVERY,
             on_error=OnError.RAISE,
             selected_sections=NO_SELECTION,
             simulation_mode=True,
             snmp_backend_override=None,
+            password_store_file=Path("/pw/store"),
         )
         commandline_discovery(
             host_name=testhost,
@@ -1967,12 +1885,13 @@ def test__discover_services_on_cluster(
         providers=scenario.providers,
         plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
         ignore_plugin=lambda *args, **kw: False,
+        ignore_service=lambda *args, **kw: False,
         get_effective_host=lambda *args, **kw: scenario.parent,
         get_service_description=functools.partial(config.service_description, ruleset_matcher),
         on_error=OnError.RAISE,
     )
 
-    services = set(discovered_services)
+    services = set(discovered_services[scenario.parent])
 
     assert services == discovery_test_case.expected_services
 
@@ -2096,6 +2015,6 @@ def test_make_discovery_diff() -> None:
     ) == (
         "Removed host label: 'foo:bar'.\n"
         "Added host label: 'gee:boo'.\n"
-        "Removed service: Check plugin 'norris' / item 'chuck'.\n"
-        "Added service: Check plugin 'chan'."
+        "Removed service: Check plug-in 'norris' / item 'chuck'.\n"
+        "Added service: Check plug-in 'chan'."
     )

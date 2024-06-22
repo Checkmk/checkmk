@@ -31,7 +31,7 @@ class TestListOfStrings:
         )
 
     def test_value_to_html(self) -> None:
-        assert vs.ListOfStrings().value_to_html(["1", "2"]) == HTML(
+        assert vs.ListOfStrings().value_to_html(["1", "2"]) == HTML.without_escaping(
             "<table><tr><td>1</td></tr><tr><td>2</td></tr></table>"
         )
         assert vs.ListOfStrings(orientation="horizontal").value_to_html(["1", "2"]) == "1, 2"

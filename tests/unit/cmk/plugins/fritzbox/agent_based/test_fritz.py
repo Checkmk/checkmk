@@ -162,8 +162,13 @@ def test_discover_fritz_wan_if(
                 ),
                 Result(
                     state=State.OK,
-                    notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.0.WAN.WAN.None', "
-                    "out_octets: Initialized: 'out_octets.0.WAN.WAN.None'",
+                    notice=(
+                        "Could not compute rates for the following counter(s):\n"
+                        "in_octets: Counter 'in_octets.0.WAN.WAN.None' has been initialized."
+                        " Result available on second check execution.\n"
+                        "out_octets: Counter 'out_octets.0.WAN.WAN.None' has been initialized."
+                        " Result available on second check execution."
+                    ),
                 ),
             ],
             id="standard case",

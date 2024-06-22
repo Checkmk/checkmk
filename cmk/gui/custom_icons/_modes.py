@@ -7,7 +7,7 @@ import os
 from collections.abc import Collection
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.images import CMKImage, ImageType
 
 from cmk.gui.config import active_config
@@ -139,7 +139,7 @@ class ModeIcons(WatoMode):
                 table.row()
 
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
 
                 table.cell(_("Actions"), css=["buttons"])
                 category = IconSelector.category_alias(category_name)

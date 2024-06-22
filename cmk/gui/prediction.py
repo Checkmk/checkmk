@@ -25,7 +25,7 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import estimate_levels, PredictionData, PredictionQuerier
 from cmk.utils.servicename import ServiceName
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request as request_
@@ -120,7 +120,7 @@ def _select_prediction(
         )
 
     with html.form_context("prediction"):
-        html.write_text(_("Show prediction for "))
+        html.write_text_permissive(_("Show prediction for "))
         html.dropdown(
             "prediction_selection",
             ((title, title) for title in available_predictions_sorted),
@@ -227,13 +227,13 @@ def _make_prediction_title(meta: PredictionInfo) -> str:
     date_str = time.strftime("%Y-%m-%d", time.localtime(meta.valid_interval[0]))
     match meta.params.period:
         case "wday":
-            return "%s (%s)" % (date_str, _("day of the week"))
+            return "{} ({})".format(date_str, _("day of the week"))
         case "day":
-            return "%s (%s)" % (date_str, _("day of the month"))
+            return "{} ({})".format(date_str, _("day of the month"))
         case "hour":
-            return "%s (%s)" % (date_str, _("hour of the day"))
+            return "{} ({})".format(date_str, _("hour of the day"))
         case "minute":
-            return "%s (%s)" % (date_str, _("minute of the hour"))
+            return "{} ({})".format(date_str, _("minute of the hour"))
 
 
 def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tuple[Color, str]]:
@@ -252,7 +252,7 @@ def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tu
 
 def _render_grid(x_range: tuple[int, int], y_range: tuple[float, float]) -> None:
     x_scala = [
-        (i + x_range[0], f"{i//3600:02}:{i%3600:02}")
+        (i + x_range[0], f"{i // 3600:02}:{i % 3600:02}")
         for i in range(0, x_range[1] - x_range[0] + 1, 7200)
     ]
     y_scala = _compute_vertical_scala(*y_range)
@@ -437,7 +437,7 @@ def _create_graph(
         "",
         class_="prediction",
         id_=canvas_id,
-        style=f"width: {size[0]//2}px; height: {size[1]//2}px;",
+        style=f"width: {size[0] // 2}px; height: {size[1] // 2}px;",
         width=str(size[0]),
         height=str(size[1]),
     )
@@ -456,20 +456,24 @@ def _create_graph(
     )
 
 
-def _render_coordinates(v_scala, t_scala) -> None:  # type: ignore[no-untyped-def]
+def _render_coordinates(
+    v_scala: Sequence[tuple[float, str]], t_scala: Sequence[tuple[int, str]]
+) -> None:
     html.javascript(
         f"cmk.prediction.render_coordinates({json.dumps(v_scala)}, {json.dumps(t_scala)});"
     )
 
 
-def _render_curve(points, color, width=1, square=False) -> None:  # type: ignore[no-untyped-def]
+def _render_curve(
+    points: Sequence[float | None], color: str, width: int = 1, square: bool = False
+) -> None:
     html.javascript(
         "cmk.prediction.render_curve(%s, %s, %d, %d);"
         % (json.dumps(points), json.dumps(color), width, square and 1 or 0)
     )
 
 
-def _render_point(t, v, color) -> None:  # type: ignore[no-untyped-def]
+def _render_point(t: float, v: float, color: str) -> None:
     html.javascript(
         f"cmk.prediction.render_point({json.dumps(t)}, {json.dumps(v)}, {json.dumps(color)});"
     )

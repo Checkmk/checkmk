@@ -40,4 +40,5 @@ configure_make(
     targets = [
         "-C src check_nrpe",
     ],
+    visibility = ["//visibility:public"],
 )

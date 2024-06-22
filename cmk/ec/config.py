@@ -187,6 +187,7 @@ class Rule(TypedDict, total=False):
     set_text: str
     sl: ServiceLevel
     state: State
+    drop: bool | Literal["skip_pack"]
 
 
 class ECRulePackSpec(TypedDict, total=False):
@@ -198,7 +199,7 @@ class ECRulePackSpec(TypedDict, total=False):
 
 
 class MkpRulePackBindingError(MKException):
-    """Base class for exceptions related to rule pack binding"""
+    """Base class for exceptions related to rule pack binding."""
 
 
 class MkpRulePackProxy(MutableMapping[str, Any]):
@@ -247,13 +248,13 @@ class MkpRulePackProxy(MutableMapping[str, Any]):
         return len(self.keys())
 
     def keys(self) -> KeysView[str]:
-        """List of keys of this rule pack"""
+        """List of keys of this rule pack."""
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         return self.rule_pack.keys()
 
     def bind_to(self, mkp_rule_pack: ECRulePackSpec) -> None:
-        """Binds this rule pack to the given MKP rule pack"""
+        """Binds this rule pack to the given MKP rule pack."""
         if self.id_ != mkp_rule_pack["id"]:
             raise MkpRulePackBindingError(
                 f"The IDs of {self} and {mkp_rule_pack} cannot be different."
@@ -337,6 +338,8 @@ class ConfigFromWATO(TypedDict):
     rule_optimizer: bool
     rule_packs: Sequence[ECRulePack]
     rules: Collection[Rule]
+    sqlite_housekeeping_interval: int
+    sqlite_freelist_size: int
     snmp_credentials: Iterable[SNMPCredential]
     socket_queue_len: int
     statistics_interval: int

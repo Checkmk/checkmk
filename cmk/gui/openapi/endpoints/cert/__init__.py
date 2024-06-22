@@ -12,14 +12,15 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-import cryptography.x509 as x509
+from cryptography import x509
 from dateutil.relativedelta import relativedelta
 
-from cmk.utils.certs import cert_dir, root_cert_path, RootCA
+from cmk.utils.certs import cert_dir, CertManagementEvent, root_cert_path, RootCA
 from cmk.utils.crypto.certificate import CertificateSigningRequest
+from cmk.utils.log.security_event import log_security_event
 from cmk.utils.paths import omd_root
 
-import cmk.gui.config as config
+from cmk.gui import config
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.http import Response
 from cmk.gui.i18n import _l
@@ -69,17 +70,23 @@ def _serialized_root_cert() -> str:
 
 
 def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
-    return (
-        _get_agent_ca()
-        .sign_csr(
-            CertificateSigningRequest(csr),
-            expiry=relativedelta(
-                months=config.active_config.agent_controller_certificates["lifetime_in_months"]
-            ),
-        )
-        .dump_pem()
-        .str
+
+    cert = _get_agent_ca().sign_csr(
+        CertificateSigningRequest(csr),
+        expiry=relativedelta(
+            months=config.active_config.agent_controller_certificates["lifetime_in_months"]
+        ),
     )
+    log_security_event(
+        CertManagementEvent(
+            event="certificate created",
+            component="agent controller",
+            actor=user.id,
+            cert=cert,
+        )
+    )
+
+    return cert.dump_pem().str
 
 
 @Endpoint(

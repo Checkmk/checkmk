@@ -10,7 +10,6 @@ filegroup(
 
 configure_make(
     name = "monitoring-plugins",
-
     # these, ladies and gentleman, are the "args"
     args = ["-j6"],
 
@@ -89,5 +88,6 @@ configure_make(
         "install",
         "install-root",
     ],
+    visibility = ["//visibility:public"],
     deps = ["@openssl"],
 )

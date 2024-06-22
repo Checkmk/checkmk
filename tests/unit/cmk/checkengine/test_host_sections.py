@@ -19,6 +19,10 @@ def parse(raw: TRAW) -> dict[SectionName, list[list[str]]]:
     return {SectionName(name): [line.split() for line in lines.splitlines()] for name, lines in raw}
 
 
+def _log(message: str) -> None:
+    pass
+
+
 class TestGroupByHost:
     def test_nothing_noop(self):
         RAW: TRAW = []
@@ -26,7 +30,7 @@ class TestGroupByHost:
         host_sections = HS(parse(RAW))
         host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert group_by_host([(host_key, host_sections)]) == {host_key: HS({})}
+        assert group_by_host([(host_key, host_sections)], _log) == {host_key: HS({})}
 
     def test_sections_noop(self):
         RAW = [
@@ -37,7 +41,7 @@ class TestGroupByHost:
         host_sections = HS(parse(RAW))
         host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert group_by_host([(host_key, host_sections)]) == {host_key: HS(parse(RAW))}
+        assert group_by_host([(host_key, host_sections)], _log) == {host_key: HS(parse(RAW))}
 
     def test_sections_merge_sources(self):
         RAW_1 = [
@@ -53,7 +57,7 @@ class TestGroupByHost:
         host_sections_2 = HS(parse(RAW_2))
         host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert group_by_host([(host_key, host_sections_1), (host_key, host_sections_2)]) == {
+        assert group_by_host([(host_key, host_sections_1), (host_key, host_sections_2)], _log) == {
             host_key: HS(parse(RAW_1 + RAW_2))
         }
         # check for input mutation
@@ -67,7 +71,7 @@ class TestGroupByHost:
         host_sections = HS(parse(RAW), piggybacked_raw_data=PB)
         host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert group_by_host([(host_key, host_sections)]) == {
+        assert group_by_host([(host_key, host_sections)], _log) == {
             host_key: HS(parse(RAW), piggybacked_raw_data=PB)
         }
 
@@ -83,7 +87,7 @@ class TestGroupByHost:
         host_sections_2 = HS(parse(RAW_2), piggybacked_raw_data={host_name: PB_2})
         host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert group_by_host([(host_key, host_sections_1), (host_key, host_sections_2)]) == {
+        assert group_by_host([(host_key, host_sections_1), (host_key, host_sections_2)], _log) == {
             host_key: HS(parse(RAW_1 + RAW_2), piggybacked_raw_data={host_name: PB_1 + PB_2})
         }
 
@@ -94,7 +98,7 @@ class TestGroupByHost:
         host_section = HS(parse(RAW), cache_info=CACHE_INFO)
         host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert group_by_host([(host_key, host_section)]) == {
+        assert group_by_host([(host_key, host_section)], _log) == {
             host_key: HS(parse(RAW), cache_info=CACHE_INFO)
         }
 
@@ -110,6 +114,6 @@ class TestGroupByHost:
         host_sections_2 = HS(parse(RAW_2), cache_info=CACHE_INFO_2)
         host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert group_by_host([(host_key, host_sections_1), (host_key, host_sections_2)]) == {
+        assert group_by_host([(host_key, host_sections_1), (host_key, host_sections_2)], _log) == {
             host_key: HS(parse(RAW_1 + RAW_2), cache_info=CACHE_INFO_2)
         }

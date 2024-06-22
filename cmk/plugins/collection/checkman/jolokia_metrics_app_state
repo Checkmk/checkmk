@@ -6,11 +6,13 @@ distribution: check_mk
 description:
  This check allows to monitor the state of a single application running on a JVM (i.e. /host-manager or /my-web-app)
 
- To use this plugin, Jolokia and the agent plugin need to be installed
+ To use this plugin, Jolokia and the agent plug-in need to be installed
  on the monitored server.
 
  The check will return {OK} if the application is found running, or
  {CRIT} if it is stopped.
+
+ Both, version 1.7 and 2.0 of Jolokia are supported.
 
 item:
  The name of the application server instance as configured by the agent

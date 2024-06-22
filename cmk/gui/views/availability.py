@@ -16,12 +16,12 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import host_state_name, service_state_name
 
-import cmk.gui.availability as availability
-import cmk.gui.bi as bi
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import availability, bi
 from cmk.gui.availability import (
     AVData,
     AVEntry,
+    AVGroups,
+    AVLayoutTimeline,
     AVMode,
     AVObjectCells,
     AVObjectSpec,
@@ -30,6 +30,7 @@ from cmk.gui.availability import (
     AVOptionValueSpecs,
     AVRawData,
     AVRowCells,
+    AVTimelineStyle,
     AVTimeRange,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -54,6 +55,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.painter.v0.helpers import format_plugin_output
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import FilterHeader, HTTPVariables, Rows
+from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -71,6 +73,7 @@ from cmk.gui.valuespec import (
     Optional,
     TextAreaUnicode,
     TextInput,
+    ValueSpec,
 )
 from cmk.gui.view import View
 from cmk.gui.visuals import page_menu_topic_add_to, view_title
@@ -122,7 +125,9 @@ def _show_availability_options(
 
         for name, height, _show_in_reporting, vs in valuespecs:
 
-            def renderer(name=name, vs=vs, avoptions=avoptions) -> None:  # type: ignore[no-untyped-def]
+            def renderer(
+                name: str = name, vs: ValueSpec = vs, avoptions: AVOptions = avoptions
+            ) -> None:
                 vs.render_input("avo_" + name, avoptions.get(name))
 
             html.render_floating_option(name, height, vs.title(), renderer)
@@ -244,7 +249,7 @@ def show_availability_page(  # pylint: disable=too-many-branches
     # Deletion must take place before computation, since it affects the outcome
     with output_funnel.plugged():
         handle_delete_annotations()
-        confirmation_html_code = HTML(output_funnel.drain())
+        confirmation_html_code = HTML.without_escaping(output_funnel.drain())
 
     # Remove variables for editing annotations, otherwise they will make it into the uris
     request.del_vars("anno_")
@@ -345,9 +350,9 @@ def show_availability_page(  # pylint: disable=too-many-branches
         html.body_end()
 
 
-def _page_menu_availability(  # type: ignore[no-untyped-def]
+def _page_menu_availability(
     breadcrumb: Breadcrumb,
-    view,
+    view: View,
     what: AVObjectType,
     av_mode: AVMode,
     av_object: AVObjectSpec,
@@ -430,7 +435,7 @@ def _render_avoptions_form(
 ) -> HTML:
     with output_funnel.plugged():
         _show_availability_options(option_type, what, avoptions, valuespecs)
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def _page_menu_entries_av_mode(
@@ -502,8 +507,8 @@ def do_render_availability(
     show_annotations(annotations, av_rawdata, what, avoptions, omit_service=av_object is not None)
 
 
-def render_availability_tables(  # type: ignore[no-untyped-def]
-    availability_tables, what, avoptions
+def render_availability_tables(
+    availability_tables: AVGroups, what: AVObjectType, avoptions: AVOptions
 ) -> None:
     if not availability_tables:
         html.show_message(_("No matching hosts/services."))
@@ -651,8 +656,8 @@ def render_timeline_legend(what: AVObjectType) -> None:
     html.close_div()
 
 
-def render_availability_table(  # type: ignore[no-untyped-def]
-    group_title, availability_table, what, avoptions
+def render_availability_table(
+    group_title: str | None, availability_table: AVData, what: AVObjectType, avoptions: AVOptions
 ) -> None:
     av_table = availability.layout_availability_table(
         what, group_title, availability_table, avoptions
@@ -714,8 +719,8 @@ def render_availability_table(  # type: ignore[no-untyped-def]
                 )
 
 
-def render_timeline_bar(  # type: ignore[no-untyped-def]
-    timeline_layout, style, timeline_nr=0
+def render_timeline_bar(
+    timeline_layout: AVLayoutTimeline, style: AVTimelineStyle, timeline_nr: int = 0
 ) -> None:
     render_date = timeline_layout["render_date"]
     time_range: AVTimeRange = timeline_layout["range"]
@@ -863,7 +868,7 @@ def show_bi_availability(  # pylint: disable=too-many-branches
 
     if not user_errors:
         # iterate all aggregation rows
-        timewarpcode = HTML()
+        timewarpcode = HTML.empty()
         timewarp = request.get_integer_input("timewarp")
 
         # The timewarp is used to display an aggregation at a specific timestamp
@@ -960,13 +965,13 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                     if not button_forth_shown:
                         html.disabled_icon_button("forth_off")
 
-                    html.write_text(" &nbsp; ")
+                    html.write_text_permissive(" &nbsp; ")
                     html.icon_button(
                         makeuri(request, [], delvars=["timewarp"]),
                         _("Close timewarp"),
                         "closetimewarp",
                     )
-                    html.write_text(
+                    html.write_text_permissive(
                         "%s %s"
                         % (
                             _("Timewarp to "),
@@ -983,7 +988,7 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                     html.close_tr()
                     html.close_table()
 
-                    timewarpcode += HTML(output_funnel.drain())
+                    timewarpcode += HTML.without_escaping(output_funnel.drain())
 
         av_data = availability.compute_availability("bi", av_rawdata, avoptions)
 
@@ -1038,7 +1043,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
         for nr, ((site_id, host, service), annotation) in enumerate(annos_to_render):
             table.row()
             table.cell("#", css=["narrow nowrap"])
-            html.write_text(nr)
+            html.write_text_permissive(nr)
             table.cell("", css=["buttons"])
             anno_vars = [
                 ("anno_site", site_id),
@@ -1215,7 +1220,7 @@ def _validate_reclassify_of_states(value, varprefix):
     if host_state is not None:
         if not value.get("host"):
             raise MKUserError(
-                "_editanno_p_host", _("Please set a hostname for host state reclassification")
+                "_editanno_p_host", _("Please set a host name for host state reclassification")
             )
 
     service_state = value.get("service_state")
@@ -1223,14 +1228,14 @@ def _validate_reclassify_of_states(value, varprefix):
         if not value.get("service"):
             raise MKUserError(
                 "_editanno_p_service_value",
-                _("Please set a service description for service state reclassification"),
+                _("Please set a service name for service state reclassification"),
             )
 
 
 def _vs_annotation():
     elements: list[DictionaryEntry] = [
         ("site", TextInput(title=_("Site"))),
-        ("host", TextInput(title=_("Hostname"))),
+        ("host", TextInput(title=_("Host name"))),
         (
             "host_state",
             Optional(
@@ -1246,7 +1251,7 @@ def _vs_annotation():
                 valuespec=TextInput(allow_empty=False),
                 sameline=True,
                 title=_("Service"),
-                label=_("Service description"),
+                label=_("Service name"),
             ),
         ),
         (

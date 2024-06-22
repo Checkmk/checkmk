@@ -28,7 +28,6 @@ def _form_discovery_netapp_api_ports_ignored() -> form_specs.Dictionary:
 rule_spec_discovery_netapp_api_ports_ignored = rule_specs.DiscoveryParameters(
     title=Title("Netapp port discovery"),
     topic=rule_specs.Topic.GENERAL,
-    eval_type=rule_specs.EvalType.MERGE,
     name="discovery_netapp_api_ports_ignored",
     parameter_form=_form_discovery_netapp_api_ports_ignored,
 )

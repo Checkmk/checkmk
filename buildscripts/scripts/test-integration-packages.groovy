@@ -51,38 +51,20 @@ def main() {
         """.stripMargin());
 
     stage('test integration') {  // TODO should not be needed
-        // TODO: don't run make test-integration-docker but use docker.inside() instead
-        testing_helper.run_make_targets(
-            // Get the ID of the docker group from the node(!). This must not be
-            // executed inside the container (as long as the IDs are different)
-            DOCKER_GROUP_ID: get_docker_group_id(),
-            DISTRO_LIST: distros,
-            EDITION: EDITION,
-            VERSION: VERSION,
-            DOCKER_TAG: docker_tag,
-            MAKE_TARGET: "test-integration-docker",
-            BRANCH: versioning.branch_name(scm),
-            cmk_version: cmk_version,
-        );
-    }
-
-    conditional_stage("Trigger GitLab SaaS job", EDITION=="saas") {
-        print("Triggering GitLab job with Docker tag '${docker_tag}'");
-
-        withCredentials([
-            string(
-                credentialsId: "GITLAB_TRIGGER_TOKEN",
-                variable:"GITLAB_TRIGGER_TOKEN"),
-        ]) {
-            sh("""
-                curl -X POST \
-                --fail \
-                -F token=${GITLAB_TRIGGER_TOKEN} \
-                -F ref="main" \
-                -F variables[BUILD_CMK_TAG]="${cmk_version}" \
-                -F variables[BUILD_CSE]="true" \
-                https://gitlab.lan.checkmk.net/api/v4/projects/3/trigger/pipeline
-            """);
+        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+            // TODO: don't run make test-integration-docker but use docker.inside() instead
+            testing_helper.run_make_targets(
+                // Get the ID of the docker group from the node(!). This must not be
+                // executed inside the container (as long as the IDs are different)
+                DOCKER_GROUP_ID: get_docker_group_id(),
+                DISTRO_LIST: distros,
+                EDITION: EDITION,
+                VERSION: VERSION,
+                DOCKER_TAG: docker_tag,
+                MAKE_TARGET: "test-integration-docker",
+                BRANCH: versioning.branch_name(scm),
+                cmk_version: cmk_version,
+            );
         }
     }
 }

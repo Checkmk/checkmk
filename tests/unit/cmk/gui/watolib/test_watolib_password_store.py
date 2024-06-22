@@ -3,12 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable
+
 import pytest
 
 from cmk.utils.password_store import Password
 
+import cmk.gui.watolib.password_store
 from cmk.gui import userdb
+from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.password_store import join_password_specs, PasswordStore, split_password_specs
+
+
+@pytest.fixture
+def mock_update_passwords_merged_file(monkeypatch: pytest.MonkeyPatch) -> Iterable[None]:
+    monkeypatch.setattr(
+        cmk.gui.watolib.password_store,
+        cmk.gui.watolib.password_store.update_passwords_merged_file.__name__,
+        lambda: None,
+    )
+    yield
 
 
 def test_join_password_specs() -> None:
@@ -88,6 +102,7 @@ def fixture_store() -> PasswordStore:
     return PasswordStore()
 
 
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_password_store_save(store: PasswordStore) -> None:
     entries = {
         "ding": Password(
@@ -101,7 +116,8 @@ def test_password_store_save(store: PasswordStore) -> None:
             }
         )
     }
-    store.save(entries, pretty=False)
+    with gui_context():
+        store.save(entries)
 
     assert store.load_for_reading() == entries
 
@@ -120,11 +136,12 @@ def fixture_test_store(store: PasswordStore) -> PasswordStore:
             }
         )
     }
-    store.save(entries, pretty=False)
+    store.save(entries)
     return store
 
 
 @pytest.mark.usefixtures("with_admin_login")
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_password_store_filter_usable_entries_by_permission(
     test_store: PasswordStore,
 ) -> None:
@@ -132,6 +149,7 @@ def test_password_store_filter_usable_entries_by_permission(
 
 
 @pytest.mark.usefixtures("with_user_login")
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_password_store_filter_usable_entries_not_permitted(
     test_store: PasswordStore,
 ) -> None:
@@ -139,6 +157,7 @@ def test_password_store_filter_usable_entries_not_permitted(
 
 
 @pytest.mark.usefixtures("with_user_login")
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_password_store_filter_usable_entries_shared_with_user_group(
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -147,6 +166,7 @@ def test_password_store_filter_usable_entries_shared_with_user_group(
 
 
 @pytest.mark.usefixtures("with_user_login")
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_password_store_filter_usable_entries_owned_by_user_group(
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -155,6 +175,7 @@ def test_password_store_filter_usable_entries_owned_by_user_group(
 
 
 @pytest.mark.usefixtures("with_admin_login")
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_password_store_filter_editable_entries_by_permission(
     test_store: PasswordStore,
 ) -> None:
@@ -162,6 +183,7 @@ def test_password_store_filter_editable_entries_by_permission(
 
 
 @pytest.mark.usefixtures("with_user_login")
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_password_store_filter_editable_entries_not_permitted(
     test_store: PasswordStore,
 ) -> None:
@@ -169,6 +191,7 @@ def test_password_store_filter_editable_entries_not_permitted(
 
 
 @pytest.mark.usefixtures("with_user_login")
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_password_store_filter_editable_entries_shared_with_user_group(
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -177,6 +200,7 @@ def test_password_store_filter_editable_entries_shared_with_user_group(
 
 
 @pytest.mark.usefixtures("with_user_login")
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_password_store_filter_editable_entries_owned_by_user_group(
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:

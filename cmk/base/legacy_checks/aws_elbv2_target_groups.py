@@ -12,7 +12,7 @@ from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import IgnoreResultsError
 
-#'TargetGroups': [
+# 'TargetGroups': [
 #        {
 #            'TargetGroupArn': 'string',
 #            'TargetGroupName': 'string',

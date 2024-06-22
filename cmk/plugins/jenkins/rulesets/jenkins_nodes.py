@@ -120,11 +120,11 @@ def _parameter_valuespec_jenkins_nodes() -> Dictionary:
                     prefill_fixed_levels=InputHint(value=(0, 0)),
                     migrate=lambda old_levels: migrate_to_integer_simple_levels(
                         old_levels,
-                        # The value from the plugin before its rewrite was entered to be in
+                        # The value from the plug-in before its rewrite was entered to be in
                         # megabytes and the conversion to bytes had been performed inside the
                         # check itself.
                         # We convert the value to comply with megabytes values of the new API.
-                        scale=1000 * 1000,
+                        scale=1000,
                     ),
                 )
             ),

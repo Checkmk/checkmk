@@ -5,13 +5,13 @@
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
-import cmk.gui.visuals as visuals
+from cmk.gui import visuals
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -24,6 +24,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.userdb import get_active_saml_connections
+from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
@@ -50,7 +51,7 @@ NavigationBar = list[tuple[str, str, str, str]]
 
 def mobile_html_head(title: str) -> None:
     html.write_html(
-        HTML(
+        HTML.without_escaping(
             """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
         )
     )
@@ -172,7 +173,8 @@ def jqm_page_index_topic_renderer(topic: str, items: Items) -> None:
         if top == topic:
             html.open_li()
             html.open_a(href=href, **{"data-ajax": "false", "data-transition": "flip"})
-            html.write_html(HTML(title))
+            # Todo (CMK-17819)
+            html.write_html(HTML.without_escaping(title))
             html.close_a()
             html.close_li()
     html.close_ul()
@@ -220,7 +222,8 @@ def page_login() -> None:
     html.open_div(id_="loginfoot")
     html.img("themes/facelift/images/logo_cmk_small.png", class_="logomk")
     html.div(
-        HTML(_('&copy; <a target="_blank" href="https://checkmk.com">Checkmk GmbH</a>')),
+        HTML.without_escaping("&copy; ")
+        + HTMLWriter.render_a("Checkmk GmbH", href="https://checkmk.com", target="_blank"),
         class_="copyright",
     )
     html.close_div()  # close content-div
@@ -335,7 +338,7 @@ def _page_view() -> None:
         logger.exception("error showing mobile view")
         if active_config.debug:
             raise
-        html.write_text("ERROR showing view: %s" % e)
+        html.write_text_permissive("ERROR showing view: %s" % e)
 
     mobile_html_foot()
     return None
@@ -407,7 +410,7 @@ class MobileViewRenderer(ABCViewRenderer):
             )
             html.open_div(id_="view_results")
             if len(rows) == 0:
-                html.write_text(_("No hosts/services found."))
+                html.write_text_permissive(_("No hosts/services found."))
             else:
                 try:
                     if cmk.gui.view_utils.row_limit_exceeded(
@@ -425,7 +428,7 @@ class MobileViewRenderer(ABCViewRenderer):
                     )
                 except Exception as e:
                     logger.exception("error rendering mobile view")
-                    html.write_text(_("Error showing view: %s") % e)
+                    html.write_text_permissive(_("Error showing view: %s") % e)
             html.close_div()
             jqm_page_navfooter(navbar, "data", page_id)
 
@@ -497,7 +500,7 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
             one_shown = True
     html.close_div()
     if not one_shown:
-        html.write_text(_("No commands are possible in this view"))
+        html.write_text_permissive(_("No commands are possible in this view"))
 
 
 # FIXME: Reduce duplicate code with views.py

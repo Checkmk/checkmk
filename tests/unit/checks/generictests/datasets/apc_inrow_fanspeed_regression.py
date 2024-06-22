@@ -16,4 +16,4 @@ info = [["518"]]
 discovery = {"": [(None, None)]}
 
 
-checks = {"": [(None, {}, [(0, "Current: 51.80%", [("fanspeed", 51.8, None, None, None, None)])])]}
+checks = {"": [(None, {}, [(0, "Current: 51.80%", [("fan_perc", 51.8, None, None, None, None)])])]}

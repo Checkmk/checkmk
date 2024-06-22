@@ -12,8 +12,10 @@ description:
  Since every system has a different behaviour there are no default
  values set to avoid false alarms.
 
- To use this plugin, Jolokia and the agent plugin need to be installed
+ To use this plugin, Jolokia and the agent plug-in need to be installed
  on the monitored server (ore the special agent must be configured).
+
+ Both, version 1.7 and 2.0 of Jolokia are supported.
 
 item:
  The name of the application server instance and name of the garbage collection

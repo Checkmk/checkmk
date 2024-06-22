@@ -148,8 +148,8 @@ winperf:
     # no - nothing(default), yes output trace to the log/winperf.log
     trace: no
 
-    # yes - separate process for winnperf to prevent ahndle leaking, no - locally
-    fork: yes
+    # yes - fork process for winnperf to prevent potential handle leaking, no - internally
+    fork: no
 
     # changes only section name winperf_******
     prefix: winperf

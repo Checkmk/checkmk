@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
     from omdlib.version_info import VersionInfo
 
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.exceptions import MKTerminate
 
 # .

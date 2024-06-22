@@ -5,8 +5,8 @@ license: GPLv2
 distribution: check_mk
 description:
  This Check determines the memory limit and the usage limit for
- each db2 instance found on server. The agent plugin {db2_mem} is needed.
- The agent plugin greps for the instances in the process list, and try
+ each db2 instance found on server. The agent plug-in {db2_mem} is needed.
+ The agent plug-in greps for the instances in the process list, and try
  to switch to each instance and execute {db2pd -dptnmem}.
 
 item:

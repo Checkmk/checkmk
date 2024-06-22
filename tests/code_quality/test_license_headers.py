@@ -8,7 +8,7 @@ import os
 import re
 from collections.abc import Sequence
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 
 LOGGER = logging.getLogger()
 
@@ -116,9 +116,8 @@ def check_for_license_header_violation(rel_path, abs_path):  # pylint: disable=t
     elif rel_path.startswith("notifications/"):
         if not GPL_HEADER_NOTIFICATION.match(get_file_header(abs_path, length=10)):
             yield "gpl header with notification not matching", rel_path
-    else:
-        if not GPL_HEADER.match(get_file_header(abs_path, length=4)):
-            yield "gpl header not matching", rel_path
+    elif not GPL_HEADER.match(get_file_header(abs_path, length=4)):
+        yield "gpl header not matching", rel_path
 
 
 def test_license_headers(python_files: Sequence[str]) -> None:

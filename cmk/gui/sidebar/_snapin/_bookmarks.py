@@ -7,14 +7,13 @@ from __future__ import annotations
 
 import urllib.parse
 from collections.abc import Callable, Mapping
-from typing import Any, cast, Self
-
-from typing_extensions import TypedDict
+from dataclasses import dataclass
+from typing import Any, Self, TypedDict
 
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
-import cmk.gui.pagetypes as pagetypes
+from cmk.gui import pagetypes
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import request
@@ -44,19 +43,45 @@ class BookmarkSpec(TypedDict):
     topic: None | str
 
 
-class BookmarkListSpec(pagetypes.OverridableSpec):
+class BookmarkListModel(pagetypes.OverridableModel):
     default_topic: str
     bookmarks: list[BookmarkSpec]
 
 
-class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
+@dataclass(kw_only=True)
+class BookmarkListConfig(pagetypes.OverridableConfig):
+    default_topic: str
+    bookmarks: list[BookmarkSpec]
+
+
+class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
     @classmethod
     def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
-        # TODO Remove 'cast' and do real parsing
-        return cls(cast(BookmarkListSpec, page_dict))
+        deserialized = BookmarkListModel.model_validate(page_dict)
+        return cls(
+            BookmarkListConfig(
+                name=deserialized.name,
+                title=deserialized.title,
+                description=deserialized.description,
+                owner=deserialized.owner,
+                public=deserialized.public,
+                hidden=deserialized.hidden,
+                default_topic=deserialized.default_topic,
+                bookmarks=deserialized.bookmarks,
+            )
+        )
 
-    def serialize(self) -> BookmarkListSpec:
-        return self._
+    def serialize(self) -> dict[str, object]:
+        return BookmarkListModel(
+            name=self.config.name,
+            title=self.config.title,
+            description=self.config.description,
+            owner=self.config.owner,
+            public=self.config.public,
+            hidden=self.config.hidden,
+            default_topic=self.config.default_topic,
+            bookmarks=self.config.bookmarks,
+        ).model_dump()
 
     @classmethod
     def type_name(cls) -> str:
@@ -206,19 +231,20 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
         instances: pagetypes.OverridableInstances[BookmarkList],
         user_id: UserId,
     ) -> None:
-        attrs = BookmarkListSpec(
-            {
-                "title": "My Bookmarks",
-                "public": False,
-                "owner": user_id,
-                "name": "my_bookmarks",
-                "description": "Your personal bookmarks",
-                "default_topic": "My Bookmarks",
-                "bookmarks": [],
-            }
+        instances.add_instance(
+            (user_id, "my_bookmarks"),
+            cls(
+                BookmarkListConfig(
+                    name="my_bookmarks",
+                    title="My Bookmarks",
+                    public=False,
+                    owner=user_id,
+                    description="Your personal bookmarks",
+                    default_topic="My Bookmarks",
+                    bookmarks=[],
+                )
+            ),
         )
-
-        instances.add_instance((user_id, "my_bookmarks"), cls(attrs))
 
     @classmethod
     def new_bookmark(cls, title: str, url: str) -> BookmarkSpec:
@@ -230,18 +256,18 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
         }
 
     def default_bookmark_topic(self) -> str:
-        return self._["default_topic"]
+        return self.config.default_topic
 
     def bookmarks_by_topic(self) -> list[tuple[str, list[BookmarkSpec]]]:
         topics: dict[str, list[BookmarkSpec]] = {}
         default_topic = self.default_bookmark_topic()
-        for bookmark in self._["bookmarks"]:
+        for bookmark in self.config.bookmarks:
             topic = topics.setdefault(bookmark["topic"] or default_topic, [])
             topic.append(bookmark)
         return sorted(topics.items())
 
     def add_bookmark(self, title: str, url: str) -> None:
-        self._["bookmarks"].append(BookmarkList.new_bookmark(title, url))
+        self.config.bookmarks.append(BookmarkList.new_bookmark(title, url))
 
 
 pagetypes.declare(BookmarkList)
@@ -259,7 +285,7 @@ class Bookmarks(SidebarSnapin):
     @classmethod
     def description(cls) -> str:
         return _(
-            "A simple and yet practical snapin allowing to create "
+            "A simple and yet practical snap-in allowing to create "
             "bookmarks to views and other content in the main frame"
         )
 

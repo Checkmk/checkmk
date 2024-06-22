@@ -25,10 +25,13 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 
-import cmk.gui.watolib.bakery as bakery
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.type_defs import CustomAttr
-from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
+from cmk.gui.watolib import bakery
+from cmk.gui.watolib.custom_attributes import (
+    CustomAttrSpecs,
+    CustomHostAttrSpec,
+    save_custom_attrs_to_mk_file,
+)
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
@@ -474,42 +477,46 @@ def test_openapi_bulk_with_failed(
 
 
 @pytest.fixture(name="custom_host_attribute")
-def _custom_host_attribute():
-    attr: CustomAttr = {
-        "name": "foo",
-        "title": "bar",
-        "help": "foo",
-        "topic": "topic",
-        "type": "TextAscii",
-        "add_custom_macro": False,
-        "show_in_table": False,
-    }
-    with custom_host_attribute_ctx({"host": [attr]}):
+def _custom_host_attribute() -> Iterator[None]:
+    attr = CustomHostAttrSpec(
+        {
+            "name": "foo",
+            "title": "bar",
+            "help": "foo",
+            "topic": "basic",
+            "type": "TextAscii",
+            "add_custom_macro": False,
+            "show_in_table": False,
+        }
+    )
+    with custom_host_attribute_ctx({"user": [], "host": [attr]}):
         yield
 
 
 @pytest.fixture(name="custom_host_attribute_basic_topic")
-def _custom_host_attribute_with_basic_topic():
-    attr: CustomAttr = {
-        "name": "foo",
-        "title": "bar",
-        "help": "foo",
-        "topic": "basic",
-        "type": "TextAscii",
-        "add_custom_macro": False,
-        "show_in_table": False,
-    }
-    with custom_host_attribute_ctx({"host": [attr]}):
+def _custom_host_attribute_with_basic_topic() -> Iterator[None]:
+    attr = CustomHostAttrSpec(
+        {
+            "name": "foo",
+            "title": "bar",
+            "help": "foo",
+            "topic": "basic",
+            "type": "TextAscii",
+            "add_custom_macro": False,
+            "show_in_table": False,
+        }
+    )
+    with custom_host_attribute_ctx({"user": [], "host": [attr]}):
         yield
 
 
 @contextlib.contextmanager
-def custom_host_attribute_ctx(attrs: dict[str, list[CustomAttr]]) -> Iterator[None]:
+def custom_host_attribute_ctx(attrs: CustomAttrSpecs) -> Iterator[None]:
     try:
         save_custom_attrs_to_mk_file(attrs)
         yield
     finally:
-        save_custom_attrs_to_mk_file({})
+        save_custom_attrs_to_mk_file({"user": [], "host": []})
 
 
 def test_openapi_host_created_timestamp(clients: ClientRegistry) -> None:
@@ -544,7 +551,7 @@ def test_openapi_host_has_deleted_custom_attributes(clients: ClientRegistry) -> 
     clients.HostConfig.edit(host_name="example.com", attributes={"foo": "bar"})
 
     # Try to get it with the attribute already deleted
-    with custom_host_attribute_ctx({}):
+    with custom_host_attribute_ctx({"user": [], "host": []}):
         resp = clients.HostConfig.get(host_name="example.com")
 
         # foo will still show up in the response, even though it is deleted.
@@ -1495,6 +1502,17 @@ def test_create_host_with_newline_in_the_name(
     )
 
 
+def test_create_host_with_too_long_of_a_name(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.HostConfig.create(
+        host_name=255 * "a",
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert resp.json["fields"]["host_name"][0] == f"HostName too long: {16 * 'a' + '…'!r}"
+
+
 @managedtest
 def test_bulk_delete_no_entries(clients: ClientRegistry) -> None:
     r = clients.HostConfig.bulk_delete(entries=[], expect_ok=False)
@@ -1541,6 +1559,7 @@ def test_move_host_between_nested_folders(clients: ClientRegistry) -> None:
 @managedtest
 def test_update_host_parent_must_exist(clients: ClientRegistry) -> None:
     clients.HostConfig.create(host_name="test_host")
+    clients.HostConfig.create(host_name="parent_host", attributes={"parents": ["test_host"]})
     resp = clients.HostConfig.edit(
         host_name="test_host", update_attributes={"parents": ["non-existent"]}, expect_ok=False
     )
@@ -1575,3 +1594,9 @@ def test_openapi_create_host_in_folder_with_umlaut(clients: ClientRegistry) -> N
     )
     response = clients.HostConfig.create(host_name="host1", folder=f"~{folder_name}")
     assert response.status_code == 200
+
+
+def test_openapi_list_hosts_with_include_links(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="host1")
+    resp = clients.HostConfig.get_all(include_links=True)
+    assert len(resp.json["value"][0]["links"])

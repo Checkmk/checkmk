@@ -23,8 +23,8 @@ from io import TextIOWrapper
 from pathlib import Path
 from typing import assert_never, cast, Final, Generic, TypeVar
 
-import cmk.utils.render as render
 import cmk.utils.version as cmk_version
+from cmk.utils import render
 from cmk.utils.backup.config import Config as RawConfig
 from cmk.utils.backup.job import JobConfig, JobState, ScheduleConfig
 from cmk.utils.backup.targets import TargetId
@@ -45,6 +45,7 @@ from cmk.utils.backup.targets.remote_interface import (
 )
 from cmk.utils.backup.type_defs import SiteBackupInfo
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
+from cmk.utils.certs import CertManagementEvent
 from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.exceptions import MKGeneralException
@@ -53,8 +54,7 @@ from cmk.utils.plugin_registry import Registry
 from cmk.utils.schedule import next_scheduled_time
 from cmk.utils.site import omd_site
 
-import cmk.gui.forms as forms
-import cmk.gui.key_mgmt as key_mgmt
+from cmk.gui import forms, key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -537,7 +537,7 @@ class PageBackup:
             for nr, job in enumerate(sorted(Config.load().jobs.values(), key=lambda j: j.ident)):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 state = job.state()
                 job_state = state.state
@@ -613,11 +613,15 @@ class PageBackup:
 
                 table.cell(_("Runtime"))
                 if state.started:
-                    html.write_text(_("Started at %s") % render.date_and_time(state.started))
+                    html.write_text_permissive(
+                        _("Started at %s") % render.date_and_time(state.started)
+                    )
                     duration = time.time() - state.started
                     if job_state == "finished":
                         assert state.finished is not None
-                        html.write_text(", Finished at %s" % render.date_and_time(state.finished))
+                        html.write_text_permissive(
+                            ", Finished at %s" % render.date_and_time(state.finished)
+                        )
                         duration = state.finished - state.started
 
                     if state.size is not None:
@@ -626,7 +630,7 @@ class PageBackup:
                         size_txt = ""
 
                     assert state.bytes_per_second is not None
-                    html.write_text(
+                    html.write_text_permissive(
                         _(" (Duration: %s, %sIO: %s/s)")
                         % (
                             render.timespan(duration),
@@ -638,10 +642,10 @@ class PageBackup:
                 table.cell(_("Next run"))
                 schedule = job.schedule()
                 if not schedule:
-                    html.write_text(_("Only execute manually"))
+                    html.write_text_permissive(_("Only execute manually"))
 
                 elif schedule["disabled"]:
-                    html.write_text(_("Disabled"))
+                    html.write_text_permissive(_("Disabled"))
 
                 elif schedule["timeofday"]:
                     # find the next time of all configured times
@@ -649,7 +653,9 @@ class PageBackup:
                     for timespec in schedule["timeofday"]:
                         times.append(next_scheduled_time(schedule["period"], timespec))
 
-                    html.write_text(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
+                    html.write_text_permissive(
+                        time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times)))
+                    )
 
 
 class PageEditBackupJob:
@@ -728,7 +734,7 @@ class PageEditBackupJob:
 
     def vs_backup_job(self, config: Config) -> Dictionary:
         if self._new:
-            ident_attr = [
+            ident_attr: list[tuple[str, TextInput | FixedValue]] = [
                 (
                     "ident",
                     ID(
@@ -771,8 +777,7 @@ class PageEditBackupJob:
                     "target",
                     DropdownChoice(
                         title=_("Target"),
-                        # TODO: understand why mypy complains
-                        choices=self.backup_target_choices(config),  # type: ignore[misc]
+                        choices=self.backup_target_choices(config),
                         validate=lambda target_id, varprefix: self._validate_target(
                             config,
                             target_id,
@@ -959,14 +964,14 @@ class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
         html.td(_("Runtime"), class_="left")
         html.open_td()
         if state.started:
-            html.write_text(_("Started at %s") % render.date_and_time(state.started))
+            html.write_text_permissive(_("Started at %s") % render.date_and_time(state.started))
             duration = time.time() - state.started
             if state.state == "finished":
                 assert state.finished is not None
-                html.write_text(", Finished at %s" % render.date_and_time(state.started))
+                html.write_text_permissive(", Finished at %s" % render.date_and_time(state.started))
                 duration = state.finished - state.started
 
-            html.write_text(_(" (Duration: %s)") % render.timespan(duration))
+            html.write_text_permissive(_(" (Duration: %s)") % render.timespan(duration))
         html.close_td()
         html.close_tr()
 
@@ -1501,9 +1506,9 @@ class Target:
                 table.cell(_("Size"), render.fmt_bytes(info.size))
                 table.cell(_("Encrypted"))
                 if (encrypt := info.config["encrypt"]) is not None:
-                    html.write_text(encrypt)
+                    html.write_text_permissive(encrypt)
                 else:
-                    html.write_text(_("No"))
+                    html.write_text_permissive(_("No"))
 
     def backups(self) -> Mapping[str, SiteBackupInfo]:
         return self._target_type().backups()
@@ -1541,7 +1546,7 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
         for nr, target in enumerate(sorted(targets, key=lambda t: t.ident)):
             table.row()
             table.cell("#", css=["narrow nowrap"])
-            html.write_text(nr)
+            html.write_text_permissive(nr)
             table.cell(_("Actions"), css=["buttons"])
             restore_url = makeuri_contextless(
                 request,
@@ -1681,7 +1686,7 @@ class PageEditBackupTarget:
 
     def vs_backup_target(self, config: Config) -> Dictionary:
         if self._new:
-            ident_attr = [
+            ident_attr: list[tuple[str, TextInput | FixedValue]] = [
                 (
                     "ident",
                     ID(
@@ -1835,6 +1840,10 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
     def _delete_confirm_title(self, nr: int) -> str:
         return _("Delete backup key #%d") % nr
 
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        return "backup encryption keys"
+
 
 class PageBackupEditKey(key_mgmt.PageEditKey):
     back_mode = "backup_keys"
@@ -1851,6 +1860,10 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
             "passphrase to decrypt the backup."
         )
 
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        return "backup encryption keys"
+
 
 class PageBackupUploadKey(key_mgmt.PageUploadKey):
     back_mode = "backup_keys"
@@ -1866,6 +1879,10 @@ class PageBackupUploadKey(key_mgmt.PageUploadKey):
             "encrypt a backup, you will need the private key part together with the "
             "passphrase to decrypt the backup."
         )
+
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        return "backup encryption keys"
 
 
 class PageBackupDownloadKey(key_mgmt.PageDownloadKey):

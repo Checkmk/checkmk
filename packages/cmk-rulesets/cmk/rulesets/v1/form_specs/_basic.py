@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
 from keyword import iskeyword
-from typing import ClassVar, Literal, Sequence, TypeVar
+from typing import ClassVar, Literal, TypeVar
 
 from .._localize import Label, Message, Title
 from ._base import DefaultValue, FormSpec, InputHint, Prefill
@@ -240,7 +241,7 @@ class MultilineText(FormSpec[str]):
     """Display text in the form as monospaced."""
     macro_support: bool = False
     """Hint in the UI that macros can be used in the field.
-    Replacing the macros in the plugin is a responsibility of the plugin developer."""
+    Replacing the macros in the plug-in is a responsibility of the plug-in developer."""
     label: Label | None = None
     """Text displayed in front of the input field."""
     prefill: Prefill[str] = InputHint("")
@@ -288,7 +289,8 @@ class RegularExpression(FormSpec[str]):
     """Adds pre-formulated help text.
     For commonly used matching behavior you can choose from predefined help texts
     to describe how the pattern will be used to match.
-    Implementing it in a way that fulfills this promise is a responsibility of the plugin developer.
+    Implementing it in a way that fulfills this promise is a responsibility of the plug-in
+    developer.
     """
     label: Label | None = None
     """Text displayed in front of the input field."""
@@ -348,7 +350,7 @@ class String(FormSpec[str]):
     """Text displayed in front of the input field."""
     macro_support: bool = False
     """Hint in the UI that macros can be used in the field.
-    Replacing the macros in the plugin is a responsibility of the plugin developer."""
+    Replacing the macros in the plug-in is a responsibility of the plug-in developer."""
     prefill: Prefill[str] = InputHint("")
     """Value to pre-populate the form field with."""
     field_size: FieldSize = FieldSize.MEDIUM
@@ -455,8 +457,11 @@ class SingleChoice(FormSpec[str]):
     If a DefaultValue is used, it must be one of the elements names.
     If an InputHint is used, its title will be shown as a placeholder in the input field, requiring
     the user to make a choice."""
-    deprecated_elements: tuple[str, ...] | None = None
-    """Elements that can still be present in old user configurations, but are no longer offered."""
+    ignored_elements: tuple[str, ...] = ()
+    """Elements that can not be configured, but aren't removed from rules if they are present.
+    They might be ignored when rendering the ruleset.
+    You can use these to deprecate elements, to avoid breaking the old configurations.
+    """
     invalid_element_validation: InvalidElementValidator | None = None
     """Validate if the selected value is still offered as a choice."""
 
@@ -465,4 +470,8 @@ class SingleChoice(FormSpec[str]):
         if isinstance(self.prefill, DefaultValue) and self.prefill.value not in valid:
             raise ValueError(
                 f"Invalid default: {self.prefill.value!r}, choose from {', '.join(valid)}"
+            )
+        if offenders := valid.intersection(self.ignored_elements):
+            raise ValueError(
+                f"Elements are marked as 'ignored' but still present: {', '.join(offenders)}"
             )

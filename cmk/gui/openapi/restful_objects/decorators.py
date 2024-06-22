@@ -69,6 +69,8 @@ from cmk.gui.watolib.activate_changes import (
 )
 from cmk.gui.watolib.git import do_git_commit
 
+from .content_decoder import decode, KnownContentType
+
 T = TypeVar("T")
 K = TypeVar("K")
 V = TypeVar("V")
@@ -77,6 +79,9 @@ WrappedFunc = Callable[[Mapping[str, Any]], cmk_http.Response]
 
 
 _logger = logging.getLogger(__name__)
+
+
+ACCEPT_FIELD_TYPE = KnownContentType | list[KnownContentType]
 
 
 class WrappedEndpoint:
@@ -258,6 +263,9 @@ class Endpoint:
         sort:
             An integer to influence the ordering of the endpoints in the yaml file.
 
+        accept:
+            The content-type accepted by the endpoint.
+
     """
 
     def __init__(  # pylint: disable=too-many-branches
@@ -269,7 +277,7 @@ class Endpoint:
         output_empty: bool = False,
         error_schemas: Mapping[ErrorStatusCodeInt, type[ApiError]] | None = None,
         response_schema: RawParameter | None = None,
-        request_schema: RawParameter | None = None,
+        request_schema: type[Schema] | None = None,
         convert_response: bool = True,
         skip_locking: bool = False,
         path_params: Sequence[RawParameter] | None = None,
@@ -287,6 +295,7 @@ class Endpoint:
         deprecated_urls: Mapping[str, int] | None = None,
         update_config_generation: bool = True,
         sort: int = 0,
+        accept: ACCEPT_FIELD_TYPE = "application/json",
     ):
         self.path = path
         self.link_relation = link_relation
@@ -310,6 +319,8 @@ class Endpoint:
         self.valid_from = valid_from
         self.valid_until = valid_until
         self.sort = sort
+        self.accept = accept if isinstance(accept, list) else [accept]
+
         if deprecated_urls is not None:
             for url in deprecated_urls:
                 if not url.startswith("/"):
@@ -510,39 +521,36 @@ class Endpoint:
         return ", ".join(_messages.keys())
 
     def _content_type_validation(self) -> None:
-        # If there is a request body with no content-type, raise an error.
+        inboud_method = self.method in ("post", "put")
+
+        # If we have an schema, or doing post/put, we need a content-type
         if self.request_schema and not request.content_type:
+
             raise RestAPIRequestContentTypeException(
-                detail="Please specify a content type.",
-                title="Missing content type.",
+                detail=f"No content-type specified. Possible value is: {", ".join(self.accept)}",
+                title="Content type not valid for this endpoint.",
             )
 
-        if self.request_schema and self.method in ("post", "put"):
-            if request.content_type is None:
-                raise RestAPIRequestContentTypeException(
-                    detail=f"No content-type specified. Possible value is: {self.content_type}",
-                    title="Content type not valid for this endpoint.",
-                )
+        content_type, options = parse_options_header(request.content_type)
 
-            content_type, options = parse_options_header(request.content_type)
-            if content_type == self.content_type:
-                # Content-Type is as expected.
-                if (
-                    content_type == "application/json"
-                    and "charset" in options
-                    and options["charset"] is not None
-                ):
-                    # but there are options.
-                    if options["charset"].lower() != "utf-8":
-                        raise RestAPIRequestContentTypeException(
-                            detail=f"Character set {options['charset']!r} not supported "
-                            f"for content-type {content_type!r}.",
-                            title="Content type not valid for this endpoint.",
-                        )
-            else:
-                # If the content type doesn't match what the endpoint expects.
+        if request.content_type and content_type not in self.accept:
+            raise RestAPIRequestContentTypeException(
+                detail=f"Content-Type {content_type!r} not supported for this endpoint.",
+                title="Content type not valid for this endpoint.",
+            )
+
+        if (
+            inboud_method
+            and self.request_schema
+            and content_type == "application/json"
+            and "charset" in options
+            and options["charset"] is not None
+        ):
+            # but there are options.
+            if options["charset"].lower() != "utf-8":
                 raise RestAPIRequestContentTypeException(
-                    detail=f"Content-Type {content_type!r} not supported for this endpoint.",
+                    detail=f"Character set {options['charset']!r} not supported "
+                    f"for content-type {content_type!r}.",
                     title="Content type not valid for this endpoint.",
                 )
 
@@ -628,13 +636,14 @@ class Endpoint:
         self, request_schema: type[Schema] | None, _params: dict[str, Any]
     ) -> None:
         try:
-            if request_schema:
-                # Try to decode only when there is data. Decoding an empty string will fail.
-                if request.get_data(cache=True):
-                    json_data = request.json or {}
-                else:
-                    json_data = {}
-                _params["body"] = request_schema().load(json_data)
+            # request.content_type was previously validated and is accepted by the endpoint or is None.
+            # If there is content_type, then we try to decode the payload
+            content_type, _ = parse_options_header(request.content_type)
+
+            if content_type and (body := decode(content_type, request, request_schema)) is not None:
+                _params["body"] = body
+                _params["content_type"] = content_type
+
         except ValidationError as exc:
             raise RestAPIRequestDataValidationException(
                 title=http.client.responses[400],
@@ -756,7 +765,7 @@ class Endpoint:
                 outbound = response_schema().dump(data)
             except ValidationError as exc:
                 raise RestAPIResponseException(
-                    title="Mismatch between endpoint and internal data format. ",
+                    title="Mismatch between endpoint and internal data format.",
                     detail="This could be due to invalid or outdated configuration, or be an error of the implementation. "
                     "Please check your *.mk files in case you have modified them by hand and run cmk-update-config. "
                     "If the problem persists afterwards, please report a bug.",
@@ -908,14 +917,11 @@ class Endpoint:
             )
         return path
 
-    def make_url(self, parameter_values: dict[str, Any]):  # type: ignore[no-untyped-def]
+    def make_url(self, parameter_values: dict[str, Any]) -> str:
         return self.path.format(**parameter_values)
 
 
-def _verify_parameters(  # type: ignore[no-untyped-def]
-    path: str,
-    path_schema: type[Schema] | None,
-):
+def _verify_parameters(path: str, path_schema: type[Schema] | None) -> None:
     """Verifies matching of parameters to the placeholders used in an URL-Template
 
     This works both ways, ensuring that no parameter is supplied which is then not used and that

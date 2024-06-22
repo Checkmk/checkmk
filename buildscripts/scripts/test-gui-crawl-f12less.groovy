@@ -62,40 +62,41 @@ def main() {
     // todo: build progress mins?
 
     stage("Prepare workspace") {
-        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-            docker_image_from_alias("IMAGE_TESTING").inside(
-                "--group-add=${get_docker_group_id()} \
-                --ulimit nofile=1024:1024 \
-                --env HOME=/home/jenkins \
-                ${mount_reference_repo_dir} \
-                -v /home/jenkins/.cmk-credentials:/home/jenkins/.cmk-credentials:ro \
-                -v /var/run/docker.sock:/var/run/docker.sock") {
+        inside_container(
+            args: [
+                "--env HOME=/home/jenkins",
+            ],
+            set_docker_group_id: true,
+            ulimit_nofile: 1024,
+            mount_credentials: true,
+            priviliged: true,
+        ) {
+            dir("${checkout_dir}") {
 
-                dir("${checkout_dir}") {
+                // Cleanup test results directory before starting the test to prevent previous
+                // runs somehow affecting the current run.
+                sh("rm -rf ${WORKSPACE}/test-results");
 
-                    // Cleanup test results directory before starting the test to prevent previous
-                    // runs somehow affecting the current run.
-                    sh("rm -rf ${WORKSPACE}/test-results");
+                // Initialize our virtual environment before parallelization
+                sh("make .venv");
 
-                    // Initialize our virtual environment before parallelization
-                    sh("make .venv");
-
-                    stage("Fetch Checkmk package") {
-                        upstream_build(
-                            relative_job_name: "builders/build-cmk-distro-package",
-                            build_params: [
-                                /// currently CUSTOM_GIT_REF must match, but in the future
-                                /// we should define dependency paths for build-cmk-distro-package
-                                CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD"),
-                                EDITION: edition,
-                                DISTRO: distro,
-                            ],
-                            dest: "package_download",
-                        );
-                    }
-                    try {
-                        stage("Run `make ${make_target}`") {
-                            dir("${checkout_dir}/tests") {
+                stage("Fetch Checkmk package") {
+                    upstream_build(
+                        relative_job_name: "builders/build-cmk-distro-package",
+                        build_params: [
+                            /// currently CUSTOM_GIT_REF must match, but in the future
+                            /// we should define dependency paths for build-cmk-distro-package
+                            CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD"),
+                            EDITION: edition,
+                            DISTRO: distro,
+                        ],
+                        dest: "package_download",
+                    );
+                }
+                try {
+                    stage("Run `make ${make_target}`") {
+                        dir("${checkout_dir}/tests") {
+                            docker.withRegistry(DOCKER_REGISTRY, "nexus") {
                                 sh("""
                                     RESULT_PATH='${WORKSPACE}/test-results/${distro}' \
                                     EDITION='${edition}' \
@@ -106,34 +107,34 @@ def main() {
                                 """);
                             }
                         }
-                    } finally {
-                        stage("Archive / process test reports") {
-                            dir("${WORKSPACE}") {
-                                show_duration("archiveArtifacts") {
-                                    archiveArtifacts("test-results/**");
-                                }
-                                xunit([Custom(
-                                    customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
-                                    deleteOutputFiles: true,
-                                    failIfNotNew: true,
-                                    pattern: "**/junit.xml",
-                                    skipNoTestFiles: false,
-                                    stopProcessingIfError: true
-                                )]);
+                    }
+                } finally {
+                    stage("Archive / process test reports") {
+                        dir("${WORKSPACE}") {
+                            show_duration("archiveArtifacts") {
+                                archiveArtifacts("test-results/**");
                             }
+                            xunit([Custom(
+                                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
+                                deleteOutputFiles: true,
+                                failIfNotNew: true,
+                                pattern: "**/junit.xml",
+                                skipNoTestFiles: false,
+                                stopProcessingIfError: true
+                            )]);
                         }
-                        stage('archive crawler report') {
-                            dir("${WORKSPACE}") {
-                                xunit([
-                                    JUnit(
-                                    deleteOutputFiles: true,
-                                    failIfNotNew: true,
-                                    pattern: "**/crawl.xml",
-                                    skipNoTestFiles: false,
-                                    stopProcessingIfError: true
-                                    )
-                                ]);
-                            }
+                    }
+                    stage('archive crawler report') {
+                        dir("${WORKSPACE}") {
+                            xunit([
+                                JUnit(
+                                deleteOutputFiles: true,
+                                failIfNotNew: true,
+                                pattern: "**/crawl.xml",
+                                skipNoTestFiles: false,
+                                stopProcessingIfError: true
+                                )
+                            ]);
                         }
                     }
                 }

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import enum
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import assert_never, Self
 
 
@@ -16,6 +17,7 @@ class _Operation(enum.Enum):
     ADD = enum.auto()
 
 
+@dataclass(frozen=True)
 class _Localizable:
     """
     Base class for creating a localizable string
@@ -58,15 +60,8 @@ class _Localizable:
 
     """
 
-    def __init__(
-        self,
-        arg: str | Self,
-        /,
-        *,
-        modifier: tuple[_Operation, tuple[str | Self, ...]] | None = None,
-    ) -> None:
-        self._arg = arg
-        self._modifier = modifier
+    _arg: str | Self
+    _modifier: tuple[_Operation, tuple[str | Self, ...]] | None = field(kw_only=True, default=None)
 
     def __repr__(self) -> str:
         return (
@@ -95,15 +90,15 @@ class _Localizable:
                 assert_never(operation)
 
     def __add__(self, other: Self) -> Self:
-        return self.__class__(self, modifier=(_Operation.ADD, (other,)))
+        return self.__class__(self, _modifier=(_Operation.ADD, (other,)))
 
     def __mod__(self, other: str | Self | tuple[str | Self, ...]) -> Self:
         return self.__class__(
-            self, modifier=(_Operation.MOD, other if isinstance(other, tuple) else (other,))
+            self, _modifier=(_Operation.MOD, other if isinstance(other, tuple) else (other,))
         )
 
     def __rmod__(self, other: Self) -> Self:
-        return self.__class__(other, modifier=(_Operation.MOD, (self,)))
+        return self.__class__(other, _modifier=(_Operation.MOD, (self,)))
 
 
 class Title(_Localizable):  # pylint: disable=too-few-public-methods

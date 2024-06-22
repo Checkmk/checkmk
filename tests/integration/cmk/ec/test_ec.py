@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import logging
 import pprint
 import re
@@ -37,6 +42,19 @@ def _validate_process_return_code(process: subprocess.Popen, assert_msg: str) ->
         p_out, p_err = process.communicate()
         msg = (assert_msg, f"STDOUT: {p_out}", f"STDERR: {p_err}")
         raise AssertionError("\n".join(msg))
+
+
+def _execute_cmd_and_validate_return_code(
+    site: Site, cmd: list[str], assert_msg: str
+) -> tuple[str, str]:
+    with site.execute(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as process:
+        _validate_process_return_code(process, assert_msg)
+        p_out, p_err = process.communicate()
+    return p_out, p_err
 
 
 def _get_ec_rule_packs(rule_id: str, title: str, state: State, match: str) -> list[ECRulePackSpec]:
@@ -98,14 +116,51 @@ def _activate_ec_changes(site: Site) -> None:
     site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
 
-def _generate_event_message(site: Site, message: str) -> None:
+def _generate_message_via_events_pipe(site: Site, message: str, end_of_line: bool = True) -> None:
     """Generate EC message via Unix socket"""
     events_path = site.path("tmp/run/mkeventd/events")
-    cmd = f"sudo su -l {site.id} -c 'echo {message} > {events_path}'"
+    cmd = f"sudo su -l {site.id} -c 'echo {'' if end_of_line else '-n'} {message} > {events_path}'"
+    logger.info("Executing: %s", cmd)
     with subprocess.Popen(
         cmd, encoding="utf-8", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     ) as process:
         _validate_process_return_code(process, "Failed to generate EC message via Unix socket.")
+
+
+def _generate_message_via_syslog(
+    site: Site,
+    message: str,
+    udp: bool = True,
+    end_of_line: bool = True,
+    timeout: int = 5,
+) -> None:
+    """Generate EC message via syslog"""
+    cmd = (
+        f"sudo su -l {site.id} -c 'echo {'' if end_of_line else '-n'} {message} | nc -w {timeout} "
+        f"{'-u' if udp else ''} 127.0.0.1 514'"
+    )
+    logger.info("Executing: %s", cmd)
+    with subprocess.Popen(
+        cmd, encoding="utf-8", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    ) as process:
+        _validate_process_return_code(process, "Failed to generate EC message via Syslog.")
+
+
+def _wait_for_queried_column(
+    site: Site,
+    query: str,
+    sleep_time: float = 1,
+    max_count: int = 20,
+    strict: bool = True,
+) -> list[str]:
+    count = 0
+    while not (queried_column := site.live.query_column(query)) and count < max_count:
+        logger.info("Waiting for the following livestatus query: %s", repr(query))
+        time.sleep(sleep_time)
+        count += 1
+    if strict:
+        assert queried_column, f"Failed to retrieve livestatus query: {repr(query)}"
+    return queried_column
 
 
 def _get_snmp_trap_cmd(event_message: str) -> list:
@@ -128,7 +183,7 @@ def _get_snmp_trap_cmd(event_message: str) -> list:
 
 
 @pytest.fixture(name="setup_ec", scope="function")
-def _setup_ec(site: Site) -> Iterator:
+def _setup_ec(site: Site) -> Iterator[tuple[str, str, State]]:
     match = "dummy"
     rule_id = f"test {match}"
     rule_state: State = 1
@@ -148,7 +203,9 @@ def _setup_ec(site: Site) -> Iterator:
     _activate_ec_changes(site)
 
     # cleanup: archive generated events
-    for event_id in site.live.query_column("GET eventconsoleevents\nColumns: event_id\n"):
+    for event_id in _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_id\n", max_count=3, strict=False
+    ):
         resp = site.openapi.post(
             "domain-types/event_console/actions/delete/invoke",
             headers={"Content-Type": "application/json"},
@@ -169,35 +226,36 @@ def _restart_site(site: Site) -> Iterator[None]:
     site.start()
 
 
-@pytest.fixture(name="enable_snmp_trap_receiver", scope="module")
-def _enable_snmp_trap_receiver(site: Site, restart_site: None) -> Iterator[None]:
-    with site.execute(
-        ["omd", "config", "show", "MKEVENTD_SNMPTRAP"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ) as process:
-        _validate_process_return_code(process, "Failed to retrieve SNMP trap receiver status.")
-        initial_config = process.communicate()[0].strip()
+@pytest.fixture(name="enable_receivers", scope="module")
+def _enable_receivers(site: Site, restart_site: None) -> Iterator[None]:
+    initial_config: dict = {}
+    for receiver in ["MKEVENTD_SNMPTRAP", "MKEVENTD_SYSLOG", "MKEVENTD_SYSLOG_TCP"]:
+        p_out, _ = _execute_cmd_and_validate_return_code(
+            site,
+            ["omd", "config", "show", receiver],
+            f"Failed to retrieve {receiver} receiver status.",
+        )
+        initial_config[receiver] = p_out.strip()
 
-    logger.info("Setting SNMP trap receiver to 'on'...")
-    with site.execute(
-        ["omd", "config", "set", "MKEVENTD_SNMPTRAP", "on"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ) as process:
-        _validate_process_return_code(process, "Failed to change SNMP trap receivers.")
+        logger.info("Setting %s receiver to 'on'...", receiver)
+        _ = _execute_cmd_and_validate_return_code(
+            site,
+            ["omd", "config", "set", receiver, "on"],
+            f"Failed to change {receiver} receiver.",
+        )
+
     site.start()
 
     yield
 
     site.stop()
-    logger.info("Setting SNMP trap receiver to '%s'...", initial_config)
-    with site.execute(
-        ["omd", "config", "set", "MKEVENTD_SNMPTRAP", f"{initial_config}"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ) as process:
-        _validate_process_return_code(process, "Failed to change SNMP trap receivers.")
+    for receiver in ["MKEVENTD_SNMPTRAP", "MKEVENTD_SYSLOG", "MKEVENTD_SYSLOG_TCP"]:
+        logger.info("Setting %s receiver to '%s'...", receiver, initial_config[receiver])
+        _ = _execute_cmd_and_validate_return_code(
+            site,
+            ["omd", "config", "set", receiver, initial_config[receiver]],
+            f"Failed to change {receiver} receiver.",
+        )
 
 
 @pytest.fixture(name="enable_snmp_trap_translation", scope="function")
@@ -215,55 +273,56 @@ def _enable_snmp_trap_translation(site: Site) -> Iterator[None]:
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
-def test_ec_rule_match(site: Site, setup_ec: Iterator) -> None:
-    """Generate a message matching an EC rule and assert an event is created"""
+def test_ec_rule_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
+    """Generate a message via the events pipe matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
 
     event_message = f"some {match} status"
-    _generate_event_message(site, event_message)
-
-    live = site.live
+    _generate_message_via_events_pipe(site, event_message)
 
     # retrieve id of matching rule via livestatus query
-    queried_rule_ids = live.query_column("GET eventconsolerules\nColumns: rule_id\n")
+    queried_rule_ids = _wait_for_queried_column(site, "GET eventconsolerules\nColumns: rule_id\n")
     assert rule_id in queried_rule_ids
 
     # retrieve matching event state via livestatus query
-    queried_event_states = live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    queried_event_states = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_state\n"
+    )
     assert len(queried_event_states) == 1
     assert queried_event_states[0] == rule_state
 
     # retrieve matching event message via livestatus query
-    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text"
+    )
     assert len(queried_event_messages) == 1
     assert queried_event_messages[0] == event_message
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
-def test_ec_rule_no_match(site: Site, setup_ec: Iterator) -> None:
-    """Generate a message not matching any EC rule and assert no event is created"""
+def test_ec_rule_no_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
+    """Generate a message via the events pipe not matching any EC rule.
+
+    Assert no event is created."""
     match, _, _ = setup_ec
     event_message = "some other status"
     assert match not in event_message
 
-    _generate_event_message(site, event_message)
+    _generate_message_via_events_pipe(site, event_message)
 
-    live = site.live
-
-    queried_event_states = live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    queried_event_states = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_state\n", max_count=3, strict=False
+    )
     assert not queried_event_states
 
-    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text", max_count=3, strict=False
+    )
     assert not queried_event_messages
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
-def test_ec_rule_match_snmp_trap(
-    site: Site, setup_ec: Iterator, enable_snmp_trap_receiver: None
-) -> None:
+def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:
     """Generate a message via SNMP trap matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
     event_message = f"some {match} status"
@@ -275,28 +334,27 @@ def test_ec_rule_match_snmp_trap(
 
     assert event_message in site.read_file("var/log/mkeventd.log")
 
-    live = site.live
-
     # retrieve id of matching rule via livestatus query
-    queried_rule_ids = live.query_column("GET eventconsolerules\nColumns: rule_id\n")
+    queried_rule_ids = _wait_for_queried_column(site, "GET eventconsolerules\nColumns: rule_id\n")
     assert rule_id in queried_rule_ids
 
     # retrieve matching event state via livestatus query
-    queried_event_states = live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    queried_event_states = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_state\n"
+    )
     assert len(queried_event_states) == 1
     assert queried_event_states[0] == rule_state
 
     # retrieve matching event message via livestatus query
-    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text"
+    )
     assert len(queried_event_messages) == 1
     assert event_message in queried_event_messages[0]
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
-def test_ec_rule_no_match_snmp_trap(
-    site: Site, setup_ec: Iterator, enable_snmp_trap_receiver: None
-) -> None:
+def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:
     """Generate a message via SNMP trap not matching any EC rule and assert no event is created"""
     match, _, _ = setup_ec
     event_message = "some other status"
@@ -307,22 +365,20 @@ def test_ec_rule_no_match_snmp_trap(
     )
     _validate_process_return_code(process, "Failed to send message via SNMP trap.")
 
-    live = site.live
-
-    queried_event_states = live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    queried_event_states = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_state\n", max_count=3, strict=False
+    )
     assert not queried_event_states
 
-    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text", max_count=3, strict=False
+    )
     assert not queried_event_messages
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
 def test_ec_global_settings(
-    site: Site,
-    setup_ec: Iterator,
-    enable_snmp_trap_receiver: None,
-    enable_snmp_trap_translation: None,
+    site: Site, setup_ec: Iterator, enable_receivers: None, enable_snmp_trap_translation: None
 ) -> None:
     """Assert that global settings of the EC are applied to the EC
 
@@ -338,20 +394,78 @@ def test_ec_global_settings(
     )
     _validate_process_return_code(process, "Failed to send message via SNMP trap.")
 
-    live = site.live
-
-    start_time = time.time()
-    while not (
-        queried_event_messages := live.query_column("GET eventconsoleevents\nColumns: event_text")
-    ):
-        logger.info("Waiting for the SNMP trap to be translated...")
-        time.sleep(0.1)
-        if time.time() > start_time + 30:
-            raise TimeoutError("Timeout reached for the SNMP trap to be translated.")
-
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text"
+    )
     assert len(queried_event_messages) == 1
 
     pattern = "SNMP.*MIB"  # pattern expected after SNMP traps translation
     assert re.compile(pattern).search(
         queried_event_messages[0]
     ), f"{pattern} not found in the event message:\n {queried_event_messages[0]}"
+
+
+@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.parametrize("udp_enabled", [True, False], ids=["udp", "tcp"])
+def test_ec_rule_match_syslog(
+    site: Site,
+    setup_ec: Iterator,
+    enable_receivers: None,
+    udp_enabled: bool,
+) -> None:
+    """Generate a message via Syslog matching an EC rule and assert an event is created"""
+    match, rule_id, rule_state = setup_ec
+    event_message = f"some {match} status"
+    _generate_message_via_syslog(site, event_message, udp=udp_enabled)
+
+    # retrieve id of matching rule via livestatus query
+    queried_rule_ids = _wait_for_queried_column(site, "GET eventconsolerules\nColumns: rule_id\n")
+    assert rule_id in queried_rule_ids
+
+    # retrieve matching event state via livestatus query
+    queried_event_states = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_state\n"
+    )
+    assert len(queried_event_states) == 1
+    assert queried_event_states[0] == rule_state
+
+    # retrieve matching event message via livestatus query
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text"
+    )
+    assert len(queried_event_messages) == 1
+    assert queried_event_messages[0] == event_message
+
+
+@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+def test_ec_rule_no_eol(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:
+    """Generate a message via events pipe and Syslog with no end-of-line matching an EC rule.
+
+    Assert:
+        * an event is NOT created via events pipe
+        * an event is NOT created via Syslog TCP
+        * an event is created via Syslog UDP
+    """
+    match, _, _ = setup_ec
+
+    event_message = f"some {match} status"
+    _generate_message_via_events_pipe(site, event_message, end_of_line=False)
+    _generate_message_via_syslog(site, event_message, udp=False, end_of_line=False)
+
+    queried_event_states = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_state\n", max_count=3, strict=False
+    )
+    assert not queried_event_states
+
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text", max_count=3, strict=False
+    )
+    assert not queried_event_messages
+
+    _generate_message_via_syslog(site, event_message, udp=True, end_of_line=False)
+
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text"
+    )
+    assert len(queried_event_messages) == 1
+    assert queried_event_messages[0] == event_message

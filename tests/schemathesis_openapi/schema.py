@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import os
+from collections.abc import Iterator
 from re import match
-from typing import Any, Iterator
+from typing import Any
 
 import schemathesis
-from schemathesis import DataGenerationMethod  # type: ignore[attr-defined]
+from schemathesis import DataGenerationMethod
 from schemathesis.specs.openapi import schemas
 
 from tests.testlib.site import get_site_factory, Site
@@ -354,12 +355,11 @@ def update_schema(
                     raw_schema[key][child].update(upd_values)
                     for val in del_values:
                         raw_schema[key][child].pop(val, None)
-            else:
-                if matching_dict(raw_schema[key], expected):
-                    logger.debug('Patching path "%s" with %s', key_path, upd_values)
-                    raw_schema[key].update(upd_values)
-                    for val in del_values:
-                        raw_schema[key].pop(val, None)
+            elif matching_dict(raw_schema[key], expected):
+                logger.debug('Patching path "%s" with %s', key_path, upd_values)
+                raw_schema[key].update(upd_values)
+                for val in del_values:
+                    raw_schema[key].pop(val, None)
         else:
             update_schema(
                 raw_schema[key],

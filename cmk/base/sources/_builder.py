@@ -7,41 +7,29 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-import logging
 from collections.abc import Iterable, Sequence
-from contextlib import suppress
 from pathlib import Path
-from typing import assert_never, Final
+from typing import assert_never, Final, Literal
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
-from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.tags import ComputedDataSources, TagID
 
-from cmk.snmplib import SNMPBackendEnum, SNMPRawDataElem
+from cmk.snmplib import SNMPBackendEnum
 
-from cmk.fetchers import SNMPFetcher
-from cmk.fetchers.config import make_persisted_section_dir
+from cmk.fetchers import SNMPFetcher, TLSConfig
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.checkengine.fetcher import FetcherType, SourceInfo
-from cmk.checkengine.parser import (
-    AgentRawDataSectionElem,
-    NO_SELECTION,
-    Parser,
-    SectionNameCollection,
-    SectionStore,
-    SNMPParser,
-)
+from cmk.checkengine.fetcher import FetcherType
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
-from cmk.base.config import ConfigCache
-from cmk.base.ip_lookup import AddressFamily
+from cmk.base.server_side_calls import SpecialAgentCommandLine
 
 from ._api import Source
 from ._sources import (
+    FetcherFactory,
     IPMISource,
     MgmtSNMPSource,
     MissingIPSource,
@@ -49,59 +37,13 @@ from ._sources import (
     PiggybackSource,
     ProgramSource,
     PushAgentSource,
+    SNMPFetcherConfig,
     SNMPSource,
     SpecialAgentSource,
     TCPSource,
 )
 
-__all__ = ["make_sources", "make_parser"]
-
-
-def make_parser(
-    config_cache: ConfigCache,
-    source: SourceInfo,
-    *,
-    # Always from NO_SELECTION.
-    checking_sections: frozenset[SectionName],
-    section_cache_path: Path,
-    keep_outdated: bool,
-    logger: logging.Logger,
-) -> Parser:
-    hostname = source.hostname
-    if source.fetcher_type is FetcherType.SNMP:
-        return SNMPParser(
-            hostname,
-            SectionStore[SNMPRawDataElem](
-                make_persisted_section_dir(
-                    source.hostname,
-                    fetcher_type=source.fetcher_type,
-                    ident=source.ident,
-                    section_cache_path=section_cache_path,
-                ),
-                logger=logger,
-            ),
-            check_intervals={
-                section_name: config_cache.snmp_fetch_interval(hostname, section_name)
-                for section_name in checking_sections
-            },
-            keep_outdated=keep_outdated,
-            logger=logger,
-        )
-
-    return config_cache.make_agent_parser(
-        hostname,
-        SectionStore[Sequence[AgentRawDataSectionElem]](
-            make_persisted_section_dir(
-                source.hostname,
-                fetcher_type=source.fetcher_type,
-                ident=source.ident,
-                section_cache_path=section_cache_path,
-            ),
-            logger=logger,
-        ),
-        keep_outdated=keep_outdated,
-        logger=logger,
-    )
+__all__ = ["make_sources"]
 
 
 class _Builder:
@@ -109,58 +51,61 @@ class _Builder:
         self,
         host_name: HostName,
         ipaddress: HostAddress | None,
-        address_family: AddressFamily,
+        ip_stack_config: IPStackConfig,
         *,
         simulation_mode: bool,
-        config_cache: ConfigCache,
+        fetcher_factory: FetcherFactory,
         is_cluster: bool,
-        selected_sections: SectionNameCollection,
-        on_scan_error: OnError,
+        snmp_fetcher_config: SNMPFetcherConfig,
         max_age_agent: MaxAge,
         max_age_snmp: MaxAge,
-        snmp_backend_override: SNMPBackendEnum | None,
-        oid_cache_dir: Path,
-        stored_walk_path: Path,
-        walk_cache_path: Path,
+        snmp_backend: SNMPBackendEnum,
         file_cache_path: Path,
         tcp_cache_path: Path,
-        cas_dir: Path,
-        ca_store: Path,
-        site_crt: Path,
+        tls_config: TLSConfig,
+        computed_datasources: ComputedDataSources,
+        datasource_programs: Sequence[str],
+        tag_list: Sequence[TagID],
+        management_protocol: Literal["snmp", "ipmi"] | None,
+        management_ip: HostAddress | None,
+        special_agent_command_lines: Iterable[tuple[str, SpecialAgentCommandLine]],
+        agent_connection_mode: HostAgentConnectionMode,
+        check_mk_check_interval: float,
     ) -> None:
         super().__init__()
         assert not is_cluster
 
         self.host_name: Final = host_name
-        self.config_cache: Final = config_cache
+        self.fetcher_factory: Final = fetcher_factory
         self.ipaddress: Final = ipaddress
-        self.address_family: Final = address_family
+        self.snmp_fetcher_config: Final = snmp_fetcher_config
+        self.ip_stack_config: Final = ip_stack_config
         self.simulation_mode: Final = simulation_mode
-        self.selected_sections: Final = selected_sections
-        self.on_scan_error: Final = on_scan_error
         self.max_age_agent: Final = max_age_agent
         self.max_age_snmp: Final = max_age_snmp
-        self.snmp_backend_override: Final = snmp_backend_override
-        self._cds: Final = config_cache.computed_datasources(host_name)
-        self._oid_cache_dir: Final = oid_cache_dir
-        self._stored_walk_path: Final = stored_walk_path
-        self._walk_cache_path: Final = walk_cache_path
+        self.snmp_backend: Final = snmp_backend
+        self.cds: Final = computed_datasources
+        self.tag_list: Final = tag_list
+        self.management_protocol: Final = management_protocol
+        self.management_ip: Final = management_ip
+        self.special_agent_command_lines: Final = special_agent_command_lines
+        self.datasource_programs: Final = datasource_programs
+        self.agent_connection_mode: Final = agent_connection_mode
+        self.check_mk_check_interval: Final = check_mk_check_interval
         self._file_cache_path: Final = file_cache_path
         self._tcp_cache_path: Final = tcp_cache_path
-        self.cas_dir: Final = cas_dir
-        self.ca_store: Final = ca_store
-        self.site_crt: Final = site_crt
+        self.tls_config: Final = tls_config
 
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
 
-        if self._cds.is_tcp and not self._elems:
+        if self.cds.is_tcp and not self._elems:
             # User wants a special agent, a CheckMK agent, or both.  But
             # we didn't configure anything.  Let's report that.
             self._add(MissingSourceSource(self.host_name, self.ipaddress, "API/agent"))
 
-        if "no-piggyback" not in self.config_cache.tag_list(self.host_name):
-            self._add(PiggybackSource(self.config_cache, self.host_name, self.ipaddress))
+        if TagID("no-piggyback") not in self.tag_list:
+            self._add(PiggybackSource(self.fetcher_factory, self.host_name, self.ipaddress))
 
         self._initialize_snmp_based()
         self._initialize_mgmt_boards()
@@ -178,11 +123,9 @@ class _Builder:
 
     def _initialize_agent_based(self) -> None:
         def make_special_agents() -> Iterable[Source]:
-            for agentname, agent_data in self.config_cache.special_agent_command_lines(
-                self.host_name, self.ipaddress
-            ):
+            for agentname, agent_data in self.special_agent_command_lines:
                 yield SpecialAgentSource(
-                    self.config_cache,
+                    self.fetcher_factory,
                     self.host_name,
                     self.ipaddress,
                     max_age=self.max_age_agent,
@@ -202,16 +145,16 @@ class _Builder:
         # API, no Checkmk agent      True                False            True
         # no API, no Checkmk agent   False               False            False
 
-        if self._cds.is_all_agents_host:
+        if self.cds.is_all_agents_host:
             self._add_agent()
             for elem in special_agents:
                 self._add(elem)
 
-        elif self._cds.is_all_special_agents_host:
+        elif self.cds.is_all_special_agents_host:
             for elem in special_agents:
                 self._add(elem)
 
-        elif self._cds.is_tcp:
+        elif self.cds.is_tcp:
             if special_agents:
                 self._add(special_agents[0])
             else:
@@ -226,7 +169,7 @@ class _Builder:
             # that are populated by the Check API upon loading the plugins.
             #
             # It is there, when the plugins are loaded, that we should
-            # make the plugin store.  However, it is not clear whether
+            # make the plug-in store.  However, it is not clear whether
             # the API would let us register hooks to accomplish that.
             #
             # The current solution is brittle in that there is not guarantee
@@ -234,36 +177,28 @@ class _Builder:
             SNMPFetcher.plugin_store = make_plugin_store()
 
     def _initialize_snmp_based(self) -> None:
-        if not self._cds.is_snmp:
+        if not self.cds.is_snmp:
             return
 
         self._initialize_snmp_plugin_store()
 
-        if (
-            self.simulation_mode
-            or self.config_cache.get_snmp_backend(self.host_name) is SNMPBackendEnum.STORED_WALK
-        ):
+        if self.simulation_mode or self.snmp_backend is SNMPBackendEnum.STORED_WALK:
             # Here, we bypass NO_IP and silently set the IP to localhost.  This is to accomodate
             # our file-based simulation modes.  However, NO_IP should really be treated as a
             # configuration error with SNMP.  We should try to find a better solution in the future.
             self._add(
                 SNMPSource(
-                    self.config_cache,
+                    self.fetcher_factory,
                     self.host_name,
                     self.ipaddress or HostAddress("127.0.0.1"),
+                    fetcher_config=self.snmp_fetcher_config,
                     max_age=self.max_age_snmp,
-                    on_scan_error=self.on_scan_error,
-                    selected_sections=self.selected_sections,
-                    backend_override=self.snmp_backend_override,
-                    oid_cache_dir=self._oid_cache_dir,
-                    stored_walk_path=self._stored_walk_path,
-                    walk_cache_path=self._walk_cache_path,
                     file_cache_path=self._file_cache_path,
                 )
             )
             return
 
-        if self.address_family is AddressFamily.NO_IP:
+        if self.ip_stack_config is IPStackConfig.NO_IP:
             return
 
         if self.ipaddress is None:
@@ -272,85 +207,74 @@ class _Builder:
 
         self._add(
             SNMPSource(
-                self.config_cache,
+                self.fetcher_factory,
                 self.host_name,
                 self.ipaddress,
+                fetcher_config=self.snmp_fetcher_config,
                 max_age=self.max_age_snmp,
-                on_scan_error=self.on_scan_error,
-                selected_sections=self.selected_sections,
-                backend_override=self.snmp_backend_override,
-                oid_cache_dir=self._oid_cache_dir,
-                stored_walk_path=self._stored_walk_path,
-                walk_cache_path=self._walk_cache_path,
                 file_cache_path=self._file_cache_path,
             )
         )
 
     def _initialize_mgmt_boards(self) -> None:
-        if self.address_family is AddressFamily.NO_IP:
+        if self.ip_stack_config is IPStackConfig.NO_IP:
             return
 
-        protocol = self.config_cache.management_protocol(self.host_name)
-        if protocol is None:
+        if self.management_protocol is None:
             return
 
-        ip_address = config.lookup_mgmt_board_ip_address(self.config_cache, self.host_name)
-        if ip_address is None:
-            self._add(MissingIPSource(self.host_name, ip_address, f"mgmt_{protocol}"))
+        if self.management_ip is None:
+            self._add(MissingIPSource(self.host_name, None, f"mgmt_{self.management_protocol}"))
             return
 
-        match protocol:
+        match self.management_protocol:
             case "snmp":
                 self._initialize_snmp_plugin_store()
                 self._add(
                     MgmtSNMPSource(
-                        self.config_cache,
+                        self.fetcher_factory,
                         self.host_name,
-                        ip_address,
+                        self.management_ip,
+                        fetcher_config=self.snmp_fetcher_config,
                         max_age=self.max_age_snmp,
-                        on_scan_error=self.on_scan_error,
-                        selected_sections=self.selected_sections,
-                        backend_override=self.snmp_backend_override,
-                        oid_cache_dir=self._oid_cache_dir,
-                        stored_walk_path=self._stored_walk_path,
-                        walk_cache_path=self._walk_cache_path,
                         file_cache_path=self._file_cache_path,
                     )
                 )
             case "ipmi":
                 self._add(
                     IPMISource(
-                        self.config_cache,
+                        self.fetcher_factory,
                         self.host_name,
-                        ip_address,
+                        self.management_ip,
                         max_age=self.max_age_agent,
                         file_cache_path=self._file_cache_path,
                     )
                 )
             case _:
-                assert_never(protocol)
+                assert_never(self.management_protocol)
 
     def _add(self, source: Source) -> None:
         self._elems[source.source_info().ident] = source
 
     def _add_agent(self) -> None:
-        with suppress(LookupError):
+        if self.datasource_programs:
             self._add(
                 ProgramSource(
-                    self.config_cache,
+                    self.fetcher_factory,
                     self.host_name,
                     self.ipaddress,
+                    program=self.datasource_programs[0],
                     max_age=self.max_age_agent,
                     file_cache_path=self._tcp_cache_path,
                 )
             )
             return
 
-        connection_mode = self.config_cache.agent_connection_mode(self.host_name)
+        connection_mode = self.agent_connection_mode
         match connection_mode:
             case HostAgentConnectionMode.PUSH:
                 # add grace period
-                interval = int(1.5 * self.config_cache.check_mk_check_interval(self.host_name))
+                interval = int(1.5 * self.check_mk_check_interval)
                 self._add(
                     source=PushAgentSource(
                         self.host_name,
@@ -360,21 +284,19 @@ class _Builder:
                     )
                 )
             case HostAgentConnectionMode.PULL:
-                if self.address_family is AddressFamily.NO_IP:
+                if self.ip_stack_config is IPStackConfig.NO_IP:
                     return
                 if self.ipaddress is None:
                     self._add(MissingIPSource(self.host_name, self.ipaddress, "agent"))
                     return
                 self._add(
                     TCPSource(
-                        self.config_cache,
+                        self.fetcher_factory,
                         self.host_name,
                         self.ipaddress,
                         max_age=self.max_age_agent,
                         file_cache_path=self._tcp_cache_path,
-                        cas_dir=self.cas_dir,
-                        ca_store=self.ca_store,
-                        site_crt=self.site_crt,
+                        tls_config=self.tls_config,
                     )
                 )
             case _:
@@ -384,25 +306,27 @@ class _Builder:
 def make_sources(
     host_name: HostName,
     ipaddress: HostAddress | None,
-    address_family: AddressFamily,
+    address_family: IPStackConfig,
     *,
-    config_cache: ConfigCache,
+    fetcher_factory: FetcherFactory,
     is_cluster: bool,
     force_snmp_cache_refresh: bool = False,
-    selected_sections: SectionNameCollection = NO_SELECTION,
-    on_scan_error: OnError = OnError.RAISE,
+    snmp_fetcher_config: SNMPFetcherConfig,
+    snmp_backend: SNMPBackendEnum,
     simulation_mode: bool,
     file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
-    snmp_backend_override: SNMPBackendEnum | None,
-    oid_cache_dir: Path,
-    stored_walk_path: Path,
-    walk_cache_path: Path,
     file_cache_path: Path,
     tcp_cache_path: Path,
-    cas_dir: Path,
-    ca_store: Path,
-    site_crt: Path,
+    tls_config: TLSConfig,
+    computed_datasources: ComputedDataSources,
+    datasource_programs: Sequence[str],
+    tag_list: Sequence[TagID],
+    management_ip: HostAddress | None,
+    management_protocol: Literal["snmp", "ipmi"] | None,
+    special_agent_command_lines: Iterable[tuple[str, SpecialAgentCommandLine]],
+    agent_connection_mode: HostAgentConnectionMode,
+    check_mk_check_interval: float,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     if is_cluster:
@@ -431,19 +355,21 @@ def make_sources(
         ipaddress,
         address_family,
         simulation_mode=simulation_mode,
-        config_cache=config_cache,
+        fetcher_factory=fetcher_factory,
+        snmp_fetcher_config=snmp_fetcher_config,
+        snmp_backend=snmp_backend,
         is_cluster=is_cluster,
-        selected_sections=selected_sections,
-        on_scan_error=on_scan_error,
         max_age_agent=max_age_agent(),
         max_age_snmp=max_age_snmp(),
-        snmp_backend_override=snmp_backend_override,
-        oid_cache_dir=oid_cache_dir,
-        stored_walk_path=stored_walk_path,
-        walk_cache_path=walk_cache_path,
         file_cache_path=file_cache_path,
         tcp_cache_path=tcp_cache_path,
-        cas_dir=cas_dir,
-        ca_store=ca_store,
-        site_crt=site_crt,
+        tls_config=tls_config,
+        computed_datasources=computed_datasources,
+        datasource_programs=datasource_programs,
+        tag_list=tag_list,
+        management_ip=management_ip,
+        management_protocol=management_protocol,
+        special_agent_command_lines=special_agent_command_lines,
+        agent_connection_mode=agent_connection_mode,
+        check_mk_check_interval=check_mk_check_interval,
     ).sources

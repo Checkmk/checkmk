@@ -7,7 +7,7 @@
 
 from collections.abc import Sequence
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -47,7 +47,7 @@ def page_create_visual(
     )
 
     html.open_p()
-    html.write_text(
+    html.write_text_permissive(
         _(
             "Depending on the chosen datasource, a %s can list <i>multiple</i> or <i>single</i> objects. "
             "For example, the <i>services</i> datasource can be used to simply create a list "

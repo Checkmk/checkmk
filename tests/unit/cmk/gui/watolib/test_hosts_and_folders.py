@@ -31,12 +31,12 @@ from cmk.utils.redis import disable_redis
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.user import UserId
 
-import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user as logged_in_user
+from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import EffectiveAttributes, Folder, folder_tree
 from cmk.gui.watolib.search import MatchItem

@@ -11,7 +11,7 @@ description:
  among current client connections and the number of clients pending on a
  blocking call (BLPOP, BRPOP, BRPOPLPUSH).
 
- Needs the agent plugin "mk_redis" to be installed.
+ Needs the agent plug-in "mk_redis" to be installed.
 
 item:
  Name of the client

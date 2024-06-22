@@ -14,10 +14,10 @@ import logging
 import subprocess
 import sys
 import traceback
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from itertools import chain
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Literal
 
 from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE
@@ -46,7 +46,6 @@ from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 
 from .registry import pre_update_action_registry, update_action_registry
-from .update_state import UpdateState
 
 
 def main(
@@ -57,7 +56,8 @@ def main(
     if arguments.debug:
         debug.enable()
 
-    logger = _setup_logging(arguments)
+    logger = _setup_logging(arguments.verbose)
+    logger.debug("parsed arguments: %s", arguments)
 
     ensure_site_is_stopped_callback(logger)
 
@@ -74,11 +74,10 @@ def main(
 
 
 def main_update_config(logger: logging.Logger, conflict: ConflictMode) -> Literal[0, 1]:
-    update_state = UpdateState.load(Path(paths.var_dir))
     _load_plugins(logger)
 
     try:
-        return update_config(logger, update_state)
+        return update_config(logger)
     except Exception:
         if debug.enabled():
             raise
@@ -143,30 +142,23 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
     return p.parse_args(args)
 
 
-def _setup_logging(arguments: argparse.Namespace) -> logging.Logger:
-    level = log.verbosity_to_log_level(arguments.verbose)
-
-    log.setup_console_logging()
-    log.logger.setLevel(level)
+# TODO: Fix this cruel hack caused by our funny mix of GUI + console stuff.
+def _setup_logging(verbose: int) -> logging.Logger:
+    log.logger.setLevel(log.verbosity_to_log_level(verbose))
 
     logger = logging.getLogger("cmk.update_config")
-    logger.setLevel(level)
-    logger.debug("parsed arguments: %s", arguments)
+    logger.setLevel(log.logger.level)
 
-    # TODO: Fix this cruel hack caused by our funny mix of GUI + console
-    # stuff. Currently, we just move the console handler to the top, so
-    # both worlds are happy. We really, really need to split business logic
-    # from presentation code... :-/
-    if log.logger.handlers:
-        console_handler = log.logger.handlers[0]
-        del log.logger.handlers[:]
-        logging.getLogger().addHandler(console_handler)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logging.getLogger().addHandler(handler)
 
-        # Special case for PIL module producing messages like "STREAM b'IHDR'
-        # 16 13" in debug level
-        logging.getLogger("PIL").setLevel(logging.INFO)
+    # Special case for PIL module producing messages like "STREAM b'IHDR' 16 13" in debug level
+    logging.getLogger("PIL").setLevel(logging.INFO)
 
-    gui_logger.setLevel(_our_logging_level_to_gui_logging_level(logger.getEffectiveLevel()))
+    # The default in cmk.gui is WARNING, whereas our default is INFO. Hence, our
+    # default corresponds to INFO in cmk.gui, which results in too much logging.
+    gui_logger.setLevel(log.logger.level + 10)
 
     return logger
 
@@ -183,13 +175,6 @@ def ensure_site_is_stopped(logger: logging.Logger) -> None:
         sys.exit(1)
 
 
-def _our_logging_level_to_gui_logging_level(lvl: int) -> int:
-    """The default in cmk.gui is WARNING, whereas our default is INFO. Hence, our default
-    corresponds to INFO in cmk.gui, which results in too much logging.
-    """
-    return lvl + 10
-
-
 def _load_plugins(logger: logging.Logger) -> None:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.actions"),
@@ -199,7 +184,7 @@ def _load_plugins(logger: logging.Logger) -> None:
             else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions")
         ),
     ):
-        logger.error("Error in action plugin %s: %s\n", plugin, exc)
+        logger.error("Error in action plug-in %s: %s\n", plugin, exc)
         if debug.enabled():
             raise exc
 
@@ -213,7 +198,7 @@ def _load_pre_plugins() -> None:
             else load_plugins_with_exceptions("cmk.update_config.cee.plugins.pre_actions")
         ),
     ):
-        sys.stderr.write(f"Error in pre action plugin {plugin}: {exc}\n")
+        sys.stderr.write(f"Error in pre action plug-in {plugin}: {exc}\n")
         if debug.enabled():
             raise exc
 
@@ -232,12 +217,12 @@ def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
         _initialize_base_environment()
         for count, pre_action in enumerate(pre_update_actions, start=1):
             logger.info(f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...")
-            pre_action(conflict_mode)
+            pre_action(logger, conflict_mode)
 
     logger.info(f"Done ({tty.green}success{tty.normal})\n")
 
 
-def update_config(logger: logging.Logger, update_state: UpdateState) -> Literal[0, 1]:
+def update_config(logger: logging.Logger) -> Literal[0, 1]:
     """Return exit code, 0 is ok, 1 is failure"""
     has_errors = False
     logger.log(VERBOSE, "Initializing application...")
@@ -259,7 +244,7 @@ def update_config(logger: logging.Logger, update_state: UpdateState) -> Literal[
             logger.info(f" {tty.yellow}{num:02d}/{total:02d}{tty.normal} {action.title}...")
             try:
                 with ActivateChangesWriter.disable():
-                    action(logger, update_state.setdefault(action.name))
+                    action(logger)
             except Exception:
                 has_errors = True
                 logger.error(f' + "{action.title}" failed', exc_info=True)
@@ -273,8 +258,6 @@ def update_config(logger: logging.Logger, update_state: UpdateState) -> Literal[
                 "Successfully updated Checkmk configuration",
                 need_sync=True,
             )
-
-    update_state.save()
 
     if has_errors:
         logger.error(f"Done ({tty.red}with errors{tty.normal})")

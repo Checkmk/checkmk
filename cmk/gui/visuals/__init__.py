@@ -64,6 +64,7 @@ from ._page_edit_visual import single_infos_spec as single_infos_spec
 from ._page_list import page_list as page_list
 from ._permissions import declare_visual_permissions as declare_visual_permissions
 from ._store import available as available
+from ._store import available_by_owner as available_by_owner
 from ._store import declare_custom_permissions as declare_custom_permissions
 from ._store import declare_packaged_visuals_permissions as declare_packaged_visuals_permissions
 from ._store import delete_local_file, get_installed_packages
@@ -119,15 +120,15 @@ def _register_pre_21_plugin_api() -> None:
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our built-in plugin have been changed to directly import from the .utils module. We add these old
-    names to remain compatible with 3rd party plugins for now.
+    Our built-in plug-in have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plug-ins for now.
 
-    In the moment we define an official plugin API, we can drop this and require all plugins to
+    In the moment we define an official plug-in API, we can drop this and require all plug-ins to
     switch to the new API. Until then let's not bother the users with it.
 
     CMK-12228
     """
-    # Needs to be a local import to not influence the regular plugin loading order
+    # Needs to be a local import to not influence the regular plug-in loading order
     import cmk.gui.plugins.visuals as api_module  # pylint: disable=cmk-module-layer-violation
     import cmk.gui.plugins.visuals.utils as plugin_utils  # pylint: disable=cmk-module-layer-violation
 

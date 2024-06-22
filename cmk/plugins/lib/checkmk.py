@@ -40,13 +40,13 @@ class CachedPluginType(StrEnum):
 def render_plugin_type(plugin_type: CachedPluginType) -> str:
     match plugin_type:
         case CachedPluginType.MRPE:
-            return "MRPE plugin"
+            return "MRPE plug-in"
         case CachedPluginType.PLUGIN:
-            return "Agent plugin"
+            return "Agent plug-in"
         case CachedPluginType.LOCAL:
             return "Local check"
         case CachedPluginType.ORACLE:
-            return "mk_oracle plugin"
+            return "mk_oracle plug-in"
 
 
 class CachedPlugin(NamedTuple):
@@ -58,6 +58,8 @@ class CachedPlugin(NamedTuple):
 
 class CachedPluginsSection(NamedTuple):
     timeout: list[CachedPlugin] | None
+    # "killfailed" has been removed from the agent in 2.4
+    # Currently it is still used by mk_oracle
     killfailed: list[CachedPlugin] | None
 
 

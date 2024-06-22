@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Iterable
 
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
@@ -640,24 +640,24 @@ def _vs_limits_vcpu_families():
             choices=[
                 (
                     "%s_vcpu" % inst_fam,
-                    fam_name.localize(_),
+                    fam_name.localize(translate_to_current_language),
                     vs_aws_limits(
-                        fam_name.localize(_),
+                        fam_name.localize(translate_to_current_language),
                         AWSEC2LimitsSpecial.get("%s_vcpu" % inst_fam, AWSEC2LimitsDefault)[0],
                     ),
                 )
                 for inst_fam, fam_name in AWSEC2InstFamilies.items()
             ],
         ),
-        title=_("Set limits and levels for running on-demand vCPUs on instance Families"),
+        title=_("Set limits and levels for running on-demand vCPUs on instance families"),
     )
 
 
 def _parameter_valuespec_aws_ec2_limits() -> Dictionary:
     return Dictionary(
         elements=[
-            ("vpc_elastic_ip_addresses", vs_aws_limits(_("VPC Elastic IP Addresses"), 5)),
-            ("elastic_ip_addresses", vs_aws_limits(_("Elastic IP Addresses"), 5)),
+            ("vpc_elastic_ip_addresses", vs_aws_limits(_("VPC Elastic IP addresses"), 5)),
+            ("elastic_ip_addresses", vs_aws_limits(_("Elastic IP addresses"), 5)),
             ("vpc_sec_group_rules", vs_aws_limits(_("Rules of VPC security group"), 120)),
             ("vpc_sec_groups", vs_aws_limits(_("VPC security groups"), 2500)),
             (

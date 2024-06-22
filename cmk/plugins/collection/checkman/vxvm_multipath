@@ -12,7 +12,7 @@ description:
  {WARN} status, or a {CRIT} if less than 50% - or none - paths are
  still working.
 
-  You need to install the agent plugin {vxvm}.
+  You need to install the agent plug-in {vxvm}.
 
 item:
  Name of the multipath device ({access name})

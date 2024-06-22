@@ -113,10 +113,10 @@ class UserProfile(ABCUserProfilePage):
             forms.header(_("Personal settings"))
 
             forms.section(_("Username"), simple=True)
-            html.write_text(user_spec.get("user_id", user.id))
+            html.write_text_permissive(user_spec.get("user_id", user.id))
 
             forms.section(_("Full name"), simple=True)
-            html.write_text(user_spec.get("alias", ""))
+            html.write_text_permissive(user_spec.get("alias", ""))
 
             select_language(user_spec)
 
@@ -150,4 +150,4 @@ def _show_custom_user_attr(
                     h = _u(h)
                 html.help(h)
             else:
-                html.write_text(vs.value_to_html(value))
+                html.write_text_permissive(vs.value_to_html(value))

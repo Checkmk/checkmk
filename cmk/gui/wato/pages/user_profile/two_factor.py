@@ -10,6 +10,7 @@ import http.client as http_client
 import json
 import time
 from base64 import b32decode, b32encode
+from http import HTTPStatus
 from typing import Literal
 from urllib import parse
 from uuid import uuid4
@@ -32,6 +33,7 @@ from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site
 from cmk.utils.totp import TOTP, TotpVersion
+from cmk.utils.user import UserId
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
@@ -68,8 +70,10 @@ from cmk.gui.userdb import (
     is_two_factor_login_enabled,
     load_two_factor_credentials,
     make_two_factor_backup_codes,
+    on_failed_login,
+    user_locked,
 )
-from cmk.gui.userdb.store import save_two_factor_credentials
+from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme
@@ -82,13 +86,17 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.utils.user_errors import user_errors
+from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.mode import redirect
 
 from .abstract_page import ABCUserProfilePage
 from .page_menu import page_menu_dropdown_user_related
 
-fido2.features.webauthn_json_mapping.enabled = True
+try:  # this fails if its set multiple times (which sometimes happens in doctests)
+    fido2.features.webauthn_json_mapping.enabled = True
+except ValueError:
+    pass
 
 
 def make_fido2_server() -> Fido2Server:
@@ -125,6 +133,21 @@ def log_event_auth(two_factor_method: str) -> None:
     )
 
 
+def handle_failed_auth(user_id: UserId) -> None:
+    on_failed_login(user_id, datetime.datetime.now())
+    if user_locked(user_id):
+        session.invalidate()
+        session.persist()
+        raise MKUserError(None, _("User is locked"), HTTPStatus.UNAUTHORIZED)
+
+
+def handle_success_auth(user_id: UserId) -> None:
+    origtarget = request.get_url_input("_origtarget", "index.py")
+    session.session_info.two_factor_completed = True
+    save_custom_attr(user_id, "num_failed_logins", 0)
+    raise HTTPRedirect(origtarget)
+
+
 overview_page_name: str = "user_two_factor_overview"
 
 
@@ -154,9 +177,11 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             if credential_id in credentials["webauthn_credentials"]:
                 del credentials["webauthn_credentials"][credential_id]
                 log_event_usermanagement(TwoFactorEventType.webauthn_remove)
+                send_security_message(user.id, SecurityNotificationEvent.webauthn_removed)
             elif credential_id in credentials["totp_credentials"]:
                 del credentials["totp_credentials"][credential_id]
                 log_event_usermanagement(TwoFactorEventType.totp_remove)
+                send_security_message(user.id, SecurityNotificationEvent.totp_removed)
             else:
                 return
             save_two_factor_credentials(user.id, credentials)
@@ -166,6 +191,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             credentials["backup_codes"] = []
             log_event_usermanagement(TwoFactorEventType.backup_remove)
             save_two_factor_credentials(user.id, credentials)
+            send_security_message(user.id, SecurityNotificationEvent.backup_revoked)
             flash(_("All backup codes have been deleted"))
 
         if request.has_var("_backup_codes"):
@@ -173,6 +199,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
             log_event_usermanagement(TwoFactorEventType.backup_add)
             save_two_factor_credentials(user.id, credentials)
+            send_security_message(user.id, SecurityNotificationEvent.backup_reset)
             flash(self.flash_new_backup_codes(codes))
 
     def flash_new_backup_codes(self, codes: list[tuple[Password, PasswordHash]]) -> HTML:
@@ -187,7 +214,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             )
         )
         codesdiv = html.render_div(
-            HTML("").join(
+            HTML.empty().join(
                 [html.render_div(code.raw, class_="codelistelement") for code, _v in codes]
             ),
             class_="codelist",
@@ -200,9 +227,9 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             value=_("Copy codes to clipboard"),
             class_=["button buttonlink"],
         )
-        return HTML("").join([header_msg, message1, codesdiv, message2, copy_button])
+        return HTML.empty().join([header_msg, message1, codesdiv, message2, copy_button])
 
-    def _page_menu(self, breadcrumb) -> PageMenu:  # type: ignore[no-untyped-def]
+    def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id)
         registered_credentials = list(credentials["webauthn_credentials"].keys()) + list(
@@ -492,6 +519,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
             }
             save_two_factor_credentials(user.id, credentials)
             log_event_usermanagement(TwoFactorEventType.totp_add)
+            send_security_message(user.id, SecurityNotificationEvent.totp_added)
             session.session_info.two_factor_completed = True
             flash(_("Registration successful"))
             origtarget = "user_two_factor_overview.py"
@@ -782,6 +810,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
         )
         save_two_factor_credentials(user.id, credentials)
         log_event_usermanagement(TwoFactorEventType.webauthn_add_)
+        send_security_message(user.id, SecurityNotificationEvent.webauthn_added)
         session.session_info.two_factor_completed = True
         flash(_("Registration successful"))
         return {"status": "OK"}
@@ -919,7 +948,6 @@ class UserLoginTwoFactor(Page):
         cls, available_methods: set[str], credentials: TwoFactorCredentials
     ) -> None:
         assert user.id is not None
-        origtarget = request.get_url_input("_origtarget", "index.py")
         if "totp_credentials" in available_methods:
             if totp_code := request.get_validated_type_input(Password, "_totp_code"):
                 totp_credential = credentials["totp_credentials"]
@@ -929,17 +957,20 @@ class UserLoginTwoFactor(Page):
                         totp_code.raw_bytes.decode(),
                         otp.calculate_generation(datetime.datetime.now()),
                     ):
-                        session.session_info.two_factor_completed = True
-                        raise HTTPRedirect(origtarget)
+                        handle_success_auth(user.id)
                 log_event_auth("Authenticator application (TOTP)")
+                handle_failed_auth(user.id)
+                raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
         if "backup_codes" in available_methods:
             if backup_code := request.get_validated_type_input(Password, "_backup_code"):
                 if is_two_factor_backup_code_valid(user.id, backup_code):
                     log_event_usermanagement(TwoFactorEventType.backup_used)
-                    session.session_info.two_factor_completed = True
-                    raise HTTPRedirect(origtarget)
+                    send_security_message(user.id, SecurityNotificationEvent.backup_used)
+                    handle_success_auth(user.id)
                 log_event_auth("Backup code")
+                handle_failed_auth(user.id)
+                raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
     def page(self) -> None:
         assert user.id is not None
@@ -1040,10 +1071,11 @@ class UserWebAuthnLoginComplete(JsonPage):
                 auth_data=data.authenticator_data,
                 signature=data.signature,
             )
-        except:
+        except BaseException:
             log_event_auth("Webauthn")
+            handle_failed_auth(user.id)
             raise
 
         session.session_info.webauthn_action_state = None
-        session.session_info.two_factor_completed = True
+        handle_success_auth(user.id)
         return {"status": "OK"}

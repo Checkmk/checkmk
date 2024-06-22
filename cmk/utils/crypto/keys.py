@@ -9,8 +9,8 @@ from typing import get_args, overload, TypeAlias, TypeGuard
 
 import cryptography.exceptions
 import cryptography.hazmat.primitives.asymmetric as asym
-import cryptography.hazmat.primitives.asymmetric.padding as padding
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.types import (

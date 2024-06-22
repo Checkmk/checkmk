@@ -157,14 +157,14 @@ def check_brocade_mlx_module_mem(item, params, info):
     if state_readable.lower() != "running":
         return 3, "Module is not running (Current State: %s)" % state_readable
 
-    warn, crit = params.get("levels", (None, None))
-    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    levels = params.get("levels")
+    mode = "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used"
     try:
         return check_memory_element(
             "Usage",
             data["mem_total"] - data["mem_avail"],
             data["mem_total"],
-            (mode, (warn, crit)),
+            (mode, levels),
             metric_name="mem_used",
         )
     except KeyError:

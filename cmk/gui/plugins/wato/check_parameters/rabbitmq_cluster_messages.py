@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Float, Integer, Migrate, Tuple
 
 
 class MessageType(enum.StrEnum):
-    """Watch out! The values must match the check plugin!
+    """Watch out! The values must match the check plug-in!
 
     For now copy'n'paste. Should go to cmk/plugins/rabbitmq sometay (TM).
     """
@@ -49,7 +49,7 @@ _KEY_MAP = {
 
 
 def _rename_keys(p: dict[str, object]) -> dict[str, object]:
-    """The plugin really needs these keys."""
+    """The plug-in really needs these keys."""
     return {_KEY_MAP.get(k, k): v for k, v in p.items()}
 
 

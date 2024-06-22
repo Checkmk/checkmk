@@ -20,13 +20,12 @@ from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
-import webtest  # type: ignore[import]
+import webtest  # type: ignore[import-untyped]
 from flask import Flask
 from mypy_extensions import KwArg
 from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
-from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.rest_api_client import (
     ClientRegistry,
     expand_rel,
@@ -36,22 +35,18 @@ from tests.testlib.rest_api_client import (
     Response,
     RestApiClient,
 )
-from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.plugin_registry import Registry
 from cmk.utils.user import UserId
 
 from cmk.automations.results import DeleteHostsResult
 
 import cmk.gui.config as config_module
-import cmk.gui.login as login
 import cmk.gui.mkeventd.wato as mkeventd
-import cmk.gui.watolib.activate_changes as activate_changes
-import cmk.gui.watolib.groups as groups
-from cmk.gui import hooks, http, main_modules, userdb
+import cmk.gui.watolib.password_store
+from cmk.gui import hooks, http, login, main_modules, userdb
 from cmk.gui.config import active_config
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.session import session, SuperUserContext, UserContext
@@ -60,7 +55,10 @@ from cmk.gui.userdb.session import load_session_infos
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
+from cmk.gui.watolib import activate_changes, groups
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+
+from .users import create_and_destroy_user
 
 SPEC_LOCK = threading.Lock()
 
@@ -80,6 +78,15 @@ HTTPMethod = Literal[
     "POST",
     "DELETE",
 ]  # fmt: off
+
+
+@pytest.fixture
+def mock_password_file_regeneration(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        cmk.gui.watolib.password_store,
+        cmk.gui.watolib.password_store.update_passwords_merged_file.__name__,
+        lambda: None,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -193,7 +200,7 @@ def set_config(**kwargs: Any) -> Iterator[None]:
 def load_plugins() -> None:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
-        raise Exception(f"The following errors occured during plugin loading: {errors}")
+        raise Exception(f"The following errors occured during plug-in loading: {errors}")
 
 
 @pytest.fixture()
@@ -277,29 +284,13 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("cmk.utils.daemon.closefrom")
 
 
-@pytest.fixture(name="registry_list")
-def fixture_registry_list() -> list[None | Registry[Any]]:
-    """Returns list of the registries to be reset after test-case execution.
-
-    Override this fixture by defining it within a test-module.
-    """
-    return []
-
-
-@pytest.fixture(name="reset_gui_registries")
-def fixture_reset_gui_registries(registry_list: list[Registry[Any]]) -> Iterator[None]:
-    """Fixture to reset a list of registries to their default entries."""
-    with reset_registries(registry_list):
-        yield
-
-
 @pytest.fixture()
 def with_automation_user(request_context: None, load_config: None) -> Iterator[tuple[UserId, str]]:
     with create_and_destroy_user(automation=True, role="admin") as user:
         yield user
 
 
-class WebTestAppForCMK(webtest.TestApp):
+class WebTestAppForCMK(webtest.TestApp):  # type: ignore[misc]
     """A webtest.TestApp class with helper functions for automation user APIs"""
 
     def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]

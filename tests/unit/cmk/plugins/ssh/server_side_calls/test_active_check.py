@@ -60,6 +60,5 @@ def test_commands_function(
                 name="host",
                 ipv4_config=IPv4Config(address="1.2.3.4"),
             ),
-            {},
         )
     ) == [expected_command]

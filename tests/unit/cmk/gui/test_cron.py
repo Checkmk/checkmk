@@ -5,7 +5,7 @@
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.cron as cron
+from cmk.gui import cron
 
 
 def test_registered_jobs() -> None:

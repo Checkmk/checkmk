@@ -22,9 +22,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.log as log
-import cmk.gui.utils as utils
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import log, utils
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
@@ -42,6 +40,7 @@ from cmk.gui.type_defs import (
     GroupedChoices,
     Icon,
 )
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
@@ -181,18 +180,18 @@ class HTMLGenerator(HTMLWriter):
             text = "%s" % text
 
         if not text:
-            return HTML("")
+            return HTML.empty()
 
         stripped: str = text.strip()
         if not stripped:
-            return HTML("")
+            return HTML.empty()
 
-        help_text: str = self.resolve_help_text_macros(stripped)
+        help_text = HTML.without_escaping(self.resolve_help_text_macros(stripped))
 
         self.enable_help_toggle()
         style: str = "display:%s;" % ("flex" if user.show_help else "none")
         inner_html: HTML = HTMLWriter.render_div(self.render_icon("info"), class_="info_icon")
-        inner_html += HTMLWriter.render_div(HTML(help_text), class_="help_text")
+        inner_html += HTMLWriter.render_div(help_text, class_="help_text")
         return HTMLWriter.render_div(inner_html, class_="help", style=style)
 
     @staticmethod
@@ -264,15 +263,20 @@ class HTMLGenerator(HTMLWriter):
 
         # Load all scripts
         for js in javascripts:
+            js_filepath = f"js/{js}_min.js"
+            js_url = HTMLGenerator._append_cache_busting_query(js_filepath)
             if js == "vue" and active_config.load_frontend_vue == "inject":
-                # those two files are injected by the vite dev server in `./packages/cmk-frontend-vue`
-                self.javascript_file("/cmk-frontend-vue-ahr/@vite/client", type_="module")
-                self.javascript_file("/cmk-frontend-vue-ahr/src/main.ts", type_="module")
+                # stage1 will try to load the hot reloading files. if this fails,
+                # an error will be shown and the fallback files will be loaded.
+                self.js_entrypoint(
+                    json.dumps({"fallback": [js_url]}),
+                    type_="cmk-entrypoint-vue-stage1",
+                )
+                self.javascript_file(HTMLGenerator._append_cache_busting_query("js/vue_stage1.js"))
             else:
-                js_filepath = f"js/{js}_min.js"
                 if current_app.debug:
                     HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
-                self.javascript_file(HTMLGenerator._append_cache_busting_query(js_filepath))
+                self.javascript_file(js_url)
 
         self.set_js_csrf_token()
 
@@ -351,7 +355,7 @@ class HTMLGenerator(HTMLWriter):
         if get_render_mode() != ExperimentalRenderMode.BACKEND:
             javascript_files.append("vue")
         if force or not self._header_sent:
-            self.write_html(HTML("<!DOCTYPE HTML>\n"))
+            self.write_html(HTML.without_escaping("<!DOCTYPE HTML>\n"))
             self.open_html()
             self._head(title, javascript_files)
             self._header_sent = True
@@ -415,12 +419,13 @@ class HTMLGenerator(HTMLWriter):
             require_confirmation=require_confirmation,
         )
 
-        yield
-
-        if only_close:
-            html.close_form()
-        else:
-            html.end_form()
+        try:
+            yield
+        finally:
+            if only_close:
+                html.close_form()
+            else:
+                html.end_form()
 
     def begin_form(
         self,
@@ -524,7 +529,7 @@ class HTMLGenerator(HTMLWriter):
         class_: CSSSpec | None = None,
     ) -> HTML:
         if value is None:
-            return HTML("")
+            return HTML.empty()
         if add_var:
             self.add_form_var(var)
         return self.render_input(
@@ -725,8 +730,7 @@ class HTMLGenerator(HTMLWriter):
         oninput: str | None = None,
         onblur: str | None = None,
         placeholder: str | None = None,
-        data_world: str | None = None,
-        data_max_labels: int | None = None,
+        data_attrs: HTMLTagAttributes | None = None,
         required: bool = False,
         title: str | None = None,
     ) -> None:
@@ -738,6 +742,9 @@ class HTMLGenerator(HTMLWriter):
         if error:
             self.set_focus(varname)
         self.form_vars.append(varname)
+
+        if data_attrs is not None:
+            assert all(data_attr_key.startswith("data-") for data_attr_key in data_attrs.keys())
 
         # View
         # TODO: Move styling away from py code
@@ -751,14 +758,13 @@ class HTMLGenerator(HTMLWriter):
                 assert isinstance(size, int)
                 style_size = ["min-width: %d.8ex;" % size]
                 cssclass += " try_max_width"
+            elif size == "max":
+                style_size = ["width: 100%;"]
             else:
-                if size == "max":
-                    style_size = ["width: 100%;"]
-                else:
-                    assert isinstance(size, int)
-                    field_size = "%d" % (size + 1)
-                    if (style is None or "width:" not in style) and not self.mobile:
-                        style_size = ["width: %d.8ex;" % size]
+                assert isinstance(size, int)
+                field_size = "%d" % (size + 1)
+                if (style is None or "width:" not in style) and not self.mobile:
+                    style_size = ["width: %d.8ex;" % size]
 
         attributes: HTMLTagAttributes = {
             "class": cssclass,
@@ -776,10 +782,9 @@ class HTMLGenerator(HTMLWriter):
                 else None
             ),
             "placeholder": placeholder,
-            "data-world": data_world,
-            "data-max-labels": None if data_max_labels is None else str(data_max_labels),
             "required": "" if required else None,
             "title": title,
+            **(data_attrs or {}),
         }
 
         if error:
@@ -810,7 +815,7 @@ class HTMLGenerator(HTMLWriter):
         onclick: str | None,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
-        """Shows a colored button with text (used in site and customer status snapins)"""
+        """Shows a colored button with text (used in site and customer status snap-ins)"""
         self.div(
             content,
             title=title,
@@ -877,7 +882,7 @@ class HTMLGenerator(HTMLWriter):
         class_name = "password_meter"
         # <label>
         self.write_html(render_start_tag(tag_name="label", close_tag=False))
-        self.write_text(str(_("Strength:")))
+        self.write_text_permissive(str(_("Strength:")))
         # <meter>
         self.write_html(
             render_start_tag(
@@ -1273,7 +1278,7 @@ class HTMLGenerator(HTMLWriter):
         assert href is not None
 
         return HTMLWriter.render_a(
-            content=HTML(HTMLGenerator.render_icon(icon, cssclass="iconbutton", theme=theme)),
+            content=HTMLGenerator.render_icon(icon, cssclass="iconbutton", theme=theme),
             href=href,
             title=title,
             id_=id_,
@@ -1321,11 +1326,11 @@ class HTMLGenerator(HTMLWriter):
         )
         self.open_div(title=_("Show more") if not with_text else "", class_="show_more")
         if with_text:
-            self.write_text(_("show more"))
+            self.write_text_permissive(_("show more"))
         self.close_div()
         self.open_div(title=_("Show less") if not with_text else "", class_="show_less")
         if with_text:
-            self.write_text(_("show less"))
+            self.write_text_permissive(_("show less"))
         self.close_div()
         self.close_a()
 
@@ -1413,7 +1418,10 @@ class HTMLGenerator(HTMLWriter):
 
         # TODO: Make method.content return HTML
         return HTMLWriter.render_div(
-            atag + HTML(method.content), class_=classes, id_="popup_trigger_%s" % ident, style=style
+            atag + HTML.without_escaping(method.content),
+            class_=classes,
+            id_="popup_trigger_%s" % ident,
+            style=style,
         )
 
     def element_dragger_url(self, dragging_tag: str, base_url: str) -> None:

@@ -9,7 +9,7 @@ values."""
 from collections.abc import Collection, Sequence
 from hashlib import sha256
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -216,7 +216,7 @@ class ModeBulkCleanup(WatoMode):
             forms.section(attr.title())
 
             if attr.is_mandatory() and not is_inherited:
-                html.write_text(
+                html.write_text_permissive(
                     _(
                         "This attribute is mandatory and there is no value "
                         "defined in the host list or any parent folder."
@@ -232,7 +232,7 @@ class ModeBulkCleanup(WatoMode):
         forms.end()
 
         if not attributes:
-            html.write_text(_("The selected hosts have no explicit attributes"))
+            html.write_text_permissive(_("The selected hosts have no explicit attributes"))
 
     def _get_attributes_for_bulk_cleanup(
         self, hosts: Sequence[Host]

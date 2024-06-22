@@ -39,6 +39,6 @@ rulespec_registry.register(
         check_group_name="logins",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_logins,
-        title=lambda: _("Number of Logins on System"),
+        title=lambda: _("Number of logins on system"),
     )
 )

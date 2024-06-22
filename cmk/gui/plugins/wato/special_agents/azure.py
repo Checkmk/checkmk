@@ -225,7 +225,7 @@ def _valuespec_special_agents_azure():
                         help=_(
                             "By default, data relating to a VM is sent to the group host"
                             " corresponding to the resource group of the VM, the same way"
-                            " as for any other resource. If the VM is present in your "
+                            " as for any other resource. If the VM is present in your"
                             " monitoring as a separate host, you can choose to send the data"
                             " to the VM itself."
                         ),

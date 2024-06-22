@@ -49,6 +49,7 @@ def test_registered_automations() -> None:
         "try-inventory",
         "update-dns-cache",
         "update-host-labels",
+        "update-passwords-merged-file",
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:

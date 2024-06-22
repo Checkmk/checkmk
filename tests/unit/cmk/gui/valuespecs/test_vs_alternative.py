@@ -78,9 +78,9 @@ class TestValuespecAlternative:
     def test_value_to_html(self) -> None:
         assert get_alternative().value_to_html("testing") == "testing"
         assert get_alternative().value_to_html({}) == "invalid: {}"
-        assert get_alternative(show_alternative_title=True).value_to_html("testing") == HTML(
-            "text<br />testing"
-        )
+        assert get_alternative(show_alternative_title=True).value_to_html(
+            "testing"
+        ) == HTML.without_escaping("text<br />testing")
 
     def test_from_html_vars(self, request_context: None) -> None:
         with request_var(a_use="2", a_2_0="2", a_2_1="3"):

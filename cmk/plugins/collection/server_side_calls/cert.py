@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterator, Mapping, Sequence
 from enum import StrEnum
-from typing import Final, List, Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel
 
@@ -12,7 +12,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    HTTPProxy,
     replace_macros,
 )
 
@@ -25,18 +24,28 @@ class LevelsType(StrEnum):
     FIXED = "fixed"
 
 
+class ServicePrefix(StrEnum):
+    AUTO = "auto"
+    NONE = "none"
+
+
 FloatLevels = (
     tuple[Literal[LevelsType.NO_LEVELS], None]
     | tuple[Literal[LevelsType.FIXED], tuple[float, float]]
 )
 
-SignatureAlgorithm = tuple[str, tuple[str, str]]
+SignatureAlgorithm = tuple[str, str]
 
 PubKey = tuple[str, str]
 
 
+class ServiceDescription(BaseModel):
+    prefix: ServicePrefix
+    name: str
+
+
 class Issuer(BaseModel):
-    common_name: str
+    common_name: str | None = None
     organization: str | None = None
     org_unit: str | None = None
     state: str | None = None
@@ -44,7 +53,7 @@ class Issuer(BaseModel):
 
 
 class Subject(BaseModel):
-    common_name: str
+    common_name: str | None = None
     organization: str | None = None
     org_unit: str | None = None
     pubkey_algorithm: PubKey | None = None
@@ -62,7 +71,7 @@ class CertificateDetails(BaseModel):
     signature_algorithm: SignatureAlgorithm | None = None
     issuer: Issuer | None = None
     subject: Subject | None = None
-    altnames: List[str] | None = None
+    altnames: list[str] | None = None
 
 
 class Settings(BaseModel):
@@ -76,6 +85,7 @@ class StandardSettings(Settings):
 
 
 class CertEndpoint(BaseModel):
+    service_name: ServiceDescription
     address: str
     port: int | None = None
     individual_settings: Settings | None = None
@@ -90,6 +100,7 @@ def parse_cert_params(raw_params: Mapping[str, object]) -> Sequence[CertEndpoint
     params = RawParams.model_validate(raw_params)
     return [
         CertEndpoint(
+            service_name=connection.service_name,
             address=connection.address,
             port=connection.port if connection.port else params.standard_settings.port,
             individual_settings=_merge_settings(
@@ -110,12 +121,14 @@ def _merge_settings(standard: StandardSettings, individual: Settings | None) -> 
 
 
 def generate_cert_services(
-    params: Sequence[CertEndpoint], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+    params: Sequence[CertEndpoint], host_config: HostConfig
 ) -> Iterator[ActiveCheckCommand]:
+    macros = host_config.macros
     for endpoint in params:
-        endpoint.address = replace_macros(endpoint.address, host_config.macros)
+        prefix = "CERT " if endpoint.service_name.prefix is ServicePrefix.AUTO else ""
+        endpoint.address = replace_macros(endpoint.address, macros)
         yield ActiveCheckCommand(
-            service_description=f"Cert {endpoint.address}",
+            service_description=f"{prefix}{replace_macros(endpoint.service_name.name, macros)}",
             command_arguments=list(_command_arguments(endpoint)),
         )
 
@@ -182,37 +195,33 @@ def _cert_details_args(cert_details: CertificateDetails) -> Iterator[str]:
 
 
 def _signature_algorithm_args(signature_algorithm: SignatureAlgorithm) -> Iterator[str]:
-    encryption_algorithm = signature_algorithm[0]
+    encryption_algorithm = signature_algorithm[1]
     yield "--signature-algorithm"
     yield encryption_algorithm
 
-    hashing_algorithm = signature_algorithm[1][0]
-    yield "--signature-hash-algorithm"
-    yield hashing_algorithm
-
 
 def _issuer_args(issuer: Issuer) -> Iterator[str]:
-    yield "--issuer-cn"
-    yield issuer.common_name
-
+    if (common_name := issuer.common_name) is not None:
+        yield "--issuer-cn"
+        yield common_name
     if (org := issuer.organization) is not None:
         yield "--issuer-o"
         yield org
-    if (org_unit := issuer.organization) is not None:
+    if (org_unit := issuer.org_unit) is not None:
         yield "--issuer-ou"
         yield org_unit
     if (state := issuer.state) is not None:
         yield "--issuer-st"
         yield state
     if (country := issuer.country) is not None:
-        yield "--isuer-c"
+        yield "--issuer-c"
         yield country
 
 
 def _subject_args(subject: Subject) -> Iterator[str]:
-    yield "--subject-cn"
-    yield subject.common_name
-
+    if (common_name := subject.common_name) is not None:
+        yield "--subject-cn"
+        yield common_name
     if (org := subject.organization) is not None:
         yield "--subject-o"
         yield org

@@ -67,9 +67,9 @@ def _valuespec_active_checks_dns():
         valuespec=Dictionary(
             title=_("Check DNS service"),
             help=_(
-                "Check the resolution of a hostname into an IP address by a DNS "
+                "Checks the resolution of a host name into an IP address by a DNS "
                 "server. This check uses <tt>check_dns</tt> from the standard "
-                "Nagios plugins. Note, that check_dns will always be executed in "
+                "Nagios plug-ins. Note, that check_dns will always be executed in "
                 "the monitoring site. By default, the configured host(s) that "
                 "this rule applies to is used as DNS server. This behaviour can "
                 "be configured by using the option <tt>DNS Server</tt>. "
@@ -78,7 +78,7 @@ def _valuespec_active_checks_dns():
                 (
                     "hostname",
                     TextInput(
-                        title=_("Queried Hostname or IP address"),
+                        title=_("Queried host name or IP address"),
                         allow_empty=False,
                         help=_("The name or IPv4 address you want to query"),
                     ),
@@ -86,10 +86,8 @@ def _valuespec_active_checks_dns():
                 (
                     "name",
                     TextInput(
-                        title=_("Alternative Service description"),
-                        help=_(
-                            "The service description will be this name instead <i>DNS Servername</i>"
-                        ),
+                        title=_("Alternative service name"),
+                        help=_("The service name will be this name instead <i>DNS Servername</i>"),
                     ),
                 ),
                 (

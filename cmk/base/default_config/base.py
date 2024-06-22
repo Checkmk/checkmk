@@ -59,11 +59,10 @@ cluster_max_cachefile_age = 90  # secs.
 piggyback_max_cachefile_age = 3600  # secs
 # Ruleset for translating piggyback host names
 piggyback_translation: list[RuleSpec[TranslationOptions]] = []
-# Ruleset for translating service descriptions
+# Ruleset for translating service names
 service_description_translation: list[RuleSpec[TranslationOptionsSpec]] = []
 simulation_mode = False
 fake_dns: str | None = None
-agent_simulator = False
 perfdata_format: Literal["pnp", "standard"] = "pnp"
 check_mk_perfdata_with_times = True
 # TODO: Remove these options?
@@ -186,10 +185,18 @@ check_parameters: list[RuleSpec[Any]] = []
 checkgroup_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 # for HW/SW-Inventory
 inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
+
+
 # WATO variant for fully formalized checks
-active_checks: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
+# WATOs active check configurations are demanded to be Mapping[str, object] by the new ruleset API.
+# However: We still have legacy rulesets, which can be of any (basic python) type.
+active_checks: dict[str, list[RuleSpec[object]]] = {}
 # WATO variant for datasource_programs
-special_agents: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
+# WATOs special agent configurations are demanded to be Mapping[str, object] by the new ruleset API.
+# However: We still have legacy rulesets, which can be of any (basic python) type.
+special_agents: dict[str, list[RuleSpec[object]]] = {}
+
+
 # WATO variant for free-form custom checks without formalization
 custom_checks: list[RuleSpec[dict[Any, Any]]] = []
 all_hosts: list = []
@@ -313,7 +320,7 @@ custom_service_attributes: list[RuleSpec[Sequence[tuple[str, str]]]] = []
 # Assign tags to services
 service_tag_rules: list[RuleSpec[Sequence[tuple[str, str]]]] = []
 
-# Rulesets for agent bakery
+# Rulesets for Agent Bakery
 agent_config: dict[str, list[RuleSpec[Any]]] = {}
 agent_bakery_logging: int | None = None
 bake_agents_on_restart = False
@@ -343,3 +350,5 @@ logwatch_rules: list[RuleSpec[object]] = []
 config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
 
 automatic_host_removal: list[RuleSpec[object]] = []
+
+ruleset_matching_stats = False

@@ -52,6 +52,7 @@ configure_make(
         "msibuild",
         "msiinfo",
     ],
+    visibility = ["//visibility:public"],
     deps = select(
         {
             ":omd_libgsf": ["@libgsf"],

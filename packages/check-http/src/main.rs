@@ -20,7 +20,7 @@ use tracing_subscriber::{
 mod cli;
 mod pwstore;
 
-const DEFAULT_USER_AGENT: &str = "Checkmk/check_http";
+const DEFAULT_USER_AGENT: &str = "checkmk-active-httpv2/2.4.0";
 
 #[tokio::main]
 async fn main() {

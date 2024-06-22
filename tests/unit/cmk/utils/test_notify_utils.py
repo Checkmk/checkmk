@@ -12,7 +12,7 @@ from pytest import MonkeyPatch
 
 import livestatus
 
-import cmk.utils.notify as notify
+from cmk.utils import notify
 
 
 class FakeLocalConnection:

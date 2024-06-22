@@ -60,7 +60,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
-from cmk.gui.view_utils import format_plugin_output, render_labels
+from cmk.gui.view_utils import format_plugin_output, LabelRenderType, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
@@ -332,7 +332,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
-                check_table=(), host_labels={}, new_labels={}, vanished_labels={}, changed_labels={}
+                check_table=(),
+                nodes_check_table={},
+                host_labels={},
+                new_labels={},
+                vanished_labels={},
+                changed_labels={},
             )
 
         if not discovery_result.check_table_created and previous_discovery_result:
@@ -665,7 +670,7 @@ class DiscoveryPageRenderer:
             for state, output in sources.values():
                 html.open_tr()
                 html.open_td()
-                html.write_html(HTML(get_html_state_marker(state)))
+                html.write_html(HTML.without_escaping(get_html_state_marker(state)))
                 html.close_td()
                 # Make sure not to show long output
                 html.td(
@@ -765,8 +770,8 @@ class DiscoveryPageRenderer:
             table.cell(_("Host labels"), labels_html, css=["expanding"])
             return
 
-        plugin_names = HTML("")
-        labels_html = HTML("")
+        plugin_names = HTML.empty()
+        labels_html = HTML.empty()
         for label_id, label in host_labels.items():
             plugin_names += HTMLWriter.render_p(label["plugin_name"])
             labels_html += render_labels(
@@ -778,7 +783,7 @@ class DiscoveryPageRenderer:
             )
 
         table.cell(_("Host labels"), labels_html, css=["expanding"])
-        table.cell(_("Check Plugin"), plugin_names, css=["plugins"])
+        table.cell(_("Check plug-in"), plugin_names, css=["plugins"])
         return
 
     def _show_discovery_details(self, discovery_result: DiscoveryResult, api_request: dict) -> None:
@@ -789,7 +794,7 @@ class DiscoveryPageRenderer:
 
         # We currently don't get correct information from cmk.base (the data sources). Better
         # don't display this until we have the information.
-        # html.write_text("Using discovery information from %s" % cmk.utils.render.date_and_time(
+        # html.write_text_permissive("Using discovery information from %s" % cmk.utils.render.date_and_time(
         #    discovery_result.check_table_created))
 
         by_group = self._group_check_table_by_state(discovery_result.check_table)
@@ -1102,13 +1107,13 @@ class DiscoveryPageRenderer:
                 }
                 table.cell(_("Newly discovered"))
                 self._show_discovered_labels(unchanged_labels)
-                self._show_discovered_labels(changed_labels, label_type="changed")
-                self._show_discovered_labels(added_labels, label_type="added")
-                self._show_discovered_labels(removed_labels, label_type="removed")
+                self._show_discovered_labels(changed_labels, override_label_render_type="changed")
+                self._show_discovered_labels(added_labels, override_label_render_type="added")
+                self._show_discovered_labels(removed_labels, override_label_render_type="removed")
 
         if self._options.show_plugin_names:
             table.cell(
-                _("Check plugin"),
+                _("Check plug-in"),
                 HTMLWriter.render_a(content=ctype, href=manpage_url),
                 css=["plugins"],
             )
@@ -1124,12 +1129,10 @@ class DiscoveryPageRenderer:
             output, *_details = entry.output.split("\n", 1)
             if output:
                 html.write_html(
-                    HTML(
-                        format_plugin_output(
-                            output,
-                            request=request,
-                            shall_escape=active_config.escape_plugin_output,
-                        )
+                    format_plugin_output(
+                        output,
+                        request=request,
+                        shall_escape=active_config.escape_plugin_output,
                     )
                 )
             return
@@ -1162,7 +1165,7 @@ class DiscoveryPageRenderer:
         rulespec = rulespec_registry[varname]
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:
-                html.write_text(
+                html.write_text_permissive(
                     _("Timespecific parameters computed at %s")
                     % cmk.utils.render.date_and_time(params["tp_computed_params"]["computed_at"])
                 )
@@ -1171,7 +1174,7 @@ class DiscoveryPageRenderer:
             rulespec.valuespec.validate_datatype(params, "")
             rulespec.valuespec.validate_value(params, "")
             paramtext = rulespec.valuespec.value_to_html(params)
-            html.write_html(HTML(paramtext))
+            html.write_html(HTML.with_escaping(paramtext))
         except Exception as e:
             if active_config.debug:
                 err = traceback.format_exc()
@@ -1181,16 +1184,19 @@ class DiscoveryPageRenderer:
             paramtext += "{}: <tt>{}</tt><br>".format(_("Variable"), varname)
             paramtext += _("Parameters:")
             paramtext += "<pre>%s</pre>" % (pprint.pformat(params))
-            html.write_text(paramtext)
+            html.write_text_permissive(paramtext)
 
     def _show_discovered_labels(
-        self, service_labels: Labels, label_type: str = "discovered"
+        self,
+        service_labels: Labels,
+        override_label_render_type: LabelRenderType | None = None,
     ) -> None:
         label_code = render_labels(
             service_labels,
             "service",
             with_links=False,
-            label_sources={k: label_type for k in service_labels.keys()},
+            label_sources={k: "discovered" for k in service_labels.keys()},
+            override_label_render_type=override_label_render_type,
             request=request,
         )
         html.write_html(label_code)
@@ -1608,7 +1614,7 @@ class DiscoveryPageRenderer:
                 title=_("Active checks"),
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
-                    "call classical check plugins. They have been added by a rule in the section "
+                    "call classical check plug-ins. They have been added by a rule in the section "
                     "<i>Active checks</i> or implicitely by Checkmk."
                 ),
             ),
@@ -1627,7 +1633,7 @@ class DiscoveryPageRenderer:
                 title=_("Custom checks - defined via rule"),
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
-                    "call a classical check plugin, that you have installed yourself."
+                    "call a classical check plug-in, that you have installed yourself."
                 ),
             ),
             TableGroupEntry(
@@ -1674,7 +1680,7 @@ class DiscoveryPageRenderer:
                 title=_("Disabled active checks"),
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
-                    "call classical check plugins. They have been added by a rule in the section "
+                    "call classical check plug-ins. They have been added by a rule in the section "
                     "<i>Active checks</i> or implicitely by Checkmk. "
                     "These services have been disabled by creating a rule in the rule set "
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."
@@ -1686,7 +1692,7 @@ class DiscoveryPageRenderer:
                 title=_("Disabled custom checks - defined via rule"),
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
-                    "call a classical check plugin, that you have installed yourself. "
+                    "call a classical check plug-in, that you have installed yourself. "
                     "These services have been disabled by creating a rule in the rule set "
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."
                 ),
@@ -1932,7 +1938,7 @@ def _page_menu_entry_show_discovered_labels(host: Host, options: DiscoveryOption
 
 def _page_menu_entry_show_plugin_names(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Show plugin names"),
+        title=_("Show plug-in names"),
         icon_name="toggle_on" if options.show_plugin_names else "toggle_off",
         item=make_simple_link(
             _checkbox_js_url(
@@ -2164,7 +2170,7 @@ def ajax_popup_service_action_menu() -> None:
 
     html.open_a(href=DiscoveryPageRenderer.rulesets_button_link(entry.description, hostname))
     html.icon("rulesets")
-    html.write_text(_("View and edit the parameters for this service"))
+    html.write_text_permissive(_("View and edit the parameters for this service"))
     html.close_a()
 
     check_parameters_url = DiscoveryPageRenderer.check_parameters_button_link(entry, hostname)
@@ -2172,5 +2178,5 @@ def ajax_popup_service_action_menu() -> None:
         return
     html.open_a(href=check_parameters_url)
     html.icon("check_parameters")
-    html.write_text(_("Edit and analyse the check parameters for this service"))
+    html.write_text_permissive(_("Edit and analyse the check parameters for this service"))
     html.close_a()

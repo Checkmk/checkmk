@@ -397,7 +397,7 @@ from collections.abc import Iterator, Sequence
 from typing import Any, get_args, TypedDict
 
 import apispec
-import apispec_oneofschema  # type: ignore[import]
+import apispec_oneofschema  # type: ignore[import-untyped]
 import openapi_spec_validator
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
@@ -461,7 +461,7 @@ __version__ = "1.0"
 def main(args: Sequence[str]) -> int:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
-        raise Exception(f"The following errors occured during plugin loading: {errors}")
+        raise Exception(f"The following errors occured during plug-in loading: {errors}")
 
     with gui_context(), SuperUserContext():
         for target in get_args(EndpointTarget):
@@ -990,7 +990,7 @@ def _build_description(description_text: str | None, werk_id: int | None = None)
     return description
 
 
-def _schema_name(schema_name: str):  # type: ignore[no-untyped-def]
+def _schema_name(schema_name: str) -> str:
     """Remove the suffix 'Schema' from a schema-name.
 
     Examples:
@@ -1012,7 +1012,7 @@ def _schema_name(schema_name: str):  # type: ignore[no-untyped-def]
     return schema_name[:-6] if schema_name.endswith("Schema") else schema_name
 
 
-def _schema_definition(schema_name: str):  # type: ignore[no-untyped-def]
+def _schema_definition(schema_name: str) -> str:
     ref = f"#/components/schemas/{_schema_name(schema_name)}"
     return f'<SchemaDefinition schemaRef="{ref}" showReadOnly={{true}} showWriteOnly={{true}} />'
 

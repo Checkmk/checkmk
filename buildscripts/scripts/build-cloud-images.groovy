@@ -43,6 +43,7 @@ def main() {
     def cloud_targets = ["amazon-ebs", "azure-arm"]
     def build_cloud_images = params.BUILD_CLOUD_IMAGES
     def publish_cloud_images = params.PUBLISH_IN_MARKETPLACE
+    def packer_envvars = ['CHECKPOINT_DISABLE=1', "PACKER_CONFIG_DIR=${checkout_dir}/packer/.packer"]
 
     currentBuild.description += (
         """
@@ -57,31 +58,30 @@ def main() {
     }
 
     // Build Phase
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_image_from_alias("IMAGE_TESTING").inside() {
-            smart_stage(
-                name: 'Packer init',
-                condition: build_cloud_images,
-                raiseOnError: true,
-            ) {
-                dir("${checkout_dir}/packer") {
+    inside_container() {
+        smart_stage(
+            name: 'Packer init',
+            condition: build_cloud_images,
+            raiseOnError: true,
+        ) {
+            dir("${checkout_dir}/packer") {
+                // https://developer.hashicorp.com/packer/docs/configure#environment-variables-usable-for-packer
+                withEnv(packer_envvars){
                     // This step cannot be done during building images as it needs the *.pkr.hcl scripts from the repo
                     sh("packer init .");
                 }
             }
-            parallel(create_build_stages(cloud_targets, env_secret_map, build_cloud_images));
+            parallel(create_build_stages(cloud_targets, env_secret_map, build_cloud_images, packer_envvars));
         }
     }
 
     // Publish Phase
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_image_from_alias("IMAGE_TESTING").inside() {
-            dir("${checkout_dir}") {
-                // As we're using the same .venv for multiple cloud targets in parallel, we need to make sure the
-                // .venv is up-to-date before parallelisation. Otherwise one process may fail due to a invalid .venv.
-                sh("make .venv");
-                parallel(create_publish_stages(["aws": ami_image_name, "azure": azure_image_name], cmk_version, publish_cloud_images))
-            }
+    inside_container() {
+        dir("${checkout_dir}") {
+            // As we're using the same .venv for multiple cloud targets in parallel, we need to make sure the
+            // .venv is up-to-date before parallelisation. Otherwise one process may fail due to a invalid .venv.
+            sh("make .venv");
+            parallel(create_publish_stages(["aws": ami_image_name, "azure": azure_image_name], cmk_version, publish_cloud_images))
         }
     }
 }
@@ -131,7 +131,7 @@ def build_env_secret_map(cmk_version, ami, azure) {
     ];
 }
 
-def create_build_stages(cloud_targets, env_secret_map, build_images) {
+def create_build_stages(cloud_targets, env_secret_map, build_images, packer_envvars) {
     return cloud_targets.collectEntries { target ->
         [("Building target ${target}"): {
             smart_stage(
@@ -140,7 +140,7 @@ def create_build_stages(cloud_targets, env_secret_map, build_images) {
                 raiseOnError: true,
             ) {
                 withCredentials(env_secret_map["secrets"]) {
-                    withEnv(env_secret_map["env"]) {
+                    withEnv(env_secret_map["env"] + packer_envvars) {
                         dir("${checkout_dir}/packer") {
                             sh("""
                                    packer build -only="checkmk-ansible.${target}.builder" .;

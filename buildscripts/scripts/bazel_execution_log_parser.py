@@ -9,23 +9,29 @@ from pathlib import Path
 from pprint import pprint as pp
 from typing import Iterator, NamedTuple
 
-from pydantic import BaseModel
-
 
 class Summary(NamedTuple):
     overallTargets: int
-    remoteCacheHits: int
+    cacheHits: int
     percentRemoteCacheHits: float
     targetsWithMissedCache: list[str]
     numberUncacheableTargets: int
     numberRemotableTargets: int
 
 
-class ExecutionMetrics(BaseModel):
-    targetLabel: str
-    remoteCacheHit: bool
-    cacheable: bool
-    remotable: bool
+# no one needs pydantics BaseModel for the price of a complete venv
+class ExecutionMetrics:
+    def __init__(self, **kwargs) -> None:
+        setattr(self, "targetLabel", "")
+        setattr(self, "cacheHit", bool)
+        setattr(self, "cacheable", bool)
+        setattr(self, "remotable", bool)
+
+        for key, value in kwargs.items():
+            if key in ("targetLabel"):
+                setattr(self, key, str(value))
+            elif key in ("cacheHit", "cacheable", "remotable"):
+                setattr(self, key, bool(value))
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -77,13 +83,13 @@ def parse_execution_logs(log_files: list[Path]) -> Iterator[ExecutionMetrics]:
 
 def build_summary(parsed_logs: list[ExecutionMetrics]) -> Summary:
     overall_targets = len(parsed_logs)
-    remote_cache_hits = sum(1 for log in parsed_logs if log.remoteCacheHit)
+    cache_hits = sum(1 for log in parsed_logs if log.cacheHit)
 
     return Summary(
         overallTargets=overall_targets,
-        remoteCacheHits=remote_cache_hits,
-        percentRemoteCacheHits=round(remote_cache_hits / overall_targets * 100, 2),
-        targetsWithMissedCache=[log.targetLabel for log in parsed_logs if not log.remoteCacheHit],
+        cacheHits=cache_hits,
+        percentRemoteCacheHits=round(cache_hits / overall_targets * 100, 2),
+        targetsWithMissedCache=[log.targetLabel for log in parsed_logs if not log.cacheHit],
         numberUncacheableTargets=sum(1 for log in parsed_logs if not log.cacheable),
         numberRemotableTargets=sum(1 for log in parsed_logs if log.remotable),
     )

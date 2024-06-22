@@ -28,11 +28,14 @@ export default defineConfig(({ command }) => {
     build: {
       sourcemap: true,
       rollupOptions: {
+        input: {
+          'vue_min.js': './src/main.ts',
+          'vue_stage1.js': './src/vue_stage1.ts'
+        },
         output: {
-          // the build process does not support dynamic filenames
-          // so we fix it to the name we expect in the site
-          // we could rename the file, but then the sourcemap comment would not match.
-          entryFileNames: 'assets/vue_min.js'
+          // the Checkmk site does not support dynamic filenames for assets.
+          // we can not rename the file, otherwise the sourcemap would no longer match.
+          entryFileNames: 'assets/[name]'
         },
         external: [
           // treat all themes files as external to the build
@@ -49,6 +52,12 @@ export default defineConfig(({ command }) => {
     // we are in serve mode here, supporting auto hot reload
     return {
       ...resultBuild,
+      test: {
+        // enable jest-like global test APIs
+        globals: true,
+        environment: 'jsdom',
+        setupFiles: ['tests/setup-tests.ts']
+      },
       server: {
         strictPort: true,
         proxy: {
@@ -56,7 +65,7 @@ export default defineConfig(({ command }) => {
           '^(?!/cmk-frontend-vue-ahr)': 'http://localhost/'
         }
       },
-      base: '/cmk-frontend-vue-ahr',
+      base: '/cmk-frontend-vue-ahr'
     }
   }
 })

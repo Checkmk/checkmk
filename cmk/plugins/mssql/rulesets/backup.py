@@ -35,7 +35,6 @@ def _form_spec_discovery_mssql_backup():
 rule_spec_discovery_mssql_backup = rule_specs.DiscoveryParameters(
     title=Title("MSSQL backup discovery"),
     topic=rule_specs.Topic.GENERAL,
-    eval_type=rule_specs.EvalType.MERGE,
     name="discovery_mssql_backup",
     parameter_form=_form_spec_discovery_mssql_backup,
 )

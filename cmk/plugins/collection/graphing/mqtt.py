@@ -6,7 +6,7 @@
 from cmk.graphing.v1 import graphs, metrics, Title
 
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
-UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("1/s"))
+UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.IECNotation("B/s"))
 
@@ -22,13 +22,6 @@ metric_subscriptions = metrics.Metric(
     title=Title("Current subscriptions"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.ORANGE,
-)
-
-metric_clients_connected = metrics.Metric(
-    name="clients_connected",
-    title=Title("Clients connected"),
-    unit=UNIT_NUMBER,
-    color=metrics.Color.PURPLE,
 )
 
 metric_clients_maximum = metrics.Metric(

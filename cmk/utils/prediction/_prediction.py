@@ -109,6 +109,8 @@ class PredictionStore:
         data_file.write_text(prediction.model_dump_json())
 
     def iter_all_metadata_files(self) -> Iterable[Path]:
+        if not self.path.exists():
+            return ()
         return self.path.rglob(f"*{self.INFO_FILE_SUFFIX}")
 
     def remove_outdated_predictions(self, now: float) -> None:

@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 
 from cmk.utils.everythingtype import EVERYTHING
 
-from cmk.checkengine.discovery import CheckPreviewEntry, DiscoveryMode, DiscoverySettings
+from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job import BackgroundStatusSnapshot
@@ -38,7 +38,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
 )
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.openapi.restful_objects.type_defs import LinkType
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils import permission_verification as permissions
@@ -111,22 +111,23 @@ class APIDiscoveryAction(enum.Enum):
     fix_all = "fix_all"
     refresh = "refresh"
     only_host_labels = "only_host_labels"
+    only_service_labels = "only_service_labels"
     tabula_rasa = "tabula_rasa"
 
 
-def _discovery_mode(default_mode: str):  # type: ignore[no-untyped-def]
+def _discovery_mode(default_mode: str) -> fields.String:
     # TODO: documentation should be separated for bulk discovery
     return fields.String(
         description="""The mode of the discovery action. The 'refresh' mode starts a new service
         discovery which will contact the host and identify undecided and vanished services and host
         labels. Those services and host labels can be added or removed accordingly with the
-        'fix_all' mode. The 'tabula_rasa' mode combines these two procedures. The 'new', 'remove'
-        and 'only_host_labels' modes give you more granular control. Both the 'tabula_rasa' and
-        'refresh' modes will start a background job and the endpoint will return a redirect to
-        the 'wait-for-completion' endpoint. All other modes will return an immediate result instead.
-        Keep in mind that the non background job modes only work with scanned data, so you may need
-        to run "refresh" first. The corresponding user interface option for each discovery mode is
-        shown below.
+        'fix_all' mode. The 'tabula_rasa' mode combines these two procedures. The 'new', 'remove',
+        'only_host_labels' and 'only_service_labels' modes give you more granular control. Both the
+        'tabula_rasa' and 'refresh' modes will start a background job and the endpoint will return
+        a redirect to the 'wait-for-completion' endpoint. All other modes will return an immediate
+        result instead. Keep in mind that the non background job modes only work with scanned data,
+        so you may need to run "refresh" first. The corresponding user interface option for each
+        discovery mode is shown below.
 
  * `new` - Monitor undecided services
  * `remove` - Remove vanished services
@@ -134,6 +135,7 @@ def _discovery_mode(default_mode: str):  # type: ignore[no-untyped-def]
  * `tabula_rasa` - Remove all and find new
  * `refresh` - Rescan
  * `only_host_labels` - Update host labels
+ * `only_service_labels` - Update service labels
     """,
         enum=[a.value for a in APIDiscoveryAction],
         example="refresh",
@@ -147,6 +149,7 @@ DISCOVERY_ACTION = {
     "fix_all": DiscoveryAction.FIX_ALL,
     "refresh": DiscoveryAction.REFRESH,
     "only_host_labels": DiscoveryAction.UPDATE_HOST_LABELS,
+    "only_service_labels": DiscoveryAction.UPDATE_SERVICE_LABELS,
     "tabula_rasa": DiscoveryAction.TABULA_RASA,
 }
 
@@ -488,6 +491,17 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
                 host=host,
                 raise_errors=False,
             )
+        case APIDiscoveryAction.only_service_labels:
+            discovery_result = perform_service_discovery(
+                action=discovery_action,
+                discovery_result=discovery_result,
+                update_source="changed",
+                update_target="unchanged",
+                host=host,
+                selected_services=EVERYTHING,
+                raise_errors=False,
+            )
+
         case _:
             assert_never(api_discovery_action)
 
@@ -516,10 +530,10 @@ def _lookup_phase_name(internal_phase_name: str) -> str:
     raise ValueError(f"Key {internal_phase_name} not found in dict.")
 
 
-def serialize_discovery_result(  # type: ignore[no-untyped-def]
+def serialize_discovery_result(
     host: Host,
     discovery_result: DiscoveryResult,
-):
+) -> DomainObject:
     services = {}
     host_name = host.name()
     for entry in discovery_result.check_table:
@@ -655,7 +669,7 @@ class BulkDiscovery(BaseSchema):
     )
     ignore_errors = fields.Boolean(
         required=False,
-        description="The option whether to ignore errors in single check plugins.",
+        description="The option whether to ignore errors in single check plug-ins.",
         example=True,
         load_default=True,
     )

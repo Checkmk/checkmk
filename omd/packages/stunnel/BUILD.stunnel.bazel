@@ -31,6 +31,7 @@ configure_make(
     out_shared_libs = [
         "libstunnel.so",
     ],
+    visibility = ["//visibility:public"],
     deps = ["@openssl"],
 )
 
@@ -44,10 +45,13 @@ genrule(
         "skel/etc/logrotate.d/stunnel",
         "skel/etc/rc.d/85-stunnel",
         "skel/etc/stunnel/server.conf",
-        "skel/etc/stunnel/conf.d",
+        # Either .gitignore are deleted in the packaging step
+        # or empty folders are created later
+        # as Bazel genrules don't allow output directories.
+        "skel/etc/stunnel/conf.d/.gitignore",
     ],
     cmd = """
         cp -r --dereference $(execpath @omd_packages//omd/packages/stunnel:skel) $$(realpath $(RULEDIR))
-        find $$(realpath $(RULEDIR)) -name ".gitignore" -delete
     """,
+    visibility = ["//visibility:public"],
 )

@@ -3,28 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
 # mypy: disable-error-code=var-annotated
+
 checkname = "checkpoint_vsx"
 
 
 mock_item_state = {
     "packets": {
-       "packets_rate": (0, 150512),
-       "packets_accepted_rate": (0, 150143),
-       "packets_dropped_rate": (0, 369),
-       "packets_rejected_rate": (0, 0),
-       "logged_rate": (0, 2386),
+        "packets_rate": (0, 150512),
+        "packets_accepted_rate": (0, 150143),
+        "packets_dropped_rate": (0, 369),
+        "packets_rejected_rate": (0, 0),
+        "logged_rate": (0, 2386),
     },
     "traffic": {
-       "bytes_accepted_rate": (0, 46451524),
-       "bytes_dropped_rate": (0, 44344),
-       "bytes_rejected_rate": (0, 0),
-
+        "bytes_accepted_rate": (0, 46451524),
+        "bytes_dropped_rate": (0, 44344),
+        "bytes_rejected_rate": (0, 0),
     },
 }
-
-
 
 
 info = [

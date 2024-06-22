@@ -5,7 +5,7 @@
 """Autocomplete (internal)
 
 This provides access to autocomplete functionality. This currently is mostly used
-internally by the Grafana's data source plugin and relies on data sent by it that
+internally by the Grafana's data source plug-in and relies on data sent by it that
 is not fully documented and specified yet.
 """
 from collections.abc import Mapping

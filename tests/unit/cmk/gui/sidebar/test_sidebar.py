@@ -9,7 +9,7 @@ from collections.abc import Iterator, Sequence
 import pytest
 from pytest_mock import MockerFixture
 
-import cmk.gui.sidebar as sidebar
+from cmk.gui import sidebar
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user

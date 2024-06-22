@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
 from contextlib import suppress
 
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
 from ._table import SNMPDecodedString
@@ -24,6 +24,7 @@ def get_single_oid(
     section_name: SectionName | None = None,
     single_oid_cache: dict[OID, SNMPDecodedString | None],
     backend: SNMPBackend,
+    log: Callable[[str], None],
 ) -> SNMPDecodedString | None:
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
@@ -35,15 +36,13 @@ def get_single_oid(
 
     with suppress(KeyError):
         cached_value = single_oid_cache[oid]
-        console.vverbose(
-            f"       Using cached OID {oid}: {tty.bold}{tty.green}{cached_value!r}{tty.normal}\n"
-        )
+        log(f"       Using cached OID {oid}: {tty.bold}{tty.green}{cached_value!r}{tty.normal}")
         return cached_value
 
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
     # SNMP contexts, all contextes will be queried until the first answer is received.
     value = None
-    console.vverbose("       Getting OID %s: " % oid)
+    log(f"       Getting OID {oid}...")
     context_config = backend.config.snmpv3_contexts_of(section_name)
     for context in context_config.contexts:
         try:
@@ -57,9 +56,9 @@ def get_single_oid(
             value = None
 
     if value is not None:
-        console.vverbose(f"{tty.bold}{tty.green}{value!r}{tty.normal}\n")
+        log(f"       Got OID {oid}: {tty.bold}{tty.green}{value!r}{tty.normal}")
     else:
-        console.vverbose("failed.\n")
+        log(f"       Getting OID {oid} failed.")
 
     if value is not None:
         decoded_value: SNMPDecodedString | None = ensure_str(

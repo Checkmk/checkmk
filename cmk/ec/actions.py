@@ -82,9 +82,7 @@ def do_event_actions(
     event: Event,
     is_cancelling: bool,
 ) -> None:
-    """
-    Execute a list of actions on an event that has just been opened or cancelled.
-    """
+    """Execute a list of actions on an event that has just been opened or cancelled."""
     table = config["action"]
     for aname in actions:
         if aname == "@NOTIFY":
@@ -125,7 +123,8 @@ def do_event_action(
         elif act[0] == "script":
             _do_script_action(history, logger, event_columns, act[1], action_id, event, user)
         else:
-            logger.error("Cannot execute action %s: invalid action type %s", action_id, act[0])
+            # TODO: Really parse the config, then this can't happen
+            logger.error("Cannot execute action %s: invalid action type %s", action_id, act[0])  # type: ignore[unreachable]
     except Exception:
         if settings.options.debug:
             raise
@@ -258,10 +257,7 @@ def _get_event_tags(
 
     tags: dict[str, str] = {}
     for key, value in substs:
-        if isinstance(value, tuple):
-            value = " ".join(map(to_string, value))
-        else:
-            value = to_string(value)
+        value = " ".join(map(to_string, value)) if isinstance(value, tuple) else to_string(value)
 
         tags[key] = value
 
@@ -464,9 +460,8 @@ def _add_infos_from_monitoring_host(
 def _add_contacts_from_rule(context: ECEventContext, event: Event, logger: Logger) -> None:
     """
     Add contact information from the rule, but only if the
-    host is unknown or if contact groups in rule have precedence
+    host is unknown or if contact groups in rule have precedence.
     """
-
     contact_groups = event.get("contact_groups")
     if (
         contact_groups is not None

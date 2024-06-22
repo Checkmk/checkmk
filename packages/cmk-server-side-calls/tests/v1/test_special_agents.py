@@ -7,13 +7,7 @@ from collections.abc import Iterator, Mapping
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    HTTPProxy,
-    Secret,
-    SpecialAgentCommand,
-    SpecialAgentConfig,
-)
+from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
 class ExampleParams(BaseModel):
@@ -29,7 +23,6 @@ def parse_example_params(params: Mapping[str, object]) -> ExampleParams:
 def generate_example_commands(
     params: ExampleParams,
     _host_config: HostConfig,
-    _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
     yield SpecialAgentCommand(
         command_arguments=(
@@ -59,7 +52,7 @@ def test_active_check_config() -> None:
         "password": Secret(42),
     }
 
-    commands = list(special_agent_example(params, host_config, {}))
+    commands = list(special_agent_example(params, host_config))
 
     assert len(commands) == 1
     assert commands[0] == SpecialAgentCommand(

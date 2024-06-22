@@ -11,7 +11,7 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.base.plugins.agent_based.utils_inventory import sort_inventory_result
+from tests.unit.cmk.plugins.collection.agent_based.utils_inventory import sort_inventory_result
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
 from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfaces, InventoryParams

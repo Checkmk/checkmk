@@ -9,14 +9,20 @@ from typing import Any
 import pytest
 
 from cmk.plugins.collection.server_side_calls.cisco_meraki import special_agent_cisco_meraki
-from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, Secret, SpecialAgentCommand
+from cmk.server_side_calls.v1 import (
+    EnvProxy,
+    HostConfig,
+    IPv4Config,
+    NoProxy,
+    Secret,
+    SpecialAgentCommand,
+    URLProxy,
+)
 
 HOST_CONFIG = HostConfig(
     name="testhost",
     ipv4_config=IPv4Config(address="0.0.0.1"),
 )
-
-HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy.com")}
 
 
 @pytest.mark.parametrize(
@@ -39,10 +45,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         pytest.param(
             {
                 "api_key": Secret(0),
-                "proxy": (
-                    "url",
-                    "abc:8567",
-                ),
+                "proxy": URLProxy(url="abc:8567"),
             },
             [
                 SpecialAgentCommand(
@@ -59,10 +62,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         pytest.param(
             {
                 "api_key": Secret(0),
-                "proxy": (
-                    "environment",
-                    "environment",
-                ),
+                "proxy": EnvProxy(),
             },
             [
                 SpecialAgentCommand(
@@ -79,10 +79,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         pytest.param(
             {
                 "api_key": Secret(0),
-                "proxy": (
-                    "no_proxy",
-                    None,
-                ),
+                "proxy": NoProxy(),
             },
             [
                 SpecialAgentCommand(
@@ -95,46 +92,6 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 )
             ],
             id="Proxy settings, no proxy",
-        ),
-        pytest.param(
-            {
-                "api_key": Secret(0),
-                "proxy": (
-                    "global",
-                    "my_proxy",
-                ),
-            },
-            [
-                SpecialAgentCommand(
-                    command_arguments=[
-                        "testhost",
-                        Secret(0),
-                        "--proxy",
-                        "proxy.com",
-                    ]
-                )
-            ],
-            id="Proxy settings, global proxy",
-        ),
-        pytest.param(
-            {
-                "api_key": Secret(0),
-                "proxy": (
-                    "global",
-                    "test_proxy",
-                ),
-            },
-            [
-                SpecialAgentCommand(
-                    command_arguments=[
-                        "testhost",
-                        Secret(0),
-                        "--proxy",
-                        "FROM_ENVIRONMENT",
-                    ]
-                )
-            ],
-            id="Proxy settings, global proxy not found in global config",
         ),
         pytest.param(
             {
@@ -174,9 +131,9 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         ),
     ],
 )
-def test_aws_argument_parsing(
+def test_argument_parsing(
     params: Mapping[str, Any],
     expected_args: Sequence[SpecialAgentCommand],
 ) -> None:
     """Tests if all required arguments are present."""
-    assert list(special_agent_cisco_meraki(params, HOST_CONFIG, HTTP_PROXIES)) == expected_args
+    assert list(special_agent_cisco_meraki(params, HOST_CONFIG)) == expected_args

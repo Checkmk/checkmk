@@ -1492,7 +1492,7 @@ graph_aws_ec2_running_ondemand_instances_x2gd = graphs.Graph(
 
 graph_aws_ec2_running_ondemand_instances_z1d = graphs.Graph(
     name="aws_ec2_running_ondemand_instances_z1d",
-    title=Title("Total running On-Demand Instances of type z1d"),
+    title=Title("Total running on-demand Instances of type z1d"),
     compound_lines=[
         "aws_ec2_running_ondemand_instances_z1d.12xlarge",
         "aws_ec2_running_ondemand_instances_z1d.2xlarge",

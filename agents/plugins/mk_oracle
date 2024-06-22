@@ -607,7 +607,7 @@ set_ora_env() {
             # oratab is not supported in Grid-Infrastructure 12.2+
             # => fetch ORACLE_HOME from cluster repository for all GI/Restart Environments!
             # OLRLOC holds crs_home
-            crs_home=get_crs_home_from_olrloc "${OLRLOC}"
+            crs_home=$(get_crs_home_from_olrloc "${OLRLOC}")
             export ORA_HOME_SOURCE="(GI):    "
 
             # set ORACLE_HOME = crs_home for ASM
@@ -615,10 +615,10 @@ set_ora_env() {
                 # shellcheck disable=SC2154
                 ORACLE_HOME=${crs_home}
             else
-                crsctl_path="${ORACLE_HOME}"/bin/crsctl
+                crsctl_path="${crs_home}"/bin/crsctl
                 EXECUTION_MODE="$(get_binary_execution_mode "$crsctl_path" "$(get_binary_owner "$crsctl_path")")"
                 # get ORACLE_HOME with crsctl from Oracle Grid Infrastructure / Restart
-                ORACLE_HOME=$($EXECUTION_MODE "\"${crsctl_path}\" stat res -p -w \"((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))\"" | grep -m1 \"^ORACLE_HOME=\" | cut -d\"=\" -f2)
+                ORACLE_HOME=$($EXECUTION_MODE "\"${crsctl_path}\" stat res -p -w \"((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))\" | ${GREP} -m1 ^ORACLE_HOME= | cut -d= -f2")
             fi
         else
             # Single Instance with oratab
@@ -2366,17 +2366,23 @@ get_binary_execution_mode() {
     BINARY_USER=$2
 
     # if the executable belongs to someone besides root, do not execute it as root
-    if [ "$(whoami)" = "root" ] && ! only_root_can_modify "$(stat -c '%A' "$BINARY_PATH")" "$(stat -c '%U' "$BINARY_PATH")" "$(stat -c '%G' "$BINARY_PATH")"; then
+    if needs_user_switch_before_executing "$BINARY_PATH"; then
         echo "su ${BINARY_USER} -c"
         return
     fi
     echo "bash -c"
 }
 
+needs_user_switch_before_executing() {
+    BINARY_PATH=$1
+
+    [ "$(whoami)" = "root" ] && ! only_root_can_modify "$(stat -c '%A' "$BINARY_PATH")" "$(stat -c '%U' "$BINARY_PATH")" "$(stat -c '%G' "$BINARY_PATH")"
+}
+
 # END COMMON PLUGIN CODE
 
 get_crs_home_from_olrloc() {
-    grep "crs_home" "${1}" | cut -d"=" -f2
+    "${GREP}" "crs_home" "${1}" | cut -d"=" -f2
 }
 
 get_sqlplus_version_with_precision() {
@@ -2784,7 +2790,9 @@ mk_ora_sqlplus() {
 
     start_time="$(perl -MTime::HiRes=time -wle 'print time')"
     read -r -d '' pipe_input <<EOM
+WHENEVER SQLERROR EXIT 1
 connect ${MK_DB_CONNECT}
+WHENEVER SQLERROR CONTINUE
 $(ora_session_environment)${function_stdin}
 EOM
     SQLPLUS=${ORACLE_HOME}/bin/sqlplus
@@ -2797,7 +2805,22 @@ EOM
         echo "<<<<${MK_PIGGYBACK_HOST}>>>>"
     fi
 
-    EXECUTION_MODE="$(get_binary_execution_mode "$SQLPLUS" "$(get_binary_owner "$SQLPLUS")")"
+    EXECUTION_USER="$(get_binary_owner "$SQLPLUS")"
+    EXECUTION_MODE="$(get_binary_execution_mode "$SQLPLUS" "$EXECUTION_USER")"
+
+    if ! $EXECUTION_MODE "test -r \"${TNS_ADMIN}/sqlnet.ora\""; then
+        # we can not read sqlnet.ora!
+        # set_ora_env already checked that the file exists
+        # and we want to transport a meaningful error message to the ui and in logging
+        local sqlnet_ora_error="${TNS_ADMIN}/sqlnet.ora can not be read by user \"${EXECUTION_USER}\"! Either use 'sqlnet.ora permission group' bakery rule, or directly modify permissions of the file."
+        logging -c -e "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "$sqlnet_ora_error"
+
+        echo '<<<oracle_instance:sep(124)>>>'
+        echo "$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|$sqlnet_ora_error"
+        exit 1
+
+    fi
+
     if output=$(echo "$pipe_input" | $EXECUTION_MODE "\"$SQLPLUS\" -L -s /nolog"); then
         echo -e "$output"
 
@@ -2821,6 +2844,7 @@ EOM
         if $MK_ORA_DEBUG_CONNECT; then
             echo "    Logindetails:           ${MK_DB_CONNECT}" >&2
             echo -e "    Error Message:          ${output:0:100}"
+            exit 1
         else
             echo '<<<oracle_instance:sep(124)>>>'
             echo -e "$output"
@@ -2855,9 +2879,119 @@ do_async_checks() {
     echo "$MK_ASYNC_SECTIONS_QUERY" | mk_ora_sqlplus "do_async_checks"
 }
 
+do_suggest_group() {
+    local MODE=$1
+    local USER=$2
+    local FILE=$3
+    if id -Gn "$USER" | "${GREP}" '\boinstall\b' >/dev/null; then
+        echo "  We suggest to change the group to oinstall and give $MODE permission for the group:"
+        echo "  chgrp oinstall \"$FILE\""
+        local m="x"
+        if [ "$MODE" = "read" ]; then
+            m="r"
+        fi
+        echo "  chmod g+$m \"$FILE\""
+    fi
+}
+
+do_test_file_permission() {
+    local MODE=$1
+    local USER=$2
+    local FILE=$3
+
+    local m="-x"
+    if [ "$MODE" = "read" ]; then
+        m="-r"
+    fi
+
+    if su "${USER}" -c "test $m \"$FILE\""; then
+        echo "* user \"$USER\" can $MODE $FILE"
+        true
+    else
+        echo "* ERROR! user \"$USER\" can NOT $MODE $FILE"
+        echo "  $(ls -dl "$FILE")"
+        do_suggest_group "$MODE" "$USER" "$FILE"
+        echo
+        false
+    fi
+}
+
+do_test_permissions() {
+    local DEFAULT_SQLNET="LOG_DIRECTORY_CLIENT=/var/log/check_mk/oracle_clientDIAG_ADR_ENABLED=OFFSQLNET.WALLET_OVERRIDE=TRUEWALLET_LOCATION=(SOURCE=(METHOD=FILE)(METHOD_DATA=(DIRECTORY=/etc/check_mk/oracle_wallet)))"
+
+    echo
+    echo "---checking permissions-------------------------------------------------"
+    echo "see https://checkmk.atlassian.net/wiki/spaces/KB/pages/70582273/Troubleshooting+mk+oracle+for+Windows+and+Linux"
+    echo
+
+    local SQLPLUS="${ORACLE_HOME}/bin/sqlplus"
+    echo "* sqlplus binary: ${SQLPLUS}"
+    local BINARY_OWNER
+    BINARY_OWNER="$(get_binary_owner "$SQLPLUS")"
+    echo "* sqlplus binary owner: ${BINARY_OWNER}"
+    if ! needs_user_switch_before_executing "$SQLPLUS"; then
+        echo "* change user: false"
+        echo "------------------------------------------------------------------------"
+        return
+    fi
+    echo "* change user: true"
+
+    echo "* \$TNS_ADMIN: ${TNS_ADMIN}"
+    local PATH_SQLNET="$TNS_ADMIN/sqlnet.ora"
+    local PATH_TNSNAMES="$TNS_ADMIN/tnsnames.ora"
+    if ! do_test_file_permission "read" "$BINARY_OWNER" "$PATH_SQLNET"; then
+        echo "  If you use the AGENT BAKERY you have to use the rule 'sqlnet.ora premission group' to make this change permanently, otherwise it will be overwritten by an agent update."
+    fi
+    if [ -f "$PATH_TNSNAMES" ]; then
+        do_test_file_permission "read" "$BINARY_OWNER" "$PATH_TNSNAMES"
+    fi
+    echo
+
+    local GENERIC_ERROR_MESSAGE="
+  Could not login. In case you are using a wallet to connect, there might be a permission error.
+  Make sure that the wallet folder can be read and executed by user \"$BINARY_OWNER\" and
+  the files inside the wallet can be read by the user.
+  Consult your ora files for hints where the wallet is located:
+  $PATH_SQLNET
+  $PATH_TNSNAMES
+"
+
+    # let's go all in and see if the connection works:
+    if error=$(echo "" | mk_ora_sqlplus "do_testmode" "no" 2>&1); then
+        echo "* test login works"
+    else
+        echo "* test-login does not work!"
+        if echo "$error" | ${GREP} "ORA-12578" >/dev/null; then
+            echo "  ORA-12578 suggests, that there is an error reading the wallet."
+            if [ "$(sed '/^#/d' </etc/check_mk/sqlnet.ora | tr -d '\n' | sed -e 's/\s\+//g')" == "$DEFAULT_SQLNET" ]; then
+                echo "  Detected sqlnet.ora as suggested in the documentation."
+                local WALLET_PATH="/etc/check_mk/oracle_wallet"
+                if [ ! -d "$WALLET_PATH" ]; then
+                    echo
+                    echo "* '$WALLET_PATH' does not exist or is not a directory!"
+                else
+                    echo
+                    do_test_file_permission "read" "$BINARY_OWNER" "$WALLET_PATH"
+                    do_test_file_permission "execute" "$BINARY_OWNER" "$WALLET_PATH"
+                    for f in "$WALLET_PATH"/{c,e}wallet.*; do
+                        do_test_file_permission "read" "$BINARY_OWNER" "$f"
+                    done
+                fi
+            else
+                echo "$GENERIC_ERROR_MESSAGE"
+            fi
+        else
+            echo "$GENERIC_ERROR_MESSAGE"
+        fi
+    fi
+    echo "------------------------------------------------------------------------"
+}
+
 do_testmode() {
     local sections=$1
     local asections=$2
+
+    do_test_permissions
 
     echo
     echo "---login----------------------------------------------------------------"
@@ -3047,6 +3181,7 @@ export -f custom_sql_section
 export -f do_async_custom_sqls
 export -f handle_custom_sql_errors
 export -f get_binary_execution_mode
+export -f needs_user_switch_before_executing
 export -f get_binary_owner
 export -f only_root_can_modify
 
@@ -3076,7 +3211,7 @@ main_queries() {
     # => Ignore a running ASM-Instance!
     # shellcheck disable=SC2016
     SIDS=$(UNIX95=true ps -ef | "${AWK}" '{print $NF}' |
-        "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_' |
+        "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_|^db_pmon_' |
         cut -d"_" -f3- | sort)
 
     # Load config AFTER we got the SIDS since we allow users to use this variable in their config

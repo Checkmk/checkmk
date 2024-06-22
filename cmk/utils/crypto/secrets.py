@@ -16,7 +16,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import AnyStr
 
-import cmk.utils.paths as paths
+from cmk.utils import paths
 from cmk.utils.user import UserId
 
 
@@ -153,9 +153,11 @@ class AutomationUserSecret:
         return secret
 
     def exists(self) -> bool:
+        """Check if the secret file is present on disk"""
         return self.path.is_file()
 
     def save(self, secret: str) -> None:
+        """Write the secret to the user's "automation.secret" file"""
         self.path.write_text(secret)
 
     def delete(self) -> None:

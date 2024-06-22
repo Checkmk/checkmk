@@ -11,7 +11,6 @@ from cmk.utils.prediction import PredictionData, PredictionStore
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class RemoveUnreadablePredictions(UpdateAction):
@@ -23,7 +22,7 @@ class RemoveUnreadablePredictions(UpdateAction):
     Deleting the unreadable ones allows us to change the format between releases.
     """
 
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         self.cleanup_unreadable_files(cmk.utils.paths.predictions_dir)
 
     @staticmethod

@@ -21,7 +21,7 @@ class _BaseGetSchema(BaseRequestSchema):
         example="heute",
     )
     host_name = HostField(
-        description="The hostname to use.",
+        description="The host name to use.",
         example="my.cool.host",
         should_be_monitored=True,
         should_exist=None,

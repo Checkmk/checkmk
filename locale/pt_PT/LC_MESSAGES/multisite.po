@@ -52921,6 +52921,10 @@ msgstr ""
 msgid "Specify database names that the rule should apply to"
 msgstr "Especificar nomes de bancos de dados aos quais a regra deve se aplicar"
 
+#, fuzzy
+msgid "Specify database names that the rule should apply to."
+msgstr "Especificar nomes de bancos de dados aos quais a regra deve se aplicar"
+
 msgid "Specify discovery mode"
 msgstr "Especificar o modo de descoberta"
 
@@ -64485,9 +64489,7 @@ msgstr ""
 msgid ""
 "This ruleset will deploy the agent plug-in <tt>mk_sap</tt> for (locally) "
 "monitoring SAP R/3 instances. Note: you still need to manually deploy the "
-"SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc. Both is "
-"explained in an <a href='http://mathias-kettner.de/checkmk_sap_r3."
-"html'>article in the Checkmk documentation</a>."
+"SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc."
 msgstr ""
 "Esse conjunto de regras implantará o plug-in de agente <tt>mk_sap</tt> para "
 "monitorar (localmente) as instâncias do SAP R/3. Nota: ainda é necessário "

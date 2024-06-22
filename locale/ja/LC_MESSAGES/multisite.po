@@ -51895,6 +51895,10 @@ msgstr "イベント履歴の新しいファイルが作成される期間を指
 msgid "Specify database names that the rule should apply to"
 msgstr "ルールを適用するデータベース名を指定します"
 
+#, fuzzy
+msgid "Specify database names that the rule should apply to."
+msgstr "ルールを適用するデータベース名を指定します"
+
 msgid "Specify discovery mode"
 msgstr "検出モードを指定します"
 
@@ -62970,9 +62974,7 @@ msgstr ""
 msgid ""
 "This ruleset will deploy the agent plug-in <tt>mk_sap</tt> for (locally) "
 "monitoring SAP R/3 instances. Note: you still need to manually deploy the "
-"SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc. Both is "
-"explained in an <a href='http://mathias-kettner.de/checkmk_sap_r3."
-"html'>article in the Checkmk documentation</a>."
+"SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc."
 msgstr ""
 "このルールセットは、SAP R/3インスタンスを(ローカルで)監視するためのエージェン"
 "トプラグイン<tt>mk_sap</tt>をデプロイします。注意: SAP NetWeaver RFCSDK "

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-14 05:05+0000\n"
+"PO-Revision-Date: 2024-06-21 05:05+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -3799,7 +3799,7 @@ msgid "Add host to use this action"
 msgstr "Host hinzufügen, um diese Aktion zu nutzen"
 
 msgid "Add host/subfolder to use this action"
-msgstr ""
+msgstr "Host/Unterordner hinzufügen, um diese Aktion zu nutzen"
 
 msgid ""
 "Add hosts to the monitoring and remove hosts from the monitoring. Please "
@@ -15817,9 +15817,8 @@ msgstr "Standard Benutzerprofil"
 msgid "Default value"
 msgstr "Standardwert"
 
-#, fuzzy
 msgid "Deferred files age"
-msgstr "Alter von Verzögerte Dateien"
+msgstr "Alter der aufgeschobenen Dateien"
 
 msgid "Deferred files in Spool"
 msgstr "Verzögerte Dateien im Spooler"
@@ -17514,9 +17513,8 @@ msgstr ""
 msgid "Disk backend bytes removed or overwritten"
 msgstr ""
 
-#, fuzzy
 msgid "Disk backend size"
-msgstr "ID-Cachegröße"
+msgstr "Größe des Festplatten-Backends"
 
 msgid "Disk backend uncompressed"
 msgstr ""
@@ -17869,9 +17867,8 @@ msgstr "Zeigt die Anzahl der Hosts in einem ausgewählten Status an."
 msgid "Displays amount of services in a selected state."
 msgstr "Zeigt die Anzahl der Services in einem ausgewählten Status an."
 
-#, fuzzy
 msgid "Displays an overview of all Checkmk servers and sites\n"
-msgstr "Zeigt einen Überblick über alle Checkmk-Server und -Instanzen an.\n"
+msgstr "Zeigt einen Überblick über alle Checkmk-Server und -Instanzen an\n"
 
 msgid "Displays either sites and states or hosts and states of a site"
 msgstr ""
@@ -18077,9 +18074,8 @@ msgstr "Das SUSEConnect Plugin nicht verteilen"
 msgid "Do not deploy Symantec Anti Virus plug-in"
 msgstr "Das Symantec Anti Virus Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Unitrends plug-ins"
-msgstr "Die Unitrends Plugins nicht verteilen"
+msgstr "Unitrends Plugins nicht verteilen"
 
 msgid "Do not deploy VxVM plug-in"
 msgstr "Das VxVM Plugin nicht verteilen"
@@ -52124,6 +52120,11 @@ msgid "Specify database names that the rule should apply to"
 msgstr ""
 "Geben Sie die Namen der Datenbanken an, auf die diese Regel greifen soll"
 
+#, fuzzy
+msgid "Specify database names that the rule should apply to."
+msgstr ""
+"Geben Sie die Namen der Datenbanken an, auf die diese Regel greifen soll"
+
 msgid "Specify discovery mode"
 msgstr "Festlegen des Erkennungsmodus"
 
@@ -63728,12 +63729,11 @@ msgstr ""
 "Status haben, wenn der Host nicht erreichbar ist. Hinweis: Die Einstellung "
 "<i>Timeout</i> funktioniert nur bei Verwendung des Checkmk Micro Core."
 
+#, fuzzy
 msgid ""
 "This ruleset will deploy the agent plug-in <tt>mk_sap</tt> for (locally) "
 "monitoring SAP R/3 instances. Note: you still need to manually deploy the "
-"SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc. Both is "
-"explained in an <a href='http://mathias-kettner.de/checkmk_sap_r3."
-"html'>article in the Checkmk documentation</a>."
+"SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc."
 msgstr ""
 "Dieser Regelsatz verteilt das Agenten-Plugin <tt>mk_sap</tt> für das "
 "(lokale) Monitoring von SAP R/3-Instanzen. Hinweis: Sie müssen dennoch "

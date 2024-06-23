@@ -7,6 +7,8 @@
 from collections.abc import Callable, Mapping
 from typing import Any, overload
 
+import cmk.utils.debug
+
 from cmk.agent_based.v1 import SNMPTree
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.agent_based.v1.type_defs import (
@@ -136,6 +138,7 @@ def agent_section(
             supersedes=supersedes,
         ),
         get_validated_plugin_location(),
+        validate=cmk.utils.debug.enabled(),
     )
 
 
@@ -284,6 +287,7 @@ def snmp_section(
             )
         ),
         get_validated_plugin_location(),
+        validate=cmk.utils.debug.enabled(),
     )
 
 

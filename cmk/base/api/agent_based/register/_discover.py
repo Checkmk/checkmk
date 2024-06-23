@@ -6,7 +6,6 @@
 
 from typing import assert_never
 
-import cmk.utils.debug
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 from cmk.agent_based.v2 import (
@@ -39,8 +38,7 @@ from .section_plugins import create_agent_section_plugin, create_snmp_section_pl
 _ABPlugins = SimpleSNMPSection | SNMPSection | AgentSection | CheckPlugin | InventoryPlugin
 
 
-def load_all_plugins() -> list[str]:
-    raise_errors = cmk.utils.debug.enabled()
+def load_all_plugins(*, raise_errors: bool) -> list[str]:
     errors = []
     for plugin_name, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
         errors.append(f"Error in agent based plug-in {plugin_name}: {exception}")
@@ -53,13 +51,11 @@ def load_all_plugins() -> list[str]:
     errors.extend(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors)
     for location, plugin in discovered_plugins.plugins.items():
         try:
-            register_plugin_by_type(location, plugin)
+            register_plugin_by_type(location, plugin, validate=raise_errors)
         except Exception as exc:
             if raise_errors:
                 raise
-            errors.append(
-                f"Error in agent based plug-in {plugin.name} ({type(plugin).__name__}): {exc}"
-            )
+            errors.append(f"Error in agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
 
     return errors
 
@@ -67,12 +63,14 @@ def load_all_plugins() -> list[str]:
 def register_plugin_by_type(
     location: PluginLocation,
     plugin: AgentSection | SimpleSNMPSection | SNMPSection | CheckPlugin | InventoryPlugin,
+    *,
+    validate: bool,
 ) -> None:
     match plugin:
         case AgentSection():
-            register_agent_section(plugin, location)
+            register_agent_section(plugin, location, validate=validate)
         case SimpleSNMPSection() | SNMPSection():
-            register_snmp_section(plugin, location)
+            register_snmp_section(plugin, location, validate=validate)
         case CheckPlugin():
             register_check_plugin(plugin, location)
         case InventoryPlugin():
@@ -81,10 +79,10 @@ def register_plugin_by_type(
             assert_never(unreachable)
 
 
-def register_agent_section(section: AgentSection, location: PluginLocation) -> None:
-    section_plugin = create_agent_section_plugin(
-        section, location, validate=cmk.utils.debug.enabled()
-    )
+def register_agent_section(
+    section: AgentSection, location: PluginLocation, *, validate: bool
+) -> None:
+    section_plugin = create_agent_section_plugin(section, location, validate=validate)
 
     if is_registered_section_plugin(section_plugin.name):
         if get_section_plugin(section_plugin.name).location == location:
@@ -104,11 +102,9 @@ def register_agent_section(section: AgentSection, location: PluginLocation) -> N
 
 
 def register_snmp_section(
-    section: SimpleSNMPSection | SNMPSection, location: PluginLocation
+    section: SimpleSNMPSection | SNMPSection, location: PluginLocation, *, validate: bool
 ) -> None:
-    section_plugin = create_snmp_section_plugin(
-        section, location, validate=cmk.utils.debug.enabled()
-    )
+    section_plugin = create_snmp_section_plugin(section, location, validate=validate)
 
     if is_registered_section_plugin(section_plugin.name):
         if get_section_plugin(section_plugin.name).location == location:

@@ -1337,7 +1337,7 @@ def load_all_plugins(
 ) -> list[str]:
     _initialize_data_structures()
 
-    errors = agent_based_register.load_all_plugins()
+    errors = agent_based_register.load_all_plugins(raise_errors=cmk.utils.debug.enabled())
 
     # LEGACY CHECK PLUGINS
     filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)

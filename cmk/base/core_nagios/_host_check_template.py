@@ -81,7 +81,7 @@ def main() -> int:
     for location in CONFIG.locations:
         module = import_module(location.module)
         if location.name is not None:
-            register_plugin_by_type(location, getattr(module, location.name))
+            register_plugin_by_type(location, getattr(module, location.name), validate=debug)
 
     cmk.base.utils.register_sigint_handler()
     cmk.utils.log.setup_console_logging()

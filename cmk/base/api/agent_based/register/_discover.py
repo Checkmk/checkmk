@@ -40,18 +40,26 @@ _ABPlugins = SimpleSNMPSection | SNMPSection | AgentSection | CheckPlugin | Inve
 
 
 def load_all_plugins() -> list[str]:
+    raise_errors = cmk.utils.debug.enabled()
     errors = []
-    for plugin, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
-        errors.append(f"Error in agent based plug-in {plugin}: {exception}")
-        if cmk.utils.debug.enabled():
+    for plugin_name, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
+        errors.append(f"Error in agent based plug-in {plugin_name}: {exception}")
+        if raise_errors:
             raise exception
 
     discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
-        PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=cmk.utils.debug.enabled()
+        PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
     )
     errors.extend(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors)
-    for loaded_plugin in discovered_plugins.plugins.items():
-        register_plugin_by_type(*loaded_plugin)
+    for location, plugin in discovered_plugins.plugins.items():
+        try:
+            register_plugin_by_type(location, plugin)
+        except Exception as exc:
+            if raise_errors:
+                raise
+            errors.append(
+                f"Error in agent based plug-in {plugin.name} ({type(plugin).__name__}): {exc}"
+            )
 
     return errors
 

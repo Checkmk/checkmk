@@ -17,7 +17,6 @@ from typing import NamedTuple, Self
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.paths import piggyback_dir, piggyback_source_dir
-from cmk.utils.store import load_bytes_from_file, makedirs
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +81,7 @@ def get_piggyback_raw_data(piggybacked_hostname: HostAddress) -> Sequence[Piggyb
             # Raw data is always stored as bytes. Later the content is
             # converted to unicode in abstact.py:_parse_info which respects
             # 'encoding' in section options.
-            content = load_bytes_from_file(file_info.file_path)
+            content = file_info.file_path.read_bytes()
 
         except FileNotFoundError:
             # race condition: file was removed between listing and reading
@@ -154,7 +153,7 @@ def _write_file_with_mtime(
     mtime: float,
 ) -> None:
     """Create a file with the given mtime in a race-condition free manner"""
-    makedirs(file_path.parent)
+    file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
 
     with tempfile.NamedTemporaryFile(
         "wb", dir=str(file_path.parent), prefix=f".{file_path.name}.new", delete=False

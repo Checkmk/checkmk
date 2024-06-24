@@ -338,6 +338,17 @@ rrdtool(
     version_str = RRDTOOL_VERSION,
 )
 
+load("//omd/packages/rrdtool:rrdtool_native.bzl", "rrdtool_native")
+
+rrdtool_native(
+    sha256 = RRDTOOL_SHA256,
+    version_str = RRDTOOL_VERSION,
+)
+
+load("//omd/packages/glib:glib.bzl", "glibconfig")
+
+glibconfig("glibconfig")
+
 load("//omd/packages/httplib:httplib.bzl", "httplib")
 
 httplib(

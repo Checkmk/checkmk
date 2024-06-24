@@ -74,12 +74,9 @@ void ProtectFiles(const fs::path &root, std::vector<std::wstring> &commands) {
 }
 
 void ProtectAll(const fs::path &root, std::vector<std::wstring> &commands) {
-    // User Write protection for everything
     wtools::ProtectPathFromUserWrite(root, commands);
-    wtools::ProtectPathFromUserWrite(root / cfg::kAppDataAppName, commands);
 
-    // TODO(sk): replace with correct folders!
-    // ProtectFiles(root, commands);
+    ProtectFiles(root, commands);
 }
 
 }  // namespace security

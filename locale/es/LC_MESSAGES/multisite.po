@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-21 14:17+0000\n"
+"PO-Revision-Date: 2024-06-24 06:15+0000\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/dev/"
 "es/>\n"
 "Language: es\n"
@@ -187,6 +187,8 @@ msgstr " o int"
 
 msgid " to get notified once the commercial release is available. "
 msgstr ""
+" para recibir una notificación cuando el lanzamiento comercial esté "
+"disponible. "
 
 msgid " to:"
 msgstr " a:"
@@ -378,9 +380,9 @@ msgstr "%d cambios"
 msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%d cambios de estado caóticos desde %s hasta %s (%s)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d check plug-ins using the deprecated API: %s"
-msgstr "%d verifique los complementos usando la API obsoleta: %s"
+msgstr "%d verifique los plugins usando la API obsoleta: %s"
 
 #, python-format
 msgid "%d columns"
@@ -410,13 +412,13 @@ msgstr "%d errores ocurridos:"
 msgid "%d failed notifications"
 msgstr "%d notificaciones fallidas"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d hour"
-msgstr "hora"
+msgstr "%d hora"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d hours"
-msgstr "horas"
+msgstr "%d horas"
 
 #, python-format
 msgid "%d icons and actions"
@@ -426,7 +428,7 @@ msgstr "%d íconos y acciones"
 msgid "%d icons customized"
 msgstr "%d íconos personalizados"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d ignored HW/SW inventory plug-ins found: %s"
 msgstr "%d se han ignorado los plugins de inventario HW/SW encontrados: %s"
 
@@ -484,7 +486,7 @@ msgstr "%d sitios con errores: %s"
 msgid "%d specific settings"
 msgstr "%d configuraciones específicas"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d time ranges"
 msgstr "%d intervalos de tiempo"
 
@@ -508,7 +510,7 @@ msgstr "%s"
 
 #, python-format
 msgid "%s (%s)"
-msgstr ""
+msgstr "%s (%s)"
 
 #, python-format
 msgid "%s (Customer missing)"
@@ -575,9 +577,9 @@ msgstr "%s para %d hosts iniciados (%s)..."
 msgid "%s for all hosts started..."
 msgstr "%s para todos los hosts iniciados..."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s has been deleted."
-msgstr "El %s ha sido borrado."
+msgstr "%s ha sido borrado."
 
 #, python-format
 msgid "%s instances"
@@ -607,13 +609,13 @@ msgstr "%s es padre de %s."
 msgid "%s latency"
 msgstr "%s latencia"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s left in your Checkmk trial period"
-msgstr "%d días restantes en su periodo de prueba de Checkmk"
+msgstr "%s días restantes en su periodo de prueba de Checkmk"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s left in your free trial"
-msgstr " a la izquierda en su prueba gratuita"
+msgstr "%s restantes en su prueba gratuita"
 
 #, fuzzy, python-format
 msgid "%s matching labels: "
@@ -639,9 +641,9 @@ msgstr "%s no enumerada en la lista explícita de nombres de host."
 msgid "%s not monitored by one of the explicitly selected sites."
 msgstr "%s no monitorizado por uno de los sitios seleccionados explícitamente."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s notification rules are matching"
-msgstr "norma de notificación"
+msgstr "%s las reglas de notificación coinciden"
 
 #, python-format
 msgid ""
@@ -683,13 +685,13 @@ msgstr "%s tasa"
 msgid "%s read %s"
 msgstr "%s leer %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s requests"
-msgstr "%s Solicitudes"
+msgstr "%s solicitudes"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s resulting notifications"
-msgstr "Notificaciones resultantes"
+msgstr "%s Notificaciones resultantes"
 
 #, python-format
 msgid "%s running for %s"
@@ -721,11 +723,11 @@ msgid ""
 "changes'."
 msgstr "%s. Checkmk está operando sin licencia, y no podrá 'Activar cambios'."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%s. Checkmk will become unlicensed %s and you will no longer be able to "
 "'Activate changes'."
-msgstr "%s. Checkmk está operando sin licencia, y no podrá 'Activar cambios'."
+msgstr "%s. Checkmk está operando sin licencia %s y no podrá 'Activar cambios'."
 
 #, python-format
 msgid "%s: %s"
@@ -751,7 +753,7 @@ msgstr "%s: No usa SSL. Considere habilitarlo en la configuración de conexión.
 msgid "%s: Service discovery: Permission denied"
 msgstr "%s: Descubrimiento de servicios: Permiso denegado"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s: Services: %s, Host labels: %s"
 msgstr "%s: Servicios: %s, Etiquetas de host: %s"
 
@@ -799,7 +801,6 @@ msgstr "estado 'Menor'"
 msgid "'Warning' state"
 msgstr "estado 'Advertencia'"
 
-#, fuzzy
 msgid ""
 "'git' command was not found on this system, but it is required for "
 "versioning the configuration.Please either install 'git' or disable git "
@@ -807,7 +808,7 @@ msgid ""
 msgstr ""
 "El comando 'git' no se ha encontrado en este sistema, pero es requerido para "
 "el versionado de la configuración. Por favor instale 'git' o deshabilite el "
-"seguimiento de la configuración mediante git en WATO."
+"seguimiento de la configuración mediante git en el setup."
 
 msgid "(0 is current period)"
 msgstr "(0 es el período actual)"
@@ -894,7 +895,6 @@ msgstr "(no soportado)"
 msgid "(nothing selected)"
 msgstr "(nada seleccionado)"
 
-#, fuzzy
 msgid "(only works with the Micro Core)"
 msgstr "(sólo funciona con el microcore)"
 
@@ -1031,13 +1031,11 @@ msgstr "100.0 - 200.0 ms"
 msgid "10x14"
 msgstr "10x14"
 
-#, fuzzy
 msgid "12 Volt output lower levels"
-msgstr "12 Volts de niveles inferiores de salida"
+msgstr "Niveles inferiores de salida de 12 voltios"
 
-#, fuzzy
 msgid "12 Volt output upper levels"
-msgstr "12 Volt de niveles superiores de salida"
+msgstr "Niveles superiores de salida de 12 voltios"
 
 msgid "15 minutes"
 msgstr "15 minutos"
@@ -1060,15 +1058,12 @@ msgstr "200.0 - 500.0 ms"
 msgid "3 months"
 msgstr "3 meses"
 
-#, fuzzy
 msgid "3.3 Volt output lower levels"
-msgstr "3.3 Volts de nivel de salida inferior"
+msgstr "Niveles inferiores de salida de 3.3 voltios"
 
-#, fuzzy
 msgid "3.3 Volt output upper levels"
-msgstr "3.3 Volts de nivel de salida superior"
+msgstr "Niveles superiores de salida de 3.3 voltios"
 
-#, fuzzy
 msgid "30 minutes"
 msgstr "30 Minutos"
 
@@ -1087,28 +1082,23 @@ msgstr "3PAR CPG (espacio usado y crecimiento)"
 msgid "3PAR Remote Copy"
 msgstr "3PAR Copia remota"
 
-#, fuzzy
 msgid "3PAR capacity (used space and growth)"
-msgstr "3PAR Capacidad (espacio usado y crecimiento)"
+msgstr "Capacidad 3PAR (espacio usado y crecimiento)"
 
-#, fuzzy
 msgid "3PAR configuration"
-msgstr "3PAR Configuración"
+msgstr "Configuración 3PAR"
 
-#, fuzzy
 msgid "3PAR ports"
-msgstr "3PAR Puertos"
+msgstr "Puertos 3PAR"
 
 msgid "4xx error rate"
 msgstr "Tasa de error 4xx"
 
-#, fuzzy
 msgid "5 Volt output lower levels"
-msgstr "5 Volts de nivel de salida inferior"
+msgstr "Niveles inferiores de salida de 5 voltios"
 
-#, fuzzy
 msgid "5 Volt output upper levels"
-msgstr "5 Volts de nivel de salida superior"
+msgstr "Niveles superiores de salida de 5 voltios"
 
 msgid "5 minutes"
 msgstr "5 minutos"
@@ -1301,6 +1291,11 @@ msgid ""
 "management boards via a dedicated host using <a href='%s'>IPMI</a> or SNMP."
 "<br><a href='%s' target='_blank'>Read more about management boards.</a>"
 msgstr ""
+"<b>Esta característica quedará obsoleta en una versión futura de Checkmk.</"
+"b><br>Por favor no configure más tableros de administración aquí. Supervise "
+"los tableros de administración a través de un host dedicado usando <a "
+"href='%s'>IPMI</a> o SNMP.<br><a href='%s' target='_blank'>Lea más sobre los "
+"tableros de administración.</a>"
 
 #, python-format
 msgid ""

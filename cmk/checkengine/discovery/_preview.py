@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
+import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
@@ -111,7 +112,7 @@ def get_check_preview(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
         console.debug,
     )
-    store_piggybacked_sections(host_sections_by_host)
+    store_piggybacked_sections(host_sections_by_host, cmk.utils.paths.omd_root)
     providers = make_providers(
         host_sections_by_host,
         section_plugins,

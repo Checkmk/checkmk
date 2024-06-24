@@ -12,6 +12,7 @@ from typing import Final
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
+from cmk.utils.paths import omd_root
 from cmk.utils.piggyback_config import Config as PiggybackConfig
 
 from cmk.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo
@@ -116,4 +117,4 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
 
     @staticmethod
     def _raw_data(hostname: HostAddress) -> Sequence[PiggybackRawDataInfo]:
-        return get_piggyback_raw_data(hostname)
+        return get_piggyback_raw_data(hostname, omd_root)

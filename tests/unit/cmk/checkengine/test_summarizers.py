@@ -5,7 +5,6 @@
 # pylint: disable=undefined-variable
 
 import time
-from pathlib import Path
 
 import pytest
 
@@ -78,7 +77,7 @@ class TestPiggybackSummarizer:
                         [
                             PiggybackFileInfo(
                                 source=HostAddress("source"),
-                                file_path=Path(),
+                                piggybacked=HostName("hostname"),
                                 last_update=now - 20,
                                 last_contact=now - 10,
                             ).serialize()
@@ -105,7 +104,7 @@ class TestPiggybackSummarizer:
                         [
                             PiggybackFileInfo(
                                 source=HostAddress("source"),
-                                file_path=Path(),
+                                piggybacked=HostName("hostname"),
                                 last_update=now - 2,
                                 last_contact=now - 1,
                             ).serialize()
@@ -132,7 +131,7 @@ class TestPiggybackSummarizer:
                         [
                             PiggybackFileInfo(
                                 source=HostAddress("source"),
-                                file_path=Path(),
+                                piggybacked=HostName("hostname"),
                                 last_update=now - 2,
                                 last_contact=now - 1,
                             ).serialize()

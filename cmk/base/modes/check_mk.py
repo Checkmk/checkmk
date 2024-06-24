@@ -857,7 +857,9 @@ modes.register(
 
 def mode_cleanup_piggyback() -> None:
     max_age = config.get_config_cache().get_definitive_piggybacked_data_expiry_age()
-    piggyback.cleanup_piggyback_files(cut_off_timestamp=time.time() - max_age)
+    piggyback.cleanup_piggyback_files(
+        cut_off_timestamp=time.time() - max_age, omd_root=cmk.utils.paths.omd_root
+    )
 
 
 modes.register(
@@ -1207,7 +1209,7 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
                 print_(tty.bold + tty.green + " cache(%d)" % d)
 
         # piggy files from this as source host
-        d = piggyback.remove_source_status_file(host)
+        d = piggyback.remove_source_status_file(host, cmk.utils.paths.omd_root)
         if d:
             print_(tty.bold + tty.magenta + " piggyback(1)")
 

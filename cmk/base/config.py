@@ -3231,7 +3231,9 @@ class ConfigCache:
         def _is_usable(data: piggyback.PiggybackRawDataInfo) -> bool:
             return (now - data.info.last_update) <= piggy_config.max_cache_age(data.info.source)
 
-        return any(map(_is_usable, piggyback.get_piggyback_raw_data(host_name)))
+        return any(
+            map(_is_usable, piggyback.get_piggyback_raw_data(host_name, cmk.utils.paths.omd_root))
+        )
 
     def _piggybacked_host_files(self, host_name: HostName) -> list[tuple[str | None, str, int]]:
         if rules := self.ruleset_matcher.get_host_values(host_name, piggybacked_host_files):
@@ -3874,7 +3876,7 @@ class ConfigCache:
     def get_piggybacked_hosts_time_settings(
         self, piggybacked_hostname: HostName | None = None
     ) -> Sequence[tuple[str | None, str, int]]:
-        all_sources = piggyback.get_piggybacked_host_with_sources()
+        all_sources = piggyback.get_piggybacked_host_with_sources(cmk.utils.paths.omd_root)
         used_sources = (
             {m.source for sources in all_sources.values() for m in sources}
             if piggybacked_hostname is None

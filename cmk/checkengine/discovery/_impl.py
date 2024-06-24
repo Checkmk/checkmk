@@ -106,7 +106,7 @@ def execute_check_discovery(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
         console.debug,
     )
-    store_piggybacked_sections(host_sections_by_host)
+    store_piggybacked_sections(host_sections_by_host, cmk.utils.paths.omd_root)
     providers = make_providers(
         host_sections_by_host,
         section_plugins,

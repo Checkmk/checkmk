@@ -8,6 +8,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Final, Generic, NamedTuple, TypeVar
 
 from cmk.utils.hostaddress import HostName
@@ -197,7 +198,9 @@ class ParsedSectionsResolver:
 Provider = ParsedSectionsResolver
 
 
-def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSections]) -> None:
+def store_piggybacked_sections(
+    collected_host_sections: Mapping[HostKey, HostSections], omd_root: Path
+) -> None:
     for host_key, host_sections in collected_host_sections.items():
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
@@ -206,7 +209,7 @@ def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSec
             continue
 
         piggyback.store_piggyback_raw_data(
-            host_key.hostname, host_sections.piggybacked_raw_data, time.time()
+            host_key.hostname, host_sections.piggybacked_raw_data, time.time(), omd_root
         )
 
 

@@ -17,6 +17,7 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
+from cmk.utils.paths import omd_root
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import Item, ServiceName
@@ -162,7 +163,7 @@ def automation_discovery(
             ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
             console.debug,
         )
-        store_piggybacked_sections(host_sections_by_host)
+        store_piggybacked_sections(host_sections_by_host, omd_root)
         providers = make_providers(
             host_sections_by_host,
             section_plugins,

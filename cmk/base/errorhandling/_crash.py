@@ -171,7 +171,9 @@ def _read_agent_output(hostname: HostName) -> AgentRawData | None:
         pass
 
     # Note: this is not quite what the fetcher does :(
-    agent_outputs.extend(r.raw_data for r in get_piggyback_raw_data(hostname))
+    agent_outputs.extend(
+        r.raw_data for r in get_piggyback_raw_data(hostname, cmk.utils.paths.omd_root)
+    )
 
     if agent_outputs:
         return AgentRawData(b"\n".join(agent_outputs))

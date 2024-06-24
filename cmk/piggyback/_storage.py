@@ -17,7 +17,8 @@ from typing import NamedTuple, Self
 
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.paths import piggyback_dir, piggyback_source_dir
+
+from ._paths import payload_dir, source_status_dir
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True, kw_only=True)
 class PiggybackFileInfo:
     source: HostName
-    file_path: Path
+    piggybacked: HostName
     last_update: int
     last_contact: int | None
 
@@ -37,7 +38,7 @@ class PiggybackFileInfo:
         raw = json.loads(serialized)
         return cls(
             source=HostName(raw["source"]),
-            file_path=Path(raw["file_path"]),
+            piggybacked=HostName(raw["piggybacked"]),
             last_update=int(raw["last_update"]),
             last_contact=None if (i := raw["last_contact"]) is None else int(i),
         )
@@ -66,38 +67,43 @@ class PiggybackRawDataInfo(NamedTuple):
 # - Path(tmp/check_mk/piggyback_sources/SOURCE).name
 
 
-def get_piggyback_raw_data(piggybacked_hostname: HostAddress) -> Sequence[PiggybackRawDataInfo]:
+def get_piggyback_raw_data(
+    piggybacked_hostname: HostAddress, omd_root: Path
+) -> Sequence[PiggybackRawDataInfo]:
     """Returns the usable piggyback data for the given host
 
     A list of two element tuples where the first element is
     the source host name and the second element is the raw
     piggyback data (byte string)
     """
-    piggyback_file_infos = _get_payload_meta_data(piggybacked_hostname)
+    piggyback_file_infos = _get_payload_meta_data(piggybacked_hostname, omd_root)
     logger.debug("%s piggyback files for '%s'.", len(piggyback_file_infos), piggybacked_hostname)
 
     piggyback_data = []
     for file_info in piggyback_file_infos:
+        content_path = _get_piggybacked_file_path(file_info.source, file_info.piggybacked, omd_root)
         try:
             # Raw data is always stored as bytes. Later the content is
             # converted to unicode in abstact.py:_parse_info which respects
             # 'encoding' in section options.
-            content = file_info.file_path.read_bytes()
+            content = content_path.read_bytes()
 
         except FileNotFoundError:
             # race condition: file was removed between listing and reading
             continue
 
-        logger.debug("Read piggyback file '%s'", file_info.file_path)
+        logger.debug("Read piggyback file '%s'", content_path)
         piggyback_data.append(PiggybackRawDataInfo(info=file_info, raw_data=AgentRawData(content)))
     return piggyback_data
 
 
-def get_piggybacked_host_with_sources() -> Mapping[HostAddress, Sequence[PiggybackFileInfo]]:
+def get_piggybacked_host_with_sources(
+    omd_root: Path,
+) -> Mapping[HostAddress, Sequence[PiggybackFileInfo]]:
     """Generates all piggyback pig/piggybacked host pairs"""
     return {
-        piggybacked_host: _get_payload_meta_data(piggybacked_host)
-        for piggybacked_host_folder in _get_piggybacked_host_folders()
+        piggybacked_host: _get_payload_meta_data(piggybacked_host, omd_root)
+        for piggybacked_host_folder in _get_piggybacked_host_folders(omd_root)
         if (piggybacked_host := HostAddress(piggybacked_host_folder.name))
     }
 
@@ -110,10 +116,10 @@ def _remove_piggyback_file(piggyback_file_path: Path) -> bool:
         return False
 
 
-def remove_source_status_file(source_hostname: HostName) -> bool:
+def remove_source_status_file(source_hostname: HostName, omd_root: Path) -> bool:
     """Remove the source_status_file of this piggyback host which will
     mark the piggyback data from this source as outdated."""
-    source_status_path = _get_source_status_file_path(source_hostname)
+    source_status_path = _get_source_status_file_path(source_hostname, omd_root)
     return _remove_piggyback_file(source_status_path)
 
 
@@ -121,16 +127,19 @@ def store_piggyback_raw_data(
     source_hostname: HostName,
     piggybacked_raw_data: Mapping[HostName, Sequence[bytes]],
     timestamp: float,
+    omd_root: Path,
 ) -> None:
     if not piggybacked_raw_data:
         # Cleanup the status file when no piggyback data was sent this turn.
         logger.debug("Received no piggyback data")
-        remove_source_status_file(source_hostname)
+        remove_source_status_file(source_hostname, omd_root)
         return
 
     piggyback_file_paths = []
     for piggybacked_hostname, lines in piggybacked_raw_data.items():
-        piggyback_file_path = _get_piggybacked_file_path(source_hostname, piggybacked_hostname)
+        piggyback_file_path = _get_piggybacked_file_path(
+            source_hostname, piggybacked_hostname, omd_root
+        )
         logger.debug("Storing piggyback data for: %r", piggybacked_hostname)
         # Raw data is always stored as bytes. Later the content is
         # converted to unicode in abstact.py:_parse_info which respects
@@ -144,7 +153,7 @@ def store_piggyback_raw_data(
     # We use the mtime of this file later for comparison.
     # Only do this for hosts that sent piggyback data this turn.
     logger.debug("Received piggyback data for %d hosts", len(piggybacked_raw_data))
-    status_file_path = _get_source_status_file_path(source_hostname)
+    status_file_path = _get_source_status_file_path(source_hostname, omd_root)
     _write_file_with_mtime(file_path=status_file_path, content=b"", mtime=timestamp)
 
 
@@ -177,18 +186,20 @@ def _write_file_with_mtime(
 #   '----------------------------------------------------------------------'
 
 
-def _get_payload_meta_data(piggybacked_hostname: HostName) -> Sequence[PiggybackFileInfo]:
+def _get_payload_meta_data(
+    piggybacked_hostname: HostName, omd_root: Path
+) -> Sequence[PiggybackFileInfo]:
     """Gather a list of piggyback files to read for further processing.
 
     Please note that there may be multiple parallel calls executing
     store_piggyback_raw_data() or cleanup_piggyback_files() functions.
     All these functions need to deal with suddenly vanishing or updated files/directories.
     """
-    piggybacked_host_folder = piggyback_dir / Path(piggybacked_hostname)
+    piggybacked_host_folder = payload_dir(omd_root) / Path(piggybacked_hostname)
     meta_data = []
     for payload_file in _files_in(piggybacked_host_folder):
         source = HostAddress(payload_file.name)
-        status_file_path = _get_source_status_file_path(source)
+        status_file_path = _get_source_status_file_path(source, omd_root)
 
         if (mtime := _get_mtime(payload_file)) is None:
             continue
@@ -196,7 +207,7 @@ def _get_payload_meta_data(piggybacked_hostname: HostName) -> Sequence[Piggyback
         meta_data.append(
             PiggybackFileInfo(
                 source=source,
-                file_path=payload_file,
+                piggybacked=piggybacked_hostname,
                 last_update=mtime,
                 last_contact=_get_mtime(status_file_path),
             )
@@ -204,12 +215,12 @@ def _get_payload_meta_data(piggybacked_hostname: HostName) -> Sequence[Piggyback
     return meta_data
 
 
-def _get_piggybacked_host_folders() -> Sequence[Path]:
-    return _files_in(piggyback_dir)
+def _get_piggybacked_host_folders(omd_root: Path) -> Sequence[Path]:
+    return _files_in(payload_dir(omd_root))
 
 
-def _get_source_state_files() -> Sequence[Path]:
-    return _files_in(piggyback_source_dir)
+def _get_source_state_files(omd_root: Path) -> Sequence[Path]:
+    return _files_in(source_status_dir(omd_root))
 
 
 def _files_in(path: Path) -> Sequence[Path]:
@@ -224,15 +235,16 @@ def _files_in(path: Path) -> Sequence[Path]:
         return []
 
 
-def _get_source_status_file_path(source_hostname: HostName) -> Path:
-    return piggyback_source_dir / str(source_hostname)
+def _get_source_status_file_path(source_hostname: HostName, omd_root: Path) -> Path:
+    return source_status_dir(omd_root) / str(source_hostname)
 
 
 def _get_piggybacked_file_path(
     source_hostname: HostName,
     piggybacked_hostname: HostName | HostAddress,
+    omd_root: Path,
 ) -> Path:
-    return piggyback_dir / piggybacked_hostname / source_hostname
+    return payload_dir(omd_root).joinpath(piggybacked_hostname, source_hostname)
 
 
 # .
@@ -246,7 +258,7 @@ def _get_piggybacked_file_path(
 #   '----------------------------------------------------------------------'
 
 
-def cleanup_piggyback_files(cut_off_timestamp: float) -> None:
+def cleanup_piggyback_files(cut_off_timestamp: float, omd_root: Path) -> None:
     """This is a housekeeping job to clean up different old files from the
     piggyback directories.
 
@@ -261,10 +273,10 @@ def cleanup_piggyback_files(cut_off_timestamp: float) -> None:
 
     piggybacked_hosts_settings = [
         (piggybacked_host_folder, _files_in(piggybacked_host_folder))
-        for piggybacked_host_folder in _get_piggybacked_host_folders()
+        for piggybacked_host_folder in _get_piggybacked_host_folders(omd_root)
     ]
 
-    _cleanup_old_source_status_files(_get_source_state_files(), cut_off_timestamp)
+    _cleanup_old_source_status_files(_get_source_state_files(omd_root), cut_off_timestamp)
     _cleanup_old_piggybacked_files(piggybacked_hosts_settings, cut_off_timestamp)
 
 
@@ -332,11 +344,12 @@ def _render_datetime(timestamp: float) -> str:
     return datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
-def move_for_host_rename(old_host: str, new_host: str) -> tuple[str, ...]:
+def move_for_host_rename(omd_root: Path, old_host: str, new_host: str) -> tuple[str, ...]:
     """Move all piggybacked and source files from old_host to new_host
 
     Return a tuple of strings representing the actions taken.
     """
+    piggyback_dir = payload_dir(omd_root)
 
     def _rename_piggybacked_dir(old_name: str, new_name: str) -> Iterable[str]:
         if not (old_path := piggyback_dir / old_name).exists():

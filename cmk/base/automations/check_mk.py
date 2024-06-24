@@ -1172,7 +1172,9 @@ class AutomationRenameHosts(Automation):
             if self._rename_host_file(str(tmp_dir / d), oldname, newname):
                 actions.append(d)
 
-        actions.extend(cmk.piggyback.move_for_host_rename(oldname, newname))
+        actions.extend(
+            cmk.piggyback.move_for_host_rename(cmk.utils.paths.omd_root, oldname, newname)
+        )
 
         # Logwatch
         if self._rename_host_dir(logwatch_dir, oldname, newname):

@@ -111,7 +111,6 @@ UNMIGRATED = {
     "azure",
     "couchbase",
     "ddn_s2a",
-    "emcvnx",
     "gcp_status",
     "graylog",
     "hivemanager",

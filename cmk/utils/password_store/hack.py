@@ -39,6 +39,7 @@ HACK_AGENTS = {
     "proxmox_ve": True,
     "pure_storage_fa": True,
     "three_par": True,
+    "emcvnx": True,
 }
 
 

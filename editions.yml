@@ -30,10 +30,8 @@ daily_extended: &daily_extended
     - "almalinux-9"
     - "sles-15sp5"
 
-# Max L runs on the latest ubuntu and does not want to reinstall his machine
 daily_saas: &daily_saas
     - "ubuntu-22.04"
-    - "ubuntu-23.10"
     - "ubuntu-24.04"
 
 # Builds for those distros will only be available internally for development purpose

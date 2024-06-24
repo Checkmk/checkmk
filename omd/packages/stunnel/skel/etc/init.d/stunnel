@@ -37,7 +37,7 @@ case "$1" in
         echo -n 'Starting stunnel...'
         if [ -e "$PIDFILE" ]; then
             PID=$(cat $PIDFILE)
-            if [ -n "$PID" ] && ps $PID >/dev/null 2>&1; then
+            if [ -n "$PID" ] && ps "$PID" >/dev/null 2>&1; then
                 echo "Already running."
                 exit 0
             fi
@@ -47,6 +47,7 @@ case "$1" in
 
         $DAEMON $CONFIG_FILE && echo OK || echo Error
         ;;
+
     stop)
         echo -n 'Stopping stunnel...'
         PID=$(cat $PIDFILE 2>/dev/null)
@@ -55,7 +56,7 @@ case "$1" in
         elif kill "$PID"; then
             echo -n 'waiting for termination..'
             N=0
-            while [ -d /proc/$PID ]; do
+            while [ -d "/proc/$PID" ]; do
                 sleep 0.05
                 if [ $((N % 20)) -eq 0 ]; then
                     echo -n .
@@ -75,11 +76,12 @@ case "$1" in
         $0 stop
         $0 start
         ;;
+
     status)
         echo -n 'Checking status of stunnel...'
         if [ -e "$PIDFILE" ]; then
             PID=$(cat $PIDFILE)
-            if [ -n "$PID" ] && ps $PID >/dev/null 2>&1; then
+            if [ -n "$PID" ] && ps "$PID" >/dev/null 2>&1; then
                 echo "running"
                 exit 0
             fi
@@ -87,7 +89,9 @@ case "$1" in
         echo "stopped"
         exit 1
         ;;
+
     *)
         echo "Usage: $0 {start|stop|restart|reload|status}"
         ;;
+
 esac

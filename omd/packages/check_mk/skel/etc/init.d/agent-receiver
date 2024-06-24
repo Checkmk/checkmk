@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-PIDFILE=$OMD_ROOT/tmp/run/agent-receiver.pid
-PID=$(cat $PIDFILE 2>/dev/null)
+PIDFILE="$OMD_ROOT/tmp/run/agent-receiver.pid"
+PID=$(cat "$PIDFILE" 2>/dev/null)
 KEY_AND_CERT_FILE="${OMD_ROOT}/etc/ssl/sites/${OMD_SITE}.pem"
 CERT_STORE="${OMD_ROOT}/etc/ssl/agent_cert_store.pem"
 
-. $OMD_ROOT/etc/omd/site.conf
+# shellcheck disable=SC1090,SC1091
+. "$OMD_ROOT/etc/omd/site.conf"
 if [ "$CONFIG_AGENT_RECEIVER" != on ]; then
     exit 5
 fi
@@ -23,7 +24,7 @@ case "$1" in
 
     start)
         echo -en "Starting agent-receiver..."
-        if kill -0 $PID >/dev/null 2>&1; then
+        if kill -0 "$PID" >/dev/null 2>&1; then
             echo 'Already running.'
             exit 0
         fi
@@ -31,20 +32,19 @@ case "$1" in
         rm -f "${CERT_STORE}"
         touch "${CERT_STORE}"
         chmod 660 "${CERT_STORE}"
-        for pemfile in ${OMD_ROOT}/etc/ssl/agents/*.pem; do
+        for pemfile in "${OMD_ROOT}"/etc/ssl/agents/*.pem; do
             openssl x509 -in "${pemfile}" >>"${CERT_STORE}"
         done
 
-        gunicorn -D -p $PIDFILE \
-            --error-logfile $OMD_ROOT/var/log/agent-receiver/error.log \
-            --access-logfile $OMD_ROOT/var/log/agent-receiver/access.log \
+        if gunicorn -D -p "$PIDFILE" \
+            --error-logfile "$OMD_ROOT/var/log/agent-receiver/error.log" \
+            --access-logfile "$OMD_ROOT/var/log/agent-receiver/access.log" \
             --keyfile "$KEY_AND_CERT_FILE" \
             --certfile "$KEY_AND_CERT_FILE" \
             --ca-certs "${CERT_STORE}" \
             --cert-reqs 1 \
             -b "${ANY_ADDRESS}:${CONFIG_AGENT_RECEIVER_PORT}" \
-            -k cmk.agent_receiver.worker.ClientCertWorker 'cmk.agent_receiver.main:main_app()'
-        if [ $? -eq 0 ]; then
+            -k cmk.agent_receiver.worker.ClientCertWorker 'cmk.agent_receiver.main:main_app()'; then
             echo "OK"
             exit 0
         else

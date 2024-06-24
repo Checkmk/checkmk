@@ -2,15 +2,15 @@
 
 unset LANG
 
-PIDFILE=$OMD_ROOT/tmp/run/mkeventd/pid
-STATUS_SOCKET=$OMD_ROOT/tmp/run/mkeventd/status
-DAEMON=$OMD_ROOT/bin/mkeventd
-STATEFILE=$OMD_ROOT/var/mkeventd/status
-THE_PID=$(cat $PIDFILE 2>/dev/null)
+PIDFILE="$OMD_ROOT/tmp/run/mkeventd/pid"
+STATUS_SOCKET="$OMD_ROOT/tmp/run/mkeventd/status"
+DAEMON="$OMD_ROOT/bin/mkeventd"
+THE_PID=$(cat "$PIDFILE" 2>/dev/null)
 # OPTS="--debug"
 OPTS=""
 
-. $OMD_ROOT/etc/omd/site.conf
+# shellcheck disable=SC1090,SC1091
+. "$OMD_ROOT/etc/omd/site.conf"
 if [ "$CONFIG_MKEVENTD" != on ]; then
     exit 5
 fi
@@ -36,19 +36,21 @@ case "$1" in
             fi
 
             echo -n "Starting mkeventd (builtin: ${ADD_TXT%*,})..."
-            if kill -0 $THE_PID >/dev/null 2>&1; then
+            if kill -0 "$THE_PID" >/dev/null 2>&1; then
                 echo 'Already running.'
                 exit 0
             fi
 
-            ${DAEMON}_open514 $OPTS
+            # shellcheck disable=SC2086
+            "${DAEMON}_open514" $OPTS
         else
             echo -n 'Starting mkeventd...'
-            if kill -0 $THE_PID >/dev/null 2>&1; then
+            if kill -0 "$THE_PID" >/dev/null 2>&1; then
                 echo 'Already running.'
                 exit 0
             fi
-            $DAEMON $OPTS
+            # shellcheck disable=SC2086
+            "$DAEMON" $OPTS
         fi
         EXIT_CODE=$?
         if [ $EXIT_CODE -ne 0 ]; then
@@ -58,6 +60,7 @@ case "$1" in
         fi
         exit $EXIT_CODE
         ;;
+
     stop)
         echo -n 'Stopping mkeventd...'
         if [ -z "$THE_PID" ]; then
@@ -89,9 +92,11 @@ case "$1" in
             echo 'OK'
         fi
         ;;
+
     restart)
         $0 stop && sleep 1 && $0 start
         ;;
+
     reload)
         echo -n 'Reloading mkeventd...'
         if [ -z "$THE_PID" ]; then
@@ -99,9 +104,10 @@ case "$1" in
             exit 1
         else
             echo "killing $THE_PID with SIGHUP..."
-            kill -1 $THE_PID
+            kill -1 "$THE_PID"
         fi
         ;;
+
     status)
         echo -n 'Checking status of mkeventd...'
         if [ -z "$THE_PID" ]; then
@@ -115,10 +121,11 @@ case "$1" in
             exit 0
         fi
         ;;
+
     flush)
         if [ -n "$THE_PID" ] && kill -0 "$THE_PID"; then
             echo -n "Flushing current state and history..."
-            result=$(echo "COMMAND FLUSH" | unixcat $STATUS_SOCKET)
+            result=$(echo "COMMAND FLUSH" | unixcat "$STATUS_SOCKET")
             if [ "$result" = "None" ]; then
                 echo OK
                 exit 0
@@ -128,11 +135,12 @@ case "$1" in
             fi
         else
             echo -n "Deleting status and history files..."
-            rm -f $OMD_ROOT/var/mkeventd/{status,master_config,slave_status,history/*}
+            rm -f "$OMD_ROOT"/var/mkeventd/{status,master_config,slave_status,history/*}
             echo OK
             exit 0
         fi
         ;;
+
     *)
         echo "Usage: $0 {start|stop|restart|reload|status|flush}"
         ;;

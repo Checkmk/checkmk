@@ -22,7 +22,7 @@ To combine both the vite auto hot reload and the site, the proxy feature of the
 vite dev server is used.
 
 * run `npm run dev`
-* surf to `http://localhost:5173/<yoursite>/checkmk/` (tailing slash is
+* surf to `http://localhost:5173/<yoursite>/check_mk/` (tailing slash is
   important, otherwise checkmk will redirect to a url without the port)
 * enable "Inject cmk-frontend-vue files via vite client" in "User Interface"
   in "Experimental Features" in "global settings"

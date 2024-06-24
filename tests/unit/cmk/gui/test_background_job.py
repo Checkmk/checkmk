@@ -25,7 +25,6 @@ from cmk.gui.background_job import (
     job_registry,
     JobStatusStates,
 )
-from cmk.gui.logged_in import user
 
 
 def test_registered_background_jobs() -> None:
@@ -110,7 +109,6 @@ class DummyBackgroundJob(BackgroundJob):
         time.sleep(100)
 
 
-@pytest.mark.usefixtures("request_context")
 def test_start_job() -> None:
     job = DummyBackgroundJob()
 
@@ -123,7 +121,7 @@ def test_start_job() -> None:
             title=job.gui_title(),
             deletable=False,
             stoppable=True,
-            user=str(user.id) if user.id else None,
+            user=None,
         ),
         override_job_log_level=logging.DEBUG,
     )
@@ -136,7 +134,7 @@ def test_start_job() -> None:
                 title=job.gui_title(),
                 deletable=False,
                 stoppable=True,
-                user=str(user.id) if user.id else None,
+                user=None,
             ),
         )
     assert job.is_active()
@@ -158,7 +156,6 @@ def test_start_job() -> None:
     assert "Hallo :-)" in output
 
 
-@pytest.mark.usefixtures("request_context")
 def test_stop_job() -> None:
     job = DummyBackgroundJob()
     job.start(
@@ -167,7 +164,7 @@ def test_stop_job() -> None:
             title=job.gui_title(),
             deletable=False,
             stoppable=True,
-            user=str(user.id) if user.id else None,
+            user=None,
         ),
     )
 
@@ -217,7 +214,7 @@ def test_job_status_while_running() -> None:
             title=job.gui_title(),
             deletable=False,
             stoppable=True,
-            user=str(user.id) if user.id else None,
+            user=None,
         ),
     )
     wait_until(
@@ -250,7 +247,7 @@ def test_job_status_after_stop() -> None:
             title=job.gui_title(),
             deletable=False,
             stoppable=True,
-            user=str(user.id) if user.id else None,
+            user=None,
         ),
     )
     wait_until(

@@ -36,15 +36,14 @@ def run_process(
     work_dir: str,
     job_id: str,
     target: Callable[[BackgroundProcessInterface], None],
+    lock_wato: bool,
+    is_stoppable: bool,
 ) -> None:
     jobstatus_store = JobStatusStore(work_dir)
     _detach_from_parent()
 
     try:
-        job_status = jobstatus_store.read()
-        logger = _initialize_environment(
-            job_id, Path(work_dir), job_status.lock_wato, job_status.stoppable
-        )
+        logger = _initialize_environment(job_id, Path(work_dir), lock_wato, is_stoppable)
         logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
         jobstatus_store.update(
             {

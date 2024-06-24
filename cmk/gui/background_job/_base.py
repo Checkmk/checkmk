@@ -41,6 +41,8 @@ class JobParameters(TypedDict):
     work_dir: str
     job_id: str
     target: Callable[[BackgroundProcessInterface], None]
+    lock_wato: bool
+    is_stoppable: bool
 
 
 class BackgroundJob:
@@ -328,6 +330,8 @@ class BackgroundJob:
                 "work_dir": self._work_dir,
                 "job_id": self._job_id,
                 "target": target,
+                "lock_wato": initial_status_args.lock_wato,
+                "is_stoppable": initial_status_args.stoppable,
             }
         )
         p = multiprocessing.Process(
@@ -368,6 +372,8 @@ class BackgroundJob:
                     job_parameters["work_dir"],
                     job_parameters["job_id"],
                     job_parameters["target"],
+                    job_parameters["lock_wato"],
+                    job_parameters["is_stoppable"],
                 ),
             )
             p.start()

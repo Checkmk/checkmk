@@ -597,6 +597,21 @@ run_purely_synchronous_sections() {
 
         rm -f "${tmpfile}"
     fi
+
+    echo '<<<sysctl_mem>>>'
+    _page_size=$( sysctl -n vm.stats.vm.v_page_size )
+    echo "mem.cache $(( _page_size * $( sysctl -n vm.stats.vm.v_cache_count ) ))"
+    echo "mem.free $(( _page_size * $( sysctl -n vm.stats.vm.v_free_count ) ))"
+    echo "mem.total $( sysctl -n hw.physmem )"
+    echo "mem.used $(( _page_size * ( $( sysctl -n vm.stats.vm.v_active_count ) + $( sysctl -n vm.stats.vm.v_wire_count ) ) ))"
+    _swap_total=$( sysctl -n vm.swap_total )
+    _swap_used=$(( $( swapinfo | tail -1 | awk '{print $3}' ) * 1024 ))
+    echo "swap.free $(( _swap_total - _swap_used ))"
+    echo "swap.total ${_swap_total}"
+    echo "swap.used ${_swap_used}"
+    unset -v _page_size
+    unset -v _swap_total
+    unset -v _swap_used
 }
 
 #

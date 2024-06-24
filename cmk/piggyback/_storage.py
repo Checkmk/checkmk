@@ -8,6 +8,7 @@ import errno
 import json
 import logging
 import os
+import shutil
 import tempfile
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass
@@ -329,3 +330,35 @@ def _get_mtime(path: Path) -> int | None:
 
 def _render_datetime(timestamp: float) -> str:
     return datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def move_for_host_rename(old_host: str, new_host: str) -> tuple[str, ...]:
+    """Move all piggybacked and source files from old_host to new_host
+
+    Return a tuple of strings representing the actions taken.
+    """
+
+    def _rename_piggybacked_dir(old_name: str, new_name: str) -> Iterable[str]:
+        if not (old_path := piggyback_dir / old_name).exists():
+            return
+
+        try:
+            shutil.rmtree(str(new_path := piggyback_dir / new_name))
+        except FileNotFoundError:
+            pass
+
+        os.rename(str(old_path), str(new_path))
+        yield "piggyback-load"
+
+    def _rename_payload_file(basedir: Path, old_name: str, new_name: str) -> Iterable[str]:
+        if not (old_path := basedir / old_name).exists():
+            return
+
+        (new_path := basedir / new_name).unlink(missing_ok=True)
+        old_path.rename(new_path)
+        yield "piggyback-pig"
+
+    return tuple(
+        *_rename_piggybacked_dir(old_host, new_host),
+        *_rename_payload_file(piggyback_dir, old_host, new_host),
+    )

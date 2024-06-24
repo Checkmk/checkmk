@@ -7,6 +7,7 @@ from ._storage import (
     cleanup_piggyback_files,
     get_piggyback_raw_data,
     get_piggybacked_host_with_sources,
+    move_for_host_rename,
     PiggybackFileInfo,
     PiggybackRawDataInfo,
     remove_source_status_file,
@@ -21,4 +22,5 @@ __all__ = [
     "PiggybackRawDataInfo",
     "remove_source_status_file",
     "store_piggyback_raw_data",
+    "move_for_host_rename",
 ]

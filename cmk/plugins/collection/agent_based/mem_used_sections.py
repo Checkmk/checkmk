@@ -307,3 +307,50 @@ agent_section_openbsd_mem = AgentSection(
     parsed_section_name="mem_used",
     parse_function=parse_openbsd_mem,
 )
+
+
+def parse_freebsd_mem(string_table: StringTable) -> SectionMemUsed | None:
+    """
+    >>> import pprint
+    >>> pprint.pprint(parse_freebsd_mem([
+    ...     ['vm.stats.vm.v_page_size', '4096'],
+    ...     ['vm.stats.vm.v_cache_count', '0'],
+    ...     ['vm.stats.vm.v_free_count', '165446'],
+    ...     ['vm.kmem_size', '4294967296'],
+    ...     ['vm.swap_total', '208896000'],
+    ...     ['swap.used', '126976000'],
+    ... ]))
+    {'Cached': 0,
+     'MemFree': 677666816,
+     'MemTotal': 4294967296,
+     'SwapFree': 81920000,
+     'SwapTotal': 208896000}
+
+    """
+    raw = dict(string_table)
+
+    try:
+        page_size = int(raw["vm.stats.vm.v_page_size"])
+        section = SectionMemUsed(
+            MemTotal=int(raw["vm.kmem_size"]),
+            MemFree=int(raw["vm.stats.vm.v_free_count"]) * page_size,
+            SwapTotal=(swap_total := int(raw["vm.swap_total"])),
+            SwapFree=swap_total - int(raw["swap.used"]),
+        )
+    except KeyError:
+        return None
+
+    try:
+        section["Cached"] = int(raw["vm.stats.vm.v_cache_count"]) * page_size
+    except KeyError:
+        pass
+
+    return section
+
+
+agent_section_freebsd_mem = AgentSection(
+    name="sysctl_mem",
+    parsed_section_name="mem_used",
+    parse_function=parse_freebsd_mem,
+    supersedes=["ucd_mem"],
+)

@@ -450,6 +450,13 @@ section_fileinfo() {
 # END COMMON AGENT CODE
 #
 
+section_sysctlmem() {
+    # Output FreeBSD memory info from sysctl
+    printf '<<<sysctl_mem>>>\n'
+    sysctl "vm.stats.vm.v_page_size" "vm.stats.vm.v_cache_count" "vm.stats.vm.v_free_count" "vm.kmem_size" "vm.swap_total"
+    printf "swap.used %s\n" "$(($(swapinfo | tail -1 | awk '{print $3}') * 1024))"
+}
+
 run_purely_synchronous_sections() {
 
     section_checkmk
@@ -457,6 +464,8 @@ run_purely_synchronous_sections() {
     section_cmk_agent_ctl_status
 
     section_checkmk_agent_plugins
+
+    section_sysctlmem
 
     osver="$(uname -r)"
     is_jailed="$(sysctl -n security.jail.jailed)"
@@ -673,9 +682,6 @@ run_purely_synchronous_sections() {
 
         echo '<<<statgrab_net>>>'
         statgrab net. 2>&1 | cut -d. -f2-99 | sed 's/ *= */ /'
-
-        echo '<<<statgrab_mem>>>'
-        grep -E "^(swap|mem)\." "${tmpfile}" | sed 's/ *= */ /'
 
         rm -f "${tmpfile}"
     fi

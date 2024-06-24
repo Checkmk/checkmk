@@ -604,7 +604,83 @@ def test_render_y_labels(
     expected_labels: Sequence[Label],
 ) -> None:
     assert formatter.ident() == expected_ident
-    assert formatter.render_y_labels(max_y, 5) == expected_labels
+    assert formatter.render_y_labels(min_y=0, max_y=max_y, mean_num_labels=5) == expected_labels
+
+
+@pytest.mark.parametrize(
+    "min_y, max_y, expected_labels",
+    [
+        pytest.param(
+            0.00123,
+            0.00456,
+            [
+                Label(
+                    position=0.001,
+                    text="0.001 u",
+                ),
+                Label(
+                    position=0.002,
+                    text="0.002 u",
+                ),
+                Label(
+                    position=0.003,
+                    text="0.003 u",
+                ),
+                Label(
+                    position=0.004,
+                    text="0.004 u",
+                ),
+            ],
+            id="decimal-small",
+        ),
+        pytest.param(
+            123.456,
+            456.789,
+            [
+                Label(
+                    position=123,
+                    text="123 u",
+                ),
+                Label(
+                    position=173,
+                    text="173 u",
+                ),
+                Label(
+                    position=223,
+                    text="223 u",
+                ),
+                Label(
+                    position=273,
+                    text="273 u",
+                ),
+                Label(
+                    position=323,
+                    text="323 u",
+                ),
+                Label(
+                    position=373,
+                    text="373 u",
+                ),
+                Label(
+                    position=423,
+                    text="423 u",
+                ),
+            ],
+            id="decimal-large",
+        ),
+    ],
+)
+def test_decimal_render_y_labels_with_min_y(
+    min_y: float, max_y: float, expected_labels: Sequence[Label]
+) -> None:
+    assert (
+        DecimalFormatter("u", metrics.AutoPrecision(2)).render_y_labels(
+            min_y=min_y,
+            max_y=max_y,
+            mean_num_labels=5,
+        )
+        == expected_labels
+    )
 
 
 @pytest.mark.parametrize(

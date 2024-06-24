@@ -150,34 +150,50 @@ class NotationFormatter:
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         raise NotImplementedError()
 
-    def render_y_labels(self, max_y: int | float, mean_num_labels: float) -> Sequence[Label]:
+    def render_y_labels(
+        self,
+        *,
+        min_y: int | float,
+        max_y: int | float,
+        mean_num_labels: float,
+    ) -> Sequence[Label]:
+        assert min_y >= 0
         assert max_y >= 0
         assert mean_num_labels >= 0
-        if max_y == 0 or mean_num_labels == 0:
+
+        if 0 < min_y < 1:
+            min_y = 0
+        elif min_y > 1:
+            min_y = math.floor(min_y)
+
+        delta = max_y - min_y
+
+        if delta == 0 or mean_num_labels == 0:
             return []
 
         if max_y < 1:
-            atoms = self._compute_small_y_label_atoms(max_y)
+            atoms = self._compute_small_y_label_atoms(delta)
         else:  # max_y >= 1
-            atoms = self._compute_large_y_label_atoms(max_y)
+            atoms = self._compute_large_y_label_atoms(delta)
 
-        if possible_atoms := [(a, q) for a in atoms if (q := int(max_y // a))]:
+        if possible_atoms := [(a, q) for a in atoms if (q := int(delta // a))]:
             atom, quotient = min(possible_atoms, key=lambda t: abs(t[1] - mean_num_labels))
         else:
-            atom = int(max_y / mean_num_labels)
-            quotient = int(max_y // atom)
+            atom = int(delta / mean_num_labels)
+            quotient = int(delta // atom)
 
-        first = self._preformat(atom)[0]
+        first = self._preformat(min_y + atom)[0]
         return [
             Label(
-                atom * i,
+                p,
                 self._postformat(
-                    self._preformat(atom * i, use_prefix=first.prefix, use_symbol=first.symbol),
+                    self._preformat(p, use_prefix=first.prefix, use_symbol=first.symbol),
                     lambda exponent, digits: exponent + digits,
                     self.use_max_digits_for_labels,
                 ),
             )
-            for i in range(1, quotient + 1)
+            for i in range(0 if min_y else 1, quotient + 1)
+            for p in (min_y + atom * i,)
         ]
 
 

@@ -1860,7 +1860,11 @@ The following users in your current installation will become incompatible with C
     def _sanitize_log_secret(self, content: str, filename: str, file_path: Path) -> None:
         self._logger.log(VERBOSE, f"Start sanitize of {file_path}")
 
-        pattern = r'Value of "automation_secret" changed from "[^"]*" to "[^"]*"\.?(\\n)?'
+        pattern = (
+            r'Value of "automation_secret" changed from "[^"]*" to "[^"]*"\.?(\\n)?|'
+            r'Attribute "automation_secret" with value "[^"]*" added\.?(\\n)?'
+        )
+
         modified_content = re.sub(pattern, "", content)
         with open(file_path, "wb") as file:
             file.write(modified_content.encode("utf-8"))

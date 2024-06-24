@@ -11,15 +11,15 @@ THE_PID=$(cat $PIDFILE 2>/dev/null)
 OPTS=""
 
 . $OMD_ROOT/etc/omd/site.conf
-if [ "$CONFIG_MKEVENTD" != on ] ; then
+if [ "$CONFIG_MKEVENTD" != on ]; then
     exit 5
 fi
 
 case "$1" in
     start)
-        if [ "$CONFIG_MKEVENTD_SYSLOG" = on ] \
-           || [ "$CONFIG_MKEVENTD_SYSLOG_TCP" = on ] \
-           || [ "$CONFIG_MKEVENTD_SNMPTRAP" = on ]; then
+        if [ "$CONFIG_MKEVENTD_SYSLOG" = on ] ||
+            [ "$CONFIG_MKEVENTD_SYSLOG_TCP" = on ] ||
+            [ "$CONFIG_MKEVENTD_SNMPTRAP" = on ]; then
 
             ADD_TXT=
             if [ "$CONFIG_MKEVENTD_SYSLOG" = on ]; then
@@ -37,17 +37,16 @@ case "$1" in
 
             echo -n "Starting mkeventd (builtin: ${ADD_TXT%*,})..."
             if kill -0 $THE_PID >/dev/null 2>&1; then
-              echo 'Already running.'
-              exit 0
+                echo 'Already running.'
+                exit 0
             fi
-
 
             ${DAEMON}_open514 $OPTS
         else
             echo -n 'Starting mkeventd...'
             if kill -0 $THE_PID >/dev/null 2>&1; then
-              echo 'Already running.'
-              exit 0
+                echo 'Already running.'
+                exit 0
             fi
             $DAEMON $OPTS
         fi
@@ -58,10 +57,10 @@ case "$1" in
             echo OK
         fi
         exit $EXIT_CODE
-    ;;
+        ;;
     stop)
         echo -n 'Stopping mkeventd...'
-        if [ -z "$THE_PID" ] ; then
+        if [ -z "$THE_PID" ]; then
             echo 'Not running.'
         elif ! kill -0 "$THE_PID" >/dev/null 2>&1; then
             echo "not running (PID file orphaned)"
@@ -71,11 +70,11 @@ case "$1" in
             if kill "$THE_PID" 2>/dev/null; then
                 # Only wait for pidfile removal when the signal could be sent
                 N=0
-                while [ -e "$PIDFILE" ] && kill -0 "$THE_PID" 2>/dev/null ; do
+                while [ -e "$PIDFILE" ] && kill -0 "$THE_PID" 2>/dev/null; do
                     sleep 0.1
                     N=$((N + 1))
-                    if [ $((N % 10)) -eq 0 ]; then echo -n . ; fi
-                    if [ $N -gt 600 ] ; then
+                    if [ $((N % 10)) -eq 0 ]; then echo -n .; fi
+                    if [ $N -gt 600 ]; then
                         echo -n "sending SIGKILL..."
                         kill -9 "$THE_PID"
                     elif [ $N = 700 ]; then
@@ -89,38 +88,38 @@ case "$1" in
             fi
             echo 'OK'
         fi
-    ;;
+        ;;
     restart)
         $0 stop && sleep 1 && $0 start
-    ;;
+        ;;
     reload)
         echo -n 'Reloading mkeventd...'
-        if [ -z "$THE_PID" ] ; then
+        if [ -z "$THE_PID" ]; then
             echo 'Not running.'
             exit 1
         else
             echo "killing $THE_PID with SIGHUP..."
             kill -1 $THE_PID
         fi
-    ;;
+        ;;
     status)
         echo -n 'Checking status of mkeventd...'
-        if [ -z "$THE_PID" ] ; then
+        if [ -z "$THE_PID" ]; then
             echo "not running (PID file missing)"
             exit 1
-        elif ! kill -0 "$THE_PID" ; then
+        elif ! kill -0 "$THE_PID"; then
             echo "not running (PID file orphaned)"
             exit 1
         else
             echo "running"
             exit 0
         fi
-    ;;
+        ;;
     flush)
-        if [ -n "$THE_PID" ] && kill -0 "$THE_PID" ; then
+        if [ -n "$THE_PID" ] && kill -0 "$THE_PID"; then
             echo -n "Flushing current state and history..."
             result=$(echo "COMMAND FLUSH" | unixcat $STATUS_SOCKET)
-            if [ "$result" = "None" ] ; then
+            if [ "$result" = "None" ]; then
                 echo OK
                 exit 0
             else
@@ -133,8 +132,8 @@ case "$1" in
             echo OK
             exit 0
         fi
-    ;;
+        ;;
     *)
         echo "Usage: $0 {start|stop|restart|reload|status|flush}"
-    ;;
+        ;;
 esac

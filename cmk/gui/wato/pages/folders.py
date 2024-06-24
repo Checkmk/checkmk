@@ -306,9 +306,8 @@ class ModeFolder(WatoMode):
 
     def _page_menu_entries_hosts_in_folder(self) -> Iterator[PageMenuEntry]:
         folder_has_hosts = self._folder.has_hosts()
-        folder_or_subfolder_has_hosts = folder_has_hosts or (  # has hosts in any of its subfolders
-            isinstance(self._folder, Folder)
-            and any(sub.has_hosts() for sub in self._folder.subfolders())
+        folder_or_subfolder_has_hosts = (
+            isinstance(self._folder, Folder) and self._folder.num_hosts_recursively() > 0
         )
         add_host_tooltip_text = _("Add host to use this action")
         add_host_or_subfolder_tooltip_text = _("Add host/subfolder to use this action")

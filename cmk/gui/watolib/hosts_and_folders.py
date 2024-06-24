@@ -523,7 +523,10 @@ class _RedisHelper:
         )
 
         pipeline = self._client.pipeline()
-        keys = [f"{path_with_slash}*"]
+        # For the root folder path_with_slash == "/", yet for first level subfolders path_with_slash
+        # does not start with a slash, e.g. "subfolder/", "subfolder/subsubfolder/".
+        # To gather all subfolders in case of the root folder we need to set ["*"] as keys here.
+        keys = [f"{path_with_slash}*"] if not path_with_slash == "/" else ["*"]
         args = ["permitted_contact_groups", "num_hosts"]
         recursive_hosts(keys=keys, args=args, client=pipeline)
         results = pipeline.execute()

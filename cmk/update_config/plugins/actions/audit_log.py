@@ -158,18 +158,22 @@ class SanitizeAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
 
         logger.info(
             f"{tty.yellow}Wrote audit log backup to {backup_dir}. Please check "
-            f"if the audit log in the GUI works as expected. In case of problems "
-            f"you can copy the backup files back to {self._audit_log_path}. "
+            f"if the audit log in the GUI works as expected.\nIn case of problems "
+            f"you can copy the backup files back to {self._audit_log_path}.\n"
             f"Please check the corresponding files in {self._audit_log_path} for "
-            f"any leftover automation secrets and remove them if necessary. If "
-            f"everything works as expected you can remove the backup. For further "
+            f"any leftover automation secrets and remove them if necessary.\nIf "
+            f"everything works as expected you can remove the backup.\nFor further "
             f"details please have a look at Werk #17056.{tty.normal}"
         )
 
     def _sanitize_log(self, content: str, logger: Logger, filename: str, file_path: Path) -> None:
         logger.debug(f"Start sanitize of {file_path}")
 
-        pattern = r'Value of "automation_secret" changed from "[^"]*" to "[^"]*"\.?(\\n)?'
+        pattern = (
+            r'Value of "automation_secret" changed from "[^"]*" to "[^"]*"\.?(\\n)?|'
+            r'Attribute "automation_secret" with value "[^"]*" added\.?(\\n)?'
+        )
+
         modified_content = re.sub(pattern, "", content)
         with open(file_path, "wb") as file:
             file.write(modified_content.encode("utf-8"))

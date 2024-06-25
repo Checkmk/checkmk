@@ -56,9 +56,14 @@ def transform_units(params):
 
 
 def check_jolokia_jvm_garbagecollectors(item, params, parsed):
+    yield from check_jolokia_jvm_garbagecollectors_testable(
+        item, params, parsed, get_value_store(), time.time()
+    )
+
+
+def check_jolokia_jvm_garbagecollectors_testable(item, params, parsed, value_store, now):
     if not (data := parsed.get(item)):
         return
-    now = time.time()
     try:
         count = data["CollectionCount"]
         ctime = data["CollectionTime"]
@@ -66,11 +71,9 @@ def check_jolokia_jvm_garbagecollectors(item, params, parsed):
         return
 
     try:
-        count_rate = get_rate(get_value_store(), "%s.count" % item, now, count, raise_overflow=True)
+        count_rate = get_rate(value_store, "%s.count" % item, now, count, raise_overflow=True)
     finally:  # initalize 2nd counter!
-        ctime_rate = get_rate(get_value_store(), "%s.time" % item, now, ctime, raise_overflow=True)
-
-    params = transform_units(params)
+        ctime_rate = get_rate(value_store, "%s.time" % item, now, ctime, raise_overflow=True)
 
     yield check_levels(
         count_rate,

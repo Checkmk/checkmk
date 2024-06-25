@@ -2855,7 +2855,7 @@ class Float(ValueSpec[float]):
             % (value, type_name(value), _(" or int") if self._allow_int else ""),
         )
 
-    def validate_value(self, value: float, varprefix: str) -> None:
+    def _validate_value(self, value: float, varprefix: str) -> None:
         self._bounds.validate_value(value, varprefix)
 
 

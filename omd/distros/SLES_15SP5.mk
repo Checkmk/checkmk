@@ -3,6 +3,7 @@ OS_PACKAGES     =
 OS_PACKAGES    += libcap-progs # needed for setting special file permissions
 OS_PACKAGES    += cronie # needed for sites cron jobs
 OS_PACKAGES    += net-tools # traceroute is needed for Checkmk parent scan
+OS_PACKAGES    += traceroute # no longer provided by net-tools
 OS_PACKAGES    += apache2
 OS_PACKAGES    += bind-utils # check_dns
 OS_PACKAGES    += curl

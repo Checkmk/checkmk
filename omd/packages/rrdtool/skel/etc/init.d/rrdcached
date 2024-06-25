@@ -68,7 +68,7 @@ case "$1" in
 
         # make sure, directories are there (ramdisk!)
         # shellcheck disable=SC2086
-        mkdir -p "$CACHE_DIR" "$RRD_DIR" &&
+        mkdir -p "$CACHE_DIR" &&
             "$DAEMON" $OPTS &&
             echo OK || echo Error
         ;;

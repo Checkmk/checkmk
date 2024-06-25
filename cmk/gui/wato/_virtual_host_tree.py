@@ -215,10 +215,13 @@ class VirtualHostTree(SidebarSnapin):
             ("filled_in", "filter"),
             ("_show_filter_form", "0"),
         ]
+        active_urlvars: list[str] = []
         if viewname == "svcproblems":
             urlvars += [("st1", "on"), ("st2", "on"), ("st3", "on")]
+            active_urlvars.append("svcstate")
+            urlvars += [("is_in_downtime", "0")]
+            active_urlvars.append("in_downtime")
 
-        active_urlvars: list[str] = []
         if tag_urlvars := self._get_tag_url_vars(tree_spec, node_values):
             urlvars += tag_urlvars
             active_urlvars.append("host_tags")

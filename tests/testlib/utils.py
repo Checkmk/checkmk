@@ -130,7 +130,7 @@ def edition_from_env(fallback: Edition | None = None) -> Edition:
 def spawn_expect_process(
     args: list[str],
     dialogs: list[PExpectDialog],
-    logfile_path: str = "/tmp/sep.out",
+    logfile_path: str | Path = "/tmp/sep.out",
     auto_wrap_length: int = 49,
     break_long_words: bool = False,
     timeout: int = 30,
@@ -294,14 +294,14 @@ def check_output(
 
 
 def write_file(
-    path: str,
+    path: str | Path,
     content: bytes | str,
     sudo: bool = True,
     substitute_user: str | None = None,
 ) -> None:
     """Write a file as root or another user."""
     with execute(
-        ["tee", path],
+        ["tee", Path(path).as_posix()],
         sudo=sudo,
         substitute_user=substitute_user,
         stdin=subprocess.PIPE,
@@ -326,9 +326,9 @@ def write_file(
         )
 
 
-def makedirs(path: str, sudo: bool = True, substitute_user: str | None = None) -> bool:
+def makedirs(path: str | Path, sudo: bool = True, substitute_user: str | None = None) -> bool:
     """Make directory path (including parents) as root or another user."""
-    p = execute(["mkdir", "-p", path], sudo=sudo, substitute_user=substitute_user)
+    p = execute(["mkdir", "-p", Path(path).as_posix()], sudo=sudo, substitute_user=substitute_user)
     return p.wait() == 0
 
 
@@ -449,14 +449,14 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
                 auth_provider_proc.kill()
 
 
-def cse_create_onboarding_dummies(root: str) -> None:
-    onboarding_dir = os.path.join(root, "share/check_mk/web/htdocs/onboarding")
-    if os.path.exists(onboarding_dir):
+def cse_create_onboarding_dummies(root: str | Path) -> None:
+    onboarding_dir = Path(root) / "share" / "check_mk" / "web" / "htdocs" / "onboarding"
+    if onboarding_dir.exists():
         return
     LOGGER.warning("SaaS edition onboarding files not found; creating dummy files...")
     makedirs(onboarding_dir)
-    write_file(f"{onboarding_dir}/search.css", "/* cse dummy file */")
-    write_file(f"{onboarding_dir}/search.js", "/* cse dummy file */")
+    write_file(onboarding_dir / "search.css", "/* cse dummy file */")
+    write_file(onboarding_dir / "search.js", "/* cse dummy file */")
 
 
 def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: float = 0.1) -> None:

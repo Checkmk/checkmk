@@ -36,25 +36,6 @@ def discover_jolokia_jvm_garbagecollectors(section):
     )
 
 
-def transform_units(params):
-    """transform 1/min to 1/s and ms/min to %, pre 1.7.0 rules."""
-    if "collection_time" in params:
-        # new params already!
-        return params
-
-    new_params = {}
-    if "CollectionTime" in params:
-        ms_per_min = params["CollectionTime"]
-        new_params["collection_time"] = (ms_per_min[0] / 600.0, ms_per_min[1] / 600.0)
-    if "CollectionCount" in params:
-        count_rate_per_min = params["CollectionCount"]
-        new_params["collection_count"] = (
-            count_rate_per_min[0] / 60.0,
-            count_rate_per_min[1] / 60.0,
-        )
-    return new_params
-
-
 def check_jolokia_jvm_garbagecollectors(item, params, parsed):
     yield from check_jolokia_jvm_garbagecollectors_testable(
         item, params, parsed, get_value_store(), time.time()

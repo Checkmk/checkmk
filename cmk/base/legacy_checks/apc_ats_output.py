@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.apc_ats import DETECT
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree
+from cmk.plugins.lib.apc import DETECT_ATS
 
 # mypy: disable-error-code="var-annotated"
 
@@ -67,7 +67,7 @@ def check_apc_ats_output(item, params, parsed):
 
 
 check_info["apc_ats_output"] = LegacyCheckDefinition(
-    detect=DETECT,
+    detect=DETECT_ATS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.8.5.4.3.1",
         oids=["1", "3", "4", "10", "13"],

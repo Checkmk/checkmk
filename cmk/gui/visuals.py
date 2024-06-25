@@ -37,6 +37,7 @@ from livestatus import LivestatusTestingError
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.escaping import escape
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.forms as forms
@@ -673,7 +674,9 @@ def get_permissioned_visual(
     if visual := permitted_visuals.get(item):
         return visual
 
-    raise MKUserError("%s_name" % what, _("The requested %s %s does not exist") % (what, item))
+    raise MKUserError(
+        "%s_name" % what, _("The requested %s %s does not exist") % (what, escape(item))
+    )
 
 
 # .

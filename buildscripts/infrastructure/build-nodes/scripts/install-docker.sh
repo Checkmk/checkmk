@@ -14,7 +14,9 @@ case "$DISTRO" in
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
         echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" >/etc/apt/sources.list.d/docker.list
         apt-get update
-        apt-get install -y docker-ce
+        # Temporary pin docker version, with the freshly released 27.0.1, we get:
+        # Error response from daemon: login attempt to https://artifacts.lan.tribe29.com/v2/ failed with status: 404 Not Found
+        apt-get install -y docker-ce="5:26.1.4-1~ubuntu.20.04~focal"
 
         # Test the installation
         docker --version || exit $?

@@ -62,7 +62,7 @@ snmp_section_df_netapp32 = SimpleSNMPSection(
 )
 
 
-def discvover_df_netapp(params: Sequence[Mapping[str, Any]], section: FSBlocks) -> DiscoveryResult:
+def discover_df_netapp(params: Sequence[Mapping[str, Any]], section: FSBlocks) -> DiscoveryResult:
     yield from df_discovery(
         params,
         [
@@ -86,7 +86,7 @@ def check_df_netapp(item: str, params: Mapping[str, Any], section: FSBlocks) -> 
 check_plugin_df_netapp = CheckPlugin(
     name="df_netapp",
     service_name="Filesystem %s",
-    discovery_function=discvover_df_netapp,
+    discovery_function=discover_df_netapp,
     discovery_ruleset_name="filesystem_groups",
     discovery_ruleset_type=RuleSetType.ALL,
     discovery_default_parameters={"groups": []},

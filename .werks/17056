@@ -22,8 +22,14 @@ the log (see next paragraph for details).
 A backup of the original audit log (before automation secrets were removed) is
 copied to "~/audit_log_backup". If anything goes wrong
 during the update, you have to copy the files back to ~var/check_mk/wato/log
-and remove the automation secrets manually. If the update works as expected,
-you can remove the backup files.
+and remove the automation secrets manually by running
+
+```
+sed -i 's/Value of "automation_secret" changed from "[^"]*" to "[^"]*".\\n//g' ~/var/check_mk/wato/log/wato_audit*
+sed -i 's/Attribute "automation_secret" with value "[^"]*" added.\\n//g' ~/var/check_mk/wato/log/wato_audit*
+```
+
+If the update works as expected, you can remove the backup files.
 
 In distributed setups which do not replicate the configuration, automation
 secrets are replaced during the update of each site.

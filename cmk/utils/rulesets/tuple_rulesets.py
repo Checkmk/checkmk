@@ -9,7 +9,7 @@ from re import Pattern
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.regex import regex
+from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.tags import TagID
 
 # Conveniance macros for legacy tuple based host and service rules
@@ -131,19 +131,16 @@ def convert_pattern_list(patterns: list[str]) -> Pattern[str] | None:
     if not patterns:
         return None
 
-    pattern_parts = []
+    pattern_parts: list[tuple[bool, str]] = []
 
     for pattern in patterns:
         negate, pattern = _parse_negated(pattern)
         # Skip ALL_SERVICES from end of negated lists
-        if negate:
-            if pattern == ALL_SERVICES[0]:
-                continue
-            pattern_parts.append("(?!%s)" % pattern)
-        else:
-            pattern_parts.append("(?:%s)" % pattern)
+        if negate and pattern == ALL_SERVICES[0]:
+            continue
+        pattern_parts.append((negate, pattern))
 
-    return regex("(?:%s)" % "|".join(pattern_parts))
+    return regex(combine_patterns(pattern_parts))
 
 
 def _parse_negated(pattern):

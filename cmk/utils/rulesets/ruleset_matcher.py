@@ -22,7 +22,7 @@ from cmk.utils.labels import (
     Labels,
 )
 from cmk.utils.parameters import merge_parameters
-from cmk.utils.regex import regex
+from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
 
@@ -564,7 +564,7 @@ class RulesetOptimizer:
             else:
                 pattern_parts.append(p)
 
-        return negate, regex("(?:%s)" % "|".join("(?:%s)" % p for p in pattern_parts))
+        return negate, regex(combine_patterns(pattern_parts))
 
     def _all_matching_hosts(  # pylint: disable=too-many-branches
         self, condition: RuleConditionsSpec, with_foreign_hosts: bool

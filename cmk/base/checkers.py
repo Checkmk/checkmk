@@ -564,6 +564,8 @@ def _compute_final_check_parameters(
         only_from=lambda: config_cache.only_from(host_name),
         prediction=make_prediction,
         service_level=lambda: config_cache.effective_service_level(host_name, service.description),
+        host_name=str(host_name),
+        service_name=str(service.description),
     )
     return Parameters({k: postprocess_configuration(v, config) for k, v in params.items()})
 
@@ -882,6 +884,8 @@ class PostprocessingConfig:
     only_from: Callable[[], None | str | list[str]]
     prediction: Callable[[], InjectedParameters]
     service_level: Callable[[], int]
+    host_name: str
+    service_name: str
 
 
 def postprocess_configuration(
@@ -903,12 +907,16 @@ def postprocess_configuration(
     rid of the recursion).
     """
     match params:
-        case tuple(("cmk_postprocessed", "predictive_levels", value)):
-            return _postprocess_predictive_levels(value, postprocessing_config.prediction())
+        case tuple(("cmk_postprocessed", "host_name", _)):
+            return postprocessing_config.host_name
         case tuple(("cmk_postprocessed", "only_from", _)):
             return postprocessing_config.only_from()
+        case tuple(("cmk_postprocessed", "predictive_levels", value)):
+            return _postprocess_predictive_levels(value, postprocessing_config.prediction())
         case tuple(("cmk_postprocessed", "service_level", _)):
             return postprocessing_config.service_level()
+        case tuple(("cmk_postprocessed", "service_name", _)):
+            return postprocessing_config.service_name
         case tuple():
             return tuple(postprocess_configuration(v, postprocessing_config) for v in params)
         case list():

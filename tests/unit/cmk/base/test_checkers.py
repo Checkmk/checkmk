@@ -192,6 +192,8 @@ def test_only_from_injection() -> None:
         only_from=lambda: ["1.2.3.4"],
         prediction=lambda: InjectedParameters(meta_file_path_template="", predictions={}),
         service_level=lambda: 42,
+        host_name="not-relevant-for-test",
+        service_name="not-relevant-for-test",
     )
     p: dict[str, object] = {
         "outer": {
@@ -210,6 +212,8 @@ def test_prediction_injection_legacy() -> None:
         only_from=lambda: ["1.2.3.4"],
         prediction=lambda: InjectedParameters(meta_file_path_template="", predictions={}),
         service_level=lambda: 42,
+        host_name="not-relevant-for-test",
+        service_name="not-relevant-for-test",
     )
     p: dict[str, object] = {
         "pagefile": (
@@ -253,6 +257,8 @@ def test_prediction_injection() -> None:
             predictions={_make_hash(params, "upper", metric): prediction},
         ),
         service_level=lambda: 42,
+        host_name="not-relevant-for-test",
+        service_name="not-relevant-for-test",
     )
     p: dict[str, object] = {
         "levels_upper": (

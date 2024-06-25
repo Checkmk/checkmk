@@ -1,0 +1,16 @@
+Title: Fix regex error when using global flags when matching multiple expressions
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1718966795
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+There are a few places where we concatenate multiple regular expressions
+to save performance. This concatenation broke when expressions using
+global flags such as "(?i)cpu" were concatenated. With this werk, we are
+converting these global flags to local ones for that specific expression
+which restores the expected behavior of the expression, fixing various
+crashes that would occur for example when updating or activating
+changes.

@@ -12,7 +12,7 @@ from cmk.utils.caching import instance_method_lru_cache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, Labels
 from cmk.utils.parameters import boil_down_parameters
-from cmk.utils.regex import regex
+from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.rulesets.tuple_rulesets import (
     ALL_HOSTS,
     ALL_SERVICES,
@@ -600,7 +600,7 @@ class RulesetOptimizer:
             else:
                 pattern_parts.append(p)
 
-        return negate, regex("(?:%s)" % "|".join("(?:%s)" % p for p in pattern_parts))
+        return negate, regex(combine_patterns(pattern_parts))
 
     def _all_matching_hosts(  # pylint: disable=too-many-branches
         self, condition: RuleConditionsSpec, with_foreign_hosts: bool

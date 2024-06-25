@@ -26,6 +26,7 @@ from livestatus import LivestatusTestingError
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.escaping import escape
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.packaging import id_to_mkp, Installer, PackageName, PackagePart
 from cmk.utils.store import save_object_to_file
@@ -772,7 +773,9 @@ def get_permissioned_visual(
     if visual := permitted_visuals.get(item):
         return visual
 
-    raise MKUserError("%s_name" % what, _("The requested %s %s does not exist") % (what, item))
+    raise MKUserError(
+        "%s_name" % what, _("The requested %s %s does not exist") % (what, escape(item))
+    )
 
 
 # .

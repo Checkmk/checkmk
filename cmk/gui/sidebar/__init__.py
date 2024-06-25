@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import textwrap
 import traceback
 from collections.abc import Mapping, Sequence
@@ -624,14 +625,15 @@ class SidebarRenderer:
         html.close_div()
 
     def _show_onboarding(self) -> None:
-        html.write_html(
-            HTML.without_escaping('<script type="module" src="onboarding/search.js"></script>')
-        )
-        html.write_html(
-            HTML.without_escaping('<link rel="stylesheet" href="onboarding/search.css">')
-        )
+        onboarding_s3_bucket = os.environ.get(
+            "ONBOARDING_STATIC_DATA_HOST", "https://static.saas-dev.cloudsandbox.checkmk.cloud"
+        ).rstrip("/")
+
         html.open_div(id_="searchApp")
         html.close_div()
+        html.javascript_file(f"{onboarding_s3_bucket}/search.js")
+        html.stylesheet(f"{onboarding_s3_bucket}/search.css")
+        html.javascript(f'window.onboardingS3Bucket = "{onboarding_s3_bucket}";')
 
     def _show_sidebar_head(self):
         html.open_div(id_="side_header")

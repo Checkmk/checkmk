@@ -16,7 +16,8 @@ case "$DISTRO" in
         apt-get update
         # Temporary pin docker version, with the freshly released 27.0.1, we get:
         # Error response from daemon: login attempt to https://artifacts.lan.tribe29.com/v2/ failed with status: 404 Not Found
-        apt-get install -y docker-ce="5:26.1.4-1~ubuntu.20.04~focal"
+        docker_version="5:26.1.4-1~ubuntu.20.04~focal"
+        apt-get install -y docker-ce="${docker_version}" docker-ce-cli="${docker_version}"
 
         # Test the installation
         docker --version || exit $?

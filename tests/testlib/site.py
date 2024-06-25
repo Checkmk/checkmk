@@ -971,11 +971,14 @@ class Site:
                 ["omd", "status"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
             ).communicate()[0]
             ps_output_file = self.result_dir() / "processes.out"
-            self.write_text_file(
+            write_file(
                 ps_output_file,
                 self.execute(
-                    ["ps", "-ef"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+                    ["ps", "-ef"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
                 ).communicate()[0],
+                sudo=True,
             )
             self.save_results()
 

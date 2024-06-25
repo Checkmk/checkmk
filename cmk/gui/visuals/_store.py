@@ -14,6 +14,7 @@ import cmk.utils
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import store
+from cmk.utils.escaping import escape
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.store import save_object_to_file
 from cmk.utils.user import UserId
@@ -563,4 +564,6 @@ def get_permissioned_visual(
 
     if visual := permitted_visuals.get(item):
         return visual
-    raise MKUserError("%s_name" % what, _("The requested %s %s does not exist") % (what, item))
+    raise MKUserError(
+        "%s_name" % what, _("The requested %s %s does not exist") % (what, escape(item))
+    )

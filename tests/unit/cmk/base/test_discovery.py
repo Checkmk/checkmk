@@ -82,7 +82,6 @@ from cmk.base.checkers import (
     SectionPluginMapper,
 )
 from cmk.base.config import ConfigCache
-from cmk.base.plugin_contexts import current_host
 
 
 def _as_plugin(plugin: SectionPluginAPI) -> SectionPlugin:
@@ -1328,53 +1327,52 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(testhost, ipaddress=HostAddress("127.0.0.1"))
     ts.fake_standard_linux_agent_output(testhost)
     config_cache = ts.apply(monkeypatch)
-    with current_host(testhost):
-        file_cache_options = FileCacheOptions()
-        parser = CMKParser(
-            config_cache.parser_factory(),
-            checking_sections=lambda hostname: config_cache.make_checking_sections(
-                hostname, selected_sections=NO_SELECTION
-            ),
-            selected_sections=NO_SELECTION,
-            keep_outdated=file_cache_options.keep_outdated,
-            logger=logging.getLogger("tests"),
-        )
-        fetcher = CMKFetcher(
-            config_cache,
-            config_cache.fetcher_factory(),
-            file_cache_options=file_cache_options,
-            force_snmp_cache_refresh=False,
-            ip_address_of=config.ConfiguredIPLookup(
-                config_cache, error_handler=config.handle_ip_lookup_failure
-            ),
-            mode=Mode.DISCOVERY,
-            on_error=OnError.RAISE,
-            selected_sections=NO_SELECTION,
-            simulation_mode=True,
-            snmp_backend_override=None,
-            password_store_file=Path("/pw/store"),
-        )
-        commandline_discovery(
-            host_name=testhost,
-            ruleset_matcher=config_cache.ruleset_matcher,
-            parser=parser,
-            fetcher=fetcher,
-            section_plugins=SectionPluginMapper(),
-            section_error_handling=lambda *args, **kw: "error",
-            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
-            plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
-            run_plugin_names=EVERYTHING,
-            ignore_plugin=lambda *args, **kw: False,
-            arg_only_new=False,
-            on_error=OnError.RAISE,
-        )
+    file_cache_options = FileCacheOptions()
+    parser = CMKParser(
+        config_cache.parser_factory(),
+        checking_sections=lambda hostname: config_cache.make_checking_sections(
+            hostname, selected_sections=NO_SELECTION
+        ),
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("tests"),
+    )
+    fetcher = CMKFetcher(
+        config_cache,
+        config_cache.fetcher_factory(),
+        file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=False,
+        ip_address_of=config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        ),
+        mode=Mode.DISCOVERY,
+        on_error=OnError.RAISE,
+        selected_sections=NO_SELECTION,
+        simulation_mode=True,
+        snmp_backend_override=None,
+        password_store_file=Path("/pw/store"),
+    )
+    commandline_discovery(
+        host_name=testhost,
+        ruleset_matcher=config_cache.ruleset_matcher,
+        parser=parser,
+        fetcher=fetcher,
+        section_plugins=SectionPluginMapper(),
+        section_error_handling=lambda *args, **kw: "error",
+        host_label_plugins=HostLabelPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+        plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+        run_plugin_names=EVERYTHING,
+        ignore_plugin=lambda *args, **kw: False,
+        arg_only_new=False,
+        on_error=OnError.RAISE,
+    )
 
-        entries = AutochecksStore(testhost).read()
-        found = {e.id(): e.service_labels for e in entries}
-        assert found == _expected_services
+    entries = AutochecksStore(testhost).read()
+    found = {e.id(): e.service_labels for e in entries}
+    assert found == _expected_services
 
-        store = DiscoveredHostLabelsStore(testhost)
-        assert store.load() == _expected_host_labels
+    store = DiscoveredHostLabelsStore(testhost)
+    assert store.load() == _expected_host_labels
 
 
 class RealHostScenario(NamedTuple):

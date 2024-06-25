@@ -14,7 +14,6 @@ from unittest import mock
 
 import pytest
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 
 from cmk.checkengine.checking import CheckPluginName
@@ -29,11 +28,6 @@ class BaseCheck(abc.ABC):
 
     def __init__(self, name: str) -> None:
         self.name = name
-        # we cant use the current_host context, b/c some tests rely on a persistent
-        # item state across several calls to run_check
-        import cmk.base.plugin_contexts  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
-
-        cmk.base.plugin_contexts._hostname = HostName("non-existent-testhost")
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r})"

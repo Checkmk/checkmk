@@ -8,13 +8,10 @@ from itertools import chain
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.hostaddress import HostName
-
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.plugin_classes import SectionPlugin, SNMPSectionPlugin
-from cmk.base.plugin_contexts import current_host
 
 
 def _section_permutations(
@@ -82,9 +79,8 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRe
                     else [plugin.discovery_default_parameters]
                 )
 
-            with current_host(HostName("testhost")):  # get_host_values needs a host_name()
-                if list(plugin.discovery_function(**kwargs)):
-                    plugins_discovering_upon_empty.add(str(plugin.name))
+            if list(plugin.discovery_function(**kwargs)):
+                plugins_discovering_upon_empty.add(str(plugin.name))
 
     assert plugins_discovering_upon_empty == plugins_expected_to_discover_upon_empty
 

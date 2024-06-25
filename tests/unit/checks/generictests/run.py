@@ -8,14 +8,6 @@ from contextlib import contextmanager
 
 import time_machine
 
-from cmk.utils.check_utils import maincheckify
-from cmk.utils.hostaddress import HostName
-
-from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
-    current_host,
-    current_service,
-)
-
 from ..checktestlib import (
     assertCheckResultsEqual,
     assertDiscoveryResultsEqual,
@@ -147,13 +139,11 @@ def run_test_on_discovery(check, subcheck, dataset, info_arg, immu):
 def run_test_on_checks(check, subcheck, dataset, info_arg, immu):
     """Run check for test case listed in dataset"""
     test_cases = getattr(dataset, "checks", {}).get(subcheck, [])
-    check_plugin_name = maincheckify(check.name)
 
     for item, params, results_expected_raw in test_cases:
         immu.register(params, "params")
 
-        with current_service(check_plugin_name, "unit test description"):
-            result = CheckResult(check.run_check(item, params, info_arg))
+        result = CheckResult(check.run_check(item, params, info_arg))
 
         immu.test(" after check (%s): " % check.info.check_function.__name__)
 
@@ -198,7 +188,6 @@ def run(check_info, dataset):
             mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
             with (
-                current_host(HostName("non-existent-testhost")),
                 mock_item_state(mock_is),
                 MockHostExtraConf(check, mock_hec),
                 MockHostExtraConf(check, mock_hecm, "get_host_merged_dict"),

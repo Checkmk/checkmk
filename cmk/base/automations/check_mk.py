@@ -153,15 +153,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
 import cmk.base.nagios_utils
 import cmk.base.parent_scan
-from cmk.base import (
-    check_api,
-    config,
-    core_config,
-    notify,
-    plugin_contexts,
-    server_side_calls,
-    sources,
-)
+from cmk.base import check_api, config, core_config, notify, server_side_calls, sources
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
@@ -346,41 +338,40 @@ class AutomationDiscovery(DiscoveryAutomation):
                     rtc_package=None,
                 )
 
-            with plugin_contexts.current_host(hostname):
-                hosts_config = config_cache.hosts_config
-                results[hostname] = automation_discovery(
+            hosts_config = config_cache.hosts_config
+            results[hostname] = automation_discovery(
+                hostname,
+                is_cluster=hostname in config_cache.hosts_config.clusters,
+                cluster_nodes=config_cache.nodes(hostname),
+                active_hosts={
+                    hn
+                    for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
+                    if config_cache.is_active(hn) and config_cache.is_online(hn)
+                },
+                ruleset_matcher=ruleset_matcher,
+                parser=parser,
+                fetcher=fetcher,
+                summarizer=CMKSummarizer(
                     hostname,
-                    is_cluster=hostname in config_cache.hosts_config.clusters,
-                    cluster_nodes=config_cache.nodes(hostname),
-                    active_hosts={
-                        hn
-                        for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
-                        if config_cache.is_active(hn) and config_cache.is_online(hn)
-                    },
-                    ruleset_matcher=ruleset_matcher,
-                    parser=parser,
-                    fetcher=fetcher,
-                    summarizer=CMKSummarizer(
-                        hostname,
-                        config_cache.summary_config,
-                        override_non_ok_state=None,
-                    ),
-                    section_plugins=SectionPluginMapper(),
-                    section_error_handling=section_error_handling,
-                    host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
-                    plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-                    ignore_service=config_cache.service_ignored,
-                    ignore_plugin=config_cache.check_plugin_ignored,
-                    get_effective_host=config_cache.effective_host,
-                    get_service_description=functools.partial(
-                        config.service_description, ruleset_matcher
-                    ),
-                    settings=settings,
-                    keep_clustered_vanished_services=True,
-                    service_filters=None,
-                    enforced_services=config_cache.enforced_services_table(hostname),
-                    on_error=on_error,
-                )
+                    config_cache.summary_config,
+                    override_non_ok_state=None,
+                ),
+                section_plugins=SectionPluginMapper(),
+                section_error_handling=section_error_handling,
+                host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
+                plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
+                ignore_service=config_cache.service_ignored,
+                ignore_plugin=config_cache.check_plugin_ignored,
+                get_effective_host=config_cache.effective_host,
+                get_service_description=functools.partial(
+                    config.service_description, ruleset_matcher
+                ),
+                settings=settings,
+                keep_clustered_vanished_services=True,
+                service_filters=None,
+                enforced_services=config_cache.enforced_services_table(hostname),
+                on_error=on_error,
+            )
 
             if results[hostname].error_text is None:
                 # Trigger the discovery service right after performing the discovery to
@@ -624,7 +615,6 @@ def _execute_discovery(
         else config.lookup_ip_address(config_cache, host_name)
     )
     with (
-        plugin_contexts.current_host(host_name),
         set_value_store_manager(
             ValueStoreManager(host_name), store_changes=False
         ) as value_store_manager,
@@ -813,44 +803,43 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     console.verbose("  failed: discovery check disabled")
                     discovery_result, activate_host = None, False
                 else:
-                    with plugin_contexts.current_host(host_name):
-                        hosts_config = config_cache.hosts_config
-                        discovery_result, activate_host = autodiscovery(
+                    hosts_config = config_cache.hosts_config
+                    discovery_result, activate_host = autodiscovery(
+                        host_name,
+                        is_cluster=host_name in config_cache.hosts_config.clusters,
+                        cluster_nodes=config_cache.nodes(host_name),
+                        active_hosts={
+                            hn
+                            for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
+                            if config_cache.is_active(hn) and config_cache.is_online(hn)
+                        },
+                        ruleset_matcher=ruleset_matcher,
+                        parser=parser,
+                        fetcher=fetcher,
+                        summarizer=CMKSummarizer(
                             host_name,
-                            is_cluster=host_name in config_cache.hosts_config.clusters,
-                            cluster_nodes=config_cache.nodes(host_name),
-                            active_hosts={
-                                hn
-                                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
-                                if config_cache.is_active(hn) and config_cache.is_online(hn)
-                            },
-                            ruleset_matcher=ruleset_matcher,
-                            parser=parser,
-                            fetcher=fetcher,
-                            summarizer=CMKSummarizer(
-                                host_name,
-                                config_cache.summary_config,
-                                override_non_ok_state=None,
-                            ),
-                            section_plugins=section_plugins,
-                            section_error_handling=section_error_handling,
-                            host_label_plugins=host_label_plugins,
-                            plugins=plugins,
-                            ignore_service=config_cache.service_ignored,
-                            ignore_plugin=config_cache.check_plugin_ignored,
-                            get_effective_host=config_cache.effective_host,
-                            get_service_description=(
-                                functools.partial(config.service_description, ruleset_matcher)
-                            ),
-                            schedule_discovery_check=_schedule_discovery_check,
-                            rediscovery_parameters=params.rediscovery,
-                            invalidate_host_config=config_cache.invalidate_host_config,
-                            autodiscovery_queue=autodiscovery_queue,
-                            reference_time=rediscovery_reference_time,
-                            oldest_queued=oldest_queued,
-                            enforced_services=config_cache.enforced_services_table(host_name),
-                            on_error=on_error,
-                        )
+                            config_cache.summary_config,
+                            override_non_ok_state=None,
+                        ),
+                        section_plugins=section_plugins,
+                        section_error_handling=section_error_handling,
+                        host_label_plugins=host_label_plugins,
+                        plugins=plugins,
+                        ignore_service=config_cache.service_ignored,
+                        ignore_plugin=config_cache.check_plugin_ignored,
+                        get_effective_host=config_cache.effective_host,
+                        get_service_description=(
+                            functools.partial(config.service_description, ruleset_matcher)
+                        ),
+                        schedule_discovery_check=_schedule_discovery_check,
+                        rediscovery_parameters=params.rediscovery,
+                        invalidate_host_config=config_cache.invalidate_host_config,
+                        autodiscovery_queue=autodiscovery_queue,
+                        reference_time=rediscovery_reference_time,
+                        oldest_queued=oldest_queued,
+                        enforced_services=config_cache.enforced_services_table(host_name),
+                        on_error=on_error,
+                    )
                 if discovery_result:
                     discovery_results[host_name] = discovery_result
                     activation_required |= activate_host

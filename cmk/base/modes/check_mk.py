@@ -102,7 +102,7 @@ import cmk.base.core_nagios
 import cmk.base.diagnostics
 import cmk.base.dump_host
 import cmk.base.parent_scan
-from cmk.base import config, plugin_contexts, profiling, sources
+from cmk.base import config, profiling, sources
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (
@@ -1831,31 +1831,30 @@ def mode_check_discovery(
     checks_result: Sequence[ActiveCheckResult] = [ActiveCheckResult(3, "unknown error")]
     with error_handler:
         fetched = fetcher(hostname, ip_address=None)
-        with plugin_contexts.current_host(hostname):
-            checks_result = execute_check_discovery(
-                hostname,
-                is_cluster=hostname in config_cache.hosts_config.clusters,
-                cluster_nodes=config_cache.nodes(hostname),
-                params=config_cache.discovery_check_parameters(hostname),
-                fetched=((f[0], f[1]) for f in fetched),
-                parser=parser,
-                summarizer=summarizer,
-                section_plugins=SectionPluginMapper(),
-                section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
-                    operation="parsing",
-                    section_name=section_name,
-                    section_content=raw_data,
-                    host_name=hostname,
-                    rtc_package=None,
-                ),
-                host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
-                plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-                ignore_service=config_cache.service_ignored,
-                ignore_plugin=config_cache.check_plugin_ignored,
-                get_effective_host=config_cache.effective_host,
-                find_service_description=partial(config.service_description, ruleset_matcher),
-                enforced_services=config_cache.enforced_services_table(hostname),
-            )
+        checks_result = execute_check_discovery(
+            hostname,
+            is_cluster=hostname in config_cache.hosts_config.clusters,
+            cluster_nodes=config_cache.nodes(hostname),
+            params=config_cache.discovery_check_parameters(hostname),
+            fetched=((f[0], f[1]) for f in fetched),
+            parser=parser,
+            summarizer=summarizer,
+            section_plugins=SectionPluginMapper(),
+            section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
+                operation="parsing",
+                section_name=section_name,
+                section_content=raw_data,
+                host_name=hostname,
+                rtc_package=None,
+            ),
+            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
+            plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
+            ignore_service=config_cache.service_ignored,
+            ignore_plugin=config_cache.check_plugin_ignored,
+            get_effective_host=config_cache.effective_host,
+            find_service_description=partial(config.service_description, ruleset_matcher),
+            enforced_services=config_cache.enforced_services_table(hostname),
+        )
 
     if error_handler.result is not None:
         checks_result = [error_handler.result]
@@ -2153,24 +2152,21 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
                 rtc_package=None,
             )
 
-        with plugin_contexts.current_host(hostname):
-            commandline_discovery(
-                hostname,
-                ruleset_matcher=config_cache.ruleset_matcher,
-                parser=parser,
-                fetcher=fetcher,
-                section_plugins=SectionPluginMapper(),
-                section_error_handling=section_error_handling,
-                host_label_plugins=HostLabelPluginMapper(
-                    ruleset_matcher=config_cache.ruleset_matcher
-                ),
-                plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
-                run_plugin_names=run_plugin_names,
-                ignore_plugin=config_cache.check_plugin_ignored,
-                arg_only_new=options["discover"] == 1,
-                only_host_labels="only-host-labels" in options,
-                on_error=on_error,
-            )
+        commandline_discovery(
+            hostname,
+            ruleset_matcher=config_cache.ruleset_matcher,
+            parser=parser,
+            fetcher=fetcher,
+            section_plugins=SectionPluginMapper(),
+            section_error_handling=section_error_handling,
+            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+            plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+            run_plugin_names=run_plugin_names,
+            ignore_plugin=config_cache.check_plugin_ignored,
+            arg_only_new=options["discover"] == 1,
+            only_host_labels="only-host-labels" in options,
+            on_error=on_error,
+        )
 
 
 modes.register(
@@ -2334,7 +2330,6 @@ def mode_check(
     ] = ()
     with (
         error_handler,
-        plugin_contexts.current_host(hostname),
         set_value_store_manager(
             ValueStoreManager(hostname), store_changes=not dry_run
         ) as value_store_manager,

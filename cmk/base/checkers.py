@@ -74,7 +74,6 @@ from cmk.checkengine.summarize import summarize, SummaryConfig
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
-from cmk.base import plugin_contexts
 from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.value_store import ValueStoreManager
@@ -595,10 +594,7 @@ def _get_check_function(
 
     @functools.wraps(check_function)
     def __check_function(*args: object, **kw: object) -> ServiceCheckResult:
-        with (
-            plugin_contexts.current_service(str(service.check_plugin_name), service.description),
-            value_store_manager.namespace(service.id()),
-        ):
+        with value_store_manager.namespace(service.id()):
             return _aggregate_results(consume_check_results(check_function(*args, **kw)))
 
     return __check_function

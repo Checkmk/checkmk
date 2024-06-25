@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-21 05:00+0000\n"
+"PO-Revision-Date: 2024-06-25 12:55+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -187,6 +187,7 @@ msgstr " oder int"
 
 msgid " to get notified once the commercial release is available. "
 msgstr ""
+" um benachrichtigt zu werden, sobald die kommerzielle Version verfügbar ist. "
 
 msgid " to:"
 msgstr " An:"
@@ -6347,6 +6348,8 @@ msgid ""
 "Application names are restricted to the following characters: a-z, A-Z, 0-9, "
 "`-`, `_`, `.`"
 msgstr ""
+"Anwendungsnamen sind auf die folgenden Zeichen beschränkt: a-z, A-Z, 0-9, `-"
+"`, `_`, `.`"
 
 msgid "Application pending requests"
 msgstr "Application ausstehende Anfragen"
@@ -8001,7 +8004,7 @@ msgid "Bazel Cache User"
 msgstr "Bazel Cache Benutzer"
 
 msgid "Bazel Remote Cache"
-msgstr ""
+msgstr "Bazel Remote Cache"
 
 msgid "Beamer lamp operation time"
 msgstr "Betriebszeit der Beamerlampe"
@@ -9156,6 +9159,9 @@ msgid ""
 "By default, the ntopng host filter is enabled, however, disabling this can "
 "have a positive impact on the performance of the ntopng integration"
 msgstr ""
+"Standardmäßig ist der ntopng-Hostfilter aktiviert, allerdings kann sich die "
+"Deaktivierung dieses Filters positiv auf die Leistung der ntopng-Integration "
+"auswirken"
 
 msgid ""
 "By enabling this option notifications will be bulked only if the specified "
@@ -9259,7 +9265,7 @@ msgid "Bytes accepted"
 msgstr "Bytes akzeptiert"
 
 msgid "Bytes allocated and in use"
-msgstr ""
+msgstr "Zugewiesene und genutzte Bytes"
 
 msgid "Bytes downloaded"
 msgstr "Bytes heruntergeladen"
@@ -9268,13 +9274,13 @@ msgid "Bytes dropped"
 msgstr "Bytes verworfen"
 
 msgid "Bytes in use by stack allocator"
-msgstr ""
+msgstr "Vom Stack Allocator verwendete Bytes"
 
 msgid "Bytes obtained from system"
 msgstr "Vom System erhaltene Bytes"
 
 msgid "Bytes obtained from system for stack allocator"
-msgstr ""
+msgstr "Vom System erhaltene Bytes für den Stack Allocator"
 
 msgid "Bytes per day"
 msgstr "Bits pro Tag"
@@ -10487,7 +10493,6 @@ msgstr "Prüfe HTTP Service (veraltet)"
 msgid "Check HTTP web service"
 msgstr "Prüfe HTTP Webdienst"
 
-#, fuzzy
 msgid ""
 "Check HTTP/HTTPS service using the plug-in <tt>check_http</tt> from the "
 "standard monitoring plug-ins. This plug-in tests the HTTP service on the "
@@ -10500,7 +10505,7 @@ msgstr ""
 "Überprüfen Sie den HTTP/HTTPS-Dienst mit dem Plugin <tt>check_http</tt> aus "
 "den Standard Monitoring Plugins. Dieses Plugin testet den HTTP-Dienst auf "
 "dem angegebenen Host. Es kann normale (HTTP) und sichere (HTTPS) Server "
-"testen, Umleitungen verfolgen, nach Zeichenketten und regulären Ausdrücken "
+"testen, Umleitungen folgen, nach Zeichenketten und regulären Ausdrücken "
 "suchen, Verbindungszeiten prüfen und Ablaufzeiten von Zertifikaten melden. "
 "Bitte beachten Sie, dass dieses Plugin veraltet ist und nicht mehr verwendet "
 "werden soll. Bitte verwenden Sie stattdessen das neue \"Check HTTP web "
@@ -10609,7 +10614,6 @@ msgstr "Prüfe Größe des Dokuments"
 msgid "Check event state in Event Console"
 msgstr "Prüfe Ereignisstatus in Event Console"
 
-#, fuzzy
 msgid "Check for an address"
 msgstr "Auf eine Adresse prüfen"
 
@@ -10846,9 +10850,8 @@ msgstr ""
 "Status der Daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (Agentenplugin mk_inventory muss installiert sein)"
 
-#, fuzzy
 msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Checkmk SaaS Beta"
+msgstr "Checkmk Cloud (SaaS) Beta"
 
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk-Konfigurationsdateien"
@@ -11139,13 +11142,13 @@ msgid "Checkmk: Views: Secs"
 msgstr "Checkmk: Ansichten: Sekunden"
 
 msgid "Checkmk: WATO: Bytes"
-msgstr "Checkmk: WATO: Bytes"
+msgstr "Checkmk: Setup: Bytes"
 
 msgid "Checkmk: WATO: Requests"
-msgstr "Checkmk: WATO: Anfragen"
+msgstr "Checkmk: Setup: Anfragen"
 
 msgid "Checkmk: WATO: Secs"
-msgstr "Checkmk: WATO: Sekunden"
+msgstr "Checkmk: Setup: Sekunden"
 
 #, python-format
 msgid "Checkmk: Your license expires %s"
@@ -13967,9 +13970,9 @@ msgstr ""
 "Erstellen Sie ein separates Diagramm, das die gemittelten Single-Core-CPU-"
 "Auslastungen zeigt."
 
-#, fuzzy
 msgid "Create a service checking the response to an address query"
-msgstr "Einen Service für jede angepingte IP-Adresse anlegen"
+msgstr ""
+"Einen Service erstellen zur Überprüfung der Antwort auf eine Adressabfrage"
 
 msgid "Create a service for each instance"
 msgstr "Einen Service für jede Instanz anlegen"
@@ -13980,9 +13983,8 @@ msgstr "Einen Service für jede Instanz und jeden Backup-Typ erstellen"
 msgid "Create a service for every pinged IP address"
 msgstr "Einen Service für jede angepingte IP-Adresse anlegen"
 
-#, fuzzy
 msgid "Create a service showing the version number"
-msgstr "Aktuelle Service-Benachrichtigungsnummer"
+msgstr "Einen Service erstellen, der die Versionsnummer anzeigt"
 
 msgid "Create a summary over all physical disks"
 msgstr "Zusammenfassung für alle physischen Festplatten erstellen"
@@ -17502,16 +17504,16 @@ msgid "Disk Write Latency"
 msgstr "Latenzzeit beim Schreiben von Festplatten"
 
 msgid "Disk backend bytes evicted (full cache)"
-msgstr ""
+msgstr "Festplatten-Backend-Bytes verdrängt (voller Cache)"
 
 msgid "Disk backend bytes removed or overwritten"
-msgstr ""
+msgstr "Entfernte oder überschriebene Backend-Bytes auf der Festplatte"
 
 msgid "Disk backend size"
 msgstr "Größe des Festplatten-Backends"
 
 msgid "Disk backend uncompressed"
-msgstr ""
+msgstr "Festplatten-Backend unkomprimiert"
 
 msgid "Disk drain rate"
 msgstr "Festplatte Entleerungsrate"
@@ -18005,9 +18007,8 @@ msgstr "Nicht überprüfen"
 msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr "Alter der niemals ausgewerteten/vakuumierten Tabellen nicht überprüfen"
 
-#, fuzzy
 msgid "Do not check for an address"
-msgstr "Auf eine Adresse prüfen"
+msgstr "Nicht auf eine Adresse prüfen"
 
 msgid "Do not check the node"
 msgstr "Diesen Knoten nicht prüfen"
@@ -18159,9 +18160,8 @@ msgstr "Plugin für Windows Broadcom-Bonding nicht verteilen"
 msgid "Do not deploy plug-in for Windows interfaces"
 msgstr "Plugin für Windows Interfaces nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy remote desktop licenses plug-in"
-msgstr "Remote-Desktop-Lizenzen-Plugin nicht verteilen"
+msgstr "Plugin für Remote-Desktop-Lizenzen nicht verteilen"
 
 #, python-format
 msgid "Do not deploy the %s plug-in"
@@ -18194,13 +18194,11 @@ msgstr "Das DB2 Plugin nicht verteilen"
 msgid "Do not deploy the DNS client plug-in"
 msgstr "Das DNS client Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Docker container plug-in"
-msgstr "Das Docker Container Plugin nicht verteilen"
+msgstr "Das Plugin für Docker Container nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Docker plug-in"
-msgstr "Das Docker Plugin nicht verteilen"
+msgstr "Das Docker-Plugin nicht verteilen"
 
 msgid "Do not deploy the IBM MQ plug-in"
 msgstr "Das IBM MQ Plugin nicht verteilen"
@@ -18214,13 +18212,11 @@ msgstr "MegaRAID-Plugin nicht verteilen"
 msgid "Do not deploy the MySQL plug-in"
 msgstr "Das MySQL Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the NGINX status plug-in"
-msgstr "Das NGINX Status Plugin nicht verteilen"
+msgstr "Das NGINX Status-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Plesk plug-ins"
-msgstr "Die plesk Plugins nicht verteilen"
+msgstr "Die Plesk-Plugins nicht verteilen"
 
 msgid "Do not deploy the PostgreSQL plug-in"
 msgstr "Das PostgreSQL Plugin nicht verteilen"
@@ -18357,9 +18353,8 @@ msgstr "Grenzwerte nicht überwachen"
 msgid "Do not monitor placeholder VMs"
 msgstr "Platzhalter-VMs nicht überwachen"
 
-#, fuzzy
 msgid "Do not monitor service"
-msgstr "Nicht überwachen"
+msgstr "Service nicht überwachen"
 
 msgid "Do not offer this action as a command on open events"
 msgstr "Biete Aktion nicht als Befehl für offene Ereignisse an"
@@ -18416,9 +18411,8 @@ msgstr "Nicht vertrauen"
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "Verwenden Sie kein 'aws:'-Präfix für den Schlüssel."
 
-#, fuzzy
 msgid "Do not use 'aws:' prefix for the value."
-msgstr "Verwenden Sie für die Werte kein 'aws:'-Präfix."
+msgstr "Verwenden Sie für den Wert kein 'aws:'-Präfix."
 
 msgid "Do not use Checkmk Python, even if it has been installed"
 msgstr "Verwende Checkmk Python nicht, auch wenn es installiert wurde"
@@ -18794,14 +18788,12 @@ msgstr "Laufwerk"
 msgid "Driver"
 msgstr "Treiber"
 
-#, fuzzy
 msgid "Driver date"
 msgstr "Treiberdatum"
 
 msgid "Driver type to use instead of doing an auto selection"
 msgstr "Zu verwendende Treiber-Art anstelle einer automatischen Auswahl"
 
-#, fuzzy
 msgid "Driver version"
 msgstr "Treiberversion"
 
@@ -18835,7 +18827,6 @@ msgstr ""
 "Checkmk enthalten die Ergebnisse widersprüchliche Metriken und diese "
 "Topliste kann falsch oder unvollständig sein."
 
-#, fuzzy
 msgid ""
 "Due to security reasons the plugin being executed as admin will check "
 "permissions for Oracle executables. If modification of Oracle binaries is "
@@ -18959,9 +18950,9 @@ msgstr ""
 "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt, aber "
 "nach der Aktivierung Ihrer Änderungen hätten Sie %s Services."
 
-#, fuzzy, python-format
+#, python-format
 msgid "During the beta phase, the number of services is limited to %s. "
-msgstr "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt."
+msgstr "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt. "
 
 msgid "During this time period no monitoring data is available"
 msgstr "Während dieser Zeitperiode sind keine Monitoring-Daten verfügbar"
@@ -19094,7 +19085,6 @@ msgstr "EWS"
 msgid "EXITED"
 msgstr "EXITED"
 
-#, fuzzy
 msgid ""
 "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
 "hostname is pingable and changing the piggyback name will reset the "
@@ -19102,8 +19092,8 @@ msgid ""
 "consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely "
 "identifies the EC2 instance. It is not possible to ping this host name."
 msgstr ""
-"Jede EC2 Instanz erstellt einen Piggyback-Host.<br><b>Hinweis:</b> Nicht "
-"jeder Host-Name ist pingbar und ändern des Piggyback-Namens setzt den "
+"Jede EC2-Instanz erstellt einen Piggyback-Host.<br><b>Hinweis:</b> Nicht "
+"jeder Host-Name ist pingbar und Änderung des Piggyback-Namens setzt den "
 "Piggyback-Host zurück.<br><br><b>IP - Region - Instance ID:</b><br>Der Name "
 "setzt sich zusammen aus \"{Private IPv4 address}-{Region}-{Instance ID}\". "
 "Dies identifiziert die EC2-Instanz eindeutig. Es ist nicht möglich, diesen "
@@ -19225,9 +19215,9 @@ msgstr ""
 "der Lage sind, bestehende vordefinierte Bedingungen zu bearbeiten, zu "
 "löschen und zu verwenden."
 
-#, fuzzy
 msgid "Each project must be unique and cannot be used multiple times"
-msgstr "Jedes Tag muss eindeutig sein und darf nicht mehrfach verwendet werden"
+msgstr ""
+"Jedes Projekt muss eindeutig sein und darf nicht mehrfach verwendet werden"
 
 msgid "Each service monitors on Robot Framework tests.\n"
 msgstr "Jeder Service überwacht Robot Framework tests.\n"
@@ -19361,11 +19351,9 @@ msgstr "Dashboards bearbeiten"
 msgid "Edit defaults"
 msgstr "Standards bearbeiten"
 
-#, fuzzy
 msgid "Edit downtimes"
 msgstr "Wartungszeiten editieren"
 
-#, fuzzy
 msgid "Edit downtimes?"
 msgstr "Wartungszeiten bearbeiten?"
 
@@ -19821,21 +19809,17 @@ msgstr "Email-Adressen, an die der Report gemailt werden soll"
 msgid "Emailed report to %s."
 msgstr "Report an %s gemailt."
 
-#, fuzzy
 msgid "Emails containing Attachment per second"
-msgstr "Emails, die %s pro Sekunde enthalten"
+msgstr "Emails mit Anhang pro Sekunde"
 
-#, fuzzy
 msgid "Emails containing Malicious Attachment per second"
-msgstr "Emails, die %s pro Sekunde enthalten"
+msgstr "E-Mails mit schädlichen Anhängen pro Sekunde"
 
-#, fuzzy
 msgid "Emails containing Malicious URL per second"
-msgstr "Emails, die %s pro Sekunde enthalten"
+msgstr "Emails mit schädlicher URL pro Sekunde"
 
-#, fuzzy
 msgid "Emails containing URL per second"
-msgstr "Emails, die %s pro Sekunde enthalten"
+msgstr "Emails mit URL pro Sekunde"
 
 msgid "Embed existing view"
 msgstr "Vorhandene Ansicht einbetten"
@@ -20014,9 +19998,8 @@ msgstr "Service-Benachrichtigungen ein"
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Synchrone Zustellung per SMTP aktivieren"
 
-#, fuzzy
 msgid "Enable the ntopng host filter"
-msgstr "Aktiviere diese ntopng-Instanz"
+msgstr "Aktiviere den Host-Filter von ntopng"
 
 msgid "Enable this ntopng instance"
 msgstr "Aktiviere diese ntopng-Instanz"
@@ -20269,9 +20252,8 @@ msgstr "Änderungen erzwingen"
 msgid "Enforce lower case User-IDs."
 msgstr "Erzwinge kleinbuchstabige Benutzer IDs."
 
-#, fuzzy
 msgid "Enforce primary address family"
-msgstr "Primäre Adressfamilie"
+msgstr "Primäre Adressfamilie erzwingen"
 
 msgid "Enforce re-authentication after"
 msgstr "Erneute Authentifizierung erzwingen nach"
@@ -20279,9 +20261,8 @@ msgstr "Erneute Authentifizierung erzwingen nach"
 msgid "Enforce show more"
 msgstr "\"Mehr anzeigen\" erzwingen"
 
-#, fuzzy
 msgid "Enforced service"
-msgstr "Erzwungene Services"
+msgstr "Erzwungener Service"
 
 msgid "Enforced services"
 msgstr "Erzwungene Services"
@@ -20419,13 +20400,12 @@ msgstr ""
 "Geben Sie die Host-Namen der Cluster-Knoten ein. Diese Hosts müssen im Setup "
 "vorhanden sein."
 
-#, fuzzy
 msgid ""
 "Enter the name of the sensor. In single mode, this can be read off from the "
 "service names of the services 'IPMI Sensor ...'."
 msgstr ""
-"Gib den Namen des Sensors ein. Im Single Mode kann dieser aus den Service "
-"Beschreibungen der Services 'IPMI Sensor...' gelesen werden."
+"Gib den Namen des Sensors ein. Im Einzelmodus kann dieser aus den Service-"
+"Namen der Services 'IPMI Sensor...' gelesen werden."
 
 msgid ""
 "Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> the "
@@ -20439,12 +20419,11 @@ msgstr ""
 "Geben Sie den sechsstelligen Code aus Ihrer Authenticator-App ein, um sich "
 "anzumelden."
 
-#, fuzzy
 msgid ""
 "Enter the uniserve service name here (has nothing to do with service name)."
 msgstr ""
-"Geben Sie hier den Dienstnamen für Uniserv an (Dies hat nichts mit der "
-"Service-Beschreibung zu tun)."
+"Geben Sie hier den Dienstnamen für Uniserv an (dies hat nichts mit dem "
+"Service-Namen zu tun)."
 
 msgid "Enter the workflow name for the project here. E.g. \"in progress\"."
 msgstr ""
@@ -20465,7 +20444,6 @@ msgstr "Enterasys LSNAT Bindings"
 msgid "Enterasys Switch: Temperature"
 msgstr "Enterasys Switch: Temperatur"
 
-#, fuzzy
 msgid "Enterasys power supply settings"
 msgstr "Enterasys Netzteileinstellungen"
 
@@ -20596,7 +20574,7 @@ msgstr "Fehler: Unbekannte Zeitperioden-ID '%s'"
 
 #, python-format
 msgid "Error: passwords.mk validation %s"
-msgstr ""
+msgstr "Fehler: passwords.mk-Überprüfung %s"
 
 msgid "Errors"
 msgstr "Fehler"
@@ -20700,6 +20678,9 @@ msgid ""
 "of deleted entries reaches this number the Event Console History will be "
 "cleaned up. "
 msgstr ""
+"Die Historie der Event Console kann mit der Zeit fragmentiert werden. Wenn "
+"also die Gesamtgröße der gelöschten Einträge diese Zahl erreicht, wird die "
+"Historie der Event Console bereinigt. "
 
 msgid "Event Console alerts"
 msgstr "Alarme der Event Console"
@@ -20723,9 +20704,8 @@ msgstr "Event Console deaktiviert"
 msgid "Event Console enabled"
 msgstr "Event Console aktiviert"
 
-#, fuzzy
 msgid "Event Console housekeeping interval"
-msgstr "Aufräum-Intervall"
+msgstr "Aufräum-Intervall der Event Console"
 
 msgid "Event Console rule packs"
 msgstr "Regelpakete für die Event Console"
@@ -21053,11 +21033,12 @@ msgstr "Ziel-Vserver ausschließen"
 msgid "Exclude empty tag choices"
 msgstr "Leere Merkmale ausklammern"
 
-#, fuzzy
 msgid ""
 "Exclude from monitoring following database instances (if detected or "
 "manually added)"
-msgstr "Nur folgende SIDs überwachen (falls entdeckt oder manuell hinzugefügt)"
+msgstr ""
+"Folgende Datenbankinstanzen aus dem Monitoring ausschließen (falls entdeckt "
+"oder manuell hinzugefügt)"
 
 msgid "Exclude hosts"
 msgstr "Hosts ausschließen"
@@ -21354,9 +21335,8 @@ msgstr "Erwartete Antwortzeit"
 msgid "Expected responses to the given SMTP commands."
 msgstr "Erwartete Antworten der SMTP Befehle."
 
-#, fuzzy
 msgid "Expected specific gateway folder"
-msgstr "Erwartete Anzahl Datenknoten"
+msgstr "Erwarteter spezifischer Gateway-Ordner"
 
 msgid "Expected state"
 msgstr "Erwarteter Status"
@@ -21388,7 +21368,6 @@ msgstr "Ausgelaufene Objekte"
 msgid "Expires"
 msgstr "Läuft ab"
 
-#, fuzzy
 msgid "Expires on"
 msgstr "Läuft ab am"
 
@@ -21417,7 +21396,6 @@ msgstr "Explizite Hosts"
 msgid "Explicit labels"
 msgstr "Explizite Labels"
 
-#, fuzzy
 msgid "Explicit list of IP addresses"
 msgstr "Explizite Liste von IP-Adressen"
 
@@ -21506,7 +21484,6 @@ msgstr "Diese Regel für API exportieren"
 msgid "Exporter"
 msgstr "Exporteur"
 
-#, fuzzy
 msgid "Express servicecode"
 msgstr "Express-Servicecode"
 
@@ -24311,6 +24288,7 @@ msgstr "HTML-Ausgabe"
 
 msgid "HTML output can not be rendered because of truncated data. "
 msgstr ""
+"HTML-Ausgabe kann nicht gerendert werden, da die Daten abgeschnitten sind. "
 
 msgid "HTTP"
 msgstr "HTTP"
@@ -24378,10 +24356,10 @@ msgid "HTTP accelerator statistics"
 msgstr "HTTP Geschwindigkeitsstatistiken"
 
 msgid "HTTP backend cache hits"
-msgstr ""
+msgstr "HTTP-Backend Cache-Treffer"
 
 msgid "HTTP backend cache missess"
-msgstr ""
+msgstr "HTTP-Backend-Cache-Fehlversuche"
 
 msgid "HTTP fixed responses"
 msgstr "Festgelegte HTTP-Antworten"
@@ -24653,13 +24631,13 @@ msgid "Heap and non-heap memory"
 msgstr "Heap- und nicht-Heap-Speicher"
 
 msgid "Heap bytes allocated and in use"
-msgstr ""
+msgstr "Zugewiesene und genutzte Heap-Bytes"
 
 msgid "Heap bytes released to OS"
-msgstr ""
+msgstr "Heap-Bytes an das Betriebssystem freigegeben"
 
 msgid "Heap bytes waiting to be used"
-msgstr ""
+msgstr "Heap-Bytes, die auf ihre Verwendung warten"
 
 msgid "Heap bytes when next garbage collection will take place"
 msgstr ""
@@ -28260,7 +28238,7 @@ msgid "Idle threads"
 msgstr "Untätige Threads"
 
 msgid "Idle time of last item in the LRU cache"
-msgstr ""
+msgstr "Leerlaufzeit des letzten Objekts im LRU-Cache"
 
 msgid "Idle timeout"
 msgstr "Inaktivitätstimeout"
@@ -28421,6 +28399,11 @@ msgid ""
 "have an associated email they will be shown an undismissable message in "
 "their user tab for the duration defined by this setting."
 msgstr ""
+"Wenn ein Benutzer eine E-Mail-Adresse hat, die mit seinem Konto verknüpft "
+"ist, wird ihm auf seiner Benutzer-Registerkarte keine Sicherheitsmitteilung "
+"angezeigt. Wenn ein Benutzer keine E-Mail-Adresse hat, wird ihm auf seiner "
+"Benutzer-Registerkarte für die durch diese Einstellung festgelegte Dauer "
+"eine nicht ignorierbare Meldung angezeigt."
 
 msgid ""
 "If a user lacks this permission then he/she can see only those events that "
@@ -28555,6 +28538,8 @@ msgid ""
 "If enabled, the core will collect statistics (cache hits/misses) during the "
 "ruleset matching process."
 msgstr ""
+"Wenn diese Option aktiviert ist, sammelt der Kern Statistiken (Cache-Treffer/"
+"Fehlschläge) während des Regelsatzabprozesses."
 
 msgid ""
 "If enabled, the service details will contain username of a process owner."
@@ -29365,6 +29350,26 @@ msgstr ""
 "                STATUS NOT AVAILABLE: OK<br>\n"
 "             "
 
+#, fuzzy
+msgid ""
+"If you don't configure the user name and password, the special agent tries "
+"to authenticate against the EMC VNX device by Security Files. These need to "
+"be created manually before using. Therefor run as instance user (if using "
+"OMD) or Nagios user (if not using OMD) a command like <tt>naviseccli -"
+"AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> This creates "
+"<tt>SecuredCLISecurityFile.xml</tt> and <tt>SecuredCLIXMLEncrypted.key</tt> "
+"in the home directory of the user and these files are used then."
+msgstr ""
+"Wenn Sie Benutzername und Passwort leer lassen, dann wird der Spezialagent "
+"versuchen, sich bei den EMC VNX-Geräten mithilfe von Security Files "
+"anzumelden. Erzeugen Sie diese bitte manuell, bevor Sie diese Methode "
+"verwenden. Dazu rufen Sie als Instanzbenutzer oder Nagios-Benutzer ein "
+"Kommando auf wie etwa <tt>naviseccli -AddUserSecurity -scope 0 -password "
+"PASSWORD -user USER</tt>. Dies erzeugt die Dateien "
+"<tt>SecuredCLISecurityFile.xml</tt> und <tt>SecuredCLIXMLEncrypted.key</tt> "
+"im Homeverzeichnis des Benutzers. Dort werden diese Dateien dann automatisch "
+"gefunden und benutzt."
+
 msgid ""
 "If you enable a wait time then this number of PINGs will always be sent in "
 "one piece without waiting. This reduces the overhead."
@@ -29567,25 +29572,6 @@ msgstr ""
 "Wenn Sie das hier leer lassen, dann wird die Datenbank auf dem Host "
 "angezeigt, auf dem Sie das <tt>mk_oracle</tt>-Plugin laufen lassen. In "
 "diesem Fall müssen die SIDs von allen überwachten Datenbank eindeutig sein."
-
-msgid ""
-"If you leave user name and password empty, the special agent tries to "
-"authenticate against the EMC VNX device by Security Files. These need to be "
-"created manually before using. Therefor run as instance user (if using OMD) "
-"or Nagios user (if not using OMD) a command like <tt>naviseccli -"
-"AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> This creates "
-"<tt>SecuredCLISecurityFile.xml</tt> and <tt>SecuredCLIXMLEncrypted.key</tt> "
-"in the home directory of the user and these files are used then."
-msgstr ""
-"Wenn Sie Benutzername und Passwort leer lassen, dann wird der Spezialagent "
-"versuchen, sich bei den EMC VNX-Geräten mithilfe von Security Files "
-"anzumelden. Erzeugen Sie diese bitte manuell, bevor Sie diese Methode "
-"verwenden. Dazu rufen Sie als Instanzbenutzer oder Nagios-Benutzer ein "
-"Kommando auf wie etwa <tt>naviseccli -AddUserSecurity -scope 0 -password "
-"PASSWORD -user USER</tt>. Dies erzeugt die Dateien "
-"<tt>SecuredCLISecurityFile.xml</tt> und <tt>SecuredCLIXMLEncrypted.key</tt> "
-"im Homeverzeichnis des Benutzers. Dort werden diese Dateien dann automatisch "
-"gefunden und benutzt."
 
 msgid ""
 "If you lose access to your authentication app / security token, you can use "
@@ -30845,7 +30831,7 @@ msgid "Increase limit"
 msgstr "Ignoriere hartes Abfragelimit"
 
 msgid "Increase limit for future entries"
-msgstr ""
+msgstr "Limit für zukünftige Einträge erhöhen"
 
 msgid ""
 "Increase this value if WMI-based services are switching constantly into "
@@ -34483,6 +34469,10 @@ msgid ""
 "If left empty, the file will be placed directly in \"var/check_mk/"
 "active_checks/check_sftp\"."
 msgstr ""
+"Lokaler Pfad zu dem Verzeichnis, in dem die Datei abgelegt werden soll, "
+"relativ zu \"var/check_mk/active_checks/check_sftp\" innerhalb des Home-"
+"Verzeichnisses Ihrer Instanz. Wenn Sie nichts angeben, wird die Datei direkt "
+"in \"var/check_mk/active_checks/check_sftp\" abgelegt."
 
 msgid ""
 "Local path to the file to be uploaded. The path is relative to \"var/"
@@ -34491,6 +34481,11 @@ msgid ""
 "file $OMD_ROOT/var/check_mk/active_checks/check_sftp/testfile.txt will be "
 "uploaded)."
 msgstr ""
+"Lokaler Pfad zur Datei, die hochgeladen werden soll. Der Pfad ist relativ zu "
+"\"var/check_mk/active_checks/check_sftp\" im Home-Verzeichnis Ihrer Instanz. "
+"Wenn die Datei nicht existiert, wird sie erstellt. Beispiel: 'testfile.txt' ("
+"Die Datei $OMD_ROOT/var/check_mk/active_checks/check_sftp/testfile.txt wird "
+"hochgeladen)."
 
 msgid "Local port number"
 msgstr "Lokale Portnummer"
@@ -34948,7 +34943,7 @@ msgid "Loss of signal errors"
 msgstr "Signalverlust-Fehler"
 
 msgid "Lost data due to truncation of long output to "
-msgstr ""
+msgstr "Verlorene Daten durch Abschneiden der langen Ausgabe nach "
 
 msgid "Lost synchronization errors"
 msgstr "Synchronisationsverlust-Fehler"
@@ -42211,30 +42206,30 @@ msgid "Oracle data file copy small writes"
 msgstr "Oracle Summe Small Writes"
 
 msgid "Oracle data file incremental backup large read bytes"
-msgstr ""
+msgstr "Oracle Datendatei inkrementelles Backup große Lesebytes"
 
 msgid "Oracle data file incremental backup large reads"
-msgstr ""
+msgstr "Oracle Datendatei inkrementelles Backup große Lesezugriffe"
 
 #, fuzzy
 msgid "Oracle data file incremental backup large write bytes"
 msgstr "Oracle Summe Large Write in Bytes"
 
 msgid "Oracle data file incremental backup large writes"
-msgstr ""
+msgstr "Oracle Datendatei inkrementelles Backup große Schreibzugriffe"
 
 msgid "Oracle data file incremental backup small read bytes"
-msgstr ""
+msgstr "Oracle Datendatei inkrementelles Backup kleine Lesebytes"
 
 msgid "Oracle data file incremental backup small reads"
-msgstr ""
+msgstr "Oracle Datendatei inkrementelles Backup kleine Lesezugriffe"
 
 #, fuzzy
 msgid "Oracle data file incremental backup small write bytes"
 msgstr "Oracle Summe Small Write in Bytes"
 
 msgid "Oracle data file incremental backup small writes"
-msgstr ""
+msgstr "Oracle Datendatei inkrementelles Backup kleine Schreibzugriffe"
 
 #, fuzzy
 msgid "Oracle data file large read bytes"
@@ -43766,6 +43761,8 @@ msgid ""
 "Path to the user certificate. If the path is not exist or empty, the user "
 "certificate will not be used."
 msgstr ""
+"Pfad zum Benutzerzertifikat. Wenn der Pfad nicht vorhanden oder leer ist, "
+"wird das Benutzerzertifikat nicht verwendet."
 
 msgid "Path to unix socket"
 msgstr "Pfad zur Unix-Buchse"
@@ -52021,7 +52018,6 @@ msgstr ""
 "Legt die Level für die gesamten Betriebsfehler seit dem letzten Zurücksetzen "
 "des Zählers fest."
 
-#, fuzzy
 msgid ""
 "Sets the thresholds for the runtime of a test. Note that runtime monitoring "
 "is not a feature of Robot Framework, but of Robotmk. That means that even "
@@ -52032,20 +52028,19 @@ msgstr ""
 "Sie, dass die Laufzeitüberwachung keine Funktion von Robot Framework, "
 "sondern von Robotmk ist. Das bedeutet, dass selbst wenn eine Robot-Suite mit "
 "einem PASS-Ergebnis beendet wurde, die Zustände der Robotmk-Test- und -Plan-"
-"Services anders als OK sein können, wenn Laufzeiten überschritten wurden. "
+"Services anders als OK sein können, wenn Laufzeiten überschritten wurden."
 
-#, fuzzy
 msgid ""
 "Sets thresholds for the runtime of a KPI. Note that runtime monitoring is "
 "not a feature of Robot Framework, but of Robotmk. This means that even if a "
 "keyword has PASSed, the corresponding KPI service can still report WARN or "
 "CRIT if the runtime thresholds are exceeded."
 msgstr ""
-"Legt den Laufzeitschwellwert für die Laufzeit eines Tests fest. Beachten "
-"Sie, dass die Laufzeitüberwachung keine Funktion von Robot Framework, "
-"sondern von Robotmk ist. Das bedeutet, dass selbst wenn eine Robot-Suite mit "
-"einem PASS-Ergebnis beendet wurde, die Zustände der Robotmk-Test- und -Plan-"
-"Services anders als OK sein können, wenn Laufzeiten überschritten wurden. "
+"Legt den Laufzeitschwellwert für die Laufzeit eines KPI fest. Beachten Sie, "
+"dass die Laufzeitüberwachung keine Funktion von Robot Framework, sondern von "
+"Robotmk ist. Das bedeutet, dass der entsprechende KPI-Service auch dann, "
+"wenn ein Schlüsselwort PASSed ist, WARN oder CRIT melden kann, wenn die "
+"Laufzeitschwellwerte überschritten werden."
 
 msgid "Setting"
 msgstr "Einstellung"
@@ -54023,10 +54018,9 @@ msgid "Specify database names that the rule should apply to"
 msgstr ""
 "Geben Sie die Namen der Datenbanken an, auf die diese Regel greifen soll"
 
-#, fuzzy
 msgid "Specify database names that the rule should apply to."
 msgstr ""
-"Geben Sie die Namen der Datenbanken an, auf die diese Regel greifen soll"
+"Geben Sie die Namen der Datenbanken an, auf die diese Regel greifen soll."
 
 msgid "Specify discovery mode"
 msgstr "Festlegen des Erkennungsmodus"
@@ -60142,7 +60136,7 @@ msgid ""
 "The node <b>%s</b> does not exist  (must be a host that is configured with "
 "WATO)"
 msgstr ""
-"Der Knoten <b>%s</b> ist nicht vorhanden (muss ein in WATO konfigurierter "
+"Der Knoten <b>%s</b> ist nicht vorhanden (muss ein in Setup konfigurierter "
 "Host sein)"
 
 msgid ""
@@ -61466,18 +61460,19 @@ msgstr ""
 "gilt. Checkmk sendet in Bezug auf den Authentifizierungsprozess eines "
 "Benutzers Anfragen an den Identitätsanbieter und erhält Antworten von ihm."
 
+#, python-format
 msgid ""
 "The timeout in seconds when gathering the Support Diagnostics Data. The "
 "default is 110 seconds. When very large files are collected, it's also "
 "possible to call the support diagnostics from command line using the command "
-"'cmk --create-diagnostics-dump' with  appropriate parameters in the context "
-"of the affected site."
+"'cmk --create-diagnostics-dump' with appropriate parameters in the context "
+"of the affected site. See the %s."
 msgstr ""
 "Der Timeout in Sekunden beim Sammeln der Support Diagnostics Daten. Der "
 "Standardwert ist 110 Sekunden. Wenn sehr große Dateien gesammelt werden, ist "
 "es auch möglich, die Support Diagnostics von der Kommandozeile aus mit dem "
 "Befehl 'cmk --create-diagnostics-dump' mit den entsprechenden Parametern im "
-"Kontext der betroffenen Instanz aufzurufen."
+"Kontext der betroffenen Instanz aufzurufen. Beachten Sie hierzu %s."
 
 #, python-format
 msgid ""
@@ -62659,7 +62654,7 @@ msgid "This check has no parameters."
 msgstr "Dieser Check hat keine Parameter."
 
 msgid "This check is not configurable via WATO"
-msgstr "Dieser Check ist nicht via WATO konfigurierbar"
+msgstr "Dieser Check ist nicht via Setup konfigurierbar"
 
 msgid ""
 "This check is part of the Checkmk Event Console and monitors whether there "
@@ -65659,7 +65654,6 @@ msgstr ""
 "Status haben, wenn der Host nicht erreichbar ist. Hinweis: Die Einstellung "
 "<i>Timeout</i> funktioniert nur bei Verwendung des Checkmk Micro Core."
 
-#, fuzzy
 msgid ""
 "This ruleset will deploy the agent plug-in <tt>mk_sap</tt> for (locally) "
 "monitoring SAP R/3 instances. Note: you still need to manually deploy the "
@@ -65668,8 +65662,7 @@ msgstr ""
 "Dieser Regelsatz verteilt das Agenten-Plugin <tt>mk_sap</tt> für das "
 "(lokale) Monitoring von SAP R/3-Instanzen. Hinweis: Sie müssen dennoch "
 "manuell SAP NetWeaver RFCSDK (nwrfcsdk) und das Python-Modul sapnwrfc "
-"verteilen. Hinweise dazu finden Sie in einem <a href='http://mathias-kettner."
-"de/checkmk_sap_r3.html'>Artikel im Checkmk Handbuch</a>."
+"verteilen."
 
 msgid "This rulespec is deprecated and will be removed in future versions."
 msgstr ""
@@ -71481,7 +71474,7 @@ msgid "Use UUID as mountpoint"
 msgstr "UUID als Mount-Punkt verwenden"
 
 msgid "Use WATO"
-msgstr "WATO verwenden"
+msgstr "Setup verwenden"
 
 msgid "Use WMI"
 msgstr "WMI verwenden"

@@ -39,6 +39,41 @@ WATO_FOLDER_PATH_NAME_REGEX: Final = f"^[{WATO_FOLDER_PATH_NAME_CHARS}]*\\Z"
 
 GROUP_NAME_PATTERN: Final = r"^(?!\.\.$|\.$)[-a-zA-Z0-9_\.]*\Z"
 
+GLOBAL_MODIFIER_PATTERN: Final = r"^\(\?([aiLmsux]*)\)"
+
+
+def _extract_global_modifiers(pattern: str) -> tuple[str, str]:
+    match = re.match(GLOBAL_MODIFIER_PATTERN, pattern)
+    if match:
+        return match.group(1), pattern[match.end() :]
+    return "", pattern
+
+
+def combine_patterns(pattern_parts: list[tuple[bool, str]] | list[str]) -> str:
+    patterns = []
+
+    for pattern_part in pattern_parts:
+        if isinstance(pattern_part, str):
+            negate = False
+            pattern = pattern_part
+        else:
+            negate, pattern = pattern_part
+
+        lookahead = "!" if negate else ":"
+
+        modifier, core_pattern = _extract_global_modifiers(pattern)
+
+        # Unfortunately re doesn't support negative lookaheads with local modifiers so we need to nest them
+        modifier_prefix = f"(?{modifier}:" if modifier else ""
+        modifier_suffix = ")" if modifier else ""
+
+        patterns.append(f"{modifier_prefix}(?{lookahead}{core_pattern}){modifier_suffix}")
+
+    if len(patterns) == 1:
+        return patterns[0]
+
+    return f"(?:{'|'.join(patterns)})"
+
 
 def regex(pattern: str, flags: int = 0) -> re.Pattern[str]:
     """Compile regex or look it up in already compiled regexes.

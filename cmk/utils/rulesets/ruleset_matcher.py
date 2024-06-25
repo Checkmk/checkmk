@@ -32,7 +32,7 @@ from cmk.utils.labels import (
     LabelSources,
 )
 from cmk.utils.parameters import merge_parameters
-from cmk.utils.regex import regex
+from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.rulesets.ruleset_matching_stats import (
     HostRulesetMatchingStats,
     persist_matching_stats,
@@ -730,7 +730,7 @@ class RulesetOptimizer:
             else:
                 pattern_parts.append(p)
 
-        return negate, regex("(?:%s)" % "|".join("(?:%s)" % p for p in pattern_parts))
+        return negate, regex(combine_patterns(pattern_parts))
 
     def _get_cache_id(
         self, condition: RuleConditionsSpec, with_foreign_hosts: bool

@@ -27,8 +27,6 @@ import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
-from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
-
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.ec.event import (  # pylint: disable=cmk-module-layer-violation
     create_event_from_syslog_message,
@@ -55,15 +53,16 @@ CHECK_DEFAULT_PARAMETERS: logwatch.PreDictLogwatchEc = {
     "method": "",  # local site
     "monitor_logfilelist": False,
     "monitor_logfile_access_state": 2,
-    # This next entry will be postprocessed by the backend.
+    # These next two entries will be postprocessed by the backend.
     # Don't try this hack at home, we are trained professionals.
     "service_level": ("cmk_postprocessed", "service_level", None),
+    "host_name": ("cmk_postprocessed", "host_name", None),
 }
 
 
-def discover_group(section: logwatch.Section) -> DiscoveryResult:
+def discover_group(section: logwatch.Section, params: Mapping[str, str]) -> DiscoveryResult:
     yield from discover_logwatch_ec_common(
-        section, logwatch.RulesetAccess.logwatch_ec_all(), "groups"
+        section, logwatch.RulesetAccess.logwatch_ec_all(params["host_name"]), "groups"
     )
 
 
@@ -76,8 +75,7 @@ def check_logwatch_ec(
         params,
         {None: section},
         value_store=get_value_store(),
-        hostname=HostName(host_name()),
-        message_forwarder=MessageForwarder(None, HostName(host_name())),
+        message_forwarder=MessageForwarder(None, HostName(params["host_name"])),
     )
 
 
@@ -89,8 +87,7 @@ def cluster_check_logwatch_ec(
         params,
         {k: v for k, v in section.items() if v is not None},
         value_store=get_value_store(),
-        hostname=host_name(),
-        message_forwarder=MessageForwarder(None, HostName(host_name())),
+        message_forwarder=MessageForwarder(None, HostName(params["host_name"])),
     )
 
 
@@ -99,6 +96,7 @@ check_plugin_logwatch_ec = CheckPlugin(
     service_name="Log Forwarding",
     sections=["logwatch"],
     discovery_function=discover_group,
+    discovery_default_parameters={},
     check_function=check_logwatch_ec,
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_ruleset_name="logwatch_ec",
@@ -106,9 +104,9 @@ check_plugin_logwatch_ec = CheckPlugin(
 )
 
 
-def discover_single(section: logwatch.Section) -> DiscoveryResult:
+def discover_single(section: logwatch.Section, params: Mapping[str, str]) -> DiscoveryResult:
     yield from discover_logwatch_ec_common(
-        section, logwatch.RulesetAccess.logwatch_ec_all(), "single"
+        section, logwatch.RulesetAccess.logwatch_ec_all(params["host_name"]), "single"
     )
 
 
@@ -123,8 +121,7 @@ def check_logwatch_ec_single(
         params,
         {None: section},
         value_store=get_value_store(),
-        hostname=HostName(host_name()),
-        message_forwarder=MessageForwarder(item, HostName(host_name())),
+        message_forwarder=MessageForwarder(item, HostName(params["host_name"])),
     )
 
 
@@ -139,8 +136,7 @@ def cluster_check_logwatch_ec_single(
         params,
         {k: v for k, v in section.items() if v is not None},
         value_store=get_value_store(),
-        hostname=host_name(),
-        message_forwarder=MessageForwarder(item, HostName(host_name())),
+        message_forwarder=MessageForwarder(item, HostName(params["host_name"])),
     )
 
 
@@ -283,14 +279,11 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     parsed: logwatch.ClusterSection,
     *,
     value_store: MutableMapping[str, Any],
-    hostname: str,
     message_forwarder: MessageForwarderProto,
 ) -> CheckResult:
     yield from logwatch.check_errors(parsed)
 
-    # Not sure why this assertion holds,
-    # but if it doesn't, `if params["monitor_logfilelist"]` would crash.
-    assert params
+    host_name = params["host_name"]
 
     log_filter = logwatch.LogFileFilter([params])
 
@@ -345,7 +338,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
         lines = _filter_accumulated_lines(parsed, logfile, seen_batches)
 
         # Determine logwatch patterns specifically for this logfile
-        rules_for_this_file = logwatch.RulesetAccess.logwatch_rules_all(logfile)
+        rules_for_this_file = logwatch.RulesetAccess.logwatch_rules_all(host_name, logfile)
         logfile_reclassify_settings = (
             logwatch.compile_reclassify_params(rules_for_this_file) if reclassify else None
         )
@@ -367,7 +360,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
                     facility=facility,
                     severity=logwatch_to_prio(rclfd_level or line[0]),
                     timestamp=cur_time,
-                    host_name=hostname,
+                    host_name=host_name,
                     application=logfile,
                     text=line[2:],
                     service_level=params["service_level"],

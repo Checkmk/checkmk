@@ -992,6 +992,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
             function=__discovery_function,
             parameters=_make_discovery_parameters_getter(
                 matcher=self.ruleset_matcher,
+                check_plugin_name=plugin.name,
                 default_parameters=plugin.discovery_default_parameters,
                 ruleset_name=plugin.discovery_ruleset_name,
                 ruleset_type=plugin.discovery_ruleset_type,
@@ -1008,6 +1009,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
 
 def _make_discovery_parameters_getter(
     matcher: RulesetMatcher,
+    check_plugin_name: CheckPluginName,
     *,
     default_parameters: ParametersTypeAlias | None,
     ruleset_name: RuleSetName | None,
@@ -1016,7 +1018,7 @@ def _make_discovery_parameters_getter(
 ) -> Callable[[HostName], None | Parameters | list[Parameters]]:
 
     def get_discovery_parameters(host_name: HostName) -> None | Parameters | list[Parameters]:
-        return get_plugin_parameters(
+        params = get_plugin_parameters(
             host_name,
             matcher,
             default_parameters=default_parameters,
@@ -1024,6 +1026,24 @@ def _make_discovery_parameters_getter(
             ruleset_type=ruleset_type,
             rules_getter_function=rules_getter_function,
         )
+
+        #
+        # We have to add an artificial parameter, the host name.
+        # We really should rewrite the logwatch plugins :-(
+        #
+        if str(check_plugin_name) not in {
+            "logwatch_ec",
+            "logwatch_ec_single",
+            "logwatch",
+            "logwatch_groups",
+        }:
+            return params
+
+        if params is None:
+            return Parameters({"host_name": host_name})
+        if isinstance(params, Parameters):  # we don't need this case, but let's be consistent.
+            return Parameters({**params, "host_name": host_name})
+        return [Parameters({**p, "host_name": host_name}) for p in params]
 
     return get_discovery_parameters
 

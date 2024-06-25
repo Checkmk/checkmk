@@ -7,8 +7,8 @@
 #                                                                                       #
 #                                 !!   W A T C H   O U T   !!                           #
 #                                                                                       #
-#   The logwatch plug-in is notorious for being an exception to just about every rule    #
-#   or best practice that applies to check plug-in development.                          #
+#   The logwatch plug-in is notorious for being an exception to just about every rule   #
+#   or best practice that applies to check plug-in development.                         #
 #   It is highly discouraged to use this a an example!                                  #
 #                                                                                       #
 #########################################################################################
@@ -22,13 +22,11 @@ from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from re import Match
-from typing import IO, Literal
+from typing import IO, Literal, TypedDict
 
 # for now, we shamelessly violate the API:
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
-
-from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -48,7 +46,12 @@ from . import commons as logwatch
 ClusterSection = dict[str | None, logwatch.Section]
 
 GroupingPattern = tuple[str, str]
-DiscoveredGroupParams = Mapping[Literal["group_patterns"], Iterable[GroupingPattern]]
+
+
+class DiscoveredGroupParams(TypedDict):
+    group_patterns: Iterable[GroupingPattern]
+    host_name: str
+
 
 _LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
 
@@ -100,7 +103,9 @@ def _discovery_make_groups(
     params: Sequence[logwatch.ParameterLogwatchGroups],
     section: logwatch.Section,
 ) -> tuple[Sequence[_Group], Iterable[str]]:
-    log_filter = logwatch.LogFileFilter(logwatch.RulesetAccess.logwatch_ec_all())
+    log_filter = logwatch.LogFileFilter(
+        logwatch.RulesetAccess.logwatch_ec_all(params[0]["host_name"])
+    )
     not_forwarded_logs = {
         item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
     }
@@ -121,24 +126,35 @@ def _discovery_make_groups(
 
 def check_logwatch_node(
     item: str,
+    params: Mapping[Literal["host_name"], str],
     section: logwatch.Section,
 ) -> CheckResult:
     """fall back to the cluster case with node=None"""
-    params = logwatch.RulesetAccess.logwatch_rules_all(item)
-    yield from check_logwatch(item, params, {None: section})
+    host_name = params["host_name"]
+    rules_params = logwatch.RulesetAccess.logwatch_rules_all(host_name, item)
+    yield from check_logwatch(item, rules_params, {None: section}, host_name)
 
 
 def check_logwatch_cluster(
-    item: str, section: Mapping[str, logwatch.Section | None]
+    item: str,
+    params: Mapping[str, str],
+    section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
-    params = logwatch.RulesetAccess.logwatch_rules_all(item)
-    yield from check_logwatch(item, params, {k: v for k, v in section.items() if v is not None})
+    host_name = params["host_name"]
+    rules_params = logwatch.RulesetAccess.logwatch_rules_all(host_name, item)
+    yield from check_logwatch(
+        item,
+        rules_params,
+        {k: v for k, v in section.items() if v is not None},
+        host_name,
+    )
 
 
 def check_logwatch(
     item: str,
     params: Sequence[logwatch.ParameterLogwatchRules],
     section: ClusterSection,
+    host_name: str,
 ) -> CheckResult:
     yield from logwatch.check_errors(section)
     yield from logwatch.check_unreadable_files(
@@ -162,6 +178,7 @@ def check_logwatch(
         loglines=loglines,
         found=item in logwatch.discoverable_items(*section.values()),
         max_filesize=_LOGWATCH_MAX_FILESIZE,
+        host_name=host_name,
     )
 
 
@@ -177,6 +194,11 @@ check_plugin_logwatch = CheckPlugin(
     # There *are* already check parameters, they're just bypassing the official API.
     # Make sure to give the check ruleset a general name, so we can (maybe, someday)
     # incorporate those.
+    check_default_parameters={
+        # The next entry will be postprocessed by the backend.
+        # Don't try this hack at home, we are trained professionals.
+        "host_name": ("cmk_postprocessed", "host_name", None),
+    },
     cluster_check_function=check_logwatch_cluster,
 )
 
@@ -267,7 +289,7 @@ def check_logwatch_groups_node(
     section: logwatch.Section,
 ) -> CheckResult:
     """fall back to the cluster case with node=None"""
-    params_rules = logwatch.RulesetAccess.logwatch_rules_all(item)
+    params_rules = logwatch.RulesetAccess.logwatch_rules_all(params["host_name"], item)
     yield from check_logwatch_groups(item, params, params_rules, {None: section})
 
 
@@ -276,7 +298,7 @@ def check_logwatch_groups_cluster(
     params: DiscoveredGroupParams,
     section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
-    params_rules = logwatch.RulesetAccess.logwatch_rules_all(item)
+    params_rules = logwatch.RulesetAccess.logwatch_rules_all(params["host_name"], item)
     yield from check_logwatch_groups(
         item, params, params_rules, {k: v for k, v in section.items() if v is not None}
     )
@@ -309,6 +331,7 @@ def check_logwatch_groups(
         loglines=loglines,
         found=True,
         max_filesize=_LOGWATCH_MAX_FILESIZE,
+        host_name=params["host_name"],
     )
 
 
@@ -436,8 +459,8 @@ class LogwatchBlockCollector:
         return "%s messages" % ", ".join(count_txt)
 
 
-def _logmsg_file_path(item: str) -> pathlib.Path:
-    logmsg_dir = pathlib.Path(cmk.utils.paths.var_dir, "logwatch", host_name())
+def _logmsg_file_path(item: str, host_name: str) -> pathlib.Path:
+    logmsg_dir = pathlib.Path(cmk.utils.paths.var_dir, "logwatch", host_name)
     logmsg_dir.mkdir(parents=True, exist_ok=True)
     return logmsg_dir / item.replace("/", "\\")
 
@@ -449,8 +472,9 @@ def check_logwatch_generic(
     loglines: Iterable[str],
     found: bool,
     max_filesize: int,
+    host_name: str,
 ) -> CheckResult:
-    logmsg_file_path = _logmsg_file_path(item)
+    logmsg_file_path = _logmsg_file_path(item, host_name)
 
     # Logfile (=item) section not found and no local file found. This usually
     # means, that the corresponding logfile also vanished on the target host.

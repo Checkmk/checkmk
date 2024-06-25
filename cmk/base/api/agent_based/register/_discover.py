@@ -136,6 +136,8 @@ def register_check_plugin(check: CheckPlugin, location: PluginLocation) -> None:
         check_ruleset_name=check.check_ruleset_name,
         cluster_check_function=check.cluster_check_function,
         location=location,
+        # sorry, but logwatch messes with the default parameters
+        validate_kwargs=check.name not in {"logwatch_ec", "logwatch_ec_single"},
     )
 
     if is_registered_check_plugin(plugin.name):

@@ -23,7 +23,6 @@ from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-v
 
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 
 from cmk.agent_based.v2 import CheckResult, Result, State
 
@@ -55,12 +54,14 @@ class CommonLogwatchEc(TypedDict):
 
 class PreDictLogwatchEc(CommonLogwatchEc):
     service_level: tuple[Literal["cmk_postprocessed"], Literal["service_level"], None]
+    host_name: tuple[Literal["cmk_postprocessed"], Literal["host_name"], None]
 
 
 class ParameterLogwatchEc(CommonLogwatchEc):
     """Parameters as created by the 'logwatch_ec' ruleset"""
 
     service_level: int
+    host_name: str
 
 
 _StateMap = Mapping[Literal["c_to", "w_to", "o_to", "._to"], Literal["C", "W", "O", "I", "."]]
@@ -73,6 +74,7 @@ class ParameterLogwatchRules(TypedDict):
 
 class ParameterLogwatchGroups(TypedDict):
     grouping_patterns: list[tuple[str, tuple[str, str]]]
+    host_name: str
 
 
 ClusterSection = dict[str | None, Section]
@@ -139,17 +141,17 @@ class RulesetAccess:
 
     # This is only wishful typing -- but lets assume this is what we get.
     @staticmethod
-    def logwatch_rules_all(item: str) -> Sequence[ParameterLogwatchRules]:
+    def logwatch_rules_all(host_name: str, item: str) -> Sequence[ParameterLogwatchRules]:
         return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
-            HostName(host_name()), item, cmk.base.config.logwatch_rules  # type: ignore[arg-type]
+            HostName(host_name), item, cmk.base.config.logwatch_rules  # type: ignore[arg-type]
         )
 
     # This is only wishful typing -- but lets assume this is what we get.
     @staticmethod
-    def logwatch_ec_all() -> Sequence[ParameterLogwatchEc]:
+    def logwatch_ec_all(host_name: str) -> Sequence[ParameterLogwatchEc]:
         """Isolate the remaining API violation w.r.t. parameters"""
         return cmk.base.config.get_config_cache().ruleset_matcher.get_host_values(
-            HostName(host_name()),
+            HostName(host_name),
             cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
         )
 

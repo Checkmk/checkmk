@@ -15,6 +15,8 @@ from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.logwatch.agent_based import commons as logwatch_
 from cmk.plugins.logwatch.agent_based import logwatch
 
+TEST_DISCO_PARAMS = [logwatch_.ParameterLogwatchGroups(host_name="test-host", grouping_patterns=[])]
+
 
 @pytest.mark.parametrize(
     "group_patterns, filename, expected",
@@ -104,10 +106,10 @@ SECTION1 = logwatch_.Section(
 
 def test_discovery_single(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda: []
+        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda _host: []
     )
     assert sorted(
-        logwatch.discover_logwatch_single([], SECTION1),
+        logwatch.discover_logwatch_single(TEST_DISCO_PARAMS, SECTION1),
         key=lambda s: s.item or "",
     ) == [
         Service(item="empty.log"),
@@ -116,7 +118,7 @@ def test_discovery_single(monkeypatch: pytest.MonkeyPatch) -> None:
         Service(item="unreadablelog"),
     ]
 
-    assert not list(logwatch.discover_logwatch_groups([], SECTION1))
+    assert not list(logwatch.discover_logwatch_groups(TEST_DISCO_PARAMS, SECTION1))
 
 
 @pytest.mark.parametrize(
@@ -158,7 +160,6 @@ def test_discovery_single(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
-@pytest.mark.skip("Flaky test - will be re-enabled with CMK-17338")
 def test_check_single(
     monkeypatch: pytest.MonkeyPatch, log_name: str, expected_result: Iterable[Result]
 ) -> None:
@@ -168,9 +169,11 @@ def test_check_single(
         logwatch_.compile_reclassify_params.__name__,
         lambda _item: logwatch_.ReclassifyParameters((), {}),
     )
-    monkeypatch.setattr(logwatch, "host_name", lambda: "test-host")
 
-    assert list(logwatch.check_logwatch_node(log_name, SECTION1)) == expected_result
+    assert (
+        list(logwatch.check_logwatch_node(log_name, {"host_name": "test-host"}, SECTION1))
+        == expected_result
+    )
 
 
 SECTION2 = logwatch_.Section(
@@ -204,10 +207,10 @@ def test_logwatch_discover_single_restrict(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr(
         logwatch_.RulesetAccess,
         logwatch_.RulesetAccess.logwatch_ec_all.__name__,
-        lambda: [{"restrict_logfiles": [".*2"]}],
+        lambda _host: [{"restrict_logfiles": [".*2"]}],
     )
     assert sorted(
-        logwatch.discover_logwatch_single([], SECTION2),
+        logwatch.discover_logwatch_single(TEST_DISCO_PARAMS, SECTION2),
         key=lambda s: s.item or "",
     ) == [
         Service(item="log1"),
@@ -221,12 +224,13 @@ def test_logwatch_discover_single_groups(monkeypatch: pytest.MonkeyPatch) -> Non
         logwatch_.ParameterLogwatchGroups(
             grouping_patterns=[
                 ("my_group", ("~log.*", "~.*1")),
-            ]
+            ],
+            host_name="test-host",
         )
     ]
 
     monkeypatch.setattr(
-        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda: []
+        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda _host: []
     )
 
     assert list(logwatch.discover_logwatch_single(params, SECTION2)) == [
@@ -241,11 +245,12 @@ def test_logwatch_discover_groups(monkeypatch: pytest.MonkeyPatch) -> None:
                 ("my_%s_group", ("~(log)[^5]", "~.*1")),
                 ("my_%s_group", ("~(log).*", "~.*5")),
             ],
+            host_name="test-host",
         )
     ]
 
     monkeypatch.setattr(
-        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda: []
+        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda _host: []
     )
 
     assert list(logwatch.discover_logwatch_groups(params, SECTION2)) == [
@@ -269,7 +274,7 @@ def fixture_logmsg_file_path(
     mocker.patch.object(
         logwatch,
         "_logmsg_file_path",
-        lambda item: tmp_path / item.replace("/", "\\"),
+        lambda item, _host_name: tmp_path / item.replace("/", "\\"),
     )
 
 
@@ -283,11 +288,12 @@ def test_check_logwatch_generic_no_messages() -> None:
             loglines=[],
             found=True,
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
+            host_name="test-host",
         )
     ) == [
         Result(state=State.OK, summary="No error messages"),
     ]
-    assert not logwatch._logmsg_file_path(item).exists()
+    assert not logwatch._logmsg_file_path(item, "test-host").exists()
 
 
 @pytest.mark.usefixtures("logmsg_file_path")
@@ -306,11 +312,15 @@ def test_check_logwatch_generic_no_reclassify() -> None:
             loglines=lines,
             found=True,
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
+            host_name="test-host",
         )
     ) == [
         Result(state=State.CRIT, summary='1 CRIT messages (Last worst: "red alert")'),
     ]
-    assert logwatch._logmsg_file_path(item).read_text().splitlines()[-len(lines) :] == lines
+    assert (
+        logwatch._logmsg_file_path(item, "test-host").read_text().splitlines()[-len(lines) :]
+        == lines
+    )
 
 
 @pytest.mark.usefixtures("logmsg_file_path")
@@ -335,11 +345,14 @@ def test_check_logwatch_generic_with_reclassification() -> None:
             loglines=lines,
             found=True,
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
+            host_name="test-host",
         )
     ) == [
         Result(state=State.CRIT, summary='2 CRIT messages (Last worst: "red alert")'),
     ]
-    assert logwatch._logmsg_file_path(item).read_text().splitlines()[-len(lines) :] == [
+    assert logwatch._logmsg_file_path(item, "test-host").read_text().splitlines()[
+        -len(lines) :
+    ] == [
         "C klingons are attacking",
         "C red alert",
         ". more context",
@@ -356,8 +369,9 @@ def test_check_logwatch_generic_missing() -> None:
             loglines=[],
             found=False,
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
+            host_name="test-host",
         )
     ) == [
         Result(state=State.UNKNOWN, summary="log not present anymore"),
     ]
-    assert not logwatch._logmsg_file_path(item).exists()
+    assert not logwatch._logmsg_file_path(item, "test-host").exists()

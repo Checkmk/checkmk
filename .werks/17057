@@ -1,0 +1,12 @@
+Title: Use correct filter for virtual host tree links
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1719321845
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+Since 2.2.0 the virtual host tree links for "Show the service problems
+contained in this branch" missed the filters for "service states"
+(WARN/CRIT/UNKN) and "downtimes" (no).

@@ -24,7 +24,6 @@ logger = logging.getLogger()
 class CMKWebSession:
     def __init__(self, site) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
-        self.transids: list[str] = []
         # Resources are only fetched and verified once per session
         self.verified_resources: set = set()
         self.site = site
@@ -52,13 +51,11 @@ class CMKWebSession:
         method: str | bytes,
         path: str,
         expected_code: int = 200,
-        add_transid: bool = False,
+        *,
         allow_redirect_to_login: bool = False,
         **kwargs,
     ) -> requests.Response:
         url = self.site.url_for_path(path)
-        if add_transid:
-            url = self._add_transid(url)
 
         # May raise "requests.exceptions.ConnectionError: ('Connection aborted.', BadStatusLine("''",))"
         # suddenly without known reason. This may be related to some
@@ -76,11 +73,6 @@ class CMKWebSession:
 
         self._handle_http_response(response, expected_code, allow_redirect_to_login)
         return response
-
-    def _add_transid(self, url: str) -> str:
-        if not self.transids:
-            raise Exception("Tried to add a transid, but none available at the moment")
-        return url + ("&" if "?" in url else "?") + "_transid=" + self.transids.pop()
 
     def _handle_http_response(
         self, response: requests.Response, expected_code: int, allow_redirect_to_login: bool
@@ -104,27 +96,12 @@ class CMKWebSession:
         if self._get_mime_type(response) == "text/html":
             soup = BeautifulSoup(response.text, "lxml")
 
-            self.transids += self._extract_transids(response.text, soup)
             self._find_errors(response.text)
             self._check_html_page_resources(response.url, soup)
 
     def _get_mime_type(self, response: requests.Response) -> str:
         assert "Content-Type" in response.headers
         return response.headers["Content-Type"].split(";", 1)[0]
-
-    def _extract_transids(self, body: str, soup: BeautifulSoup) -> list:
-        """Extract transids from pages used in later actions issued by tests."""
-
-        transids = set()
-
-        # Extract from form hidden fields
-        for element in soup.findAll(attrs={"name": "_transid"}):
-            transids.add(element["value"])
-
-        # Extract from URLs in the body
-        transids.update(re.findall("_transid=([0-9/]+)", body))
-
-        return list(transids)
 
     def _find_errors(self, body: str) -> None:
         matches = re.search("<div class=error>(.*?)</div>", body, re.M | re.DOTALL)

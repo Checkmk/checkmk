@@ -443,7 +443,10 @@ _STATUS_NAMES = {
 }
 
 
-def site_state_titles() -> dict[str, str]:
+def site_state_titles() -> dict[
+    Literal["online", "disabled", "down", "unreach", "dead", "waiting", "missing", "unknown"],
+    str,
+]:
     return {
         "online": _("This site is online."),
         "disabled": _("The connection to this site has been disabled."),
@@ -452,6 +455,7 @@ def site_state_titles() -> dict[str, str]:
         "dead": _("This site is not responding."),
         "waiting": _("The status of this site has not yet been determined."),
         "missing": _("This site does not exist."),
+        "unknown": _("The status of this site could not be determined."),
     }
 
 

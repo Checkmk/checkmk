@@ -108,7 +108,9 @@ class PageAutomation(AjaxPage):
         if not secret:
             raise MKAuthException(_("Missing secret for automation command."))
 
-        if secret != _get_login_secret():
+        login_secret = _get_login_secret()
+
+        if (login_secret is None) or not secrets.compare_digest(secret, login_secret):
             raise MKAuthException(_("Invalid automation secret."))
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
@@ -248,7 +250,7 @@ def _set_version_headers() -> None:
     response.headers["x-checkmk-edition"] = cmk_version.edition().short
 
 
-def _get_login_secret(create_on_demand=False):
+def _get_login_secret(create_on_demand: bool = False) -> str | None:
     path = cmk.utils.paths.var_dir + "/wato/automation_secret.mk"
 
     secret = store.load_object_from_file(path, default=None)

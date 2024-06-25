@@ -898,6 +898,8 @@ def _convert_to_legacy_percentage(
         "help": _localize_optional(to_convert.help_text, localizer),
         "label": _localize_optional(to_convert.label, localizer),
         "display_format": "%r",
+        "minvalue": None,
+        "maxvalue": None,
     }
 
     match to_convert.prefill:

@@ -233,7 +233,11 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.Percentage(),
-            legacy_valuespecs.Percentage(display_format="%r"),
+            legacy_valuespecs.Percentage(
+                display_format="%r",
+                minvalue=None,
+                maxvalue=None,
+            ),
             id="minimal Percentage",
         ),
         pytest.param(
@@ -250,6 +254,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=_("label"),
                 display_format="%r",
                 default_value=-1.0,
+                minvalue=None,
+                maxvalue=None,
                 validate=lambda x, y: None,
             ),
             id="Percentage",
@@ -1634,6 +1640,44 @@ def test_convert_validation(
     assert actual_error.value.args == expected_error.value.args
     assert actual_error.value.message == expected_error.value.message
     assert actual_error.value.varname == expected_error.value.varname
+
+
+@pytest.mark.parametrize(
+    ["bounds", "input_value", "value_is_valid"],
+    [
+        pytest.param((0, 100), 50, True, id="valid value"),
+        pytest.param((0, None), 200, True, id="valid value without max"),
+        pytest.param((None, 100), -1, True, id="valid value without min"),
+        pytest.param((0, 100), 101, False, id="invalid value above upper bound"),
+        pytest.param((0, 100), -1, False, id="invalid value below lower bound"),
+    ],
+)
+def test_percentage_validation(
+    bounds: tuple[float | None, float | None], input_value: float, value_is_valid: bool
+) -> None:
+    converted_spec = _convert_to_legacy_valuespec(
+        api_v1.form_specs.Percentage(
+            custom_validate=[
+                api_v1.form_specs.validators.NumberInRange(min_value=bounds[0], max_value=bounds[1])
+            ]
+        ),
+        _,
+    )
+
+    expected_spec = legacy_valuespecs.Percentage(
+        display_format="%r", minvalue=bounds[0], maxvalue=bounds[1]
+    )
+
+    test_args = (input_value, "var_prefix")
+    if value_is_valid:
+        expected_spec.validate_value(*test_args)
+        converted_spec.validate_value(*test_args)
+    else:
+        with pytest.raises(MKUserError):
+            expected_spec.validate_value(*test_args)
+
+        with pytest.raises(MKUserError):
+            converted_spec.validate_value(*test_args)
 
 
 @pytest.mark.parametrize(

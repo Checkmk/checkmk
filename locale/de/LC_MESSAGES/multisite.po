@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-21 05:05+0000\n"
+"PO-Revision-Date: 2024-06-25 12:55+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -184,6 +184,10 @@ msgstr " oder "
 
 msgid " or int"
 msgstr " oder int"
+
+msgid " to get notified once the commercial release is available. "
+msgstr ""
+" um benachrichtigt zu werden, sobald die kommerzielle Version verfügbar ist. "
 
 msgid " to:"
 msgstr " An:"
@@ -8022,7 +8026,7 @@ msgid "Bazel Cache User"
 msgstr "Bazel Cache Benutzer"
 
 msgid "Bazel Remote Cache"
-msgstr ""
+msgstr "Bazel Remote Cache"
 
 msgid "Beamer lamp operation time"
 msgstr "Betriebszeit der Beamerlampe"
@@ -9177,6 +9181,9 @@ msgid ""
 "By default, the ntopng host filter is enabled, however, disabling this can "
 "have a positive impact on the performance of the ntopng integration"
 msgstr ""
+"Standardmäßig ist der ntopng-Hostfilter aktiviert, allerdings kann sich die "
+"Deaktivierung dieses Filters positiv auf die Leistung der ntopng-Integration "
+"auswirken"
 
 msgid ""
 "By enabling this option notifications will be bulked only if the specified "
@@ -9274,7 +9281,7 @@ msgid "Bytes accepted"
 msgstr "Bytes akzeptiert"
 
 msgid "Bytes allocated and in use"
-msgstr ""
+msgstr "Zugewiesene und genutzte Bytes"
 
 msgid "Bytes downloaded"
 msgstr "Bytes heruntergeladen"
@@ -9283,13 +9290,13 @@ msgid "Bytes dropped"
 msgstr "Bytes verworfen"
 
 msgid "Bytes in use by stack allocator"
-msgstr ""
+msgstr "Vom Stack Allocator verwendete Bytes"
 
 msgid "Bytes obtained from system"
 msgstr "Vom System erhaltene Bytes"
 
 msgid "Bytes obtained from system for stack allocator"
-msgstr ""
+msgstr "Vom System erhaltene Bytes für den Stack Allocator"
 
 msgid "Bytes per day"
 msgstr "Bits pro Tag"
@@ -10852,6 +10859,9 @@ msgstr ""
 "Status der Daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (Agentenplugin mk_inventory muss installiert sein)"
 
+msgid "Checkmk Cloud (SaaS) Beta"
+msgstr "Checkmk Cloud (SaaS) Beta"
+
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk-Konfigurationsdateien"
 
@@ -10884,9 +10894,6 @@ msgstr "Checkmk Überblick"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Übersicht des Checkmk Server"
-
-msgid "Checkmk SaaS Beta"
-msgstr "Checkmk SaaS Beta"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmk-Seitenleiste"
@@ -11147,13 +11154,13 @@ msgid "Checkmk: Views: Secs"
 msgstr "Checkmk: Ansichten: Sekunden"
 
 msgid "Checkmk: WATO: Bytes"
-msgstr "Checkmk: WATO: Bytes"
+msgstr "Checkmk: Setup: Bytes"
 
 msgid "Checkmk: WATO: Requests"
-msgstr "Checkmk: WATO: Anfragen"
+msgstr "Checkmk: Setup: Anfragen"
 
 msgid "Checkmk: WATO: Secs"
-msgstr "Checkmk: WATO: Sekunden"
+msgstr "Checkmk: Setup: Sekunden"
 
 #, python-format
 msgid "Checkmk: Your license expires %s"
@@ -17508,16 +17515,16 @@ msgid "Disk Write Latency"
 msgstr "Latenzzeit beim Schreiben von Festplatten"
 
 msgid "Disk backend bytes evicted (full cache)"
-msgstr ""
+msgstr "Festplatten-Backend-Bytes verdrängt (voller Cache)"
 
 msgid "Disk backend bytes removed or overwritten"
-msgstr ""
+msgstr "Entfernte oder überschriebene Backend-Bytes auf der Festplatte"
 
 msgid "Disk backend size"
 msgstr "Größe des Festplatten-Backends"
 
 msgid "Disk backend uncompressed"
-msgstr ""
+msgstr "Festplatten-Backend unkomprimiert"
 
 msgid "Disk drain rate"
 msgstr "Festplatte Entleerungsrate"
@@ -18161,9 +18168,8 @@ msgstr "Plugin für Windows Broadcom-Bonding nicht verteilen"
 msgid "Do not deploy plug-in for Windows interfaces"
 msgstr "Plugin für Windows Interfaces nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy remote desktop licenses plug-in"
-msgstr "Remote-Desktop-Lizenzen-Plugin nicht verteilen"
+msgstr "Plugin für Remote-Desktop-Lizenzen nicht verteilen"
 
 #, python-format
 msgid "Do not deploy the %s plug-in"
@@ -18196,13 +18202,11 @@ msgstr "Das DB2 Plugin nicht verteilen"
 msgid "Do not deploy the DNS client plug-in"
 msgstr "Das DNS client Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Docker container plug-in"
-msgstr "Das Docker Container Plugin nicht verteilen"
+msgstr "Das Plugin für Docker Container nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Docker plug-in"
-msgstr "Das Docker Plugin nicht verteilen"
+msgstr "Das Docker-Plugin nicht verteilen"
 
 msgid "Do not deploy the IBM MQ plug-in"
 msgstr "Das IBM MQ Plugin nicht verteilen"
@@ -18216,13 +18220,11 @@ msgstr "MegaRAID-Plugin nicht verteilen"
 msgid "Do not deploy the MySQL plug-in"
 msgstr "Das MySQL Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the NGINX status plug-in"
-msgstr "Das NGINX Status Plugin nicht verteilen"
+msgstr "Das NGINX Status-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Plesk plug-ins"
-msgstr "Die plesk Plugins nicht verteilen"
+msgstr "Die Plesk-Plugins nicht verteilen"
 
 msgid "Do not deploy the PostgreSQL plug-in"
 msgstr "Das PostgreSQL Plugin nicht verteilen"
@@ -18784,14 +18786,12 @@ msgstr "Laufwerk"
 msgid "Driver"
 msgstr "Treiber"
 
-#, fuzzy
 msgid "Driver date"
 msgstr "Treiberdatum"
 
 msgid "Driver type to use instead of doing an auto selection"
 msgstr "Zu verwendende Treiber-Art anstelle einer automatischen Auswahl"
 
-#, fuzzy
 msgid "Driver version"
 msgstr "Treiberversion"
 
@@ -18825,7 +18825,6 @@ msgstr ""
 "Checkmk enthalten die Ergebnisse widersprüchliche Metriken und diese "
 "Topliste kann falsch oder unvollständig sein."
 
-#, fuzzy
 msgid ""
 "Due to security reasons the plugin being executed as admin will check "
 "permissions for Oracle executables. If modification of Oracle binaries is "
@@ -18950,8 +18949,8 @@ msgstr ""
 "nach der Aktivierung Ihrer Änderungen hätten Sie %s Services."
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s."
-msgstr "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt."
+msgid "During the beta phase, the number of services is limited to %s. "
+msgstr "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt. "
 
 msgid "During this time period no monitoring data is available"
 msgstr "Während dieser Zeitperiode sind keine Monitoring-Daten verfügbar"
@@ -19344,11 +19343,9 @@ msgstr "Dashboards bearbeiten"
 msgid "Edit defaults"
 msgstr "Standards bearbeiten"
 
-#, fuzzy
 msgid "Edit downtimes"
 msgstr "Wartungszeiten editieren"
 
-#, fuzzy
 msgid "Edit downtimes?"
 msgstr "Wartungszeiten bearbeiten?"
 
@@ -19985,9 +19982,8 @@ msgstr "Service-Benachrichtigungen ein"
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Synchrone Zustellung per SMTP aktivieren"
 
-#, fuzzy
 msgid "Enable the ntopng host filter"
-msgstr "Aktiviere diese ntopng-Instanz"
+msgstr "Aktiviere den Host-Filter von ntopng"
 
 msgid "Enable this ntopng instance"
 msgstr "Aktiviere diese ntopng-Instanz"
@@ -20246,9 +20242,8 @@ msgstr "Erneute Authentifizierung erzwingen nach"
 msgid "Enforce show more"
 msgstr "\"Mehr anzeigen\" erzwingen"
 
-#, fuzzy
 msgid "Enforced service"
-msgstr "Erzwungene Services"
+msgstr "Erzwungener Service"
 
 msgid "Enforced services"
 msgstr "Erzwungene Services"
@@ -20431,7 +20426,6 @@ msgstr "Enterasys LSNAT Bindings"
 msgid "Enterasys Switch: Temperature"
 msgstr "Enterasys Switch: Temperatur"
 
-#, fuzzy
 msgid "Enterasys power supply settings"
 msgstr "Enterasys Netzteileinstellungen"
 
@@ -21002,11 +20996,12 @@ msgstr "Ziel-Vserver ausschließen"
 msgid "Exclude empty tag choices"
 msgstr "Leere Merkmale ausklammern"
 
-#, fuzzy
 msgid ""
 "Exclude from monitoring following database instances (if detected or "
 "manually added)"
-msgstr "Nur folgende SIDs überwachen (falls entdeckt oder manuell hinzugefügt)"
+msgstr ""
+"Folgende Datenbankinstanzen aus dem Monitoring ausschließen (falls entdeckt "
+"oder manuell hinzugefügt)"
 
 msgid "Exclude hosts"
 msgstr "Hosts ausschließen"
@@ -21303,9 +21298,8 @@ msgstr "Erwartete Antwortzeit"
 msgid "Expected responses to the given SMTP commands."
 msgstr "Erwartete Antworten der SMTP Befehle."
 
-#, fuzzy
 msgid "Expected specific gateway folder"
-msgstr "Erwartete Anzahl Datenknoten"
+msgstr "Erwarteter spezifischer Gateway-Ordner"
 
 msgid "Expected state"
 msgstr "Erwarteter Status"
@@ -21359,7 +21353,6 @@ msgstr "Explizite Hosts"
 msgid "Explicit labels"
 msgstr "Explizite Labels"
 
-#, fuzzy
 msgid "Explicit list of IP addresses"
 msgstr "Explizite Liste von IP-Adressen"
 
@@ -21448,7 +21441,6 @@ msgstr "Diese Regel für API exportieren"
 msgid "Exporter"
 msgstr "Exporteur"
 
-#, fuzzy
 msgid "Express servicecode"
 msgstr "Express-Servicecode"
 
@@ -24315,10 +24307,10 @@ msgid "HTTP accelerator statistics"
 msgstr "HTTP Geschwindigkeitsstatistiken"
 
 msgid "HTTP backend cache hits"
-msgstr ""
+msgstr "HTTP-Backend Cache-Treffer"
 
 msgid "HTTP backend cache missess"
-msgstr ""
+msgstr "HTTP-Backend-Cache-Fehlversuche"
 
 msgid "HTTP fixed responses"
 msgstr "Festgelegte HTTP-Antworten"
@@ -24590,13 +24582,13 @@ msgid "Heap and non-heap memory"
 msgstr "Heap- und nicht-Heap-Speicher"
 
 msgid "Heap bytes allocated and in use"
-msgstr ""
+msgstr "Zugewiesene und genutzte Heap-Bytes"
 
 msgid "Heap bytes released to OS"
-msgstr ""
+msgstr "Heap-Bytes an das Betriebssystem freigegeben"
 
 msgid "Heap bytes waiting to be used"
-msgstr ""
+msgstr "Heap-Bytes, die auf ihre Verwendung warten"
 
 msgid "Heap bytes when next garbage collection will take place"
 msgstr ""
@@ -27147,7 +27139,7 @@ msgid "Idle threads"
 msgstr "Untätige Threads"
 
 msgid "Idle time of last item in the LRU cache"
-msgstr ""
+msgstr "Leerlaufzeit des letzten Objekts im LRU-Cache"
 
 msgid "Idle timeout"
 msgstr "Inaktivitätstimeout"
@@ -33309,6 +33301,10 @@ msgid ""
 "If left empty, the file will be placed directly in \"var/check_mk/"
 "active_checks/check_sftp\"."
 msgstr ""
+"Lokaler Pfad zu dem Verzeichnis, in dem die Datei abgelegt werden soll, "
+"relativ zu \"var/check_mk/active_checks/check_sftp\" innerhalb des Home-"
+"Verzeichnisses Ihrer Instanz. Wenn Sie nichts angeben, wird die Datei direkt "
+"in \"var/check_mk/active_checks/check_sftp\" abgelegt."
 
 msgid ""
 "Local path to the file to be uploaded. The path is relative to \"var/"
@@ -33317,6 +33313,11 @@ msgid ""
 "file $OMD_ROOT/var/check_mk/active_checks/check_sftp/testfile.txt will be "
 "uploaded)."
 msgstr ""
+"Lokaler Pfad zur Datei, die hochgeladen werden soll. Der Pfad ist relativ zu "
+"\"var/check_mk/active_checks/check_sftp\" im Home-Verzeichnis Ihrer Instanz. "
+"Wenn die Datei nicht existiert, wird sie erstellt. Beispiel: 'testfile.txt' ("
+"Die Datei $OMD_ROOT/var/check_mk/active_checks/check_sftp/testfile.txt wird "
+"hochgeladen)."
 
 msgid "Local port number"
 msgstr "Lokale Portnummer"
@@ -50892,6 +50893,9 @@ msgstr ""
 "Angepasste Pakete von Monitoring-Agenten für Linux, Windows und andere "
 "Betriebssysteme signieren"
 
+msgid "Sign up here"
+msgstr ""
+
 msgid "Signal quality of Wireless device"
 msgstr "Signalqualität eines Wireless-Geräts"
 
@@ -52120,10 +52124,9 @@ msgid "Specify database names that the rule should apply to"
 msgstr ""
 "Geben Sie die Namen der Datenbanken an, auf die diese Regel greifen soll"
 
-#, fuzzy
 msgid "Specify database names that the rule should apply to."
 msgstr ""
-"Geben Sie die Namen der Datenbanken an, auf die diese Regel greifen soll"
+"Geben Sie die Namen der Datenbanken an, auf die diese Regel greifen soll."
 
 msgid "Specify discovery mode"
 msgstr "Festlegen des Erkennungsmodus"
@@ -58222,7 +58225,7 @@ msgid ""
 "The node <b>%s</b> does not exist  (must be a host that is configured with "
 "WATO)"
 msgstr ""
-"Der Knoten <b>%s</b> ist nicht vorhanden (muss ein in WATO konfigurierter "
+"Der Knoten <b>%s</b> ist nicht vorhanden (muss ein in Setup konfigurierter "
 "Host sein)"
 
 msgid ""
@@ -59540,18 +59543,19 @@ msgstr ""
 "gilt. Checkmk sendet in Bezug auf den Authentifizierungsprozess eines "
 "Benutzers Anfragen an den Identitätsanbieter und erhält Antworten von ihm."
 
+#, python-format
 msgid ""
 "The timeout in seconds when gathering the Support Diagnostics Data. The "
 "default is 110 seconds. When very large files are collected, it's also "
 "possible to call the support diagnostics from command line using the command "
-"'cmk --create-diagnostics-dump' with  appropriate parameters in the context "
-"of the affected site."
+"'cmk --create-diagnostics-dump' with appropriate parameters in the context "
+"of the affected site. See the %s"
 msgstr ""
 "Der Timeout in Sekunden beim Sammeln der Support Diagnostics Daten. Der "
 "Standardwert ist 110 Sekunden. Wenn sehr große Dateien gesammelt werden, ist "
 "es auch möglich, die Support Diagnostics von der Kommandozeile aus mit dem "
 "Befehl 'cmk --create-diagnostics-dump' mit den entsprechenden Parametern im "
-"Kontext der betroffenen Instanz aufzurufen."
+"Kontext der betroffenen Instanz aufzurufen. Beachten Sie hierzu %s"
 
 #, python-format
 msgid ""
@@ -60724,7 +60728,7 @@ msgid "This check has no parameters."
 msgstr "Dieser Check hat keine Parameter."
 
 msgid "This check is not configurable via WATO"
-msgstr "Dieser Check ist nicht via WATO konfigurierbar"
+msgstr "Dieser Check ist nicht via Setup konfigurierbar"
 
 msgid ""
 "This check is part of the Checkmk Event Console and monitors whether there "
@@ -63729,7 +63733,6 @@ msgstr ""
 "Status haben, wenn der Host nicht erreichbar ist. Hinweis: Die Einstellung "
 "<i>Timeout</i> funktioniert nur bei Verwendung des Checkmk Micro Core."
 
-#, fuzzy
 msgid ""
 "This ruleset will deploy the agent plug-in <tt>mk_sap</tt> for (locally) "
 "monitoring SAP R/3 instances. Note: you still need to manually deploy the "
@@ -63738,8 +63741,7 @@ msgstr ""
 "Dieser Regelsatz verteilt das Agenten-Plugin <tt>mk_sap</tt> für das "
 "(lokale) Monitoring von SAP R/3-Instanzen. Hinweis: Sie müssen dennoch "
 "manuell SAP NetWeaver RFCSDK (nwrfcsdk) und das Python-Modul sapnwrfc "
-"verteilen. Hinweise dazu finden Sie in einem <a href='http://mathias-kettner."
-"de/checkmk_sap_r3.html'>Artikel im Checkmk Handbuch</a>."
+"verteilen."
 
 msgid "This rulespec is deprecated and will be removed in future versions."
 msgstr ""
@@ -69528,7 +69530,7 @@ msgid "Use UUID as mountpoint"
 msgstr "UUID als Mount-Punkt verwenden"
 
 msgid "Use WATO"
-msgstr "WATO verwenden"
+msgstr "Setup verwenden"
 
 msgid "Use WMI"
 msgstr "WMI verwenden"

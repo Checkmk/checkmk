@@ -6,9 +6,9 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-04-12 06:00+0000\n"
+"PO-Revision-Date: 2024-06-24 23:12+0000\n"
 "Language-Team: Italian <https://translate.checkmk.com/projects/checkmk/"
-"software/it/>\n"
+"stable/it/>\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -180,6 +180,9 @@ msgstr " o "
 
 msgid " or int"
 msgstr " o int"
+
+msgid " to get notified once the commercial release is available. "
+msgstr ""
 
 msgid " to:"
 msgstr " a:"
@@ -10936,6 +10939,10 @@ msgstr ""
 "demoni: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, "
 "RRDCached (il plugin mk_inventory dell'agente deve essere installato)"
 
+#, fuzzy
+msgid "Checkmk Cloud (SaaS) Beta"
+msgstr "Agente Checkmk"
+
 msgid "Checkmk Configuration Files"
 msgstr "File di configurazione di Checkmk"
 
@@ -10968,10 +10975,6 @@ msgstr "Checkmk Panoramica"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Panoramica del server Checkmk"
-
-#, fuzzy
-msgid "Checkmk SaaS Beta"
-msgstr "Agente Checkmk"
 
 msgid "Checkmk Sidebar"
 msgstr "Barra laterale di Checkmk"
@@ -19223,7 +19226,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s."
+msgid "During the beta phase, the number of services is limited to %s. "
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -51200,6 +51203,9 @@ msgstr ""
 "Firmare i pacchetti dell'agente baked per Linux, Windows e altri sistemi "
 "operativi"
 
+msgid "Sign up here"
+msgstr ""
+
 msgid "Signal quality of Wireless device"
 msgstr "Qualità del segnale del dispositivo wireless"
 
@@ -59773,12 +59779,13 @@ msgstr ""
 "Checkmk invia richieste e riceve risposte dal fornitore di identità in "
 "merito al processo di autenticazione di un utente."
 
+#, python-format
 msgid ""
 "The timeout in seconds when gathering the Support Diagnostics Data. The "
 "default is 110 seconds. When very large files are collected, it's also "
 "possible to call the support diagnostics from command line using the command "
-"'cmk --create-diagnostics-dump' with  appropriate parameters in the context "
-"of the affected site."
+"'cmk --create-diagnostics-dump' with appropriate parameters in the context "
+"of the affected site. See the %s"
 msgstr ""
 
 #, python-format
@@ -63939,7 +63946,6 @@ msgstr ""
 "l'host non è raggiungibile. Nota: l'impostazione <i>Timeout</i> funziona "
 "solo quando si utilizza Checkmk Micro Core."
 
-#, fuzzy
 msgid ""
 "This ruleset will deploy the agent plug-in <tt>mk_sap</tt> for (locally) "
 "monitoring SAP R/3 instances. Note: you still need to manually deploy the "
@@ -63948,8 +63954,7 @@ msgstr ""
 "Questo set di regole distribuirà il plugin dell'agente <tt>mk_sap</tt> per "
 "il monitoraggio (locale) delle istanze SAP R/3. Nota: è ancora necessario "
 "distribuire manualmente il SAP NetWeaver RFCSDK (nwrfcsdk) e il modulo "
-"Python sapnwrfc. Entrambi sono spiegati in un articolo <a href='http://"
-"mathias-kettner.de/checkmk_sap_r3.html'> della documentazione di Checkmk</a>."
+"Python sapnwrfc."
 
 #, fuzzy
 msgid "This rulespec is deprecated and will be removed in future versions."

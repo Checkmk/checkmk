@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-24 06:14+0000\n"
+"PO-Revision-Date: 2024-06-24 23:12+0000\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/"
 "stable/es/>\n"
 "Language: es\n"
@@ -184,6 +184,9 @@ msgstr " o "
 
 msgid " or int"
 msgstr " o int"
+
+msgid " to get notified once the commercial release is available. "
+msgstr ""
 
 msgid " to:"
 msgstr " a:"
@@ -730,7 +733,8 @@ msgstr "%s. Checkmk está operando sin licencia, y no podrá 'Activar cambios'."
 msgid ""
 "%s. Checkmk will become unlicensed %s and you will no longer be able to "
 "'Activate changes'."
-msgstr "%s. Checkmk está operando sin licencia %s y no podrá 'Activar cambios'."
+msgstr ""
+"%s. Checkmk está operando sin licencia %s y no podrá 'Activar cambios'."
 
 #, python-format
 msgid "%s: %s"
@@ -11138,6 +11142,10 @@ msgstr ""
 "daemons: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, "
 "RRDCached (es necesario instalar el plugin del agente mk_inventory)"
 
+#, fuzzy
+msgid "Checkmk Cloud (SaaS) Beta"
+msgstr "Agente Checkmk"
+
 msgid "Checkmk Configuration Files"
 msgstr "Archivos de configuración de Checkmk"
 
@@ -11170,10 +11178,6 @@ msgstr "Resumen de Checkmk"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Descripción general del servidor Checkmk"
-
-#, fuzzy
-msgid "Checkmk SaaS Beta"
-msgstr "Agente Checkmk"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmk barra lateral"
@@ -19571,7 +19575,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s."
+msgid "During the beta phase, the number of services is limited to %s. "
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -52198,6 +52202,9 @@ msgstr ""
 "Firma de paquetes de agentes horneados para Linux, Windows y otros sistemas "
 "operativos"
 
+msgid "Sign up here"
+msgstr ""
+
 msgid "Signal quality of Wireless device"
 msgstr "Calidad de la señal del dispositivo inalámbrico"
 
@@ -60910,12 +60917,13 @@ msgstr ""
 "identidad. Checkmk envía solicitudes a éste y recibe respuestas de él en "
 "relación con el proceso de autenticación de un usuario."
 
+#, python-format
 msgid ""
 "The timeout in seconds when gathering the Support Diagnostics Data. The "
 "default is 110 seconds. When very large files are collected, it's also "
 "possible to call the support diagnostics from command line using the command "
-"'cmk --create-diagnostics-dump' with  appropriate parameters in the context "
-"of the affected site."
+"'cmk --create-diagnostics-dump' with appropriate parameters in the context "
+"of the affected site. See the %s"
 msgstr ""
 
 #, python-format
@@ -65150,7 +65158,6 @@ msgstr ""
 "Checkmk un estado OK aquí si el host no es accesible. Nota: el ajuste "
 "<i>Timeout</i> sólo funciona cuando se utiliza el Checkmk Micro Core."
 
-#, fuzzy
 msgid ""
 "This ruleset will deploy the agent plug-in <tt>mk_sap</tt> for (locally) "
 "monitoring SAP R/3 instances. Note: you still need to manually deploy the "
@@ -65159,8 +65166,7 @@ msgstr ""
 "Este conjunto de reglas desplegará el plugin de agente <tt>mk_sap</tt> para "
 "la monitorización (local) de instancias SAP R/3. Nota: aún es necesario "
 "desplegar manualmente el SAP NetWeaver RFCSDK (nwrfcsdk) y el módulo Python "
-"sapnwrfc. Ambos se explican en un <a href='http://mathias-kettner.de/"
-"checkmk_sap_r3.html'>artículo de la documentación de Checkmk</a>."
+"sapnwrfc."
 
 #, fuzzy
 msgid "This rulespec is deprecated and will be removed in future versions."

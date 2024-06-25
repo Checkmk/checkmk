@@ -40,15 +40,21 @@ echo "information about caching"
 echo "========================================================================="
 bazel --version
 
-if [ -z "${BAZEL_CACHE_URL}" ] || [ -z "${BAZEL_CACHE_USER}" ] || [ -z "${BAZEL_CACHE_PASSWORD}" ]; then
+if [[ -n "${BAZEL_CACHE_URL}" ]]; then
+    echo "Bazel remote cache configured to \"${BAZEL_CACHE_URL}\""
+    if [ -n "${BAZEL_CACHE_USER}" ] && [ -n "${BAZEL_CACHE_PASSWORD}" ]; then
+        echo "Read/Write access to Bazel cache configured"
+        BAZEL_REMOTE_CACHE_ARGUMENT="--remote_cache=grpcs://${BAZEL_CACHE_USER}:${BAZEL_CACHE_PASSWORD}@${BAZEL_CACHE_URL}"
+    else
+        echo "Read-only access to Bazel cache configured"
+        BAZEL_REMOTE_CACHE_ARGUMENT="--remote_cache=grpcs://${BAZEL_CACHE_URL}"
+    fi
+else
     echo
     echo "BAZEL REMOTE CACHING NOT CONFIGURED!"
-    echo "To do so, set BAZEL_CACHE_URL, BAZEL_CACHE_USER and BAZEL_CACHE_PASSWORD"
+    echo "To do so, set BAZEL_CACHE_URL maybe addionally also BAZEL_CACHE_USER and BAZEL_CACHE_PASSWORD to get read-write access"
     echo
     BAZEL_REMOTE_CACHE_ARGUMENT="--remote_cache="""
-else
-    echo "Bazel remote cache configured to \"${BAZEL_CACHE_URL}\""
-    BAZEL_REMOTE_CACHE_ARGUMENT="--remote_cache=grpcs://${BAZEL_CACHE_USER}:${BAZEL_CACHE_PASSWORD}@${BAZEL_CACHE_URL}"
 fi
 
 if [ "${CI}" == "true" ]; then

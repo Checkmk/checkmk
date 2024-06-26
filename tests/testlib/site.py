@@ -1643,9 +1643,13 @@ class SiteFactory:
             f"--conflict={conflict_mode}",
         ]
 
-        process = site.execute(cmd)
+        process = site.execute(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         rc = process.wait()
-        assert rc == 0, process.stderr
+        assert rc == 0, (
+            f"Failed to update the test-site!\n"
+            f"STDERR: {process.stderr.read() if process.stderr else ""}\n"
+            f"STDOUT: {process.stdout.read() if process.stdout else ""}"
+        )
 
         # refresh the site object after creating the site
         site = self.get_existing_site(site.id)

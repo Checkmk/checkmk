@@ -20,6 +20,7 @@ from setproctitle import setthreadtitle
 
 from cmk.utils import daemon, render, store
 from cmk.utils.exceptions import MKTerminate
+from cmk.utils.licensing.helper import get_licensing_logger
 from cmk.utils.log import VERBOSE
 
 from cmk.gui import log, sites
@@ -132,6 +133,7 @@ class BackgroundProcess(multiprocessing.Process):
     def initialize_environment(self) -> None:
         """Setup environment (Logging, Livestatus handles, etc.)"""
         self._init_gui_logging()
+        self._cleanup_licensing_logging()
         self._disable_timeout_manager()
         self._cleanup_livestatus_connections()
         self._open_stdout_and_stderr()
@@ -143,6 +145,12 @@ class BackgroundProcess(multiprocessing.Process):
         log.init_logging()  # NOTE: We run in a subprocess!
         self._logger = log.logger.getChild("background-job")
         self._log_path_hint = _("More information can be found in ~/var/log/web.log")
+
+    def _cleanup_licensing_logging(self) -> None:
+        """Remove all handlers from the licensing logger to ensure none of them hold file handles
+        that were just closed."""
+        licensing_logger = get_licensing_logger()
+        del licensing_logger.handlers[:]
 
     def _disable_timeout_manager(self) -> None:
         if timeout_manager:

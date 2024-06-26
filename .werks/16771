@@ -1,0 +1,14 @@
+Title: agent_netapp_ontap: Fails gracefully on an unauthorised request
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1719390117
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+This change is relevant if you are monitoring a NetApp filer
+with the NetApp via ONTAP api check plugin.
+
+Unauthorised requests caused the special agent to crash.
+This werk improves this behaviour by only reporting a meaningful message in this case.

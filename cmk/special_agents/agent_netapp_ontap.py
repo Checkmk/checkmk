@@ -8,13 +8,14 @@ from collections.abc import Iterable, Sequence
 
 import requests
 from netapp_ontap import resources as NetAppResource
+from netapp_ontap.error import NetAppRestError
 from netapp_ontap.host_connection import HostConnection
 
 from cmk.base.plugins.agent_based.utils import (  # pylint: disable=cmk-module-layer-violation
     netapp_ontap_models,
 )
 
-from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.utils.agent_common import CannotRecover, SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 __version__ = "2.2.0p27"
@@ -858,6 +859,12 @@ def _setup_logging(verbose: bool) -> logging.Logger:
 
 
 def agent_netapp_main(args: Args) -> int:
+    """
+    For NetApp responses HTTP status codes:
+    https://docs.netapp.com/us-en/ontap-restapi-9141//ontap/getting_started_with_the_ontap_rest_api.html#HTTP_status_codes
+
+    """
+
     logger = _setup_logging(args.verbose)
     with HostConnection(
         args.hostname,
@@ -866,9 +873,14 @@ def agent_netapp_main(args: Args) -> int:
         verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
         headers={"User-Agent": USER_AGENT},
     ) as connection:
-        logger.debug("Connection estabilished. Start writing sections")
-        write_sections(connection, logger, args)
-        logger.debug("Sections have been written")
+        logger.debug("Start writing sections")
+        try:
+            write_sections(connection, logger, args)
+        except NetAppRestError as exc:
+            if exc.status_code == 401:
+                raise CannotRecover("Authentication failed. Please check the credentials.")
+            raise exc
+        logger.debug("All sections have been written")
 
     return 0
 

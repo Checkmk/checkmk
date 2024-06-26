@@ -128,7 +128,7 @@ class PainterInventoryTree(Painter):
             inv_display_hints,
             theme,
             self.request,
-            show_internal_tree_paths=self._painter_options.get("show_internal_tree_paths"),
+            self._painter_options.get("show_internal_tree_paths"),
         )
 
         with output_funnel.plugged():
@@ -188,6 +188,10 @@ class PainterInvhistDelta(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_delta", "invhist_time"]
 
+    @property
+    def painter_options(self):
+        return ["show_internal_tree_paths"]
+
     def _compute_data(self, row: Row, cell: Cell) -> ImmutableDeltaTree:
         try:
             _validate_inventory_tree_uniqueness(row)
@@ -206,6 +210,7 @@ class PainterInvhistDelta(Painter):
             inv_display_hints,
             theme,
             self.request,
+            self._painter_options.get("show_internal_tree_paths"),
         )
 
         with output_funnel.plugged():
@@ -459,7 +464,7 @@ def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterO
         inv_display_hints,
         theme,
         request,
-        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+        painter_options.get("show_internal_tree_paths"),
     )
 
     with output_funnel.plugged():

@@ -347,7 +347,7 @@ class TreeRenderer:
         hints: DisplayHints,
         theme_: Theme,
         request_: Request,
-        show_internal_tree_paths: bool = False,
+        show_internal_tree_paths: bool,
     ) -> None:
         self._site_id = site_id
         self._host_name = host_name

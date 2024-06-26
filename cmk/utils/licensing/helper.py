@@ -15,6 +15,10 @@ from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.paths import log_dir
 
 
+def get_licensing_logger() -> logging.Logger:
+    return logging.getLogger("licensing")
+
+
 def init_logging() -> logging.Logger:
     Path(log_dir).mkdir(parents=True, exist_ok=True)
 
@@ -23,7 +27,7 @@ def init_logging() -> logging.Logger:
     handler = logging.FileHandler(filename=Path(log_dir, "licensing.log"), encoding="utf-8")
     handler.setFormatter(formatter)
 
-    logger = logging.getLogger("licensing")
+    logger = get_licensing_logger()
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)
     logger.propagate = False

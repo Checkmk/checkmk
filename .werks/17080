@@ -1,0 +1,18 @@
+Title: Hanging background jobs/frozen site
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1719405900
+Edition: cee
+Level: 1
+Version: 2.2.0p28
+
+Background jobs could previously hang without ever finishing under the wrong conditions. This could lead to the entire site freezing if the job had acquired crucial file locks (i.e. a lock on licensing files).
+
+This is usually accompanied by the error
+
+C+:
+Bad file descriptor
+C-:
+
+in the logs.

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import logging
 import sys
 from collections.abc import Iterable, Sequence
@@ -29,11 +28,7 @@ def write_section(section_name: str, generator: Iterable, logger: logging.Logger
         logger.debug(
             "Element data: %r", element.model_dump_json(exclude_unset=True, exclude_none=False)
         )
-        sys.stdout.write(
-            json.dumps(
-                element.model_dump_json(exclude_unset=True, exclude_none=False), sort_keys=True
-            )
-        )
+        sys.stdout.write(element.model_dump_json(exclude_unset=True, exclude_none=False))
         sys.stdout.write("\n")
     sys.stdout.flush()
 

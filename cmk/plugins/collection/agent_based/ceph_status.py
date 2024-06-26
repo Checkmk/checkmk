@@ -20,7 +20,6 @@ from cmk.agent_based.v2 import (
     get_value_store,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
@@ -67,11 +66,10 @@ def ceph_check_epoch(id_: str, epoch: float, params: Mapping[str, Any]) -> Check
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-# Suggested by customer: 1,3 per 30 min
 
-
-def discovery_ceph_status(section: Section) -> DiscoveryResult:
-    yield Service()
+def dont_discover(section: Section) -> DiscoveryResult:
+    """The plugin was replaced with the new Ceph integration in 2.4.0"""
+    yield from ()
 
 
 def _extract_error_messages(section: Section) -> Sequence[str]:
@@ -114,10 +112,11 @@ agent_section_ceph_status = AgentSection(
     parse_function=parse_ceph_status,
 )
 
+
 check_plugin_ceph_status = CheckPlugin(
     name="ceph_status",
     service_name="Ceph Status",
-    discovery_function=discovery_ceph_status,
+    discovery_function=dont_discover,
     check_function=check_ceph_status,
     check_default_parameters={
         "epoch": (1.0, 3.0, 30),
@@ -135,11 +134,6 @@ check_plugin_ceph_status = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer: 50, 100 per 15 min
-
-
-def discovery_ceph_status_osds(section: Section) -> DiscoveryResult:
-    if "osdmap" in section:
-        yield Service()
 
 
 def check_ceph_status_osds(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -178,7 +172,7 @@ check_plugin_ceph_status_osds = CheckPlugin(
     name="ceph_status_osds",
     sections=["ceph_status"],
     service_name="Ceph OSDs",
-    discovery_function=discovery_ceph_status_osds,
+    discovery_function=dont_discover,
     check_function=check_ceph_status_osds,
     check_ruleset_name="ceph_osds",
     check_default_parameters={
@@ -197,11 +191,6 @@ check_plugin_ceph_status_osds = CheckPlugin(
 #   |                          | .__/ \__, |___/                           |
 #   |                          |_|    |___/                                |
 #   '----------------------------------------------------------------------'
-
-
-def discovery_ceph_status_pgs(section: Section) -> DiscoveryResult:
-    if "pgmap" in section:
-        yield Service()
 
 
 def check_ceph_status_pgs(section: Section) -> CheckResult:
@@ -257,7 +246,7 @@ check_plugin_ceph_status_pgs = CheckPlugin(
     name="ceph_status_pgs",
     sections=["ceph_status"],
     service_name="Ceph PGs",
-    discovery_function=discovery_ceph_status_pgs,
+    discovery_function=dont_discover,
     check_function=check_ceph_status_pgs,
 )
 
@@ -271,13 +260,6 @@ check_plugin_ceph_status_pgs = CheckPlugin(
 #   |                                |___/                                 |
 #   '----------------------------------------------------------------------'
 
-# Suggested by customer: 1, 2 per 5 min
-
-
-def discovery_ceph_status_mgrs(section: Section) -> DiscoveryResult:
-    if "epoch" in section.get("mgrmap", {}):
-        yield Service()
-
 
 def check_ceph_status_mgrs(params: Mapping[str, Any], section: Section) -> CheckResult:
     epoch = section.get("mgrmap", {}).get("epoch")
@@ -290,7 +272,7 @@ check_plugin_ceph_status_mgrs = CheckPlugin(
     name="ceph_status_mgrs",
     sections=["ceph_status"],
     service_name="Ceph MGRs",
-    discovery_function=discovery_ceph_status_mgrs,
+    discovery_function=dont_discover,
     check_function=check_ceph_status_mgrs,
     check_ruleset_name="ceph_mgrs",
     check_default_parameters={

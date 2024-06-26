@@ -1,0 +1,18 @@
+title: Ceph Storage: Classes
+agents: linux
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the size and used space of pools of Ceph storage systems by their class.
+
+ The usage is checked against values configurable using the ruleset "Filesystems (used space and growth)".
+
+item:
+ The pools classes.
+
+discovery:
+ One service is created for each pool class.
+
+cluster:
+ On a cluster only the first nodes' response is checked.

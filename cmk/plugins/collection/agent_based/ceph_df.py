@@ -17,12 +17,7 @@ from cmk.agent_based.v2 import (
     RuleSetType,
     StringTable,
 )
-from cmk.plugins.lib.df import (
-    df_check_filesystem_list,
-    df_discovery,
-    FILESYSTEM_DEFAULT_PARAMS,
-    FSBlocks,
-)
+from cmk.plugins.lib.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS, FSBlocks
 
 
 def _sanitize_line(line: list[str]) -> list[str]:
@@ -348,8 +343,9 @@ agent_section_ceph_df = AgentSection(
 )
 
 
-def discover_ceph_df(params: Sequence[Mapping[str, Any]], section: FSBlocks) -> DiscoveryResult:
-    yield from df_discovery(params, [x[0] for x in section])
+def dont_discover(params: Sequence[Mapping[str, Any]], section: FSBlocks) -> DiscoveryResult:
+    """The plugin was replaced with the new Ceph integration in 2.4.0"""
+    yield from ()
 
 
 def check_ceph_df(item: str, params: Mapping[str, Any], section: FSBlocks) -> CheckResult:
@@ -365,7 +361,7 @@ def check_ceph_df(item: str, params: Mapping[str, Any], section: FSBlocks) -> Ch
 check_plugin_ceph_df = CheckPlugin(
     name="ceph_df",
     service_name="Ceph Pool %s",
-    discovery_function=discover_ceph_df,
+    discovery_function=dont_discover,
     discovery_ruleset_name="filesystem_groups",
     discovery_ruleset_type=RuleSetType.ALL,
     discovery_default_parameters={"groups": []},

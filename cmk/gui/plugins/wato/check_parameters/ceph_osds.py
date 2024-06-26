@@ -43,6 +43,7 @@ def _parameter_valuespec_ceph_osds():
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
+        is_deprecated=True,
         check_group_name="ceph_osds",
         group=RulespecGroupCheckParametersStorage,
         match_type="dict",

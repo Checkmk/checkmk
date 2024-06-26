@@ -6,7 +6,7 @@
 
 from functools import lru_cache
 
-from cmk.agent_based.v2 import get_value_store, Result, Service, State
+from cmk.agent_based.v2 import get_value_store, Result, State
 from cmk.plugins.collection.agent_based import ceph_status
 
 STRING_TABLE_1 = [
@@ -64,13 +64,6 @@ def section1() -> ceph_status.Section:
 @lru_cache
 def section_osds() -> ceph_status.Section:
     return ceph_status.parse_ceph_status(STRING_TABLE_OSDS)
-
-
-def test_discover_ceph_status() -> None:
-    assert list(ceph_status.discovery_ceph_status(section1())) == [Service()]
-    assert not list(ceph_status.discovery_ceph_status_osds(section1()))
-    assert list(ceph_status.discovery_ceph_status_osds(section_osds())) == [Service()]
-    assert not list(ceph_status.discovery_ceph_status_pgs(section1()))
 
 
 def test_check_ceph_status(initialised_item_state: None) -> None:

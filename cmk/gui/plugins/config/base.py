@@ -270,7 +270,8 @@ class CREConfig:
     # Page heading for main frame set
     page_heading: str = "Checkmk %s"
 
-    login_screen: dict = field(default_factory=dict)
+    # Default for login screen customization; hiding the version as it can be a security vulnerability
+    login_screen: dict = field(default_factory=lambda: {"hide_version": True})
 
     # Timeout for rescheduling of host- and servicechecks
     reschedule_timeout: float = 10.0

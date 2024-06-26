@@ -257,7 +257,6 @@ def test__normalize_perf_data(
             "check_mk-kernel_util",
             ["util_fallback", "METRIC_user"],
         ),  # METRIC_user has no recipe
-        (["util"], "check_mk-netapp_api_cpu_utilization", ["cpu_utilization_numcpus"]),
         (["user", "util"], "check_mk-winperf_processor_util", ["cpu_utilization_numcpus"]),
         (["user", "system", "idle", "nice"], "check_mk-kernel_util", ["cpu_utilization_3"]),
         (["user", "system", "idle", "io_wait"], "check_mk-kernel_util", ["cpu_utilization_4"]),

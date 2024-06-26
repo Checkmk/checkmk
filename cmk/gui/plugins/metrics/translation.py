@@ -85,8 +85,6 @@ for check in [
         "avg": {"name": "util_average"},
     }
 check_metrics["check_mk-winperf_processor_util"].update({"util": {"name": "util_numcpu_as_max"}})
-check_metrics["check_mk-netapp_api_cpu"] = {"util": {"name": "util_numcpu_as_max"}}
-check_metrics["check_mk-netapp_api_cpu_utilization"] = {"util": {"name": "util_numcpu_as_max"}}
 check_metrics["check_mk-openbsd_sensors"] = {
     "rpm": {"name": "fan"},
 }
@@ -195,10 +193,6 @@ check_metrics["check_mk-esx_vsphere_vm_mem_usage"] = {
 check_metrics["check_mk-ibm_svc_systemstats_disk_latency"] = {
     "read_latency": {"scale": m},
     "write_latency": {"scale": m},
-}
-check_metrics["check_mk-netapp_api_disk_summary"] = {
-    "total_disk_capacity": {"name": "disk_capacity"},
-    "total_disks": {"name": "disks"},
 }
 check_metrics["check_mk-netapp_ontap_disk_summary"] = {
     "total_disk_capacity": {"name": "disk_capacity"},
@@ -401,7 +395,6 @@ df_translation: dict[str, CheckMetricEntry] = {
 check_metrics["check_mk-df"] = df_translation
 check_metrics["check_mk-db2_logsizes"] = df_translation
 check_metrics["check_mk-esx_vsphere_datastores"] = df_translation
-check_metrics["check_mk-netapp_api_aggr"] = df_translation
 check_metrics["check_mk-netapp_ontap_aggr"] = df_translation
 check_metrics["check_mk-vms_df"] = df_translation
 check_metrics["check_mk-vms_diskstat_df"] = df_translation
@@ -421,9 +414,7 @@ check_metrics["check_mk-ibm_svc_mdiskgrp"] = df_translation
 check_metrics["check_mk-fast_lta_silent_cubes_capacity"] = df_translation
 check_metrics["check_mk-fast_lta_volumes"] = df_translation
 check_metrics["check_mk-libelle_business_shadow_archive_dir"] = df_translation
-check_metrics["check_mk-netapp_api_luns"] = df_translation
 check_metrics["check_mk-netapp_ontap_luns"] = df_translation
-check_metrics["check_mk-netapp_api_qtree_quota"] = df_translation
 check_metrics["check_mk-netapp_ontap_qtree_quota"] = df_translation
 check_metrics["check_mk-emc_datadomain_fs"] = df_translation
 check_metrics["check_mk-emc_isilon_quota"] = df_translation
@@ -513,7 +504,6 @@ netapp_volumes_metrics: dict[str, CheckMetricEntry] = {
     "iscsi_other_latency": {"scale": m},
 }
 
-check_metrics["check_mk-netapp_api_volumes"] = netapp_volumes_metrics
 check_metrics["check_mk-netapp_ontap_volumes"] = netapp_volumes_metrics
 
 disk_utilization_translation: dict[str, CheckMetricEntry] = {
@@ -562,7 +552,6 @@ check_metrics["check_mk-huawei_osn_if"] = if_translation
 check_metrics["check_mk-if64"] = if_translation
 check_metrics["check_mk-lnx_if"] = if_translation
 check_metrics["check_mk-mcdata_fcport"] = if_translation
-check_metrics["check_mk-netapp_api_if"] = if_translation
 check_metrics["check_mk-netapp_ontap_if"] = if_translation
 check_metrics["check_mk-winperf_if"] = if_translation
 check_metrics["check_mk-gcp_gce_network"] = if_translation
@@ -1004,12 +993,6 @@ check_metrics["check_mk-lparstat_aix"] = {
 check_metrics["check_mk-netapp_fcpio"] = {
     "read": {"name": "disk_read_throughput"},
     "write": {"name": "disk_write_throughput"},
-}
-check_metrics["check_mk-netapp_api_vf_stats_traffic"] = {
-    "read_bytes": {"name": "disk_read_throughput"},
-    "write_bytes": {"name": "disk_write_throughput"},
-    "read_ops": {"name": "disk_read_ios"},
-    "write_ops": {"name": "disk_write_ios"},
 }
 check_metrics["check_mk-job"] = {
     "reads": {"name": "disk_read_throughput"},

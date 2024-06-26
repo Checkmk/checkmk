@@ -6,6 +6,7 @@
 import ast
 import dataclasses
 import enum
+import hashlib
 import json
 import sys
 import time
@@ -939,7 +940,10 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
 
 
 def execute_discovery_job(
-    host_name: HostName, action: DiscoveryAction, *, raise_errors: bool
+    host_name: HostName,
+    action: DiscoveryAction,
+    *,
+    raise_errors: bool,
 ) -> DiscoveryResult:
     """Either execute the discovery job to scan the host or return the discovery result
     based on the currently cached data"""
@@ -978,7 +982,8 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         return _("Service discovery")
 
     def __init__(self, host_name: HostName) -> None:
-        super().__init__(f"{self.job_prefix}-{host_name}")
+        host_name_hash = hashlib.sha256(host_name.encode("utf-8")).hexdigest()
+        super().__init__(f"{self.job_prefix}-{host_name[:20]}-{host_name_hash}")
         self.host_name: Final = host_name
 
         self._preview_store = ObjectStore(

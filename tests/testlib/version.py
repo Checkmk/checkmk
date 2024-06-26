@@ -455,10 +455,8 @@ def code_name(distro_name: str) -> str:
     if code := {
         "cma-3": "cma-3",
         "cma-4": "cma-4",
-        "debian-10": "buster",
         "debian-11": "bullseye",
         "debian-12": "bookworm",
-        "ubuntu-20.04": "focal",
         "ubuntu-22.04": "jammy",
         "ubuntu-23.04": "lunar",
         "ubuntu-23.10": "mantic",
@@ -470,7 +468,6 @@ def code_name(distro_name: str) -> str:
         "sles-15sp2": "sles15sp2",
         "sles-15sp3": "sles15sp3",
         "sles-15sp4": "sles15sp4",
-        "sles-12sp5": "sles12sp5",
         "sles-15sp5": "sles15sp5",
     }.get(distro_name):
         return code

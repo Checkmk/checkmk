@@ -226,10 +226,8 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
 
         package_name = available_packages[0].name
         os_name = {
-            "debian-10": "buster",
             "debian-11": "bullseye",
             "debian-12": "bookworm",
-            "ubuntu-20.04": "focal",
             "ubuntu-22.04": "jammy",
             "ubuntu-23.10": "mantic",
             "ubuntu-24.04": "noble",
@@ -237,7 +235,6 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
             "almalinux-9": "el9",
             "sles-15sp3": "sles15sp3",
             "sles-15sp4": "sles15sp4",
-            "sles-12sp5": "sles12sp5",
             "sles-15sp5": "sles15sp5",
         }.get(distro_name, f"UNKNOWN DISTRO: {distro_name}")
         pkg_pattern = rf"check-mk-{version.edition.long}-{version.version}.*{os_name}.*\.(deb|rpm)"

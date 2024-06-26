@@ -39,8 +39,6 @@ configure_make(
         "--with-openssl=$EXT_BUILD_DEPS/openssl",
         "--with-openssl-rpath=auto",
         "CFLAGS='-Dredacted=\"redacted\"'",
-        # Under sles, we need to pass ncursesw include dir explicitly... no idea why
-        "CPPFLAGS='-I/usr/include/ncursesw'",
         "--enable-optimizations",
         "--enable-shared",
         "--with-lto",

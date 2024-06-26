@@ -1,21 +1,17 @@
 # The common set of distros which gets build during an official release
 common: &common
-    - "debian-10"
     - "debian-11"
     - "debian-12"
-    - "ubuntu-20.04"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
     - "centos-8"
     - "almalinux-9"
-    - "sles-12sp5"
     - "sles-15sp3"
     - "sles-15sp4"
     - "sles-15sp5"
 
 # A reduced set of distros for the daily builds
 daily_reduced: &daily_reduced
-    - "ubuntu-20.04"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
     - "debian-12"
@@ -23,7 +19,6 @@ daily_reduced: &daily_reduced
 
 daily_extended: &daily_extended
     - "debian-12"
-    - "ubuntu-20.04"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
     - "centos-8"

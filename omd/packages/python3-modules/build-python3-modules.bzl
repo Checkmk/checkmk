@@ -36,7 +36,7 @@ build_cmd = """
     # Needed because RULEDIR is relative and we need absolute paths as prefix
     export HOME=$$PWD
     export TMPDIR="/tmp"
-   
+
     # output needs to be an archive for bazel 7
     MODULE_NAME=$$(basename $@)
 
@@ -85,12 +85,6 @@ build_cmd = """
         echo "Copy package sources"
         echo "cp -r {requirements}/** $$REQUIREMENTS"
         cp -r {requirements}/** $$REQUIREMENTS
-    fi
-
-    # Fix python-gssapi build on SLES12SP5
-    # https://github.com/pythongssapi/python-gssapi/issues/212
-    if grep 'PRETTY_NAME="SUSE Linux Enterprise Server 12 SP5"' /etc/os-release >/dev/null 2>&1; then
-        export GSSAPI_COMPILER_ARGS='-DHAS_GSSAPI_EXT_H'
     fi
 
     # Under some distros (e.g. almalinux), the build may use an available c++ system compiler instead of our own /opt/bin/g++

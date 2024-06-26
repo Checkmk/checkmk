@@ -18,15 +18,12 @@ install_package() {
     # GO111MODULE=on is the default with Go 1.16
     GOPATH="${TARGET_DIR:-/opt}" \
         GO111MODULE=on \
-        go "$1" github.com/bazelbuild/buildtools/buildifier@${BUILDIFIER_VERSION}
+        go install github.com/bazelbuild/buildtools/buildifier@${BUILDIFIER_VERSION}
 }
 
 case "$DISTRO" in
-    ubuntu-20.04)
-        install_package "get"
-        ;;
     ubuntu-*)
-        install_package "install"
+        install_package
         ;;
     *)
         echo "ERROR: Unhandled DISTRO: $DISTRO - buildifier currently only available in Ubuntu based reference images!"

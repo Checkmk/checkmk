@@ -62,6 +62,7 @@ INFO_STANDARD = [
     ["Type:                     incoming"],
     ["State:                    established"],
     ["Since:                    1571143941 (2019-10-15 14:52:21, 68785 sec ago)"],
+    ["Connect Time:             30"],
     ["Notifications Sent:       47"],
     ["Notifications Received:   47"],
     ["Pending Acknowledgements:"],
@@ -85,6 +86,7 @@ SECTION_STANDARD = MkNotifySection(
                     since=1571143941,
                     notifications_sent=47,
                     notifications_received=47,
+                    connect_time=30,
                 ),
                 "remote_site": Connection(
                     type_="incoming",
@@ -92,6 +94,7 @@ SECTION_STANDARD = MkNotifySection(
                     since=1571143941,
                     notifications_sent=47,
                     notifications_received=47,
+                    connect_time=30,
                 ),
             },
             spools={
@@ -181,7 +184,7 @@ SECTION_CONNECTION_COOLDOWN = MkNotifySection(
 )
 
 INFO_WITH_DEFERRED_CORRUPTED_NEW = [
-    ["1571212728"],
+    ["1571212738"],
     ["[heute]"],
     ["Version:         2019.10.14"],
     ["Updated:         1571212726 (2019-10-16 09:58:46)"],
@@ -220,7 +223,7 @@ SECTION_WITH_DEFERRED_CORRUPTED_NEW = MkNotifySection(
             },
         ),
     },
-    timestamp=1571212728.0,
+    timestamp=1571212738.0,
 )
 
 
@@ -339,13 +342,17 @@ def test_discover_mknotifyd_connection_v2(
                     state=State.OK,
                     summary="Spooler running",
                 ),
-                Metric(name="last_updated", value=2),
+                Metric(name="last_updated", value=12),
                 Metric(name="new_files", value=2),
-                Result(state=State.WARN, summary="1 corrupted files: youngest 2 seconds ago"),
+                Result(state=State.WARN, summary="1 corrupted files: youngest 12 seconds ago"),
                 Metric("corrupted_files", 1.0),
-                Result(state=State.OK, summary="3 deferred files: oldest 2 seconds ago"),
-                Metric("deferred_age", 2.0),
+                Result(state=State.OK, summary="Deferred files: 3"),
                 Metric("deferred_files", 3.0),
+                Result(
+                    state=State.WARN,
+                    summary="Oldest: 12 seconds (warn/crit at 5 seconds/10 minutes 0 seconds)",
+                ),
+                Metric("deferred_age", 12.0, levels=(5.0, 600.0)),
             ],
             id="Section with deferred, corrupted, new",
         ),
@@ -368,8 +375,9 @@ def test_check_mknotifyd(
             [
                 Result(state=State.OK, summary="Alive"),
                 Result(state=State.OK, summary="Uptime: 19 hours 6 minutes"),
-                Result(state=State.OK, summary="47 Notifications sent"),
-                Result(state=State.OK, summary="47 Notifications received"),
+                Result(state=State.OK, summary="Connect time: 30 seconds"),
+                Result(state=State.OK, summary="Notifications sent: 47"),
+                Result(state=State.OK, summary="Notifications received: 47"),
             ],
             id="old connection check, monitored but not discovered",
         ),
@@ -379,8 +387,9 @@ def test_check_mknotifyd(
             [
                 Result(state=State.OK, summary="Alive"),
                 Result(state=State.OK, summary="Uptime: 19 hours 6 minutes"),
-                Result(state=State.OK, summary="47 Notifications sent"),
-                Result(state=State.OK, summary="47 Notifications received"),
+                Result(state=State.OK, summary="Connect time: 30 seconds"),
+                Result(state=State.OK, summary="Notifications sent: 47"),
+                Result(state=State.OK, summary="Notifications received: 47"),
             ],
             id="connection check",
         ),

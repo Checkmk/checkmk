@@ -54,6 +54,7 @@ from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -270,9 +271,6 @@ def check_mknotifyd(item: str, section: MkNotifySection) -> CheckResult:
     if (site := section.sites.get(item)) is None:
         return
 
-    # There are dummy-entries created during the parsing. So the
-    # dict will never be completely empty. We check for Version
-    # because this should be always present in a valid state file.
     if site.version is None or site.updated is None:
         yield Result(
             state=State.CRIT,
@@ -306,19 +304,21 @@ def check_mknotifyd(item: str, section: MkNotifySection) -> CheckResult:
     # Are there deferred files that are too old?
     deferred_spool = site.spools["Deferred"]
     if deferred_spool.count and deferred_spool.oldest is not None:
-        count = deferred_spool.count
-        age = section.timestamp - deferred_spool.oldest
-        if age > 5:
-            state = State.WARN
-        elif age > 600:  # TODO
-            state = State.CRIT
-        else:
-            state = State.OK
-        yield Result(
-            state=state, summary=f"{count} deferred files: oldest {render.timespan(age)} ago"
+
+        yield from check_levels(
+            deferred_spool.count,
+            metric_name="deferred_files",
+            render_func=str,
+            label="Deferred files",
         )
-        yield Metric("deferred_age", age)
-        yield Metric("deferred_files", count)
+
+        yield from check_levels(
+            section.timestamp - deferred_spool.oldest,
+            metric_name="deferred_age",
+            levels_upper=("fixed", (5, 600)),
+            render_func=render.timespan,
+            label="Oldest",
+        )
 
 
 check_plugin_mknotifyd = CheckPlugin(
@@ -376,21 +376,26 @@ def check_mknotifyd_connection(item: str, section: MkNotifySection) -> CheckResu
 
         if connection.state == "established":
             age = section.timestamp - connection.since
-            yield Result(state=State.OK, summary=f"Uptime: {render.timespan(age)}")
+            yield from check_levels(age, label="Uptime", render_func=render.timespan)
 
             if connection.connect_time is not None:
-                yield Result(
-                    state=State.OK, summary=f"Connect time: {connection.connect_time:.3f} sec"
+                yield from check_levels(
+                    connection.connect_time,
+                    label="Connect time",
+                    render_func=render.timespan,
                 )
 
         if connection.notifications_sent:
-            yield Result(
-                state=State.OK, summary=f"{connection.notifications_sent} Notifications sent"
+            yield from check_levels(
+                connection.notifications_sent,
+                render_func=str,
+                label="Notifications sent",
             )
         if connection.notifications_received:
-            yield Result(
-                state=State.OK,
-                summary=f"{connection.notifications_received} Notifications received",
+            yield from check_levels(
+                connection.notifications_received,
+                render_func=str,
+                label="Notifications received",
             )
 
 

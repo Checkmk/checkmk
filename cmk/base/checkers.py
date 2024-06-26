@@ -24,6 +24,7 @@ import cmk.utils.paths
 import cmk.utils.resulttype as result
 from cmk.utils import password_store, tty
 from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -31,7 +32,8 @@ from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup
 from cmk.utils.prediction import make_updated_predictions, PredictionStore
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import timeperiod_active
@@ -988,8 +990,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
             sections=plugin.sections,
             service_name=plugin.service_name,
             function=__discovery_function,
-            parameters=partial(
-                get_plugin_parameters,
+            parameters=_make_discovery_parameters_getter(
                 matcher=self.ruleset_matcher,
                 default_parameters=plugin.discovery_default_parameters,
                 ruleset_name=plugin.discovery_ruleset_name,
@@ -1003,6 +1004,28 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
 
     def __len__(self) -> int:
         return len(_api.registered_check_plugins)
+
+
+def _make_discovery_parameters_getter(
+    matcher: RulesetMatcher,
+    *,
+    default_parameters: ParametersTypeAlias | None,
+    ruleset_name: RuleSetName | None,
+    ruleset_type: Literal["all", "merged"],
+    rules_getter_function: Callable[[RuleSetName], Sequence[RuleSpec]],
+) -> Callable[[HostName], None | Parameters | list[Parameters]]:
+
+    def get_discovery_parameters(host_name: HostName) -> None | Parameters | list[Parameters]:
+        return get_plugin_parameters(
+            host_name,
+            matcher,
+            default_parameters=default_parameters,
+            ruleset_name=ruleset_name,
+            ruleset_type=ruleset_type,
+            rules_getter_function=rules_getter_function,
+        )
+
+    return get_discovery_parameters
 
 
 class InventoryPluginMapper(Mapping[InventoryPluginName, InventoryPlugin]):

@@ -222,16 +222,18 @@ def test_registered_pages() -> None:
             "noauth:saml_acs",
             "noauth:saml_metadata",
             "noauth:saml_sso",
-            "noauth:cognito_sso",
-            "noauth:cognito_callback",
-            "cognito_logout",
             "robotmk_suite_log",
             "robotmk_suite_report",
             "download_robotmk_suite_report",
         ]
 
     if cmk_version.edition() is cmk_version.Edition.CSE:
-        expected_pages += ["ajax_saas_onboarding_button_toggle"]
+        expected_pages += [
+            "ajax_saas_onboarding_button_toggle",
+            "noauth:cognito_sso",
+            "noauth:cognito_callback",
+            "cognito_logout",
+        ]
 
     # TODO: Depending on how we call the test (single test or whole package) we
     # see this page or we don't...

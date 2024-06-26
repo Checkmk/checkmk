@@ -17,17 +17,11 @@ from typing import Any, cast, Self
 from livestatus import SiteId
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.sites as sites
+from cmk.gui import hooks, pagetypes, sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, register_post_config_load_hook
-
-if cmk_version.edition() is cmk_version.Edition.CSE:
-    from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding
-
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -610,25 +604,6 @@ class SidebarRenderer:
             html.write_html(content)
         html.close_div()
 
-    def _show_saas_link(self) -> None:
-        from cmk.gui.cse.userdb.cognito.oauth2 import load_admin_panel_url
-
-        html.open_div(
-            id_="saas",
-            title=_("Go to the Saas Admin Panel"),
-            onclick=f"window.open({json.dumps(load_admin_panel_url())}, '_blank')",
-        )
-        html.icon("saas")
-        if not user.get_attribute("nav_hide_icons_title"):
-            html.div(_("Admin"))
-        html.close_div()
-
-    def _show_onboarding(self) -> None:
-        html.write_html(HTML('<script type="module" src="onboarding/search.js"></script>'))
-        html.write_html(HTML('<link rel="stylesheet" href="onboarding/search.css">'))
-        html.open_div(id_="searchApp")
-        html.close_div()
-
     def _show_sidebar_head(self):
         html.open_div(id_="side_header")
         html.open_a(
@@ -642,11 +617,7 @@ class SidebarRenderer:
 
         MainMenuRenderer().show()
 
-        if cmk_version.edition() is cmk_version.Edition.CSE and user_may_see_saas_onboarding(
-            user.id
-        ):
-            self._show_onboarding()
-            self._show_saas_link()
+        hooks.call("show-main-menu-bottom")
 
         html.open_div(
             id_="side_fold", title=_("Toggle the sidebar"), onclick="cmk.sidebar.toggle_sidebar()"

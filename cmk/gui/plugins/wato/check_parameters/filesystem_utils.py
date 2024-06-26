@@ -34,9 +34,6 @@ MutableParamType = MutableMapping[str, Any]
 class FilesystemElements(Enum):
     levels = "levels"
     levels_percent = "levels_percent"  # sansymphony_pool
-    # Kept for compatibility to custom on-site plugins
-    # All levels are now unbound due to more prevalent filesystem virtualization
-    levels_unbound = "levels_unbound"  # TODO: deprecate
     show_levels = "show_levels"  # TODO: deprecate
     magic_factor = "magic_factor"
     reserved = "reserved"
@@ -502,7 +499,6 @@ def size_trend_elements() -> list[DictionaryEntry]:
 FILESYSTEM_ELEMENTS_SELECTOR: Mapping[FilesystemElements, Callable[[], list[DictionaryEntry]]] = {
     FilesystemElements.levels: _filesystem_levels_elements,
     FilesystemElements.levels_percent: _filesystem_levels_percent_only,
-    FilesystemElements.levels_unbound: _filesystem_levels_elements,
     FilesystemElements.show_levels: _filesystem_show_levels_elements,
     FilesystemElements.reserved: _filesystem_reserved_elements,
     FilesystemElements.volume_name: _filesystem_volume_name,

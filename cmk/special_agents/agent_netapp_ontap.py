@@ -10,6 +10,7 @@ from collections.abc import Iterable, Sequence
 import requests
 from netapp_ontap import resources as NetAppResource
 from netapp_ontap.host_connection import HostConnection
+from pydantic import BaseModel
 
 from cmk.plugins.netapp import models  # pylint: disable=cmk-module-layer-violation
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
@@ -20,7 +21,9 @@ __version__ = "2.3.0b1"
 USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
 
 
-def write_section(section_name: str, generator: Iterable, logger: logging.Logger) -> None:
+def write_section(
+    section_name: str, generator: Iterable[BaseModel], logger: logging.Logger
+) -> None:
     section_name = f"netapp_ontap_{section_name}"
     sys.stdout.write(f"<<<{section_name}:sep(0)>>>")
     sys.stdout.write("\n")

@@ -61,3 +61,14 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Store updated rule output as static references: rules already stored as reference"
         "are updated and new ones are added.",
     )
+
+
+@pytest.fixture(name="branch", scope="session")
+def current_branch(test_site: Site) -> str:
+    if test_site.version.branch_version == "2.4.0":
+        branch = "master"
+    elif test_site.version.branch_version == "2.3.0":
+        branch = "latest"
+    else:
+        raise ValueError(f"Unsupported branch version: {test_site.version.branch_version}")
+    return branch

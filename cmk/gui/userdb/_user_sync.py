@@ -6,6 +6,7 @@
 import traceback
 from collections.abc import Callable
 from datetime import datetime
+from functools import partial
 from typing import Literal
 
 from livestatus import SiteId
@@ -47,8 +48,8 @@ def execute_userdb_job() -> None:
         return
 
     job.start(
-        lambda job_interface: job.do_sync(
-            job_interface=job_interface,
+        partial(
+            job.do_sync,
             add_to_changelog=False,
             enforce_sync=False,
             load_users_func=load_users,

@@ -233,6 +233,7 @@ def test_registered_configvars() -> None:
             "cmc_livestatus_lines_per_file",
             "cmc_livestatus_logcache_size",
             "cmc_livestatus_threads",
+            "cmc_max_response_size",
             "cmc_log_cmk_helpers",
             "cmc_log_levels",
             "cmc_log_limit",

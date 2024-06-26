@@ -10,6 +10,7 @@ from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
+from functools import partial
 from itertools import chain
 from typing import Final
 
@@ -551,10 +552,7 @@ def _launch_requests_processing_background() -> None:
     job = SearchIndexBackgroundJob()
     with suppress(BackgroundJobAlreadyRunning):
         job.start(
-            lambda job_interface: _process_update_requests_background(
-                job_interface,
-                get_redis_client(),
-            ),
+            partial(_process_update_requests_background, redis_client=get_redis_client()),
             # We deliberately do not provide an estimated duration here, since that involves I/O.
             # We need to be as fast as possible here, since this is done at the end of HTTP
             # requests.

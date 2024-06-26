@@ -25,10 +25,9 @@ def write_section(section_name: str, generator: Iterable, logger: logging.Logger
     sys.stdout.write(f"<<<{section_name}:sep(0)>>>")
     sys.stdout.write("\n")
     for element in generator:
-        logger.debug(
-            "Element data: %r", element.model_dump_json(exclude_unset=True, exclude_none=False)
-        )
-        sys.stdout.write(element.model_dump_json(exclude_unset=True, exclude_none=False))
+        json_dict = element.model_dump_json(exclude_unset=True, exclude_none=False)
+        logger.debug("Element data: %r", json_dict)
+        sys.stdout.write(json_dict)
         sys.stdout.write("\n")
     sys.stdout.flush()
 

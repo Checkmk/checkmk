@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import logging
+import sys
 from collections.abc import Iterable, Sequence
 
 import requests
@@ -11,7 +13,7 @@ from netapp_ontap import resources as NetAppResource
 from netapp_ontap.host_connection import HostConnection
 
 from cmk.plugins.netapp import models  # pylint: disable=cmk-module-layer-violation
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.agent_common import special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 __version__ = "2.3.0b1"
@@ -19,14 +21,21 @@ __version__ = "2.3.0b1"
 USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
 
 
-def write_section(section_header: str, generator: Iterable, logger: logging.Logger) -> None:
-    section_header = f"netapp_ontap_{section_header}"
-    with SectionWriter(section_header) as writer:
-        for element in generator:
-            logger.debug(
-                "Element data: %r", element.model_dump_json(exclude_unset=True, exclude_none=False)
+def write_section(section_name: str, generator: Iterable, logger: logging.Logger) -> None:
+    section_name = f"netapp_ontap_{section_name}"
+    sys.stdout.write(f"<<<{section_name}:sep(0)>>>")
+    sys.stdout.write("\n")
+    for element in generator:
+        logger.debug(
+            "Element data: %r", element.model_dump_json(exclude_unset=True, exclude_none=False)
+        )
+        sys.stdout.write(
+            json.dumps(
+                element.model_dump_json(exclude_unset=True, exclude_none=False), sort_keys=True
             )
-            writer.append_json(element.model_dump(exclude_unset=True, exclude_none=False))
+        )
+        sys.stdout.write("\n")
+    sys.stdout.flush()
 
 
 def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: bool) -> Iterable:

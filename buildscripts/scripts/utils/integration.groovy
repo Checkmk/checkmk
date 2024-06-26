@@ -107,7 +107,7 @@ def run_make_targets(Map args) {
                     stage("Archive / process test reports") {
                         dir(WORKSPACE) {
                             show_duration("archiveArtifacts") {
-                                archiveArtifacts("test-results/**");
+                                archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
                             }
                             xunit([Custom(
                                 customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
@@ -119,6 +119,7 @@ def run_make_targets(Map args) {
                             )]);
                         }
                     }
+
                     /// remove downloaded packages since they consume dozens of GiB
                     sh("""rm -rf "${WORKSPACE}/${download_dir}" """);
                 }

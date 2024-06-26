@@ -20,11 +20,14 @@ class TestSuite:
     suites: Sequence["TestSuite"]
     tests: Sequence[TestCase]
 
+class Message:
+    message: str
+
 class Keyword(BodyItem):
     name: str | None
     elapsed_time: timedelta
     status: Literal["PASS", "FAIL", "SKIP", "NOT RUN", "NOT SET"]
-    message: str
+    messages: Sequence[Message]
     args: Sequence[str]
 
 class Result:

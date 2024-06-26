@@ -7,17 +7,21 @@ from collections.abc import Mapping
 
 import pytest
 
-from .checktestlib import SpecialAgent
-
-pytestmark = pytest.mark.checks
+from cmk.plugins.tinkerforge.server_side_calls.special_agent import commands_function, Params
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 
 
 @pytest.mark.parametrize(
-    "params,expected_args",
+    "raw_params,host_config,expected_args",
     [
-        ({}, ["--host", "address"]),
+        (
+            {},
+            HostConfig(name="test", ipv4_config=IPv4Config(address="address")),
+            ["--host", "address"],
+        ),
         (
             {"segment_display_brightness": 5, "segment_display_uid": "8888", "port": 4223},
+            HostConfig(name="test", ipv4_config=IPv4Config(address="address")),
             [
                 "--host",
                 "address",
@@ -32,9 +36,10 @@ pytestmark = pytest.mark.checks
     ],
 )
 def test_tinkerforge_argument_parsing(
-    params: Mapping[str, object], expected_args: list[str]
+    raw_params: Mapping[str, object], host_config: HostConfig, expected_args: list[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    agent = SpecialAgent("agent_tinkerforge")
-    arguments = agent.argument_func(params, "host", "address")
+    commands = list(commands_function(Params.model_validate(raw_params), host_config))
+    assert len(commands) == 1
+    arguments = commands[0].command_arguments
     assert arguments == expected_args

@@ -129,7 +129,6 @@ UNMIGRATED = {
     "splunk",
     "storeonce",
     "storeonce4x",
-    "tinkerforge",
     "ucs_bladecenter",
     "vnx_quotas",
     "zerto",

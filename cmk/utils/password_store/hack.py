@@ -40,6 +40,7 @@ HACK_AGENTS = {
     "pure_storage_fa": True,
     "three_par": True,
     "emcvnx": True,
+    "tinkerforge": False,  # needs no secret
 }
 
 

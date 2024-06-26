@@ -36,6 +36,7 @@ configure_make(
     configure_command = "configure",
     configure_in_place = True,
     configure_options = [
+        "LDFLAGS='-static-libstdc++ -static-libgcc'",
         "--with-openssl=$EXT_BUILD_DEPS/openssl",
         "--with-openssl-rpath=auto",
         "CFLAGS='-Dredacted=\"redacted\"'",

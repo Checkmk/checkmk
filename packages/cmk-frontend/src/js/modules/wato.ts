@@ -263,10 +263,13 @@ function get_effective_tags() {
 }
 
 export function randomize_secret(id: string, len: number, message: string) {
+    const charset =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const array = new Uint8Array(len);
+    window.crypto.getRandomValues(array);
     let secret = "";
     for (let i = 0; i < len; i++) {
-        const c = parseInt(String(26 * Math.random() + 64));
-        secret += String.fromCharCode(c);
+        secret += charset.charAt(array[i] % charset.length);
     }
     const oInput = document.getElementById(id) as HTMLInputElement;
     oInput.value = secret;

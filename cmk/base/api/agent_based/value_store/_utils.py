@@ -124,8 +124,10 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
                     self._log_debug("already loaded")
                 else:
                     self._log_debug("loading from disk")
-                    self._data = self._deserializer(
-                        store.load_text_from_file(self._path, default="{}", lock=False)
+                    self._data = (
+                        self._deserializer(content)
+                        if (content := store.load_text_from_file(self._path, lock=False).strip())
+                        else {}
                     )
 
                 if removed or updated:

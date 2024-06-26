@@ -28,9 +28,7 @@ class ConvertCounters(UpdateAction):
             return True
 
         for f in counters_path.iterdir():
-            content = f.read_text()
-
-            if is_json(content):
+            if not (content := f.read_text().strip()) or is_json(content):
                 continue
 
             f.write_text(

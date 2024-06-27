@@ -20,7 +20,8 @@ cc_library(
     deps = [
         "@asio",
         "@re2",
-        "@rrdtool",
+        # rrdgraph for rrd_xport
+        "@rrdtool_native//:rrdgraph",
     ],
 )
 

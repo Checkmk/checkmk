@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
 import time
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -50,29 +51,11 @@ def make_table_view_name_of_host(view_name: str) -> str:
 
 
 @dataclass(frozen=True, kw_only=True)
-class Column:
+class _Column:
     key: SDKey
     title: str
     paint_function: PaintFunction
     key_info: str
-
-
-def _make_columns(
-    keys: Iterable[SDKey], key_columns: Sequence[SDKey], hint: NodeDisplayHint
-) -> Sequence[Column]:
-    # Always take key columns into account because they identify a row
-    needed_keys = set(keys).union(key_columns)
-    return [
-        Column(
-            key=c,
-            title=h.title,
-            paint_function=h.paint_function,
-            key_info=f"{c}*" if c in key_columns else c,
-        )
-        for c in list(hint.columns) + sorted(needed_keys - set(hint.columns))
-        if c in needed_keys
-        for h in (hint.get_column_hint(c),)
-    ]
 
 
 @total_ordering
@@ -133,53 +116,6 @@ class SDItem:
         return tdclass, html_value
 
 
-def _sort_pairs(
-    attributes: ImmutableAttributes, hint: NodeDisplayHint, icon_path_svc_problems: str
-) -> Sequence[SDItem]:
-    sorted_keys = list(hint.attributes) + sorted(set(attributes.pairs) - set(hint.attributes))
-    return [
-        SDItem(
-            key=k,
-            title=h.title,
-            value=attributes.pairs[k],
-            retention_interval=attributes.retentions.get(k),
-            paint_function=h.paint_function,
-            icon_path_svc_problems=icon_path_svc_problems,
-        )
-        for k in sorted_keys
-        if k in attributes.pairs
-        for h in (hint.get_attribute_hint(k),)
-    ]
-
-
-def _sort_rows(
-    table: ImmutableTable, columns: Sequence[Column], icon_path_svc_problems: str
-) -> Sequence[Sequence[SDItem]]:
-    def _sort_row(ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> Sequence[SDItem]:
-        return [
-            SDItem(
-                key=c.key,
-                title=c.title,
-                value=row.get(c.key),
-                retention_interval=table.retentions.get(ident, {}).get(c.key),
-                paint_function=c.paint_function,
-                icon_path_svc_problems=icon_path_svc_problems,
-            )
-            for c in columns
-        ]
-
-    min_type = _MinType()
-
-    return [
-        _sort_row(ident, row)
-        for ident, row in sorted(
-            table.rows_by_ident.items(),
-            key=lambda t: tuple(t[1].get(c.key) or min_type for c in columns),
-        )
-        if not all(v is None for v in row.values())
-    ]
-
-
 @dataclass(frozen=True, kw_only=True)
 class _SDDeltaItem:
     key: SDKey
@@ -217,55 +153,150 @@ def _delta_value_has_change(delta_value: SDDeltaValue) -> bool:
     )
 
 
-def _sort_delta_pairs(
-    attributes: ImmutableDeltaAttributes, hint: NodeDisplayHint
-) -> Sequence[_SDDeltaItem]:
-    sorted_keys = list(hint.attributes) + sorted(set(attributes.pairs) - set(hint.attributes))
-    return [
-        _SDDeltaItem(
-            key=k,
-            title=h.title,
-            old=attributes.pairs[k].old,
-            new=attributes.pairs[k].new,
-            paint_function=h.paint_function,
-        )
-        for k in sorted_keys
-        if (v := attributes.pairs.get(k)) is not None and _delta_value_has_change(v)
-        for h in (hint.get_attribute_hint(k),)
-    ]
+@dataclass(frozen=True)
+class _ABCItemsSorter(abc.ABC):
+    hint: NodeDisplayHint
 
-
-def _sort_delta_rows(
-    table: ImmutableDeltaTable, columns: Sequence[Column]
-) -> Sequence[Sequence[_SDDeltaItem]]:
-    def _sort_row(row: Mapping[SDKey, SDDeltaValue]) -> Sequence[_SDDeltaItem]:
+    def _make_columns(
+        self, keys: Iterable[SDKey], key_columns: Sequence[SDKey]
+    ) -> Sequence[_Column]:
+        # Always take key columns into account because they identify a row
+        needed_keys = set(keys).union(key_columns)
         return [
-            _SDDeltaItem(
-                key=c.key,
-                title=c.title,
-                old=v.old,
-                new=v.new,
-                paint_function=c.paint_function,
+            _Column(
+                key=c,
+                title=h.title,
+                paint_function=h.paint_function,
+                key_info=f"{c}*" if c in key_columns else c,
             )
-            for c in columns
-            for v in (row.get(c.key) or SDDeltaValue(None, None),)
+            for c in list(self.hint.columns) + sorted(needed_keys - set(self.hint.columns))
+            if c in needed_keys
+            for h in (self.hint.get_column_hint(c),)
         ]
 
-    min_type = _MinType()
 
-    def _sanitize(value: SDDeltaValue) -> tuple[_MinType | SDValue, _MinType | SDValue]:
-        return (value.old or min_type, value.new or min_type)
+@dataclass(frozen=True)
+class _SDItemsSorter(_ABCItemsSorter):
+    icon_path_svc_problems: str
+    attributes: ImmutableAttributes
+    table: ImmutableTable
 
-    return [
-        _sort_row(row)
-        for row in sorted(
-            table.rows,
-            key=lambda r: tuple(
-                _sanitize(r.get(c.key) or SDDeltaValue(None, None)) for c in columns
-            ),
+    def sort_pairs(self) -> Sequence[SDItem]:
+        sorted_keys = list(self.hint.attributes) + sorted(
+            set(self.attributes.pairs) - set(self.hint.attributes)
         )
-        if any(_delta_value_has_change(delta_value) for delta_value in row.values())
-    ]
+        return [
+            SDItem(
+                key=k,
+                title=h.title,
+                value=self.attributes.pairs[k],
+                retention_interval=self.attributes.retentions.get(k),
+                paint_function=h.paint_function,
+                icon_path_svc_problems=self.icon_path_svc_problems,
+            )
+            for k in sorted_keys
+            if k in self.attributes.pairs
+            for h in (self.hint.get_attribute_hint(k),)
+        ]
+
+    def _filter_row_keys(self) -> Iterator[SDKey]:
+        for row in self.table.rows:
+            for key, value in row.items():
+                if value is not None:
+                    yield key
+
+    def sort_rows(self) -> tuple[Sequence[_Column], Sequence[Sequence[SDItem]]]:
+        columns = self._make_columns(self._filter_row_keys(), self.table.key_columns)
+
+        def _sort_row(ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> Sequence[SDItem]:
+            return [
+                SDItem(
+                    key=c.key,
+                    title=c.title,
+                    value=row.get(c.key),
+                    retention_interval=self.table.retentions.get(ident, {}).get(c.key),
+                    paint_function=c.paint_function,
+                    icon_path_svc_problems=self.icon_path_svc_problems,
+                )
+                for c in columns
+            ]
+
+        min_type = _MinType()
+
+        return (
+            columns,
+            [
+                _sort_row(ident, row)
+                for ident, row in sorted(
+                    self.table.rows_by_ident.items(),
+                    key=lambda t: tuple(t[1].get(c.key) or min_type for c in columns),
+                )
+                if not all(v is None for v in row.values())
+            ],
+        )
+
+
+@dataclass(frozen=True)
+class _SDDeltaItemsSorter(_ABCItemsSorter):
+    attributes: ImmutableDeltaAttributes
+    table: ImmutableDeltaTable
+
+    def sort_pairs(self) -> Sequence[_SDDeltaItem]:
+        sorted_keys = list(self.hint.attributes) + sorted(
+            set(self.attributes.pairs) - set(self.hint.attributes)
+        )
+        return [
+            _SDDeltaItem(
+                key=k,
+                title=h.title,
+                old=self.attributes.pairs[k].old,
+                new=self.attributes.pairs[k].new,
+                paint_function=h.paint_function,
+            )
+            for k in sorted_keys
+            if (v := self.attributes.pairs.get(k)) is not None and _delta_value_has_change(v)
+            for h in (self.hint.get_attribute_hint(k),)
+        ]
+
+    def _filter_delta_row_keys(self) -> Iterator[SDKey]:
+        for row in self.table.rows:
+            if any(_delta_value_has_change(delta_value) for delta_value in row.values()):
+                yield from row
+
+    def sort_rows(self) -> tuple[Sequence[_Column], Sequence[Sequence[_SDDeltaItem]]]:
+        columns = self._make_columns(self._filter_delta_row_keys(), self.table.key_columns)
+
+        def _sort_row(row: Mapping[SDKey, SDDeltaValue]) -> Sequence[_SDDeltaItem]:
+            return [
+                _SDDeltaItem(
+                    key=c.key,
+                    title=c.title,
+                    old=v.old,
+                    new=v.new,
+                    paint_function=c.paint_function,
+                )
+                for c in columns
+                for v in (row.get(c.key) or SDDeltaValue(None, None),)
+            ]
+
+        min_type = _MinType()
+
+        def _sanitize(value: SDDeltaValue) -> tuple[_MinType | SDValue, _MinType | SDValue]:
+            return (value.old or min_type, value.new or min_type)
+
+        return (
+            columns,
+            [
+                _sort_row(row)
+                for row in sorted(
+                    self.table.rows,
+                    key=lambda r: tuple(
+                        _sanitize(r.get(c.key) or SDDeltaValue(None, None)) for c in columns
+                    ),
+                )
+                if any(_delta_value_has_change(delta_value) for delta_value in row.values())
+            ],
+        )
 
 
 # Ajax call for fetching parts of the tree
@@ -326,19 +357,6 @@ def _replace_title_placeholders(hint: NodeDisplayHint, path: SDPath) -> str:
     return title % node_names[-title.count("%s") :]
 
 
-def _filter_row_keys(rows: Sequence[Mapping[SDKey, SDValue]]) -> Iterator[SDKey]:
-    for row in rows:
-        for key, value in row.items():
-            if value is not None:
-                yield key
-
-
-def _filter_delta_row_keys(rows: Sequence[Mapping[SDKey, SDDeltaValue]]) -> Iterator[SDKey]:
-    for row in rows:
-        if any(_delta_value_has_change(delta_value) for delta_value in row.values()):
-            yield from row
-
-
 class TreeRenderer:
     def __init__(
         self,
@@ -379,7 +397,7 @@ class TreeRenderer:
     def _show_table(
         self,
         table_view_name: str,
-        columns: Sequence[Column],
+        columns: Sequence[_Column],
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]],
     ) -> None:
         if table_view_name:
@@ -459,25 +477,22 @@ class TreeRenderer:
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]]
         match tree:
             case ImmutableTree():
-                sorted_pairs = _sort_pairs(
-                    tree.attributes, hint, self._theme.detect_icon_path("svc_problems", "icon_")
-                )
-                columns = _make_columns(
-                    _filter_row_keys(tree.table.rows),
-                    tree.table.key_columns,
+                items_sorter = _SDItemsSorter(
                     hint,
+                    self._theme.detect_icon_path("svc_problems", "icon_"),
+                    tree.attributes,
+                    tree.table,
                 )
-                sorted_rows = _sort_rows(
-                    tree.table, columns, self._theme.detect_icon_path("svc_problems", "icon_")
-                )
+                sorted_pairs = items_sorter.sort_pairs()
+                columns, sorted_rows = items_sorter.sort_rows()
             case ImmutableDeltaTree():
-                sorted_pairs = _sort_delta_pairs(tree.attributes, hint)
-                columns = _make_columns(
-                    _filter_delta_row_keys(tree.table.rows),
-                    tree.table.key_columns,
+                delta_items_sorter = _SDDeltaItemsSorter(
                     hint,
+                    tree.attributes,
+                    tree.table,
                 )
-                sorted_rows = _sort_delta_rows(tree.table, columns)
+                sorted_pairs = delta_items_sorter.sort_pairs()
+                columns, sorted_rows = delta_items_sorter.sort_rows()
 
         if sorted_pairs:
             self._show_attributes(sorted_pairs)

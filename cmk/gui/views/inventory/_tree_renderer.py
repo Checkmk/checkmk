@@ -51,23 +51,6 @@ def make_table_view_name_of_host(view_name: str) -> str:
 
 
 @dataclass(frozen=True, kw_only=True)
-class _Column:
-    key: SDKey
-    title: str
-    paint_function: PaintFunction
-    key_info: str
-
-
-@total_ordering
-class _MinType:
-    def __le__(self, other: object) -> bool:
-        return True
-
-    def __eq__(self, other: object) -> bool:
-        return self is other
-
-
-@dataclass(frozen=True, kw_only=True)
 class SDItem:
     key: SDKey
     title: str
@@ -146,11 +129,21 @@ class _SDDeltaItem:
         raise NotImplementedError()
 
 
-def _delta_value_has_change(delta_value: SDDeltaValue) -> bool:
-    return (
-        not (delta_value.old is None and delta_value.new is None)
-        and delta_value.old != delta_value.new
-    )
+@dataclass(frozen=True, kw_only=True)
+class _Column:
+    key: SDKey
+    title: str
+    paint_function: PaintFunction
+    key_info: str
+
+
+@total_ordering
+class _MinType:
+    def __le__(self, other: object) -> bool:
+        return True
+
+    def __eq__(self, other: object) -> bool:
+        return self is other
 
 
 @dataclass(frozen=True)
@@ -234,6 +227,13 @@ class _SDItemsSorter(_ABCItemsSorter):
                 if not all(v is None for v in row.values())
             ],
         )
+
+
+def _delta_value_has_change(delta_value: SDDeltaValue) -> bool:
+    return (
+        not (delta_value.old is None and delta_value.new is None)
+        and delta_value.old != delta_value.new
+    )
 
 
 @dataclass(frozen=True)

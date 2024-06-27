@@ -614,7 +614,7 @@ def _render_legacy_labels(
     # max(2, ...)               -> show at least two labels
     # height_ex - 2             -> add some overall spacing
     # math.log(height_ex) * 1.6 -> spacing between labels, increase for higher graphs
-    num_v_labels = max(2, (height_ex - 2) / math.log(height_ex) * 1.6)
+    num_v_labels = max(2, (height_ex - 2) / math.log(height_ex) * 1.6) if height_ex > 1 else 0
 
     # The value range between single labels
     label_distance_at_least = float(v_axis_min_max.distance) / max(num_v_labels, 1)

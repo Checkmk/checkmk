@@ -1111,7 +1111,17 @@ def host_service_graph_dashlet_cmk(
                 graph_render_config,
                 graph_artwork,
             )
-            graph_render_config.size = (width, int(height - legend_height))
+            if (graph_height := int(height - legend_height)) <= 0:
+                html.write_html(
+                    render_graph_error_html(
+                        title=_("Dashlet too short to render graph"),
+                        msg_or_exc=_(
+                            "Either increase the dashlet height or disable the graph legend."
+                        ),
+                    )
+                )
+                return None
+            graph_render_config.size = (width, graph_height)
 
     html_code = _render_graphs_from_definitions(
         [graph_recipe],

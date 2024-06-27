@@ -43,3 +43,6 @@ class Werks(CmkPage):
     @property
     def reset_filter(self) -> Locator:
         return self.main_area.locator().get_by_role(role="button", name="Reset")
+
+    def werk(self, werk_id: int) -> Locator:
+        return self.get_link(f"#{werk_id}")

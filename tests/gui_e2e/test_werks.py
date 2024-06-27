@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import re
 from collections.abc import Iterator
+from urllib.parse import quote_plus
 
 import pytest
 from playwright.sync_api import expect
@@ -23,15 +25,15 @@ def fixture_werks_page(logged_in_page: LoginPage) -> Iterator[Werks]:
 
 def test_werks_available(werks_page: Werks) -> None:
 
-    # get all werks on the werks page (list is required to retain the order)
-    displayed_werks = werks_page.get_recent_werks()
+    displayed_werks = werks_page.get_recent_werks(count=50)
     displayed_werk_ids = list(displayed_werks.keys())
     assert len(displayed_werk_ids) > 0, "Checkmk site does not display any werks!"
 
-    # check that all werk links share the same url format
-    for werk in displayed_werks:
-        response = werks_page.go(displayed_werks[werk])
-        assert response and response.ok, f"Could not navigate to werk {werk}!"
+    for werk_id in displayed_werks:
+        _url_pattern: str = quote_plus(f"werk.py?werk={werk_id}")
+        werks_page.werk(werk_id).click()
+        werks_page.page.wait_for_url(re.compile(f"{_url_pattern}$"), wait_until="load")
+        werks_page.page.go_back()
 
 
 def test_navigate_to_werks(werks_page: Werks) -> None:

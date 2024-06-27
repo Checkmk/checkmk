@@ -26,7 +26,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 
 from ._defines import BackgroundJobDefines
-from ._process import BackgroundProcess, BackgroundProcessInterface
+from ._process import BackgroundProcessInterface, run_process
 from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
 from ._store import JobStatusStore
 
@@ -362,11 +362,13 @@ class BackgroundJob:
 
             self._jobstatus_store.update({"ppid": os.getpid()})
 
-            p = BackgroundProcess(
-                logger=log.logger.getChild("background_process"),
-                work_dir=job_parameters["work_dir"],
-                job_id=job_parameters["job_id"],
-                target=job_parameters["target"],
+            p = multiprocessing.Process(
+                target=run_process,
+                args=(
+                    job_parameters["work_dir"],
+                    job_parameters["job_id"],
+                    job_parameters["target"],
+                ),
             )
             p.start()
         except Exception as e:

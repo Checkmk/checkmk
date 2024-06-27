@@ -7,7 +7,6 @@ from ._base import BackgroundJob as BackgroundJob
 from ._base import BackgroundJobAlreadyRunning as BackgroundJobAlreadyRunning
 from ._defines import BackgroundJobDefines as BackgroundJobDefines
 from ._manager import BackgroundJobManager as BackgroundJobManager
-from ._process import BackgroundProcess as BackgroundProcess
 from ._process import BackgroundProcessInterface as BackgroundProcessInterface
 from ._registry import BackgroundJobRegistry as BackgroundJobRegistry
 from ._registry import job_registry as job_registry

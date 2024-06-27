@@ -6,12 +6,12 @@
 from __future__ import annotations
 
 import io
-import multiprocessing
 import os
 import signal
 import sys
 import time
 from collections.abc import Callable
+from functools import partial
 from logging import Formatter, Logger, StreamHandler
 from pathlib import Path
 from types import FrameType
@@ -32,170 +32,173 @@ from ._status import JobStatusStates
 from ._store import JobStatusStore
 
 
-class BackgroundProcess(multiprocessing.Process):
-    """When started, BackgroundJob spawns one instance of BackgroundProcess"""
+def run_process(
+    work_dir: str,
+    job_id: str,
+    target: Callable[[BackgroundProcessInterface], None],
+) -> None:
+    jobstatus_store = JobStatusStore(work_dir)
+    _detach_from_parent()
 
-    def __init__(
-        self,
-        logger: Logger,
-        work_dir: str,
-        job_id: str,
-        target: Callable[[BackgroundProcessInterface], None],
-    ) -> None:
-        super().__init__()
-        self._jobstatus_store = JobStatusStore(work_dir)
-        self._logger = logger
-        self._target = target
-        self._job_interface = BackgroundProcessInterface(work_dir, job_id, logger)
-
-    def _register_signal_handlers(self) -> None:
-        self._logger.debug("Register signal handler %d", os.getpid())
-        signal.signal(signal.SIGTERM, self._handle_sigterm)
-
-    def _handle_sigterm(self, signum: int, frame: FrameType | None) -> None:
-        self._logger.debug("Received SIGTERM")
-        status = self._jobstatus_store.read()
-        if not status.stoppable:
-            self._logger.warning(
-                "Skip termination of background job (Job ID: %s, PID: %d)",
-                self._job_interface.get_job_id(),
-                os.getpid(),
-            )
-            return
-
-        raise MKTerminate()
-
-    def run(self) -> None:
-        self._detach_from_parent()
-
-        try:
-            self.initialize_environment()
-            self._logger.log(
-                VERBOSE, "Initialized background job (Job ID: %s)", self._job_interface.get_job_id()
-            )
-            self._jobstatus_store.update(
-                {
-                    "pid": self.pid,
-                    "state": JobStatusStates.RUNNING,
-                }
-            )
-
-            # The actual function call
-            self._execute_function()
-
-            # Final status update
-            job_status = self._jobstatus_store.read()
-
-            if job_status.loginfo["JobException"]:
-                final_state = JobStatusStates.EXCEPTION
-            else:
-                final_state = JobStatusStates.FINISHED
-
-            self._jobstatus_store.update(
-                {
-                    "state": final_state,
-                    "duration": time.time() - job_status.started,
-                }
-            )
-        except MKTerminate:
-            self._logger.warning("Job was stopped")
-            self._jobstatus_store.update({"state": JobStatusStates.STOPPED})
-        except Exception:
-            self._logger.error(
-                "Exception while preparing background function environment", exc_info=True
-            )
-            self._jobstatus_store.update({"state": JobStatusStates.EXCEPTION})
-
-    def _detach_from_parent(self) -> None:
-        # Detach from parent and cleanup inherited file descriptors
-        os.setsid()
-
-        # NOTE: Setting the thread title is not for cosmetics! BackgroundJob._is_correct_process()
-        # will not do the right thing without it! Furthermore, using setproctitle() instead of
-        # setthreadtitle() would be more fragile, because the former will only work if os.environ
-        # has not been damaged too much, but our tests do this via mock.patch.dict(os.environ, ...).
-        setthreadtitle(BackgroundJobDefines.process_name)
-
-        sys.stdin.close()
-        # NOTE
-        # When forking off from an mod_wsgi process, these handles are not the standard stdout and
-        # stderr handles but rather proxies to internal data-structures of mod_wsgi. If these are
-        # closed then mod_wsgi will trigger a "RuntimeError: log object has expired" if you want to
-        # use them again, as this is considered a programming error. The logging framework
-        # installs an "atexit" callback which flushes the logs upon the process exiting. This
-        # tries to write to the now closed fake stdout/err handles and triggers the RuntimeError.
-        # This will happen even if sys.stdout and sys.stderr are reset to their originals because
-        # the StreamHandler will still hold a reference to the mod_wsgi stdout/err handles.
-        # sys.stdout.close()
-        # sys.stderr.close()
-        daemon.closefrom(0)
-
-    def initialize_environment(self) -> None:
-        """Setup environment (Logging, Livestatus handles, etc.)"""
-        self._init_gui_logging()
-        self._cleanup_licensing_logging()
-        self._disable_timeout_manager()
-        self._cleanup_livestatus_connections()
-        self._open_stdout_and_stderr()
-        self._enable_logging_to_stdout()
-        self._register_signal_handlers()
-        self._lock_configuration()
-
-    def _init_gui_logging(self) -> None:
-        log.init_logging()  # NOTE: We run in a subprocess!
-        self._logger = log.logger.getChild("background-job")
-        self._log_path_hint = _("More information can be found in ~/var/log/web.log")
-
-    def _cleanup_licensing_logging(self) -> None:
-        """Remove all handlers from the licensing logger to ensure none of them hold file handles
-        that were just closed."""
-        licensing_logger = get_licensing_logger()
-        del licensing_logger.handlers[:]
-
-    def _disable_timeout_manager(self) -> None:
-        if timeout_manager:
-            timeout_manager.disable_timeout()
-
-    def _cleanup_livestatus_connections(self) -> None:
-        """Close livestatus connections inherited from the parent process"""
-        sites.disconnect()
-
-    def _execute_function(self) -> None:
-        try:
-            self._target(self._job_interface)
-        except MKTerminate:
-            raise
-        except Exception as e:
-            self._logger.exception("Exception in background function")
-            self._job_interface.send_exception(_("Exception: %s") % (e))
-
-    def _open_stdout_and_stderr(self) -> None:
-        """Create a temporary file and use it as stdout / stderr buffer"""
-        # - We can not use io.BytesIO() or similar because we need real file descriptors
-        #   to be able to catch the (debug) output of libraries like libldap or subproccesses
-        # - Use buffering=0 to make the non flushed output directly visible in
-        #   the job progress dialog
-        # - Python 3's stdout and stderr expect 'str' not 'bytes'
-        unbuffered = (
-            Path(self._job_interface.get_work_dir()) / BackgroundJobDefines.progress_update_filename
-        ).open("wb", buffering=0)
-        sys.stdout = sys.stderr = io.TextIOWrapper(unbuffered, write_through=True)
-        os.dup2(sys.stdout.fileno(), 1)
-        os.dup2(sys.stderr.fileno(), 2)
-
-    def _enable_logging_to_stdout(self) -> None:
-        """In addition to the web.log we also want to see the job specific logs
-        in stdout (which results in job progress info)"""
-        handler = StreamHandler(stream=sys.stdout)
-        handler.setFormatter(
-            Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
+    try:
+        job_status = jobstatus_store.read()
+        logger = _initialize_environment(
+            job_id, Path(work_dir), job_status.lock_wato, job_status.stoppable
         )
-        log.logger.addHandler(handler)
+        logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
+        jobstatus_store.update(
+            {
+                "pid": os.getpid(),
+                "state": JobStatusStates.RUNNING,
+            }
+        )
 
-    def _lock_configuration(self) -> None:
-        if self._jobstatus_store.read().lock_wato:
-            store.release_all_locks()
-            store.lock_exclusive()
+        # The actual function call
+        _execute_function(logger, target, BackgroundProcessInterface(work_dir, job_id, logger))
+
+        # Final status update
+        job_status = jobstatus_store.read()
+
+        if job_status.loginfo["JobException"]:
+            final_state = JobStatusStates.EXCEPTION
+        else:
+            final_state = JobStatusStates.FINISHED
+
+        jobstatus_store.update(
+            {
+                "state": final_state,
+                "duration": time.time() - job_status.started,
+            }
+        )
+    except MKTerminate:
+        logger.warning("Job was stopped")
+        jobstatus_store.update({"state": JobStatusStates.STOPPED})
+    except Exception:
+        logger.error("Exception while preparing background function environment", exc_info=True)
+        jobstatus_store.update({"state": JobStatusStates.EXCEPTION})
+
+
+def _register_signal_handlers(logger: Logger, is_stoppable: bool, job_id: str) -> None:
+    logger.debug("Register signal handler %d", os.getpid())
+    signal.signal(signal.SIGTERM, partial(_handle_sigterm, logger, is_stoppable, job_id))
+
+
+def _handle_sigterm(
+    logger: Logger, is_stoppable: bool, job_id: str, signum: int, frame: FrameType | None
+) -> None:
+    logger.debug("Received SIGTERM")
+    if not is_stoppable:
+        logger.warning(
+            "Skip termination of background job (Job ID: %s, PID: %d)",
+            job_id,
+            os.getpid(),
+        )
+        return
+
+    raise MKTerminate()
+
+
+def _detach_from_parent() -> None:
+    # Detach from parent and cleanup inherited file descriptors
+    os.setsid()
+
+    # NOTE: Setting the thread title is not for cosmetics! BackgroundJob._is_correct_process()
+    # will not do the right thing without it! Furthermore, using setproctitle() instead of
+    # setthreadtitle() would be more fragile, because the former will only work if os.environ
+    # has not been damaged too much, but our tests do this via mock.patch.dict(os.environ, ...).
+    setthreadtitle(BackgroundJobDefines.process_name)
+
+    sys.stdin.close()
+    # NOTE
+    # When forking off from an mod_wsgi process, these handles are not the standard stdout and
+    # stderr handles but rather proxies to internal data-structures of mod_wsgi. If these are
+    # closed then mod_wsgi will trigger a "RuntimeError: log object has expired" if you want to
+    # use them again, as this is considered a programming error. The logging framework
+    # installs an "atexit" callback which flushes the logs upon the process exiting. This
+    # tries to write to the now closed fake stdout/err handles and triggers the RuntimeError.
+    # This will happen even if sys.stdout and sys.stderr are reset to their originals because
+    # the StreamHandler will still hold a reference to the mod_wsgi stdout/err handles.
+    # sys.stdout.close()
+    # sys.stderr.close()
+    daemon.closefrom(0)
+
+
+def _initialize_environment(
+    job_id: str, work_dir: Path, lock_wato: bool, is_stoppable: bool
+) -> Logger:
+    """Setup environment (Logging, Livestatus handles, etc.)"""
+    logger = _init_gui_logging()
+    _cleanup_licensing_logging()
+    _disable_timeout_manager()
+    _cleanup_livestatus_connections()
+    _open_stdout_and_stderr(work_dir)
+    _enable_logging_to_stdout()
+    _register_signal_handlers(logger, is_stoppable, job_id)
+    _lock_configuration(lock_wato)
+    return logger
+
+
+def _init_gui_logging() -> Logger:
+    log.init_logging()  # NOTE: We run in a subprocess!
+    return log.logger.getChild("background-job")
+
+
+def _cleanup_licensing_logging() -> None:
+    """Remove all handlers from the licensing logger to ensure none of them hold file handles
+    that were just closed."""
+    licensing_logger = get_licensing_logger()
+    del licensing_logger.handlers[:]
+
+
+def _disable_timeout_manager() -> None:
+    if timeout_manager:
+        timeout_manager.disable_timeout()
+
+
+def _cleanup_livestatus_connections() -> None:
+    """Close livestatus connections inherited from the parent process"""
+    sites.disconnect()
+
+
+def _execute_function(
+    logger: Logger,
+    target: Callable[[BackgroundProcessInterface], None],
+    job_interface: BackgroundProcessInterface,
+) -> None:
+    try:
+        target(job_interface)
+    except MKTerminate:
+        raise
+    except Exception as e:
+        logger.exception("Exception in background function")
+        job_interface.send_exception(_("Exception: %s") % (e))
+
+
+def _open_stdout_and_stderr(work_dir: Path) -> None:
+    """Create a temporary file and use it as stdout / stderr buffer"""
+    # - We can not use io.BytesIO() or similar because we need real file descriptors
+    #   to be able to catch the (debug) output of libraries like libldap or subproccesses
+    # - Use buffering=0 to make the non flushed output directly visible in
+    #   the job progress dialog
+    # - Python 3's stdout and stderr expect 'str' not 'bytes'
+    unbuffered = (work_dir / BackgroundJobDefines.progress_update_filename).open("wb", buffering=0)
+    sys.stdout = sys.stderr = io.TextIOWrapper(unbuffered, write_through=True)
+    os.dup2(sys.stdout.fileno(), 1)
+    os.dup2(sys.stderr.fileno(), 2)
+
+
+def _enable_logging_to_stdout() -> None:
+    """In addition to the web.log we also want to see the job specific logs
+    in stdout (which results in job progress info)"""
+    handler = StreamHandler(stream=sys.stdout)
+    handler.setFormatter(Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"))
+    log.logger.addHandler(handler)
+
+
+def _lock_configuration(lock_wato: bool) -> None:
+    if lock_wato:
+        store.release_all_locks()
+        store.lock_exclusive()
 
 
 class BackgroundProcessInterface:

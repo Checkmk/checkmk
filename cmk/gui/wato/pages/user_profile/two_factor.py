@@ -117,7 +117,7 @@ def make_fido2_server() -> Fido2Server:
     )
 
 
-def log_event_usermanagement(event: TwoFactorEventType) -> None:
+def _log_event_usermanagement(event: TwoFactorEventType) -> None:
     assert user.id is not None
     log_security_event(
         TwoFactorEvent(
@@ -127,7 +127,7 @@ def log_event_usermanagement(event: TwoFactorEventType) -> None:
     )
 
 
-def log_event_auth(two_factor_method: str) -> None:
+def _log_event_auth(two_factor_method: str) -> None:
     log_security_event(
         AuthenticationFailureEvent(
             user_error="Failed two factor authentication",
@@ -138,7 +138,7 @@ def log_event_auth(two_factor_method: str) -> None:
     )
 
 
-def handle_failed_auth(user_id: UserId) -> None:
+def _handle_failed_auth(user_id: UserId) -> None:
     on_failed_login(user_id, datetime.datetime.now())
     if user_locked(user_id):
         session.invalidate()
@@ -146,7 +146,7 @@ def handle_failed_auth(user_id: UserId) -> None:
         raise MKUserError(None, _("User is locked"), HTTPStatus.UNAUTHORIZED)
 
 
-def handle_success_auth(user_id: UserId) -> None:
+def _handle_success_auth(user_id: UserId) -> None:
     origtarget = request.get_url_input("_origtarget", "index.py")
     session.session_info.two_factor_completed = True
     save_custom_attr(user_id, "num_failed_logins", 0)
@@ -181,11 +181,11 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         if credential_id := request.get_ascii_input("_delete_credential"):
             if credential_id in credentials["webauthn_credentials"]:
                 del credentials["webauthn_credentials"][credential_id]
-                log_event_usermanagement(TwoFactorEventType.webauthn_remove)
+                _log_event_usermanagement(TwoFactorEventType.webauthn_remove)
                 send_security_message(user.id, SecurityNotificationEvent.webauthn_removed)
             elif credential_id in credentials["totp_credentials"]:
                 del credentials["totp_credentials"][credential_id]
-                log_event_usermanagement(TwoFactorEventType.totp_remove)
+                _log_event_usermanagement(TwoFactorEventType.totp_remove)
                 send_security_message(user.id, SecurityNotificationEvent.totp_removed)
             else:
                 return
@@ -194,7 +194,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
 
         if request.has_var("_delete_codes"):
             credentials["backup_codes"] = []
-            log_event_usermanagement(TwoFactorEventType.backup_remove)
+            _log_event_usermanagement(TwoFactorEventType.backup_remove)
             save_two_factor_credentials(user.id, credentials)
             send_security_message(user.id, SecurityNotificationEvent.backup_revoked)
             flash(_("All backup codes have been deleted"))
@@ -202,7 +202,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         if request.has_var("_backup_codes"):
             codes = make_two_factor_backup_codes()
             credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
-            log_event_usermanagement(TwoFactorEventType.backup_add)
+            _log_event_usermanagement(TwoFactorEventType.backup_add)
             save_two_factor_credentials(user.id, credentials)
             send_security_message(user.id, SecurityNotificationEvent.backup_reset)
             flash(self.flash_new_backup_codes(codes))
@@ -523,7 +523,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
                 "alias": alias or "",
             }
             save_two_factor_credentials(user.id, credentials)
-            log_event_usermanagement(TwoFactorEventType.totp_add)
+            _log_event_usermanagement(TwoFactorEventType.totp_add)
             send_security_message(user.id, SecurityNotificationEvent.totp_added)
             session.session_info.two_factor_completed = True
             flash(_("Registration successful"))
@@ -814,7 +814,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
             }
         )
         save_two_factor_credentials(user.id, credentials)
-        log_event_usermanagement(TwoFactorEventType.webauthn_add_)
+        _log_event_usermanagement(TwoFactorEventType.webauthn_add_)
         send_security_message(user.id, SecurityNotificationEvent.webauthn_added)
         session.session_info.two_factor_completed = True
         flash(_("Registration successful"))
@@ -962,19 +962,19 @@ class UserLoginTwoFactor(Page):
                         totp_code.raw_bytes.decode(),
                         otp.calculate_generation(datetime.datetime.now()),
                     ):
-                        handle_success_auth(user.id)
-                log_event_auth("Authenticator application (TOTP)")
-                handle_failed_auth(user.id)
+                        _handle_success_auth(user.id)
+                _log_event_auth("Authenticator application (TOTP)")
+                _handle_failed_auth(user.id)
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
         if "backup_codes" in available_methods:
             if backup_code := request.get_validated_type_input(Password, "_backup_code"):
                 if is_two_factor_backup_code_valid(user.id, backup_code):
-                    log_event_usermanagement(TwoFactorEventType.backup_used)
+                    _log_event_usermanagement(TwoFactorEventType.backup_used)
                     send_security_message(user.id, SecurityNotificationEvent.backup_used)
-                    handle_success_auth(user.id)
-                log_event_auth("Backup code")
-                handle_failed_auth(user.id)
+                    _handle_success_auth(user.id)
+                _log_event_auth("Backup code")
+                _handle_failed_auth(user.id)
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
     def page(self) -> None:
@@ -1077,10 +1077,10 @@ class UserWebAuthnLoginComplete(JsonPage):
                 signature=data.signature,
             )
         except BaseException:
-            log_event_auth("Webauthn")
-            handle_failed_auth(user.id)
+            _log_event_auth("Webauthn")
+            _handle_failed_auth(user.id)
             raise
 
         session.session_info.webauthn_action_state = None
-        handle_success_auth(user.id)
+        _handle_success_auth(user.id)
         return {"status": "OK"}

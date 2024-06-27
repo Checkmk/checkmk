@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-25 12:55+0000\n"
+"PO-Revision-Date: 2024-06-27 02:22+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -2912,7 +2912,7 @@ msgid "Absolute time of alert"
 msgstr "Absolute Zeit des Alerts"
 
 msgid "Absolute used commit charge"
-msgstr ""
+msgstr "Absolute, verbrauchte Commit-Gebühr"
 
 msgid "Absolute used leases levels"
 msgstr "Absolute Level für benutzte Leases"
@@ -9069,7 +9069,6 @@ msgstr ""
 "wie z.B. gerenderte Links, deaktivieren Sie diese Option. Beachten Sie, dass "
 "Sie den Weg für mehrere Injektionsangriffe frei machen können."
 
-#, fuzzy
 msgid ""
 "By default, for security reasons, the GUI does not interpret any HTML code "
 "received from external sources, like service output or log messages. But "
@@ -9734,7 +9733,7 @@ msgid "Cache interval"
 msgstr "Speicherintervall"
 
 msgid "Cache misses per second"
-msgstr "Cache-Misses pro Sekunde"
+msgstr "Cache-Fehlschläge pro Sekunde"
 
 msgid "Cache several non-status queries"
 msgstr "Etliche statuslose Anfragen cachen"
@@ -12266,16 +12265,16 @@ msgid "Comments of service"
 msgstr "Kommentare von Service"
 
 msgid "Commit charge"
-msgstr ""
+msgstr "Commit-Gebühr"
 
 msgid "Commit charge (averaged)"
-msgstr ""
+msgstr "Commit-Gebühr (gemittelt)"
 
 msgid "Commit charge in percent (relative to commit limit)"
 msgstr "Commit-Belastung in Prozent (bezogen auf Commit-Limit)"
 
 msgid "Commit charge levels"
-msgstr ""
+msgstr "Commit-Gebühr-Level"
 
 msgid "Commit limit"
 msgstr "Commit-Limit"
@@ -21105,7 +21104,6 @@ msgstr "Als anderer Benutzer ausführen"
 msgid "Execute custom action '%s'?"
 msgstr "Benutzerdefinierte Aktion '%s' ausführen?"
 
-#, fuzzy
 msgid "Execute legacy monitoring plug-ins"
 msgstr "Legacy Monitoring-Plugins ausführen"
 
@@ -21483,7 +21481,6 @@ msgstr "Zusätzliche Bytes gelesen/geschrieben"
 msgid "Extractors"
 msgstr "Extraktoren"
 
-#, fuzzy
 msgid "Extracts DB time performance data into a separate service"
 msgstr "Extrahiert die DB-Zeit-Performancedaten in einen separaten Service"
 
@@ -21500,19 +21497,15 @@ msgstr "Nur Extreme"
 msgid "F5 BigIP configuration sync status"
 msgstr "F5 BigIP-Konfigurations-Synchronisationsstatus"
 
-#, fuzzy
 msgid "F5 load balancer VServer"
 msgstr "F5 Load Balancer VServer"
 
-#, fuzzy
 msgid "F5 load balancer connections"
 msgstr "F5 Load Balancer Verbindungen"
 
-#, fuzzy
 msgid "F5 load balancer pools"
 msgstr "F5 Load Balancer-Pools"
 
-#, fuzzy
 msgid "F5 load balancer source NAT"
 msgstr "F5 Load Balancer Source NAT"
 
@@ -21624,13 +21617,11 @@ msgstr "Fehlgeschlagene Verbindungen"
 msgid "Failed disk"
 msgstr "Defekte Platte"
 
-#, fuzzy
 msgid "Failed file requests"
 msgstr "Fehlgeschlagene Dateianfragen"
 
-#, fuzzy
 msgid "Failed get locations requests"
-msgstr "Fehlgeschlagene Standordanfragen"
+msgstr "Fehlgeschlagene Standortanfragen"
 
 msgid "Failed index operations"
 msgstr "Fehlgeschlagene Indexoperationen"
@@ -21650,9 +21641,8 @@ msgstr "Fehlgeschlagene Bereitstellungen"
 msgid "Failed requests"
 msgstr "Fehlgeschlagene Anfragen"
 
-#, fuzzy
 msgid "Failed requests to adress book files"
-msgstr "Fehlgeschlagene Anfragen an Adressbuch Dateien"
+msgstr "Fehlgeschlagene Anfragen an Adressbuchdateien"
 
 msgid "Failed search requests"
 msgstr "Fehlgeschlagene Suchanfragen"
@@ -21766,7 +21756,7 @@ msgstr "Fehler beim Holen der Änderungen von den Instanzen: %s."
 msgid "Failed to get the status from DCD (%s)"
 msgstr "Der Status des DCD (%s) konnte nicht ermittelt werden"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Failed to load legacy host attribute from local plug-ins: %r"
 msgstr ""
 "Legacy-Host-Attribut aus lokalen Plugins konnte nicht geladen werden: %r"
@@ -22271,7 +22261,6 @@ msgstr "Dateisystemgruppen"
 msgid "Filesystem mount options (Linux/UNIX)"
 msgstr "Dateisystem: Mountoptionen (Linux/UNIX)"
 
-#, fuzzy
 msgid "Filesystem node"
 msgstr "Dateisystemknoten"
 
@@ -22281,7 +22270,6 @@ msgstr "Dateisystemgröße"
 msgid "Filesystem types to ignore"
 msgstr "Zu ignorierende Dateisystemtypen"
 
-#, fuzzy
 msgid "Filesystem writeback"
 msgstr "Dateisytem Writeback"
 
@@ -22349,9 +22337,8 @@ msgstr ""
 msgid "Filter group (see help)"
 msgstr "Filtergruppe (siehe Hilfe)"
 
-#, fuzzy
 msgid "Filter host"
-msgstr "Filter Host"
+msgstr "Host filtern"
 
 msgid "Filter out consecutive duplicated messages in the agent output"
 msgstr ""
@@ -22641,7 +22628,6 @@ msgstr "Der Umleitung folgen"
 msgid "Follow, but stay to same IP address"
 msgstr "Folgen, aber bei selber IP-Adresse bleiben"
 
-#, fuzzy
 msgid "Follow, but stay to same IP address and port"
 msgstr "Folgen, aber bei IP-Adresse und Port bleiben"
 
@@ -22760,7 +22746,6 @@ msgstr ""
 msgid "For devices that measure smoke in percent"
 msgstr "Für Geräte, die Rauch in Prozent messen"
 
-#, fuzzy
 msgid ""
 "For each folder an automatic network scan can be configured. It will try to "
 "detect new hosts in the configured IP ranges by sending pings to each IP "
@@ -23025,7 +23010,6 @@ msgstr "Formel"
 msgid "FortiGate HighAvailability"
 msgstr "FortiGate HighAvailability"
 
-#, fuzzy
 msgid "FortiSandbox software"
 msgstr "FortiSandbox Software"
 
@@ -23334,9 +23318,8 @@ msgstr "Absender-E-Mailadresse"
 msgid "Frontend net time"
 msgstr "Netto Frontend-Zeit"
 
-#, fuzzy
 msgid "Frontend port"
-msgstr "Frontend-Anschluss"
+msgstr "Frontend Port"
 
 msgid "Frozen"
 msgstr "Eingefroren"
@@ -23374,7 +23357,6 @@ msgstr "Vollständiger Name oder Alias des Benutzers"
 msgid "Full stats"
 msgstr "Vollständige Statistiken"
 
-#, fuzzy
 msgid "Fullfilled prerequisite"
 msgstr "Voraussetzung erfüllt"
 
@@ -23875,7 +23857,7 @@ msgstr ""
 msgid "Graph rendering options"
 msgstr "Graphanzeigeoptionen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Graph specification '%s' is insufficient for dashboard."
 msgstr "Graph-Spezifizierung '%s' ist für das Dashboard unzureichend."
 
@@ -23913,15 +23895,13 @@ msgstr "Graph-Tunings"
 msgid "Graph visibility"
 msgstr "Graph-Sichtbarkeit"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Graphic card %d"
 msgstr "Grafikkarte %d"
 
-#, fuzzy
 msgid "Graphic card name"
 msgstr "Grafikkartenname"
 
-#, fuzzy
 msgid "Graphic cards"
 msgstr "Grafikkarten"
 
@@ -24310,7 +24290,7 @@ msgid "HTTP backend cache hits"
 msgstr "HTTP-Backend Cache-Treffer"
 
 msgid "HTTP backend cache missess"
-msgstr "HTTP-Backend-Cache-Fehlversuche"
+msgstr "HTTP-Backend-Cache-Fehlschläge"
 
 msgid "HTTP fixed responses"
 msgstr "Festgelegte HTTP-Antworten"
@@ -46396,6 +46376,8 @@ msgid ""
 "Requests data from a Bazel Remote Cache instance metrics endpoint running "
 "version v2.4.1 or higher"
 msgstr ""
+"Fordert Daten von einem Bazel Remote Cache Instanz Metrics Endpunkt mit "
+"Version v2.4.1 oder höher an"
 
 #, fuzzy
 msgid "Requests data from a Jenkins instance."
@@ -47444,10 +47426,10 @@ msgid "S."
 msgstr "s."
 
 msgid "S3 backend cache hits"
-msgstr ""
+msgstr "S3 Backend Cache Treffer"
 
 msgid "S3 backend cache missess"
-msgstr ""
+msgstr "S3 Backend Cache Fehlschläge"
 
 msgid "SAML"
 msgstr "SAML"
@@ -50894,7 +50876,7 @@ msgstr ""
 "Betriebssysteme signieren"
 
 msgid "Sign up here"
-msgstr ""
+msgstr "Melden Sie sich hier an"
 
 msgid "Signal quality of Wireless device"
 msgstr "Signalqualität eines Wireless-Geräts"
@@ -65699,6 +65681,7 @@ msgstr "Gesamtzahl der Instanzen"
 
 msgid "Total number of incoming AC get cache request misses"
 msgstr ""
+"Gesamtzahl der eingehenden AC-Get-Cache-Anfragen, die fehlgeschlagen sind"
 
 msgid "Total number of indexes lower level"
 msgstr "Untergrenze der Gesamtzahl der Indizes"
@@ -76115,10 +76098,10 @@ msgid "avg. duration"
 msgstr "durchschnittl. Dauer"
 
 msgid "azblob backend cache hits"
-msgstr ""
+msgstr "azblob Backend Cache Treffer"
 
 msgid "azblob backend cache missess"
-msgstr ""
+msgstr "azblob Backend Cache Fehlschläge"
 
 msgid "backup"
 msgstr "Backup"

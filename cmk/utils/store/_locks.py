@@ -149,6 +149,9 @@ def locked(path: Path | str, blocking: bool = True) -> Iterator[None]:
             release_lock(path)
 
 
+# Important: This function is NOT THREAD SAFE if used without an appropriate release_lock()
+#            call inside the thread. Use locked() instead. If multiple threads work on the
+#            same file, the entire process will hang indefinitely.
 def acquire_lock(path: Path | str, blocking: bool = True) -> bool:
     """Obtain physical file lock on a file.
     If the file is already registered, then  done do nothing and return False.

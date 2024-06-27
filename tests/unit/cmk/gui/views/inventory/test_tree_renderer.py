@@ -172,6 +172,181 @@ def test_sort_table_rows_displayhint(
                 key_columns=[SDKey("sid")],
                 rows=[
                     {
+                        SDKey("sid"): SDDeltaValue("SID 1", "SID 1"),
+                        SDKey("flashback"): SDDeltaValue(None, None),
+                    },
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 2", "SID 2"),
+                        SDKey("flashback"): SDDeltaValue("Flashback", "Flashback"),
+                    },
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 2", "SID 2"),
+                        SDKey("flashback"): SDDeltaValue(None, None),
+                    },
+                ],
+            ),
+            [],
+        ),
+        (
+            ImmutableDeltaTable(
+                key_columns=[SDKey("sid")],
+                rows=[
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 1", "SID 1"),
+                        SDKey("flashback"): SDDeltaValue(None, None),
+                    },
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 2", "SID 2"),
+                        SDKey("flashback"): SDDeltaValue("Flashback 21", "Flashback 22"),
+                    },
+                ],
+            ),
+            [
+                [
+                    _SDDeltaItem(
+                        key="sid",
+                        title="SID",
+                        old="SID 2",
+                        new="SID 2",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key="changed",
+                        title="Changed",
+                        old=None,
+                        new=None,
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key="foo",
+                        title="Foo",
+                        old=None,
+                        new=None,
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key="flashback",
+                        title="Flashback",
+                        old="Flashback 21",
+                        new="Flashback 22",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key="other",
+                        title="Other",
+                        old=None,
+                        new=None,
+                        paint_function=inv_paint_generic,
+                    ),
+                ],
+            ],
+        ),
+        (
+            ImmutableDeltaTable(
+                key_columns=[SDKey("sid")],
+                rows=[
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 2", None),
+                        SDKey("flashback"): SDDeltaValue(None, "Flashback 2"),
+                        SDKey("other"): SDDeltaValue("Other 2", "Other 2"),
+                        SDKey("changed"): SDDeltaValue("Changed 21", "Changed 22"),
+                    },
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 1", None),
+                        SDKey("flashback"): SDDeltaValue(None, "Flashback 1"),
+                        SDKey("other"): SDDeltaValue("Other 1", "Other 1"),
+                        SDKey("changed"): SDDeltaValue("Changed 11", "Changed 12"),
+                    },
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 3", "SID 3"),
+                        SDKey("flashback"): SDDeltaValue("Flashback 3", "Flashback 3"),
+                        SDKey("other"): SDDeltaValue(None, None),
+                        SDKey("changed"): SDDeltaValue(None, None),
+                    },
+                ],
+            ),
+            [
+                [
+                    _SDDeltaItem(
+                        key=SDKey("sid"),
+                        title="SID",
+                        old="SID 1",
+                        new=None,
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("changed"),
+                        title="Changed",
+                        old="Changed 11",
+                        new="Changed 12",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("foo"),
+                        title="Foo",
+                        old=None,
+                        new=None,
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("flashback"),
+                        title="Flashback",
+                        old=None,
+                        new="Flashback 1",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("other"),
+                        title="Other",
+                        old="Other 1",
+                        new="Other 1",
+                        paint_function=inv_paint_generic,
+                    ),
+                ],
+                [
+                    _SDDeltaItem(
+                        key=SDKey("sid"),
+                        title="SID",
+                        old="SID 2",
+                        new=None,
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("changed"),
+                        title="Changed",
+                        old="Changed 21",
+                        new="Changed 22",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("foo"),
+                        title="Foo",
+                        old=None,
+                        new=None,
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("flashback"),
+                        title="Flashback",
+                        old=None,
+                        new="Flashback 2",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("other"),
+                        title="Other",
+                        old="Other 2",
+                        new="Other 2",
+                        paint_function=inv_paint_generic,
+                    ),
+                ],
+            ],
+        ),
+        (
+            ImmutableDeltaTable(
+                key_columns=[SDKey("sid")],
+                rows=[
+                    {
                         SDKey("sid"): SDDeltaValue("SID 2", None),
                         SDKey("flashback"): SDDeltaValue(None, "Flashback 2"),
                         SDKey("other"): SDDeltaValue("Other 2", "Other 2"),

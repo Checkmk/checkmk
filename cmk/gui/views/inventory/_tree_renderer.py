@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
 from typing import Iterable
@@ -60,6 +60,8 @@ class Column:
 def _make_columns(
     keys: Iterable[SDKey], key_columns: Sequence[SDKey], hint: NodeDisplayHint
 ) -> Sequence[Column]:
+    # Always take key columns into account because they identify a row
+    needed_keys = set(keys).union(key_columns)
     return [
         Column(
             key=c,
@@ -67,7 +69,8 @@ def _make_columns(
             paint_function=h.paint_function,
             key_info=f"{c}*" if c in key_columns else c,
         )
-        for c in list(hint.columns) + sorted(set(keys) - set(hint.columns))
+        for c in list(hint.columns) + sorted(needed_keys - set(hint.columns))
+        if c in needed_keys
         for h in (hint.get_column_hint(c),)
     ]
 
@@ -323,6 +326,19 @@ def _replace_title_placeholders(hint: NodeDisplayHint, path: SDPath) -> str:
     return title % node_names[-title.count("%s") :]
 
 
+def _filter_row_keys(rows: Sequence[Mapping[SDKey, SDValue]]) -> Iterator[SDKey]:
+    for row in rows:
+        for key, value in row.items():
+            if value is not None:
+                yield key
+
+
+def _filter_delta_row_keys(rows: Sequence[Mapping[SDKey, SDDeltaValue]]) -> Iterator[SDKey]:
+    for row in rows:
+        if any(_delta_value_has_change(delta_value) for delta_value in row.values()):
+            yield from row
+
+
 class TreeRenderer:
     def __init__(
         self,
@@ -439,9 +455,6 @@ class TreeRenderer:
     def show(self, tree: ImmutableTree | ImmutableDeltaTree, tree_id: str = "") -> None:
         hint = self._hints.get_node_hint(tree.path)
 
-        columns = _make_columns(
-            {k for r in tree.table.rows for k in r}, tree.table.key_columns, hint
-        )
         sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]]
         match tree:
@@ -449,11 +462,21 @@ class TreeRenderer:
                 sorted_pairs = _sort_pairs(
                     tree.attributes, hint, self._theme.detect_icon_path("svc_problems", "icon_")
                 )
+                columns = _make_columns(
+                    _filter_row_keys(tree.table.rows),
+                    tree.table.key_columns,
+                    hint,
+                )
                 sorted_rows = _sort_rows(
                     tree.table, columns, self._theme.detect_icon_path("svc_problems", "icon_")
                 )
             case ImmutableDeltaTree():
                 sorted_pairs = _sort_delta_pairs(tree.attributes, hint)
+                columns = _make_columns(
+                    _filter_delta_row_keys(tree.table.rows),
+                    tree.table.key_columns,
+                    hint,
+                )
                 sorted_rows = _sort_delta_rows(tree.table, columns)
 
         if sorted_pairs:

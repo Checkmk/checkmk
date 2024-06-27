@@ -15,6 +15,7 @@ import D3Table from './views/D3Table.vue'
 import { CmkRuleset } from './components/cmk-form/'
 import Table from './views/CmkTable.vue'
 import { mixinUniqueId } from './plugins'
+import QuickSetup from './views/QuickSetup.vue'
 
 function setup_vue() {
   document.querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app]').forEach((div) => {
@@ -56,6 +57,9 @@ function setup_vue() {
       })
       app.mount(div)
       console.log('vue fully mounted table')
+    } else if (vueApp.app_name == 'quick_setup') {
+      const app = createApp(QuickSetup, { quick_setup_id: vueApp.quick_setup_id })
+      app.mount(div)
     } else {
       throw `can not load vue app "${vueApp.app_name}"`
     }

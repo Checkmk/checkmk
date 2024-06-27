@@ -104,22 +104,27 @@ def run_make_targets(Map args) {
                     /* groovylint-enable NestedBlockDepth */
                     parallel DOCKER_BUILDS;
                 } finally {
-                    stage("Archive / process test reports") {
-                        dir(WORKSPACE) {
-                            show_duration("archiveArtifacts") {
-                                archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
+                    // We sometime see errors during the archive step, like:
+                    // ERROR: org.jenkinsci.plugins.compress_artifacts.TrueZipArchiver.visit(TrueZipArchiver.java:77): java.io.FileNotFoundException:
+                    // ...test-composition/test-results/ubuntu-24.04/results/comp_0_central/logs/nagios.log (No such file or directory)
+                    // Didn't manage to find the issue but we really want to avoid the whole pipline failing bc of that.
+                    catchError(buildResult: "SUCCESS", stageResult: "FAILURE") {
+                        stage("Archive / process test reports") {
+                            dir(WORKSPACE) {
+                                show_duration("archiveArtifacts") {
+                                    archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
+                                }
+                                xunit([Custom(
+                                    customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
+                                    deleteOutputFiles: true,
+                                    failIfNotNew: true,
+                                    pattern: "**/junit.xml",
+                                    skipNoTestFiles: false,
+                                    stopProcessingIfError: true
+                                )]);
                             }
-                            xunit([Custom(
-                                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
-                                deleteOutputFiles: true,
-                                failIfNotNew: true,
-                                pattern: "**/junit.xml",
-                                skipNoTestFiles: false,
-                                stopProcessingIfError: true
-                            )]);
                         }
                     }
-
                     /// remove downloaded packages since they consume dozens of GiB
                     sh("""rm -rf "${WORKSPACE}/${download_dir}" """);
                 }

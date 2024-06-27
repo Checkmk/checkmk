@@ -10,6 +10,7 @@ import inspect
 import json
 import logging
 import os
+import pprint
 import subprocess
 import sys
 import time
@@ -1560,7 +1561,11 @@ class SiteFactory:
             timeout=timeout,
         )
         if version_supported:
-            assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
+            assert rc == 0, (
+                f"Failed to interactively update the test-site!\n"
+                "Logfile content:\n"
+                f"{pprint.pformat(site.read_file("var/log/update.log"), indent=4)}"
+            )
         else:
             assert rc == 256, f"Executed command returned {rc} exit status. Expected: 256"
             pytest.skip(f"{base_version} is not a supported version for {target_version}")
@@ -1599,7 +1604,6 @@ class SiteFactory:
         assert (
             site.version.edition.short == target_version.edition.short
         ), "Edition mismatch during update!"
-
         return site
 
     def update_as_site_user(

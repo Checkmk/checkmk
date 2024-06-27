@@ -587,7 +587,7 @@ def _check_cisco_temperature(
 
     if not math.isfinite(reading):
         yield Result(state=State(state), summary="Status: %s" % state_readable)
-        yield Result(state=State.UNKNOWN, summary="Reading: {reading}")
+        yield Result(state=State.UNKNOWN, summary=f"Reading: {reading}")
         return
 
     yield from check_temperature(
@@ -671,7 +671,7 @@ def check_cisco_temperature_dom(
         return
 
     if not math.isfinite(reading):
-        yield Result(state=State.UNKNOWN, summary="Reading: {reading}")
+        yield Result(state=State.UNKNOWN, summary=f"Reading: {reading}")
         return
 
     # get won't save you, because 'dev_levels' may be present, but None.

@@ -14,7 +14,8 @@ DEBUG = False
 
 
 def load_default_config() -> ProfileSetting:
-    # Imports only the bare minimum... I hope.
+    # These local imports are intentional. As many imports as possible shall be
+    # in scope of the import profiling middleware.
     from cmk.utils import paths
 
     return ProfileSetting(
@@ -28,18 +29,19 @@ def load_default_config() -> ProfileSetting:
 
 def load_actual_config() -> ProfileSetting:
     """Load the profiling global setting from the Setup GUI config"""
+    # These local imports are intentional. As many imports as possible shall be
+    # in scope of the import profiling middleware.
     from cmk.utils import paths
 
-    from cmk.gui import log
-    from cmk.gui.wsgi.applications import utils
+    from cmk.gui import log, single_global_setting
 
     # Initialize logging as early as possible, before even importing most of the code.
     log.init_logging()
-    log.set_log_levels(utils.load_gui_log_levels())
+    log.set_log_levels(single_global_setting.load_gui_log_levels())
 
     # NOTE: Importing the module and not the function to enable mock-ability.
     return ProfileSetting(
-        mode=utils.load_single_global_wato_setting("profile", deflt=False),
+        mode=single_global_setting.load_profiling_mode(),
         cachegrind_file=pathlib.Path(paths.var_dir) / "multisite.cachegrind",
         profile_file=pathlib.Path(paths.var_dir) / "multisite.profile",
         accumulate=False,

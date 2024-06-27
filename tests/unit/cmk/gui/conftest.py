@@ -185,7 +185,7 @@ def set_config(**kwargs: Any) -> Iterator[None]:
             with (
                 mock.patch.multiple(active_config, **kwargs),
                 mock.patch(
-                    "cmk.gui.wsgi.applications.utils.load_single_global_wato_setting",
+                    "cmk.gui.single_global_setting._load_single_global_wato_setting",
                     new=fake_load_single_global_wato_setting,
                 ),
             ):

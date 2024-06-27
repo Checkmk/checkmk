@@ -13,6 +13,8 @@ from http.cookiejar import Cookie
 import requests
 from bs4 import BeautifulSoup
 
+from tests.testlib.version import version_from_env
+
 
 class APIError(Exception):
     pass
@@ -114,8 +116,20 @@ class CMKWebSession:
 
         # There might be other resources like iframe, audio, ... but we don't care about them
         self._check_resources(soup, base_url, "img", "src", ["image/png", "image/svg+xml"])
+        # The CSE includes a new onboarding feature. This is loaded from an external source hosted
+        # by checkmk. We do not want to check it in the integration tests
+        script_filters = (
+            [("src", "https://static.saas-dev.cloudsandbox.checkmk.cloud")]
+            if version_from_env().is_saas_edition()
+            else None
+        )
         self._check_resources(
-            soup, base_url, "script", "src", ["application/javascript", "text/javascript"]
+            soup,
+            base_url,
+            "script",
+            "src",
+            ["application/javascript", "text/javascript"],
+            filters=script_filters,
         )
         self._check_resources(
             soup, base_url, "link", "href", ["text/css"], filters=[("rel", "stylesheet")]

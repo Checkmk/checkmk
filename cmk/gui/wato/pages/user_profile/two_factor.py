@@ -76,11 +76,7 @@ from cmk.gui.userdb import (
 from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.security_log_events import (
-    AuthenticationFailureEvent,
-    TwoFactorEvent,
-    TwoFactorEventType,
-)
+from cmk.gui.utils.security_log_events import TwoFactorEvent, TwoFactorEventType, TwoFAFailureEvent
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -129,9 +125,9 @@ def _log_event_usermanagement(event: TwoFactorEventType) -> None:
 
 def _log_event_auth(two_factor_method: str) -> None:
     log_security_event(
-        AuthenticationFailureEvent(
+        TwoFAFailureEvent(
             user_error="Failed two factor authentication",
-            auth_method=two_factor_method,
+            two_fa_method=two_factor_method,
             username=user.id,
             remote_ip=request.remote_ip,
         )

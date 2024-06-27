@@ -90,6 +90,8 @@ AuthType = Literal[
     "cookie",
     "http_header",
     "internal_token",
+    "login_form",
+    "saml",
     "web_server",
 ]
 

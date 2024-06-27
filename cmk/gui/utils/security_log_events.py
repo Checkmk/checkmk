@@ -10,6 +10,8 @@ from typing import Literal
 from cmk.utils.log.security_event import SecurityEvent
 from cmk.utils.user import UserId
 
+from cmk.gui.type_defs import AuthType
+
 
 class TwoFactorEventType(Enum):
     totp_add = "Authenticator application key added"
@@ -26,7 +28,12 @@ class AuthenticationFailureEvent(SecurityEvent):
     """Indicates a failed authentication attempt"""
 
     def __init__(
-        self, *, user_error: str, auth_method: str, username: UserId | None, remote_ip: str | None
+        self,
+        *,
+        user_error: str,
+        auth_method: AuthType,
+        username: UserId | None,
+        remote_ip: str | None,
     ) -> None:
         super().__init__(
             "authentication failed",
@@ -44,11 +51,32 @@ class AuthenticationFailureEvent(SecurityEvent):
 class AuthenticationSuccessEvent(SecurityEvent):
     """Indicates a successful authentication"""
 
-    def __init__(self, *, auth_method: str, username: UserId | None, remote_ip: str | None) -> None:
+    def __init__(
+        self, *, auth_method: AuthType, username: UserId | None, remote_ip: str | None
+    ) -> None:
         super().__init__(
             "authentication succeeded",
             {
                 "method": auth_method,
+                "user": str(username or "Unknown user"),
+                "remote_ip": remote_ip,
+            },
+            SecurityEvent.Domain.auth,
+        )
+
+
+@dataclass
+class TwoFAFailureEvent(SecurityEvent):
+    """Indicates a failed 2FA attempt"""
+
+    def __init__(
+        self, *, user_error: str, two_fa_method: str, username: UserId | None, remote_ip: str | None
+    ) -> None:
+        super().__init__(
+            "2FA authentication failed",
+            {
+                "user_error": user_error,
+                "method": two_fa_method,
                 "user": str(username or "Unknown user"),
                 "remote_ip": remote_ip,
             },

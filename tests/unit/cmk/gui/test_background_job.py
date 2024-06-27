@@ -17,7 +17,6 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 import cmk.gui.log
-from cmk.gui import config
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,
@@ -27,15 +26,6 @@ from cmk.gui.background_job import (
     JobStatusStates,
 )
 from cmk.gui.logged_in import user
-
-
-@pytest.fixture(autouse=True)
-def debug_logging(load_config):
-    cmk.gui.log.set_log_levels(
-        {"cmk.web": logging.DEBUG, "cmk.web.background-job": cmk.utils.log.VERBOSE}
-    )
-    yield
-    cmk.gui.log.set_log_levels(config.active_config.log_levels)
 
 
 def test_registered_background_jobs() -> None:
@@ -135,6 +125,7 @@ def test_start_job() -> None:
             stoppable=True,
             user=str(user.id) if user.id else None,
         ),
+        override_job_log_level=logging.DEBUG,
     )
     wait_until(job.is_active, timeout=5, interval=0.1)
 

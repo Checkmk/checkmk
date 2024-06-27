@@ -43,6 +43,7 @@ class JobParameters(TypedDict):
     target: Callable[[BackgroundProcessInterface], None]
     lock_wato: bool
     is_stoppable: bool
+    override_job_log_level: int | None
 
 
 class BackgroundJob:
@@ -283,6 +284,7 @@ class BackgroundJob:
         self,
         target: Callable[[BackgroundProcessInterface], None],
         initial_status_args: InitialStatusArgs,
+        override_job_log_level: int | None = None,
     ) -> None:
         # if initial_status_args is None:
         #    initial_status_args = InitialStatusArgs(
@@ -290,12 +292,13 @@ class BackgroundJob:
         #    )
 
         with store.locked(self._job_initializiation_lock):
-            self._start(target, initial_status_args)
+            self._start(target, initial_status_args, override_job_log_level)
 
     def _start(
         self,
         target: Callable[[BackgroundProcessInterface], None],
         initial_status_args: InitialStatusArgs,
+        override_job_log_level: int | None,
     ) -> None:
         if self.is_active():
             raise BackgroundJobAlreadyRunning(_("Background Job %s already running") % self._job_id)
@@ -332,6 +335,7 @@ class BackgroundJob:
                 "target": target,
                 "lock_wato": initial_status_args.lock_wato,
                 "is_stoppable": initial_status_args.stoppable,
+                "override_job_log_level": override_job_log_level,
             }
         )
         p = multiprocessing.Process(
@@ -374,6 +378,7 @@ class BackgroundJob:
                     job_parameters["target"],
                     job_parameters["lock_wato"],
                     job_parameters["is_stoppable"],
+                    job_parameters["override_job_log_level"],
                 ),
             )
             p.start()

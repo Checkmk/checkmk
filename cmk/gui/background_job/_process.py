@@ -38,12 +38,15 @@ def run_process(
     target: Callable[[BackgroundProcessInterface], None],
     lock_wato: bool,
     is_stoppable: bool,
+    override_job_log_level: int | None = None,
 ) -> None:
     jobstatus_store = JobStatusStore(work_dir)
     _detach_from_parent()
 
     try:
-        logger = _initialize_environment(job_id, Path(work_dir), lock_wato, is_stoppable)
+        logger = _initialize_environment(
+            job_id, Path(work_dir), lock_wato, is_stoppable, override_job_log_level
+        )
         logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
         jobstatus_store.update(
             {
@@ -123,10 +126,14 @@ def _detach_from_parent() -> None:
 
 
 def _initialize_environment(
-    job_id: str, work_dir: Path, lock_wato: bool, is_stoppable: bool
+    job_id: str,
+    work_dir: Path,
+    lock_wato: bool,
+    is_stoppable: bool,
+    override_job_log_level: int | None,
 ) -> Logger:
     """Setup environment (Logging, Livestatus handles, etc.)"""
-    logger = _init_gui_logging()
+    logger = _init_gui_logging(override_job_log_level)
     _cleanup_licensing_logging()
     _disable_timeout_manager()
     _cleanup_livestatus_connections()
@@ -137,9 +144,12 @@ def _initialize_environment(
     return logger
 
 
-def _init_gui_logging() -> Logger:
+def _init_gui_logging(override_job_log_level: int | None) -> Logger:
     log.init_logging()  # NOTE: We run in a subprocess!
-    return log.logger.getChild("background-job")
+    logger = log.logger.getChild("background-job")
+    if override_job_log_level:
+        logger.setLevel(override_job_log_level)
+    return logger
 
 
 def _cleanup_licensing_logging() -> None:

@@ -207,6 +207,13 @@ class _SDDeltaItem:
         raise NotImplementedError()
 
 
+def _delta_value_has_change(delta_value: SDDeltaValue) -> bool:
+    return (
+        not (delta_value.old is None and delta_value.new is None)
+        and delta_value.old != delta_value.new
+    )
+
+
 def _sort_delta_pairs(
     attributes: ImmutableDeltaAttributes, hint: NodeDisplayHint
 ) -> Sequence[_SDDeltaItem]:
@@ -220,7 +227,7 @@ def _sort_delta_pairs(
             paint_function=h.paint_function,
         )
         for k in sorted_keys
-        if k in attributes.pairs
+        if (v := attributes.pairs.get(k)) is not None and _delta_value_has_change(v)
         for h in (hint.get_attribute_hint(k),)
     ]
 
@@ -254,7 +261,7 @@ def _sort_delta_rows(
                 _sanitize(r.get(c.key) or SDDeltaValue(None, None)) for c in columns
             ),
         )
-        if not all(left == right for left, right in row.values())
+        if any(_delta_value_has_change(delta_value) for delta_value in row.values())
     ]
 
 

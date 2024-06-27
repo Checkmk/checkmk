@@ -405,13 +405,6 @@ def test_sort_attributes_pairs_displayhint(
                     new="D",
                     paint_function=inv_paint_generic,
                 ),
-                _SDDeltaItem(
-                    key=SDKey("c"),
-                    title="C",
-                    old="C",
-                    new="C",
-                    paint_function=inv_paint_generic,
-                ),
             ],
         ),
     ],

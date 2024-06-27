@@ -380,7 +380,6 @@ test-unit: prepare-protobuf-files test-unit-doctests
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
 		--config-file=pyproject.toml \
-		--import-mode=importlib \
 		--override-ini="pythonpath=." \
 		--random-order-bucket=global \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
@@ -397,7 +396,6 @@ test-unit-all: prepare-protobuf-files
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
 		--config-file=pyproject.toml \
-		--import-mode=importlib \
 		--override-ini="pythonpath=." \
 		--random-order-bucket=global \
 		--ignore=tests/unit/omdlib/ \

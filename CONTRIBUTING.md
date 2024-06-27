@@ -1,5 +1,7 @@
 # Contributing to Checkmk
 
+> ⚠️ Due to our development for 2.4, we are not processing any pull requests until the 1st of September. We are still interested in your contributions and will review them after this date (see [forum post](https://forum.checkmk.com/t/update-on-github-pull-requests/47922)).
+
 Thanks for your interest to contribute to [Checkmk on Github](https://github.com/Checkmk/checkmk)!
 
 Here are some ways you can help out:

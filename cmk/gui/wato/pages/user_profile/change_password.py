@@ -14,13 +14,13 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
 from cmk.gui.session import session
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.watolib.mode import redirect

@@ -31,7 +31,6 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.log import AuthenticationFailureEvent, AuthenticationSuccessEvent
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser, user
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, PageRegistry
@@ -41,6 +40,7 @@ from cmk.gui.userdb.session import auth_cookie_name
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.security_log_events import AuthenticationFailureEvent, AuthenticationSuccessEvent
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode

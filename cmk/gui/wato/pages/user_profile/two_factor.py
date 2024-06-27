@@ -44,7 +44,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.log import AuthenticationFailureEvent, logger, TwoFactorEvent, TwoFactorEventType
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
@@ -76,6 +76,11 @@ from cmk.gui.userdb import (
 from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.security_log_events import (
+    AuthenticationFailureEvent,
+    TwoFactorEvent,
+    TwoFactorEventType,
+)
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (

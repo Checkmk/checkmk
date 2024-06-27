@@ -63,11 +63,11 @@ from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.utils import escaping
+from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,

@@ -21,8 +21,8 @@ from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
-from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.utils.security_log_events import UserManagementEvent
 
 from ._connections import active_connections, get_connection
 from ._user_spec import new_user_template

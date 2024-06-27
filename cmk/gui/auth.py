@@ -31,9 +31,10 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.log import AuthenticationFailureEvent, logger
+from cmk.gui.log import logger
 from cmk.gui.type_defs import AuthType
 from cmk.gui.userdb.session import generate_auth_hash
+from cmk.gui.utils.security_log_events import AuthenticationFailureEvent
 from cmk.gui.utils.urls import requested_file_name
 
 auth_logger = logger.getChild("auth")

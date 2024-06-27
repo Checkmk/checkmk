@@ -79,7 +79,7 @@ const prevStep = () => {
 
 /*
 Dev notes:
-Every step will send the information from steps 0..currentStep to the backend for further validation. 
+Every step will send the information from steps 0..currentStep to the backend for further validation.
 The backend should send the representation of previous steps and the form for the new one.
 */
 </script>

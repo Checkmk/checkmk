@@ -15,12 +15,14 @@
   },
   "dependencies": {
     "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
     "core-js": "^3.37.1",
     "crossfilter2": "^1.5.4",
     "d3": "^7.9.0",
     "jquery": "^3.7.1",
-    "radix-vue": "^1.8.5",
-    "tailwind-merge": "^2.3.0",
+    "lucide-vue-next": "^0.407.0",
+    "radix-vue": "^1.9.0",
+    "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",
     "vue": "^3.4.27"
   },

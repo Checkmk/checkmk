@@ -4,6 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+import { type ComponentSpec } from './components/quick-setup/widgets/widget_types'
+
 export interface QuickSetupAppProperties {
   quick_setup_id: string
 }
@@ -16,7 +18,7 @@ export interface OverviewSpec {
 
 export interface StageSpec {
   id: number
-  components: []
+  components: ComponentSpec[]
 }
 
 export interface QuickSetupOverviewRestApiSpec {
@@ -25,3 +27,8 @@ export interface QuickSetupOverviewRestApiSpec {
 }
 
 export type StepData = Record<string, object>
+
+export interface QuickSetupStageRequest {
+  stage_id: number
+  form_data: StepData
+}

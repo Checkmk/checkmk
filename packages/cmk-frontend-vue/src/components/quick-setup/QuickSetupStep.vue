@@ -5,6 +5,10 @@ import StepNumber from './element/StepNumber.vue'
 
 import { type OverviewSpec, type StageSpec, type StepData } from '@/quick_setup_types'
 
+import CompositeWidget from '@/components/quick-setup/widgets/CompositeWidget.vue'
+
+import Button from '@/components/IconButton.vue'
+
 interface QuickSetupStepWithIndexSpec {
   /**@property {number} index - The index of the current step */
   index: number
@@ -31,7 +35,19 @@ interface QuickSetupStepWithIndexSpec {
   prevTitle?: string //Used as label of back button
 }
 
+const emit = defineEmits(['prevStep', 'nextStep', 'save', 'update'])
 const props = defineProps<QuickSetupStepWithIndexSpec>()
+
+const isFirst = props.index == 0
+const isLast = props.index == props.steps - 1
+
+//Here we will store the user input. The key is the form's id.
+let userInput: StepData = props?.data || {}
+
+const update_data = (id: string, value: object) => {
+  userInput[id] = value
+  emit('update', props.index, userInput)
+}
 </script>
 
 <template>
@@ -56,13 +72,28 @@ const props = defineProps<QuickSetupStepWithIndexSpec>()
               <Label class="cmk-stepper__subtitle">{{ props.overview.sub_title }}</Label>
             </div>
 
-            <div v-if="props.stage">
-              <div>Widgets placeholder</div>
-            </div>
+            <CompositeWidget
+              v-if="props.stage"
+              :components="props.stage.components"
+              @update="update_data"
+            />
           </div>
 
           <div class="cmk-stepper__action">
-            <div>Buttons Placeholder</div>
+            <Button
+              v-if="!isFirst"
+              style="padding-left: 1rem"
+              :label="props.prevTitle || 'Back'"
+              variant="prev"
+              @click="$emit('prevStep')"
+            />
+            <Button
+              v-if="!isLast"
+              :label="props.nextTitle || 'Next'"
+              variant="next"
+              @click="$emit('nextStep')"
+            />
+            <Button v-if="isLast" label="Save" variant="save" @click="$emit('save')" />
           </div>
         </CollapsibleContent>
       </Collapsible>
@@ -127,7 +158,6 @@ const props = defineProps<QuickSetupStepWithIndexSpec>()
   font-weight: normal;
   font-size: small;
   position: relative;
-  top: -0.2rem;
 }
 
 .cmk-stepper__content {

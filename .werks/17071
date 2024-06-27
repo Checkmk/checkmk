@@ -1,0 +1,12 @@
+Title: Graphs with legend in dashboards: Avoid crash if dashlet is too short to contain graph
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1719486107
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+Graph dashlets with activated legend crashed if the dashlet was too short to contain the graph. As
+of this werk, the UI instead displays a helpful error message in such cases, hinting the user at
+either increasing the dashlet height or disabling the legend.

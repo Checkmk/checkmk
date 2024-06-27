@@ -1169,7 +1169,17 @@ def host_service_graph_dashlet_cmk(
         )
         if graph_artwork["curves"]:
             legend_height = graph_legend_height_ex(graph_render_options, graph_artwork)
-            graph_render_options["size"] = (width, height - legend_height)
+            if (graph_height := (height - legend_height)) <= 0:
+                html.write_html(
+                    render_graph_error_html(
+                        title=_("Dashlet too short to render graph"),
+                        msg_or_exc=_(
+                            "Either increase the dashlet height or disable the graph legend."
+                        ),
+                    )
+                )
+                return None
+            graph_render_options["size"] = (width, graph_height)
 
     html_code = render_graphs_from_definitions(
         [graph_recipe],

@@ -17,6 +17,7 @@ from tests.testlib.agent import (
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.utils import is_containerized
 
+from tests.composition.constants import TEST_HOST_1
 from tests.composition.utils import bake_agent, get_cre_agent_path
 
 site_factory = get_site_factory(prefix="comp_")
@@ -114,7 +115,7 @@ def _installed_agent_ctl_in_unknown_state(central_site: Site) -> Path:
 def _agent_package_path(site: Site) -> Path:
     if site.version.is_raw_edition():
         return get_cre_agent_path(site)
-    return bake_agent(site)[1]
+    return bake_agent(site, TEST_HOST_1)[1]
 
 
 @pytest.fixture(name="agent_ctl", scope="function")

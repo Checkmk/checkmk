@@ -644,7 +644,7 @@ class _RedisHelper:
         os.walk               -> 0.34 seconds
         find (+spawn process) -> 0.14 seconds
         """
-        result = subprocess.run(  # nosec
+        result = subprocess.run(  # nosec B602 # BNS:248184
             f"find {cmk.utils.paths.check_mk_config_dir}/wato -type d -printf '%T@\n' -o -name .wato -printf '%T@\n' | sort -n | tail -6 | uniq",
             shell=True,
             capture_output=True,

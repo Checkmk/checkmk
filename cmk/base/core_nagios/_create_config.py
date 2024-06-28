@@ -26,7 +26,6 @@ from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
-from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
 
 from cmk.checkengine.checking import CheckPluginName
@@ -44,6 +43,7 @@ from cmk.base.core_config import (
 
 from ._precompile_host_checks import precompile_hostchecks
 
+_ContactgroupName = str
 ObjectSpec = dict[str, Any]
 
 
@@ -133,7 +133,7 @@ class NagiosConfig:
 
         self.hostgroups_to_define: set[HostgroupName] = set()
         self.servicegroups_to_define: set[ServicegroupName] = set()
-        self.contactgroups_to_define: set[ContactgroupName] = set()
+        self.contactgroups_to_define: set[_ContactgroupName] = set()
         self.checknames_to_define: set[CheckPluginName] = set()
         self.active_checks_to_define: dict[str, str] = {}
         self.custom_commands_to_define: set[CoreCommandName] = set()

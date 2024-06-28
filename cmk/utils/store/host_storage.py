@@ -23,11 +23,11 @@ HostAttributeMapping = tuple[
     str, str, dict[str, Any], str
 ]  # host attr, cmk.base var name, value, title
 
-ContactgroupName = str
+_ContactgroupName = str
 
 
 class GroupRuleType(TypedDict):
-    value: list[ContactgroupName] | ContactgroupName
+    value: list[_ContactgroupName] | _ContactgroupName
     condition: dict[str, str | list[str]]
 
 
@@ -97,7 +97,7 @@ class HostsStorageFieldsGenerator:
     def contact_groups(
         cls,
         host_service_group_rules: list[tuple[list[GroupRuleType], bool]],
-        folder_host_service_group_rules: tuple[set[str], set[ContactgroupName], bool],
+        folder_host_service_group_rules: tuple[set[str], set[_ContactgroupName], bool],
         folder_path: str,
     ) -> ContactGroupsField:
         contact_group_fields = ContactGroupsField(

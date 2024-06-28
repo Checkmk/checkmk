@@ -18,7 +18,6 @@ from cmk.utils.notify_types import (
     NotificationContext,
     NotifyPluginParams,
 )
-from cmk.utils.store.host_storage import ContactgroupName
 
 from cmk.base import notify
 
@@ -111,7 +110,7 @@ def test_create_plugin_context(
 
 
 @pytest.fixture(name="user_groups")
-def fixture_user_groups() -> Mapping[ContactName, list[ContactgroupName]]:
+def fixture_user_groups() -> Mapping[ContactName, list[str]]:
     return {
         "ding": ["foo"],
         "dong": ["bar", "all"],
@@ -119,7 +118,7 @@ def fixture_user_groups() -> Mapping[ContactName, list[ContactgroupName]]:
     }
 
 
-def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[ContactgroupName]]) -> None:
+def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> None:
     contacts = {name: Contact({"contactgroups": groups}) for name, groups in user_groups.items()}
     assert notify.rbn_groups_contacts([], config_contacts=contacts) == set()
     assert notify.rbn_groups_contacts(["nono"], config_contacts=contacts) == set()

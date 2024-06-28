@@ -12,7 +12,7 @@ from cmk.utils.notify_types import Contact, ContactName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec, TagsOfHosts
 from cmk.utils.servicename import ServiceName
-from cmk.utils.store.host_storage import ContactgroupName, FolderAttributesForBase
+from cmk.utils.store.host_storage import FolderAttributesForBase
 from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.timeperiod import TimeperiodSpecs
@@ -28,6 +28,8 @@ from cmk.checkengine.exitspec import ExitSpec
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
 # variables are preset in checks/* as well.
+
+_ContactgroupName = str
 
 # TODO: Remove the duplication with cmk.base.config
 _ALL_HOSTS: Final = ["@all"]  # physical and cluster hosts
@@ -252,8 +254,8 @@ host_contactgroups: list[RuleSpec[str]] = []
 parents: list[RuleSpec[str]] = []
 define_hostgroups: dict[_HostgroupName, str] = {}
 define_servicegroups: dict[_ServicegroupName, str] = {}
-define_contactgroups: dict[ContactgroupName, str] = {}
-contactgroup_members: dict[ContactgroupName, list[ContactName]] = {}
+define_contactgroups: dict[_ContactgroupName, str] = {}
+contactgroup_members: dict[_ContactgroupName, list[ContactName]] = {}
 contacts: dict[ContactName, Contact] = {}
 # needed for WATO
 timeperiods: TimeperiodSpecs = {}

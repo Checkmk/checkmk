@@ -25,7 +25,6 @@ from cmk.utils import deprecation_warnings
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
-from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from cmk.utils.translations import TranslationOptionsSpec
 from cmk.utils.user import UserId
@@ -46,6 +45,8 @@ from cmk.gui.watolib.utils import host_attribute_matches
 
 from cmk.fields import String
 
+_ContactgroupName = str
+
 
 def register(host_attribute_topic_registry_: HostAttributeTopicRegistry) -> None:
     host_attribute_topic_registry_.register(HostAttributeTopicBasicSettings)
@@ -59,7 +60,7 @@ def register(host_attribute_topic_registry_: HostAttributeTopicRegistry) -> None
 
 
 class HostContactGroupSpec(TypedDict):
-    groups: list[ContactgroupName]
+    groups: list[_ContactgroupName]
     recurse_perms: bool
     use: bool
     use_for_services: bool

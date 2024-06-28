@@ -11,7 +11,6 @@ from typing import TypeVar
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
-from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.gui.view_utils
@@ -97,6 +96,7 @@ from ._host_attributes import configure_attributes
 from ._status_links import make_folder_status_link
 from ._tile_menu import TileMenuRenderer
 
+_ContactgroupName = str
 TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
 
 
@@ -1137,7 +1137,7 @@ class ModeFolder(WatoMode):
             labels = dict(sorted(labels.items())[:limit])
         return labels, show_all
 
-    def _render_contact_group(self, contact_group_names: GroupSpecs, c: ContactgroupName) -> HTML:
+    def _render_contact_group(self, contact_group_names: GroupSpecs, c: _ContactgroupName) -> HTML:
         display_name = contact_group_names.get(c, {"alias": c})["alias"]
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 

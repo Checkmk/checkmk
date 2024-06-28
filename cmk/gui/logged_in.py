@@ -17,7 +17,6 @@ from livestatus import SiteConfigurations, SiteId
 import cmk.utils.paths
 from cmk.utils import store
 from cmk.utils.crypto.secrets import AutomationUserSecret
-from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.user import UserId
 from cmk.utils.version import __version__, edition, Edition, Version
 
@@ -31,6 +30,7 @@ from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
 
 _logger = logging.getLogger(__name__)
+_ContactgroupName = str
 
 
 class LoggedInUser:
@@ -132,8 +132,8 @@ class LoggedInUser:
         return self.get_attribute("customer")
 
     @property
-    def contact_groups(self) -> Sequence[ContactgroupName]:
-        return [ContactgroupName(raw) for raw in self.get_attribute("contactgroups", [])]
+    def contact_groups(self) -> Sequence[_ContactgroupName]:
+        return [_ContactgroupName(raw) for raw in self.get_attribute("contactgroups", [])]
 
     @property
     def start_url(self) -> str | None:

@@ -14,7 +14,6 @@ from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.paths import var_dir
-from cmk.utils.store.host_storage import ContactgroupName
 
 from cmk import fields
 from cmk.bi.actions import (
@@ -33,6 +32,8 @@ from cmk.bi.schema import Schema
 from cmk.bi.search import BIHostSearch, BIServiceSearch
 from cmk.bi.type_defs import AggrConfigDict
 from cmk.fields import String
+
+_ContactgroupName = str
 
 
 class DeleteErrorUsedByAggregation(MKGeneralException):
@@ -75,7 +76,7 @@ class BIPackConfig(TypedDict):
     id: str
     title: str
     comment: NotRequired[str]
-    contact_groups: list[ContactgroupName]
+    contact_groups: list[_ContactgroupName]
     public: bool
     rules: NotRequired[list[dict[str, Any]]]
     aggregations: NotRequired[list[AggrConfigDict]]

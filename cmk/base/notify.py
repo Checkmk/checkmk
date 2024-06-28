@@ -75,7 +75,6 @@ from cmk.utils.notify_types import (
     UUIDs,
 )
 from cmk.utils.regex import regex
-from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active, TimeperiodSpecs
 
@@ -85,6 +84,8 @@ logger = logging.getLogger("cmk.base.notify")
 
 _log_to_stdout = False
 notify_mode = "notify"
+
+_ContactgroupName = str
 
 NotificationTableEntry = dict[str, NotificationPluginNameStr | list]
 NotificationTable = list[NotificationTableEntry]
@@ -1647,13 +1648,13 @@ def rbn_all_contacts(
 def _contactgroup_members(
     *,
     config_contacts: ConfigContacts,
-) -> Mapping[ContactgroupName, set[ContactName]]:
+) -> Mapping[_ContactgroupName, set[ContactName]]:
     """Get the members of all contact groups
 
     Is computed once  for the process lifetime since it's either a short lived process or in case of
     the Micro Core notify helper, it is restarted once a new configuration is applied to the core.
     """
-    members: dict[ContactgroupName, set[ContactName]] = {}
+    members: dict[_ContactgroupName, set[ContactName]] = {}
     for name, contact in config_contacts.items():
         for group_name in contact.get("contactgroups", []):
             members.setdefault(group_name, set()).add(name)

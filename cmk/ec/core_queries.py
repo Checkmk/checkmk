@@ -9,13 +9,14 @@ from typing import Any, NamedTuple
 from livestatus import LocalConnection
 
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.user import UserId
 
+_ContactgroupName = str
+
 
 # NOTE: This function is a polished copy of cmk/base/notify.py. :-/
-def query_contactgroups_members(group_names: Iterable[ContactgroupName]) -> set[UserId]:
+def query_contactgroups_members(group_names: Iterable[_ContactgroupName]) -> set[UserId]:
     query = "GET contactgroups\nColumns: members"
     num_group_names = 0
     for group_name in group_names:
@@ -34,7 +35,7 @@ class HostInfo(NamedTuple):
     address: HostAddress
     custom_variables: Mapping[str, str]
     contacts: set[UserId]
-    contact_groups: set[ContactgroupName]
+    contact_groups: set[_ContactgroupName]
 
 
 def _create_host_info(row: Mapping[str, Any]) -> HostInfo:

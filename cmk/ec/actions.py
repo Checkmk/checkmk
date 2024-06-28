@@ -12,7 +12,6 @@ from logging import Logger
 from cmk.utils.log import VERBOSE
 from cmk.utils.notify_types import ECEventContext
 from cmk.utils.statename import service_state_name
-from cmk.utils.store.host_storage import ContactgroupName
 
 from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
 from .core_queries import query_contactgroups_members, query_status_enable_notifications
@@ -33,6 +32,8 @@ from .settings import Settings
 #   | Global functions for executing rule actions like sending emails and  |
 #   | executing scripts.                                                   |
 #   '----------------------------------------------------------------------'
+
+_ContactgroupName = str
 
 
 def event_has_opened(
@@ -476,7 +477,7 @@ def _add_contacts_from_rule(context: ECEventContext, event: Event, logger: Logge
 
 
 def _add_contact_information_to_context(
-    context: ECEventContext, contact_groups: Iterable[ContactgroupName], logger: Logger
+    context: ECEventContext, contact_groups: Iterable[_ContactgroupName], logger: Logger
 ) -> None:
     try:
         contact_names = query_contactgroups_members(contact_groups)

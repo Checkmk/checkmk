@@ -33,7 +33,6 @@ from cmk.utils.store import (
     save_text_to_file,
     save_to_mk_file,
 )
-from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.user import UserId
 
 import cmk.gui.pages
@@ -53,6 +52,8 @@ from ._user_attribute import get_user_attributes
 from ._user_spec import add_internal_attributes
 
 T = TypeVar("T")
+
+_ContactgroupName = str
 
 
 def load_custom_attr(
@@ -669,7 +670,7 @@ def load_cached_profile(user_id: UserId) -> UserSpec | None:
     return LoggedInUser(user_id).load_file("cached_profile", None)
 
 
-def contactgroups_of_user(user_id: UserId) -> list[ContactgroupName]:
+def contactgroups_of_user(user_id: UserId) -> list[_ContactgroupName]:
     return load_user(user_id).get("contactgroups", [])
 
 

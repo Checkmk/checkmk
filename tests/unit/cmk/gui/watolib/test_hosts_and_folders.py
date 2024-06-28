@@ -28,7 +28,6 @@ from livestatus import SiteId
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.redis import disable_redis
-from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
@@ -788,7 +787,7 @@ def _convert_folder_tree_to_all_folders(
 
 @dataclass
 class _UserTest:
-    contactgroups: list[ContactgroupName]
+    contactgroups: list[str]
     hide_folders_without_permission: bool
     expected_num_hosts: int
     fix_legacy_visibility: bool = False
@@ -804,7 +803,7 @@ def hide_folders_without_permission(do_hide: bool) -> Iterator[None]:
         active_config.wato_hide_folders_without_read_permissions = old_value
 
 
-def _default_groups(configured_groups: list[ContactgroupName]) -> HostAttributes:
+def _default_groups(configured_groups: list[str]) -> HostAttributes:
     return HostAttributes(
         {
             "contactgroups": {

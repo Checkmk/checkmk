@@ -69,11 +69,7 @@ from cmk.utils.rulesets.ruleset_matcher import LabelManager, RulesetMatcher, Rul
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.site import omd_site
-from cmk.utils.store.host_storage import (
-    apply_hosts_file_to_object,
-    ContactgroupName,
-    get_host_storage_loaders,
-)
+from cmk.utils.store.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 from cmk.utils.timeperiod import TimeperiodName
@@ -140,6 +136,8 @@ try:
 except ModuleNotFoundError:
     # Non-existing edition layering...
     RRDObjectConfig: TypeAlias = object  # type: ignore[no-redef]
+
+_ContactgroupName = str
 
 # TODO: Prefix helper functions with "_".
 
@@ -1881,7 +1879,7 @@ class ConfigCache:
         self.__active_checks: dict[HostName, SSCRules] = {}
         self.__special_agents: dict[HostName, SSCRules] = {}
         self.__hostgroups: dict[HostName, Sequence[str]] = {}
-        self.__contactgroups: dict[HostName, Sequence[ContactgroupName]] = {}
+        self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
         self.__snmp_fetch_interval: dict[tuple[HostName, SectionName], int | None] = {}
         self.__labels: dict[HostName, Labels] = {}
@@ -2726,11 +2724,11 @@ class ConfigCache:
 
         return self.__hostgroups.setdefault(host_name, hostgroups_impl())
 
-    def contactgroups(self, host_name: HostName) -> Sequence[ContactgroupName]:
+    def contactgroups(self, host_name: HostName) -> Sequence[_ContactgroupName]:
         """Returns the list of contactgroups of this host"""
 
-        def contactgroups_impl() -> Sequence[ContactgroupName]:
-            cgrs: list[ContactgroupName] = []
+        def contactgroups_impl() -> Sequence[_ContactgroupName]:
+            cgrs: list[_ContactgroupName] = []
 
             # host_contactgroups may take single values as well as lists as item value.
             #

@@ -37,7 +37,6 @@ from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
-    ContactgroupName,
     FolderAttributesForBase,
     get_all_storage_readers,
     get_host_storage_loaders,
@@ -105,6 +104,8 @@ from cmk.gui.watolib.utils import (
     wato_root_dir,
 )
 
+_ContactgroupName = str
+
 SearchCriteria = Mapping[str, Any]
 
 
@@ -135,13 +136,13 @@ class FolderMetaData:
         path: PathWithSlash,
         title: str,
         title_path_without_root: str,
-        permitted_contact_groups: list[ContactgroupName],
+        permitted_contact_groups: list[_ContactgroupName],
     ):
         self.tree: Final = tree
         self._path: Final = path
         self._title: Final = title
         self._title_path_without_root: Final[str] = title_path_without_root
-        self._permitted_groups: Final[list[ContactgroupName]] = permitted_contact_groups
+        self._permitted_groups: Final[list[_ContactgroupName]] = permitted_contact_groups
         self._num_hosts_recursively: int | None = None
 
     @property
@@ -161,7 +162,7 @@ class FolderMetaData:
         return self._path.split("/")
 
     @property
-    def permitted_groups(self) -> list[ContactgroupName]:
+    def permitted_groups(self) -> list[_ContactgroupName]:
         return self._permitted_groups
 
     @property
@@ -206,8 +207,8 @@ class PermissionChecker:
 
 
 class _ContactGroupsInfo(NamedTuple):
-    actual_groups: set[ContactgroupName]
-    configured_groups: list[ContactgroupName] | None
+    actual_groups: set[_ContactgroupName]
+    configured_groups: list[_ContactgroupName] | None
     apply_to_subfolders: bool
 
 
@@ -233,8 +234,8 @@ def _get_permitted_groups_of_all_folders(
     for tokens in tokenized_folders:
         # Compute the groups we get from the parent folders
         # Either directly inherited (nearest parent wins) or enforce inherited through recurse_perms
-        parents_all_subfolder_groups: set[ContactgroupName] = set()
-        parents_nearest_configured: list[ContactgroupName] | None = None
+        parents_all_subfolder_groups: set[_ContactgroupName] = set()
+        parents_nearest_configured: list[_ContactgroupName] | None = None
         parent_tokens = tokens[:-1]
         while parent_tokens:
             contact_groups_info = effective_groups_per_folder[parent_tokens]
@@ -488,7 +489,7 @@ class _RedisHelper:
         num_hosts: int,
         title: str,
         title_path_without_root: str,
-        permitted_contact_groups: set[ContactgroupName],
+        permitted_contact_groups: set[_ContactgroupName],
     ) -> None:
         folder_key = f"wato:folders:{path}/"
         mapping: Mapping[str | bytes, str | int] = {
@@ -1889,7 +1890,7 @@ class Folder(FolderProtocol):
 
     def groups(
         self, host: Host | None = None
-    ) -> tuple[set[ContactgroupName], set[ContactgroupName], bool]:
+    ) -> tuple[set[_ContactgroupName], set[_ContactgroupName], bool]:
         # CLEANUP: this method is also used for determining host permission
         # in behalv of Host::groups(). Not nice but was done for avoiding
         # code duplication
@@ -3212,7 +3213,7 @@ class Host:
         labels.update(self.attributes.get("labels", {}).items())
         return labels
 
-    def groups(self) -> tuple[set[ContactgroupName], set[ContactgroupName], bool]:
+    def groups(self) -> tuple[set[_ContactgroupName], set[_ContactgroupName], bool]:
         return self.folder().groups(self)
 
     def _user_needs_permission(self, how: Literal["read", "write"]) -> None:
@@ -3457,7 +3458,7 @@ def make_folder_audit_log_object(attributes: Mapping[str, object]) -> dict[str, 
 
 
 def _validate_contact_group_modification(
-    old_groups: Sequence[ContactgroupName], new_groups: Sequence[ContactgroupName]
+    old_groups: Sequence[_ContactgroupName], new_groups: Sequence[_ContactgroupName]
 ) -> None:
     """Verifies if a user is allowed to modify the contact groups.
 
@@ -3471,7 +3472,7 @@ def _validate_contact_group_modification(
         _must_be_in_contactgroups(diff_groups)
 
 
-def _must_be_in_contactgroups(cgs: Iterable[ContactgroupName]) -> None:
+def _must_be_in_contactgroups(cgs: Iterable[_ContactgroupName]) -> None:
     """Make sure that the user is in all of cgs contact groups
 
     This is needed when the user assigns contact groups to

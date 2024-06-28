@@ -9,6 +9,7 @@ from dataclasses import dataclass
 import cmk.utils.debug
 from cmk.utils.plugin_registry import Registry
 
+from cmk.gui.log import logger
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
@@ -29,11 +30,22 @@ def load_graphing_plugins() -> (
         | graphs.Bidirectional
     ]
 ):
-    return discover_plugins(
+    discovered_plugins: DiscoveredPlugins[
+        metrics.Metric
+        | translations.Translation
+        | perfometers.Perfometer
+        | perfometers.Bidirectional
+        | perfometers.Stacked
+        | graphs.Graph
+        | graphs.Bidirectional
+    ] = discover_plugins(
         PluginGroup.GRAPHING,
         entry_point_prefixes(),
         raise_errors=cmk.utils.debug.enabled(),
     )
+    for exc in discovered_plugins.errors:
+        logger.error(exc)
+    return discovered_plugins
 
 
 class UnitsFromAPI(Registry[UnitInfo]):

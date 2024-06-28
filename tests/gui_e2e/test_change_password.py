@@ -5,47 +5,69 @@
 
 import re
 from collections.abc import Iterator
+from urllib.parse import quote_plus
 
 import pytest
+from playwright.sync_api import expect
 
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.change_password import ChangePassword
+from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.login import LoginPage
+from tests.testlib.playwright.pom.setup.global_settings import GlobalSettings
 from tests.testlib.site import ADMIN_USER, Site
 
 
-@pytest.fixture(name="with_password_policy")
-def fixture_with_password_policy(logged_in_page: LoginPage, test_site: Site) -> Iterator[None]:
-    """
-    Navigate to the global setting for the password policy, set it to require *at least two groups*
-    and disable the policy again when done.
-    """
-    home = test_site.url_for_path("index.py")
-    config_page = test_site.url_for_path(
-        "wato.py?folder=&mode=edit_configvar&site=&varname=password_policy"
+def navigate_to_edit_user_page(logged_in_page: LoginPage, user_name: str) -> None:
+    logged_in_page.main_menu.setup_menu("Users").click()
+    logged_in_page.page.wait_for_url(
+        url=re.compile(quote_plus("wato.py?mode=users")), wait_until="load"
     )
-    num_groups_label = logged_in_page.locator("label[for='cb_ve_p_num_groups_USE']")
-    num_groups_input = logged_in_page.locator("input[name='ve_p_num_groups']")
-    save_btn = logged_in_page.locator("#suggestions >> text=Save")
+    logged_in_page.main_area.locator(
+        f"tr:has(td:has-text('{user_name}')) >> a[title='Properties']"
+    ).click()
+    logged_in_page.page.wait_for_url(
+        url=re.compile(quote_plus(f"edit={user_name}")), wait_until="load"
+    )
+
+
+@pytest.fixture(name="with_password_policy")
+def fixture_with_password_policy(logged_in_page: LoginPage) -> Iterator[None]:
+    """Navigate to the global settings for the password policy.
+
+    Set it to require `at least two groups` and disable the policy again when done.
+    """
+
+    def _navigate_to_password_policy() -> None:
+        _setting_name = "Password policy for local accounts"
+        settings_page.search_settings(_setting_name)
+        settings_page.setting_link(_setting_name).click()
+        logged_in_page.page.wait_for_url(
+            url=re.compile(quote_plus("varname=password_policy")), wait_until="load"
+        )
+        expect(logged_in_page.main_area.locator(num_groups_label)).to_be_visible()
+
+    num_groups_label = "label[for='cb_ve_p_num_groups_USE']"
+    num_groups_input = "input[name='ve_p_num_groups']"
+    save_btn = "#suggestions >> text=Save"
 
     # enable the policy
-    logged_in_page.go(config_page)
-    assert not num_groups_input.is_visible(), "is not already active"
+    settings_page = GlobalSettings(logged_in_page.page)
+    _navigate_to_password_policy()
 
-    num_groups_label.click()
-    num_groups_input.fill("2")
-    save_btn.click()
-    logged_in_page.go(home)
+    logged_in_page.main_area.locator(num_groups_label).click()
+    logged_in_page.main_area.locator(num_groups_input).fill("2")
+    logged_in_page.main_area.locator(save_btn).click()
+    _ = Dashboard(logged_in_page.page)
 
     yield
 
     # now disable
-    logged_in_page.go(config_page)
-    assert num_groups_input.is_visible(), "is active"
+    settings_page.navigate()
+    _navigate_to_password_policy()
 
-    num_groups_label.click()
-    save_btn.click()
-    logged_in_page.go(home)
+    logged_in_page.main_area.locator(num_groups_label).click()
+    logged_in_page.main_area.locator(save_btn).click()
 
 
 @pytest.mark.parametrize(
@@ -140,7 +162,6 @@ def test_user_change_password_incompatible_with_policy(
 )
 def test_edit_user_change_password_errors(
     logged_in_page: LoginPage,
-    test_site: Site,
     new_pw: str,
     new_pw_conf: str,
     expect_error_contains: str,
@@ -148,28 +169,33 @@ def test_edit_user_change_password_errors(
     """Test the password and repeat-password fields in the edit users menu"""
     page = logged_in_page
     pw_field_suffix = "Y21rYWRtaW4="  # base64 'cmkadmin'
-    page.go(test_site.url_for_path("wato.py?edit=cmkadmin&folder=&mode=edit_user"))
-    page.locator(f"input[name='_password_{pw_field_suffix}']").fill(new_pw)
-    page.locator(f"input[name='_password2_{pw_field_suffix}']").fill(new_pw_conf)
-    page.locator("#suggestions >> text=Save").click()
-    page.check_error(re.compile(f".*{expect_error_contains}.*"))
+    navigate_to_edit_user_page(page, ADMIN_USER)
+
+    page.main_area.locator(f"input[name='_password_{pw_field_suffix}']").fill(new_pw)
+    page.main_area.locator(f"input[name='_password2_{pw_field_suffix}']").fill(new_pw_conf)
+    page.main_area.locator("#suggestions >> text=Save").click()
+    page.main_area.check_error(re.compile(f".*{expect_error_contains}.*"))
 
 
 def test_setting_password_incompatible_with_policy(
-    logged_in_page: LoginPage, test_site: Site, with_password_policy: None
+    logged_in_page: LoginPage, with_password_policy: None
 ) -> None:
     """
     Activate a password policy that requries at least 2 groups of characters (via fixture)
     and fail setting a password that doesn't comply with that.
     """
     pw_field_suffix = "Y21rYWRtaW4="  # base64 'cmkadmin'
-    logged_in_page.go(test_site.url_for_path("wato.py?edit=cmkadmin&folder=&mode=edit_user"))
+    navigate_to_edit_user_page(logged_in_page, ADMIN_USER)
 
-    logged_in_page.locator(f"input[name='_password_{pw_field_suffix}']").fill("cmkcmkcmkcmk")
-    logged_in_page.locator(f"input[name='_password2_{pw_field_suffix}']").fill("cmkcmkcmkcmk")
-    logged_in_page.locator("#suggestions >> text=Save").click()
+    logged_in_page.main_area.locator(f"input[name='_password_{pw_field_suffix}']").fill(
+        "cmkcmkcmkcmk"
+    )
+    logged_in_page.main_area.locator(f"input[name='_password2_{pw_field_suffix}']").fill(
+        "cmkcmkcmkcmk"
+    )
+    logged_in_page.main_area.locator("#suggestions >> text=Save").click()
 
-    logged_in_page.check_error(
+    logged_in_page.main_area.check_error(
         "The password does not use enough character groups. You need to "
         "set a password which uses at least %d of them." % 2
     )

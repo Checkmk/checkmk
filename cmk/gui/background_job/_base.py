@@ -348,6 +348,8 @@ class BackgroundJob:
         if p.exitcode == 0:
             job_status = self.get_status()
             self._logger.debug('Started job "%s" (PID: %s)', self._job_id, job_status.pid)
+        else:
+            self._logger.error('Failed to start job "%s"', self._job_id)
 
     def _prepare_work_dir(self) -> None:
         self._delete_work_dir()

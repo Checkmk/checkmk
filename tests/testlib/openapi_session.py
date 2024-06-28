@@ -674,3 +674,48 @@ class CMKOpenApiSession(requests.Session):
 
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
+
+    def create_dynamic_host_configuration(
+        self,
+        dcd_id: str,
+        title: str,
+        comment: str = "",
+        disabled: bool = False,
+        restrict_source_hosts: list | None = None,
+        interval: int = 60,
+        host_attributes: dict | None = None,
+        delete_hosts: bool = False,
+        activate_changes_interval: int = 60,
+        discover_on_creation: bool = True,
+        no_deletion_time_after_init: int = 600,
+        max_cache_age: int = 3600,
+        validity_period: int = 60,
+    ) -> None:
+        """Create a DCD connection via REST API."""
+        resp = self.post(
+            "/domain-types/dcd/collections/all",
+            json={
+                "dcd_id": dcd_id,
+                "title": title,
+                "comment": comment,
+                "disabled": disabled,
+                "site": self.site,
+                "connector_type": "piggyback",
+                "restrict_source_hosts": restrict_source_hosts or [],
+                "interval": interval,
+                "creation_rules": [
+                    {
+                        "folder_path": "/",
+                        "host_attributes": host_attributes or {},
+                        "delete_hosts": delete_hosts,
+                    }
+                ],
+                "activate_changes_interval": activate_changes_interval,
+                "discover_on_creation": discover_on_creation,
+                "no_deletion_time_after_init": no_deletion_time_after_init,
+                "max_cache_age": max_cache_age,
+                "validity_period": validity_period,
+            },
+        )
+        if resp.status_code != 200:
+            raise UnexpectedResponse.from_response(resp)

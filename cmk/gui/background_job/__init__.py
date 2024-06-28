@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._app import BackgroundJobFlaskApp as BackgroundJobFlaskApp
 from ._base import BackgroundJob as BackgroundJob
 from ._base import BackgroundJobAlreadyRunning as BackgroundJobAlreadyRunning
 from ._defines import BackgroundJobDefines as BackgroundJobDefines

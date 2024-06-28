@@ -9,7 +9,6 @@ import cmk.utils.paths
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.crypto.secrets import AutomationUserSecret
-from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
@@ -21,6 +20,7 @@ from cmk.gui.userdb import (
     HtpasswdUserConnectionConfig,
     UserConnector,
 )
+from cmk.gui.utils.htpasswd import Htpasswd
 
 
 # Checkmk supports different authentication frontends for verifying the

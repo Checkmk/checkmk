@@ -21,7 +21,6 @@ import cmk.utils.paths
 import cmk.utils.version
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
-from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 import cmk.gui.userdb._custom_attributes
@@ -44,6 +43,7 @@ from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUs
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import load_custom_attr, save_two_factor_credentials, save_users
+from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.valuespec import Dictionary
 
 if TYPE_CHECKING:

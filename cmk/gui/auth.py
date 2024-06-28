@@ -23,7 +23,6 @@ from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.secrets import AutomationUserSecret, Secret, SiteInternalSecret
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
@@ -34,6 +33,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.type_defs import AuthType
 from cmk.gui.userdb.session import generate_auth_hash
+from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent
 from cmk.gui.utils.urls import requested_file_name
 

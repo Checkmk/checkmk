@@ -611,7 +611,11 @@ _COMPONENTS = (
     (Component("cmk.base.ip_lookup"), _is_default_allowed_import),
     (Component("cmk.base"), _allowed_for_base_cee),
     (Component("cmk.base.cee"), _allowed_for_base_cee),
-    (Component("cmk.cmkpasswd"), _is_default_allowed_import),
+    (
+        # Allow everything here because it's a program.  It can't be imported anywhere, however.
+        Component("cmk.cmkpasswd"),
+        _allow_for_gui,
+    ),
     (Component("cmk.checkengine"), _allow_for_cmk_checkengine),
     (Component("cmk.fetchers"), _allow_for_cmk_fetchers),
     (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),

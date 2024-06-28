@@ -12,7 +12,6 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
@@ -22,6 +21,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import UserManagementEvent
 
 from ._connections import active_connections, get_connection

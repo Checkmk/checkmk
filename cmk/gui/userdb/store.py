@@ -34,7 +34,6 @@ from cmk.utils.store import (
     save_to_mk_file,
 )
 from cmk.utils.store.host_storage import ContactgroupName
-from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 import cmk.gui.pages
@@ -45,6 +44,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file
 from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
+from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.roles import roles_of_user
 
 from ._connections import active_connections, get_connection

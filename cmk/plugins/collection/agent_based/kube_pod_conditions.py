@@ -65,12 +65,21 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
         section.scheduled,
         get_age_levels_for(params, "scheduled"),
     )
-    yield from _check_condition(
-        now,
-        "hasnetwork",
-        section.hasnetwork,
-        get_age_levels_for(params, "hasnetwork"),
-    )
+    if section.hasnetwork is not None:
+        # As of k8s version 1.28, this name was changed to PodReadyToStartContainers
+        yield from _check_condition(
+            now,
+            "hasnetwork",
+            section.hasnetwork,
+            get_age_levels_for(params, "hasnetwork"),
+        )
+    else:
+        yield from _check_condition(
+            now,
+            "readytostartcontainers",
+            section.readytostartcontainers,
+            get_age_levels_for(params, "hasnetwork"),
+        )
     yield from _check_condition(
         now,
         "initialized",

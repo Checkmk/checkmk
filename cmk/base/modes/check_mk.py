@@ -1654,7 +1654,6 @@ def mode_automation(args: list[str]) -> None:
         "reload",
         "start",
         "create-diagnostics-dump",
-        "try-inventory",
         "service-discovery-preview",
     ]:
         log.logger.handlers[:] = []

@@ -184,16 +184,6 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
 result_type_registry.register(ServiceDiscoveryPreviewResult)
 
 
-# Should be droped in 2.3
-class DiscoveryPreviewPre22NameResult(ServiceDiscoveryPreviewResult):
-    @staticmethod
-    def automation_call() -> str:
-        return "try-inventory"
-
-
-result_type_registry.register(DiscoveryPreviewPre22NameResult)
-
-
 @dataclass
 class AutodiscoveryResult(ABCAutomationResult):
     hosts: Mapping[HostName, SingleHostDiscoveryResult]

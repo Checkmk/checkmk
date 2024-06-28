@@ -416,32 +416,6 @@ class AutomationDiscoveryPreview(Automation):
 automations.register(AutomationDiscoveryPreview())
 
 
-class AutomationTryDiscovery(Automation):
-    cmd = "try-inventory"  # TODO: drop with 2.3
-    needs_config = True
-    needs_checks = True  # TODO: Can we change this?
-
-    def execute(self, args: list[str]) -> ServiceDiscoveryPreviewResult:
-        # Note: in the @noscan case we *must not* fetch live data (it must be fast)
-        # In the @scan case we *must* fetch live data (it must be up to date)
-        _do_scan, args = _extract_directive("@scan", args)
-        prevent_scan, args = _extract_directive("@noscan", args)
-        raise_errors, args = _extract_directive("@raiseerrors", args)
-        perform_scan = (
-            not prevent_scan
-        )  # ... or are you *absolutely* sure we always use *exactly* one of the directives :-)
-
-        return _get_discovery_preview(
-            HostName(args[0]),
-            config.get_config_cache(),
-            perform_scan,
-            OnError.RAISE if raise_errors else OnError.WARN,
-        )
-
-
-automations.register(AutomationTryDiscovery())
-
-
 # TODO: invert the 'perform_scan' logic -> 'prevent_fetching'
 def _get_discovery_preview(
     host_name: HostName,

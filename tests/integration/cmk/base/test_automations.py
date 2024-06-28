@@ -353,24 +353,6 @@ def test_automation_analyse_service_no_check(site: Site) -> None:
     assert automation_result.label_sources == {}
 
 
-# old alias, drop after 2.2 release
-def test_automation_try_inventory_not_existing_host(site: Site) -> None:
-    _execute_automation(
-        site,
-        "try-inventory",
-        args=["xxx-not-existing-host."],
-        expect_stderr_pattern=(
-            r"Failed to lookup IPv4 address of xxx-not-existing-host. "
-            r"via DNS: (\[Errno -2\] Name or service not known"
-            r"|\[Errno -3\] Temporary failure in name resolution"
-            r"|\[Errno -5\] No address associated with host name)\n"
-        ),
-        expect_stdout="",
-        expect_exit_code=2,
-        parse_data=False,
-    )
-
-
 def test_automation_discovery_preview_not_existing_host(site: Site) -> None:
     _execute_automation(
         site,
@@ -386,22 +368,6 @@ def test_automation_discovery_preview_not_existing_host(site: Site) -> None:
         expect_exit_code=2,
         parse_data=False,
     )
-
-
-# old alias, drop after 2.2 release
-@pytest.mark.usefixtures("test_cfg")
-def test_automation_try_inventory_host(site: Site) -> None:
-    result = _execute_automation(
-        site,
-        "try-inventory",
-        args=["modes-test-host"],
-    )
-    assert isinstance(result, results.ServiceDiscoveryPreviewResult)
-    assert isinstance(result.output, str)
-    assert isinstance(result.check_table, list)
-    assert isinstance(result.nodes_check_table, dict)
-    for _h, node_check_table in result.nodes_check_table.items():
-        assert isinstance(node_check_table, list)
 
 
 @pytest.mark.usefixtures("test_cfg")

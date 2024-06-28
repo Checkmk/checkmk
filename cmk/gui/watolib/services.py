@@ -1038,8 +1038,9 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         print("Completed.")
 
     def _perform_service_scan(self, *, raise_errors: bool) -> None:
-        """The try-inventory automation refreshes the Checkmk internal cache and makes the new
-        information available to the next try-inventory call made by get_result()."""
+        """The service-discovery-preview automation refreshes the Checkmk internal cache and makes
+        the new information available to the next service-discovery-preview call made by get_result().
+        """
         result = local_discovery_preview(
             self.host_name,
             prevent_fetching=False,

@@ -97,6 +97,24 @@ class SNMPContextConfig:
     def default(cls) -> Self:
         return cls(section=None, contexts=[""], timeout_policy="stop")
 
+    def serialize(self) -> tuple[str | None, Sequence[SNMPContext], Literal["stop", "continue"]]:
+        return (
+            str(self.section) if self.section is not None else None,
+            self.contexts,
+            self.timeout_policy,
+        )
+
+    @classmethod
+    def deserialize(
+        cls, serialized: tuple[str | None, Sequence[SNMPContext], Literal["stop", "continue"]]
+    ) -> Self:
+        section, contexts, timeout = serialized
+        return cls(
+            section=SectionName(section) if section is not None else None,
+            contexts=contexts,
+            timeout_policy=timeout,
+        )
+
 
 # Wraps the configuration of a host into a single object for the SNMP code
 @dataclass(frozen=True, kw_only=True)
@@ -137,10 +155,7 @@ class SNMPHostConfig:
         serialized["oid_range_limits"] = {
             str(sn): rl for sn, rl in serialized["oid_range_limits"].items()
         }
-        serialized["snmpv3_contexts"] = [
-            (str(sn) if sn is not None else None, rl, eh)
-            for sn, rl, eh in serialized["snmpv3_contexts"]
-        ]
+        serialized["snmpv3_contexts"] = [c.serialize() for c in serialized["snmpv3_contexts"]]
         return serialized
 
     @classmethod
@@ -152,8 +167,7 @@ class SNMPHostConfig:
             SectionName(sn): rl for sn, rl in serialized_["oid_range_limits"].items()
         }
         serialized_["snmpv3_contexts"] = [
-            (SectionName(sn) if sn is not None else None, rl, eh)
-            for sn, rl, eh in serialized_["snmpv3_contexts"]
+            SNMPContextConfig.deserialize(c) for c in serialized_["snmpv3_contexts"]
         ]
         return cls(**serialized_)
 

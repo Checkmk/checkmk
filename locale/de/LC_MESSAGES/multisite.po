@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-27 02:22+0000\n"
+"PO-Revision-Date: 2024-06-27 18:14+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -23861,14 +23861,14 @@ msgstr "Graphanzeigeoptionen"
 msgid "Graph specification '%s' is insufficient for dashboard."
 msgstr "Graph-Spezifizierung '%s' ist für das Dashboard unzureichend."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Graph specification '%s' is insufficient for dashboard. Please save your "
 "graph as a custom graph first, then add that one to the dashboard."
 msgstr ""
 "Die Spezifikation des Graph '%s' ist unzureichend für das Dashboard. Bitte "
-"speichern Sie Ihren Graphen zuerst als benutzerdefinierten Graphen und fügen "
-"Sie diesen dann zum Dashboard hinzu."
+"speichern Sie Ihren Graph zuerst als benutzerdefinierten Graph und fügen Sie "
+"diesen dann zum Dashboard hinzu."
 
 msgid "Graph template"
 msgstr "Graphschablone"
@@ -24190,7 +24190,6 @@ msgstr "HILFE"
 msgid "HH:MM:SS"
 msgstr "HH:MM:SS"
 
-#, fuzzy
 msgid "HP MSA power supply voltage levels"
 msgstr "HP MSA Netzteilspannungslevel"
 
@@ -24251,7 +24250,6 @@ msgstr "HTTP 504 Fehler"
 msgid "HTTP 5XX errors"
 msgstr "HTTP 5XX Fehler"
 
-#, fuzzy
 msgid "HTTP 5xx responses"
 msgstr "HTTP 5xx Antworten"
 
@@ -24316,7 +24314,6 @@ msgstr "HTTP-Request-Header-Variable"
 msgid "HTTP requests per second"
 msgstr "HTTP-Anfragen pro Sekunde"
 
-#, fuzzy
 msgid "HTTP timings"
 msgstr "HTTP Zeiten"
 
@@ -24338,7 +24335,6 @@ msgstr "HTTPS"
 msgid "HTTPS Proxy"
 msgstr "HTTPS Proxy"
 
-#, fuzzy
 msgid ""
 "HTTPS is the suggested setting here. It requires a valid SSL setup of your "
 "Apache web server on your monitoring server, however. When using HTTP then "

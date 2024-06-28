@@ -62,6 +62,7 @@ API_DOMAIN = Literal[
     "ldap_connection",
     "saml_connection",
     "parent_scan",
+    "quick_setup",
 ]
 
 
@@ -2751,6 +2752,20 @@ class ParentScanClient(RestApiClient):
             "post",
             url=f"/domain-types/{self.domain}/actions/start/invoke",
             body=body,
+        )
+
+
+class QuickSetupClient(RestApiClient):
+    domain: API_DOMAIN = "quick_setup"
+
+    def get_overview(
+        self,
+        quick_setup_id: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{quick_setup_id}",
             expect_ok=expect_ok,
         )
 
@@ -2799,6 +2814,7 @@ class ClientRegistry:
     LdapConnection: LDAPConnectionClient
     SamlConnection: SAMLConnectionClient
     ParentScan: ParentScanClient
+    QuickSetup: QuickSetupClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -2833,6 +2849,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         AutoComplete=AutocompleteClient(request_handler, url_prefix),
         ServiceDiscovery=ServiceDiscoveryClient(request_handler, url_prefix),
         LdapConnection=LDAPConnectionClient(request_handler, url_prefix),
-        SamlConnection=SAMLConnectionClient(request_handler, url_prefix),
         ParentScan=ParentScanClient(request_handler, url_prefix),
+        SamlConnection=SAMLConnectionClient(request_handler, url_prefix),
+        QuickSetup=QuickSetupClient(request_handler, url_prefix),
     )

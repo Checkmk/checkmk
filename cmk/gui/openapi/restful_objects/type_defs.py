@@ -59,6 +59,7 @@ DomainType = Literal[
     "user_role",
     "aux_tag",
     "autocomplete",
+    "quick_setup",
 ]  # fmt: off
 
 
@@ -132,6 +133,7 @@ CmkEndpointName = Literal[
     "cmk/change_state",
     "cmk/verify",
     "cmk/register",
+    "cmk/quick_setup",
 ]
 
 RestfulEndpointName = Literal[

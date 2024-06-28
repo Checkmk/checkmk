@@ -27,6 +27,7 @@ from cmk.gui.openapi.endpoints import (
     notification_rules,
     parent_scan,
     password,
+    quick_setup,
     rule,
     ruleset,
     service,
@@ -76,3 +77,4 @@ def register(endpoint_registry: EndpointRegistry, job_registry: BackgroundJobReg
     user_role.register(endpoint_registry)
     version.register(endpoint_registry)
     spec_generator_job.register(job_registry)
+    quick_setup.register(endpoint_registry)

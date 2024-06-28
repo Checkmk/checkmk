@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
-from typing import Mapping, TypedDict
+from typing import NewType
 
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.quick_setup.widgets import Widget
 
-StageId = int
-QuickSetupId = str
+StageId = NewType("StageId", int)
+QuickSetupId = NewType("QuickSetupId", str)
 
 
 @dataclass
@@ -22,7 +23,7 @@ class StageOverview:
 
 
 @dataclass
-class Stage(TypedDict):
+class Stage:
     stage_id: StageId
     components: list[dict]
 
@@ -62,14 +63,17 @@ class QuickSetupOverview:
 @dataclass
 class QuickSetup:
     id: QuickSetupId
-    stages: Mapping[StageId, QuickSetupStage]
+    stages: Sequence[QuickSetupStage]
 
-    def wizard_overview(self) -> QuickSetupOverview:
-        return QuickSetupOverview(
-            quick_setup_id=self.id,
-            overviews=[stage.stage_overview() for stage in self.stages.values()],
-            stage=self.stages[1].stage(),
-        )
+    def overview(self) -> QuickSetupOverview:
+        for stage in self.stages:
+            if stage.stage_id == StageId(1):
+                return QuickSetupOverview(
+                    quick_setup_id=self.id,
+                    overviews=[stage.stage_overview() for stage in self.stages],
+                    stage=stage.stage(),
+                )
+        raise MKGeneralException("The first stage is missing.")
 
 
 class QuickSetupNotFoundException(MKGeneralException):

@@ -59,6 +59,7 @@ snmp_section_entity_sensors = SNMPSection(
     detect=any_of(
         startswith(OIDSysDescr, "palo alto networks"),
         startswith(OIDSysDescr, "cisco adaptive security appliance"),
+        startswith(OIDSysDescr, "arista networks"),
     ),
     parse_function=parse_entity_sensors,
     fetch=[
@@ -75,6 +76,7 @@ snmp_section_entity_sensors = SNMPSection(
                 OIDEnd(),
                 "1",  # entPhySensorType
                 "2",  # entPhySensorScale
+                "3",  # entPhySensorPrecision
                 "4",  # entPhySensorValue
                 "5",  # entPhySensorOperStatus
                 "6",  # entPhySensorUnitsDisplay

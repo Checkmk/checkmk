@@ -91,13 +91,37 @@ def _unit_from_device_unit(unit: str) -> str | None:
     }.get(unit)
 
 
+def _parse_precision(precision: int) -> float:
+    if -8 <= precision <= -1:
+        # It represents the number of accurate digits in the associated EntitySensorValue
+        # fixed-point number
+        return float("1e+%s" % abs(precision))
+    if 1 <= precision <= 9:
+        # It represents the number of decimal places in the fractional part of an associated
+        # EntitySensorValue fixed- point number
+        return float("1e-%s" % precision)
+    if precision == 0:
+        # The value zero indicates the associated EntitySensorValue object is not a fixed-point
+        # number
+        return 1.0
+    raise ValueError(precision)
+
+
 def parse_entity_sensors(
     string_table: Sequence[StringTable],
     sensor_types_ignore: Container[str] = (),
 ) -> EntitySensorSection:
     section: EntitySensorSection = {}
     sensor_names = {i[0]: i[1] for i in string_table[0]}
-    for oid_end, sensor_type_nr, scaling_nr, reading, status_nr, device_unit in string_table[1]:
+    for (
+        oid_end,
+        sensor_type_nr,
+        scaling_nr,
+        precision_nr,
+        reading,
+        status_nr,
+        device_unit,
+    ) in string_table[1]:
         if sensor_type_nr in sensor_types_ignore:
             continue
         # Some devices such as Palo Alto Network series 3000 support
@@ -108,7 +132,11 @@ def parse_entity_sensors(
         sensor_type, default_unit = ENTITY_SENSOR_TYPES[sensor_type_nr]
         section.setdefault(sensor_type, {})[sensor_name] = EntitySensor(
             name=sensor_name,
-            reading=float(reading) * ENTITY_SENSOR_SCALING[scaling_nr],
+            reading=(
+                float(reading)
+                * ENTITY_SENSOR_SCALING[scaling_nr]
+                * _parse_precision(int(precision_nr))
+            ),
             unit=_unit_from_device_unit(device_unit.lower()) or default_unit,
             state=_sensor_state(status_nr),
             status_descr=_sensor_status_descr(status_nr),

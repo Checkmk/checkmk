@@ -203,9 +203,11 @@ def _load(debug: bool, folders: Sequence[str], load_translations: bool) -> tuple
                     loaded_perfometer_info,
                     loaded_graph_info,
                 ) = _load_file_content(path)
-            except Exception:
+            except Exception as e:
+                _show_exception(e)
                 if debug:
                     sys.exit(1)
+                continue
 
             legacy_metric_info.update(loaded_metric_info)
             if load_translations:

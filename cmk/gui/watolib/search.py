@@ -10,7 +10,6 @@ from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
-from functools import partial
 from itertools import chain
 from typing import Final
 
@@ -406,10 +405,7 @@ class IndexSearcher:
         build_job = SearchIndexBackgroundJob()
         with suppress(BackgroundJobAlreadyRunning):
             build_job.start(
-                lambda job_interface: _index_building_in_background_job(
-                    job_interface,
-                    self._redis_client,
-                ),
+                _index_building_in_background_job,
                 # We deliberately do not provide an estimated duration here, since that involves I/O.
                 # We need to be as fast as possible here, since this is done at the end of HTTP
                 # requests.
@@ -537,10 +533,11 @@ class _SearchResultWithPermissionsCheck:
     permissions_check: Callable[[str], bool]
 
 
-def _index_building_in_background_job(
-    job_interface: BackgroundProcessInterface,
-    redis_client: redis.Redis[str],
-) -> None:
+def _index_building_in_background_job(job_interface: BackgroundProcessInterface) -> None:
+    _build_index(job_interface, get_redis_client())
+
+
+def _build_index(job_interface: BackgroundProcessInterface, redis_client: redis.Redis[str]) -> None:
     job_interface.send_progress_update(_("Building of search index started"))
     IndexBuilder(match_item_generator_registry, redis_client).build_full_index()
     job_interface.send_result_message(_("Search index successfully built"))
@@ -552,7 +549,7 @@ def _launch_requests_processing_background() -> None:
     job = SearchIndexBackgroundJob()
     with suppress(BackgroundJobAlreadyRunning):
         job.start(
-            partial(_process_update_requests_background, redis_client=get_redis_client()),
+            _process_update_requests_background,
             # We deliberately do not provide an estimated duration here, since that involves I/O.
             # We need to be as fast as possible here, since this is done at the end of HTTP
             # requests.
@@ -567,10 +564,8 @@ def _launch_requests_processing_background() -> None:
 register_builtin("request-start", _launch_requests_processing_background)
 
 
-def _process_update_requests_background(
-    job_interface: BackgroundProcessInterface,
-    redis_client: redis.Redis[str],
-) -> None:
+def _process_update_requests_background(job_interface: BackgroundProcessInterface) -> None:
+    redis_client = get_redis_client()
     if not redis_server_reachable(redis_client):
         job_interface.send_progress_update(_("Redis is not reachable, terminating"))
         return
@@ -589,12 +584,12 @@ def _process_update_requests(
     redis_client: redis.Redis[str],
 ) -> None:
     if requests["rebuild"]:
-        _index_building_in_background_job(job_interface, redis_client)
+        _build_index(job_interface, redis_client)
         return
 
     if not IndexBuilder.index_is_built(redis_client):
         job_interface.send_progress_update(_("Search index not found, re-building from scratch"))
-        _index_building_in_background_job(job_interface, redis_client)
+        _build_index(job_interface, redis_client)
         return
 
     job_interface.send_progress_update(_("Updating of search index started"))

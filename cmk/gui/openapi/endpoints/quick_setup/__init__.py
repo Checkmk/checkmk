@@ -6,6 +6,7 @@
 Quick setup
 
 * GET quick setup overview
+* POST validate stage and retrieve the next
 """
 
 from collections.abc import Mapping
@@ -16,19 +17,22 @@ from cmk.utils.encoding import json_encode
 
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import Endpoint
-from cmk.gui.openapi.restful_objects.constructors import object_href
+from cmk.gui.openapi.restful_objects.constructors import collection_href, object_href
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.aws_stages import aws_quicksetup
 from cmk.gui.quick_setup.definitions import (
+    IncomingStage,
     quick_setup_registry,
     QuickSetup,
     QuickSetupNotFoundException,
     QuickSetupOverview,
+    Stage,
 )
 
 from cmk import fields
 
-from .response_schemas import QuickSetupOverviewResponse
+from .request_schemas import QuickSetupRequest
+from .response_schemas import QuickSetupOverviewResponse, QuickSetupStageResponse
 
 # TODO: CMK-18110: Investigate registration mechanism for Quick setups
 quick_setup_registry.add_quick_setup(aws_quicksetup)
@@ -58,10 +62,33 @@ def get_all_stage_overviews_and_first_stage(params: Mapping[str, Any]) -> Respon
         quick_setup: QuickSetup = quick_setup_registry.get(quick_setup_id)
     except QuickSetupNotFoundException as exc:
         return _serve_error(title="Quick setup not found", detail=str(exc))
-    return _serve_data(quick_setup.overview())
+    return _serve_data(data=quick_setup.overview())
 
 
-def _serve_data(data: QuickSetupOverview, status_code: int = 200) -> Response:
+@Endpoint(
+    collection_href("quick_setup"),
+    "cmk/quick_setup",
+    tag_group="Checkmk Internal",
+    method="post",
+    request_schema=QuickSetupRequest,
+    response_schema=QuickSetupStageResponse,
+)
+def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Response:
+    """Validate the current stage and retrieve the next"""
+    body = params["body"]
+    quick_setup: QuickSetup = quick_setup_registry.get(body["quick_setup_id"])
+    stages = [
+        IncomingStage(stage_id=stage["stage_id"], form_data=stage["form_data"])
+        for stage in body["stages"]
+    ]
+
+    next_stage = quick_setup.validate_current_stage(stages)
+    if next_stage.validation_errors:
+        return _serve_data(data=next_stage, status_code=400)
+    return _serve_data(data=next_stage)
+
+
+def _serve_data(data: QuickSetupOverview | Stage, status_code: int = 200) -> Response:
     response = Response()
     response.set_content_type("application/json")
     response.set_data(json_encode(asdict(data)))
@@ -79,3 +106,4 @@ def _serve_error(title: str, detail: str, status_code: int = 404) -> Response:
 
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(get_all_stage_overviews_and_first_stage)
+    endpoint_registry.register(quicksetup_validate_stage_and_retrieve_next)

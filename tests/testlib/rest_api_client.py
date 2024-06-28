@@ -2763,6 +2763,19 @@ class QuickSetupClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def send_stage_retrieve_next(
+        self,
+        quick_setup_id: str,
+        stages: list[dict[str, Any]],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body={"quick_setup_id": quick_setup_id, "stages": stages},
+            expect_ok=expect_ok,
+        )
+
 
 @dataclasses.dataclass
 class ClientRegistry:

@@ -36,6 +36,7 @@ HOST_CONFIG = HostConfig(
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
+                        "--apikey-reference",
                         Secret(0),
                     ]
                 )
@@ -51,6 +52,7 @@ HOST_CONFIG = HostConfig(
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
+                        "--apikey-reference",
                         Secret(0),
                         "--proxy",
                         "abc:8567",
@@ -68,6 +70,7 @@ HOST_CONFIG = HostConfig(
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
+                        "--apikey-reference",
                         Secret(0),
                         "--proxy",
                         "FROM_ENVIRONMENT",
@@ -85,6 +88,7 @@ HOST_CONFIG = HostConfig(
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
+                        "--apikey-reference",
                         Secret(0),
                         "--proxy",
                         "NO_PROXY",
@@ -102,6 +106,7 @@ HOST_CONFIG = HostConfig(
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
+                        "--apikey-reference",
                         Secret(0),
                         "--sections",
                         "licenses-overview",
@@ -120,6 +125,7 @@ HOST_CONFIG = HostConfig(
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
+                        "--apikey-reference",
                         Secret(0),
                         "--orgs",
                         "org1",

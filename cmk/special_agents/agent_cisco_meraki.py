@@ -355,9 +355,15 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = create_default_argument_parser(description=__doc__)
 
     parser.add_argument("hostname")
-    parser.add_argument(
-        "apikey",
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--apikey-reference",
         help="Password store reference to the API key for the Meraki API dashboard access.",
+    )
+    group.add_argument(
+        "--apikey",
+        help="API key for the Meraki API dashboard access.",
     )
 
     parser.add_argument("--proxy", type=str)
@@ -417,7 +423,9 @@ def _need_devices(section_names: Sequence[str]) -> bool:
 
 
 def _make_secret(args: Args) -> str:
-    pw_id, pw_file = args.apikey.split(":", 1)
+    if args.apikey:
+        return args.apikey
+    pw_id, pw_file = args.apikey_reference.split(":", 1)
     return password_store.lookup(Path(pw_file), pw_id)
 
 

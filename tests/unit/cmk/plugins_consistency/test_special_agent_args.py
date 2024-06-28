@@ -235,7 +235,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "--piggy-back-prefix",
         "a",
     ],
-    "cisco_meraki": ["HOSTNAME", "API_KEY"],
+    "cisco_meraki": ["HOSTNAME", "--apikey-reference", "API_KEY"],
     "azure_status": ["REGION1 REGION2"],
     "aws_status": [],
     "gcp_status": [],

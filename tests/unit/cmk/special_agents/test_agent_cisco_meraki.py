@@ -234,6 +234,7 @@ def test_agent_cisco_meraki_main(
         agent_cisco_meraki.parse_arguments(
             [
                 "testhost",
+                "--apikey-reference",
                 "my-api-key-id:/file",
             ]
             + list(orgs)

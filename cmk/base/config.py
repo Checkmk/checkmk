@@ -46,7 +46,6 @@ import cmk.utils.config_path
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.piggyback_config
-import cmk.utils.store.host_storage
 import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
@@ -56,6 +55,7 @@ from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, ParametersTypeAlias, section_name_of
 from cmk.utils.config_path import ConfigPath
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
+from cmk.utils.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPStackConfig
@@ -69,7 +69,6 @@ from cmk.utils.rulesets.ruleset_matcher import LabelManager, RulesetMatcher, Rul
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.site import omd_site
-from cmk.utils.store.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 from cmk.utils.timeperiod import TimeperiodName

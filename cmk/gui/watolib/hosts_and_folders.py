@@ -28,13 +28,7 @@ from livestatus import SiteId
 import cmk.utils.paths
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import Labels
-from cmk.utils.object_diff import make_diff_text
-from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
-from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
-from cmk.utils.site import omd_site
-from cmk.utils.store.host_storage import (
+from cmk.utils.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
     FolderAttributesForBase,
@@ -50,6 +44,12 @@ from cmk.utils.store.host_storage import (
     StandardHostsStorage,
     StorageFormat,
 )
+from cmk.utils.hostaddress import HostName
+from cmk.utils.labels import Labels
+from cmk.utils.object_diff import make_diff_text
+from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
+from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
+from cmk.utils.site import omd_site
 from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.user import UserId
 

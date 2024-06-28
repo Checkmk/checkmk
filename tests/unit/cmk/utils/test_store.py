@@ -26,14 +26,14 @@ from tests.unit.import_module_hack import import_module_hack
 import cmk.utils.debug
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.store import ObjectStore, TextSerializer
-from cmk.utils.store._file import FileIo, RealIo
-from cmk.utils.store.host_storage import (
+from cmk.utils.host_storage import (
     get_hosts_file_variables,
     get_standard_hosts_storage,
     StandardStorageLoader,
     StorageFormat,
 )
+from cmk.utils.store import ObjectStore, TextSerializer
+from cmk.utils.store._file import FileIo, RealIo
 
 
 class FakeIo:

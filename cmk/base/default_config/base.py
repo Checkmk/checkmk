@@ -6,13 +6,13 @@
 from collections.abc import Container, Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, SupportsInt, TypeAlias, TypedDict, Union
 
+from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import Contact, ContactName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec, TagsOfHosts
 from cmk.utils.servicename import ServiceName
-from cmk.utils.store.host_storage import FolderAttributesForBase
 from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.timeperiod import TimeperiodSpecs

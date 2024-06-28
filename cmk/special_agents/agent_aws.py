@@ -23,6 +23,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
+from pathlib import Path
 from time import sleep
 from typing import (
     Any,
@@ -40,7 +41,7 @@ import botocore
 from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
 
-from cmk.utils import store
+from cmk.utils import password_store, store
 from cmk.utils.exceptions import MKException
 from cmk.utils.paths import tmp_dir
 
@@ -7168,16 +7169,26 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         required=True,
         help="The access key ID for your AWS account",
     )
-    parser.add_argument(
+    group_secret_access_key = parser.add_mutually_exclusive_group(required=True)
+    group_secret_access_key.add_argument(
+        "--secret-access-key-reference",
+        help="Password store reference to the secret access key for your AWS account.",
+    )
+    group_secret_access_key.add_argument(
         "--secret-access-key",
-        required=True,
         help="The secret access key for your AWS account.",
     )
     parser.add_argument("--proxy-host", help="The address of the proxy server")
     parser.add_argument("--proxy-port", help="The port of the proxy server")
     parser.add_argument("--proxy-user", help="The username for authentication of the proxy server")
-    parser.add_argument(
-        "--proxy-password", help="The password for authentication of the proxy server"
+    group_proxy_password = parser.add_mutually_exclusive_group()
+    group_proxy_password.add_argument(
+        "--proxy-password-reference",
+        help="Password store reference to the password for authentication of the proxy server",
+    )
+    group_proxy_password.add_argument(
+        "--proxy-password",
+        help="The password for authentication of the proxy server",
     )
     parser.add_argument(
         "--global-service-region",
@@ -7416,20 +7427,23 @@ class AWSAccessCredentialsError(Exception):
 
 
 def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
-    return (
-        botocore.config.Config(
+    if args.proxy_host:
+        if args.proxy_password:
+            proxy_password = args.proxy_password
+        else:
+            pw_id, pw_file = args.proxy_password_reference.split(":", 1)
+            proxy_password = password_store.lookup(Path(pw_file), pw_id)
+        return botocore.config.Config(
             proxies={
                 "https": _proxy_address(
                     args.proxy_host,
                     args.proxy_port,
                     args.proxy_user,
-                    args.proxy_password,
+                    proxy_password,
                 )
             }
         )
-        if args.proxy_host
-        else None
-    )
+    return None
 
 
 def _configure_aws(args: Args) -> AWSConfig:
@@ -7501,16 +7515,21 @@ def _configure_aws(args: Args) -> AWSConfig:
 def _create_session_from_args(
     args: Args, region: str, config: botocore.config.Config | None
 ) -> boto3.session.Session:
+    if args.secret_access_key:
+        secret_access_key = args.secret_access_key
+    else:
+        pw_id, pw_file = args.secret_access_key_reference.split(":", 1)
+        secret_access_key = password_store.lookup(Path(pw_file), pw_id)
     if args.assume_role:
         return _sts_assume_role(
             args.access_key_id,
-            args.secret_access_key,
+            secret_access_key,
             args.role_arn,
             args.external_id,
             region,
             config,
         )
-    return _create_session(args.access_key_id, args.secret_access_key, region)
+    return _create_session(args.access_key_id, secret_access_key, region)
 
 
 def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:

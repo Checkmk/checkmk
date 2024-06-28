@@ -58,8 +58,8 @@ def _proxy_args(details: ProxyDetails) -> list[str | Secret]:
             (
                 "--proxy-user",
                 details.proxy_user,
-                "--proxy-password",
-                details.proxy_password.unsafe(),
+                "--proxy-password-reference",
+                details.proxy_password,
             )
         )
     return proxy_args
@@ -104,7 +104,7 @@ def aws_arguments(
     host_config: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
     args: list[str | Secret] = ["--access-key-id", params.access_key_id]
-    args.extend(("--secret-access-key", params.secret_access_key.unsafe()))
+    args.extend(("--secret-access-key-reference", params.secret_access_key))
     if params.proxy_details:
         args.extend(_proxy_args(params.proxy_details))
     if global_serv_region := params.access.global_service_region:

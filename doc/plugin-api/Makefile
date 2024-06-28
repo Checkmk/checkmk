@@ -6,7 +6,7 @@ REPO_PATH := $(realpath $(dir $(realpath $(dir $(realpath $(dir $(lastword $(MAK
 
 include $(REPO_PATH)/defines.make
 
-PIPENV := $(REPO_PATH)/scripts/run-pipenv
+PIPENV := $(REPO_PATH)/omd/run-pipenv
 
 
 # You can set these variables from the command line, and also

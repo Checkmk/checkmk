@@ -84,7 +84,6 @@ PACKAGES += cloud
 PACKAGES += saas
 endif
 
-PIPENV := ../scripts/run-pipenv
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
 INSTALL_LOG_TARGETS := $(foreach package,$(INSTALL_TARGETS),$(addsuffix -log,$(package)))
@@ -287,9 +286,6 @@ debian/control: debian/control.in
 	    -e '/Depends:/s/@/ /g' \
 	   debian/control.in > debian/control
 
-venv:
-	$(MAKE) -C ../ .venv
-
 # Called by our release system to build DEB packages
 #
 # Check out "man debuild" and "man dpkg-buildpackage" to get a description of
@@ -302,7 +298,7 @@ venv:
 # a) add -nc fo jessie/trusty/xenial
 # b) drop the "clean" argument for newer distros
 # c) remove the dh_prep from debian/rules
-deb: venv debian/changelog debian/control
+deb: debian/changelog debian/control
 	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
 	    TARGET="-us -uc -B" ; \
 	else \
@@ -316,6 +312,8 @@ deb: venv debian/changelog debian/control
 	    --preserve-envvar="RUSTUP_HOME" \
 	    --prepend-path $$HOME/.cargo/bin \
 	    --prepend-path=/usr/local/bin \
+	    --prepend-path=`dirname $$(which pipenv)` \
+	    --prepend-path=`dirname $$(which python3)` \
 	    --set-envvar EDITION=$(EDITION) \
 	    --no-lintian \
 	    -i\.git -I\.git \

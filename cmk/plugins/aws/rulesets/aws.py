@@ -132,7 +132,7 @@ def _regional_services() -> dict[str, DictElement]:
     }
 
 
-def _fromspec_aws_api_access() -> dict[str, DictElement]:
+def _formspec_aws_api_access() -> dict[str, DictElement]:
     return {
         "access": DictElement(
             parameter_form=Dictionary(
@@ -354,7 +354,7 @@ def _formspec_aws():
                     },
                 ),
             ),
-            **_fromspec_aws_api_access(),
+            **_formspec_aws_api_access(),
             "global_services": DictElement(
                 parameter_form=Dictionary(
                     title=Title("Global services to monitor"),

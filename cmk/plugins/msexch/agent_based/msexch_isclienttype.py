@@ -13,10 +13,10 @@ from cmk.agent_based.v2 import (
     render,
 )
 from cmk.plugins.lib.wmi import (
-    inventory_wmi_table_instances,
+    check_wmi_raw_average,
+    check_wmi_raw_persec,
+    discover_wmi_table_instances,
     parse_wmi_table,
-    wmi_yield_raw_average,
-    wmi_yield_raw_persec,
     WMISection,
 )
 
@@ -28,8 +28,8 @@ from cmk.plugins.lib.wmi import (
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
 
 
-def inventory_msexch_isclienttype(section: WMISection) -> DiscoveryResult:
-    yield from inventory_wmi_table_instances(section)
+def discover_msexch_isclienttype(section: WMISection) -> DiscoveryResult:
+    yield from discover_wmi_table_instances(section)
 
 
 class Params(TypedDict):
@@ -40,7 +40,7 @@ class Params(TypedDict):
 
 def check_msexch_isclienttype(item: str, params: Params, section: WMISection) -> CheckResult:
     table = section[""]
-    yield from wmi_yield_raw_average(
+    yield from check_wmi_raw_average(
         table,
         item,
         "RPCAverageLatency",
@@ -51,7 +51,7 @@ def check_msexch_isclienttype(item: str, params: Params, section: WMISection) ->
         render_func=render.timespan,
     )
 
-    yield from wmi_yield_raw_persec(
+    yield from check_wmi_raw_persec(
         table,
         item,
         "RPCRequests",
@@ -69,7 +69,7 @@ agent_section_msexch_isclienttype = AgentSection(
 check_plugin_msexch_isclienttype = CheckPlugin(
     name="msexch_isclienttype",
     service_name="Exchange IS Client Type %s",
-    discovery_function=inventory_msexch_isclienttype,
+    discovery_function=discover_msexch_isclienttype,
     check_function=check_msexch_isclienttype,
     check_ruleset_name="msx_info_store",
     check_default_parameters=Params(

@@ -13,9 +13,9 @@ from cmk.agent_based.v2 import (
     render,
 )
 from cmk.plugins.lib.wmi import (
-    inventory_wmi_table_instances,
+    check_wmi_raw_average,
+    discover_wmi_table_instances,
     parse_wmi_table,
-    wmi_yield_raw_average,
     WMISection,
 )
 
@@ -27,8 +27,8 @@ from cmk.plugins.lib.wmi import (
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
 
 
-def inventory_msexch_isstore(section: WMISection) -> DiscoveryResult:
-    yield from inventory_wmi_table_instances(section)
+def discover_msexch_isstore(section: WMISection) -> DiscoveryResult:
+    yield from discover_wmi_table_instances(section)
 
 
 class Params(TypedDict):
@@ -38,7 +38,7 @@ class Params(TypedDict):
 
 
 def check_msexch_isstore(item: str, params: Params, section: WMISection) -> CheckResult:
-    yield from wmi_yield_raw_average(
+    yield from check_wmi_raw_average(
         section[""],
         item,
         "RPCAverageLatency",
@@ -58,7 +58,7 @@ agent_section_msexch_isstore = AgentSection(
 check_plugin_msexch_isstore = CheckPlugin(
     name="msexch_isstore",
     service_name="Exchange IS Store %s",
-    discovery_function=inventory_msexch_isstore,
+    discovery_function=discover_msexch_isstore,
     check_function=check_msexch_isstore,
     check_ruleset_name="msx_info_store",
     check_default_parameters=Params(

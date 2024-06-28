@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib.wmi import parse_wmi_table
 from cmk.plugins.msexch.agent_based.msexch_isclienttype import (
     check_msexch_isclienttype,
-    inventory_msexch_isclienttype,
+    discover_msexch_isclienttype,
     Params,
 )
 
@@ -1907,7 +1907,7 @@ def test_parse_msexch_isclienttype(
     string_table: StringTable, expected_result: DiscoveryResult
 ) -> None:
     section = parse_wmi_table(string_table)
-    assert sorted(inventory_msexch_isclienttype(section)) == expected_result
+    assert sorted(discover_msexch_isclienttype(section)) == expected_result
 
 
 @pytest.mark.usefixtures("initialised_item_state")

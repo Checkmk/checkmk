@@ -353,18 +353,7 @@ def get_wmi_time(table: WMITable, row: str | int) -> float:
     return float(timestamp) / float(frequency)
 
 
-# .
-#   .--Inventory-----------------------------------------------------------.
-#   |            ___                      _                                |
-#   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
-#   |            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |             |
-#   |            | || | | \ V /  __/ | | | || (_) | |  | |_| |             |
-#   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
-#   |                                                   |___/              |
-#   '----------------------------------------------------------------------'
-
-
-def inventory_wmi_table_instances(
+def discover_wmi_table_instances(
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, str | int], bool] | None = None,
@@ -393,7 +382,7 @@ def inventory_wmi_table_instances(
             yield Service(item=instance, parameters=levels or {})
 
 
-def inventory_wmi_table_total(
+def discover_wmi_table_total(
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, None], bool] | None = None,
@@ -427,7 +416,7 @@ def inventory_wmi_table_total(
 #   '----------------------------------------------------------------------'
 
 
-def wmi_yield_raw_counter(
+def check_wmi_raw_counter(
     table: WMITable,
     row: str | int,
     column: str | int,
@@ -484,7 +473,7 @@ def wmi_calculate_raw_average(
     return scale_counter(int(measure) * factor, factor, base_int)
 
 
-def wmi_yield_raw_average(
+def check_wmi_raw_average(
     table: WMITable,
     row: str | int,
     column: str,
@@ -523,7 +512,7 @@ def scale_counter(
     return measure / base
 
 
-def wmi_yield_raw_persec(
+def check_wmi_raw_persec(
     table: WMITable,
     row: str | int,
     column: str | int,

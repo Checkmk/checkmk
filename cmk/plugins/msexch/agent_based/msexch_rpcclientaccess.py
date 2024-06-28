@@ -14,10 +14,10 @@ from cmk.agent_based.v2 import (
     render,
 )
 from cmk.plugins.lib.wmi import (
-    inventory_wmi_table_total,
+    check_wmi_raw_counter,
+    check_wmi_raw_persec,
+    discover_wmi_table_total,
     parse_wmi_table,
-    wmi_yield_raw_counter,
-    wmi_yield_raw_persec,
     WMISection,
 )
 
@@ -26,7 +26,7 @@ from cmk.plugins.lib.wmi import (
 
 
 def discover_msexch_rpcclientaccess(section: WMISection) -> DiscoveryResult:
-    yield from inventory_wmi_table_total(section)
+    yield from discover_wmi_table_total(section)
 
 
 class Params(TypedDict):
@@ -53,7 +53,7 @@ def check_msexch_rpcclientaccess(params: Params, section: WMISection) -> CheckRe
         levels_upper=params["latency_s"],
         render_func=render.timespan,
     )
-    yield from wmi_yield_raw_persec(
+    yield from check_wmi_raw_persec(
         table,
         "",
         "RPCRequests",
@@ -61,10 +61,10 @@ def check_msexch_rpcclientaccess(params: Params, section: WMISection) -> CheckRe
         metric_name="requests_per_sec",
         levels_upper=params["requests"],
     )
-    yield from wmi_yield_raw_counter(
+    yield from check_wmi_raw_counter(
         table, "", "UserCount", label="Users", metric_name="current_users"
     )
-    yield from wmi_yield_raw_counter(
+    yield from check_wmi_raw_counter(
         table, "", "ActiveUserCount", label="Active users", metric_name="active_users"
     )
 

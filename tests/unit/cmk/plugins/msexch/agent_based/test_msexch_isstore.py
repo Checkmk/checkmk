@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib.wmi import parse_wmi_table
 from cmk.plugins.msexch.agent_based.msexch_isstore import (
     check_msexch_isstore,
-    inventory_msexch_isstore,
+    discover_msexch_isstore,
     Params,
 )
 
@@ -1260,7 +1260,7 @@ _AGENT_OUTPUT_REGRESSION_02 = [
 )
 def test_parse_msexch_isstore(string_table: StringTable, expected_result: DiscoveryResult) -> None:
     section = parse_wmi_table(string_table)
-    assert sorted(inventory_msexch_isstore(section)) == expected_result
+    assert sorted(discover_msexch_isstore(section)) == expected_result
 
 
 @pytest.mark.usefixtures("initialised_item_state")

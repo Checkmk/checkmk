@@ -38,3 +38,18 @@ class QuickSetupRequest(BaseSchema):
         example=[{"stage_id": 1, "form_data": {}}, {"stage_id": 2, "form_data": {}}],
         description="A list of stages",
     )
+
+
+class QuickSetupFinalSaveRequest(BaseSchema):
+    stages = fields.List(
+        fields.Nested(
+            QuickSetupStageRequest,
+            required=True,
+            description="A stage id and it's form data",
+        ),
+        example=[
+            {"stage_id": 1, "stage_data": []},
+            {"stage_id": 2, "stage_data": []},
+        ],
+        description="A list of stages' form data",
+    )

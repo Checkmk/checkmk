@@ -2776,6 +2776,20 @@ class QuickSetupClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def complete_quick_setup(
+        self,
+        quick_setup_id: str,
+        payload: dict[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
+
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{quick_setup_id}/actions/save/invoke",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
 
 @dataclasses.dataclass
 class ClientRegistry:

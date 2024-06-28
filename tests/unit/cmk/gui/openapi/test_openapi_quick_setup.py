@@ -216,3 +216,12 @@ def test_send_aws_stage_four(clients: ClientRegistry) -> None:
         "stage_summary": [],
         "components": [],
     }
+
+
+def test_quick_setup_save(clients: ClientRegistry) -> None:
+    resp = clients.QuickSetup.complete_quick_setup(
+        quick_setup_id="aws_quick_setup",
+        payload={"stages": []},
+    )
+    resp.assert_status_code(201)
+    assert resp.json == {"redirect_url": "http://save/url"}

@@ -134,6 +134,7 @@ CmkEndpointName = Literal[
     "cmk/verify",
     "cmk/register",
     "cmk/quick_setup",
+    "cmk/complete_quick_setup",
 ]
 
 RestfulEndpointName = Literal[
@@ -455,6 +456,7 @@ ErrorStatusCodeInt = Literal[
 ]
 SuccessStatusCodeInt = Literal[
     200,
+    201,
     204,
 ]
 
@@ -471,6 +473,7 @@ StatusCodeInt = Literal[
 
 StatusCode = Literal[
     "200",
+    "201",
     "204",
     "301",
     "302",

@@ -5,7 +5,13 @@
 
 from collections.abc import Sequence
 
-from cmk.utils.quick_setup.definitions import QuickSetup, QuickSetupId, QuickSetupStage, StageId
+from cmk.utils.quick_setup.definitions import (
+    IncomingStage,
+    QuickSetup,
+    QuickSetupId,
+    QuickSetupStage,
+    StageId,
+)
 from cmk.utils.quick_setup.widgets import FormSpecWrapper, List, NoteText
 
 from cmk.ccc.i18n import _
@@ -104,7 +110,13 @@ def aws_stages() -> Sequence[QuickSetupStage]:
     ]
 
 
+def save_action(stages: list[IncomingStage]) -> str:
+    # Save the data and return the URL to redirect to
+    return "http://save/url"
+
+
 aws_quicksetup = QuickSetup(
     id=QuickSetupId("aws_quick_setup"),
     stages=aws_stages(),
+    save_action=save_action,
 )

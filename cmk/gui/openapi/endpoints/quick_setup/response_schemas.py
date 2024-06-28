@@ -60,3 +60,10 @@ class QuickSetupOverviewResponse(BaseSchema):
         example={"stage_id": 1, "components": []},
         description="The first stage",
     )
+
+
+class QuickSetupSaveResponse(BaseSchema):
+    redirect_url = fields.String(
+        example="http://save/url",
+        description="The url to redirect to after saving the quicksetup",
+    )

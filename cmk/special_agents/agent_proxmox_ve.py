@@ -211,7 +211,7 @@ class BackupTask:
                 ),
                 (
                     "backuped",
-                    r"^INFO: (.*): had to backup (.*) of (.*) \(compressed (.*)\) in (.*)s",
+                    r"^INFO: (.*): had to backup (.*) of (.*) \(compressed (.*)\) in ([\d.]+)[\s]*s.*",
                 ),
             )
         }

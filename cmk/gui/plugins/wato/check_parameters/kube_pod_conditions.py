@@ -26,8 +26,13 @@ def _parameter_valuespec():
                 age_levels_dropdown(_("Time until alert, if PODSCHEDULED condition is false")),
             ),
             (
-                "hasnetwork",
-                age_levels_dropdown(_("Time until alert, if PODHASNETWORK condition is false")),
+                "hasnetwork",  # If we decide against being backwards compatible, then we should rename this field.
+                age_levels_dropdown(
+                    _(
+                        "Time until alert, if PODREADYTOSTARTCONTAINERS (PODHASNETWORK in "
+                        "Kubernetes version 1.27 and below) condition is false"
+                    )
+                ),
             ),
             (
                 "initialized",

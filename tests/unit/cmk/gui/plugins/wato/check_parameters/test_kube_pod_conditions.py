@@ -22,11 +22,6 @@ def test_parameter_valuespec_returns_a_dictionary() -> None:
     assert isinstance(parameters, Dictionary)
 
 
-def test_parameter_valuespec_has_as_much_elements_as_section_elements() -> None:
-    parameters = kube_pod_conditions._parameter_valuespec()
-    assert len(parameters._elements()) == len(SECTION_ELEMENTS)
-
-
 @pytest.mark.parametrize("section_element", SECTION_ELEMENTS)
 def test_parameter_valuespec_has_element_for_section_element(
     section_element: str,

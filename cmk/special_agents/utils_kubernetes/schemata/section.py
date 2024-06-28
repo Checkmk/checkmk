@@ -278,6 +278,7 @@ class PodConditions(Section):
 
     initialized: PodCondition | None = Field(None)
     hasnetwork: PodCondition | None = Field(None)
+    readytostartcontainers: PodCondition | None = Field(None)
     scheduled: PodCondition
     containersready: PodCondition | None = Field(None)
     ready: PodCondition | None = Field(None)

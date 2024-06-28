@@ -456,6 +456,13 @@ def build_linux_agent_updater(agent, edition, branch_version, registry) {
             passwordVariable: 'NEXUS_PASSWORD',
             usernameVariable: 'NEXUS_USERNAME')
     ]) {
+        // Debug only: Remove me!
+        sh("""
+            echo "Debug only: before changedir into cmk-update-agent";
+            pwd;
+            ls -lisa ${checkout_dir}/non-free/;
+        """)
+
         dir("${checkout_dir}/non-free/cmk-update-agent") {
             def cmd = "BRANCH_VERSION=${branch_version} DOCKER_REGISTRY_NO_HTTP=${registry} ./make-agent-updater${suffix}";
             on_dry_run_omit(LONG_RUNNING, "RUN ${cmd}") {

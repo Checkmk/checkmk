@@ -2,6 +2,8 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
+
 from cmk.plugins.aws.lib import aws_region_to_monitor
 from cmk.plugins.aws.ruleset_helper import (
     convert_tag_list,
@@ -302,94 +304,114 @@ def _migrate(values: object) -> dict[str, object]:
     return values
 
 
-def _formspec_aws():
+def quick_setup_stage_1() -> Mapping[str, DictElement]:
+    return {
+        "access_key_id": DictElement(
+            parameter_form=String(
+                title=Title("The access key ID for your AWS account"),
+                field_size=FieldSize.MEDIUM,
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+            required=True,
+        ),
+        "secret_access_key": DictElement(
+            parameter_form=Password(
+                title=Title("The secret access key for your AWS account"),
+                migrate=migrate_to_password,
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+            required=True,
+        ),
+    }
+
+
+def quick_setup_stage_2() -> Mapping[str, DictElement]:
+    return {
+        "regions_to_monitor": DictElement(
+            parameter_form=MultipleChoice(
+                title=Title("Regions to monitor"),
+                elements=[
+                    MultipleChoiceElement(
+                        name=name.replace("-", "_"),
+                        title=Title(title),  # pylint: disable=localization-of-non-literal-string
+                    )
+                    for name, title in aws_region_to_monitor()
+                ],
+            ),
+            required=True,
+        ),
+    }
+
+
+def quick_setup_stage_3() -> Mapping[str, DictElement]:
+    return {
+        "global_services": DictElement(
+            parameter_form=Dictionary(
+                title=Title("Global services to monitor"),
+                elements=_global_services(),
+            ),
+            required=True,
+        ),
+        "services": DictElement(
+            parameter_form=Dictionary(
+                title=Title("Services per region to monitor"),
+                elements=_regional_services(),
+            ),
+            required=True,
+        ),
+    }
+
+
+def quick_setup_advanced() -> Mapping[str, DictElement]:
+    return {
+        "proxy_details": DictElement(
+            parameter_form=Dictionary(
+                title=Title("Proxy server details"),
+                elements={
+                    "proxy_host": DictElement(
+                        parameter_form=String(title=Title("Proxy host")),
+                        required=True,
+                    ),
+                    "proxy_port": DictElement(
+                        parameter_form=Integer(
+                            title=Title("Port"),
+                            custom_validate=[
+                                validators.NumberInRange(
+                                    0, 65535, Message("Port must be between 0 and 65535")
+                                )
+                            ],
+                        )
+                    ),
+                    "proxy_user": DictElement(
+                        parameter_form=String(title=Title("Username"), field_size=FieldSize.MEDIUM),
+                    ),
+                    "proxy_password": DictElement(
+                        parameter_form=Password(
+                            title=Title("Password"), migrate=migrate_to_password
+                        ),
+                    ),
+                },
+            ),
+        ),
+        **_formspec_aws_api_access(),
+        **_formspec_aws_piggyback_naming_convention(),
+        "overall_tags": DictElement(
+            parameter_form=formspec_aws_tags(
+                Title("Restrict monitoring services by one of these AWS tags")
+            ),
+        ),
+    }
+
+
+def _formspec():
     return Dictionary(
         title=Title("Amazon Web Services (AWS)"),
         migrate=_migrate,  # Unable to split this due to CMK-17471
         elements={
-            "access_key_id": DictElement(
-                parameter_form=String(
-                    title=Title("The access key ID for your AWS account"),
-                    field_size=FieldSize.MEDIUM,
-                    custom_validate=(validators.LengthInRange(min_value=1),),
-                ),
-                required=True,
-            ),
-            "secret_access_key": DictElement(
-                parameter_form=Password(
-                    title=Title("The secret access key for your AWS account"),
-                    migrate=migrate_to_password,
-                    custom_validate=(validators.LengthInRange(min_value=1),),
-                ),
-                required=True,
-            ),
-            "proxy_details": DictElement(
-                parameter_form=Dictionary(
-                    title=Title("Proxy server details"),
-                    elements={
-                        "proxy_host": DictElement(
-                            parameter_form=String(title=Title("Proxy host")),
-                            required=True,
-                        ),
-                        "proxy_port": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Port"),
-                                custom_validate=[
-                                    validators.NumberInRange(
-                                        0, 65535, Message("Port must be between 0 and 65535")
-                                    )
-                                ],
-                            )
-                        ),
-                        "proxy_user": DictElement(
-                            parameter_form=String(
-                                title=Title("Username"), field_size=FieldSize.MEDIUM
-                            ),
-                        ),
-                        "proxy_password": DictElement(
-                            parameter_form=Password(
-                                title=Title("Password"), migrate=migrate_to_password
-                            ),
-                        ),
-                    },
-                ),
-            ),
-            **_formspec_aws_api_access(),
-            "global_services": DictElement(
-                parameter_form=Dictionary(
-                    title=Title("Global services to monitor"),
-                    elements=_global_services(),
-                ),
-                required=True,
-            ),
-            "regions_to_monitor": DictElement(
-                parameter_form=MultipleChoice(
-                    title=Title("Regions to monitor"),
-                    elements=[
-                        MultipleChoiceElement(
-                            name=name.replace("-", "_"),
-                            title=Title(  # pylint: disable=localization-of-non-literal-string
-                                title
-                            ),
-                        )
-                        for name, title in aws_region_to_monitor()
-                    ],
-                ),
-                required=True,
-            ),
-            "services": DictElement(
-                parameter_form=Dictionary(
-                    title=Title("Services per region to monitor"),
-                    elements=_regional_services(),
-                ),
-                required=True,
-            ),
-            **_formspec_aws_piggyback_naming_convention(),
-            "overall_tags": DictElement(
-                parameter_form=formspec_aws_tags(
-                    Title("Restrict monitoring services by one of these AWS tags")
-                ),
-            ),
+            **quick_setup_stage_1(),
+            **quick_setup_stage_2(),
+            **quick_setup_stage_3(),
+            **quick_setup_advanced(),
         },
     )
 
@@ -398,5 +420,5 @@ rule_spec_aws = SpecialAgent(
     name="aws",
     title=Title("Amazon Web Services (AWS)"),
     topic=Topic.CLOUD,
-    parameter_form=_formspec_aws,
+    parameter_form=_formspec,
 )

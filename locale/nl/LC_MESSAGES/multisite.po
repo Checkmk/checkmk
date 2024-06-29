@@ -3312,9 +3312,6 @@ msgstr "Geactiveerd"
 msgid "Activated changes by %s."
 msgstr "Geactiveerde veranderingen door %s."
 
-msgid "Activated the changes"
-msgstr "Activeerde de veranderingen"
-
 msgid "Activating"
 msgstr "Activeren"
 
@@ -10031,6 +10028,12 @@ msgstr "Kan grafiekrecepten niet berekenen"
 msgid "Cannot calculate graph recipes: %s"
 msgstr "Kan grafiekrecepten niet berekenen: %s"
 
+msgid "Cannot change folder of rules managed by Quick setup."
+msgstr ""
+
+msgid "Cannot change rule conditions for rules managed by Quick setup."
+msgstr ""
+
 #, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "Kan geen verbinding maken met event daemon via %s: %s"
@@ -10072,6 +10075,10 @@ msgstr ""
 
 msgid "Cannot delete job. Job cannot be stopped."
 msgstr "Kan taak niet verwijderen. Taak kan niet worden gestopt."
+
+#, fuzzy
+msgid "Cannot delete rules that are managed by Quick setup."
+msgstr "U kunt geen rollen verwijderen, die nog in gebruik zijn (%s)!"
 
 #, python-format
 msgid ""
@@ -10626,6 +10633,10 @@ msgstr "Locatie specifieke configuratie variabele %s veranderd in %s."
 
 msgid "Changes"
 msgstr "Wijzigingen"
+
+#, fuzzy
+msgid "Changes have been activated"
+msgstr "Is nooit geactiveerd geweest"
 
 msgid "Changes since last dump"
 msgstr "Veranderingen sinds de laatste dump"
@@ -12713,6 +12724,9 @@ msgstr "Voorwaarden"
 msgid "Conditions for this rule to apply"
 msgstr "Voorwaarden voor de toepassing van deze regel"
 
+msgid "Conditions of rules managed by Quick setup cannot be changed."
+msgstr ""
+
 msgid "Conference Allocation Latency"
 msgstr "Conferentie Toewijzingslatentie"
 
@@ -13179,6 +13193,10 @@ msgstr "Geconfigureerde eigenschap mismatch"
 msgid "Configured time period parameters"
 msgstr "Geconfigureerde tijdsparameters"
 
+#, python-format
+msgid "Configured with %s Quick setup"
+msgstr ""
+
 msgid ""
 "Configures the number of available filters in the network topology view."
 msgstr ""
@@ -13395,6 +13413,10 @@ msgstr "Verbinding verbroken"
 
 msgid "Connection name"
 msgstr "Naam verbinding"
+
+#, fuzzy, python-format
+msgid "Connection representation: %s"
+msgstr "Weergave van de regel: %s"
 
 msgid "Connection settings"
 msgstr "Instellingen verbinding"
@@ -13818,6 +13840,10 @@ msgstr "Kopieer alle gebeurtenisregels van de centrale site"
 #, fuzzy
 msgid "Copy codes to clipboard"
 msgstr "Geheim gekopieerd naar klembord"
+
+#, fuzzy
+msgid "Copy connection value representation to clipboard"
+msgstr "Weergave van regelwaarde kopiëren naar klembord"
 
 msgid "Copy existing view"
 msgstr "Bestaand uitzicht kopiëren"
@@ -15538,6 +15564,9 @@ msgstr ""
 "kunt u aangeven in welke sectie van het menu dit dashboard toegankelijk moet "
 "zijn. Als u een nieuwe onderwerpnaam wilt definiëren, kunt u dat <a "
 "href='%s'>hier</a> doen."
+
+msgid "Dashlet too short to render graph"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -20158,6 +20187,9 @@ msgstr ""
 "Ofwel schakel je persistente verbindingen uit, ofwel bekijk je zorgvuldig "
 "het maximum aantal Apache processen en mogelijke livestatus verbindingen."
 
+msgid "Either increase the dashlet height or disable the graph legend."
+msgstr ""
+
 msgid ""
 "Either the minimum or maximum allowed value must be configured, otherwise "
 "this validator is meaningless."
@@ -21901,6 +21933,10 @@ msgstr "Expliciete %s mapping"
 msgid "Explicit Queue Names"
 msgstr "Expliciete wachtrijnamen"
 
+#, fuzzy
+msgid "Explicit condition"
+msgstr "Expliciete voorwaarden"
+
 msgid "Explicit conditions"
 msgstr "Expliciete voorwaarden"
 
@@ -21995,6 +22031,10 @@ msgstr "Gegevens van weergaven exporteren met behulp van de CSV-export"
 msgid ""
 "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the host name"
 msgstr "Exportbestand aan te maken, met <tt>&lt;HOST&gt;</tt> voor de hostnaam"
+
+#, fuzzy
+msgid "Export this connection for API"
+msgstr "Exporteer deze regel voor API"
 
 msgid "Export this rule for API"
 msgstr "Exporteer deze regel voor API"
@@ -37145,6 +37185,10 @@ msgstr "Maximale niveaus voor belasting in procenten"
 msgid "Maximum levels if using magic factor"
 msgstr "Maximum niveaus bij gebruik van magische factor"
 
+#, fuzzy
+msgid "Maximum livestatus response size"
+msgstr "Maximale grootte"
+
 msgid "Maximum log age"
 msgstr "Maximale logleeftijd"
 
@@ -39507,9 +39551,6 @@ msgstr "NetApp snapvault discovery"
 
 #, fuzzy
 msgid "NetApp via Ontap REST API"
-msgstr "NetApp via WebAPI"
-
-msgid "NetApp via WebAPI"
 msgstr "NetApp via WebAPI"
 
 msgid "NetBIOS name of the server"
@@ -41897,6 +41938,14 @@ msgstr "Offline/reserve verhouding"
 msgid "Offline verification"
 msgstr "Offline verificatie"
 
+#, fuzzy
+msgid "Offline verification procedure was not successful"
+msgstr "De online verificatieprocedure was niet succesvol"
+
+#, fuzzy
+msgid "Offline verification procedure was successful"
+msgstr "De online verificatieprocedure was succesvol"
+
 msgid "Offset"
 msgstr "Offset"
 
@@ -41984,6 +42033,26 @@ msgstr "Op geselecteerde plaatsen"
 
 msgid "On selected users"
 msgstr "Op geselecteerde gebruikers"
+
+#, fuzzy, python-format
+msgid ""
+"On the %s you can configure a push configuration, where the monitored host "
+"is expected to send the data to the monitoring server without being actively "
+"triggered.\n"
+"\n"
+"If you are configuring agent only monitoring, you might want to also set the "
+"\"%s\" attribute to \"%s\"."
+msgstr ""
+"Standaard zal de server proberen contact op te nemen met de bewaakte host en "
+"de gegevens ophalen door een TCP-verbinding te initialiseren. Op de %s kunt "
+"u een push-configuratie configureren, waarbij van de bewaakte host wordt "
+"verwacht dat deze de gegevens naar de monitoring server stuurt zonder actief "
+"getriggerd te worden.\n"
+"\n"
+"Als u dit configureert, wilt u misschien ook het \"%s\" attribuut instellen "
+"op \"%s\". Het niet bereikbaar zijn van de host door de site is een van de "
+"belangrijkste redenen waarom u in de eerste plaats de push-verbinding wilt "
+"gebruiken."
 
 msgid ""
 "On this page you can test the defined logfile patterns against a custom "
@@ -45299,10 +45368,12 @@ msgstr "Piggybacked hostnaam expressies"
 msgid "Ping"
 msgstr "Ping"
 
-msgid "Ping IPv4 address identified by its index"
+#, fuzzy
+msgid "Ping IPv4 address identified by its index (starting at 1)"
 msgstr "Ping IPv4 adres geïdentificeerd door zijn index"
 
-msgid "Ping IPv6 address identified by its index"
+#, fuzzy
+msgid "Ping IPv6 address identified by its index (starting at 1)"
 msgstr "Ping IPv6 adres geïdentificeerd door zijn index"
 
 msgid "Ping additional IPv4 addresses"
@@ -49862,6 +49933,9 @@ msgstr "Regelboom"
 
 msgid "Rule activation"
 msgstr "Activering van de regel"
+
+msgid "Rule can only be deleted via Quick setup"
+msgstr ""
 
 msgid "Rule contact groups"
 msgstr "Regel contactgroepen"
@@ -59419,8 +59493,8 @@ msgstr ""
 msgid "The content element \"%s, %s\" cannot be rendered: %s"
 msgstr "Het inhoudselement \"%s, %s\" kan niet worden gerenderd: %s"
 
-#, python-format
-msgid "The content of this file could not be processed successfully: %s"
+#, fuzzy, python-format
+msgid "The content of this file %s could not be processed successfully: %s"
 msgstr "De inhoud van dit bestand kon niet succesvol worden verwerkt: %s"
 
 msgid ""
@@ -60256,6 +60330,10 @@ msgstr ""
 "De negeer optie kan alert regels op verschillende niveaus aanspreken, zowel "
 "specifieke regels als volledige groepen van regels. Overeenkomende regels "
 "zullen uitgefilterd worden aan de alertmanager agent kant."
+
+#, fuzzy
+msgid "The index must be greater or equal to 1."
+msgstr "De tijd mag niet groter zijn dan %02d:%02d."
 
 #, python-format
 msgid "The info %s does not exist."
@@ -62103,6 +62181,10 @@ msgstr ""
 
 msgid "The state of the job is ignored by default."
 msgstr "De status van de job wordt standaard genegeerd."
+
+#, fuzzy
+msgid "The status of this site could not be determined."
+msgstr "De status van dit gebied is nog niet vastgesteld."
 
 msgid "The status of this site has not yet been determined."
 msgstr "De status van dit gebied is nog niet vastgesteld."
@@ -65868,6 +65950,13 @@ msgstr "Deze regel is verouderd. Gebruik in plaats daarvan \"%s\"."
 msgid "This rule is disabled"
 msgstr "Deze regel is uitgeschakeld"
 
+#, python-brace-format
+msgid ""
+"This rule is part of the {hostname} configuration using Quick setup. Some "
+"options cannot be edited to avoid conflicts.<br>Go to Quick setup to edit "
+"all parameters of {hostname}."
+msgstr ""
+
 msgid ""
 "This rule is used to configure thresholds for counter values read from "
 "Siemens PLC devices."
@@ -66080,20 +66169,6 @@ msgstr ""
 "Deze regelset selecteert de speciale agent voor HPE StoreOnce Applainces in "
 "plaats van de normale Checkmk agent en maakt monitoring via Web API "
 "mogelijk. "
-
-msgid ""
-"This rule set selects the NetApp special agent instead of the normal Checkmk "
-"Agent and allows monitoring via the NetApp Web API. To access the data the "
-"user requires permissions to several API classes. They are shown when you "
-"call the agent with <tt>agent_netapp --help</tt>. The agent itself is "
-"located in the site directory under <tt>~/share/check_mk/agents/special</tt>."
-msgstr ""
-"Deze regelset selecteert de speciale NetApp agent in plaats van de normale "
-"Checkmk Agent en maakt monitoring via de NetApp Web API mogelijk. Om toegang "
-"te krijgen tot de gegevens heeft de gebruiker machtigingen nodig voor "
-"verschillende API-klassen. Deze worden getoond wanneer u de agent aanroept "
-"met <tt>agent_netapp --help</tt>. De agent zelf bevindt zich in de "
-"sitedirectory onder <tt>~/share/check_mk/agents/special</tt>."
 
 msgid ""
 "This rule set selects the special agent for HPE StoreOnce Applainces instead "
@@ -66537,6 +66612,13 @@ msgstr "Deze dienst is aan het flapperen"
 
 msgid "This service is stale"
 msgstr "Deze dienst is afgezaagd"
+
+msgid ""
+"This sets the maximum size of messages sent by livestatus. If the value is "
+"too low, livestatus will drop longer responses. However, setting the value "
+"too high may cause CMC issues such as OOM kills and response timeouts.  "
+"Values in the range of 100-500 MB should work in most cases."
+msgstr ""
 
 msgid ""
 "This sets the time that the GUI waits for a connection to the site to be "
@@ -68035,6 +68117,22 @@ msgstr ""
 "Om gegevens naar InfluxDB te sturen met deze verbinding, moet u nog steeds "
 "ten minste één regel configureren die bepaalt welke gegevens moeten worden "
 "verzonden."
+
+#, fuzzy
+msgid ""
+"To set the value of a connection using the REST API, you need to set the "
+"<tt>value_raw</tt> field. The value of this fields is individual for each "
+"connection set. To help you understand what kind of data structure you need "
+"to provide, this connection export mechanism is showing you the value you "
+"need to set for a given connection. The value needs to be a string "
+"representation of a compatible Python data structure."
+msgstr ""
+"Om de waarde van een regel in te stellen met de REST API, moet je het "
+"<tt>value_raw</tt> veld instellen. De waarde van dit veld is individueel "
+"voor elke regelset. Om je te helpen begrijpen wat voor gegevensstructuur je "
+"moet voorzien, toont dit regel export mechanisme je de waarde die je moet "
+"instellen voor een gegeven regel. De waarde moet een string representatie "
+"zijn van een compatibele Python datastructuur."
 
 msgid ""
 "To set the value of a rule using the REST API, you need to set the "
@@ -79315,6 +79413,10 @@ msgstr "[%s] Synchronisatie voor verbinding voltooid"
 msgid "[%s] Finished sync for site"
 msgstr "[%s] Synchronisatie voor site voltooid"
 
+#, fuzzy, python-format
+msgid "[%s] Quick setup"
+msgstr "Snelle installatie"
+
 #, python-format
 msgid "[%s] Starting sync for connection"
 msgstr "[%s] Start synchronisatie voor verbinding"
@@ -81415,6 +81517,27 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Activated the changes"
+#~ msgstr "Activeerde de veranderingen"
+
+#~ msgid "NetApp via WebAPI"
+#~ msgstr "NetApp via WebAPI"
+
+#~ msgid ""
+#~ "This rule set selects the NetApp special agent instead of the normal "
+#~ "Checkmk Agent and allows monitoring via the NetApp Web API. To access the "
+#~ "data the user requires permissions to several API classes. They are shown "
+#~ "when you call the agent with <tt>agent_netapp --help</tt>. The agent "
+#~ "itself is located in the site directory under <tt>~/share/check_mk/agents/"
+#~ "special</tt>."
+#~ msgstr ""
+#~ "Deze regelset selecteert de speciale NetApp agent in plaats van de "
+#~ "normale Checkmk Agent en maakt monitoring via de NetApp Web API mogelijk. "
+#~ "Om toegang te krijgen tot de gegevens heeft de gebruiker machtigingen "
+#~ "nodig voor verschillende API-klassen. Deze worden getoond wanneer u de "
+#~ "agent aanroept met <tt>agent_netapp --help</tt>. De agent zelf bevindt "
+#~ "zich in de sitedirectory onder <tt>~/share/check_mk/agents/special</tt>."
 
 #~ msgid "Address Check mode"
 #~ msgstr "Adres Check mode"

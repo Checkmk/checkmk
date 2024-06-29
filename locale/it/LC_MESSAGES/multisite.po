@@ -3290,9 +3290,6 @@ msgstr "Attivato"
 msgid "Activated changes by %s."
 msgstr "Cambiamenti attivati da %s."
 
-msgid "Activated the changes"
-msgstr "Attivato i cambiamenti"
-
 msgid "Activating"
 msgstr "Attivare"
 
@@ -9932,6 +9929,12 @@ msgstr "Impossibile calcolare le ricette dei grafici"
 msgid "Cannot calculate graph recipes: %s"
 msgstr "Impossibile calcolare le ricette del grafico: %s"
 
+msgid "Cannot change folder of rules managed by Quick setup."
+msgstr ""
+
+msgid "Cannot change rule conditions for rules managed by Quick setup."
+msgstr ""
+
 #, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "Impossibile connettersi al demone degli eventi tramite %s: %s"
@@ -9972,6 +9975,10 @@ msgstr ""
 
 msgid "Cannot delete job. Job cannot be stopped."
 msgstr "Impossibile eliminare il lavoro. Il lavoro non può essere fermato."
+
+#, fuzzy
+msgid "Cannot delete rules that are managed by Quick setup."
+msgstr "Non puoi cancellare i ruoli che sono ancora in uso (%s)!"
 
 #, python-format
 msgid ""
@@ -10525,6 +10532,10 @@ msgstr "Cambiata la variabile di configurazione specifica del sito %s in %s."
 
 msgid "Changes"
 msgstr "Cambiamenti"
+
+#, fuzzy
+msgid "Changes have been activated"
+msgstr "Non è mai stato attivato"
 
 msgid "Changes since last dump"
 msgstr "Cambiamenti dall'ultimo dump"
@@ -12584,6 +12595,9 @@ msgstr "Condizioni"
 msgid "Conditions for this rule to apply"
 msgstr "Condizioni per l'applicazione di questa regola"
 
+msgid "Conditions of rules managed by Quick setup cannot be changed."
+msgstr ""
+
 msgid "Conference Allocation Latency"
 msgstr "Latenza di assegnazione della conferenza"
 
@@ -13047,6 +13061,10 @@ msgstr "Disadattamento della caratteristica configurata"
 msgid "Configured time period parameters"
 msgstr "Parametri del periodo di tempo configurati"
 
+#, python-format
+msgid "Configured with %s Quick setup"
+msgstr ""
+
 msgid ""
 "Configures the number of available filters in the network topology view."
 msgstr ""
@@ -13263,6 +13281,10 @@ msgstr "Connessione persa si è verificata"
 
 msgid "Connection name"
 msgstr "Nome della connessione"
+
+#, fuzzy, python-format
+msgid "Connection representation: %s"
+msgstr "Rappresentazione della regola: %s"
 
 msgid "Connection settings"
 msgstr "Impostazioni di connessione"
@@ -13672,6 +13694,10 @@ msgstr "Copiare tutte le regole degli eventi dal sito centrale"
 
 msgid "Copy codes to clipboard"
 msgstr "Copiare i codici negli appunti"
+
+#, fuzzy
+msgid "Copy connection value representation to clipboard"
+msgstr "Copiare la rappresentazione del valore della regola negli appunti"
 
 msgid "Copy existing view"
 msgstr "Copiare la vista esistente"
@@ -15378,6 +15404,9 @@ msgstr ""
 "opzione, è possibile selezionare in quale sezione del menu questa dashboard "
 "deve essere accessibile. Se si desidera definire il nome di un nuovo "
 "argomento, è possibile farlo <a href='%s'> qui</a>."
+
+msgid "Dashlet too short to render graph"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -19972,6 +20001,9 @@ msgstr ""
 "Disattivare le connessioni persistenti o rivedere attentamente il numero "
 "massimo di processi Apache e le possibili connessioni livestatus."
 
+msgid "Either increase the dashlet height or disable the graph legend."
+msgstr ""
+
 msgid ""
 "Either the minimum or maximum allowed value must be configured, otherwise "
 "this validator is meaningless."
@@ -21695,6 +21727,10 @@ msgstr "Mappatura esplicita %s"
 msgid "Explicit Queue Names"
 msgstr "Nomi di coda espliciti"
 
+#, fuzzy
+msgid "Explicit condition"
+msgstr "Condizioni esplicite"
+
 msgid "Explicit conditions"
 msgstr "Condizioni esplicite"
 
@@ -21791,6 +21827,10 @@ msgid ""
 msgstr ""
 "File di esportazione da creare, contenente <tt>&lt;HOST&gt;</tt> per "
 "l'hostname"
+
+#, fuzzy
+msgid "Export this connection for API"
+msgstr "Esportazione di questa regola per API"
 
 msgid "Export this rule for API"
 msgstr "Esportazione di questa regola per API"
@@ -36796,6 +36836,10 @@ msgstr "Livelli massimi di carico in percentuale"
 msgid "Maximum levels if using magic factor"
 msgstr "Livelli massimi se si usa il fattore magico"
 
+#, fuzzy
+msgid "Maximum livestatus response size"
+msgstr "Dimensione massima"
+
 msgid "Maximum log age"
 msgstr "Età massima del tronco"
 
@@ -39142,9 +39186,6 @@ msgstr "Scoperta di NetApp snapvault"
 msgid "NetApp via Ontap REST API"
 msgstr "NetApp tramite l'API REST di Ontap"
 
-msgid "NetApp via WebAPI"
-msgstr "NetApp via WebAPI"
-
 msgid "NetBIOS name of the server"
 msgstr "Nome NetBIOS del server"
 
@@ -41489,6 +41530,14 @@ msgstr "Rapporto tra offline e ricambio"
 msgid "Offline verification"
 msgstr "Verifica offline"
 
+#, fuzzy
+msgid "Offline verification procedure was not successful"
+msgstr "La procedura di verifica online non è andata a buon fine"
+
+#, fuzzy
+msgid "Offline verification procedure was successful"
+msgstr "La procedura di verifica online è andata a buon fine"
+
 msgid "Offset"
 msgstr "Offset"
 
@@ -41576,6 +41625,25 @@ msgstr "Su siti selezionati"
 
 msgid "On selected users"
 msgstr "Su utenti selezionati"
+
+#, fuzzy, python-format
+msgid ""
+"On the %s you can configure a push configuration, where the monitored host "
+"is expected to send the data to the monitoring server without being actively "
+"triggered.\n"
+"\n"
+"If you are configuring agent only monitoring, you might want to also set the "
+"\"%s\" attribute to \"%s\"."
+msgstr ""
+"Per impostazione predefinita, il server cercherà di contattare l'host "
+"monitorato e di prelevare i dati inizializzando una connessione TCP. Su %s è "
+"possibile configurare una configurazione push, in cui si prevede che l'host "
+"monitorato invii i dati al server di monitoraggio senza essere attivato "
+"attivamente.\n"
+"\n"
+"Se si configura questa configurazione, si consiglia di impostare anche "
+"l'attributo \"%s\" su \"%s\". L'host non raggiungibile dal sito è uno dei "
+"motivi principali per cui si vuole usare la connessione push."
 
 msgid ""
 "On this page you can test the defined logfile patterns against a custom "
@@ -44870,10 +44938,12 @@ msgstr "Espressioni del nome dell'host piggybacked"
 msgid "Ping"
 msgstr "Ping"
 
-msgid "Ping IPv4 address identified by its index"
+#, fuzzy
+msgid "Ping IPv4 address identified by its index (starting at 1)"
 msgstr "Ping indirizzo IPv4 identificato dal suo indice"
 
-msgid "Ping IPv6 address identified by its index"
+#, fuzzy
+msgid "Ping IPv6 address identified by its index (starting at 1)"
 msgstr "Ping indirizzo IPv6 identificato dal suo indice"
 
 msgid "Ping additional IPv4 addresses"
@@ -49403,6 +49473,9 @@ msgstr "Albero delle regole"
 
 msgid "Rule activation"
 msgstr "Attivazione della regola"
+
+msgid "Rule can only be deleted via Quick setup"
+msgstr ""
 
 msgid "Rule contact groups"
 msgstr "Regola gruppi di contatto"
@@ -58870,8 +58943,8 @@ msgstr ""
 msgid "The content element \"%s, %s\" cannot be rendered: %s"
 msgstr "L'elemento di contenuto \"%s, %s\" non può essere reso: %s"
 
-#, python-format
-msgid "The content of this file could not be processed successfully: %s"
+#, fuzzy, python-format
+msgid "The content of this file %s could not be processed successfully: %s"
 msgstr "Non è stato possibile elaborare il contenuto di questo file: %s"
 
 msgid ""
@@ -59692,6 +59765,10 @@ msgstr ""
 "L'opzione ignora può indirizzare le regole di avviso a diversi livelli, "
 "comprese regole specifiche e interi gruppi di regole. Le regole "
 "corrispondenti saranno filtrate dall'agente alertmanager."
+
+#, fuzzy
+msgid "The index must be greater or equal to 1."
+msgstr "Il tempo non deve essere maggiore di %02d:%02d."
 
 #, python-format
 msgid "The info %s does not exist."
@@ -61541,6 +61618,10 @@ msgstr ""
 
 msgid "The state of the job is ignored by default."
 msgstr "Lo stato del lavoro è ignorato per impostazione predefinita."
+
+#, fuzzy
+msgid "The status of this site could not be determined."
+msgstr "Lo stato di questo sito non è ancora stato determinato."
 
 msgid "The status of this site has not yet been determined."
 msgstr "Lo stato di questo sito non è ancora stato determinato."
@@ -65281,6 +65362,13 @@ msgstr "Questa regola è deprecata. Si prega di usare invece \"%s\"."
 msgid "This rule is disabled"
 msgstr "Questa regola è disabilitata"
 
+#, python-brace-format
+msgid ""
+"This rule is part of the {hostname} configuration using Quick setup. Some "
+"options cannot be edited to avoid conflicts.<br>Go to Quick setup to edit "
+"all parameters of {hostname}."
+msgstr ""
+
 msgid ""
 "This rule is used to configure thresholds for counter values read from "
 "Siemens PLC devices."
@@ -65494,20 +65582,6 @@ msgid ""
 msgstr ""
 "Questo set di regole seleziona l'agente speciale NetApp invece del normale "
 "agente Checkmk e consente il monitoraggio tramite l'API REST di NetApp Ontap."
-
-msgid ""
-"This rule set selects the NetApp special agent instead of the normal Checkmk "
-"Agent and allows monitoring via the NetApp Web API. To access the data the "
-"user requires permissions to several API classes. They are shown when you "
-"call the agent with <tt>agent_netapp --help</tt>. The agent itself is "
-"located in the site directory under <tt>~/share/check_mk/agents/special</tt>."
-msgstr ""
-"Questo set di regole seleziona l'agente speciale NetApp invece del normale "
-"agente Checkmk e consente il monitoraggio tramite l'API Web NetApp. Per "
-"accedere ai dati, l'utente deve ottenere le autorizzazioni per diverse "
-"classi API. Queste vengono mostrate quando si chiama l'agente con "
-"<tt>agent_netapp --help</tt>. L'agente stesso si trova nella directory del "
-"sito sotto <tt>~/share/check_mk/agents/special</tt>."
 
 msgid ""
 "This rule set selects the special agent for HPE StoreOnce Applainces instead "
@@ -65951,6 +66025,13 @@ msgstr "Questo servizio si sta sbattendo"
 
 msgid "This service is stale"
 msgstr "Questo servizio è stantio"
+
+msgid ""
+"This sets the maximum size of messages sent by livestatus. If the value is "
+"too low, livestatus will drop longer responses. However, setting the value "
+"too high may cause CMC issues such as OOM kills and response timeouts.  "
+"Values in the range of 100-500 MB should work in most cases."
+msgstr ""
 
 msgid ""
 "This sets the time that the GUI waits for a connection to the site to be "
@@ -67434,6 +67515,23 @@ msgid ""
 msgstr ""
 "Per inviare dati a InfluxDB con questa connessione, è necessario configurare "
 "almeno una regola che determini quali dati devono essere inviati."
+
+#, fuzzy
+msgid ""
+"To set the value of a connection using the REST API, you need to set the "
+"<tt>value_raw</tt> field. The value of this fields is individual for each "
+"connection set. To help you understand what kind of data structure you need "
+"to provide, this connection export mechanism is showing you the value you "
+"need to set for a given connection. The value needs to be a string "
+"representation of a compatible Python data structure."
+msgstr ""
+"Per impostare il valore di una regola utilizzando l'API REST, è necessario "
+"impostare il campo <tt>value_raw</tt>. Il valore di questo campo è "
+"individuale per ogni set di regole. Per aiutarvi a capire che tipo di "
+"struttura di dati dovete fornire, questo meccanismo di esportazione delle "
+"regole vi mostra il valore che dovete impostare per una determinata regola. "
+"Il valore deve essere una rappresentazione stringa di una struttura dati "
+"Python compatibile."
 
 msgid ""
 "To set the value of a rule using the REST API, you need to set the "
@@ -78563,6 +78661,10 @@ msgstr "[%s] Sincronizzazione finita per la connessione"
 msgid "[%s] Finished sync for site"
 msgstr "[%s] Sincronizzazione terminata per il sito"
 
+#, fuzzy, python-format
+msgid "[%s] Quick setup"
+msgstr "Impostazione rapida"
+
 #, python-format
 msgid "[%s] Starting sync for connection"
 msgstr "[%s] Avvio della sincronizzazione per la connessione"
@@ -80632,6 +80734,27 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Activated the changes"
+#~ msgstr "Attivato i cambiamenti"
+
+#~ msgid "NetApp via WebAPI"
+#~ msgstr "NetApp via WebAPI"
+
+#~ msgid ""
+#~ "This rule set selects the NetApp special agent instead of the normal "
+#~ "Checkmk Agent and allows monitoring via the NetApp Web API. To access the "
+#~ "data the user requires permissions to several API classes. They are shown "
+#~ "when you call the agent with <tt>agent_netapp --help</tt>. The agent "
+#~ "itself is located in the site directory under <tt>~/share/check_mk/agents/"
+#~ "special</tt>."
+#~ msgstr ""
+#~ "Questo set di regole seleziona l'agente speciale NetApp invece del "
+#~ "normale agente Checkmk e consente il monitoraggio tramite l'API Web "
+#~ "NetApp. Per accedere ai dati, l'utente deve ottenere le autorizzazioni "
+#~ "per diverse classi API. Queste vengono mostrate quando si chiama l'agente "
+#~ "con <tt>agent_netapp --help</tt>. L'agente stesso si trova nella "
+#~ "directory del sito sotto <tt>~/share/check_mk/agents/special</tt>."
 
 #~ msgid "Address Check mode"
 #~ msgstr "Modalità di controllo dell'indirizzo"

@@ -15518,6 +15518,9 @@ msgstr ""
 "accesibil acest tablou de bord. Dacă doriți să definiți un nou nume de "
 "subiect, puteți face acest lucru <a href='%s'> aici</a>."
 
+msgid "Dashlet too short to render graph"
+msgstr ""
+
 #, python-format
 msgid ""
 "Dashlet type %s could not be found. Please remove it from your dashboard "
@@ -20132,6 +20135,9 @@ msgid ""
 msgstr ""
 "Fie dezactivați conexiunile persistente, fie analizați cu atenție numărul "
 "maxim de procese Apache și conexiunile livestatus posibile."
+
+msgid "Either increase the dashlet height or disable the graph legend."
+msgstr ""
 
 msgid ""
 "Either the minimum or maximum allowed value must be configured, otherwise "
@@ -35964,6 +35970,10 @@ msgstr "Nivelurile maxime pentru incarcare in procente"
 msgid "Maximum levels if using magic factor"
 msgstr "Niveluri maxime dacă se utilizează factorul magic"
 
+#, fuzzy
+msgid "Maximum livestatus response size"
+msgstr "Dimensiunea maximă"
+
 msgid "Maximum log age"
 msgstr "Vârsta maximă a buștenilor"
 
@@ -43429,10 +43439,12 @@ msgstr "Expresii ale numelui de gazdă cu rol de porc"
 msgid "Ping"
 msgstr "Ping"
 
-msgid "Ping IPv4 address identified by its index"
+#, fuzzy
+msgid "Ping IPv4 address identified by its index (starting at 1)"
 msgstr "Ping adresa IPv4 identificată prin indexul său"
 
-msgid "Ping IPv6 address identified by its index"
+#, fuzzy
+msgid "Ping IPv6 address identified by its index (starting at 1)"
 msgstr "Ping adresa IPv6 identificată prin indexul său"
 
 msgid "Ping additional IPv4 addresses"
@@ -58428,6 +58440,10 @@ msgstr ""
 "inclusiv reguli specifice, precum și grupuri întregi de reguli. Regulile "
 "care corespund vor fi filtrate pe partea agentului alertmanager."
 
+#, fuzzy
+msgid "The index must be greater or equal to 1."
+msgstr "Timpul nu trebuie să fie mai mare decât %02d:%02d."
+
 #, python-format
 msgid "The info %s does not exist."
 msgstr "Informația %s nu există."
@@ -60292,6 +60308,10 @@ msgstr ""
 
 msgid "The state of the job is ignored by default."
 msgstr "Starea postului este ignorată în mod implicit."
+
+#, fuzzy
+msgid "The status of this site could not be determined."
+msgstr "Statutul acestui sit nu a fost încă stabilit."
 
 msgid "The status of this site has not yet been determined."
 msgstr "Statutul acestui sit nu a fost încă stabilit."
@@ -64787,6 +64807,13 @@ msgstr "Acest serviciu este în flăcări"
 
 msgid "This service is stale"
 msgstr "Acest serviciu este învechit"
+
+msgid ""
+"This sets the maximum size of messages sent by livestatus. If the value is "
+"too low, livestatus will drop longer responses. However, setting the value "
+"too high may cause CMC issues such as OOM kills and response timeouts.  "
+"Values in the range of 100-500 MB should work in most cases."
+msgstr ""
 
 msgid ""
 "This sets the time that the GUI waits for a connection to the site to be "

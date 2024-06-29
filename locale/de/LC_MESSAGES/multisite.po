@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2024-06-27 18:14+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -15222,6 +15222,9 @@ msgstr ""
 "verfügbar sein soll. Einen neuen Themennamen können Sie <a href='%s'>hier</"
 "a> definieren."
 
+msgid "Dashlet too short to render graph"
+msgstr ""
+
 #, python-format
 msgid ""
 "Dashlet type %s could not be found. Please remove it from your dashboard "
@@ -19652,6 +19655,9 @@ msgstr ""
 "Deaktivieren Sie entweder dauerhafte Verbindungen oder überprüfen Sie "
 "sorgfältig die maximale Anzahl von Apache-Prozessen und möglichen Livestatus-"
 "Verbindungen."
+
+msgid "Either increase the dashlet height or disable the graph legend."
+msgstr ""
 
 msgid ""
 "Either the minimum or maximum allowed value must be configured, otherwise "
@@ -35265,6 +35271,10 @@ msgstr "Obergrenzen für die Last in Prozent"
 msgid "Maximum levels if using magic factor"
 msgstr "Maximale Level bei Verwendung von Magic Factor"
 
+#, fuzzy
+msgid "Maximum livestatus response size"
+msgstr "Maximale Sechseckgröße"
+
 msgid "Maximum log age"
 msgstr "Maximales Logalter"
 
@@ -42634,10 +42644,12 @@ msgstr "Ausdrücke für Piggyback-Host-Namen"
 msgid "Ping"
 msgstr "Ping"
 
-msgid "Ping IPv4 address identified by its index"
+#, fuzzy
+msgid "Ping IPv4 address identified by its index (starting at 1)"
 msgstr "Ping IPv4-Adresse, die durch ihren Index identifiziert wird"
 
-msgid "Ping IPv6 address identified by its index"
+#, fuzzy
+msgid "Ping IPv6 address identified by its index (starting at 1)"
 msgstr "Ping IPv6-Adresse, die durch ihren Index identifiziert wird"
 
 msgid "Ping additional IPv4 addresses"
@@ -57422,6 +57434,10 @@ msgstr ""
 "Übereinstimmende Regeln werden auf der Seite des Alert Manager-Agenten "
 "herausgefiltert."
 
+#, fuzzy
+msgid "The index must be greater or equal to 1."
+msgstr "Die Zeit darf nicht größer als %02d:%02d sein."
+
 #, python-format
 msgid "The info %s does not exist."
 msgstr "Die Informationsquelle %s existiert nicht."
@@ -59326,6 +59342,10 @@ msgstr ""
 
 msgid "The state of the job is ignored by default."
 msgstr "Der Status des Auftrags wird standardmäßig ignoriert."
+
+#, fuzzy
+msgid "The status of this site could not be determined."
+msgstr "Der Status dieser Instanz ist noch nicht festgelegt worden."
 
 msgid "The status of this site has not yet been determined."
 msgstr "Der Status dieser Instanz ist noch nicht festgelegt worden."
@@ -63759,6 +63779,13 @@ msgstr "Dieser Service ist oszilierend"
 
 msgid "This service is stale"
 msgstr "Dieser Service ist veraltet"
+
+msgid ""
+"This sets the maximum size of messages sent by livestatus. If the value is "
+"too low, livestatus will drop longer responses. However, setting the value "
+"too high may cause CMC issues such as OOM kills and response timeouts.  "
+"Values in the range of 100-500 MB should work in most cases."
+msgstr ""
 
 msgid ""
 "This sets the time that the GUI waits for a connection to the site to be "

@@ -15509,6 +15509,9 @@ msgstr ""
 "deve estar acessível. Se quiser definir um novo nome de tópico, pode fazê-lo "
 "<a href='%s'>aqui</a>."
 
+msgid "Dashlet too short to render graph"
+msgstr ""
+
 #, python-format
 msgid ""
 "Dashlet type %s could not be found. Please remove it from your dashboard "
@@ -20098,6 +20101,9 @@ msgid ""
 msgstr ""
 "Desactivar as ligações persistentes ou rever cuidadosamente o número máximo "
 "de processos Apache e possíveis ligações livestatus."
+
+msgid "Either increase the dashlet height or disable the graph legend."
+msgstr ""
 
 msgid ""
 "Either the minimum or maximum allowed value must be configured, otherwise "
@@ -35919,6 +35925,10 @@ msgstr "Níveis máximos de carga em percentagem"
 msgid "Maximum levels if using magic factor"
 msgstr "Níveis máximos se usar factor mágico"
 
+#, fuzzy
+msgid "Maximum livestatus response size"
+msgstr "Tamanho máximo"
+
 msgid "Maximum log age"
 msgstr "Idade máxima de registo"
 
@@ -43359,10 +43369,12 @@ msgstr "Expressões do nome do anfitrião com suporte de porquinho"
 msgid "Ping"
 msgstr "Ping"
 
-msgid "Ping IPv4 address identified by its index"
+#, fuzzy
+msgid "Ping IPv4 address identified by its index (starting at 1)"
 msgstr "Ping endereço IPv4 identificado pelo seu índice"
 
-msgid "Ping IPv6 address identified by its index"
+#, fuzzy
+msgid "Ping IPv6 address identified by its index (starting at 1)"
 msgstr "Ping Endereço IPv6 identificado por seu índice"
 
 msgid "Ping additional IPv4 addresses"
@@ -58286,6 +58298,10 @@ msgstr ""
 "regras específicas e grupos de regras inteiros. As regras correspondentes "
 "serão filtradas no lado do agente alertmanager."
 
+#, fuzzy
+msgid "The index must be greater or equal to 1."
+msgstr "O tempo não deve ser maior do que %02d:%02d."
+
 #, python-format
 msgid "The info %s does not exist."
 msgstr "A informação %s não existe."
@@ -60120,6 +60136,10 @@ msgstr ""
 
 msgid "The state of the job is ignored by default."
 msgstr "O estado do trabalho é ignorado por defeito."
+
+#, fuzzy
+msgid "The status of this site could not be determined."
+msgstr "O status deste site ainda não foi determinado."
 
 msgid "The status of this site has not yet been determined."
 msgstr "O status deste site ainda não foi determinado."
@@ -64538,6 +64558,13 @@ msgstr "Este serviço é de flapping"
 
 msgid "This service is stale"
 msgstr "Este serviço é obsoleto"
+
+msgid ""
+"This sets the maximum size of messages sent by livestatus. If the value is "
+"too low, livestatus will drop longer responses. However, setting the value "
+"too high may cause CMC issues such as OOM kills and response timeouts.  "
+"Values in the range of 100-500 MB should work in most cases."
+msgstr ""
 
 msgid ""
 "This sets the time that the GUI waits for a connection to the site to be "

@@ -15518,6 +15518,9 @@ msgstr ""
 "zijn. Als u een nieuwe onderwerpnaam wilt definiëren, kunt u dat <a "
 "href='%s'>hier</a> doen."
 
+msgid "Dashlet too short to render graph"
+msgstr ""
+
 #, python-format
 msgid ""
 "Dashlet type %s could not be found. Please remove it from your dashboard "
@@ -20111,6 +20114,9 @@ msgid ""
 msgstr ""
 "Ofwel schakel je persistente verbindingen uit, ofwel bekijk je zorgvuldig "
 "het maximum aantal Apache processen en mogelijke livestatus verbindingen."
+
+msgid "Either increase the dashlet height or disable the graph legend."
+msgstr ""
 
 msgid ""
 "Either the minimum or maximum allowed value must be configured, otherwise "
@@ -35937,6 +35943,10 @@ msgstr "Maximale niveaus voor belasting in procenten"
 msgid "Maximum levels if using magic factor"
 msgstr "Maximum niveaus bij gebruik van magische factor"
 
+#, fuzzy
+msgid "Maximum livestatus response size"
+msgstr "Maximale grootte"
+
 msgid "Maximum log age"
 msgstr "Maximale logleeftijd"
 
@@ -43408,10 +43418,12 @@ msgstr "Piggybacked hostnaam expressies"
 msgid "Ping"
 msgstr "Ping"
 
-msgid "Ping IPv4 address identified by its index"
+#, fuzzy
+msgid "Ping IPv4 address identified by its index (starting at 1)"
 msgstr "Ping IPv4 adres geïdentificeerd door zijn index"
 
-msgid "Ping IPv6 address identified by its index"
+#, fuzzy
+msgid "Ping IPv6 address identified by its index (starting at 1)"
 msgstr "Ping IPv6 adres geïdentificeerd door zijn index"
 
 msgid "Ping additional IPv4 addresses"
@@ -58321,6 +58333,10 @@ msgstr ""
 "specifieke regels als volledige groepen van regels. Overeenkomende regels "
 "zullen uitgefilterd worden aan de alertmanager agent kant."
 
+#, fuzzy
+msgid "The index must be greater or equal to 1."
+msgstr "De tijd mag niet groter zijn dan %02d:%02d."
+
 #, python-format
 msgid "The info %s does not exist."
 msgstr "De info %s bestaat niet."
@@ -60157,6 +60173,10 @@ msgstr ""
 
 msgid "The state of the job is ignored by default."
 msgstr "De status van de job wordt standaard genegeerd."
+
+#, fuzzy
+msgid "The status of this site could not be determined."
+msgstr "De status van dit gebied is nog niet vastgesteld."
 
 msgid "The status of this site has not yet been determined."
 msgstr "De status van dit gebied is nog niet vastgesteld."
@@ -64587,6 +64607,13 @@ msgstr "Deze dienst is aan het flapperen"
 
 msgid "This service is stale"
 msgstr "Deze dienst is afgezaagd"
+
+msgid ""
+"This sets the maximum size of messages sent by livestatus. If the value is "
+"too low, livestatus will drop longer responses. However, setting the value "
+"too high may cause CMC issues such as OOM kills and response timeouts.  "
+"Values in the range of 100-500 MB should work in most cases."
+msgstr ""
 
 msgid ""
 "This sets the time that the GUI waits for a connection to the site to be "

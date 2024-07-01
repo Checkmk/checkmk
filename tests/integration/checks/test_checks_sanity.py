@@ -18,6 +18,7 @@ from tests.testlib.agent import (
 )
 from tests.testlib.site import Site
 from tests.testlib.utils import get_services_with_status, ServiceInfo
+from tests.testlib.version import version_from_env
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
@@ -46,6 +47,8 @@ def _host_services(
     site: Site, agent_ctl: Path, request: pytest.FixtureRequest
 ) -> Iterator[dict[str, ServiceInfo]]:
     active_mode = request.param
+    if active_mode and version_from_env().is_saas_edition():
+        pytest.skip("Active mode requires pull agent, which is not available in CSE")
     rule_id = None
     hostname = HostName(f"host-{request.node.callspec.id}")
     site.openapi.create_host(hostname, attributes={"ipaddress": site.http_address, "site": site.id})
@@ -60,19 +63,21 @@ def _host_services(
         if active_mode:
             site.reschedule_services(hostname)
         else:
-            # Reduce check interval to 3 seconds
-            rule_id = site.openapi.create_rule(
-                ruleset_name=RuleGroup.ExtraServiceConf("check_interval"),
-                value=0.05,
-                conditions={
-                    "service_description": {
-                        "match_on": ["Check_MK$"],
-                        "operator": "one_of",
+            if not version_from_env().is_saas_edition():
+                # Reduce check interval to 3 seconds
+                rule_id = site.openapi.create_rule(
+                    ruleset_name=RuleGroup.ExtraServiceConf("check_interval"),
+                    value=0.05,
+                    conditions={
+                        "service_description": {
+                            "match_on": ["Check_MK$"],
+                            "operator": "one_of",
+                        },
                     },
-                },
-            )
-            site.activate_changes_and_wait_for_core_reload()
-            site.wait_for_services_state_update(hostname, "Check_MK", 0, 5, 10)
+                )
+                site.activate_changes_and_wait_for_core_reload()
+            wait_timeout = 5 if not version_from_env().is_saas_edition() else 65
+            site.wait_for_services_state_update(hostname, "Check_MK", 0, wait_timeout, 10)
 
         host_services = site.get_host_services(hostname)
 

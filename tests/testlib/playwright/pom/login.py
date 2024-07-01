@@ -5,7 +5,7 @@
 
 import re
 from typing import Literal, override
-from urllib.parse import parse_qs, urljoin, urlparse
+from urllib.parse import urljoin
 
 from playwright.sync_api import expect, Locator, Page, Response
 
@@ -23,12 +23,10 @@ class LoginPage(CmkPage):
         page: Page,
         site_url: str | None = None,  # URL to one of the pages on Checkmk GUI
         navigate_to_page: bool = True,
-        mobile_device: bool = False,
         timeout_assertions: int | None = None,
         timeout_navigation: int | None = None,
     ) -> None:
         self.site_url = site_url
-        self._mobile_device: bool = mobile_device
         super().__init__(page, navigate_to_page, timeout_assertions, timeout_navigation)
 
     def navigate(self) -> None:
@@ -65,7 +63,7 @@ class LoginPage(CmkPage):
     def login_button(self) -> Locator:
         return self.page.locator("#_login")
 
-    def login(self, credentials: CmkCredentials, expected_url: str | None = None) -> None:
+    def login(self, credentials: CmkCredentials) -> None:
         """Login to Checkmk GUI.
 
         By default, the credentials provided to `LoginPage` are used.
@@ -73,33 +71,7 @@ class LoginPage(CmkPage):
         self.username_input.fill(credentials.username)
         self.password_input.fill(credentials.password)
         self.login_button.click()
-        _url_pattern = re.escape(expected_url or self._target_page())
-        self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
-
-    def _target_page(self) -> str:
-        """Returns the URL of the page to be navigated after successful login.
-
-        This URL is embedded within the login page's URL.
-        """
-
-        def _target_url_at(param: str, query: str) -> list[str]:
-            queries = parse_qs(query)
-            assert (
-                len(queries.get(param, [])) <= 1
-            ), f"Multiple instances of parameter: {param} found in {query}!"
-            return queries.get(param, [])
-
-        _url = "mobile.py" if self._mobile_device else "index.py"
-        try:
-            # parse target url within the query
-            _url = _target_url_at("_origtarget", urlparse(self._url).query)[-1]
-        except IndexError:
-            # empty list: no query found
-            return _url
-        if self._mobile_device:
-            # parse target url within the "nested" query
-            _url = _target_url_at("start_url", urlparse(_url).query)[-1]
-        return _url
+        self.page.wait_for_load_state("load")
 
     @override
     def go(

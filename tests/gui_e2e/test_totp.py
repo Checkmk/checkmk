@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from base64 import b32decode
 from datetime import datetime
+
+from playwright.sync_api import expect
 
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.login import LoginPage
@@ -44,7 +47,9 @@ def test_totp(test_site: Site, logged_in_page: LoginPage, credentials: CmkCreden
     # Log out stuff here
     logged_in_page.main_menu.logout()
     login_page = LoginPage(logged_in_page.page, navigate_to_page=False)
-    login_page.login(credentials, "user_login_two_factor.py")
+    login_page.login(credentials)
+    expect(login_page.page).to_have_url(re.compile("user_login_two_factor.py"))
+
     logged_in_page.get_input("_totp_code").fill("1")
     logged_in_page.get_input("_use_totp_code").click()
 

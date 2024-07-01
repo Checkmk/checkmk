@@ -500,16 +500,15 @@ TEST(AgentConfig, FoldersTest) {
 
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getRoot()));
-        folders.createDataFolderStructure(L"", Folders::Protection::no);
+        folders.createDataFolderStructure(L"");
         EXPECT_TRUE(fs::exists(folders.getData()));
-        EXPECT_TRUE(folders.getData() == folders.makeDefaultDataFolder(
-                                             L"", Folders::Protection::no));
+        EXPECT_TRUE(folders.getData() == folders.makeDefaultDataFolder(L""));
     }
 
     {
         Folders folders;
         auto ret = folders.setRoot(L"WinDefend", L"");  // good to test
-        folders.createDataFolderStructure(L"", Folders::Protection::no);
+        folders.createDataFolderStructure(L"");
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
@@ -518,7 +517,7 @@ TEST(AgentConfig, FoldersTest) {
     {
         Folders folders;
         auto ret = folders.setRoot(L"", value.wstring());  // good to test
-        folders.createDataFolderStructure(L"", Folders::Protection::no);
+        folders.createDataFolderStructure(L"");
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
@@ -528,12 +527,11 @@ TEST(AgentConfig, FoldersTest) {
         Folders folders;
         auto ret =
             folders.setRoot(L"WinDefend", value.wstring());  // good to test
-        folders.createDataFolderStructure(L"", Folders::Protection::no);
+        folders.createDataFolderStructure(L"");
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
-        EXPECT_TRUE(folders.getData() == folders.makeDefaultDataFolder(
-                                             L"", Folders::Protection::no));
+        EXPECT_TRUE(folders.getData() == folders.makeDefaultDataFolder(L""));
     }
 }
 }  // namespace cma::cfg::details

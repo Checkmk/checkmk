@@ -1,0 +1,42 @@
+Title: fix a privilege escalation vulnerability in the Checkmk Windows Agent
+Class: security
+Compatible: compat
+Component: checks
+Date: 1719843798
+Edition: cre
+Level: 2
+Version: 2.2.0p29
+
+This Werk fixes a privilege escalation vulnerability in the Checkmk Windows 
+Agent.
+
+Prior to this Werk, it was possible for authenticated users on the monitored 
+Windows host to execute commands as administrator account that is used to run 
+the Agent, allowing them to elevate their privileges.
+The reason for this issue were excessive write permissions on the 
+<code>ProgramData\checkmk\agent</code> directory.
+
+Note that you must update Checkmk as well as the agent in order to apply this 
+fix.
+
+This issue was found in a commissioned penetration test conducted by modzero 
+GmbH.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0
+
+<em>Mitigations</em>:
+
+If updating is not possible, you can manually remove write access for non-admin 
+users on the <code>ProgramData\checkmk\agent</code> folder.
+To do this, navigate to the folder's property settings and make sure to verify 
+the special permissions and advanced permission settings in addition to the 
+basic permission settings.
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 8.8 High (<code>CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H</code>) 
+and assigned <code>CVE-2024-28827</code>.

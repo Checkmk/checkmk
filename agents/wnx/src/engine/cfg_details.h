@@ -45,8 +45,7 @@ public:
     bool setRootEx(const std::wstring &service_name,  // look in registry
                    const std::wstring &preset_root);  // look in disk
     enum class Protection { no, yes };
-    void createDataFolderStructure(const std::wstring &proposed_folder,
-                                   Protection protection);
+    void createDataFolderStructure(const std::wstring &proposed_folder);
 
     /// for reloading
     void cleanAll();
@@ -126,7 +125,7 @@ public:
 private:
     /// returns path if folder was created successfully
     static std::filesystem::path makeDefaultDataFolder(
-        std::wstring_view data_folder, Protection protection);
+        std::wstring_view data_folder);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
     std::filesystem::path public_logs_;   //

@@ -609,12 +609,10 @@ bool Folders::setRootEx(const std::wstring &service_name,  // look in registry
     return true;
 }  // namespace cma::cfg::details
 
-void Folders::createDataFolderStructure(const std::wstring &proposed_folder,
-                                        Protection protection) {
+void Folders::createDataFolderStructure(const std::wstring &proposed_folder) {
     try {
         fs::path folder = proposed_folder;
-        data_ = makeDefaultDataFolder(folder.lexically_normal().wstring(),
-                                      protection);
+        data_ = makeDefaultDataFolder(folder.lexically_normal().wstring());
     } catch (const std::exception &e) {
         XLOG::l.bp("Cannot create Default Data Folder , exception : {}",
                    e.what());
@@ -802,11 +800,10 @@ int CreateTree(const fs::path &base_path) {
 // to create folder structure in next folders:
 // 1. ProgramData/CorpName/AgentName
 //
-fs::path Folders::makeDefaultDataFolder(std::wstring_view data_folder,
-                                        Protection protection) {
+fs::path Folders::makeDefaultDataFolder(std::wstring_view data_folder) {
     if (data_folder.empty()) {
         using tools::win::GetSomeSystemFolder;
-        auto draw_folder = [](std::wstring_view DataFolder) -> auto{
+        auto draw_folder = [](std::wstring_view DataFolder) -> auto {
             fs::path app_data = DataFolder;
             app_data /= kAppDataCompanyName;
             app_data /= kAppDataAppName;
@@ -818,14 +815,6 @@ fs::path Folders::makeDefaultDataFolder(std::wstring_view data_folder,
 
         auto app_data = draw_folder(app_data_folder);
         auto ret = CreateTree(app_data);
-        if (protection == Protection::yes) {
-            XLOG::d.i("Protection requested");
-            std::vector<std::wstring> commands;
-
-            security::ProtectAll(
-                fs::path(app_data_folder) / kAppDataCompanyName, commands);
-            wtools::ExecuteCommandsAsync(L"all", commands);
-        }
 
         if (ret == 0) {
             return app_data;
@@ -1248,9 +1237,7 @@ void ConfigInfo::initFolders(
     const std::wstring &data_folder)         // look in dis
 {
     cleanFolders();
-    folders_.createDataFolderStructure(
-        data_folder, service_valid_name.empty() ? Folders::Protection::no
-                                                : Folders::Protection::yes);
+    folders_.createDataFolderStructure(data_folder);
 
     // This is not very good idea, but we want
     // to start logging as early as possible
@@ -1268,7 +1255,11 @@ void ConfigInfo::initFolders(
         std::vector<std::wstring> commands;
         wtools::ProtectFileFromUserWrite(exe_path, commands);
         wtools::ProtectPathFromUserAccess(root, commands);
-        wtools::ExecuteCommandsAsync(L"data", commands);
+
+        auto data = folders_.getData();
+        wtools::ProtectPathFromUserAccess(data.parent_path(), commands);
+        wtools::ProtectPathFromUserWrite(data, commands);
+        wtools::ExecuteCommandsAsync(L"all", commands);
     }
 
     if (folders_.getData().empty()) {
@@ -1313,7 +1304,7 @@ bool ConfigInfo::pushFolders(const fs::path &root, const fs::path &data) {
     }
     folders_stack_.push(folders_);
     folders_.setRoot({}, root.wstring());
-    folders_.createDataFolderStructure(data, Folders::Protection::no);
+    folders_.createDataFolderStructure(data);
 
     return true;
 }

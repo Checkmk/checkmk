@@ -7,7 +7,7 @@
 from collections.abc import Sequence
 from logging import Logger
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.definition import RuleGroup
@@ -119,7 +119,7 @@ def _validate_rule_values(
                     "",
                 )
             except (MKUserError, AssertionError, ValueError, TypeError) as e:
-                if version.edition() is version.Edition.CME and ruleset.name in (
+                if version.edition(paths.omd_root) is version.Edition.CME and ruleset.name in (
                     "host_contactgroups",
                     "host_groups",
                     "service_contactgroups",

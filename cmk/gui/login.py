@@ -49,7 +49,7 @@ from cmk.gui.utils.user_errors import user_errors
 
 def register(page_registry: PageRegistry) -> None:
     # TODO: only overwrite this in cse specific files
-    if cmk_version.edition() == cmk_version.Edition.CSE:
+    if cmk_version.edition(cmk.utils.paths.omd_root) == cmk_version.Edition.CSE:
         page_registry.register_page("login")(SaasLoginPage)
         page_registry.register_page("logout")(SaasLogoutPage)
     else:

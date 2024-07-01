@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 
 from cmk.gui import utils
 from cmk.gui.pages import PageRegistry
@@ -103,7 +104,7 @@ def register(
     autocompleter_registry.register_autocompleter(
         "add_to_dashboard_choices", add_to_dashboard_choices_autocompleter
     )
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         autocompleter_registry.register_autocompleter(
             "add_to_report_choices", add_to_report_choices_autocompleter
         )

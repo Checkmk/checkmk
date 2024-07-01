@@ -8,6 +8,7 @@ import pytest
 from tests.testlib.rest_api_client import ClientRegistry
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.gui.valuespec import autocompleter_registry
@@ -25,7 +26,7 @@ def fixture_expected_autocompleters() -> list[str]:
         "monitored_service_description",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         autocompleters.append("combined_graphs")
 
     return autocompleters
@@ -117,7 +118,7 @@ def test_openapi_lenny_autocompleter(
 
 
 @pytest.mark.skipif(
-    cmk_version.edition() is cmk_version.Edition.CRE,
+    cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE,
     reason="combined_graphs is not available in CRE",
 )
 def test_openapi_combined_graphs_autocompleter(

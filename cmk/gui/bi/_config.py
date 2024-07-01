@@ -10,6 +10,7 @@ from collections.abc import Collection, Iterable
 from typing import Any, overload, TypedDict
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
@@ -2280,7 +2281,7 @@ class BIModeAggregations(ABCBIMode):
 
                 table.cell(_("ID"), aggregation_id)
 
-                if cmk_version.edition() is cmk_version.Edition.CME:
+                if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
                     table.cell(_("Customer"))
                     if bi_aggregation.customer:
                         html.write_text_permissive(

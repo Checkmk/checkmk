@@ -7,7 +7,7 @@
 
 from collections.abc import Callable, Sequence
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.version import edition_supports_nagvis
 
 from cmk.gui import hooks
@@ -102,7 +102,7 @@ def register(
 ) -> None:
     _register_automation_commands(automation_command_registry)
     _register_gui_background_jobs(job_registry)
-    if edition_supports_nagvis(version.edition()):
+    if edition_supports_nagvis(version.edition(paths.omd_root)):
         _register_nagvis_hooks()
     _register_config_domains(config_domain_registry)
     host_attributes.register(host_attribute_topic_registry)

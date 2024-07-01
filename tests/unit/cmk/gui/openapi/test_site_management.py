@@ -11,7 +11,7 @@ from pytest import MonkeyPatch
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-from cmk.utils import version
+from cmk.utils import paths, version
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.openapi.endpoints.site_management.common import (
@@ -716,7 +716,7 @@ def test_update_url_prefix_400(clients: ClientRegistry) -> None:
 
 def test_post_site_config_customer_field(clients: ClientRegistry) -> None:
     config = _default_config()
-    if version.edition() is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.CME:
         r = clients.SiteManagement.create(site_config=config)
         assert "customer" in r.json["extensions"]["basic_settings"]
         del config["basic_settings"]["customer"]
@@ -754,7 +754,7 @@ def test_validation_layer_min_config(clients: ClientRegistry) -> None:
             "replicate_extensions": True,
         },
     }
-    if version.edition() is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.CME:
         r["basic_settings"]["customer"] = "provider"
 
     clients.SiteManagement.create(site_config=r)

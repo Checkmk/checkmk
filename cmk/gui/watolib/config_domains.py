@@ -194,7 +194,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
     @classmethod
     def enabled(cls) -> bool:
         return (
-            cmk_version.edition() is not cmk_version.Edition.CRE
+            cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE
             and active_config.liveproxyd_enabled
         )
 

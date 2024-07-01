@@ -10,6 +10,7 @@ from functools import partial
 
 from livestatus import MultiSiteConnection
 
+from cmk.utils import paths
 from cmk.utils.crash_reporting import crash_report_registry
 from cmk.utils.licensing.registry import register_cre_licensing_handler
 from cmk.utils.version import edition, Edition
@@ -111,7 +112,7 @@ from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 
 
 def register_sites_options() -> None:
-    if edition() is not Edition.CME:
+    if edition(paths.omd_root) is not Edition.CME:
         hooks.register_builtin("mkeventd-activate-changes", save_active_config)
     visuals.MultipleSitesFilter.sites_options = cre_sites_options
     visuals.SiteFilter.heading_hook = visuals.cre_site_filter_heading_info
@@ -173,7 +174,7 @@ def register() -> None:
         autocompleter_registry,
     )
 
-    if edition() is not Edition.CSE:  # disabled in CSE
+    if edition(paths.omd_root) is not Edition.CSE:  # disabled in CSE
         backup_register(
             page_registry,
             mode_registry,
@@ -219,7 +220,7 @@ def register() -> None:
         timeperiod_usage_finder_registry,
     )
 
-    if edition() is Edition.CSE:
+    if edition(paths.omd_root) is Edition.CSE:
         userdb_registration.saas_register(user_attribute_registry)
 
     wato_registration.register(

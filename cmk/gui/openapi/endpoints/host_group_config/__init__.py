@@ -20,7 +20,7 @@ A host group object can have the following relations present in `links`:
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils import version
+from cmk.utils import paths, version
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -81,7 +81,7 @@ def create(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     name = body["name"]
     group_details = {"alias": body["alias"]}
-    if version.edition() is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.CME:
         group_details = update_customer_info(group_details, body["customer"])
     groups.add_group(name, "host", group_details)
     group = fetch_group(name, "host")

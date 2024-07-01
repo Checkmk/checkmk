@@ -8,6 +8,7 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.version import edition, Edition
@@ -63,7 +64,7 @@ def _instantiate_ruleset(
                 },
                 **(
                     {}
-                    if edition() is Edition.CRE
+                    if edition(paths.omd_root) is Edition.CRE
                     else {RuleGroup.ExtraServiceConf("_sla_config"): "i am skipped"}
                 ),
             },

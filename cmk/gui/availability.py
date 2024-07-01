@@ -302,7 +302,7 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
             ("service_groups", _("By service group")),
         ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
         ruleset_search_url = makeuri_contextless(
             request,
             [

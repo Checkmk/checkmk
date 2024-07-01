@@ -18,7 +18,7 @@ from six import ensure_str
 
 from livestatus import SiteConfiguration, SiteId
 
-from cmk.utils import render
+from cmk.utils import paths, render
 from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.registry import get_licensing_user_effect
 from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
@@ -506,7 +506,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return True
 
     def _license_allows_activation(self):
-        if edition() in (Edition.CME, Edition.CCE):
+        if edition(paths.omd_root) in (Edition.CME, Edition.CCE):
             # TODO: move to CCE handler to avoid is_cloud_edition check
             license_usage_report_valid = (
                 self._license_usage_report_validity
@@ -620,7 +620,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             )
             return
 
-        if edition_has_enforced_licensing(edition()):
+        if edition_has_enforced_licensing(edition(paths.omd_root)):
             # TODO move to CCE handler to avoid is_cloud_edition check
             if (
                 self._license_usage_report_validity

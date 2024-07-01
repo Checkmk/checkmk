@@ -10,6 +10,7 @@ from typing import Any, Literal, TypedDict
 
 from livestatus import SiteConfigurations
 
+from cmk.utils import paths
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.version import edition, Edition
 
@@ -502,7 +503,7 @@ class CREConfig:
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
 
-    mkeventd_enabled: bool = edition() is not Edition.CSE  # disabled in CSE
+    mkeventd_enabled: bool = edition(paths.omd_root) is not Edition.CSE  # disabled in CSE
     mkeventd_pprint_rules: bool = False
     mkeventd_notify_contactgroup: str = ""
     mkeventd_notify_facility: int = 16

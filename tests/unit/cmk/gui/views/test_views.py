@@ -14,6 +14,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 import cmk.gui.plugins.views
@@ -276,7 +277,7 @@ def test_registered_commands() -> None:
         },
     }
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected.update(
             {
                 "edit_downtimes": {

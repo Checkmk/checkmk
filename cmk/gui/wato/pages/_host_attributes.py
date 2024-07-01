@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -73,7 +74,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
     show_more_mode: bool = False
 
     show_more_mode = user.show_mode != "default_show_less"
-    is_cse = cmk_version.edition() == cmk_version.Edition.CSE
+    is_cse = cmk_version.edition(paths.omd_root) == cmk_version.Edition.CSE
 
     for topic_id, topic_title in get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies

@@ -63,7 +63,7 @@ from cmk.utils.site import omd_site
 from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree
 from cmk.utils.user import UserId
 
-if cmk_version.edition() in [
+if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CEE,
     cmk_version.Edition.CME,
     cmk_version.Edition.CCE,
@@ -193,7 +193,7 @@ class DiagnosticsDump:
             optional_elements.append(CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files))
 
         # CEE options
-        if cmk_version.edition() is not cmk_version.Edition.CRE:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
             rel_checkmk_core_files = parameters.get(OPT_CHECKMK_CORE_FILES)
             if rel_checkmk_core_files:
                 optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))

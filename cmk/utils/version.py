@@ -23,7 +23,6 @@ from functools import cache
 from pathlib import Path
 from typing import Any, Final, NamedTuple, Self
 
-import cmk.utils.paths
 from cmk.utils.site import get_omd_config
 
 
@@ -53,15 +52,15 @@ class Edition(_EditionValue, enum.Enum):
 
 
 @cache
-def omd_version() -> str:
-    version_link = cmk.utils.paths.omd_root / "version"
+def omd_version(omd_root: Path) -> str:
+    version_link = omd_root / "version"
     return version_link.resolve().name
 
 
 @cache
-def edition() -> Edition:
+def edition(omd_root: Path) -> Edition:
     try:
-        return Edition.from_version_string(omd_version())
+        return Edition.from_version_string(omd_version(omd_root))
     except KeyError:
         # Without this fallback CI jobs may fail.
         # The last job known to fail was we the building of the sphinx documentation
@@ -558,7 +557,7 @@ def get_general_version_infos(omd_root: Path) -> dict[str, Any]:
         "time": time.time(),
         "os": _get_os_info(),
         "version": __version__,
-        "edition": edition().short,
+        "edition": edition(omd_root).short,
         "core": _current_monitoring_core(omd_root),
         "python_version": sys.version,
         "python_paths": sys.path,

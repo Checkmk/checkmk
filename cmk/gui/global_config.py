@@ -5,6 +5,7 @@
 
 from pydantic import BaseModel
 
+from cmk.utils import paths
 from cmk.utils.paths import cse_config_dir
 from cmk.utils.rulesets.definition import RuleGroupType
 from cmk.utils.version import edition, Edition
@@ -18,7 +19,7 @@ class GlobalSettings(BaseModel):
     is_activate: set[str]
 
     def is_activated(self, varname: str) -> bool:
-        return edition() is not Edition.CSE or varname in self.is_activate
+        return edition(paths.omd_root) is not Edition.CSE or varname in self.is_activate
 
 
 class RuleSetGroup(BaseModel):

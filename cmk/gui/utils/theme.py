@@ -106,7 +106,7 @@ class Theme:
         See CMESnapshotDataCollector._update_customer_sidebar_top.
         """
         return (
-            edition() is Edition.CME
+            edition(cmk.utils.paths.omd_root) is Edition.CME
             and self.base_dir().joinpath("images", f"{logo_name}.png").exists()
         )
 

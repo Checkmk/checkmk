@@ -6,6 +6,7 @@
 import pytest
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.automation_commands import automation_command_registry
@@ -33,7 +34,7 @@ def test_registered_config_domains() -> None:
         "rrdcached",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_config_domains += [
             "dcd",
             "mknotifyd",
@@ -68,7 +69,7 @@ def test_registered_automation_commands() -> None:
         "rename-hosts-uuid-link",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_automation_commands += [
             "execute-dcd-command",
             "get-agent-requests",
@@ -211,7 +212,7 @@ def test_registered_configvars() -> None:
         "load_frontend_vue",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_vars += [
             "agent_bakery_logging",
             "agent_deployment_enabled",
@@ -309,7 +310,7 @@ def test_registered_configvar_groups() -> None:
         "Developer Tools",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_groups += [
             "Dynamic configuration",
             "Automatic agent updates",

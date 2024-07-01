@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from livestatus import SiteId
 
 import cmk.utils.debug
+from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.plugin_loader import load_plugins_with_exceptions, PluginFailures
 from cmk.utils.site import omd_site
@@ -95,9 +96,9 @@ def load_plugins() -> None:
 
 def _load_plugins() -> PluginFailures:
     yield from load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions")
-    if edition() is not Edition.CRE:
+    if edition(paths.omd_root) is not Edition.CRE:
         yield from load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")
-    if edition() in (Edition.CME, Edition.CCE):
+    if edition(paths.omd_root) in (Edition.CME, Edition.CCE):
         yield from load_plugins_with_exceptions("cmk.post_rename_site.cce.plugins.actions")
 
 

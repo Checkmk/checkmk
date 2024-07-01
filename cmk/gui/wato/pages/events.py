@@ -7,6 +7,7 @@ import abc
 from collections.abc import Callable, Sequence
 from typing import Generic, Literal, TypeVar
 
+from cmk.utils import paths
 from cmk.utils.notify_types import EventRule
 from cmk.utils.version import edition, Edition
 
@@ -290,7 +291,7 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
 
     @classmethod
     def _match_service_level_elements(cls) -> list[DictionaryEntry]:
-        if edition() is Edition.CSE:  # disabled in CSE
+        if edition(paths.omd_root) is Edition.CSE:  # disabled in CSE
             return []
         return [
             (

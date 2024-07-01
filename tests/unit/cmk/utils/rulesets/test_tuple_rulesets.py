@@ -34,7 +34,7 @@ from cmk.utils.tags import TagGroupID, TagID
 
 @pytest.fixture(autouse=True)
 def fake_version(monkeypatch):
-    monkeypatch.setattr(cmk_version, "omd_version", lambda: "1.4.0i1.cee")
+    monkeypatch.setattr(cmk_version, "omd_version", lambda *args, **kw: "1.4.0i1.cee")
 
 
 @pytest.fixture()

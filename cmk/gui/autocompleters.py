@@ -9,6 +9,7 @@ from collections.abc import Callable, Collection, Sequence
 from livestatus import LivestatusColumn, MultiSiteConnection
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.regex import regex
 
 from cmk.gui import sites
@@ -103,7 +104,7 @@ def sites_autocompleter(
 
     choices: Choices = [v for v in sites_options() if _matches_id_or_title(value, v)]
     # CME sort order is already in place
-    if cmk_version.edition() is not cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CME:
         choices.sort(key=lambda a: a[1].lower())
 
     # This part should not exists as the optional(not enforce) would better be not having the filter at all

@@ -425,7 +425,7 @@ class LoggedInUser:
     def get_docs_base_url(self) -> str:
         version = (
             "saas"
-            if edition() == Edition.CSE
+            if edition(cmk.utils.paths.omd_root) == Edition.CSE
             else Version.from_str(__version__).version_base or "master"
         )
         language = "de" if self.language == "de" else "en"

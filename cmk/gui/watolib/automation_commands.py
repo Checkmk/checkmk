@@ -9,6 +9,7 @@ from typing import Any
 
 import cmk.utils.plugin_registry
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_state
 
 
@@ -51,6 +52,6 @@ class AutomationPing(AutomationCommand):
     def execute(self, _unused_request: None) -> dict[str, str]:
         return {
             "version": cmk_version.__version__,
-            "edition": cmk_version.edition().short,
+            "edition": cmk_version.edition(paths.omd_root).short,
             "license_state": get_license_state().name,
         }

@@ -15,6 +15,7 @@ from typing import Final
 
 import redis
 
+from cmk.utils import paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
@@ -324,7 +325,7 @@ class PermissionsHandler:
 
     @staticmethod
     def _permission_global_setting(url: str) -> bool:
-        if edition() is not Edition.CSE:
+        if edition(paths.omd_root) is not Edition.CSE:
             return True
         _, query_vars = file_name_and_query_vars_from_url(url)
         return get_global_config().global_settings.is_activated(query_vars["varname"][0])

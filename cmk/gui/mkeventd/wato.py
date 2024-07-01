@@ -282,7 +282,7 @@ def mib_dirs() -> list[tuple[Path, str]]:
 
 
 def match_event_rule(rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event) -> ec.MatchResult:
-    if edition() is Edition.CME:
+    if edition(cmk.utils.paths.omd_root) is Edition.CME:
         rule_customer_id = (
             rule_pack["customer"] if "customer" in rule_pack else rule.get("customer", SCOPE_GLOBAL)
         )
@@ -529,7 +529,7 @@ def vs_mkeventd_rule_pack(
         ),
     )
 
-    if edition() is Edition.CME:
+    if edition(cmk.utils.paths.omd_root) is Edition.CME:
         elements += customer_api().customer_choice_element(deflt=SCOPE_GLOBAL)
 
     return Dictionary(
@@ -556,7 +556,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
         ),
     ] + rule_option_elements()
 
-    if edition() is Edition.CME:
+    if edition(cmk.utils.paths.omd_root) is Edition.CME:
         if customer:
             # Enforced by rule pack
             elements += [
@@ -1573,7 +1573,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
     def _get_rule_pack_to_mkp_map(self) -> dict[str, Any]:
         return (
             {}
-            if edition() is Edition.CRE
+            if edition(cmk.utils.paths.omd_root) is Edition.CRE
             else cmk.mkp_tool.id_to_mkp(
                 cmk.mkp_tool.Installer(cmk.utils.paths.installed_packages_dir),
                 cmk.mkp_tool.all_rule_pack_files(ec.mkp_rule_pack_dir()),
@@ -1988,7 +1988,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 rules_url = makeuri_contextless(request, rules_url_vars)
                 html.icon_button(rules_url, _("Edit the rules in this pack"), "rules")
 
-                if edition() is not Edition.CRE:
+                if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
                     # Icons for mkp export (CEE/CME only)
                     if type_ == ec.RulePackType.internal:
                         export_url = make_action_link(
@@ -2117,7 +2117,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 table.cell(_("ID"), id_)
                 table.cell(_("Title"), rule_pack["title"])
 
-                if edition() is Edition.CME:
+                if edition(cmk.utils.paths.omd_root) is Edition.CME:
                     table.cell(_("Customer"))
                     if "customer" in rule_pack:
                         html.write_text_permissive(customer_api().get_customer_name(rule_pack))
@@ -2463,7 +2463,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
                 table.cell(_("ID"), HTMLWriter.render_a(rule["id"], edit_url))
 
-                if edition() is Edition.CME:
+                if edition(cmk.utils.paths.omd_root) is Edition.CME:
                     table.cell(_("Customer"))
                     if "customer" in self._rule_pack:
                         html.write_text_permissive(
@@ -2580,7 +2580,7 @@ def _add_change_for_sites(
 ) -> None:
     """If CME, add the changes only for the customer's sites if customer is configured"""
     customer_id: str | None = rule_or_rulepack.get("customer")
-    if edition() is Edition.CME and customer_id is not None:
+    if edition(cmk.utils.paths.omd_root) is Edition.CME and customer_id is not None:
         sites_ = list(customer_api().get_sites_of_customer(customer_id).keys())
     else:
         sites_ = _get_event_console_sync_sites()
@@ -2654,7 +2654,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         vs = self._valuespec()
         rule_pack_dict = vs.from_html_vars("rule_pack")
         vs.validate_value(rule_pack_dict, "rule_pack")
-        if edition() is Edition.CME and "customer" in rule_pack_dict:
+        if edition(cmk.utils.paths.omd_root) is Edition.CME and "customer" in rule_pack_dict:
             self._rule_pack = ec.ECRulePackSpec(
                 id=rule_pack_dict["id"],
                 title=rule_pack_dict["title"],
@@ -2866,7 +2866,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                         )
             num_repl -= 1
 
-        if edition() is Edition.CME and "customer" in self._rule_pack:
+        if edition(cmk.utils.paths.omd_root) is Edition.CME and "customer" in self._rule_pack:
             try:
                 del rule["customer"]
             except KeyError:

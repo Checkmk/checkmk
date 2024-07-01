@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 
 import cmk.utils.plugin_registry
+from cmk.utils import paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, RuleGroupType
 from cmk.utils.version import Edition, edition, mark_edition_only
@@ -81,7 +82,7 @@ class RulespecAllowList:
 
 
 def get_rulespec_allow_list() -> RulespecAllowList | AllowAll:
-    if edition() is not Edition.CSE:
+    if edition(paths.omd_root) is not Edition.CSE:
         return AllowAll()
     return RulespecAllowList.from_config()
 

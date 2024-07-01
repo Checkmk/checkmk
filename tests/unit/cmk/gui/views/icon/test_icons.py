@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 
 import cmk.gui.permissions
 import cmk.gui.views
@@ -51,7 +52,7 @@ def test_builtin_icons_and_actions() -> None:
         "wato",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_icons_and_actions += [
             "agent_deployment",
             "deployment_status",

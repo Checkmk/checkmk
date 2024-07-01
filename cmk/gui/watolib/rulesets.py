@@ -18,7 +18,7 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import Any, assert_never, cast, Final
 
-from cmk.utils import store
+from cmk.utils import paths, store
 from cmk.utils.config_validation_layer.rules import validate_rulesets
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.global_ident_type import GlobalIdent
@@ -537,7 +537,7 @@ class AllRulesets(RulesetCollection):
 
 
 def visible_rulesets(rulesets: Mapping[RulesetName, Ruleset]) -> Mapping[RulesetName, Ruleset]:
-    if edition() is not Edition.CSE:
+    if edition(paths.omd_root) is not Edition.CSE:
         return rulesets
 
     allow_list = RulespecAllowList.from_config()
@@ -549,7 +549,7 @@ def visible_rulesets(rulesets: Mapping[RulesetName, Ruleset]) -> Mapping[Ruleset
 
 
 def visible_ruleset(rulespec_name: str) -> bool:
-    if edition() is not Edition.CSE:
+    if edition(paths.omd_root) is not Edition.CSE:
         return True
 
     return RulespecAllowList.from_config().is_visible(rulespec_name)

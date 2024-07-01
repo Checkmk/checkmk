@@ -8,11 +8,12 @@ Entries of the main_menu_registry must NOT be registered in this module to keep 
 in this module as small as possible.
 """
 
+from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_message
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.version import __version__, edition, Edition
 
-if edition() is Edition.CSE:
+if edition(paths.omd_root) is Edition.CSE:
     from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding
 
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -111,7 +112,7 @@ def _help_menu_topics() -> list[TopicMenuTopic]:
         ),
     ]
 
-    if edition() == Edition.CSE and user_may_see_saas_onboarding(user.id):
+    if edition(paths.omd_root) == Edition.CSE and user_may_see_saas_onboarding(user.id):
         learning_items.append(
             TopicMenuItem(
                 name="getting_started", title=_("Getting started"), sort_index=10, url=""
@@ -218,7 +219,7 @@ mega_menu_registry.register(
         icon="main_help",
         sort_index=18,
         topics=_help_menu_topics,
-        info_line=lambda: f"{edition().title} {__version__}{license_status()}",
+        info_line=lambda: f"{edition(paths.omd_root).title} {__version__}{license_status()}",
     )
 )
 

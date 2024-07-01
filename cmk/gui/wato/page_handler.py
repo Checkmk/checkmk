@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
-from cmk.utils import store
+from cmk.utils import paths, store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import configuration_lockfile
 
@@ -69,7 +69,7 @@ def page_handler() -> None:
     # chance to configure a backup for remote sites.
     # config.current_customer can not be checked with CRE repos
     if (
-        cmk_version.edition() is cmk_version.Edition.CME
+        cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME
         and not customer_api().is_provider(active_config.current_customer)
         and not current_mode.startswith(("backup", "edit_backup"))
     ):

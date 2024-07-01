@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils import paths
 from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import edition, Edition
@@ -183,7 +184,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
 
 
 def _fetch_events_and_logs_elements() -> list[DictionaryEntry]:
-    if edition() is Edition.CSE:  # disabled in CSE
+    if edition(paths.omd_root) is Edition.CSE:  # disabled in CSE
         return []
     return [
         (

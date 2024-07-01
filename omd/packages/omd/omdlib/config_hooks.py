@@ -31,6 +31,7 @@ import pydantic
 from omdlib.type_defs import ConfigChoiceHasError
 
 import cmk.utils.resulttype as result
+from cmk.utils import paths
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.version import edition
@@ -212,7 +213,7 @@ def load_defaults(site: "SiteContext") -> dict[str, str]:
         return {}
 
     return {
-        hook_name: call_hook(site, hook_name, ["default", edition().short])[1]
+        hook_name: call_hook(site, hook_name, ["default", edition(paths.omd_root).short])[1]
         for hook_name in sort_hooks(os.listdir(site.hook_dir))
         if hook_name[0] != "."
     }

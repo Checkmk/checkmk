@@ -11,10 +11,12 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
-managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
+managedtest = pytest.mark.skipif(
+    version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
+)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")

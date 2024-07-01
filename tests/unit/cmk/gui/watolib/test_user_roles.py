@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 
 import cmk.gui.utils.transaction_manager
 from cmk.gui.exceptions import MKUserError
@@ -44,10 +45,16 @@ def test_deleting_cloned_user_roles(request_context: None) -> None:
     userroles.clone_role(RoleID("admin"))
 
     all_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
-    assert len(all_roles) == 5 if cmk_version.edition() is cmk_version.Edition.CCE else 4
+    assert (
+        len(all_roles) == 5 if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CCE else 4
+    )
     userroles.delete_role(RoleID("adminx"))
     roles_after_deletion: Mapping[RoleID, UserRole] = userroles.get_all_roles()
-    assert len(roles_after_deletion) == 4 if cmk_version.edition() is cmk_version.Edition.CCE else 3
+    assert (
+        len(roles_after_deletion) == 4
+        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CCE
+        else 3
+    )
 
 
 def test_cloning_user_roles(request_context: None) -> None:
@@ -57,7 +64,9 @@ def test_cloning_user_roles(request_context: None) -> None:
         userroles.clone_role(roleid)
 
     all_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
-    assert len(all_roles) == 8 if cmk_version.edition() is cmk_version.Edition.CCE else 6
+    assert (
+        len(all_roles) == 8 if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CCE else 6
+    )
     assert {roleid for roleid in all_roles.keys() if roleid.endswith("x")} == {
         "adminx",
         "guestx",

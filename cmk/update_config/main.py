@@ -180,7 +180,7 @@ def _load_plugins(logger: logging.Logger) -> None:
         load_plugins_with_exceptions("cmk.update_config.plugins.actions"),
         (
             []
-            if edition() is Edition.CRE
+            if edition(paths.omd_root) is Edition.CRE
             else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions")
         ),
     ):
@@ -194,7 +194,7 @@ def _load_pre_plugins() -> None:
         load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"),
         (
             []
-            if edition() is Edition.CRE
+            if edition(paths.omd_root) is Edition.CRE
             else load_plugins_with_exceptions("cmk.update_config.cee.plugins.pre_actions")
         ),
     ):

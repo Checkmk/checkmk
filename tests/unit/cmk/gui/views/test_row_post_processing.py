@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.structured_data import ImmutableTree
 
@@ -19,7 +20,7 @@ def test_post_processor_registrations() -> None:
         "inventory_row_post_processor",
         "join_service_row_post_processor",
     ]
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected.append("sla_row_post_processor")
     assert sorted(names) == sorted(expected)
 

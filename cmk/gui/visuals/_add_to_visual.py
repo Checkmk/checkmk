@@ -11,6 +11,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
@@ -93,7 +94,10 @@ def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> list[PageMenuD
             )
         )
 
-    if add_type == "pnpgraph" and cmk_version.edition() is not cmk_version.Edition.CRE:
+    if (
+        add_type == "pnpgraph"
+        and cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE
+    ):
         visual_topics.append(
             PageMenuTopic(
                 title=_("Export"),
@@ -183,7 +187,7 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
             )
         ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         entries.append(
             PageMenuEntry(
                 title=_("Add to report"),

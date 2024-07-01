@@ -23,6 +23,7 @@ from livestatus import (
     UnixSocketInfo,
 )
 
+from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.paths import livestatus_unix_socket
@@ -315,7 +316,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
             )
             continue
 
-        central_edition = edition()
+        central_edition = edition(paths.omd_root)
         central_version = __version__
         remote_edition = _edition_from_livestatus(remote_edition)
         central_license_state = get_license_state()

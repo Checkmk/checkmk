@@ -22,7 +22,7 @@ from marshmallow import fields as _fields
 from marshmallow import post_load, pre_dump, utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.exceptions import MKException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExpression
@@ -1053,7 +1053,7 @@ class SiteField(base.String):
 
 
 def customer_field(**kw):
-    if version.edition() is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.CME:
         return _CustomerField(**kw)
     return None
 

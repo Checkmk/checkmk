@@ -9,6 +9,7 @@ from collections.abc import Callable
 from typing import Any, Literal
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.notify_types import EventRule
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.regex import GROUP_NAME_PATTERN
@@ -93,7 +94,7 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
 
     _set_group(all_groups, group_type, name, extra_info)
     customer = customer_api()
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         old_customer = customer.get_customer_id(old_group_backup)
         new_customer = customer.get_customer_id(extra_info)
         if old_customer != new_customer:

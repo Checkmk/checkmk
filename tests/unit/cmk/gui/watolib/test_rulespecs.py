@@ -12,6 +12,7 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -168,7 +169,7 @@ def _expected_rulespec_group_choices():
         ("vm_cloud_container", "VM, cloud, container"),
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected += [
             ("agents/agent_plugins", "&nbsp;&nbsp;\u2319 Agent plug-ins"),
             ("agents/automatic_updates", "&nbsp;&nbsp;\u2319 Automatic Updates"),
@@ -301,7 +302,7 @@ def test_rulespec_get_all_groups() -> None:
         "eventconsole",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_rulespec_groups += [
             "agents/automatic_updates",
             "agents/linux_agent",
@@ -346,7 +347,7 @@ def test_rulespec_get_host_groups() -> None:
         "vm_cloud_container",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_rulespec_host_groups += [
             "agents/agent_plugins",
             "agents/automatic_updates",

@@ -289,7 +289,7 @@ def _fake_version_and_paths() -> None:
 
     monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
     monkeypatch.setattr(
-        cmk_version, "omd_version", lambda: f"{cmk_version.__version__}.{edition_short}"
+        cmk_version, "omd_version", lambda *args, **kw: f"{cmk_version.__version__}.{edition_short}"
     )
 
 

@@ -389,7 +389,7 @@ class ModeDiagnostics(WatoMode):
             ),
         ]
 
-        if cmk_version.edition() is not cmk_version.Edition.CRE:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
             elements.append(
                 (
                     OPT_PERFORMANCE_GRAPHS,
@@ -463,7 +463,7 @@ class ModeDiagnostics(WatoMode):
             ),
         ]
 
-        if cmk_version.edition() is not cmk_version.Edition.CRE:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
             elements.append(
                 (
                     OPT_COMP_CMC,

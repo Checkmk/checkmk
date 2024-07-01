@@ -78,7 +78,7 @@ class PageAutomationLogin(AjaxPage):
             repr(
                 {
                     "version": cmk_version.__version__,
-                    "edition_short": cmk_version.edition().short,
+                    "edition_short": cmk_version.edition(cmk.utils.paths.omd_root).short,
                     "login_secret": _get_login_secret(create_on_demand=True),
                 }
             )
@@ -252,7 +252,7 @@ def _set_version_headers() -> None:
     Has been added with 2.0.0p13.
     """
     response.headers["x-checkmk-version"] = cmk_version.__version__
-    response.headers["x-checkmk-edition"] = cmk_version.edition().short
+    response.headers["x-checkmk-edition"] = cmk_version.edition(cmk.utils.paths.omd_root).short
 
 
 def _get_login_secret(create_on_demand: bool = False) -> str | None:

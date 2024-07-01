@@ -10,7 +10,7 @@ from typing import Any, Literal
 
 from livestatus import MultiSiteConnection, SiteId
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.version import edition, Edition
@@ -32,7 +32,7 @@ GroupDomainType = Literal[
 
 
 def complement_customer(details):
-    if edition() is not Edition.CME:
+    if edition(paths.omd_root) is not Edition.CME:
         return details
 
     if "customer" in details:
@@ -76,7 +76,7 @@ def serialize_group(name: GroupDomainType) -> Callable[[GroupSpec], DomainObject
         if "customer" in group:
             customer_id = group["customer"]
             extensions["customer"] = "global" if customer_id is None else customer_id
-        elif edition() is Edition.CME:
+        elif edition(paths.omd_root) is Edition.CME:
             extensions["customer"] = customer_api().default_customer_id()
 
         extensions["alias"] = group["alias"]
@@ -112,7 +112,7 @@ def prepare_groups(group_type: GroupType, entries: list[dict[str, Any]]) -> Grou
             already_existing.append(name)
             continue
         group_details: GroupSpec = {"alias": details["alias"]}
-        if version.edition() is version.Edition.CME:
+        if version.edition(paths.omd_root) is version.Edition.CME:
             group_details = update_customer_info(group_details, details["customer"])
         groups[name] = group_details
 
@@ -251,7 +251,7 @@ def update_customer_info(
 def group_edit_details(body: GroupSpec) -> GroupSpec:
     group_details: GroupSpec = {k: v for k, v in body.items() if k != "customer"}
 
-    if version.edition() is version.Edition.CME and "customer" in body:
+    if version.edition(paths.omd_root) is version.Edition.CME and "customer" in body:
         group_details = update_customer_info(group_details, body["customer"])
     return group_details
 

@@ -5,6 +5,7 @@
 
 from typing import Final
 
+from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import edition, Edition
 
@@ -56,7 +57,7 @@ CCE_AZURE_SERVICES: Final = [
 
 
 def get_azure_services() -> list[tuple[str, str]]:
-    if edition() in (Edition.CME, Edition.CCE):
+    if edition(paths.omd_root) in (Edition.CME, Edition.CCE):
         return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
 
     return RAW_AZURE_SERVICES

@@ -20,7 +20,7 @@ from uuid import UUID
 import livestatus
 
 import cmk.utils.version as cmk_version
-from cmk.utils import store
+from cmk.utils import paths, store
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageSample,
@@ -164,7 +164,7 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
     return LicenseUsageSample(
         instance_id=instance_id,
         site_hash=site_hash,
-        version=cmk_version.omd_version(),
+        version=cmk_version.omd_version(paths.omd_root),
         edition=general_infos["edition"],
         platform=general_infos["os"],
         is_cma=cmk_version.is_cma(),

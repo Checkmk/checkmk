@@ -12,7 +12,7 @@ from typing import Any, cast, NamedTuple
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.version as cmk_version
-from cmk.utils import store
+from cmk.utils import paths, store
 from cmk.utils.site import omd_site
 
 import cmk.gui.sites
@@ -357,7 +357,7 @@ class SiteManagement:
             folder_tree().invalidate_caches()
             cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
-            if cmk_version.edition_supports_nagvis(cmk_version.edition()):
+            if cmk_version.edition_supports_nagvis(cmk_version.edition(paths.omd_root)):
                 _create_nagvis_backends(sites)
 
             # Call the sites saved hook
@@ -414,7 +414,7 @@ class SiteManagement:
 class SiteManagementFactory:
     @staticmethod
     def factory() -> SiteManagement:
-        if cmk_version.edition() is cmk_version.Edition.CRE:
+        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
             cls: type[SiteManagement] = CRESiteManagement
         else:
             cls = CEESiteManagement

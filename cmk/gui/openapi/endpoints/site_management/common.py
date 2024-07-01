@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils import version
+from cmk.utils import paths, version
 
 from cmk.gui.rest_api_types.site_connection import SiteConfig
 
@@ -58,7 +58,7 @@ def default_config_example() -> SiteConfig:
         },
     }
 
-    if version.edition() is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.CME:
         r["basic_settings"] = {
             "alias": "Die remote site 1",
             "site_id": "site_id_1",

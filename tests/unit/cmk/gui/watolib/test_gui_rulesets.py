@@ -14,7 +14,7 @@ from pytest import FixtureRequest
 
 from tests.unit.cmk.gui.conftest import SetConfig
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets import ruleset_matcher
@@ -652,7 +652,7 @@ class _RuleHelper:
         pytest.param(
             _RuleHelper(_RuleHelper.ssh_rule, "sshkey", ("new_priv", "public_key"), "runas"),
             marks=pytest.mark.skipif(
-                version.edition() is version.Edition.CRE,
+                version.edition(paths.omd_root) is version.Edition.CRE,
                 reason="lnx_remote_alert_handlers is not available in raw edition",
             ),
         ),

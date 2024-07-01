@@ -6,6 +6,7 @@
 from collections.abc import Iterator
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 
 from cmk.gui import pagetypes, visuals
 from cmk.gui.bi import is_part_of_aggregation
@@ -348,7 +349,7 @@ def _get_combined_graphs_entry(
 
 
 def _show_combined_graphs_context_button(view: View) -> bool:
-    if cmk_version.edition() is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
         return False
 
     if view.name == "service":

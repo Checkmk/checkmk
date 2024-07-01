@@ -5,6 +5,7 @@
 
 from collections.abc import Sequence
 
+from cmk.utils import paths
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.http import request
@@ -38,7 +39,7 @@ class NotificationParameterMail(NotificationParameter):
             elements=self._parameter_elements,
             hidden_keys=(
                 ["from", "url_prefix", "disable_multiplexing", "smtp"]
-                if edition() == Edition.CSE
+                if edition(paths.omd_root) == Edition.CSE
                 else []
             ),
         )
@@ -189,7 +190,9 @@ $LONGSERVICEOUTPUT$
         return Dictionary(
             title=_("Create notification with the following parameters"),
             elements=elements,
-            hidden_keys=(["from", "disable_multiplexing"] if edition() == Edition.CSE else []),
+            hidden_keys=(
+                ["from", "disable_multiplexing"] if edition(paths.omd_root) == Edition.CSE else []
+            ),
         )
 
 

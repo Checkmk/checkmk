@@ -10,6 +10,7 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
@@ -54,7 +55,7 @@ def test_registered_automations() -> None:
         "update-passwords-merged-file",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         needed_automations += [
             "bake-agents",
         ]

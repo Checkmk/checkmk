@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.version import edition_supports_nagvis
 
 from cmk.gui.pages import PageRegistry
@@ -47,7 +47,7 @@ def register(snapin_registry_: SnapinRegistry, page_registry: PageRegistry) -> N
     snapin_registry_.register(HostGroups)
     snapin_registry_.register(ServiceGroups)
     snapin_registry_.register(MasterControlSnapin)
-    if edition_supports_nagvis(version.edition()):
+    if edition_supports_nagvis(version.edition(paths.omd_root)):
         snapin_registry_.register(NagVisMaps)
     snapin_registry_.register(Performance)
     snapin_registry_.register(QuicksearchSnapin)

@@ -8,6 +8,7 @@ import sys
 import pytest
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 
 import cmk.gui.pages
 
@@ -155,7 +156,7 @@ def test_registered_pages() -> None:
         "gui_timings",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_pages += [
             "ajax_host_overview_tooltip",
             "ajax_pagetype_add_element",
@@ -227,7 +228,7 @@ def test_registered_pages() -> None:
             "download_robotmk_suite_report",
         ]
 
-    if cmk_version.edition() is cmk_version.Edition.CSE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CSE:
         expected_pages += [
             "ajax_saas_onboarding_button_toggle",
             "noauth:cognito_sso",

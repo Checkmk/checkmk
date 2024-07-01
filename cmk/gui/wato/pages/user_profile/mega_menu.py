@@ -5,9 +5,10 @@
 
 """The user profile mega menu and related AJAX endpoints"""
 
+import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
-if cmk_version.edition() is cmk_version.Edition.CSE:
+if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CSE:
     from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding
 
 from cmk.gui.exceptions import MKUserError
@@ -29,7 +30,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("ajax_sidebar_position")(ModeAjaxCycleSidebarPosition)
     page_registry.register_page("ajax_set_dashboard_start_url")(ModeAjaxSetStartURL)
 
-    if cmk_version.edition() == cmk_version.Edition.CSE:
+    if cmk_version.edition(cmk.utils.paths.omd_root) == cmk_version.Edition.CSE:
         page_registry.register_page("ajax_saas_onboarding_button_toggle")(
             ModeAjaxCycleSaasOnboardingButtonToggle
         )
@@ -91,7 +92,9 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
         ),
     ]
 
-    if cmk_version.edition() == cmk_version.Edition.CSE and user_may_see_saas_onboarding(user.id):
+    if cmk_version.edition(
+        cmk.utils.paths.omd_root
+    ) == cmk_version.Edition.CSE and user_may_see_saas_onboarding(user.id):
         quick_items.append(
             TopicMenuItem(
                 name="saas_onboarding_button_toggle",
@@ -118,7 +121,7 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
         ),
     ]
 
-    if cmk_version.edition() != cmk_version.Edition.CSE:
+    if cmk_version.edition(cmk.utils.paths.omd_root) != cmk_version.Edition.CSE:
         items.extend(
             [
                 TopicMenuItem(

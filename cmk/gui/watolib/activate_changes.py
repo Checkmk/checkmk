@@ -1568,7 +1568,7 @@ class ActivateChangesManager(ActivateChanges):
                 pass
 
             snapshot_manager = SnapshotManager.factory(
-                work_dir, site_snapshot_settings, version.edition()
+                work_dir, site_snapshot_settings, version.edition(paths.omd_root)
             )
             snapshot_manager.generate_snapshots()
             logger.debug("Config sync snapshot creation took %.4f", time.time() - start)

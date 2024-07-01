@@ -12,6 +12,7 @@ from pathlib import Path
 from types import ModuleType
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 from cmk.gui import utils
@@ -126,13 +127,13 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
 def _plugin_package_names(main_module_name: str) -> Iterator[str]:
     yield f"cmk.gui.plugins.{main_module_name}"
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         yield f"cmk.gui.cee.plugins.{main_module_name}"
 
     if (
-        cmk_version.edition() is cmk_version.Edition.CCE
-        or cmk_version.edition() is cmk_version.Edition.CSE
-        or cmk_version.edition() is cmk_version.Edition.CME
+        cmk_version.edition(paths.omd_root) is cmk_version.Edition.CCE
+        or cmk_version.edition(paths.omd_root) is cmk_version.Edition.CSE
+        or cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME
     ):
         yield f"cmk.gui.cce.plugins.{main_module_name}"
 

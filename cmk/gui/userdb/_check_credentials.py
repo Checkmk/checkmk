@@ -142,7 +142,7 @@ def user_exists_according_to_profile(username: UserId) -> bool:
 
 
 def is_customer_user_allowed_to_login(user_id: UserId) -> bool:
-    if cmk_version.edition() is not cmk_version.Edition.CME:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CME:
         return True
 
     user = LoggedInUser(user_id)

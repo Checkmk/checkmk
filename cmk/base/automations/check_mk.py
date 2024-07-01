@@ -1297,7 +1297,7 @@ class AutomationRenameHosts(Automation):
             actions.append("retention")
 
         # NagVis maps
-        if edition_supports_nagvis(version.edition()) and self.rename_host_in_files(
+        if edition_supports_nagvis(version.edition(omd_root)) and self.rename_host_in_files(
             "%s/etc/nagvis/maps/*.cfg" % omd_root,
             "^[[:space:]]*host_name=%s[[:space:]]*$" % oldregex,
             "host_name=%s" % newname,

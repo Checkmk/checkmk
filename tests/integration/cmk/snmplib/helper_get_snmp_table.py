@@ -28,7 +28,7 @@ from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-viol
     StoredWalkSNMPBackend,
 )
 
-if edition() is not Edition.CRE:
+if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
     from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=import-error,no-name-in-module,cmk-module-layer-violation
         InlineSNMPBackend,
     )

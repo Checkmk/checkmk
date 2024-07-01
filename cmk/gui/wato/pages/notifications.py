@@ -14,7 +14,7 @@ from typing import Any, cast, Literal, NamedTuple, overload
 
 from livestatus import LivestatusResponse, SiteId
 
-from cmk.utils import store
+from cmk.utils import paths, store
 from cmk.utils.labels import Labels
 from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import EventRule, is_always_bulk, NotifyAnalysisInfo
@@ -209,7 +209,7 @@ class ABCNotificationsMode(ABCEventsMode):
 
     @classmethod
     def _match_event_console_elements(cls) -> list[DictionaryEntry]:
-        if edition() is Edition.CSE:  # disabled in CSE
+        if edition(paths.omd_root) is Edition.CSE:  # disabled in CSE
             return []
 
         def migrate_ec_rule_id_match(val):
@@ -431,7 +431,7 @@ class ABCNotificationsMode(ABCEventsMode):
                     ("ec_contact", _("Event Console contact")),
                     ("ec_comment", _("Event Console comment")),
                 ]
-                if edition() is not Edition.CSE  # disabled in CSE
+                if edition(paths.omd_root) is not Edition.CSE  # disabled in CSE
                 else []
             ),
             default_value=["host"],
@@ -2159,7 +2159,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 "contact_match_macros",
                 "contact_match_groups",
             ],
-            hidden_keys=["contact_emails"] if edition() == Edition.CSE else [],
+            hidden_keys=["contact_emails"] if edition(paths.omd_root) == Edition.CSE else [],
             headers=headers_part1 + contact_headers + headers_part2,
             render="form",
             form_narrow=True,

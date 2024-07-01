@@ -432,7 +432,7 @@ def _slow_view_logging_help():
 
 def _add_saml_log_level(params: dict[str, int]) -> dict[str, int]:
     """Update version 2.1 -> 2.2"""
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
         params.setdefault("cmk.web.saml2", 30)
     return params
 
@@ -507,7 +507,7 @@ class ConfigVariableLogLevels(ConfigVariable):
             ("cmk.web.slow-views", _("Slow views"), _slow_view_logging_help()),
         ]
 
-        if edition() is not Edition.CRE:
+        if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
             loggers.extend(
                 [
                     (
@@ -3787,7 +3787,10 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
         ),
     ]
 
-    if user.may("wato.add_or_modify_executables") and edition() is not Edition.CSE:
+    if (
+        user.may("wato.add_or_modify_executables")
+        and edition(cmk.utils.paths.omd_root) is not Edition.CSE
+    ):
         choices.append(("custom", _("Use a custom check plug-in..."), PluginCommandLine()))
 
     return choices
@@ -5120,7 +5123,7 @@ def _valuespec_automatic_host_removal() -> CascadingDropdown:
                     filename="wato.py",
                 )
             )
-            if edition() in (Edition.CME, Edition.CCE)
+            if edition(cmk.utils.paths.omd_root) in (Edition.CME, Edition.CCE)
             else ""
         ),
         sorted=False,

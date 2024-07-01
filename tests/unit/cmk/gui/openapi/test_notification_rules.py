@@ -11,7 +11,7 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
 from cmk.utils.tags import TagID
 
@@ -45,7 +45,9 @@ from cmk.gui.wato._notification_parameter._registry import (
 )
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 
-managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
+managedtest = pytest.mark.skipif(
+    version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
+)
 
 
 def test_get_notification_rule(clients: ClientRegistry) -> None:

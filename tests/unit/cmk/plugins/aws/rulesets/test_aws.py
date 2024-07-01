@@ -9,6 +9,7 @@ from typing import Generator
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.utils import paths
 from cmk.utils.version import Edition, edition
 
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
@@ -79,7 +80,7 @@ def test_vs_to_fs_rule_update_valid_datatypes() -> None:
     assert value["access"]["global_service_region"] == "us_gov_east_1"
     assert value["regions_to_monitor"] == ["ap_northeast_2", "ap_southeast_2"]
     assert value["overall_tags"] == [{"key": "global_restrict_key", "values": ["value1"]}]
-    if edition() is Edition.CCE:
+    if edition(paths.omd_root) is Edition.CCE:
         assert value["global_services"]["route53"] == ("none", None)
         assert value["services"]["aws_lambda"] == ("all", {"limits": "limits"})
 

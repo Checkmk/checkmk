@@ -25,6 +25,7 @@ import urllib3
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils import store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.handler import LicenseState
@@ -393,7 +394,7 @@ def get_url_raw(
         timeout=timeout,
         headers={
             "x-checkmk-version": cmk_version.__version__,
-            "x-checkmk-edition": cmk_version.edition().short,
+            "x-checkmk-edition": cmk_version.edition(paths.omd_root).short,
             "x-checkmk-license-state": get_license_state().readable,
         },
     )
@@ -427,7 +428,7 @@ def _verify_compatibility(response: requests.Response) -> None:
     Since 2.0.0p13 the remote site answers with x-checkmk-version, x-checkmk-edition headers.
     """
     central_version = cmk_version.__version__
-    central_edition_short = cmk_version.edition().short
+    central_edition_short = cmk_version.edition(paths.omd_root).short
     central_license_state = get_license_state()
 
     remote_version = response.headers.get("x-checkmk-version", "")
@@ -477,7 +478,7 @@ def verify_request_compatibility(ignore_license_compatibility: bool) -> None:
     )
     central_license_state = parse_license_state(request.headers.get("x-checkmk-license-state", ""))
     remote_version = cmk_version.__version__
-    remote_edition_short = cmk_version.edition().short
+    remote_edition_short = cmk_version.edition(paths.omd_root).short
     remote_license_state = get_license_state()
 
     compatibility = compatible_with_central_site(
@@ -549,7 +550,7 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
         "_login": "1",
         "_username": name,
         "_password": password,
-        "_origtarget": f"automation_login.py?_version={cmk_version.__version__}&_edition_short={cmk_version.edition().short}",
+        "_origtarget": f"automation_login.py?_version={cmk_version.__version__}&_edition_short={cmk_version.edition(paths.omd_root).short}",
         "_plain_error": "1",
     }
     response = get_url(
@@ -570,7 +571,7 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
         raise MKAutomationException(response)
     if isinstance(eval_response, dict):
         if (
-            cmk_version.edition() is cmk_version.Edition.CME
+            cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME
             and eval_response["edition_short"] != "cme"
         ):
             raise MKUserError(

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils import paths
 from cmk.utils.licensing.cre_handler import CRELicensingHandler
 from cmk.utils.licensing.handler import (
     LicenseState,
@@ -36,13 +37,13 @@ licensing_handler_registry = LicensingHandlerRegistry()
 
 
 def get_available_licensing_handler_type() -> type[LicensingHandler]:
-    if (ed := edition()) is Edition.CRE:
+    if (ed := edition(paths.omd_root)) is Edition.CRE:
         return CRELicensingHandler
     raise ValueError(ed)
 
 
 def _get_licensing_handler() -> type[LicensingHandler]:
-    return licensing_handler_registry[edition()]
+    return licensing_handler_registry[edition(paths.omd_root)]
 
 
 def _make_licensing_handler() -> LicensingHandler:

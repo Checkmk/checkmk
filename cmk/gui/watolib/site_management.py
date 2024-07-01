@@ -25,7 +25,7 @@ from livestatus import (
     UnixSocketInfo,
 )
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
@@ -325,7 +325,7 @@ class BasicSettings:
 
     @classmethod
     def from_internal(cls, site_id: SiteId, internal_config: SiteConfiguration) -> BasicSettings:
-        if version.edition() is version.Edition.CME:
+        if version.edition(paths.omd_root) is version.Edition.CME:
             return cls(
                 alias=internal_config["alias"],
                 site_id=site_id,
@@ -336,12 +336,12 @@ class BasicSettings:
     def to_external(self) -> Iterator[tuple[str, str]]:
         yield "alias", self.alias
         yield "site_id", self.site_id
-        if version.edition() is version.Edition.CME and self.customer is not None:
+        if version.edition(paths.omd_root) is version.Edition.CME and self.customer is not None:
             yield "customer", self.customer
 
     def to_internal(self) -> SiteConfiguration:
         configid: SiteConfiguration = {"alias": self.alias, "id": SiteId(self.site_id)}
-        if version.edition() is version.Edition.CME and self.customer is not None:
+        if version.edition(paths.omd_root) is version.Edition.CME and self.customer is not None:
             configid["customer"] = self.customer
 
         return configid

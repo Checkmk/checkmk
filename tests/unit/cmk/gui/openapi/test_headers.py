@@ -9,6 +9,7 @@ from webtest import TestResponse  # type: ignore[import-untyped]
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 
 
 def _get_version(app: WebTestAppForCMK, status: int = 200) -> TestResponse:
@@ -28,7 +29,7 @@ def test_headers_exposed(
     resp = _get_version(
         aut_user_auth_wsgi_app,
     )
-    assert resp.headers["x-checkmk-edition"] == cmk_version.edition().short
+    assert resp.headers["x-checkmk-edition"] == cmk_version.edition(paths.omd_root).short
     assert resp.headers["x-checkmk-version"] == cmk_version.__version__
 
 

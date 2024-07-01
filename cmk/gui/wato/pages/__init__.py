@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils import paths
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.background_job import BackgroundJobRegistry
@@ -104,6 +105,6 @@ def register(
     user_profile.register(page_registry)
     users.register(mode_registry)
 
-    if edition() is not Edition.CSE:  # disabled in CSE
+    if edition(paths.omd_root) is not Edition.CSE:  # disabled in CSE
         ldap.register(mode_registry)
         roles.register(mode_registry)

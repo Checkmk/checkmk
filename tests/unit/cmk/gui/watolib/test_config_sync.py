@@ -115,7 +115,7 @@ def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
         f.write("DUMMY_PWD_ENTRY \n")
 
     with monkeypatch.context() as m:
-        if cmk_version.edition() is cmk_version.Edition.CME:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
             m.setattr(
                 active_config,
                 "customers",
@@ -491,7 +491,7 @@ def test_synchronize_site(
         body="True",
     )
 
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: edition)
 
     file_filter_func = None
     site_id = SiteId("unit_remote_1")

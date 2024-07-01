@@ -1895,7 +1895,7 @@ def register_mode_check_discovery(
     )
 
 
-if cmk_version.edition() is cmk_version.Edition.CRE:
+if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
     register_mode_check_discovery(active_check_handler=lambda *args: None, keepalive=False)
 
 # .
@@ -2465,7 +2465,7 @@ def register_mode_check(
     )
 
 
-if cmk_version.edition() is cmk_version.Edition.CRE:
+if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
     register_mode_check(get_submitter, active_check_handler=lambda *args: None, keepalive=False)
 
 # .
@@ -2894,7 +2894,7 @@ def register_mode_inventory_as_check(
     )
 
 
-if cmk_version.edition() is cmk_version.Edition.CRE:
+if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
     register_mode_inventory_as_check(
         active_check_handler=lambda *args: None,
         keepalive=False,
@@ -3065,7 +3065,7 @@ Copyright (C) 2009 Mathias Kettner
 """
         % (
             cmk_version.__version__,
-            cmk_version.edition().short.upper(),
+            cmk_version.edition(cmk.utils.paths.omd_root).short.upper(),
         )
     )
 
@@ -3173,7 +3173,7 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
         ),
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
         sub_options.append(
             Option(
                 long_option=OPT_PERFORMANCE_GRAPHS,

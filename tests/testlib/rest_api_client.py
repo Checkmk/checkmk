@@ -15,7 +15,7 @@ import urllib.parse
 from collections.abc import Mapping, Sequence
 from typing import Any, cast, Literal, NoReturn, NotRequired, TYPE_CHECKING, TypedDict
 
-from cmk.utils import version
+from cmk.utils import paths, version
 
 from cmk.gui.http import HTTPMethod
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
@@ -1707,7 +1707,7 @@ class GroupConfig(RestApiClient):
         expect_ok: bool = True,
     ) -> Response:
         body = {"name": name, "alias": alias}
-        if version.edition() is version.Edition.CME:
+        if version.edition(paths.omd_root) is version.Edition.CME:
             body.update({"customer": customer})
 
         return self.request(

@@ -16,6 +16,7 @@ from typing import DefaultDict, Final
 from tests.unit.conftest import FixRegister
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.sectionname import SectionName
 
 CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
@@ -62,7 +63,7 @@ CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
 
 
 def all_documented_builtin_host_labels() -> set[str]:
-    if cmk_version.edition() is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
         return CRE_DOCUMENTED_BUILTIN_HOST_LABELS
     return CEE_DOCUMENTED_BUILTIN_HOST_LABELS | CRE_DOCUMENTED_BUILTIN_HOST_LABELS
 

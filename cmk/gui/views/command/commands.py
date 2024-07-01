@@ -10,6 +10,7 @@ from typing import Literal, Protocol
 import livestatus
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
@@ -1032,7 +1033,7 @@ class CommandAcknowledge(Command):
         date, time_ = self._expiration_date_and_time(
             active_config.acknowledge_problems.get("ack_expire", 3600)
         )
-        is_raw_edition: bool = cmk_version.edition() is cmk_version.Edition.CRE
+        is_raw_edition: bool = cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE
         html.open_div(class_="disabled" if is_raw_edition else "")
         html.checkbox(
             "_ack_expire",

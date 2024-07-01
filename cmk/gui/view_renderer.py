@@ -455,7 +455,7 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
     def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
-        if cmk_version.edition() is cmk_version.Edition.CRE:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
             return
 
         if not user.may("general.instant_reports"):

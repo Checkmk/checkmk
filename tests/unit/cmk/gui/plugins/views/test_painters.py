@@ -14,6 +14,7 @@ import pytest
 import time_machine
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
 from cmk.utils.structured_data import ImmutableTree
@@ -820,7 +821,7 @@ def test_registered_painters() -> None:
         "wato_folder_rel",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_painters += [
             "svc_metrics_forecast",
             "svc_metrics_hist",
@@ -839,7 +840,7 @@ def test_registered_painters() -> None:
             "deployment_target_hash",
         ]
 
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         expected_painters += [
             "host_customer",
             "customer_id",

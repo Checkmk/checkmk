@@ -145,7 +145,7 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
         "alias": "test-host",
     }
 
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
         expected_attrs["_CUSTOMER"] = "provider"
 
     assert (

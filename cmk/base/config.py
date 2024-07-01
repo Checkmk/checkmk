@@ -3070,7 +3070,10 @@ class ConfigCache:
 
     @staticmethod
     def _is_inline_backend_supported() -> bool:
-        return "netsnmp" in sys.modules and cmk_version.edition() is not cmk_version.Edition.CRE
+        return (
+            "netsnmp" in sys.modules
+            and cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE
+        )
 
     def get_snmp_backend(self, host_name: HostName | HostAddress) -> SNMPBackendEnum:
         if result := self.__snmp_backend.get(host_name):
@@ -3529,7 +3532,7 @@ class ConfigCache:
         if actions:
             attrs["_ACTIONS"] = ",".join(actions)
 
-        if cmk_version.edition() is cmk_version.Edition.CME:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
             attrs[
                 "_CUSTOMER"
             ] = current_customer  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
@@ -3967,7 +3970,9 @@ def reset_config_cache() -> ConfigCache:
 def _create_config_cache() -> ConfigCache:
     """create clean config cache"""
     cache_class = (
-        ConfigCache if cmk_version.edition() is cmk_version.Edition.CRE else CEEConfigCache
+        ConfigCache
+        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE
+        else CEEConfigCache
     )
     return cache_class()
 

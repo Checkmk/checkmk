@@ -16,7 +16,7 @@ however, the password itself is not returned for security reasons.
 from collections.abc import Mapping
 from typing import Any, cast
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.password_store import Password
 
 from cmk.gui.http import Response
@@ -79,7 +79,7 @@ def create_password(params: Mapping[str, Any]) -> Response:
             "customer",
         )
     }
-    if version.edition() is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.CME:
         password_details = update_customer_info(password_details, body["customer"])
     password_details["owned_by"] = None if body["owned_by"] == "admin" else body["owned_by"]
     save_password(ident, cast(Password, password_details), new_password=True)

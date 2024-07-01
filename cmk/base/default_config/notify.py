@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.notify_types import EventRule, NotificationPluginNameStr, NotifyPluginParamsDict
 
 # Log level of notifications
@@ -37,7 +38,7 @@ notification_plugin_timeout = 60
 # "both"   - Asynchronous local delivery plus remote forwarding
 # False    - legacy: sync delivery  (and notification_spool_to)
 # True     - legacy: async delivery (and notification_spool_to)
-if cmk_version.edition() is cmk_version.Edition.CRE:
+if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
     notification_spooling: bool | str = "off"
 else:
     notification_spooling = "local"

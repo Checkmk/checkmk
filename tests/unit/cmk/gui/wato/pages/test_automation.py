@@ -67,7 +67,7 @@ class TestPageAutomation:
 
     @pytest.fixture(name="patch_edition")
     def patch_edition_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(cmk_version, "edition", lambda: cmk_version.Edition.CEE)
+        monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: cmk_version.Edition.CEE)
 
     @pytest.fixture(name="setup_request")
     def setup_request_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:

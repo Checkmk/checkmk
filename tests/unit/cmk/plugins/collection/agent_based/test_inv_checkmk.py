@@ -397,7 +397,7 @@ def test_merge_sections(
     edition: cmk_version.Edition,
     merged_sections: Mapping[str, object],
 ) -> None:
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: edition)
     assert merged_sections == inv_checkmk.merge_sections(
         SECTION_LIVESTATUS_STATUS, SECTION_OMD_STATUS, SECTION_OMD_INFO
     )

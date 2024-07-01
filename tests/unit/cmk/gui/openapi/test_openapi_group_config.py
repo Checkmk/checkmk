@@ -20,10 +20,12 @@ from tests.testlib.rest_api_client import (
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.user import UserId
 
-managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
+managedtest = pytest.mark.skipif(
+    version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
+)
 
 ESCAPED_GROUP_NAME_PATTERN = "^(?!\\\\.\\\\.$|\\\\.$)[-a-zA-Z0-9_\\\\.]*\\\\Z"
 

@@ -1344,7 +1344,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             else:
                 loaded_user = new_user_template(self.id)
                 create = True
-                if cmk_version.edition() is cmk_version.Edition.CME:
+                if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
                     user["customer"] = self._config.get(
                         "customer", customer_api().default_customer_id()
                     )

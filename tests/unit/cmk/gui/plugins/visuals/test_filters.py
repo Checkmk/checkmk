@@ -16,6 +16,7 @@ from tests.unit.cmk.gui.conftest import SetConfig
 
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.structured_data import ImmutableTree
 
@@ -1132,7 +1133,7 @@ def test_filters_filter_table(
             "zzz": {},
         }[host_name]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         import cmk.gui.cee.agent_bakery._filters as bakery_filters  # pylint: disable=redefined-outer-name,import-outside-toplevel,no-name-in-module
 
         monkeypatch.setattr(bakery_filters, "get_cached_deployment_status", deployment_states)
@@ -1148,7 +1149,7 @@ def test_filters_filter_table(
 
         # TODO: Fix this for real...
         if (
-            cmk_version.edition() is not cmk_version.Edition.CRE
+            cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE
             or test.ident != "deployment_has_agent"
         ):
             filt = filter_registry[test.ident]
@@ -1286,7 +1287,7 @@ def test_filters_filter_inv_table(test: FilterTableTest) -> None:
         context: VisualContext = {test.ident: dict(test.request_vars)}
 
         # TODO: Fix this for real...
-        if cmk_version.edition() is not cmk_version.Edition.CRE:
+        if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
             rows = filter_registry[test.ident].filter_table(context, test.rows)
             assert len(rows) == len(test.expected_rows)
             for row, expected_row in zip(rows, test.expected_rows):

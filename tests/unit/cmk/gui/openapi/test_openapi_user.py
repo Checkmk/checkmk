@@ -19,7 +19,7 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import SetConfig
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.crypto.password import PasswordHash
 from cmk.utils.user import UserId
 
@@ -43,7 +43,9 @@ from cmk.gui.watolib.custom_attributes import (
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
 
-managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
+managedtest = pytest.mark.skipif(
+    version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
+)
 
 MOCK_SAML_CONNECTOR_NAME = "saml_connector"
 
@@ -613,7 +615,7 @@ def test_openapi_user_internal_auth_handling(
 
 @managedtest
 def test_openapi_managed_global_edition(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr("cmk.utils.version.edition", lambda: version.Edition.CME)
+    monkeypatch.setattr("cmk.utils.version.edition", lambda *args, **kw: version.Edition.CME)
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         resp = clients.User.create(username="user", fullname="Cosme Fulanito", customer="global")
@@ -986,7 +988,7 @@ def custom_user_attributes_ctx(attrs: list[CustomUserAttrSpec]) -> Iterator:
 
 
 def add_default_customer_in_managed_edition(params: dict[str, Any]) -> None:
-    if version.edition() is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.CME:
         params["customer"] = "global"
 
 

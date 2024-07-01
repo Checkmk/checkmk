@@ -6,6 +6,7 @@
 from collections.abc import Callable, Iterable, Sequence
 from typing import Final
 
+from cmk.utils import paths
 from cmk.utils.version import edition, Edition
 
 from cmk.rulesets.v1 import Help, Title
@@ -38,7 +39,7 @@ CCE_GCP_SERVICES: Final = [
 
 
 def get_gcp_services() -> Sequence[MultipleChoiceElement]:
-    if edition() in (Edition.CME, Edition.CCE):
+    if edition(paths.omd_root) in (Edition.CME, Edition.CCE):
         return RAW_GCP_SERVICES + CCE_GCP_SERVICES
 
     return RAW_GCP_SERVICES

@@ -129,7 +129,7 @@ def test_base_dir(th: Theme) -> None:
 def test_has_custom_logo(
     monkeypatch: MonkeyPatch, th: Theme, edition: cmk.utils.version.Edition, with_logo: bool
 ) -> None:
-    monkeypatch.setattr("cmk.gui.utils.theme.edition", lambda: edition)
+    monkeypatch.setattr("cmk.gui.utils.theme.edition", lambda *args, **kw: edition)
     logo = th.base_dir().joinpath("images", "login_logo.png")
     if with_logo:
         logo.parent.mkdir(parents=True, exist_ok=True)

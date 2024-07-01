@@ -8,7 +8,7 @@ import socket
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from typing import Any
 
-from cmk.utils import version
+from cmk.utils import paths, version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
@@ -619,7 +619,7 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         "uuid_link": _("UUID links for TLS-encrypting agent communication"),
     }
 
-    if edition_supports_nagvis(version.edition()):
+    if edition_supports_nagvis(version.edition(paths.omd_root)):
         action_titles["nagvis"] = _("NagVis map")
 
     texts = []

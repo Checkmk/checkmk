@@ -10,6 +10,7 @@ import annotated_types
 import pydantic
 import pydantic_core
 
+from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import Edition, edition
 
@@ -142,7 +143,7 @@ def _tcp_timeouts():
 
 
 def _usage_endpoint() -> tuple[str, CascadingDropdown] | tuple[str, Tuple]:
-    if edition() in OPENSHIFT_EDITIONS:
+    if edition(paths.omd_root) in OPENSHIFT_EDITIONS:
         return (
             "usage_endpoint",
             CascadingDropdown(
@@ -176,7 +177,9 @@ def _is_cre_spec(k: str, vs: object) -> bool:
 
 def _migrate_cce2cre(p: dict[str, object]) -> dict[str, object]:
     return (
-        p if edition() in OPENSHIFT_EDITIONS else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
+        p
+        if edition(paths.omd_root) in OPENSHIFT_EDITIONS
+        else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
     )
 
 

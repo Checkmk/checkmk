@@ -8,6 +8,7 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+from cmk.utils import paths
 from cmk.utils import version as cmk_version
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import HostLabel
@@ -36,7 +37,7 @@ def test_result_type_registry_completeness() -> None:
     # ensures that all automation calls registered in cmk.base have a corresponding result type
     # registered in cmk.automations
     automations_missing = (
-        {"bake-agents"} if cmk_version.edition() is cmk_version.Edition.CRE else set()
+        {"bake-agents"} if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE else set()
     )
     assert set(result_type_registry) - automations_missing == set(automations._automations)
 

@@ -8,6 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 
 from cmk.gui import visuals
 from cmk.gui.http import request
@@ -61,7 +62,7 @@ def _expected_visual_types():
         },
     }
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_visual_types.update(
             {
                 "reports": {
@@ -290,7 +291,7 @@ def test_get_context_specs_no_info_limit() -> None:
         "invsyntheticmonitoringplans",
         "invsyntheticmonitoringtests",
     ]
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         expected += ["customer"]
 
     assert sorted([r[0] for r in result]) == sorted(expected)

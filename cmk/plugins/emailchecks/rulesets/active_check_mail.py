@@ -7,6 +7,7 @@
 from collections.abc import Mapping
 from typing import Literal
 
+from cmk.utils import paths
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.mkeventd import syslog_facilities  # pylint: disable=cmk-module-layer-violation
@@ -64,7 +65,7 @@ def _valuespec_active_checks_mail() -> Dictionary:
             ),
             **(
                 {}
-                if edition() is Edition.CSE
+                if edition(paths.omd_root) is Edition.CSE
                 else {"forward": DictElement(parameter_form=_forward_to_ec_form())}
             ),
         },

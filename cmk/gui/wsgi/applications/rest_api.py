@@ -163,7 +163,9 @@ class EndpointAdapter(AbstractWSGIApp):
             wsgi_app = self.endpoint.wrapped(ParameterDict(path_args))
 
         wsgi_app.headers[_get_header_name(HEADER_CHECKMK_VERSION)] = cmk_version.__version__
-        wsgi_app.headers[_get_header_name(HEADER_CHECKMK_EDITION)] = cmk_version.edition().short
+        wsgi_app.headers[_get_header_name(HEADER_CHECKMK_EDITION)] = cmk_version.edition(
+            paths.omd_root
+        ).short
 
         # Serve the response
         return wsgi_app(environ, start_response)

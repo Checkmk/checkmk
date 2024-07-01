@@ -22,6 +22,7 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
 
@@ -242,7 +243,7 @@ def test_format_nagios_object() -> None:
 def test_create_nagios_host_spec(
     hostname_str: str, result: dict[str, str], monkeypatch: MonkeyPatch
 ) -> None:
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         result = result.copy()
         result["_CUSTOMER"] = "provider"
 

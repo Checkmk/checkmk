@@ -11,13 +11,16 @@ from tests.testlib.site import Site
 
 from tests.integration.linux_test_host import create_linux_test_host
 
+from cmk.utils import paths
 from cmk.utils import version as cmk_version
 
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
 
 
 # Test whether or not factory settings and checkgroup parameters work
-@pytest.mark.skipif(cmk_version.edition() is cmk_version.Edition.CRE, reason="flaky on raw edition")
+@pytest.mark.skipif(
+    cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE, reason="flaky on raw edition"
+)
 def test_check_default_parameters(request: pytest.FixtureRequest, site: Site) -> None:
     host_name = "check-variables-test-host"
 

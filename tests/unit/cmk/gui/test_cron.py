@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 
 from cmk.gui import cron
 
@@ -23,7 +24,7 @@ def test_registered_jobs() -> None:
         "execute_autodiscovery",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected += [
             "execute_host_registration_background_job",
             "execute_discover_registered_hosts_background_job",

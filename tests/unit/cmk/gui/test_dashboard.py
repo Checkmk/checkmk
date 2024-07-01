@@ -14,6 +14,7 @@ from pytest import MonkeyPatch
 from tests.testlib.plugin_registry import reset_registries
 
 import cmk.utils.version as cmk_version
+from cmk.utils import paths
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.user import UserId
 
@@ -85,7 +86,7 @@ def test_dashlet_registry_plugins() -> None:
         "snapin",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_plugins += [
             "alerts_bar_chart",
             "alert_overview",
@@ -128,7 +129,7 @@ def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
         ("linked_view", False),
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected += [
             ("custom_graph", 60),
             ("combined_graph", 60),

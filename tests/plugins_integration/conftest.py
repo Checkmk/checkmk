@@ -115,6 +115,13 @@ def pytest_addoption(parser):
         default=None,
     )
 
+    parser.addoption(
+        "--enable-piggyback",
+        action="store_true",
+        default=False,
+        help="Enable piggyback hosts via a DCD connector",
+    )
+
 
 def pytest_configure(config):
     # parse options that control the test execution
@@ -134,6 +141,7 @@ def pytest_configure(config):
     checks.config.host_names = config.getoption(name="--host-names")
     checks.config.check_names = config.getoption(name="--check-names")
     checks.config.dump_types = config.getoption(name="--dump-types")
+    checks.config.piggyback = config.getoption(name="--enable-piggyback")
 
     checks.config.load()
 
@@ -255,3 +263,29 @@ def _create_periodic_service_discovery_rule(test_site_update: Site) -> Iterator[
         if rule["id"] not in existing_rules_ids:
             test_site_update.openapi.delete_rule(rule["id"])
     test_site_update.openapi.activate_changes_and_wait_for_completion()
+
+
+@pytest.fixture(name="dcd_connector", scope="function")
+def _dcd_connector(test_site: Site) -> Iterator[None]:
+    if checks.config.piggyback:
+        logger.info("Creating a DCD connection for piggyback hosts...")
+        dcd_id = "dcd_connector"
+        host_attributes = {
+            "tag_snmp_ds": "no-snmp",
+            "tag_agent": "no-agent",
+            "tag_piggyback": "piggyback",
+            "tag_address_family": "no-ip",
+        }
+        test_site.openapi.create_dynamic_host_configuration(
+            dcd_id=dcd_id,
+            title="DCD Connector for piggyback hosts",
+            host_attributes=host_attributes,
+            interval=1,
+            validity_period=600,
+        )
+        test_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        yield
+        test_site.openapi.delete_dynamic_host_configuration(dcd_id)
+        test_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+    else:
+        yield  # a fixture must yield or return something

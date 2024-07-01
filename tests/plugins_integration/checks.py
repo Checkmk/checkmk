@@ -54,6 +54,7 @@ class CheckConfig:
     host_names: list[str] | None = None
     check_names: list[str] | None = None
     api_services_cols: list | None = None
+    piggyback: bool = False
 
     def load(self):
         self.data_dir = str(

@@ -5,6 +5,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from functools import partial
 from typing import Literal
 
 from livestatus import SiteId
@@ -21,6 +22,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.session import SuperUserContext
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -80,26 +82,27 @@ class ParentScanBackgroundJob(BackgroundJob):
         tasks: Sequence[ParentScanTask],
         job_interface: BackgroundProcessInterface,
     ) -> None:
-        self._initialize_statistics()
-        self._logger.info("Parent scan started...")
+        with SuperUserContext():
+            self._initialize_statistics()
+            self._logger.info("Parent scan started...")
 
-        for task in tasks:
-            self._process_task(task, settings)
+            for task in tasks:
+                self._process_task(task, settings)
 
-        self._logger.info("Summary:")
-        for title, value in [
-            ("Total hosts", self._num_hosts_total),
-            ("Gateways found", self._num_gateways_found),
-            ("Directly reachable hosts", self._num_directly_reachable_hosts),
-            ("Unreachable gateways", self._num_unreachable_gateways),
-            ("No gateway found", self._num_no_gateway_found),
-            ("New parents configured", self._num_new_parents_configured),
-            ("Gateway hosts created", self._num_gateway_hosts_created),
-            ("Errors", self._num_errors),
-        ]:
-            self._logger.info("  %s: %d" % (title, value))
+            self._logger.info("Summary:")
+            for title, value in [
+                ("Total hosts", self._num_hosts_total),
+                ("Gateways found", self._num_gateways_found),
+                ("Directly reachable hosts", self._num_directly_reachable_hosts),
+                ("Unreachable gateways", self._num_unreachable_gateways),
+                ("No gateway found", self._num_no_gateway_found),
+                ("New parents configured", self._num_new_parents_configured),
+                ("Gateway hosts created", self._num_gateway_hosts_created),
+                ("Errors", self._num_errors),
+            ]:
+                self._logger.info("  %s: %d" % (title, value))
 
-        job_interface.send_result_message(_("Parent scan finished"))
+            job_interface.send_result_message(_("Parent scan finished"))
 
     def _initialize_statistics(self) -> None:
         self._num_hosts_total = 0
@@ -317,10 +320,10 @@ def start_parent_scan(
     settings: ParentScanSettings,
 ) -> None:
     job.start(
-        lambda job_interface: job.do_execute(
+        partial(
+            job.do_execute,
             settings,
             [ParentScanTask(host.site_id(), host.folder().path(), host.name()) for host in hosts],
-            job_interface,
         ),
         InitialStatusArgs(
             title=_("Parent scan"),

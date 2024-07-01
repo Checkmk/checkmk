@@ -274,6 +274,8 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("multiprocessing.Process.start", new=lambda self: self.run())
     # We stub out everything preventing smooth execution.
     mocker.patch("multiprocessing.Process.join")
+    mocker.patch("multiprocessing.Process.pid", 1234)
+    mocker.patch("multiprocessing.Process.exitcode", 0)
     mocker.patch("sys.exit")
     mocker.patch("cmk.gui.watolib.activate_changes._close_apache_fds")
     mocker.patch("cmk.gui.background_job._process._detach_from_parent")

@@ -16,6 +16,7 @@ from cmk.utils.user import UserId
 
 from cmk.automations.results import Gateway, GatewayResult, ScanParentsResult
 
+from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.parent_scan import (
     ParentScanBackgroundJob,
@@ -68,5 +69,6 @@ def test_scan_parents_job(mocker: MagicMock, host: Host) -> None:
     start_parent_scan(hosts=[host], job=ParentScanBackgroundJob(), settings=settings)
 
     # THEN
-    updated_host = folder_tree().root_folder().host(host.name())  # Regenerate data
-    assert updated_host is not None and updated_host.parents() == [f"gw-{host.id()}-123-0-0-1"]
+    with application_and_request_context():
+        updated_host = folder_tree().root_folder().host(host.name())
+        assert updated_host is not None and updated_host.parents() == [f"gw-{host.id()}-123-0-0-1"]

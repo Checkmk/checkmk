@@ -719,3 +719,9 @@ class CMKOpenApiSession(requests.Session):
         )
         if resp.status_code != 200:
             raise UnexpectedResponse.from_response(resp)
+
+    def delete_dynamic_host_configuration(self, dcd_id: str) -> None:
+        """Delete a DCD connection via REST API."""
+        resp = self.delete(f"/objects/dcd/{dcd_id}")
+        if resp.status_code != 204:
+            raise UnexpectedResponse.from_response(resp)

@@ -2753,9 +2753,6 @@ void ProtectPathFromUserWrite(const fs::path &path,
         fmt::format(L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c",
                     path.wstring()));
 
-    for (auto const t : commands) {
-        commands.emplace_back(t);
-    }
     XLOG::l.i("Protect path from User write '{}'", path);
 }
 

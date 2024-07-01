@@ -24,12 +24,14 @@ from typing import Final, Literal
 import pytest
 import pytest_check  # type: ignore[import-untyped]
 
+from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
+    cse_create_onboarding_dummies,
+    cse_openid_oauth_provider,
+)
 from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.repo import current_base_branch_name, repo_path
 from tests.testlib.utils import (
     check_output,
-    cse_create_onboarding_dummies,
-    cse_openid_oauth_provider,
     execute,
     is_containerized,
     makedirs,
@@ -483,7 +485,9 @@ class Site:
         )
 
     def check_output(
-        self, cmd: list[str], input: str | None = None  # pylint: disable=redefined-builtin
+        self,
+        cmd: list[str],
+        input: str | None = None,  # pylint: disable=redefined-builtin
     ) -> str:
         """Mimics subprocess.check_output while running a process as the site user.
 

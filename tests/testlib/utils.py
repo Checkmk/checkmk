@@ -13,11 +13,9 @@ import textwrap
 
 # pylint: disable=redefined-outer-name
 import time
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable
 from pathlib import Path
 from pprint import pformat
-from urllib.parse import urlparse
 
 import pexpect  # type: ignore[import-untyped]
 import pytest
@@ -382,81 +380,6 @@ def get_services_with_status(
         )
     services_list = set(_ for _ in services_by_state[service_status] if _ not in skipped_services)
     return services_list
-
-
-@contextmanager
-def _cse_config(config: Path, content: bytes | str) -> Iterator[None]:
-    write_config = not os.path.exists(config)
-    if write_config:
-        write_file(config.as_posix(), content, sudo=True)
-    else:
-        LOGGER.warning('Skipped writing "%s": File exists!', config)
-    assert config.exists()
-    yield
-    if write_config:
-        execute(["rm", config.as_posix()])
-
-
-@contextmanager
-def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
-    from cmk.gui.cse.userdb.cognito import oauth2
-
-    idp_url = "http://localhost:5551"
-    makedirs("/etc/cse", sudo=True)
-    assert os.path.exists("/etc/cse")
-
-    cognito_config = Path("/etc/cse/cognito-cmk.json")
-    cognito_content = check_output(
-        [f"{repo_path()}/scripts/create_cognito_config_cse.sh", idp_url, site_url]
-    )
-
-    global_config = Path("/etc/cse/global-config.json")
-    with open(f"{repo_path()}/tests/etc/cse/global-config.json") as f:
-        global_content = f.read()
-
-    uap_config = Path("/etc/cse/admin_panel_url.json")
-    uap_content = oauth2.AdminPanelUrl(uap_url="https://some.test.url/uap").model_dump_json()
-
-    with (
-        _cse_config(cognito_config, cognito_content),
-        _cse_config(global_config, global_content),
-        _cse_config(uap_config, uap_content),
-    ):
-        idp = urlparse(idp_url)
-        auth_provider_proc = execute(
-            [
-                f"{repo_path()}/scripts/run-pipenv",
-                "run",
-                "uvicorn",
-                "tests.testlib.cse.openid_oauth_provider:application",
-                "--host",
-                f"{idp.hostname}",
-                "--port",
-                f"{idp.port}",
-            ],
-            sudo=False,
-            cwd=repo_path(),
-            env=dict(os.environ, URL=idp_url),
-            shell=False,
-        )
-        assert (
-            auth_provider_proc.poll() is None
-        ), f"Error while starting auth provider! (RC: {auth_provider_proc.returncode})"
-        try:
-            yield auth_provider_proc
-        finally:
-            if auth_provider_proc:
-                auth_provider_proc.kill()
-
-
-def cse_create_onboarding_dummies(root: str | Path) -> None:
-    onboarding_dir = Path(root) / "share" / "check_mk" / "web" / "htdocs" / "onboarding"
-    if onboarding_dir.exists():
-        return
-    LOGGER.warning("SaaS edition onboarding files not found; creating dummy files...")
-    makedirs(onboarding_dir)
-    write_file(onboarding_dir / "search.css", "/* cse dummy file */")
-    write_file(onboarding_dir / "search.js", "/* cse dummy file */")
 
 
 def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: float = 0.1) -> None:

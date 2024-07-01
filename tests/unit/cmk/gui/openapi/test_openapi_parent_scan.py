@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from tests.testlib.rest_api_client import ClientRegistry
 
-# pylint: disable=protected-access
-
 
 def test_openapi_parent_scan_background(clients: ClientRegistry) -> None:
     clients.HostConfig.bulk_create(

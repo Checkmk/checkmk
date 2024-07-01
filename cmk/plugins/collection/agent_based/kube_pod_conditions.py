@@ -46,6 +46,23 @@ LOGICAL_ORDER = [
 ]
 
 
+def _check_condition(
+    now: float, name: str, cond: PodCondition | None, levels_upper: tuple[int, int] | None
+) -> CheckResult:
+    if cond is not None:
+        # keep the last-seen one
+        time_diff = now - cond.last_transition_time  # type: ignore[operator]  # SUP-12170
+        if cond.status:
+            # TODO: CMK-11697
+            yield Result(state=State.OK, summary=condition_short_description(name, cond.status))
+            return
+        summary_prefix = condition_detailed_description(name, cond.status, cond.reason, cond.detail)
+    else:
+        summary_prefix = condition_short_description(name, False)
+    for result in check_levels(time_diff, levels_upper=levels_upper, render_func=render.timespan):
+        yield Result(state=result.state, summary=f"{summary_prefix} for {result.summary}")
+
+
 def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:
     """Check every condition in the section. Return one result if all conditions
     passed. Otherwise, return four results if one or more conditions are faulty
@@ -89,22 +106,7 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
                     ),
                 )
             continue
-        if cond is not None:
-            # keep the last-seen one
-            time_diff = now - cond.last_transition_time  # type: ignore[operator]  # SUP-12170
-            if cond.status:
-                # TODO: CMK-11697
-                yield Result(state=State.OK, summary=condition_short_description(name, cond.status))
-                continue
-            summary_prefix = condition_detailed_description(
-                name, cond.status, cond.reason, cond.detail
-            )
-        else:
-            summary_prefix = condition_short_description(name, False)
-        for result in check_levels(
-            time_diff, levels_upper=get_age_levels_for(params, name), render_func=render.timespan
-        ):
-            yield Result(state=result.state, summary=f"{summary_prefix} for {result.summary}")
+        yield from _check_condition(now, name, cond, get_age_levels_for(params, name))
 
 
 def check(params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:

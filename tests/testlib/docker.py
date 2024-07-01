@@ -9,9 +9,9 @@ import subprocess
 import tarfile
 import time
 from collections.abc import Iterator, Mapping
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
-from typing import Any
+from typing import Any, ContextManager
 
 import docker  # type: ignore[import-untyped]
 import requests
@@ -25,6 +25,7 @@ logger = logging.getLogger()
 build_path = str(repo_path() / "docker_image")
 image_prefix = "docker-tests"
 distro_codename = "jammy"
+cse_config_root = Path("/tmp/cmk-docker-test/cse-config-volume")
 
 
 def cleanup_old_packages() -> None:
@@ -117,7 +118,10 @@ def resolve_image_alias(alias: str) -> str:
     >>> assert image and isinstance(image, str)
     """
     return subprocess.check_output(
-        [os.path.join(repo_path(), "buildscripts/docker_image_aliases/resolve.py"), alias],
+        [
+            os.path.join(repo_path(), "buildscripts/docker_image_aliases/resolve.py"),
+            alias,
+        ],
         text=True,
     ).split("\n", maxsplit=1)[0]
 
@@ -248,6 +252,14 @@ def start_checkmk(
             "fix this, then restart your computer and try again."
         ) from e
 
+    if version.is_saas_edition():
+        from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
+            create_cse_initial_config,
+        )
+
+        create_cse_initial_config(root=Path(cse_config_root))
+        volumes = (volumes or []) + get_cse_volumes(cse_config_root)
+
     kwargs = {
         key: value
         for key, value in {
@@ -285,7 +297,10 @@ def start_checkmk(
 
             assert "STARTING SITE" in output
         except TimeoutError:
-            logger.error("TIMEOUT while starting Checkmk. Log output: %s", c.logs().decode("utf-8"))
+            logger.error(
+                "TIMEOUT while starting Checkmk. Log output: %s",
+                c.logs().decode("utf-8"),
+            )
             raise
 
     status_rc, status_output = c.exec_run(["omd", "status"], user=site_id)
@@ -296,16 +311,40 @@ def start_checkmk(
 
     logger.debug(c.logs().decode("utf-8"))
 
+    cse_oauth_context_mngr: ContextManager = nullcontext()
+    if version.is_saas_edition():
+        from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
+            cse_openid_oauth_provider,
+        )
+
+        # TODO: The Oauth provider is currently not reachable from the Checkmk container.
+        # To fix this, we should contenairize the Oauth provider as well and provide the Oauth
+        # provider container IP address to the Checkmk container (via the cognito-cmk.json file).
+        # This is similar to what we are doing with the Oracle container in the test_docker_oracle
+        # test.
+        cse_oauth_context_mngr = cse_openid_oauth_provider(
+            site_url=f"http://{get_container_ip(c)}:5000", config_root=cse_config_root
+        )
     try:
-        yield c
+        with cse_oauth_context_mngr:
+            yield c
     finally:
         if os.getenv("CLEANUP", "1") != "0":
             c.stop()
             c.remove(force=True)
 
 
+def get_cse_volumes(config_root: Path) -> list[str]:
+    cse_config_dir = Path("etc/cse")
+    cse_config_on_local_machine = config_root / cse_config_dir
+    cse_config_on_container = Path("/") / cse_config_dir
+    return [f"{cse_config_on_local_machine}:{cse_config_on_container}:ro"]
+
+
 def checkmk_docker_automation_secret(
-    checkmk: docker.models.containers.Container, site_id: str = "cmk", api_user: str = "automation"
+    checkmk: docker.models.containers.Container,
+    site_id: str = "cmk",
+    api_user: str = "automation",
 ) -> str:
     """Return the automation secret for a Checkmk docker instance."""
     secret_rc, secret_output = checkmk.exec_run(
@@ -345,7 +384,11 @@ def checkmk_docker_api_request(
     if headers:
         api_headers.update(headers)
     return requests.request(
-        method, url=f"{api_url}", headers=api_headers, json=json, allow_redirects=allow_redirects
+        method,
+        url=f"{api_url}",
+        headers=api_headers,
+        json=json,
+        allow_redirects=allow_redirects,
     )
 
 

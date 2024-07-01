@@ -214,10 +214,9 @@ def test_start_enable_mail(client: docker.DockerClient) -> None:
         )
 
 
-@pytest.mark.skipif(
-    version_from_env().is_saas_edition(), reason="Saas edition requires cognito config"
-)
-def test_http_access_base_redirects_work(checkmk: docker.models.containers.Container) -> None:
+def test_http_access_base_redirects_work(
+    checkmk: docker.models.containers.Container,
+) -> None:
     ip = get_container_ip(checkmk)
 
     for url, expectedLocation in {

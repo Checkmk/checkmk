@@ -25,8 +25,6 @@ import pytest
 from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.utils import (
     check_output,
-    cse_create_onboarding_dummies,
-    cse_openid_oauth_provider,
     current_base_branch_name,
     current_branch_version,
     execute,
@@ -45,6 +43,17 @@ from tests.testlib.web_session import CMKWebSession
 
 import livestatus
 
+try:
+    from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+        cse_openid_oauth_provider,
+    )
+except ImportError:
+
+    @contextmanager
+    def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
+        raise NotImplementedError("CSE is not available in this environment")
+
+
 from cmk.utils.crypto.secrets import Secret
 from cmk.utils.paths import counters_dir, piggyback_dir, piggyback_source_dir
 from cmk.utils.version import Edition, Version
@@ -53,7 +62,10 @@ logger = logging.getLogger(__name__)
 
 ADMIN_USER: Final[str] = "cmkadmin"
 AUTOMATION_USER: Final[str] = "automation"
-PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version_info.minor
+PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = (
+    sys.version_info.major,
+    sys.version_info.minor,
+)
 
 
 class Site:
@@ -241,7 +253,12 @@ class Site:
     ) -> None:
         logger.debug("%s;%s schedule check", hostname, service_description)
         last_check_before = self._last_service_check(hostname, service_description)
-        logger.debug("%s;%s last check before %r", hostname, service_description, last_check_before)
+        logger.debug(
+            "%s;%s last check before %r",
+            hostname,
+            service_description,
+            last_check_before,
+        )
 
         command_timestamp = self._command_timestamp(last_check_before)
 
@@ -397,7 +414,10 @@ class Site:
         plugin_output: str,
         wait_timeout: int | None = None,
     ) -> None:
-        logger.debug("processing check result took %0.2f seconds", time.time() - command_timestamp)
+        logger.debug(
+            "processing check result took %0.2f seconds",
+            time.time() - command_timestamp,
+        )
         if not last_check > last_check_before:
             raise TimeoutError(
                 f"Check result not processed within {wait_timeout or self.check_wait_timeout} seconds "
@@ -439,11 +459,18 @@ class Site:
         **kwargs,
     ) -> subprocess.Popen:
         return execute(
-            cmd, *args, preserve_env=preserve_env, sudo=True, substitute_user=self.id, **kwargs
+            cmd,
+            *args,
+            preserve_env=preserve_env,
+            sudo=True,
+            substitute_user=self.id,
+            **kwargs,
         )
 
     def check_output(
-        self, cmd: list[str], input: str | None = None  # pylint: disable=redefined-builtin
+        self,
+        cmd: list[str],
+        input: str | None = None,  # pylint: disable=redefined-builtin
     ) -> str:
         """Mimics subprocess.check_output while running a process as the site user.
 
@@ -554,7 +581,10 @@ class Site:
         return self.execute(["test", "-d", self.path(rel_path)]).wait() == 0
 
     def file_mode(self, rel_path: str) -> int:
-        return int(self.check_output(["stat", "-c", "%f", self.path(rel_path)]).rstrip(), base=16)
+        return int(
+            self.check_output(["stat", "-c", "%f", self.path(rel_path)]).rstrip(),
+            base=16,
+        )
 
     def inode(self, rel_path: str) -> int:
         return int(self.check_output(["stat", "-c", "%i", self.path(rel_path)]).rstrip())
@@ -578,7 +608,8 @@ class Site:
 
     def system_temp_dir(self) -> Iterator[str]:
         p = self.execute(
-            ["mktemp", "-d", "cmk-system-test-XXXXXXXXX", "-p", "/tmp"], stdout=subprocess.PIPE
+            ["mktemp", "-d", "cmk-system-test-XXXXXXXXX", "-p", "/tmp"],
+            stdout=subprocess.PIPE,
         )
         assert p.wait() == 0
         assert p.stdout is not None
@@ -614,7 +645,9 @@ class Site:
                     f"{repo_path()}/tests/scripts/install-cmk.py",
                 ],
                 env=dict(
-                    os.environ, VERSION=self.version.version, EDITION=self.version.edition.short
+                    os.environ,
+                    VERSION=self.version.version,
+                    EDITION=self.version.edition.short,
                 ),
                 check=False,
             )
@@ -725,7 +758,8 @@ class Site:
         # 15 = verbose
         # 10 = debug
         self.write_text_file(
-            "etc/check_mk/liveproxyd.d/logging.mk", "liveproxyd_log_levels = {'cmk.liveproxyd': 15}"
+            "etc/check_mk/liveproxyd.d/logging.mk",
+            "liveproxyd_log_levels = {'cmk.liveproxyd': 15}",
         )
 
     def _enable_mkeventd_debug_logging(self) -> None:
@@ -961,7 +995,12 @@ class Site:
             self.check_output(["omd", "status", "--bare"])
             return 0
         except subprocess.CalledProcessError as e:
-            logger.info("%s Output: %sSTDERR: %s", e, _fmt_output(e.output), _fmt_output(e.stderr))
+            logger.info(
+                "%s Output: %sSTDERR: %s",
+                e,
+                _fmt_output(e.output),
+                _fmt_output(e.stderr),
+            )
             return e.returncode
 
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
@@ -982,7 +1021,9 @@ class Site:
 
     def get_config(self, key: str, default: str = "") -> str:
         p = self.execute(
-            ["omd", "config", "show", key], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            ["omd", "config", "show", key],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
         stdout, stderr = p.communicate()
         logger.debug("omd config: %s is set to %r", key, stdout.strip())
@@ -1008,13 +1049,19 @@ class Site:
     # is checked during site initialization instead of a dedicated test.
     def verify_cmk(self) -> None:
         p = self.execute(
-            ["cmk", "--help"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True
+            ["cmk", "--help"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
         )
         stdout = p.communicate()[0]
         assert p.returncode == 0, "Failed to execute 'cmk': %s" % stdout
 
         p = self.execute(
-            ["cmk", "-U"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True
+            ["cmk", "-U"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
         )
         stdout = p.communicate()[0]
         assert p.returncode == 0, "Failed to execute 'cmk -U': %s" % stdout
@@ -1222,28 +1269,36 @@ class Site:
         logger.info("Stopping execution of host-checks...")
         self.live.command("STOP_EXECUTING_HOST_CHECKS")
         wait_until(
-            lambda: self.is_global_flag_disabled("execute_host_checks"), timeout=60, interval=1
+            lambda: self.is_global_flag_disabled("execute_host_checks"),
+            timeout=60,
+            interval=1,
         )
 
     def start_host_checks(self) -> None:
         logger.info("Starting execution of host-checks...")
         self.live.command("START_EXECUTING_HOST_CHECKS")
         wait_until(
-            lambda: self.is_global_flag_enabled("execute_host_checks"), timeout=60, interval=1
+            lambda: self.is_global_flag_enabled("execute_host_checks"),
+            timeout=60,
+            interval=1,
         )
 
     def stop_active_services(self) -> None:
         logger.info("Stopping execution of active services...")
         self.live.command("STOP_EXECUTING_SVC_CHECKS")
         wait_until(
-            lambda: self.is_global_flag_disabled("execute_service_checks"), timeout=60, interval=1
+            lambda: self.is_global_flag_disabled("execute_service_checks"),
+            timeout=60,
+            interval=1,
         )
 
     def start_active_services(self) -> None:
         logger.info("Starting execution of active services...")
         self.live.command("START_EXECUTING_SVC_CHECKS")
         wait_until(
-            lambda: self.is_global_flag_enabled("execute_service_checks"), timeout=60, interval=1
+            lambda: self.is_global_flag_enabled("execute_service_checks"),
+            timeout=60,
+            interval=1,
         )
 
 
@@ -1279,6 +1334,15 @@ class SiteFactory:
     ) -> Site:
         site = self._site_obj(name)
 
+        if self.version.is_saas_edition():
+            from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
+                create_cse_initial_config,
+            )
+
+            # We need to create some CSE config files before starting the site, exactly as it
+            # happens on the SaaS environment, where k8s takes care of creating the config files
+            # before the site is created.
+            create_cse_initial_config()
         site.create()
 
         if init_livestatus:
@@ -1288,9 +1352,6 @@ class SiteFactory:
             return site
 
         site.start()
-
-        if self.version.is_saas_edition():
-            cse_create_onboarding_dummies(site.root)
 
         if prepare_for_tests:
             with (

@@ -553,13 +553,13 @@ def _check_minimum_patch_release(
 # and diagnostics.
 
 
-def get_general_version_infos() -> dict[str, Any]:
+def get_general_version_infos(omd_root: Path) -> dict[str, Any]:
     return {
         "time": time.time(),
         "os": _get_os_info(),
         "version": __version__,
         "edition": edition().short,
-        "core": _current_monitoring_core(),
+        "core": _current_monitoring_core(omd_root),
         "python_version": sys.version,
         "python_paths": sys.path,
     }
@@ -598,5 +598,5 @@ def _get_os_info() -> str:
     return "UNKNOWN"
 
 
-def _current_monitoring_core() -> str:
-    return get_omd_config().get("CONFIG_CORE", "UNKNOWN")
+def _current_monitoring_core(omd_root: Path) -> str:
+    return get_omd_config(omd_root).get("CONFIG_CORE", "UNKNOWN")

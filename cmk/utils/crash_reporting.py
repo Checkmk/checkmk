@@ -226,7 +226,7 @@ def _get_generic_crash_info(type_name: str, details: Mapping[str, Any]) -> Crash
 
     tb_list = traceback.extract_tb(exc_traceback)
 
-    infos = cmk_version.get_general_version_infos()
+    infos = cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
     infos.update(
         {
             "id": str(uuid.uuid1()),

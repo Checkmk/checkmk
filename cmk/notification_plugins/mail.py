@@ -28,6 +28,7 @@ from urllib.request import urlopen
 from cmk.utils import site
 from cmk.utils.exceptions import MKException
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
+from cmk.utils.paths import omd_root
 
 from cmk.notification_plugins import utils
 
@@ -703,7 +704,7 @@ def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
     url = (
         "http://localhost:%d/%s/check_mk/ajax_graph_images.py?host=%s&service=%s&num_graphs=%s"
         % (
-            site.get_apache_port(),
+            site.get_apache_port(omd_root),
             os.environ["OMD_SITE"],
             quote(context["HOSTNAME"]),
             quote(svc_desc),

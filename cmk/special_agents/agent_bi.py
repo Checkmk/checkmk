@@ -17,6 +17,7 @@ import cmk.utils.site
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.exceptions import MKException
 from cmk.utils.password_store import extract
+from cmk.utils.paths import omd_root
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
 
@@ -157,7 +158,7 @@ class AggregationRawdataGenerator:
 
         if site_config == "local":
             self._site_url = "http://localhost:%d/%s" % (
-                cmk.utils.site.get_apache_port(),
+                cmk.utils.site.get_apache_port(omd_root),
                 omd_site(),
             )
         else:

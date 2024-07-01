@@ -9,11 +9,17 @@ from pathlib import Path
 
 from livestatus import SiteId
 
-import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
 OMDConfig = dict[str, str]
+
+#
+# !!! This module seems completely useless !!!
+#
+# We should type `OMDConfig` correctly instead and pass this
+# configuration block around instead.
+#
 
 
 @cache
@@ -30,10 +36,7 @@ def url_prefix() -> str:
     return f"/{omd_site()}/"
 
 
-def get_omd_config(omd_root: Path | None = None) -> OMDConfig:
-    if omd_root is None:
-        omd_root = cmk.utils.paths.omd_root
-
+def get_omd_config(omd_root: Path) -> OMDConfig:
     site_conf = omd_root / "etc" / "omd" / "site.conf"
 
     omd_config: OMDConfig = {}
@@ -44,6 +47,6 @@ def get_omd_config(omd_root: Path | None = None) -> OMDConfig:
     return omd_config
 
 
-def get_apache_port(omd_root: Path | None = None) -> int:
+def get_apache_port(omd_root: Path) -> int:
     port = get_omd_config(omd_root).get("CONFIG_APACHE_TCP_PORT")
     return 80 if port is None else int(port)

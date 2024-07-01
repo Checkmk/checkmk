@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils import site
+from cmk.utils.paths import omd_root
 
 
 def test_get_omd_config(patch_omd_site: None) -> None:
-    assert site.get_omd_config() == {
+    assert site.get_omd_config(omd_root) == {
         "CONFIG_ADMIN_MAIL": "",
         "CONFIG_AGENT_RECEIVER": "on",
         "CONFIG_AGENT_RECEIVER_PORT": "8000",
@@ -35,4 +36,4 @@ def test_get_omd_config(patch_omd_site: None) -> None:
 
 
 def test_get_apache_port(patch_omd_site: None) -> None:
-    assert site.get_apache_port() == 5002
+    assert site.get_apache_port(omd_root) == 5002

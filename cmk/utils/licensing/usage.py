@@ -158,7 +158,7 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
     cloud_counter = _get_cloud_counter()
     synthetic_monitoring_counter = _get_synthetic_monitoring_counter()
 
-    general_infos = cmk_version.get_general_version_infos()
+    general_infos = cmk_version.get_general_version_infos(omd_root)
     extensions = _load_extensions()
 
     return LicenseUsageSample(

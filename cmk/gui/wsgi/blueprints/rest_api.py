@@ -11,6 +11,7 @@ from flask import Blueprint, current_app, make_response, Response, send_from_dir
 from flask.blueprints import BlueprintSetupState
 
 from cmk.utils import paths, store
+from cmk.utils.paths import omd_root
 from cmk.utils.site import get_omd_config
 
 from cmk.gui import hooks, main_modules, sites
@@ -71,7 +72,7 @@ def serve_redoc(site: str, file_name: str) -> Response:
 @functools.lru_cache
 def _get_receiver_port() -> int:
     # make sure we really only ever report a number and nothing more
-    return int(get_omd_config()["CONFIG_AGENT_RECEIVER_PORT"])
+    return int(get_omd_config(omd_root)["CONFIG_AGENT_RECEIVER_PORT"])
 
 
 @rest_api.route("/<string:version>/domain-types/internal/actions/discover-receiver/invoke")

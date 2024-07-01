@@ -58,6 +58,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.i18n import _
 from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.log import console, section
+from cmk.utils.paths import omd_root
 from cmk.utils.site import omd_site
 from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree
 from cmk.utils.user import UserId
@@ -285,7 +286,9 @@ class DiagnosticsDump:
 
 @cache
 def get_omd_config() -> site.OMDConfig:
-    return site.get_omd_config()
+    # Useless function, useless cache.  See comment
+    # in cmk.utils.site
+    return site.get_omd_config(cmk.utils.paths.omd_root)
 
 
 @cache
@@ -426,7 +429,7 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
-        version_infos = cmk_version.get_general_version_infos()
+        version_infos = cmk_version.get_general_version_infos(omd_root)
         version_infos["arch"] = platform.machine()
         time_obj = datetime.fromtimestamp(version_infos.get("time", 0))
         version_infos["time_human_readable"] = time_obj.isoformat(sep=" ")

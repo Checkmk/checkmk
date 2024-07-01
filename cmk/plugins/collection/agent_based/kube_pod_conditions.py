@@ -80,16 +80,16 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
         return
 
     for name, cond in condition_list:
-        if cond is not None:
-            if name == "disruptiontarget":
+        if name == "disruptiontarget":
+            if cond is not None:
                 yield Result(
                     state=State.OK,
                     summary=condition_detailed_description(
                         name, cond.status, cond.reason, cond.detail
                     ),
                 )
-                continue
-
+            continue
+        if cond is not None:
             # keep the last-seen one
             time_diff = now - cond.last_transition_time  # type: ignore[operator]  # SUP-12170
             if cond.status:
@@ -99,8 +99,6 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
             summary_prefix = condition_detailed_description(
                 name, cond.status, cond.reason, cond.detail
             )
-        elif name == "disruptiontarget":
-            continue
         else:
             summary_prefix = condition_short_description(name, False)
         for result in check_levels(

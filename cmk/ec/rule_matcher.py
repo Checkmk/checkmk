@@ -51,7 +51,7 @@ def compile_matching_value(key: str, val: str) -> TextPattern | None:
         return None
     if cmk.utils.regex.is_regex(value):
         return re.compile(value, re.IGNORECASE)
-    return val.lower()
+    return value.lower()
 
 
 def compile_rule_attribute(

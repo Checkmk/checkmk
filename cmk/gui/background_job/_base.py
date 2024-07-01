@@ -329,20 +329,19 @@ class BackgroundJob:
         )
         self._jobstatus_store.write(initial_status)
 
-        job_parameters = JobParameters(
-            {
-                "work_dir": self._work_dir,
-                "job_id": self._job_id,
-                "target": target,
-                "lock_wato": initial_status_args.lock_wato,
-                "is_stoppable": initial_status_args.stoppable,
-                "override_job_log_level": override_job_log_level,
-            }
-        )
         p = multiprocessing.Process(
-            target=self._start_background_subprocess, args=(job_parameters,)
+            target=self._start_background_subprocess,
+            args=(
+                JobParameters(
+                    work_dir=self._work_dir,
+                    job_id=self._job_id,
+                    target=target,
+                    lock_wato=initial_status_args.lock_wato,
+                    is_stoppable=initial_status_args.stoppable,
+                    override_job_log_level=override_job_log_level,
+                ),
+            ),
         )
-
         p.start()
         p.join()
 
@@ -373,7 +372,7 @@ class BackgroundJob:
 
             self._jobstatus_store.update({"ppid": os.getpid()})
 
-            p = multiprocessing.Process(
+            p = multiprocessing.get_context("spawn").Process(
                 # The import hack here is done to avoid circular imports. Actually run_process is
                 # only needed in the background job. A better way to approach this, could be to
                 # launch the background job with a subprocess instead to get rid of this import
@@ -389,6 +388,10 @@ class BackgroundJob:
                 ),
             )
             p.start()
+
+            assert p.pid is not None
+            self._jobstatus_store.update({"pid": p.pid})
+
         except Exception as e:
             self._logger.exception("Error while starting subprocess: %s", e)
             self._exit(1)

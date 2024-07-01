@@ -21,6 +21,7 @@ from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,
     BackgroundJobDefines,
+    BackgroundProcessInterface,
     InitialStatusArgs,
     job_registry,
     JobStatusStates,
@@ -90,20 +91,20 @@ class DummyBackgroundJob(BackgroundJob):
     job_prefix = "dummy_job"
 
     @classmethod
-    def gui_title(cls):
+    def gui_title(cls) -> str:
         return "Dummy Job"
 
     def __init__(self) -> None:
-        self.finish_hello_event = multiprocessing.Event()
+        self.finish_hello_event = multiprocessing.get_context("spawn").Event()
 
         super().__init__(self.job_prefix)
 
-    def execute_hello(self, job_interface):
+    def execute_hello(self, job_interface: BackgroundProcessInterface) -> None:
         sys.stdout.write("Hallo :-)\n")
         sys.stdout.flush()
         self.finish_hello_event.wait()
 
-    def execute_endless(self, job_interface):
+    def execute_endless(self, job_interface: BackgroundProcessInterface) -> None:
         sys.stdout.write("Hanging loop\n")
         sys.stdout.flush()
         time.sleep(100)
@@ -125,7 +126,7 @@ def test_start_job() -> None:
         ),
         override_job_log_level=logging.DEBUG,
     )
-    wait_until(job.is_active, timeout=5, interval=0.1)
+    wait_until(job.is_active, timeout=10, interval=0.1)
 
     with pytest.raises(BackgroundJobAlreadyRunning):
         job.start(
@@ -144,7 +145,7 @@ def test_start_job() -> None:
     wait_until(
         lambda: job.get_status().state
         not in [JobStatusStates.INITIALIZED, JobStatusStates.RUNNING],
-        timeout=5,
+        timeout=10,
         interval=0.1,
     )
 
@@ -170,7 +171,7 @@ def test_stop_job() -> None:
 
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
-        timeout=5,
+        timeout=10,
         interval=0.1,
     )
 
@@ -219,7 +220,7 @@ def test_job_status_while_running() -> None:
     )
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
-        timeout=5,
+        timeout=10,
         interval=0.1,
     )
 
@@ -252,7 +253,7 @@ def test_job_status_after_stop() -> None:
     )
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
-        timeout=5,
+        timeout=10,
         interval=0.1,
     )
     job.stop()

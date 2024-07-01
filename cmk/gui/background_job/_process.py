@@ -22,16 +22,16 @@ from types import FrameType
 
 from setproctitle import setthreadtitle
 
-from cmk.utils import daemon, store
+from cmk.utils import store
 from cmk.utils.exceptions import MKTerminate
-from cmk.utils.licensing.helper import get_licensing_logger
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import configuration_lockfile
 
-from cmk.gui import log, sites
+from cmk.gui import config, log, main_modules
 from cmk.gui.i18n import _
-from cmk.gui.utils.timeout_manager import timeout_manager
+from cmk.gui.utils import get_failed_plugins
 
+from ._app import BackgroundJobFlaskApp
 from ._defines import BackgroundJobDefines
 from ._interface import BackgroundProcessInterface
 from ._status import JobStatusStates
@@ -46,23 +46,20 @@ def run_process(
     is_stoppable: bool,
     override_job_log_level: int | None = None,
 ) -> None:
+    logger = log.logger.getChild("background-job")
     jobstatus_store = JobStatusStore(work_dir)
     _detach_from_parent()
 
     try:
-        logger = _initialize_environment(
-            job_id, Path(work_dir), lock_wato, is_stoppable, override_job_log_level
-        )
-        logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
-        jobstatus_store.update(
-            {
-                "pid": os.getpid(),
-                "state": JobStatusStates.RUNNING,
-            }
-        )
+        with BackgroundJobFlaskApp().test_request_context("/"):
+            job_status = jobstatus_store.read()
+            _initialize_environment(
+                logger, job_id, Path(work_dir), lock_wato, is_stoppable, override_job_log_level
+            )
+            logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
+            jobstatus_store.update({"pid": os.getpid(), "state": JobStatusStates.RUNNING})
 
-        # The actual function call
-        _execute_function(logger, target, BackgroundProcessInterface(work_dir, job_id, logger))
+            _execute_function(logger, target, BackgroundProcessInterface(work_dir, job_id, logger))
 
         # Final status update
         job_status = jobstatus_store.read()
@@ -86,6 +83,13 @@ def run_process(
         jobstatus_store.update({"state": JobStatusStates.EXCEPTION})
 
 
+def _load_ui() -> None:
+    """This triggers loading all modules of the UI, internal ones and plugins"""
+    main_modules.load_plugins()
+    if errors := get_failed_plugins():
+        raise Exception(f"The following errors occured during plug-in loading: {errors}")
+
+
 def _register_signal_handlers(logger: Logger, is_stoppable: bool, job_id: str) -> None:
     logger.debug("Register signal handler %d", os.getpid())
     signal.signal(signal.SIGTERM, partial(_handle_sigterm, logger, is_stoppable, job_id))
@@ -107,7 +111,7 @@ def _handle_sigterm(
 
 
 def _detach_from_parent() -> None:
-    # Detach from parent and cleanup inherited file descriptors
+    # Detach from parent
     os.setsid()
 
     # NOTE: Setting the thread title is not for cosmetics! BackgroundJob._is_correct_process()
@@ -116,63 +120,28 @@ def _detach_from_parent() -> None:
     # has not been damaged too much, but our tests do this via mock.patch.dict(os.environ, ...).
     setthreadtitle(BackgroundJobDefines.process_name)
 
-    sys.stdin.close()
-    # NOTE
-    # When forking off from an mod_wsgi process, these handles are not the standard stdout and
-    # stderr handles but rather proxies to internal data-structures of mod_wsgi. If these are
-    # closed then mod_wsgi will trigger a "RuntimeError: log object has expired" if you want to
-    # use them again, as this is considered a programming error. The logging framework
-    # installs an "atexit" callback which flushes the logs upon the process exiting. This
-    # tries to write to the now closed fake stdout/err handles and triggers the RuntimeError.
-    # This will happen even if sys.stdout and sys.stderr are reset to their originals because
-    # the StreamHandler will still hold a reference to the mod_wsgi stdout/err handles.
-    # sys.stdout.close()
-    # sys.stderr.close()
-    daemon.closefrom(0)
-
 
 def _initialize_environment(
+    logger: Logger,
     job_id: str,
     work_dir: Path,
     lock_wato: bool,
     is_stoppable: bool,
     override_job_log_level: int | None,
-) -> Logger:
+) -> None:
     """Setup environment (Logging, Livestatus handles, etc.)"""
-    logger = _init_gui_logging(override_job_log_level)
-    _cleanup_licensing_logging()
-    _disable_timeout_manager()
-    _cleanup_livestatus_connections()
     _open_stdout_and_stderr(work_dir)
+    config.initialize()
     _enable_logging_to_stdout()
+    _init_job_logging(logger, override_job_log_level)
+    _load_ui()
     _register_signal_handlers(logger, is_stoppable, job_id)
     _lock_configuration(lock_wato)
-    return logger
 
 
-def _init_gui_logging(override_job_log_level: int | None) -> Logger:
-    log.init_logging()  # NOTE: We run in a subprocess!
-    logger = log.logger.getChild("background-job")
+def _init_job_logging(logger: Logger, override_job_log_level: int | None) -> None:
     if override_job_log_level:
         logger.setLevel(override_job_log_level)
-    return logger
-
-
-def _cleanup_licensing_logging() -> None:
-    """Remove all handlers from the licensing logger to ensure none of them hold file handles
-    that were just closed."""
-    licensing_logger = get_licensing_logger()
-    del licensing_logger.handlers[:]
-
-
-def _disable_timeout_manager() -> None:
-    if timeout_manager:
-        timeout_manager.disable_timeout()
-
-
-def _cleanup_livestatus_connections() -> None:
-    """Close livestatus connections inherited from the parent process"""
-    sites.disconnect()
 
 
 def _execute_function(

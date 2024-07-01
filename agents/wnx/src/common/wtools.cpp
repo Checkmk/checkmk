@@ -2605,15 +2605,17 @@ void ProtectPathFromUserWrite(const fs::path &path,
     // "programdata/checkmk" we must remove inherited write rights for
     // Users in checkmk root data folder.
 
-    constexpr std::wstring_view command_templates[] = {
-        L"icacls \"{}\" /inheritance:d /c",           // disable inheritance
-        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c",  // remove all user rights
-        L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
+    // disable inheritance
+    commands.emplace_back(
+        fmt::format(L"icacls \"{}\" /inheritance:d /c", path.wstring()));
+    // remove all user rights
+    commands.emplace_back(fmt::format(
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c", path.wstring()));
+    // read/exec
+    commands.emplace_back(
+        fmt::format(L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c",
+                    path.wstring()));
 
-    for (auto const t : command_templates) {
-        auto cmd = fmt::format(t.data(), path.wstring());
-        commands.emplace_back(cmd);
-    }
     XLOG::l.i("Protect path from User write '{}'", path);
 }
 

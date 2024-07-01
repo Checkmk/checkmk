@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""Background job process entry point.
+
+This must not be imported from anywhere outside of the background job process."""
+
 from __future__ import annotations
 
 import io
@@ -18,7 +22,7 @@ from types import FrameType
 
 from setproctitle import setthreadtitle
 
-from cmk.utils import daemon, render, store
+from cmk.utils import daemon, store
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.licensing.helper import get_licensing_logger
 from cmk.utils.log import VERBOSE
@@ -28,6 +32,7 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.timeout_manager import timeout_manager
 
 from ._defines import BackgroundJobDefines
+from ._interface import BackgroundProcessInterface
 from ._status import JobStatusStates
 from ._store import JobStatusStore
 
@@ -208,48 +213,3 @@ def _lock_configuration(lock_wato: bool) -> None:
     if lock_wato:
         store.release_all_locks()
         store.lock_exclusive()
-
-
-class BackgroundProcessInterface:
-    def __init__(self, work_dir: str, job_id: str, logger: Logger) -> None:
-        self._work_dir = work_dir
-        self._job_id = job_id
-        self._logger = logger
-
-    def get_work_dir(self) -> str:
-        return self._work_dir
-
-    def get_job_id(self) -> str:
-        return self._job_id
-
-    def get_logger(self) -> Logger:
-        return self._logger
-
-    def send_progress_update(self, info: str, with_timestamp: bool = False) -> None:
-        """The progress update is written to stdout and will be caught by the threads counterpart"""
-        message = info
-        if with_timestamp:
-            message = f"{render.time_of_day(time.time())} {message}"
-        sys.stdout.write(message + "\n")
-
-    def send_result_message(self, info: str) -> None:
-        """The result message is written to a distinct file to separate this info from the rest of
-        the context information. This message should contain a short result message and/or some kind
-        of resulting data, e.g. a link to a report or an agent output. As it may contain HTML code
-        it is not written to stdout."""
-        encoded_info = "%s\n" % info
-        result_message_path = (
-            Path(self.get_work_dir()) / BackgroundJobDefines.result_message_filename
-        )
-        with result_message_path.open("ab") as f:
-            f.write(encoded_info.encode())
-
-    def send_exception(self, info: str) -> None:
-        """Exceptions are written to stdout because of log output clarity
-        as well as into a distinct file, to separate this info from the rest of the context information
-        """
-        # Exceptions also get an extra newline, since some error messages tend not output a \n at the end..
-        encoded_info = "%s\n" % info
-        sys.stdout.write(encoded_info)
-        with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:
-            f.write(encoded_info.encode())

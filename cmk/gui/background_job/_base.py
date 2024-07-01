@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import importlib
 import logging
 import multiprocessing
 import os
@@ -26,7 +27,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 
 from ._defines import BackgroundJobDefines
-from ._process import BackgroundProcessInterface, run_process
+from ._interface import BackgroundProcessInterface
 from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
 from ._store import JobStatusStore
 
@@ -373,7 +374,11 @@ class BackgroundJob:
             self._jobstatus_store.update({"ppid": os.getpid()})
 
             p = multiprocessing.Process(
-                target=run_process,
+                # The import hack here is done to avoid circular imports. Actually run_process is
+                # only needed in the background job. A better way to approach this, could be to
+                # launch the background job with a subprocess instead to get rid of this import
+                # hack.
+                target=importlib.import_module("cmk.gui.background_job._process").run_process,
                 args=(
                     job_parameters["work_dir"],
                     job_parameters["job_id"],

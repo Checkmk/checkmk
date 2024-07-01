@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import json
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
@@ -31,7 +30,7 @@ from cmk.plugins.lib.kube import COLLECTOR_SERVICE_NAME
 
 # TODO: change section from info to components
 def parse_collector_processing_logs(string_table: StringTable) -> CollectorProcessingLogs:
-    return CollectorProcessingLogs(**json.loads(string_table[0][0]))
+    return CollectorProcessingLogs.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_collector_processing_logs_v1 = AgentSection(
@@ -42,7 +41,7 @@ agent_section_kube_collector_processing_logs_v1 = AgentSection(
 
 
 def parse_collector_metadata(string_table: StringTable) -> CollectorComponentsMetadata:
-    return CollectorComponentsMetadata(**json.loads(string_table[0][0]))
+    return CollectorComponentsMetadata.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_collector_metadata_v1 = AgentSection(
@@ -53,7 +52,7 @@ agent_section_kube_collector_metadata_v1 = AgentSection(
 
 
 def parse_collector_daemons(string_table: StringTable) -> CollectorDaemons:
-    return CollectorDaemons(**json.loads(string_table[0][0]))
+    return CollectorDaemons.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_collector_daemons_v1 = AgentSection(

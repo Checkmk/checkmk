@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 
-import json
 import math
 import time
 from collections.abc import MutableMapping
@@ -47,7 +46,7 @@ def parse_kube_pod_resources(string_table: StringTable) -> PodResources:
     ... ]])
     PodResources(running=['checkmk-cluster-agent', 'storage-provisioner'], pending=['success2'], succeeded=['hello-27303194--1-9vtft'], failed=[], unknown=[])
     """
-    return PodResources(**json.loads(string_table[0][0]))
+    return PodResources.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_pod_resources_v1 = AgentSection(
@@ -65,7 +64,7 @@ def parse_kube_allocatable_pods(string_table: StringTable) -> AllocatablePods:
     ... ]])
     AllocatablePods(capacity=110, allocatable=110)
     """
-    return AllocatablePods(**json.loads(string_table[0][0]))
+    return AllocatablePods.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_allocatable_pods_v1 = AgentSection(

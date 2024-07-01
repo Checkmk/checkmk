@@ -2,7 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
 import time
 from collections.abc import Iterator, Mapping, MutableMapping
 from typing import Any, TypedDict
@@ -56,14 +55,14 @@ class Params(TypedDict, total=False):
 
 def parse_persistent_volume_claims(string_table: StringTable) -> PersistentVolumeClaims:
     """Parses `string_table` into a PersistentVolumeClaims instance"""
-    return PersistentVolumeClaims(**json.loads(string_table[0][0]))
+    return PersistentVolumeClaims.model_validate_json(string_table[0][0])
 
 
 def parse_persistent_volume_claims_attached_volumes(
     string_table: StringTable,
 ) -> PersistentVolumeClaimAttachedVolumes:
     """Parses `string_table` into a PersistentVolumeAttachedVolumes instance"""
-    return PersistentVolumeClaimAttachedVolumes(**json.loads(string_table[0][0]))
+    return PersistentVolumeClaimAttachedVolumes.model_validate_json(string_table[0][0])
 
 
 def parse_attached_persistent_volumes(

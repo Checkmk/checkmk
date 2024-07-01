@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -23,7 +22,7 @@ def parse_kube_pod_lifecycle(string_table: StringTable) -> PodLifeCycle:
     >>> parse_kube_pod_lifecycle([['{"phase": "running"}']])
     PodLifeCycle(phase=<Phase.RUNNING: 'running'>)
     """
-    return PodLifeCycle(**json.loads(string_table[0][0]))
+    return PodLifeCycle.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_pod_lifecycle_v1 = AgentSection(

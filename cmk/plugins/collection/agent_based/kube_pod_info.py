@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 
-import json
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -48,7 +47,7 @@ def parse_kube_pod_info(string_table: StringTable) -> PodInfo:
     ... ]])
     PodInfo(namespace='redis', name='redis-xyz', creation_timestamp=1637069562.0, labels={}, annotations={}, node='k8-w2', host_network=None, dns_policy='Default', host_ip='192.168.49.2', pod_ip='172.17.0.2', qos_class='burstable', restart_policy='Always', uid='dd1019ca-c429-46af-b6b7-8aad47b6081a', controllers=[Controller(type_='Deployment', name='redis-deployment')], cluster='cluster', kubernetes_cluster_hostname='host')
     """
-    return PodInfo(**json.loads(string_table[0][0]))
+    return PodInfo.model_validate_json(string_table[0][0])
 
 
 def host_labels(section: PodInfo) -> HostLabelGenerator:

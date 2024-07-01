@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import time
 from collections.abc import Mapping
 
@@ -30,7 +29,7 @@ from cmk.plugins.lib.kube import (
 
 def parse(string_table: StringTable) -> PodConditions:
     """Parses `string_table` into a PodConditions instance"""
-    return PodConditions(**json.loads(string_table[0][0]))
+    return PodConditions.model_validate_json(string_table[0][0])
 
 
 def discovery(section: PodConditions) -> DiscoveryResult:

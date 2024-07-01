@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from collections.abc import Mapping
 from typing import cast, Literal
 
@@ -25,7 +24,7 @@ CountName = Literal["running", "waiting", "terminated", "total"]
 
 def parse(string_table: StringTable) -> ContainerCount:
     """Parses running, waiting and terminated containers into ContainerCount"""
-    return ContainerCount(**json.loads(string_table[0][0]))
+    return ContainerCount.model_validate_json(string_table[0][0])
 
 
 def discovery(section: ContainerCount) -> DiscoveryResult:

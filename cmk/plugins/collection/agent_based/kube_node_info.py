@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 
-import json
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -44,7 +43,7 @@ def parse_kube_node_info(string_table: StringTable) -> NodeInfo:
     ... ]])
     NodeInfo(architecture='amd64', kernel_version='5.13.0-27-generic', os_image='Ubuntu 20.04.2 LTS', operating_system='linux', container_runtime_version='docker://20.10.8', name='minikube', creation_timestamp=1640000000.0, labels={}, annotations={}, addresses=[], cluster='cluster', kubernetes_cluster_hostname='host')
     """
-    return NodeInfo(**json.loads(string_table[0][0]))
+    return NodeInfo.model_validate_json(string_table[0][0])
 
 
 def host_labels(section: NodeInfo) -> HostLabelGenerator:

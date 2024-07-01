@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -27,7 +26,7 @@ def parse_kube_cluster_info(string_table: StringTable) -> ClusterInfo:
     ... ]])
     ClusterInfo(name='cluster', version='v1.22.2')
     """
-    return ClusterInfo(**json.loads(string_table[0][0]))
+    return ClusterInfo.model_validate_json(string_table[0][0])
 
 
 def host_labels(section: ClusterInfo) -> HostLabelGenerator:

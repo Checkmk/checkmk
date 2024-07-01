@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import time
 from collections.abc import Mapping
 
@@ -38,7 +37,7 @@ def parse(string_table: StringTable) -> PodContainers | None:
     """
     if not string_table:
         return None
-    return PodContainers(**json.loads(string_table[0][0]))
+    return PodContainers.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_pod_containers_v1 = AgentSection(

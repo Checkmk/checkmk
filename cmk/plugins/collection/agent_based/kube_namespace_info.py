@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 
-import json
 import typing
 
 from cmk.agent_based.v2 import (
@@ -39,7 +38,7 @@ def parse_kube_namespace_info(string_table: StringTable) -> NamespaceInfo:
     ... '}']])
     NamespaceInfo(name='namespace', creation_timestamp=1640000000.0, labels={}, annotations={}, cluster='cluster', kubernetes_cluster_hostname='host')
     """
-    return NamespaceInfo(**json.loads(string_table[0][0]))
+    return NamespaceInfo.model_validate_json(string_table[0][0])
 
 
 def host_labels(section: NamespaceInfo) -> HostLabelGenerator:

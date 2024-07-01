@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -34,7 +33,7 @@ def parse(string_table: StringTable) -> DaemonSetInfo:
     ... ]])
     DaemonSetInfo(name='oh-lord', namespace='have-mercy', labels={}, annotations={}, selector=Selector(match_labels={}, match_expressions=[MatchExpression(key='app', operator='In', values=['sleep'])]), creation_timestamp=1638798546.0, containers=ThinContainers(images=frozenset({'i/name:0.5'}), names=['name']), cluster='cluster', kubernetes_cluster_hostname='host')
     """
-    return DaemonSetInfo(**json.loads(string_table[0][0]))
+    return DaemonSetInfo.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_daemonset_info_v1 = AgentSection[DaemonSetInfo](

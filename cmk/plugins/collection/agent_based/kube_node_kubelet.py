@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -19,7 +18,7 @@ from cmk.plugins.kube.schemata.section import KubeletInfo
 
 
 def parse_kube_node_kubelet_v1(string_table: StringTable) -> KubeletInfo:
-    return KubeletInfo(**json.loads(string_table[0][0]))
+    return KubeletInfo.model_validate_json(string_table[0][0])
 
 
 def check_kube_node_kubelet(section: KubeletInfo) -> CheckResult:

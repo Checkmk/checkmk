@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any, Literal
@@ -34,15 +33,15 @@ from cmk.plugins.lib.kube_strategy import strategy_text
 
 
 def parse_kube_deployment_replicas(string_table: StringTable) -> DeploymentReplicas:
-    return DeploymentReplicas(**json.loads(string_table[0][0]))
+    return DeploymentReplicas.model_validate_json(string_table[0][0])
 
 
 def parse_kube_statefulset_replicas(string_table: StringTable) -> StatefulSetReplicas:
-    return StatefulSetReplicas(**json.loads(string_table[0][0]))
+    return StatefulSetReplicas.model_validate_json(string_table[0][0])
 
 
 def parse_kube_daemonset_replicas(string_table: StringTable) -> DaemonSetReplicas:
-    return DaemonSetReplicas(**json.loads(string_table[0][0]))
+    return DaemonSetReplicas.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_deployment_replicas_v1 = AgentSection(
@@ -65,7 +64,7 @@ agent_section_kube_daemonset_replicas_v1 = AgentSection(
 
 
 def parse_kube_strategy(string_table: StringTable) -> UpdateStrategy:
-    return UpdateStrategy(**json.loads(string_table[0][0]))
+    return UpdateStrategy.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_update_strategy_v1 = AgentSection(

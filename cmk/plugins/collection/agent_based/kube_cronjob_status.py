@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
-import json
 import time
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, assert_never
@@ -47,7 +46,7 @@ class JobStatusType(enum.Enum):
 
 
 def parse_cron_job_status(string_table: StringTable) -> CronJobStatus:
-    return CronJobStatus(**json.loads(string_table[0][0]))
+    return CronJobStatus.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_cron_job_status_v1 = AgentSection(
@@ -58,7 +57,7 @@ agent_section_kube_cron_job_status_v1 = AgentSection(
 
 
 def parse_latest_job(string_table: StringTable) -> CronJobLatestJob:
-    return CronJobLatestJob(**json.loads(string_table[0][0]))
+    return CronJobLatestJob.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_cron_job_latest_job_v1 = AgentSection(

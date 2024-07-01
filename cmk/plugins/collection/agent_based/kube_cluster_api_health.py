@@ -2,7 +2,6 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -18,7 +17,7 @@ from cmk.plugins.kube.schemata.section import ClusterDetails
 
 
 def parse(string_table: StringTable) -> ClusterDetails:
-    return ClusterDetails(**json.loads(string_table[0][0]))
+    return ClusterDetails.model_validate_json(string_table[0][0])
 
 
 def discovery(section: ClusterDetails) -> DiscoveryResult:

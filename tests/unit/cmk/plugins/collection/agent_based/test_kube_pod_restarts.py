@@ -62,7 +62,7 @@ def string_table(string_table_element):
 def section(string_table):
     if not string_table:
         return None
-    return PodContainers(**json.loads(string_table[0][0]))
+    return PodContainers.model_validate_json(string_table[0][0])
 
 
 @pytest.fixture

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import time
 from collections.abc import Mapping
 
@@ -36,7 +35,7 @@ CONDITIONS_OK_MAPPINGS = {
 
 def parse(string_table: StringTable) -> DeploymentConditions:
     """Parses `string_table` into a DeploymentConditions instance"""
-    return DeploymentConditions(**json.loads(string_table[0][0]))
+    return DeploymentConditions.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_deployment_conditions_v1 = AgentSection(

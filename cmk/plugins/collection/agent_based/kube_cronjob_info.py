@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 
-import json
 import typing
 
 from cmk.agent_based.v2 import (
@@ -45,7 +44,7 @@ def parse_kube_cronjob_info(string_table: StringTable) -> CronJobInfo:
     ... ]])
     CronJobInfo(name='cronjob', namespace='checkmk-monitoring', creation_timestamp=1640000000.0, labels={}, annotations={}, schedule='0 * * * *', concurrency_policy=<ConcurrencyPolicy.Allow: 'Allow'>, failed_jobs_history_limit=10, successful_jobs_history_limit=10, suspend=False, cluster='cluster', kubernetes_cluster_hostname='host')
     """
-    return CronJobInfo(**json.loads(string_table[0][0]))
+    return CronJobInfo.model_validate_json(string_table[0][0])
 
 
 def host_labels(section: CronJobInfo) -> HostLabelGenerator:

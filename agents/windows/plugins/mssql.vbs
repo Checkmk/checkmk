@@ -726,7 +726,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                     "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
                     "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id  " & _
                     "WHERE (rep.is_local is null or rep.is_local = 1)  " & _
-                    "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and machine_name = SERVERPROPERTY(''Machinename'') " & _
+                    "AND machine_name = SERVERPROPERTY(''Machinename'') " & _
                     "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
                 "END " & _
                 "EXEC (@SQLCommand)"
@@ -754,7 +754,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                is_primary_replica = Trim(record("is_primary_replica"))
                backup_machine_name = Trim(record("machine_name"))
 
-               If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "True") Then
+               If lastBackupDate <> "" Then
                    addOutput("MSSQL_" & instance_id & "|" & backup_database & _
                              "|" & Replace(lastBackupDate, " ", "|") & "|" & backup_type)
                End If

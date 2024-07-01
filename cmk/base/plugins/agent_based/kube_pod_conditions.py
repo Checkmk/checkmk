@@ -40,16 +40,6 @@ def discovery(section: PodConditions) -> DiscoveryResult:
     yield Service()
 
 
-LOGICAL_ORDER = [
-    "scheduled",
-    "hasnetwork",
-    "initialized",
-    "containersready",
-    "ready",
-    "disruptiontarget",
-]
-
-
 def _check_condition(
     now: float, name: str, cond: PodCondition | None, levels_upper: tuple[int, int] | None
 ) -> CheckResult:
@@ -73,14 +63,10 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
     or missing, defining each state according to `last_transition_time` and the
     respective levels in `params`.
 
-    A pod transitions through the conditions in the order specified in
-    `LOGICAL_ORDER`.  The last two conditions, `containersready` and `ready`,
-    can be in a failed state simultaneously.  When a condition is missing (i.e.
-    is `None`), it means that the previous condition is in a failed state."""
-
-    condition_list: list[tuple[str, PodCondition | None]] = [
-        (name, getattr(section, name)) for name in LOGICAL_ORDER
-    ]
+    The Pod sets the conditions to True in this order:
+    PodScheduled -> PodInitialized -> PodContainersReady -> PodReady.
+    PodReadyToStartContainers and PodDisruptionTarget don't have as clear a place.
+    """
 
     # DisruptionTarget is a special case, and the user should be able to see the condition details
     # when this condition appears.
@@ -91,26 +77,60 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
             state=State.OK,
             summary="Ready, all conditions passed",
             details="\n".join(
-                [
-                    condition_detailed_description(name, cond.status, cond.reason, cond.detail)
-                    for name, cond in condition_list
-                    if cond is not None
+                condition_detailed_description(name, cond.status, cond.reason, cond.detail)
+                for name, cond in [
+                    ("scheduled", section.scheduled),
+                    ("hasnetwork", section.hasnetwork),
+                    ("initialized", section.initialized),
+                    ("containersready", section.containersready),
+                    ("ready", section.ready),
+                    ("disruptiontarget", section.disruptiontarget),
                 ]
+                if cond is not None
             ),
         )
         return
 
-    for name, cond in condition_list:
-        if name == "disruptiontarget":
-            if cond is not None:
-                yield Result(
-                    state=State.OK,
-                    summary=condition_detailed_description(
-                        name, cond.status, cond.reason, cond.detail
-                    ),
-                )
-            continue
-        yield from _check_condition(now, name, cond, get_age_levels_for(params, name))
+    yield from _check_condition(
+        now,
+        "scheduled",
+        section.scheduled,
+        get_age_levels_for(params, "scheduled"),
+    )
+    yield from _check_condition(
+        now,
+        "hasnetwork",
+        section.hasnetwork,
+        get_age_levels_for(params, "hasnetwork"),
+    )
+    yield from _check_condition(
+        now,
+        "initialized",
+        section.initialized,
+        get_age_levels_for(params, "initialized"),
+    )
+    yield from _check_condition(
+        now,
+        "containersready",
+        section.containersready,
+        get_age_levels_for(params, "containersready"),
+    )
+    yield from _check_condition(
+        now,
+        "ready",
+        section.ready,
+        get_age_levels_for(params, "ready"),
+    )
+    if (disruptiontarget := section.disruptiontarget) is not None:
+        yield Result(
+            state=State.OK,
+            summary=condition_detailed_description(
+                "disruptiontarget",
+                disruptiontarget.status,
+                disruptiontarget.reason,
+                disruptiontarget.detail,
+            ),
+        )
 
 
 def check(params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:

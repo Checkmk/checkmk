@@ -288,8 +288,7 @@ def test_check_all_results_with_summary_status_false():
     check_result = kube_pod_conditions._check(TIMESTAMP, {}, section)
     expected_summaries = [
         f"{k.upper()}: False ({REASON}: {DETAIL}) for 0 seconds"
-        for k in kube_pod_conditions.LOGICAL_ORDER
-        if k != "disruptiontarget"
+        for k in ["scheduled", "hasnetwork", "initialized", "containersready", "ready"]
     ]
     assert list(r.summary for r in check_result if isinstance(r, Result)) == expected_summaries
 
@@ -352,7 +351,14 @@ def test_check_results_sets_summary_when_status_false(
     time_diff = render.timespan(TIMESTAMP - transition_timestamp)
     expected_prefixes = [
         f"{k.upper()}: False ({REASON}: {DETAIL}) for {time_diff}"
-        for k in kube_pod_conditions.LOGICAL_ORDER
+        for k in [
+            "scheduled",
+            "hasnetwork",
+            "initialized",
+            "containersready",
+            "ready",
+            "disruptiontarget",
+        ]
     ]
     for expected_prefix, result in zip(expected_prefixes, check_result):
         assert isinstance(result, Result) and result.summary.startswith(expected_prefix)

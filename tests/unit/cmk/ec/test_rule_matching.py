@@ -127,6 +127,24 @@ from cmk.ec.rule_matcher import (
             (),
             (),
         ),
+        # regex, dot star
+        (
+            "test ODBC test",
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            ".*ODBC",
+            "test ODBC",
+            (),
+            (),
+        ),
+        # regex, dot star also at the end
+        (
+            "test ODBC test",
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            ".*ODBC.*",
+            "test ODBC test",
+            (),
+            (),
+        ),
     ],
 )
 def test_match_message(

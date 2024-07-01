@@ -6,7 +6,7 @@ from typing import TypedDict, TypeGuard
 
 # TODO: replace this with an enum once we parse config files to proper types
 PROGRAM_ID_DCD = "dcd"
-PROGRAM_ID_CONFIG_BUNDLE = "config_bundle"
+PROGRAM_ID_QUICK_SETUP = "quick_setup"
 
 
 class GlobalIdent(TypedDict):
@@ -15,5 +15,5 @@ class GlobalIdent(TypedDict):
     instance_id: str
 
 
-def is_locked_by_config_bundle(ident: GlobalIdent | None) -> TypeGuard[GlobalIdent]:
-    return ident is not None and ident["program_id"] == PROGRAM_ID_CONFIG_BUNDLE
+def is_locked_by_quick_setup(ident: GlobalIdent | None) -> TypeGuard[GlobalIdent]:
+    return ident is not None and ident["program_id"] == PROGRAM_ID_QUICK_SETUP

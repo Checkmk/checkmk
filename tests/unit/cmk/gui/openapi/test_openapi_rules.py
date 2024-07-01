@@ -18,7 +18,7 @@ from tests.testlib.rest_api_client import (
 )
 
 from cmk.utils import paths
-from cmk.utils.global_ident_type import PROGRAM_ID_CONFIG_BUNDLE
+from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.store import load_mk_file, save_mk_file, save_to_mk_file
 
@@ -507,32 +507,20 @@ def fixture_locked_rule_id() -> Iterable[str]:
     id_ = "f893cdfc-00c8-4d93-943b-05c4edc52068"
     save_to_mk_file(
         rules_mk,
-        "special_agents",
-        {
-            "jenkins": [
-                {
-                    "id": id_,
-                    "value": {
-                        "instance": "localhost:9999",
-                        "user": "uhh",
-                        "password": (
-                            "cmk_postprocessed",
-                            "explicit_password",
-                            ("uuidb1728c95-932d-475a-8623-de0b1f35260f", "no"),
-                        ),
-                        "protocol": "https",
-                        "sections": ["instance", "jobs", "nodes", "queue"],
-                    },
-                    "condition": {},
-                    "options": {"disabled": False, "description": "test"},
-                    "locked_by": {
-                        "site_id": "heute",
-                        "program_id": PROGRAM_ID_CONFIG_BUNDLE,
-                        "instance_id": "quick-setup-rule-1",
-                    },
+        "host_label_rules",
+        [
+            {
+                "id": id_,
+                "value": {"custom": "label"},
+                "condition": {"host_name": ["heute"]},
+                "options": {"disabled": False},
+                "locked_by": {
+                    "site_id": "heute",
+                    "program_id": PROGRAM_ID_QUICK_SETUP,
+                    "instance_id": "some-rule-id",
                 },
-            ]
-        },
+            },
+        ],
     )
     yield id_
     if content is None:
@@ -547,11 +535,23 @@ def test_openapi_cannot_delete_locked_rule(clients: ClientRegistry, locked_rule_
 
 
 def test_openapi_cannot_move_locked_rule(clients: ClientRegistry, locked_rule_id: str) -> None:
-    clients.Folder.create("test_folder", "/", "test_folder")
     resp = clients.Rule.move(
-        locked_rule_id, {"position": "top_of_folder", "folder": "/test_folder"}, expect_ok=False
+        locked_rule_id, {"position": "top_of_folder", "folder": "/"}, expect_ok=False
     ).assert_status_code(400)
-    assert resp.json["detail"] == "Rules managed by Quick setup cannot be moved to another folder."
+    assert resp.json["detail"] == "Rules managed by Quick setup cannot be moved."
+
+
+def test_openapi_cannot_move_rule_before_locked_rule(
+    clients: ClientRegistry, locked_rule_id: str
+) -> None:
+    clients.Ruleset.list()
+    rule_resp = clients.Rule.create("host_label_rules", value_raw='{"foo": "bar"}')
+    move_resp = clients.Rule.move(
+        rule_resp.json["id"],
+        {"position": "before_specific_rule", "rule_id": locked_rule_id},
+        expect_ok=False,
+    ).assert_status_code(400)
+    assert move_resp.json["detail"] == "Cannot move before a rule managed by Quick setup."
 
 
 def test_openapi_cannot_change_locked_rule_conditions(

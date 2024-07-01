@@ -69,21 +69,23 @@ RULE_ID: Mapping[str, fields.String] = {
 }
 
 
-class MoveToFolder(base.BaseSchema):
+class _BaseMoveTo(base.BaseSchema):
     cast_to_dict = True
 
     position = fields.String(
-        description="The type of position to move to.", example="top_of_folder"
+        description="""The type of position to move to.
+        Note that you cannot move rules before rules managed by a Quick setup. In the case of
+        `top_of_folder` your rule will instead be after all managed rules. If you specify a managed
+        rule in `after_specific_rule` or `before_specific_rule` you will receive an error.""",
+        example="top_of_folder",
     )
+
+
+class MoveToFolder(_BaseMoveTo):
     folder = gui_fields.FolderField(example="/")
 
 
-class MoveToSpecificRule(base.BaseSchema):
-    cast_to_dict = True
-
-    position = fields.String(
-        description="The type of position to move to.", example="after_specific_rule"
-    )
+class MoveToSpecificRule(_BaseMoveTo):
     rule_id = fields.String(
         description="The UUID of the rule to move after/before.",
         example="f8b74720-a454-4242-99c4-62994ef0f2bf",

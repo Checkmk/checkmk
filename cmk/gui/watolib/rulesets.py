@@ -21,7 +21,7 @@ from typing import Any, assert_never, cast, Final
 from cmk.utils import paths, store
 from cmk.utils.config_validation_layer.rules import validate_rulesets
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.global_ident_type import GlobalIdent
+from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
@@ -304,17 +304,6 @@ class RuleConditions:
             ),
             service_label_groups=self.service_label_groups,
         )
-
-    def get_single_explicit_host(self) -> str | None:
-        """Return a single host name, if there is exactly one configured."""
-        if (
-            isinstance(self.host_name, list)
-            and len(self.host_name) == 1
-            and isinstance(self.host_name[0], str)
-        ):
-            return self.host_name[0]
-
-        return None
 
     def __bool__(self) -> bool:
         return bool(self.to_config(UseHostFolder.HOST_FOLDER_FOR_UI))
@@ -680,9 +669,28 @@ class Ruleset:
         except KeyError:
             return []
 
+    def _num_quick_setup_rules(self, folder: Folder) -> int:
+        # the assertion is that all quick setup rules are at the top
+        folder_rules = self.get_folder_rules(folder)
+        for idx, rule in enumerate(folder_rules):
+            if not is_locked_by_quick_setup(rule.locked_by):
+                return idx
+        # if we get here either there are no rules or all of them are managed by qs
+        return len(folder_rules)
+
+    def get_index_for_move(self, folder: Folder, rule: Rule, target: int) -> int:
+        num_qs_rules = self._num_quick_setup_rules(folder)
+        if is_locked_by_quick_setup(rule.locked_by):
+            if rule in self.get_folder_rules(folder):
+                return min(num_qs_rules - 1, target)
+
+            return min(num_qs_rules, target)
+
+        return max(num_qs_rules, target)
+
     def prepend_rule(self, folder: Folder, rule: Rule) -> None:
         rules = self._rules.setdefault(folder.path(), [])
-        rules.insert(0, rule)
+        rules.insert(self.get_index_for_move(folder, rule, 0), rule)
         self._rules_by_id[rule.id] = rule
         self._on_change()
 
@@ -715,6 +723,7 @@ class Ruleset:
         if index == Ruleset.BOTTOM:
             dest_rules.append(rule)
         else:
+            index = self.get_index_for_move(folder, rule, index)
             dest_rules.insert(index, rule)
         rule.folder = folder
 
@@ -722,15 +731,19 @@ class Ruleset:
 
     def append_rule(self, folder: Folder, rule: Rule) -> int:
         rules = self._rules.setdefault(folder.path(), [])
-        index = len(rules)
-        rules.append(rule)
+        if is_locked_by_quick_setup(rule.locked_by):
+            index = self._num_quick_setup_rules(folder)
+            rules.insert(index, rule)
+        else:
+            index = len(rules)
+            rules.append(rule)
         self._rules_by_id[rule.id] = rule
         self._on_change()
         return index
 
     def insert_rule_after(self, rule: Rule, after: Rule) -> None:
         rules = self._rules[rule.folder.path()]
-        index = rules.index(after) + 1
+        index = self.get_index_for_move(rule.folder, rule, rules.index(after) + 1)
         rules.insert(index, rule)
         self._rules_by_id[rule.id] = rule
         self._on_change()
@@ -918,6 +931,10 @@ class Ruleset:
     def move_rule_to(self, rule: Rule, index: int) -> None:
         rules = self._rules[rule.folder.path()]
         old_index = rules.index(rule)
+        index = self.get_index_for_move(rule.folder, rule, index)
+        if old_index == index:
+            return
+
         rules.remove(rule)
         rules.insert(index, rule)
         add_change(
@@ -1096,7 +1113,7 @@ class Rule:
             self.conditions.clone(),
             dataclasses.replace(self.rule_options),
             self.value,
-            self.locked_by,
+            self.locked_by if preserve_id else None,
         )
 
     @classmethod

@@ -15,7 +15,7 @@ from dataclasses import asdict
 from enum import auto, Enum
 from typing import Any, cast, Literal, overload, TypedDict
 
-from cmk.utils.global_ident_type import is_locked_by_config_bundle
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.regex import escape_regex_chars
@@ -136,6 +136,12 @@ from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
+from ._html_elements import (
+    quick_setup_duplication_warning,
+    quick_setup_locked_warning,
+    quick_setup_render_link,
+    quick_setup_source_cell,
+)
 from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition
 
@@ -1084,7 +1090,7 @@ class ModeEditRuleset(WatoMode):
 
         action = request.get_ascii_input_mandatory("_action")
         if action == "delete":
-            if is_locked_by_config_bundle(rule.locked_by):
+            if is_locked_by_quick_setup(rule.locked_by):
                 raise MKUserError(None, _("Cannot delete rules that are managed by Quick setup."))
             ruleset.delete_rule(rule)
         elif action == "move_to":
@@ -1262,16 +1268,22 @@ class ModeEditRuleset(WatoMode):
         export_url = folder_preserving_link([("mode", "export_rule"), *folder_preserving_vars])
         html.icon_button(export_url, _("Export this rule for API"), "export_rule")
 
-        html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rule.id))
-
-        if is_locked_by_config_bundle(rule.locked_by):
+        if is_locked_by_quick_setup(rule.locked_by):
+            html.icon_button(
+                url="",
+                title=_("Rule cannot be moved, because it is managed by Quick setup"),
+                icon="drag",
+                class_=["disabled"],
+            )
             html.icon_button(
                 url="",
                 title=_("Rule can only be deleted via Quick setup"),
                 icon="delete",
                 class_=["disabled"],
             )
+
         else:
+            html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rule.id))
             html.icon_button(
                 url=make_confirm_delete_link(
                     url=self._action_url("delete", folder, rule.id),
@@ -1437,17 +1449,7 @@ class ModeEditRuleset(WatoMode):
         desc = rule.rule_options.description or rule.rule_options.comment or ""
         html.write_text_permissive(desc)
 
-        # Source
-        table.cell(_("Source"), css=["source"])
-        if is_locked_by_config_bundle(rule.locked_by):
-            html.a(
-                _("[%s] Quick setup") % rule.conditions.get_single_explicit_host()
-                or "<hostname>",  # TODO: QUICK-SETUP - host name
-                "#",  # TODO: QUICK-SETUP - link to Quick setup
-                class_=["config-bundle-link"],
-            )
-        else:
-            html.write_text("")
+        quick_setup_source_cell(table, rule.locked_by)
 
     def _rule_conditions(self, rule: Rule) -> None:
         self._predefined_condition_info(rule)
@@ -1937,7 +1939,7 @@ class ABCEditRuleMode(WatoMode):
             self._rule.folder = new_rule_folder
             self._save_rule()
 
-        elif is_locked_by_config_bundle(self._rule.locked_by):
+        elif is_locked_by_quick_setup(self._rule.locked_by):
             flash(_("Cannot change folder of rules managed by Quick setup."), msg_type="error")
             return redirect(self._back_url())
 
@@ -1981,7 +1983,7 @@ class ABCEditRuleMode(WatoMode):
         # CONDITION
         rule_conditions = self._get_rule_conditions_from_vars()
         if (
-            is_locked_by_config_bundle(self._rule.locked_by)
+            is_locked_by_quick_setup(self._rule.locked_by)
             and self._rule.conditions != rule_conditions
         ):
             flash(
@@ -2101,39 +2103,12 @@ class ABCEditRuleMode(WatoMode):
             )
         return self._rule.value, DataOrigin.DISK
 
+    def _page_form_quick_setup_warning(self) -> None:
+        if is_locked_by_quick_setup(self._rule.locked_by):
+            quick_setup_locked_warning(self._rule.locked_by, "rule")
+
     def _page_form(self) -> None:
-        if is_locked_by_config_bundle(self._rule.locked_by):
-            html.div(
-                html.render_div(
-                    html.render_h2(
-                        _("Configured with %s Quick setup")
-                        % self._rule.locked_by["instance_id"],  # TODO: QUICK-SETUP - rule type
-                        class_=["heading"],
-                    )
-                    + html.render_div(
-                        _(
-                            "This rule is part of the {hostname} configuration using Quick setup. "
-                            "Some options cannot be edited to avoid conflicts.<br>Go to Quick "
-                            "setup to edit all parameters of {hostname}."
-                        ).format(
-                            hostname=self._rule.conditions.get_single_explicit_host()
-                            or "<hostname>"
-                        ),  # TODO: QUICK-SETUP - hostname
-                    )
-                    + html.render_div(
-                        html.render_a(
-                            html.render_b(
-                                _("Edit %s") % self._rule.conditions.get_single_explicit_host()
-                                or "<hostname>"
-                            ),  # TODO: QUICK-SETUP - hostname
-                            href="#",  # TODO: QUICK-SETUP - link to Quick setup
-                        ),
-                        class_=["button-container"],
-                    ),
-                    class_=["content"],
-                ),
-                class_=["warning_container"],
-            )
+        self._page_form_quick_setup_warning()
 
         # Additional rule options
         self._vs_rule_options(self._rule).render_input("options", asdict(self._rule.rule_options))
@@ -2199,7 +2174,7 @@ class ABCEditRuleMode(WatoMode):
         self._vs_rule_options(self._rule).set_focus("options")
 
     def _show_conditions(self) -> None:
-        locked = is_locked_by_config_bundle(self._rule.locked_by)
+        locked = is_locked_by_quick_setup(self._rule.locked_by)
         forms.header(_("Conditions"), css="locked" if locked else None)
         if locked:
             forms.warning_message(
@@ -2342,19 +2317,14 @@ class ABCEditRuleMode(WatoMode):
             )
         )
 
-        if is_locked_by_config_bundle(rule.locked_by):
+        if is_locked_by_quick_setup(rule.locked_by):
             elements.append(
                 (
                     "source",
                     FixedValue(
                         value=rule.locked_by["instance_id"],
                         title=_("Source"),
-                        totext=html.render_a(
-                            _("[%s] Quick setup") % rule.conditions.get_single_explicit_host()
-                            or "<hostname>",  # TODO: QUICK-SETUP - use host name
-                            "#",  # TODO: QUICK-SETUP - link to Quick setup
-                            class_=["config-bundle-link"],
-                        ),
+                        totext=quick_setup_render_link(rule.locked_by),
                     ),
                 )
             )
@@ -2982,6 +2952,10 @@ class ModeCloneRule(ABCEditRuleMode):
 
     def _remove_from_orig_folder(self) -> None:
         pass  # Cloned rule is not yet in folder, don't try to remove
+
+    def _page_form_quick_setup_warning(self) -> None:
+        if is_locked_by_quick_setup(self._orig_rule.locked_by):
+            quick_setup_duplication_warning(self._orig_rule.locked_by, "rule")
 
 
 class ModeNewRule(ABCEditRuleMode):

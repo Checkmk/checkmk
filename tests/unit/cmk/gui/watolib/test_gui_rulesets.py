@@ -16,6 +16,7 @@ from tests.unit.cmk.gui.conftest import SetConfig
 
 from cmk.utils import paths, version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.definition import RuleGroup
@@ -535,6 +536,170 @@ def test_rule_clone() -> None:
     assert rule.folder == cloned_rule.folder
     assert rule.ruleset == cloned_rule.ruleset
     assert rule.id != cloned_rule.id
+
+
+def test_rule_clone_locked() -> None:
+    rule = rulesets.Rule.from_config(
+        folder_tree().root_folder(),
+        _ruleset("clustered_services"),
+        {
+            "id": "10",
+            "value": True,
+            "condition": {
+                "host_name": ["HOSTLIST"],
+                "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+            },
+            "locked_by": {
+                "site_id": "heute",
+                "program_id": PROGRAM_ID_QUICK_SETUP,
+                "instance_id": "...",
+            },
+        },
+    )
+    assert rule.locked_by is not None
+
+    cloned_rule = rule.clone(preserve_id=True)
+    assert rule.locked_by == cloned_rule.locked_by
+
+    cloned_rule = rule.clone(preserve_id=False)
+    assert cloned_rule.locked_by is None
+
+
+def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Folder, Rule]:
+    ruleset = _ruleset(RuleGroup.CheckgroupParameters("local"))
+    folder = folder_tree().root_folder()
+    ruleset.append_rule(
+        folder,
+        Rule.from_config(
+            folder,
+            ruleset,
+            {
+                "id": "1",
+                "value": "VAL",
+                "condition": {
+                    "host_name": ["HOSTLIST"],
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                },
+                "locked_by": (
+                    {
+                        "site_id": "heute",
+                        "program_id": PROGRAM_ID_QUICK_SETUP,
+                        "instance_id": "1",
+                    }
+                    if rule_a_locked
+                    else None
+                ),
+            },
+        ),
+    )
+    rule = Rule.from_config(
+        folder,
+        ruleset,
+        {
+            "id": "2",
+            "value": "VAL2",
+            "condition": {
+                "host_name": ["HOSTLIST"],
+                "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+            },
+            "locked_by": (
+                {
+                    "site_id": "heute",
+                    "program_id": PROGRAM_ID_QUICK_SETUP,
+                    "instance_id": "2",
+                }
+                if rule_b_locked
+                else None
+            ),
+        },
+    )
+    return ruleset, folder, rule
+
+
+@pytest.mark.parametrize(
+    "rule_a_locked, rule_b_locked, expected_index",
+    [
+        (False, False, 0),
+        (True, False, 1),
+        (False, True, 0),
+        (True, True, 0),
+    ],
+)
+def test_ruleset_get_index_for_move(
+    rule_a_locked: bool, rule_b_locked: bool, expected_index: int
+) -> None:
+    ruleset, folder, rule = _setup_rules(rule_a_locked, rule_b_locked)
+    ruleset.append_rule(folder, rule)
+    assert ruleset.get_index_for_move(folder, rule, 0) == expected_index
+
+
+@pytest.mark.parametrize(
+    "rule_a_locked, rule_b_locked, expected_index",
+    [
+        (False, False, 0),
+        (True, False, 1),
+        (False, True, 0),
+        (True, True, 0),
+    ],
+)
+def test_ruleset_ordering_prepend(
+    rule_a_locked: bool, rule_b_locked: bool, expected_index: int
+) -> None:
+    ruleset, folder, rule = _setup_rules(rule_a_locked, rule_b_locked)
+    ruleset.prepend_rule(folder, rule)
+    assert ruleset.get_folder_rules(folder)[expected_index] == rule
+
+
+@pytest.mark.parametrize(
+    "rule_a_locked, rule_b_locked, expected_index",
+    [
+        (False, False, 1),
+        (True, False, 1),
+        (False, True, 0),
+        (True, True, 1),
+    ],
+)
+def test_ruleset_ordering_append(
+    rule_a_locked: bool, rule_b_locked: bool, expected_index: int
+) -> None:
+    ruleset, folder, rule = _setup_rules(rule_a_locked, rule_b_locked)
+    ruleset.append_rule(folder, rule)
+    assert ruleset.get_folder_rules(folder)[expected_index] == rule
+
+
+@pytest.mark.parametrize(
+    "rule_a_locked, rule_b_locked, expected_index",
+    [
+        (False, False, 0),
+        (True, False, 1),
+        (False, True, 0),
+        (True, True, 0),
+    ],
+)
+def test_ruleset_ordering_move_to(
+    rule_a_locked: bool, rule_b_locked: bool, expected_index: int
+) -> None:
+    ruleset, folder, rule = _setup_rules(rule_a_locked, rule_b_locked)
+    ruleset.append_rule(folder, rule)
+    ruleset.move_rule_to(rule, 0)
+    assert ruleset.get_folder_rules(folder)[expected_index] == rule
+
+
+@pytest.mark.parametrize(
+    "rule_a_locked, rule_b_locked, expected_index",
+    [
+        (False, False, 1),
+        (True, False, 1),
+        (False, True, 0),
+        (True, True, 1),
+    ],
+)
+def test_ruleset_ordering_insert_after(
+    rule_a_locked: bool, rule_b_locked: bool, expected_index: int
+) -> None:
+    ruleset, folder, rule = _setup_rules(rule_a_locked, rule_b_locked)
+    ruleset.insert_rule_after(rule, ruleset.get_folder_rules(folder)[0])
+    assert ruleset.get_folder_rules(folder)[expected_index] == rule
 
 
 @pytest.mark.parametrize(

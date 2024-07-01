@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.utils.datastructures import denilled
-from cmk.utils.global_ident_type import is_locked_by_config_bundle
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.labels import LabelGroups
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.rulesets.conditions import (
@@ -121,6 +121,12 @@ def move_rule_to(param: Mapping[str, Any]) -> http.Response:
     position = body["position"]
 
     source_entry = _get_rule_by_id(rule_id)
+    if is_locked_by_quick_setup(source_entry.rule.locked_by):
+        return problem(
+            status=400,
+            title="Rule is managed by Quick setup",
+            detail="Rules managed by Quick setup cannot be moved.",
+        )
 
     all_rulesets = source_entry.all_rulesets
 
@@ -136,6 +142,11 @@ def move_rule_to(param: Mapping[str, Any]) -> http.Response:
         case "before_specific_rule":
             dest_entry = _get_rule_by_id(body["rule_id"], all_rulesets=all_rulesets)
             _validate_rule_move(source_entry, dest_entry)
+            if is_locked_by_quick_setup(dest_entry.rule.locked_by):
+                raise RestAPIRequestDataValidationException(
+                    title="Invalid rule move.",
+                    detail="Cannot move before a rule managed by Quick setup.",
+                )
             index = dest_entry.index_nr
             dest_folder = dest_entry.folder
         case "after_specific_rule":
@@ -143,22 +154,20 @@ def move_rule_to(param: Mapping[str, Any]) -> http.Response:
             _validate_rule_move(source_entry, dest_entry)
             dest_folder = dest_entry.folder
             index = dest_entry.index_nr + 1
+            actual_index = source_entry.ruleset.get_index_for_move(
+                source_entry.folder, source_entry.rule, index
+            )
+            if index != actual_index:
+                raise RestAPIRequestDataValidationException(
+                    title="Invalid rule move.",
+                    detail="Cannot move before a rule managed by Quick setup.",
+                )
         case _:
             return problem(
                 status=400,
                 title="Invalid position",
                 detail=f"Position {position!r} is not a valid position.",
             )
-
-    if (
-        is_locked_by_config_bundle(source_entry.rule.locked_by)
-        and source_entry.folder != dest_folder
-    ):
-        return problem(
-            status=400,
-            title="Rule is managed by Quick setup",
-            detail="Rules managed by Quick setup cannot be moved to another folder.",
-        )
 
     dest_folder.permissions.need_permission("write")
     source_entry.ruleset.move_to_folder(source_entry.rule, dest_folder, index)
@@ -343,7 +352,7 @@ def delete_rule(param):
     for ruleset in visible_rulesets(all_rulesets.get_rulesets()).values():
         for _folder, _index, rule in ruleset.get_rules():
             if rule.id == rule_id:
-                if is_locked_by_config_bundle(rule.locked_by):
+                if is_locked_by_quick_setup(rule.locked_by):
                     return problem(
                         status=400,
                         title="Rule is managed by Quick setup",

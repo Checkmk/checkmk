@@ -12,15 +12,15 @@ import pytest
 from playwright.sync_api import expect
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.testlib.playwright.pom.login import LoginPage
+from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.werks import Werks
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="werks_page", scope="function")
-def fixture_werks_page(logged_in_page: LoginPage) -> Iterator[Werks]:
-    yield Werks(logged_in_page.page)
+def fixture_werks_page(dashboard_page: Dashboard) -> Iterator[Werks]:
+    yield Werks(dashboard_page.page)
 
 
 def test_werks_available(werks_page: Werks) -> None:

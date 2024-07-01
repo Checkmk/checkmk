@@ -6,12 +6,9 @@
 from playwright.sync_api import expect
 
 from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.pom.login import LoginPage
 
 
-def test_dashboard_sanity_check(logged_in_page: LoginPage) -> None:
-    dashboard_page = Dashboard(logged_in_page.page, navigate_to_page=False)
-
+def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
     for dashlet_title in dashboard_page.default_dashlets_list:
         expect(dashboard_page.dashlet(dashlet_title)).to_be_visible()
 

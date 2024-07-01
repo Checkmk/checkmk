@@ -11,14 +11,14 @@ import pytest
 from faker import Faker
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.pom.login import LoginPage
+from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.setup.hosts import HostDetails, HostProperties
 
 
 @pytest.fixture(name="host")
-def fixture_host(logged_in_page: LoginPage) -> Iterator[HostProperties]:
+def fixture_host(dashboard_page: Dashboard) -> Iterator[HostProperties]:
     _host = HostProperties(
-        logged_in_page.page,
+        dashboard_page.page,
         HostDetails(name=f"test_host_{Faker().first_name()}", ip="127.0.0.1"),
     )
     yield _host
@@ -37,11 +37,11 @@ def test_navigate_to_host_properties(host: HostProperties) -> None:
     expect(host.main_area.locator("div.warning")).to_have_count(0)
 
 
-def test_create_and_delete_a_host(logged_in_page: LoginPage) -> None:
+def test_create_and_delete_a_host(dashboard_page: Dashboard) -> None:
     """Validate creation and deletes of a host."""
     # create Host
     host = HostProperties(
-        logged_in_page.page,
+        dashboard_page.page,
         host=HostDetails(name=f"test_host_{Faker().first_name()}", ip="127.0.0.1"),
     )
     # validate

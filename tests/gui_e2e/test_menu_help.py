@@ -6,7 +6,7 @@ import re
 
 import pytest
 
-from tests.testlib.playwright.pom.login import LoginPage
+from tests.testlib.playwright.pom.dashboard import Dashboard
 
 
 @pytest.mark.parametrize(
@@ -36,7 +36,7 @@ from tests.testlib.playwright.pom.login import LoginPage
     ],
 )
 def test_help_menu(
-    logged_in_page: LoginPage,
+    dashboard_page: Dashboard,
     help_menu_button: str,
     url_pattern: str,
     branch: str,
@@ -44,14 +44,14 @@ def test_help_menu(
 
     if "{branch}" in url_pattern:
         url_pattern = url_pattern.format(branch=branch)
-    browser_context = logged_in_page.page.context
+    browser_context = dashboard_page.page.context
 
     with browser_context.expect_page() as new_tab_info:
         with browser_context.expect_event(
             "response", lambda response: bool(re.findall(url_pattern, response.url))
         ) as matched_response:
 
-            getattr(logged_in_page.main_menu, help_menu_button).click()
+            getattr(dashboard_page.main_menu, help_menu_button).click()
 
             assert matched_response.value.status == 200, (
                 f"Unexpected response status code: {matched_response.value.status}, "
@@ -63,7 +63,7 @@ def test_help_menu(
             new_page.close()
 
 
-def test_help_info(logged_in_page: LoginPage) -> None:
-    logged_in_page.main_menu.help_info.click()
-    logged_in_page.page.wait_for_url(url=re.compile("info.py$"), wait_until="load")
-    logged_in_page.main_area.check_page_title("About Checkmk")
+def test_help_info(dashboard_page: Dashboard) -> None:
+    dashboard_page.main_menu.help_info.click()
+    dashboard_page.page.wait_for_url(url=re.compile("info.py$"), wait_until="load")
+    dashboard_page.main_area.check_page_title("About Checkmk")

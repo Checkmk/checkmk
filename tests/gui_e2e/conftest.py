@@ -12,6 +12,7 @@ import pytest
 from playwright.sync_api import BrowserContext, Page
 
 from tests.testlib.playwright.helpers import CmkCredentials
+from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import ADMIN_USER, get_site_factory, Site
 
@@ -31,17 +32,18 @@ def _credentials(test_site: Site) -> CmkCredentials:
 def _log_in(
     page: Page, test_site: Site, credentials: CmkCredentials, mobile_device: bool = False
 ) -> LoginPage:
-    ppage = LoginPage(
+    login_page = LoginPage(
         page,
         site_url=test_site.internal_url if not mobile_device else test_site.internal_url_mobile,
     )
-    ppage.login(credentials)
-    return ppage
+    login_page.login(credentials)
+    return login_page
 
 
-@pytest.fixture(name="logged_in_page")
-def logged_in(test_site: Site, page: Page, credentials: CmkCredentials) -> LoginPage:
-    return _log_in(page, test_site, credentials)
+@pytest.fixture(name="dashboard_page")
+def _dashboard_page(test_site: Site, page: Page, credentials: CmkCredentials) -> Dashboard:
+    login_page = _log_in(page, test_site, credentials)
+    return Dashboard(login_page.page, navigate_to_page=False)
 
 
 @pytest.fixture(name="logged_in_page_mobile")

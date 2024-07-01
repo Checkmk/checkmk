@@ -12,7 +12,7 @@ import pytest
 from playwright.sync_api import expect, FilePayload
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.testlib.playwright.pom.login import LoginPage
+from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.site import Site
 
 from cmk.utils.crypto.certificate import CertificateWithPrivateKey
@@ -29,7 +29,7 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
     )
 
 
-def go_to_signature_page(page: LoginPage) -> None:
+def go_to_signature_page(page: Dashboard) -> None:
     """Go to the `Signature keys for signing agents` page."""
     page.click_and_wait(page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True)
     page.main_area.locator("#page_menu_dropdown_agents >> text=Agents >> visible=true").click()
@@ -37,7 +37,7 @@ def go_to_signature_page(page: LoginPage) -> None:
     page.main_area.check_page_title("Signature keys for signing agents")
 
 
-def delete_key(page: LoginPage, identifier: str | None = None) -> None:
+def delete_key(page: Dashboard, identifier: str | None = None) -> None:
     """Delete a key based on some text, e.g. alias or hash.
 
     Note: you already have to be on the `Signature keys for signing agents` site.
@@ -51,7 +51,7 @@ def delete_key(page: LoginPage, identifier: str | None = None) -> None:
         pass
 
 
-def send_pem_content(page: LoginPage, description: str, password: str, content: str) -> None:
+def send_pem_content(page: Dashboard, description: str, password: str, content: str) -> None:
     """Upload a combined pem file (private key and certificate) via the Paste textarea method."""
     go_to_signature_page(page)
     delete_key(page, description)
@@ -68,7 +68,7 @@ def send_pem_content(page: LoginPage, description: str, password: str, content: 
     page.main_area.get_suggestion("Upload").click()
 
 
-def send_pem_file(page: LoginPage, description: str, password: str, content: str) -> None:
+def send_pem_file(page: Dashboard, description: str, password: str, content: str) -> None:
     """Upload a combined pem file (private key and certificate) via upload."""
     go_to_signature_page(page)
     delete_key(page, description)
@@ -101,16 +101,16 @@ def wait_for_bakery(test_site: Site, max_attempts: int = 60) -> None:
 
 @pytest.mark.parametrize("upload_function", (send_pem_content, send_pem_file))
 def test_upload_signing_keys(
-    logged_in_page: LoginPage,
+    dashboard_page: Dashboard,
     self_signed_cert: CertificateWithPrivateKey,
-    upload_function: Callable[[LoginPage, str, str, str], None],
+    upload_function: Callable[[Dashboard, str, str, str], None],
 ) -> None:
     """Send a few payloads to the `Signature keys for signing agents` page and check the
     responses."""
 
     # pem is invalid
-    upload_function(logged_in_page, "Some description", "password", "invalid")
-    logged_in_page.main_area.check_error("The file does not look like a valid key file.")
+    upload_function(dashboard_page, "Some description", "password", "invalid")
+    dashboard_page.main_area.check_error("The file does not look like a valid key file.")
 
     # This is very delicate...
     # But will be fixed soon
@@ -122,50 +122,50 @@ def test_upload_signing_keys(
     fingerprint = rf'{self_signed_cert.certificate.fingerprint(HashAlgorithm.MD5).hex(":")}'
 
     # passphrase is invalid
-    upload_function(logged_in_page, "Some description", "password", pem_content)
+    upload_function(dashboard_page, "Some description", "password", pem_content)
     # There is a weird bug that is not reproducible and a wrong password can be
     # mistreated as an invalid file. This happens so rarely and we don't think
     # users are too confused by that so we leave it as is, but we should except
     # both cases...
     # See also: tests/unit/cmk/utils/crypto/test_certificate.py
-    logged_in_page.main_area.check_error(
+    dashboard_page.main_area.check_error(
         re.compile("(Invalid pass phrase)|(The file does not look like a valid key file.)")
     )
 
     # all ok
-    upload_function(logged_in_page, "Some description", "SecureP4ssword", pem_content)
-    expect(logged_in_page.main_area.get_text(fingerprint.upper())).to_be_visible()
+    upload_function(dashboard_page, "Some description", "SecureP4ssword", pem_content)
+    expect(dashboard_page.main_area.get_text(fingerprint.upper())).to_be_visible()
 
-    delete_key(logged_in_page, fingerprint)
+    delete_key(dashboard_page, fingerprint)
 
 
-def test_generate_key(logged_in_page: LoginPage) -> None:
+def test_generate_key(dashboard_page: Dashboard) -> None:
     """Add a key, aka let Checkmk generate it."""
-    go_to_signature_page(logged_in_page)
-    delete_key(logged_in_page, "e2e-test")
+    go_to_signature_page(dashboard_page)
+    delete_key(dashboard_page, "e2e-test")
 
-    logged_in_page.click_and_wait(
-        logged_in_page.main_area.get_suggestion("Generate key"), navigate=True
+    dashboard_page.click_and_wait(
+        dashboard_page.main_area.get_suggestion("Generate key"), navigate=True
     )
-    logged_in_page.main_area.check_page_title("Add agent signature key")
+    dashboard_page.main_area.check_page_title("Add agent signature key")
 
     # Use a too short password
-    logged_in_page.main_area.get_input("key_p_alias").fill("Won't work")
-    logged_in_page.main_area.get_input("key_p_passphrase").fill("short")
-    logged_in_page.main_area.get_suggestion("Create").click()
-    logged_in_page.main_area.check_error("You need to provide at least 8 characters.")
+    dashboard_page.main_area.get_input("key_p_alias").fill("Won't work")
+    dashboard_page.main_area.get_input("key_p_passphrase").fill("short")
+    dashboard_page.main_area.get_suggestion("Create").click()
+    dashboard_page.main_area.check_error("You need to provide at least 8 characters.")
 
-    logged_in_page.main_area.get_input("key_p_alias").fill("e2e-test")
-    logged_in_page.main_area.get_input("key_p_passphrase").fill("12345678")
-    logged_in_page.main_area.get_suggestion("Create").click()
-    expect(logged_in_page.main_area.get_text("e2e-test")).to_be_visible()
+    dashboard_page.main_area.get_input("key_p_alias").fill("e2e-test")
+    dashboard_page.main_area.get_input("key_p_passphrase").fill("12345678")
+    dashboard_page.main_area.get_suggestion("Create").click()
+    expect(dashboard_page.main_area.get_text("e2e-test")).to_be_visible()
 
-    delete_key(logged_in_page, "e2e-test")
+    delete_key(dashboard_page, "e2e-test")
 
 
 @pytest.fixture(name="with_key")
 def with_key_fixture(
-    logged_in_page: LoginPage, self_signed_cert: CertificateWithPrivateKey
+    dashboard_page: Dashboard, self_signed_cert: CertificateWithPrivateKey
 ) -> Iterator[str]:
     """Create a signing key via the GUI, yield and then delete it again."""
     key_name = "with_key_fixture"
@@ -174,59 +174,59 @@ def with_key_fixture(
         self_signed_cert.private_key.dump_pem(password).str
         + self_signed_cert.certificate.dump_pem().str
     )
-    send_pem_file(logged_in_page, key_name, password.raw, combined_file)
-    expect(logged_in_page.main_area.get_text(key_name)).to_be_visible()
+    send_pem_file(dashboard_page, key_name, password.raw, combined_file)
+    expect(dashboard_page.main_area.get_text(key_name)).to_be_visible()
 
     yield key_name
 
-    delete_key(logged_in_page, key_name)
+    delete_key(dashboard_page, key_name)
 
 
-def test_bake_and_sign(logged_in_page: LoginPage, test_site: Site, with_key: str) -> None:
+def test_bake_and_sign(dashboard_page: Dashboard, test_site: Site, with_key: str) -> None:
     """Go to agents and click bake and sign.
 
     Bake and sign starts an asynchronous background job, which is why we run "wait_for_bakery()".
     If the job finished, the success is reported and the test can continue."""
-    logged_in_page.click_and_wait(
-        logged_in_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True
+    dashboard_page.click_and_wait(
+        dashboard_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True
     )
-    logged_in_page.click_and_wait(
-        locator=logged_in_page.main_area.get_suggestion("Bake and sign agents"),
+    dashboard_page.click_and_wait(
+        locator=dashboard_page.main_area.get_suggestion("Bake and sign agents"),
         navigate=False,
     )
 
-    logged_in_page.main_area.locator("#select2-key_p_key-container").click()
-    logged_in_page.main_area.locator(
+    dashboard_page.main_area.locator("#select2-key_p_key-container").click()
+    dashboard_page.main_area.locator(
         "#select2-key_p_key-results > li.select2-results__option[role='option']"
     ).filter(has_text="with_key_fixture").first.click()
-    logged_in_page.main_area.get_text(with_key).click()
-    logged_in_page.main_area.get_input("key_p_passphrase").fill("foo")
+    dashboard_page.main_area.get_text(with_key).click()
+    dashboard_page.main_area.get_input("key_p_passphrase").fill("foo")
 
     # wait (just in case the bakery is busy)
     wait_for_bakery(test_site)
-    logged_in_page.click_and_wait(
-        locator=logged_in_page.main_area.get_input("create"), navigate=False
+    dashboard_page.click_and_wait(
+        locator=dashboard_page.main_area.get_input("create"), navigate=False
     )
 
     # wait for completion and verify status
     wait_for_bakery(test_site)
-    expect(logged_in_page.main_area.get_text("Agent baking successful")).to_be_visible(
+    expect(dashboard_page.main_area.get_text("Agent baking successful")).to_be_visible(
         timeout=30000
     )
 
 
-def test_bake_and_sign_disabled(logged_in_page: LoginPage) -> None:
+def test_bake_and_sign_disabled(dashboard_page: Dashboard) -> None:
     """Delete all keys, go to agents and check that the sign buttons are disabled."""
-    go_to_signature_page(logged_in_page)
-    delete_key(logged_in_page)
+    go_to_signature_page(dashboard_page)
+    delete_key(dashboard_page)
 
-    logged_in_page.click_and_wait(
-        logged_in_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True
+    dashboard_page.click_and_wait(
+        dashboard_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True
     )
 
-    expect(logged_in_page.main_area.get_suggestion("Bake and sign agents")).to_have_class(
+    expect(dashboard_page.main_area.get_suggestion("Bake and sign agents")).to_have_class(
         re.compile("disabled"), timeout=15000
     )
-    expect(logged_in_page.main_area.get_suggestion("Sign agents")).to_have_class(
+    expect(dashboard_page.main_area.get_suggestion("Sign agents")).to_have_class(
         re.compile("disabled"), timeout=15000
     )

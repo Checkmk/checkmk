@@ -18,21 +18,21 @@ from tests.testlib.playwright.pom.setup.global_settings import GlobalSettings
 from tests.testlib.site import ADMIN_USER, Site
 
 
-def navigate_to_edit_user_page(logged_in_page: LoginPage, user_name: str) -> None:
-    logged_in_page.main_menu.setup_menu("Users").click()
-    logged_in_page.page.wait_for_url(
+def navigate_to_edit_user_page(dashboard_page: Dashboard, user_name: str) -> None:
+    dashboard_page.main_menu.setup_menu("Users").click()
+    dashboard_page.page.wait_for_url(
         url=re.compile(quote_plus("wato.py?mode=users")), wait_until="load"
     )
-    logged_in_page.main_area.locator(
+    dashboard_page.main_area.locator(
         f"tr:has(td:has-text('{user_name}')) >> a[title='Properties']"
     ).click()
-    logged_in_page.page.wait_for_url(
+    dashboard_page.page.wait_for_url(
         url=re.compile(quote_plus(f"edit={user_name}")), wait_until="load"
     )
 
 
 @pytest.fixture(name="with_password_policy")
-def fixture_with_password_policy(logged_in_page: LoginPage) -> Iterator[None]:
+def fixture_with_password_policy(dashboard_page: Dashboard) -> Iterator[None]:
     """Navigate to the global settings for the password policy.
 
     Set it to require `at least two groups` and disable the policy again when done.
@@ -42,23 +42,23 @@ def fixture_with_password_policy(logged_in_page: LoginPage) -> Iterator[None]:
         _setting_name = "Password policy for local accounts"
         settings_page.search_settings(_setting_name)
         settings_page.setting_link(_setting_name).click()
-        logged_in_page.page.wait_for_url(
+        dashboard_page.page.wait_for_url(
             url=re.compile(quote_plus("varname=password_policy")), wait_until="load"
         )
-        expect(logged_in_page.main_area.locator(num_groups_label)).to_be_visible()
+        expect(dashboard_page.main_area.locator(num_groups_label)).to_be_visible()
 
     num_groups_label = "label[for='cb_ve_p_num_groups_USE']"
     num_groups_input = "input[name='ve_p_num_groups']"
     save_btn = "#suggestions >> text=Save"
 
     # enable the policy
-    settings_page = GlobalSettings(logged_in_page.page)
+    settings_page = GlobalSettings(dashboard_page.page)
     _navigate_to_password_policy()
 
-    logged_in_page.main_area.locator(num_groups_label).click()
-    logged_in_page.main_area.locator(num_groups_input).fill("2")
-    logged_in_page.main_area.locator(save_btn).click()
-    _ = Dashboard(logged_in_page.page)
+    dashboard_page.main_area.locator(num_groups_label).click()
+    dashboard_page.main_area.locator(num_groups_input).fill("2")
+    dashboard_page.main_area.locator(save_btn).click()
+    _ = Dashboard(dashboard_page.page)
 
     yield
 
@@ -66,8 +66,8 @@ def fixture_with_password_policy(logged_in_page: LoginPage) -> Iterator[None]:
     settings_page.navigate()
     _navigate_to_password_policy()
 
-    logged_in_page.main_area.locator(num_groups_label).click()
-    logged_in_page.main_area.locator(save_btn).click()
+    dashboard_page.main_area.locator(num_groups_label).click()
+    dashboard_page.main_area.locator(save_btn).click()
 
 
 @pytest.mark.parametrize(
@@ -85,7 +85,7 @@ def fixture_with_password_policy(logged_in_page: LoginPage) -> Iterator[None]:
 )
 def test_user_change_password_success(
     test_site: Site,
-    logged_in_page: LoginPage,
+    dashboard_page: Dashboard,
     new_pw: str,
     new_pw_conf: str,
 ) -> None:
@@ -93,9 +93,9 @@ def test_user_change_password_success(
     # Note: if these fail, we will probably also fail to reset the password to "cmk", so you might
     # have to do this manually.
 
-    page = logged_in_page
+    page = dashboard_page
 
-    change_password_page = ChangePassword(logged_in_page.page)
+    change_password_page = ChangePassword(page.page)
     change_password_page.change_password(test_site.admin_password, new_pw, new_pw_conf)
     change_password_page.main_area.check_success("Successfully changed password.")
 
@@ -123,27 +123,27 @@ def test_user_change_password_success(
     ],
 )
 def test_user_change_password_errors(
-    logged_in_page: LoginPage,
+    dashboard_page: Dashboard,
     new_pw: str,
     new_pw_conf: str,
     old_pw: str,
     expect_error_contains: str,
 ) -> None:
     """Test failure cases of changing the user's own password in the user profile menu"""
-    change_password_page = ChangePassword(logged_in_page.page)
+    change_password_page = ChangePassword(dashboard_page.page)
     change_password_page.change_password(old_pw, new_pw, new_pw_conf)
     change_password_page.main_area.check_error(re.compile(f".*{expect_error_contains}.*"))
 
 
 def test_user_change_password_incompatible_with_policy(
-    logged_in_page: LoginPage,
+    dashboard_page: Dashboard,
     with_password_policy: None,
 ) -> None:
     """
     Test changing the user's own password in the user profile menu to a PW that doesn't comply with
     the PW policy
     """
-    change_password_page = ChangePassword(logged_in_page.page)
+    change_password_page = ChangePassword(dashboard_page.page)
     change_password_page.change_password("cmk", "123456789010", "123456789010")
     change_password_page.main_area.check_error(
         "The password does not use enough character groups. You need to "
@@ -161,13 +161,13 @@ def test_user_change_password_incompatible_with_policy(
     ],
 )
 def test_edit_user_change_password_errors(
-    logged_in_page: LoginPage,
+    dashboard_page: Dashboard,
     new_pw: str,
     new_pw_conf: str,
     expect_error_contains: str,
 ) -> None:
     """Test the password and repeat-password fields in the edit users menu"""
-    page = logged_in_page
+    page = dashboard_page
     pw_field_suffix = "Y21rYWRtaW4="  # base64 'cmkadmin'
     navigate_to_edit_user_page(page, ADMIN_USER)
 
@@ -178,24 +178,24 @@ def test_edit_user_change_password_errors(
 
 
 def test_setting_password_incompatible_with_policy(
-    logged_in_page: LoginPage, with_password_policy: None
+    dashboard_page: Dashboard, with_password_policy: None
 ) -> None:
     """
-    Activate a password policy that requries at least 2 groups of characters (via fixture)
+    Activate a password policy that requires at least 2 groups of characters (via fixture)
     and fail setting a password that doesn't comply with that.
     """
     pw_field_suffix = "Y21rYWRtaW4="  # base64 'cmkadmin'
-    navigate_to_edit_user_page(logged_in_page, ADMIN_USER)
+    navigate_to_edit_user_page(dashboard_page, ADMIN_USER)
 
-    logged_in_page.main_area.locator(f"input[name='_password_{pw_field_suffix}']").fill(
+    dashboard_page.main_area.locator(f"input[name='_password_{pw_field_suffix}']").fill(
         "cmkcmkcmkcmk"
     )
-    logged_in_page.main_area.locator(f"input[name='_password2_{pw_field_suffix}']").fill(
+    dashboard_page.main_area.locator(f"input[name='_password2_{pw_field_suffix}']").fill(
         "cmkcmkcmkcmk"
     )
-    logged_in_page.main_area.locator("#suggestions >> text=Save").click()
+    dashboard_page.main_area.locator("#suggestions >> text=Save").click()
 
-    logged_in_page.main_area.check_error(
+    dashboard_page.main_area.check_error(
         "The password does not use enough character groups. You need to "
         "set a password which uses at least %d of them." % 2
     )

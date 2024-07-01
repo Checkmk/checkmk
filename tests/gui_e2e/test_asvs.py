@@ -15,16 +15,17 @@ from playwright.sync_api import BrowserContext
 
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.change_password import ChangePassword
+from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import Site
 
 
-def test_v2_1_5(test_site: Site, logged_in_page: LoginPage, credentials: CmkCredentials) -> None:
+def test_v2_1_5(test_site: Site, dashboard_page: Dashboard, credentials: CmkCredentials) -> None:
     """Verify users can change their password."""
 
-    page = logged_in_page
+    page = dashboard_page
 
-    change_password_page = ChangePassword(logged_in_page.page)
+    change_password_page = ChangePassword(dashboard_page.page)
     change_password_page.change_password(credentials.password, "not-cmk-really-not")
     change_password_page.main_area.check_success("Successfully changed password.")
     change_password_page.main_menu.logout()
@@ -41,10 +42,10 @@ def test_v2_1_5(test_site: Site, logged_in_page: LoginPage, credentials: CmkCred
     page.main_area.check_page_title("Main dashboard")
 
 
-def test_password_truncation_error(logged_in_page: LoginPage) -> None:
+def test_password_truncation_error(dashboard_page: Dashboard) -> None:
     """Bcrypt truncates at 72 chars, check for the error if the password is longer"""
 
-    change_password_page = ChangePassword(logged_in_page.page)
+    change_password_page = ChangePassword(dashboard_page.page)
     change_password_page.change_password("cmk", "A" * 80)
     change_password_page.main_area.check_error(
         "Passwords over 72 bytes would be truncated and are therefore not allowed!"

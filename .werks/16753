@@ -1,0 +1,9 @@
+Title: HW/SW Inventory: Fix missing joined service columns if a service is assigned to a cluster
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1719844378
+Edition: cre
+Level: 1
+Version: 2.2.0p30
+

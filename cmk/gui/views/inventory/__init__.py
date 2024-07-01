@@ -1519,7 +1519,7 @@ def _register_sorter(
 
 class RowTableInventory(ABCRowTable):
     def __init__(self, info_name: str, inventory_path: inventory.InventoryPath) -> None:
-        super().__init__([info_name], ["host_structured_status"])
+        super().__init__([info_name], ["host_structured_status", "host_childs"])
         self._inventory_path = inventory_path
 
     def _get_inv_data(self, hostrow: Row) -> Sequence[SDRow]:

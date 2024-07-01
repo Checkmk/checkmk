@@ -15,14 +15,12 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-import cmk.utils.paths
 from cmk.utils.exceptions import MKConfigLockTimeout, MKTimeout
 from cmk.utils.i18n import _
 
 _all = [
     "acquire_lock",
     "cleanup_locks",
-    "configuration_lockfile",
     "have_lock",
     "lock_checkmk_configuration",
     "lock_exclusive",
@@ -47,17 +45,10 @@ logger = logging.getLogger("cmk.store")
 #   '----------------------------------------------------------------------'
 
 
-def configuration_lockfile() -> str:
-    # for our path monkeypatching to have an effect when executing the unit tests, we need to use
-    # the full module path :(
-    return cmk.utils.paths.default_config_dir + "/multisite.mk"
-
-
 @contextmanager
-def lock_checkmk_configuration() -> Iterator[None]:
-    path = configuration_lockfile()
+def lock_checkmk_configuration(lockfile: Path) -> Iterator[None]:
     try:
-        acquire_lock(path)
+        acquire_lock(lockfile)
     except MKTimeout as e:
         raise MKConfigLockTimeout(
             _(
@@ -71,12 +62,12 @@ def lock_checkmk_configuration() -> Iterator[None]:
     try:
         yield
     finally:
-        release_lock(path)
+        release_lock(lockfile)
 
 
-# TODO: Use lock_checkmk_configuration() and nuke this!
-def lock_exclusive() -> None:
-    acquire_lock(configuration_lockfile())
+# TODO: Use lock_checkmk_configuration() and nuke this! (only one caller)
+def lock_exclusive(lockfile: Path) -> None:
+    acquire_lock(lockfile)
 
 
 # .

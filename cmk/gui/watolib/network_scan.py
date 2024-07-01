@@ -16,6 +16,7 @@ from typing import Literal, NamedTuple, TypeGuard
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.paths import configuration_lockfile
 from cmk.utils.translations import translate_hostname, TranslationOptions
 from cmk.utils.user import UserId
 
@@ -155,7 +156,7 @@ def _add_scanned_hosts_to_folder(
         if not Host.host_exists(host_name):
             entries.append((host_name, attrs, None))
 
-    with store.lock_checkmk_configuration():
+    with store.lock_checkmk_configuration(configuration_lockfile):
         folder.create_hosts(entries)
         folder.save()
 
@@ -164,7 +165,7 @@ def _add_scanned_hosts_to_folder(
 
 def _save_network_scan_result(folder: Folder, result: NetworkScanResult) -> None:
     # Reload the folder, lock Setup before to protect against concurrency problems.
-    with store.lock_checkmk_configuration():
+    with store.lock_checkmk_configuration(configuration_lockfile):
         # A user might have changed the folder somehow since starting the scan. Load the
         # folder again to get the current state.
         write_folder = folder_tree().folder(folder.path())

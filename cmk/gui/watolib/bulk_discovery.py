@@ -10,6 +10,7 @@ from livestatus import SiteId
 
 from cmk.utils import store
 from cmk.utils.hostaddress import HostName
+from cmk.utils.paths import configuration_lockfile
 
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
 
@@ -317,7 +318,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
     ) -> None:
         # The following code updates the host config. The progress from loading the Setup folder
         # until it has been saved needs to be locked.
-        with store.lock_checkmk_configuration():
+        with store.lock_checkmk_configuration(configuration_lockfile):
             tree = folder_tree()
             tree.invalidate_caches()
             folder = tree.folder(task.folder_path)

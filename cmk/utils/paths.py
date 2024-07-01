@@ -88,6 +88,8 @@ predictions_dir = Path(var_dir, "prediction")
 ec_main_config_file = Path(default_config_dir, "mkeventd.mk")
 ec_config_dir = Path(default_config_dir, "mkeventd.d")
 
+configuration_lockfile = Path(default_config_dir, "multisite.mk")
+
 # persisted secret files
 # avoid using these paths directly; use wrappers in cmk.util.crypto.secrets instead
 # note that many of these paths are duplicated in code relating to snapshots and Activate Changes

@@ -25,7 +25,7 @@ from cmk.utils.store._file import (
     Serializer,
     TextSerializer,
 )
-from cmk.utils.store._locks import acquire_lock, cleanup_locks, configuration_lockfile, have_lock
+from cmk.utils.store._locks import acquire_lock, cleanup_locks, have_lock
 from cmk.utils.store._locks import leave_locked_unless_exception as _leave_locked_unless_exception
 from cmk.utils.store._locks import (
     lock_checkmk_configuration,
@@ -47,7 +47,6 @@ __all__ = [
     "TextSerializer",
     "acquire_lock",
     "cleanup_locks",
-    "configuration_lockfile",
     "have_lock",
     "lock_checkmk_configuration",
     "lock_exclusive",

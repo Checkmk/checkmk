@@ -26,6 +26,7 @@ from werkzeug.datastructures import MultiDict
 from werkzeug.http import parse_options_header
 
 from cmk.utils import store
+from cmk.utils.paths import configuration_lockfile
 
 from cmk.gui import hooks
 from cmk.gui import http as cmk_http
@@ -875,7 +876,7 @@ class Endpoint:
             @functools.wraps(func)
             def _wrapper(param: Mapping[str, Any]) -> cmk_http.Response:
                 if not self.skip_locking and self.method != "get":
-                    with store.lock_checkmk_configuration():
+                    with store.lock_checkmk_configuration(configuration_lockfile):
                         response = func(param)
                 else:
                     response = func(param)

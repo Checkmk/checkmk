@@ -46,6 +46,7 @@ from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.helper import get_licensing_logger
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
+from cmk.utils.paths import configuration_lockfile
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 from cmk.utils.visuals import invalidate_visuals_cache
@@ -1533,7 +1534,7 @@ class ActivateChangesManager(ActivateChanges):
         newer changes than the ones to be activated.
 
         """
-        with store.lock_checkmk_configuration():
+        with store.lock_checkmk_configuration(configuration_lockfile):
             if not self._pending_changes:
                 raise MKUserError(None, _("Currently there are no changes to activate."))
 
@@ -1925,7 +1926,7 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
 
     def _do_housekeeping(self) -> None:
         """Cleanup non-running activation directories"""
-        with store.lock_checkmk_configuration():
+        with store.lock_checkmk_configuration(configuration_lockfile):
             for activation_id in self._existing_activation_ids():
                 self._logger.info("Check activation: %s", activation_id)
                 delete = False
@@ -2924,7 +2925,7 @@ class AutomationGetConfigSyncState(AutomationCommand):
         ]
 
     def execute(self, api_request: list[ReplicationPath]) -> GetConfigSyncStateResponse:
-        with store.lock_checkmk_configuration():
+        with store.lock_checkmk_configuration(configuration_lockfile):
             file_infos = _get_config_sync_file_infos(api_request, base_dir=cmk.utils.paths.omd_root)
             transport_file_infos = {
                 k: (v.st_mode, v.st_size, v.link_target, v.file_hash) for k, v in file_infos.items()
@@ -3101,7 +3102,7 @@ class AutomationReceiveConfigSync(AutomationCommand):
         )
 
     def execute(self, api_request: ReceiveConfigSyncRequest) -> bool:
-        with store.lock_checkmk_configuration():
+        with store.lock_checkmk_configuration(configuration_lockfile):
             if api_request.config_generation != _get_current_config_generation():
                 raise MKGeneralException(
                     _(

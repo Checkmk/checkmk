@@ -26,6 +26,7 @@ from cmk.utils import daemon, store
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.licensing.helper import get_licensing_logger
 from cmk.utils.log import VERBOSE
+from cmk.utils.paths import configuration_lockfile
 
 from cmk.gui import log, sites
 from cmk.gui.i18n import _
@@ -212,4 +213,4 @@ def _enable_logging_to_stdout() -> None:
 def _lock_configuration(lock_wato: bool) -> None:
     if lock_wato:
         store.release_all_locks()
-        store.lock_exclusive()
+        store.lock_exclusive(configuration_lockfile)

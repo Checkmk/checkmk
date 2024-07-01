@@ -12,6 +12,7 @@ from livestatus import SiteId
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.paths import configuration_lockfile
 
 from cmk.automations.results import Gateway, GatewayResult
 
@@ -153,7 +154,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             if result.state in ["direct", "root", "gateway"]:
                 # The following code updates the host config. The progress from loading the Setup folder
                 # until it has been saved needs to be locked.
-                with store.lock_checkmk_configuration():
+                with store.lock_checkmk_configuration(configuration_lockfile):
                     self._configure_host_and_gateway(task, settings, result.gateway)
             else:
                 self._logger.error(result.message)

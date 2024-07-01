@@ -13,7 +13,7 @@ from cmk.utils import store
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
 from cmk.utils.notify_types import EventRule, MailPluginModel, NotificationRuleID
-from cmk.utils.paths import site_cert_file
+from cmk.utils.paths import configuration_lockfile, site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
 
 from cmk.gui.groups import AllGroupSpecs, GroupName
@@ -50,7 +50,7 @@ def init_wato_datastructures(with_wato_lock: bool = False) -> None:
         _create_sample_config()
 
     if with_wato_lock:
-        with store.lock_checkmk_configuration():
+        with store.lock_checkmk_configuration(configuration_lockfile):
             init()
     else:
         init()

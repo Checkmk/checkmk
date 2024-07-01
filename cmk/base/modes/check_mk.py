@@ -43,6 +43,7 @@ from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnErr
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.i18n import _
 from cmk.utils.log import console, section
+from cmk.utils.paths import configuration_lockfile
 from cmk.utils.resulttype import Result
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
@@ -1697,7 +1698,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         # Edition layering...
         keepalive_mod: TypeAlias = None  # type: ignore[no-redef]
 
-    with store.lock_checkmk_configuration():
+    with store.lock_checkmk_configuration(configuration_lockfile):
         config.load(with_conf_d=True, validate_hosts=False)
 
     def ensure_nagios(msg: str) -> None:

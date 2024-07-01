@@ -26,6 +26,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path
+from cmk.utils.paths import configuration_lockfile
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.store import lock_checkmk_configuration
 from cmk.utils.tags import TagGroupID, TagID
@@ -305,7 +306,7 @@ def _bake_on_restart(
 
     assert isinstance(config_cache, config.CEEConfigCache)
 
-    with nullcontext() if skip_locking else lock_checkmk_configuration():
+    with nullcontext() if skip_locking else lock_checkmk_configuration(configuration_lockfile):
         target_configs = agent_bakery.BakeryTargetConfigs.from_config_cache(
             config_cache, all_hosts=all_hosts, selected_hosts=None
         )

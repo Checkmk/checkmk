@@ -6,6 +6,7 @@
 import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.paths import configuration_lockfile
 
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 from cmk.gui.config import active_config
@@ -84,7 +85,7 @@ def page_handler() -> None:
 
     # If we do an action, we acquire an exclusive lock on the complete Setup.
     if transactions.is_transaction():
-        with store.lock_checkmk_configuration():
+        with store.lock_checkmk_configuration(configuration_lockfile):
             _wato_page_handler(current_mode, mode_instance)
     else:
         _wato_page_handler(current_mode, mode_instance)

@@ -15,6 +15,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.paths import configuration_lockfile
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
@@ -132,7 +133,11 @@ class PageAutomation(AjaxPage):
             self._command == "checkmk-automation"
             and request.get_str_input_mandatory("automation") == "active-check"
         )
-        with store.lock_checkmk_configuration() if lock_config else nullcontext():
+        with (
+            store.lock_checkmk_configuration(configuration_lockfile)
+            if lock_config
+            else nullcontext()
+        ):
             self._execute_automation()
         return None
 

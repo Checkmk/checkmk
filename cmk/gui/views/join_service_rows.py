@@ -11,6 +11,7 @@ from typing import NamedTuple
 
 from livestatus import lqencode, SiteId
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
 
 from cmk.gui.data_source import data_source_registry
@@ -21,6 +22,16 @@ from cmk.gui.views.sorter import SorterEntry
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter
+
+
+def _parents(rows: Rows) -> Mapping[tuple[SiteId, HostName], Sequence[HostName]]:
+    parents: dict[tuple[SiteId, HostName], set[HostName]] = {}
+    for row in rows:
+        for cluster_name in row.get("host_childs", []):
+            parents.setdefault((row["site"], cluster_name), set()).add(row["host_name"])
+    return {
+        (site_id, cluster_name): list(nodes) for (site_id, cluster_name), nodes in parents.items()
+    }
 
 
 def join_service_row_post_processor(
@@ -39,6 +50,10 @@ def join_service_row_post_processor(
         raise ValueError()
 
     inventory_join_macros = dict(view.spec.get("inventory_join_macros", {}).get("macros", []))
+    parents: Mapping[tuple[SiteId, HostName], Sequence[HostName]] = (
+        _parents(rows) if view.datasource.ident.startswith("inv") else {}
+    )
+
     join_filters = _make_join_filters(
         [
             _JoinValue(
@@ -50,6 +65,7 @@ def join_service_row_post_processor(
             for join_cell in view.join_cells
         ],
         rows,
+        parents,
     )
 
     row_data = slave_ds.table.query(
@@ -78,8 +94,14 @@ def join_service_row_post_processor(
 
     per_master_entry: dict[tuple[SiteId, str], dict[str, Row]] = {}
     for row in join_rows:
-        current_entry = per_master_entry.setdefault(_make_master_key(row, join_master_column), {})
-        current_entry[row[slave_ds.join_key]] = row
+        master_key = _make_master_key(row, join_master_column)
+        if node_names := parents.get((master_key[0], HostName(master_key[1]))):
+            for node_name in node_names:
+                current_entry = per_master_entry.setdefault((master_key[0], node_name), {})
+                current_entry[row[slave_ds.join_key]] = row
+        else:
+            current_entry = per_master_entry.setdefault(master_key, {})
+            current_entry[row[slave_ds.join_key]] = row
 
     # Add this information into master table in artificial column "JOIN"
     for row in rows:
@@ -182,7 +204,11 @@ class _JoinFilters(NamedTuple):
     filters: Sequence[LivestatusQuery]
 
 
-def _make_join_filters(join_values: Sequence[_JoinValue], rows: Rows) -> _JoinFilters:
+def _make_join_filters(
+    join_values: Sequence[_JoinValue],
+    rows: Rows,
+    parents: Mapping[tuple[SiteId, HostName], Sequence[HostName]],
+) -> _JoinFilters:
     with_macros = []
     without_macros = []
     filters = []
@@ -190,7 +216,7 @@ def _make_join_filters(join_values: Sequence[_JoinValue], rows: Rows) -> _JoinFi
     for join_value in join_values:
         if join_value.has_macros():
             with_macros.append(join_value)
-            filters.append(_livestatus_filter_from_macros(join_value, rows))
+            filters.append(_livestatus_filter_from_macros(join_value, rows, parents))
         else:
             without_macros.append(join_value)
             filters.append(_livestatus_filter(join_value))
@@ -203,12 +229,22 @@ def _make_join_filters(join_values: Sequence[_JoinValue], rows: Rows) -> _JoinFi
     )
 
 
-def _livestatus_filter_from_macros(join_value: _JoinValue, rows: Rows) -> LivestatusQuery:
+def _livestatus_filter_from_macros(
+    join_value: _JoinValue,
+    rows: Rows,
+    parents: Mapping[tuple[SiteId, HostName], Sequence[HostName]],
+) -> LivestatusQuery:
     filters_by_hostname: dict[str, list[str]] = {}
     for row in rows:
-        filters_by_hostname.setdefault(row["host_name"], []).append(
+        host_name = row["host_name"]
+        filters_by_hostname.setdefault(host_name, []).append(
             _livestatus_filter(join_value.replace_macros(row))
         )
+        for (_site_id, cluster_name), node_names in parents.items():
+            if host_name in node_names:
+                filters_by_hostname.setdefault(cluster_name, []).append(
+                    _livestatus_filter(join_value.replace_macros(row))
+                )
 
     join_filters = []
     for host_name, filters in filters_by_hostname.items():

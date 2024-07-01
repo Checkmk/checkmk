@@ -33,19 +33,14 @@ from cmk.gui.utils import get_failed_plugins
 
 from ._app import BackgroundJobFlaskApp
 from ._defines import BackgroundJobDefines
-from ._interface import BackgroundProcessInterface
+from ._interface import BackgroundProcessInterface, JobParameters
 from ._status import JobStatusStates
 from ._store import JobStatusStore
 
 
-def run_process(
-    work_dir: str,
-    job_id: str,
-    target: Callable[[BackgroundProcessInterface], None],
-    lock_wato: bool,
-    is_stoppable: bool,
-    override_job_log_level: int | None = None,
-) -> None:
+def run_process(job_parameters: JobParameters) -> None:
+    work_dir, job_id, target, lock_wato, is_stoppable, override_job_log_level = job_parameters
+
     logger = log.logger.getChild("background-job")
     jobstatus_store = JobStatusStore(work_dir)
     _detach_from_parent()

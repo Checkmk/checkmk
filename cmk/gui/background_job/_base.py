@@ -11,7 +11,7 @@ import shutil
 import signal
 import time
 from collections.abc import Callable
-from typing import NoReturn, TypedDict
+from typing import NoReturn
 
 import psutil
 
@@ -27,24 +27,13 @@ from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 
 from ._defines import BackgroundJobDefines
-from ._interface import BackgroundProcessInterface
+from ._interface import BackgroundProcessInterface, JobParameters
 from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
 from ._store import JobStatusStore
 
 
 class BackgroundJobAlreadyRunning(MKGeneralException):
     pass
-
-
-class JobParameters(TypedDict):
-    """Just a small wrapper to help improve the typing through multiprocessing.Process call"""
-
-    work_dir: str
-    job_id: str
-    target: Callable[[BackgroundProcessInterface], None]
-    lock_wato: bool
-    is_stoppable: bool
-    override_job_log_level: int | None
 
 
 class BackgroundJob:
@@ -378,14 +367,7 @@ class BackgroundJob:
                 # launch the background job with a subprocess instead to get rid of this import
                 # hack.
                 target=importlib.import_module("cmk.gui.background_job._process").run_process,
-                args=(
-                    job_parameters["work_dir"],
-                    job_parameters["job_id"],
-                    job_parameters["target"],
-                    job_parameters["lock_wato"],
-                    job_parameters["is_stoppable"],
-                    job_parameters["override_job_log_level"],
-                ),
+                args=(job_parameters,),
             )
             p.start()
 

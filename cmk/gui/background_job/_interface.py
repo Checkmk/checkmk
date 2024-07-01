@@ -7,6 +7,7 @@ import sys
 import time
 from logging import Logger
 from pathlib import Path
+from typing import Callable, NamedTuple
 
 from cmk.utils import render
 
@@ -56,3 +57,14 @@ class BackgroundProcessInterface:
         sys.stdout.write(encoded_info)
         with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:
             f.write(encoded_info.encode())
+
+
+class JobParameters(NamedTuple):
+    """Just a small wrapper to help improve the typing through multiprocessing.Process call"""
+
+    work_dir: str
+    job_id: str
+    target: Callable[[BackgroundProcessInterface], None]
+    lock_wato: bool
+    is_stoppable: bool
+    override_job_log_level: int | None

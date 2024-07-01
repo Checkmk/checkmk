@@ -11,8 +11,6 @@ from typing import NewType
 
 from cryptography.hazmat.primitives import hashes as crypto_hashes
 
-from cmk.utils.exceptions import MKException
-
 
 class HashAlgorithm(Enum):
     """This is just a facade to selected hash algorithms from cryptography"""
@@ -67,7 +65,7 @@ class SerializedPEM:
         return self._data
 
 
-class MKCryptoException(MKException):
+class MKCryptoException(Exception):
     """Common baseclass for this module's exceptions"""
 
 

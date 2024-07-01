@@ -25,6 +25,7 @@ from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 from cmk.utils import crash_reporting, paths, store
+from cmk.utils.crypto.types import MKCryptoException
 from cmk.utils.exceptions import MKException
 from cmk.utils.site import omd_site
 
@@ -511,7 +512,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 detail=str(exc),
             )
 
-        except MKException as exc:
+        except (MKException, MKCryptoException) as exc:
             if self.debug:
                 raise
             response = problem(

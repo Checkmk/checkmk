@@ -18,6 +18,7 @@ import livestatus
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
+from cmk.utils.crypto.types import MKCryptoException
 from cmk.utils.exceptions import MKException
 
 from cmk.gui import pages, sites
@@ -223,7 +224,7 @@ def _process_request(  # pylint: disable=too-many-branches
         resp = _render_exception(e, title=_("Configuration error"))
         logger.error("MKConfigError: %s", e)
 
-    except MKException as e:
+    except (MKException, MKCryptoException) as e:
         resp = _render_exception(e, title=_("General error"))
         logger.error("%s: %s", e.__class__.__name__, e)
 

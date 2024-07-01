@@ -58,38 +58,10 @@ def _check_condition(
 
 
 def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:
-    """Check every condition in the section. Return one result if all conditions
-    passed. Otherwise, return four results if one or more conditions are faulty
-    or missing, defining each state according to `last_transition_time` and the
-    respective levels in `params`.
-
-    The Pod sets the conditions to True in this order:
+    """The Pod sets the conditions to True in this order:
     PodScheduled -> PodInitialized -> PodContainersReady -> PodReady.
     PodReadyToStartContainers and PodDisruptionTarget don't have as clear a place.
     """
-
-    # DisruptionTarget is a special case, and the user should be able to see the condition details
-    # when this condition appears.
-    if section.disruptiontarget is None and all(
-        cond and cond.status for name, cond in section if name != "disruptiontarget"
-    ):
-        yield Result(
-            state=State.OK,
-            summary="Ready, all conditions passed",
-            details="\n".join(
-                condition_detailed_description(name, cond.status, cond.reason, cond.detail)
-                for name, cond in [
-                    ("scheduled", section.scheduled),
-                    ("hasnetwork", section.hasnetwork),
-                    ("initialized", section.initialized),
-                    ("containersready", section.containersready),
-                    ("ready", section.ready),
-                    ("disruptiontarget", section.disruptiontarget),
-                ]
-                if cond is not None
-            ),
-        )
-        return
 
     yield from _check_condition(
         now,

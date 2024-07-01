@@ -385,40 +385,6 @@ def test_register_check_plugin_calls(check_plugin) -> None:  # type: ignore[no-u
     assert str(check_plugin.check_ruleset_name) == "kube_pod_conditions"
 
 
-@pytest.mark.parametrize(
-    "condition_status, expected_length",
-    [
-        (True, 1),
-        (False, 5),
-    ],
-)
-def test_check_yields_check_results(condition_status: bool, expected_length: int) -> None:
-    section = PodConditionsFactory.build(
-        initialized=PodConditionFactory.build(status=condition_status),
-        hasnetwork=PodConditionFactory.build(status=condition_status),
-        scheduled=PodConditionFactory.build(status=condition_status),
-        containersready=PodConditionFactory.build(status=condition_status),
-        ready=PodConditionFactory.build(status=condition_status),
-    )
-    check_result = kube_pod_conditions._check(TIMESTAMP, {}, section)
-    assert len(list(check_result)) == expected_length
-
-
-def test_check_all_results_with_summary_status_true():
-    condition_status = True
-    section = PodConditionsFactory.build(
-        initialized=PodConditionFactory.build(status=condition_status),
-        hasnetwork=PodConditionFactory.build(status=condition_status),
-        scheduled=PodConditionFactory.build(status=condition_status),
-        containersready=PodConditionFactory.build(status=condition_status),
-        ready=PodConditionFactory.build(status=condition_status),
-    )
-    check_result = kube_pod_conditions._check(TIMESTAMP, {}, section)
-    assert list(isinstance(r, Result) and r.summary for r in check_result) == [
-        "Ready, all conditions passed"
-    ]
-
-
 def test_check_disruption_target_condition():
     condition_status = True
     section = PodConditionsFactory.build(

@@ -1250,7 +1250,7 @@ class EventServer(ECServerThread):
             return None
         if cmk.utils.regex.is_regex(value):
             return re.compile(value, re.IGNORECASE)
-        return val.lower()
+        return value.lower()
 
     def hash_rule(self, rule: Rule) -> None:
         """Construct rule hash for faster execution."""

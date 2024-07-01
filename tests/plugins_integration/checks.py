@@ -57,12 +57,16 @@ class CheckConfig:
     piggyback: bool = False
 
     def load(self):
-        self.data_dir = str(
-            self.data_dir or os.getenv("DATA_DIR", str(qa_test_data_path() / "plugins_integration"))
+        data_dir_default = str(qa_test_data_path() / "plugins_integration")
+        dump_dir_default = f"{data_dir_default}/dumps" + ("/piggyback" if self.piggyback else "")
+        response_dir_default = f"{data_dir_default}/responses" + (
+            "/piggyback" if self.piggyback else ""
         )
-        self.dump_dir = str(self.dump_dir or os.getenv("DUMP_DIR", f"{self.data_dir}/dumps"))
+
+        self.data_dir = str(self.data_dir or os.getenv("DATA_DIR", data_dir_default))
+        self.dump_dir = str(self.dump_dir or os.getenv("DUMP_DIR", dump_dir_default))
         self.response_dir = str(
-            self.response_dir or os.getenv("RESPONSE_DIR", f"{self.data_dir}/responses")
+            self.response_dir or os.getenv("RESPONSE_DIR", response_dir_default)
         )
         self.diff_dir = str(self.diff_dir or os.getenv("DIFF_DIR", "/tmp"))
         self.host_names = (

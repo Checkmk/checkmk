@@ -25,7 +25,7 @@ description:
   If no third column is present, the service will not have any metrics.
 
   Currently the check works with MySQL, Postgresql, MSSQL, DB2, SQL Anywhere and Oracle databases.
-  For this to work, additional pyhton libraries must be installed (depending on the type of database one of {psycopg2}, {pymysql}, {pymssql}, {cx_Oracle}, {ibm_db}, {ibm_db_dbi} and {sqlanydb}).
+  For this to work, additional python libraries must be installed (depending on the type of database one of {psycopg2}, {pymysql}, {pymssql}, {oracledb}, {ibm_db}, {ibm_db_dbi} and {sqlanydb}).
   For Oracle support the Oracle instantclient needs to be installed as well, and the LD_LIBRARY_PATH needs to be modified to point to the libclntsh.so of that package.
 
   The oracle check supports procedure calls.

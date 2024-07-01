@@ -64,6 +64,7 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
+from cmk.gui.userdb.user_sync_job import UserSyncBackgroundJob
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
@@ -131,8 +132,8 @@ class ModeUsers(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._job = userdb.UserSyncBackgroundJob()
-        self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
+        self._job = UserSyncBackgroundJob()
+        self._job_snapshot = UserSyncBackgroundJob().get_status_snapshot()
         self._can_create_and_delete_users = edition() != Edition.CSE
 
     def title(self) -> str:
@@ -295,7 +296,7 @@ class ModeUsers(WatoMode):
 
         if request.var("_sync"):
             try:
-                job = userdb.UserSyncBackgroundJob()
+                job = UserSyncBackgroundJob()
 
                 try:
                     job.start(
@@ -330,7 +331,7 @@ class ModeUsers(WatoMode):
         action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
         if action_handler.did_acknowledge_job():
-            self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
+            self._job_snapshot = UserSyncBackgroundJob().get_status_snapshot()
             flash(_("Synchronization job acknowledged"))
             return redirect(self.mode_url())
 
@@ -368,7 +369,7 @@ class ModeUsers(WatoMode):
             and not self._job_snapshot.acknowledged_by
         ):
             # Just finished, auto-acknowledge
-            userdb.UserSyncBackgroundJob().acknowledge(user.id)
+            UserSyncBackgroundJob().acknowledge(user.id)
             # html.show_message(_("User synchronization successful"))
 
         elif not self._job_snapshot.acknowledged_by and self._job_snapshot.has_exception:

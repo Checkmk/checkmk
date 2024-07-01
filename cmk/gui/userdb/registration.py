@@ -17,8 +17,8 @@ from ._custom_attributes import update_config_based_user_attributes
 from ._find_usage import find_timeperiod_usage_in_users, find_usages_of_contact_group_in_users
 from ._user_attribute import UserAttributeRegistry
 from ._user_profile_cleanup import execute_user_profile_cleanup_job, UserProfileCleanupBackgroundJob
-from ._user_sync import ajax_sync, execute_userdb_job, UserSyncBackgroundJob
 from .htpasswd import HtpasswdUserConnector
+from .user_sync_job import ajax_sync, execute_userdb_job, UserSyncBackgroundJob
 
 __all__ = ["register", "saas_register"]
 

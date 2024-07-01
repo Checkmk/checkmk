@@ -90,7 +90,7 @@ from ._user_attribute import (
 )
 from ._user_selection import UserSelection
 from ._user_spec import add_internal_attributes, new_user_template, USER_SCHEME_SERIAL
-from ._user_sync import user_sync_config, user_sync_default_config, UserSyncBackgroundJob
+from ._user_sync_config import user_sync_config, user_sync_default_config
 from .session import is_valid_user_session, load_session_infos
 from .store import (
     contactgroups_of_user,
@@ -139,6 +139,8 @@ __all__ = [
     "Discover",
     "DIR_SERVER_389",
     "DISABLE_NOTIFICATIONS",
+    "user_sync_config",
+    "user_sync_default_config",
     "disable_two_factor_authentication",
     "find_timeperiod_usage_in_notification_rule",
     "Fixed",
@@ -219,7 +221,6 @@ __all__ = [
     "UserConnectorRegistry",
     "UserSelection",
     "UserSpec",
-    "UserSyncBackgroundJob",
     "Users",
     "UI_SIDEBAR_POSITIONS",
     "UI_THEME",

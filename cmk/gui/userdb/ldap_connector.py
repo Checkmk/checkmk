@@ -97,7 +97,7 @@ from ._connector import CheckCredentialsResult, ConnectorType, UserConnector, Us
 from ._roles import load_roles
 from ._user_attribute import get_user_attributes
 from ._user_spec import add_internal_attributes, new_user_template
-from ._user_sync import user_sync_config
+from ._user_sync_config import user_sync_config
 from .store import load_cached_profile, load_users, release_users_lock, save_users
 
 

@@ -155,7 +155,7 @@ class SNMPHostConfig:
         serialized["oid_range_limits"] = {
             str(sn): rl for sn, rl in serialized["oid_range_limits"].items()
         }
-        serialized["snmpv3_contexts"] = [c.serialize() for c in serialized["snmpv3_contexts"]]
+        serialized["snmpv3_contexts"] = [c.serialize() for c in self.snmpv3_contexts]
         return serialized
 
     @classmethod

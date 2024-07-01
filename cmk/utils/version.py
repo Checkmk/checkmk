@@ -72,12 +72,12 @@ def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
 
 
-def edition_has_enforced_licensing() -> bool:
-    return edition() in (Edition.CME, Edition.CCE)
+def edition_has_enforced_licensing(ed: Edition, /) -> bool:
+    return ed in (Edition.CME, Edition.CCE)
 
 
-def edition_supports_nagvis() -> bool:
-    return edition() is not Edition.CSE
+def edition_supports_nagvis(ed: Edition, /) -> bool:
+    return ed is not Edition.CSE
 
 
 def mark_edition_only(feature_to_mark: str, exclusive_to: Sequence[Edition]) -> str:

@@ -7,6 +7,7 @@ import abc
 from collections.abc import Collection, Iterator, Sequence
 
 import cmk.utils.paths
+from cmk.utils import version
 from cmk.utils.user import UserId
 from cmk.utils.version import edition_supports_nagvis
 
@@ -506,7 +507,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
         if permitted_inventory_paths:
             self.group["inventory_paths"] = permitted_inventory_paths
 
-        if edition_supports_nagvis():
+        if edition_supports_nagvis(version.edition()):
             permitted_maps = self._vs_nagvis_maps().from_html_vars("nagvis_maps")
             self._vs_nagvis_maps().validate_value(permitted_maps, "nagvis_maps")
             if permitted_maps:
@@ -521,7 +522,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
             "inventory_paths", self.group.get("inventory_paths")
         )
 
-        if edition_supports_nagvis() and self._get_nagvis_maps():
+        if edition_supports_nagvis(version.edition()) and self._get_nagvis_maps():
             forms.section(_("Access to NagVis Maps"))
             html.help(_("Configure access permissions to NagVis maps."))
             self._vs_nagvis_maps().render_input("nagvis_maps", self.group.get("nagvis_maps", []))

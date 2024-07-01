@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils import version
 from cmk.utils.version import edition_supports_nagvis
 
 from cmk.gui.background_job import BackgroundJobRegistry
@@ -117,7 +118,7 @@ def register(
     )
     _ac_tests.register(ac_test_registry)
     _omd_configuration.register(config_domain_registry, config_variable_registry)
-    if edition_supports_nagvis():
+    if edition_supports_nagvis(version.edition()):
         _nagvis_auth.register(permission_section_registry, permission_registry)
     _snapins.register(snapin_registry, match_item_generator_registry, mega_menu_registry)
     _notification_settings.register(config_variable_registry)

@@ -620,7 +620,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             )
             return
 
-        if edition_has_enforced_licensing():
+        if edition_has_enforced_licensing(edition()):
             # TODO move to CCE handler to avoid is_cloud_edition check
             if (
                 self._license_usage_report_validity

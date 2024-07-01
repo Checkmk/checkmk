@@ -357,7 +357,7 @@ class SiteManagement:
             folder_tree().invalidate_caches()
             cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
-            if cmk_version.edition_supports_nagvis():
+            if cmk_version.edition_supports_nagvis(cmk_version.edition()):
                 _create_nagvis_backends(sites)
 
             # Call the sites saved hook

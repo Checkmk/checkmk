@@ -251,15 +251,16 @@ def show_activation(params: Mapping[str, Any]) -> Response:
 def list_activations(params: Mapping[str, Any]) -> Response:
     """Show all currently running activations"""
 
-    return serve_json(
-        constructors.collection_object(
-            domain_type="activation_run",
-            value=[
+    value = []
+    for activation_id in get_activation_ids():
+        try:
+            value.append(
                 _activation_run_domain_object(get_restapi_response_for_activation_id(activation_id))
-                for activation_id in get_activation_ids()
-            ],
-        )
-    )
+            )
+        except MKUserError:
+            pass
+
+    return serve_json(constructors.collection_object(domain_type="activation_run", value=value))
 
 
 @Endpoint(

@@ -24,6 +24,7 @@ from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.userdb import get_active_saml_connections
 from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
+from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.urls import makeuri, requested_file_name
@@ -173,7 +174,6 @@ def jqm_page_index_topic_renderer(topic: str, items: Items) -> None:
         if top == topic:
             html.open_li()
             html.open_a(href=href, **{"data-ajax": "false", "data-transition": "flip"})
-            # Todo (CMK-17819)
             html.write_html(HTML.without_escaping(title))
             html.close_a()
             html.close_li()
@@ -270,7 +270,9 @@ def _page_index() -> None:
                 count = '<span class="ui-li-count">%d</span>' % get_row_count(view)
 
             topic = PagetypeTopics.get_topic(view_spec.get("topic", ""))
-            items.append((topic.title(), url, "{} {}".format(view_spec["title"], count)))
+            items.append(
+                (topic.title(), url, "{} {}".format(escape_text(view_spec["title"]), count))
+            )
 
     jqm_page_index(_("Checkmk Mobile"), items)
     # Link to non-mobile GUI

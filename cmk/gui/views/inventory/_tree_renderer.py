@@ -375,8 +375,7 @@ class TreeRenderer:
         self._show_internal_tree_paths = show_internal_tree_paths
 
     def _get_header(self, title: str, key_info: str) -> HTML:
-        # Todo (CMK-17819)
-        header = HTML.without_escaping(title)
+        header = HTML.with_escaping(title)
         if self._show_internal_tree_paths:
             header += " " + HTMLWriter.render_span(f"({key_info})", css="muted_text")
         return header

@@ -38807,9 +38807,6 @@ msgstr "Raport lunar"
 msgid "More information can be found in %s"
 msgstr "Mai multe informații pot fi găsite în %s."
 
-msgid "More information can be found in ~/var/log/web.log"
-msgstr "Mai multe informații pot fi găsite în ~/var/log/web.log"
-
 msgid "More options"
 msgstr "Mai multe opțiuni"
 
@@ -81648,6 +81645,9 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "More information can be found in ~/var/log/web.log"
+#~ msgstr "Mai multe informații pot fi găsite în ~/var/log/web.log"
 
 #~ msgid "Activated the changes"
 #~ msgstr "A activat modificările"

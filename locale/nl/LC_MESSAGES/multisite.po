@@ -38764,9 +38764,6 @@ msgstr "Maandelijks verslag"
 msgid "More information can be found in %s"
 msgstr "Meer informatie kunt u vinden in %s"
 
-msgid "More information can be found in ~/var/log/web.log"
-msgstr "Meer informatie is te vinden in ~/var/log/web.log"
-
 #, fuzzy
 msgid "More options"
 msgstr "Montagemogelijkheden"
@@ -81517,6 +81514,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "More information can be found in ~/var/log/web.log"
+#~ msgstr "Meer informatie is te vinden in ~/var/log/web.log"
 
 #~ msgid "Activated the changes"
 #~ msgstr "Activeerde de veranderingen"

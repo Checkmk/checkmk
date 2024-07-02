@@ -38404,9 +38404,6 @@ msgstr "Rapporto mensile"
 msgid "More information can be found in %s"
 msgstr "Maggiori informazioni possono essere trovate in %s"
 
-msgid "More information can be found in ~/var/log/web.log"
-msgstr "Maggiori informazioni possono essere trovate in ~/var/log/web.log"
-
 msgid "More options"
 msgstr "Altre opzioni"
 
@@ -80734,6 +80731,9 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "More information can be found in ~/var/log/web.log"
+#~ msgstr "Maggiori informazioni possono essere trovate in ~/var/log/web.log"
 
 #~ msgid "Activated the changes"
 #~ msgstr "Attivato i cambiamenti"

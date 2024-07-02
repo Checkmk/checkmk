@@ -11,13 +11,11 @@ import itertools
 import json
 import struct
 import uuid
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-import cmk.utils.version as cmk_version
 from cmk.utils.crash_reporting import (
     _format_var_for_export,
     ABCCrashReport,
@@ -45,27 +43,22 @@ def crash(crashdir: Path) -> UnitTestCrashReport:
         return UnitTestCrashReport.from_exception(crashdir, {})
 
 
-@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_type(crash: ABCCrashReport) -> None:
     assert crash.type() == "test"
 
 
-@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_ident(crash: ABCCrashReport) -> None:
     assert crash.ident() == (crash.crash_info["id"],)
 
 
-@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_ident_to_text(crash: ABCCrashReport) -> None:
     assert crash.ident_to_text() == crash.crash_info["id"]
 
 
-@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_crash_dir(crashdir: Path, crash: ABCCrashReport) -> None:
     assert crash.crash_dir() == crashdir / crash.type() / crash.ident_to_text()
 
 
-@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_local_crash_report_url(crash: ABCCrashReport) -> None:
     url = "crash.py?component=test&ident=%s" % crash.ident_to_text()
     assert crash.local_crash_report_url() == url
@@ -137,16 +130,7 @@ def patch_uuid1(monkeypatch):
     monkeypatch.setattr("uuid.uuid1", uuid1)
 
 
-@pytest.fixture
-def cache_general_version_infos(monkeypatch):
-    """Cache the computation to save time for repeated crash report creation"""
-
-    monkeypatch.setattr(
-        cmk_version, "get_general_version_infos", lru_cache(cmk_version.get_general_version_infos)
-    )
-
-
-@pytest.mark.usefixtures("patch_uuid1", "cache_general_version_infos", "patch_omd_site")
+@pytest.mark.usefixtures("patch_uuid1")
 @pytest.mark.parametrize("n_crashes", [15, 45])
 def test_crash_report_store_cleanup(crashdir: Path, n_crashes: int) -> None:
     store = CrashReportStore()

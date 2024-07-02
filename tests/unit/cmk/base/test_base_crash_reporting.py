@@ -5,8 +5,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from cmk.utils.hostaddress import HostName
 
 from cmk.base.errorhandling import CheckCrashReport
@@ -34,7 +32,6 @@ def _check_generic_crash_info(crash):
         )
 
 
-@pytest.mark.usefixtures("patch_omd_site")
 def test_check_crash_report_from_exception(tmp_path: Path) -> None:
     # Tautological test...
     crashdir = tmp_path / "crash"

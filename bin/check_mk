@@ -15,6 +15,7 @@ import getopt
 import logging
 import os
 import sys
+from typing import Self
 
 # Needs to be placed before cmk modules, because they are not available
 # when executed as non site user. Alas, this screws up our import ordering
@@ -56,7 +57,7 @@ class CrashReport(ABCCrashReport):
     @classmethod
     def from_exception(
         cls, details: object = None, type_specific_attributes: object = None
-    ) -> ABCCrashReport:
+    ) -> Self:
         return super().from_exception(
             details={
                 "argv": sys.argv,

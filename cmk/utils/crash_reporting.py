@@ -21,7 +21,7 @@ from collections.abc import Iterator, Mapping
 from contextlib import suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import cmk.utils.paths
 import cmk.utils.plugin_registry
@@ -132,7 +132,7 @@ class ABCCrashReport(abc.ABC):
         cls,
         details: Mapping[str, Any] | None = None,
         type_specific_attributes: dict[str, Any] | None = None,
-    ) -> ABCCrashReport:
+    ) -> Self:
         """Create a crash info object from the current exception context
 
         details - Is an optional dictionary of crash type specific attributes

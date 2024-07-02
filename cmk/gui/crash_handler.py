@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Self
+
 from cmk.utils.crash_reporting import ABCCrashReport, CrashReportRegistry, CrashReportStore
 from cmk.utils.site import omd_site
 
@@ -28,7 +30,11 @@ class GUICrashReport(ABCCrashReport):
         return "gui"
 
     @classmethod
-    def from_exception(cls, details=None, type_specific_attributes=None):
+    def from_exception(
+        cls,
+        details: object | None = None,
+        type_specific_attributes: object | None = None,
+    ) -> Self:
         return super().from_exception(
             details={
                 "page": requested_file_name(request) + ".py",

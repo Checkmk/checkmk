@@ -1,0 +1,11 @@
+Title: missing error message for wrong backup key password
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1719924608
+Edition: cre
+Level: 1
+Version: 2.2.0p31
+
+When a wrong password was entered for downloading a backup encryption key or a signature key for signing agents, an empty error message box was displayed.
+Now, the error message is displayed correctly.

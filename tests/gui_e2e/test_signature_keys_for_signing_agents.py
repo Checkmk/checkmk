@@ -148,6 +148,27 @@ def with_key_fixture(
     delete_key(logged_in_page, "with_key_fixture")
 
 
+def test_download_key(logged_in_page: PPage, with_key: str) -> None:
+    """Download a key and check if the content is the same."""
+    go_to_signature_page(logged_in_page)
+
+    logged_in_page.main_area.locator(
+        "tr.data:has-text('with_key_fixture') >> td.buttons >> a[title='Download this key']"
+    ).click()
+
+    logged_in_page.main_area.get_input("key_p_passphrase").fill("definitely_wrong")
+    logged_in_page.main_area.get_suggestion("Download").click()
+    logged_in_page.main_area.check_error("Invalid pass phrase")
+
+    logged_in_page.main_area.get_input("key_p_passphrase").fill("foo")
+    with logged_in_page.page.expect_download() as download_info:
+        logged_in_page.main_area.get_suggestion("Download").click()
+
+    assert (
+        download_info.is_done()
+    ), "Signature key couldn't be downloaded, even after providing correct passphrase."
+
+
 @pytest.mark.xfail(reason="Test flaky, must be investigated")
 def test_bake_and_sign(logged_in_page: PPage, with_key: None) -> None:
     """go to agents and click bake and sign

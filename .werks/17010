@@ -5,7 +5,7 @@ Component: wato
 Date: 1718618899
 Edition: cre
 Level: 1
-Version: 2.2.0p28
+Version: 2.2.0p29
 
 Prior to this Werk an attacher could add HTML to one parameter of the <em>Check SQL database</em> rule which was executed on the overview page.
 

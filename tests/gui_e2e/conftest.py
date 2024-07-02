@@ -41,7 +41,8 @@ def _log_in(
     request: pytest.FixtureRequest,
     test_site: Site,
 ) -> None:
-    with manage_new_page_from_browser_context(context, request) as page:
+    video_name = f"login_for_{request.node.name.replace('.py', '')}"
+    with manage_new_page_from_browser_context(context, request, video_name) as page:
         login_page = LoginPage(page, site_url=test_site.internal_url)
         login_page.login(credentials)
 

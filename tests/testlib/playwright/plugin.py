@@ -14,6 +14,7 @@ import os
 import typing as t
 from collections.abc import Iterator
 from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
 from playwright.sync_api import (
@@ -24,6 +25,7 @@ from playwright.sync_api import (
     Page,
     Playwright,
     sync_playwright,
+    Video,
 )
 
 logger = logging.getLogger(__name__)
@@ -44,13 +46,15 @@ def _browser_type_launch_args(pytestconfig: t.Any) -> dict:
     return launch_options
 
 
-def _build_artifact_path(request: pytest.FixtureRequest, suffix: str = "") -> str:
+def _build_artifact_path(
+    request: pytest.FixtureRequest, artifact_name: str = "", suffix: str = ""
+) -> str:
     output_dir = request.config.getoption("--output")
     node_safepath = os.path.splitext(os.path.split(request.node.path)[1])[0]
     node_safename = request.node.name.replace("[", "__").replace("]", "__")
-    build_artifact_path = os.path.join(output_dir, f"{node_safepath}__{node_safename}{suffix}")
+    _name = f"{artifact_name}" if artifact_name else f"{node_safepath}__{node_safename}"
+    build_artifact_path = os.path.join(output_dir, f"{_name}{suffix}")
     logger.debug("build_artifact_path=%s", build_artifact_path)
-
     return build_artifact_path
 
 
@@ -78,6 +82,9 @@ def _browser(
 @pytest.fixture(name="context_launch_kwargs", scope="session")
 def _context_launch_kwargs(pytestconfig: pytest.Config) -> dict[str, t.Any]:
     kwargs = {"locale": pytestconfig.getoption("--locale")}
+    if pytestconfig.getoption("--video"):
+        kwargs["record_video_dir"] = str(pytestconfig.getoption("--output"))
+        kwargs["record_video_size"] = {"width": 1280, "height": 960}
     return kwargs
 
 
@@ -145,40 +152,53 @@ def _page_mobile(
 def manage_new_page_from_browser_context(
     context: BrowserContext,
     request: pytest.FixtureRequest | None = None,
+    video_name: str = "",
 ) -> Iterator[Page]:
     """Create a new page from the provided `BrowserContext` and close it.
 
-    Optionally,
-    includes functionality to take a screenshot when a test-case fails.
-    NOTE: requires access to pytest fixture: `request`.
+    Optionally, includes functionality
+        * to take a screenshot when a test-case fails.
+        * to record interactions occuring on the page.
+            + videos are recorded within the directory provided to `--output`
+            + custom `video_name` can be provided, exclude file extension.
+        NOTE: requires access to pytest fixture: `request`.
     """
     pages: t.List[Page] = []
     context.on("page", lambda page: pages.append(page))  # pylint: disable=unnecessary-lambda
     page = context.new_page()
     yield page
-    if request:
-        _may_create_screenshot(request, pages)
+    _may_create_screenshot(request, pages)
     page.close()
+    _may_record_video(page, request, video_name)
 
 
 def _may_create_screenshot(
-    request: pytest.FixtureRequest,
+    request: pytest.FixtureRequest | None,
     pages: t.List[Page],
 ) -> None:
-    failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else True
-    screenshot_option = request.config.getoption("--screenshot")
-    capture_screenshot = screenshot_option == "on" or (
-        failed and screenshot_option == "only-on-failure"
-    )
-    if not capture_screenshot:
-        return
-    for page in pages:
-        human_readable_status = "failed" if failed else "finished"
-        screenshot_path = _build_artifact_path(request, f".{human_readable_status}.png")
-        try:
-            page.screenshot(timeout=5432, path=screenshot_path)
-        except Error as e:
-            logger.info("Failed to create screenshot of page %s due to: %s", page, e)
+    if isinstance(request, pytest.FixtureRequest):
+        failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else True
+        screenshot_option = request.config.getoption("--screenshot")
+        capture_screenshot = screenshot_option == "on" or (
+            failed and screenshot_option == "only-on-failure"
+        )
+        if not capture_screenshot:
+            return
+        for page in pages:
+            human_readable_status = "failed" if failed else "finished"
+            screenshot_path = _build_artifact_path(request, f".{human_readable_status}.png")
+            try:
+                page.screenshot(timeout=5432, path=screenshot_path)
+            except Error as e:
+                logger.info("Failed to create screenshot of page %s due to: %s", page, e)
+
+
+def _may_record_video(page: Page, request: pytest.FixtureRequest | None, video_name: str) -> None:
+    if isinstance(request, pytest.FixtureRequest) and isinstance(page.video, Video):
+        new_path = _build_artifact_path(request, artifact_name=video_name, suffix=".webm")
+        logger.info("Video recorded at: %s", Path(page.video.path()).replace(new_path))
+    else:
+        logger.debug("Video recording is disabled.")
 
 
 @pytest.fixture(scope="session")
@@ -265,3 +285,9 @@ def pytest_addoption(parser: t.Any) -> None:
         "If you choose only-on-failure, a screenshot of the failing page only will be created.",
     )
     group.addoption("--locale", default="en-US", help="The default locale of the browser.")
+    group.addoption(
+        "--video",
+        action="store_true",
+        default=False,
+        help="Record a video of interactions occurring in a page.",
+    )

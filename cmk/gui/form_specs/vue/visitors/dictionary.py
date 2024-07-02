@@ -28,7 +28,7 @@ class DictionaryVisitor(FormSpecVisitor):
             value = self.form_spec.migrate(value)
 
         if isinstance(value, DEFAULT_VALUE):
-            value = {}
+            value = {key: default_value for key in self.form_spec.elements.keys()}
 
         if not isinstance(value, dict):
             raise TypeError(f"Expected a dictionary, got {type(value)}")

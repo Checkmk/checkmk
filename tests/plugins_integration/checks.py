@@ -191,6 +191,7 @@ def get_host_names(site: Site | None = None) -> list[str]:
             _
             for _ in os.listdir(config.dump_dir)
             if (not _.startswith(".") and _ not in SkippedDumps.SKIPPED_DUMPS)
+            and os.path.isfile(os.path.join(config.dump_dir, _))
         ]:
             try:
                 dump_file_path = f"{config.dump_dir}/{dump_file_name}"

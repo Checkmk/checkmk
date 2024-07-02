@@ -1124,3 +1124,23 @@ check_metrics["check_mk-ups_capacity"] = {
 check_metrics["check_mk-hp_proliant_power"] = {
     "watt": {"name": "power"},
 }
+check_metrics["check_mk-drbd_disk"] = {
+    "read": {
+        "scale": KB,
+        "name": "disk_read_throughput",
+    },
+    "write": {
+        "scale": KB,
+        "name": "disk_write_throughput",
+    },
+}
+check_metrics["check_mk-drbd_net"] = {
+    "in": {
+        "scale": KB,
+        "name": "if_in_octets",
+    },
+    "out": {
+        "scale": KB,
+        "name": "if_out_octets",
+    },
+}

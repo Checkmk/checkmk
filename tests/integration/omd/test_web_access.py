@@ -12,13 +12,46 @@ def test_www_dir(site: Site) -> None:
     web = CMKWebSession(site)
 
     # unauthenticated = denied
-    web.get("/%s/testfile" % site.id, expected_code=401)
+    web.get("/%s/testfile.html" % site.id, expected_code=401)
 
     try:
         site.write_text_file("var/www/testfile.html", "123")
         assert web.get("/%s/testfile.html" % site.id, auth=("cmkadmin", "cmk")).text == "123"
     finally:
         site.delete_file("var/www/testfile.html")
+
+
+def test_checkmk_htdocs(site: Site) -> None:
+    web = CMKWebSession(site)
+
+    web.get(f"/{site.id}/check_mk/local/foobar.txt", expected_code=404)
+
+    try:
+        site.write_text_file("local/share/check_mk/web/htdocs/foobar.txt", "123")
+        assert web.get(f"/{site.id}/check_mk/local/foobar.txt").text == "123"
+    finally:
+        site.delete_file("local/share/check_mk/web/htdocs/foobar.txt")
+
+
+def test_checkmk_htdocs_local_overwrite(site: Site) -> None:
+    web = CMKWebSession(site)
+
+    response = web.get("/%s/check_mk/images/icons/core.png" % site.id)
+    assert response.headers["Content-Type"] == "image/png"
+    assert response.text != "123"
+
+    try:
+        site.makedirs("local/share/check_mk/web/htdocs/images/icons/")
+        site.write_text_file("local/share/check_mk/web/htdocs/images/icons/core.png", "123")
+
+        response = web.get("/%s/check_mk/images/icons/core.png" % site.id)
+        assert response.text == "123"
+    finally:
+        site.delete_file("local/share/check_mk/web/htdocs/images/icons/core.png")
+
+    response = web.get("/%s/check_mk/images/icons/core.png" % site.id)
+    assert response.headers["Content-Type"] == "image/png"
+    assert response.text != "123"
 
 
 def test_base_path_redirects(site: Site) -> None:
@@ -55,6 +88,12 @@ def test_cmk_local_agents_access(site: Site) -> None:
     web = CMKWebSession(site)
     body = web.get("/%s/check_mk/local/agents" % site.id).text
     assert "Index of" in body
+
+
+def test_plugin_apis_access(site: Site) -> None:
+    web = CMKWebSession(site)
+    body = web.get("/%s/check_mk/plugin-api" % site.id).text
+    assert "Plugin APIs" in body
 
 
 def test_cmk_sounds(site: Site) -> None:

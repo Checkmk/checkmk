@@ -25,15 +25,20 @@ def fixture_werks_page(logged_in_page: LoginPage) -> Iterator[Werks]:
 
 def test_werks_available(werks_page: Werks) -> None:
 
+    ignore_werks = [16878]
+
     displayed_werks = werks_page.get_recent_werks(count=50)
     displayed_werk_ids = list(displayed_werks.keys())
     assert len(displayed_werk_ids) > 0, "Checkmk site does not display any werks!"
 
     for werk_id in displayed_werks:
+        if werk_id in ignore_werks:
+            # CMK-18094: investigate rendering of Werk 16878
+            continue
         _url_pattern: str = quote_plus(f"werk.py?werk={werk_id}")
         werks_page.werk(werk_id).click()
         werks_page.page.wait_for_url(re.compile(f"{_url_pattern}$"), wait_until="load")
-        werks_page.page.go_back()
+        werks_page.page.go_back(wait_until="load")
 
 
 def test_navigate_to_werks(werks_page: Werks) -> None:

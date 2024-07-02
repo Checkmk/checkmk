@@ -182,13 +182,36 @@ def with_key_fixture(
     delete_key(logged_in_page, key_name)
 
 
+def test_download_key(logged_in_page: LoginPage, with_key: str) -> None:
+    """Test downloading a key.
+
+    First a wrong password is provided, checking the error message; then the key should be
+    downloaded successfully using the correct password."""
+    go_to_signature_page(logged_in_page)
+
+    logged_in_page.get_link("Download this key").click()
+
+    logged_in_page.main_area.get_input("key_p_passphrase").fill("definitely_wrong")
+    logged_in_page.main_area.get_suggestion("Download").click()
+    logged_in_page.main_area.check_error("Invalid pass phrase")
+
+    logged_in_page.main_area.get_input("key_p_passphrase").fill("foo")
+    with logged_in_page.page.expect_download() as download_info:
+        logged_in_page.main_area.get_suggestion("Download").click()
+
+    assert (
+        download_info.is_done()
+    ), "Signature key couldn't be downloaded, even after providing correct passphrase."
+
+
 def test_bake_and_sign(logged_in_page: LoginPage, test_site: Site, with_key: str) -> None:
     """Go to agents and click bake and sign.
 
     Bake and sign starts an asynchronous background job, which is why we run "wait_for_bakery()".
     If the job finished, the success is reported and the test can continue."""
     logged_in_page.click_and_wait(
-        logged_in_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True
+        logged_in_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"),
+        navigate=True,
     )
     logged_in_page.click_and_wait(
         locator=logged_in_page.main_area.get_suggestion("Bake and sign agents"),

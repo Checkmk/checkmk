@@ -281,7 +281,6 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("multiprocessing.Process.exitcode", 0)
     mocker.patch("multiprocessing.context.SpawnProcess.exitcode", 0)
     mocker.patch("sys.exit")
-    mocker.patch("cmk.gui.watolib.activate_changes._close_apache_fds")
     mocker.patch("cmk.gui.background_job._process._detach_from_parent")
     mocker.patch("cmk.gui.background_job._process._open_stdout_and_stderr")
     mocker.patch("cmk.gui.background_job._process._register_signal_handlers")

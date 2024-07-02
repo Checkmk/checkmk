@@ -5,11 +5,14 @@
 
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
-from typing import NewType
+from typing import cast, NewType
 
-from cmk.gui.quick_setup.widgets import Widget
+from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
+from cmk.gui.form_specs.vue.type_defs import DataOrigin
+from cmk.gui.quick_setup.widgets import FormSpecWrapper, Widget
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.rulesets.v1.form_specs import FormSpec
 
 StageId = NewType("StageId", int)
 QuickSetupId = NewType("QuickSetupId", str)
@@ -26,6 +29,7 @@ class StageOverview:
 class Stage:
     stage_id: StageId
     components: list[dict]
+    validation_errors: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -42,15 +46,25 @@ class QuickSetupStage:
             sub_title=self.sub_title,
         )
 
-    def stage(self) -> Stage:
-        return Stage(
-            stage_id=self.stage_id,
-            components=[_serialize_widget(widget) for widget in self.components],
-        )
 
-
-def _serialize_widget(widget: Widget) -> dict:
-    return asdict(widget)
+def get_stage_components_for_the_frontend(quick_setup_stage: QuickSetupStage) -> list[dict]:
+    components: list[dict] = []
+    for widget in quick_setup_stage.components:
+        if isinstance(widget, FormSpecWrapper):
+            form_spec = cast(FormSpec, widget.form_spec)
+            components.append(
+                asdict(
+                    serialize_data_for_frontend(
+                        form_spec=form_spec,
+                        field_id=widget.id,
+                        origin=DataOrigin.DISK,
+                        do_validate=False,
+                    ),
+                ),
+            )
+        else:
+            components.append(asdict(widget))
+    return components
 
 
 @dataclass
@@ -71,7 +85,10 @@ class QuickSetup:
                 return QuickSetupOverview(
                     quick_setup_id=self.id,
                     overviews=[stage.stage_overview() for stage in self.stages],
-                    stage=stage.stage(),
+                    stage=Stage(
+                        stage_id=stage.stage_id,
+                        components=get_stage_components_for_the_frontend(stage),
+                    ),
                 )
         raise MKGeneralException("The first stage is missing.")
 

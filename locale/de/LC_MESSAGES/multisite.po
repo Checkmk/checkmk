@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-27 18:14+0000\n"
+"PO-Revision-Date: 2024-07-01 23:11+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -2040,11 +2040,11 @@ msgid ""
 "enable caching for plug-ins that are lacking this option at their dedicated "
 "ruleset."
 msgstr ""
-"Für Plugins kann ein Limit für das Cachealter gesetzt werden. Wenn gesetzt, "
-"wird die Ausgabe von Plugins gespeichert und für die eingestellte Zeit "
-"wiederverwendet. Die aktivierung des Cache durch diese Regel eignet sich "
-"besonders für Plugins, diese Funktionalität in ihrem eigenen Regelset nicht "
-"bereitstellen."
+"Limit für das Cachealter von Plugins. Wenn gesetzt, wird die Ausgabe von "
+"Plugins gespeichert und für die eingestellte Zeit wiederverwendet. "
+"Insbesondere kann diese Regel verwendet werden, um die Zwischenspeicherung "
+"für Plugins zu aktivieren, die diese Option in ihrem eigenen Regelsatz nicht "
+"haben."
 
 msgid "A combination of the instance, database and (logical) file name."
 msgstr ""
@@ -4267,7 +4267,7 @@ msgid "Additional options"
 msgstr "Zusätzliche Optionen"
 
 msgid "Additional plug-in output"
-msgstr "Zusätzliche Pluginausgabe"
+msgstr "Zusätzliche Plugin-Ausgabe"
 
 msgid "Additional rules for outliers"
 msgstr "Zusätzliche Regeln für Sonderfälle"
@@ -7945,7 +7945,7 @@ msgid "Base URL for docker API engine"
 msgstr "Base URL für die Docker API Engine"
 
 msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
-msgstr "Basisverzeichnis für <tt>plug-ins</tt> und <tt>local</tt>"
+msgstr "Basisverzeichnis für <tt>Plugins</tt> und <tt>lokal</tt>"
 
 msgid "Base directory for variable data (caches, state files)"
 msgstr "Basisverzeichnis für variable Daten (Caches, Zustandsdateien)"
@@ -9134,8 +9134,8 @@ msgid ""
 "tt> (depending on the command found on the host system). Here you can "
 "specify a specific command, independent of the script that will be executed."
 msgstr ""
-"Standardmäßig wird der Checkmk UNIX Agent Python 3 Plugins mit <tt>python3</"
-"tt> ausführen und Python 2 Plugins mit <tt>python2</tt> oder <tt>python</tt> "
+"Standardmäßig wird der Checkmk UNIX Agent Python 3-Plugins mit <tt>python3</"
+"tt> ausführen und Python 2-Plugins mit <tt>python2</tt> oder <tt>python</tt> "
 "(abhängig davon welcher Befehl auf dem Host-System gefunden wird). Hier "
 "können Sie einen spezifischen Befehl festlegen, der unabhängig vom Skript "
 "ausgeführt wird."
@@ -10741,12 +10741,12 @@ msgid ""
 "redirect, accepts and uses cookies, parses forms from the requested pages, "
 "changes vars and submits them to check the response afterwards."
 msgstr ""
-"Überprüfen Sie das Absenden von HTML-Formularen über HTTP/HTTPS mit dem Plug-"
-"in <tt>check_form_submit</tt>, das mit Checkmk geliefert wird. Dieses Plugin "
-"bietet mehr Funktionalität als <tt>check_http</tt>, da es automatisch der "
-"HTTP-Weiterleitung folgt, Cookies akzeptiert und verwendet, Formulare von "
-"den angeforderten Seiten analysiert, Variablen ändert und sie absendet, um "
-"anschließend die Antwort zu überprüfen."
+"Überprüfen Sie das Absenden von HTML-Formularen über HTTP/HTTPS mit dem "
+"Plugin <tt>check_form_submit</tt>, das mit Checkmk geliefert wird. Dieses "
+"Plugin bietet mehr Funktionalität als <tt>check_http</tt>, da es automatisch "
+"der HTTP-Weiterleitung folgt, Cookies akzeptiert und verwendet, Formulare "
+"von den angeforderten Seiten analysiert, Variablen ändert und sie absendet, "
+"um anschließend die Antwort zu überprüfen."
 
 msgid "Check the URL"
 msgstr "Prüfe die URL"
@@ -16588,7 +16588,7 @@ msgid "Deploy ISC DHCP-Daemon plug-in"
 msgstr "ISC DHCP-Daemon-Plugin verteilen"
 
 msgid "Deploy Inotify plug-in"
-msgstr "INotify Plugin verteilen"
+msgstr "INotify-Plugin verteilen"
 
 msgid "Deploy Kaspersky Anti-Virus plug-in"
 msgstr "Kaspersky Anti-Virus Plugin verteilen"
@@ -16627,10 +16627,10 @@ msgid "Deploy Robotmk scheduler and agent plug-in"
 msgstr "Robotmk-Scheduler und Agentenplugin verteilen"
 
 msgid "Deploy SMART plug-in"
-msgstr "SMART Plugin verteilen"
+msgstr "SMART-Plugin verteilen"
 
 msgid "Deploy SUSEConnect plug-in"
-msgstr "SUSEConnect Plugin verteilen"
+msgstr "SUSEConnect-Plugin verteilen"
 
 msgid "Deploy StorCLI plug-in"
 msgstr "StorCLI-Plugin verteilen"
@@ -16639,10 +16639,10 @@ msgid "Deploy Symantec Anti Virus plug-in"
 msgstr "Symantec Anti Virus Plugin verteilen"
 
 msgid "Deploy Unitrends plug-ins"
-msgstr "Unitrends Plugins verteilen"
+msgstr "Unitrends-Plugins verteilen"
 
 msgid "Deploy VxVM plug-in"
-msgstr "VxVM Plugin verteilen"
+msgstr "VxVM-Plugin verteilen"
 
 msgid "Deploy Windows License plug-in"
 msgstr "Windows-Lizenz-Plugin verteilen"
@@ -16674,7 +16674,7 @@ msgid "Deploy custom files with agent"
 msgstr "Benutzerdefinierte Dateien mit Agent verteilen"
 
 msgid "Deploy iptables plug-in"
-msgstr "iptables Plugin verteilen"
+msgstr "iptables-Plugin verteilen"
 
 msgid "Deploy logged in users plug-in"
 msgstr "Plugin für eingeloggte Benutzer verteilen"
@@ -16769,10 +16769,10 @@ msgid "Deploy the Docker plug-in"
 msgstr "Docker-Plugin verteilen"
 
 msgid "Deploy the Jolokia plug-in"
-msgstr "Jolokia Plugin verteilen"
+msgstr "Jolokia-Plugin verteilen"
 
 msgid "Deploy the MySQL plug-in"
-msgstr "MySQL Plugin verteilen"
+msgstr "MySQL-Plugin verteilen"
 
 msgid "Deploy the Plesk plug-ins"
 msgstr "Plesk-Plugins verteilen"
@@ -16796,7 +16796,7 @@ msgid "Deploy the TSM plug-in"
 msgstr "TSM Plugin verteilen"
 
 msgid "Deploy the Zypper plug-in"
-msgstr "Zypper Plugin verteilen"
+msgstr "Zypper-Plugin verteilen"
 
 msgid ""
 "Deploy the agent plug-in <tt>mk_postgres</tt>. This will create information "
@@ -16819,7 +16819,7 @@ msgid "Deploy the mk_filehandler plug-in"
 msgstr "mk_filehandler-Plugin verteilen"
 
 msgid "Deploy the netstat plug-in"
-msgstr "Das netstat-Plugin verteilen"
+msgstr "netstat-Plugin verteilen"
 
 msgid "Deploy the nvidia_smi agent plug-in"
 msgstr "nvidia_smi Agenten-Plugin verteilen"
@@ -18036,22 +18036,22 @@ msgid "Do not deploy AD-Replication plug-in"
 msgstr "Plugin für AD-Replikation nicht verteilen"
 
 msgid "Do not deploy DB2 memory plug-in"
-msgstr "Das DB2 memory Plugin nicht verteilen"
+msgstr "DB2 memory Plugin nicht verteilen"
 
 msgid "Do not deploy ISC DHCP-Daemon plug-in"
-msgstr "Das ISC DHCP-Daemon Plugin nicht verteilen"
+msgstr "ISC DHCP-Daemon Plugin nicht verteilen"
 
 msgid "Do not deploy Inotify plug-in"
-msgstr "INotify Plugin nicht verteilen"
+msgstr "INotify-Plugin nicht verteilen"
 
 msgid "Do not deploy Kaspersky Anti-Virus plug-in"
-msgstr "Das Kaspersky Anti-Virus Plugin nicht verteilen"
+msgstr "Kaspersky Anti-Virus Plugin nicht verteilen"
 
 msgid "Do not deploy LVM plug-in"
-msgstr "Das LVM-Plugin nicht verteilen"
+msgstr "LVM-Plugin nicht verteilen"
 
 msgid "Do not deploy Linux filesystem quota plug-in"
-msgstr "Das Linux filesystem quota Plugin nicht verteilen"
+msgstr "Linux filesystem quota Plugin nicht verteilen"
 
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "MSSQL-Server-Plugin nicht verteilen"
@@ -18060,10 +18060,10 @@ msgid "Do not deploy MTR plug-in"
 msgstr "MTR-Plugin nicht verteilen"
 
 msgid "Do not deploy Mailman plug-in"
-msgstr "Das Mailman Plugin nicht verteilen"
+msgstr "Mailman-Plugin nicht verteilen"
 
 msgid "Do not deploy NFS4 exports plug-in"
-msgstr "Das NFS4 exports Plugin nicht verteilen"
+msgstr "NFS4 exports Plugin nicht verteilen"
 
 msgid "Do not deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitor (ohne GUI) nicht verteilen"
@@ -18075,46 +18075,46 @@ msgid "Do not deploy Robotmk"
 msgstr "Robotmk nicht verteilen"
 
 msgid "Do not deploy SMART plug-in"
-msgstr "Das SMART Plugin nicht verteilen"
+msgstr "SMART-Plugin nicht verteilen"
 
 msgid "Do not deploy SUSEConnect plug-in"
-msgstr "Das SUSEConnect Plugin nicht verteilen"
+msgstr "SUSEConnect-Plugin nicht verteilen"
 
 msgid "Do not deploy Symantec Anti Virus plug-in"
-msgstr "Das Symantec Anti Virus Plugin nicht verteilen"
+msgstr "Symantec Anti Virus Plugin nicht verteilen"
 
 msgid "Do not deploy Unitrends plug-ins"
-msgstr "Unitrends Plugins nicht verteilen"
+msgstr "Unitrends-Plugins nicht verteilen"
 
 msgid "Do not deploy VxVM plug-in"
-msgstr "Das VxVM Plugin nicht verteilen"
+msgstr "VxVM-Plugin nicht verteilen"
 
 msgid "Do not deploy Windows License plug-in"
 msgstr "Windows-Lizenz-Plugin nicht verteilen"
 
 msgid "Do not deploy Windows McAfee AV client plug-in"
-msgstr "Das Windows McAfee AV Clientplugin nicht verteilen"
+msgstr "Windows McAfee AV Clientplugin nicht verteilen"
 
 msgid "Do not deploy Windows Multipath plug-in"
-msgstr "Das Windows Multipath Plugin nicht verteilen"
+msgstr "Windows Multipath Plugin nicht verteilen"
 
 msgid "Do not deploy Windows Printer Queue plug-in"
-msgstr "Das Windows-Druckerwarteschlange-Plugin nicht verteilen"
+msgstr "Windows-Druckerwarteschlange-Plugin nicht verteilen"
 
 msgid "Do not deploy Windows Updates plug-in"
-msgstr "Das Windows Updates-Plugin nicht verteilen"
+msgstr "Windows Updates-Plugin nicht verteilen"
 
 msgid "Do not deploy automatic agent update plug-in"
 msgstr "Plugin für automatisches Agentenupdate nicht verteilen"
 
 msgid "Do not deploy iptables plug-in"
-msgstr "Das iptables Plugin nicht verteilen"
+msgstr "iptables-Plugin nicht verteilen"
 
 msgid "Do not deploy logged in users plug-in"
 msgstr "Plugins für angemeldete Benutzer nicht verteilen"
 
 msgid "Do not deploy mk_mongodb.py plug-in"
-msgstr "Das Plugin mk_mongodb.py nicht verteilen"
+msgstr "Plugin mk_mongodb.py nicht verteilen"
 
 msgid "Do not deploy plug-in"
 msgstr "Plugin nicht verteilen"
@@ -18138,19 +18138,19 @@ msgid "Do not deploy plug-in for JAR signatures"
 msgstr "Plugin für JAR-Signaturen nicht verteilen"
 
 msgid "Do not deploy plug-in for MS Exchange database latency"
-msgstr "Das Plugin für MS Exchange Datenbank-Latenzzeiten nicht verteilen"
+msgstr "Plugin für MS Exchange Datenbank-Latenzzeiten nicht verteilen"
 
 msgid "Do not deploy plug-in for MS IIS Application Pool States"
 msgstr "Plugin für MS IIS Application Pool States nicht verteilen"
 
 msgid "Do not deploy plug-in for MS Office 365"
-msgstr "Das MS Office 365-Plugin nicht verteilen"
+msgstr "MS Office 365-Plugin nicht verteilen"
 
 msgid "Do not deploy plug-in for Microsoft SQL Server"
 msgstr "Plugin für Microsoft SQL-Server nicht verteilen"
 
 msgid "Do not deploy plug-in for NFS IO Stats"
-msgstr "Kein Plugin für NFS IO Stats verteilen"
+msgstr "Plugin für NFS IO Stats nicht verteilen"
 
 msgid "Do not deploy plug-in for Veeam backup status"
 msgstr "Plugin für den Veeam-Backup-Status nicht verteilen"
@@ -18175,91 +18175,91 @@ msgstr "Plugin für Remote-Desktop-Lizenzen nicht verteilen"
 
 #, python-format
 msgid "Do not deploy the %s plug-in"
-msgstr "Das %s Plugin nicht verteilen"
+msgstr "%s Plugin nicht verteilen"
 
 msgid "Do not deploy the APT plug-in"
-msgstr "Das APT-Plugin nicht verteilen"
+msgstr "APT-Plugin nicht verteilen"
 
 msgid "Do not deploy the Apache Status plug-in"
-msgstr "Das Apache Status Plugin nicht verteilen"
+msgstr "Apache Status Plugin nicht verteilen"
 
 msgid "Do not deploy the Arcserve plug-in"
 msgstr "Arcserve-Plugin nicht verteilen"
 
 msgid "Do not deploy the Checkmk CUPS queues plug-in"
-msgstr "Das Checkmk CUPS Queues Plugin nicht verteilen"
+msgstr "Checkmk CUPS Queues Plugin nicht verteilen"
 
 msgid "Do not deploy the Checkmk EMC ScaleIO plug-in"
-msgstr "Das Checkmk EMC ScaleIO Plugin nicht verteilen"
+msgstr "Checkmk EMC ScaleIO Plugin nicht verteilen"
 
 msgid "Do not deploy the Checkmk Inventory plug-in"
-msgstr "Das Checkmk Inventory Plugin nicht verteilen"
+msgstr "Checkmk Inventory Plugin nicht verteilen"
 
 msgid "Do not deploy the Checkmk site objects plug-in"
-msgstr "Das Plugin für die Checkmk-Instanzobjekte nicht verteilen"
+msgstr "Plugin für die Checkmk-Instanzobjekte nicht verteilen"
 
 msgid "Do not deploy the DB2 plug-in"
-msgstr "Das DB2 Plugin nicht verteilen"
+msgstr "DB2-Plugin nicht verteilen"
 
 msgid "Do not deploy the DNS client plug-in"
-msgstr "Das DNS client Plugin nicht verteilen"
+msgstr "DNS client Plugin nicht verteilen"
 
 msgid "Do not deploy the Docker container plug-in"
-msgstr "Das Plugin für Docker Container nicht verteilen"
+msgstr "Plugin für Docker Container nicht verteilen"
 
 msgid "Do not deploy the Docker plug-in"
-msgstr "Das Docker-Plugin nicht verteilen"
+msgstr "Docker-Plugin nicht verteilen"
 
 msgid "Do not deploy the IBM MQ plug-in"
-msgstr "Das IBM MQ Plugin nicht verteilen"
+msgstr "IBM MQ-Plugin nicht verteilen"
 
 msgid "Do not deploy the Jolokia plug-in"
-msgstr "Das Jolokia Plugin nicht verteilen"
+msgstr "Jolokia-Plugin nicht verteilen"
 
 msgid "Do not deploy the MegaRAID plug-in"
 msgstr "MegaRAID-Plugin nicht verteilen"
 
 msgid "Do not deploy the MySQL plug-in"
-msgstr "Das MySQL Plugin nicht verteilen"
+msgstr "MySQL-Plugin nicht verteilen"
 
 msgid "Do not deploy the NGINX status plug-in"
-msgstr "Das NGINX Status-Plugin nicht verteilen"
+msgstr "NGINX Status-Plugin nicht verteilen"
 
 msgid "Do not deploy the Plesk plug-ins"
-msgstr "Die Plesk-Plugins nicht verteilen"
+msgstr "Plesk-Plugins nicht verteilen"
 
 msgid "Do not deploy the PostgreSQL plug-in"
-msgstr "Das PostgreSQL Plugin nicht verteilen"
+msgstr "PostgreSQL-Plugin nicht verteilen"
 
 msgid "Do not deploy the Redis plug-in"
-msgstr "Das Redis Plugin nicht verteilen"
+msgstr "Redis-Plugin nicht verteilen"
 
 msgid "Do not deploy the SAP HANA plug-in"
-msgstr "Das SAP HANA-Plugin nicht verteilen"
+msgstr "SAP HANA-Plugin nicht verteilen"
 
 msgid "Do not deploy the SAP R/3 plug-in"
-msgstr "Das SAP R/3 Plugin nicht verteilen"
+msgstr "SAP R/3-Plugin nicht verteilen"
 
 msgid "Do not deploy the SAP router plug-in"
-msgstr "Das SAP-Router-Plugin nicht verteilen"
+msgstr "SAP-Router-Plugin nicht verteilen"
 
 msgid "Do not deploy the SSH daemon configuration plug-in"
-msgstr "Das SSH Daemon Konfigurationsplugin nicht verteilen"
+msgstr "SSH Daemon Konfigurationsplugin nicht verteilen"
 
 msgid "Do not deploy the StorCLI plug-in"
-msgstr "Das StorCLI-Plugin nicht verteilen"
+msgstr "StorCLI-Plugin nicht verteilen"
 
 msgid "Do not deploy the TSM plug-in"
-msgstr "Das TSM Plugin nicht verteilen"
+msgstr "TSM-Plugin nicht verteilen"
 
 msgid "Do not deploy the Zypper plug-in"
-msgstr "Das Zypper Plugin nicht verteilen"
+msgstr "Zypper-Plugin nicht verteilen"
 
 msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "mk_filehandler-Plugin nicht verteilen"
 
 msgid "Do not deploy the netstat plug-in"
-msgstr "Das Netstat-Plugin nicht verteilen"
+msgstr "Netstat-Plugin nicht verteilen"
 
 msgid "Do not deploy the nvidia_smi agent plug-in"
 msgstr "nvidia_smi Agenten-Plugin nicht verteilen"
@@ -24482,7 +24482,6 @@ msgstr "Hardware/Software-Inventur"
 msgid "Hardware Sensors via OpenHardwareMonitor"
 msgstr "Hardware-Sensoren via OpenHardware Monitor"
 
-#, fuzzy
 msgid "Hardware corrupted"
 msgstr "Korrumpierte Hardware"
 
@@ -24596,7 +24595,6 @@ msgstr "Heartbeat OK"
 msgid "Heartbeat clusters"
 msgstr "Heartbeat-Cluster"
 
-#, fuzzy
 msgid "Heartbeat ressource status"
 msgstr "Heartbeat Ressourcenstatus"
 
@@ -24609,7 +24607,6 @@ msgstr "Höhe"
 msgid "Help"
 msgstr "Hilfe"
 
-#, fuzzy
 msgid "Help text"
 msgstr "Hilfe-Text"
 
@@ -25094,7 +25091,6 @@ msgstr ""
 "Hier können Sie Änderungen aktivieren lassen, wann immer Service hinzugefügt "
 "oder entfernt wurden."
 
-#, fuzzy
 msgid ""
 "Here you can impose various levels on the results reported by the "
 "mk_filstats plug-in. Note that some levels only apply to a matching output "
@@ -25106,10 +25102,9 @@ msgstr ""
 "verschiedenen Leveln versehen. Beachten Sie, dass einige Level nur für ein "
 "passendes Ausgabeformat gelten (z.B. max/min count levels werden nicht "
 "angewendet, wenn nur die kleinste, größte, älteste und neueste Datei "
-"gemeldet wird). Um die erforderlichen Daten zu erhalten, müssen Sie das "
+"gemeldet werden). Um die erforderlichen Daten zu erhalten, müssen Sie das "
 "Plugin mk_filestats konfigurieren."
 
-#, fuzzy
 msgid ""
 "Here you can impose various levels the results reported by the mk_filstats "
 "plug-in. Note that those levels only concern about a single file."
@@ -25188,13 +25183,12 @@ msgstr ""
 "Processes</a>. Eine Änderung dort wird sofort aktiv, während eine Änderung "
 "in dieser Regel eine erneute Erkennung der Dienste erfordert."
 
-#, fuzzy
 msgid ""
 "Here you can select more metrics for InfluxDB. We will save these metrics as "
 "fields in InfluxDB."
 msgstr ""
 "Hier können Sie weitere Metriken für InfluxDB auswählen. Wir werden diese "
-"Metriken als Feld in InfluxDB speichern."
+"Metriken als Felder in InfluxDB speichern."
 
 msgid ""
 "Here you can select the different tags and labels for InfluxDB. We will save "
@@ -25238,14 +25232,13 @@ msgstr ""
 "Hier können Sie die Level für WARN/CRIT bezüglich der freien Kühlpositionen "
 "einstellen."
 
-#, fuzzy
 msgid ""
 "Here you can set explicit scheduler jobs by defining them via SID, job owner "
 "and job name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"
 msgstr ""
-"Hier können Sie explizit Scheduler-Jobs angeben, indem Sie SID, Job-Benutzer "
-"und Job-Name durch Punkte getrennt schreiben, z.B. <tt>TUX12C.SYS.PURGE_LOG</"
-"tt>"
+"Hier können Sie explizite Scheduler-Jobs angeben, indem Sie SID, Job-"
+"Benutzer und Job-Name, durch Punkte getrennt, angeben, z.B. <tt>TUX12C.SYS."
+"PURGE_LOG</tt>"
 
 msgid ""
 "Here you can set explicit tablespaces by defining them via SID and the "
@@ -25355,7 +25348,6 @@ msgstr ""
 "ermöglichen. Das Weglassen dieses Leerzeichens führt zum Rückgriff auf <tt>/"
 "etc/check_mk</tt>."
 
-#, fuzzy
 msgid ""
 "Here you can specify an alternative user that the agent should be run as. "
 "Please note that only root has enough privileges for all commands and plug-"
@@ -25410,7 +25402,6 @@ msgstr ""
 "Hier können Sie die Level für die gesamte Speicherauslastung von "
 "geclusterten Hosts angeben."
 
-#, fuzzy
 msgid ""
 "Here you can specify upper levels for the number of infections detected by "
 "anti-malware engine."
@@ -25639,11 +25630,9 @@ msgstr "Historie der geplanten Wartungszeiten"
 msgid "Hits"
 msgstr "Zugriffe"
 
-#, fuzzy
 msgid "HiveManager NG devices"
-msgstr "HivemanagerNG Geräte"
+msgstr "HiveManager NG Geräte"
 
-#, fuzzy
 msgid "Hivemanager devices"
 msgstr "Hivemanager-Geräte"
 
@@ -26741,9 +26730,8 @@ msgstr "MQ Channels"
 msgid "IBM MQ managers"
 msgstr "IBM MQ Managers"
 
-#, fuzzy
 msgid "IBM MQ plug-in"
-msgstr "IBM MQ Plugin"
+msgstr "IBM MQ-Plugin"
 
 #, fuzzy
 msgid "IBM MQ queues"
@@ -27749,9 +27737,8 @@ msgid ""
 "If this is set, the plug-in output will be cached and will only be refreshed "
 "once the age of the cache has exceeded this value."
 msgstr ""
-"Diese option sorgt dafür, dass die Ausgabe des Plugins gecacht wird und nur "
-"dann neu berechnet, wenn das eingestellte Alter des Caches überschritten "
-"wurde."
+"Wenn dies gesetzt ist, wird die Ausgabe des Plugins zwischengespeichert und "
+"erst aktualisiert, wenn das Alter des Caches diesen Wert überschritten hat."
 
 msgid ""
 "If this option is activated, checkmk will pad port numbers of network "
@@ -27963,14 +27950,14 @@ msgid ""
 "%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do "
 "hardware/software Inventory</a>."
 msgstr ""
-"Diese Option verteilt das Agenten-Plugin <tt>mk_inventory</tt> auf Linux-"
-"Rechern. Es sammelt Informationen über installierte Hardware und Software "
-"und macht diese Informationen in der Oberfläche von Checkmk sichtbar. Auch "
-"ist ein Export in andere System möglich. <b>Hinweis:</b> Um die "
-"Inventurisierung tatsächlich zu nutzen, müssen Sie für die gewünschten Hosts "
-"zusätzlich eine Regel anlegen im Regelsatz <a href='wato.py?"
-"varname=active_checks%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-"
-"Inventur / Hardware/Software-Inventur aktivieren</a>."
+"Wenn Sie diese Option aktivieren, wird das Agent-Plugin <tt>mk_inventory</"
+"tt> auf Linux- und Windows-Hosts eingesetzt. Es sammelt Informationen über "
+"die installierte Hard- und Software und stellt die Informationen in "
+"Multisite und für den Export in Drittanbieter-Software zur Verfügung. "
+"<b>Hinweis:</b> Um das Inventar für einen Host tatsächlich zu nutzen, müssen "
+"Sie es auch im Regelsatz <a href='wato.py?varname=active_checks"
+"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventarisierung / "
+"Do hardware/software Inventory</a> aktivieren."
 
 msgid ""
 "If you activate this option, then the agent plug-in <tt>apache_status</tt> "
@@ -28835,7 +28822,6 @@ msgstr "Standardinkrement ignorieren"
 msgid "Ignore device's own levels"
 msgstr "Die Level des Gerätes ignorieren"
 
-#, fuzzy
 msgid "Ignore errors in single check plug-ins"
 msgstr "Fehler in einzelnen Check-Plugins ignorieren"
 
@@ -29058,7 +29044,7 @@ msgid ""
 "the first match is used."
 msgstr ""
 "Zusätzlich zur Einstellung des generischen Status \"Fehlende Monitoring-Daten"
-"\" können Sie durch ein RegEx-Muster bestimmte Check Plugins angeben und "
+"\" können Sie durch ein RegEx-Muster bestimmte Check-Plugins angeben und "
 "ihnen einen individuellen Status geben, falls sie keine Monitoring-Daten "
 "erhalten. Beachten Sie, dass die erste Übereinstimmung verwendet wird."
 
@@ -29348,7 +29334,7 @@ msgstr ""
 "die folgenden Informationen von jedem Docker-Container als Piggyback-Daten. "
 "Der dabei benutzte Host-Name ist der unten konfigurierte Host-Name des "
 "Containers. Die jeweiligen Checkboxen gehören zu den Check-Plugins mit dem "
-"Namen, der mit'docker_container_' beginnt (z.B. gehört die Checkbox 'Node "
+"Namen, der mit 'docker_container_' beginnt (z.B. gehört die Checkbox 'Node "
 "Name:' zu 'docker_container_node_node_name')."
 
 msgid ""
@@ -30134,7 +30120,6 @@ msgstr ""
 "werden. Die Ziel-Event Console kann für jeden Host in einer separaten Regel "
 "konfiguriert werden."
 
-#, fuzzy
 msgid "Integrate Nagios plug-ins"
 msgstr "Nagios-Plugins einbinden"
 
@@ -30860,7 +30845,6 @@ msgstr ""
 "zu informieren, aber die Nachricht zu unterdrücken, nachdem das Ereignis "
 "stattgefunden hat."
 
-#, fuzzy
 msgid ""
 "It is possible to fetch several attributes of users, like Email or full "
 "names, from the LDAP directory. This is done by plug-ins which can "
@@ -30869,11 +30853,11 @@ msgid ""
 "user options which get imported into Checkmk from LDAP will be locked in "
 "Setup."
 msgstr ""
-"Sie können verschiedene Benutzerattribute (E-Mail, vollständiger Name u. a.) "
-"aus dem LDAP Verzeichnis holen. Das erledigen Plugins, die einzeln ein-/"
-"ausgeschaltet werden können. Ein aktiviertes Plugin holt bei der nächsten "
-"Synchronisation die Benutzerattribute ab. Die Benutzeroptionen, die aus LDAP "
-"in Checkmk importiert werden, sind im Setup gesperrt."
+"Sie können verschiedene Benutzerattribute, wie E-Mail oder vollständiger "
+"Name, aus dem LDAP-Verzeichnis holen. Das erledigen Plugins, die einzeln "
+"ein-/ausgeschaltet werden können. Ein aktiviertes Plugin holt bei der "
+"nächsten Synchronisation die Benutzerattribute ab. Die Benutzeroptionen, die "
+"aus LDAP in Checkmk importiert werden, sind im Setup gesperrt."
 
 msgid "It is possible to let users edit their custom attributes."
 msgstr "Hier können sie einstellen, ob der Benutzer sein Attribut ändern kann."
@@ -73715,13 +73699,11 @@ msgstr "Mehrzeiligen Ausgabe von Services in Monitoring-History schreiben"
 msgid "Write operations"
 msgstr "Schreibzugriffe"
 
-#, fuzzy
 msgid "Write operations/s"
-msgstr "Schreibzugriffe"
+msgstr "Schreibzugriffe/s"
 
-#, fuzzy
 msgid "Write queue-length"
-msgstr "schreibe Länge der Warteschlange"
+msgstr ""
 
 msgid "Write retransmission"
 msgstr "Schreibe erneute Übertragung"
@@ -74090,13 +74072,13 @@ msgstr ""
 "Sie können zwischen verschiedenen Aggregationsmodi für geclusterte Services "
 "wählen:"
 
-#, fuzzy
 msgid ""
 "You can configure an individual alias here for the tunnel matching the IP "
 "address or name configured in the field above."
 msgstr ""
-"Hier können Sie einen Aliasnamen definieren für den Tunnel, der zu der IP-"
-"Addresse oder dem Namen passt, den Sie im Feld oben eingegeben haben."
+"Hier können Sie einen individuellen Alias für den Tunnel konfigurieren, der "
+"mit der im obigen Feld konfigurierten IP-Adresse oder dem Namen "
+"übereinstimmt."
 
 msgid ""
 "You can configure groups of statuses and the time after which a warn/crit "
@@ -74439,7 +74421,6 @@ msgstr ""
 "Sie können nur für die lokale Instanz eine lokale Verbindung konfigurieren. "
 "Die IDs ('%s' und '%s') stimmen nicht überein."
 
-#, fuzzy
 msgid ""
 "You can only configure section names here, but not choose individual check "
 "plug-ins. The reason for this is that the check plug-ins themselves are not "
@@ -75318,7 +75299,6 @@ msgstr ""
 "Ihr entsprechender Text enthält zu viele Untergruppen von regulären "
 "Ausdrücken. Erlaubt sind maximal neun."
 
-#, fuzzy
 msgid ""
 "You may choose to enforce the usage of a specific TLS version. Either by "
 "pinning to exactly the selected version, or by also allowing higher "
@@ -75330,10 +75310,10 @@ msgstr ""
 "Sie können die Verwendung einer bestimmten TLS-Version erzwingen. Entweder "
 "durch die Festlegung auf genau die ausgewählte Version oder indem Sie auch "
 "höhere Versionen zulassen. Bitte beachten Sie, dass Checkmk SSLv3 oder SSLv2 "
-"überhaupt nicht unterstützt. TLS 1.0 und 1.1 wird von dem zugrunde liegenden "
-"Plug-in unterstützt, aber nicht von diesem Regelsatz, da das Plug-in mit "
-"einer unsicheren Konfiguration von OpenSSL 3 aufgerufen werden muss. Dies "
-"erfordert einen direkten Aufruf über <i>Nagios Plugins integrieren.</i>"
+"überhaupt nicht unterstützt. TLS 1.0 und 1.1 werden von dem zugrunde "
+"liegenden Plugin unterstützt, aber nicht von diesem Regelsatz, da das Plugin "
+"mit einer unsicheren Konfiguration von OpenSSL 3 aufgerufen werden muss. "
+"Dies erfordert einen direkten Aufruf über <i>Nagios Plugins integrieren.</i>"
 
 msgid ""
 "You may enforce a specific version if you need to test the compatibility "
@@ -75508,13 +75488,12 @@ msgstr ""
 "Sie müssen eine \"%s\"-Spalte konfigurieren und die Tabellenansicht zuerst "
 "speichern, um nach dieser Spalte sortieren zu können."
 
-#, fuzzy
 msgid ""
 "You need to configure the group base DN to be able to use the roles "
 "synchronization plug-in."
 msgstr ""
-"Sie müssen den Gruppen-Basis-DN konfigurieren um Rollen synchronisieren zu "
-"können."
+"Sie müssen den Gruppen-Basis-DN konfigurieren, um das Plugin für die "
+"Rollensynchronisierung nutzen zu können."
 
 msgid ""
 "You need to confirm that you want to overwrite the remote site configuration."
@@ -76501,9 +76480,8 @@ msgstr "Versionkontrolle per GIT einschalten"
 msgid "enable debug mode"
 msgstr "aktiviere Fehlersuch-Modus"
 
-#, fuzzy
 msgid "enable debug of livestatus queries"
-msgstr "aktiviere Fehlersuche für Livestatus Abfragen"
+msgstr "Debuggen von Livestatus-Abfragen aktivieren"
 
 msgid "enable extensive rule logging"
 msgstr "aktiviere ausführliches Protokoll für Regeln"

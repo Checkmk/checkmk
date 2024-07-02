@@ -285,7 +285,8 @@ def _dcd_connector(test_site: Site) -> Iterator[None]:
         )
         test_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
         yield
-        test_site.openapi.delete_dynamic_host_configuration(dcd_id)
-        test_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        if not checks.config.skip_cleanup:
+            test_site.openapi.delete_dynamic_host_configuration(dcd_id)
+            test_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
     else:
         yield  # a fixture must yield or return something

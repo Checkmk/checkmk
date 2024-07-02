@@ -9,7 +9,6 @@ from pathlib import Path
 
 from livestatus import SiteId
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
 OMDConfig = dict[str, str]
@@ -26,10 +25,10 @@ OMDConfig = dict[str, str]
 def omd_site() -> SiteId:
     try:
         return SiteId(os.environ["OMD_SITE"])
-    except KeyError:
-        raise MKGeneralException(
+    except KeyError as exc:
+        raise RuntimeError(
             _("OMD_SITE environment variable not set. You can only execute this in an OMD site.")
-        )
+        ) from exc
 
 
 def url_prefix() -> str:

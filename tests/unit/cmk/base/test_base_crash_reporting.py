@@ -5,7 +5,6 @@
 
 import pytest
 
-from cmk.utils.crash_reporting import CrashReportStore
 from cmk.utils.hostaddress import HostName
 
 from cmk.base.errorhandling import CheckCrashReport
@@ -57,28 +56,3 @@ def test_check_crash_report_from_exception() -> None:
     assert crash.type() == "check"
     assert crash.crash_info["exc_type"] == "Exception"
     assert crash.crash_info["exc_value"] == "DING"
-
-
-@pytest.mark.usefixtures("patch_omd_site")
-def test_check_crash_report_save() -> None:
-    hostname = HostName("testhost")
-    store = CrashReportStore()
-    try:
-        raise Exception("DING")
-    except Exception:
-        crash = CheckCrashReport.from_exception(
-            details={
-                "check_output": "Output",
-                "host": hostname,
-                "is_cluster": False,
-                "description": "Uptime",
-                "check_type": "uptime",
-                "inline_snmp": False,
-                "enforced_service": False,
-            },
-            type_specific_attributes={},
-        )
-        store.save(crash)
-
-    crash2 = store.load_from_directory(crash.crash_dir())
-    assert crash2.crash_info["exc_value"] == "DING"

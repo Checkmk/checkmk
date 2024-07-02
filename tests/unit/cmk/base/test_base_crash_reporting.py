@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
 import pytest
 
 from cmk.utils.hostaddress import HostName
@@ -33,13 +35,15 @@ def _check_generic_crash_info(crash):
 
 
 @pytest.mark.usefixtures("patch_omd_site")
-def test_check_crash_report_from_exception() -> None:
+def test_check_crash_report_from_exception(tmp_path: Path) -> None:
+    crashdir = tmp_path / "crash"
     hostname = HostName("testhost")
     crash = None
     try:
         raise Exception("DING")
     except Exception:
         crash = CheckCrashReport.from_exception(
+            crashdir,
             details={
                 "check_output": "Output",
                 "host": hostname,

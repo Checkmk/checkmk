@@ -40,6 +40,7 @@ def create_section_crash_dump(
     text = f"{operation.title()} of section {section_name} failed"
     try:
         crash = SectionCrashReport.from_exception(
+            cmk.utils.paths.crash_dir,
             details={
                 "section_name": str(section_name),
                 "section_content": section_content,
@@ -80,6 +81,7 @@ def create_check_crash_dump(
     text = "check failed - please submit a crash report!"
     try:
         crash = CheckCrashReport.from_exception(
+            cmk.utils.paths.crash_dir,
             details={
                 "check_output": text,
                 "host": host_name,
@@ -109,11 +111,12 @@ def create_check_crash_dump(
 class CrashReportWithAgentOutput(crash_reporting.ABCCrashReport):
     def __init__(
         self,
+        crashdir: Path,
         crash_info: dict,
         snmp_info: bytes | None = None,
         agent_output: bytes | None = None,
     ) -> None:
-        super().__init__(crash_info)
+        super().__init__(crashdir, crash_info)
         self.snmp_info = snmp_info
         self.agent_output = agent_output
 

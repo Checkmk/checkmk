@@ -15,6 +15,7 @@ import getopt
 import logging
 import os
 import sys
+from pathlib import Path
 from typing import Self
 
 # Needs to be placed before cmk modules, because they are not available
@@ -56,13 +57,17 @@ class CrashReport(ABCCrashReport):
 
     @classmethod
     def from_exception(
-        cls, details: object = None, type_specific_attributes: object = None
+        cls,
+        crashdir: Path,
+        details: object = None,
+        type_specific_attributes: object = None,
     ) -> Self:
         return super().from_exception(
+            crashdir,
             details={
                 "argv": sys.argv,
                 "env": dict(os.environ),
-            }
+            },
         )
 
 
@@ -142,12 +147,12 @@ except OSError as e:
     if e.errno == errno.EPIPE:
         # this is not an error, caller closes socket(s) and will kill cmk too
         sys.exit(4)
-    crash = CrashReport.from_exception()
+    crash = CrashReport.from_exception(cmk.utils.paths.crash_dir)
     CrashReportStore().save(crash)
     raise
 
 except Exception:
-    crash = CrashReport.from_exception()
+    crash = CrashReport.from_exception(cmk.utils.paths.crash_dir)
     CrashReportStore().save(crash)
     raise
 

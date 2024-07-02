@@ -6,6 +6,7 @@
 import traceback
 from typing import Literal
 
+import cmk.utils.paths
 from cmk.utils import crash_reporting
 
 CrashReportStore = crash_reporting.CrashReportStore
@@ -20,7 +21,7 @@ class AgentCrashReport(crash_reporting.ABCCrashReport):
 
 def create_agent_crash_dump() -> str:
     try:
-        crash = AgentCrashReport.from_exception()
+        crash = AgentCrashReport.from_exception(cmk.utils.paths.crash_dir)
         CrashReportStore().save(crash)
         return f"Agent failed - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
     except Exception:

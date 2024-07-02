@@ -106,7 +106,7 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
         },
     }
 
-    crash = APICrashReport.from_exception(details=details)
+    crash = APICrashReport.from_exception(paths.crash_dir, details=details)
     crash_reporting.CrashReportStore().save(crash)
     logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
 

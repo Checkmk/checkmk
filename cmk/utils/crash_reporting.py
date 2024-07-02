@@ -21,7 +21,7 @@ from collections.abc import Iterator, Mapping
 from contextlib import suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any, Self
+from typing import Any, Final, Self
 
 import cmk.utils.paths
 import cmk.utils.plugin_registry
@@ -122,6 +122,11 @@ class CrashReportStore:
 class ABCCrashReport(abc.ABC):
     """Base class for the component specific crash report types"""
 
+    def __init__(self, crashdir: Path, crash_info: CrashInfo) -> None:
+        super().__init__()
+        self.crashdir: Final = crashdir
+        self.crash_info = crash_info
+
     @classmethod
     @abc.abstractmethod
     def type(cls) -> str:
@@ -130,6 +135,7 @@ class ABCCrashReport(abc.ABC):
     @classmethod
     def from_exception(
         cls,
+        crashdir: Path,
         details: Mapping[str, Any] | None = None,
         type_specific_attributes: dict[str, Any] | None = None,
     ) -> Self:
@@ -144,13 +150,13 @@ class ABCCrashReport(abc.ABC):
             "crash_info": _get_generic_crash_info(cls.type(), details or {}),
         }
         attributes |= type_specific_attributes or {}
-        return cls(**attributes)
+        return cls(crashdir, **attributes)
 
     @classmethod
-    def deserialize(cls, serialized: dict[str, dict[str, str]]) -> ABCCrashReport:
+    def deserialize(cls, crashdir: Path, serialized: dict[str, dict[str, str]]) -> ABCCrashReport:
         """Deserialize the object"""
         class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
-        return class_(**serialized)
+        return class_(crashdir, **serialized)
 
     def _serialize_attributes(self) -> dict[str, CrashInfo | bytes]:
         """Serialize object type specific attributes for transport"""
@@ -166,10 +172,6 @@ class ABCCrashReport(abc.ABC):
             raise TypeError("No crash information available")
 
         return self._serialize_attributes()
-
-    def __init__(self, crash_info: CrashInfo) -> None:
-        super().__init__()
-        self.crash_info = crash_info
 
     def ident(self) -> tuple[str, ...]:
         """Return the identity in form of a tuple of a single crash report"""
@@ -187,7 +189,7 @@ class ABCCrashReport(abc.ABC):
         """Returns the path to the crash directory of the current or given crash report"""
         if ident_text is None:
             ident_text = self.ident_to_text()
-        return cmk.utils.paths.crash_dir / self.type() / ident_text
+        return self.crashdir / self.type() / ident_text
 
     def local_crash_report_url(self) -> str:
         """Returns the site local URL to the current crash report"""

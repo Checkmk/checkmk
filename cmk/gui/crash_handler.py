@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
 from typing import Self
 
+import cmk.utils.paths
 from cmk.utils.crash_reporting import ABCCrashReport, CrashReportRegistry, CrashReportStore
 from cmk.utils.site import omd_site
 
@@ -32,10 +34,12 @@ class GUICrashReport(ABCCrashReport):
     @classmethod
     def from_exception(
         cls,
+        crashdir: Path,
         details: object | None = None,
         type_specific_attributes: object | None = None,
     ) -> Self:
         return super().from_exception(
+            crashdir,
             details={
                 "page": requested_file_name(request) + ".py",
                 "vars": {
@@ -69,7 +73,10 @@ def handle_exception_as_gui_crash_report(
     fail_silently: bool = False,
     show_crash_link: bool | None = None,
 ) -> GUICrashReport:
-    crash = GUICrashReport.from_exception(details=details)
+    crash = GUICrashReport.from_exception(
+        cmk.utils.paths.crash_dir,
+        details=details,
+    )
     CrashReportStore().save(crash)
 
     logger.exception("Unhandled exception (Crash ID: %s)", crash.ident_to_text())

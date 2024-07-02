@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Self
 
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils.crash_reporting import ABCCrashReport, CrashReportRegistry, CrashReportStore
 from cmk.utils.site import omd_site
 
@@ -35,11 +36,13 @@ class GUICrashReport(ABCCrashReport):
     def from_exception(
         cls,
         crashdir: Path,
+        version_info: dict[str, object],
         details: object | None = None,
         type_specific_attributes: object | None = None,
     ) -> Self:
         return super().from_exception(
             crashdir,
+            version_info,
             details={
                 "page": requested_file_name(request) + ".py",
                 "vars": {
@@ -75,6 +78,7 @@ def handle_exception_as_gui_crash_report(
 ) -> GUICrashReport:
     crash = GUICrashReport.from_exception(
         cmk.utils.paths.crash_dir,
+        cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
         details=details,
     )
     CrashReportStore().save(crash)

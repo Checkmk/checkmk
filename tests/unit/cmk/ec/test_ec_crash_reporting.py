@@ -22,7 +22,7 @@ def test_ec_crash_report_from_exception(tmp_path: Path) -> None:
     try:
         raise ValueError("DING")
     except Exception:
-        crash = ECCrashReport.from_exception(crashdir)
+        crash = ECCrashReport.from_exception(crashdir, {})
         CrashReportStore().save(crash)
 
     assert crash.type() == "ec"

@@ -42,7 +42,7 @@ def crash(crashdir: Path) -> UnitTestCrashReport:
     try:
         raise ValueError("XYZ")
     except ValueError:
-        return UnitTestCrashReport.from_exception(crashdir)
+        return UnitTestCrashReport.from_exception(crashdir, {})
 
 
 @pytest.mark.usefixtures("patch_omd_site")
@@ -159,7 +159,7 @@ def test_crash_report_store_cleanup(crashdir: Path, n_crashes: int) -> None:
         try:
             raise ValueError("Crash #%d" % num)
         except ValueError:
-            crash = UnitTestCrashReport.from_exception(crashdir)
+            crash = UnitTestCrashReport.from_exception(crashdir, {})
             store.save(crash)
             crash_ids.append(crash.ident_to_text())
 

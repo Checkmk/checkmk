@@ -3526,7 +3526,12 @@ def main() -> None:
         if settings.options.debug:
             raise
 
-        CrashReportStore().save(ECCrashReport.from_exception(cmk.utils.paths.crash_dir))
+        CrashReportStore().save(
+            ECCrashReport.from_exception(
+                cmk.utils.paths.crash_dir,
+                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+            )
+        )
         bail_out(logger, traceback.format_exc())
 
     finally:

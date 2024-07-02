@@ -23,9 +23,7 @@ from itertools import islice
 from pathlib import Path
 from typing import Any, Final, Self
 
-import cmk.utils.paths
 import cmk.utils.plugin_registry
-import cmk.utils.version as cmk_version
 from cmk.utils import store
 
 CrashInfo = dict[str, Any]  # TODO: improve this type
@@ -136,6 +134,7 @@ class ABCCrashReport(abc.ABC):
     def from_exception(
         cls,
         crashdir: Path,
+        version_info: dict[str, object],
         details: Mapping[str, Any] | None = None,
         type_specific_attributes: dict[str, Any] | None = None,
     ) -> Self:
@@ -147,7 +146,7 @@ class ABCCrashReport(abc.ABC):
                                    are set as attributes on the crash objects.
         """
         attributes = {
-            "crash_info": _get_generic_crash_info(cls.type(), details or {}),
+            "crash_info": _get_generic_crash_info(cls.type(), version_info, details or {}),
         }
         attributes |= type_specific_attributes or {}
         return cls(crashdir, **attributes)
@@ -198,7 +197,11 @@ class ABCCrashReport(abc.ABC):
         )
 
 
-def _get_generic_crash_info(type_name: str, details: Mapping[str, Any]) -> CrashInfo:
+def _get_generic_crash_info(
+    type_name: str,
+    version_info: dict[str, object],
+    details: Mapping[str, Any],
+) -> CrashInfo:
     """Produces the crash info data structure.
 
     The top level keys of the crash info dict are standardized and need
@@ -207,8 +210,7 @@ def _get_generic_crash_info(type_name: str, details: Mapping[str, Any]) -> Crash
 
     tb_list = traceback.extract_tb(exc_traceback)
 
-    infos = cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
-    infos.update(
+    version_info.update(
         {
             "id": str(uuid.uuid1()),
             "crash_type": type_name,
@@ -220,7 +222,7 @@ def _get_generic_crash_info(type_name: str, details: Mapping[str, Any]) -> Crash
             "details": details,
         }
     )
-    return infos
+    return version_info
 
 
 def _get_local_vars_of_last_exception() -> str:

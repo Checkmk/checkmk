@@ -36,6 +36,7 @@ def _check_generic_crash_info(crash):
 
 @pytest.mark.usefixtures("patch_omd_site")
 def test_check_crash_report_from_exception(tmp_path: Path) -> None:
+    # Tautological test...
     crashdir = tmp_path / "crash"
     hostname = HostName("testhost")
     crash = None
@@ -44,6 +45,15 @@ def test_check_crash_report_from_exception(tmp_path: Path) -> None:
     except Exception:
         crash = CheckCrashReport.from_exception(
             crashdir,
+            {
+                "time": 0.0,
+                "os": "",
+                "version": "",
+                "edition": "",
+                "core": "",
+                "python_version": "",
+                "python_paths": [],
+            },
             details={
                 "check_output": "Output",
                 "host": hostname,

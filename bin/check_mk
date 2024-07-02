@@ -30,6 +30,7 @@ import cmk.utils.caching
 import cmk.utils.debug
 import cmk.utils.log
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils.crash_reporting import ABCCrashReport, crash_report_registry, CrashReportStore
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTerminate
 from cmk.utils.log import console
@@ -59,11 +60,13 @@ class CrashReport(ABCCrashReport):
     def from_exception(
         cls,
         crashdir: Path,
+        version_info: dict[str, object],
         details: object = None,
         type_specific_attributes: object = None,
     ) -> Self:
         return super().from_exception(
             crashdir,
+            version_info,
             details={
                 "argv": sys.argv,
                 "env": dict(os.environ),
@@ -147,12 +150,18 @@ except OSError as e:
     if e.errno == errno.EPIPE:
         # this is not an error, caller closes socket(s) and will kill cmk too
         sys.exit(4)
-    crash = CrashReport.from_exception(cmk.utils.paths.crash_dir)
+    crash = CrashReport.from_exception(
+        cmk.utils.paths.crash_dir,
+        cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+    )
     CrashReportStore().save(crash)
     raise
 
 except Exception:
-    crash = CrashReport.from_exception(cmk.utils.paths.crash_dir)
+    crash = CrashReport.from_exception(
+        cmk.utils.paths.crash_dir,
+        cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+    )
     CrashReportStore().save(crash)
     raise
 

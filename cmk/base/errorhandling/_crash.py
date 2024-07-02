@@ -12,6 +12,7 @@ from typing import Any, Literal
 import cmk.utils.debug
 import cmk.utils.encoding
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils import crash_reporting
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
@@ -41,6 +42,7 @@ def create_section_crash_dump(
     try:
         crash = SectionCrashReport.from_exception(
             cmk.utils.paths.crash_dir,
+            cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
             details={
                 "section_name": str(section_name),
                 "section_content": section_content,
@@ -82,6 +84,7 @@ def create_check_crash_dump(
     try:
         crash = CheckCrashReport.from_exception(
             cmk.utils.paths.crash_dir,
+            cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
             details={
                 "check_output": text,
                 "host": host_name,

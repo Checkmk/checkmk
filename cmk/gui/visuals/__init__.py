@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
-from cmk.utils import paths
+from cmk.utils import paths, store
 
-from cmk.gui import utils
+from cmk.gui import hooks, utils
 from cmk.gui.pages import PageRegistry
 from cmk.gui.valuespec import autocompleter_registry
 
@@ -70,6 +70,7 @@ from ._store import declare_custom_permissions as declare_custom_permissions
 from ._store import declare_packaged_visuals_permissions as declare_packaged_visuals_permissions
 from ._store import delete_local_file, get_installed_packages
 from ._store import get_permissioned_visual as get_permissioned_visual
+from ._store import invalidate_all_caches
 from ._store import load as load
 from ._store import load_visuals_of_a_user as load_visuals_of_a_user
 from ._store import local_file_exists, move_visual_to_local
@@ -108,6 +109,12 @@ def register(
         autocompleter_registry.register_autocompleter(
             "add_to_report_choices", add_to_report_choices_autocompleter
         )
+
+    hooks.register_builtin("snapshot-pushed", invalidate_all_caches)
+    hooks.register_builtin(
+        "snapshot-pushed", lambda: store.clear_pickled_files_cache(paths.tmp_dir)
+    )
+    hooks.register_builtin("users-saved", lambda x: invalidate_all_caches())
 
 
 def load_plugins() -> None:

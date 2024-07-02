@@ -19,7 +19,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.store import save_object_to_file
 from cmk.utils.user import UserId
 
-from cmk.gui import hooks, userdb
+from cmk.gui import userdb
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -194,11 +194,8 @@ class _CombinedVisualsCache(Generic[TVisual]):
         self._update_cache_info_timestamp()
 
 
-hooks.register_builtin("snapshot-pushed", _CombinedVisualsCache.invalidate_all_caches)
-hooks.register_builtin(
-    "snapshot-pushed", lambda: store.clear_pickled_files_cache(cmk.utils.paths.tmp_dir)
-)
-hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate_all_caches())
+def invalidate_all_caches() -> None:
+    _CombinedVisualsCache.invalidate_all_caches()
 
 
 def _load_custom_user_visuals(

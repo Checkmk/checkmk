@@ -451,9 +451,6 @@ def validate_host_parents(host):
             )
 
 
-hooks.register_builtin("validate-host", validate_host_parents)
-
-
 @hooks.request_memoize()
 def _get_criticality_choices():
     """Returns the current configuration of the tag_group criticality"""

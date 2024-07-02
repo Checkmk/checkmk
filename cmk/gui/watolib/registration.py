@@ -82,9 +82,9 @@ from .sample_config import (
     ConfigGeneratorBasicWATOConfig,
     ConfigGeneratorRegistrationUser,
 )
-from .search import SearchIndexBackgroundJob
+from .search import launch_requests_processing_background, SearchIndexBackgroundJob
 from .timeperiods import TimeperiodUsageFinderRegistry
-from .user_profile import PushUserProfilesToSite
+from .user_profile import handle_ldap_sync_finished, PushUserProfilesToSite
 
 
 def register(
@@ -135,6 +135,9 @@ def register(
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_notification_rules)
     config_variable_groups.register(config_variable_group_registry)
     autocompleter_registry.register_autocompleter("config_hostname", config_hostname_autocompleter)
+    hooks.register_builtin("request-start", launch_requests_processing_background)
+    hooks.register_builtin("validate-host", builtin_attributes.validate_host_parents)
+    hooks.register_builtin("ldap-sync-finished", handle_ldap_sync_finished)
 
 
 def _register_automation_commands(automation_command_registry: AutomationCommandRegistry) -> None:

@@ -35,7 +35,6 @@ from cmk.gui.background_job import (
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.global_config import get_global_config
-from cmk.gui.hooks import register_builtin
 from cmk.gui.http import request
 from cmk.gui.i18n import (
     _,
@@ -544,7 +543,7 @@ def _build_index(job_interface: BackgroundProcessInterface, redis_client: redis.
     job_interface.send_result_message(_("Search index successfully built"))
 
 
-def _launch_requests_processing_background() -> None:
+def launch_requests_processing_background() -> None:
     if not updates_requested() or not redis_enabled():
         return
     job = SearchIndexBackgroundJob()
@@ -560,9 +559,6 @@ def _launch_requests_processing_background() -> None:
                 user=str(user.id) if user.id else None,
             ),
         )
-
-
-register_builtin("request-start", _launch_requests_processing_background)
 
 
 def _process_update_requests_background(job_interface: BackgroundProcessInterface) -> None:

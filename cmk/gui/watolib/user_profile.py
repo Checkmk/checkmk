@@ -15,7 +15,7 @@ from livestatus import SiteConfiguration, SiteId
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.user import UserId
 
-from cmk.gui import hooks, sites, userdb
+from cmk.gui import sites, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import request
@@ -159,14 +159,11 @@ def _sychronize_profile_worker(
 
 
 # TODO: Why is the logger handed over here? The sync job could simply gather it's own
-def _handle_ldap_sync_finished(logger, profiles_to_synchronize, changes):
+def handle_ldap_sync_finished(logger, profiles_to_synchronize, changes):
     _synchronize_profiles_to_sites(logger, profiles_to_synchronize)
 
     if changes and active_config.wato_enabled and not is_wato_slave_site():
         add_change("edit-users", "<br>".join(changes), add_user=False)
-
-
-hooks.register_builtin("ldap-sync-finished", _handle_ldap_sync_finished)
 
 
 def push_user_profiles_to_site_transitional_wrapper(site, user_profiles):

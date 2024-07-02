@@ -264,6 +264,8 @@ def register(
     #       (as is done for the other registrations above).
     notification_parameter_registry.register(NotificationParameterMKEventDaemon)
 
+    hooks.register_builtin("pre-activate-changes", mkeventd_update_notification_configuration)
+
 
 def _compiled_mibs_dir() -> Path:
     return cmk.utils.paths.omd_root / "local/share/check_mk/compiled_mibs"
@@ -5359,8 +5361,6 @@ define command {
             },
         )
 
-
-hooks.register_builtin("pre-activate-changes", mkeventd_update_notification_configuration)
 
 #   .--Setup search--------------------------------------------------------.
 #   |     ____       _                                         _           |

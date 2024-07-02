@@ -5,6 +5,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Dictionary, FixedValue, HTTPUrl, Password, TextInput
+from cmk.gui.wato import HTTPProxyReference
 
 from ._base import NotificationParameter
 
@@ -27,6 +28,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                 "ignore_ssl",
                 "timeout",
                 "label",
+                "proxy_url",
             ],
             elements=[
                 (
@@ -45,6 +47,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                         help=_("Ignore unverified HTTPS request warnings. Use with caution."),
                     ),
                 ),
+                ("proxy_url", HTTPProxyReference()),
                 (
                     "username",
                     TextInput(

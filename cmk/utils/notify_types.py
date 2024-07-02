@@ -521,6 +521,7 @@ class JiraIssuePluginModel(TypedDict):
     resolution: NotRequired[str]
     timeout: NotRequired[str]
     site_customid: NotRequired[str]
+    proxy_url: NotRequired[ProxyUrl]
 
 
 class MicrosoftTeamsPluginModel(TypedDict):

@@ -182,6 +182,28 @@ def with_key_fixture(
     delete_key(dashboard_page, key_name)
 
 
+def test_download_key(dashboard_page: Dashboard, with_key: str) -> None:
+    """Test downloading a key.
+
+    First a wrong password is provided, checking the error message; then the key should be
+    downloaded successfully using the correct password."""
+    go_to_signature_page(dashboard_page)
+
+    dashboard_page.get_link("Download this key").click()
+
+    dashboard_page.main_area.get_input("key_p_passphrase").fill("definitely_wrong")
+    dashboard_page.main_area.get_suggestion("Download").click()
+    dashboard_page.main_area.check_error("Invalid pass phrase")
+
+    dashboard_page.main_area.get_input("key_p_passphrase").fill("foo")
+    with dashboard_page.page.expect_download() as download_info:
+        dashboard_page.main_area.get_suggestion("Download").click()
+
+    assert (
+        download_info.is_done()
+    ), "Signature key couldn't be downloaded, even after providing correct passphrase."
+
+
 def test_bake_and_sign(dashboard_page: Dashboard, test_site: Site, with_key: str) -> None:
     """Go to agents and click bake and sign.
 

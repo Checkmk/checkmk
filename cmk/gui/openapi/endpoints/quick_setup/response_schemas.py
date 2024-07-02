@@ -33,6 +33,11 @@ class QuickSetupStageResponse(BaseSchema):
         example=[],
         description="A collection of stage components",
     )
+    validation_errors = fields.List(
+        fields.String,
+        example=[],
+        description="A collection of validation errors",
+    )
 
 
 class QuickSetupOverviewResponse(BaseSchema):

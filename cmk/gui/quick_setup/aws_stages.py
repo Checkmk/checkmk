@@ -6,23 +6,63 @@
 from collections.abc import Sequence
 
 from cmk.gui.quick_setup.definitions import QuickSetup, QuickSetupId, QuickSetupStage, StageId
+from cmk.gui.quick_setup.widgets import FormSpecWrapper, List, NoteText
 
 from cmk.ccc.i18n import _
+from cmk.plugins.aws.rulesets import aws  # pylint: disable=cmk-module-layer-violation
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String, validators
 
 
 def prepare_aws(stage_id: StageId) -> QuickSetupStage:
     return QuickSetupStage(
         stage_id=stage_id,
         title=_("Prepare AWS for Checkmk"),
-        components=[],
+        components=[
+            List(
+                items=[
+                    _("Go to AWS root account > Services > IAM."),
+                    _(
+                        "Click 'Add user' under Users, select 'Access key - Programmatic access', and attach the 'ReadOnlyAccess' policy*."
+                    ),
+                    _("Save the generated access key and secret key for later use."),
+                ]
+            ),
+            FormSpecWrapper(
+                id="aws_account_name",
+                form_spec=Dictionary(
+                    elements={
+                        "account_name": DictElement(
+                            parameter_form=String(
+                                title=Title("AWS account name"),
+                                field_size=FieldSize.MEDIUM,
+                                custom_validate=(validators.LengthInRange(min_value=1),),
+                            ),
+                            required=True,
+                        )
+                    }
+                ),
+            ),
+            NoteText(
+                text=_(
+                    "*Since this is a ReadOnlyAccess, we will never create any resources on your AWS account"
+                )
+            ),
+            FormSpecWrapper(
+                id="credentials",
+                form_spec=Dictionary(elements=aws.quick_setup_stage_1()),
+            ),
+        ],
     )
 
 
 def configure_host_and_region(stage_id: StageId) -> QuickSetupStage:
     return QuickSetupStage(
         stage_id=stage_id,
-        title=_("Configure host & region"),
-        sub_title=_("Name your host, path and select the region you would like to monitor"),
+        title=_("Configure host and regions"),
+        sub_title=_(
+            "Name your host, define the path and select the regions you would like to monitor"
+        ),
         components=[],
     )
 
@@ -31,7 +71,7 @@ def configure_services_to_monitor(stage_id: StageId) -> QuickSetupStage:
     return QuickSetupStage(
         stage_id=stage_id,
         title=_("Configure services to monitor"),
-        sub_title=_("Select & configure AWS services you would like to monitor"),
+        sub_title=_("Select and configure AWS services you would like to monitor"),
         components=[],
     )
 
@@ -39,8 +79,8 @@ def configure_services_to_monitor(stage_id: StageId) -> QuickSetupStage:
 def review_and_run_service_discovery(stage_id: StageId) -> QuickSetupStage:
     return QuickSetupStage(
         stage_id=stage_id,
-        title=_("Review & run service discovery"),
-        sub_title=_("Double check your configuration"),
+        title=_("Review and run service discovery"),
+        sub_title=_("Review your configuration, run and preview service discovery"),
         components=[],
     )
 

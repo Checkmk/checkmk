@@ -56,7 +56,7 @@ def _check_condition(
 def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:
     """The Pod sets the conditions to True in this order:
     PodScheduled -> PodInitialized -> PodContainersReady -> PodReady.
-    PodReadyToStartContainers and PodDisruptionTarget don't have as clear a place.
+    The Kubelet does not set PodReadyToStartContainers and PodDisruptionTarget in a specific order.
     """
 
     yield from _check_condition(

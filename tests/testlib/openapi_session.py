@@ -186,6 +186,7 @@ class CMKOpenApiSession(requests.Session):
         force_foreign_changes: bool = False,
         timeout: int = 60,
     ) -> bool:
+        logger.info("Activate changes and wait for completion...")
         with self._wait_for_completion(timeout, "get"):
             if activation_started := self.activate_changes(sites, force_foreign_changes):
                 pending_changes = self.pending_changes()
@@ -396,6 +397,7 @@ class CMKOpenApiSession(requests.Session):
         etag: str,
         timeout: int = 60,
     ) -> None:
+        logger.info("Rename host %s to %s and wait for completion...", hostname_old, hostname_new)
         with self._wait_for_completion(timeout, "get"):
             self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
             assert (
@@ -534,7 +536,7 @@ class CMKOpenApiSession(requests.Session):
             while redirect_url:
                 if time.time() > (start + timeout):
                     raise TimeoutError("wait for completion timed out")
-
+                logger.debug('Redirecting to "%s %s"...', http_method_for_redirection, redirect_url)
                 response = self.request(
                     method=http_method_for_redirection,
                     url=redirect_url,

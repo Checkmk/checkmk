@@ -69,6 +69,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.page_menu import confirmed_form_submit_options
+from cmk.gui.session import session
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import Choices, GlobalSettings, HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
@@ -3558,7 +3559,13 @@ def folder_preserving_link(add_vars: HTTPVariables) -> str:
 
 
 def make_action_link(vars_: HTTPVariables) -> str:
-    return folder_preserving_link(vars_ + [("_transid", transactions.get())])
+    return folder_preserving_link(
+        vars_
+        + [
+            ("_transid", transactions.get()),
+            ("csrf_token", session.session_info.csrf_token),
+        ]
+    )
 
 
 @request_memoize()

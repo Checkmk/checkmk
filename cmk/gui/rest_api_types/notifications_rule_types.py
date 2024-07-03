@@ -2318,7 +2318,7 @@ class API_AsciiMailData(TypedDict, total=False):
     subject_for_host_notifications: CheckboxStrAPIType
     subject_for_service_notifications: CheckboxStrAPIType
     send_separate_notification_to_every_recipient: CheckboxStateType
-    sort_order_for_bulk_notificaions: CheckboxSortOrderAPIType
+    sort_order_for_bulk_notifications: CheckboxSortOrderAPIType
     body_head_for_both_host_and_service_notifications: CheckboxStrAPIType
     body_tail_for_host_notifications: CheckboxStrAPIType
     body_tail_for_service_notifications: CheckboxStrAPIType
@@ -2333,7 +2333,7 @@ class API_HTMLMailData(TypedDict, total=False):
     info_to_be_displayed_in_the_email_body: CheckboxEmailBodyInfoAPIType
     insert_html_section_between_body_and_table: CheckboxStrAPIType
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
-    sort_order_for_bulk_notificaions: CheckboxSortOrderAPIType
+    sort_order_for_bulk_notifications: CheckboxSortOrderAPIType
     send_separate_notification_to_every_recipient: CheckboxStateType
     enable_sync_smtp: API_EnableSyncViaSMTPValueType
     display_graphs_among_each_other: CheckboxStateType

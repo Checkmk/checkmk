@@ -636,7 +636,7 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": "Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
         },
-        "sort_order_for_bulk_notificaions": {
+        "sort_order_for_bulk_notifications": {
             "state": "enabled",
             "value": "newest_first",
         },
@@ -695,7 +695,7 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": {"option": "automatic", "schema": "https"},
         },
-        "sort_order_for_bulk_notificaions": {"state": "enabled", "value": "newest_first"},
+        "sort_order_for_bulk_notifications": {"state": "enabled", "value": "newest_first"},
         "send_separate_notification_to_every_recipient": {"state": "enabled"},
         "enable_sync_smtp": {
             "state": "enabled",

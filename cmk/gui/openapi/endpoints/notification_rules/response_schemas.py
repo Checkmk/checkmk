@@ -369,7 +369,7 @@ class MailCommonParams(PluginName):
     reply_to = fields.Nested(ToEmailAndNameCheckbox)
     subject_for_host_notifications = fields.Nested(SubjectForHostNotificationsCheckbox)
     subject_for_service_notifications = fields.Nested(SubjectForServiceNotificationsCheckbox)
-    sort_order_for_bulk_notificaions = fields.Nested(CheckboxSortOrderValue)
+    sort_order_for_bulk_notifications = fields.Nested(CheckboxSortOrderValue)
     send_separate_notification_to_every_recipient = fields.Nested(CheckboxOutput)
 
 

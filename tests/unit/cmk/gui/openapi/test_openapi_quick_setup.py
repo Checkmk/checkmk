@@ -123,6 +123,38 @@ def verify_stage_1_components(components: list[dict]) -> None:
     ]
 
 
+def verify_stage_2_components(components: list[dict]) -> None:
+    components = remove_keys(components, {"html", "varprefix"})
+
+    assert components == [
+        {
+            "id": "configure_host_and_region",
+            "app_name": "form_spec",
+            "spec": {
+                "type": "dictionary",
+                "title": "",
+                "help": "",
+                "validators": [],
+                "elements": [
+                    {
+                        "ident": "regions_to_monitor",
+                        "required": True,
+                        "default_value": {},
+                        "parameter_form": {
+                            "type": "legacy_valuespec",
+                            "title": "Regions to monitor",
+                            "help": "",
+                            "validators": [],
+                        },
+                    }
+                ],
+            },
+            "data": {"regions_to_monitor": {}},
+            "validation": [],
+        }
+    ]
+
+
 @pytest.mark.usefixtures("patch_theme")
 def test_get_overview(clients: ClientRegistry) -> None:
     resp = clients.QuickSetup.get_overview("aws_quick_setup")
@@ -164,11 +196,9 @@ def test_send_aws_stage_one(clients: ClientRegistry) -> None:
         quick_setup_id="aws_quick_setup",
         stages=[{"stage_id": 1, "form_data": {}}],
     )
-    assert resp.json == {
-        "stage_id": 2,
-        "components": [],
-        "validation_errors": [],
-    }
+    assert resp.json["stage_id"] == 2
+    assert resp.json["validation_errors"] == []
+    verify_stage_2_components(components=resp.json["components"])
 
 
 def test_send_aws_stage_two(clients: ClientRegistry) -> None:

@@ -63,7 +63,12 @@ def configure_host_and_region(stage_id: StageId) -> QuickSetupStage:
         sub_title=_(
             "Name your host, define the path and select the regions you would like to monitor"
         ),
-        components=[],
+        components=[
+            FormSpecWrapper(
+                id="configure_host_and_region",
+                form_spec=Dictionary(elements=aws.quick_setup_stage_2()),
+            ),
+        ],
     )
 
 

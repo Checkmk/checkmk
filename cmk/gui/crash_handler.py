@@ -76,15 +76,21 @@ def handle_exception_as_gui_crash_report(
     fail_silently: bool = False,
     show_crash_link: bool | None = None,
 ) -> GUICrashReport:
+    crash = create_gui_crash_report(details)
+    logger.exception("Unhandled exception (Crash ID: %s)", crash.ident_to_text())
+    _show_crash_dump_message(crash, plain_error, fail_silently, show_crash_link)
+    return crash
+
+
+def create_gui_crash_report(
+    details: dict | None = None,
+) -> GUICrashReport:
     crash = GUICrashReport.from_exception(
         cmk.utils.paths.crash_dir,
         cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
         details=details,
     )
     CrashReportStore().save(crash)
-
-    logger.exception("Unhandled exception (Crash ID: %s)", crash.ident_to_text())
-    _show_crash_dump_message(crash, plain_error, fail_silently, show_crash_link)
     return crash
 
 

@@ -21,6 +21,7 @@ from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
 from cmk.utils.user import UserId
 
 from cmk.gui import log
+from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -375,7 +376,10 @@ class BackgroundJob:
             self._jobstatus_store.update({"pid": p.pid})
 
         except Exception as e:
-            self._logger.exception("Error while starting subprocess: %s", e)
+            crash = create_gui_crash_report()
+            self._logger.exception(
+                "Error while starting subprocess: %s (Crash ID: %s)", e, crash.ident_to_text()
+            )
             self._exit(1)
         self._exit(0)
 

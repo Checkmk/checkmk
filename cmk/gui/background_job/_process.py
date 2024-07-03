@@ -29,6 +29,7 @@ from cmk.utils.paths import configuration_lockfile
 from cmk.utils.user import UserId
 
 from cmk.gui import config, log, main_modules
+from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.utils import get_failed_plugins
@@ -79,7 +80,12 @@ def run_process(job_parameters: JobParameters) -> None:
         logger.warning("Job was stopped")
         jobstatus_store.update({"state": JobStatusStates.STOPPED})
     except Exception:
-        logger.error("Exception while preparing background function environment", exc_info=True)
+        crash = create_gui_crash_report()
+        logger.error(
+            "Exception while preparing background function environment (Crash ID: %s)",
+            crash.ident_to_text(),
+            exc_info=True,
+        )
         jobstatus_store.update({"state": JobStatusStates.EXCEPTION})
 
 
@@ -154,8 +160,9 @@ def _execute_function(
     except MKTerminate:
         raise
     except Exception as e:
-        logger.exception("Exception in background function")
-        job_interface.send_exception(_("Exception: %s") % (e))
+        crash = create_gui_crash_report()
+        logger.exception("Exception in background function (Crash ID: %s)", crash.ident_to_text())
+        job_interface.send_exception(_("Exception (Crash ID: %s): %s") % (crash.ident_to_text(), e))
 
 
 def _open_stdout_and_stderr(work_dir: Path) -> None:

@@ -10,6 +10,7 @@ from enum import Enum
 from functools import lru_cache
 from typing import Literal
 
+from flask import session
 from typing_extensions import assert_never
 
 from cmk.gui.exceptions import MKNotFound
@@ -242,9 +243,16 @@ def makeactionuri(
     filename: str | None = None,
     delvars: Sequence[str] | None = None,
 ) -> str:
+    # We have to assert the attributes, due to importing flask.session because of
+    # circular imports.
+    assert hasattr(session, "session_info")  # mypy
     return makeuri(
         request,
-        addvars + [("_transid", transaction_manager.get())],
+        addvars
+        + [
+            ("_transid", transaction_manager.get()),
+            ("csrf_token", session.session_info.csrf_token),
+        ],
         filename=filename,
         delvars=delvars,
     )
@@ -256,9 +264,16 @@ def makeactionuri_contextless(
     addvars: HTTPVariables,
     filename: str | None = None,
 ) -> str:
+    # We have to assert the attributes, due to importing flask.session because of
+    # circular imports.
+    assert hasattr(session, "session_info")  # mypy
     return makeuri_contextless(
         request,
-        addvars + [("_transid", transaction_manager.get())],
+        addvars
+        + [
+            ("_transid", transaction_manager.get()),
+            ("csrf_token", session.session_info.csrf_token),
+        ],
         filename=filename,
     )
 

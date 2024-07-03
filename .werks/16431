@@ -7,7 +7,7 @@ Edition: cre
 Level: 1
 Version: 2.2.0p29
 
-Due to a regression introduced by Werk <a href="https://checkmk.com/werk/16422">Werk #16422</a>, the
+Due to a regression introduced by <a href="https://checkmk.com/werk/16422">Werk #16422</a>, the
 command `omd restore <NEW_SITE> <ARCHIVE_PATH>` could fail:
 
 C+:

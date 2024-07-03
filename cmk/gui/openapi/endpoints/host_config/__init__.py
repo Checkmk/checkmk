@@ -40,6 +40,7 @@ A host_config object can have the following relations present in `links`:
 import itertools
 import operator
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from functools import partial
 from typing import Any
 from urllib.parse import urlparse
 
@@ -588,9 +589,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     try:
         background_job = RenameHostBackgroundJob(host)
         background_job.start(
-            lambda job_interface: rename_hosts_background_job(
-                [(host.folder(), host_name, new_name)], job_interface
-            ),
+            partial(rename_hosts_background_job, [(host.folder(), host_name, new_name)]),
             InitialStatusArgs(
                 title="Renaming of %s -> %s" % (host_name, new_name),
                 lock_wato=True,

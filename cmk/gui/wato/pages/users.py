@@ -8,6 +8,7 @@ import base64
 import time
 import traceback
 from collections.abc import Collection, Iterable, Iterator
+from functools import partial
 from typing import cast, Literal, overload
 
 from cmk.utils import paths, render
@@ -303,8 +304,8 @@ class ModeUsers(WatoMode):
 
                 try:
                     job.start(
-                        lambda job_interface: job.do_sync(
-                            job_interface=job_interface,
+                        partial(
+                            job.do_sync,
                             add_to_changelog=True,
                             enforce_sync=True,
                             load_users_func=userdb.load_users,

@@ -6,6 +6,7 @@
 import tarfile
 import uuid
 from collections.abc import Collection, Sequence
+from functools import partial
 from pathlib import Path
 
 from livestatus import SiteId
@@ -181,7 +182,7 @@ class ModeDiagnostics(WatoMode):
         params = self._diagnostics_parameters
         assert params is not None
         self._job.start(
-            lambda job_interface: self._job.do_execute(params, job_interface),
+            partial(self._job.do_execute, params),
             InitialStatusArgs(
                 title=self._job.gui_title(),
                 lock_wato=False,

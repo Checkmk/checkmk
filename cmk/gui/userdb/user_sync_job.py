@@ -74,8 +74,8 @@ def ajax_sync() -> None:
         job = UserSyncBackgroundJob()
         try:
             job.start(
-                lambda job_interface: job.do_sync(
-                    job_interface=job_interface,
+                partial(
+                    job.do_sync,
                     add_to_changelog=False,
                     enforce_sync=True,
                     load_users_func=load_users,

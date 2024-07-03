@@ -13,6 +13,7 @@ import warnings as warnings_module
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 from typing import Any, Sequence
 
@@ -522,7 +523,7 @@ class ConfigDomainOMD(ABCConfigDomain):
                 raise MKUserError(None, _("Another omd config change job is already running."))
 
             job.start(
-                lambda job_interface: job.do_execute(config_change_commands, job_interface),
+                partial(job.do_execute, config_change_commands),
                 InitialStatusArgs(
                     title=job.gui_title(),
                     lock_wato=False,

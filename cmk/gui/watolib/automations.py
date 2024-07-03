@@ -15,6 +15,7 @@ import re
 import subprocess
 import uuid
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from functools import partial
 from io import BytesIO
 from pathlib import Path
 from typing import NamedTuple
@@ -680,7 +681,7 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
         job_id = f"{CheckmkAutomationBackgroundJob.job_prefix}{api_request.command}-{automation_id}"
         job = CheckmkAutomationBackgroundJob(job_id)
         job.start(
-            lambda job_interface: job.execute_automation(job_interface, api_request),
+            partial(job.execute_automation, api_request=api_request),
             InitialStatusArgs(
                 title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
                 user=str(user.id) if user.id else None,

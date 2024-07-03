@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from functools import partial
 from typing import NamedTuple, NewType, TypedDict
 
 from livestatus import SiteId
@@ -448,9 +449,7 @@ def start_bulk_discovery(
     """
     tasks = _create_tasks_from_hosts(hosts, bulk_size)
     job.start(
-        lambda job_interface: job.do_execute(
-            discovery_mode, do_full_scan, ignore_errors, tasks, job_interface
-        ),
+        partial(job.do_execute, discovery_mode, do_full_scan, ignore_errors, tasks),
         InitialStatusArgs(
             title=job.gui_title(),
             lock_wato=False,

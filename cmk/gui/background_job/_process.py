@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import gc
 import io
 import logging
 import multiprocessing
@@ -21,7 +22,6 @@ from setproctitle import setthreadtitle
 import cmk.utils.paths
 from cmk.utils import daemon, render, store
 from cmk.utils.exceptions import MKTerminate
-from cmk.utils.licensing.helper import get_licensing_logger
 from cmk.utils.log import VERBOSE
 
 from cmk.gui import log, sites
@@ -118,6 +118,20 @@ class BackgroundProcess(multiprocessing.Process):
         setthreadtitle(BackgroundJobDefines.process_name)
 
         sys.stdin.close()
+
+        # Remove all handlers from the loggers to ensure none of them hold file handles that are
+        # about to be closed
+        loggers_to_close = {
+            logger
+            for logger_name, logger in logging.Logger.manager.loggerDict.items()
+            if logger_name.startswith("cmk") and isinstance(logger, logging.Logger)
+        }
+        for logger_to_close in loggers_to_close:
+            del logger_to_close.handlers[:]
+
+        web_logger = logging.getLogger()
+        del web_logger.handlers[:]
+
         # NOTE
         # When forking off from an mod_wsgi process, these handles are not the standard stdout and
         # stderr handles but rather proxies to internal data-structures of mod_wsgi. If these are
@@ -129,14 +143,14 @@ class BackgroundProcess(multiprocessing.Process):
         # the logging.StreamHandler will still hold a reference to the mod_wsgi stdout/err handles.
         # sys.stdout.close()
         # sys.stderr.close()
+        gc.collect()
         daemon.closefrom(0)
 
     def initialize_environment(self) -> None:
         """Setup environment (Logging, Livestatus handles, etc.)"""
-        self._init_gui_logging()
-        self._cleanup_licensing_logging()
-        self._disable_timeout_manager()
         self._cleanup_livestatus_connections()
+        self._init_gui_logging()
+        self._disable_timeout_manager()
         self._open_stdout_and_stderr()
         self._enable_logging_to_stdout()
         self._register_signal_handlers()
@@ -146,12 +160,6 @@ class BackgroundProcess(multiprocessing.Process):
         log.init_logging()  # NOTE: We run in a subprocess!
         self._logger = log.logger.getChild("background-job")
         self._log_path_hint = _("More information can be found in ~/var/log/web.log")
-
-    def _cleanup_licensing_logging(self) -> None:
-        """Remove all handlers from the licensing logger to ensure none of them hold file handles
-        that were just closed."""
-        licensing_logger = get_licensing_logger()
-        del licensing_logger.handlers[:]
 
     def _disable_timeout_manager(self) -> None:
         if timeout_manager:

@@ -3,15 +3,15 @@
 BUILD = """
 package(default_visibility = ["//visibility:public"])
 cc_library(
-    name = "%s",
+    name = "glibconfig",
     hdrs = ["include/glibconfig.h"],
     includes = ["include"],
 )
 """
 
-def glibconfig(name, path):
+def glibconfig(name):
     native.new_local_repository(
-        name = name,
-        build_file_content = BUILD % name,
-        path = path,
+        name = "glibconfig",
+        build_file_content = BUILD,
+        path = "/usr/lib/x86_64-linux-gnu/glib-2.0",
     )

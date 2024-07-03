@@ -347,9 +347,7 @@ rrdtool_native(
 
 load("//omd/packages/glib:glib.bzl", "glibconfig")
 
-glibconfig("glibconfig-default", "/usr/lib/x86_64-linux-gnu/glib-2.0")
-
-glibconfig("glibconfig-centos", "/usr/lib64/glib-2.0")
+glibconfig("glibconfig")
 
 load("//omd/packages/httplib:httplib.bzl", "httplib")
 

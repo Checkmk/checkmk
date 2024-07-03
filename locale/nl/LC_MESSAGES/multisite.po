@@ -46473,6 +46473,10 @@ msgstr "Voorvoegsel match"
 msgid "Prefix text"
 msgstr "Voorvoegsel tekst"
 
+#, fuzzy
+msgid "Prepare AWS for Checkmk"
+msgstr "Geïnitialiseerde GIT voor Checkmk"
+
 msgid "Prepend namespace prefix for hosts"
 msgstr "Prepend namespace prefix voor hosts"
 

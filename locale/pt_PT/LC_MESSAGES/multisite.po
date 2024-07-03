@@ -46439,6 +46439,10 @@ msgstr "Jogo de prefixos"
 msgid "Prefix text"
 msgstr "Texto do prefixo"
 
+#, fuzzy
+msgid "Prepare AWS for Checkmk"
+msgstr "GIT Inicializado para Checkmk"
+
 msgid "Prepend namespace prefix for hosts"
 msgstr "Prefixo do espaço de nomes para os anfitriões"
 

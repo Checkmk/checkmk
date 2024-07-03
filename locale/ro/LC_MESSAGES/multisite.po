@@ -46513,6 +46513,10 @@ msgstr "Prefixul se potrivește"
 msgid "Prefix text"
 msgstr "Prefix text"
 
+#, fuzzy
+msgid "Prepare AWS for Checkmk"
+msgstr "GIT inițializat pentru Checkmk"
+
 msgid "Prepend namespace prefix for hosts"
 msgstr "Prefixul de spațiu de nume pentru gazde"
 

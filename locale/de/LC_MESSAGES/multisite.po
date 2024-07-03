@@ -45599,6 +45599,10 @@ msgstr "Präfixübereinstimmung"
 msgid "Prefix text"
 msgstr "Zusätzlicher Text"
 
+#, fuzzy
+msgid "Prepare AWS for Checkmk"
+msgstr "GIT für Checkmk eingerichtet"
+
 msgid "Prepend namespace prefix for hosts"
 msgstr "Namespace-Präfix für Hosts voranstellen"
 

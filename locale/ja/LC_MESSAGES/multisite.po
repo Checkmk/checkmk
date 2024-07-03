@@ -45638,6 +45638,10 @@ msgstr "プレフィックス一致"
 msgid "Prefix text"
 msgstr "プレフィックスのテキスト"
 
+#, fuzzy
+msgid "Prepare AWS for Checkmk"
+msgstr "Checkmkの初期化されたGIT"
+
 msgid "Prepend namespace prefix for hosts"
 msgstr "ホストの名前スペースプレフィックスを付加する"
 

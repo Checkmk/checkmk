@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import ast
 import dataclasses
 import enum
@@ -12,6 +14,7 @@ import sys
 import time
 from collections.abc import Container, Iterator, Mapping, MutableMapping, Sequence
 from contextlib import contextmanager
+from functools import partial
 from pathlib import Path
 from typing import assert_never, Final, Literal, NamedTuple
 
@@ -939,6 +942,17 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
     )
 
 
+# multiprocessing needs picklable objects and neither lambdas nor
+# local functions are picklable.
+def _discovery_job_target(
+    job_interface: object,
+    job: ServiceDiscoveryBackgroundJob,
+    action: DiscoveryAction,
+    raise_errors: bool,
+) -> None:
+    job.discover(action, raise_errors=raise_errors)
+
+
 def execute_discovery_job(
     host_name: HostName,
     action: DiscoveryAction,
@@ -954,7 +968,7 @@ def execute_discovery_job(
         DiscoveryAction.TABULA_RASA,
     ]:
         job.start(
-            lambda job_interface: job.discover(action, raise_errors=raise_errors),
+            partial(_discovery_job_target, job=job, action=action, raise_errors=raise_errors),
             InitialStatusArgs(
                 title=_("Service discovery"),
                 stoppable=True,

@@ -5,7 +5,7 @@ Component: ec
 Date: 1719847864
 Edition: cee
 Level: 1
-Version: 2.2.0p30
+Version: 2.2.0p31
 
 Event console method compile_matching_value had a typo
 which caused a valid regex to not match, because it was sent as a string

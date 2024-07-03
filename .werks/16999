@@ -5,7 +5,7 @@ Component: multisite
 Date: 1717399158
 Edition: cre
 Level: 1
-Version: 2.2.0p30
+Version: 2.2.0p31
 
 Previously instead of "!" the GUI displayed "!" when rendering a service check command.
 This is fixed to rendering unescaped service check commands to the GUI.

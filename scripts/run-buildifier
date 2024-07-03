@@ -12,6 +12,7 @@ get_bazel_files() {
     find $REPO_PATH \
         -type f \
         \! -path "${REPO_PATH}/*/build/*" -a \
+        \! -path "${REPO_PATH}/container_shadow_workspace_local/*" -a \
         \( -name '*.bzl' \
         -o -name '*.sky' \
         -o -name BUILD.bazel \

@@ -383,8 +383,9 @@ class CMKOpenApiSession(requests.Session):
             allow_redirects=False,
         )
         if 300 <= response.status_code < 400:
+            # rename pending
             raise Redirect(redirect_url=response.headers["Location"])
-        if not response.ok:
+        if not response.status_code == 200:
             raise UnexpectedResponse.from_response(response)
 
     def rename_host_and_wait_for_completion(
@@ -397,6 +398,9 @@ class CMKOpenApiSession(requests.Session):
     ) -> None:
         with self._wait_for_completion(timeout, "get"):
             self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
+            assert (
+                self.get_host(hostname_new) is not None
+            ), 'Failed to rename host "{hostname_old}" to "{hostname_new}"!'
 
     def create_host_group(self, name: str, alias: str) -> requests.Response:
         response = self.post(

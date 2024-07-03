@@ -261,6 +261,7 @@ def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
         time.sleep(waiting_time)
         baking_status = central_site.openapi.get_baking_status()
         assert baking_status.state in (
+            "initialized",
             "running",
             "finished",
         ), f"Unexpected baking state: {baking_status}"

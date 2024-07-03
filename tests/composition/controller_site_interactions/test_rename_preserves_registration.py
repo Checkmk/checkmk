@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from contextlib import suppress
 from pathlib import Path
 
 from tests.testlib.agent import controller_status_json, register_controller
@@ -38,35 +39,40 @@ def _test_rename_preserves_registration(
     agent_ctl: Path,
     hostname: HostName,
 ) -> None:
-    response_create = central_site.openapi.create_host(
-        hostname=hostname,
-        attributes={
-            "ipaddress": "127.0.0.1",
-            "site": registration_site.id,
-        },
-    )
-    central_site.openapi.activate_changes_and_wait_for_completion()
-    register_controller(
-        agent_ctl,
-        registration_site,
-        hostname,
-    )
-
     new_hostname = HostName(f"{hostname}-renamed")
-    central_site.openapi.rename_host_and_wait_for_completion(
-        hostname_old=hostname,
-        hostname_new=new_hostname,
-        etag=response_create.headers["ETag"],
-    )
-    _activate_changes_and_wait_for_completion_with_retries(central_site)
-
-    controller_status = controller_status_json(agent_ctl)
     try:
-        assert HostName(controller_status["connections"][0]["remote"]["hostname"]) == new_hostname
-    except Exception as e:
-        raise Exception(
-            f"Checking if controller sees renaming failed. Status output:\n{controller_status}"
-        ) from e
+        response_create = central_site.openapi.create_host(
+            hostname=hostname,
+            attributes={
+                "ipaddress": "127.0.0.1",
+                "site": registration_site.id,
+            },
+        )
+        central_site.openapi.activate_changes_and_wait_for_completion()
+        register_controller(
+            agent_ctl,
+            registration_site,
+            hostname,
+        )
+        central_site.openapi.rename_host_and_wait_for_completion(
+            hostname_old=hostname,
+            hostname_new=new_hostname,
+            etag=response_create.headers["ETag"],
+        )
+        _activate_changes_and_wait_for_completion_with_retries(central_site)
+        controller_status = controller_status_json(agent_ctl)
+        try:
+            assert (
+                HostName(controller_status["connections"][0]["remote"]["hostname"]) == new_hostname
+            )
+        except Exception as e:
+            raise Exception(
+                f"Checking if controller sees renaming failed. Status output:\n{controller_status}"
+            ) from e
+    finally:
+        with suppress(UnexpectedResponse):
+            central_site.openapi.delete_host(hostname)
+            central_site.openapi.delete_host(new_hostname)
 
 
 @skip_if_not_containerized

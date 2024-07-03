@@ -123,7 +123,7 @@ class AsciiMailPlugin:
     send_separate_notification_to_every_recipient: CheckboxTrueOrNone = field(
         default_factory=CheckboxTrueOrNone
     )
-    sort_order_for_bulk_notificaions: CheckboxSortOrder = field(default_factory=CheckboxSortOrder)
+    sort_order_for_bulk_notifications: CheckboxSortOrder = field(default_factory=CheckboxSortOrder)
     body_head_for_both_host_and_service_notifications: CheckboxWithStrValue = field(
         default_factory=CheckboxWithStrValue
     )
@@ -158,7 +158,7 @@ class AsciiMailPlugin:
             body_tail_for_service_notifications=CheckboxWithStrValue.from_mk_file_format(
                 pluginparams.get("service_body")
             ),
-            sort_order_for_bulk_notificaions=CheckboxSortOrder.from_mk_file_format(
+            sort_order_for_bulk_notifications=CheckboxSortOrder.from_mk_file_format(
                 pluginparams.get("bulk_sort_order")
             ),
             send_separate_notification_to_every_recipient=CheckboxTrueOrNone.from_mk_file_format(
@@ -186,8 +186,8 @@ class AsciiMailPlugin:
             send_separate_notification_to_every_recipient=CheckboxTrueOrNone.from_api_request(
                 params["send_separate_notification_to_every_recipient"]
             ),
-            sort_order_for_bulk_notificaions=CheckboxSortOrder.from_api_request(
-                params["sort_order_for_bulk_notificaions"]
+            sort_order_for_bulk_notifications=CheckboxSortOrder.from_api_request(
+                params["sort_order_for_bulk_notifications"]
             ),
             body_head_for_both_host_and_service_notifications=CheckboxWithStrValue.from_api_request(
                 params["body_head_for_both_host_and_service_notifications"]
@@ -209,7 +209,7 @@ class AsciiMailPlugin:
                     "reply_to": self.reply_to.api_response(),
                     "subject_for_host_notifications": self.subject_for_host_notifications.api_response(),
                     "subject_for_service_notifications": self.subject_for_service_notifications.api_response(),
-                    "sort_order_for_bulk_notificaions": self.sort_order_for_bulk_notificaions.api_response(),
+                    "sort_order_for_bulk_notifications": self.sort_order_for_bulk_notifications.api_response(),
                     "send_separate_notification_to_every_recipient": self.send_separate_notification_to_every_recipient.api_response(),
                     "body_head_for_both_host_and_service_notifications": self.body_head_for_both_host_and_service_notifications.api_response(),
                     "body_tail_for_host_notifications": self.body_tail_for_host_notifications.api_response(),
@@ -230,7 +230,7 @@ class AsciiMailPlugin:
             "common_body": self.body_head_for_both_host_and_service_notifications.to_mk_file_format(),
             "host_body": self.body_tail_for_host_notifications.to_mk_file_format(),
             "service_body": self.body_tail_for_service_notifications.to_mk_file_format(),
-            "bulk_sort_order": self.sort_order_for_bulk_notificaions.to_mk_file_format(),
+            "bulk_sort_order": self.sort_order_for_bulk_notifications.to_mk_file_format(),
             "disable_multiplexing": self.send_separate_notification_to_every_recipient.to_mk_file_format(),
         }
         return (
@@ -258,7 +258,7 @@ class HTMLMailPlugin:
     send_separate_notification_to_every_recipient: CheckboxTrueOrNone = field(
         default_factory=CheckboxTrueOrNone,
     )
-    sort_order_for_bulk_notificaions: CheckboxSortOrder = field(
+    sort_order_for_bulk_notifications: CheckboxSortOrder = field(
         default_factory=CheckboxSortOrder,
     )
     insert_html_section: CheckboxWithStrValue = field(
@@ -311,7 +311,7 @@ class HTMLMailPlugin:
             info_to_be_displayed_in_the_email_body=CheckboxEmailBodyInfo.from_mk_file_format(
                 pluginparams.get("elements"),
             ),
-            sort_order_for_bulk_notificaions=CheckboxSortOrder.from_mk_file_format(
+            sort_order_for_bulk_notifications=CheckboxSortOrder.from_mk_file_format(
                 pluginparams.get("bulk_sort_order"),
             ),
             send_separate_notification_to_every_recipient=CheckboxTrueOrNone.from_mk_file_format(
@@ -351,8 +351,8 @@ class HTMLMailPlugin:
             send_separate_notification_to_every_recipient=CheckboxTrueOrNone.from_api_request(
                 params["send_separate_notification_to_every_recipient"]
             ),
-            sort_order_for_bulk_notificaions=CheckboxSortOrder.from_api_request(
-                params["sort_order_for_bulk_notificaions"]
+            sort_order_for_bulk_notifications=CheckboxSortOrder.from_api_request(
+                params["sort_order_for_bulk_notifications"]
             ),
             insert_html_section=CheckboxWithStrValue.from_api_request(
                 params["insert_html_section_between_body_and_table"]
@@ -387,7 +387,7 @@ class HTMLMailPlugin:
                     "info_to_be_displayed_in_the_email_body": self.info_to_be_displayed_in_the_email_body.api_response(),
                     "insert_html_section_between_body_and_table": self.insert_html_section.api_response(),
                     "url_prefix_for_links_to_checkmk": self.url_prefix_for_links_to_checkmk.api_response(),
-                    "sort_order_for_bulk_notificaions": self.sort_order_for_bulk_notificaions.api_response(),
+                    "sort_order_for_bulk_notifications": self.sort_order_for_bulk_notifications.api_response(),
                     "send_separate_notification_to_every_recipient": self.send_separate_notification_to_every_recipient.api_response(),
                     "enable_sync_smtp": self.smtp.api_response(),
                     "display_graphs_among_each_other": self.no_floating_graphs.api_response(),
@@ -409,7 +409,7 @@ class HTMLMailPlugin:
             "disable_multiplexing": self.send_separate_notification_to_every_recipient.to_mk_file_format(),
             "url_prefix": self.url_prefix_for_links_to_checkmk.to_mk_file_format(),
             "elements": self.info_to_be_displayed_in_the_email_body.to_mk_file_format(),
-            "bulk_sort_order": self.sort_order_for_bulk_notificaions.to_mk_file_format(),
+            "bulk_sort_order": self.sort_order_for_bulk_notifications.to_mk_file_format(),
             "insert_html_section": self.insert_html_section.to_mk_file_format(),
             "smtp": None if self.smtp is None else self.smtp.to_mk_file_format(),
             "graphs_per_notification": self.graphs_per_notification.to_mk_file_format(),

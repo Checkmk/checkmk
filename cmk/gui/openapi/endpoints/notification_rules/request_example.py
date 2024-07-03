@@ -31,7 +31,7 @@ def notification_rule_request_example() -> APINotificationRule:
                     "info_to_be_displayed_in_the_email_body": {"state": "disabled"},
                     "insert_html_section_between_body_and_table": {"state": "disabled"},
                     "url_prefix_for_links_to_checkmk": {"state": "disabled"},
-                    "sort_order_for_bulk_notificaions": {"state": "disabled"},
+                    "sort_order_for_bulk_notifications": {"state": "disabled"},
                     "send_separate_notification_to_every_recipient": {"state": "disabled"},
                     "enable_sync_smtp": {"state": "disabled"},
                     "display_graphs_among_each_other": {"state": "disabled"},

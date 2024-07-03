@@ -931,7 +931,7 @@ class MailBaseCreate(PluginName):
         Checkbox,
         required=True,
     )
-    sort_order_for_bulk_notificaions = fields.Nested(
+    sort_order_for_bulk_notifications = fields.Nested(
         SortOrderOneOfSchema,
         required=True,
     )

@@ -26,9 +26,11 @@ from cmk.utils import store
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import configuration_lockfile
+from cmk.utils.user import UserId
 
 from cmk.gui import config, log, main_modules
 from cmk.gui.i18n import _
+from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.utils import get_failed_plugins
 
 from ._app import BackgroundJobFlaskApp
@@ -46,8 +48,11 @@ def run_process(job_parameters: JobParameters) -> None:
     _detach_from_parent()
 
     try:
-        with BackgroundJobFlaskApp().test_request_context("/"):
-            job_status = jobstatus_store.read()
+        job_status = jobstatus_store.read()
+        with (
+            BackgroundJobFlaskApp().test_request_context("/"),
+            SuperUserContext() if job_status.user is None else UserContext(UserId(job_status.user)),
+        ):
             _initialize_environment(
                 logger, job_id, Path(work_dir), lock_wato, is_stoppable, override_job_log_level
             )

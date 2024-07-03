@@ -6,6 +6,7 @@
 
 import socket
 from collections.abc import Collection, Iterable, Mapping, Sequence
+from functools import partial
 from typing import Any
 
 from cmk.utils import paths, version
@@ -167,7 +168,7 @@ class ModeBulkRenameHost(WatoMode):
 
             try:
                 host_renaming_job.start(
-                    lambda job_interface: rename_hosts_background_job(renamings, job_interface),
+                    partial(rename_hosts_background_job, renamings),
                     background_job.InitialStatusArgs(
                         title=title,
                         lock_wato=True,
@@ -529,7 +530,7 @@ class ModeRenameHost(WatoMode):
 
         try:
             host_renaming_job.start(
-                lambda job_interface: rename_hosts_background_job(renamings, job_interface),
+                partial(rename_hosts_background_job, renamings),
                 background_job.InitialStatusArgs(
                     title=_("Renaming of %s -> %s") % (self._host.name(), newname),
                     lock_wato=True,

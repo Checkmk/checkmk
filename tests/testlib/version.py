@@ -453,7 +453,6 @@ class PackageManagerCMA(PackageManagerDEB):
 # TODO: Duplicated in cmk_dev.utils.distro_code
 def code_name(distro_name: str) -> str:
     if code := {
-        "cma-3": "cma-3",
         "cma-4": "cma-4",
         "debian-11": "bullseye",
         "debian-12": "bookworm",

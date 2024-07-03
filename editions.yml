@@ -38,7 +38,6 @@ internal_editions:
     - "saas"
 
 cma_distros: &cma_distros
-    - "cma-3"
     - "cma-4"
 
 # README:

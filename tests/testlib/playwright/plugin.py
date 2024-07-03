@@ -12,9 +12,10 @@ See: https://github.com/microsoft/playwright-pytest
 import logging
 import os
 import typing as t
+from collections.abc import Iterator
+from contextlib import contextmanager
 
 import pytest
-from _pytest.fixtures import SubRequest  # TODO: Do we really need an implementation detail?
 from playwright.sync_api import (
     Browser,
     BrowserContext,
@@ -43,10 +44,8 @@ def _browser_type_launch_args(pytestconfig: t.Any) -> dict:
     return launch_options
 
 
-def _build_artifact_path(
-    pytestconfig: t.Any, request: pytest.FixtureRequest, suffix: str = ""
-) -> str:
-    output_dir = pytestconfig.getoption("--output")
+def _build_artifact_path(request: pytest.FixtureRequest, suffix: str = "") -> str:
+    output_dir = request.config.getoption("--output")
     node_safepath = os.path.splitext(os.path.split(request.node.path)[1])[0]
     node_safename = request.node.name.replace("[", "__").replace("]", "__")
     build_artifact_path = os.path.join(output_dir, f"{node_safepath}__{node_safename}{suffix}")
@@ -67,7 +66,7 @@ def _browser_type(playwright: Playwright, browser_name: str) -> BrowserType:
     return t.cast(BrowserType, getattr(playwright, browser_name))
 
 
-@pytest.fixture(scope="session", name="browser")
+@pytest.fixture(scope="session")
 def _browser(
     browser_type: BrowserType, browser_type_launch_args: dict
 ) -> t.Generator[Browser, None, None]:
@@ -76,52 +75,98 @@ def _browser(
     browser.close()
 
 
-@pytest.fixture(name="context")
+@pytest.fixture(name="context_launch_kwargs", scope="session")
+def _context_launch_kwargs(pytestconfig: pytest.Config) -> dict[str, t.Any]:
+    kwargs = {"locale": pytestconfig.getoption("--locale")}
+    return kwargs
+
+
+@pytest.fixture(scope="module")
 def _context(
-    browser: Browser,
-    pytestconfig: t.Any,
-    request: pytest.FixtureRequest,
+    _browser: Browser,
+    context_launch_kwargs: dict[str, t.Any],
 ) -> t.Generator[BrowserContext, None, None]:
-    pages: t.List[Page] = []
-    context = browser.new_context(locale=pytestconfig.getoption("--locale"))
-    context.on("page", lambda page: pages.append(page))  # pylint: disable=unnecessary-lambda
-    yield context
-    try:
-        _may_create_screenshot(request, pytestconfig, pages)
-    finally:
-        context.close()
+    """Create a browser context(browser testing) for one test-module at a time."""
+    with manage_new_browser_context(_browser, context_launch_kwargs) as context:
+        yield context
 
 
-@pytest.fixture(name="context_mobile", params=_mobile_devices)
+@pytest.fixture(scope="module", params=_mobile_devices)
 def _context_mobile(
     playwright: Playwright,
-    browser: Browser,
-    pytestconfig: t.Any,
+    _browser: Browser,
+    context_launch_kwargs: dict[str, t.Any],
     request: pytest.FixtureRequest,
-    is_chromium: bool,  # pylint: disable=redefined-outer-name
 ) -> t.Generator[BrowserContext, None, None]:
+    """Create a browser context(mobile testing) for one test-module at a time."""
+    devices = playwright.devices[str(request.param)]
+    with manage_new_browser_context(_browser, (context_launch_kwargs | devices)) as context:
+        yield context
+
+
+@contextmanager
+def manage_new_browser_context(
+    browser: Browser, context_kwargs: dict[str, t.Any] | None = None
+) -> Iterator[BrowserContext]:
+    """Creates a browser context and makes sure to close it.
+
+    `context_kwargs` are the arguments passed to `Browser.new_context`
+    """
+    if not context_kwargs:
+        context_kwargs = {}
+    context = browser.new_context(**context_kwargs)
+    yield context
+    context.close()
+
+
+@pytest.fixture(name="page")
+def _page(
+    _context: BrowserContext, request: pytest.FixtureRequest
+) -> t.Generator[Page, None, None]:
+    """Create a new page in a browser for every test-case."""
+    with manage_new_page_from_browser_context(_context, request) as page:
+        yield page
+
+
+@pytest.fixture(name="page_mobile")
+def _page_mobile(
+    _context_mobile: BrowserContext,
+    is_chromium: bool,
+    request: pytest.FixtureRequest,
+) -> t.Generator[Page, None, None]:
+    """Create a new page in a mobile browser for every test-case."""
     if not is_chromium:
         pytest.skip("Mobile emulation currently not supported on Firefox.")
+    with manage_new_page_from_browser_context(_context_mobile, request) as page:
+        yield page
 
-    devices = playwright.devices[str(request.param)]
+
+@contextmanager
+def manage_new_page_from_browser_context(
+    context: BrowserContext,
+    request: pytest.FixtureRequest | None = None,
+) -> Iterator[Page]:
+    """Create a new page from the provided `BrowserContext` and close it.
+
+    Optionally,
+    includes functionality to take a screenshot when a test-case fails.
+    NOTE: requires access to pytest fixture: `request`.
+    """
     pages: t.List[Page] = []
-
-    context = browser.new_context(locale=pytestconfig.getoption("--locale"), **devices)
     context.on("page", lambda page: pages.append(page))  # pylint: disable=unnecessary-lambda
-    yield context
-    try:
-        _may_create_screenshot(request, pytestconfig, pages)
-    finally:
-        context.close()
+    page = context.new_page()
+    yield page
+    if request:
+        _may_create_screenshot(request, pages)
+    page.close()
 
 
 def _may_create_screenshot(
     request: pytest.FixtureRequest,
-    pytestconfig: t.Any,
     pages: t.List[Page],
 ) -> None:
     failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else True
-    screenshot_option = pytestconfig.getoption("--screenshot")
+    screenshot_option = request.config.getoption("--screenshot")
     capture_screenshot = screenshot_option == "on" or (
         failed and screenshot_option == "only-on-failure"
     )
@@ -129,19 +174,11 @@ def _may_create_screenshot(
         return
     for page in pages:
         human_readable_status = "failed" if failed else "finished"
-        screenshot_path = _build_artifact_path(
-            pytestconfig, request, f".{human_readable_status}.png"
-        )
+        screenshot_path = _build_artifact_path(request, f".{human_readable_status}.png")
         try:
             page.screenshot(timeout=5432, path=screenshot_path)
         except Error as e:
             logger.info("Failed to create screenshot of page %s due to: %s", page, e)
-
-
-@pytest.fixture(name="page")
-def _page(context: BrowserContext) -> t.Generator[Page, None, None]:
-    page = context.new_page()
-    yield page
 
 
 @pytest.fixture(scope="session")
@@ -154,20 +191,20 @@ def is_firefox(browser_name: str) -> bool:
     return browser_name == "firefox"
 
 
-@pytest.fixture(scope="session")
-def is_chromium(browser_name: str) -> bool:
+@pytest.fixture(name="is_chromium", scope="session")
+def _is_chromium(browser_name: str) -> bool:
     return browser_name == "chromium"
 
 
 @pytest.fixture(name="browser_name", scope="session", params=_browser_engines)
-def _browser_name(request: SubRequest, pytestconfig: pytest.Config) -> str:
+def _browser_name(request: pytest.FixtureRequest) -> str:
     """Returns the browser name(s).
 
     Fixture returning the parametrized browser name(s). A subset of the parametrized browser names
     can be selected via the --browser flag in the CLI.
     """
     browser_name_param = str(request.param)
-    browser_names_cli = t.cast(list[str], pytestconfig.getoption("--browser"))
+    browser_names_cli = t.cast(list[str], request.config.getoption("--browser"))
 
     if browser_name_param not in browser_names_cli and not len(browser_names_cli) == 0:
         pytest.skip(

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from playwright.sync_api import BrowserContext, expect
+from playwright.sync_api import expect
 
 from tests.testlib.playwright.helpers import Keys
 from tests.testlib.playwright.pom.dashboard import Dashboard
@@ -27,7 +27,7 @@ def test_add_remove_snapin(dashboard_page: Dashboard, snapin_id: str) -> None:
     dashboard_page.main_area.locator(f"div#{snapin_id}").wait_for(state="attached")
 
 
-def test_monitor_searchbar(dashboard_page: Dashboard, context: BrowserContext) -> None:
+def test_monitor_searchbar(dashboard_page: Dashboard) -> None:
     """Navigate to the CPU inventory from the monitor searchbar."""
 
     dashboard_page.main_menu.monitor_searchbar.fill("all hosts")

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from typing import override
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -63,3 +64,41 @@ class Dashboard(CmkPage):
 
     def dashlet_svg(self, dashlet_name: str) -> Locator:
         return self.dashlet(dashlet_name).locator("svg")
+
+
+class DashboardMobile(CmkPage):
+
+    page_title: str = r"Checkmk Mobile"
+
+    links: list[str] = [
+        r"Host Search",
+        r"Service Search",
+        r"Host problems (all)",
+        r"Host problems (unhandled)",
+        r"Service problems (all)",
+        r"Service problems (unhandled)",
+        # "Events" - TODO: confirm why there are two Events.
+        r"Classical web GUI",
+        "History",
+        "Logout",
+    ]
+
+    def navigate(self) -> None:
+        """TODO: add navigation"""
+
+    def _validate_page(self) -> None:
+        expect(self.page.get_by_role(role="heading", name=self.page_title)).to_have_count(1)
+        expect(self.classical_web_gui).to_be_visible()
+        expect(self.logout).to_be_visible()
+
+    @override
+    def get_link(self, name: str, exact: bool = True) -> Locator:
+        return self.page.get_by_role(role="link", name=name, exact=exact)
+
+    @property
+    def classical_web_gui(self) -> Locator:
+        return self.get_link(r"Classical web GUI")
+
+    @property
+    def logout(self) -> Locator:
+        return self.get_link("Logout")

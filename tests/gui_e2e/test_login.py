@@ -7,7 +7,7 @@ import re
 from urllib.parse import urljoin
 
 import pytest
-from playwright.sync_api import expect, Page
+from playwright.sync_api import BrowserContext, expect, Page
 
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.login import LoginPage
@@ -24,8 +24,12 @@ from tests.testlib.site import Site
     ],
 )
 def test_redirected_to_desired_page(
-    test_site: Site, page: Page, credentials: CmkCredentials, url: str
+    new_browser_context_and_page: tuple[BrowserContext, Page],
+    credentials: CmkCredentials,
+    test_site: Site,
+    url: str,
 ) -> None:
+    _, page = new_browser_context_and_page
     cmk_page = url.replace(r"<SITE_ID>", test_site.id)
     visit_url = urljoin(test_site.internal_url, cmk_page)
 

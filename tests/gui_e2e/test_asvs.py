@@ -11,7 +11,7 @@ Currently we aim for V4.0.3 L1
 See:
 - https://owasp.org/www-project-application-security-verification-standard/"""
 
-from playwright.sync_api import BrowserContext
+from playwright.sync_api import BrowserContext, Page
 
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.change_password import ChangePassword
@@ -53,14 +53,17 @@ def test_password_truncation_error(dashboard_page: Dashboard) -> None:
 
 
 def test_cookie_flags(
-    context: BrowserContext, test_site: Site, is_chromium: bool, credentials: CmkCredentials
+    test_site: Site,
+    is_chromium: bool,
+    credentials: CmkCredentials,
+    new_browser_context_and_page: tuple[BrowserContext, Page],
 ) -> None:
     """tests for 3.4.X"""
-    page = context.new_page()
+    browser_context, page = new_browser_context_and_page
     ppage = LoginPage(page, site_url=test_site.internal_url)
     ppage.login(credentials)
 
-    cookie = context.cookies()[0]
+    cookie = browser_context.cookies()[0]
     # V3.4.2
     assert cookie["httpOnly"]
 

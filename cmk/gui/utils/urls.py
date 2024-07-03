@@ -10,7 +10,7 @@ from enum import Enum
 from functools import lru_cache
 from typing import Mapping, Optional, Sequence, Tuple, Union
 
-from cmk.gui.globals import user
+from cmk.gui.globals import session, user
 from cmk.gui.http import Request
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_text
@@ -129,12 +129,11 @@ def makeactionuri(
     filename: Optional[str] = None,
     delvars: Optional[Sequence[str]] = None,
 ) -> str:
-    return makeuri(
-        request,
-        addvars + [("_transid", transaction_manager.get())],
-        filename=filename,
-        delvars=delvars,
-    )
+    session_vars: HTTPVariables = [("_transid", transaction_manager.get())]
+    if session and session.session_info is not None:
+        session_vars.append(("csrf_token", session.session_info.csrf_token))
+
+    return makeuri(request, addvars=addvars + session_vars, filename=filename, delvars=delvars)
 
 
 def makeactionuri_contextless(
@@ -143,11 +142,11 @@ def makeactionuri_contextless(
     addvars: HTTPVariables,
     filename: Optional[str] = None,
 ) -> str:
-    return makeuri_contextless(
-        request,
-        addvars + [("_transid", transaction_manager.get())],
-        filename=filename,
-    )
+    session_vars: HTTPVariables = [("_transid", transaction_manager.get())]
+    if session and session.session_info is not None:
+        session_vars.append(("csrf_token", session.session_info.csrf_token))
+
+    return makeuri_contextless(request, addvars + session_vars, filename=filename)
 
 
 def makeuri_contextless_rulespec_group(

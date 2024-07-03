@@ -73,7 +73,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
-from cmk.gui.globals import config, g, html, request, transactions, user
+from cmk.gui.globals import config, g, html, request, session, transactions, user
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -3991,7 +3991,11 @@ def folder_preserving_link(add_vars: HTTPVariables) -> str:
 
 
 def make_action_link(vars_: HTTPVariables) -> str:
-    return folder_preserving_link(vars_ + [("_transid", transactions.get())])
+    session_vars: HTTPVariables = [("_transid", transactions.get())]
+    if session and session.session_info is not None:
+        session_vars.append(("csrf_token", session.session_info.csrf_token))
+
+    return folder_preserving_link(vars_ + session_vars)
 
 
 def get_folder_title_path(path, with_links=False):

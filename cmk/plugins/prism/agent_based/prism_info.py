@@ -40,8 +40,9 @@ def host_label_prism_info(section: Section) -> HostLabelGenerator:
 
 
 agent_section_prism_info = AgentSection(
-    name="prism_info",
+    name="prism_cluster",
     parse_function=parse_prism_info,
+    parsed_section_name="prism_info",
     host_label_function=host_label_prism_info,
 )
 

@@ -1,0 +1,19 @@
+Title: Fix missing CSRF token issues
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1719997630
+Edition: cre
+Level: 1
+Version: 2.1.0p45
+
+Werk #17090 in Checkmk 2.3.0p8 and 2.2.0p29 introduced additional CSRF token checks in the GUI.
+This caused some buttons to not work anymore because the CSRF token was missing, including, but likely not limited to:
+
+LI: "Synchronize users" in Setup > Users to manually trigger the LDAP sync (the background sync still runs)
+LI: "Show analysis" and "Show bulks" in Setup > Events > Notifications
+LI: Reordering notification rules via drag-and-drop in the same view
+LI: "Bake agents" in the agent bakery (as a workaround, use "Bake and sign agents")
+LI: "Acknowledge last baking result" when a bake job failed (as a workaround, delete the failed job instead)
+
+This Werk fixes the issues by adding the token.

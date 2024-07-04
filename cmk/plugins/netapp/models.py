@@ -609,7 +609,6 @@ class QtreeQuotaModel(BaseModel):
     ============
     """
 
-    type_: str
     name: str | None = None
     volume: str
     hard_limit: int | None = None

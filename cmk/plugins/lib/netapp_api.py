@@ -55,7 +55,6 @@ INFO_INCLUDED_MAP = {"dont_show_and_check": False}
 class Qtree(NamedTuple):
     quota: str
     quota_users: str
-    quota_type: str
     volume: str
     disk_limit: str
     disk_used: str

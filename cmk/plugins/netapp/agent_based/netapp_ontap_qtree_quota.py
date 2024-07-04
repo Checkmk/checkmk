@@ -45,7 +45,6 @@ def parse_netapp_ontap_qtree_quota(string_table: StringTable) -> Section:
         qtree = Qtree(
             quota=qtree_quota.name or "",
             quota_users=",".join(qtree_quota.users),
-            quota_type=qtree_quota.type_,
             volume=qtree_quota.volume,
             disk_limit=str(qtree_quota.hard_limit) if qtree_quota.hard_limit is not None else "",
             disk_used=str(qtree_quota.used_total) if qtree_quota.used_total is not None else "",

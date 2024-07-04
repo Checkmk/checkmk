@@ -744,7 +744,6 @@ def fetch_qtree_quota(
             continue
 
         yield models.QtreeQuotaModel(
-            type_=element_data["type"],
             name=element_data.get("qtree", {}).get("name"),
             volume=element_data["volume"]["name"],
             hard_limit=element_data.get("space", {}).get("hard_limit"),

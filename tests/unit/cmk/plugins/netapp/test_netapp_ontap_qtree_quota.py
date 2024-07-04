@@ -27,7 +27,6 @@ from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
                 "": Qtree(
                     quota="",
                     quota_users="",
-                    quota_type="tree",
                     volume="bs_data",
                     disk_limit="26388279066624",
                     disk_used="0",
@@ -37,7 +36,6 @@ from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
                 "bs_data/": Qtree(
                     quota="",
                     quota_users="",
-                    quota_type="tree",
                     volume="bs_data",
                     disk_limit="26388279066624",
                     disk_used="0",
@@ -60,7 +58,6 @@ from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
                 "bs_data/vr_data": Qtree(
                     quota="vr_data",
                     quota_users="*",
-                    quota_type="user",
                     volume="bs_data",
                     disk_limit="",
                     disk_used="0",
@@ -70,7 +67,6 @@ from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
                 "vr_data": Qtree(
                     quota="vr_data",
                     quota_users="*",
-                    quota_type="user",
                     volume="bs_data",
                     disk_limit="",
                     disk_used="0",
@@ -93,7 +89,6 @@ from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
                 "bs_group/tools": Qtree(
                     quota="tools",
                     quota_users="user1,user2",
-                    quota_type="tree",
                     volume="bs_group",
                     disk_limit="2199023255552",
                     disk_used="929024028672",
@@ -103,7 +98,6 @@ from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
                 "bs_data/vr_data": Qtree(
                     quota="vr_data",
                     quota_users="",
-                    quota_type="tree",
                     volume="bs_data",
                     disk_limit="26388279066624",
                     disk_used="26127656828928",
@@ -113,7 +107,6 @@ from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
                 "tools": Qtree(
                     quota="tools",
                     quota_users="user1,user2",
-                    quota_type="tree",
                     volume="bs_group",
                     disk_limit="2199023255552",
                     disk_used="929024028672",
@@ -123,7 +116,6 @@ from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
                 "vr_data": Qtree(
                     quota="vr_data",
                     quota_users="",
-                    quota_type="tree",
                     volume="bs_data",
                     disk_limit="26388279066624",
                     disk_used="26127656828928",

@@ -168,7 +168,6 @@ _QTREE_SECTION = {
     "qtree.1": Qtree(
         quota="qtree",
         quota_users="1",
-        quota_type="type",
         volume="",
         disk_limit="500",
         disk_used="100",
@@ -179,7 +178,6 @@ _QTREE_SECTION = {
     "volume_name/qtree.2": Qtree(
         quota="qtree",
         quota_users="2",
-        quota_type="type",
         volume="volume_name",
         disk_limit="500",
         disk_used="100",
@@ -190,7 +188,6 @@ _QTREE_SECTION = {
     "qtree.2": Qtree(
         quota="qtree",
         quota_users="2",
-        quota_type="type",
         volume="volume_name",
         disk_limit="500",
         disk_used="100",
@@ -227,7 +224,6 @@ def test_check_netapp_qtree_quota_ok() -> None:
     qtree = Qtree(
         quota="qtree",
         quota_users="1",
-        quota_type="type",
         volume="",
         disk_limit="500",
         disk_used="100",
@@ -251,7 +247,6 @@ def test_check_netapp_qtree_quota_ok() -> None:
             Qtree(
                 quota="qtree",
                 quota_users="2",
-                quota_type="type",
                 volume="volume_name",
                 disk_limit="",
                 disk_used="100",
@@ -265,7 +260,6 @@ def test_check_netapp_qtree_quota_ok() -> None:
             Qtree(
                 quota="qtree",
                 quota_users="2",
-                quota_type="type",
                 volume="volume_name",
                 disk_limit="500",
                 disk_used="unknown",

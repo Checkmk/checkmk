@@ -1,0 +1,14 @@
+Title: Fix problems on cloning built-in problems dashboard
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1720101757
+Edition: cme
+Level: 1
+Version: 2.2.0p35
+
+If you cloned the built-in dashboard "problems", the "Topic" section showed
+"This element does not exist anymore".
+
+Furthermore, if you edited the "Host statistics" or "Service statistics"
+dashlet on the cloned dashboard, an error like "KeyError (size)" occurred.

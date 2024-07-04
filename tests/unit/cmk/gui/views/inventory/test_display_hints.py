@@ -143,9 +143,9 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
             NodeDisplayHint(
                 path=(),
                 icon="",
-                title="Inventory Tree",
-                short_title="Inventory Tree",
-                long_title="Inventory Tree",
+                title="Inventory tree",
+                short_title="Inventory tree",
+                long_title="Inventory tree",
                 attributes={},
                 columns={},
                 table_view_name="",

@@ -618,8 +618,8 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         "pnpspool": _("Spool files of PNP4Nagios"),
         "history": _("Monitoring history entries (events and availability)"),
         "retention": _("The current monitoring state (including acknowledgements and downtimes)"),
-        "inv": _("Recent HW/SW Inventory"),
-        "invarch": _("History of HW/SW Inventory"),
+        "inv": _("HW/SW Inventory"),
+        "invarch": _("HW/SW Inventory history"),
         "uuid_link": _("UUID links for TLS-encrypting agent communication"),
     }
 

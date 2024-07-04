@@ -180,7 +180,7 @@ class DataSourceInventoryHistory(ABCDataSource):
 
     @property
     def title(self) -> str:
-        return _("Inventory: History")
+        return _("HW/SW Inventory history")
 
     @property
     def table(self) -> RowTable:

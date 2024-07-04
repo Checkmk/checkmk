@@ -49,11 +49,11 @@ class RulespecGroupInventory(RulespecGroup):
 
     @property
     def title(self) -> str:
-        return _("Hardware / Software Inventory")
+        return _("HW/SW Inventory")
 
     @property
     def help(self):
-        return _("Configuration of the Checkmk Hardware and Software Inventory System")
+        return _("Configuration of the Checkmk hardware- and software inventory system")
 
 
 def _valuespec_active_checks_cmk_inv() -> Dictionary:

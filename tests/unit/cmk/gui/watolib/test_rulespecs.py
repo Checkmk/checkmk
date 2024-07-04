@@ -129,7 +129,7 @@ def _expected_rulespec_group_choices():
         ),
         ("datasource_programs", "Other integrations"),
         ("eventconsole", "Event Console rules"),
-        ("inventory", "Hardware / Software Inventory"),
+        ("inventory", "HW/SW Inventory"),
         ("host_monconf", "Host monitoring rules"),
         ("host_monconf/host_checks", "&nbsp;&nbsp;\u2319 Host checks"),
         ("host_monconf/host_notifications", "&nbsp;&nbsp;\u2319 Notifications"),

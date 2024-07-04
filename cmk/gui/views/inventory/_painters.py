@@ -96,7 +96,7 @@ class PainterInventoryTree(Painter):
         return "inventory_tree"
 
     def title(self, cell):
-        return _("Inventory Tree")
+        return _("Inventory tree")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -153,10 +153,10 @@ class PainterInvhistTime(Painter):
         return "invhist_time"
 
     def title(self, cell: Cell) -> str:
-        return _("Inventory Date/Time")
+        return _("Inventory date/time")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Date/Time")
+        return _("Date/time")
 
     @property
     def columns(self) -> Sequence[ColumnName]:

@@ -314,11 +314,11 @@ class VisualInfoInventoryHistory(VisualInfo):
 
     @property
     def title(self) -> str:
-        return _("Inventory History")
+        return _("Inventory history")
 
     @property
     def title_plural(self) -> str:
-        return _("Inventory Historys")
+        return _("Inventory histories")
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:

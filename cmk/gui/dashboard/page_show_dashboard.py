@@ -534,7 +534,7 @@ def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
     )
 
     yield PageMenuTopic(
-        title=_("Inventory"),
+        title=_("HW/SW Inventory"),
         entries=list(_dashboard_add_inventory_dashlet_entries(name)),
     )
 
@@ -872,7 +872,7 @@ def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMe
 
 def _dashboard_add_inventory_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
     yield PageMenuEntryCEEOnly(
-        title="Host inventory",
+        title="HW/SW Inventory of host",
         icon_name="inventory",
         item=_dashboard_add_non_view_dashlet_link(name, "inventory"),
     )

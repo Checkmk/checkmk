@@ -466,9 +466,9 @@ inv_display_hints = DisplayHints(
     {
         (): NodeDisplayHint(
             (),
-            str(_l("Inventory Tree")),
-            str(_l("Inventory Tree")),
-            str(_l("Inventory Tree")),
+            str(_l("Inventory tree")),
+            str(_l("Inventory tree")),
+            str(_l("Inventory tree")),
             "",
             {},
             {},

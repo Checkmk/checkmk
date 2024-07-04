@@ -2142,7 +2142,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             ),
             "inventory": PagetypeTopicConfig(
                 name="inventory",
-                title=_("Inventory"),
+                title=_("HW/SW Inventory"),
                 icon_name="topic_inventory",
                 public=True,
                 sort_index=90,

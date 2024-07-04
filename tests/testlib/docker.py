@@ -321,7 +321,7 @@ def checkmk_docker_api_request(
     method: str,
     endpoint: str,
     json: Any | None = None,
-    allow_redirects: bool = True,
+    allow_redirects: bool = False,
     headers: dict[str, str] | None = None,
 ) -> requests.Response:
     """Run an API request against a Checkmk docker instance."""

@@ -1017,14 +1017,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["active_vms"],
-        "total": 200,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "days",
         "half_value": 100,

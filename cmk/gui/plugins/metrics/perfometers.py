@@ -846,15 +846,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "registered_phones",
-        "half_value": 50,
-        "exponent": 3,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "call_legs",
         "half_value": 10,
         "exponent": 2,

@@ -202,25 +202,18 @@ def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> Co
     return config_hooks
 
 
-def load_defaults(site: "SiteContext") -> dict[str, str]:
-    """Get the default values of all config hooks for the site configuration"""
-    if not site.hook_dir or not os.path.exists(site.hook_dir):
-        return {}
-
-    return {
-        hook_name: call_hook(site, hook_name, ["default"])[1]
-        for hook_name in sort_hooks(os.listdir(site.hook_dir))
-        if hook_name[0] != "."
-    }
-
-
-def load_config(site: "SiteContext", defaults: dict[str, str]) -> Config:
+def load_config(site: "SiteContext") -> Config:
     """Load all variables from omd/sites.conf. These variables always begin with
     CONFIG_. The reason is that this file can be sources with the shell.
 
     Puts these variables into the config dict without the CONFIG_. Also
     puts the variables into the process environment."""
-    return {**defaults, **read_site_config(site)}
+    config = read_site_config(site)
+    if site.hook_dir and os.path.exists(site.hook_dir):
+        for hook_name in sort_hooks(os.listdir(site.hook_dir)):
+            if hook_name[0] != "." and hook_name not in config:
+                config[hook_name] = call_hook(site, hook_name, ["default"])[1]
+    return config
 
 
 def read_site_config(site: "SiteContext") -> Config:

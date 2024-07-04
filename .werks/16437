@@ -1,0 +1,12 @@
+Title: omd: Improve Runtime with Many Sites
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1720082692
+Edition: cre
+Level: 2
+Version: 2.2.0p31
+
+With this Werk, the all invocations of the <tt>omd</tt> command line tool are faster.
+This Werk should not affect behaviour in any other way. The performance improvements
+should largely affect hosts, which have a high number of sites.

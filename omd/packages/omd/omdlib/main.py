@@ -64,7 +64,6 @@ from omdlib.config_hooks import (
     hook_exists,
     load_config,
     load_config_hooks,
-    load_defaults,
     load_hook_dependencies,
     read_site_config,
     save_site_conf,
@@ -2424,7 +2423,7 @@ def init_site(
     # Change ownership of all files and dirs to site user
     chown_tree(site.dir, site.name)
 
-    site.set_config(load_config(site, load_defaults(site)))
+    site.set_config(load_config(site))
     if config_settings:  # add specific settings
         for hook_name, value in config_settings.items():
             site.conf[hook_name] = value
@@ -2472,7 +2471,7 @@ def finalize_site(
     # The config changes above, made with the site user, have to be also available for
     # the root user, so load the site config again. Otherwise e.g. changed
     # APACHE_TCP_PORT would not be recognized
-    site.set_config(load_config(site, load_defaults(site)))
+    site.set_config(load_config(site))
     register_with_system_apache(version_info, site, apache_reload)
 
 
@@ -2603,7 +2602,7 @@ def main_update_apache_config(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    site.set_config(load_config(site, load_defaults(site)))
+    site.set_config(load_config(site))
     if _is_apache_enabled(site):
         register_with_system_apache(version_info, site, apache_reload=True)
     else:
@@ -2721,7 +2720,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     sys.stdout.write("OK\n")
 
     # Now switch over to the new site as currently active site
-    new_site.set_config(load_config(new_site, load_defaults(new_site)))
+    new_site.set_config(load_config(new_site))
     set_environment(new_site)
 
     # Entry for tmps in /etc/fstab
@@ -3120,7 +3119,7 @@ def main_update(  # pylint: disable=too-many-branches
 
     # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
     # new settings and default values.
-    site.set_config(load_config(site, load_defaults(site)))
+    site.set_config(load_config(site))
 
     # Execute some builtin initializations before executing the update-pre-hooks
     initialize_livestatus_tcp_tls_after_update(site)
@@ -3363,7 +3362,7 @@ def main_init_action(  # pylint: disable=too-many-branches
         if site.is_disabled():
             continue
 
-        site.set_config(load_config(site, load_defaults(site)))
+        site.set_config(load_config(site))
 
         # Handle non autostart sites
         if command in ["start", "restart", "reload"] or ("auto" in options and command == "status"):
@@ -3607,7 +3606,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
         sys.stdout.write("Restoring site from %s...\n" % source_descr)
         sys.stdout.flush()
 
-        site.set_config(load_config(site, load_defaults(site)))
+        site.set_config(load_config(site))
         orig_apache_port = site.conf["APACHE_TCP_PORT"]
 
         prepare_restore_as_site_user(site, global_opts, options)
@@ -3637,7 +3636,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
 
         tar.extract(tarinfo, path=site.dir)
 
-    site.set_config(load_config(site, load_defaults(site)))
+    site.set_config(load_config(site))
 
     # give new user all files
     chown_tree(site.dir, site.name)
@@ -4905,7 +4904,7 @@ def main() -> None:  # pylint: disable=too-many-branches
             exec_other_omd(v)
 
     if isinstance(site, SiteContext):
-        site.set_config(load_config(site, load_defaults(site)))
+        site.set_config(load_config(site))
 
     # Commands which affect a site and can be called as root *or* as
     # site user should always run with site user privileges. That way

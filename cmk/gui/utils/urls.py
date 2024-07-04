@@ -155,7 +155,6 @@ def _file_name_from_path(
         result = default
     else:
         assert_never(on_error)
-        raise RuntimeError("To make pylint happy")
 
     return result
 

@@ -649,9 +649,6 @@ class PrometheusResult(BaseModel):
             case prometheus_api.ResponseSuccess():
                 return ResultType.response_invalid_data, None
         assert_never(result)
-        # match statements are disliked by pylint. The statement below is not reachable, but ensures
-        # that pylint knows this function returns a tuple
-        return ResultType.response_invalid_data, None
 
     def summary(self) -> str:
         match self.type_:

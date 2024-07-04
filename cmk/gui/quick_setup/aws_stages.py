@@ -77,7 +77,12 @@ def configure_services_to_monitor(stage_id: StageId) -> QuickSetupStage:
         stage_id=stage_id,
         title=_("Configure services to monitor"),
         sub_title=_("Select and configure AWS services you would like to monitor"),
-        components=[],
+        components=[
+            FormSpecWrapper(
+                id="configure_services_to_monitor",
+                form_spec=Dictionary(elements=aws.quick_setup_stage_3()),
+            ),
+        ],
     )
 
 

@@ -20,7 +20,7 @@ from cmk.gui.form_specs.vue.form_spec_recomposers.percentage import (
 from cmk.gui.form_specs.vue.form_spec_recomposers.unknown_form_spec import (
     recompose as recompose_unknown_form_spec,
 )
-from cmk.gui.form_specs.vue.type_defs import DataOrigin, VisitorOptions
+from cmk.gui.form_specs.vue.type_defs import DataOrigin, default_value, VisitorOptions
 from cmk.gui.form_specs.vue.utils import (
     get_visitor,
     register_form_spec_recomposer,
@@ -106,25 +106,13 @@ def render_form_spec(
 ) -> None:
     """Renders the valuespec via vue within a div"""
     try:
-        if form_spec.migrate:
-            value = form_spec.migrate(value)
-        visitor = get_visitor(form_spec, VisitorOptions(data_origin=origin))
-        parsed_value = visitor.parse_value(value)
-        vue_component, vue_value = visitor.to_vue(parsed_value)
-        validation = visitor.validate(parsed_value) if do_validate else []
-        vue_app_config = asdict(
-            VueAppConfig(
-                id=field_id,
-                app_name="form_spec",
-                spec=vue_component,
-                data=vue_value,
-                validation=validation,
-            )
+        vue_app_config = serialize_data_for_frontend(
+            form_spec, field_id, origin, do_validate, value
         )
         logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220))
-        logger.warning("Vue value:\n%s", pprint.pformat(vue_value, width=220))
-        logger.warning("Vue validation:\n%s", pprint.pformat(validation, width=220))
-        html.div("", data_cmk_vue_app=json.dumps(vue_app_config))
+        logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
+        logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
+        html.div("", data_cmk_vue_app=json.dumps(asdict(vue_app_config)))
     except Exception as e:
         logger.warning("".join(traceback.format_exception(e)))
 
@@ -137,3 +125,26 @@ def parse_data_from_frontend(form_spec: FormSpec, field_id: str) -> Any:
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
     _process_validation_errors(visitor.validate(value_from_frontend))
     return visitor.to_disk(value_from_frontend)
+
+
+def serialize_data_for_frontend(
+    form_spec: FormSpec,
+    field_id: str,
+    origin: DataOrigin,
+    do_validate: bool,
+    value: Any = default_value,
+) -> VueAppConfig:
+    """Serializes backend value to vue app compatible config."""
+    if form_spec.migrate:
+        value = form_spec.migrate(value)
+    visitor = get_visitor(form_spec, VisitorOptions(data_origin=origin))
+    parsed_value = visitor.parse_value(value)
+    vue_component, vue_value = visitor.to_vue(parsed_value)
+    validation = visitor.validate(parsed_value) if do_validate else []
+    return VueAppConfig(
+        id=field_id,
+        app_name="form_spec",
+        spec=vue_component,
+        data=vue_value,
+        validation=validation,
+    )

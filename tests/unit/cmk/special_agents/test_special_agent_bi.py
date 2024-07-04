@@ -61,15 +61,15 @@ legacy_response_example = {
                                         {
                                             "host": ("heute", "heute"),
                                             "reqhosts": [("heute", "heute")],
-                                            "service": "Check_MK " "HW/SW " "Inventory",
-                                            "title": "heute " "- " "Check_MK " "HW/SW " "Inventory",
+                                            "service": "Check_MK HW/SW Inventory",
+                                            "title": "heute - Check_MK HW/SW Inventory",
                                             "type": 1,
                                         },
                                         {
                                             "host": ("heute", "heute"),
                                             "reqhosts": [("heute", "heute")],
                                             "service": "Check_MK",
-                                            "title": "heute " "- " "Check_MK",
+                                            "title": "heute - Check_MK",
                                             "type": 1,
                                         },
                                     ],
@@ -150,19 +150,15 @@ legacy_response_example = {
                                             {
                                                 "host": ("heute", "heute"),
                                                 "reqhosts": [("heute", "heute")],
-                                                "service": "Check_MK " "HW/SW " "Inventory",
-                                                "title": "heute "
-                                                "- "
-                                                "Check_MK "
-                                                "HW/SW "
-                                                "Inventory",
+                                                "service": "Check_MK HW/SW Inventory",
+                                                "title": "heute - Check_MK HW/SW Inventory",
                                                 "type": 1,
                                             },
                                             {
                                                 "host": ("heute", "heute"),
                                                 "reqhosts": [("heute", "heute")],
                                                 "service": "Check_MK",
-                                                "title": "heute " "- " "Check_MK",
+                                                "title": "heute - Check_MK",
                                                 "type": 1,
                                             },
                                         ],
@@ -233,19 +229,15 @@ legacy_response_example = {
                                             {
                                                 "host": ("heute", "heute"),
                                                 "reqhosts": [("heute", "heute")],
-                                                "service": "Check_MK " "HW/SW " "Inventory",
-                                                "title": "heute "
-                                                "- "
-                                                "Check_MK "
-                                                "HW/SW "
-                                                "Inventory",
+                                                "service": "Check_MK HW/SW Inventory",
+                                                "title": "heute - Check_MK HW/SW Inventory",
                                                 "type": 1,
                                             },
                                             {
                                                 "host": ("heute", "heute"),
                                                 "reqhosts": [("heute", "heute")],
                                                 "service": "Check_MK",
-                                                "title": "heute " "- " "Check_MK",
+                                                "title": "heute - Check_MK",
                                                 "type": 1,
                                             },
                                         ],
@@ -293,11 +285,8 @@ legacy_response_example = {
                                             {
                                                 "host": ("heute", "heute"),
                                                 "reqhosts": [("heute", "heute")],
-                                                "service": "Check_MK " "HW/SW " "Inventory",
-                                                "title": "heute - "
-                                                "Check_MK "
-                                                "HW/SW "
-                                                "Inventory",
+                                                "service": "Check_MK HW/SW Inventory",
+                                                "title": "heute - Check_MK HW/SW Inventory",
                                                 "type": 1,
                                             },
                                             {
@@ -331,8 +320,8 @@ legacy_response_example = {
                                             {
                                                 "host": ("heute", "heute"),
                                                 "reqhosts": [("heute", "heute")],
-                                                "service": "Check_MK HW/SW " "Inventory",
-                                                "title": "heute - Check_MK HW/SW " "Inventory",
+                                                "service": "Check_MK HW/SW Inventory",
+                                                "title": "heute - Check_MK HW/SW Inventory",
                                                 "type": 1,
                                             },
                                         ),
@@ -461,15 +450,15 @@ legacy_response_example = {
                                         {
                                             "host": ("heute", "heute"),
                                             "reqhosts": [("heute", "heute")],
-                                            "service": "Check_MK " "HW/SW " "Inventory",
-                                            "title": "heute " "- " "Check_MK " "HW/SW " "Inventory",
+                                            "service": "Check_MK HW/SW Inventory",
+                                            "title": "heute - Check_MK HW/SW Inventory",
                                             "type": 1,
                                         },
                                         {
                                             "host": ("heute", "heute"),
                                             "reqhosts": [("heute", "heute")],
                                             "service": "Check_MK",
-                                            "title": "heute " "- " "Check_MK",
+                                            "title": "heute - Check_MK",
                                             "type": 1,
                                         },
                                     ],

@@ -342,7 +342,11 @@ def checkmk_docker_api_request(
     if headers:
         api_headers.update(headers)
     return requests.request(
-        method, url=f"{api_url}", headers=api_headers, json=json, allow_redirects=allow_redirects
+        method,
+        url=api_url,
+        headers=api_headers,
+        json=json,
+        allow_redirects=allow_redirects,
     )
 
 

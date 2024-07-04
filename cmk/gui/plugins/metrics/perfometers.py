@@ -845,15 +845,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "call_legs",
-        "half_value": 10,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "stacked",
         "perfometers": [
             {

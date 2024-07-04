@@ -75,7 +75,10 @@ def _impl(ctx):
         features = features,
         cxx_builtin_include_directories = [
             prefix + "/lib/gcc/x86_64-pc-linux-gnu/13.2.0/include",
+            prefix + "/lib/gcc/x86_64-pc-linux-gnu/13.2.0/include-fixed",
             prefix + "/include",
+            "/usr/include",
+            "/usr/lib64/",
         ],
         toolchain_identifier = "local",
         host_system_name = "local",

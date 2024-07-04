@@ -820,26 +820,6 @@ perfometer_info.append(
         "perfometers": [
             {
                 "type": "logarithmic",
-                "metric": "normal_updates",
-                "half_value": 10,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "security_updates",
-                "half_value": 10,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "logarithmic",
                 "metric": "mail_queue_deferred_length",
                 "half_value": 10000,
                 "exponent": 5,

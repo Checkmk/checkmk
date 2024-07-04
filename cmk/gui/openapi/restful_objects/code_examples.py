@@ -136,13 +136,13 @@ PASSWORD="{{ password }}"
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 curl {%- if includes_redirect %} -L {%- endif %} \\
-  {%- if query_params %}
-  -G \\
+  {%- if query_params and request_method|upper == 'GET' %}
+  --get \\
   {%- endif %}
   {%- if downloadable %}
   -JO \\
   {%- endif %}
-  {%- if not includes_redirect %}
+  {%- if not includes_redirect and request_method | upper != 'GET' %}
   --request {{ request_method | upper }} \\
   {%- endif %}
   --write-out "\\nxxx-status_code=%{http_code}\\n" \\

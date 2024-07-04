@@ -129,12 +129,6 @@ metric_info["humidity"] = {
     "color": "#90b0b0",
 }
 
-metric_info["signal_noise"] = {
-    "title": _("Signal/Noise ratio"),
-    "unit": "db",
-    "color": "#aadd66",
-}
-
 metric_info["pressure"] = {
     "title": _("Pressure"),
     "unit": "bar",

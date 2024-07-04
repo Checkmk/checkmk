@@ -768,29 +768,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "signal_noise",
-                "half_value": 50.0,
-                "exponent": 2.0,
-            },
-            {
-                "type": "linear",
-                "segments": ["codewords_corrected", "codewords_uncorrectable"],
-                "total": 1.0,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {"type": "logarithmic", "metric": "signal_noise", "half_value": 50.0, "exponent": 2.0}
-)  # Fallback if no codewords are available
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "disk_ios",
         "half_value": 30,

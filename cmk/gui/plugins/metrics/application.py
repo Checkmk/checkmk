@@ -21,18 +21,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["codewords_corrected"] = {
-    "title": _l("Corrected codewords"),
-    "unit": "%",
-    "color": "#ff8040",
-}
-
-metric_info["codewords_uncorrectable"] = {
-    "title": _l("Uncorrectable codewords"),
-    "unit": "%",
-    "color": "#ff4020",
-}
-
 metric_info["xda_hitratio"] = {
     "title": _l("XDA hitratio"),
     "unit": "%",

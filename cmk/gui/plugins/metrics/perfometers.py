@@ -636,26 +636,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "deadlocks",
-                "half_value": 50,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "lockwaits",
-                "half_value": 50,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["sort_overflow"],
         "total": 100.0,

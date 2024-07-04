@@ -21,18 +21,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["deadlocks"] = {
-    "title": _l("Deadlocks"),
-    "unit": "1/s",
-    "color": "#dc359f",
-}
-
-metric_info["lockwaits"] = {
-    "title": _l("Waitlocks"),
-    "unit": "1/s",
-    "color": "#2e282c",
-}
-
 metric_info["sort_overflow"] = {
     "title": _l("Sort overflow"),
     "unit": "%",
@@ -151,14 +139,6 @@ metric_info["cpu_credits_remaining"] = {
 #   +----------------------------------------------------------------------+
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
-
-graph_info["deadlocks_and_waits"] = {
-    "title": _l("Dead- and waitlocks"),
-    "metrics": [
-        ("deadlocks", "area"),
-        ("lockwaits", "stack"),
-    ],
-}
 
 graph_info["current_users"] = {
     "title": _l("Number of signed-in users"),

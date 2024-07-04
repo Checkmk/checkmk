@@ -59,6 +59,7 @@ def register(main_module_registry: MainModuleRegistry) -> None:
     main_module_registry.register(MainModulePasswords)
     main_module_registry.register(MainModuleAuditLog)
     main_module_registry.register(MainModuleAnalyzeConfig)
+    main_module_registry.register(MainModuleCertificateOverview)
     main_module_registry.register(MainModuleDiagnostics)
     main_module_registry.register(MainModuleMonitoringRules)
     main_module_registry.register(MainModuleDiscoveryRules)
@@ -931,6 +932,40 @@ class MainModuleAnalyzeConfig(ABCMainModule):
     @property
     def sort_index(self) -> int:
         return 40
+
+    @property
+    def is_show_more(self) -> bool:
+        return False
+
+
+class MainModuleCertificateOverview(ABCMainModule):
+    @property
+    def mode_or_url(self) -> str:
+        return "certificate_overview"
+
+    @property
+    def topic(self) -> MainModuleTopic:
+        return MainModuleTopicMaintenance
+
+    @property
+    def title(self) -> str:
+        return _("Certificate overview")
+
+    @property
+    def icon(self) -> Icon:
+        return "certificate_overview"
+
+    @property
+    def permission(self) -> None | str:
+        return "certificate_overview"
+
+    @property
+    def description(self) -> str:
+        return _("Displays details of the certificates used by Checkmk")
+
+    @property
+    def sort_index(self) -> int:
+        return 35
 
     @property
     def is_show_more(self) -> bool:

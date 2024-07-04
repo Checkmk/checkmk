@@ -58,6 +58,7 @@ def expected_items() -> dict[str, list[str]]:
 
     maintenance_items += [
         "diagnostics",
+        "certificate_overview",
         "analyze_config",
         "background_jobs_overview",
     ]

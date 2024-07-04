@@ -20,6 +20,7 @@ from . import (
     bulk_discovery,
     bulk_edit,
     bulk_import,
+    certificate_overview,
     check_catalog,
     custom_attributes,
     diagnostics,
@@ -105,6 +106,7 @@ def register(
     user_migrate.register(mode_registry)
     user_profile.register(page_registry)
     users.register(mode_registry)
+    certificate_overview.register(mode_registry)
 
     if edition(paths.omd_root) is not Edition.CSE:  # disabled in CSE
         ldap.register(mode_registry)

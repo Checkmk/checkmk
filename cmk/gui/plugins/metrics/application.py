@@ -21,15 +21,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["database_apply_lag"] = {
-    "title": _l("Database apply lag"),
-    "help": _l(
-        "Amount of time that the application of redo data on the standby database lags behind the primary database"
-    ),
-    "unit": "s",
-    "color": "#006040",
-}
-
 metric_info["replication_lag"] = {
     "title": _l("Replication lag"),
     "help": _l("Amount of time that the replica server is lagging against the source server"),

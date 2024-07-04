@@ -21,12 +21,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["sort_overflow"] = {
-    "title": _l("Sort overflow"),
-    "unit": "%",
-    "color": "#e72121",
-}
-
 metric_info["execution_time"] = {
     "title": _l("Total execution time"),
     "unit": "s",

@@ -637,14 +637,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["sort_overflow"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["tablespace_used"],
         "total": "tablespace_max_size",
     }

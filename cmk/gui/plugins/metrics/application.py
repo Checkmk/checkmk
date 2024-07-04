@@ -21,12 +21,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["elapsed_time"] = {
-    "title": _l("Elapsed time"),
-    "unit": "s",
-    "color": "11/a",
-}
-
 metric_info["items_count"] = {
     "title": _l("Items"),
     "unit": "count",

@@ -1063,15 +1063,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "elapsed_time",
-        "half_value": 1.0,
-        "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "nimble_read_latency_total",
         "half_value": 10,
         "exponent": 2.0,

@@ -44,7 +44,7 @@ def test_check(section: eiq.Section, monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         Metric("fs_free", 206048695.57109737, boundaries=(0, None)),
         Metric("fs_used_percent", 1.7483255524171002, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
-        Result(state=State.OK, summary="Used: 1.75% - 3.84 TB of 220 TB"),
+        Result(state=State.OK, summary="Used: 1.75% - 3.50 TiB of 200 TiB"),
         Metric("fs_size", 209715200.0, boundaries=(0, None)),
         Metric("growth", 0.0),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),

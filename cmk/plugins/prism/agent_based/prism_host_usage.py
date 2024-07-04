@@ -53,9 +53,9 @@ def check_prism_host_usage(item: str, params: Mapping[str, Any], section: Sectio
             None,
             params=params,
         )
-    message = f"Total SAS: {render.disksize(total_sas)}, Free SAS: {render.disksize(free_sas)}"
+    message = f"Total SAS: {render.bytes(total_sas)}, Free SAS: {render.bytes(free_sas)}"
     yield Result(state=State(0), summary=message)
-    message = f"Total SSD: {render.disksize(total_ssd)}, Free SSD: {render.disksize(free_ssd)}"
+    message = f"Total SSD: {render.bytes(total_ssd)}, Free SSD: {render.bytes(free_ssd)}"
     yield Result(state=State(0), summary=message)
 
 

@@ -106,10 +106,10 @@ def test_df_check() -> None:
             item_1st, params, parsed, {"VMFS_01.delta": (0.0, 1212896 - 1024.0)}, 60
         )
     )[4:] == [
-        Result(state=State.OK, summary="Used: 57.81% - 1.27 TB of 2.20 TB"),
+        Result(state=State.OK, summary="Used: 57.81% - 1.16 TiB of 2.00 TiB"),
         Metric("fs_size", 2097892.0, boundaries=(0.0, None)),
         Metric("growth", 1474560.0),
-        Result(state=State.OK, summary="trend per 1 day 0 hours: +1.55 TB"),
+        Result(state=State.OK, summary="trend per 1 day 0 hours: +1.41 TiB"),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +70.29%"),
         Metric("trend", 1474560.0),
         Result(state=State.OK, summary="Time left until disk full: 14 hours 24 minutes"),

@@ -537,7 +537,7 @@ def check_filesystem_levels(
     # Expand infotext according to current params
     summary = (
         f"Used: {render.percent(used_space_percent)} "
-        f"- {render.disksize(used_space * 1024**2)} of {render.disksize(allocatable_filesystem_size * 1024**2)}"
+        f"- {render.bytes(used_space * 1024**2)} of {render.bytes(allocatable_filesystem_size * 1024**2)}"
     )
     if (
         show_levels == "always"
@@ -592,7 +592,7 @@ def df_check_filesystem_single(
 
     if show_reserved:
         reserved_perc_hr = render.percent(100.0 * reserved_space / filesystem_size)
-        reserved_hr = render.disksize(reserved_space * 1024**2)
+        reserved_hr = render.bytes(reserved_space * 1024**2)
         yield Result(
             state=State.OK,
             summary=(

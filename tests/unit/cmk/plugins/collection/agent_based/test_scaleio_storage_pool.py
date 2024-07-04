@@ -206,7 +206,7 @@ def test_check_scaleio_storage_pool() -> None:
             value_store={"4e9a44c700000000.delta": (1660684225.0453863, 12792627.2)},
         )
     )
-    assert check_result[3] == Result(state=State.OK, summary="Used: 43.73% - 13.4 TB of 30.7 TB")
+    assert check_result[3] == Result(state=State.OK, summary="Used: 43.73% - 12.2 TiB of 27.9 TiB")
 
 
 def test_check_scaleio_storage_pool_totalrw_rebalancerw_item_not_found() -> None:

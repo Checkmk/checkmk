@@ -64,7 +64,7 @@ def test_discovery_fast_lta_volumes(
 @pytest.mark.usefixtures("initialised_item_state")
 def test_check_fast_lta_volumes(check_fast_lta_volumes: CheckFunction) -> None:
     assert list(check_fast_lta_volumes("Archiv_Test", FILESYSTEM_DEFAULT_PARAMS, parsed)) == [
-        Result(state=State.OK, summary="Used: 1.00% - 10.0 GB of 1.00 TB"),
+        Result(state=State.OK, summary="Used: 1.00% - 9.31 GiB of 931 GiB"),
         Metric(
             "fs_used",
             9536.7431640625,

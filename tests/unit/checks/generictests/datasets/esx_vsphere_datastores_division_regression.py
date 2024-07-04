@@ -73,7 +73,7 @@ checks = {
             [
                 (
                     0,
-                    "Used: 23.59% - 4.70 TB of 19.9 TB",
+                    "Used: 23.59% - 4.27 TiB of 18.1 TiB",
                     [
                         (
                             "fs_used",
@@ -109,7 +109,7 @@ checks = {
             [
                 (
                     0,
-                    "Used: 62.57% - 2.82 TB of 4.50 TB",
+                    "Used: 62.57% - 2.56 TiB of 4.09 TiB",
                     [
                         ("fs_used", 2685473.0, 3433676.8, 3862886.4, 0, 4292096.0),
                         ("fs_free", 1606623.0, None, None, 0, None),
@@ -138,7 +138,7 @@ checks = {
             [
                 (
                     0,
-                    "Used: 76.68% - 6.03 TB of 7.87 TB",
+                    "Used: 76.68% - 5.49 TiB of 7.16 TiB",
                     [
                         (
                             "fs_used",
@@ -174,7 +174,7 @@ checks = {
             [
                 (
                     0,
-                    "Used: 0.21% - 1.02 GB of 492 GB",
+                    "Used: 0.21% - 974 MiB of 458 GiB",
                     [
                         ("fs_used", 974.0, 375398.4, 422323.2, 0, 469248.0),
                         ("fs_free", 468274.0, None, None, 0, None),
@@ -203,7 +203,7 @@ checks = {
             [
                 (
                     0,
-                    "Used: 76.68% - 6.03 TB of 7.87 TB",
+                    "Used: 76.68% - 5.49 TiB of 7.16 TiB",
                     [
                         (
                             "fs_used",

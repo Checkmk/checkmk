@@ -140,7 +140,7 @@ def size_trend(  # pylint: disable=too-many-branches
     sign = "+" if trend > 0 else ""
     infotext += ", trend: {}{} / {:g} hours".format(
         sign,
-        render.disksize(trend * MB),
+        render.bytes(trend * MB),
         range_hours,
     )
 
@@ -157,8 +157,8 @@ def size_trend(  # pylint: disable=too-many-branches
             problems.append(
                 "growing too fast (warn/crit at %s/%s per %.1f h)(!"
                 % (
-                    render.disksize(wa),
-                    render.disksize(cr),
+                    render.bytes(wa),
+                    render.bytes(cr),
                     range_hours,
                 )
             )
@@ -172,7 +172,7 @@ def size_trend(  # pylint: disable=too-many-branches
         trend * MB,
         levels.get("trend_shrinking_bytes"),
         range_hours,
-        render.disksize,
+        render.bytes,
     )
     if tmp_state > 0:
         state = max(state, tmp_state)

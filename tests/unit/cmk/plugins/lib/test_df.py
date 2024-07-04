@@ -111,7 +111,7 @@ def test_df_discovery(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Used: 42.71% - 46.0 GB of 108 GB",
+                    summary="Used: 42.71% - 42.8 GiB of 100 GiB",
                 ),
                 Metric("fs_size", 102655.0, boundaries=(0.0, None)),
                 Metric(
@@ -120,7 +120,7 @@ def test_df_discovery(
                 ),
                 Result(
                     state=State.OK,
-                    summary="trend per 1 day 0 hours: +169 TB",
+                    summary="trend per 1 day 0 hours: +154 TiB",
                 ),
                 Result(
                     state=State.OK,
@@ -165,7 +165,7 @@ def test_df_discovery(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Used: 42.71% - 46.0 GB of 108 GB",
+                    summary="Used: 42.71% - 42.8 GiB of 100 GiB",
                 ),
                 Metric("fs_size", 102655.0, boundaries=(0.0, None)),
                 Metric(
@@ -174,7 +174,7 @@ def test_df_discovery(
                 ),
                 Result(
                     state=State.OK,
-                    summary="trend per 1 day 0 hours: +169 TB",
+                    summary="trend per 1 day 0 hours: +154 TiB",
                 ),
                 Result(
                     state=State.OK,
@@ -229,7 +229,7 @@ def test_df_discovery(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Used: 42.71% - 46.0 GB of 108 GB",
+                    summary="Used: 42.71% - 42.8 GiB of 100 GiB",
                 ),
                 Metric("fs_size", 102655.0, boundaries=(0.0, None)),
                 Metric(
@@ -238,7 +238,7 @@ def test_df_discovery(
                 ),
                 Result(
                     state=State.OK,
-                    summary="trend per 1 day 0 hours: +169 TB",
+                    summary="trend per 1 day 0 hours: +154 TiB",
                 ),
                 Result(
                     state=State.OK,

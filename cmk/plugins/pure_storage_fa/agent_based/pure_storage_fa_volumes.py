@@ -81,22 +81,22 @@ def check_volume_capacity(
         label="Data reduction",
     )
 
-    yield Result(state=State.OK, notice=f"Size: {render.disksize(volume.total_provisioned)}")
+    yield Result(state=State.OK, notice=f"Size: {render.bytes(volume.total_provisioned)}")
     yield Metric("fs_size", volume.total_provisioned, boundaries=(0, None))
 
     yield Result(
-        state=State.OK, notice=f"Physical capacity used - volume: {render.disksize(volume.unique)}"
+        state=State.OK, notice=f"Physical capacity used - volume: {render.bytes(volume.unique)}"
     )
     yield Metric("unique_size", volume.unique)
 
     yield Result(
         state=State.OK,
-        notice=f"Physical capacity used - snapshots: {render.disksize(volume.snapshots)}",
+        notice=f"Physical capacity used - snapshots: {render.bytes(volume.snapshots)}",
     )
     yield Metric("snapshots_size", volume.snapshots)
 
     yield Result(
-        state=State.OK, notice=f"Virtual capacity used - volume: {render.disksize(volume.virtual)}"
+        state=State.OK, notice=f"Virtual capacity used - volume: {render.bytes(volume.virtual)}"
     )
     yield Metric("virtual_size", volume.virtual)
 

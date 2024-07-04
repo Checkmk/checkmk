@@ -1,22 +1,6 @@
 import {zxcvbn, zxcvbnOptions} from "@zxcvbn-ts/core";
-
-const loadOptions = async () => {
-    const zxcvbnCommonPackage = await import(
-        /* webpackChunkName: "/zxcvbn" */ "@zxcvbn-ts/language-common"
-    );
-    const zxcvbnEnPackage = await import(
-        /* webpackChunkName: "/zxcvbn" */ "@zxcvbn-ts/language-en"
-    );
-
-    return {
-        dictionary: {
-            ...zxcvbnCommonPackage.default.dictionary,
-            ...zxcvbnEnPackage.default.dictionary,
-        },
-        graphs: zxcvbnCommonPackage.default.adjacencyGraphs,
-        translations: zxcvbnEnPackage.default.translations,
-    };
-};
+import * as zxcvbnCommonPackage from "@zxcvbn-ts/language-common";
+import * as zxcvbnEnPackage from "@zxcvbn-ts/language-en";
 
 export async function initPasswordStrength() {
     // Mapping password strength score to data-* attributes sent
@@ -26,8 +10,14 @@ export async function initPasswordStrength() {
         const allMeters = document.querySelectorAll("meter.password_meter");
         if (allMeters.length == 0) return;
 
-        const options = await loadOptions();
-        zxcvbnOptions.setOptions(options);
+        zxcvbnOptions.setOptions({
+            dictionary: {
+                ...zxcvbnCommonPackage.dictionary,
+                ...zxcvbnEnPackage.dictionary,
+            },
+            graphs: zxcvbnCommonPackage.adjacencyGraphs,
+            translations: zxcvbnEnPackage.translations,
+        });
 
         for (const meter of allMeters as NodeListOf<HTMLMeterElement>) {
             if (

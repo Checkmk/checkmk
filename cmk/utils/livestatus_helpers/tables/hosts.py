@@ -517,23 +517,23 @@ class Hosts(Table):
     mk_inventory = Column(
         'mk_inventory',
         col_type='blob',
-        description='The file content of the Check_MK HW/SW-Inventory',
+        description='The file content of the Check_MK HW/SW Inventory',
     )
-    """The file content of the Check_MK HW/SW-Inventory"""
+    """The file content of the Check_MK HW/SW Inventory"""
 
     mk_inventory_gz = Column(
         'mk_inventory_gz',
         col_type='blob',
-        description='The gzipped file content of the Check_MK HW/SW-Inventory',
+        description='The gzipped file content of the Check_MK HW/SW Inventory',
     )
-    """The gzipped file content of the Check_MK HW/SW-Inventory"""
+    """The gzipped file content of the Check_MK HW/SW Inventory"""
 
     mk_inventory_last = Column(
         'mk_inventory_last',
         col_type='time',
-        description='The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present',
+        description='The timestamp of the last Check_MK HW/SW Inventory for this host. 0 means that no inventory data is present',
     )
-    """The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present"""
+    """The timestamp of the last Check_MK HW/SW Inventory for this host. 0 means that no inventory data is present"""
 
     mk_logwatch_files = Column(
         'mk_logwatch_files',
@@ -881,9 +881,9 @@ class Hosts(Table):
     structured_status = Column(
         'structured_status',
         col_type='blob',
-        description='The file content of the structured status of the Check_MK HW/SW-Inventory',
+        description='The file content of the structured status of the Check_MK HW/SW Inventory',
     )
-    """The file content of the structured status of the Check_MK HW/SW-Inventory"""
+    """The file content of the structured status of the Check_MK HW/SW Inventory"""
 
     tag_names = Column(
         'tag_names',

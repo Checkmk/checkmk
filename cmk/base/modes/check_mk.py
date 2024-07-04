@@ -2617,9 +2617,9 @@ modes.register(
         argument=True,
         argument_descr="HOST1 HOST2...",
         argument_optional=True,
-        short_help="Do a HW/SW-Inventory on some or all hosts",
+        short_help="Do a HW/SW Inventory on some or all hosts",
         long_help=[
-            "Does a HW/SW-Inventory for all, one or several "
+            "Does a HW/SW Inventory for all, one or several "
             "hosts. If you add the option -f, --force then persisted sections "
             "will be used even if they are outdated."
         ],
@@ -2851,7 +2851,7 @@ def register_mode_inventory_as_check(
             ),
             argument=True,
             argument_descr="HOST",
-            short_help="Do HW/SW-Inventory, behave like check plug-in",
+            short_help="Do HW/SW Inventory, behave like check plug-in",
             sub_options=[
                 *_FETCHER_OPTIONS,
                 _SNMP_BACKEND_OPTION,

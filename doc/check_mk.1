@@ -114,8 +114,8 @@ is being checked. This is useful for testing and debugging a check plugin.
  cmk --convert-rrds [--split] [H...]  convert exiting RRD to new format (only CEE)
  cmk --compress-history FILES...      optimize monitoring history files for CMC
  cmk --handle-alerts                  alert handling, always in keepalive mode (only CEE)
- cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
- cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
+ cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW Inventory of some ar all hosts
+ cmk --inventory-as-check HOST        Do HW/SW Inventory, behave like check plugin
  cmk -A, --bake-agents [-f] [H1 H2..] Bake agents for hosts (not in all versions)
  cmk --cap pack|unpack|list FILE.cap  Pack/unpack agent packages (not in all versions)
  cmk --show-snmp-stats                Analyzes recorded Inline SNMP statistics
@@ -245,6 +245,6 @@ NOTES:
   of the RRDs has changed. The option --split will activate conversion
   from exising RRDs in PNP storage type SINGLE to MULTIPLE.
 
-  -i, --inventory does a HW/SW-Inventory for all, one or several
+  -i, --inventory does a HW/SW Inventory for all, one or several
   hosts. If you add the option -f, --force then persisted sections
   will be used even if they are outdated.

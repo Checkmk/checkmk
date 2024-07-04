@@ -298,7 +298,7 @@ TableStatus::TableStatus(ICore *mc) {
     // Special stuff for Check_MK
     addColumn(std::make_unique<TimeColumn<row_type>>(
         "mk_inventory_last",
-        "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
+        "The timestamp of the last time a host has been inventorized by Check_MK HW/SW Inventory",
         offsets, [](const row_type &row) {
             return mk_inventory_last(row.paths()->inventory_directory() /
                                      ".last");

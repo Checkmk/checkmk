@@ -811,23 +811,23 @@ class Services(Table):
     host_mk_inventory = Column(
         'host_mk_inventory',
         col_type='blob',
-        description='The file content of the Check_MK HW/SW-Inventory',
+        description='The file content of the Check_MK HW/SW Inventory',
     )
-    """The file content of the Check_MK HW/SW-Inventory"""
+    """The file content of the Check_MK HW/SW Inventory"""
 
     host_mk_inventory_gz = Column(
         'host_mk_inventory_gz',
         col_type='blob',
-        description='The gzipped file content of the Check_MK HW/SW-Inventory',
+        description='The gzipped file content of the Check_MK HW/SW Inventory',
     )
-    """The gzipped file content of the Check_MK HW/SW-Inventory"""
+    """The gzipped file content of the Check_MK HW/SW Inventory"""
 
     host_mk_inventory_last = Column(
         'host_mk_inventory_last',
         col_type='time',
-        description='The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present',
+        description='The timestamp of the last Check_MK HW/SW Inventory for this host. 0 means that no inventory data is present',
     )
-    """The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present"""
+    """The timestamp of the last Check_MK HW/SW Inventory for this host. 0 means that no inventory data is present"""
 
     host_mk_logwatch_files = Column(
         'host_mk_logwatch_files',
@@ -1175,9 +1175,9 @@ class Services(Table):
     host_structured_status = Column(
         'host_structured_status',
         col_type='blob',
-        description='The file content of the structured status of the Check_MK HW/SW-Inventory',
+        description='The file content of the structured status of the Check_MK HW/SW Inventory',
     )
-    """The file content of the structured status of the Check_MK HW/SW-Inventory"""
+    """The file content of the structured status of the Check_MK HW/SW Inventory"""
 
     host_tag_names = Column(
         'host_tag_names',

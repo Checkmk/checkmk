@@ -252,7 +252,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     },
                 ]
             },
-            # Interval for HW/SW-Inventory check
+            # Interval for HW/SW Inventory check
             "extra_service_conf": {
                 "check_interval": [
                     {
@@ -261,7 +261,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                             "service_description": [{"$regex": "Check_MK HW/SW Inventory$"}]
                         },
                         "value": 1440,
-                        "options": {"description": "Restrict HW/SW-Inventory to once a day"},
+                        "options": {"description": "Restrict HW/SW Inventory to once a day"},
                     },
                 ],
             },

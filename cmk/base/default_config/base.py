@@ -185,7 +185,7 @@ tag_config: TagConfigSpec = {
 static_checks: dict[str, list[RuleSpec[list[object]]]] = {}
 check_parameters: list[RuleSpec[Any]] = []
 checkgroup_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
-# for HW/SW-Inventory
+# for HW/SW Inventory
 inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 
 

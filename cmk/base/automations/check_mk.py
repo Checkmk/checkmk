@@ -1151,7 +1151,7 @@ class AutomationRenameHosts(Automation):
         if self._rename_host_file(snmpwalks_dir, oldname, newname):
             actions.append("snmpwalk")
 
-        # HW/SW-Inventory
+        # HW/SW Inventory
         if self._rename_host_file(var_dir + "/inventory", oldname, newname):
             self._rename_host_file(var_dir + "/inventory", oldname + ".gz", newname + ".gz")
             actions.append("inv")

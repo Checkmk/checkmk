@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Note: this check is deprecated. It is superseeded by the new
-# Check_MK HW/SW-Inventory.
+# Check_MK HW/SW Inventory.
 
 
 from cmk.base.check_api import LegacyCheckDefinition

@@ -368,7 +368,7 @@ class Mode(Option):
         return specs
 
     # expected format is like this
-    #  -i, --inventory does a HW/SW-Inventory for all, one or several
+    #  -i, --inventory does a HW/SW Inventory for all, one or several
     #  hosts. If you add the option -f, --force then persisted sections
     #  will be used even if they are outdated.
     def long_help_text(self) -> str | None:

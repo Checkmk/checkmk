@@ -649,7 +649,7 @@ void TableHosts::addColumns(Table *table, const ICore &core,
         [&core](const row_type &row) { return core.isPnpGraphPresent(row); }));
     table->addColumn(std::make_unique<TimeColumn<row_type>>(
         prefix + "mk_inventory_last",
-        "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
+        "The timestamp of the last Check_MK HW/SW Inventory for this host. 0 means that no inventory data is present",
         offsets, [&core](const row_type &row) {
             return mk_inventory_last(core.paths()->inventory_directory() /
                                      row.name());
@@ -657,19 +657,19 @@ void TableHosts::addColumns(Table *table, const ICore &core,
 
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "mk_inventory",
-        "The file content of the Check_MK HW/SW-Inventory", offsets,
+        "The file content of the Check_MK HW/SW Inventory", offsets,
         BlobFileReader<row_type>{[&core](const row_type &row) {
             return core.paths()->inventory_directory() / row.name();
         }}));
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "mk_inventory_gz",
-        "The gzipped file content of the Check_MK HW/SW-Inventory", offsets,
+        "The gzipped file content of the Check_MK HW/SW Inventory", offsets,
         BlobFileReader<row_type>{[&core](const row_type &row) {
             return core.paths()->inventory_directory() / (row.name() + ".gz");
         }}));
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "structured_status",
-        "The file content of the structured status of the Check_MK HW/SW-Inventory",
+        "The file content of the structured status of the Check_MK HW/SW Inventory",
         offsets, BlobFileReader<row_type>{[&core](const row_type &row) {
             return core.paths()->structured_status_directory() / row.name();
         }}));

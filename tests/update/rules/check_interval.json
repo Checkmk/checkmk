@@ -3,7 +3,7 @@
     "ruleset": "extra_service_conf:check_interval",
     "folder": "/",
     "properties": {
-      "description": "Restrict HW/SW-Inventory to once a day"
+      "description": "Restrict HW/SW Inventory to once a day"
     },
     "value_raw": "1440.0",
     "conditions": {

@@ -11,7 +11,7 @@ description:
  does if any of the paths is broken.
 
  If the number of paths is higher than expected, the check goes
- warning. A reinventory of the check might be necessary in that
+ warning. A re-discovery of the check might be necessary in that
  case.
 
  This check is based on the output of the command {multipath -l} as

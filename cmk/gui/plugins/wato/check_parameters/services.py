@@ -68,7 +68,7 @@ def _valuespec_inventory_services_rules():
             ),
         ],
         help=_(
-            "This rule can be used to configure the inventory of the windows services check. "
+            "This rule can be used to configure the discovery of the windows services check. "
             "You can configure specific windows services to be monitored by the windows check by "
             "selecting them by name, current state during the inventory, or start mode."
         ),

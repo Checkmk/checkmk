@@ -436,7 +436,7 @@ _INV_VIEW_HOST = ViewSpec(
         # General options
         "datasource": "hosts",
         "topic": "inventory",
-        "title": _("Inventory of host"),
+        "title": _("HW/SW Inventory of host"),
         "description": _("The complete hardware- and software inventory of a host"),
         "icon": "inventory",
         "hidebutton": False,
@@ -602,7 +602,7 @@ _INV_VIEW_HOST_HISTORY = ViewSpec(
         # General options
         "datasource": "invhist",
         "topic": "inventory",
-        "title": _("Inventory history of host"),
+        "title": _("HW/SW Inventory history of host"),
         "description": _("The history for changes in hardware- and software inventory of a host"),
         "icon": {
             "icon": "inventory",

@@ -12,21 +12,21 @@ from collections.abc import Sequence
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="check_cmk_inv",
-        description="""Check Checkmk inventory""",
+        description="""Check Checkmk HW/SW Inventory""",
     )
 
     parser.add_argument(
         "hostname",
         type=str,
         metavar="HOSTNAME",
-        help="Host for which the inventory is executed",
+        help="Host for which the HW/SW Inventory is executed",
     )
 
     parser.add_argument(
         "--inv-fail-status",
         type=int,
         default=1,
-        help="State when inventory fails",
+        help="State when HW/SW Inventory fails",
     )
 
     parser.add_argument(

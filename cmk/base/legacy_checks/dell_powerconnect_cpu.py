@@ -22,7 +22,7 @@ from cmk.base.config import check_info
 from cmk.agent_based.v2 import contains, IgnoreResultsError, render, SNMPTree, StringTable
 
 
-# Inventory of dell power connect CPU details.
+# Discovery of dell power connect CPU details.
 def inventory_dell_powerconnect_cpu(info):
     if info:
         enabled, onesecondperc, _oneminuteperc, _fiveminutesperc = info[0]

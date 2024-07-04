@@ -52,7 +52,7 @@ dell_powerconnect_fans_status2nagios_map = {
 }
 
 
-# Inventory of all fan related elements
+# Discovery of all fan related elements
 def inventory_dell_powerconnect_fans(info):
     inventory = []
     for _device_id, name, state in info:

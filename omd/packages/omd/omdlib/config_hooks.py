@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING
 
 import pydantic
 
-from omdlib.type_defs import ConfigChoiceHasError
+from omdlib.type_defs import Config, ConfigChoiceHasError
 
 import cmk.utils.resulttype as result
 from cmk.utils import paths
@@ -217,6 +217,35 @@ def load_defaults(site: "SiteContext") -> dict[str, str]:
         for hook_name in sort_hooks(os.listdir(site.hook_dir))
         if hook_name[0] != "."
     }
+
+
+def load_config(site: "SiteContext", defaults: dict[str, str]) -> Config:
+    """Load all variables from omd/sites.conf. These variables always begin with
+    CONFIG_. The reason is that this file can be sources with the shell.
+
+    Puts these variables into the config dict without the CONFIG_. Also
+    puts the variables into the process environment."""
+    return {**defaults, **read_site_config(site)}
+
+
+def read_site_config(site: "SiteContext") -> Config:
+    """Read and parse the file site.conf of a site into a dictionary and returns it"""
+    config: Config = {}
+    if not (confpath := Path(site.dir, "etc/omd/site.conf")).exists():
+        return {}
+
+    with confpath.open() as conf_file:
+        for line in conf_file:
+            line = line.strip()
+            if line == "" or line[0] == "#":
+                continue
+            var, value = line.split("=", 1)
+            if not var.startswith("CONFIG_"):
+                sys.stderr.write("Ignoring invalid variable %s.\n" % var)
+            else:
+                config[var[7:].strip()] = value.strip().strip("'")
+
+    return config
 
 
 # Always sort CORE hook to the end because it runs "cmk -U" which

@@ -50,12 +50,12 @@ size1 = SizeWithUsage(
     ["491520", "460182", "460182", "65536"],
     491520 * 65536,
     491520 * 65536 - 460182 * 65536,
-    "Used: 6.38% - 2.05 GB of 32.2 GB",
+    "Used: 6.38% - 1.91 GiB of 30.0 GiB",
 )
 
 size2 = SizeBasic(
     ["201326592", "170803720", "170803720", "32768"],
-    "Used: 15.16% - 1.00 TB of 6.60 TB",
+    "Used: 15.16% - 931 GiB of 6.00 TiB",
 )
 
 
@@ -113,7 +113,7 @@ def test_network_fs_mounts_discovery(
             "/ABCshare",
             [
                 Result(state=State.OK, summary=size1.text),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.69 GB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.37 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -14.55%"),
                 Metric(
                     "fs_used",
@@ -147,7 +147,7 @@ def test_network_fs_mounts_discovery(
             "/var/dbaexport",
             [
                 Result(state=State.OK, summary=size2.text),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.54 GB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.23 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -0.07%"),
                 Metric(
                     "fs_used",
@@ -166,7 +166,7 @@ def test_network_fs_mounts_discovery(
             "/PERFshare",
             [
                 Result(state=State.OK, summary=size1.text),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.69 GB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.37 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -14.55%"),
                 Metric(
                     "fs_used",
@@ -238,8 +238,8 @@ def test_network_fs_mounts_check(
             "/mnt/test_client",
             [
                 Result(state=State.OK, summary="Source: 127.0.0.1:/mnt/test"),
-                Result(state=State.OK, summary="Used: 37.06% - 92.1 GB of 249 GB"),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.67 GB"),
+                Result(state=State.OK, summary="Used: 37.06% - 85.8 GiB of 232 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.35 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -1.88%"),
             ],
         ),

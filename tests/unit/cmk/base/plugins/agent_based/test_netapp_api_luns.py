@@ -91,11 +91,11 @@ def test_checks(section: SectionSingleInstance) -> None:
         Metric("fs_used_percent", 83.64674516415643, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
         Result(
             state=State.WARN,
-            summary="Used: 83.65% - 539 GB of 644 GB (warn/crit at 80.00%/90.00% used)",
+            summary="Used: 83.65% - 502 GiB of 600 GiB (warn/crit at 80.00%/90.00% used)",
         ),
         Metric("fs_size", 614439.1845703125, boundaries=(0, None)),
         Metric("growth", 740100065.625),
-        Result(state=State.OK, summary="trend per 1 day 0 hours: +776 TB"),
+        Result(state=State.OK, summary="trend per 1 day 0 hours: +706 TiB"),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +120451.31%"),
         Metric("trend", 740100065.625),
         Result(state=State.OK, summary="Time left until disk full: 12 seconds"),

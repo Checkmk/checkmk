@@ -95,11 +95,11 @@ def test_check_fjdarye_pools() -> None:
         ),
         Result(
             state=State.CRIT,
-            summary="Used: 95.00% - 117 TB of 123 TB (warn/crit at 80.00%/90.00% used)",
+            summary="Used: 95.00% - 106 TiB of 112 TiB (warn/crit at 80.00%/90.00% used)",
         ),
         Metric("fs_size", 117190584.0, boundaries=(0.0, None)),
         Metric("growth", 117439812266.66666),
-        Result(state=State.OK, summary="trend per 1 day 0 hours: +123 PB"),
+        Result(state=State.OK, summary="trend per 1 day 0 hours: +109 PiB"),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +100212.67%"),
         Metric("trend", 117439812266.66666),
         Result(state=State.OK, summary="Time left until disk full: 4 seconds"),

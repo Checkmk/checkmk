@@ -36,7 +36,7 @@ checks = {
             [
                 (
                     0,
-                    "Used: 79.73% - 34.3 TB of 43.0 TB",
+                    "Used: 79.73% - 31.2 TiB of 39.1 TiB",
                     [
                         (
                             "fs_used",

@@ -82,22 +82,22 @@ def check_overall_capacity(item: str, params: Mapping[str, Any], section: Array)
         label="Data reduction",
     )
 
-    yield Result(state=State.OK, notice=f"Unique: {render.disksize(section.unique)}")
+    yield Result(state=State.OK, notice=f"Unique: {render.bytes(section.unique)}")
     yield Metric("unique_size", section.unique)
 
-    yield Result(state=State.OK, notice=f"Snapshots: {render.disksize(section.snapshots)}")
+    yield Result(state=State.OK, notice=f"Snapshots: {render.bytes(section.snapshots)}")
     yield Metric("snapshots_size", section.snapshots)
 
-    yield Result(state=State.OK, notice=f"Shared: {render.disksize(section.shared)}")
+    yield Result(state=State.OK, notice=f"Shared: {render.bytes(section.shared)}")
     yield Metric("shared_size", section.shared)
 
-    yield Result(state=State.OK, notice=f"System: {render.disksize(section.system)}")
+    yield Result(state=State.OK, notice=f"System: {render.bytes(section.system)}")
     yield Metric("system_size", section.system)
 
     yield Result(state=State.OK, notice=f"Replication: {render.disksize(section.replication)}")
     yield Metric("replication_size", section.replication)
 
-    yield Result(state=State.OK, notice=f"Empty: {render.disksize(free_space)}")
+    yield Result(state=State.OK, notice=f"Empty: {render.bytes(free_space)}")
 
 
 register.check_plugin(

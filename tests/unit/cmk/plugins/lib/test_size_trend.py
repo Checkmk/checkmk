@@ -66,7 +66,7 @@ def test_size_trend(args: ArgsDict) -> None:
     # (100 (MB) / 1800) * 3600 * 24
     assert _call_size_trend_with(args) == [
         Metric(name="growth", value=4800.0),
-        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +210 MB"),
+        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +200 MiB"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +10.00%"),
         Metric("trend", 4800.0),
         Result(state=State.OK, summary="Time left until resource_name full: 9 hours 0 minutes"),
@@ -88,7 +88,7 @@ def test_size_trend_growing(args: ArgsDict) -> None:
         Metric(name="growth", value=4800.0),
         Result(
             state=State.WARN,
-            summary="trend per 1 hour 0 minutes: +210 MB (warn/crit at +157 MB/+262 MB)",
+            summary="trend per 1 hour 0 minutes: +200 MiB (warn/crit at +150 MiB/+250 MiB)",
         ),
         Result(
             state=State.WARN,
@@ -118,7 +118,7 @@ def test_size_trend_shrinking_ok(args: ArgsDict) -> None:
     )
     assert _call_size_trend_with(args) == [
         Metric(name="growth", value=-480.0),
-        Result(state=State.OK, summary="trend per 1 hour 0 minutes: -21.0 MB"),
+        Result(state=State.OK, summary="trend per 1 hour 0 minutes: -20.0 MiB"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: -1.00%"),
         Metric("trend", -480.0),
     ]
@@ -145,7 +145,7 @@ def test_size_trend_shrinking_warn(args: ArgsDict) -> None:
         Metric(name="growth", value=-4800.0),
         Result(
             state=State.WARN,
-            summary="trend per 1 hour 0 minutes: -210 MB (warn/crit below -105 MB/-210 MB)",
+            summary="trend per 1 hour 0 minutes: -200 MiB (warn/crit below -100 MiB/-200 MiB)",
         ),
         Result(
             state=State.WARN,
@@ -174,7 +174,7 @@ def test_size_trend_negative_free_space() -> None:
         )
     ) == [
         Metric("growth", 50112.0),
-        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +2.19 GB"),
+        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +2.04 GiB"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +1697.56%"),
         Metric("trend", 50112.0),
         Result(

@@ -166,7 +166,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
 
     if show_reserved:
         reserved_perc_hr = render.percent(100.0 * reserved_mb / size_mb)
-        reserved_hr = render.disksize(reserved_mb * 1024**2)
+        reserved_hr = render.bytes(reserved_mb * 1024**2)
         infotext.append(
             "additionally reserved for root: %s" % reserved_hr  #
             if subtract_reserved

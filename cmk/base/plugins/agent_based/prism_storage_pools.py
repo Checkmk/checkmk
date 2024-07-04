@@ -70,11 +70,13 @@ def check_prism_storage_pools(
             params=params,
         )
     if das_cap > 0:
-        message = f"SAS/SATA capacity: {render.disksize(das_cap)}, SAS/SATA free: {render.disksize(das_free)}"
+        message = (
+            f"SAS/SATA capacity: {render.bytes(das_cap)}, SAS/SATA free: {render.bytes(das_free)}"
+        )
         yield Result(state=State(0), summary=message)
 
     if ssd_cap > 0:
-        message = f"SSD capacity: {render.disksize(ssd_cap)}, SSD free: {render.disksize(ssd_free)}"
+        message = f"SSD capacity: {render.bytes(ssd_cap)}, SSD free: {render.bytes(ssd_free)}"
         yield Result(state=State(0), summary=message)
 
 

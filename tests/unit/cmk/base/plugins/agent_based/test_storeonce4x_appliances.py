@@ -74,7 +74,7 @@ def test_check_storage(monkeypatch: pytest.MonkeyPatch, section: Section) -> Non
             ),
             Result(
                 state=State.OK,
-                summary="Used: 28.03% - 101 TB of 360 TB",
+                summary="Used: 28.03% - 91.7 TiB of 327 TiB",
             ),
             Metric("fs_size", 342871050.0, boundaries=(0, None)),
             Metric("growth", 0.0),

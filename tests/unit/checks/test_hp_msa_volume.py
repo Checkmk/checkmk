@@ -117,7 +117,7 @@ def test_df_check() -> None:
     }
     expected_result = (
         0,
-        "Used: 57.81% - 1.27 TB of 2.20 TB, trend: +1.39 TB / 24 hours",
+        "Used: 57.81% - 1.16 TiB of 2.00 TiB, trend: +1.27 TiB / 24 hours",
         [
             ("fs_used", 1212896, 1678313.6, 1888102.8, 0, 2097892.0),
             ("fs_free", 884996, None, None, 0, None),

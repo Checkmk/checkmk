@@ -108,7 +108,8 @@ def size_trend(
         mb_in_range * MB,
         levels_upper=levels.get("trend_bytes"),
         levels_lower=_reverse_level_signs(levels.get("trend_shrinking_bytes")),
-        render_func=lambda x: ("+" if x >= 0 else "") + render.disksize(x),
+        # Don't use render.disksize here, see SUP-19150.
+        render_func=lambda x: ("+" if x >= 0 else "") + render.bytes(x),
         label="trend per %s" % render.timespan(range_sec),
     )
 

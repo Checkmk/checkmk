@@ -614,10 +614,10 @@ def test_check_grouped(section: nav.Section, monkeypatch: pytest.MonkeyPatch) ->
             Metric(
                 "fs_used_percent", 8.151860854204964, levels=(80.0, 90.0), boundaries=(0.0, 100.0)
             ),
-            Result(state=State.OK, summary="Used: 8.15% - 18.6 GB of 228 GB"),
+            Result(state=State.OK, summary="Used: 8.15% - 17.3 GiB of 212 GiB"),
             Metric("fs_size", 217600.0, boundaries=(0.0, None)),
             Metric("growth", 210695.9049353863),
-            Result(state=State.OK, summary="trend per 1 day 0 hours: +221 GB"),
+            Result(state=State.OK, summary="trend per 1 day 0 hours: +206 GiB"),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +96.83%"),
             Metric("trend", 210695.9049353863),
             Result(state=State.OK, summary="Time left until disk full: 22 hours 45 minutes"),
@@ -685,13 +685,13 @@ def test_check_with_perf_data(section: nav.Section, monkeypatch: pytest.MonkeyPa
             ),
             Result(
                 state=State.CRIT,
-                summary="Used: 60.04% - 193 GB of 322 GB (warn/crit at 50.00%/60.00% used)",
+                summary="Used: 60.04% - 180 GiB of 300 GiB (warn/crit at 50.00%/60.00% used)",
             ),
             Metric("fs_size", 307200.0, boundaries=(0.0, None)),
             Metric("growth", 2190950.615204839),
             Result(
                 state=State.CRIT,
-                summary="trend per 1 day 0 hours: +2.30 TB (warn/crit at +105 MB/+210 MB)",
+                summary="trend per 1 day 0 hours: +2.09 TiB (warn/crit at +100 MiB/+200 MiB)",
             ),
             Result(
                 state=State.CRIT,

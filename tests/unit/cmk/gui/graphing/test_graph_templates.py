@@ -180,7 +180,7 @@ def test__replace_expressions_missing_scalars() -> None:
             "one=5;7;6;; power=5;9;10;; output=5;2;3;;",
             [
                 HorizontalRule(7.0, "7.00", "#ffd000", "Warning"),
-                HorizontalRule(10.0, "10.0 W", "#ff3232", "Critical power"),
+                HorizontalRule(10.0, "10 W", "#ff3232", "Critical power"),
                 HorizontalRule(-2.0, "-2 ", "#ffd000", "Warning output"),
             ],
             id="Thresholds present",

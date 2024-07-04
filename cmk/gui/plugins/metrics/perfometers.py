@@ -636,15 +636,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "power",
-        "half_value": 1000,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "current",
         "half_value": 10,
         "exponent": 4,
@@ -1125,14 +1116,6 @@ perfometer_info.append(
         "metric": "requests",
         "half_value": 100.0,
         "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["power_usage"],
-        "total": "power_usage:max",
     }
 )
 

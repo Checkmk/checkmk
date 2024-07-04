@@ -20,12 +20,6 @@ from cmk.gui.i18n import _
 
 # Title are always lower case - except the first character!
 
-metric_info["power_usage"] = {
-    "title": _("Power Usage"),
-    "color": "13/b",
-    "unit": "w",
-}
-
 metric_info["temp"] = {
     "title": _("Temperature"),
     "unit": "c",
@@ -96,12 +90,6 @@ metric_info["voltage"] = {
     "title": _("Electrical voltage"),
     "unit": "v",
     "color": "14/a",
-}
-
-metric_info["power"] = {
-    "title": _("Electrical power"),
-    "unit": "w",
-    "color": "22/a",
 }
 
 metric_info["energy"] = {

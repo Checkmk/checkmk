@@ -44,7 +44,6 @@ from livestatus import SiteConfiguration, SiteId
 from cmk.utils import agent_registration, paths, render, setup_search_index, store, version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.export import LicenseUsageExtensions
-from cmk.utils.licensing.helper import get_licensing_logger
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
 from cmk.utils.site import omd_site
@@ -2210,8 +2209,6 @@ def sync_and_activate(
         # Cleanup existing livestatus connections (may be opened later when needed)
         sites_disconnect()
 
-        _close_apache_fds()
-
         activate_changes = ActivateChanges()
         activate_changes.load()
         activate_changes.load_changes_until(activation_id, site_snapshot_settings.keys())
@@ -2428,22 +2425,6 @@ def _render_warnings(configuration_warnings: ConfigWarnings) -> str:
 def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivationState) -> None:
     state_path = ActivateChangesManager.site_state_path(activation_id, site_id)
     store.save_object_to_file(state_path, state)
-
-
-def _close_apache_fds():
-    # Close logger handles, before starting bad lowlevel things
-    licensing_logger = get_licensing_logger()
-    del licensing_logger.handlers[:]
-
-    # Cleanup resources of the apache
-    for x in range(3, 256):
-        try:
-            os.close(x)
-        except OSError as e:
-            if e.errno == errno.EBADF:
-                pass
-            else:
-                raise
 
 
 def parse_serialized_domain_requests(

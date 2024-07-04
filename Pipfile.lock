@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "0e880439872056a09d8132aedc6b94a6ca8af6f4f48ac73a3f903640d4f7c361"
+            "sha256": "52947c6fa53fe57070c98268fa54d00c2443b909e900b66eca221a96ec8f932d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -4197,6 +4197,15 @@
             "markers": "python_version >= '3.7'",
             "version": "==0.49"
         },
+        "checkmk-dev-tools": {
+            "hashes": [
+                "sha256:d2e83abb5681c7ad44f0b59d3a1232cd1c630fa9adaf9fdc531f56ce022e4ac2",
+                "sha256:d76ced9627cbad81432be035bd5c747304340444d84bca97fa09096b5c65b68b"
+            ],
+            "index": "pypi",
+            "markers": "python_full_version >= '3.10.4' and python_full_version < '4.0.0'",
+            "version": "==0.1.64"
+        },
         "click": {
             "hashes": [
                 "sha256:ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28",
@@ -5020,6 +5029,15 @@
             "index": "pypi",
             "markers": "python_version >= '3.6'",
             "version": "==0.7.1"
+        },
+        "multi-key-dict": {
+            "hashes": [
+                "sha256:3a1e1fc705a30a7de1a153ec2992b3ca3655ccd9225d2e427fe6525c8f160d6d",
+                "sha256:cb1e00aa9d8192496cc0cc040f6d9602f35e4cf099e866248be06b04fd45b42b",
+                "sha256:deebdec17aa30a1c432cb3f437e81f8621e1c0542a0c0617a74f71e232e9939e",
+                "sha256:fb67a532d7361a66820aa1e8fe6c0c939f4c34a3a09a3e8db199ce7b77c4fb78"
+            ],
+            "version": "==2.0.3"
         },
         "multidict": {
             "hashes": [
@@ -5845,6 +5863,13 @@
             ],
             "version": "==1.0.1"
         },
+        "python-jenkins": {
+            "hashes": [
+                "sha256:56e7dabb0607bdb8e1d6fc6d2d4301abedbed9165da2b206facbd3071cb6eecb",
+                "sha256:585c9a25042892ce224dcddb1d4b9ff29755ca63da03ac2ce96537d373c0233e"
+            ],
+            "version": "==1.8.2"
+        },
         "python-lsp-black": {
             "hashes": [
                 "sha256:8286d2d310c566844b3c116b824ada6fccfa6ba228b1a09a0526b74c04e0805f",
@@ -6464,6 +6489,14 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==0.12.5"
+        },
+        "trickkiste": {
+            "hashes": [
+                "sha256:1fbb38bb36220e1531992c5c85158c8623815ceb2a6178430a786b260d1cb9ce",
+                "sha256:626cee8fdd77c11932296b2b1a66cb53b84e1c3b5fae057aac47187560334f30"
+            ],
+            "markers": "python_version < '4' and python_full_version >= '3.10.4'",
+            "version": "==0.1.3"
         },
         "twine": {
             "hashes": [

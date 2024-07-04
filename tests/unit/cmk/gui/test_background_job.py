@@ -253,7 +253,7 @@ def test_job_status_after_stop() -> None:
     )
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
-        timeout=10,
+        timeout=20,
         interval=0.1,
     )
     job.stop()

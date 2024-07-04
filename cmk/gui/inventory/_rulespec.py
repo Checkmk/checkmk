@@ -58,7 +58,7 @@ class RulespecGroupInventory(RulespecGroup):
 
 def _valuespec_active_checks_cmk_inv() -> Dictionary:
     return Dictionary(
-        title=_("Do hardware/software inventory"),
+        title=_("Do HW/SW Inventory"),
         help=_(
             "All hosts configured via this ruleset will do a hardware and "
             "software inventory. For each configured host a new active check "

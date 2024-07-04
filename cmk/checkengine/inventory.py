@@ -97,7 +97,7 @@ class HWSWInventoryParameters:
     sw_missing: int
 
     # Do not use source states which would overwrite "State when
-    # inventory fails" in the ruleset "Do hardware/software Inventory".
+    # inventory fails" in the ruleset "Do HW/SW Inventory".
     # These are handled by the "Check_MK" service
     fail_status: int
     status_data_inventory: bool

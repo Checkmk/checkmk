@@ -501,7 +501,7 @@ def _check_duplicates(
             yield Result(
                 state=State.WARN,
                 summary=f"{type_} {name}: found {count} times",
-                details="Consult the hardware/software inventory for a complete list of files",
+                details="Consult the HW/SW Inventory for a complete list of files",
             )
 
 

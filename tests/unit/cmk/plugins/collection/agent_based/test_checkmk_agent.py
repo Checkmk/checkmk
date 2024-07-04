@@ -897,12 +897,12 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                 Result(
                     state=State.WARN,
                     summary="Agent plug-in plugin1: found 2 times",
-                    details="Consult the hardware/software inventory for a complete list of files",
+                    details="Consult the HW/SW Inventory for a complete list of files",
                 ),
                 Result(
                     state=State.WARN,
                     summary="Local check check2.py: found 2 times",
-                    details="Consult the hardware/software inventory for a complete list of files",
+                    details="Consult the HW/SW Inventory for a complete list of files",
                 ),
             ],
             id="duplicate files",
@@ -978,12 +978,12 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                 Result(
                     state=State.WARN,
                     summary="Agent plug-in plugin1: found 2 times",
-                    details="Consult the hardware/software inventory for a complete list of files",
+                    details="Consult the HW/SW Inventory for a complete list of files",
                 ),
                 Result(
                     state=State.WARN,
                     summary="Local check check1.sh: found 2 times",
-                    details="Consult the hardware/software inventory for a complete list of files",
+                    details="Consult the HW/SW Inventory for a complete list of files",
                 ),
             ],
             id="duplicate files with excludes",

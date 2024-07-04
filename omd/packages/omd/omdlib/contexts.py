@@ -24,8 +24,6 @@
 
 import abc
 import os
-import sys
-from pathlib import Path
 from typing import cast
 
 import omdlib
@@ -93,7 +91,7 @@ class AbstractSiteContext(abc.ABC):
         return self._config
 
     @abc.abstractmethod
-    def load_config(self, defaults: dict[str, str]) -> None:
+    def set_config(self, config: Config) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -159,33 +157,9 @@ class SiteContext(AbstractSiteContext):
             "###EDITION###": Edition[version.split(".")[-1].upper()].long,
         }
 
-    def load_config(self, defaults: dict[str, str]) -> None:
-        """Load all variables from omd/sites.conf. These variables always begin with
-        CONFIG_. The reason is that this file can be sources with the shell.
-
-        Puts these variables into the config dict without the CONFIG_. Also
-        puts the variables into the process environment."""
-        self._config = {**defaults, **self.read_site_config()}
+    def set_config(self, config: Config) -> None:
+        self._config = config
         self._config_loaded = True
-
-    def read_site_config(self) -> Config:
-        """Read and parse the file site.conf of a site into a dictionary and returns it"""
-        config: Config = {}
-        if not (confpath := Path(self.dir, "etc/omd/site.conf")).exists():
-            return {}
-
-        with confpath.open() as conf_file:
-            for line in conf_file:
-                line = line.strip()
-                if line == "" or line[0] == "#":
-                    continue
-                var, value = line.split("=", 1)
-                if not var.startswith("CONFIG_"):
-                    sys.stderr.write("Ignoring invalid variable %s.\n" % var)
-                else:
-                    config[var[7:].strip()] = value.strip().strip("'")
-
-        return config
 
     def exists(self) -> bool:
         # In container environments the tmpfs may be managed by the container runtime (when
@@ -285,7 +259,7 @@ class RootContext(AbstractSiteContext):
     def version(self) -> str:
         return omdlib.__version__
 
-    def load_config(self, defaults: dict[str, str]) -> None:
+    def set_config(self, config: Config) -> None:
         pass
 
     def exists(self) -> bool:

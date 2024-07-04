@@ -256,12 +256,6 @@ for i in range(MAX_CORES):
         "color": indexed_color(i, MAX_CORES),
     }
 
-metric_info["system_time"] = {
-    "title": _l("CPU time in system space"),
-    "unit": "s",
-    "color": "#ff6000",
-}
-
 metric_info["cpu_reservation"] = {
     "title": _l("CPU reservation"),
     "unit": "%",
@@ -279,46 +273,6 @@ metric_info["cpu_reservation"] = {
 #   +----------------------------------------------------------------------+
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
-
-graph_info["used_cpu_time"] = {
-    "title": _l("Used CPU Time"),
-    "metrics": [
-        ("user_time", "area"),
-        ("children_user_time", "stack"),
-        ("system_time", "stack"),
-        ("children_system_time", "stack"),
-        (
-            "user_time,children_user_time,system_time,children_system_time,+,+,+#888888",
-            "line",
-            _l("Total"),
-        ),
-    ],
-    "omit_zero_metrics": True,
-    "conflicting_metrics": ["cmk_time_agent", "cmk_time_snmp", "cmk_time_ds"],
-}
-
-graph_info["cmk_cpu_time_by_phase"] = {
-    "title": _l("Time usage by phase"),
-    "metrics": [
-        ("user_time,children_user_time,+", "stack", _l("CPU time in user space")),
-        ("system_time,children_system_time,+", "stack", _l("CPU time in operating system")),
-        ("cmk_time_agent", "stack"),
-        ("cmk_time_snmp", "stack"),
-        ("cmk_time_ds", "stack"),
-        ("execution_time", "line"),
-    ],
-    "optional_metrics": ["cmk_time_agent", "cmk_time_snmp", "cmk_time_ds"],
-}
-
-graph_info["cpu_time"] = {
-    "title": _l("CPU Time"),
-    "metrics": [
-        ("user_time", "area"),
-        ("system_time", "stack"),
-        ("user_time,system_time,+", "line", _l("Total")),
-    ],
-    "conflicting_metrics": ["children_user_time"],
-}
 
 graph_info["tapes_utilization"] = {
     "title": _l("Tapes utilization"),

@@ -96,14 +96,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["execution_time"],
-        "total": 90.0,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "session_rate",
         "half_value": 50.0,

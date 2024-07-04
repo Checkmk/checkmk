@@ -169,18 +169,6 @@ metric_info["session_rate"] = {
     "color": "#4080a0",
 }
 
-metric_info["children_user_time"] = {
-    "title": _("Child time in user space"),
-    "unit": "s",
-    "color": "#aef090",
-}
-
-metric_info["children_system_time"] = {
-    "title": _("Child time in system space"),
-    "unit": "s",
-    "color": "#ffb080",
-}
-
 metric_info["sync_latency"] = {
     "title": _("Sync latency"),
     "unit": "s",

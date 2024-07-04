@@ -57,24 +57,6 @@ metric_info["helper_usage_cmk"] = {
     "color": "15/a",
 }
 
-metric_info["cmk_time_agent"] = {
-    "title": _l("Time spent waiting for Checkmk agent"),
-    "unit": "s",
-    "color": "36/a",
-}
-
-metric_info["cmk_time_snmp"] = {
-    "title": _l("Time spent waiting for SNMP responses"),
-    "unit": "s",
-    "color": "32/a",
-}
-
-metric_info["cmk_time_ds"] = {
-    "title": _l("Time spent waiting for special agent"),
-    "unit": "s",
-    "color": "34/a",
-}
-
 metric_info["normal_updates"] = {
     "title": _l("Pending normal updates"),
     "unit": "count",

@@ -352,8 +352,6 @@ def test_non_trivial_graph_declarations() -> None:
     assert set(non_trivial_graphs) == {
         "bandwidth",
         "bandwidth_translated",
-        "cmk_cpu_time_by_phase",
-        "cpu_time",
         "cpu_utilization_3",
         "cpu_utilization_4",
         "cpu_utilization_5",
@@ -377,7 +375,6 @@ def test_non_trivial_graph_declarations() -> None:
         "savings",
         "shrinking",
         "time_offset",
-        "used_cpu_time",
         "util_average_1",
         "util_average_2",
         "util_fallback",

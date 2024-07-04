@@ -21,12 +21,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["helper_usage_cmk"] = {
-    "title": _l("Checkmk helper usage"),
-    "unit": "%",
-    "color": "15/a",
-}
-
 metric_info["normal_updates"] = {
     "title": _l("Pending normal updates"),
     "unit": "count",
@@ -50,14 +44,6 @@ metric_info["security_updates"] = {
 #   +----------------------------------------------------------------------+
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
-
-graph_info["helper_usage_cmk"] = {
-    "title": _l("Checkmk helper usage"),
-    "metrics": [
-        ("helper_usage_cmk", "area"),
-    ],
-    "range": (0, 100),
-}
 
 graph_info["pending_updates"] = {
     "title": _l("Pending updates"),

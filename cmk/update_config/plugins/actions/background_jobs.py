@@ -27,8 +27,15 @@ def _rename_background_job_dirs(logger: Logger) -> None:
     """
     logger.debug("       Rename directories of service discovery background job...")
     dir_prefix: Literal["service_discovery-"] = "service_discovery-"
+    background_job_path = BackgroundJobDefines.base_dir
+    if not os.path.exists(background_job_path):
+        logger.debug(
+            f"       Background job path {background_job_path} not found, skipping update step..."
+        )
+        return
+
     try:
-        for item in os.listdir(background_job_path := BackgroundJobDefines.base_dir):
+        for item in os.listdir(background_job_path):
             if not item.startswith(dir_prefix):
                 continue
 

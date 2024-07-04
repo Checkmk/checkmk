@@ -10,7 +10,7 @@ from cmk.gui.valuespec import TextInput, ValueSpec
 def vs_element_inventory_visible_raw_path() -> tuple[str, ValueSpec]:
     # Via 'Display options::Show internal tree paths' the tree paths are shown as 'path.to.node'.
     # We keep this format in order to easily copy&paste these tree paths to
-    # 'Contact groups::Permitted HW/SW inventory paths'.
+    # 'Contact groups::Permitted HW/SW Inventory paths'.
     return (
         "visible_raw_path",
         TextInput(

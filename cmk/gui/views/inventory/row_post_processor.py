@@ -92,7 +92,7 @@ def _add_inventory_data(rows: Rows) -> None:
         user_errors.add(
             MKUserError(
                 "load_structured_data_tree",
-                _("Cannot load HW/SW inventory trees %s. Please remove the corrupted files.")
+                _("Cannot load HW/SW Inventory trees %s. Please remove the corrupted files.")
                 % ", ".join(sorted(corrupted_inventory_files)),
             )
         )

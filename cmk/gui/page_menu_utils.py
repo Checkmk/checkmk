@@ -236,7 +236,7 @@ def _collect_linked_visuals_of_type(
             continue
 
         # Optional feature of visuals: Make them dynamically available as links or not.
-        # This has been implemented for HW/SW inventory views which are often useless when a host
+        # This has been implemented for HW/SW Inventory views which are often useless when a host
         # has no such information available. For example the "Oracle Tablespaces" inventory view
         # is useless on hosts that don't host Oracle databases.
         vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)

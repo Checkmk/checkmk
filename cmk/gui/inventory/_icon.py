@@ -25,7 +25,7 @@ class InventoryIcon(Icon):
 
     @classmethod
     def title(cls) -> str:
-        return _("HW/SW inventory")
+        return _("HW/SW Inventory")
 
     def host_columns(self) -> list[str]:
         return ["name"]

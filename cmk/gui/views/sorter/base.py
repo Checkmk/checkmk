@@ -87,7 +87,7 @@ class Sorter(abc.ABC):
     # TODO: Cleanup this hack
     @property
     def load_inv(self) -> bool:
-        """Whether or not to load the HW/SW inventory for this column"""
+        """Whether or not to load the HW/SW Inventory for this column"""
         return False
 
 

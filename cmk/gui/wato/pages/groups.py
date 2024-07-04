@@ -520,7 +520,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
         super()._show_extra_page_elements()
 
         forms.header(_("Permissions"))
-        forms.section(_("Permitted HW/SW inventory paths"))
+        forms.section(_("Permitted HW/SW Inventory paths"))
         self._vs_inventory_paths_and_keys().render_input(
             "inventory_paths", self.group.get("inventory_paths")
         )

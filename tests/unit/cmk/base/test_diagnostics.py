@@ -374,7 +374,7 @@ def test_diagnostics_element_checkmk_overview() -> None:
     "host_list, host_tree, error",
     [
         ([], None, "No Checkmk server found"),
-        ([["checkmk-server-name"]], None, "No HW/SW inventory tree of 'checkmk-server-name' found"),
+        ([["checkmk-server-name"]], None, "No HW/SW Inventory tree of 'checkmk-server-name' found"),
         (
             [["checkmk-server-name"]],
             {
@@ -384,7 +384,7 @@ def test_diagnostics_element_checkmk_overview() -> None:
                     "applications": {},
                 },
             },
-            "No HW/SW inventory node 'Software > Applications > Checkmk'",
+            "No HW/SW Inventory node 'Software > Applications > Checkmk'",
         ),
     ],
 )
@@ -396,7 +396,7 @@ def test_diagnostics_element_checkmk_overview_error(
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
     if host_tree:
-        # Fake HW/SW inventory tree
+        # Fake HW/SW Inventory tree
         inventory_dir = Path(cmk.utils.paths.inventory_output_dir)
         inventory_dir.mkdir(parents=True, exist_ok=True)
         with inventory_dir.joinpath("checkmk-server-name").open("w") as f:
@@ -465,7 +465,7 @@ def test_diagnostics_element_checkmk_overview_content(
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
     if host_tree:
-        # Fake HW/SW inventory tree
+        # Fake HW/SW Inventory tree
         inventory_dir = Path(cmk.utils.paths.inventory_output_dir)
         inventory_dir.mkdir(parents=True, exist_ok=True)
         with inventory_dir.joinpath("checkmk-server-name").open("w") as f:

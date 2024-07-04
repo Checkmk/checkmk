@@ -20,7 +20,7 @@ def post_process_rows(
     """Extend the rows fetched from livestatus with additional information
 
     For example:
-        - Add HW/SW inventory data when needed
+        - Add HW/SW Inventory data when needed
         - Add SLA data when needed (Enterprise editions only)
     """
     if not rows:

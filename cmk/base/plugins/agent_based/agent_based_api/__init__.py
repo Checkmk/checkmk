@@ -9,5 +9,5 @@ This API provides tools for the implementation of
 
  * **check plug-ins** subscribing to sections and creating services
 
- * **inventory plug-ins** subscribing to sections and creating entries for the HW/SW inventory
+ * **inventory plug-ins** subscribing to sections and creating entries for the HW/SW Inventory
 """

@@ -464,7 +464,7 @@ def test_inventory_verbose(execute: Execute) -> None:
         p = execute(["cmk", "-v", opt, "modes-test-host"])
         assert p.returncode == 0, on_failure(p)
         assert p.stderr == ""
-        assert p.stdout.startswith("Doing HW/SW inventory on: modes-test-host\n")
+        assert p.stdout.startswith("Doing HW/SW Inventory on: modes-test-host\n")
         stdout_words = p.stdout.split()
         for expected_word in ("check_mk:", "lnx_if:", "mem:"):
             assert expected_word in stdout_words

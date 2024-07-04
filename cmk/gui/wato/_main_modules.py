@@ -327,7 +327,7 @@ class MainModuleHWSWInventory(ABCMainModule):
 
     @property
     def title(self) -> str:
-        return _("HW/SW inventory rules")
+        return _("HW/SW Inventory rules")
 
     @property
     def icon(self) -> Icon:

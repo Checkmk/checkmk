@@ -490,7 +490,7 @@ def _collect_item(item: Attributes | TableRow, collection: ItemDataCollection) -
 # longer than their validity period.
 #
 # 1.) Collect cache infos from plugins if and only if there is a configured 'path-to-node' and
-#     attributes/table keys entry in the ruleset 'Retention intervals for HW/SW inventory
+#     attributes/table keys entry in the ruleset 'Retention intervals for HW/SW Inventory
 #     entities'.
 #
 # 2.) Process collected cache infos - handle the following four cases via AttributesUpdater,

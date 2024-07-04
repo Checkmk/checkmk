@@ -258,7 +258,7 @@ def _valuespec_inv_parameters_lnx_sysctl():
             "This rule allows for defining regex-patterns for in- and excluding kernel "
             "configuration parameters in the inventory. By default, no parameters are included. "
             "Note that some kernel configuration parameters change frequently. Inventorizing "
-            "one of these parameters will lead to frequent changes in the HW/SW inventory, "
+            "one of these parameters will lead to frequent changes in the HW/SW Inventory, "
             "which can quickly fill up the temporary file system."
         ),
         elements=[
@@ -334,7 +334,7 @@ def _valuespec_inv_retention_intervals() -> ValueSpec:
             ],
             optional_keys=["attributes", "columns"],
         ),
-        title=_("Retention intervals for HW/SW inventory entities"),
+        title=_("Retention intervals for HW/SW Inventory entities"),
         help=vs_inventory_path_or_keys_help()
         + _(
             "<br>With these intervals specific single values or table columns can be kept"

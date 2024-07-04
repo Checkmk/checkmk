@@ -33,7 +33,7 @@ def format_view_title(name: str, view: ViewSpec) -> str:
     if "event" in infos:
         title_parts.append(_("Event Console"))
     elif view["datasource"].startswith("inv"):
-        title_parts.append(_("HW/SW inventory"))
+        title_parts.append(_("HW/SW Inventory"))
     elif "aggr" in infos:
         title_parts.append(_("BI"))
     elif "log" in infos:

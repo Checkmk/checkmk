@@ -153,7 +153,7 @@ class LabelsSerializer:
 
     @staticmethod
     def deserialize(raw: bytes) -> Mapping[str, HostLabelValueDict]:
-        # Skip labels discovered by the previous HW/SW inventory approach
+        # Skip labels discovered by the previous HW/SW Inventory approach
         # (which was addded+removed in 1.6 beta)
         return {
             str(key): {

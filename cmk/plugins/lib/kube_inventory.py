@@ -36,7 +36,7 @@ def match_expressions_to_str(match_expressions: MatchExpressions) -> str:
 def labels_to_table(labels: Labels) -> Iterator[TableRow]:
     """Populate table of labels.
 
-    This function is intended for usage with HW/SW inventory on a Kubernetes objects. It picks the
+    This function is intended for usage with HW/SW Inventory on a Kubernetes objects. It picks the
     correct path, and relies on the uniqueness of the label names of a Kubernetes objects. Using
     this function ensures a uniform look across inventories.
 

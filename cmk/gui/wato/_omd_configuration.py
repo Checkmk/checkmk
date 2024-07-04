@@ -382,7 +382,7 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
                             "are normally deleted. But there are cases, where the files are left on "
                             "the disk until manual deletion, for example if you move a host from one "
                             "site to another or deleting a host manually from the configuration.<br>"
-                            "The performance data (RRDs) and HW/SW inventory archive are never deleted "
+                            "The performance data (RRDs) and HW/SW Inventory archive are never deleted "
                             "during host deletion. They are only deleted automatically when you enable "
                             "this option and after the configured period."
                         ),

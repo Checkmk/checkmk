@@ -77,7 +77,7 @@ class WerkTranslator:
             "ec": _("Event console"),
             "livestatus": _("Livestatus"),
             "liveproxy": _("Livestatus proxy"),
-            "inv": _("HW/SW inventory"),
+            "inv": _("HW/SW Inventory"),
             "rest-api": _("REST API"),
             # CEE
             "cmc": _("The Checkmk Micro Core"),

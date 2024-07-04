@@ -131,7 +131,7 @@ class RowTableInventory(ABCRowTable):
             user_errors.add(
                 MKUserError(
                     "load_inventory_tree",
-                    _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.")
+                    _("Cannot load HW/SW Inventory tree %s. Please remove the corrupted file.")
                     % get_short_inventory_filepath(hostrow.get("host_name", "")),
                 )
             )
@@ -158,7 +158,7 @@ class RowTableInventoryHistory(ABCRowTable):
                 MKUserError(
                     "load_inventory_delta_tree",
                     _(
-                        "Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
+                        "Cannot load HW/SW Inventory history entries %s. Please remove the corrupted files."
                     )
                     % ", ".join(sorted(corrupted_history_files)),
                 )

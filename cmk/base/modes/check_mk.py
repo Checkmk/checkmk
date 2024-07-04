@@ -2501,7 +2501,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     if args:
         hostnames = modes.parse_hostname_list(config_cache, hosts_config, args, with_clusters=True)
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
-        console.verbose(f"Doing HW/SW inventory on: {', '.join(hostnames)}")
+        console.verbose(f"Doing HW/SW Inventory on: {', '.join(hostnames)}")
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(
@@ -2511,7 +2511,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
                 if config_cache.is_active(hn) and config_cache.is_online(hn)
             }
         )
-        console.verbose("Doing HW/SW inventory on all hosts")
+        console.verbose("Doing HW/SW Inventory on all hosts")
 
     if "force" in options:
         file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
@@ -3151,7 +3151,7 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
         ),
         Option(
             long_option=OPT_CHECKMK_OVERVIEW,
-            short_help="Pack HW/SW inventory node 'Software > Applications > Checkmk'",
+            short_help="Pack HW/SW Inventory node 'Software > Applications > Checkmk'",
         ),
         Option(
             long_option=OPT_CHECKMK_CONFIG_FILES,

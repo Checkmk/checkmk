@@ -1283,7 +1283,7 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("Deprecated HW/SW inventory plug-ins")
+        return _("Deprecated HW/SW Inventory plug-ins")
 
     def help(self) -> str:
         return _(
@@ -1300,13 +1300,13 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
             if plugin_files := list(local_inventory_dir.iterdir()):
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("%d ignored HW/SW inventory plug-ins found: %s")
+                    text=_("%d ignored HW/SW Inventory plug-ins found: %s")
                     % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
                 )
                 return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("No ignored HW/SW inventory plug-ins found")
+            state=ACResultState.OK, text=_("No ignored HW/SW Inventory plug-ins found")
         )
 
 

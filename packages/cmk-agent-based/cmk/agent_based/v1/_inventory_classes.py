@@ -53,7 +53,7 @@ class _AttributesTuple(NamedTuple):
 
 
 class Attributes(_AttributesTuple):
-    """Attributes to be written at a node in the HW/SW inventory"""
+    """Attributes to be written at a node in the HW/SW Inventory"""
 
     def __new__(
         cls,
@@ -102,7 +102,7 @@ class _TableRowTuple(NamedTuple):
 
 
 class TableRow(_TableRowTuple):
-    """TableRow to be written into a Table at a node in the HW/SW inventory"""
+    """TableRow to be written into a Table at a node in the HW/SW Inventory"""
 
     def __new__(
         cls,

@@ -1711,7 +1711,7 @@ sql_version() {
 }
 
 sql_systemparameter() {
-    # TODO In the future, all data needed for HW/SW inventory, should
+    # TODO In the future, all data needed for HW/SW Inventory, should
     # implement a "persist:$UNTIL" to reduce amount of data transmission
     echo "PROMPT <<<oracle_systemparameter:sep(124)>>>"
     echo "select upper(i.instance_name)

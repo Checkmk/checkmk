@@ -205,7 +205,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     },
                 },
             ],
-            # Enable HW/SW inventory + status data inventory for docker
+            # Enable HW/SW Inventory + status data inventory for docker
             # containers, kubernetes objects, robotmk and Check-MK servers by default to
             # simplify the setup procedure for them
             "active_checks": {

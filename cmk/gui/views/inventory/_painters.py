@@ -501,7 +501,7 @@ def node_painter_from_hint(
         ),
         # Only attributes can be shown in reports. There is currently no way to render trees.
         # The HTML code would simply be stripped by the default rendering mechanism which does
-        # not look good for the HW/SW inventory tree
+        # not look good for the HW/SW Inventory tree
         printable=False,
         load_inv=True,
         sorter=hint.ident,

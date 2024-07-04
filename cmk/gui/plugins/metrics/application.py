@@ -22,12 +22,6 @@ from cmk.gui.i18n import _l
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
 # DRBD metrics
-metric_info["sms_success_rate"] = {
-    "title": _l("SMS success rate"),
-    "unit": "%",
-    "color": "35/a",
-}
-
 metric_info["cpu_credits_consumed"] = {
     "title": _l("Credits consumed"),
     "unit": "count",

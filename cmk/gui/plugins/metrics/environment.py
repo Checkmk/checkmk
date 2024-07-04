@@ -26,18 +26,6 @@ metric_info["temp"] = {
     "color": "16/a",
 }
 
-metric_info["smoke_ppm"] = {
-    "title": _("Smoke"),
-    "unit": "%/m",
-    "color": "#60f088",
-}
-
-metric_info["smoke_perc"] = {
-    "title": _("Smoke"),
-    "unit": "%",
-    "color": "#60f088",
-}
-
 metric_info["airflow"] = {
     "title": _("Air flow"),
     "unit": "l/s",

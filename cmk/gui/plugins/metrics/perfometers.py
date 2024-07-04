@@ -713,22 +713,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["smoke_ppm"],
-        "total": 10,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["smoke_perc"],
-        "total": 100,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["availability"],
         "total": 100.0,
     }

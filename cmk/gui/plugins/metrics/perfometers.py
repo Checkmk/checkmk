@@ -672,26 +672,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "dual",
-        "perfometers": [
-            {"type": "linear", "segments": ["total_hitratio"], "total": 100},
-            {"type": "linear", "segments": ["data_hitratio"], "total": 100},
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {"type": "linear", "segments": ["index_hitratio"], "total": 100},
-            {"type": "linear", "segments": ["xda_hitratio"], "total": 100},
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["output_load"],
         "total": 100.0,

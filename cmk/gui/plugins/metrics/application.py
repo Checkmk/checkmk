@@ -21,30 +21,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["xda_hitratio"] = {
-    "title": _l("XDA hitratio"),
-    "unit": "%",
-    "color": "#0ae86d",
-}
-
-metric_info["data_hitratio"] = {
-    "title": _l("Data hitratio"),
-    "unit": "%",
-    "color": "#2828de",
-}
-
-metric_info["index_hitratio"] = {
-    "title": _l("Index hitratio"),
-    "unit": "%",
-    "color": "#dc359f",
-}
-
-metric_info["total_hitratio"] = {
-    "title": _l("Total hitratio"),
-    "unit": "%",
-    "color": "#2e282c",
-}
-
 metric_info["deadlocks"] = {
     "title": _l("Deadlocks"),
     "unit": "1/s",
@@ -175,20 +151,6 @@ metric_info["cpu_credits_remaining"] = {
 #   +----------------------------------------------------------------------+
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
-
-# TODO: Warum ist hier überall line? Default ist Area.
-# Kann man die hit ratios nicht schön stacken? Ist
-# nicht total die Summe der anderen?
-
-graph_info["bufferpool_hitratios"] = {
-    "title": _l("Bufferpool Hitratios"),
-    "metrics": [
-        ("total_hitratio", "line"),
-        ("data_hitratio", "line"),
-        ("index_hitratio", "line"),
-        ("xda_hitratio", "line"),
-    ],
-}
 
 graph_info["deadlocks_and_waits"] = {
     "title": _l("Dead- and waitlocks"),

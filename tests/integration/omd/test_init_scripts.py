@@ -20,6 +20,7 @@ def test_init_scripts(site: Site) -> None:
         "stunnel",
         "redis",
         "agent-receiver",
+        "piggyback-hub",
     ]
 
     if not site.version.is_raw_edition():

@@ -144,7 +144,7 @@ from cmk.checkengine.discovery import (
     set_autochecks_of_real_hosts,
 )
 from cmk.checkengine.discovery._utils import DiscoveredItem
-from cmk.checkengine.fetcher import FetcherType, SourceType
+from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
@@ -405,32 +405,73 @@ class AutomationDiscoveryPreview(Automation):
         host_name = HostName(args[0])
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+        on_error = OnError.RAISE if raise_errors else OnError.WARN
+        file_cache_options = FileCacheOptions(
+            use_outdated=prevent_fetching, use_only_cache=prevent_fetching
+        )
+        fetcher = CMKFetcher(
+            config_cache,
+            config_cache.fetcher_factory(),
+            file_cache_options=file_cache_options,
+            force_snmp_cache_refresh=not prevent_fetching,
+            ip_address_of=config.ConfiguredIPLookup(
+                config_cache, error_handler=config.handle_ip_lookup_failure
+            ),
+            mode=Mode.DISCOVERY,
+            on_error=on_error,
+            selected_sections=NO_SELECTION,
+            simulation_mode=config.simulation_mode,
+            snmp_backend_override=None,
+            password_store_file=cmk.utils.password_store.pending_password_store_path(),
+        )
+        ip_address_of = config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        )
+        hosts_config = config.make_hosts_config()
+        ip_address = (
+            None
+            if host_name in hosts_config.clusters
+            or ConfigCache.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP
+            # We *must* do the lookup *before* calling `get_host_attributes()`
+            # because...  I don't know... global variables I guess.  In any case,
+            # doing it the other way around breaks one integration test.
+            # note (mo): The baviour of repeated lookups changed. The above _might_ not be true anymore.
+            else config.lookup_ip_address(config_cache, host_name)
+        )
         return _get_discovery_preview(
             host_name,
-            config_cache,
-            not prevent_fetching,
-            OnError.RAISE if raise_errors else OnError.WARN,
+            on_error,
+            fetcher,
+            file_cache_options,
+            ip_address_of,
+            ip_address,
         )
 
 
 automations.register(AutomationDiscoveryPreview())
 
 
-# TODO: invert the 'perform_scan' logic -> 'prevent_fetching'
 def _get_discovery_preview(
     host_name: HostName,
-    config_cache: ConfigCache,
-    perform_scan: bool,
     on_error: OnError,
+    fetcher: FetcherFunction,
+    file_cache_options: FileCacheOptions,
+    ip_address_of: config.IPLookup,
+    ip_address: HostAddress | None,
 ) -> ServiceDiscoveryPreviewResult:
     buf = io.StringIO()
-    ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=config.handle_ip_lookup_failure
-    )
+
     with redirect_stdout(buf), redirect_stderr(buf):
         log.setup_console_logging()
 
-        check_preview = _execute_discovery(host_name, perform_scan, on_error, ip_address_of)
+        check_preview = _execute_discovery(
+            host_name,
+            on_error,
+            ip_address_of,
+            ip_address,
+            fetcher,
+            file_cache_options,
+        )
 
         def make_discovered_host_labels(
             labels: Sequence[HostLabel],
@@ -543,14 +584,12 @@ def _active_check_preview_rows(
 
 def _execute_discovery(
     host_name: HostName,
-    perform_scan: bool,
     on_error: OnError,
     ip_address_of: config.IPLookup,
+    ip_address: HostAddress | None,
+    fetcher: FetcherFunction,
+    file_cache_options: FileCacheOptions,
 ) -> CheckPreview:
-    file_cache_options = FileCacheOptions(
-        use_outdated=not perform_scan, use_only_cache=not perform_scan
-    )
-
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
     ruleset_matcher = config_cache.ruleset_matcher
@@ -563,31 +602,7 @@ def _execute_discovery(
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
-    fetcher = CMKFetcher(
-        config_cache,
-        config_cache.fetcher_factory(),
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=perform_scan,
-        ip_address_of=config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
-        ),
-        mode=Mode.DISCOVERY,
-        on_error=on_error,
-        selected_sections=NO_SELECTION,
-        simulation_mode=config.simulation_mode,
-        snmp_backend_override=None,
-        password_store_file=cmk.utils.password_store.pending_password_store_path(),
-    )
-    ip_address = (
-        None
-        if host_name in hosts_config.clusters
-        or ConfigCache.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP
-        # We *must* do the lookup *before* calling `get_host_attributes()`
-        # because...  I don't know... global variables I guess.  In any case,
-        # doing it the other way around breaks one integration test.
-        # note (mo): The baviour of repeated lookups changed. The above _might_ not be true anymore.
-        else config.lookup_ip_address(config_cache, host_name)
-    )
+
     with (
         set_value_store_manager(
             ValueStoreManager(host_name), store_changes=False

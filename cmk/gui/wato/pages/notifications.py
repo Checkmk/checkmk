@@ -733,7 +733,6 @@ class ModeNotifications(ABCNotificationsMode):
         hostname = general_test_options["on_hostname_hint"]
         context: dict[str, Any] = {
             "HOSTNAME": hostname,
-            "HOSTALIAS": hostname,
         }
 
         simulation_mode = general_test_options["simulation_mode"]
@@ -848,8 +847,10 @@ class ModeNotifications(ABCNotificationsMode):
         so we enrich the context after fetching all user defined options"""
         hostname = context["HOSTNAME"]
         resp = sites.live().query(
-            "GET hosts\nColumns: custom_variable_names custom_variable_values groups contact_groups labels\nFilter: host_name = %s\n"
-            % hostname
+            "GET hosts\n"
+            "Columns: custom_variable_names custom_variable_values groups "
+            "contact_groups labels host_alias\n"
+            f"Filter: host_name = {hostname}\n"
         )
         if len(resp) < 1:
             raise MKUserError(
@@ -861,6 +862,7 @@ class ModeNotifications(ABCNotificationsMode):
         context["HOSTGROUPNAMES"] = ",".join(resp[0][2])
         context["HOSTCONTACTGROUPNAMES"] = ",".join(resp[0][3])
         self._set_labels(context, resp[0][4], "HOST")
+        context["HOSTALIAS"] = resp[0][5]
 
     def _set_custom_variables(
         self,

@@ -1080,15 +1080,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "items_count",
-        "half_value": 1000,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["log_file_utilization"],
         "total": 100.0,

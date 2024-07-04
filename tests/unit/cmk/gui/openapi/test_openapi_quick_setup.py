@@ -16,6 +16,21 @@ def test_get_overview(clients: ClientRegistry) -> None:
                 "title": "Prepare AWS for Checkmk",
                 "sub_title": None,
             },
+            {
+                "stage_id": 2,
+                "title": "Configure host & region",
+                "sub_title": "Name your host, path and select the region you would like to monitor",
+            },
+            {
+                "stage_id": 3,
+                "title": "Configure services to monitor",
+                "sub_title": "Select & configure AWS services you would like to monitor",
+            },
+            {
+                "stage_id": 4,
+                "title": "Review & run service discovery",
+                "sub_title": "Double check your configuration",
+            },
         ],
         "stage": {
             "stage_id": 1,

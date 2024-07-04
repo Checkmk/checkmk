@@ -21,36 +21,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["hosts_active"] = {
-    "title": _l("Active hosts"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["hosts_inactive"] = {
-    "title": _l("Inactive hosts"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["hosts_degraded"] = {
-    "title": _l("Degraded hosts"),
-    "unit": "count",
-    "color": "23/a",
-}
-
-metric_info["hosts_offline"] = {
-    "title": _l("Offline hosts"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["hosts_other"] = {
-    "title": _l("Other hosts"),
-    "unit": "count",
-    "color": "41/a",
-}
-
 metric_info["helper_usage_cmk"] = {
     "title": _l("Checkmk helper usage"),
     "unit": "%",

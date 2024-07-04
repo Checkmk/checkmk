@@ -773,19 +773,6 @@ graph_info["number_of_total_and_running_sessions"] = {
     ],
 }
 
-
-graph_info["cluster_hosts"] = {
-    "title": _("Hosts"),
-    "metrics": [
-        ("hosts_active", "stack"),
-        ("hosts_inactive", "stack"),
-        ("hosts_degraded", "stack"),
-        ("hosts_offline", "stack"),
-        ("hosts_other", "stack"),
-    ],
-    "optional_metrics": ["hosts_active"],
-}
-
 graph_info["modems"] = {
     "title": _("Modems"),
     "metrics": [

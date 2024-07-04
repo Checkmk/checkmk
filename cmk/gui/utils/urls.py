@@ -239,19 +239,11 @@ def makeactionuri(
     filename: str | None = None,
     delvars: Sequence[str] | None = None,
 ) -> str:
-    # We have to assert the attributes, due to importing flask.session because of
-    # circular imports.
-    assert hasattr(session, "session_info")  # mypy
-    return makeuri(
-        request,
-        addvars
-        + [
-            ("_transid", transaction_manager.get()),
-            ("csrf_token", session.session_info.csrf_token),
-        ],
-        filename=filename,
-        delvars=delvars,
-    )
+    session_vars: HTTPVariables = [("_transid", transaction_manager.get())]
+    if session and hasattr(session, "session_info"):
+        session_vars.append(("csrf_token", session.session_info.csrf_token))
+
+    return makeuri(request, addvars + session_vars, filename=filename, delvars=delvars)
 
 
 def makeactionuri_contextless(
@@ -260,18 +252,11 @@ def makeactionuri_contextless(
     addvars: HTTPVariables,
     filename: str | None = None,
 ) -> str:
-    # We have to assert the attributes, due to importing flask.session because of
-    # circular imports.
-    assert hasattr(session, "session_info")  # mypy
-    return makeuri_contextless(
-        request,
-        addvars
-        + [
-            ("_transid", transaction_manager.get()),
-            ("csrf_token", session.session_info.csrf_token),
-        ],
-        filename=filename,
-    )
+    session_vars: HTTPVariables = [("_transid", transaction_manager.get())]
+    if session and hasattr(session, "session_info"):
+        session_vars.append(("csrf_token", session.session_info.csrf_token))
+
+    return makeuri_contextless(request, addvars + session_vars, filename=filename)
 
 
 def makeuri_contextless_rulespec_group(

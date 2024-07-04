@@ -21,18 +21,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["num_user"] = {
-    "title": _l("User"),
-    "unit": "count",
-    "color": "23/a",
-}
-
-metric_info["max_user"] = {
-    "title": _l("Maximum allowed users"),
-    "unit": "count",
-    "color": "25/a",
-}
-
 # DRBD metrics
 metric_info["memory_reservation"] = {
     "title": _l("Memory reservation"),
@@ -81,14 +69,6 @@ graph_info["current_users"] = {
     ],
 }
 
-
-graph_info["firewall_users"] = {
-    "title": _l("Number of active users"),
-    "metrics": [
-        ("num_user", "line"),
-        ("max_user", "line"),
-    ],
-}
 
 graph_info["cpu_credits"] = {
     "title": _l("CPU credits"),

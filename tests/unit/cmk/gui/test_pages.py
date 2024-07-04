@@ -235,6 +235,7 @@ def test_registered_pages() -> None:
             "noauth:cognito_sso",
             "noauth:cognito_callback",
             "cognito_logout",
+            "noauth:verification_request",
         ]
 
     # TODO: Depending on how we call the test (single test or whole package) we

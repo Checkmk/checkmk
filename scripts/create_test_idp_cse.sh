@@ -32,5 +32,16 @@ json_string=$(jq --null-input \
 
 echo "$json_string" | jq "." | sudo tee /etc/cse/admin_panel_url.json >/dev/null
 
+CSE_LICENSE_SECRET_PATH=/etc/cse/client-secret
+json_string=$(jq --null-input \
+    --arg secret_path "$CSE_LICENSE_SECRET_PATH" \
+    '{"secret_path": $secret_path}')
+
+echo "$json_string" | jq "." | sudo tee /etc/cse/cmk_license_settings.json >/dev/null
+
+# Write the test license secret to a file
+CSE_LICENSE_SECRET=$(head -c 32 /dev/urandom | sha256sum -z | awk -F' ' '{{printf($1)}}')
+echo "$CSE_LICENSE_SECRET" | sudo tee "$CSE_LICENSE_SECRET_PATH" >/dev/null
+
 export PYTHONPATH="${REPO_PATH}"
 "${REPO_PATH}/scripts/run-pipenv" run uvicorn tests.testlib.cse.openid_oauth_provider:application --host "${HOST}" --port "${PORT}"

@@ -1,0 +1,55 @@
+import type { ComponentSpec } from './widgets/widget_types'
+import type { ValidationMessages } from '@/lib/validation'
+
+//Quick setup
+export interface QuickSetupSpec {
+  /** @property {string} quick_setup_id - The quick setup id  */
+  quick_setup_id: string
+}
+
+//Quick setup stage
+export type StageData = Record<string, object>
+type AllValidationMessages = Record<string, ValidationMessages>
+
+export interface QuickSetupStageSpec {
+  /** @property {string} title - String to be displayed next to the stage number */
+  title: string
+
+  /** @property {string} sub_title - String to be displayed below the title in current stage */
+  sub_title?: string | null
+
+  /** @property {string} next_button_label - Label for the "go to the next step" button */
+  next_button_label?: string | null
+
+  /** @property {ComponentSpec[]} components - List of widgets to render in current stage */
+  components?: ComponentSpec[]
+
+  /** @property {ComponentSpec[]} recap - List of widgets to render in completed stages*/
+  recap?: ComponentSpec[]
+
+  /** @property {unknown} user_input - Input from the user */
+  user_input: unknown
+
+  /** @property {AllValidationMessages} form_spec_errors - Object containing the validation errors of all FormSpecWidgets from current stage*/
+  form_spec_errors?: AllValidationMessages
+
+  /** @property {string[]} stage_errors - List of global errors from the current stage */
+  other_errors?: string[]
+}
+
+export interface QuickSetupStepWithIndexSpec {
+  /**@property {number} index - The index of the current step */
+  index: number
+
+  /**@property {number} steps - Total steps count */
+  steps: number
+
+  /**@property {number} selectedStep - The selected step's index  */
+  selectedStep: number
+
+  /** @property {boolean} loading - A flag to indicate if the quick-setup is performing a request */
+  loading: boolean
+
+  /** @property {QuickSetupStageSpec} spec - Components, titles, subtitles, text, error messages, data, etc of current stage */
+  spec: QuickSetupStageSpec
+}

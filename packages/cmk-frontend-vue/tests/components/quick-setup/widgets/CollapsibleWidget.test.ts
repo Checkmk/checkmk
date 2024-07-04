@@ -5,8 +5,8 @@ test('CollapsibleWidget renders values and label', async () => {
   render(CollapsibleWidget, {
     props: {
       open: true,
-      label: 'I am a label',
-      components: [
+      title: 'I am a label',
+      items: [
         { widget_type: 'text', text: 'Welcome' },
         { widget_type: 'text', text: 'to Jurassic Park' }
       ]

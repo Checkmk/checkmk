@@ -9,13 +9,14 @@
 
 import 'core-js/stable'
 
-import { createApp } from 'vue'
+import { createApp, defineAsyncComponent } from 'vue'
 
-import D3Table from './views/D3Table.vue'
-import { CmkRuleset } from './components/cmk-form/'
-import Table from './views/CmkTable.vue'
 import { mixinUniqueId } from './plugins'
-import QuickSetup from './views/QuickSetup.vue'
+
+const D3Table = defineAsyncComponent(() => import('./views/D3Table.vue'))
+const Table = defineAsyncComponent(() => import('./views/CmkTable.vue'))
+const { CmkRuleset } = defineAsyncComponent(() => import('./components/cmk-form/'))
+const QuickSetup = defineAsyncComponent(() => import('./views/QuickSetup.vue'))
 
 function setupVue() {
   document.querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app]').forEach((div) => {

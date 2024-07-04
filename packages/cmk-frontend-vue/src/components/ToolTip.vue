@@ -1,12 +1,29 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+
+const DEFAULT_DELAY: number = 200
+const DEFAULT_HEIGHT: number = 16
+const DEFAULT_ICON: string = 'themes/facelift/images/icon_about_checkmk.svg'
+
+interface ToolTipInterface {
+  /** @property {number} duration - how many milliseconds should wait before displaying the tooltip  */
+  delayDuration?: number
+
+  /** @property {number} height - Height in pixels for the tooltip icon */
+  height?: number
+
+  /** @property {string} icon - URL of the icon to display */
+  icon?: string
+}
+
+defineProps<ToolTipInterface>()
 </script>
 
 <template>
-  <TooltipProvider :delay-duration="200">
+  <TooltipProvider :delay-duration="delayDuration || DEFAULT_DELAY">
     <Tooltip>
       <TooltipTrigger as-child>
-        <img class="trigger" src="themes/facelift/images/icon_about_checkmk.svg" height="16" />
+        <img class="trigger" :src="icon || DEFAULT_ICON" :height="height || DEFAULT_HEIGHT" />
       </TooltipTrigger>
       <TooltipContent as-child class="tooltipContent message">
         <div>

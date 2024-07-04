@@ -1,48 +1,25 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import { Label } from '@/components/ui/label'
-import StepNumber from './element/StepNumber.vue'
-
-import { type OverviewSpec, type StageSpec, type StepData } from '@/quick_setup_types'
 
 import CompositeWidget from '@/components/quick-setup/widgets/CompositeWidget.vue'
-
 import Button from '@/components/IconButton.vue'
+import LoadingIcon from '@/components/LoadingIcon.vue'
+import StepNumber from './element/StepNumber.vue'
+import ErrorBoundary from '@/components/ErrorBoundary.vue'
 
-interface QuickSetupStepWithIndexSpec {
-  /**@property {number} index - The index of the current step */
-  index: number
-
-  /**@property {number} steps - Total steps count */
-  steps: number
-
-  /**@property {number} selectedStep - The selected step's index  */
-  selectedStep: number
-
-  /**@property {StepData} data - User's data input */
-  data?: StepData
-
-  /** @property {OverviewSpec} overview - Overview information (title, subtitle, etc) */
-  overview: OverviewSpec
-
-  /** @property {StageSpec} stage - Components to be rendered when the step is selected */
-  stage?: StageSpec | null
-
-  /**@property {string} nextTitle - Title of the next step. It can be used as "next" button label  */
-  nextTitle?: string //Used as label of next button
-
-  /**@property {string} prevTitle - Title of the previous step. It can be used as "previous" button label  */
-  prevTitle?: string //Used as label of back button
-}
+import { type QuickSetupStepWithIndexSpec, type StageData } from './quick_setup_types'
+import AlertBox from '../AlertBox.vue'
 
 const emit = defineEmits(['prevStep', 'nextStep', 'save', 'update'])
 const props = defineProps<QuickSetupStepWithIndexSpec>()
 
-const isFirst = props.index == 0
-const isLast = props.index == props.steps - 1
+const isFirst = computed(() => props.index == 0)
+const isLast = computed(() => props.index == props.steps - 1)
+const isCompleted = computed(() => props.index < props.selectedStep)
 
-//Here we will store the user input. The key is the form's id.
-let userInput: StepData = props?.data || {}
+let userInput: StageData = (props?.spec.user_input as StageData) || {}
 
 const updateData = (id: string, value: object) => {
   userInput[id] = value
@@ -64,37 +41,51 @@ const updateData = (id: string, value: object) => {
         :active="props.index == props.selectedStep"
         :complete="props.index < props.selectedStep"
       />
-      <Label class="cmk-stepper__title">{{ props.overview.title }}</Label>
+      <Label class="cmk-stepper__title">{{ props.spec.title }}</Label>
+
+      <ErrorBoundary>
+        <CompositeWidget v-if="isCompleted" :items="props.spec.recap || []" @update="updateData" />
+      </ErrorBoundary>
+
       <Collapsible :open="props.index == props.selectedStep" class="cmk-stepper__content">
         <CollapsibleContent class="cmk-animated-collapsible">
           <div style="padding-left: 1rem">
-            <div v-if="props.overview.sub_title">
-              <Label class="cmk-stepper__subtitle">{{ props.overview.sub_title }}</Label>
+            <div v-if="props.spec.sub_title">
+              <Label class="cmk-stepper__subtitle">{{ props.spec.sub_title }}</Label>
             </div>
-
-            <CompositeWidget
-              v-if="props.stage"
-              :components="props.stage.components"
-              @update="updateData"
-            />
+            <AlertBox v-if="props.spec?.other_errors?.length" variant="error">
+              <ul>
+                <li v-for="error in props.spec.other_errors" :key="error">{{ error }}</li>
+              </ul>
+            </AlertBox>
+            <ErrorBoundary>
+              <CompositeWidget
+                v-if="props.spec?.components"
+                :items="props.spec.components"
+                :data="userInput"
+                :errors="props.spec?.form_spec_errors || {}"
+                @update="updateData"
+              />
+            </ErrorBoundary>
           </div>
 
-          <div class="cmk-stepper__action">
-            <Button
-              v-if="!isFirst"
-              style="padding-left: 1rem"
-              :label="props.prevTitle || 'Back'"
-              variant="prev"
-              @click="$emit('prevStep')"
-            />
+          <div v-if="!loading" class="cmk-stepper__action">
             <Button
               v-if="!isLast"
-              :label="props.nextTitle || 'Next'"
+              :label="props.spec.next_button_label || 'Next'"
               variant="next"
               @click="$emit('nextStep')"
             />
             <Button v-if="isLast" label="Save" variant="save" @click="$emit('save')" />
+            <Button
+              v-if="!isFirst"
+              style="padding-left: 1rem"
+              label="Back"
+              variant="prev"
+              @click="$emit('prevStep')"
+            />
           </div>
+          <div v-else class="cmk-stepper__loading"><LoadingIcon :height="16" /> Please wait...</div>
         </CollapsibleContent>
       </Collapsible>
     </div>
@@ -102,6 +93,9 @@ const updateData = (id: string, value: object) => {
 </template>
 
 <style scoped>
+.cmk-stepper__loading {
+  padding-left: 1rem;
+}
 .cmk-stepper__item {
   position: relative;
   display: flex;

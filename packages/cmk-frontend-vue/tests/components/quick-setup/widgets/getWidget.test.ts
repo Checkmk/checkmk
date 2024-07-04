@@ -5,6 +5,7 @@ import ListWidget from '@/components/quick-setup/widgets/ListWidget.vue'
 import NoneWidget from '@/components/quick-setup/widgets/NoneWidget.vue'
 import FormSpecWidget from '@/components/quick-setup/widgets/FormSpecWidget.vue'
 import CollapsibleWidget from '@/components/quick-setup/widgets/CollapsibleWidget.vue'
+import FormSpecRecapWidget from '@/components/quick-setup/widgets/FormSpecRecapWidget.vue'
 
 test('getWidget returns NoneWidget when widget_type is unknown', async () => {
   expect(getWidget('i_do_not_exist')).toBe(NoneWidget)
@@ -17,4 +18,5 @@ test('getWidget returns the proper widget', async () => {
   expect(getWidget('list_of_widgets')).toBe(ListWidget)
   expect(getWidget('form_spec')).toBe(FormSpecWidget)
   expect(getWidget('collapsible')).toBe(CollapsibleWidget)
+  expect(getWidget('form_spec_recap')).toBe(FormSpecRecapWidget)
 })

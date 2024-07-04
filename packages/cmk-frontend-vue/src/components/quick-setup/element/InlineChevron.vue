@@ -2,6 +2,7 @@
 type InlineChevronVariant = 'bottom' | 'left' | 'right'
 
 interface InlineChevronProps {
+  /**@property {string} variant - The chevron's direction */
   variant: InlineChevronVariant
 }
 

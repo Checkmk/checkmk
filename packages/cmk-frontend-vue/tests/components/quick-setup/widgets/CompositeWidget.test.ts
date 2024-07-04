@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/vue'
 test('CompositeWidget renders values and label', async () => {
   render(CompositeWidget, {
     props: {
-      components: [
+      items: [
         { widget_type: 'text', text: 'Welcome' },
         { widget_type: 'text', text: 'to Jurassic Park' }
       ]

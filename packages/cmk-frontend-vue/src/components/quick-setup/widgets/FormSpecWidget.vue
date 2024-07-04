@@ -1,14 +1,25 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
 import { type FormSpecWidgetProps } from './widget_types'
+import type { ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<FormSpecWidgetProps>()
 const emit = defineEmits(['update'])
-const internal = ref(props?.data || {})
+
+const formSpecId = props.form_spec.id as string
+const internal = ref(props?.data![formSpecId] || props.form_spec.data || {})
+
+const validationErrors = computed((): ValidationMessages => {
+  const errors = props?.errors![formSpecId] || []
+  return errors
+})
+
+//This will set a starting value on the quick setup component for this form spec
+emit('update', formSpecId, internal)
 
 watch(internal.value, (newValue) => {
-  emit('update', props.id, newValue)
+  emit('update', formSpecId, newValue)
 })
 </script>
 
@@ -16,7 +27,11 @@ watch(internal.value, (newValue) => {
   <table class="nform">
     <tr>
       <td>
-        <CmkFormDispatcher v-model:data="internal" :spec="schema" :backend-validation="[]" />
+        <CmkFormDispatcher
+          v-model:data="internal"
+          :spec="form_spec.spec"
+          :backend-validation="validationErrors"
+        />
       </td>
     </tr>
   </table>

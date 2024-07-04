@@ -2,16 +2,26 @@
 import { Button } from '@/components/ui/button'
 
 interface CustomIconButtonProps {
+  /** @property {string} iconUrl - Url of the icon to be displayed inside the button */
   iconUrl: string
+
+  /** @property {string} label - Button's caption */
   label: string
+
+  /** @property {string} ariaLabel - Aria label for the button */
   ariaLabel?: string
 }
 
 type ButtonVariant = 'prev' | 'next' | 'back' | 'save'
 
 interface PredefinedIconButtonProps {
+  /** @property {string} variant - Type of button */
   variant: ButtonVariant
+
+  /** @property {string} label - Button's caption */
   label: string
+
+  /** @property {string} ariaLabel - Aria label for the button */
   ariaLabel?: string
 }
 

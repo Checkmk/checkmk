@@ -7,7 +7,7 @@ import { type CollapsibleWidgetProps } from './widget_types'
 const props = defineProps<CollapsibleWidgetProps>()
 defineEmits(['update'])
 
-const isOpen = ref(!!props.open)
+const isOpen = ref(!!props?.open)
 
 const toggleOpen = () => {
   isOpen.value = !isOpen.value
@@ -15,8 +15,14 @@ const toggleOpen = () => {
 </script>
 
 <template>
-  <CollapsibleTitle :label="props.label" :open="isOpen" @toggle-open="toggleOpen" />
-  <CompositeWidget v-if="isOpen" :components="props.components" @update="$emit('update')" />
+  <CollapsibleTitle :title="props.title" :open="isOpen" @toggle-open="toggleOpen" />
+  <CompositeWidget
+    v-if="isOpen"
+    :items="props.items"
+    :data="props?.data || {}"
+    :errors="props.errors || {}"
+    @update="$emit('update')"
+  />
 </template>
 
 <style scoped></style>

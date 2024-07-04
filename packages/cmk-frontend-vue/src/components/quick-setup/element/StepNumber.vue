@@ -1,7 +1,12 @@
 <script setup lang="ts">
 interface StepNumberProps {
+  /** @property {number} number - The number to display in the step */
   number: number
+
+  /** @property {boolean} active - If true, the step is currently active */
   active: boolean
+
+  /** @property {boolean} complete - If true, the step is complete */
   complete: boolean
 }
 

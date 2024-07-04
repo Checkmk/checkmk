@@ -11,8 +11,14 @@ const updateData = (id: string, value: object) => {
 </script>
 
 <template>
-  <div v-for="({ widget_type, ...widget_props }, idx) in props.components" :key="idx">
-    <component :is="getWidget(widget_type)" v-bind="widget_props" @update="updateData" />
+  <div v-for="({ widget_type, ...widget_props }, idx) in props.items" :key="idx">
+    <component
+      :is="getWidget(widget_type)"
+      v-bind="widget_props"
+      :data="props.data"
+      :errors="props.errors"
+      @update="updateData"
+    />
   </div>
 </template>
 

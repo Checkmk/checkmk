@@ -21,20 +21,8 @@ from cmk.gui.i18n import _
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["deferred_age"] = {
-    "title": _("Deferred files age"),
-    "unit": "s",
-    "color": "#80f000",
-}
-
 metric_info["runtime"] = {
     "title": _("Process runtime"),
-    "unit": "s",
-    "color": "#80f000",
-}
-
-metric_info["lifetime_remaining"] = {
-    "title": _("Lifetime remaining"),
     "unit": "s",
     "color": "#80f000",
 }
@@ -43,12 +31,6 @@ metric_info["streams"] = {
     "title": _("Streams"),
     "unit": "%",
     "color": "35/a",
-}
-
-metric_info["cache_misses_rate"] = {
-    "title": _("Cache misses per second"),
-    "unit": "1/s",
-    "color": "#ba60ba",
 }
 
 metric_info["cache_hit_ratio"] = {
@@ -93,12 +75,6 @@ metric_info["zfs_metadata_limit"] = {
     "color": "36/a",
 }
 
-metric_info["zfs_l2_size"] = {
-    "title": _("L2 cache size"),
-    "unit": "bytes",
-    "color": "31/a",
-}
-
 # cloud storage
 
 metric_info["used_space"] = {
@@ -119,36 +95,6 @@ metric_info["egress"] = {
     "color": "43/a",
 }
 
-metric_info["ingress_packet_drop"] = {
-    "title": _("Ingress packet drop"),
-    "unit": "count",
-    "color": "25/a",
-}
-
-metric_info["egress_packet_drop"] = {
-    "title": _("Egress packet drop"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["data_files"] = {
-    "title": _("Data files size"),
-    "unit": "bytes",
-    "color": "34/a",
-}
-
-metric_info["log_files_used"] = {
-    "title": _("Used size of log files"),
-    "unit": "bytes",
-    "color": "25/a",
-}
-
-metric_info["log_files_total"] = {
-    "title": _("Total size of log files"),
-    "unit": "bytes",
-    "color": "16/a",
-}
-
 metric_info["database_size"] = {
     "title": _("Database size"),
     "unit": "bytes",
@@ -159,12 +105,6 @@ metric_info["data_size"] = {
     "title": _("Data size"),
     "unit": "bytes",
     "color": "25/a",
-}
-
-metric_info["size_on_disk"] = {
-    "title": _("Size on disk"),
-    "unit": "bytes",
-    "color": "25/b",
 }
 
 metric_info["unallocated_size"] = {
@@ -236,12 +176,6 @@ metric_info["database_reclaimable"] = {
     "color": "45/a",
 }
 
-metric_info["mem_available"] = {
-    "color": "21/a",
-    "title": _("Estimated RAM for new processes"),
-    "unit": "bytes",
-}
-
 metric_info["cpu_mem_used_percent"] = {
     "color": "#80ff40",
     "title": _("CPU Memory used"),
@@ -266,58 +200,10 @@ metric_info["mem_trend"] = {
     "color": "#808080",
 }
 
-metric_info["trend_hoursleft"] = {
-    "title": _("Time left until full"),
-    "unit": "s",
-    "color": "#94b65a",
-}
-
-metric_info["swap_free"] = {
-    "title": _("Free swap space"),
-    "unit": "bytes",
-    "color": "#eeeeee",
-}
-
-metric_info["swap_used_percent"] = {
-    "color": "#408f20",
-    "title": _("Swap used"),
-    "unit": "%",
-}
-
-metric_info["caches"] = {
-    "title": _("Memory used by caches"),
-    "unit": "bytes",
-    "color": "51/a",
-}
-
 metric_info["mem_pages_rate"] = {
     "title": _("Memory pages"),
     "unit": "1/s",
     "color": "34/a",
-}
-
-metric_info["mem_lnx_total_used"] = {
-    "title": _("Total used memory"),
-    "color": "#70f038",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_pending"] = {
-    "title": _("Pending memory"),
-    "color": "25/a",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_unevictable"] = {
-    "title": _("Unevictable memory"),
-    "color": "26/a",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_anon_pages"] = {
-    "title": _("Anonymous pages"),
-    "color": "#cc4040",
-    "unit": "bytes",
 }
 
 metric_info["mem_lnx_active_anon"] = {
@@ -404,12 +290,6 @@ metric_info["mem_lnx_commit_limit"] = {
     "unit": "bytes",
 }
 
-metric_info["mem_lnx_shmem"] = {
-    "title": _("Shared memory"),
-    "color": "#bf9111",
-    "unit": "bytes",
-}
-
 metric_info["mem_lnx_kernel_stack"] = {
     "title": _("Kernel stack"),
     "color": "#7192ad",
@@ -425,18 +305,6 @@ metric_info["mem_lnx_page_tables"] = {
 metric_info["mem_lnx_mlocked"] = {
     "title": _("Locked mmap() data"),
     "color": "#a671ad",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_mapped"] = {
-    "title": _("Mapped data"),
-    "color": "#a671ad",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_anon_huge_pages"] = {
-    "title": _("Anonymous huge pages"),
-    "color": "#f0f0f0",
     "unit": "bytes",
 }
 
@@ -482,32 +350,6 @@ metric_info["mem_lnx_vmalloc_chunk"] = {
     "unit": "bytes",
 }
 
-metric_info["mem_lnx_hardware_corrupted"] = {
-    "title": _("Hardware corrupted memory"),
-    "color": "13/a",
-    "unit": "bytes",
-}
-
-# Consumed Host memory usage is defined as the amount of host memory that is allocated to the virtual machine
-metric_info["mem_esx_host"] = {
-    "title": _("Consumed host memory"),
-    "color": "#70f038",
-    "unit": "bytes",
-}
-
-# Active Guest Memory is defined as the amount of guest memory that is currently being used by the guest operating system and its applications
-metric_info["mem_esx_guest"] = {
-    "title": _("Active guest memory"),
-    "color": "15/a",
-    "unit": "bytes",
-}
-
-metric_info["mem_esx_ballooned"] = {
-    "title": _("Ballooned memory"),
-    "color": "21/a",
-    "unit": "bytes",
-}
-
 metric_info["mem_esx_shared"] = {
     "title": _("Shared memory"),
     "color": "34/a",
@@ -517,12 +359,6 @@ metric_info["mem_esx_shared"] = {
 metric_info["mem_esx_private"] = {
     "title": _("Private memory"),
     "color": "25/a",
-    "unit": "bytes",
-}
-
-metric_info["pagefile_total"] = {
-    "title": _("Pagefile installed"),
-    "color": "#e0e0e0",
     "unit": "bytes",
 }
 
@@ -548,24 +384,6 @@ metric_info["mem_nonheap_committed"] = {
     "title": _("Non-heap memory committed"),
     "unit": "bytes",
     "color": "16/b",
-}
-
-metric_info["mem_fragmentation"] = {
-    "title": _("Memory fragmentation"),
-    "unit": "count",
-    "color": "16/b",
-}
-
-metric_info["evictions"] = {
-    "title": _("Evictions"),
-    "unit": "count",
-    "color": "31/b",
-}
-
-metric_info["reclaimed"] = {
-    "title": _("Reclaimed"),
-    "unit": "count",
-    "color": "35/b",
 }
 
 metric_info["tapes_total"] = {
@@ -610,30 +428,6 @@ metric_info["disk_ios"] = {
     "color": "#60e0a0",
 }
 
-metric_info["disk_min_read_wait"] = {
-    "title": _("Minimum read wait time"),
-    "unit": "s",
-    "color": "#20e8a0",
-}
-
-metric_info["disk_max_read_wait"] = {
-    "title": _("Maximum read wait time"),
-    "unit": "s",
-    "color": "#20e8e0",
-}
-
-metric_info["disk_min_write_wait"] = {
-    "title": _("Minimum write wait time"),
-    "unit": "s",
-    "color": "#20a0e8",
-}
-
-metric_info["disk_max_write_wait"] = {
-    "title": _("Maximum write wait time"),
-    "unit": "s",
-    "color": "#20e0e8",
-}
-
 metric_info["disk_read_latency"] = {
     "title": _("Disk read latency"),
     "unit": "s",
@@ -664,12 +458,6 @@ metric_info["write_latency"] = {
     "color": "45/a",
 }
 
-metric_info["other_latency"] = {
-    "title": _("Other latency"),
-    "unit": "s",
-    "color": "21/a",
-}
-
 metric_info["disk_read_ql"] = {
     "title": _("Average disk read queue length"),
     "unit": "",
@@ -686,12 +474,6 @@ metric_info["disk_capacity"] = {
     "title": _("Total disk capacity"),
     "unit": "bytes",
     "color": "12/a",
-}
-
-metric_info["disk_used_capacity"] = {
-    "title": _("Used disk capacity"),
-    "unit": "bytes",
-    "color": "14/a",
 }
 
 metric_info["disks"] = {
@@ -724,18 +506,6 @@ metric_info["write_blocks"] = {
     "color": "21/a",
 }
 
-metric_info["files_open"] = {
-    "title": _("Open files"),
-    "unit": "count",
-    "color": "#ff6234",
-}
-
-metric_info["directories"] = {
-    "title": _("Directories"),
-    "unit": "count",
-    "color": "#202020",
-}
-
 metric_info["shared_memory_segments"] = {
     "title": _("Shared memory segments"),
     "unit": "count",
@@ -760,76 +530,10 @@ metric_info["backup_size"] = {
     "color": "12/a",
 }
 
-metric_info["backup_avgspeed"] = {
-    "title": _("Average speed of backup"),
-    "unit": "bytes/s",
-    "color": "22/a",
-}
-
-metric_info["backup_duration"] = {
-    "title": _("Duration of backup"),
-    "unit": "s",
-    "color": "33/a",
-}
-
-metric_info["readsize"] = {
-    "title": _("Readsize"),
-    "unit": "bytes",
-    "color": "12/a",
-}
-
-metric_info["transferredsize"] = {
-    "title": _("Transferredsize"),
-    "unit": "bytes",
-    "color": "12/a",
-}
-
 metric_info["job_duration"] = {
     "title": _("Job duration"),
     "unit": "s",
     "color": "33/a",
-}
-
-metric_info["backup_age_database"] = {
-    "title": _("Age of last database backup"),
-    "unit": "s",
-    "color": "11/a",
-}
-
-metric_info["backup_age_database_diff"] = {
-    "title": _("Age of last differential database backup"),
-    "unit": "s",
-    "color": "14/a",
-}
-
-metric_info["backup_age_log"] = {
-    "title": _("Age of last log backup"),
-    "unit": "s",
-    "color": "21/a",
-}
-
-metric_info["backup_age_file_or_filegroup"] = {
-    "title": _("Age of last file or filegroup backup"),
-    "unit": "s",
-    "color": "24/a",
-}
-
-metric_info["backup_age_file_diff"] = {
-    "title": _("Age of last differential file backup"),
-    "unit": "s",
-    "color": "31/a",
-}
-
-metric_info["backup_age_partial"] = {
-    "title": _("Age of last partial backup"),
-    "unit": "s",
-    "color": "34/a",
-}
-
-metric_info["backup_age_differential_partial"] = {
-    "title": _("Age of last differential partial backup"),
-    "unit": "s",
-    "color": "41/a",
 }
 
 metric_info["backup_age"] = {
@@ -866,24 +570,6 @@ metric_info["total_cache_usage"] = {
     "title": _("Total cache usage"),
     "unit": "%",
     "color": "#0ae86d",
-}
-
-metric_info["nfs_ios"] = {
-    "title": _("NFS operations"),
-    "unit": "1/s",
-    "color": "31/a",
-}
-
-metric_info["nfsv4_ios"] = {
-    "title": _("NFSv4 operations"),
-    "unit": "1/s",
-    "color": "31/a",
-}
-
-metric_info["nfsv4_1_ios"] = {
-    "title": _("NFSv4.1 operations"),
-    "unit": "1/s",
-    "color": "31/a",
 }
 
 metric_info["harddrive_power_cycles"] = {
@@ -928,22 +614,10 @@ metric_info["harddrive_end_to_end_errors"] = {
     "color": "41/a",
 }
 
-metric_info["harddrive_uncorrectable_erros"] = {
-    "title": _("Harddrive uncorrectable errors"),
-    "unit": "count",
-    "color": "44/a",
-}
-
 metric_info["harddrive_udma_crc_errors"] = {
     "title": _("Harddrive UDMA CRC errors"),
     "unit": "count",
     "color": "46/a",
-}
-
-metric_info["harddrive_crc_errors"] = {
-    "title": _("Harddrive CRC errors"),
-    "unit": "count",
-    "color": "15/a",
 }
 
 metric_info["harddrive_uncorrectable_errors"] = {
@@ -952,76 +626,10 @@ metric_info["harddrive_uncorrectable_errors"] = {
     "color": "13/a",
 }
 
-metric_info["nvme_media_and_data_integrity_errors"] = {
-    "title": _("Media and data integrity errors"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["nvme_error_information_log_entries"] = {
-    "title": _("Error information log entries"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["nvme_critical_warning"] = {
-    "title": _("Critical warning"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["nvme_available_spare"] = {
-    "title": _("Available Spare"),
-    "unit": "%",
-    "color": "21/a",
-}
-
-metric_info["nvme_spare_percentage_used"] = {
-    "title": _("Percentage used"),
-    "unit": "%",
-    "color": "24/a",
-}
-
-metric_info["nvme_data_units_read"] = {
-    "title": _("Data units read"),
-    "unit": "bytes",
-    "color": "31/a",
-}
-
-metric_info["nvme_data_units_written"] = {
-    "title": _("Data units written"),
-    "unit": "bytes",
-    "color": "24/a",
-}
-
-metric_info["data_usage"] = {
-    "title": _("Data usage"),
-    "unit": "%",
-    "color": "21/a",
-}
-
-metric_info["meta_usage"] = {
-    "title": _("Meta usage"),
-    "unit": "%",
-    "color": "31/a",
-}
-
 metric_info["storage_processor_util"] = {
     "title": _("Storage processor utilization"),
     "unit": "%",
     "color": "34/a",
-}
-
-metric_info["storage_used"] = {
-    "title": _("Storage space used"),
-    "unit": "bytes",
-    "color": "36/a",
-}
-
-metric_info["storage_percent"] = {
-    "title": _("Storage space used"),
-    "unit": "%",
-    "color": "36/b",
 }
 
 metric_info["filehandler_perc"] = {
@@ -1034,68 +642,6 @@ metric_info["capacity_perc"] = {
     "title": _("Available capacity"),
     "unit": "%",
     "color": "#4800ff",
-}
-
-metric_info["available_file_descriptors"] = {
-    "title": _("Number of available file descriptors"),
-    "unit": "count",
-    "color": "21/a",
-}
-
-metric_info["mem_total_virtual_in_bytes"] = {
-    "title": _("Total virtual memory"),
-    "unit": "bytes",
-    "color": "53/a",
-}
-
-metric_info["store_size"] = {
-    "title": _("Store size"),
-    "unit": "bytes",
-    "color": "32/a",
-}
-
-metric_info["id_cache_size"] = {
-    "title": _("ID cache size"),
-    "unit": "bytes",
-    "color": "25/a",
-}
-
-metric_info["field_data_size"] = {
-    "title": _("Field data size"),
-    "unit": "bytes",
-    "color": "16/a",
-}
-
-metric_info["avg_doc_size"] = {
-    "title": _("Average document size"),
-    "unit": "bytes",
-    "color": "25/b",
-}
-
-metric_info["disk_fill_rate"] = {
-    "title": _("Disk fill rate"),
-    "unit": "1/s",
-    "color": "31/a",
-}
-
-metric_info["disk_drain_rate"] = {
-    "title": _("Disk drain rate"),
-    "unit": "1/s",
-    "color": "31/b",
-}
-
-metric_info["memory_used"] = {
-    "color": "46/a",
-    "title": _("Memory used"),
-    "unit": "bytes",
-}
-
-# In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
-# 1024) which means an invalidation of historic values.
-metric_info["kb_out_of_sync"] = {
-    "title": _("KiB out of sync"),  # according to documentation
-    "unit": "count",
-    "color": "14/a",
 }
 
 metric_info["log_file_utilization"] = {
@@ -1114,12 +660,6 @@ metric_info["io_consumption_percent"] = {
     "title": _("Storage IO consumption"),
     "unit": "%",
     "color": "25/b",
-}
-
-metric_info["serverlog_storage_percent"] = {
-    "title": _("Server log storage used"),
-    "unit": "%",
-    "color": "11/a",
 }
 
 # .

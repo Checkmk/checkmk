@@ -51,12 +51,6 @@ metric_info["hosts_other"] = {
     "color": "41/a",
 }
 
-metric_info["hosts_healthy"] = {
-    "title": _l("Healthy hosts"),
-    "unit": "count",
-    "color": "46/a",
-}
-
 metric_info["helper_usage_cmk"] = {
     "title": _l("Checkmk helper usage"),
     "unit": "%",
@@ -91,30 +85,6 @@ metric_info["security_updates"] = {
     "title": _l("Pending security updates"),
     "unit": "count",
     "color": "#ff0030",
-}
-
-metric_info["num_high_alerts"] = {
-    "title": _l("High alerts"),
-    "unit": "count",
-    "color": "22/a",
-}
-
-metric_info["num_disabled_alerts"] = {
-    "title": _l("Disabled alerts"),
-    "unit": "count",
-    "color": "24/a",
-}
-
-metric_info["age_oldest"] = {
-    "title": _l("Oldest age"),
-    "unit": "s",
-    "color": "35/a",
-}
-
-metric_info["age_youngest"] = {
-    "title": _l("Youngest age"),
-    "unit": "s",
-    "color": "21/a",
 }
 
 # .

@@ -21,24 +21,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["uncommitted"] = {
-    "title": _l("Uncommitted"),
-    "unit": "bytes",
-    "color": "16/a",
-}
-
-metric_info["overprovisioned"] = {
-    "title": _l("Overprovisioned"),
-    "unit": "bytes",
-    "color": "24/a",
-}
-
-metric_info["precompiled"] = {
-    "title": _l("Precompiled"),
-    "unit": "bytes",
-    "color": "16/a",
-}
-
 metric_info["codewords_corrected"] = {
     "title": _l("Corrected codewords"),
     "unit": "%",
@@ -93,18 +75,6 @@ metric_info["sort_overflow"] = {
     "color": "#e72121",
 }
 
-metric_info["hours_operation"] = {
-    "title": _l("Hours of operation"),
-    "unit": "s",
-    "color": "#94b65a",
-}
-
-metric_info["hours_since_service"] = {
-    "title": _l("Hours since service"),
-    "unit": "s",
-    "color": "#94b65a",
-}
-
 metric_info["execution_time"] = {
     "title": _l("Total execution time"),
     "unit": "s",
@@ -145,18 +115,6 @@ metric_info["replication_lag"] = {
     "color": "14/a",
 }
 
-metric_info["registered_desktops"] = {
-    "title": _l("Registered desktops"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["time_in_GC"] = {
-    "title": _l("Time spent in GC"),
-    "unit": "%",
-    "color": "16/a",
-}
-
 metric_info["active_vms"] = {
     "title": _l("Active VMs"),
     "unit": "count",
@@ -169,88 +127,16 @@ metric_info["quarantine"] = {
     "color": "43/b",
 }
 
-metric_info["service_costs_eur"] = {
-    "title": _l("Service Costs per Day"),
-    "unit": "EUR",
-    "color": "35/a",
-}
-
 metric_info["elapsed_time"] = {
     "title": _l("Elapsed time"),
     "unit": "s",
     "color": "11/a",
 }
 
-metric_info["fired_alerts"] = {
-    "title": _l("Number of fired alerts"),
-    "unit": "count",
-    "color": "22/a",
-}
-
-metric_info["index_count"] = {
-    "title": _l("Indices"),
-    "unit": "count",
-    "color": "23/a",
-}
-
-metric_info["items_active"] = {
-    "title": _l("Active items"),
-    "unit": "count",
-    "color": "23/a",
-}
-
-metric_info["items_non_res"] = {
-    "title": _l("Non-resident items"),
-    "unit": "count",
-    "color": "23/a",
-}
-
 metric_info["items_count"] = {
     "title": _l("Items"),
     "unit": "count",
     "color": "23/a",
-}
-
-metric_info["num_collections"] = {
-    "title": _l("Collections"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["num_objects"] = {
-    "title": _l("Objects"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["num_extents"] = {
-    "title": _l("Extents"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["num_input"] = {
-    "title": _l("Inputs"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["num_output"] = {
-    "title": _l("Outputs"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["num_stream_rule"] = {
-    "title": _l("Stream rules"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["num_extractor"] = {
-    "title": _l("Extractors"),
-    "unit": "count",
-    "color": "21/a",
 }
 
 metric_info["num_user"] = {
@@ -266,152 +152,10 @@ metric_info["max_user"] = {
 }
 
 # DRBD metrics
-metric_info["activity_log_updates"] = {
-    "title": _l("Activity log updates"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["bit_map_updates"] = {
-    "title": _l("Bit map updates"),
-    "unit": "count",
-    "color": "32/a",
-}
-
-metric_info["local_count_requests"] = {
-    "title": _l("Local count requests"),
-    "unit": "count",
-    "color": "24/b",
-}
-
-metric_info["pending_requests"] = {
-    "title": _l("Pending requests"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["unacknowledged_requests"] = {
-    "title": _l("Unacknowledged requests"),
-    "unit": "count",
-    "color": "16/b",
-}
-
-metric_info["application_pending_requests"] = {
-    "title": _l("Application pending requests"),
-    "unit": "count",
-    "color": "23/a",
-}
-
-metric_info["epoch_objects"] = {
-    "title": _l("Epoch objects"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["collectors_running"] = {
-    "title": _l("Running collectors"),
-    "unit": "count",
-    "color": "26/a",
-}
-metric_info["collectors_stopped"] = {
-    "title": _l("Stopped collectors"),
-    "unit": "count",
-    "color": "21/a",
-}
-metric_info["collectors_failing"] = {
-    "title": _l("Failing collectors"),
-    "unit": "count",
-    "color": "12/a",
-}
-
-metric_info["num_streams"] = {
-    "title": _l("Streams"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["item_memory"] = {
-    "color": "26/a",
-    "title": _l("Item memory"),
-    "unit": "bytes",
-}
-
-metric_info["resident_items_ratio"] = {
-    "title": _l("Resident items ratio"),
-    "unit": "%",
-    "color": "23/a",
-}
-
-metric_info["fetched_items"] = {
-    "title": _l("Number of fetched items"),
-    "unit": "count",
-    "color": "23/b",
-}
-
-metric_info["consumers"] = {
-    "title": _l("Consumers"),
-    "unit": "count",
-    "color": "21/a",
-}
-
-metric_info["exchanges"] = {
-    "title": _l("Exchanges"),
-    "unit": "count",
-    "color": "26/a",
-}
-
-metric_info["queues"] = {
-    "title": _l("Queues"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["gc_runs"] = {
-    "title": _l("GC runs"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["gc_runs_rate"] = {
-    "title": _l("GC runs rate"),
-    "unit": "1/s",
-    "color": "53/a",
-}
-
-metric_info["runtime_run_queue"] = {
-    "title": _l("Runtime run queue"),
-    "unit": "count",
-    "color": "21/a",
-}
-
-metric_info["gc_bytes"] = {
-    "title": _l("Bytes reclaimed by GC"),
-    "unit": "bytes",
-    "color": "32/a",
-}
-
-metric_info["gc_bytes_rate"] = {
-    "title": _l("Bytes reclaimed by GC rate"),
-    "unit": "bytes/s",
-    "color": "42/a",
-}
-
 metric_info["memory_reservation"] = {
     "title": _l("Memory reservation"),
     "unit": "%",
     "color": "36/a",
-}
-
-metric_info["num_topics"] = {
-    "title": _l("Number of topics live"),
-    "unit": "count",
-    "color": "26/a",
-}
-
-metric_info["sms_spend"] = {
-    "title": _l("SMS spending"),
-    "unit": "count",
-    "color": "11/a",
 }
 
 metric_info["sms_success_rate"] = {

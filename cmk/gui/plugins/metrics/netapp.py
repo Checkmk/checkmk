@@ -22,37 +22,36 @@ from cmk.gui.i18n import _
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
 
+metric_info["read_data"] = {
+    "title": _("Data read"),
+    "unit": "bytes",
+    "color": "31/a",
+}
+
+metric_info["write_data"] = {
+    "title": _("Data written"),
+    "unit": "bytes",
+    "color": "44/a",
+}
+
+metric_info["space_savings"] = {"title": _("Saved space"), "unit": "bytes", "color": "45/a"}
+
+metric_info["logical_used"] = {
+    "title": _("Used logical space"),
+    "unit": "bytes",
+    "color": "41/b",
+}
+
+
 def _fix_title(title):
     return title.replace("read data", "data read").replace("write data", "data written")
 
 
 def register_netapp_api_vs_traffic_metrics():
-    metric_info["read_data"] = {
-        "title": _("Data read"),
-        "unit": "bytes",
-        "color": "31/a",
-    }
-
-    metric_info["write_data"] = {
-        "title": _("Data written"),
-        "unit": "bytes",
-        "color": "44/a",
-    }
-
-    metric_info["space_savings"] = {"title": _("Saved space"), "unit": "bytes", "color": "45/a"}
-
-    metric_info["logical_used"] = {
-        "title": _("Used logical space"),
-        "unit": "bytes",
-        "color": "41/b",
-    }
-
     for volume_info in ["NFS", "NFSv4", "NFSv4.1", "CIFS", "SAN", "FCP", "ISCSI"]:
         for what, unit in [
             ("data", "bytes"),
             ("latency", "s"),
-            ("ios", "1/s"),
-            ("throughput", "bytes/s"),
             ("ops", "1/s"),
         ]:
             volume = volume_info.lower().replace(".", "_")
@@ -68,13 +67,6 @@ def register_netapp_api_vs_traffic_metrics():
                 "unit": unit,
                 "color": "44/a",
             }
-
-            if what in ["data", "ops", "latency"]:
-                metric_info[f"{volume}_other_{what}"] = {
-                    "title": _("%s other %s") % (volume_info, what),
-                    "unit": unit,
-                    "color": "21/a",
-                }
 
 
 register_netapp_api_vs_traffic_metrics()

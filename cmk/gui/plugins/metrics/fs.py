@@ -39,12 +39,6 @@ metric_info["fs_used"] = {
     "color": "#00ffc6",
 }
 
-metric_info["fs_used_percent"] = {
-    "title": _("Used space %"),
-    "unit": "%",
-    "color": "#00ffc6",
-}
-
 metric_info["fs_size"] = {
     "title": _("Total size"),
     "unit": "bytes",
@@ -61,18 +55,6 @@ metric_info["fs_trend"] = {
     "title": _("Growth trend"),
     "unit": "bytes/d",
     "color": "#808080",
-}
-
-metric_info["fs_provisioning"] = {
-    "title": _("Provisioned space"),
-    "unit": "bytes",
-    "color": "#ff8000",
-}
-
-metric_info["data_reduction"] = {
-    "title": _("Data reduction ratio"),
-    "unit": "count",
-    "color": "11/a",
 }
 
 metric_info["unique_size"] = {

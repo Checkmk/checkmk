@@ -22,40 +22,16 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["predict_load15"] = {
-    "title": _l("Predicted average for 15 minute CPU load"),
-    "unit": "",
-    "color": "#a0b0c0",
-}
-
-metric_info["load_instant"] = {
-    "title": _l("Instantaneous CPU load"),
-    "unit": "",
-    "color": "42/a",
-}
-
 metric_info["threads_idle"] = {
     "title": _l("Idle threads"),
     "unit": "count",
     "color": "#8040f0",
 }
 
-metric_info["threads_rate"] = {
-    "title": _l("Thread creations per second"),
-    "unit": "1/s",
-    "color": "44/a",
-}
-
 metric_info["dedup_rate"] = {
     "title": _l("Deduplication rate"),
     "unit": "count",
     "color": "12/a",
-}
-
-metric_info["threads_total"] = {
-    "title": _l("Number of threads"),
-    "unit": "count",
-    "color": "41/a",
 }
 
 metric_info["threads_busy"] = {
@@ -221,28 +197,10 @@ metric_info["util_average"] = {
     "color": "44/a",
 }
 
-metric_info["util1s"] = {
-    "title": _l("CPU utilization last second"),
-    "unit": "%",
-    "color": "#50ff20",
-}
-
-metric_info["util5s"] = {
-    "title": _l("CPU utilization last five seconds"),
-    "unit": "%",
-    "color": "#600020",
-}
-
 metric_info["util1"] = {
     "title": _l("CPU utilization last minute"),
     "unit": "%",
     "color": "#60f020",
-}
-
-metric_info["util5"] = {
-    "title": _l("CPU utilization last 5 minutes"),
-    "unit": "%",
-    "color": "#80f040",
 }
 
 metric_info["util15"] = {
@@ -298,94 +256,10 @@ for i in range(MAX_CORES):
         "color": indexed_color(i, MAX_CORES),
     }
 
-metric_info["cpu_time_percent"] = {
-    "title": _l("CPU time"),
-    "unit": "%",
-    "color": "#94b65a",
-}
-
 metric_info["system_time"] = {
     "title": _l("CPU time in system space"),
     "unit": "s",
     "color": "#ff6000",
-}
-
-metric_info["app"] = {
-    "title": _l("Available physical processors in shared pool"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["entc"] = {
-    "title": _l("Entitled capacity consumed"),
-    "unit": "%",
-    "color": "12/a",
-}
-
-metric_info["lbusy"] = {
-    "title": _l("Logical processor(s) utilization"),
-    "unit": "%",
-    "color": "13/a",
-}
-
-metric_info["nsp"] = {
-    "title": _l("Average processor speed"),
-    "unit": "%",
-    "color": "14/a",
-}
-
-metric_info["phint"] = {
-    "title": _l("Phantom interruptions received"),
-    "unit": "count",
-    "color": "15/a",
-}
-
-metric_info["physc"] = {
-    "title": _l("Physical processors consumed"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["utcyc"] = {
-    "title": _l("Unaccounted turbo cycles"),
-    "unit": "%",
-    "color": "21/a",
-}
-
-metric_info["vcsw"] = {
-    "title": _l("Virtual context switches"),
-    "unit": "%",
-    "color": "22/a",
-}
-
-metric_info["job_total"] = {
-    "title": _l("Total number of jobs"),
-    "unit": "count",
-    "color": "26/a",
-}
-
-metric_info["failed_jobs"] = {
-    "title": _l("Total number of failed jobs"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["zombie_jobs"] = {
-    "title": _l("Total number of zombie jobs"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["cpu_percent"] = {
-    "title": _l("CPU used"),
-    "unit": "%",
-    "color": "16/a",
-}
-
-metric_info["cpu_total_in_millis"] = {
-    "title": _l("CPU total in ms"),
-    "unit": "1/s",
-    "color": "26/a",
 }
 
 metric_info["cpu_reservation"] = {

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._color import indexed_color
 from cmk.gui.graphing._utils import graph_info, metric_info
 from cmk.gui.i18n import _
 
@@ -20,13 +19,6 @@ from cmk.gui.i18n import _
 #   '----------------------------------------------------------------------'
 
 # Title are always lower case - except the first character!
-# Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
-
-metric_info["power_usage_percentage"] = {
-    "title": _("Power Usage"),
-    "color": "13/a",
-    "unit": "%",
-}
 
 metric_info["power_usage"] = {
     "title": _("Power Usage"),
@@ -94,32 +86,8 @@ metric_info["output_signal_power_dbm"] = {
     "color": "#2080c0",
 }
 
-metric_info["signal_power_dbm"] = {
-    "title": _("Power"),
-    "unit": "dbm",
-    "color": "#2080c0",
-}
-
-metric_info["downstream_power"] = {
-    "title": _("Downstream power"),
-    "unit": "dbmv",
-    "color": "14/a",
-}
-
 metric_info["current"] = {
     "title": _("Electrical current"),
-    "unit": "a",
-    "color": "#ffb030",
-}
-
-metric_info["differential_current_ac"] = {
-    "title": _("Differential current AC"),
-    "unit": "a",
-    "color": "#ffb030",
-}
-
-metric_info["differential_current_dc"] = {
-    "title": _("Differential current DC"),
     "unit": "a",
     "color": "#ffb030",
 }
@@ -134,12 +102,6 @@ metric_info["power"] = {
     "title": _("Electrical power"),
     "unit": "w",
     "color": "22/a",
-}
-
-metric_info["appower"] = {
-    "title": _("Electrical apparent power"),
-    "unit": "va",
-    "color": "22/b",
 }
 
 metric_info["energy"] = {
@@ -173,12 +135,6 @@ metric_info["signal_noise"] = {
     "color": "#aadd66",
 }
 
-metric_info["noise_floor"] = {
-    "title": _("Noise floor"),
-    "unit": "dbm",
-    "color": "11/a",
-}
-
 metric_info["pressure"] = {
     "title": _("Pressure"),
     "unit": "bar",
@@ -197,12 +153,6 @@ metric_info["parts_per_million"] = {
     "unit": "ppm",
 }
 
-metric_info["frequency"] = {
-    "title": _("Frequency"),
-    "unit": "hz",
-    "color": "11/a",
-}
-
 metric_info["battery_capacity"] = {
     "title": _("Battery capacity"),
     "unit": "%",
@@ -215,22 +165,10 @@ metric_info["battery_current"] = {
     "color": "15/a",
 }
 
-metric_info["battery_temp"] = {
-    "title": _("Battery temperature"),
-    "unit": "c",
-    "color": "#ffb030",
-}
-
 metric_info["battery_seconds_remaining"] = {
     "title": _("Battery time remaining"),
     "unit": "s",
     "color": "21/a",
-}
-
-metric_info["o2_percentage"] = {
-    "title": _("Current O2 percentage"),
-    "unit": "%",
-    "color": "42/a",
 }
 
 metric_info["rx_light"] = {
@@ -256,21 +194,10 @@ for i in range(10):
         "unit": "dbm",
         "color": "15/b",
     }
-    metric_info["port_temp_%d" % i] = {
-        "title": _("Temperature Lane %d") % (i + 1),
-        "unit": "dbm",
-        "color": indexed_color(i * 3 + 2, 30),
-    }
 
 metric_info["fan"] = {
     "title": _("Fan speed"),
     "unit": "rpm",
-    "color": "16/b",
-}
-
-metric_info["fan_perc"] = {
-    "title": _("Fan speed"),
-    "unit": "%",
     "color": "16/b",
 }
 

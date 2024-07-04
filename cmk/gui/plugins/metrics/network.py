@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.render
-
 from cmk.gui.graphing._utils import graph_info, metric_info
 from cmk.gui.i18n import _
 
@@ -23,112 +21,16 @@ from cmk.gui.i18n import _
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["accepted"] = {
-    "title": _("Accepted connections"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["accepted_per_sec"] = {
-    "title": _("Accepted connections per second"),
-    "unit": "1/s",
-    "color": "16/a",
-}
-
-metric_info["handled"] = {
-    "title": _("Handled connections"),
-    "unit": "count",
-    "color": "21/a",
-}
-
-metric_info["handled_per_sec"] = {
-    "title": _("Handled connections per second"),
-    "unit": "1/s",
-    "color": "26/a",
-}
-
 metric_info["requests"] = {
     "title": _("Requests per second"),
     "unit": "count",
     "color": "31/a",
 }
 
-metric_info["failed_requests"] = {
-    "title": _("Failed requests"),
-    "unit": "count",
-    "color": "32/a",
-}
-
-metric_info["requests_per_conn"] = {
-    "title": _("Requests per connection"),
-    "unit": "count",
-    "color": "33/a",
-}
-
-metric_info["requests_per_sec"] = {
-    "title": _("Requests per second"),
-    "unit": "1/s",
-    "color": "36/a",
-}
-
-metric_info["active"] = {
-    "title": _("Active connections"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["reading"] = {
-    "title": _("Reading connections"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["waiting"] = {
-    "title": _("Waiting connections"),
-    "unit": "count",
-    "color": "21/a",
-}
-
-metric_info["writing"] = {
-    "title": _("Writing connections"),
-    "unit": "count",
-    "color": "21/a",
-}
-
-metric_info["apply_finish_time"] = {
-    "title": _("Apply finish time"),
-    "unit": "s",
-    "color": "11/a",
-}
-
-metric_info["transport_lag"] = {
-    "title": _("Transport lag"),
-    "unit": "s",
-    "color": "16/a",
-}
-
-metric_info["apply_lag"] = {
-    "title": _("Apply lag"),
-    "unit": "s",
-    "color": "21/a",
-}
-
 metric_info["rtt"] = {
     "title": _("Round trip time"),
     "unit": "s",
     "color": "33/a",
-}
-
-metric_info["hops"] = {
-    "title": _("Number of hops"),
-    "unit": "count",
-    "color": "51/a",
-}
-
-metric_info["time_difference"] = {
-    "title": _("Time difference"),
-    "unit": "s",
-    "color": "#80f000",
 }
 
 metric_info["transactions"] = {
@@ -169,20 +71,6 @@ metric_info["availability"] = {
     "title": _("Availability"),
     "unit": "%",
     "color": "31/a",
-}
-
-# TODO: Metric names with preceeding numbers seems not to be capable
-# of adding scalars with graph_info (e.g. for horizontal warning levels)
-metric_info["5ghz_clients"] = {
-    "title": _("Client connects for 5 Ghz band"),
-    "unit": "count",
-    "color": "13/a",
-}
-
-metric_info["24ghz_clients"] = {
-    "title": _("Client connects for 2,4 Ghz band"),
-    "unit": "count",
-    "color": "14/a",
 }
 
 metric_info["cifs_share_users"] = {
@@ -233,36 +121,6 @@ metric_info["connections_blocked_rate"] = {
     "color": "14/a",
 }
 
-metric_info["connections_failed_rate"] = {
-    "title": _("Failed connections"),
-    "unit": "1/s",
-    "color": "14/a",
-}
-
-metric_info["failed_connections"] = {
-    "title": _("Failed connections"),
-    "unit": "count",
-    "color": "26/a",
-}
-
-metric_info["connections_ssl"] = {
-    "title": _("SSL connections"),
-    "unit": "count",
-    "color": "13/a",
-}
-
-metric_info["connections_ssl_vpn"] = {
-    "title": _("SSL/VPN connections"),
-    "unit": "count",
-    "color": "13/a",
-}
-
-metric_info["connections_rate"] = {
-    "title": _("Connections per second"),
-    "unit": "1/s",
-    "color": "#a080b0",
-}
-
 metric_info["connections_duration_min"] = {
     "title": _("Connections duration min"),
     "unit": "s",
@@ -281,12 +139,6 @@ metric_info["connections_duration_mean"] = {
     "color": "25/a",
 }
 
-metric_info["packet_velocity_asic"] = {
-    "title": _("Packet velocity asic"),
-    "unit": "1/s",
-    "color": "26/a",
-}
-
 metric_info["total_sessions"] = {
     "title": _("Total sessions"),
     "unit": "count",
@@ -299,12 +151,6 @@ metric_info["running_sessions"] = {
     "color": "42/a",
 }
 
-metric_info["rejected_sessions"] = {
-    "title": _("Rejected sessions"),
-    "unit": "count",
-    "color": "45/a",
-}
-
 metric_info["active_sessions"] = {
     "title": _("Active sessions"),
     "unit": "count",
@@ -315,12 +161,6 @@ metric_info["active_sessions_peak"] = {
     "title": _("Peak value of active sessions"),
     "unit": "count",
     "color": "#000000",
-}
-
-metric_info["inactive_sessions"] = {
-    "title": _("Inactive sessions"),
-    "unit": "count",
-    "color": "13/a",
 }
 
 metric_info["session_rate"] = {
@@ -345,33 +185,6 @@ metric_info["sync_latency"] = {
     "title": _("Sync latency"),
     "unit": "s",
     "color": "#ffb080",
-}
-
-metric_info["relay_log_space"] = {
-    "title": _("Relay log size"),
-    "unit": "bytes",
-    "color": "#ffb080",
-}
-
-metric_info["p2s_bandwidth"] = {
-    "title": _("Point-to-site bandwidth"),
-    "unit": "bytes/s",
-    "color": "#00c0ff",
-}
-
-metric_info["s2s_bandwidth"] = {
-    "title": _("Site-to-site bandwidth"),
-    "unit": "bytes/s",
-    "color": "#00c080",
-}
-
-# “Output Queue Length is the length of the output packet queue (in
-# packets). If this is longer than two, there are delays and the bottleneck
-# should be found and eliminated, if possible.
-metric_info["outqlen"] = {
-    "title": _("Length of output queue"),
-    "unit": "count",
-    "color": "25/a",
 }
 
 metric_info["wlan_physical_errors"] = {
@@ -422,40 +235,10 @@ metric_info["fw_connections_passthrough"] = {
     "color": "34/a",
 }
 
-metric_info["average_sync_time"] = {
-    "title": _("Average remote site sync time"),
-    "unit": "s",
-    "color": "46/a",
-}
-
-metric_info["average_processing_time"] = {
-    "title": _("Event processing time"),
-    "unit": "s",
-    "color": "13/a",
-}
-
-metric_info["average_rule_hit_ratio"] = {
-    "title": _("Rule hit ratio"),
-    "unit": "%",
-    "color": "#cccccc",
-}
-
-metric_info["used_dhcp_leases"] = {
-    "title": _("Used DHCP leases"),
-    "unit": "count",
-    "color": "#60bbbb",
-}
-
 metric_info["free_dhcp_leases"] = {
     "title": _("Free DHCP leases"),
     "unit": "count",
     "color": "34/a",
-}
-
-metric_info["pending_dhcp_leases"] = {
-    "title": _("Pending DHCP leases"),
-    "unit": "count",
-    "color": "31/a",
 }
 
 metric_info["net_data_recv"] = {
@@ -488,12 +271,6 @@ metric_info["registered_modems"] = {
     "color": "16/a",
 }
 
-metric_info["channel_utilization"] = {
-    "title": _("Channel utilization"),
-    "unit": "%",
-    "color": "24/a",
-}
-
 metric_info["channel_utilization_24ghz"] = {
     "title": _("Channel utilization for 2,4GHz band"),
     "unit": "%",
@@ -510,12 +287,6 @@ metric_info["connector_outlets"] = {
     "title": _("Connector outlets"),
     "unit": "count",
     "color": "51/a",
-}
-
-metric_info["response_size"] = {
-    "title": _("Response size"),
-    "unit": "bytes",
-    "color": "53/b",
 }
 
 metric_info["time_connect"] = {
@@ -544,21 +315,6 @@ metric_info["time_firstbyte"] = {
 
 metric_info["time_transfer"] = {
     "title": _("Time to receive full response"),
-    "unit": "s",
-    "color": "41/a",
-}
-
-# time_http_headers/time_http_body come from check_httpv2 and correspond
-# to time_headers/time_transfer from the old check_http.
-# We keep the old metrics as long as the old check_http is still in use.
-metric_info["time_http_headers"] = {
-    "title": _("Time to fetch HTTP headers"),
-    "unit": "s",
-    "color": "15/a",
-}
-
-metric_info["time_http_body"] = {
-    "title": _("Time to fetch page content"),
     "unit": "s",
     "color": "41/a",
 }
@@ -599,8 +355,6 @@ for ctype, ccolor in (
     ("dot11ac", "34/b"),
     ("dot11n2_4", "45/a"),
     ("dot11n5", "46/b"),
-    ("dot11ax2_4", "14/a"),
-    ("dot11ax5", "35/a"),
 ):
     metric_info["wifi_connection_" + ctype] = {
         "title": "802." + ctype,
@@ -626,58 +380,16 @@ metric_info["request_rate"] = {
     "color": "35/a",
 }
 
-metric_info["server_conns"] = {
-    "title": _("Server connections"),
-    "unit": "count",
-    "color": "34/a",
-}
-
-metric_info["client_conns"] = {
-    "title": _("Client connections"),
-    "unit": "count",
-    "color": "45/a",
-}
-
-metric_info["error_rate"] = {
-    "title": _("Error rate"),
-    "unit": "1/s",
-    "color": "14/a",
-}
-
-metric_info["managed_object_count"] = {
-    "title": _("Managed objects"),
-    "unit": "count",
-    "color": "45/a",
-}
-
 metric_info["active_vpn_tunnels"] = {
     "title": _("Active VPN tunnels"),
     "unit": "count",
     "color": "43/a",
 }
 
-metric_info["active_vpn_users"] = {
-    "title": _("Active VPN users"),
-    "unit": "count",
-    "color": "23/a",
-}
-
-metric_info["active_vpn_websessions"] = {
-    "title": _("Active VPN web sessions"),
-    "unit": "count",
-    "color": "33/a",
-}
-
 metric_info["current_users"] = {
     "title": _("Current users"),
     "unit": "count",
     "color": "23/a",
-}
-
-metric_info["total_active_sessions"] = {
-    "title": _("Total active sessions"),
-    "unit": "count",
-    "color": "#888888",
 }
 
 metric_info["tcp_active_sessions"] = {
@@ -698,33 +410,10 @@ metric_info["icmp_active_sessions"] = {
     "color": "#008888",
 }
 
-metric_info["packages_accepted"] = {
-    "title": _("Accepted packages/s"),
-    "unit": "1/s",
-    "color": "#80ff40",
-}
-metric_info["packages_blocked"] = {
-    "title": _("Blocked packages/s"),
-    "unit": "1/s",
-    "color": "14/a",
-}
-
-metric_info["packages_icmp_total"] = {
-    "title": _("ICMP packages/s"),
-    "unit": "count",
-    "color": "21/a",
-}
-
 metric_info["sslproxy_active_sessions"] = {
     "title": _("Active SSL proxy sessions"),
     "unit": "count",
     "color": "#11FF11",
-}
-
-metric_info["locks_per_batch"] = {
-    "title": _("Locks/batch"),
-    "unit": "",
-    "color": "21/a",
 }
 
 metric_info["page_reads_sec"] = {
@@ -737,186 +426,6 @@ metric_info["page_writes_sec"] = {
     "title": _("Page writes"),
     "unit": "1/s",
     "color": "14/a",
-}
-
-metric_info["page_lookups_sec"] = {
-    "title": _("Page lookups"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["failed_search_requests"] = {
-    "title": _("WEB - Failed search requests"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["failed_location_requests"] = {
-    "title": _("WEB - Failed get locations requests"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["failed_ad_requests"] = {
-    "title": _("WEB - Timed out Active Directory requests"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["http_5xx"] = {
-    "title": _("HTTP 500 errors"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["sip_message_processing_time"] = {
-    "title": _("SIP - Average incoming message processing time"),
-    "unit": "s",
-    "color": "42/a",
-}
-
-metric_info["asp_requests_rejected"] = {
-    "title": _("ASP requests rejected"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["failed_file_requests"] = {
-    "title": _("Failed file requests"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["join_failures"] = {
-    "title": _("Join Launcher service failures"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["failed_validate_cert_calls"] = {
-    "title": _("WEB - Failed validate cert calls"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["sip_incoming_responses_dropped"] = {
-    "title": _("SIP - Incoming responses dropped"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["sip_incoming_requests_dropped"] = {
-    "title": _("SIP - Incoming requests dropped"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["usrv_queue_latency"] = {
-    "title": _("USrv - Queue latency"),
-    "unit": "s",
-    "color": "42/a",
-}
-
-metric_info["usrv_sproc_latency"] = {
-    "title": _("USrv - Sproc latency"),
-    "unit": "s",
-    "color": "42/a",
-}
-
-metric_info["usrv_throttled_requests"] = {
-    "title": _("USrv - Throttled requests"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["sip_503_responses"] = {
-    "title": _("SIP - Local 503 responses"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["sip_incoming_messages_timed_out"] = {
-    "title": _("SIP - Incoming messages timed out"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["caa_incomplete_calls"] = {
-    "title": _("CAA - Incomplete calls"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["usrv_create_conference_latency"] = {
-    "title": _("USrv - Create conference latency"),
-    "unit": "s",
-    "color": "42/a",
-}
-
-metric_info["usrv_allocation_latency"] = {
-    "title": _("USrv - Allocation latency"),
-    "unit": "s",
-    "color": "42/a",
-}
-
-metric_info["sip_avg_holding_time_incoming_messages"] = {
-    "title": _("SIP - Average holding time for incoming messages"),
-    "unit": "s",
-    "color": "42/a",
-}
-
-metric_info["sip_flow_controlled_connections"] = {
-    "title": _("SIP - Flow-controlled connections"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["sip_avg_outgoing_queue_delay"] = {
-    "title": _("SIP - Average outgoing queue delay"),
-    "unit": "s",
-    "color": "42/a",
-}
-
-metric_info["sip_sends_timed_out"] = {
-    "title": _("SIP - Sends timed out"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["sip_authentication_errors"] = {
-    "title": _("SIP - Authentication errors"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["mediation_load_call_failure_index"] = {
-    "title": _("MediationServer - Load call failure index"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["mediation_failed_calls_because_of_proxy"] = {
-    "title": _("MediationServer - Failed calls caused by unexpected interaction from proxy"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["mediation_failed_calls_because_of_gateway"] = {
-    "title": _("MediationServer - Failed calls caused by unexpected interaction from gateway"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["mediation_media_connectivity_failure"] = {
-    "title": _("Mediation Server - Media connectivity check failure"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["avauth_failed_requests"] = {
-    "title": _("A/V Auth - Bad requests received"),
-    "unit": "count",
-    "color": "42/a",
 }
 
 metric_info["edge_udp_failed_auth"] = {
@@ -955,30 +464,6 @@ metric_info["edge_tcp_packets_dropped"] = {
     "color": "42/a",
 }
 
-metric_info["tcp_packets_received"] = {
-    "title": _("Received TCP packets"),
-    "unit": "1/s",
-    "color": "21/a",
-}
-
-metric_info["udp_packets_received"] = {
-    "title": _("Received UDP packets"),
-    "unit": "1/s",
-    "color": "23/a",
-}
-
-metric_info["icmp_packets_received"] = {
-    "title": _("Received ICMP packets"),
-    "unit": "1/s",
-    "color": "25/a",
-}
-
-metric_info["dataproxy_connections_throttled"] = {
-    "title": _("DATAPROXY - Throttled server connections"),
-    "unit": "count",
-    "color": "42/a",
-}
-
 metric_info["xmpp_failed_outbound_streams"] = {
     "title": _("XmppFederationProxy - Failed outbound stream establishes"),
     "unit": "1/s",
@@ -989,12 +474,6 @@ metric_info["xmpp_failed_inbound_streams"] = {
     "title": _("XmppFederationProxy - Failed inbound stream establishes"),
     "unit": "1/s",
     "color": "31/a",
-}
-
-metric_info["web_requests_processing"] = {
-    "title": _("WEB - Requests in processing"),
-    "unit": "count",
-    "color": "12/a",
 }
 
 metric_info["dhcp_discovery"] = {
@@ -1087,48 +566,6 @@ metric_info["dns_nxdomain"] = {
     "color": "34/a",
 }
 
-metric_info["time_to_resolve_dns"] = {
-    "title": _("Time to resolve DNS"),
-    "unit": "s",
-    "color": "36/a",
-}
-
-metric_info["time_consumed_by_rule_engine"] = {
-    "title": _("Time consumed by rule engine"),
-    "unit": "s",
-    "color": "35/a",
-}
-
-metric_info["inside_macs"] = {
-    "title": _("Number of unique inside MAC addresses"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["outside_macs"] = {
-    "title": _("Number of unique outside MAC addresses"),
-    "unit": "count",
-    "color": "33/a",
-}
-
-metric_info["avg_response_time"] = {
-    "title": _("Average response time"),
-    "unit": "s",
-    "color": "#4040ff",
-}
-
-metric_info["remaining_reads"] = {
-    "title": _("Remaining reads"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["dtu_percent"] = {
-    "title": _("Database throughput unit"),
-    "unit": "%",
-    "color": "#4040ff",
-}
-
 metric_info["connections_max_used"] = {
     "title": _("Maximum used parallel connections"),
     "unit": "count",
@@ -1171,189 +608,6 @@ metric_info["new_connections"] = {
     "color": "42/a",
 }
 
-metric_info["op_s"] = {
-    "title": _("Operations per second"),
-    "unit": "count",
-    "color": "#90ee90",
-}
-
-metric_info["rpc_backlog"] = {
-    "title": _("RPC Backlog"),
-    "unit": "count",
-    "color": "#90ee90",
-}
-
-metric_info["read_ops"] = {
-    "title": _("Read operations"),
-    "unit": "1/s",
-    "color": "34/a",
-}
-
-metric_info["read_b_s"] = {
-    "title": _("Read size per second"),
-    "unit": "bytes/s",
-    "color": "#80ff20",
-}
-
-metric_info["read_b_op"] = {
-    "title": _("Read size per operation"),
-    "unit": "bytes/op",
-    "color": "#4080c0",
-    "render": lambda value: cmk.utils.render.fmt_bytes(int(value)),
-}
-
-metric_info["read_retrans"] = {
-    "title": _("Read retransmission"),
-    "unit": "%",
-    "color": "#90ee90",
-}
-
-metric_info["write_retrans"] = {
-    "title": _("Write retransmission"),
-    "unit": "%",
-    "color": "#90ee90",
-}
-
-metric_info["read_avg_rtt_s"] = {
-    "title": _("Read average rtt"),
-    "unit": "s",
-    "color": "#90ee90",
-}
-
-metric_info["read_avg_exe_s"] = {
-    "title": _("Read average exe"),
-    "unit": "s",
-    "color": "#90ee90",
-}
-
-metric_info["write_ops_s"] = {
-    "title": _("Write operations"),
-    "unit": "1/s",
-    "color": "34/a",
-}
-
-metric_info["write_b_s"] = {
-    "title": _("Writes size per second"),
-    "unit": "bytes/s",
-    "color": "#80ff20",
-}
-
-metric_info["write_b_op"] = {
-    "title": _("Writes size per operation"),
-    "unit": "bytes/op",
-    "color": "#4080c0",
-    "render": lambda value: cmk.utils.render.fmt_bytes(int(value)),
-}
-
-metric_info["write_avg_rtt_s"] = {
-    "title": _("Write average rtt"),
-    "unit": "s",
-    "color": "#90ee90",
-}
-
-metric_info["write_avg_exe_s"] = {
-    "title": _("Write average exe"),
-    "unit": "s",
-    "color": "#90ee90",
-}
-
-
-def register_requests_metrics() -> None:
-    for request, color in zip(
-        ["get", "put", "delete", "head", "post", "select", "list"],
-        ["11/a", "13/a", "15/a", "21/a", "23/a", "25/a", "31/a"],
-    ):
-        metric_info["%s_requests" % request] = {
-            "title": _("%s requests") % request.upper(),
-            "unit": "1/s",
-            "color": color,
-        }
-        metric_info["%s_requests_perc" % request] = {
-            "title": _("Percentage %s requests") % request.upper(),
-            "unit": "%",
-            "color": color,
-        }
-
-
-register_requests_metrics()
-
-metric_info["channels"] = {
-    "title": _("Channels"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["bytes_accepted"] = {
-    "title": _("Bytes accepted"),
-    "unit": "bytes/s",
-    "color": "21/a",
-}
-
-metric_info["bytes_dropped"] = {
-    "title": _("Bytes dropped"),
-    "unit": "bytes/s",
-    "color": "32/a",
-}
-
-metric_info["bytes_rejected"] = {
-    "title": _("Bytes rejected"),
-    "unit": "bytes/s",
-    "color": "42/a",
-}
-
-metric_info["packets"] = {
-    "title": _("Total number of packets"),
-    "unit": "1/s",
-    "color": "11/a",
-}
-
-metric_info["packets_accepted"] = {
-    "title": _("Packets accepted"),
-    "unit": "1/s",
-    "color": "21/a",
-}
-
-metric_info["packets_dropped"] = {
-    "title": _("Packets dropped"),
-    "unit": "1/s",
-    "color": "32/a",
-}
-
-metric_info["packets_rejected"] = {
-    "title": _("Packets rejected"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["fortiauthenticator_fails_5min"] = {
-    "title": _("Authentication failures (last 5 minutes)"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["fortigate_detection_rate"] = {
-    "title": _("Detection rate"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["fortigate_blocking_rate"] = {
-    "title": _("Blocking rate"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["ap_count"] = {
-    "title": _("Number of access points"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["clients_count"] = {
-    "title": _("Number of clients"),
-    "unit": "count",
-    "color": "22/a",
-}
 
 metric_info["bytes_downloaded"] = {
     "title": _("Bytes downloaded"),
@@ -1373,28 +627,10 @@ metric_info["queries_per_sec"] = {
     "color": "41/b",
 }
 
-metric_info["byte_count"] = {
-    "title": _("Byte count"),
-    "unit": "bytes/s",
-    "color": "11/a",
-}
-
 metric_info["snat_usage"] = {
     "title": _("SNAT usage"),
     "unit": "%",
     "color": "21/a",
-}
-
-metric_info["allocated_snat_ports"] = {
-    "title": _("Allocated SNAT ports"),
-    "unit": "count",
-    "color": "41/a",
-}
-
-metric_info["used_snat_ports"] = {
-    "title": _("Used SNAT ports"),
-    "unit": "count",
-    "color": "42/b",
 }
 
 # .

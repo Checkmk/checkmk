@@ -166,7 +166,8 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
         # migration_helpers need libcst. I am conservative here, but wondering if we shouldn't
         # exclude all treasures.
         basepath / "doc/treasures/migration_helpers",
-        basepath / "container_shadow_workspace_local",  # that may contain multiple .venvs and is not relevant
+        basepath
+        / "container_shadow_workspace_local",  # that may contain multiple .venvs and is not relevant
     )
 
     for source_file_path in iter_sourcefiles(basepath):

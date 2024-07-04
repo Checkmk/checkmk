@@ -14,6 +14,7 @@ from itertools import chain
 from typing import Final
 
 import redis
+from redis import ConnectionError as RedisConnectionError
 
 from cmk.utils import paths
 from cmk.utils.exceptions import MKGeneralException
@@ -567,12 +568,17 @@ def _process_update_requests_background(job_interface: BackgroundProcessInterfac
         job_interface.send_progress_update(_("Redis is not reachable, terminating"))
         return
 
-    while updates_requested():
-        _process_update_requests(
-            read_and_remove_update_requests(),
-            job_interface,
-            redis_client,
-        )
+    try:
+        while updates_requested():
+            _process_update_requests(
+                read_and_remove_update_requests(),
+                job_interface,
+                redis_client,
+            )
+    except RedisConnectionError as e:
+        # This can happen when Redis or the whole site is stopped while the background job is
+        # running. Report an error in the background job result but don't create a crash report.
+        job_interface.send_exception(_("An connection error occurred: %s") % e)
 
 
 def _process_update_requests(

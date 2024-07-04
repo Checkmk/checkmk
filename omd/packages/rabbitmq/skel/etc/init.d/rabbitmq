@@ -1,0 +1,144 @@
+#!/bin/bash
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+PIDFILE="${OMD_ROOT}/tmp/run/rabbitmq.pid"
+RABBITMQ_LOG_BASE="${OMD_ROOT}/var/log/rabbitmq"
+RABBITMQ_MNESIA_BASE="${OMD_ROOT}/var/rabbitmq/mnesia"
+RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
+RABBITMQ_ENABLED_PLUGINS_FILE="${OMD_ROOT}/etc/rabbitmq/enabled_plugins"
+EXECUTE="${OMD_ROOT}/bin/rabbitmq-server"
+
+getpid() {
+    cat "${PIDFILE}" 2>/dev/null
+}
+
+process_is_running() {
+    [ -e "${PIDFILE}" ] && kill -0 "$(getpid)" 2>/dev/null
+}
+
+await_process_stop() {
+    max=$(("${1}" * 10))
+    for N in $(seq "${max}"); do
+        process_is_running || return 0
+        [ $((N % 10)) = 0 ] && printf "."
+        sleep 0.1
+    done
+    return 1
+}
+
+await_process_start() {
+    max=$(("${1}" * 10))
+    # If the PIDFILE gets filled, rabbitmq started
+    for N in $(seq "${max}"); do
+        [ -s "${PIDFILE}" ] && return 0
+        [ -e "${PIDFILE}" ] || return 1
+        [ $((N % 10)) = 0 ] && printf "."
+        sleep 0.1
+    done
+    # give up after timeout.
+    return 1
+}
+
+force_kill() {
+    printf "sending SIGKILL."
+    kill -9 "${1}"
+}
+
+exit_successfully() {
+    printf "%s\n" "${1}"
+    exit 0
+}
+
+exit_failure() {
+    printf "%s\n" "${1}"
+    exit 1
+}
+
+case "$1" in
+
+    start-blocking)
+        RABBITMQ_ENABLED_PLUGINS_FILE="${RABBITMQ_ENABLED_PLUGINS_FILE}" \
+            RABBITMQ_CONFIG_FILES="${RABBITMQ_CONFIG_FILES}" \
+            RABBITMQ_LOG_BASE="${RABBITMQ_LOG_BASE}" \
+            RABBITMQ_PID_FILE="${PIDFILE}" \
+            RABBITMQ_MNESIA_BASE="${RABBITMQ_MNESIA_BASE}" \
+            flock "${PIDFILE}" --command "${EXECUTE}"
+        rm --force "${PIDFILE}" # should be removed by rabbitmq itself
+        ;;
+
+    start)
+        printf "Starting rabbitmq..."
+        if ! flock --nonblock "${PIDFILE}" --command :; then
+            exit_successfully 'already running.'
+        fi
+
+        touch "${PIDFILE}"
+        nohup "${0}" "start-blocking" &>/dev/null &
+
+        # try for one minute to interpret the outcome
+        await_process_start 60 && exit_successfully "OK"
+
+        # Give up
+        exit_failure "failed"
+        ;;
+
+    stop)
+        printf "Stopping rabbitmq..."
+        PID="$(getpid "${PIDFILE}")"
+
+        if [ -z "${PID}" ]; then
+            exit_successfully "not running"
+        fi
+
+        if ! kill -0 "${PID}" >/dev/null 2>&1; then
+            rm "${PIDFILE}"
+            exit_successfully "not running (PID file orphaned)"
+        fi
+
+        printf "killing %s..." "${PID}"
+
+        if ! kill "${PID}" 2>/dev/null; then
+            # Remove the stale pidfile to have a clean state after this
+            rm "${PIDFILE}"
+            exit_successfully "OK"
+        fi
+
+        # signal could be sent. Patiently wait for 1 minute.
+        if await_process_stop 60; then
+            exit_successfully "OK"
+        fi
+
+        # We insist...
+        force_kill "${PID}"
+        if await_process_stop 10; then
+            exit_successfully "OK"
+        fi
+        # Give up
+        exit_failure "failed"
+        ;;
+
+    restart | reload)
+        $0 stop
+        $0 start
+        ;;
+
+    status)
+        printf "Checking status of rabbitmq..."
+        PID="$(getpid "${PIDFILE}")"
+
+        if [ -z "${PID}" ]; then
+            exit_failure "not running"
+        fi
+
+        if ! kill -0 "${PID}" 2>/dev/null; then
+            exit_failure "not running (PID file orphaned)"
+        fi
+        exit_successfully "running"
+        ;;
+    *)
+        exit_failure "Usage: rabbitmq {start|stop|restart|reload|status}"
+        ;;
+
+esac

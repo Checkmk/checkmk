@@ -19,6 +19,7 @@ def test_init_scripts(site: Site) -> None:
         "npcd",
         "piggyback-hub",
         "pnp_gearman_worker",
+        "rabbitmq",
         "redis",
         "rrdcached",
         "stunnel",

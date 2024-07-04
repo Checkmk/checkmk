@@ -1026,14 +1026,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["quarantine"],
-        "total": 100,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "queue",
         "half_value": 80,

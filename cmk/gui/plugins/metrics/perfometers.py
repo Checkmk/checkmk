@@ -1167,14 +1167,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["memory_reservation"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["sms_success_rate"],
         "total": 100.0,
     }

@@ -426,7 +426,7 @@ msgid "%d icons customized"
 msgstr "%d pictograme personalizate"
 
 #, fuzzy, python-format
-msgid "%d ignored HW/SW inventory plug-ins found: %s"
+msgid "%d ignored HW/SW Inventory plug-ins found: %s"
 msgstr "%d ignorate plugin-uri de inventar HW/SW găsite: %s."
 
 #, python-format
@@ -6086,6 +6086,10 @@ msgstr "Un pseudonim sau o descriere a perioadei de timp"
 msgid "An alias or description of this group."
 msgstr "Un pseudonim sau o descriere a acestui grup."
 
+#, fuzzy, python-format
+msgid "An connection error occurred: %s"
+msgstr "S-a produs o excepție: %s"
+
 msgid "An empty value is not allowed here."
 msgstr "Aici nu este permisă o valoare goală."
 
@@ -10187,23 +10191,23 @@ msgstr "Nu se poate încărca %s din %s: %s."
 msgid "Cannot load %s: %s"
 msgstr "Nu se poate încărca %s: %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot load HW/SW inventory history entries %s. Please remove the corrupted "
+"Cannot load HW/SW Inventory history entries %s. Please remove the corrupted "
 "files."
 msgstr ""
 "Nu se pot încărca intrările din istoricul inventarului HW/SW %s. Vă rugăm să "
 "eliminați fișierele corupte."
 
-#, python-format
-msgid "Cannot load HW/SW inventory tree %s. Please remove the corrupted file."
+#, fuzzy, python-format
+msgid "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
 msgstr ""
 "Nu se poate încărca arborele de inventar HW/SW %s. Vă rugăm să eliminați "
 "fișierul corupt."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot load HW/SW inventory trees %s. Please remove the corrupted files."
+"Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
 msgstr ""
 "Nu se pot încărca arborii de inventar HW/SW %s. Vă rugăm să eliminați "
 "fișierele corupte."
@@ -12917,6 +12921,10 @@ msgstr ""
 msgid "Configure grouping of interfaces"
 msgstr "Configurați gruparea interfețelor"
 
+#, fuzzy
+msgid "Configure host & region"
+msgstr "Configurație"
+
 #, no-python-format
 msgid ""
 "Configure levels for averaged CPU utilization depending on number of cluster "
@@ -12959,6 +12967,10 @@ msgstr "Configurați utilizarea serverului proxy"
 
 msgid "Configure restrictions manually"
 msgstr "Configurarea manuală a restricțiilor"
+
+#, fuzzy
+msgid "Configure services to monitor"
+msgstr "Servicii Azure de monitorizat"
 
 msgid "Configure sidebar"
 msgstr "Configurați bara laterală"
@@ -17313,7 +17325,7 @@ msgid "Deprecated"
 msgstr "Depreciat"
 
 #, fuzzy
-msgid "Deprecated HW/SW inventory plug-ins"
+msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Plugin-uri de inventar HW/SW depășite"
 
 #, fuzzy
@@ -18432,6 +18444,10 @@ msgstr "Configurație de monitorizare distribuită"
 msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "Monitorizare distribuită folosind mai multe site-uri Checkmk"
 
+#, fuzzy
+msgid "Do HW/SW Inventory"
+msgstr "Inventarul HW/SW"
+
 msgid "Do a full service scan"
 msgstr "Efectuați o scanare completă a serviciului"
 
@@ -18446,9 +18462,6 @@ msgstr "Efectuați o actualizare <tt>apt-get</tt> înainte de verificare"
 
 msgid "Do cancelling actions"
 msgstr "Efectuați acțiuni de anulare"
-
-msgid "Do hardware/software inventory"
-msgstr "Efectuați un inventar hardware/software"
 
 msgid "Do inventory and service configuration on existing hosts."
 msgstr ""
@@ -19175,6 +19188,10 @@ msgstr "Nivelurile de memorie în timpul execuției DotNet (.Net)"
 msgid "Double Integer (DINT)"
 msgstr "Număr întreg dublu (DINT)"
 
+#, fuzzy
+msgid "Double check your configuration"
+msgstr "Dezactivați configurarea la distanță"
+
 msgid "Double-click to grow further"
 msgstr ""
 
@@ -19478,6 +19495,7 @@ msgstr ""
 "consola de evenimente. Dacă setați această valoare mai mică decât intervalul "
 "de verificare al gazdei, vor lipsi jurnale. "
 
+#, fuzzy
 msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
@@ -19485,7 +19503,7 @@ msgid ""
 "are normally deleted. But there are cases, where the files are left on the "
 "disk until manual deletion, for example if you move a host from one site to "
 "another or deleting a host manually from the configuration.<br>The "
-"performance data (RRDs) and HW/SW inventory archive are never deleted during "
+"performance data (RRDs) and HW/SW Inventory archive are never deleted during "
 "host deletion. They are only deleted automatically when you enable this "
 "option and after the configured period."
 msgstr ""
@@ -21558,6 +21576,10 @@ msgstr "Exc."
 
 msgid "Exception"
 msgstr "Excepție"
+
+#, fuzzy, python-format
+msgid "Exception (Crash ID: %s): %s"
+msgstr "Excepție în pictograma '%s': %s."
 
 #, python-format
 msgid "Exception during element refresh (element '%s')"
@@ -25042,10 +25064,20 @@ msgstr "Informații HW"
 msgid "HW containers"
 msgstr "Containere HW"
 
-msgid "HW/SW inventory"
+#, fuzzy
+msgid "HW/SW Inventory"
 msgstr "Inventarul HW/SW"
 
-msgid "HW/SW inventory rules"
+#, fuzzy
+msgid "HW/SW Inventory history of host"
+msgstr "Istoricul de inventariere a gazdei"
+
+#, fuzzy
+msgid "HW/SW Inventory of host"
+msgstr "Inventarul gazdei"
+
+#, fuzzy
+msgid "HW/SW Inventory rules"
 msgstr "Reguli de inventariere HW/SW"
 
 msgid "Half closed connections"
@@ -26312,11 +26344,12 @@ msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr ""
 "Rotația jurnalului istoric: Rotire în funcție de mărime (Limita de mărime)"
 
-msgid "History of event"
+#, fuzzy
+msgid "History of HW/SW Inventory"
 msgstr "Istoria evenimentului"
 
-msgid "History of hardware/software inventory"
-msgstr "Istoricul inventarului hardware/software"
+msgid "History of event"
+msgstr "Istoria evenimentului"
 
 msgid "History of notifications"
 msgstr "Istoricul notificărilor"
@@ -28433,6 +28466,12 @@ msgstr ""
 "(%s pe minut), puteți restricționa monitorizarea la grupuri de resurse și "
 "resurse individuale."
 
+#, python-format
+msgid ""
+"However, the duplicated %s will no longer be associated with the Quick setup "
+"and this source."
+msgstr ""
+
 msgid "Hub"
 msgstr "Hub"
 
@@ -29757,8 +29796,8 @@ msgid ""
 "for exporting to third-party software. <b>Note:</b> in order to actually use "
 "the inventory for a host you also need to enable it in the ruleset <a "
 "href='wato.py?varname=active_checks"
-"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do "
-"hardware/software Inventory</a>."
+"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do HW/SW "
+"Inventory</a>."
 msgstr ""
 "Dacă activați această opțiune, pluginul agent <tt>mk_inventory</tt> va fi "
 "implementat pe gazdele linux și windows. Acesta adună informații despre "
@@ -32583,9 +32622,6 @@ msgstr "Modificări ale stocurilor"
 msgid "Inventory column: %s"
 msgstr "Coloana Inventar"
 
-msgid "Inventory history of host"
-msgstr "Istoricul de inventariere a gazdei"
-
 #, fuzzy, python-format
 msgid "Inventory node: %s"
 msgstr "Nod de inventariere"
@@ -32598,9 +32634,6 @@ msgid "Inventory of all deployed agent plug-ins and their versions"
 msgstr ""
 "Inventarul tuturor plugin-urilor de agent implementate și a versiunilor "
 "acestora"
-
-msgid "Inventory of host"
-msgstr "Inventarul gazdei"
 
 #, fuzzy, python-format
 msgid "Inventory table: %s"
@@ -39432,6 +39465,9 @@ msgstr "Rezoluția numelui"
 msgid "Name your %s for easy recognition."
 msgstr "Dați un nume %s pentru a fi ușor de recunoscut."
 
+msgid "Name your host, path and select the region you would like to monitor"
+msgstr ""
+
 #, python-format
 msgid "Name: %s"
 msgstr "Numele: %s"
@@ -40085,7 +40121,7 @@ msgid "No hosts/services found."
 msgstr "Nu s-au găsit gazde/servicii."
 
 #, fuzzy
-msgid "No ignored HW/SW inventory plug-ins found"
+msgid "No ignored HW/SW Inventory plug-ins found"
 msgstr "Nu s-au găsit plugin-uri de inventar HW/SW ignorate"
 
 msgid "No influence on element display"
@@ -45202,7 +45238,8 @@ msgstr "Permite ștergerea tuturor hărților."
 msgid "Permitted Contact Groups"
 msgstr "Grupuri de contacte permise"
 
-msgid "Permitted HW/SW inventory paths"
+#, fuzzy
+msgid "Permitted HW/SW Inventory paths"
 msgstr "Trasee de inventariere HW/SW permise"
 
 msgid "Persistent (long)"
@@ -47972,11 +48009,12 @@ msgstr ""
 msgid "Received messages"
 msgstr "Mesaje primite"
 
+#, fuzzy
+msgid "Recent HW/SW Inventory"
+msgstr "Inventarul HW/SW"
+
 msgid "Recent event history"
 msgstr "Istoricul evenimentelor recente"
-
-msgid "Recent hardware/software inventory"
-msgstr "Inventar hardware/software recent"
 
 msgid "Recently changed services"
 msgstr "Servicii schimbate recent"
@@ -49715,7 +49753,8 @@ msgstr "Reluarea"
 msgid "Retained messages"
 msgstr "Mesaje reținute"
 
-msgid "Retention intervals for HW/SW inventory entities"
+#, fuzzy
+msgid "Retention intervals for HW/SW Inventory entities"
 msgstr ""
 "Intervale de păstrare pentru entitățile de inventariere a echipamentelor "
 "hardware și software"
@@ -49789,6 +49828,10 @@ msgstr "Reveniți asupra modificărilor?"
 #, fuzzy
 msgid "Revert foreign changes"
 msgstr "Activați modificările străine"
+
+#, fuzzy
+msgid "Review & run service discovery"
+msgstr "Salvați & rulați descoperirea serviciilor"
 
 msgid "Revolutions per minute"
 msgstr "Rotații pe minut"
@@ -49978,6 +50021,10 @@ msgstr "Activarea regulii"
 
 msgid "Rule can only be deleted via Quick setup"
 msgstr ""
+
+#, fuzzy
+msgid "Rule cannot be moved, because it is managed by Quick setup"
+msgstr "Nu puteți șterge rolurile care sunt încă în uz (%s)!"
 
 msgid "Rule contact groups"
 msgstr "Grupuri de contact de reguli"
@@ -51385,6 +51432,9 @@ msgstr "Vedeți vizualizările de disponibilitate ale gazdelor și serviciilor"
 #, python-format
 msgid "See user %s"
 msgstr "Vezi utilizator %s"
+
+msgid "Select & configure AWS services you would like to monitor"
+msgstr ""
 
 msgid "Select a time period"
 msgstr "Selectați o perioadă de timp"
@@ -53285,7 +53335,8 @@ msgstr "Afișați %ss pentru servicii"
 msgid "Show / hide notification context"
 msgstr "Afișați / ascundeți contextul de notificare"
 
-msgid "Show Hardware/Software Inventory of this host"
+#, fuzzy
+msgid "Show HW/SW Inventory of this host"
 msgstr "Afișați inventarul hardware/software al acestei gazde"
 
 msgid "Show MK Livestatus error messages"
@@ -54817,6 +54868,10 @@ msgstr "Denumire NAT sursă"
 msgid "Source Path"
 msgstr "Calea sursei"
 
+#, fuzzy
+msgid "Source association changed"
+msgstr "Activarea simultană a modificărilor"
+
 msgid ""
 "Source field of the alert. Default value is IP address of the incoming "
 "request."
@@ -55310,7 +55365,9 @@ msgstr ""
 "Specificați starea de monitorizare atunci când modul de legare nu este "
 "conform așteptărilor."
 
-msgid "Specify the name of a store (This is either a mailbox or public folder)"
+#, fuzzy
+msgid ""
+"Specify the name of a store (This is either a mailbox or public folder)."
 msgstr ""
 "Specificați numele unui magazin (acesta este fie o căsuță poștală, fie un "
 "dosar public)"
@@ -65644,12 +65701,13 @@ msgstr ""
 "frontieră de sesiune ACME (SBC). Acest agent utilizează SSH, deci trebuie să "
 "schimbați o cheie SSH pentru a face posibilă o conexiune fără parolă."
 
+#, fuzzy
 msgid ""
 "This rule allows for defining regex-patterns for in- and excluding kernel "
 "configuration parameters in the inventory. By default, no parameters are "
 "included. Note that some kernel configuration parameters change frequently. "
 "Inventorizing one of these parameters will lead to frequent changes in the "
-"HW/SW inventory, which can quickly fill up the temporary file system."
+"HW/SW Inventory, which can quickly fill up the temporary file system."
 msgstr ""
 "Această regulă permite definirea unor modele regex pentru a include și a "
 "exclude parametrii de configurare a nucleului din inventar. În mod implicit, "
@@ -65924,8 +65982,9 @@ msgstr ""
 "pentru a fi monitorizate de verificarea Solaris selectându-le după "
 "descriere, categorie, nume sau stare curentă în timpul descoperirii."
 
+#, fuzzy
 msgid ""
-"This rule can be used to configure the inventory of the windows services "
+"This rule can be used to configure the discovery of the windows services "
 "check. You can configure specific windows services to be monitored by the "
 "windows check by selecting them by name, current state during the inventory, "
 "or start mode."
@@ -66147,13 +66206,6 @@ msgstr "Această regulă este depășită. Vă rugăm să utilizați \"%s\" în 
 
 msgid "This rule is disabled"
 msgstr "Această regulă este dezactivată"
-
-#, python-brace-format
-msgid ""
-"This rule is part of the {hostname} configuration using Quick setup. Some "
-"options cannot be edited to avoid conflicts.<br>Go to Quick setup to edit "
-"all parameters of {hostname}."
-msgstr ""
 
 msgid ""
 "This rule is used to configure thresholds for counter values read from "
@@ -67572,6 +67624,13 @@ msgstr "Acest lucru va suprima toate notificările"
 msgid "This year"
 msgstr "În acest an"
 
+#, python-brace-format
+msgid ""
+"This {type_name} is part of the {host_name} configuration using Quick setup. "
+"Some options cannot be edited to avoid conflicts.<br>Go to Quick setup to "
+"edit all parameters of {host_name}."
+msgstr ""
+
 msgid "Thread creations per second"
 msgstr "Crearea de fire pe secundă"
 
@@ -67991,7 +68050,10 @@ msgstr ""
 msgid "Time until alert, if INITIALIZED condition is false"
 msgstr "Timpul până la alertă, dacă condiția INITIALIZAT este falsă"
 
-msgid "Time until alert, if PODHASNETWORK condition is false"
+#, fuzzy
+msgid ""
+"Time until alert, if PODREADYTOSTARTCONTAINERS (PODHASNETWORK in Kubernetes "
+"version 1.27 and below) condition is false"
 msgstr ""
 "Timpul până la alertă, în cazul în care condiția PODHASNETWORK este falsă"
 
@@ -71875,10 +71937,6 @@ msgstr "Necunoscut"
 #, python-format
 msgid "Unknown %s group: %s"
 msgstr "Necunoscut %s grup: %s"
-
-#, python-format
-msgid "Unknown (%s)"
-msgstr "Necunoscut (%s)"
 
 msgid "Unknown - DUnknown"
 msgstr "Necunoscut - DUnknown"
@@ -77511,6 +77569,12 @@ msgstr ""
 
 #, python-format
 msgid ""
+"You are duplicating a %s that has been created by the Quick setup and "
+"associated with the source"
+msgstr ""
+
+#, python-format
+msgid ""
 "You are missing the action with the ID <b>%s</b>, which is still used in "
 "some rules."
 msgstr ""
@@ -79553,6 +79617,10 @@ msgstr "Actualizări Zypper"
 msgid "Zypper normal and security updates (Linux)"
 msgstr "Zypper normal și actualizări de securitate (Linux)"
 
+#, fuzzy, python-format
+msgid "[%s] - Quick setup"
+msgstr "Configurare rapidă"
+
 #, python-format
 msgid "[%s] Exception: %s"
 msgstr "[%s] Excepție: %s"
@@ -79564,10 +79632,6 @@ msgstr "[%s] Sincronizare finalizată pentru conexiune"
 #, python-format
 msgid "[%s] Finished sync for site"
 msgstr "[%s] Sincronizare finalizată pentru site"
-
-#, fuzzy, python-format
-msgid "[%s] Quick setup"
-msgstr "Configurare rapidă"
 
 #, python-format
 msgid "[%s] Starting sync for connection"
@@ -81153,9 +81217,6 @@ msgstr ""
 "reprezintă așteptarea unei cereri de conexiune de la orice TCP la distanță "
 "și port"
 
-msgid "requests"
-msgstr "cereri"
-
 msgid "requests/sec"
 msgstr "cereri/sec"
 
@@ -81649,6 +81710,22 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Do hardware/software inventory"
+#~ msgstr "Efectuați un inventar hardware/software"
+
+#~ msgid "History of hardware/software inventory"
+#~ msgstr "Istoricul inventarului hardware/software"
+
+#~ msgid "Recent hardware/software inventory"
+#~ msgstr "Inventar hardware/software recent"
+
+#, python-format
+#~ msgid "Unknown (%s)"
+#~ msgstr "Necunoscut (%s)"
+
+#~ msgid "requests"
+#~ msgstr "cereri"
 
 #~ msgid "More information can be found in ~/var/log/web.log"
 #~ msgstr "Mai multe informații pot fi găsite în ~/var/log/web.log"

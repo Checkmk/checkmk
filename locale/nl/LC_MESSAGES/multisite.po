@@ -429,7 +429,7 @@ msgid "%d icons customized"
 msgstr "%d bewerkte iconen"
 
 #, fuzzy, python-format
-msgid "%d ignored HW/SW inventory plug-ins found: %s"
+msgid "%d ignored HW/SW Inventory plug-ins found: %s"
 msgstr "%d genegeerde HW/SW inventaris plugins gevonden: %s"
 
 #, python-format
@@ -6079,6 +6079,10 @@ msgstr "Een alias of beschrijving van de periode"
 msgid "An alias or description of this group."
 msgstr "Een alias of beschrijving van deze groep."
 
+#, fuzzy, python-format
+msgid "An connection error occurred: %s"
+msgstr "Er is een uitzondering opgetreden: %s"
+
 msgid "An empty value is not allowed here."
 msgstr "Een lege waarde is hier niet toegestaan."
 
@@ -10159,22 +10163,22 @@ msgstr "Kan %s van %s niet laden: %s"
 msgid "Cannot load %s: %s"
 msgstr "Kan %s niet laden: %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot load HW/SW inventory history entries %s. Please remove the corrupted "
+"Cannot load HW/SW Inventory history entries %s. Please remove the corrupted "
 "files."
 msgstr ""
 "Kan HW/SW inventarisgeschiedenisitems %s niet laden. Verwijder alstublieft "
 "de beschadigde bestanden."
 
-#, python-format
-msgid "Cannot load HW/SW inventory tree %s. Please remove the corrupted file."
+#, fuzzy, python-format
+msgid "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
 msgstr ""
 "Kan HW/SW inventarisboom %s niet laden. Verwijder het beschadigde bestand."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot load HW/SW inventory trees %s. Please remove the corrupted files."
+"Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
 msgstr ""
 "Kan HW/SW inventarisbomen %s niet laden. Verwijder alstublieft de "
 "beschadigde bestanden."
@@ -12905,6 +12909,10 @@ msgstr ""
 msgid "Configure grouping of interfaces"
 msgstr "Groepering van interfaces configureren"
 
+#, fuzzy
+msgid "Configure host & region"
+msgstr "Configuratie"
+
 #, no-python-format
 msgid ""
 "Configure levels for averaged CPU utilization depending on number of cluster "
@@ -12949,6 +12957,10 @@ msgstr "Gebruik van de proxyserver configureren"
 
 msgid "Configure restrictions manually"
 msgstr "Beperkingen handmatig configureren"
+
+#, fuzzy
+msgid "Configure services to monitor"
+msgstr "Te controleren Azure diensten"
 
 msgid "Configure sidebar"
 msgstr "Zijbalk configureren"
@@ -17293,7 +17305,7 @@ msgid "Deprecated"
 msgstr "Afgeschreven"
 
 #, fuzzy
-msgid "Deprecated HW/SW inventory plug-ins"
+msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Afgeschreven HW/SW inventaris plugins"
 
 #, fuzzy
@@ -18405,6 +18417,10 @@ msgstr "Gedistribueerde bewakingsconfiguratie"
 msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "Gedistribueerde monitoring met meerdere Checkmk-sites"
 
+#, fuzzy
+msgid "Do HW/SW Inventory"
+msgstr "HW/SW-inventaris"
+
 msgid "Do a full service scan"
 msgstr "Doe een volledige service scan"
 
@@ -18419,9 +18435,6 @@ msgstr "Doe een <tt>apt-get update</tt> voor de controle"
 
 msgid "Do cancelling actions"
 msgstr "Doe annulerende acties"
-
-msgid "Do hardware/software inventory"
-msgstr "Inventarisatie hardware/software"
 
 msgid "Do inventory and service configuration on existing hosts."
 msgstr "Inventarisatie en dienstconfiguratie op bestaande hosts."
@@ -19150,6 +19163,10 @@ msgstr "DotNet (.Net) runtime geheugen niveaus"
 msgid "Double Integer (DINT)"
 msgstr "Dubbel geheel getal (DINT)"
 
+#, fuzzy
+msgid "Double check your configuration"
+msgstr "Externe configuratie uitschakelen"
+
 msgid "Double-click to grow further"
 msgstr ""
 
@@ -19455,6 +19472,7 @@ msgstr ""
 "waarde lager wordt ingesteld dan het controle-interval van de host, zullen "
 "er logs ontbreken. "
 
+#, fuzzy
 msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
@@ -19462,7 +19480,7 @@ msgid ""
 "are normally deleted. But there are cases, where the files are left on the "
 "disk until manual deletion, for example if you move a host from one site to "
 "another or deleting a host manually from the configuration.<br>The "
-"performance data (RRDs) and HW/SW inventory archive are never deleted during "
+"performance data (RRDs) and HW/SW Inventory archive are never deleted during "
 "host deletion. They are only deleted automatically when you enable this "
 "option and after the configured period."
 msgstr ""
@@ -21525,6 +21543,10 @@ msgstr "Exc."
 
 msgid "Exception"
 msgstr "Uitzondering"
+
+#, fuzzy, python-format
+msgid "Exception (Crash ID: %s): %s"
+msgstr "Uitzondering in pictogram '%s': %s"
 
 #, python-format
 msgid "Exception during element refresh (element '%s')"
@@ -25036,10 +25058,20 @@ msgstr "HW Informatie"
 msgid "HW containers"
 msgstr "HW containers"
 
-msgid "HW/SW inventory"
+#, fuzzy
+msgid "HW/SW Inventory"
 msgstr "HW/SW-inventaris"
 
-msgid "HW/SW inventory rules"
+#, fuzzy
+msgid "HW/SW Inventory history of host"
+msgstr "Inventarisatie geschiedenis van host"
+
+#, fuzzy
+msgid "HW/SW Inventory of host"
+msgstr "Inventaris van de gastheer"
+
+#, fuzzy
+msgid "HW/SW Inventory rules"
 msgstr "HW/SW-inventarisatieregels"
 
 msgid "Half closed connections"
@@ -26295,11 +26327,12 @@ msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr "Geschiedenis log rotatie: Roteren op grootte (Limiet van de grootte)"
 
 #, fuzzy
-msgid "History of event"
+msgid "History of HW/SW Inventory"
 msgstr "Geschiedenis van het evenement"
 
-msgid "History of hardware/software inventory"
-msgstr "Historiek van hardware/software-inventaris"
+#, fuzzy
+msgid "History of event"
+msgstr "Geschiedenis van het evenement"
 
 msgid "History of notifications"
 msgstr "Geschiedenis van de kennisgevingen"
@@ -28423,6 +28456,12 @@ msgstr ""
 "minuut), kunt u de bewaking beperken tot afzonderlijke resourcegroepen en "
 "resources."
 
+#, python-format
+msgid ""
+"However, the duplicated %s will no longer be associated with the Quick setup "
+"and this source."
+msgstr ""
+
 msgid "Hub"
 msgstr "Hub"
 
@@ -29737,8 +29776,8 @@ msgid ""
 "for exporting to third-party software. <b>Note:</b> in order to actually use "
 "the inventory for a host you also need to enable it in the ruleset <a "
 "href='wato.py?varname=active_checks"
-"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do "
-"hardware/software Inventory</a>."
+"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do HW/SW "
+"Inventory</a>."
 msgstr ""
 "Als u deze optie activeert, wordt de agent-plugin <tt>mk_inventory</tt> "
 "ingezet op Linux- en Windows-hosts. Het verzamelt informatie over "
@@ -32521,9 +32560,6 @@ msgstr "Inventariswijzigingen"
 msgid "Inventory column: %s"
 msgstr "Inventariskolom"
 
-msgid "Inventory history of host"
-msgstr "Inventarisatie geschiedenis van host"
-
 #, fuzzy, python-format
 msgid "Inventory node: %s"
 msgstr "Inventaris knooppunt"
@@ -32534,9 +32570,6 @@ msgstr "Inventarisatie van Linux kernel configuratie (sysctl)"
 #, fuzzy
 msgid "Inventory of all deployed agent plug-ins and their versions"
 msgstr "Inventaris van alle ingezette agent plugins en hun versies"
-
-msgid "Inventory of host"
-msgstr "Inventaris van de gastheer"
 
 #, fuzzy, python-format
 msgid "Inventory table: %s"
@@ -39390,6 +39423,9 @@ msgstr "Naam resolutie"
 msgid "Name your %s for easy recognition."
 msgstr "Geef uw %s een naam voor gemakkelijke herkenning."
 
+msgid "Name your host, path and select the region you would like to monitor"
+msgstr ""
+
 #, python-format
 msgid "Name: %s"
 msgstr "Naam: %s"
@@ -40041,7 +40077,7 @@ msgid "No hosts/services found."
 msgstr "Geen hosts/services gevonden."
 
 #, fuzzy
-msgid "No ignored HW/SW inventory plug-ins found"
+msgid "No ignored HW/SW Inventory plug-ins found"
 msgstr "Geen genegeerde HW/SW inventaris plugins gevonden"
 
 msgid "No influence on element display"
@@ -45176,7 +45212,8 @@ msgstr "Staat toe alle kaarten te verwijderen."
 msgid "Permitted Contact Groups"
 msgstr "Toegestane contactgroepen"
 
-msgid "Permitted HW/SW inventory paths"
+#, fuzzy
+msgid "Permitted HW/SW Inventory paths"
 msgstr "Toegestane HW/SW inventarisatiepaden"
 
 msgid "Persistent (long)"
@@ -47930,11 +47967,12 @@ msgstr ""
 msgid "Received messages"
 msgstr "Ontvangen berichten"
 
+#, fuzzy
+msgid "Recent HW/SW Inventory"
+msgstr "HW/SW-inventaris"
+
 msgid "Recent event history"
 msgstr "Recente gebeurtenissen"
-
-msgid "Recent hardware/software inventory"
-msgstr "Recente hardware/software-inventaris"
 
 msgid "Recently changed services"
 msgstr "Onlangs gewijzigde diensten"
@@ -49676,7 +49714,8 @@ msgstr "Resulterende staat"
 msgid "Retained messages"
 msgstr "Behouden berichten"
 
-msgid "Retention intervals for HW/SW inventory entities"
+#, fuzzy
+msgid "Retention intervals for HW/SW Inventory entities"
 msgstr "Bewaartermijnen voor HW/SW-inventarisentiteiten"
 
 msgid "Retention period"
@@ -49747,6 +49786,10 @@ msgstr "Inventariswijzigingen"
 #, fuzzy
 msgid "Revert foreign changes"
 msgstr "Buitenlandse wijzigingen activeren"
+
+#, fuzzy
+msgid "Review & run service discovery"
+msgstr "Save & run service discovery"
 
 msgid "Revolutions per minute"
 msgstr "Omwentelingen per minuut"
@@ -49937,6 +49980,10 @@ msgstr "Activering van de regel"
 
 msgid "Rule can only be deleted via Quick setup"
 msgstr ""
+
+#, fuzzy
+msgid "Rule cannot be moved, because it is managed by Quick setup"
+msgstr "U kunt geen rollen verwijderen, die nog in gebruik zijn (%s)!"
 
 msgid "Rule contact groups"
 msgstr "Regel contactgroepen"
@@ -51348,6 +51395,9 @@ msgstr "Bekijk de beschikbaarheidsoverzichten van hosts en diensten"
 #, python-format
 msgid "See user %s"
 msgstr "Zie gebruiker %s"
+
+msgid "Select & configure AWS services you would like to monitor"
+msgstr ""
 
 msgid "Select a time period"
 msgstr "Selecteer een periode"
@@ -53184,7 +53234,8 @@ msgstr "Toon %ss voor diensten"
 msgid "Show / hide notification context"
 msgstr "Toon / verberg melding context"
 
-msgid "Show Hardware/Software Inventory of this host"
+#, fuzzy
+msgid "Show HW/SW Inventory of this host"
 msgstr "Toon Hardware/Software Inventaris van deze host"
 
 msgid "Show MK Livestatus error messages"
@@ -54709,6 +54760,10 @@ msgstr "Naam bron NAT"
 msgid "Source Path"
 msgstr "Bron Pad"
 
+#, fuzzy
+msgid "Source association changed"
+msgstr "Simultane activering van veranderingen"
+
 msgid ""
 "Source field of the alert. Default value is IP address of the incoming "
 "request."
@@ -55188,7 +55243,9 @@ msgstr ""
 msgid "Specify the monitoring state when the bonding mode is not as expected."
 msgstr ""
 
-msgid "Specify the name of a store (This is either a mailbox or public folder)"
+#, fuzzy
+msgid ""
+"Specify the name of a store (This is either a mailbox or public folder)."
 msgstr ""
 "Specificeer de naam van een opslagplaats (Dit is ofwel een postbus of een "
 "openbare map)"
@@ -65464,12 +65521,13 @@ msgstr ""
 "Border Controller (SBC). Deze agent gebruikt SSH, dus je moet een SSH "
 "sleutel uitwisselen om een wachtwoordloze verbinding mogelijk te maken."
 
+#, fuzzy
 msgid ""
 "This rule allows for defining regex-patterns for in- and excluding kernel "
 "configuration parameters in the inventory. By default, no parameters are "
 "included. Note that some kernel configuration parameters change frequently. "
 "Inventorizing one of these parameters will lead to frequent changes in the "
-"HW/SW inventory, which can quickly fill up the temporary file system."
+"HW/SW Inventory, which can quickly fill up the temporary file system."
 msgstr ""
 "Deze regel laat toe regex-patronen te definiëren voor het in- en uitsluiten "
 "van kernel configuratie parameters in de inventaris. Standaard worden geen "
@@ -65741,8 +65799,9 @@ msgstr ""
 "te worden gecontroleerd door de Solaris controle door ze te selecteren op "
 "beschrijving, categorie, naam, of huidige toestand tijdens de ontdekking."
 
+#, fuzzy
 msgid ""
-"This rule can be used to configure the inventory of the windows services "
+"This rule can be used to configure the discovery of the windows services "
 "check. You can configure specific windows services to be monitored by the "
 "windows check by selecting them by name, current state during the inventory, "
 "or start mode."
@@ -65950,13 +66009,6 @@ msgstr "Deze regel is verouderd. Gebruik in plaats daarvan \"%s\"."
 
 msgid "This rule is disabled"
 msgstr "Deze regel is uitgeschakeld"
-
-#, python-brace-format
-msgid ""
-"This rule is part of the {hostname} configuration using Quick setup. Some "
-"options cannot be edited to avoid conflicts.<br>Go to Quick setup to edit "
-"all parameters of {hostname}."
-msgstr ""
 
 msgid ""
 "This rule is used to configure thresholds for counter values read from "
@@ -67362,6 +67414,13 @@ msgstr "Alle persoonlijke meldingen uitschakelen"
 msgid "This year"
 msgstr "Dit jaar"
 
+#, python-brace-format
+msgid ""
+"This {type_name} is part of the {host_name} configuration using Quick setup. "
+"Some options cannot be edited to avoid conflicts.<br>Go to Quick setup to "
+"edit all parameters of {host_name}."
+msgstr ""
+
 msgid "Thread creations per second"
 msgstr "Draad creaties per seconde"
 
@@ -67792,7 +67851,10 @@ msgstr "Tijd tot waarschuwing, indien CONTAINERSREADY voorwaarde vals is"
 msgid "Time until alert, if INITIALIZED condition is false"
 msgstr "Tijd tot waarschuwing, als de INITIALIZED voorwaarde vals is"
 
-msgid "Time until alert, if PODHASNETWORK condition is false"
+#, fuzzy
+msgid ""
+"Time until alert, if PODREADYTOSTARTCONTAINERS (PODHASNETWORK in Kubernetes "
+"version 1.27 and below) condition is false"
 msgstr "Tijd tot waarschuwing, indien PODHASNETWORK voorwaarde vals is"
 
 msgid "Time until alert, if PODSCHEDULED condition is false"
@@ -71738,10 +71800,6 @@ msgstr "Onbekend"
 #, python-format
 msgid "Unknown %s group: %s"
 msgstr "Onbekende %s groep: %s"
-
-#, python-format
-msgid "Unknown (%s)"
-msgstr "Onbekend (%s)"
 
 msgid "Unknown - DUnknown"
 msgstr "Onbekend - DU Onbekend"
@@ -77371,6 +77429,12 @@ msgstr ""
 
 #, python-format
 msgid ""
+"You are duplicating a %s that has been created by the Quick setup and "
+"associated with the source"
+msgstr ""
+
+#, python-format
+msgid ""
 "You are missing the action with the ID <b>%s</b>, which is still used in "
 "some rules."
 msgstr ""
@@ -79402,6 +79466,10 @@ msgstr "Zypper Updates"
 msgid "Zypper normal and security updates (Linux)"
 msgstr "Zypper normaal en beveiligingsupdates (Linux)"
 
+#, fuzzy, python-format
+msgid "[%s] - Quick setup"
+msgstr "Snelle installatie"
+
 #, python-format
 msgid "[%s] Exception: %s"
 msgstr "[%s] Uitzondering: %s"
@@ -79413,10 +79481,6 @@ msgstr "[%s] Synchronisatie voor verbinding voltooid"
 #, python-format
 msgid "[%s] Finished sync for site"
 msgstr "[%s] Synchronisatie voor site voltooid"
-
-#, fuzzy, python-format
-msgid "[%s] Quick setup"
-msgstr "Snelle installatie"
 
 #, python-format
 msgid "[%s] Starting sync for connection"
@@ -81020,9 +81084,6 @@ msgid ""
 msgstr ""
 "staat voor wachten op een verbindingsverzoek van een TCP op afstand en poort"
 
-msgid "requests"
-msgstr "verzoeken"
-
 msgid "requests/sec"
 msgstr "verzoeken/sec"
 
@@ -81518,6 +81579,22 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Do hardware/software inventory"
+#~ msgstr "Inventarisatie hardware/software"
+
+#~ msgid "History of hardware/software inventory"
+#~ msgstr "Historiek van hardware/software-inventaris"
+
+#~ msgid "Recent hardware/software inventory"
+#~ msgstr "Recente hardware/software-inventaris"
+
+#, python-format
+#~ msgid "Unknown (%s)"
+#~ msgstr "Onbekend (%s)"
+
+#~ msgid "requests"
+#~ msgstr "verzoeken"
 
 #~ msgid "More information can be found in ~/var/log/web.log"
 #~ msgstr "Meer informatie is te vinden in ~/var/log/web.log"

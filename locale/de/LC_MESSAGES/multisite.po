@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-07-01 23:11+0000\n"
+"PO-Revision-Date: 2024-07-05 01:06+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -427,8 +427,8 @@ msgstr "%d Symbole und Aktionen"
 msgid "%d icons customized"
 msgstr "%d Icons angepasst"
 
-#, python-format
-msgid "%d ignored HW/SW inventory plug-ins found: %s"
+#, fuzzy, python-format
+msgid "%d ignored HW/SW Inventory plug-ins found: %s"
 msgstr "%d ignorierte HW/SW-Inventur-Plugins gefunden: %s"
 
 #, python-format
@@ -5963,6 +5963,10 @@ msgstr "Ein Alias oder eine Beschreibung der Zeitperiode"
 msgid "An alias or description of this group."
 msgstr "Alias/Beschreibung der Gruppe."
 
+#, fuzzy, python-format
+msgid "An connection error occurred: %s"
+msgstr "Es ist eine Ausnahme aufgetreten: %s"
+
 msgid "An empty value is not allowed here."
 msgstr "Leerer Wert ist hier nicht erlaubt."
 
@@ -7394,7 +7398,7 @@ msgid "Average remote site sync time"
 msgstr "Durchschnittliche Synczeit der Remote-Instanz"
 
 msgid "Average request response time"
-msgstr "Durchschnittliche Request-Antwortzeit"
+msgstr "Durchschnittliche Anfrage-Antwortzeit"
 
 msgid "Average request size"
 msgstr "Durchschnittliche Request-Größe"
@@ -7412,7 +7416,7 @@ msgid "Average round-trip response time to this node"
 msgstr "Durchschnittliche Paketumlaufzeit zu diesem Knoten"
 
 msgid "Average roundtrip time in ms"
-msgstr "Durchschnittliche Antwortzeit in Milisekunden"
+msgstr "Durchschnittliche Paketumlaufzeit in Millisekunden"
 
 msgid "Average scatterplot"
 msgstr "Streudiagramm der Durschnitte"
@@ -9974,23 +9978,23 @@ msgstr "Kann %s von %s nicht laden: %s"
 msgid "Cannot load %s: %s"
 msgstr "Kann %s nicht laden: %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot load HW/SW inventory history entries %s. Please remove the corrupted "
+"Cannot load HW/SW Inventory history entries %s. Please remove the corrupted "
 "files."
 msgstr ""
 "Kann HW/SW-Inventory Einträge %s nicht laden. Bitte entfernen Sie die "
 "beschädigten Dateien."
 
-#, python-format
-msgid "Cannot load HW/SW inventory tree %s. Please remove the corrupted file."
+#, fuzzy, python-format
+msgid "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
 msgstr ""
 "Kann den HW/SW-Inventory Baum %s nicht laden. Bitte entfernen Sie die "
 "beschädigte Datei."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot load HW/SW inventory trees %s. Please remove the corrupted files."
+"Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
 msgstr ""
 "Kann den HW/SW-Inventory Baum %s nicht laden. Bitte entfernen Sie die "
 "beschädigte Dateien."
@@ -12635,6 +12639,10 @@ msgstr "Konfiguriere forcierte Checks, ohne die Service-Erkennung zu benutzen"
 msgid "Configure grouping of interfaces"
 msgstr "Konfiguriere die Gruppierung von Interfaces"
 
+#, fuzzy
+msgid "Configure host & region"
+msgstr "Einstellungen"
+
 #, no-python-format
 msgid ""
 "Configure levels for averaged CPU utilization depending on number of cluster "
@@ -12676,6 +12684,10 @@ msgstr "Proxy-Server Gebrauch konfigurieren"
 
 msgid "Configure restrictions manually"
 msgstr "Einschränkungen manuell konfigurieren"
+
+#, fuzzy
+msgid "Configure services to monitor"
+msgstr "Zu überwachende Azure-Dienste"
 
 msgid "Configure sidebar"
 msgstr "Konfiguriere Seitenleiste"
@@ -16872,7 +16884,8 @@ msgstr "Verteilung"
 msgid "Deprecated"
 msgstr "Veraltet"
 
-msgid "Deprecated HW/SW inventory plug-ins"
+#, fuzzy
+msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Veraltete HW/SW-Inventar-Plugins"
 
 msgid "Deprecated check plug-ins"
@@ -17976,6 +17989,10 @@ msgstr "Konfiguration des verteilten Monitorings"
 msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "Verteiltes Monitoring mit Hilfe mehrerer Checkmk-Instanzen"
 
+#, fuzzy
+msgid "Do HW/SW Inventory"
+msgstr "HW/SW-Inventur"
+
 msgid "Do a full service scan"
 msgstr "Führe einen vollständigen Service-Scan durch"
 
@@ -17990,9 +18007,6 @@ msgstr "Vor dem Check in <tt>apt-get update</tt> ausführen"
 
 msgid "Do cancelling actions"
 msgstr "Hebe alle Aktionen auf"
-
-msgid "Do hardware/software inventory"
-msgstr "Hardware/Software-Inventur durchführen"
 
 msgid "Do inventory and service configuration on existing hosts."
 msgstr ""
@@ -18634,6 +18648,10 @@ msgstr "DotNet (.Net) Runtime Speicher-Level"
 msgid "Double Integer (DINT)"
 msgstr "Doppelte Ganzzahl (DINT)"
 
+#, fuzzy
+msgid "Double check your configuration"
+msgstr "Remote-Konfiguration deaktivieren"
+
 msgid "Double-click to grow further"
 msgstr "Doppelklick für weiteres Wachstum"
 
@@ -18946,6 +18964,7 @@ msgstr ""
 "gesendet. Wenn Sie diesen Wert niedriger als den Checkintervall des Hosts "
 "einstellen, werden Protokolle fehlen. "
 
+#, fuzzy
 msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
@@ -18953,7 +18972,7 @@ msgid ""
 "are normally deleted. But there are cases, where the files are left on the "
 "disk until manual deletion, for example if you move a host from one site to "
 "another or deleting a host manually from the configuration.<br>The "
-"performance data (RRDs) and HW/SW inventory archive are never deleted during "
+"performance data (RRDs) and HW/SW Inventory archive are never deleted during "
 "host deletion. They are only deleted automatically when you enable this "
 "option and after the configured period."
 msgstr ""
@@ -21015,6 +21034,10 @@ msgstr "Ausnahme"
 
 msgid "Exception"
 msgstr "Ausnahme"
+
+#, fuzzy, python-format
+msgid "Exception (Crash ID: %s): %s"
+msgstr "Exception im Symbol '%s': %s"
 
 #, python-format
 msgid "Exception during element refresh (element '%s')"
@@ -24436,10 +24459,20 @@ msgstr "HW-Informationen"
 msgid "HW containers"
 msgstr "HW-Container"
 
-msgid "HW/SW inventory"
+#, fuzzy
+msgid "HW/SW Inventory"
 msgstr "HW/SW-Inventur"
 
-msgid "HW/SW inventory rules"
+#, fuzzy
+msgid "HW/SW Inventory history of host"
+msgstr "Inventur-Geschichte von Host"
+
+#, fuzzy
+msgid "HW/SW Inventory of host"
+msgstr "Hostinventar"
+
+#, fuzzy
+msgid "HW/SW Inventory rules"
 msgstr "HW/SW-Inventur-Regeln"
 
 msgid "Half closed connections"
@@ -25684,11 +25717,12 @@ msgstr "Rotation der Historie: Regelmäßige Rotation"
 msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr "Rotation der Historie: Nach Größe (limitierte Dateigröße)"
 
-msgid "History of event"
+#, fuzzy
+msgid "History of HW/SW Inventory"
 msgstr "Historie des Ereignisses"
 
-msgid "History of hardware/software inventory"
-msgstr "Historie der Hardware/Software-Inventur"
+msgid "History of event"
+msgstr "Historie des Ereignisses"
 
 msgid "History of notifications"
 msgstr "Historie der Benachrichtigungen"
@@ -25873,845 +25907,668 @@ msgstr "Hop 17 minimale Umlaufzeit"
 msgid "Hop 17 round trip standard devation"
 msgstr "Hop 17 Standardabweichung der Umlaufzeit"
 
-#, fuzzy
 msgid "Hop 18 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 18 Paketverlust"
 
-#, fuzzy
 msgid "Hop 18 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 18 Antwortzeit"
 
-#, fuzzy
 msgid "Hop 18 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 18 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 18 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 18 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 18 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 18 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 18 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 18 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 19 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 19 Paketverlust"
 
-#, fuzzy
 msgid "Hop 19 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 19 Antwortzeit"
 
-#, fuzzy
 msgid "Hop 19 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 19 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 19 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 19 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 19 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 19 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 19 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 19 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 2 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 2 Paketverlust"
 
 #, fuzzy
 msgid "Hop 2 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 2 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 2 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 2 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 2 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 2 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 2 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 2 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 2 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 20 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 20 Paketverlust"
 
 #, fuzzy
 msgid "Hop 20 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 20 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 20 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 20 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 20 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 20 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 20 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 20 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 20 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 21 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 21 Paketverlust"
 
 #, fuzzy
 msgid "Hop 21 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 21 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 21 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 21 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 21 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 21 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 21 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 21 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 21 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 22 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 22 Paketverlust"
 
 #, fuzzy
 msgid "Hop 22 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 22 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 22 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 22 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 22 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 22 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 22 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 22 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 22 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 23 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 23 Paketverlust"
 
 #, fuzzy
 msgid "Hop 23 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 23 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 23 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 23 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 23 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 23 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 23 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 23 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 23 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 24 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 24 Paketverlust"
 
 #, fuzzy
 msgid "Hop 24 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 24 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 24 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 24 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 24 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 24 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 24 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 24 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 24 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 25 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 25 Paketverlust"
 
 #, fuzzy
 msgid "Hop 25 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 25 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 25 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 25 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 25 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 25 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 25 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 25 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 25 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 26 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 26 Paketverlust"
 
 #, fuzzy
 msgid "Hop 26 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 26 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 26 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 26 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 26 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 26 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 26 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 26 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 26 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 27 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 27 Paketverlust"
 
 #, fuzzy
 msgid "Hop 27 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 27 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 27 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 27 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 27 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 27 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 27 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 27 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 27 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 28 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 28 Paketverlust"
 
 #, fuzzy
 msgid "Hop 28 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 28 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 28 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 28 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 28 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 28 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 28 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 28 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 28 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 29 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 29 Paketverlust"
 
 #, fuzzy
 msgid "Hop 29 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 29 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 29 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 29 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 29 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 29 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 29 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 29 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 29 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 3 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 3 Paketverlust"
 
 #, fuzzy
 msgid "Hop 3 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 3 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 3 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 3 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 3 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 3 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 3 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 3 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 3 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 30 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 30 Paketverlust"
 
 #, fuzzy
 msgid "Hop 30 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 30 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 30 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 30 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 30 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 30 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 30 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 30 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 30 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 31 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 31 Paketverlust"
 
 #, fuzzy
 msgid "Hop 31 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 31 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 31 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 31 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 31 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 31 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 31 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 31 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 31 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 32 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 32 Paketverlust"
 
 #, fuzzy
 msgid "Hop 32 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 32 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 32 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 32 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 32 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 32 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 32 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 32 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 32 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 33 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 33 Paketverlust"
 
 #, fuzzy
 msgid "Hop 33 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 33 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 33 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 33 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 33 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 33 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 33 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 33 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 33 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 34 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 34 Paketverlust"
 
 #, fuzzy
 msgid "Hop 34 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 34 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 34 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 34 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 34 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 34 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 34 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 34 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 34 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 35 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 35 Paketverlust"
 
 #, fuzzy
 msgid "Hop 35 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 35 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 35 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 35 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 35 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 35 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 35 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 35 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 35 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 36 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 36 Paketverlust"
 
 #, fuzzy
 msgid "Hop 36 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 36 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 36 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 36 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 36 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 36 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 36 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 36 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 36 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 37 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 37 Paketverlust"
 
 #, fuzzy
 msgid "Hop 37 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 37 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 37 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 37 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 37 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 37 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 37 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 37 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 37 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 38 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 38 Paketverlust"
 
 #, fuzzy
 msgid "Hop 38 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 38 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 38 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 38 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 38 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 38 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 38 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 38 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 38 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 39 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 39 Paketverlust"
 
 #, fuzzy
 msgid "Hop 39 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 39 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 39 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 39 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 39 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 39 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 39 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 39 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 39 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 4 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 4 Paketverlust"
 
 #, fuzzy
 msgid "Hop 4 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 4 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 4 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 4 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 4 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 4 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 4 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 4 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 4 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 40 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 40 Paketverlust"
 
 #, fuzzy
 msgid "Hop 40 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 40 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 40 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 40 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 40 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 40 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 40 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 40 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 40 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 41 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 41 Paketverlust"
 
 #, fuzzy
 msgid "Hop 41 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 41 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 41 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 41 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 41 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 41 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 41 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 41 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 41 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 42 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 42 Paketverlust"
 
 #, fuzzy
 msgid "Hop 42 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 42 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 42 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 42 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 42 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 42 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 42 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 42 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 42 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 43 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 43 Paketverlust"
 
 #, fuzzy
 msgid "Hop 43 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 43 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 43 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 43 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 43 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 43 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 43 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 43 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 43 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 44 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 44 Paketverlust"
 
 #, fuzzy
 msgid "Hop 44 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 44 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 44 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 44 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 44 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 44 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 44 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 44 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 44 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 5 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 5 Paketverlust"
 
 #, fuzzy
 msgid "Hop 5 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 5 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 5 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 5 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 5 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 5 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 5 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 5 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 5 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 6 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 6 Paketverlust"
 
 #, fuzzy
 msgid "Hop 6 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 6 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 6 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 6 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 6 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 6 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 6 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 6 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 6 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 7 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 7 Paketverlust"
 
 #, fuzzy
 msgid "Hop 7 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 7 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 7 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 7 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 7 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 7 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 7 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 7 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 7 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 8 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 8 Paketverlust"
 
 #, fuzzy
 msgid "Hop 8 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 8 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 8 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 8 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 8 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 8 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 8 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 8 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 8 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop 9 packet loss"
-msgstr "Hop %d Paketverlust"
+msgstr "Hop 9 Paketverlust"
 
 #, fuzzy
 msgid "Hop 9 response time"
 msgstr "Antwortzeiten des Hops"
 
-#, fuzzy
 msgid "Hop 9 round trip average"
-msgstr "Hop %d Paketumlaufzeit"
+msgstr "Hop 9 durchschnittlicher Umlauf"
 
-#, fuzzy
 msgid "Hop 9 round trip maximum"
-msgstr "%sRoundtrip-Maximum"
+msgstr "Hop 9 maximaler Umlauf"
 
-#, fuzzy
 msgid "Hop 9 round trip minimum"
-msgstr "%sRoundtrip-Minimum"
+msgstr "Hop 9 minimaler Umlauf"
 
-#, fuzzy
 msgid "Hop 9 round trip standard devation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "Hop 9 Umlauf-Standardabweichung"
 
 #, fuzzy
 msgid "Hop response time"
@@ -26865,16 +26722,14 @@ msgstr "Host existiert bereits"
 msgid "Host and service checks"
 msgstr "Host- und Service-Checks"
 
-#, fuzzy
 msgid "Host and service comments"
-msgstr "Host-/Service-Kommentare"
+msgstr "Host- und Service-Kommentare"
 
 msgid "Host and service configuration rule"
 msgstr "Host-/Service-Konfigurationsregel"
 
-#, fuzzy
 msgid "Host and service events"
-msgstr "Host/Service-Ereignisse"
+msgstr "Host- und Service-Ereignisse"
 
 msgid "Host and service parameters"
 msgstr "Host- & Service-Parameter"
@@ -26978,9 +26833,8 @@ msgstr "Host unten"
 msgid "Host event limit"
 msgstr "Host-Ereignis-Limit"
 
-#, fuzzy
 msgid "Host events"
-msgstr "Hostereignisse"
+msgstr "Host-Ereignisse"
 
 msgid "Host gets unreachble"
 msgstr "Host wird unerreichbar"
@@ -27188,7 +27042,6 @@ msgstr "Host-Name des Ereignisses (genaue Übereinstimmung)"
 msgid "Host name of original event (regex)"
 msgstr "Host-Name des ursprünglichen Ereignisses (regex)"
 
-#, fuzzy
 msgid "Host name of the device"
 msgstr "Host-Name des Geräts"
 
@@ -27214,14 +27067,11 @@ msgid "Host name, IP address or host alias the event is relevant for"
 msgstr ""
 "Host-Name, IP-Adresse oder Host-Alias, für die das Ereignis relevant ist"
 
-#, fuzzy
 msgid "Host name, marked red if down (deprecated)"
-msgstr "Host-Name, rot markiert, wenn down (veraltet)"
+msgstr "Host-Name, rot markiert, wenn DOWN (veraltet)"
 
-#, fuzzy
 msgid "Host name, red background if down or unreachable (deprecated)"
-msgstr ""
-"Host-Name, roter Hintergrund bei Ausfall oder Unerreichbarkeit (veraltet)"
+msgstr "Host-Name, roter Hintergrund bei DOWN oder Unerreichbarkeit (veraltet)"
 
 msgid "Host name/IP address of Event Console:"
 msgstr "Host-Name/IP-Adresse der Event Console:"
@@ -27364,7 +27214,6 @@ msgstr "Host-Statistiken"
 msgid "Host status"
 msgstr "Host-Status"
 
-#, fuzzy
 msgid "Host status grouping"
 msgstr "Host-Status-Gruppierung"
 
@@ -27656,7 +27505,6 @@ msgstr "Stunden seit Betriebsbeginn"
 msgid "Hours/Minutes out of range"
 msgstr "Std./Min. außerhalb des Bereichs"
 
-#, fuzzy
 msgid "Housekeeping interval"
 msgstr "Aufräum-Intervall"
 
@@ -27713,6 +27561,12 @@ msgstr ""
 "beschränkt, können Sie das Monitoring auf einzelne Ressourcengruppen und "
 "Ressourcen beschränken."
 
+#, python-format
+msgid ""
+"However, the duplicated %s will no longer be associated with the Quick setup "
+"and this source."
+msgstr ""
+
 msgid "Hub"
 msgstr "Hub"
 
@@ -27740,9 +27594,8 @@ msgstr "Feuchtigkeit"
 msgid "Humidity Levels"
 msgstr "Level für Feuchtigkeit"
 
-#, fuzzy
 msgid "Humidity levels for devices with a single sensor"
-msgstr "Feuchtigkeitslevel für Geräte mit einem einzelnen Feuchtigkeitssensor"
+msgstr "Feuchtigkeitslevel für Geräte mit einem einzelnen Sensor"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Hyper-V Server: Zustand von VMs"
@@ -27759,19 +27612,15 @@ msgstr "Hyperthreads pro CPU"
 msgid "Hz"
 msgstr "Hz"
 
-#, fuzzy
 msgid "I/O database reads (attached) average latency"
 msgstr "I/O Datenbank-Lesezugriffe (Attached), durchschnittliche Latenz"
 
-#, fuzzy
 msgid "I/O database reads (recovery) average latency"
 msgstr "I/O Datenbank-Lesezugriffe (Recovery), durchschnittliche Latenz"
 
-#, fuzzy
 msgid "I/O database writes (attached) average latency"
 msgstr "I/O Datenbank-Schreibzugriffe (Attached), durchschnittliche Latenz"
 
-#, fuzzy
 msgid "I/O log writes average latency"
 msgstr "I/O Log-Schreibzugriffe, durchschnittliche Latenz"
 
@@ -27793,9 +27642,8 @@ msgstr "MQ Mangers"
 msgid "IBM MQ Queues"
 msgstr "IBM MQ Warteschlangen"
 
-#, fuzzy
 msgid "IBM MQ channels"
-msgstr "MQ Channels"
+msgstr "IBM MQ Kanäle"
 
 msgid "IBM MQ managers"
 msgstr "IBM MQ Managers"
@@ -27803,7 +27651,6 @@ msgstr "IBM MQ Managers"
 msgid "IBM MQ plug-in"
 msgstr "IBM MQ-Plugin"
 
-#, fuzzy
 msgid "IBM MQ queues"
 msgstr "IBM MQ Warteschlangen"
 
@@ -27861,7 +27708,6 @@ msgstr "ICMP Echo Request"
 msgid "ICMP jitter"
 msgstr "ICMP Jitter"
 
-#, fuzzy
 msgid "ICMP packages/s"
 msgstr "ICMP-Pakete/s"
 
@@ -27933,14 +27779,12 @@ msgstr "IO Bandbreite"
 msgid "IO Groups"
 msgstr "IO-Gruppen"
 
-#, fuzzy
 msgid "IO latency"
-msgstr "IO Latenzzeit"
+msgstr "IO-Latenz"
 
 msgid "IOPS"
 msgstr "IOPS"
 
-#, fuzzy
 msgid "IP - Region - Instance ID"
 msgstr "IP - Region - Instanz-ID"
 
@@ -27953,7 +27797,6 @@ msgstr "IP-Adresse"
 msgid "IP address family"
 msgstr "IP-Adressfamilie"
 
-#, fuzzy
 msgid "IP address of Host"
 msgstr "IP-Adresse des Hosts"
 
@@ -27964,7 +27807,6 @@ msgstr ""
 "IP-Adresse des SMB-Share-Hosts (nur erforderlich, wenn sich der SMB-Share-"
 "Host in einem anderen Netzwerk befindet)"
 
-#, fuzzy
 msgid "IP address of remote Event Console"
 msgstr "IP-Adresse der Remote Event Console"
 
@@ -29030,6 +28872,7 @@ msgstr ""
 "zurückliefern. Diese wird vom dann ausgewertet. Wenn die Prozedur "
 "Eingabeparameter benötigt, dann können diese unten angegeben werden."
 
+#, fuzzy
 msgid ""
 "If you activate this option, the agent plug-in <tt>mk_inventory</tt> will be "
 "deployed on linux and windows hosts. It gathers information about installed "
@@ -29037,8 +28880,8 @@ msgid ""
 "for exporting to third-party software. <b>Note:</b> in order to actually use "
 "the inventory for a host you also need to enable it in the ruleset <a "
 "href='wato.py?varname=active_checks"
-"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do "
-"hardware/software Inventory</a>."
+"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do HW/SW "
+"Inventory</a>."
 msgstr ""
 "Wenn Sie diese Option aktivieren, wird das Agent-Plugin <tt>mk_inventory</"
 "tt> auf Linux- und Windows-Hosts eingesetzt. Es sammelt Informationen über "
@@ -31822,9 +31665,6 @@ msgstr "Änderungen in der Inventur"
 msgid "Inventory column: %s"
 msgstr "Inventar-Spalte: %s"
 
-msgid "Inventory history of host"
-msgstr "Inventur-Geschichte von Host"
-
 #, python-format
 msgid "Inventory node: %s"
 msgstr "Inventarknoten: %s"
@@ -31834,9 +31674,6 @@ msgstr "Inventur der Linux-Kernel-Konfiguration (sysctl)"
 
 msgid "Inventory of all deployed agent plug-ins and their versions"
 msgstr "Inventur aller verteilten Agenten-Plugins und ihrer Versionen"
-
-msgid "Inventory of host"
-msgstr "Hostinventar"
 
 #, python-format
 msgid "Inventory table: %s"
@@ -33439,21 +33276,17 @@ msgstr "Level für Instanzen"
 msgid "Levels latency check"
 msgstr "Level Checklatenz"
 
-#, fuzzy
 msgid "Levels latency checker"
 msgstr "Level Latenz Checker"
 
-#, fuzzy
 msgid "Levels latency fetcher"
-msgstr "Level Fetcherlatenz"
+msgstr "Level Latenz Fetcher"
 
-#, fuzzy
 msgid "Levels livestatus overflows"
 msgstr "Level Livestatus Überläufe"
 
-#, fuzzy
 msgid "Levels livestatus usage"
-msgstr "Level Livestatusbenutzung"
+msgstr "Level Livestatus-Auslastung"
 
 msgid "Levels memory"
 msgstr "Speicher-Levels"
@@ -33632,7 +33465,6 @@ msgstr "Grenzwerte der Replikation"
 msgid "Levels requests"
 msgstr "Ebenen Anfragen"
 
-#, fuzzy
 msgid "Levels services"
 msgstr "Level Services"
 
@@ -33956,7 +33788,6 @@ msgstr "Linkausfälle"
 msgid "Link of Title"
 msgstr "Link des Titels"
 
-#, fuzzy
 msgid "Link priority"
 msgstr "Linkpriorität"
 
@@ -38579,6 +38410,9 @@ msgstr "Namensauflösung"
 msgid "Name your %s for easy recognition."
 msgstr "Benennen Sie Ihr %s zur einfachen Wiedererkennung."
 
+msgid "Name your host, path and select the region you would like to monitor"
+msgstr ""
+
 #, python-format
 msgid "Name: %s"
 msgstr "Name: %s"
@@ -39220,7 +39054,8 @@ msgstr "Keine Hosts zu entdecken"
 msgid "No hosts/services found."
 msgstr "Keine Hosts/Services gefunden."
 
-msgid "No ignored HW/SW inventory plug-ins found"
+#, fuzzy
+msgid "No ignored HW/SW Inventory plug-ins found"
 msgstr "Keine ignorierten HW/SW-Inventar-Plugins gefunden"
 
 msgid "No influence on element display"
@@ -44298,7 +44133,8 @@ msgstr "Berechtigt zum Löschen aller Karten."
 msgid "Permitted Contact Groups"
 msgstr "Berechtigte Kontaktgruppen"
 
-msgid "Permitted HW/SW inventory paths"
+#, fuzzy
+msgid "Permitted HW/SW Inventory paths"
 msgstr "Erlaubte HW/SW-Inventurpfade"
 
 msgid "Persistent (long)"
@@ -47048,11 +46884,12 @@ msgstr ""
 msgid "Received messages"
 msgstr "Erhaltene Nachrichten"
 
+#, fuzzy
+msgid "Recent HW/SW Inventory"
+msgstr "HW/SW-Inventur"
+
 msgid "Recent event history"
 msgstr "Jüngste Ereignisgeschichte"
-
-msgid "Recent hardware/software inventory"
-msgstr "Kürzliche Hardware/Software-Inventur"
 
 msgid "Recently changed services"
 msgstr "Kürzlich geänderte Services"
@@ -48770,7 +48607,8 @@ msgstr "Fortsetzung"
 msgid "Retained messages"
 msgstr "Einbehaltene Nachrichten"
 
-msgid "Retention intervals for HW/SW inventory entities"
+#, fuzzy
+msgid "Retention intervals for HW/SW Inventory entities"
 msgstr "Aufbewahrungsintervalle für HW/SW-Inventarobjekte"
 
 msgid "Retention period"
@@ -48842,6 +48680,10 @@ msgstr "Änderungen rückgängig machen?"
 #, fuzzy
 msgid "Revert foreign changes"
 msgstr "Aktiviere fremde Änderungen"
+
+#, fuzzy
+msgid "Review & run service discovery"
+msgstr "Speichern & Service-Erkennung durchführen"
 
 msgid "Revolutions per minute"
 msgstr "Umdrehungen pro Minute"
@@ -48964,7 +48806,7 @@ msgid "Round trip time"
 msgstr "Umlaufzeit"
 
 msgid "Roundtrip"
-msgstr "Roundtrip"
+msgstr "Umlauf"
 
 msgid "Route53"
 msgstr "Route53"
@@ -49025,6 +48867,12 @@ msgstr "Regelaktivierung"
 
 msgid "Rule can only be deleted via Quick setup"
 msgstr ""
+
+#, fuzzy
+msgid "Rule cannot be moved, because it is managed by Quick setup"
+msgstr ""
+"Sie können keine Rollen löschen, die durch die \"Schnelle Einrichtung\" "
+"gesteuert werden."
 
 msgid "Rule contact groups"
 msgstr "Regel-Kontaktgruppen"
@@ -50401,6 +50249,9 @@ msgstr "Verfügbarkeitsansichten aller Hosts und Services ansehen"
 #, python-format
 msgid "See user %s"
 msgstr "%s anderer Benutzer sehen"
+
+msgid "Select & configure AWS services you would like to monitor"
+msgstr ""
 
 msgid "Select a time period"
 msgstr "Zeitperiode auswählen"
@@ -52254,7 +52105,8 @@ msgstr "Zeige %ss für Services"
 msgid "Show / hide notification context"
 msgstr "Benachrichtigungskontext zeigen / verstecken"
 
-msgid "Show Hardware/Software Inventory of this host"
+#, fuzzy
+msgid "Show HW/SW Inventory of this host"
 msgstr "Auf diesem Host Hardware/Software-Inventur zeigen"
 
 msgid "Show MK Livestatus error messages"
@@ -53773,6 +53625,10 @@ msgstr "Source NAT Name"
 msgid "Source Path"
 msgstr "Quellpfad"
 
+#, fuzzy
+msgid "Source association changed"
+msgstr "Simultane Aktivierung von Änderungen"
+
 msgid ""
 "Source field of the alert. Default value is IP address of the incoming "
 "request."
@@ -54260,7 +54116,9 @@ msgstr ""
 "Geben Sie den Monitoring-Zustand an, wenn der Bonding-Modus nicht wie "
 "erwartet funktioniert."
 
-msgid "Specify the name of a store (This is either a mailbox or public folder)"
+#, fuzzy
+msgid ""
+"Specify the name of a store (This is either a mailbox or public folder)."
 msgstr ""
 "Gegen Sie den Namen des Stores an (Das ist entweder eine Mailbox oder ein "
 "öffentlicher Ordner)"
@@ -54612,7 +54470,7 @@ msgid "Standard deviation difference"
 msgstr "Differenz der Standardabweichung"
 
 msgid "Standard deviation of roundtrip times in ms"
-msgstr "Standardabweichung der Antwortzeit in Milisekunden"
+msgstr "Standardabweichung der Paketumlaufzeit in Millisekunden"
 
 msgid ""
 "Standard settings are used for all endpoints unless overwritten by the "
@@ -59689,8 +59547,8 @@ msgid ""
 "The maximum allowed percentage of packet loss to the destination before this "
 "service goes into warning/critical."
 msgstr ""
-"Der maximal erlaubte prozentuale Paketverlust, bevor der Service in WARN/"
-"CRIT wechselt."
+"Der maximal erlaubte prozentuale Paketverlust in Richtung Ziel, bevor der "
+"Service in WARN/CRIT wechselt."
 
 #, python-format
 msgid "The maximum allowed value is %s."
@@ -59701,9 +59559,9 @@ msgid ""
 "warning/critical. This alarm only applies to the target host, not the hops "
 "in between."
 msgstr ""
-"Der maximal erlaubte, durchschnittliche Paketlaufzeit in Milisekunden, bevor "
-"der Service in WARN/CRIT wechselt. Dieser Parameter wird nur auf den "
-"Zielhost angewendet, nicht auf die einzelnen Hops."
+"Die maximale, durchschnittliche Paketumlaufzeit in Millisekunden, bevor "
+"dieser Service in WARN/CRIT wechselt. Dieser Alarm wird nur auf den Zielhost "
+"angewendet, nicht auf die einzelnen Hops."
 
 msgid "The maximum key length is 128 characters."
 msgstr "Die maximale Schlüssellänge beträgt 128 Zeichen."
@@ -59766,9 +59624,9 @@ msgid ""
 "service goes intowarning/critical. This alarm only applies to the target "
 "host, not the hops in between."
 msgstr ""
-"Der maximal erlaubte Normalabweichung der Paketlaufzeit in Milisekunden, "
-"bevor der Service in WARN/CRIT wechselt. Dieser Parameter wird nur auf den "
-"Zielhost angewendet, nicht auf die einzelnen Hops."
+"Die maximale Standardabweichung der Paketumlaufzeit in Millisekunden, bevor "
+"der Service in WARN/CRIT wechselt. Dieser Alarm wird nur auf den Zielhost "
+"angewendet, nicht auf die einzelnen Hops."
 
 msgid "The maximum value length is 256 characters."
 msgstr "Die maximale Wertlänge beträgt 256 Zeichen."
@@ -64537,12 +64395,13 @@ msgstr ""
 "SSH-Schlüssel ausgetauscht werden muss, um eine passwortlose Verbindung zu "
 "ermöglichen."
 
+#, fuzzy
 msgid ""
 "This rule allows for defining regex-patterns for in- and excluding kernel "
 "configuration parameters in the inventory. By default, no parameters are "
 "included. Note that some kernel configuration parameters change frequently. "
 "Inventorizing one of these parameters will lead to frequent changes in the "
-"HW/SW inventory, which can quickly fill up the temporary file system."
+"HW/SW Inventory, which can quickly fill up the temporary file system."
 msgstr ""
 "Diese Regel ermöglicht das Definieren von Regex-Mustern zum Ein- und "
 "Ausschließen von Kernel-Konfigurationsparametern in der Inventur. "
@@ -64810,8 +64669,9 @@ msgstr ""
 "erfolgt über Beschreibung, Kategorie, Name, oder Status während der "
 "Erkennung."
 
+#, fuzzy
 msgid ""
-"This rule can be used to configure the inventory of the windows services "
+"This rule can be used to configure the discovery of the windows services "
 "check. You can configure specific windows services to be monitored by the "
 "windows check by selecting them by name, current state during the inventory, "
 "or start mode."
@@ -65026,13 +64886,6 @@ msgstr "Dieser Regel ist veraltet. Bitte nutzen Sie stattdessen \"%s\"."
 
 msgid "This rule is disabled"
 msgstr "Diese Regel ist deaktiviert"
-
-#, python-brace-format
-msgid ""
-"This rule is part of the {hostname} configuration using Quick setup. Some "
-"options cannot be edited to avoid conflicts.<br>Go to Quick setup to edit "
-"all parameters of {hostname}."
-msgstr ""
 
 msgid ""
 "This rule is used to configure thresholds for counter values read from "
@@ -65483,8 +65336,9 @@ msgid ""
 "This ruleset can be used to change MTR's (Matt's traceroute) warning and "
 "crit levels for packet loss, average roundtrip and standard deviation."
 msgstr ""
-"Mit dieser Regelkette können die Parameter des Checks MTR's (Matt's "
-"traceroute) angepasst werden."
+"Dieser Regelsatz kann verwendet werden, um die WARN- und CRIT-Level von MTR "
+"(Matt's Traceroute) für Paketverluste, durchschnittlichen Umlauf und "
+"Standardabweichung zu ändern."
 
 msgid ""
 "This ruleset defines criteria for SNMP processes base upon the HOST "
@@ -66425,6 +66279,13 @@ msgstr "Dies unterdrückt alle Benachrichtigungen"
 msgid "This year"
 msgstr "Dieses Jahr"
 
+#, python-brace-format
+msgid ""
+"This {type_name} is part of the {host_name} configuration using Quick setup. "
+"Some options cannot be edited to avoid conflicts.<br>Go to Quick setup to "
+"edit all parameters of {host_name}."
+msgstr ""
+
 msgid "Thread creations per second"
 msgstr "Threaderstellungen pro Sekunde"
 
@@ -66842,7 +66703,10 @@ msgstr "Zeit bis zum Alert, wenn die Bedingung CONTAINERSREADY falsch ist"
 msgid "Time until alert, if INITIALIZED condition is false"
 msgstr "Zeit bis zum Alert, wenn die Bedingung INITIALIZED falsch ist"
 
-msgid "Time until alert, if PODHASNETWORK condition is false"
+#, fuzzy
+msgid ""
+"Time until alert, if PODREADYTOSTARTCONTAINERS (PODHASNETWORK in Kubernetes "
+"version 1.27 and below) condition is false"
 msgstr "Zeit bis zum Alert, wenn die Bedingung PODHASNETWORK falsch ist"
 
 msgid "Time until alert, if PODSCHEDULED condition is false"
@@ -70296,10 +70160,6 @@ msgstr "Unbekannt"
 #, python-format
 msgid "Unknown %s group: %s"
 msgstr "Unbekannte %s-Gruppe: %s"
-
-#, python-format
-msgid "Unknown (%s)"
-msgstr "Unbekannt (%s)"
 
 msgid "Unknown - DUnknown"
 msgstr "Unknown - DUnknown"
@@ -75854,6 +75714,12 @@ msgstr ""
 
 #, python-format
 msgid ""
+"You are duplicating a %s that has been created by the Quick setup and "
+"associated with the source"
+msgstr ""
+
+#, python-format
+msgid ""
 "You are missing the action with the ID <b>%s</b>, which is still used in "
 "some rules."
 msgstr ""
@@ -77931,6 +77797,10 @@ msgstr "Zypper-Aktualisierungen"
 msgid "Zypper normal and security updates (Linux)"
 msgstr "Normale und Sicherheitsupdates für Zypper (Linux)"
 
+#, fuzzy, python-format
+msgid "[%s] - Quick setup"
+msgstr "[%s] Schnelle Einrichtung"
+
 #, python-format
 msgid "[%s] Exception: %s"
 msgstr "[%s] Ausnahme: %s"
@@ -77942,10 +77812,6 @@ msgstr "[%s] Synchronisation für Verbindung abgeschlossen"
 #, python-format
 msgid "[%s] Finished sync for site"
 msgstr "[%s] Synchronisierung für Website abgeschlossen"
-
-#, python-format
-msgid "[%s] Quick setup"
-msgstr "[%s] Schnelle Einrichtung"
 
 #, python-format
 msgid "[%s] Starting sync for connection"
@@ -79522,9 +79388,6 @@ msgstr ""
 "repräsentiert das Warten auf eine Verbindungsanfrage beliebiger Remote-TCP-"
 "Verbindungen und Ports"
 
-msgid "requests"
-msgstr "Anfragen"
-
 msgid "requests/sec"
 msgstr "Anfragen/Sek"
 
@@ -80008,6 +79871,22 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Do hardware/software inventory"
+#~ msgstr "Hardware/Software-Inventur durchführen"
+
+#~ msgid "History of hardware/software inventory"
+#~ msgstr "Historie der Hardware/Software-Inventur"
+
+#~ msgid "Recent hardware/software inventory"
+#~ msgstr "Kürzliche Hardware/Software-Inventur"
+
+#, python-format
+#~ msgid "Unknown (%s)"
+#~ msgstr "Unbekannt (%s)"
+
+#~ msgid "requests"
+#~ msgstr "Anfragen"
 
 #~ msgid "More information can be found in ~/var/log/web.log"
 #~ msgstr "Weitere Informationen finden sich in ~/var/log/web.log"

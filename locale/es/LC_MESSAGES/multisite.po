@@ -428,8 +428,8 @@ msgstr "%d íconos y acciones"
 msgid "%d icons customized"
 msgstr "%d íconos personalizados"
 
-#, python-format
-msgid "%d ignored HW/SW inventory plug-ins found: %s"
+#, fuzzy, python-format
+msgid "%d ignored HW/SW Inventory plug-ins found: %s"
 msgstr "%d se han ignorado los plugins de inventario HW/SW encontrados: %s"
 
 #, python-format
@@ -6131,6 +6131,10 @@ msgstr "Un alias o descripción del periodo de tiempo"
 msgid "An alias or description of this group."
 msgstr "Un alias o descripción de este grupo."
 
+#, fuzzy, python-format
+msgid "An connection error occurred: %s"
+msgstr "Se ha producido una excepción: %s"
+
 msgid "An empty value is not allowed here."
 msgstr "Aquí no se permite un valor vacío."
 
@@ -10231,23 +10235,23 @@ msgstr "No se puede cargar %s de %s: %s"
 msgid "Cannot load %s: %s"
 msgstr "No se puede cargar %s: %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot load HW/SW inventory history entries %s. Please remove the corrupted "
+"Cannot load HW/SW Inventory history entries %s. Please remove the corrupted "
 "files."
 msgstr ""
 "No se pueden cargar las entradas del historial de inventario de HW/SW %s. "
 "Por favor, elimine los archivos corruptos."
 
-#, python-format
-msgid "Cannot load HW/SW inventory tree %s. Please remove the corrupted file."
+#, fuzzy, python-format
+msgid "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
 msgstr ""
 "No se puede cargar el árbol de inventario HW/SW %s. Por favor, elimine el "
 "archivo dañado."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot load HW/SW inventory trees %s. Please remove the corrupted files."
+"Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
 msgstr ""
 "No se pueden cargar los árboles de inventario HW/SW %s. Por favor, elimine "
 "los archivos corruptos."
@@ -13016,6 +13020,10 @@ msgstr ""
 msgid "Configure grouping of interfaces"
 msgstr "Configurar la agrupación de interfaces"
 
+#, fuzzy
+msgid "Configure host & region"
+msgstr "Configuración"
+
 #, no-python-format
 msgid ""
 "Configure levels for averaged CPU utilization depending on number of cluster "
@@ -13060,6 +13068,10 @@ msgstr "Configurar el uso del servidor proxy"
 
 msgid "Configure restrictions manually"
 msgstr "Configurar las restricciones manualmente"
+
+#, fuzzy
+msgid "Configure services to monitor"
+msgstr "Servicios Azure a supervisar"
 
 msgid "Configure sidebar"
 msgstr "Configurar la barra lateral"
@@ -17431,7 +17443,7 @@ msgid "Deprecated"
 msgstr "Desaprobado"
 
 #, fuzzy
-msgid "Deprecated HW/SW inventory plug-ins"
+msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Plugins de inventario HW/SW obsoletos"
 
 #, fuzzy
@@ -18564,6 +18576,10 @@ msgstr "Configuración de supervisión distribuida"
 msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "Supervisión distribuida mediante varios sitios de Checkmk"
 
+#, fuzzy
+msgid "Do HW/SW Inventory"
+msgstr "Inventario de HW/SW"
+
 msgid "Do a full service scan"
 msgstr "Realice un escaneo de servicio completo"
 
@@ -18578,9 +18594,6 @@ msgstr "Haz una <tt>apt-get update</tt> antes de la comprobación"
 
 msgid "Do cancelling actions"
 msgstr "Realizar acciones de anulación"
-
-msgid "Do hardware/software inventory"
-msgstr "Hacer un inventario de hardware/software"
 
 msgid "Do inventory and service configuration on existing hosts."
 msgstr ""
@@ -19311,6 +19324,10 @@ msgstr "Niveles de memoria de ejecución de DotNet (.Net)"
 msgid "Double Integer (DINT)"
 msgstr "Double Integer (DINT)"
 
+#, fuzzy
+msgid "Double check your configuration"
+msgstr "Desactivar la configuración remota"
+
 msgid "Double-click to grow further"
 msgstr ""
 
@@ -19619,6 +19636,7 @@ msgstr ""
 "consola de eventos varias veces. Si se establece este valor por debajo del "
 "intervalo de comprobación del host, se perderán registros. "
 
+#, fuzzy
 msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
@@ -19626,7 +19644,7 @@ msgid ""
 "are normally deleted. But there are cases, where the files are left on the "
 "disk until manual deletion, for example if you move a host from one site to "
 "another or deleting a host manually from the configuration.<br>The "
-"performance data (RRDs) and HW/SW inventory archive are never deleted during "
+"performance data (RRDs) and HW/SW Inventory archive are never deleted during "
 "host deletion. They are only deleted automatically when you enable this "
 "option and after the configured period."
 msgstr ""
@@ -21711,6 +21729,10 @@ msgstr "Exc."
 
 msgid "Exception"
 msgstr "Excepción"
+
+#, fuzzy, python-format
+msgid "Exception (Crash ID: %s): %s"
+msgstr "Excepción en el icono '%s': %s"
 
 #, python-format
 msgid "Exception during element refresh (element '%s')"
@@ -25248,10 +25270,20 @@ msgstr "Información sobre HW"
 msgid "HW containers"
 msgstr "Contenedores HW"
 
-msgid "HW/SW inventory"
+#, fuzzy
+msgid "HW/SW Inventory"
 msgstr "Inventario de HW/SW"
 
-msgid "HW/SW inventory rules"
+#, fuzzy
+msgid "HW/SW Inventory history of host"
+msgstr "Historial de inventario del host"
+
+#, fuzzy
+msgid "HW/SW Inventory of host"
+msgstr "Inventario del host"
+
+#, fuzzy
+msgid "HW/SW Inventory rules"
 msgstr "reglas de inventario de HW/SW"
 
 msgid "Half closed connections"
@@ -26521,11 +26553,12 @@ msgstr ""
 "Rotación del registro histórico: Rotación por tamaño (Límite del tamaño)"
 
 #, fuzzy
-msgid "History of event"
+msgid "History of HW/SW Inventory"
 msgstr "Historia del evento"
 
-msgid "History of hardware/software inventory"
-msgstr "Historial del inventario de hardware/software"
+#, fuzzy
+msgid "History of event"
+msgstr "Historia del evento"
 
 msgid "History of notifications"
 msgstr "Historia de las notificaciones"
@@ -28652,6 +28685,12 @@ msgstr ""
 "(%s por minuto), puede restringir la supervisión a grupos de recursos y "
 "recursos individuales."
 
+#, python-format
+msgid ""
+"However, the duplicated %s will no longer be associated with the Quick setup "
+"and this source."
+msgstr ""
+
 msgid "Hub"
 msgstr "Hub"
 
@@ -29979,8 +30018,8 @@ msgid ""
 "for exporting to third-party software. <b>Note:</b> in order to actually use "
 "the inventory for a host you also need to enable it in the ruleset <a "
 "href='wato.py?varname=active_checks"
-"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do "
-"hardware/software Inventory</a>."
+"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do HW/SW "
+"Inventory</a>."
 msgstr ""
 "Si activa esta opción, el plugin de agente <tt>mk_inventory</tt> se "
 "desplegará en los hosts linux y windows. Recoge información sobre el "
@@ -32787,9 +32826,6 @@ msgstr "Cambios en el inventario"
 msgid "Inventory column: %s"
 msgstr "Columna de inventario"
 
-msgid "Inventory history of host"
-msgstr "Historial de inventario del host"
-
 #, fuzzy, python-format
 msgid "Inventory node: %s"
 msgstr "Nodo de inventario"
@@ -32800,9 +32836,6 @@ msgstr "Inventario de la configuración del núcleo de Linux (sysctl)"
 #, fuzzy
 msgid "Inventory of all deployed agent plug-ins and their versions"
 msgstr "Inventario de todos los plugins de agente desplegados y sus versiones"
-
-msgid "Inventory of host"
-msgstr "Inventario del host"
 
 #, fuzzy, python-format
 msgid "Inventory table: %s"
@@ -39727,6 +39760,9 @@ msgstr "Resolución del nombre"
 msgid "Name your %s for easy recognition."
 msgstr "Ponle un nombre a tu %s para reconocerlo fácilmente."
 
+msgid "Name your host, path and select the region you would like to monitor"
+msgstr ""
+
 #, python-format
 msgid "Name: %s"
 msgstr "Nombres: %s"
@@ -40378,7 +40414,7 @@ msgid "No hosts/services found."
 msgstr "No se han encontrado hosts/servicios."
 
 #, fuzzy
-msgid "No ignored HW/SW inventory plug-ins found"
+msgid "No ignored HW/SW Inventory plug-ins found"
 msgstr "No se han encontrado plugins de inventario HW/SW ignorados"
 
 msgid "No influence on element display"
@@ -45555,7 +45591,8 @@ msgstr "Permite borrar todos los mapas."
 msgid "Permitted Contact Groups"
 msgstr "Grupos de contacto permitidos"
 
-msgid "Permitted HW/SW inventory paths"
+#, fuzzy
+msgid "Permitted HW/SW Inventory paths"
 msgstr "Vías de inventario HW/SW permitidas"
 
 msgid "Persistent (long)"
@@ -48343,11 +48380,12 @@ msgstr ""
 msgid "Received messages"
 msgstr "Mensajes recibidos"
 
+#, fuzzy
+msgid "Recent HW/SW Inventory"
+msgstr "Inventario de HW/SW"
+
 msgid "Recent event history"
 msgstr "Historial de eventos recientes"
-
-msgid "Recent hardware/software inventory"
-msgstr "Inventario reciente de hardware/software"
 
 msgid "Recently changed services"
 msgstr "Servicios modificados recientemente"
@@ -50127,7 +50165,8 @@ msgstr "Estado resultante"
 msgid "Retained messages"
 msgstr "Mensajes recibidos"
 
-msgid "Retention intervals for HW/SW inventory entities"
+#, fuzzy
+msgid "Retention intervals for HW/SW Inventory entities"
 msgstr "Intervalos de retención para las entidades de inventario de HW/SW"
 
 msgid "Retention period"
@@ -50203,6 +50242,10 @@ msgstr "Cambios en el inventario"
 #, fuzzy
 msgid "Revert foreign changes"
 msgstr "Activar los cambios en el extranjero"
+
+#, fuzzy
+msgid "Review & run service discovery"
+msgstr "Guardar & ejecutar la detección de servicios"
 
 msgid "Revolutions per minute"
 msgstr "Revoluciones por minuto"
@@ -50393,6 +50436,10 @@ msgstr "Activación de la regla"
 
 msgid "Rule can only be deleted via Quick setup"
 msgstr ""
+
+#, fuzzy
+msgid "Rule cannot be moved, because it is managed by Quick setup"
+msgstr "No puede eliminar los roles que aún están en uso (%s)!"
 
 msgid "Rule contact groups"
 msgstr "Grupos de contacto de las reglas"
@@ -51816,6 +51863,9 @@ msgstr "Ver las vistas de disponibilidad de hosts y servicios"
 #, python-format
 msgid "See user %s"
 msgstr "Ver usuario %s"
+
+msgid "Select & configure AWS services you would like to monitor"
+msgstr ""
 
 msgid "Select a time period"
 msgstr "Seleccione un periodo de tiempo"
@@ -53681,7 +53731,8 @@ msgstr "Mostrar %ss para los servicios"
 msgid "Show / hide notification context"
 msgstr "Mostrar / ocultar el contexto de las notificaciones"
 
-msgid "Show Hardware/Software Inventory of this host"
+#, fuzzy
+msgid "Show HW/SW Inventory of this host"
 msgstr "Mostrar el inventario de hardware/software de este host"
 
 msgid "Show MK Livestatus error messages"
@@ -55229,6 +55280,10 @@ msgstr "Nombre de la NAT de origen"
 msgid "Source Path"
 msgstr "Fuente de la ruta"
 
+#, fuzzy
+msgid "Source association changed"
+msgstr "Activación simultánea de los cambios"
+
 msgid ""
 "Source field of the alert. Default value is IP address of the incoming "
 "request."
@@ -55721,7 +55776,9 @@ msgstr ""
 "Especifique el estado de supervisión cuando el modo de enlace no sea el "
 "esperado."
 
-msgid "Specify the name of a store (This is either a mailbox or public folder)"
+#, fuzzy
+msgid ""
+"Specify the name of a store (This is either a mailbox or public folder)."
 msgstr ""
 "Especifique el nombre de un almacén (Se trata de un buzón o una carpeta "
 "pública)"
@@ -66073,12 +66130,13 @@ msgstr ""
 "Controller (SBC). Este agente utiliza SSH, por lo que hay que intercambiar "
 "una clave SSH para hacer posible una conexión sin contraseña."
 
+#, fuzzy
 msgid ""
 "This rule allows for defining regex-patterns for in- and excluding kernel "
 "configuration parameters in the inventory. By default, no parameters are "
 "included. Note that some kernel configuration parameters change frequently. "
 "Inventorizing one of these parameters will lead to frequent changes in the "
-"HW/SW inventory, which can quickly fill up the temporary file system."
+"HW/SW Inventory, which can quickly fill up the temporary file system."
 msgstr ""
 "Esta regla permite definir patrones regex para incluir y excluir parámetros "
 "de configuración del núcleo en el inventario. Por defecto, no se incluye "
@@ -66352,8 +66410,9 @@ msgstr ""
 "para que sean supervisados por la comprobación de Solaris seleccionándolos "
 "por descripción, categoría, nombre o estado actual durante la detección."
 
+#, fuzzy
 msgid ""
-"This rule can be used to configure the inventory of the windows services "
+"This rule can be used to configure the discovery of the windows services "
 "check. You can configure specific windows services to be monitored by the "
 "windows check by selecting them by name, current state during the inventory, "
 "or start mode."
@@ -66564,13 +66623,6 @@ msgstr "Esta regla está obsoleta. Por favor, utilice \"%s\" en su lugar."
 
 msgid "This rule is disabled"
 msgstr "Esta regla está desactivada"
-
-#, python-brace-format
-msgid ""
-"This rule is part of the {hostname} configuration using Quick setup. Some "
-"options cannot be edited to avoid conflicts.<br>Go to Quick setup to edit "
-"all parameters of {hostname}."
-msgstr ""
 
 msgid ""
 "This rule is used to configure thresholds for counter values read from "
@@ -67987,6 +68039,13 @@ msgstr "Desactivar todas las notificaciones personales"
 msgid "This year"
 msgstr "Este año"
 
+#, python-brace-format
+msgid ""
+"This {type_name} is part of the {host_name} configuration using Quick setup. "
+"Some options cannot be edited to avoid conflicts.<br>Go to Quick setup to "
+"edit all parameters of {host_name}."
+msgstr ""
+
 msgid "Thread creations per second"
 msgstr "Creación de hilos por segundo"
 
@@ -68416,7 +68475,10 @@ msgstr "Tiempo hasta la alerta, si la condición CONTAINERSREADY es falsa"
 msgid "Time until alert, if INITIALIZED condition is false"
 msgstr "Tiempo hasta la alerta, si la condición INICIALIZADO es falsa"
 
-msgid "Time until alert, if PODHASNETWORK condition is false"
+#, fuzzy
+msgid ""
+"Time until alert, if PODREADYTOSTARTCONTAINERS (PODHASNETWORK in Kubernetes "
+"version 1.27 and below) condition is false"
 msgstr "Tiempo hasta la alerta, si la condición PODHASNETWORK es falsa"
 
 msgid "Time until alert, if PODSCHEDULED condition is false"
@@ -72375,10 +72437,6 @@ msgstr "Desconocido"
 #, python-format
 msgid "Unknown %s group: %s"
 msgstr "Grupo %s desconocido: %s"
-
-#, python-format
-msgid "Unknown (%s)"
-msgstr "Desconocido (%s)"
 
 msgid "Unknown - DUnknown"
 msgstr "Desconocido - Ddesconocido"
@@ -78050,6 +78108,12 @@ msgstr ""
 
 #, python-format
 msgid ""
+"You are duplicating a %s that has been created by the Quick setup and "
+"associated with the source"
+msgstr ""
+
+#, python-format
+msgid ""
 "You are missing the action with the ID <b>%s</b>, which is still used in "
 "some rules."
 msgstr ""
@@ -80104,6 +80168,10 @@ msgstr "Actualizaciones del Zypper"
 msgid "Zypper normal and security updates (Linux)"
 msgstr "Zypper normal y actualizaciones de seguridad (Linux)"
 
+#, fuzzy, python-format
+msgid "[%s] - Quick setup"
+msgstr "Configuración rápida"
+
 #, python-format
 msgid "[%s] Exception: %s"
 msgstr "[%s] Excepción: %s"
@@ -80115,10 +80183,6 @@ msgstr "[%s] Sincronización finalizada para la conexión"
 #, python-format
 msgid "[%s] Finished sync for site"
 msgstr "%s] Sincronización finalizada para el sitio"
-
-#, fuzzy, python-format
-msgid "[%s] Quick setup"
-msgstr "Configuración rápida"
 
 #, python-format
 msgid "[%s] Starting sync for connection"
@@ -81728,9 +81792,6 @@ msgstr ""
 "representa la espera de una solicitud de conexión de cualquier TCP remoto y "
 "el puerto"
 
-msgid "requests"
-msgstr "solicita"
-
 msgid "requests/sec"
 msgstr "solicitudes/seg"
 
@@ -82225,6 +82286,22 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#~ msgid "Do hardware/software inventory"
+#~ msgstr "Hacer un inventario de hardware/software"
+
+#~ msgid "History of hardware/software inventory"
+#~ msgstr "Historial del inventario de hardware/software"
+
+#~ msgid "Recent hardware/software inventory"
+#~ msgstr "Inventario reciente de hardware/software"
+
+#, python-format
+#~ msgid "Unknown (%s)"
+#~ msgstr "Desconocido (%s)"
+
+#~ msgid "requests"
+#~ msgstr "solicita"
 
 #~ msgid "More information can be found in ~/var/log/web.log"
 #~ msgstr "Puede encontrar más información en ~/var/log/web.log"

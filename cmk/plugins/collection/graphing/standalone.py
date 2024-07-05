@@ -22,6 +22,7 @@ UNIT_HERTZ = metrics.Unit(metrics.DecimalNotation("Hz"))
 UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""))
 UNIT_DECIBEL_MILLIVOLTS = metrics.Unit(metrics.DecimalNotation("dBmV"))
+UNIT_REVOLUTIONS_PER_MINUTE = metrics.Unit(metrics.DecimalNotation("rpm"), metrics.AutoPrecision(4))
 
 metric_uncommitted = metrics.Metric(
     name="uncommitted",
@@ -2172,4 +2173,10 @@ metric_iscsi_other_ops = metrics.Metric(
     title=Title("ISCSI other ops"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.YELLOW,
+)
+metric_fan_speed = metrics.Metric(
+    name="fan_speed",
+    title=Title("Fan speed"),
+    unit=UNIT_REVOLUTIONS_PER_MINUTE,
+    color=metrics.Color.ORANGE,
 )

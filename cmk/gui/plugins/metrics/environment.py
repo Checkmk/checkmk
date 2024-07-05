@@ -38,12 +38,6 @@ metric_info["pressure"] = {
     "color": "#ff6234",
 }
 
-metric_info["fan"] = {
-    "title": _("Fan speed"),
-    "unit": "rpm",
-    "color": "16/b",
-}
-
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -55,13 +49,6 @@ metric_info["fan"] = {
 #   +----------------------------------------------------------------------+
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
-
-graph_info["fan_speed"] = {
-    "title": _("Fan speed"),
-    "metrics": [
-        ("fan_speed", "area"),
-    ],
-}
 
 graph_info["temperature"] = {
     "title": _("Temperature"),

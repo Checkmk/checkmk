@@ -833,15 +833,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "fan",
-        "half_value": 3000,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["read_hits"],
         "total": 100.0,

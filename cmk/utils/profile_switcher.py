@@ -34,11 +34,9 @@ import pstats
 import threading
 import typing
 import urllib.parse
+from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
 import pyprof2calltree  # type: ignore[import-untyped]
-
-if typing.TYPE_CHECKING:
-    from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
 
 P = typing.ParamSpec("P")
 

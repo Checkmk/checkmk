@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import functools
-import typing
+from wsgiref.types import WSGIApplication
 
 import flask
 import werkzeug
@@ -22,9 +22,6 @@ from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.wsgi.applications import CheckmkApp
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.gui.wsgi.middleware import PatchJsonMiddleware
-
-if typing.TYPE_CHECKING:
-    from _typeshed.wsgi import WSGIApplication
 
 ResponseTypes = flask.Response | werkzeug.Response
 

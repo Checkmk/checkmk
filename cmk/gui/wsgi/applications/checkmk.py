@@ -8,7 +8,7 @@ import functools
 import http.client as http_client
 import traceback
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from wsgiref.types import StartResponse, WSGIEnvironment
 
 import flask
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -47,10 +47,6 @@ from cmk.gui.wsgi.applications.utils import (
     plain_error,
 )
 from cmk.gui.wsgi.type_defs import WSGIResponse
-
-if TYPE_CHECKING:
-    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
-    from _typeshed.wsgi import StartResponse, WSGIEnvironment
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.

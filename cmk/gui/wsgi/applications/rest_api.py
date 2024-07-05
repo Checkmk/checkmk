@@ -14,6 +14,7 @@ from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import Any, Literal, TYPE_CHECKING
+from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
 from apispec.yaml_utils import dict_to_yaml
 from flask import g, send_from_directory
@@ -53,9 +54,6 @@ from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
 from cmk.gui.wsgi.wrappers import ParameterDict
 
 if TYPE_CHECKING:
-    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
-    from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
-
     from cmk.gui.http import HTTPMethod
     from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
     from cmk.gui.wsgi.type_defs import WSGIResponse

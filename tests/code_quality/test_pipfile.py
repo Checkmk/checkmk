@@ -398,7 +398,6 @@ def test_dependencies_are_declared() -> None:
         "pymongo",  # Optional except ImportError...
         "pytest",  # In __main__ guarded section in cmk/special_agents/utils/misc.py
         "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
-        "_typeshed",  # used by mypy within typing.TYPE_CHECKING
         "mypy_boto3_logs",  # used by mypy within typing.TYPE_CHECKING
         "docker",  # optional
         "msrest",  # used in publish_cloud_images.py and not in the product

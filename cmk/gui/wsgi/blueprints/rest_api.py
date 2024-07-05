@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import functools
-import typing
+from wsgiref.types import WSGIApplication
 
 from flask import Blueprint, current_app, make_response, Response, send_from_directory
 from flask.blueprints import BlueprintSetupState
@@ -18,9 +18,6 @@ from cmk.gui import hooks, main_modules, sites
 from cmk.gui.wsgi.applications import CheckmkRESTAPI
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.gui.wsgi.middleware import OverrideRequestMethod
-
-if typing.TYPE_CHECKING:
-    from _typeshed.wsgi import WSGIApplication
 
 rest_api = Blueprint(
     "rest-api",

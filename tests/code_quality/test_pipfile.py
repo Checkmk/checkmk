@@ -45,6 +45,7 @@ BUILD_DIRS = {
     # This directory needs to be ignored for a few days (until all workspaces were cleared)
     repo_path() / "agent-receiver/build",
     repo_path() / "bazel-check_mk",
+    repo_path() / "bazel-checkout",
     repo_path() / "bazel-out",
     repo_path() / "omd/build",
     repo_path() / "packages/cmc/build",
@@ -166,8 +167,8 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
         # migration_helpers need libcst. I am conservative here, but wondering if we shouldn't
         # exclude all treasures.
         basepath / "doc/treasures/migration_helpers",
-        basepath
-        / "container_shadow_workspace_local",  # that may contain multiple .venvs and is not relevant
+        # the following paths may contain python files and should not be scanned
+        basepath / "container_shadow_workspace_local",
     )
 
     for source_file_path in iter_sourcefiles(basepath):

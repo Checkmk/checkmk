@@ -27,12 +27,6 @@ metric_info["rtt"] = {
     "color": "33/a",
 }
 
-metric_info["availability"] = {
-    "title": _("Availability"),
-    "unit": "%",
-    "color": "31/a",
-}
-
 metric_info["cifs_share_users"] = {
     "title": _("Users using a cifs share"),
     "unit": "count",
@@ -954,12 +948,5 @@ graph_info["connection_count"] = {
     "metrics": [
         ("current_connections", "line"),
         ("new_connections", "line"),
-    ],
-}
-
-graph_info["availability"] = {
-    "title": _("Availability"),
-    "metrics": [
-        ("availability", "line"),
     ],
 }

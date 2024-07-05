@@ -33,12 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["free_dhcp_leases"] = {
-    "title": _("Free DHCP leases"),
-    "unit": "count",
-    "color": "34/a",
-}
-
 metric_info["net_data_recv"] = {
     "title": _("Net data received"),
     "unit": "bytes/s",

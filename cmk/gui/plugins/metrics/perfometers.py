@@ -568,15 +568,6 @@ perfometer_info.append(
     }
 )
 
-# TODO: :max should be the default?
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["free_dhcp_leases"],
-        "total": "free_dhcp_leases:max",
-    }
-)
-
 perfometer_info.append(
     {
         "type": "stacked",

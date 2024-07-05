@@ -33,12 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["snat_usage"] = {
-    "title": _("SNAT usage"),
-    "unit": "%",
-    "color": "21/a",
-}
-
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

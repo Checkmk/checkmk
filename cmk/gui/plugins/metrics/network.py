@@ -33,19 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["current_connections"] = {
-    "title": _("Current connections"),
-    "unit": "count",
-    "color": "24/a",
-}
-
-metric_info["new_connections"] = {
-    "title": _("New connections"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-
 metric_info["bytes_downloaded"] = {
     "title": _("Bytes downloaded"),
     "unit": "bytes",
@@ -232,13 +219,5 @@ graph_info["data_transfer"] = {
     "metrics": [
         ("bytes_downloaded", "stack"),
         ("bytes_uploaded", "stack"),
-    ],
-}
-
-graph_info["connection_count"] = {
-    "title": _("Connections"),
-    "metrics": [
-        ("current_connections", "line"),
-        ("new_connections", "line"),
     ],
 }

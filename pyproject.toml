@@ -48,6 +48,7 @@ section-order = [
   "unittests",
   "livestatus",
   "omd",
+  "cmk_ccc",
   "cmk_utils",
   "cmk_automations",
   "cmk_snmplib",
@@ -71,6 +72,7 @@ compositiontests = ["tests.composition"]
 unittests = ["tests.unit", "tests.plugins_integration", "tests.update"]
 livestatus = ["livestatus"]
 omd = ["omdlib"]
+cmk_ccc = ["cmk.ccc"]
 cmk_utils = ["cmk.utils"]
 cmk_automations = ["cmk.automations"]
 cmk_snmplib = ["cmk.snmplib"]

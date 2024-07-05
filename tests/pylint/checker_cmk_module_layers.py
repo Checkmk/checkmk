@@ -66,6 +66,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
     return any(
         (
             imported == "cmk",
+            _in_component(imported=imported, component=Component("cmk.ccc")),
             _in_component(imported=imported, component=Component("cmk.utils")),
             _in_component(imported=imported, component=Component("cmk.fields")),
             _in_component(imported=imported, component=Component("cmk.automations")),
@@ -403,6 +404,7 @@ def _is_allowed_for_plugins(
             _in_component(imported=imported, component=Component("cmk.special_agents.v0_unstable")),
             _in_component(imported=imported, component=Component("cmk.plugins")),
             _in_component(imported=imported, component=Component("cmk.utils")),
+            _in_component(imported=imported, component=Component("cmk.ccc")),
         )
     )
 

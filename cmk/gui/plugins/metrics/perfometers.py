@@ -145,15 +145,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "fw_connections_active",
-        "half_value": 100,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "stacked",
         "perfometers": [
             {

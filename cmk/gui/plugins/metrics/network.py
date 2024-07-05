@@ -33,36 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["fw_connections_active"] = {
-    "title": _("Active connections"),
-    "unit": "count",
-    "color": "15/a",
-}
-
-metric_info["fw_connections_established"] = {
-    "title": _("Established connections"),
-    "unit": "count",
-    "color": "41/a",
-}
-
-metric_info["fw_connections_halfopened"] = {
-    "title": _("Half opened connections"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["fw_connections_halfclosed"] = {
-    "title": _("Half closed connections"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["fw_connections_passthrough"] = {
-    "title": _("Unoptimized connections"),
-    "unit": "count",
-    "color": "34/a",
-}
-
 metric_info["free_dhcp_leases"] = {
     "title": _("Free DHCP leases"),
     "unit": "count",
@@ -533,17 +503,6 @@ graph_info["traffic"] = {
         ("if_in_octets", "area"),
         ("if_out_non_unicast_octets", "-area"),
         ("if_out_unicast_octets", "-stack"),
-    ],
-}
-
-graph_info["firewall_connections"] = {
-    "title": _("Firewall connections"),
-    "metrics": [
-        ("fw_connections_active", "stack"),
-        ("fw_connections_established", "stack"),
-        ("fw_connections_halfopened", "stack"),
-        ("fw_connections_halfclosed", "stack"),
-        ("fw_connections_passthrough", "stack"),
     ],
 }
 

@@ -33,24 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["connections_max_used"] = {
-    "title": _("Maximum used parallel connections"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["connections_max"] = {
-    "title": _("Maximum parallel connections"),
-    "unit": "count",
-    "color": "51/b",
-}
-
-metric_info["connections_conn_threads"] = {
-    "title": _("Currently open connections"),
-    "unit": "count",
-    "color": "31/a",
-}
-
 metric_info["connections_perc_conn_threads"] = {
     "title": _("Open connections load"),
     "unit": "%",
@@ -233,15 +215,6 @@ graph_info["packet_loss"] = {
     "scalars": [
         "pl:warn",
         "pl:crit",
-    ],
-}
-
-graph_info["DB_connections"] = {
-    "title": _("Parallel connections"),
-    "metrics": [
-        ("connections_max_used", "line"),
-        ("connections_conn_threads", "line"),
-        ("connections_max", "line"),
     ],
 }
 

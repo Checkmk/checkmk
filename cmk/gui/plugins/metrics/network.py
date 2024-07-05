@@ -33,20 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-for ctype, ccolor in (
-    ("dot11a", "21/a"),
-    ("dot11b", "21/b"),
-    ("dot11g", "33/a"),
-    ("dot11ac", "34/b"),
-    ("dot11n2_4", "45/a"),
-    ("dot11n5", "46/b"),
-):
-    metric_info["wifi_connection_" + ctype] = {
-        "title": "802." + ctype,
-        "unit": "count",
-        "color": ccolor,
-    }
-
 metric_info["wifi_connection_total"] = {
     "title": "Total connections",
     "unit": "count",
@@ -397,14 +383,6 @@ graph_info["time_to_connect"] = {
     "title": _("Time to connect"),
     "metrics": [
         ("connection_time", "area"),
-    ],
-}
-
-graph_info["wifi_connections"] = {
-    "title": _("WiFi connection types"),
-    "metrics": [
-        ("wifi_connection_dot%s" % ctype, "stack")
-        for ctype in ("11a", "11b", "11g", "11ac", "11n2_4", "11n5")
     ],
 }
 

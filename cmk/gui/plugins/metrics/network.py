@@ -27,12 +27,6 @@ metric_info["rtt"] = {
     "color": "33/a",
 }
 
-metric_info["transactions"] = {
-    "title": _("Transaction count"),
-    "unit": "count",
-    "color": "36/a",
-}
-
 metric_info["server_latency"] = {
     "title": _("Server latency"),
     "unit": "s",
@@ -997,13 +991,6 @@ graph_info["connection_count"] = {
     "metrics": [
         ("current_connections", "line"),
         ("new_connections", "line"),
-    ],
-}
-
-graph_info["transactions"] = {
-    "title": _("Transactions"),
-    "metrics": [
-        ("transactions", "line"),
     ],
 }
 

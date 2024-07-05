@@ -26,6 +26,7 @@ import traceback
 import types
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Literal, NamedTuple, TextIO
 
@@ -71,6 +72,12 @@ def _parse_arguments() -> argparse.Namespace:
         action="store_true",
         default=False,
         help="Show informations during migration",
+    )
+    parser.add_argument(
+        "--cmk-header",
+        action="store_true",
+        default=False,
+        help="Add CMK header",
     )
     parser.add_argument(
         "folders",
@@ -2123,6 +2130,20 @@ def _obj_repr(
             return f"graph_{_obj_var_name()} = {_graph_repr(unit_parser, obj)}"
 
 
+def _imports_repr(migration_objects: MigratedObjects) -> Iterator[str]:
+    if migration_objects.metrics:
+        yield "metrics"
+        yield "Title"
+    if migration_objects.translations:
+        yield "translations"
+    if migration_objects.perfometers:
+        yield "perfometers"
+        yield "Title"
+    if migration_objects.graph_templates:
+        yield "graphs"
+        yield "Title"
+
+
 # .
 
 
@@ -2183,10 +2204,26 @@ def main() -> None:
     if args.sanitize:
         migrated_objects = _sanitize(migrated_objects)
 
+    if imports := sorted(set(_imports_repr(migrated_objects))):
+        if args.cmk_header:
+            print(
+                f"""#!/usr/bin/env python3
+# Copyright (C) {datetime.today().year} Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""
+            )
+        print(f"from cmk.graphing.v1 import {', '.join(imports)}\n")
     if migrated_objects:
-        print("\n".join([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]))
-    for migrated_object in migrated_objects:
-        print(_obj_repr(unit_parser, migrated_object))
+        print("\n".join([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]) + "\n")
+    if migrated_metrics := [_obj_repr(unit_parser, o) for o in migrated_objects.metrics]:
+        print("\n".join(migrated_metrics) + "\n")
+    if migrated_perfometers := [_obj_repr(unit_parser, o) for o in migrated_objects.perfometers]:
+        print("\n".join(migrated_perfometers) + "\n")
+    if migrated_graph_templates := [
+        _obj_repr(unit_parser, o) for o in migrated_objects.graph_templates
+    ]:
+        print("\n".join(migrated_graph_templates) + "\n")
 
     if migration_errors.metrics_without_def:
         _LOGGER.info(

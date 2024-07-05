@@ -79,6 +79,7 @@ cc_library(
     linkopts = [
         "-lglib-2.0",
     ],
+    linkstatic = True,
     deps = select(
         {
             ":non_standard_glib_path": ["@glibconfig-centos"],
@@ -108,6 +109,7 @@ cc_library(
         "-gdwarf-4",
         "-O2",  # maybe O3?
     ],
+    linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
         ":rrdupd",
@@ -145,6 +147,7 @@ cc_library(
         "-lpangocairo-1.0",
         "-lpng",
     ],
+    linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [":rrd"],
 )

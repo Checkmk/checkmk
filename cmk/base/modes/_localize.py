@@ -11,8 +11,9 @@ from pathlib import Path
 
 import cmk.utils.paths
 from cmk.utils import store, tty
-from cmk.utils.exceptions import MKException
 from cmk.utils.log import VERBOSE
+
+from cmk.ccc.exceptions import MKException
 
 __all__ = ["do_localize"]
 

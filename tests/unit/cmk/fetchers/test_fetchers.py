@@ -18,7 +18,6 @@ from pytest import MonkeyPatch
 
 import cmk.utils.resulttype as result
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 
@@ -58,6 +57,8 @@ from cmk.fetchers.filecache import (
     SNMPFileCache,
 )
 from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
+
+from cmk.ccc.exceptions import MKFetcherError, MKTimeout, OnError
 
 
 class SensorReading(NamedTuple):

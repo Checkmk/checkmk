@@ -14,7 +14,6 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.utils import ip_lookup, tty
-from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.paths import tmp_dir
@@ -48,6 +47,8 @@ from cmk.base.config import (
     lookup_mgmt_board_ip_address,
 )
 from cmk.base.sources import SNMPFetcherConfig, Source
+
+from cmk.ccc.exceptions import OnError
 
 
 def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches

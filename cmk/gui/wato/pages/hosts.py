@@ -9,7 +9,6 @@ from collections.abc import Collection, Iterator
 from typing import overload
 
 import cmk.utils.tags
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.watolib.sites as watolib_sites
@@ -50,6 +49,8 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_all_hosts,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from ._host_attributes import configure_attributes
 from ._status_links import make_host_status_link

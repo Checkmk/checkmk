@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from typing import Literal
 
 from cmk.utils import tty
-from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
 from cmk.utils.log import console
@@ -35,6 +34,8 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
+
+from cmk.ccc.exceptions import OnError
 
 from ._autochecks import AutocheckEntry, DiscoveredService
 from ._autodiscovery import _Transition, get_host_services_by_host_name

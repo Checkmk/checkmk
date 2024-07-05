@@ -14,7 +14,6 @@ backend business and persistence logic, which is also shared with the REST API.
 # pylint: disable=unused-import
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.valuespec
 import cmk.gui.view_utils
@@ -78,6 +77,8 @@ from cmk.gui.watolib.rulespecs import register_check_parameters as register_chec
 from cmk.gui.watolib.rulespecs import register_rule as register_rule
 from cmk.gui.watolib.sites import LivestatusViaTCP
 from cmk.gui.watolib.translation import HostnameTranslation
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from ._check_mk_configuration import monitoring_macro_help as monitoring_macro_help
 from ._check_mk_configuration import PluginCommandLine as PluginCommandLine

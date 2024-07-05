@@ -9,7 +9,7 @@ import signal
 from types import FrameType
 from typing import Final, NoReturn
 
-from cmk.utils.exceptions import MKTimeout
+from cmk.ccc.exceptions import MKTimeout
 
 __all__ = ["MKTimeout", "Timeout"]
 

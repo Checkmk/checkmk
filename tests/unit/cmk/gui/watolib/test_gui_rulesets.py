@@ -15,7 +15,6 @@ from pytest import FixtureRequest
 from tests.unit.cmk.gui.conftest import SetConfig
 
 from cmk.utils import paths, version
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets import ruleset_matcher
@@ -32,6 +31,8 @@ from cmk.gui.utils.rule_specs import legacy_converter
 from cmk.gui.watolib import rulesets
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:

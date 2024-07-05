@@ -32,9 +32,10 @@ from omdlib.type_defs import Config, ConfigChoiceHasError
 
 import cmk.utils.resulttype as result
 from cmk.utils import paths
-from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.version import edition
+
+from cmk.ccc.exceptions import MKTerminate
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext

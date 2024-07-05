@@ -41,7 +41,6 @@ from setproctitle import setthreadtitle
 from livestatus import SiteConfiguration, SiteId
 
 from cmk.utils import agent_registration, paths, render, setup_search_index, store, version
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
@@ -114,6 +113,7 @@ from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 
 from cmk import mkp_tool
 from cmk.bi.type_defs import frozen_aggregations_dir
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 
 # TODO: Make private

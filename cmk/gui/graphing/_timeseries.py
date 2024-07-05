@@ -9,11 +9,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal, TypeVar
 
-from cmk.utils.exceptions import MKGeneralException
-
 from cmk.gui.i18n import _
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.utils import escaping
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from ._type_defs import LineType, Operators, RRDData
 

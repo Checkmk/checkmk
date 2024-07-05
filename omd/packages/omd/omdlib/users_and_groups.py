@@ -17,7 +17,8 @@ if TYPE_CHECKING:
     from omdlib.version_info import VersionInfo
 
 from cmk.utils import tty
-from cmk.utils.exceptions import MKTerminate
+
+from cmk.ccc.exceptions import MKTerminate
 
 # .
 #   .--Users/Groups--------------------------------------------------------.

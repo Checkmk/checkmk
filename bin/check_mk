@@ -31,7 +31,6 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.crash_reporting import ABCCrashReport, crash_report_registry, CrashReportStore
-from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTerminate
 from cmk.utils.log import console
 
 import cmk.base.check_api as check_api
@@ -41,6 +40,7 @@ import cmk.base.utils
 from cmk.base.modes import modes
 
 import cmk.ccc.debug
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
 
 cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.base")

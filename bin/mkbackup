@@ -43,8 +43,9 @@ from cmk.utils.backup.utils import (
     SITE_BACKUP_MARKER,
     State,
 )
-from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.paths import mkbackup_lock_dir
+
+from cmk.ccc.exceptions import MKGeneralException, MKTerminate
 
 ################
 # Utility Code #

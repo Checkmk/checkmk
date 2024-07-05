@@ -20,7 +20,6 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
@@ -39,6 +38,7 @@ from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
 import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException
 
 CoreCommandName = str
 CoreCommand = str

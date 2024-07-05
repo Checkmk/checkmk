@@ -21,7 +21,6 @@ from tests.testlib.base import Scenario
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
@@ -47,6 +46,7 @@ from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 
 from cmk.agent_based.v1 import HostLabel
+from cmk.ccc.exceptions import MKGeneralException
 
 
 def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:

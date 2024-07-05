@@ -8,7 +8,8 @@ from functools import partial
 from typing import TypeVar
 
 import cmk.utils.resulttype as result
-from cmk.utils.exceptions import MKFetcherError, MKTimeout
+
+from cmk.ccc.exceptions import MKFetcherError, MKTimeout
 
 from ._abstract import Fetcher, Mode
 from .filecache import FileCache

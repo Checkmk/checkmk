@@ -14,7 +14,6 @@ import flask
 from flask import Flask
 from flask.sessions import SessionInterface, SessionMixin
 
-from cmk.utils.exceptions import MKException
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
@@ -31,6 +30,8 @@ from cmk.gui.userdb.store import convert_idle_timeout, load_custom_attr
 from cmk.gui.utils.flashed_messages import MSG_TYPET
 from cmk.gui.utils.security_log_events import AuthenticationSuccessEvent
 from cmk.gui.wsgi.utils import dict_property
+
+from cmk.ccc.exceptions import MKException
 
 
 class CheckmkFileBasedSession(dict, SessionMixin):

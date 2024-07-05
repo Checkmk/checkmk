@@ -18,7 +18,6 @@ tag for resolving conditions.
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.tags import AuxTag, AuxTagInUseError, TagID
 
 from cmk.gui.http import Response
@@ -38,6 +37,8 @@ from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.tags import load_all_tag_config_read_only, load_tag_config, update_tag_config
+
+from cmk.ccc.exceptions import MKGeneralException
 
 PERMISSIONS = permissions.Perm("wato.hosttags")
 

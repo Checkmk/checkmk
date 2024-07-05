@@ -21,7 +21,8 @@ from cmk.utils import store
 from cmk.utils.backup.job import Job, JobState
 from cmk.utils.backup.stream import BackupStream, RestoreStream
 from cmk.utils.backup.type_defs import Backup, RawBackupInfo, SiteBackupInfo
-from cmk.utils.exceptions import MKGeneralException
+
+from cmk.ccc.exceptions import MKGeneralException
 
 SITE_BACKUP_MARKER = "Check_MK"
 BACKUP_INFO_FILENAME = "mkbackup.info"

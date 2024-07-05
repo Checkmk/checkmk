@@ -14,8 +14,9 @@ from cryptography.exceptions import InvalidTag
 import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.crypto.secrets import PasswordStoreSecret
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.password_store import PasswordId, PasswordStore
+
+from cmk.ccc.exceptions import MKGeneralException
 
 PW_STORE = "pw_from_store"
 PW_EXPL = "pw_explicit"

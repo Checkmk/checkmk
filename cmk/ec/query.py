@@ -13,7 +13,8 @@ from logging import Logger
 from typing import Any, Literal
 
 import cmk.utils.regex
-from cmk.utils.exceptions import MKException
+
+from cmk.ccc.exceptions import MKException
 
 
 class MKClientError(MKException):

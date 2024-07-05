@@ -9,7 +9,8 @@ import pytest
 
 from cmk.utils.backup.targets import TargetId
 from cmk.utils.backup.targets.local import LocalTarget
-from cmk.utils.exceptions import MKGeneralException
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 class TestLocalTarget:

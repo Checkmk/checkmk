@@ -16,7 +16,6 @@ from typing import NoReturn
 import psutil
 
 from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
 from cmk.utils.user import UserId
 
@@ -26,6 +25,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from ._defines import BackgroundJobDefines
 from ._interface import BackgroundProcessInterface, JobParameters

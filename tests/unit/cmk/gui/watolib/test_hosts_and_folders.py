@@ -25,7 +25,6 @@ from pytest import MonkeyPatch
 
 from livestatus import SiteId
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.redis import disable_redis
 from cmk.utils.user import UserId
@@ -39,6 +38,8 @@ from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import EffectiveAttributes, Folder, folder_tree
 from cmk.gui.watolib.search import MatchItem
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 def test_effective_attributes() -> None:

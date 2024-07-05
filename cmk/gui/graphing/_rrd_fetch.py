@@ -15,7 +15,6 @@ import livestatus
 from livestatus import livestatus_lql, SiteId
 
 import cmk.utils.version as cmk_version
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
@@ -25,6 +24,8 @@ from cmk.gui import sites
 from cmk.gui.i18n import _
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.type_defs import ColumnName
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from ._graph_specification import GraphDataRange, GraphRecipe
 from ._loader import get_unit_info

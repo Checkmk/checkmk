@@ -18,7 +18,6 @@ from livestatus import (
     SiteId,
 )
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import estimate_levels, PredictionData, PredictionQuerier
@@ -35,6 +34,7 @@ from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
 import cmk.ccc.debug
 from cmk.agent_based.prediction_backend import PredictionInfo
+from cmk.ccc.exceptions import MKGeneralException
 
 _GRAPH_SIZE = 2000, 700
 

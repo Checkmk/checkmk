@@ -16,7 +16,6 @@ from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.plugin_registry
 import cmk.utils.version as cmk_version
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import edition, Edition
@@ -220,6 +219,8 @@ from cmk.gui.watolib.translation import (
     ServiceDescriptionTranslation as ServiceDescriptionTranslation,
 )
 from cmk.gui.watolib.translation import translation_elements as translation_elements
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 def check_icmp_params() -> list[DictionaryEntry]:

@@ -25,7 +25,6 @@ from cmk.utils import password_store, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
-from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
@@ -104,6 +103,7 @@ from cmk.agent_based.prediction_backend import (
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
 from cmk.agent_based.v1 import Result as CheckFunctionResult
 from cmk.agent_based.v1 import State
+from cmk.ccc.exceptions import MKTimeout, OnError
 
 __all__ = [
     "CheckPluginMapper",

@@ -19,7 +19,6 @@ from typing import Any, IO, Literal, NotRequired, TypedDict, TypeVar
 import cmk.utils
 import cmk.utils.paths
 from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
@@ -27,6 +26,8 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.audit_log import log_audit
+
+from cmk.ccc.exceptions import MKGeneralException
 
 DomainSpec = dict
 

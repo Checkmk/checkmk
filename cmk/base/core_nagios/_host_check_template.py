@@ -10,7 +10,6 @@ from importlib import import_module
 
 import cmk.utils.log
 from cmk.utils.config_path import LATEST_CONFIG
-from cmk.utils.exceptions import MKTerminate
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.submitters import get_submitter
@@ -22,6 +21,7 @@ from cmk.base.core_nagios import HostCheckConfig
 from cmk.base.modes.check_mk import mode_check
 
 import cmk.ccc.debug
+from cmk.ccc.exceptions import MKTerminate
 from cmk.discover_plugins import PluginLocation
 
 # This will be replaced by the config genreration, when the template is instanciated.

@@ -7,7 +7,6 @@ import pytest
 
 from livestatus import SiteId
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.graphing._graph_templates as gt
@@ -38,6 +37,8 @@ from cmk.gui.graphing._utils import (
     ScalarDefinition,
 )
 from cmk.gui.metrics import translate_perf_data
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 @pytest.mark.parametrize(

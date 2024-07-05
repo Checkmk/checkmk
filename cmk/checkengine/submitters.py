@@ -16,13 +16,14 @@ from typing import final, Final, IO, Literal
 
 import cmk.utils.paths
 from cmk.utils import tty
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeout import Timeout
 
 from cmk.checkengine.checkresults import ServiceCheckResult
+
+from cmk.ccc.exceptions import MKGeneralException
 
 _CacheInfo = tuple[int, int]
 

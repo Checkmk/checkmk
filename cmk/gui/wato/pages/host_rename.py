@@ -10,7 +10,6 @@ from functools import partial
 from typing import Any
 
 from cmk.utils import paths, version
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
 from cmk.utils.version import edition_supports_nagvis
@@ -66,6 +65,8 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.site_changes import SiteChanges
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 def register(mode_registry: ModeRegistry) -> None:

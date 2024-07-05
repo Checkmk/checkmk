@@ -16,7 +16,6 @@ from typing import Any, Final
 import cmk.utils.plugin_registry
 from cmk.utils import store
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui.hooks import request_memoize
@@ -25,6 +24,8 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.site_changes import ChangeSpec
+
+from cmk.ccc.exceptions import MKGeneralException
 
 ConfigDomainName = str
 

@@ -22,7 +22,6 @@ from livestatus import SiteId
 
 import cmk.utils.plugin_registry
 from cmk.utils import deprecation_warnings
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
@@ -43,6 +42,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.gui.watolib.utils import host_attribute_matches
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.fields import String
 
 _ContactgroupName = str

@@ -13,7 +13,6 @@ from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
 from cmk.utils import paths
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.watolib.rulespecs
@@ -42,6 +41,8 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
 )
 from cmk.gui.watolib.search import MatchItem
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 def test_rulespec_sub_group() -> None:

@@ -9,7 +9,7 @@ import signal
 from types import FrameType
 from typing import NoReturn
 
-from cmk.utils.exceptions import MKTerminate
+from cmk.ccc.exceptions import MKTerminate
 
 # .
 #   .--Ctrl-C--------------------------------------------------------------.

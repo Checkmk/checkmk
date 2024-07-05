@@ -21,12 +21,13 @@ from typing import Any, Final, TypeVar
 import cmk.utils.cleanup
 import cmk.utils.paths
 from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import logger
 from cmk.utils.servicename import Item
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID
+
+from cmk.ccc.exceptions import MKGeneralException
 
 _PluginName = str
 _UserKey = str

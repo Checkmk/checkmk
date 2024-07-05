@@ -10,7 +10,6 @@ from collections.abc import Callable, Container, Mapping, Sequence
 
 import cmk.utils.cleanup
 from cmk.utils import tty
-from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
@@ -29,6 +28,7 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException, OnError
 
 from ._autochecks import AutochecksStore
 from ._discovery import DiscoveryPlugin

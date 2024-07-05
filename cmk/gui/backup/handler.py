@@ -48,7 +48,6 @@ from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
 from cmk.utils.certs import CertManagementEvent
 from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import omd_root
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.schedule import next_scheduled_time
@@ -103,6 +102,8 @@ from cmk.gui.valuespec import (
     ValueSpecText,
 )
 from cmk.gui.wato import IndividualOrStoredPassword
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 def register() -> None:

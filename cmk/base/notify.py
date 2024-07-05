@@ -34,7 +34,6 @@ from typing import Any, Callable, cast, Literal, overload
 
 import cmk.utils.paths
 from cmk.utils import log, store
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console
@@ -80,6 +79,7 @@ from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active, Timepe
 from cmk.base import events
 
 import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException
 
 logger = logging.getLogger("cmk.base.notify")
 

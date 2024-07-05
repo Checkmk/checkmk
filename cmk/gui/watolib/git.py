@@ -10,12 +10,13 @@ from pathlib import Path
 
 import cmk.utils
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 def add_message(message: str) -> None:

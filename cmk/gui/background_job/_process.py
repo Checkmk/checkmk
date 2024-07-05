@@ -23,7 +23,6 @@ from types import FrameType
 from setproctitle import setthreadtitle
 
 from cmk.utils import store
-from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.user import UserId
@@ -33,6 +32,8 @@ from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.utils import get_failed_plugins
+
+from cmk.ccc.exceptions import MKTerminate
 
 from ._app import BackgroundJobFlaskApp
 from ._defines import BackgroundJobDefines

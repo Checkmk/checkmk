@@ -9,7 +9,6 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import (
     _Label,
@@ -19,6 +18,8 @@ from cmk.utils.labels import (
     ServiceLabel,
 )
 from cmk.utils.sectionname import SectionName
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 class TestServiceLabel:

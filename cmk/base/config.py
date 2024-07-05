@@ -53,7 +53,6 @@ from cmk.utils.agent_registration import connection_mode_from_host_config, HostA
 from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, ParametersTypeAlias, section_name_of
 from cmk.utils.config_path import ConfigPath
-from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
@@ -127,6 +126,7 @@ from cmk.base.sources import SNMPFetcherConfig
 
 import cmk.ccc.debug
 from cmk import piggyback
+from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 

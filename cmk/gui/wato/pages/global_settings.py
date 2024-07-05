@@ -11,8 +11,6 @@ import abc
 from collections.abc import Callable, Collection, Iterable, Iterator
 from typing import Any, Final
 
-from cmk.utils.exceptions import MKGeneralException
-
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -62,6 +60,8 @@ from cmk.gui.watolib.search import (
     MatchItem,
     MatchItems,
 )
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 def register(mode_registry: ModeRegistry) -> None:

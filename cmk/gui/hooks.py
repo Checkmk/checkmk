@@ -9,7 +9,7 @@ import typing
 from collections.abc import Callable
 from typing import Any, Literal, NamedTuple
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 
 
 class Hook(NamedTuple):

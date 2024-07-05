@@ -15,11 +15,12 @@ import urllib3
 
 import cmk.utils.site
 from cmk.utils.crypto.secrets import AutomationUserSecret
-from cmk.utils.exceptions import MKException
 from cmk.utils.password_store import extract
 from cmk.utils.paths import omd_root
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
+
+from cmk.ccc.exceptions import MKException
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

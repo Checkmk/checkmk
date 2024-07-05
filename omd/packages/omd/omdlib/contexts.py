@@ -17,8 +17,9 @@ from omdlib.skel_permissions import (
 from omdlib.type_defs import Config, Replacements
 from omdlib.version import version_from_site_dir
 
-from cmk.utils.exceptions import MKTerminate
 from cmk.utils.version import Edition
+
+from cmk.ccc.exceptions import MKTerminate
 
 
 class AbstractSiteContext(abc.ABC):

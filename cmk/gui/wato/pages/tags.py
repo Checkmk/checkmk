@@ -9,7 +9,6 @@ import abc
 from collections.abc import Collection
 
 import cmk.utils.tags
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.gui.watolib.changes as _changes
@@ -65,6 +64,8 @@ from cmk.gui.watolib.tags import (
     TagConfigFile,
     update_tag_config,
 )
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from ._tile_menu import TileMenuRenderer
 

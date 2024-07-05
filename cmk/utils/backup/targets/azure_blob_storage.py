@@ -11,8 +11,9 @@ from azure.identity import ClientSecretCredential
 from azure.storage.blob import ContainerClient, LinearRetry
 
 from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.password_store import extract, PasswordId
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 class BlobStorageADCredentials(TypedDict):

@@ -14,8 +14,6 @@ from livestatus import (
     SiteId,
 )
 
-from cmk.utils.exceptions import MKGeneralException
-
 from cmk.gui import sites
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -24,6 +22,8 @@ from cmk.gui.i18n import _
 from cmk.gui.sidebar import SidebarSnapin, snapin_site_choice
 from cmk.gui.type_defs import RoleName
 from cmk.gui.user_sites import get_event_console_site_choices
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 class SidebarSnapinEventConsole(SidebarSnapin):

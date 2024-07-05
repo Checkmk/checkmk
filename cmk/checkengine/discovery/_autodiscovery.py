@@ -14,7 +14,6 @@ from typing import assert_never, Generic, Literal, TypeVar
 
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
@@ -34,6 +33,7 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.summarize import SummarizerFunction
 
 import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 
 from ._autochecks import (
     AutocheckEntry,

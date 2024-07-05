@@ -5,8 +5,6 @@
 
 from typing import Any
 
-from cmk.utils.exceptions import MKGeneralException
-
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
@@ -19,6 +17,8 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 # NOTE: When changing this keep it in sync with cmk.utils.translations.translate_hostname()

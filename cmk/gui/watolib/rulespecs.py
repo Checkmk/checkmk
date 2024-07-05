@@ -13,7 +13,6 @@ from typing import Any, Literal
 
 import cmk.utils.plugin_registry
 from cmk.utils import paths
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, RuleGroupType
 from cmk.utils.version import Edition, edition, mark_edition_only
 
@@ -48,6 +47,8 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry

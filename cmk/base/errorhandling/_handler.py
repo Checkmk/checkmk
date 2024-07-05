@@ -7,14 +7,6 @@ from __future__ import annotations
 
 from typing import Final, Literal
 
-from cmk.utils.exceptions import (
-    MKAgentError,
-    MKFetcherError,
-    MKGeneralException,
-    MKIPAddressLookupError,
-    MKSNMPError,
-    MKTimeout,
-)
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
@@ -25,6 +17,14 @@ from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.submitters import ServiceState
 
 import cmk.ccc.debug
+from cmk.ccc.exceptions import (
+    MKAgentError,
+    MKFetcherError,
+    MKGeneralException,
+    MKIPAddressLookupError,
+    MKSNMPError,
+    MKTimeout,
+)
 
 from ._crash import create_check_crash_dump
 

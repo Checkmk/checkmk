@@ -27,7 +27,6 @@ from livestatus import SiteId
 import cmk.utils.version as cmk_version
 from cmk.utils import crash_reporting, paths, store
 from cmk.utils.crypto.types import MKCryptoException
-from cmk.utils.exceptions import MKException
 from cmk.utils.site import omd_site
 
 from cmk.gui import session
@@ -52,6 +51,8 @@ from cmk.gui.openapi.utils import (
 )
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
 from cmk.gui.wsgi.wrappers import ParameterDict
+
+from cmk.ccc.exceptions import MKException
 
 if TYPE_CHECKING:
     from cmk.gui.http import HTTPMethod

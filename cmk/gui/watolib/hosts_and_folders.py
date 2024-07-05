@@ -27,7 +27,6 @@ from livestatus import SiteId
 
 import cmk.utils.paths
 from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
@@ -104,6 +103,8 @@ from cmk.gui.watolib.utils import (
     rename_host_in_list,
     wato_root_dir,
 )
+
+from cmk.ccc.exceptions import MKGeneralException
 
 _ContactgroupName = str
 

@@ -11,7 +11,6 @@ from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import DiagnosticsCLParameters
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
 from cmk.utils.notify_types import EventContext
@@ -33,6 +32,8 @@ from cmk.gui.watolib.automations import (
     local_automation_failure,
     MKAutomationException,
 )
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 class AutomationResponse(NamedTuple):

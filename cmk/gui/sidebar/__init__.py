@@ -20,7 +20,6 @@ from livestatus import SiteId
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui import hooks, pagetypes, sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
@@ -47,6 +46,8 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
 from cmk.gui.werks import may_acknowledge
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from . import _snapin
 from ._snapin import begin_footnote_links as begin_footnote_links

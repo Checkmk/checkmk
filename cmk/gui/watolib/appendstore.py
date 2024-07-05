@@ -12,10 +12,11 @@ from pathlib import Path
 from typing import Generic, TypeVar
 
 from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+
+from cmk.ccc.exceptions import MKGeneralException
 
 _VT = TypeVar("_VT")
 

@@ -28,7 +28,6 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.version as cmk_version
 from cmk.utils import paths
 from cmk.utils import store as store
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.log import VERBOSE
@@ -64,6 +63,8 @@ from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automation_types import PhaseOneResult
 from cmk.gui.watolib.utils import mk_repr
+
+from cmk.ccc.exceptions import MKGeneralException
 
 auto_logger = logger.getChild("automations")
 

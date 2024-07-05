@@ -36,7 +36,6 @@ import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.translations
 from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
@@ -173,6 +172,7 @@ from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
 
 import cmk.mkp_tool
+from cmk.ccc.exceptions import MKGeneralException
 
 from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole

@@ -10,8 +10,7 @@ import re
 from collections.abc import Iterator, Mapping, Sequence
 from typing import NamedTuple, NewType, NotRequired, TypedDict
 
-from cmk.utils.exceptions import MKGeneralException
-
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 
 TagID = NewType("TagID", str)

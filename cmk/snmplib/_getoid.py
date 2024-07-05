@@ -9,10 +9,10 @@ from contextlib import suppress
 import cmk.utils.cleanup
 import cmk.utils.paths
 from cmk.utils import tty
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.sectionname import SectionName
 
 import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException
 
 from ._table import SNMPDecodedString
 from ._typedefs import ensure_str, OID, SNMPBackend

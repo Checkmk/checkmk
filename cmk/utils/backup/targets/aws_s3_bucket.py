@@ -10,8 +10,9 @@ from typing import Final, TypedDict
 import boto3
 
 from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.password_store import extract, PasswordId
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 class S3Params(TypedDict):

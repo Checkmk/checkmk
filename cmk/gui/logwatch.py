@@ -11,7 +11,6 @@ from typing import Any
 import livestatus
 from livestatus import SiteId
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui import sites
@@ -44,6 +43,8 @@ from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
+
+from cmk.ccc.exceptions import MKGeneralException
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |

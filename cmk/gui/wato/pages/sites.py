@@ -24,7 +24,6 @@ from livestatus import (
 
 import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import is_free
 from cmk.utils.site import omd_site
@@ -113,6 +112,8 @@ from cmk.gui.watolib.sites import (
     SiteManagementFactory,
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:

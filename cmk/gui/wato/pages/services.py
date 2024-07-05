@@ -16,7 +16,6 @@ from livestatus import SiteId
 import cmk.utils.render
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.html import get_html_state_marker
 from cmk.utils.labels import HostLabelValueDict, Labels
@@ -94,6 +93,8 @@ from cmk.gui.watolib.services import (
     UpdateType,
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_repr
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from ._status_links import make_host_status_link
 

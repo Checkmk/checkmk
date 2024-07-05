@@ -15,8 +15,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from cmk.utils.exceptions import MKConfigLockTimeout, MKTimeout
-
+from cmk.ccc.exceptions import MKConfigLockTimeout, MKTimeout
 from cmk.ccc.i18n import _
 
 _all = [

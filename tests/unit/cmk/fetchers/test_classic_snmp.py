@@ -10,7 +10,6 @@ from typing import NamedTuple
 
 import pytest
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
 
@@ -18,6 +17,8 @@ from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 
 import cmk.fetchers.snmp_backend.classic as classic_snmp
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 @pytest.mark.parametrize(

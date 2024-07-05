@@ -17,7 +17,8 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.views.store import internal_view_to_runtime_view
 
-from ...utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
+
 from .builtin_dashboards import builtin_dashboards
 from .type_defs import DashboardConfig, DashboardName, DashletConfig, DashletId
 

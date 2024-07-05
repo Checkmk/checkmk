@@ -23,9 +23,9 @@ from typing import Any
 import requests
 import urllib3
 
-from cmk.utils.exceptions import MKException
 from cmk.utils.password_store import replace_passwords
 
+from cmk.ccc.exceptions import MKException
 from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 ElementAttributes = dict[str, str]

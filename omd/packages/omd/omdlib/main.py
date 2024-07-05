@@ -127,13 +127,14 @@ from cmk.utils import tty
 from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.password_hashing import hash_password
-from cmk.utils.exceptions import MKTerminate
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
 from cmk.utils.resulttype import Error, OK, Result
 from cmk.utils.version import Version, versions_compatible, VersionsIncompatible
 from cmk.utils.werks.acknowledgement import unacknowledged_incompatible_werks
+
+from cmk.ccc.exceptions import MKTerminate
 
 Arguments = list[str]
 ConfigChangeCommands = list[tuple[str, str]]

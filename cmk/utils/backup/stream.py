@@ -18,7 +18,8 @@ from cmk.utils.crypto.deprecated import (
 )
 from cmk.utils.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey, PublicKey
 from cmk.utils.crypto.password import Password
-from cmk.utils.exceptions import MKException, MKGeneralException
+
+from cmk.ccc.exceptions import MKException, MKGeneralException
 
 
 # Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA

@@ -10,7 +10,6 @@ from collections.abc import Sequence
 
 from livestatus import SiteConfiguration, SiteId
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.user import UserId
 
 import cmk.gui.sites
@@ -30,6 +29,8 @@ from cmk.gui.watolib.activate_changes import (
 )
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 def register(page_registry: PageRegistry) -> None:

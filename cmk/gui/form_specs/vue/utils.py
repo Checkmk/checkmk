@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Callable, Optional, Protocol, Sequence
 
-from cmk.utils.exceptions import MKGeneralException
-
 from cmk.gui.form_specs.private.definitions import UnknownFormSpec
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.registries import (
@@ -17,6 +15,7 @@ from cmk.gui.form_specs.vue.registries import (
 from cmk.gui.form_specs.vue.type_defs import ModelT, VisitorOptions
 from cmk.gui.i18n import translate_to_current_language
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 

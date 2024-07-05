@@ -10,7 +10,6 @@ from typing import Any
 
 import cmk.utils.paths
 from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.pages
 from cmk.gui import utils
@@ -18,6 +17,8 @@ from cmk.gui.http import response
 from cmk.gui.log import logger
 from cmk.gui.pages import PageRegistry
 from cmk.gui.session import SuperUserContext
+
+from cmk.ccc.exceptions import MKGeneralException
 
 multisite_cronjobs = []
 

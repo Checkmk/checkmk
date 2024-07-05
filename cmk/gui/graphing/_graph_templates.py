@@ -11,13 +11,14 @@ from typing import assert_never, ClassVar, Literal
 from livestatus import SiteId
 
 from cmk.utils import pnp_cleanup, regex
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from ._expression import (
     Average,

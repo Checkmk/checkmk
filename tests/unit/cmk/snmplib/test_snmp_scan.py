@@ -13,7 +13,6 @@ import pytest
 
 from tests.unit.conftest import FixPluginLegacy
 
-from cmk.utils.exceptions import MKSNMPError, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
 from cmk.utils.paths import snmp_scan_cache_dir
@@ -27,6 +26,7 @@ import cmk.fetchers._snmpscan as snmp_scan
 import cmk.base.api.agent_based.register as agent_based_register
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
+from cmk.ccc.exceptions import MKSNMPError, OnError
 from cmk.plugins.collection.agent_based import aironet_clients
 
 

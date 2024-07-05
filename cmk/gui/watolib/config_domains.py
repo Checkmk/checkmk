@@ -29,7 +29,6 @@ from cmk.utils import store
 from cmk.utils.certs import CN_TEMPLATE, RemoteSiteCertsStore
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.process import pid_from_file, send_signal
 
@@ -52,6 +51,8 @@ from cmk.gui.watolib.config_domain_name import (
     SerializedSettings,
 )
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 class _NegativeSerialException(Exception):

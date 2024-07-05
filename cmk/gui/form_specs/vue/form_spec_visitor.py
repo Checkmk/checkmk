@@ -9,8 +9,6 @@ import traceback
 from dataclasses import asdict, dataclass
 from typing import Any
 
-from cmk.utils.exceptions import MKGeneralException
-
 import cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components as VueComponents
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec, UnknownFormSpec
@@ -38,6 +36,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     Dictionary,

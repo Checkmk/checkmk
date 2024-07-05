@@ -7,11 +7,11 @@ from collections.abc import Iterable, Sequence
 from re import Pattern
 
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.tags import TagID
 
 import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException
 
 # Conveniance macros for legacy tuple based host and service rules
 PHYSICAL_HOSTS = ["@physical"]  # all hosts but not clusters

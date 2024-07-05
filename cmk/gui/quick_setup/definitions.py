@@ -7,9 +7,9 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
 from typing import NewType
 
-from cmk.utils.exceptions import MKGeneralException
-
 from cmk.gui.quick_setup.widgets import Widget
+
+from cmk.ccc.exceptions import MKGeneralException
 
 StageId = NewType("StageId", int)
 QuickSetupId = NewType("QuickSetupId", str)

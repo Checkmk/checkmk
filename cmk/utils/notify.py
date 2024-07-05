@@ -18,7 +18,6 @@ import livestatus
 
 from cmk.utils import statename, store
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import EnrichedEventContext
@@ -28,6 +27,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.store import load_object_from_file, save_object_to_file
 from cmk.utils.tags import TagGroupID, TagID
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 
 logger = logging.getLogger("cmk.utils.notify")

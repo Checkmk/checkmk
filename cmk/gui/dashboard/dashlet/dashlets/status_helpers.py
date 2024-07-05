@@ -7,14 +7,14 @@ from collections.abc import Iterable
 
 from livestatus import LivestatusResponse
 
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
-
 from cmk.gui import sites, visuals
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
+
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 
 
 def host_table_query(

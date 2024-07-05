@@ -19,7 +19,6 @@ import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
 from cmk.utils.crypto.types import MKCryptoException
-from cmk.utils.exceptions import MKException
 
 from cmk.gui import pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -47,6 +46,8 @@ from cmk.gui.wsgi.applications.utils import (
     plain_error,
 )
 from cmk.gui.wsgi.type_defs import WSGIResponse
+
+from cmk.ccc.exceptions import MKException
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.

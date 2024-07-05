@@ -15,11 +15,11 @@ from typing import Any, assert_never, Literal, NamedTuple
 import cmk.utils.paths
 from cmk.utils import store
 from cmk.utils.caching import cache_manager
-from cmk.utils.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 
 import cmk.ccc.debug
+from cmk.ccc.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 
 IPLookupCacheId = tuple[HostName | HostAddress, socket.AddressFamily]
 

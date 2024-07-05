@@ -15,7 +15,6 @@ from typing import Literal, NamedTuple, NewType, NotRequired, Self, TypedDict
 from livestatus import livestatus_lql
 
 import cmk.utils.regex
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.metrics import MetricName
 from cmk.utils.plugin_registry import Registry
 
@@ -28,6 +27,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 from cmk.gui.utils.speaklater import LazyString
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.discover_plugins import DiscoveredPlugins
 from cmk.graphing.v1 import graphs, metrics, perfometers, translations
 

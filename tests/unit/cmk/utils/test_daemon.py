@@ -11,7 +11,8 @@ from pathlib import Path
 import pytest
 
 from cmk.utils import daemon, store
-from cmk.utils.exceptions import MKGeneralException
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 @pytest.fixture(autouse=True)

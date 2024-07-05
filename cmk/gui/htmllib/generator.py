@@ -30,12 +30,12 @@ import json
 import typing
 from typing import assert_never, Final, final, Literal
 
-from cmk.utils.exceptions import MKGeneralException
-
 from cmk.gui.i18n import _
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from .tag_rendering import (
     HTMLContent,

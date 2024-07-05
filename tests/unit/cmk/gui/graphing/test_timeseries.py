@@ -7,11 +7,11 @@ from typing import Literal
 
 import pytest
 
-from cmk.utils.exceptions import MKGeneralException
-
 from cmk.gui.graphing._timeseries import time_series_math
 from cmk.gui.graphing._type_defs import Operators
 from cmk.gui.time_series import TimeSeries
+
+from cmk.ccc.exceptions import MKGeneralException
 
 
 @pytest.mark.parametrize(

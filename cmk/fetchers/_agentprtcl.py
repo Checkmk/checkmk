@@ -14,8 +14,9 @@ from enum import Enum
 from typing import assert_never, Final, Self
 
 from cmk.utils.crypto.deprecated import AesCbcCipher
-from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.serializertype import Deserializer, Serializer
+
+from cmk.ccc.exceptions import MKFetcherError
 
 OPENSSL_SALTED_MARKER = "Salted__"
 

@@ -8,8 +8,6 @@ from collections.abc import Callable, Mapping, Sequence
 import numpy as np
 import pytest
 
-from cmk.utils.exceptions import MKGeneralException
-
 from cmk.gui.graphing import (
     get_first_matching_perfometer,
     MetricometerRendererLegacyLogarithmic,
@@ -28,6 +26,7 @@ from cmk.gui.graphing._perfometer import (
 )
 from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric, UnitInfo
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics, perfometers
 
 

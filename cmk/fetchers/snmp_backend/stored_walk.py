@@ -9,10 +9,11 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
 
-from cmk.utils.exceptions import MKException, MKGeneralException, MKSNMPError
 from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPHostConfig, SNMPRawValue, SNMPRowInfo
+
+from cmk.ccc.exceptions import MKException, MKGeneralException, MKSNMPError
 
 from ._utils import strip_snmp_value
 

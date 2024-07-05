@@ -67,7 +67,6 @@ import cmk.utils.plugin_registry
 import cmk.utils.regex
 from cmk.utils import dateutils
 from cmk.utils.crypto import certificate, keys
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress as HostAddressType
 from cmk.utils.images import CMKImage, ImageType
 from cmk.utils.labels import AndOrNotLiteral, LabelSources
@@ -114,6 +113,8 @@ from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
+
+from cmk.ccc.exceptions import MKGeneralException
 
 seconds_per_day = 86400
 

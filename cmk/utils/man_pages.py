@@ -24,9 +24,9 @@ from typing import Final
 
 import cmk.utils.paths
 from cmk.utils import tty
-from cmk.utils.exceptions import MKGeneralException
 
 import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 
 # remove with 2.4 / after 2.3 is released

@@ -33,12 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["channel_utilization_5ghz"] = {
-    "title": _("Channel utilization for 5GHz band"),
-    "unit": "%",
-    "color": "26/a",
-}
-
 metric_info["connector_outlets"] = {
     "title": _("Connector outlets"),
     "unit": "count",
@@ -631,18 +625,6 @@ graph_info["nodes_by_type"] = {
         ("number_of_nodes", "area"),
         ("number_of_data_nodes", "line"),
     ],
-}
-
-graph_info["channel_utilization_5ghz"] = {
-    "title": _("Channel utilization for 5GHz band"),
-    "metrics": [
-        ("channel_utilization_5ghz", "area"),
-    ],
-    "scalars": [
-        "channel_utilization_5ghz:warn",
-        "channel_utilization_5ghz:crit",
-    ],
-    "range": (0, 100),
 }
 
 graph_info["data_transfer"] = {

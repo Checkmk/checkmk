@@ -45,10 +45,6 @@ perfometer_info.append(
 )
 
 perfometer_info.append(
-    {"type": "logarithmic", "metric": "wifi_connection_total", "half_value": 5000, "exponent": 2.0}
-)
-
-perfometer_info.append(
     {
         "type": "logarithmic",
         "metric": "runtime",

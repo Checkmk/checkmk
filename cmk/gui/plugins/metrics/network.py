@@ -33,12 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["wifi_connection_total"] = {
-    "title": "Total connections",
-    "unit": "count",
-    "color": "35/a",
-}
-
 metric_info["ap_devices_percent_unhealthy"] = {
     "title": "Percentage of unhealthy access points",
     "unit": "%",

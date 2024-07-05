@@ -38,12 +38,6 @@ metric_info["pressure"] = {
     "color": "#ff6234",
 }
 
-metric_info["battery_capacity"] = {
-    "title": _("Battery capacity"),
-    "unit": "%",
-    "color": "13/a",
-}
-
 metric_info["battery_seconds_remaining"] = {
     "title": _("Battery time remaining"),
     "unit": "s",
@@ -97,14 +91,6 @@ graph_info["fan_speed"] = {
     "metrics": [
         ("fan_speed", "area"),
     ],
-}
-
-graph_info["battery_capacity"] = {
-    "title": _("Battery capacity"),
-    "metrics": [
-        ("battery_capacity", "area"),
-    ],
-    "range": (0, 100),
 }
 
 graph_info["optical_signal_power"] = {

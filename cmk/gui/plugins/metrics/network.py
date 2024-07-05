@@ -27,18 +27,6 @@ metric_info["rtt"] = {
     "color": "33/a",
 }
 
-metric_info["last_sync_time"] = {
-    "title": _("Time since last sync"),
-    "unit": "s",
-    "color": "41/b",
-}
-
-metric_info["last_sync_receive_time"] = {
-    "title": _("Time since last NTPMessage"),
-    "unit": "s",
-    "color": "45/b",
-}
-
 metric_info["connection_time"] = {
     "title": _("Connection time"),
     "unit": "s",
@@ -639,11 +627,6 @@ graph_info["wlan_errors"] = {
         ("wlan_resets", "stack"),
         ("wlan_retries", "stack"),
     ],
-}
-
-graph_info["last_sync_time"] = {
-    "title": _("Time since last synchronisation"),
-    "metrics": [("last_sync_time", "line"), ("last_sync_receive_time", "line")],
 }
 
 graph_info["firewall_connections"] = {

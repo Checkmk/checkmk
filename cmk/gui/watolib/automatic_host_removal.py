@@ -9,6 +9,8 @@ import time
 from collections.abc import Iterable, Iterator, Sequence
 from typing import Literal, TypedDict
 
+from redis import ConnectionError as RedisConnectionError
+
 from livestatus import LocalConnection, SiteId
 
 from cmk.utils.hostaddress import HostName
@@ -64,33 +66,38 @@ class HostRemovalBackgroundJob(BackgroundJob):
 
 
 def _remove_hosts(job_interface: BackgroundProcessInterface) -> None:
-    job_interface.send_progress_update("Starting host removal background job")
+    try:
+        job_interface.send_progress_update("Starting host removal background job")
 
-    if not (
-        hosts_to_be_removed := {
-            site_id: hosts
-            for site_id, hosts_iter in _hosts_to_be_removed(job_interface)
-            if (hosts := list(hosts_iter))
-        }
-    ):
-        job_interface.send_progress_update("Found no hosts to be removed, exiting")
-        return
+        if not (
+            hosts_to_be_removed := {
+                site_id: hosts
+                for site_id, hosts_iter in _hosts_to_be_removed(job_interface)
+                if (hosts := list(hosts_iter))
+            }
+        ):
+            job_interface.send_progress_update("Found no hosts to be removed, exiting")
+            return
 
-    for folder, hosts_in_folder in itertools.groupby(
-        itertools.chain.from_iterable(hosts_to_be_removed.values()),
-        lambda h: h.folder(),
-    ):
-        hostnames = list(host.name() for host in hosts_in_folder)
-        job_interface.send_progress_update(
-            f"Removing {len(hostnames)} hosts from folder {folder.title()}"
-        )
-        with SuperUserContext():
-            folder.delete_hosts(hostnames, automation=delete_hosts)
+        for folder, hosts_in_folder in itertools.groupby(
+            itertools.chain.from_iterable(hosts_to_be_removed.values()),
+            lambda h: h.folder(),
+        ):
+            hostnames = list(host.name() for host in hosts_in_folder)
+            job_interface.send_progress_update(
+                f"Removing {len(hostnames)} hosts from folder {folder.title()}"
+            )
+            with SuperUserContext():
+                folder.delete_hosts(hostnames, automation=delete_hosts)
 
-    job_interface.send_progress_update("Hosts removed, starting activation of changes")
-    _activate_changes(hosts_to_be_removed)
+        job_interface.send_progress_update("Hosts removed, starting activation of changes")
+        _activate_changes(hosts_to_be_removed)
 
-    job_interface.send_progress_update("Host removal background job finished")
+        job_interface.send_progress_update("Host removal background job finished")
+    except RedisConnectionError as e:
+        # This can happen when Redis or the whole site is stopped while the background job is
+        # running. Report an error in the background job result but don't create a crash report.
+        job_interface.send_exception(_("An connection error occurred: %s") % e)
 
 
 def _hosts_to_be_removed(

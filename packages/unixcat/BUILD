@@ -10,8 +10,7 @@ cc_binary(
         "-O3",
     ],
     deps = [
-        "//packages/livestatus",
-        "@re2",
+        "//packages/livestatus:lspoller",
     ],
 )
 

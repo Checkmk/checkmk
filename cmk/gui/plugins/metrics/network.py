@@ -27,22 +27,6 @@ metric_info["rtt"] = {
     "color": "33/a",
 }
 
-metric_info["latencies_50"] = {
-    "title": _("Latencies (50th percentile)"),
-    "unit": "s",
-    "color": "21/a",
-}
-metric_info["latencies_95"] = {
-    "title": _("Latencies (95th percentile)"),
-    "unit": "s",
-    "color": "23/a",
-}
-metric_info["latencies_99"] = {
-    "title": _("Latencies (99th percentile)"),
-    "unit": "s",
-    "color": "25/a",
-}
-
 metric_info["availability"] = {
     "title": _("Availability"),
     "unit": "%",
@@ -962,15 +946,6 @@ graph_info["data_transfer"] = {
     "metrics": [
         ("bytes_downloaded", "stack"),
         ("bytes_uploaded", "stack"),
-    ],
-}
-
-graph_info["latencies"] = {
-    "title": _("Latencies"),
-    "metrics": [
-        ("latencies_50", "line"),
-        ("latencies_95", "line"),
-        ("latencies_99", "line"),
     ],
 }
 

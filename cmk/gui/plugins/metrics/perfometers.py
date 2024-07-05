@@ -729,14 +729,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["deviation_calibration_point"],
-        "total": 10,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["deviation_airflow"],
         "total": 10,
     }

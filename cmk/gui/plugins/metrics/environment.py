@@ -32,12 +32,6 @@ metric_info["fluidflow"] = {
     "color": "#ff6234",
 }
 
-metric_info["output_load"] = {
-    "title": _("Output load"),
-    "unit": "%",
-    "color": "#c83880",
-}
-
 metric_info["humidity"] = {
     "title": _("Relative humidity"),
     "unit": "%",

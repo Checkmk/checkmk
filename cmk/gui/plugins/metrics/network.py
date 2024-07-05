@@ -33,18 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["edge_udp_allocate_requests_exceeding_port_limit"] = {
-    "title": _("A/V Edge - UDP allocate requests exceeding port limit"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["edge_tcp_allocate_requests_exceeding_port_limit"] = {
-    "title": _("A/V Edge - TCP allocate requests exceeding port limit"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
 metric_info["edge_udp_packets_dropped"] = {
     "title": _("A/V Edge - UDP packets dropped"),
     "unit": "1/s",
@@ -359,14 +347,6 @@ graph_info["packet_loss"] = {
     "scalars": [
         "pl:warn",
         "pl:crit",
-    ],
-}
-
-graph_info["allocate_requests_exceeding_port_limit"] = {
-    "title": _("Allocate requests exceeding port limit"),
-    "metrics": [
-        ("edge_udp_allocate_requests_exceeding_port_limit", "line"),
-        ("edge_tcp_allocate_requests_exceeding_port_limit", "line"),
     ],
 }
 

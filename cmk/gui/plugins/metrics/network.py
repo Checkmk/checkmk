@@ -33,42 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["dhcp_discovery"] = {
-    "title": _("DHCP Discovery messages"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["dhcp_requests"] = {
-    "title": _("DHCP received requests"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["dhcp_releases"] = {
-    "title": _("DHCP received releases"),
-    "unit": "count",
-    "color": "21/a",
-}
-
-metric_info["dhcp_declines"] = {
-    "title": _("DHCP received declines"),
-    "unit": "count",
-    "color": "24/a",
-}
-
-metric_info["dhcp_informs"] = {
-    "title": _("DHCP received informs"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["dhcp_others"] = {
-    "title": _("DHCP received other messages"),
-    "unit": "count",
-    "color": "34/a",
-}
-
 metric_info["dhcp_offers"] = {
     "title": _("DHCP sent offers"),
     "unit": "count",
@@ -323,18 +287,6 @@ graph_info["packet_loss"] = {
     "scalars": [
         "pl:warn",
         "pl:crit",
-    ],
-}
-
-graph_info["dhcp_statistics_received"] = {
-    "title": _("DHCP statistics (received messages)"),
-    "metrics": [
-        ("dhcp_discovery", "area"),
-        ("dhcp_requests", "stack"),
-        ("dhcp_releases", "stack"),
-        ("dhcp_declines", "stack"),
-        ("dhcp_informs", "stack"),
-        ("dhcp_others", "stack"),
     ],
 }
 

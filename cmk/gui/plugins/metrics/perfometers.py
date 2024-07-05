@@ -554,26 +554,6 @@ perfometer_info.append(
         "perfometers": [
             {
                 "type": "logarithmic",
-                "metric": "input_signal_power_dbm",
-                "half_value": 4,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "output_signal_power_dbm",
-                "half_value": 4,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "logarithmic",
                 "metric": "net_data_recv",
                 "half_value": 5000000,
                 "exponent": 5,

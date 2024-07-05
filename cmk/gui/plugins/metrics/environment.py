@@ -38,18 +38,6 @@ metric_info["health_perc"] = {
     "color": "#ff6234",
 }
 
-metric_info["input_signal_power_dbm"] = {
-    "title": _("Input power"),
-    "unit": "dbm",
-    "color": "#20c080",
-}
-
-metric_info["output_signal_power_dbm"] = {
-    "title": _("Output power"),
-    "unit": "dbm",
-    "color": "#2080c0",
-}
-
 metric_info["current"] = {
     "title": _("Electrical current"),
     "unit": "a",

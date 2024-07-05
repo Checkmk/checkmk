@@ -33,42 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["dns_successes"] = {
-    "title": _("DNS successful responses"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["dns_referrals"] = {
-    "title": _("DNS referrals"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["dns_recursion"] = {
-    "title": _("DNS queries received using recursion"),
-    "unit": "count",
-    "color": "21/a",
-}
-
-metric_info["dns_failures"] = {
-    "title": _("DNS failed queries"),
-    "unit": "count",
-    "color": "24/a",
-}
-
-metric_info["dns_nxrrset"] = {
-    "title": _("DNS queries received for non-existent record"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["dns_nxdomain"] = {
-    "title": _("DNS queries received for non-existent domain"),
-    "unit": "count",
-    "color": "34/a",
-}
-
 metric_info["connections_max_used"] = {
     "title": _("Maximum used parallel connections"),
     "unit": "count",
@@ -269,18 +233,6 @@ graph_info["packet_loss"] = {
     "scalars": [
         "pl:warn",
         "pl:crit",
-    ],
-}
-
-graph_info["dns_statistics"] = {
-    "title": _("DNS statistics"),
-    "metrics": [
-        ("dns_successes", "area"),
-        ("dns_referrals", "stack"),
-        ("dns_recursion", "stack"),
-        ("dns_failures", "stack"),
-        ("dns_nxrrset", "stack"),
-        ("dns_nxdomain", "stack"),
     ],
 }
 

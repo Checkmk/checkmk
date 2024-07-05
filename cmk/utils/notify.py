@@ -241,12 +241,6 @@ def transform_flexible_and_plain_context(context: NotificationContext) -> Notifi
     return context
 
 
-def transform_flexible_and_plain_plugin(
-    plugin: NotificationPluginName | None,
-) -> NotificationPluginName:
-    return plugin or NotificationPluginName("mail")
-
-
 def write_notify_host_file(
     config_path: VersionedConfigPath,
     config_per_host: Mapping[HostName, NotificationHostConfig],

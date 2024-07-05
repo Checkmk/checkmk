@@ -728,14 +728,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["deviation_airflow"],
-        "total": 10,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "fluidflow",
         "half_value": 0.2,

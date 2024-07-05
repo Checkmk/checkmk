@@ -32,12 +32,6 @@ metric_info["fluidflow"] = {
     "color": "#ff6234",
 }
 
-metric_info["deviation_airflow"] = {
-    "title": _("Airflow deviation"),
-    "unit": "%",
-    "color": "#60f020",
-}
-
 metric_info["health_perc"] = {
     "title": _("Health"),
     "unit": "%",

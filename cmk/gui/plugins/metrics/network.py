@@ -39,12 +39,6 @@ metric_info["session_rate"] = {
     "color": "#4080a0",
 }
 
-metric_info["sync_latency"] = {
-    "title": _("Sync latency"),
-    "unit": "s",
-    "color": "#ffb080",
-}
-
 metric_info["wlan_physical_errors"] = {
     "title": "WLAN physical errors",
     "unit": "1/s",

@@ -750,15 +750,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "queries_per_sec",
-        "half_value": 1000,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["cpu_reservation"],
         "total": 100.0,

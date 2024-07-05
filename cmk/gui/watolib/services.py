@@ -22,7 +22,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel, HostLabelValueDict
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.store import ObjectStore, TextSerializer
 from cmk.utils.version import __version__, Version
 
 from cmk.automations.results import (
@@ -57,6 +56,8 @@ from cmk.gui.watolib.check_mk_automations import (
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.rulesets import EnabledDisabledServicesEditor
 from cmk.gui.watolib.utils import may_edit_ruleset
+
+from cmk.ccc.store import ObjectStore, TextSerializer
 
 
 # Would rather use an Enum for this, but this information is exported to javascript

@@ -22,7 +22,7 @@ import cmk.utils.cleanup
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils import config_warnings, ip_lookup, log, store, tty
+from cmk.utils import config_warnings, ip_lookup, log, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
@@ -128,6 +128,7 @@ from cmk.base.utils import register_sigint_handler
 import cmk.ccc.debug
 from cmk import piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.i18n import _
 from cmk.discover_plugins import discover_families, PluginGroup

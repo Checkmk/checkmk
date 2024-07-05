@@ -18,7 +18,7 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import Any, assert_never, cast, Final
 
-from cmk.utils import paths, store
+from cmk.utils import paths
 from cmk.utils.config_validation_layer.rules import validate_rulesets
 from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
@@ -54,6 +54,7 @@ from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
 

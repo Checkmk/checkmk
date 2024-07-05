@@ -22,7 +22,7 @@ from pathlib import Path
 import cmk.utils.config_path
 import cmk.utils.password_store
 import cmk.utils.paths
-from cmk.utils import store, tty
+from cmk.utils import tty
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -37,6 +37,7 @@ import cmk.base.utils
 from cmk.base import config, server_side_calls
 from cmk.base.config import ConfigCache
 
+from cmk.ccc import store
 from cmk.discover_plugins import PluginLocation
 
 from ._host_check_config import HostCheckConfig

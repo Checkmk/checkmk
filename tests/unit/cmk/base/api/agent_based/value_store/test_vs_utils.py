@@ -9,7 +9,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID
@@ -21,6 +20,8 @@ from cmk.base.api.agent_based.value_store._utils import (
     _ValueStore,
     ValueStoreManager,
 )
+
+from cmk.ccc import store
 
 _TEST_KEY = ("check", "item", "user-key")
 

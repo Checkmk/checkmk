@@ -13,7 +13,7 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import NamedTuple
 
-from cmk.utils import store
+from cmk.ccc import store
 
 
 class LicenseState(Enum):

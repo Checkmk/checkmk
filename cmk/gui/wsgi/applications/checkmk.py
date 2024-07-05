@@ -17,7 +17,6 @@ import livestatus
 
 import cmk.utils.paths
 import cmk.utils.profile
-import cmk.utils.store
 from cmk.utils.crypto.types import MKCryptoException
 
 from cmk.gui import pages, sites
@@ -47,6 +46,7 @@ from cmk.gui.wsgi.applications.utils import (
 )
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
+import cmk.ccc.store
 from cmk.ccc.exceptions import MKException
 
 # TODO
@@ -163,7 +163,7 @@ class CheckmkApp(AbstractWSGIApp):
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         """Is called by the WSGI server to serve the current page"""
-        with cmk.utils.store.cleanup_locks(), sites.cleanup_connections():
+        with cmk.ccc.store.cleanup_locks(), sites.cleanup_connections():
             return _process_request(environ, start_response, debug=self.debug)
 
 

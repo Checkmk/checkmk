@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Any, Final
 
 import cmk.utils.plugin_registry
-from cmk.utils import store
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.hostaddress import HostName
 
@@ -25,6 +24,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.site_changes import ChangeSpec
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 ConfigDomainName = str

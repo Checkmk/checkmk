@@ -17,7 +17,6 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
-from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.pages
@@ -58,6 +57,7 @@ from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttribu
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
 from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 # Was not able to get determine the type of csv._reader / _csv.reader

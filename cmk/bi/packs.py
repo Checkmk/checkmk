@@ -10,7 +10,6 @@ from typing import Any, NamedTuple, NotRequired, TypedDict
 
 from marshmallow import pre_dump
 
-from cmk.utils import store
 from cmk.utils.paths import var_dir
 
 from cmk import fields
@@ -29,6 +28,7 @@ from cmk.bi.sample_configs import bi_sample_config
 from cmk.bi.schema import Schema
 from cmk.bi.search import BIHostSearch, BIServiceSearch
 from cmk.bi.type_defs import AggrConfigDict
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 from cmk.fields import String

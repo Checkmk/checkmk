@@ -34,7 +34,6 @@ from typing import Generic, Literal, Self, TypeVar
 from pydantic import BaseModel as PydanticBaseModel
 
 import cmk.utils.paths
-from cmk.utils import store
 from cmk.utils.user import UserId
 from cmk.utils.version import edition, Edition
 
@@ -111,6 +110,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 SubPagesSpec = list[tuple[str, str, str]]

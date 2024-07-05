@@ -9,7 +9,6 @@ from typing import NamedTuple, NewType, TypedDict
 
 from livestatus import SiteId
 
-from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import configuration_lockfile
 
@@ -35,6 +34,8 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
 from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
+
+from cmk.ccc import store
 
 DoFullScan = NewType("DoFullScan", bool)
 

@@ -24,7 +24,8 @@ from pathlib import Path
 from typing import Any, Final, Self
 
 import cmk.utils.plugin_registry
-from cmk.utils import store
+
+from cmk.ccc import store
 
 CrashInfo = dict[str, Any]  # TODO: improve this type
 

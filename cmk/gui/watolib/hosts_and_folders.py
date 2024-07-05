@@ -26,7 +26,6 @@ from redis.client import Pipeline
 from livestatus import SiteId
 
 import cmk.utils.paths
-from cmk.utils import store
 from cmk.utils.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
@@ -103,6 +102,7 @@ from cmk.gui.watolib.utils import (
     wato_root_dir,
 )
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 

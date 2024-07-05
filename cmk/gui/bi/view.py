@@ -9,7 +9,6 @@ from typing import Any, Literal
 
 from livestatus import OnlySites, SiteId
 
-from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
@@ -60,6 +59,7 @@ from cmk.bi.data_fetcher import get_cache_dir
 from cmk.bi.lib import FrozenMarker
 from cmk.bi.trees import BICompiledRule
 from cmk.bi.type_defs import frozen_aggregations_dir
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 

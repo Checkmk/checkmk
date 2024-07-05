@@ -6,9 +6,10 @@
 from collections.abc import Sequence
 from pathlib import Path
 
-from cmk.utils import store
 from cmk.utils.crypto.password import PasswordHash
 from cmk.utils.user import UserId
+
+from cmk.ccc import store
 
 Entries = dict[UserId, PasswordHash]
 

@@ -8,7 +8,7 @@ import signal
 from pathlib import Path
 from typing import NewType
 
-from cmk.utils.store import load_object_from_file
+from cmk.ccc.store import load_object_from_file
 
 ProcessId = NewType("ProcessId", int)
 

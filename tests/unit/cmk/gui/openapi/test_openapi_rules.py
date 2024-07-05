@@ -20,7 +20,8 @@ from tests.testlib.rest_api_client import (
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.store import load_mk_file, save_mk_file, save_to_mk_file
+
+from cmk.ccc.store import load_mk_file, save_mk_file, save_to_mk_file
 
 DEFAULT_VALUE_RAW = """{
     "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],

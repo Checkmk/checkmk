@@ -9,8 +9,7 @@ from collections.abc import Generator
 from contextlib import contextmanager, suppress
 from pathlib import Path
 
-from cmk.utils import store
-
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 

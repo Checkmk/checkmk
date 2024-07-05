@@ -11,11 +11,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Generic, TypeVar
 
-from cmk.utils import store
-
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 _VT = TypeVar("_VT")

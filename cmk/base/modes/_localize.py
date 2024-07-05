@@ -10,9 +10,10 @@ import sys
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.utils import store, tty
+from cmk.utils import tty
 from cmk.utils.log import VERBOSE
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKException
 
 __all__ = ["do_localize"]

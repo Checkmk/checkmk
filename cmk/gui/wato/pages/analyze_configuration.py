@@ -20,7 +20,6 @@ from collections.abc import Collection
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
-from cmk.utils import store
 
 from cmk.gui import log
 from cmk.gui.breadcrumb import Breadcrumb
@@ -54,6 +53,7 @@ from cmk.gui.watolib.analyze_configuration import (
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 

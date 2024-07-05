@@ -12,7 +12,7 @@ from typing import Any, cast, NamedTuple
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.version as cmk_version
-from cmk.utils import paths, store
+from cmk.utils import paths
 
 import cmk.gui.sites
 import cmk.gui.watolib.activate_changes
@@ -60,6 +60,7 @@ from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
+from cmk.ccc import store
 from cmk.ccc.site import omd_site
 
 

@@ -13,13 +13,13 @@ import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import ServiceLabel
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.store import ObjectStore
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.parameters import TimespecificParameters
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.store import ObjectStore
 
 __all__ = [
     "AutocheckServiceWithNodes",

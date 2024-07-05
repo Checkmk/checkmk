@@ -7,8 +7,6 @@
 import time
 from collections.abc import Collection
 
-from cmk.utils import store
-
 from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -30,6 +28,8 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.utils import multisite_dir
+
+from cmk.ccc import store
 
 
 def register(mode_registry: ModeRegistry) -> None:

@@ -10,7 +10,6 @@ from collections.abc import Mapping
 from typing import Any
 
 import cmk.utils.paths
-from cmk.utils import store
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.version import edition, Edition
 
@@ -45,6 +44,8 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_sync import ReplicationPath
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
+
+from cmk.ccc import store
 
 
 def register(

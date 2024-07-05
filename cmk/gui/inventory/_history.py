@@ -9,12 +9,12 @@ from pathlib import Path
 from typing import NamedTuple
 
 import cmk.utils.paths
-from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, load_tree, SDFilterChoice
 
 from cmk.gui.i18n import _
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 from ._tree import _get_permitted_inventory_paths, make_filter_choices_from_permitted_paths

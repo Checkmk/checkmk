@@ -23,18 +23,18 @@ from tests.testlib.utils import wait_until
 
 from tests.unit.import_module_hack import import_module_hack
 
-from cmk.utils import store
 from cmk.utils.host_storage import (
     get_hosts_file_variables,
     get_standard_hosts_storage,
     StandardStorageLoader,
     StorageFormat,
 )
-from cmk.utils.store import ObjectStore, TextSerializer
-from cmk.utils.store._file import FileIo, RealIo
 
 import cmk.ccc.debug
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.store import ObjectStore, TextSerializer
+from cmk.ccc.store._file import FileIo, RealIo
 
 
 class FakeIo:
@@ -558,7 +558,7 @@ class LockTestThread(threading.Thread):
 @pytest.fixture(name="t1")
 def fixture_test_thread_1(test_file: Path) -> Iterator[LockTestThread]:
     # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
-    t_store = import_module_hack("cmk/utils/store/__init__.py")
+    t_store = import_module_hack("cmk/ccc/store/__init__.py")
 
     t = LockTestThread(t_store, test_file)
     t.start()

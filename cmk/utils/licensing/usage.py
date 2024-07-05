@@ -20,7 +20,7 @@ from uuid import UUID
 import livestatus
 
 import cmk.utils.version as cmk_version
-from cmk.utils import paths, store
+from cmk.utils import paths
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageSample,
@@ -39,6 +39,7 @@ from cmk.utils.licensing.helper import (
 )
 from cmk.utils.paths import licensing_dir, omd_root
 
+from cmk.ccc import store
 from cmk.ccc.site import omd_site
 
 CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}

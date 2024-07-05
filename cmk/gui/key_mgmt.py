@@ -12,7 +12,6 @@ from typing import Any, Literal
 from livestatus import SiteId
 
 import cmk.utils.render
-from cmk.utils import store
 from cmk.utils.certs import CertManagementEvent
 from cmk.utils.crypto.certificate import Certificate, CertificateWithPrivateKey
 from cmk.utils.crypto.keys import WrongPasswordError
@@ -49,6 +48,7 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 
+from cmk.ccc import store
 from cmk.ccc.site import omd_site
 
 

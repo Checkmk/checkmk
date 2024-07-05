@@ -17,10 +17,10 @@ from livestatus import SiteId
 import omdlib.main  # pylint: disable=wrong-import-order
 from omdlib.contexts import SiteContext  # pylint: disable=wrong-import-order
 
-from cmk.utils.store import load_text_from_file
-
 from cmk.gui.watolib import config_domains
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
+
+from cmk.ccc.store import load_text_from_file
 
 remote1_newer = (
     "-----BEGIN CERTIFICATE-----\n"

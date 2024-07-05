@@ -17,9 +17,7 @@ import livestatus
 
 import cmk.utils.paths
 import cmk.utils.plugin_registry
-from cmk.utils import store
 from cmk.utils.hostaddress import HostName
-from cmk.utils.store import locked
 from cmk.utils.user import UserId
 
 import cmk.gui.visuals
@@ -82,6 +80,9 @@ from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import FilterRegistry
+
+from cmk.ccc import store
+from cmk.ccc.store import locked
 
 
 @request_memoize()

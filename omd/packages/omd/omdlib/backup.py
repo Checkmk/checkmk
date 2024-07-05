@@ -73,7 +73,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
     excludes = []
     excludes.append("tmp/*")  # Exclude all tmpfs files
 
-    # exclude all temporary files that are created during cmk.utils.store writes
+    # exclude all temporary files that are created during cmk.ccc.store writes
     excludes.append("*.mk.new*")
     excludes.append("var/log/.liveproxyd.state.new*")
 

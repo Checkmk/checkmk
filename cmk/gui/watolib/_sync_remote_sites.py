@@ -12,8 +12,6 @@ from pathlib import Path
 
 from livestatus import SiteId
 
-from cmk.utils import store
-
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobRegistry,
@@ -33,6 +31,7 @@ from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 
+from cmk.ccc import store
 from cmk.ccc.site import omd_site
 
 AuditLogs = Sequence[AuditLogStore.Entry]

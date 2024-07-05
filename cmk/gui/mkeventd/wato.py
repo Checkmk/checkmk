@@ -35,7 +35,6 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.translations
-from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import edition, Edition
@@ -171,6 +170,7 @@ from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
 
 import cmk.mkp_tool
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 

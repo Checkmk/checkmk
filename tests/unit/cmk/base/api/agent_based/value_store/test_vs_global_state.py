@@ -5,7 +5,6 @@
 
 from pytest import MonkeyPatch
 
-from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID
@@ -13,6 +12,7 @@ from cmk.checkengine.checking import CheckPluginName, ServiceID
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 
 from cmk.agent_based.v1.value_store import get_value_store, set_value_store_manager
+from cmk.ccc import store
 
 
 def test_load_host_value_store_loads_file(monkeypatch: MonkeyPatch) -> None:

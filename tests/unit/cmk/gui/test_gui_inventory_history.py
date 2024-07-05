@@ -27,7 +27,7 @@ def test_get_history_archive_but_no_inv_tree(request_context: None) -> None:
     hostname = HostName("inv-host")
 
     # history
-    cmk.utils.store.save_object_to_file(
+    cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
         ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
     )
@@ -43,24 +43,24 @@ def _create_inventory_history() -> None:
     hostname = HostName("inv-host")
 
     # history
-    cmk.utils.store.save_object_to_file(
+    cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
         ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
     )
-    cmk.utils.store.save_object_to_file(
+    cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "1"),
         ImmutableTree.deserialize({"inv": "attr-1"}).serialize(),
     )
-    cmk.utils.store.save_object_to_file(
+    cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "2"),
         ImmutableTree.deserialize({"inv-2": "attr"}).serialize(),
     )
-    cmk.utils.store.save_object_to_file(
+    cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "3"),
         ImmutableTree.deserialize({"inv": "attr-3"}).serialize(),
     )
     # current tree
-    cmk.utils.store.save_object_to_file(
+    cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_output_dir, hostname),
         ImmutableTree.deserialize({"inv": "attr"}).serialize(),
     )
@@ -170,7 +170,7 @@ def test_load_latest_delta_tree_no_archive_and_inv_tree(request_context: None) -
     hostname = HostName("inv-host")
 
     # current tree
-    cmk.utils.store.save_object_to_file(
+    cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_output_dir, hostname),
         ImmutableTree.deserialize({"inv": "attr"}).serialize(),
     )
@@ -182,13 +182,13 @@ def test_load_latest_delta_tree_one_archive_and_inv_tree(request_context: None) 
     hostname = HostName("inv-host")
 
     # history
-    cmk.utils.store.save_object_to_file(
+    cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
         ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
     )
 
     # current tree
-    cmk.utils.store.save_object_to_file(
+    cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_output_dir, hostname),
         ImmutableTree.deserialize({"inv": "attr"}).serialize(),
     )
@@ -202,7 +202,7 @@ def test_load_latest_delta_tree_one_archive_and_no_inv_tree(request_context: Non
     hostname = HostName("inv-host")
 
     # history
-    cmk.utils.store.save_object_to_file(
+    cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
         ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
     )

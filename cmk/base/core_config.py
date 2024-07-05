@@ -26,7 +26,6 @@ from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.store import lock_checkmk_configuration
 from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
@@ -39,6 +38,7 @@ from cmk.base.nagios_utils import do_check_nagiosconfig
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.store import lock_checkmk_configuration
 
 CoreCommandName = str
 CoreCommand = str

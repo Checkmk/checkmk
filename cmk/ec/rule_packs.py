@@ -20,7 +20,8 @@ from typing import Any, cast
 
 import cmk.utils.log
 import cmk.utils.paths
-from cmk.utils import store
+
+from cmk.ccc import store
 
 from .config import (
     ConfigFromWATO,

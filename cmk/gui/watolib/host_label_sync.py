@@ -16,7 +16,6 @@ from typing import Any
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.paths
-from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
@@ -40,6 +39,7 @@ from cmk.gui.watolib.automations import do_remote_automation, MKAutomationExcept
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.paths import wato_var_dir
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 UpdatedHostLabelsEntry = tuple[str, float, str]

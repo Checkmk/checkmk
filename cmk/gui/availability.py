@@ -25,7 +25,7 @@ from livestatus import (
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils import dateutils, store
+from cmk.utils import dateutils
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
@@ -75,6 +75,7 @@ from cmk.bi.lib import (
     NodeResultBundle,
 )
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule, CompiledAggrTree
+from cmk.ccc import store
 
 AVMode = str  # TODO: Improve this type
 AVObjectType = Literal["host", "service", "bi"]

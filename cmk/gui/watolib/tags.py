@@ -12,7 +12,6 @@ from typing import Any, TypeVar
 
 import cmk.utils.paths
 import cmk.utils.tags
-from cmk.utils import store
 from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
 
 from cmk.gui import hooks
@@ -25,6 +24,7 @@ from cmk.gui.watolib.rulesets import AllRulesets, Rule, RuleConditions, Ruleset
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import format_php, multisite_dir, wato_root_dir
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 

@@ -10,7 +10,7 @@ from wsgiref.types import WSGIApplication
 from flask import Blueprint, current_app, make_response, Response, send_from_directory
 from flask.blueprints import BlueprintSetupState
 
-from cmk.utils import paths, store
+from cmk.utils import paths
 from cmk.utils.paths import omd_root
 
 from cmk.gui import hooks, main_modules, sites
@@ -18,6 +18,7 @@ from cmk.gui.wsgi.applications import CheckmkRESTAPI
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.gui.wsgi.middleware import OverrideRequestMethod
 
+from cmk.ccc import store
 from cmk.ccc.site import get_omd_config
 
 rest_api = Blueprint(

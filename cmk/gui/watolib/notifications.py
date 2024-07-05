@@ -29,7 +29,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
 
-from cmk.utils import store
 from cmk.utils.notify_types import EventRule, NotificationRuleID, NotifyBulkType, NotifyPlugin
 from cmk.utils.user import UserId
 
@@ -66,6 +65,8 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.utils import wato_root_dir
+
+from cmk.ccc import store
 
 logger = logging.getLogger(__name__)
 

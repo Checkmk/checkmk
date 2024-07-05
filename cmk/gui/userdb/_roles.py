@@ -8,14 +8,14 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Literal, TypedDict
 
-from cmk.utils import store
-
 from cmk.gui import hooks
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import RoleName
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
+
+from cmk.ccc import store
 
 
 class BuiltInUserRoleValues(Enum):

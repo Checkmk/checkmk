@@ -25,7 +25,7 @@ from werkzeug.routing import Map, Rule, Submount
 from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
-from cmk.utils import crash_reporting, paths, store
+from cmk.utils import crash_reporting, paths
 from cmk.utils.crypto.types import MKCryptoException
 
 from cmk.gui import session
@@ -51,6 +51,7 @@ from cmk.gui.openapi.utils import (
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
 from cmk.gui.wsgi.wrappers import ParameterDict
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.site import omd_site
 

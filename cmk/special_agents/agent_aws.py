@@ -41,9 +41,10 @@ import botocore
 from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
 
-from cmk.utils import password_store, store
+from cmk.utils import password_store
 from cmk.utils.paths import tmp_dir
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKException
 from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-violation
     AWSEC2InstFamilies,

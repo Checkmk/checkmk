@@ -13,9 +13,7 @@ from typing import Any, cast, Final, Generic, get_args, TypeVar
 import cmk.utils
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils import store
 from cmk.utils.escaping import escape
-from cmk.utils.store import save_object_to_file
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
@@ -29,7 +27,9 @@ from cmk.gui.type_defs import PermissionName, Visual, VisualName, VisualTypeName
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.speaklater import LazyString
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.store import save_object_to_file
 from cmk.mkp_tool import id_to_mkp, Installer, PackageName, PackagePart
 
 TVisual = TypeVar("TVisual", bound=Visual)

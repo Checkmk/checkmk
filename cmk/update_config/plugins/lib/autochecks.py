@@ -12,7 +12,6 @@ from typing import Any, NamedTuple, Self, TypeVar
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import autochecks_dir
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.store import ObjectStore
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore
@@ -23,6 +22,7 @@ from cmk.base.api.agent_based import register
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 
 from cmk.ccc import debug
+from cmk.ccc.store import ObjectStore
 
 REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {}
 

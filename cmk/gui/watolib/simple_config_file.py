@@ -8,7 +8,6 @@ from typing import Callable, cast, Generic, Mapping, TypeAlias, TypeVar
 
 from pydantic import TypeAdapter, ValidationError
 
-from cmk.utils import store
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 from cmk.utils.paths import omd_root
 from cmk.utils.plugin_registry import Registry
@@ -16,6 +15,8 @@ from cmk.utils.plugin_registry import Registry
 from cmk.gui.config import active_config
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 from cmk.gui.watolib.utils import format_config_value
+
+from cmk.ccc import store
 
 _G = TypeVar("_G")
 _T = TypeVar("_T")
@@ -25,8 +26,8 @@ _D = TypeVar("_D", bound=Mapping)
 class WatoConfigFile(ABC, Generic[_G]):
     """Manage simple .mk config file
 
-    The file handling logic is inherited from cmk.utils.store.load_from_mk_file()
-    and cmk.utils.store.save_to_mk_file().
+    The file handling logic is inherited from cmk.ccc.store.load_from_mk_file()
+    and cmk.ccc.store.save_to_mk_file().
     """
 
     def __init__(

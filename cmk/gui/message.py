@@ -11,7 +11,6 @@ from email.mime.text import MIMEText
 from typing import Any
 
 import cmk.utils.paths
-from cmk.utils import store
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.user import UserId
 
@@ -49,6 +48,8 @@ from cmk.gui.valuespec import (
     Optional,
     TextAreaUnicode,
 )
+
+from cmk.ccc import store
 
 Message = DictionaryModel
 

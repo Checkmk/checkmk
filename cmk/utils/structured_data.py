@@ -18,8 +18,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Generic, Literal, NamedTuple, NewType, Self, TypedDict, TypeVar
 
-from cmk.utils import store
 from cmk.utils.hostaddress import HostName
+
+from cmk.ccc import store
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO filter table rows?

@@ -24,15 +24,6 @@ from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.paths import htpasswd_file, var_dir
-from cmk.utils.store import (
-    acquire_lock,
-    load_from_mk_file,
-    load_text_from_file,
-    mkdir,
-    release_lock,
-    save_text_to_file,
-    save_to_mk_file,
-)
 from cmk.utils.user import UserId
 
 import cmk.gui.pages
@@ -45,6 +36,16 @@ from cmk.gui.logged_in import LoggedInUser, save_user_file
 from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.roles import roles_of_user
+
+from cmk.ccc.store import (
+    acquire_lock,
+    load_from_mk_file,
+    load_text_from_file,
+    mkdir,
+    release_lock,
+    save_text_to_file,
+    save_to_mk_file,
+)
 
 from ._connections import active_connections, get_connection
 from ._connector import UserConnector

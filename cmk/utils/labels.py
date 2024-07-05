@@ -11,10 +11,10 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, Self, TypedDict
 
 import cmk.utils.paths
-from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 

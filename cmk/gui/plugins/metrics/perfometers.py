@@ -59,15 +59,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "parts_per_million",
-        "half_value": 50.0,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["cpu_mem_used_percent"],
         "total": 100.0,

@@ -38,12 +38,6 @@ metric_info["pressure"] = {
     "color": "#ff6234",
 }
 
-metric_info["parts_per_million"] = {
-    "color": "42/a",
-    "title": _("Parts per Million"),
-    "unit": "ppm",
-}
-
 metric_info["battery_capacity"] = {
     "title": _("Battery capacity"),
     "unit": "%",

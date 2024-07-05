@@ -33,12 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["connector_outlets"] = {
-    "title": _("Connector outlets"),
-    "unit": "count",
-    "color": "51/a",
-}
-
 metric_info["time_connect"] = {
     "title": _("Time to connect"),
     "unit": "s",

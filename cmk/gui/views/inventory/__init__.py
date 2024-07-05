@@ -611,7 +611,7 @@ _INV_VIEW_HOST_HISTORY = ViewSpec(
         "hidebutton": False,
         "public": True,
         "hidden": True,
-        "is_show_more": True,
+        "is_show_more": False,
         "link_from": {
             "single_infos": ["host"],
             "has_inventory_tree_history": tuple(),

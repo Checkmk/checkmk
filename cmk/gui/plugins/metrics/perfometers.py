@@ -624,15 +624,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "energy",
-        "half_value": 10000,
-        "exponent": 3,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["humidity"],
         "total": 100.0,

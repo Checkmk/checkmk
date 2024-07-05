@@ -32,12 +32,6 @@ metric_info["fluidflow"] = {
     "color": "#ff6234",
 }
 
-metric_info["energy"] = {
-    "title": _("Electrical energy"),
-    "unit": "wh",
-    "color": "#aa80b0",
-}
-
 metric_info["output_load"] = {
     "title": _("Output load"),
     "unit": "%",

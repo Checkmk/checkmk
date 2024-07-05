@@ -77,15 +77,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "response_time",
-        "half_value": 10,
-        "exponent": 4,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "mails_received_time",
         "half_value": 5,
         "exponent": 3,

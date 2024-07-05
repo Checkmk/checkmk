@@ -33,36 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["time_connect"] = {
-    "title": _("Time to connect"),
-    "unit": "s",
-    "color": "11/a",
-}
-
-metric_info["time_ssl"] = {
-    "title": _("Time to negotiate SSL"),
-    "unit": "s",
-    "color": "13/a",
-}
-
-metric_info["time_headers"] = {
-    "title": _("Time to send request"),
-    "unit": "s",
-    "color": "15/a",
-}
-
-metric_info["time_firstbyte"] = {
-    "title": _("Time to receive start of response"),
-    "unit": "s",
-    "color": "26/a",
-}
-
-metric_info["time_transfer"] = {
-    "title": _("Time to receive full response"),
-    "unit": "s",
-    "color": "41/a",
-}
-
 metric_info["ap_devices_total"] = {
     "title": _("Total devices"),
     "unit": "count",
@@ -576,19 +546,6 @@ graph_info["dns_statistics"] = {
         ("dns_nxrrset", "stack"),
         ("dns_nxdomain", "stack"),
     ],
-}
-
-graph_info["http_timings"] = {
-    "title": _("HTTP timings"),
-    "metrics": [
-        ("time_connect", "area", _("Connect")),
-        ("time_ssl", "stack", _("Negotiate SSL")),
-        ("time_headers", "stack", _("Send request")),
-        ("time_transfer", "stack", _("Receive full response")),
-        ("time_firstbyte", "line", _("Receive start of response")),
-        ("response_time", "line", _("Roundtrip")),
-    ],
-    "optional_metrics": ["time_ssl"],
 }
 
 graph_info["DB_connections"] = {

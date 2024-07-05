@@ -2021,17 +2021,12 @@ class ABCEditRuleMode(WatoMode):
     def _get_render_mode(
         self,
     ) -> tuple[ExperimentalRenderMode, FormSpec | None]:
-        # NOTE: This code is non-productive and only supports rules within the
-        # checkgroup_parameters group
+        # NOTE: This code is still experimental
         configured_mode = get_render_mode()
         if configured_mode == ExperimentalRenderMode.BACKEND:
             return configured_mode, None
 
-        if (
-            form_spec := form_spec_registry.get(
-                self._ruleset.name.removeprefix("checkgroup_parameters:")
-            )
-        ) is not None:
+        if (form_spec := form_spec_registry.get(self._ruleset.name.split(":")[-1])) is not None:
             assert form_spec.rule_spec.parameter_form is not None
             return configured_mode, form_spec.rule_spec.parameter_form()
 

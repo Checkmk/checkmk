@@ -14,9 +14,9 @@ from redis import ConnectionError as RedisConnectionError
 from redis import Redis
 from redis.client import Pipeline
 
-from cmk.ccc.exceptions import MKTimeout
+from cmk.utils.paths import omd_root
 
-from .paths import omd_root
+from cmk.ccc.exceptions import MKTimeout
 
 QueryData = TypeVar("QueryData")
 

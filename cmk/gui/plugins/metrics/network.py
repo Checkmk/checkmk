@@ -27,12 +27,6 @@ metric_info["rtt"] = {
     "color": "33/a",
 }
 
-metric_info["server_latency"] = {
-    "title": _("Server latency"),
-    "unit": "s",
-    "color": "21/a",
-}
-
 metric_info["e2e_latency"] = {
     "title": _("End-to-end latency"),
     "unit": "s",
@@ -991,13 +985,6 @@ graph_info["connection_count"] = {
     "metrics": [
         ("current_connections", "line"),
         ("new_connections", "line"),
-    ],
-}
-
-graph_info["server_latency"] = {
-    "title": _("Server latency"),
-    "metrics": [
-        ("server_latency", "line"),
     ],
 }
 

@@ -27,12 +27,6 @@ metric_info["rtt"] = {
     "color": "33/a",
 }
 
-metric_info["time_offset"] = {
-    "title": _("Time offset"),
-    "unit": "s",
-    "color": "#9a52bf",
-}
-
 metric_info["last_sync_time"] = {
     "title": _("Time since last sync"),
     "unit": "s",
@@ -43,12 +37,6 @@ metric_info["last_sync_receive_time"] = {
     "title": _("Time since last NTPMessage"),
     "unit": "s",
     "color": "45/b",
-}
-
-metric_info["jitter"] = {
-    "title": _("Time dispersion (jitter)"),
-    "unit": "s",
-    "color": "43/b",
 }
 
 metric_info["connection_time"] = {
@@ -651,19 +639,6 @@ graph_info["wlan_errors"] = {
         ("wlan_resets", "stack"),
         ("wlan_retries", "stack"),
     ],
-}
-
-graph_info["time_offset"] = {
-    "title": _("Time offset"),
-    "metrics": [("time_offset", "area"), ("jitter", "line")],
-    "scalars": [
-        ("time_offset:crit", _("Upper critical level")),
-        ("time_offset:warn", _("Upper warning level")),
-        ("0,time_offset:warn,-", _("Lower warning level")),
-        ("0,time_offset:crit,-", _("Lower critical level")),
-    ],
-    "range": ("0,time_offset:crit,-", "time_offset:crit"),
-    "optional_metrics": ["jitter"],
 }
 
 graph_info["last_sync_time"] = {

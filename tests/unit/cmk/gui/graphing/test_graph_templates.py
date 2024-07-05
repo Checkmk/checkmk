@@ -374,7 +374,6 @@ def test_non_trivial_graph_declarations() -> None:
         "ram_swap_used",
         "savings",
         "shrinking",
-        "time_offset",
         "util_average_1",
         "util_average_2",
         "util_fallback",

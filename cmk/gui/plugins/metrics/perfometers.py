@@ -448,15 +448,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "time_offset",
-        "half_value": 1.0,
-        "exponent": 10.0,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "stacked",
         "perfometers": [
             {

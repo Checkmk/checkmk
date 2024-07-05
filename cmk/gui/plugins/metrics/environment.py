@@ -38,12 +38,6 @@ metric_info["pressure"] = {
     "color": "#ff6234",
 }
 
-metric_info["battery_seconds_remaining"] = {
-    "title": _("Battery time remaining"),
-    "unit": "s",
-    "color": "21/a",
-}
-
 metric_info["rx_light"] = {
     "title": _("RX Signal Power"),
     "unit": "dbm",

@@ -119,13 +119,6 @@ metric_jenkins_pending_tasks = Metric(
     color=Color.GREEN,
 )
 
-metric_jenkins_queue_length = Metric(
-    name="queue",
-    title=Title("Queue length"),
-    unit=TASKS_UNIT,
-    color=Color.CYAN,
-)
-
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

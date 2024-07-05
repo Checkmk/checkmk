@@ -33,24 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["connections_duration_min"] = {
-    "title": _("Connections duration min"),
-    "unit": "s",
-    "color": "24/a",
-}
-
-metric_info["connections_duration_max"] = {
-    "title": _("Connections duration max"),
-    "unit": "s",
-    "color": "25/a",
-}
-
-metric_info["connections_duration_mean"] = {
-    "title": _("Connections duration mean"),
-    "unit": "s",
-    "color": "25/a",
-}
-
 metric_info["total_sessions"] = {
     "title": _("Total sessions"),
     "unit": "count",
@@ -776,15 +758,6 @@ graph_info["dns_statistics"] = {
         ("dns_failures", "stack"),
         ("dns_nxrrset", "stack"),
         ("dns_nxdomain", "stack"),
-    ],
-}
-
-graph_info["connection_durations"] = {
-    "title": _("Connection durations"),
-    "metrics": [
-        ("connections_duration_min", "line"),
-        ("connections_duration_max", "line"),
-        ("connections_duration_mean", "line"),
     ],
 }
 

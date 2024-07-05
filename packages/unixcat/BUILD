@@ -9,9 +9,11 @@ cc_binary(
         "-gdwarf-4",
         "-O3",
     ],
+    linkopts = [
+        "-pthread",
+    ],
     deps = [
-        "//packages/livestatus",
-        "@re2",
+        "//packages/livestatus:lspoller",
     ],
 )
 

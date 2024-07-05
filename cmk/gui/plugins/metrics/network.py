@@ -33,18 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["bytes_downloaded"] = {
-    "title": _("Bytes downloaded"),
-    "unit": "bytes",
-    "color": "42/a",
-}
-
-metric_info["bytes_uploaded"] = {
-    "title": _("Bytes uploaded"),
-    "unit": "bytes",
-    "color": "41/b",
-}
-
 metric_info["queries_per_sec"] = {
     "title": _("Queries per second"),
     "unit": "1/s",
@@ -211,13 +199,5 @@ graph_info["nodes_by_type"] = {
     "metrics": [
         ("number_of_nodes", "area"),
         ("number_of_data_nodes", "line"),
-    ],
-}
-
-graph_info["data_transfer"] = {
-    "title": _("Data transfer"),
-    "metrics": [
-        ("bytes_downloaded", "stack"),
-        ("bytes_uploaded", "stack"),
     ],
 }

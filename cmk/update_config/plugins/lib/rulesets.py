@@ -9,7 +9,6 @@ import re
 from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
 
-from cmk.utils import debug
 from cmk.utils.log import VERBOSE
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 
@@ -23,6 +22,8 @@ from cmk.gui.watolib.rulesets import (
     RuleConditions,
     RulesetCollection,
 )
+
+from cmk.ccc import debug
 
 REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {}
 

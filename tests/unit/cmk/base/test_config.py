@@ -2982,7 +2982,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         {registered_plugin.name: registered_plugin},
     )
     monkeypatch.setattr(
-        cmk.utils.debug,
+        cmk.ccc.debug,
         "enabled",
         lambda: True,
     )
@@ -3016,7 +3016,7 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
         {registered_section.name: registered_section},
     )
     monkeypatch.setattr(
-        cmk.utils.debug,
+        cmk.ccc.debug,
         "enabled",
         lambda: True,
     )

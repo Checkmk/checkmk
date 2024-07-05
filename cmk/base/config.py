@@ -43,7 +43,6 @@ import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.cleanup
 import cmk.utils.config_path
-import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.piggyback_config
 import cmk.utils.tags
@@ -126,6 +125,7 @@ from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.server_side_calls import load_special_agents, SpecialAgent, SpecialAgentCommandLine
 from cmk.base.sources import SNMPFetcherConfig
 
+import cmk.ccc.debug
 from cmk import piggyback
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
@@ -633,7 +633,7 @@ def _load_config(with_conf_d: bool) -> set[str]:
                 )
 
         except Exception as e:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             if sys.stderr.isatty():
                 console.error(f"Cannot read in configuration file {path}: {e}", file=sys.stderr)
@@ -1334,7 +1334,7 @@ def load_all_plugins(
 ) -> list[str]:
     _initialize_data_structures()
 
-    errors = agent_based_register.load_all_plugins(raise_errors=cmk.utils.debug.enabled())
+    errors = agent_based_register.load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
 
     # LEGACY CHECK PLUGINS
     filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)
@@ -1399,7 +1399,7 @@ def load_checks(
             ignored_plugins_errors.append(
                 f"Ignoring outdated plug-in file {f}: {e} -- this API is deprecated!"
             )
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             continue
 
@@ -1567,11 +1567,11 @@ def _extract_agent_and_snmp_sections(
             # NOTE: missing section plug-ins may lead to missing data for a check plug-in
             #       *or* to more obscure errors, when a check/inventory plug-in will be
             #       passed un-parsed data unexpectedly.
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise MKGeneralException(exc) from exc
             errors.append(AUTO_MIGRATION_ERR_MSG % ("section", section_name))
 
-    if cmk.utils.debug.enabled():
+    if cmk.ccc.debug.enabled():
         subchecks = (name for name in legacy_checks if "." in name)
         for subcheck in subchecks:
             assert agent_based_register.is_registered_section_plugin(
@@ -1617,7 +1617,7 @@ def _extract_check_plugins(
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
             # NOTE: as a result of a missing check plug-in, the corresponding services
             #       will be silently droppend on most (all?) occasions.
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise MKGeneralException(exc) from exc
             errors.append(AUTO_MIGRATION_ERR_MSG % ("check plug-in", check_plugin_name))
 
@@ -1793,7 +1793,7 @@ def get_resource_macros() -> Mapping[str, str]:
             varname, value = line.split("=", 1)
             macros[varname] = value
     except Exception:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
     return macros
 
@@ -3693,7 +3693,7 @@ class ConfigCache:
                     s = s.replace(key, value.decode("utf-8"))
                 except Exception:
                     # If this does not help, do not replace
-                    if cmk.utils.debug.enabled():
+                    if cmk.ccc.debug.enabled():
                         raise
 
         return s

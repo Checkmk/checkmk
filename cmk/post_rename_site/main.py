@@ -9,7 +9,6 @@ from dataclasses import dataclass
 
 from livestatus import SiteId
 
-import cmk.utils.debug
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.plugin_loader import load_plugins_with_exceptions, PluginFailures
@@ -22,6 +21,8 @@ from cmk.utils.version import edition, Edition
 from cmk.gui import main_modules
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
+
+import cmk.ccc.debug
 
 from .logger import logger, setup_logging
 from .registry import rename_action_registry
@@ -64,7 +65,7 @@ def main(args: Sequence[str]) -> int:
     setup_logging(verbose=arguments.verbose)
 
     if arguments.debug:
-        cmk.utils.debug.enable()
+        cmk.ccc.debug.enable()
     logger.debug("parsed arguments: %s", arguments)
 
     new_site_id = omd_site()
@@ -90,7 +91,7 @@ def main(args: Sequence[str]) -> int:
 def load_plugins() -> None:
     for plugin, exc in _load_plugins():
         logger.error("Error in action plug-in %s: %s\n", plugin, exc)
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise exc
 
 

@@ -12,7 +12,6 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Protocol
 
-import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.caching import cache_manager, DictCache
@@ -22,6 +21,8 @@ from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 
 from cmk.automations.results import Gateway, GatewayResult
+
+import cmk.ccc.debug
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -115,7 +116,7 @@ def scan_parents_of(
                 )
             )
         except Exception as e:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             procs.append((host, None, "ERROR: %s" % e))
 
@@ -155,7 +156,7 @@ def scan_parents_of(
             continue
 
         if len(lines) == 0:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise MKGeneralException(
                     "Cannot execute %s. Is traceroute installed? Are you root?" % command
                 )

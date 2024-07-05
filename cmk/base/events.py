@@ -19,7 +19,6 @@ from urllib.parse import quote, urlencode
 import livestatus
 
 import cmk.utils.daemon
-import cmk.utils.debug
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify import read_notify_host_file
@@ -30,6 +29,8 @@ from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.site import omd_site
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches, TimeperiodSpecs
+
+import cmk.ccc.debug
 
 ContactList = list  # TODO Improve this
 
@@ -100,7 +101,7 @@ def event_keepalive(
                     except OSError:
                         new_data = b""
                     except Exception as e:
-                        if cmk.utils.debug.enabled():
+                        if cmk.ccc.debug.enabled():
                             raise
                         logger.info("Cannot read data from CMC: %s", e)
 
@@ -115,7 +116,7 @@ def event_keepalive(
                     context = raw_context_from_string(data.rstrip(b"\n").decode("utf-8"))
                     event_function(context)
                 except Exception:
-                    if cmk.utils.debug.enabled():
+                    if cmk.ccc.debug.enabled():
                         raise
                     logger.exception("ERROR:")
 
@@ -126,7 +127,7 @@ def event_keepalive(
         except SystemExit as e:
             sys.exit(e.code)
         except Exception:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             logger.exception("ERROR:")
 
@@ -134,7 +135,7 @@ def event_keepalive(
             try:
                 call_every_loop()
             except Exception:
-                if cmk.utils.debug.enabled():
+                if cmk.ccc.debug.enabled():
                     raise
                 logger.exception("ERROR:")
 
@@ -191,7 +192,7 @@ def raw_context_from_string(data: str) -> EventContext:
             # Dynamically adding to TypedDict...
             context[varname] = expand_backslashes(value)  # type: ignore[literal-required]
     except Exception:  # line without '=' ignored or alerted
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
     pipe_decode_raw_context(context)
     return context
@@ -244,7 +245,7 @@ def livestatus_fetch_contacts(host: HostName, service: ServiceName | None) -> Co
         return livestatus_fetch_contacts(host, None)
 
     except Exception:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         return None  # We must allow notifications without Livestatus access
 

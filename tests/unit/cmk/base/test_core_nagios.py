@@ -20,7 +20,6 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-import cmk.utils.debug
 import cmk.utils.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.config_path import VersionedConfigPath
@@ -30,6 +29,8 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
 
 from cmk.base import config, core_nagios
+
+import cmk.ccc.debug
 
 
 def ip_address_of_never_called(
@@ -810,7 +811,7 @@ def test_create_nagios_servicedefs_invalid_args(
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
-    monkeypatch.setattr(cmk.utils.debug, "enabled", lambda: False)
+    monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()

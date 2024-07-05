@@ -32,7 +32,7 @@ from pylint.lint import PyLinter
 ####################################################################################################
 
 PackageName = NewType("PackageName", str)  # something like "requests-oauthlib"
-ModuleName = NewType("ModuleName", str)  # something like "cmk.utils.debug"
+ModuleName = NewType("ModuleName", str)  # something like "cmk.ccc.debug"
 ImportedName = NewType("ImportedName", str)
 
 

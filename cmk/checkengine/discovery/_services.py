@@ -7,7 +7,6 @@ import itertools
 import sys
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 
-import cmk.utils.debug
 from cmk.utils import tty
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
@@ -17,6 +16,8 @@ from cmk.checkengine.checking import CheckPluginName, ServiceID
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider
 from cmk.checkengine.sectionparserutils import get_section_kwargs
+
+import cmk.ccc.debug
 
 from ._autochecks import AutocheckEntry
 from ._discovery import DiscoveryPlugin
@@ -171,7 +172,7 @@ def _discover_plugins_services(
     try:
         kwargs = get_section_kwargs(providers, host_key, plugin.sections)
     except Exception as exc:
-        if cmk.utils.debug.enabled() or on_error is OnError.RAISE:
+        if cmk.ccc.debug.enabled() or on_error is OnError.RAISE:
             raise
         if on_error is OnError.WARN:
             console.warning(tty.format_warning(f"  Exception while parsing agent section: {exc}\n"))

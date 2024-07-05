@@ -32,7 +32,6 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Callable, cast, Literal, overload
 
-import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils import log, store
 from cmk.utils.exceptions import MKGeneralException
@@ -79,6 +78,8 @@ from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active, TimeperiodSpecs
 
 from cmk.base import events
+
+import cmk.ccc.debug
 
 logger = logging.getLogger("cmk.base.notify")
 
@@ -494,7 +495,7 @@ def locally_deliver_raw_context(
         )
 
     except Exception:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         logger.exception("ERROR:")
 
@@ -962,7 +963,7 @@ def _process_notifications(
                         )
 
             except Exception as e:
-                if cmk.utils.debug.enabled():
+                if cmk.ccc.debug.enabled():
                     raise
                 logger.exception("    ERROR:")
                 log_to_history(
@@ -1147,7 +1148,7 @@ def rbn_get_bulk_params(rule: EventRule) -> NotifyBulkParameters | None:
         try:
             active = timeperiod_active(params["timeperiod"])
         except Exception:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             # If a livestatus connection error appears we will bulk the
             # notification in the first place. When the connection is available
@@ -2255,7 +2256,7 @@ def send_ripe_bulks(
             try:
                 notify_bulk(bulk[0], bulk[-1], get_http_proxy, plugin_timeout=plugin_timeout)
             except Exception:
-                if cmk.utils.debug.enabled():
+                if cmk.ccc.debug.enabled():
                     raise
                 logger.exception("Error sending bulk %s:", bulk[0])
 
@@ -2283,7 +2284,7 @@ def notify_bulk(
         try:
             params, context = store.load_object_from_file(dirname + "/" + notify_uuid, default=None)
         except Exception as e:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             logger.info(
                 "    Deleting corrupted or empty bulk file %s/%s: %s", dirname, notify_uuid, e

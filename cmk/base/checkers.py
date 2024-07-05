@@ -19,7 +19,6 @@ from typing import Final, Literal
 
 import livestatus
 
-import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.resulttype as result
 from cmk.utils import password_store, tty
@@ -94,6 +93,7 @@ from cmk.base.sources import (
     Source,
 )
 
+import cmk.ccc.debug
 from cmk.agent_based.prediction_backend import (
     InjectedParameters,
     lookup_predictive_levels,
@@ -824,7 +824,7 @@ def get_aggregated_result(
     except MKTimeout:
         raise
     except Exception:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         check_result = SubmittableServiceCheckResult(
             3,

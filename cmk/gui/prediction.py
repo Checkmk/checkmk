@@ -18,7 +18,6 @@ from livestatus import (
     SiteId,
 )
 
-import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
@@ -34,6 +33,7 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.sites import live
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
+import cmk.ccc.debug
 from cmk.agent_based.prediction_backend import PredictionInfo
 
 _GRAPH_SIZE = 2000, 700
@@ -311,7 +311,7 @@ def _get_observed_data(
             until_time,
         )
     except MKLivestatusNotFoundError as e:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         raise MKGeneralException(f"Cannot get historic metrics via Livestatus: {e}")
     if response is None:

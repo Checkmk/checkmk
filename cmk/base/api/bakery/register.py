@@ -5,10 +5,11 @@
 
 import sys
 
-import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
+
+import cmk.ccc.debug
 
 from .function_types import (
     BakeryPlugin,
@@ -70,7 +71,7 @@ def bakery_plugin(
 def get_bakery_plugins() -> dict[str, BakeryPlugin]:
     for plugin, exception in load_plugins_with_exceptions("cmk.base.cee.plugins.bakery"):
         console.error(f"Error in bakery plug-in {plugin}: {exception}", file=sys.stderr)
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise exception
 
     return registered_bakery_plugins

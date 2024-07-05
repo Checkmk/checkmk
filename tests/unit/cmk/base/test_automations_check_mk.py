@@ -9,7 +9,6 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-import cmk.utils.debug
 import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostAddress
 
@@ -21,6 +20,8 @@ from cmk.fetchers import PiggybackFetcher
 from cmk.base import config, core_config
 from cmk.base.automations import check_mk
 from cmk.base.config import ConfigCache
+
+import cmk.ccc.debug
 
 
 class TestAutomationDiagHost:
@@ -284,7 +285,7 @@ def test_automation_active_check_invalid_args(
     config_cache = config.reset_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
-    monkeypatch.setattr(cmk.utils.debug, "enabled", lambda: False)
+    monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
     active_check = check_mk.AutomationActiveCheck()
     active_check.execute(active_check_args)

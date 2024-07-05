@@ -13,7 +13,6 @@ from contextlib import contextmanager, suppress
 from typing import Literal
 
 import cmk.utils.cleanup
-import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils import ip_lookup, store, tty
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
@@ -23,6 +22,8 @@ import cmk.base.nagios_utils
 from cmk.base import core_config
 from cmk.base.config import ConfigCache, ConfiguredIPLookup
 from cmk.base.core_config import MonitoringCore
+
+import cmk.ccc.debug
 
 # suppress "Cannot find module" error from mypy
 
@@ -97,7 +98,7 @@ def do_restart(
             do_core_action(action, monitoring_core=core.name())
 
     except Exception as e:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         raise MKBailOut("An error occurred: %s" % e)
 

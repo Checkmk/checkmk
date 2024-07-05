@@ -8,7 +8,6 @@ import sys
 from contextlib import suppress
 from importlib import import_module
 
-import cmk.utils.debug
 import cmk.utils.log
 from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.exceptions import MKTerminate
@@ -22,6 +21,7 @@ from cmk.base.api.agent_based.register import register_plugin_by_type
 from cmk.base.core_nagios import HostCheckConfig
 from cmk.base.modes.check_mk import mode_check
 
+import cmk.ccc.debug
 from cmk.discover_plugins import PluginLocation
 
 # This will be replaced by the config genreration, when the template is instanciated.
@@ -88,7 +88,7 @@ def main() -> int:
 
     cmk.utils.log.logger.setLevel(cmk.utils.log.verbosity_to_log_level(loglevel))
     if debug:
-        cmk.utils.debug.enable()
+        cmk.ccc.debug.enable()
 
     config.load_checks(check_api.get_check_api_context, CONFIG.checks_to_load)
 

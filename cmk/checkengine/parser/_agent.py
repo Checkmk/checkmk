@@ -11,11 +11,12 @@ import time
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from typing import final, Final, NamedTuple
 
-import cmk.utils.debug
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import MutableSectionMap, SectionName
 from cmk.utils.translations import TranslationOptions
+
+import cmk.ccc.debug
 
 from ._markers import PiggybackMarker, SectionMarker
 from ._parser import (
@@ -262,7 +263,7 @@ class ParserState(abc.ABC):
                 )
             return self.do_action(line)
         except Exception:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             return self.to_error(line)
 

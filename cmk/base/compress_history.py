@@ -10,9 +10,10 @@
 import logging
 from typing import IO
 
-import cmk.utils.debug
 from cmk.utils.exceptions import MKBailOut
 from cmk.utils.log import VERBOSE
+
+import cmk.ccc.debug
 
 logger = logging.getLogger("cmk.base.compress_history")
 
@@ -26,7 +27,7 @@ def do_compress_history(args: list[str]) -> None:
             logger.log(VERBOSE, "%s...", filename)
             compress_history_file(filename, filename + ".compressed")
         except Exception as e:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             raise MKBailOut("%s" % e)
 

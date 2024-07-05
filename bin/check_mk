@@ -27,7 +27,6 @@ if not os.environ.get("OMD_SITE"):
     sys.exit(1)
 
 import cmk.utils.caching
-import cmk.utils.debug
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -40,6 +39,8 @@ import cmk.base.config as config
 import cmk.base.profiling as profiling
 import cmk.base.utils
 from cmk.base.modes import modes
+
+import cmk.ccc.debug
 
 cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.base")
@@ -142,7 +143,7 @@ except MKTerminate:
 
 except (MKGeneralException, MKBailOut) as e:
     sys.stderr.write("%s\n" % e)
-    if cmk.utils.debug.enabled():
+    if cmk.ccc.debug.enabled():
         raise
     sys.exit(3)
 

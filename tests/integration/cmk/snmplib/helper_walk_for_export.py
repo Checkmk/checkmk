@@ -11,7 +11,6 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 
-import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.version import edition, Edition
 
@@ -22,6 +21,8 @@ from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-viol
     StoredWalkSNMPBackend,
 )
 
+import cmk.ccc.debug
+
 if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
     from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=import-error,no-name-in-module,cmk-module-layer-violation
         InlineSNMPBackend,
@@ -29,7 +30,7 @@ if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
 else:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
-cmk.utils.debug.enable()
+cmk.ccc.debug.enable()
 
 logger = logging.getLogger(__name__)
 

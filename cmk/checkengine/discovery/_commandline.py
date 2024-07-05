@@ -9,7 +9,6 @@ from collections import Counter
 from collections.abc import Callable, Container, Mapping, Sequence
 
 import cmk.utils.cleanup
-import cmk.utils.debug
 from cmk.utils import tty
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.hostaddress import HostName
@@ -28,6 +27,8 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
+
+import cmk.ccc.debug
 
 from ._autochecks import AutochecksStore
 from ._discovery import DiscoveryPlugin
@@ -89,7 +90,7 @@ def commandline_discovery(
         )
 
     except Exception as e:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         section.section_error("%s" % e)
     finally:

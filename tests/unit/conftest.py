@@ -36,7 +36,6 @@ import livestatus
 
 import cmk.utils.caching
 import cmk.utils.crypto.password_hashing
-import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import redis, store, tty
@@ -53,15 +52,17 @@ from cmk.utils.livestatus_helpers.testing import (
 )
 from cmk.utils.site import omd_site
 
+import cmk.ccc.debug
+
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
 def enable_debug_fixture():
-    debug_mode = cmk.utils.debug.debug_mode
-    cmk.utils.debug.enable()
+    debug_mode = cmk.ccc.debug.debug_mode
+    cmk.ccc.debug.enable()
     yield
-    cmk.utils.debug.debug_mode = debug_mode
+    cmk.ccc.debug.debug_mode = debug_mode
 
 
 @pytest.fixture
@@ -81,10 +82,10 @@ def as_path(tmp_path: Path) -> Callable[[str], Path]:
 
 @pytest.fixture
 def disable_debug():
-    debug_mode = cmk.utils.debug.debug_mode
-    cmk.utils.debug.disable()
+    debug_mode = cmk.ccc.debug.debug_mode
+    cmk.ccc.debug.disable()
     yield
-    cmk.utils.debug.debug_mode = debug_mode
+    cmk.ccc.debug.debug_mode = debug_mode
 
 
 @pytest.fixture(autouse=True, scope="session")

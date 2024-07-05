@@ -15,9 +15,10 @@ from typing import Any, Final, Generic, Protocol, TypeVar
 
 from pydantic import BaseModel
 
-import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
+
+import cmk.ccc.debug
 
 from ._locks import acquire_lock, release_lock
 
@@ -156,7 +157,7 @@ class RealIo:
         except (MKTerminate, MKTimeout):
             raise
         except Exception as e:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             raise MKGeneralException(_('Cannot read file "%s": %s') % (self.path, e))
 

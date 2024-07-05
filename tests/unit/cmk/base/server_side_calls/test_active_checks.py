@@ -641,7 +641,7 @@ def test_test_get_active_service_data_crash(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(
-        cmk.utils.debug,
+        cmk.ccc.debug,
         "enabled",
         lambda: False,
     )
@@ -709,7 +709,7 @@ def test_test_get_active_service_data_crash_with_debug(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        cmk.utils.debug,
+        cmk.ccc.debug,
         "enabled",
         lambda: True,
     )

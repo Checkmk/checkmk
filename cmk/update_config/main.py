@@ -19,7 +19,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Literal
 
-from cmk.utils import debug, log, paths, tty
+from cmk.utils import log, paths, tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import check_mk_config_dir
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
@@ -43,6 +43,7 @@ from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
+from cmk.ccc import debug
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 
 from .registry import pre_update_action_registry, update_action_registry

@@ -12,11 +12,12 @@ from dateutil.tz import tzlocal
 import livestatus
 
 import cmk.utils.cleanup
-import cmk.utils.debug
 from cmk.utils.caching import cache_manager
 from cmk.utils.dateutils import Weekday
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.i18n import _
+
+import cmk.ccc.debug
 
 __all__ = [
     "TimeperiodName",
@@ -77,7 +78,7 @@ def check_timeperiod(timeperiod: TimeperiodName) -> bool:
         raise
 
     except Exception:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
 
         # If the query is not successful better skip this check then fail

@@ -23,7 +23,6 @@ from tests.testlib.utils import wait_until
 
 from tests.unit.import_module_hack import import_module_hack
 
-import cmk.utils.debug
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.host_storage import (
@@ -34,6 +33,8 @@ from cmk.utils.host_storage import (
 )
 from cmk.utils.store import ObjectStore, TextSerializer
 from cmk.utils.store._file import FileIo, RealIo
+
+import cmk.ccc.debug
 
 
 class FakeIo:
@@ -168,7 +169,7 @@ def test_load_data_from_not_permitted_file(
     tmp_path: Path, path_type: type[str] | type[Path]
 ) -> None:
     # Note: The code is actually a lot more expressive in debug mode.
-    cmk.utils.debug.disable()
+    cmk.ccc.debug.disable()
 
     locked_file = tmp_path / "test"
     locked_file.write_text("[1, 2]", encoding="utf-8")
@@ -183,7 +184,7 @@ def test_load_data_from_not_permitted_file(
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_load_data_from_file_dict(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
     # Note: The code is actually a lot more expressive in debug mode.
-    cmk.utils.debug.disable()
+    cmk.ccc.debug.disable()
 
     locked_file = tmp_path / "test"
     locked_file.write_bytes(repr({"1": 2, "ä": "ß"}).encode())

@@ -12,13 +12,14 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, assert_never, Literal, NamedTuple
 
-import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils import store
 from cmk.utils.caching import cache_manager
 from cmk.utils.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
+
+import cmk.ccc.debug
 
 IPLookupCacheId = tuple[HostName | HostAddress, socket.AddressFamily]
 
@@ -288,7 +289,7 @@ class IPLookupCache:
             raise
 
         except Exception:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             # TODO: Would be better to log it somewhere to make the failure transparent
 
@@ -392,7 +393,7 @@ def update_dns_cache(
             except Exception as e:
                 failed.append(host_name)
                 console.verbose(f"lookup failed: {e}")
-                if cmk.utils.debug.enabled():
+                if cmk.ccc.debug.enabled():
                     raise
                 continue
 

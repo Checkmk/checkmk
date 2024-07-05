@@ -9,7 +9,6 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Literal
 
-import cmk.utils.debug
 import cmk.utils.encoding
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -23,6 +22,7 @@ from cmk.snmplib import SNMPBackendEnum
 
 from cmk.checkengine.checking import CheckPluginName
 
+import cmk.ccc.debug
 from cmk.piggyback import get_piggyback_raw_data
 
 CrashReportStore = crash_reporting.CrashReportStore
@@ -58,7 +58,7 @@ def create_section_crash_dump(
         CrashReportStore().save(crash)
         return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
     except Exception:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         return f"{text} - failed to create a crash report: {traceback.format_exc()}"
 
@@ -106,7 +106,7 @@ def create_check_crash_dump(
         text += " (Crash-ID: %s)" % crash.ident_to_text()
         return text
     except Exception:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         return "check failed - failed to create a crash report: %s" % traceback.format_exc()
 

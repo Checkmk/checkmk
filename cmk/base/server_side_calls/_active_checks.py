@@ -8,12 +8,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils import config_warnings, password_store
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
+import cmk.ccc.debug
 from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckConfig, HostConfig
 from cmk.server_side_calls_backend.config_processing import (
@@ -149,7 +149,7 @@ class ActiveCheck:
                     f"active check plug-in is missing an argument function or a service name"
                 )
             except Exception as e:
-                if cmk.utils.debug.enabled():
+                if cmk.ccc.debug.enabled():
                     raise
                 config_warnings.warn(
                     f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
@@ -327,7 +327,7 @@ class ActiveCheck:
                 )
                 continue
             except Exception as e:
-                if cmk.utils.debug.enabled():
+                if cmk.ccc.debug.enabled():
                     raise
                 config_warnings.warn(
                     f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"

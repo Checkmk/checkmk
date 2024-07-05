@@ -51,7 +51,7 @@ def test_get_absolute_importee(
         # allow component internal imprt
         ("cmk/gui", "cmk.gui.foo", "cmk.gui.bar", True),
         # utils not ok in agent based plugins
-        ("_nevermind_", "cmk.base.plugins.agent_based.utils.foo", "cmk.utils.debug", False),
+        ("_nevermind_", "cmk.base.plugins.agent_based.utils.foo", "cmk.ccc.debug", False),
         # `checkers` in `utils` is wrong but anywhere else is OK
         ("cmk/checkers", "cmk.checkengine.snmp", "cmk.utils", True),
         ("cmk/base", "cmk.base.sources", "cmk.checkengine", True),

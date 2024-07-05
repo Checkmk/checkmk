@@ -6,11 +6,12 @@
 from collections.abc import Iterable, Sequence
 from re import Pattern
 
-import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.tags import TagID
+
+import cmk.ccc.debug
 
 # Conveniance macros for legacy tuple based host and service rules
 PHYSICAL_HOSTS = ["@physical"]  # all hosts but not clusters
@@ -91,7 +92,7 @@ def in_extraconf_hostlist(hostlist, hostname):  # pylint: disable=too-many-branc
                 if regex(hostentry).match(hostname) is not None:
                     return not negate
         except MKGeneralException:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
 
     return False

@@ -11,7 +11,6 @@ from contextlib import redirect_stdout, suppress
 from types import FrameType
 from typing import Any, NoReturn
 
-import cmk.utils.debug
 from cmk.utils import log, paths
 from cmk.utils import version as cmk_version
 from cmk.utils.exceptions import MKException, MKTimeout
@@ -21,6 +20,8 @@ from cmk.utils.plugin_loader import import_plugins
 from cmk.automations.results import ABCAutomationResult
 
 from cmk.base import check_api, config, profiling
+
+import cmk.ccc.debug
 
 
 # TODO: Inherit from MKGeneralException
@@ -63,12 +64,12 @@ class Automations:
 
         except (MKAutomationError, MKTimeout) as e:
             console.error(f"{e}", file=sys.stderr)
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             return 1
 
         except Exception as e:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             console.error(f"{e}", file=sys.stderr)
             return 2

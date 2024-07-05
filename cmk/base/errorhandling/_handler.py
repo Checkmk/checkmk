@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from typing import Final, Literal
 
-import cmk.utils.debug
 from cmk.utils.exceptions import (
     MKAgentError,
     MKFetcherError,
@@ -24,6 +23,8 @@ from cmk.snmplib import SNMPBackendEnum
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.submitters import ServiceState
+
+import cmk.ccc.debug
 
 from ._crash import create_check_crash_dump
 
@@ -98,7 +99,7 @@ def _handle_failure(
     if isinstance(exc, MKGeneralException):
         return exit_spec.get("exception", 3), f"{exc}\n"
 
-    if cmk.utils.debug.enabled():
+    if cmk.ccc.debug.enabled():
         raise exc
     return (
         exit_spec.get("exception", 3),

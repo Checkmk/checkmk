@@ -16,7 +16,6 @@ from pathlib import Path
 from typing import Literal
 
 import cmk.utils.config_path
-import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup
@@ -38,6 +37,8 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
+
+import cmk.ccc.debug
 
 CoreCommandName = str
 CoreCommand = str
@@ -280,7 +281,7 @@ def do_create_config(
             duplicates=duplicates,
         )
     except Exception as e:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
 

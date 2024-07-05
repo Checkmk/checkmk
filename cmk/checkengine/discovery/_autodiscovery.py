@@ -12,7 +12,6 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, Generic, Literal, TypeVar
 
-import cmk.utils.debug
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
@@ -33,6 +32,8 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.summarize import SummarizerFunction
+
+import cmk.ccc.debug
 
 from ._autochecks import (
     AutocheckEntry,
@@ -264,7 +265,7 @@ def automation_discovery(
         raise  # let general timeout through
 
     except Exception as e:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         results[host_name].error_text = str(e)
 

@@ -19,7 +19,6 @@ from typing import Final, Literal, NamedTuple, overload, Protocol, TypeAlias, Ty
 import livestatus
 
 import cmk.utils.cleanup
-import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -128,6 +127,7 @@ from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 from cmk.base.utils import register_sigint_handler
 
+import cmk.ccc.debug
 from cmk import piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
@@ -211,7 +211,7 @@ modes.register_general_option(
 
 
 def option_debug() -> None:
-    cmk.utils.debug.enable()
+    cmk.ccc.debug.enable()
 
 
 modes.register_general_option(
@@ -481,7 +481,7 @@ def mode_list_checks() -> None:
     all_check_manuals = {
         n: man_pages.parse_man_page(n, p)
         for n, p in man_pages.make_man_page_path_map(
-            discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+            discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
         ).items()
     }
 
@@ -684,7 +684,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         if has_errors:
             sys.exit(1)
     except Exception as e:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         raise MKBailOut("Unhandled exception: %s" % e)
 
@@ -984,7 +984,7 @@ def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
         )
     except Exception as e:
         console.error(f"Error walking {backend.hostname}: {e}", file=sys.stderr)
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
     cmk.utils.cleanup.cleanup_globals()
 
@@ -1012,7 +1012,7 @@ def _execute_walks_for_dump(
             yield walk_for_export(backend.walk(oid, context=""))
         except Exception as e:
             console.error(f"Error: {e}", file=sys.stderr)
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
 
 
@@ -1400,7 +1400,7 @@ def mode_update() -> None:
             )
     except Exception as e:
         console.error(f"Configuration Error: {e}", file=sys.stderr)
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         sys.exit(1)
 
@@ -1542,7 +1542,7 @@ def mode_man(options: Mapping[str, str], args: list[str]) -> None:
     from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
 
     man_page_path_map = man_pages.make_man_page_path_map(
-        discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+        discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
     )
     if not args:
         man_pages.print_man_page_table(man_page_path_map)
@@ -1613,7 +1613,7 @@ def mode_browse_man() -> None:
 
     man_pages.print_man_page_browser(
         man_pages.load_man_page_catalog(
-            discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+            discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
         )
     )
 
@@ -2103,7 +2103,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     else:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
 
-    on_error = OnError.RAISE if cmk.utils.debug.enabled() else OnError.WARN
+    on_error = OnError.RAISE if cmk.ccc.debug.enabled() else OnError.WARN
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     config_cache = config.get_config_cache()
     parser = CMKParser(
@@ -2602,7 +2602,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
                 section.section_success(check_result.summary)
 
         except Exception as e:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             section.section_error("%s" % e)
         finally:

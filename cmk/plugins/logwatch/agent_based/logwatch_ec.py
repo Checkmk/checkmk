@@ -23,7 +23,6 @@ from pathlib import Path
 from typing import Any, Literal, Protocol
 from urllib.parse import quote as url_quote
 
-import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
@@ -32,6 +31,7 @@ from cmk.ec.event import (  # pylint: disable=cmk-module-layer-violation
     create_event_from_syslog_message,
 )
 
+import cmk.ccc.debug  # pylint: disable=cmk-module-layer-violation
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -397,7 +397,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
             )
 
     except Exception as exc:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         yield Result(
             state=State.CRIT,
@@ -643,7 +643,7 @@ class MessageForwarder:
                 spool_file_path.write_text(repr(message_chunk))
                 result.num_spooled += len(message_chunk)
             except Exception:
-                if cmk.utils.debug.enabled():
+                if cmk.ccc.debug.enabled():
                     raise
 
                 if num_already_spooled == 0:

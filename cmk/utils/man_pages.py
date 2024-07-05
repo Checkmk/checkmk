@@ -22,11 +22,12 @@ from io import StringIO
 from pathlib import Path
 from typing import Final
 
-import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
+
+import cmk.ccc.debug
 
 # remove with 2.4 / after 2.3 is released
 _LEGACY_MAN_PAGE_PATHS = (
@@ -528,7 +529,7 @@ def parse_man_page(name: str, path: Path) -> ManPage:
             cluster=parsed.get("cluster"),
         )
     except (KeyError, MKGeneralException) as msg:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         return ManPage.fallback(
             name=name,

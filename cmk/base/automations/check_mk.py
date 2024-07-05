@@ -29,7 +29,6 @@ from typing import Any
 
 import livestatus
 
-import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup, log, man_pages, store, tty, version
@@ -185,6 +184,7 @@ from cmk.base.server_side_calls import (
 )
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 
+import cmk.ccc.debug
 import cmk.piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
@@ -229,7 +229,7 @@ def _schedule_discovery_check(host_name: HostName) -> None:
         s.connect(cmk.utils.paths.livestatus_unix_socket)
         s.send(f"COMMAND [{now}] {command}\n".encode())
     except Exception:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
 
 
@@ -1817,7 +1817,7 @@ def _execute_silently(
             raise MKAutomationError(str(e))
 
         except Exception as e:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             raise MKAutomationError(str(e))
 
@@ -1878,7 +1878,7 @@ class AutomationGetCheckInformation(Automation):
 
     def execute(self, args: list[str]) -> GetCheckInformationResult:
         man_page_path_map = man_pages.make_man_page_path_map(
-            discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+            discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
         )
 
         plugin_infos: dict[str, dict[str, Any]] = {}
@@ -1911,7 +1911,7 @@ class AutomationGetCheckInformation(Automation):
         try:
             return cmk.utils.man_pages.get_title_from_man_page(manfile)
         except Exception as e:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             raise MKAutomationError(f"Failed to parse man page '{plugin_name}': {e}")
 
@@ -2210,7 +2210,7 @@ class AutomationDiagHost(Automation):
             )
 
         except Exception as e:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             return DiagHostResult(
                 1,
@@ -2642,7 +2642,7 @@ class AutomationActiveCheck(Automation):
             return status, output
 
         except Exception as e:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             return 3, "UNKNOWN - Cannot execute command: %s" % e
 
@@ -2840,7 +2840,7 @@ class AutomationGetAgentOutput(Automation):
                             raw_oid_value = f"{oid} {value}\n"
                             lines.append(raw_oid_value.encode())
                     except Exception as e:
-                        if cmk.utils.debug.enabled():
+                        if cmk.ccc.debug.enabled():
                             raise
                         success = False
                         output += f"OID '{oid}': {e}\n"
@@ -2849,7 +2849,7 @@ class AutomationGetAgentOutput(Automation):
         except Exception as e:
             success = False
             output = f"Failed to fetch data from {hostname}: {e}\n"
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
 
         return GetAgentOutputResult(

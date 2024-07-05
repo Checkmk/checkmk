@@ -6,12 +6,12 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-import cmk.utils.debug
 from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.log import logger
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
+import cmk.ccc.debug
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes, graphs, metrics, perfometers, translations
 
@@ -41,7 +41,7 @@ def load_graphing_plugins() -> (
     ] = discover_plugins(
         PluginGroup.GRAPHING,
         entry_point_prefixes(),
-        raise_errors=cmk.utils.debug.enabled(),
+        raise_errors=cmk.ccc.debug.enabled(),
     )
     for exc in discovered_plugins.errors:
         logger.error(exc)

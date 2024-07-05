@@ -13,7 +13,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, assert_never, TypeVar
 
-import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.hostaddress import HostName
@@ -34,6 +33,7 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.validatedstr import ValidatedString
 
+import cmk.ccc.debug
 from cmk.agent_based.v1 import Attributes, TableRow
 
 from .checkresults import ActiveCheckResult
@@ -353,8 +353,8 @@ def _collect_inventory_plugin_items(
                     for item in inventory_plugin.function(**kwargs)
                 ]
             except Exception as exception:
-                # TODO(ml): What is the `if cmk.utils.debug.enabled()` actually good for?
-                if cmk.utils.debug.enabled():
+                # TODO(ml): What is the `if cmk.ccc.debug.enabled()` actually good for?
+                if cmk.ccc.debug.enabled():
                     raise
 
                 console.warning(

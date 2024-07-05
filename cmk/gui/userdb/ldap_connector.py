@@ -55,7 +55,6 @@ from cmk.utils import password_store, store
 from cmk.utils.crypto.password import Password
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
 from cmk.gui import hooks, log
@@ -86,6 +85,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.groups_io import load_contact_group_information
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 from ._connections import (
     active_connections,

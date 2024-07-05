@@ -26,7 +26,6 @@ from livestatus import (
 )
 
 from cmk.utils import paths, version
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config, prepare_raw_site_config
@@ -40,6 +39,8 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import SiteManagementFactory
+
+from cmk.ccc.site import omd_site
 
 
 class SiteDoesNotExistException(Exception): ...

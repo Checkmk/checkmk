@@ -21,7 +21,6 @@ from cmk.utils.html import get_html_state_marker
 from cmk.utils.labels import HostLabelValueDict, Labels
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.servicename import Item
-from cmk.utils.site import omd_site
 from cmk.utils.statename import short_service_state_name
 from cmk.utils.version import __version__, Version
 
@@ -95,6 +94,7 @@ from cmk.gui.watolib.services import (
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_repr
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 from ._status_links import make_host_status_link
 

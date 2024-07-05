@@ -13,7 +13,6 @@ from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfiguratio
 
 import cmk.utils.version as cmk_version
 from cmk.utils import paths, store
-from cmk.utils.site import omd_site
 
 import cmk.gui.sites
 import cmk.gui.watolib.activate_changes
@@ -60,6 +59,8 @@ from cmk.gui.watolib.config_sync import create_distributed_wato_files
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
+
+from cmk.ccc.site import omd_site
 
 
 class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):

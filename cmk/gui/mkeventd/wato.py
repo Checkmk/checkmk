@@ -38,7 +38,6 @@ import cmk.utils.translations
 from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.site import omd_site
 from cmk.utils.version import edition, Edition
 
 # It's OK to import centralized config load logic
@@ -173,6 +172,7 @@ from cmk.gui.watolib.utils import site_neutral_path
 
 import cmk.mkp_tool
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole

@@ -66,7 +66,6 @@ from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
 from cmk.utils.rulesets.ruleset_matcher import LabelManager, RulesetMatcher, RulesetName, RuleSpec
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.site import omd_site
 from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 from cmk.utils.timeperiod import TimeperiodName
@@ -127,6 +126,7 @@ from cmk.base.sources import SNMPFetcherConfig
 import cmk.ccc.debug
 from cmk import piggyback
 from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
+from cmk.ccc.site import omd_site
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 

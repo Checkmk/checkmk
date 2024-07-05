@@ -205,7 +205,7 @@ def test_diagnostics_element_environment_content(
         for key in environment_vars:
             assert content[key] == environment_vars[key]
 
-        assert content["OMD_SITE"] == cmk.utils.site.omd_site()
+        assert content["OMD_SITE"] == cmk.ccc.site.omd_site()
 
 
 def test_diagnostics_element_filesize() -> None:

@@ -5,7 +5,6 @@
 
 
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.utils.site import omd_site
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -15,6 +14,8 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, SerializedSettings
+
+from cmk.ccc.site import omd_site
 
 from .livestatus import execute_command
 

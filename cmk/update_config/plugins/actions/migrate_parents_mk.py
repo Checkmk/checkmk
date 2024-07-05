@@ -14,7 +14,6 @@ from livestatus import SiteId
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.site import omd_site
 
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext
@@ -22,6 +21,7 @@ from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 
+from cmk.ccc.site import omd_site
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

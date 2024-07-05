@@ -27,10 +27,10 @@ from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
 from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
-from cmk.utils.site import omd_site
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches, TimeperiodSpecs
 
 import cmk.ccc.debug
+from cmk.ccc.site import omd_site
 
 ContactList = list  # TODO Improve this
 

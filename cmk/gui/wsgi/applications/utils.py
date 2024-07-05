@@ -15,7 +15,6 @@ import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
 import cmk.utils.version as cmk_version
-from cmk.utils.site import url_prefix
 
 import cmk.gui.auth
 import cmk.gui.session
@@ -31,6 +30,8 @@ from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.wsgi.type_defs import WSGIResponse
+
+from cmk.ccc.site import url_prefix
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.

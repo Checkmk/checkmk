@@ -27,7 +27,6 @@ from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.paths import livestatus_unix_socket
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 from cmk.utils.version import __version__, Edition, edition, Version, VersionsIncompatible
 
@@ -44,6 +43,8 @@ from cmk.gui.utils.compatibility import (
     LicensingCompatible,
     make_incompatible_info,
 )
+
+from cmk.ccc.site import omd_site
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |

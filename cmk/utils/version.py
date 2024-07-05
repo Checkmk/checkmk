@@ -23,7 +23,7 @@ from functools import cache
 from pathlib import Path
 from typing import Any, Final, NamedTuple, Self
 
-from cmk.utils.site import get_omd_config
+from cmk.ccc.site import get_omd_config
 
 
 class _EditionValue(NamedTuple):

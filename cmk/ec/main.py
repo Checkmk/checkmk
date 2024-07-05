@@ -44,10 +44,10 @@ from cmk.utils import log, store
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE
-from cmk.utils.site import omd_site
 from cmk.utils.translations import translate_hostname
 
 from cmk.ccc.exceptions import MKException
+from cmk.ccc.site import omd_site
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
 from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule

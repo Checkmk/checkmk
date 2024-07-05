@@ -18,7 +18,6 @@ from livestatus import SiteConfiguration, SiteConfigurations
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils import paths
-from cmk.utils.site import omd_site, url_prefix
 
 from cmk.gui import log, utils
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
@@ -26,6 +25,8 @@ from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.config.base import CREConfig  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.type_defs import Key, RoleName
+
+from cmk.ccc.site import omd_site, url_prefix
 
 if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
     from cmk.gui.cee.plugins.config.cee import (  # pylint: disable=no-name-in-module,cmk-module-layer-violation

@@ -12,7 +12,6 @@ from typing import Any, overload, TypedDict
 import cmk.utils.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.site import omd_site
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms, weblib
@@ -102,6 +101,7 @@ from cmk.bi.packs import BIAggregationPack, BIPackConfig
 from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.type_defs import AggrConfigDict
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 from ._packs import get_cached_bi_packs
 from ._valuespecs import (

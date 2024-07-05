@@ -10,7 +10,6 @@ from pathlib import Path
 
 from cmk.utils import store
 from cmk.utils.hostaddress import HostName
-from cmk.utils.site import omd_site
 
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -40,6 +39,7 @@ from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 
 def register(

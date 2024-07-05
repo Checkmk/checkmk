@@ -19,7 +19,6 @@ from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
 from cmk.gui.breadcrumb import Breadcrumb
@@ -49,6 +48,8 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     TextInput,
 )
+
+from cmk.ccc.site import omd_site
 
 
 class KeypairStore:

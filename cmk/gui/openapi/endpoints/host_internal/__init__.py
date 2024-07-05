@@ -17,7 +17,6 @@ from cmk.utils.agent_registration import (
     HostAgentConnectionMode,
 )
 from cmk.utils.hostaddress import HostName
-from cmk.utils.site import omd_site
 
 from cmk.gui.agent_registration import PermissionSectionAgentRegistration
 from cmk.gui.exceptions import MKAuthException
@@ -36,6 +35,8 @@ from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import Host
+
+from cmk.ccc.site import omd_site
 
 permission_registry.register(
     Permission(

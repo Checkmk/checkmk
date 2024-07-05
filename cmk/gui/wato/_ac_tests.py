@@ -18,7 +18,6 @@ from livestatus import LocalConnection, SiteConfiguration, SiteId
 from cmk.utils.crypto.password import Password
 from cmk.utils.paths import local_checks_dir, local_inventory_dir
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
 import cmk.gui.userdb.ldap_connector as ldap
@@ -51,6 +50,7 @@ from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 from cmk.gui.watolib.sites import SiteManagementFactory
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.

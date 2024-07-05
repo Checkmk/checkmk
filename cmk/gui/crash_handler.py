@@ -9,7 +9,6 @@ from typing import Self
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.crash_reporting import ABCCrashReport, CrashReportRegistry, CrashReportStore
-from cmk.utils.site import omd_site
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.header import make_header
@@ -21,6 +20,8 @@ from cmk.gui.logged_in import user
 from cmk.gui.utils import escaping
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, requested_file_name
+
+from cmk.ccc.site import omd_site
 
 
 def register(crash_report_registry: CrashReportRegistry) -> None:

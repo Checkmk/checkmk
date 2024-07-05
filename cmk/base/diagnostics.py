@@ -30,7 +30,7 @@ import livestatus
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils import site, store, tty
+from cmk.utils import store, tty
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.diagnostics import (
     CheckmkFileEncryption,
@@ -58,11 +58,12 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
-from cmk.utils.site import omd_site
 from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree
 from cmk.utils.user import UserId
 
+from cmk.ccc import site
 from cmk.ccc.i18n import _
+from cmk.ccc.site import omd_site
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CEE,
@@ -288,7 +289,7 @@ class DiagnosticsDump:
 @cache
 def get_omd_config() -> site.OMDConfig:
     # Useless function, useless cache.  See comment
-    # in cmk.utils.site
+    # in cmk.ccc.site
     return site.get_omd_config(cmk.utils.paths.omd_root)
 
 

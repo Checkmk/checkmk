@@ -16,11 +16,12 @@ from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
-from cmk.utils.site import omd_site
 
 from cmk.gui import sites
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import application_and_request_context
+
+from cmk.ccc.site import omd_site
 
 
 @contextlib.contextmanager

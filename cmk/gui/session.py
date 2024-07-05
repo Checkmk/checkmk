@@ -15,7 +15,6 @@ from flask import Flask
 from flask.sessions import SessionInterface, SessionMixin
 
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
 import cmk.gui.userdb.session  # NOQA  # pylint: disable=unused-import
@@ -32,6 +31,7 @@ from cmk.gui.utils.security_log_events import AuthenticationSuccessEvent
 from cmk.gui.wsgi.utils import dict_property
 
 from cmk.ccc.exceptions import MKException
+from cmk.ccc.site import omd_site
 
 
 class CheckmkFileBasedSession(dict, SessionMixin):

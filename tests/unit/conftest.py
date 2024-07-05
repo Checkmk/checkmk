@@ -50,9 +50,9 @@ from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
-from cmk.utils.site import omd_site
 
 import cmk.ccc.debug
+from cmk.ccc.site import omd_site
 
 logger = logging.getLogger(__name__)
 

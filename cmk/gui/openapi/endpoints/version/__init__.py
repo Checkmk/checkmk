@@ -11,13 +11,14 @@ import sys
 
 import cmk.utils.version as cmk_version
 from cmk.utils import paths
-from cmk.utils.site import omd_site
 
 from cmk.gui.http import request
 from cmk.gui.openapi.endpoints.version.response_schemas import InstalledVersions
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import serve_json
+
+from cmk.ccc.site import omd_site
 
 
 @Endpoint(

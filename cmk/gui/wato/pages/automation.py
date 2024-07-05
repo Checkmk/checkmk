@@ -15,7 +15,6 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
@@ -40,6 +39,7 @@ from cmk.gui.watolib.automations import (
 )
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 
 def register(page_registry: PageRegistry) -> None:

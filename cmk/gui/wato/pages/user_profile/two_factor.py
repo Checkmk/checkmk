@@ -30,7 +30,6 @@ from fido2.webauthn import (
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.site import omd_site
 from cmk.utils.totp import TOTP, TotpVersion
 from cmk.utils.user import UserId
 
@@ -91,6 +90,7 @@ from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.mode import redirect
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 from .abstract_page import ABCUserProfilePage
 from .page_menu import page_menu_dropdown_user_related

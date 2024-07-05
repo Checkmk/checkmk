@@ -13,14 +13,14 @@ from typing import Any
 import requests
 import urllib3
 
-import cmk.utils.site
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.password_store import extract
 from cmk.utils.paths import omd_root
 from cmk.utils.regex import regex
-from cmk.utils.site import omd_site
 
+import cmk.ccc.site
 from cmk.ccc.exceptions import MKException
+from cmk.ccc.site import omd_site
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -159,7 +159,7 @@ class AggregationRawdataGenerator:
 
         if site_config == "local":
             self._site_url = "http://localhost:%d/%s" % (
-                cmk.utils.site.get_apache_port(omd_root),
+                cmk.ccc.site.get_apache_port(omd_root),
                 omd_site(),
             )
         else:

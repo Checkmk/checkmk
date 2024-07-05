@@ -409,7 +409,6 @@ from werkzeug.utils import import_string
 from livestatus import SiteId
 
 from cmk.utils import store
-from cmk.utils.site import omd_site
 
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
@@ -453,6 +452,8 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.script_helpers import gui_context
+
+from cmk.ccc.site import omd_site
 
 Ident = tuple[str, str]
 __version__ = "1.0"

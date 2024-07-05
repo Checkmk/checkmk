@@ -11,8 +11,6 @@ from urllib.parse import quote
 
 from werkzeug.datastructures import ETags
 
-from cmk.utils.site import omd_site
-
 from cmk.gui.config import active_config
 from cmk.gui.http import HTTPMethod, request, Response
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
@@ -30,6 +28,8 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     ResultType,
 )
 from cmk.gui.openapi.utils import EXT, ProblemException
+
+from cmk.ccc.site import omd_site
 
 ETagHash = NewType("ETagHash", str)
 

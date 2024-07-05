@@ -10,9 +10,10 @@ import os
 from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.paths
-from cmk.utils.site import omd_site
 
 from cmk.gui.config import active_config, Config
+
+from cmk.ccc.site import omd_site
 
 
 def sitenames() -> list[SiteId]:

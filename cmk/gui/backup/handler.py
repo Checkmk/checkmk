@@ -51,7 +51,6 @@ from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.paths import omd_root
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.schedule import next_scheduled_time
-from cmk.utils.site import omd_site
 
 from cmk.gui import forms, key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
@@ -104,6 +103,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import IndividualOrStoredPassword
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 
 def register() -> None:

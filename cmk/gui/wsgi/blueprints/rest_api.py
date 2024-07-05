@@ -12,12 +12,13 @@ from flask.blueprints import BlueprintSetupState
 
 from cmk.utils import paths, store
 from cmk.utils.paths import omd_root
-from cmk.utils.site import get_omd_config
 
 from cmk.gui import hooks, main_modules, sites
 from cmk.gui.wsgi.applications import CheckmkRESTAPI
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.gui.wsgi.middleware import OverrideRequestMethod
+
+from cmk.ccc.site import get_omd_config
 
 rest_api = Blueprint(
     "rest-api",

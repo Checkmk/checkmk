@@ -16,7 +16,6 @@ from cmk.utils.crypto.password import Password
 from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.utils.licensing.registry import get_remaining_trial_time_rounded
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.site import omd_site, url_prefix
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
@@ -45,6 +44,8 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
 from cmk.gui.utils.user_errors import user_errors
+
+from cmk.ccc.site import omd_site, url_prefix
 
 
 def register(page_registry: PageRegistry) -> None:

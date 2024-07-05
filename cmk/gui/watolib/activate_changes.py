@@ -45,7 +45,6 @@ from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 from cmk.utils.visuals import invalidate_visuals_cache
 
@@ -114,6 +113,7 @@ from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk import mkp_tool
 from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 
 # TODO: Make private

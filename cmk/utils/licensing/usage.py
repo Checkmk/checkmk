@@ -38,7 +38,8 @@ from cmk.utils.licensing.helper import (
     rot47,
 )
 from cmk.utils.paths import licensing_dir, omd_root
-from cmk.utils.site import omd_site
+
+from cmk.ccc.site import omd_site
 
 CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}
 

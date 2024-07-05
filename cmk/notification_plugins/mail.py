@@ -25,12 +25,12 @@ from typing import Literal, NamedTuple, NoReturn
 from urllib.parse import quote
 from urllib.request import urlopen
 
-from cmk.utils import site
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.paths import omd_root
 
 from cmk.notification_plugins import utils
 
+from cmk.ccc import site
 from cmk.ccc.exceptions import MKException
 
 

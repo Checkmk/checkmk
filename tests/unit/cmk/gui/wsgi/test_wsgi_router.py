@@ -16,8 +16,9 @@ from werkzeug.test import create_environ
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
+
+from cmk.ccc.site import omd_site
 
 
 def search_up(search_path: str, start_path: str) -> str:

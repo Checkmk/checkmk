@@ -26,7 +26,6 @@ import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import is_free
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
 import cmk.gui.sites
@@ -114,6 +113,7 @@ from cmk.gui.watolib.sites import (
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:

@@ -39,7 +39,6 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
     serialize_wato_parameters,
 )
-from cmk.utils.site import omd_site
 
 from cmk.automations.results import CreateDiagnosticsDumpResult
 
@@ -84,6 +83,8 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCom
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+
+from cmk.ccc.site import omd_site
 
 _CHECKMK_FILES_NOTE = _(
     "<br>Note: Some files may contain highly sensitive data like"

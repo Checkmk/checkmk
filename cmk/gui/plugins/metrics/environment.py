@@ -38,12 +38,6 @@ metric_info["pressure"] = {
     "color": "#ff6234",
 }
 
-metric_info["pressure_pa"] = {
-    "title": _("Pressure"),
-    "unit": "pa",
-    "color": "#ff6234",
-}
-
 metric_info["parts_per_million"] = {
     "color": "42/a",
     "title": _("Parts per Million"),

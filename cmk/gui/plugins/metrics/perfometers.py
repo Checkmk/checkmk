@@ -175,15 +175,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "pressure_pa",
-        "half_value": 10,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "cifs_share_users",
         "half_value": 10,
         "exponent": 2,

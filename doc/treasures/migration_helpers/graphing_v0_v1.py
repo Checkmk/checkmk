@@ -1583,10 +1583,26 @@ def _parse_legacy_graph_infos(
 
         if lower is not None and upper is not None:
             yield graphs.Bidirectional(
-                name=f"{lower.name}_{upper.name}",
+                name=lower.name,
                 title=Title(str(info["title"])),
-                lower=lower,
-                upper=upper,
+                lower=graphs.Graph(
+                    name=f"{lower.name}_lower",
+                    title=lower.title,
+                    minimal_range=lower.minimal_range,
+                    compound_lines=lower.compound_lines,
+                    simple_lines=lower.simple_lines,
+                    optional=lower.optional,
+                    conflicting=lower.conflicting,
+                ),
+                upper=graphs.Graph(
+                    name=f"{upper.name}_upper",
+                    title=upper.title,
+                    minimal_range=upper.minimal_range,
+                    compound_lines=upper.compound_lines,
+                    simple_lines=upper.simple_lines,
+                    optional=upper.optional,
+                    conflicting=upper.conflicting,
+                ),
             )
         elif lower is not None and upper is None:
             yield lower

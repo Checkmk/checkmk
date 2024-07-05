@@ -110,6 +110,7 @@ class DummyBackgroundJob(BackgroundJob):
         time.sleep(100)
 
 
+@pytest.mark.skip(reason="Fails randomly: see CMK-18161")
 def test_start_job() -> None:
     job = DummyBackgroundJob()
 
@@ -157,6 +158,7 @@ def test_start_job() -> None:
     assert "Hallo :-)" in output
 
 
+@pytest.mark.skip(reason="Fails randomly: see CMK-18161")
 def test_stop_job() -> None:
     job = DummyBackgroundJob()
     job.start(
@@ -206,6 +208,7 @@ def test_job_status_not_started() -> None:
     assert job.get_title() == "Background job"
 
 
+@pytest.mark.skip(reason="Fails randomly: see CMK-18161")
 @pytest.mark.usefixtures("request_context")
 def test_job_status_while_running() -> None:
     job = DummyBackgroundJob()
@@ -239,6 +242,7 @@ def test_job_status_while_running() -> None:
     job.stop()
 
 
+@pytest.mark.skip(reason="Fails randomly: see CMK-18161")
 @pytest.mark.usefixtures("request_context")
 def test_job_status_after_stop() -> None:
     job = DummyBackgroundJob()

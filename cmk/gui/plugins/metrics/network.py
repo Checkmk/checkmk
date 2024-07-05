@@ -33,18 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["edge_udp_packets_dropped"] = {
-    "title": _("A/V Edge - UDP packets dropped"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["edge_tcp_packets_dropped"] = {
-    "title": _("A/V Edge - TCP packets dropped"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
 metric_info["xmpp_failed_outbound_streams"] = {
     "title": _("XmppFederationProxy - Failed outbound stream establishes"),
     "unit": "1/s",
@@ -347,14 +335,6 @@ graph_info["packet_loss"] = {
     "scalars": [
         "pl:warn",
         "pl:crit",
-    ],
-}
-
-graph_info["packets_dropped"] = {
-    "title": _("Packets dropped"),
-    "metrics": [
-        ("edge_udp_packets_dropped", "line"),
-        ("edge_tcp_packets_dropped", "line"),
     ],
 }
 

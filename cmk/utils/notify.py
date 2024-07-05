@@ -113,13 +113,13 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
 
 def notification_progress_message(
     plugin: NotificationPluginName,
-    context: NotificationContext,
+    contact: str,
+    hostname: str,
+    service: str | None,
     exit_code: NotificationResultCode,
     output: str,
 ) -> str:
-    contact = context["CONTACTNAME"]
-    hostname = context["HOSTNAME"]
-    if service := context.get("SERVICEDESC"):
+    if service:
         what = "SERVICE NOTIFICATION PROGRESS"
         spec = f"{hostname};{service}"
     else:
@@ -138,13 +138,13 @@ def notification_progress_message(
 
 def notification_result_message(
     plugin: NotificationPluginName,
-    context: NotificationContext,
+    contact: str,
+    hostname: str,
+    service: str | None,
     exit_code: NotificationResultCode,
     output: list[str],
 ) -> str:
-    contact = context["CONTACTNAME"]
-    hostname = context["HOSTNAME"]
-    if service := context.get("SERVICEDESC"):
+    if service:
         what = "SERVICE NOTIFICATION RESULT"
         spec = f"{hostname};{service}"
     else:

@@ -969,10 +969,12 @@ def _process_notifications(
                 logger.exception("    ERROR:")
                 log_to_history(
                     notification_result_message(
-                        NotificationPluginName(plugin_name),
-                        NotificationContext(plugin_context),
-                        NotificationResultCode(2),
-                        [str(e)],
+                        plugin=NotificationPluginName(plugin_name),
+                        contact=plugin_context["CONTACTNAME"],
+                        hostname=plugin_context["HOSTNAME"],
+                        service=plugin_context.get("SERVICEDESC"),
+                        exit_code=NotificationResultCode(2),
+                        output=[str(e)],
                     )
                 )
 
@@ -1815,10 +1817,12 @@ def call_notification_script(
     if not is_spoolfile:
         log_to_history(
             notification_result_message(
-                NotificationPluginName(plugin_name),
-                NotificationContext(plugin_context),
-                NotificationResultCode(exitcode),
-                output_lines,
+                plugin=NotificationPluginName(plugin_name),
+                contact=plugin_context["CONTACTNAME"],
+                hostname=plugin_context["HOSTNAME"],
+                service=plugin_context.get("SERVICEDESC"),
+                exit_code=NotificationResultCode(exitcode),
+                output=output_lines,
             )
         )
 
@@ -2330,7 +2334,14 @@ def notify_bulk(
 
         for context in bulk_context:
             log_to_history(
-                notification_result_message(plugin_text, context, exitcode, output_lines)
+                notification_result_message(
+                    plugin=plugin_text,
+                    contact=context["CONTACTNAME"],
+                    hostname=context["HOSTNAME"],
+                    service=context.get("SERVICEDESC"),
+                    exit_code=exitcode,
+                    output=output_lines,
+                )
             )
     else:
         logger.info("No valid notification file left. Skipping this bulk.")

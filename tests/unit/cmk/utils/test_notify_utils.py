@@ -40,8 +40,7 @@ def test_notification_result_message() -> None:
     plugin = notify.NotificationPluginName("bulk asciimail")
     exit_code = notify.NotificationResultCode(0)
     output: list[str] = []
-    context = notify.NotificationContext({"CONTACTNAME": "harri", "HOSTNAME": "test"})
-    actual = notify.notification_result_message(plugin, context, exit_code, output)
+    actual = notify.notification_result_message(plugin, "harri", "test", None, exit_code, output)
     expected = "{}: {};{};{};{};{};{}".format(
         "HOST NOTIFICATION RESULT",
         "harri",

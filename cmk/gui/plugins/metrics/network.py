@@ -33,24 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["wlan_physical_errors"] = {
-    "title": "WLAN physical errors",
-    "unit": "1/s",
-    "color": "14/a",
-}
-
-metric_info["wlan_resets"] = {
-    "title": "WLAN reset operations",
-    "unit": "1/s",
-    "color": "21/a",
-}
-
-metric_info["wlan_retries"] = {
-    "title": "WLAN transmission retries",
-    "unit": "1/s",
-    "color": "24/a",
-}
-
 metric_info["fw_connections_active"] = {
     "title": _("Active connections"),
     "unit": "count",
@@ -551,15 +533,6 @@ graph_info["traffic"] = {
         ("if_in_octets", "area"),
         ("if_out_non_unicast_octets", "-area"),
         ("if_out_unicast_octets", "-stack"),
-    ],
-}
-
-graph_info["wlan_errors"] = {
-    "title": _("WLAN errors, reset operations and transmission retries"),
-    "metrics": [
-        ("wlan_physical_errors", "area"),
-        ("wlan_resets", "stack"),
-        ("wlan_retries", "stack"),
     ],
 }
 

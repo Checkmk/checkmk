@@ -163,10 +163,13 @@ def test_create_graph_recipe_from_template() -> None:
         graph_template, translated_metrics, lq_row, specification
     ) == GraphRecipe(
         title="Used space",
+        unit="IECNotation_B_AutoPrecision_2",
+        explicit_vertical_range=MinimalVerticalRange(type="minimal", min=0.0, max=None),
+        horizontal_rules=[],
+        omit_zero_metrics=False,
+        consolidation_function="max",
         metrics=[
             GraphMetric(
-                unit="bytes",
-                color="#00ffc6",
                 title="Used space",
                 line_type="area",
                 operation=MetricOpRRDSource(
@@ -175,13 +178,13 @@ def test_create_graph_recipe_from_template() -> None:
                     service_name="",
                     metric_name="_",
                     consolidation_func_name="max",
-                    scale=1048576,
+                    scale=1048576.0,
                 ),
+                unit="IECNotation_B_AutoPrecision_2",
+                color="#1e90ff",
                 visible=True,
             ),
             GraphMetric(
-                unit="bytes",
-                color="#e3fff9",
                 title="Free space",
                 line_type="stack",
                 operation=MetricOpOperator(
@@ -193,7 +196,7 @@ def test_create_graph_recipe_from_template() -> None:
                             service_name="",
                             metric_name="fs_size",
                             consolidation_func_name="max",
-                            scale=1048576,
+                            scale=1048576.0,
                         ),
                         MetricOpRRDSource(
                             site_id=SiteId(""),
@@ -201,15 +204,15 @@ def test_create_graph_recipe_from_template() -> None:
                             service_name="",
                             metric_name="_",
                             consolidation_func_name="max",
-                            scale=1048576,
+                            scale=1048576.0,
                         ),
                     ],
                 ),
+                unit="IECNotation_B_AutoPrecision_2",
+                color="#e3fff9",
                 visible=True,
             ),
             GraphMetric(
-                unit="bytes",
-                color="#006040",
                 title="Total size",
                 line_type="line",
                 operation=MetricOpRRDSource(
@@ -218,20 +221,25 @@ def test_create_graph_recipe_from_template() -> None:
                     service_name="",
                     metric_name="fs_size",
                     consolidation_func_name="max",
-                    scale=1048576,
+                    scale=1048576.0,
                 ),
+                unit="IECNotation_B_AutoPrecision_2",
+                color="#37fa37",
                 visible=True,
             ),
         ],
-        unit="bytes",
-        explicit_vertical_range=MinimalVerticalRange(
-            min=0.0,
-            max=None,
+        additional_html=None,
+        render_options={},
+        data_range=None,
+        mark_requested_end_time=False,
+        specification=TemplateGraphSpecification(
+            site=SiteId("Site"),
+            host_name=HostName("Host-Name"),
+            service_description="Service name",
+            graph_index=None,
+            graph_id=None,
+            destination=None,
         ),
-        horizontal_rules=[],
-        omit_zero_metrics=False,
-        consolidation_function="max",
-        specification=specification,
     )
 
 

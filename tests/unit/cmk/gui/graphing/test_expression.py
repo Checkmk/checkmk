@@ -97,20 +97,6 @@ def test_evaluate_cpu_utilization(
             "#37fa37",
             id="already_migrated-warn, crit, min, max",
         ),
-        pytest.param(
-            [PerfDataTuple(n, n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]],
-            "check_mk-df",
-            "fs_size,fs_used,-#e3fff9",
-            Difference(
-                minuend=Metric(name="fs_size"),
-                subtrahend=Metric(name="fs_used"),
-                explicit_color="#e3fff9",
-            ),
-            6291456,
-            "bytes",
-            "#e3fff9",
-            id="None None None None",
-        ),
         # This is a terrible metric from Nagios plug-ins. Test is for survival instead of
         # correctness The unit "percent" is lost on the way. Fixing this would imply also
         # figuring out how to represent graphs for active-icmp check when host has multiple
@@ -334,7 +320,7 @@ def test_evaluate_cpu_utilization(
         ),
     ],
 )
-def test_parse_and_evaluate(
+def test_parse_and_evaluate_1(
     perf_data: Perfdata,
     check_command: str,
     raw_expression: str,
@@ -349,6 +335,43 @@ def test_parse_and_evaluate(
     assert metric_expression.evaluate(translated_metrics) == MetricExpressionResult(
         value, unit_info[unit_name], color
     )
+
+
+@pytest.mark.parametrize(
+    "perf_data, check_command, raw_expression, expected_metric_expression, value, unit_name, color",
+    [
+        pytest.param(
+            [PerfDataTuple(n, n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]],
+            "check_mk-df",
+            "fs_size,fs_used,-#e3fff9",
+            Difference(
+                minuend=Metric(name="fs_size"),
+                subtrahend=Metric(name="fs_used"),
+                explicit_color="#e3fff9",
+            ),
+            6291456,
+            "IECNotation_B_AutoPrecision_2",
+            "#e3fff9",
+            id="None None None None",
+        ),
+    ],
+)
+def test_parse_and_evaluate_2(
+    perf_data: Perfdata,
+    check_command: str,
+    raw_expression: str,
+    expected_metric_expression: MetricExpression,
+    value: float,
+    unit_name: str,
+    color: str,
+) -> None:
+    translated_metrics = translate_metrics(perf_data, check_command)
+    metric_expression = parse_expression(raw_expression, translated_metrics)
+    assert metric_expression == expected_metric_expression
+    result = metric_expression.evaluate(translated_metrics)
+    assert result.value == value
+    assert result.unit_info["id"] == unit_name
+    assert result.color == color
 
 
 @pytest.mark.parametrize(

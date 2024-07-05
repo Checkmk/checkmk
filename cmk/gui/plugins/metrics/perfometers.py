@@ -468,14 +468,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["running_sessions"],
-        "total": "total_sessions",
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "connections",
         "half_value": 50,
@@ -529,15 +521,6 @@ perfometer_info.append(
                 "exponent": 2,
             },
         ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "running_sessions",
-        "half_value": 10,
-        "exponent": 2,
     }
 )
 

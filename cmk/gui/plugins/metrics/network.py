@@ -33,18 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["total_sessions"] = {
-    "title": _("Total sessions"),
-    "unit": "count",
-    "color": "#94b65a",
-}
-
-metric_info["running_sessions"] = {
-    "title": _("Running sessions"),
-    "unit": "count",
-    "color": "42/a",
-}
-
 metric_info["active_sessions"] = {
     "title": _("Active sessions"),
     "unit": "count",
@@ -614,14 +602,6 @@ graph_info["time_to_connect"] = {
     "title": _("Time to connect"),
     "metrics": [
         ("connection_time", "area"),
-    ],
-}
-
-graph_info["number_of_total_and_running_sessions"] = {
-    "title": _("Number of total and running sessions"),
-    "metrics": [
-        ("running_sessions", "line"),
-        ("total_sessions", "line"),
     ],
 }
 

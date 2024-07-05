@@ -33,24 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["total_modems"] = {
-    "title": _("Total number of modems"),
-    "unit": "count",
-    "color": "12/a",
-}
-
-metric_info["active_modems"] = {
-    "title": _("Active modems"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["registered_modems"] = {
-    "title": _("Registered modems"),
-    "unit": "count",
-    "color": "16/a",
-}
-
 metric_info["channel_utilization_24ghz"] = {
     "title": _("Channel utilization for 2,4GHz band"),
     "unit": "%",
@@ -492,15 +474,6 @@ graph_info["time_to_connect"] = {
     "title": _("Time to connect"),
     "metrics": [
         ("connection_time", "area"),
-    ],
-}
-
-graph_info["modems"] = {
-    "title": _("Modems"),
-    "metrics": [
-        ("active_modems", "area"),
-        ("registered_modems", "line"),
-        ("total_modems", "line"),
     ],
 }
 

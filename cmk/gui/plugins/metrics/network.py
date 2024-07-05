@@ -34,17 +34,6 @@ metric_info["connection_time"] = {
 }
 
 for ctype, ccolor in (
-    ("critical", "14/a"),
-    ("minor", "23/b"),
-    ("cleared", "32/b"),
-):
-    metric_info["ap_devices_" + ctype] = {
-        "title": ctype.title(),
-        "unit": "count",
-        "color": ccolor,
-    }
-
-for ctype, ccolor in (
     ("dot11a", "21/a"),
     ("dot11b", "21/b"),
     ("dot11g", "33/a"),
@@ -409,11 +398,6 @@ graph_info["time_to_connect"] = {
     "metrics": [
         ("connection_time", "area"),
     ],
-}
-
-graph_info["access_point_statistics2"] = {
-    "title": _("Access point statistics"),
-    "metrics": [("ap_devices_" + ctype, "stack") for ctype in ("cleared", "minor", "critical")],
 }
 
 graph_info["wifi_connections"] = {

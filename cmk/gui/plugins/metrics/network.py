@@ -33,18 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["connections_perc_conn_threads"] = {
-    "title": _("Open connections load"),
-    "unit": "%",
-    "color": "31/a",
-}
-
-metric_info["connections_perc_used"] = {
-    "title": _("Parallel connections load"),
-    "unit": "%",
-    "color": "42/a",
-}
-
 metric_info["current_connections"] = {
     "title": _("Current connections"),
     "unit": "count",

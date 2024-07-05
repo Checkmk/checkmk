@@ -31,8 +31,10 @@ import pydantic
 from omdlib.type_defs import Config, ConfigChoiceHasError
 
 import cmk.utils.resulttype as result
+from cmk.utils import paths
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
+from cmk.utils.version import edition
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
@@ -215,7 +217,9 @@ def load_config(site: "SiteContext") -> Config:
     if site.hook_dir and os.path.exists(site.hook_dir):
         for hook_name in sort_hooks(os.listdir(site.hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
-                config[hook_name] = call_hook(site, hook_name, ["default"])[1]
+                config[hook_name] = call_hook(
+                    site, hook_name, ["default", edition(paths.omd_root).short]
+                )[1]
     return config
 
 

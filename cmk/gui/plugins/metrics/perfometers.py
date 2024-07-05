@@ -30,26 +30,6 @@ from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB, TB
 
 perfometer_info.append(
     {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "tcp_active_sessions",
-                "half_value": 4,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "udp_active_sessions",
-                "half_value": 4,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "active_sessions",
         "half_value": 50.0,

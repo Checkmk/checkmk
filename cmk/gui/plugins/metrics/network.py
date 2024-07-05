@@ -374,30 +374,6 @@ metric_info["active_vpn_tunnels"] = {
     "color": "43/a",
 }
 
-metric_info["tcp_active_sessions"] = {
-    "title": _("Active TCP sessions"),
-    "unit": "count",
-    "color": "#888800",
-}
-
-metric_info["udp_active_sessions"] = {
-    "title": _("Active UDP sessions"),
-    "unit": "count",
-    "color": "#880088",
-}
-
-metric_info["icmp_active_sessions"] = {
-    "title": _("Active ICMP sessions"),
-    "unit": "count",
-    "color": "#008888",
-}
-
-metric_info["sslproxy_active_sessions"] = {
-    "title": _("Active SSL proxy sessions"),
-    "unit": "count",
-    "color": "#11FF11",
-}
-
 metric_info["page_reads_sec"] = {
     "title": _("Page reads"),
     "unit": "1/s",
@@ -833,16 +809,6 @@ graph_info["packet_loss"] = {
     "scalars": [
         "pl:warn",
         "pl:crit",
-    ],
-}
-
-graph_info["palo_alto_sessions"] = {
-    "title": _("Palo Alto sessions"),
-    "metrics": [
-        ("tcp_active_sessions", "area"),
-        ("udp_active_sessions", "stack"),
-        ("icmp_active_sessions", "stack"),
-        ("sslproxy_active_sessions", "stack"),
     ],
 }
 

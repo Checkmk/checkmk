@@ -597,15 +597,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "request_rate",
-        "half_value": 100,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "mem_pages_rate",
         "half_value": 5000,
         "exponent": 2,

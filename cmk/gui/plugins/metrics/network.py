@@ -33,12 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["request_rate"] = {
-    "title": _("Request rate"),
-    "unit": "1/s",
-    "color": "35/a",
-}
-
 metric_info["active_vpn_tunnels"] = {
     "title": _("Active VPN tunnels"),
     "unit": "count",

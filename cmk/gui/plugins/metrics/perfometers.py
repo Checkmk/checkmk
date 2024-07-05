@@ -625,26 +625,9 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "voltage",
-        "half_value": 220.0,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "energy",
         "half_value": 10000,
         "exponent": 3,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["voltage_percent"],
-        "total": 100.0,
     }
 )
 

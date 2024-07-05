@@ -32,12 +32,6 @@ metric_info["fluidflow"] = {
     "color": "#ff6234",
 }
 
-metric_info["voltage"] = {
-    "title": _("Electrical voltage"),
-    "unit": "v",
-    "color": "14/a",
-}
-
 metric_info["energy"] = {
     "title": _("Electrical energy"),
     "unit": "wh",
@@ -48,13 +42,6 @@ metric_info["output_load"] = {
     "title": _("Output load"),
     "unit": "%",
     "color": "#c83880",
-}
-
-metric_info["voltage_percent"] = {
-    # xgettext: no-python-format
-    "title": _("Electrical tension in % of normal value"),
-    "unit": "%",
-    "color": "#ffc020",
 }
 
 metric_info["humidity"] = {

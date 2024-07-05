@@ -700,14 +700,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["health_perc"],
-        "total": 100,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "fluidflow",
         "half_value": 0.2,

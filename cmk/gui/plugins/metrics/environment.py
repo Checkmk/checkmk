@@ -32,12 +32,6 @@ metric_info["fluidflow"] = {
     "color": "#ff6234",
 }
 
-metric_info["health_perc"] = {
-    "title": _("Health"),
-    "unit": "%",
-    "color": "#ff6234",
-}
-
 metric_info["current"] = {
     "title": _("Electrical current"),
     "unit": "a",

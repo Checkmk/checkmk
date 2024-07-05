@@ -33,18 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["net_data_recv"] = {
-    "title": _("Net data received"),
-    "unit": "bytes/s",
-    "color": "41/b",
-}
-
-metric_info["net_data_sent"] = {
-    "title": _("Net data sent"),
-    "unit": "bytes/s",
-    "color": "42/a",
-}
-
 metric_info["total_modems"] = {
     "title": _("Total number of modems"),
     "unit": "count",
@@ -513,14 +501,6 @@ graph_info["modems"] = {
         ("active_modems", "area"),
         ("registered_modems", "line"),
         ("total_modems", "line"),
-    ],
-}
-
-graph_info["net_data_traffic"] = {
-    "title": _("Net data traffic"),
-    "metrics": [
-        ("net_data_recv", "stack"),
-        ("net_data_sent", "stack"),
     ],
 }
 

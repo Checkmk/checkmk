@@ -454,26 +454,6 @@ perfometer_info.append(
         "perfometers": [
             {
                 "type": "logarithmic",
-                "metric": "net_data_recv",
-                "half_value": 5000000,
-                "exponent": 5,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "net_data_sent",
-                "half_value": 5000000,
-                "exponent": 5,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "logarithmic",
                 "metric": "read_blocks",
                 "half_value": 50000000,
                 "exponent": 2,

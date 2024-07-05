@@ -32,12 +32,6 @@ metric_info["fluidflow"] = {
     "color": "#ff6234",
 }
 
-metric_info["current"] = {
-    "title": _("Electrical current"),
-    "unit": "a",
-    "color": "#ffb030",
-}
-
 metric_info["voltage"] = {
     "title": _("Electrical voltage"),
     "unit": "v",
@@ -93,12 +87,6 @@ metric_info["battery_capacity"] = {
     "color": "13/a",
 }
 
-metric_info["battery_current"] = {
-    "title": _("Battery electrical current"),
-    "unit": "a",
-    "color": "15/a",
-}
-
 metric_info["battery_seconds_remaining"] = {
     "title": _("Battery time remaining"),
     "unit": "s",
@@ -151,14 +139,6 @@ graph_info["fan_speed"] = {
     "title": _("Fan speed"),
     "metrics": [
         ("fan_speed", "area"),
-    ],
-}
-
-graph_info["battery_currents"] = {
-    "title": _("Battery currents"),
-    "metrics": [
-        ("battery_current", "area"),
-        ("current", "stack"),
     ],
 }
 

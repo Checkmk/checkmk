@@ -39,14 +39,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["ap_devices_drifted", "ap_devices_not_responding"],
-        "total": "ap_devices_total",
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["ap_devices_percent_unhealthy"],
         "total": 100.0,
     }

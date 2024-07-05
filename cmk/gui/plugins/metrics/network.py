@@ -33,24 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["ap_devices_total"] = {
-    "title": _("Total devices"),
-    "unit": "count",
-    "color": "51/a",
-}
-
-metric_info["ap_devices_drifted"] = {
-    "title": _("Time drifted devices"),
-    "unit": "count",
-    "color": "23/a",
-}
-
-metric_info["ap_devices_not_responding"] = {
-    "title": _("Not responding devices"),
-    "unit": "count",
-    "color": "14/a",
-}
-
 for ctype, ccolor in (
     ("critical", "14/a"),
     ("minor", "23/b"),
@@ -426,15 +408,6 @@ graph_info["time_to_connect"] = {
     "title": _("Time to connect"),
     "metrics": [
         ("connection_time", "area"),
-    ],
-}
-
-graph_info["access_point_statistics"] = {
-    "title": _("Access point statistics"),
-    "metrics": [
-        ("ap_devices_total", "area"),
-        ("ap_devices_drifted", "line"),
-        ("ap_devices_not_responding", "line"),
     ],
 }
 

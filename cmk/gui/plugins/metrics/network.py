@@ -33,24 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["dhcp_offers"] = {
-    "title": _("DHCP sent offers"),
-    "unit": "count",
-    "color": "12/a",
-}
-
-metric_info["dhcp_acks"] = {
-    "title": _("DHCP sent acks"),
-    "unit": "count",
-    "color": "15/a",
-}
-
-metric_info["dhcp_nacks"] = {
-    "title": _("DHCP sent nacks"),
-    "unit": "count",
-    "color": "22/b",
-}
-
 metric_info["dns_successes"] = {
     "title": _("DNS successful responses"),
     "unit": "count",
@@ -287,15 +269,6 @@ graph_info["packet_loss"] = {
     "scalars": [
         "pl:warn",
         "pl:crit",
-    ],
-}
-
-graph_info["dhcp_statistics_sent"] = {
-    "title": _("DHCP statistics (sent messages)"),
-    "metrics": [
-        ("dhcp_offers", "area"),
-        ("dhcp_acks", "stack"),
-        ("dhcp_nacks", "stack"),
     ],
 }
 

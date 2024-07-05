@@ -33,12 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["ap_devices_percent_unhealthy"] = {
-    "title": "Percentage of unhealthy access points",
-    "unit": "%",
-    "color": "33/a",
-}
-
 metric_info["request_rate"] = {
     "title": _("Request rate"),
     "unit": "1/s",

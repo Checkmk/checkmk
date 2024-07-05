@@ -21,12 +21,6 @@ from cmk.gui.i18n import _
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["requests"] = {
-    "title": _("Requests per second"),
-    "unit": "count",
-    "color": "31/a",
-}
-
 metric_info["rtt"] = {
     "title": _("Round trip time"),
     "unit": "s",
@@ -1003,14 +997,6 @@ graph_info["connection_count"] = {
     "metrics": [
         ("current_connections", "line"),
         ("new_connections", "line"),
-    ],
-}
-
-# workaround for showing single metrics of multiple hosts on the same combined graph dashlet
-graph_info["requests"] = {
-    "title": _("Requests"),
-    "metrics": [
-        ("requests", "line"),
     ],
 }
 

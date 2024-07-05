@@ -33,18 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["infections_rate"] = {
-    "title": _("Infections"),
-    "unit": "1/s",
-    "color": "15/a",
-}
-
-metric_info["connections_blocked_rate"] = {
-    "title": _("Blocked connections"),
-    "unit": "1/s",
-    "color": "14/a",
-}
-
 metric_info["connections_duration_min"] = {
     "title": _("Connections duration min"),
     "unit": "s",
@@ -811,14 +799,6 @@ graph_info["http_timings"] = {
         ("response_time", "line", _("Roundtrip")),
     ],
     "optional_metrics": ["time_ssl"],
-}
-
-graph_info["web_gateway_statistics"] = {
-    "title": _("Web gateway statistics"),
-    "metrics": [
-        ("infections_rate", "stack"),
-        ("connections_blocked_rate", "stack"),
-    ],
 }
 
 graph_info["DB_connections"] = {

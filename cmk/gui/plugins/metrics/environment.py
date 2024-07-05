@@ -26,12 +26,6 @@ metric_info["temp"] = {
     "color": "16/a",
 }
 
-metric_info["airflow"] = {
-    "title": _("Air flow"),
-    "unit": "l/s",
-    "color": "#ff6234",
-}
-
 metric_info["fluidflow"] = {
     "title": _("Fluid flow"),
     "unit": "l/s",

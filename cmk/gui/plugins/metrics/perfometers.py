@@ -745,15 +745,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "airflow",
-        "half_value": 300,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "fluidflow",
         "half_value": 0.2,
         "exponent": 5,

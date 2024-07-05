@@ -33,18 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["page_reads_sec"] = {
-    "title": _("Page reads"),
-    "unit": "1/s",
-    "color": "33/b",
-}
-
-metric_info["page_writes_sec"] = {
-    "title": _("Page writes"),
-    "unit": "1/s",
-    "color": "14/a",
-}
-
 metric_info["edge_udp_failed_auth"] = {
     "title": _("UDP authentication failures"),
     "unit": "1/s",
@@ -383,14 +371,6 @@ graph_info["packet_loss"] = {
     "scalars": [
         "pl:warn",
         "pl:crit",
-    ],
-}
-
-graph_info["page_activity"] = {
-    "title": _("Page activity"),
-    "metrics": [
-        ("page_reads_sec", "area"),
-        ("page_writes_sec", "-area"),
     ],
 }
 

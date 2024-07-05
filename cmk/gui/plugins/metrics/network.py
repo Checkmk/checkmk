@@ -27,12 +27,6 @@ metric_info["rtt"] = {
     "color": "33/a",
 }
 
-metric_info["cifs_share_users"] = {
-    "title": _("Users using a cifs share"),
-    "unit": "count",
-    "color": "#60f020",
-}
-
 metric_info["time_offset"] = {
     "title": _("Time offset"),
     "unit": "s",

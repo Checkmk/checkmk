@@ -33,18 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["xmpp_failed_outbound_streams"] = {
-    "title": _("XmppFederationProxy - Failed outbound stream establishes"),
-    "unit": "1/s",
-    "color": "26/a",
-}
-
-metric_info["xmpp_failed_inbound_streams"] = {
-    "title": _("XmppFederationProxy - Failed inbound stream establishes"),
-    "unit": "1/s",
-    "color": "31/a",
-}
-
 metric_info["dhcp_discovery"] = {
     "title": _("DHCP Discovery messages"),
     "unit": "count",
@@ -335,14 +323,6 @@ graph_info["packet_loss"] = {
     "scalars": [
         "pl:warn",
         "pl:crit",
-    ],
-}
-
-graph_info["streams"] = {
-    "title": _("Streams"),
-    "metrics": [
-        ("xmpp_failed_inbound_streams", "area"),
-        ("xmpp_failed_outbound_streams", "-area"),
     ],
 }
 

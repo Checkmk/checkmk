@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import logging
 import re
 from abc import abstractmethod
 from typing import Literal, overload
@@ -11,6 +11,8 @@ from urllib.parse import urljoin
 from playwright.sync_api import expect, FrameLocator, Locator, Page, Response
 
 from tests.testlib.playwright.helpers import Keys, LocatorHelper
+
+logger = logging.getLogger(__name__)
 
 
 class CmkPage(LocatorHelper):
@@ -54,9 +56,11 @@ class CmkPage(LocatorHelper):
         return self.page.locator(selector)
 
     def activate_selected(self) -> None:
+        logger.info("Click 'Activate on selected sites' button")
         self.main_area.locator("#menu_suggestion_activate_selected").click()
 
     def expect_success_state(self) -> None:
+        logger.info("Check changes were activated successfully")
         expect(
             self.main_area.locator("#site_gui_e2e_central_status.msg.state_success")
         ).to_be_visible()
@@ -70,17 +74,21 @@ class CmkPage(LocatorHelper):
 
     def goto_main_dashboard(self) -> None:
         """Click the banner and wait for the dashboard"""
+        logger.info("Navigate to 'Main dashboard' page")
         self.main_menu.main_page.click()
         self.main_area.check_page_title("Main dashboard")
 
     def select_host(self, host_name: str) -> None:
+        logger.info("Click on host link: %s", host_name)
         self.main_area.locator(f"td a:has-text('{host_name}')").click()
 
     def goto_add_sidebar_element(self) -> None:
+        logger.info("Navigate to 'Add sidebar element' page")
         self.locator("div#check_mk_sidebar >> div#add_snapin > a").click()
         self.main_area.check_page_title("Add sidebar element")
 
     def press_keyboard(self, key: Keys) -> None:
+        logger.info("Press keyboard key: %d", key.value)
         self.page.keyboard.press(str(key.value))
 
     def get_link(self, name: str, exact: bool = True) -> Locator:
@@ -285,6 +293,7 @@ class MainMenu(LocatorHelper):
         return self.help_menu("Change log (Werks)")
 
     def logout(self) -> None:
+        logger.info("Click logout button")
         self.user_logout.click()
         self.page.wait_for_url(url=re.compile("login.py$"), wait_until="load")
 

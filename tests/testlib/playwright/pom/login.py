@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import logging
 import re
 from typing import Literal, override
 from urllib.parse import urljoin
@@ -11,6 +11,8 @@ from playwright.sync_api import expect, Locator, Page, Response
 
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.page import CmkPage
+
+logger = logging.getLogger(__name__)
 
 
 class LoginPage(CmkPage):
@@ -38,6 +40,7 @@ class LoginPage(CmkPage):
         Returns the URL of login page. Returns an empty-string when user is already logged in.
         """
         if self.site_url:
+            logger.info("Navigate to login page")
             self.page.goto(self.site_url, wait_until="load")
             self._validate_page()
         else:
@@ -45,6 +48,7 @@ class LoginPage(CmkPage):
 
     def _validate_page(self) -> None:
         """Check if the current page is the login page."""
+        logger.info("Validate that current page is login page")
         expect(self.page).to_have_url(re.compile(self.url_suffix))
         expect(self.username_input).to_be_visible()
         expect(self.username_input).to_be_empty()
@@ -64,10 +68,8 @@ class LoginPage(CmkPage):
         return self.page.locator("#_login")
 
     def login(self, credentials: CmkCredentials) -> None:
-        """Login to Checkmk GUI.
-
-        By default, the credentials provided to `LoginPage` are used.
-        """
+        """Login to Checkmk GUI."""
+        logger.info("Login using provided credentials")
         self.username_input.fill(credentials.username)
         self.password_input.fill(credentials.password)
         self.login_button.click()

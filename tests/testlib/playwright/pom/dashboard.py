@@ -2,11 +2,14 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import logging
 import re
 
 from playwright.sync_api import expect, Locator, Page
 
 from tests.testlib.playwright.pom.page import CmkPage
+
+logger = logging.getLogger(__name__)
 
 
 class Dashboard(CmkPage):
@@ -38,11 +41,13 @@ class Dashboard(CmkPage):
         super().__init__(page, navigate_to_page)
 
     def navigate(self) -> None:
+        logger.info("Navigate to 'Main dashboard' page")
         self.main_menu.main_page.click()
         self.page.wait_for_url(url=re.compile("dashboard.py$"), wait_until="load")
         self._validate_page()
 
     def _validate_page(self) -> None:
+        logger.info("Validate that current page is 'Main dashboard' page")
         self.main_area.check_page_title(self.page_title)
         expect(self.dashlet("Host statistics")).to_be_visible()
         expect(self.menu_icon("Filter")).to_be_visible()

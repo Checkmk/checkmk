@@ -1,6 +1,26 @@
 import {zxcvbn, zxcvbnOptions} from "@zxcvbn-ts/core";
-import * as zxcvbnCommonPackage from "@zxcvbn-ts/language-common";
-import * as zxcvbnEnPackage from "@zxcvbn-ts/language-en";
+
+const loadOptions = async () => {
+    /** Lazy loading sizable dictionaries from zxcvbn, webpack relies
+     * on the 'webpackChunkName: "/zxcvbn"' to create the chunk.
+     * https://github.com/zxcvbn-ts/zxcvbn/blob/master/docs/guide/lazy-loading/README.md#lazy-loading
+     */
+    const {dictionary: commonDict, adjacencyGraphs} = await import(
+        /* webpackChunkName: "/zxcvbn" */ "@zxcvbn-ts/language-common"
+    );
+    const {dictionary: enDict, translations} = await import(
+        /* webpackChunkName: "/zxcvbn" */ "@zxcvbn-ts/language-en"
+    );
+
+    return {
+        dictionary: {
+            ...commonDict,
+            ...enDict,
+        },
+        graphs: adjacencyGraphs,
+        translations: translations,
+    };
+};
 
 export async function initPasswordStrength() {
     // Mapping password strength score to data-* attributes sent
@@ -10,14 +30,8 @@ export async function initPasswordStrength() {
         const allMeters = document.querySelectorAll("meter.password_meter");
         if (allMeters.length == 0) return;
 
-        zxcvbnOptions.setOptions({
-            dictionary: {
-                ...zxcvbnCommonPackage.dictionary,
-                ...zxcvbnEnPackage.dictionary,
-            },
-            graphs: zxcvbnCommonPackage.adjacencyGraphs,
-            translations: zxcvbnEnPackage.translations,
-        });
+        const options = await loadOptions();
+        zxcvbnOptions.setOptions(options);
 
         for (const meter of allMeters as NodeListOf<HTMLMeterElement>) {
             if (

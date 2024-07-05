@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils import version as cmk_version
-from cmk.utils.i18n import _
 from cmk.utils.licensing.handler import LicenseState
+
+from cmk.ccc.i18n import _
 
 
 class LicenseStateIncompatible:

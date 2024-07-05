@@ -9,7 +9,7 @@ from pathlib import Path
 
 from livestatus import SiteId
 
-from cmk.utils.i18n import _
+from cmk.ccc.i18n import _
 
 OMDConfig = dict[str, str]
 

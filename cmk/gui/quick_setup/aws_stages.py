@@ -5,9 +5,9 @@
 
 from collections.abc import Sequence
 
-from cmk.utils.i18n import _
-
 from cmk.gui.quick_setup.definitions import QuickSetup, QuickSetupId, QuickSetupStage, StageId
+
+from cmk.ccc.i18n import _
 
 
 def prepare_aws(stage_id: StageId) -> QuickSetupStage:

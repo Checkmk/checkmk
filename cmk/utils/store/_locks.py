@@ -16,7 +16,8 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from cmk.utils.exceptions import MKConfigLockTimeout, MKTimeout
-from cmk.utils.i18n import _
+
+from cmk.ccc.i18n import _
 
 _all = [
     "acquire_lock",

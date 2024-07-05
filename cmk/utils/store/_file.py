@@ -16,9 +16,9 @@ from typing import Any, Final, Generic, Protocol, TypeVar
 from pydantic import BaseModel
 
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
-from cmk.utils.i18n import _
 
 import cmk.ccc.debug
+from cmk.ccc.i18n import _
 
 from ._locks import acquire_lock, release_lock
 

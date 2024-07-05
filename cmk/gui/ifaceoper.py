@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.i18n import _
+from cmk.ccc.i18n import _
 
 
 def interface_oper_state_name(state_num: int, deflt: str = "") -> str:

@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
-from cmk.utils.i18n import _
 from cmk.utils.store._file import (
     BytesSerializer,
     DimSerializer,
@@ -36,6 +35,8 @@ from cmk.utils.store._locks import (
     try_acquire_lock,
     try_locked,
 )
+
+from cmk.ccc.i18n import _
 
 __all__ = [
     "BytesSerializer",

@@ -10,7 +10,8 @@ import re
 from typing import Final
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.i18n import _
+
+from cmk.ccc.i18n import _
 
 g_compiled_regexes: dict[tuple[str, int], re.Pattern[str]] = {}
 

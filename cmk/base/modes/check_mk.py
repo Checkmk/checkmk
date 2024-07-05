@@ -40,7 +40,6 @@ from cmk.utils.diagnostics import (
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
-from cmk.utils.i18n import _
 from cmk.utils.log import console, section
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.resulttype import Result
@@ -130,6 +129,7 @@ from cmk.base.utils import register_sigint_handler
 import cmk.ccc.debug
 from cmk import piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.ccc.i18n import _
 from cmk.discover_plugins import discover_families, PluginGroup
 
 from ._localize import do_localize

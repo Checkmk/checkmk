@@ -9,9 +9,10 @@ from typing import Any
 from pydantic import BaseModel, field_validator, model_validator, ValidationError
 
 from cmk.utils.dateutils import weekday_ids
-from cmk.utils.i18n import _
 
 from cmk.gui.exceptions import MKConfigError  # pylint: disable=cmk-module-layer-violation
+
+from cmk.ccc.i18n import _
 
 ALIASES = list[str]
 TIME_RANGE = tuple[str, str]

@@ -7,10 +7,9 @@ from logging import Logger
 
 from livestatus import SiteId
 
-from cmk.utils.i18n import _
-
 from cmk.gui.watolib.sites import SiteManagementFactory
 
+from cmk.ccc.i18n import _
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
 

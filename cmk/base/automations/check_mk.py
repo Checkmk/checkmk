@@ -41,7 +41,6 @@ from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
-from cmk.utils.i18n import _
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -187,6 +186,7 @@ from cmk.base.sources import make_parser, SNMPFetcherConfig
 import cmk.ccc.debug
 import cmk.piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.ccc.i18n import _
 from cmk.discover_plugins import discover_families, PluginGroup
 
 HistoryFile = str

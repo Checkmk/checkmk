@@ -15,9 +15,9 @@ import cmk.utils.cleanup
 from cmk.utils.caching import cache_manager
 from cmk.utils.dateutils import Weekday
 from cmk.utils.exceptions import MKTimeout
-from cmk.utils.i18n import _
 
 import cmk.ccc.debug
+from cmk.ccc.i18n import _
 
 __all__ = [
     "TimeperiodName",

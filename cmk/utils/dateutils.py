@@ -5,7 +5,7 @@
 
 from typing import Literal
 
-from cmk.utils.i18n import _
+from cmk.ccc.i18n import _
 
 Weekday = Literal[
     "monday",

@@ -55,13 +55,14 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
 )
 from cmk.utils.hostaddress import HostName
-from cmk.utils.i18n import _
 from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 from cmk.utils.site import omd_site
 from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree
 from cmk.utils.user import UserId
+
+from cmk.ccc.i18n import _
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CEE,

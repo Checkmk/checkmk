@@ -7,7 +7,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from itertools import zip_longest
 
-from cmk.utils.i18n import _
+from cmk.ccc.i18n import _
 
 __all__ = [
     "make_diff",

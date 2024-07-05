@@ -22,10 +22,11 @@ from typing import Any
 from pydantic import BaseModel, PrivateAttr
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
 from cmk.utils.store import load_object_from_file, save_object_to_file
 from cmk.utils.version import is_cma
+
+from cmk.ccc.i18n import _
 
 from .job import JobConfig
 from .targets import TargetId

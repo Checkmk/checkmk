@@ -9,9 +9,9 @@ from pathlib import Path
 from livestatus import SiteId
 
 from cmk.utils import tty
-from cmk.utils.i18n import _
 from cmk.utils.log import console
 
+from cmk.ccc.i18n import _
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
 

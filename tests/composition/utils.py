@@ -29,22 +29,18 @@ def get_package_extension() -> str:
 
 
 def bake_agent(site: Site) -> tuple[str, Path]:
-    try:
-        LOGGER.info('Create host "%s" and bake agent...', TEST_HOST_1)
-        start_time = time.time()
-        site.openapi.create_host(
-            TEST_HOST_1,
-            attributes={"ipaddress": site.http_address},
-            bake_agent=True,
-        )
+    # Add test host
+    start_time = time.time()
+    site.openapi.create_host(
+        TEST_HOST_1,
+        attributes={"ipaddress": site.http_address},
+        bake_agent=True,
+    )
 
-        site.activate_changes_and_wait_for_core_reload()
+    site.activate_changes_and_wait_for_core_reload()
 
-        # A baking job just got triggered automatically after adding the host. wait for it to finish.
-        wait_for_baking_job(site, start_time)
-    finally:
-        LOGGER.info('Cleanup host "%s"...', TEST_HOST_1)
-        site.openapi.delete_host(TEST_HOST_1)
+    # A baking job just got triggered automatically after adding the host. wait for it to finish.
+    wait_for_baking_job(site, start_time)
 
     server_rel_hostlink_dir = Path("var", "check_mk", "agents", get_package_type(), "references")
     agent_path = site.resolve_path(server_rel_hostlink_dir / TEST_HOST_1)

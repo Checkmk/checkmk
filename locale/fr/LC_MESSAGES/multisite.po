@@ -53758,7 +53758,9 @@ msgstr ""
 msgid "Specify the monitoring state when the bonding mode is not as expected."
 msgstr ""
 
-msgid "Specify the name of a store (This is either a mailbox or public folder)"
+#, fuzzy
+msgid ""
+"Specify the name of a store (This is either a mailbox or public folder)."
 msgstr ""
 "Spécifiez le nom d'un magasin (il s'agit d'une boîte aux lettres ou d'un "
 "dossier public)"
@@ -66472,7 +66474,10 @@ msgstr "Temps jusqu'à l'alerte, si la condition CONTAINERSREADY est fausse"
 msgid "Time until alert, if INITIALIZED condition is false"
 msgstr "Temps jusqu'à l'alerte, si la condition INITIALIZED est fausse"
 
-msgid "Time until alert, if PODHASNETWORK condition is false"
+#, fuzzy
+msgid ""
+"Time until alert, if PODREADYTOSTARTCONTAINERS (PODHASNETWORK in Kubernetes "
+"version 1.27 and below) condition is false"
 msgstr "Temps jusqu'à l'alerte, si la condition PODHASNETWORK est fausse"
 
 msgid "Time until alert, if PODSCHEDULED condition is false"

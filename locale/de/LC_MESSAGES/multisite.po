@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-07-01 23:11+0000\n"
+"PO-Revision-Date: 2024-07-05 05:05+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -7443,7 +7443,7 @@ msgid "Average remote site sync time"
 msgstr "Durchschnittliche Synczeit der Remote-Instanz"
 
 msgid "Average request response time"
-msgstr "Durchschnittliche Request-Antwortzeit"
+msgstr "Durchschnittliche Anfrage-Antwortzeit"
 
 msgid "Average request size"
 msgstr "Durchschnittliche Request-Größe"
@@ -7461,7 +7461,7 @@ msgid "Average round-trip response time to this node"
 msgstr "Durchschnittliche Paketumlaufzeit zu diesem Knoten"
 
 msgid "Average roundtrip time in ms"
-msgstr "Durchschnittliche Antwortzeit in Milisekunden"
+msgstr "Durchschnittliche Paketumlaufzeit in Millisekunden"
 
 msgid "Average scatterplot"
 msgstr "Streudiagramm der Durschnitte"
@@ -25798,16 +25798,14 @@ msgstr "Host existiert bereits"
 msgid "Host and service checks"
 msgstr "Host- und Service-Checks"
 
-#, fuzzy
 msgid "Host and service comments"
-msgstr "Host-/Service-Kommentare"
+msgstr "Host- und Service-Kommentare"
 
 msgid "Host and service configuration rule"
 msgstr "Host-/Service-Konfigurationsregel"
 
-#, fuzzy
 msgid "Host and service events"
-msgstr "Host/Service-Ereignisse"
+msgstr "Host- und Service-Ereignisse"
 
 msgid "Host and service parameters"
 msgstr "Host- & Service-Parameter"
@@ -25911,9 +25909,8 @@ msgstr "Host unten"
 msgid "Host event limit"
 msgstr "Host-Ereignis-Limit"
 
-#, fuzzy
 msgid "Host events"
-msgstr "Hostereignisse"
+msgstr "Host-Ereignisse"
 
 msgid "Host gets unreachble"
 msgstr "Host wird unerreichbar"
@@ -26121,7 +26118,6 @@ msgstr "Host-Name des Ereignisses (genaue Übereinstimmung)"
 msgid "Host name of original event (regex)"
 msgstr "Host-Name des ursprünglichen Ereignisses (regex)"
 
-#, fuzzy
 msgid "Host name of the device"
 msgstr "Host-Name des Geräts"
 
@@ -26147,14 +26143,11 @@ msgid "Host name, IP address or host alias the event is relevant for"
 msgstr ""
 "Host-Name, IP-Adresse oder Host-Alias, für die das Ereignis relevant ist"
 
-#, fuzzy
 msgid "Host name, marked red if down (deprecated)"
-msgstr "Host-Name, rot markiert, wenn down (veraltet)"
+msgstr "Host-Name, rot markiert, wenn DOWN (veraltet)"
 
-#, fuzzy
 msgid "Host name, red background if down or unreachable (deprecated)"
-msgstr ""
-"Host-Name, roter Hintergrund bei Ausfall oder Unerreichbarkeit (veraltet)"
+msgstr "Host-Name, roter Hintergrund bei DOWN oder Unerreichbarkeit (veraltet)"
 
 msgid "Host name/IP address of Event Console:"
 msgstr "Host-Name/IP-Adresse der Event Console:"
@@ -26297,7 +26290,6 @@ msgstr "Host-Statistiken"
 msgid "Host status"
 msgstr "Host-Status"
 
-#, fuzzy
 msgid "Host status grouping"
 msgstr "Host-Status-Gruppierung"
 
@@ -26586,7 +26578,6 @@ msgstr "Stunden seit Betriebsbeginn"
 msgid "Hours/Minutes out of range"
 msgstr "Std./Min. außerhalb des Bereichs"
 
-#, fuzzy
 msgid "Housekeeping interval"
 msgstr "Aufräum-Intervall"
 
@@ -26670,9 +26661,8 @@ msgstr "Feuchtigkeit"
 msgid "Humidity Levels"
 msgstr "Level für Feuchtigkeit"
 
-#, fuzzy
 msgid "Humidity levels for devices with a single sensor"
-msgstr "Feuchtigkeitslevel für Geräte mit einem einzelnen Feuchtigkeitssensor"
+msgstr "Feuchtigkeitslevel für Geräte mit einem einzelnen Sensor"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Hyper-V Server: Zustand von VMs"
@@ -26689,19 +26679,15 @@ msgstr "Hyperthreads pro CPU"
 msgid "Hz"
 msgstr "Hz"
 
-#, fuzzy
 msgid "I/O database reads (attached) average latency"
 msgstr "I/O Datenbank-Lesezugriffe (Attached), durchschnittliche Latenz"
 
-#, fuzzy
 msgid "I/O database reads (recovery) average latency"
 msgstr "I/O Datenbank-Lesezugriffe (Recovery), durchschnittliche Latenz"
 
-#, fuzzy
 msgid "I/O database writes (attached) average latency"
 msgstr "I/O Datenbank-Schreibzugriffe (Attached), durchschnittliche Latenz"
 
-#, fuzzy
 msgid "I/O log writes average latency"
 msgstr "I/O Log-Schreibzugriffe, durchschnittliche Latenz"
 
@@ -26723,9 +26709,8 @@ msgstr "MQ Mangers"
 msgid "IBM MQ Queues"
 msgstr "IBM MQ Warteschlangen"
 
-#, fuzzy
 msgid "IBM MQ channels"
-msgstr "MQ Channels"
+msgstr "IBM MQ Kanäle"
 
 msgid "IBM MQ managers"
 msgstr "IBM MQ Managers"
@@ -26733,7 +26718,6 @@ msgstr "IBM MQ Managers"
 msgid "IBM MQ plug-in"
 msgstr "IBM MQ-Plugin"
 
-#, fuzzy
 msgid "IBM MQ queues"
 msgstr "IBM MQ Warteschlangen"
 
@@ -26791,7 +26775,6 @@ msgstr "ICMP Echo Request"
 msgid "ICMP jitter"
 msgstr "ICMP Jitter"
 
-#, fuzzy
 msgid "ICMP packages/s"
 msgstr "ICMP-Pakete/s"
 
@@ -26863,9 +26846,8 @@ msgstr "IO Bandbreite"
 msgid "IO Groups"
 msgstr "IO-Gruppen"
 
-#, fuzzy
 msgid "IO latency"
-msgstr "IO Latenzzeit"
+msgstr "IO-Latenz"
 
 msgid "IOPS"
 msgstr "IOPS"
@@ -26882,7 +26864,6 @@ msgstr "IP-Adresse"
 msgid "IP address family"
 msgstr "IP-Adressfamilie"
 
-#, fuzzy
 msgid "IP address of Host"
 msgstr "IP-Adresse des Hosts"
 
@@ -26893,7 +26874,6 @@ msgstr ""
 "IP-Adresse des SMB-Share-Hosts (nur erforderlich, wenn sich der SMB-Share-"
 "Host in einem anderen Netzwerk befindet)"
 
-#, fuzzy
 msgid "IP address of remote Event Console"
 msgstr "IP-Adresse der Remote Event Console"
 
@@ -32299,21 +32279,17 @@ msgstr "Level für Instanzen"
 msgid "Levels latency check"
 msgstr "Level Checklatenz"
 
-#, fuzzy
 msgid "Levels latency checker"
 msgstr "Level Latenz Checker"
 
-#, fuzzy
 msgid "Levels latency fetcher"
-msgstr "Level Fetcherlatenz"
+msgstr "Level Latenz Fetcher"
 
-#, fuzzy
 msgid "Levels livestatus overflows"
 msgstr "Level Livestatus Überläufe"
 
-#, fuzzy
 msgid "Levels livestatus usage"
-msgstr "Level Livestatusbenutzung"
+msgstr "Level Livestatus-Auslastung"
 
 msgid "Levels memory"
 msgstr "Speicher-Levels"
@@ -32492,7 +32468,6 @@ msgstr "Grenzwerte der Replikation"
 msgid "Levels requests"
 msgstr "Ebenen Anfragen"
 
-#, fuzzy
 msgid "Levels services"
 msgstr "Level Services"
 
@@ -32816,7 +32791,6 @@ msgstr "Linkausfälle"
 msgid "Link of Title"
 msgstr "Link des Titels"
 
-#, fuzzy
 msgid "Link priority"
 msgstr "Linkpriorität"
 
@@ -47027,7 +47001,7 @@ msgid "Round trip time"
 msgstr "Umlaufzeit"
 
 msgid "Roundtrip"
-msgstr "Roundtrip"
+msgstr "Umlauf"
 
 msgid "Route53"
 msgstr "Route53"
@@ -52360,7 +52334,9 @@ msgstr ""
 "Geben Sie den Monitoring-Zustand an, wenn der Bonding-Modus nicht wie "
 "erwartet funktioniert."
 
-msgid "Specify the name of a store (This is either a mailbox or public folder)"
+#, fuzzy
+msgid ""
+"Specify the name of a store (This is either a mailbox or public folder)."
 msgstr ""
 "Gegen Sie den Namen des Stores an (Das ist entweder eine Mailbox oder ein "
 "öffentlicher Ordner)"
@@ -52714,7 +52690,7 @@ msgid "Standard deviation difference"
 msgstr "Differenz der Standardabweichung"
 
 msgid "Standard deviation of roundtrip times in ms"
-msgstr "Standardabweichung der Antwortzeit in Milisekunden"
+msgstr "Standardabweichung der Paketumlaufzeit in Millisekunden"
 
 msgid ""
 "Standard settings are used for all endpoints unless overwritten by the "
@@ -57776,8 +57752,8 @@ msgid ""
 "The maximum allowed percentage of packet loss to the destination before this "
 "service goes into warning/critical."
 msgstr ""
-"Der maximal erlaubte prozentuale Paketverlust, bevor der Service in WARN/"
-"CRIT wechselt."
+"Der maximal erlaubte prozentuale Paketverlust in Richtung Ziel, bevor der "
+"Service in WARN/CRIT wechselt."
 
 #, python-format
 msgid "The maximum allowed value is %s."
@@ -57788,9 +57764,9 @@ msgid ""
 "warning/critical. This alarm only applies to the target host, not the hops "
 "in between."
 msgstr ""
-"Der maximal erlaubte, durchschnittliche Paketlaufzeit in Milisekunden, bevor "
-"der Service in WARN/CRIT wechselt. Dieser Parameter wird nur auf den "
-"Zielhost angewendet, nicht auf die einzelnen Hops."
+"Die maximale, durchschnittliche Paketumlaufzeit in Millisekunden, bevor "
+"dieser Service in WARN/CRIT wechselt. Dieser Alarm wird nur auf den Zielhost "
+"angewendet, nicht auf die einzelnen Hops."
 
 msgid "The maximum key length is 128 characters."
 msgstr "Die maximale Schlüssellänge beträgt 128 Zeichen."
@@ -57849,9 +57825,9 @@ msgid ""
 "service goes intowarning/critical. This alarm only applies to the target "
 "host, not the hops in between."
 msgstr ""
-"Der maximal erlaubte Normalabweichung der Paketlaufzeit in Milisekunden, "
-"bevor der Service in WARN/CRIT wechselt. Dieser Parameter wird nur auf den "
-"Zielhost angewendet, nicht auf die einzelnen Hops."
+"Die maximale Standardabweichung der Paketumlaufzeit in Millisekunden, bevor "
+"der Service in WARN/CRIT wechselt. Dieser Alarm wird nur auf den Zielhost "
+"angewendet, nicht auf die einzelnen Hops."
 
 msgid "The maximum value length is 256 characters."
 msgstr "Die maximale Wertlänge beträgt 256 Zeichen."
@@ -63554,8 +63530,9 @@ msgid ""
 "This ruleset can be used to change MTR's (Matt's traceroute) warning and "
 "crit levels for packet loss, average roundtrip and standard deviation."
 msgstr ""
-"Mit dieser Regelkette können die Parameter des Checks MTR's (Matt's "
-"traceroute) angepasst werden."
+"Dieser Regelsatz kann verwendet werden, um die WARN- und CRIT-Level von MTR "
+"(Matt's Traceroute) für Paketverluste, durchschnittlichen Umlauf und "
+"Standardabweichung zu ändern."
 
 msgid ""
 "This ruleset defines criteria for SNMP processes base upon the HOST "
@@ -64898,7 +64875,10 @@ msgstr "Zeit bis zum Alert, wenn die Bedingung CONTAINERSREADY falsch ist"
 msgid "Time until alert, if INITIALIZED condition is false"
 msgstr "Zeit bis zum Alert, wenn die Bedingung INITIALIZED falsch ist"
 
-msgid "Time until alert, if PODHASNETWORK condition is false"
+#, fuzzy
+msgid ""
+"Time until alert, if PODREADYTOSTARTCONTAINERS (PODHASNETWORK in Kubernetes "
+"version 1.27 and below) condition is false"
 msgstr "Zeit bis zum Alert, wenn die Bedingung PODHASNETWORK falsch ist"
 
 msgid "Time until alert, if PODSCHEDULED condition is false"

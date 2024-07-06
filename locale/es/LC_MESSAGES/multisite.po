@@ -53727,7 +53727,9 @@ msgstr ""
 "Especifique el estado de supervisión cuando el modo de enlace no sea el "
 "esperado."
 
-msgid "Specify the name of a store (This is either a mailbox or public folder)"
+#, fuzzy
+msgid ""
+"Specify the name of a store (This is either a mailbox or public folder)."
 msgstr ""
 "Especifique el nombre de un almacén (Se trata de un buzón o una carpeta "
 "pública)"
@@ -66389,7 +66391,10 @@ msgstr "Tiempo hasta la alerta, si la condición CONTAINERSREADY es falsa"
 msgid "Time until alert, if INITIALIZED condition is false"
 msgstr "Tiempo hasta la alerta, si la condición INICIALIZADO es falsa"
 
-msgid "Time until alert, if PODHASNETWORK condition is false"
+#, fuzzy
+msgid ""
+"Time until alert, if PODREADYTOSTARTCONTAINERS (PODHASNETWORK in Kubernetes "
+"version 1.27 and below) condition is false"
 msgstr "Tiempo hasta la alerta, si la condición PODHASNETWORK es falsa"
 
 msgid "Time until alert, if PODSCHEDULED condition is false"

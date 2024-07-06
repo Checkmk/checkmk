@@ -502,6 +502,15 @@ check_metrics["check_mk-msexch_database"] = {
     "db_write_latency": {"name": "db_write_latency_s", "scale": m},
     "db_log_latency": {"name": "db_log_latency_s", "scale": m},
 }
+check_metrics["check_mk-msexch_isclienttype"] = {
+    "average_latency": {"name": "average_latency_s", "scale": m},
+}
+check_metrics["check_mk-msexch_isstore"] = {
+    "average_latency": {"name": "average_latency_s", "scale": m},
+}
+check_metrics["check_mk-msexch_rpcclientaccess"] = {
+    "average_latency": {"name": "average_latency_s", "scale": m},
+}
 
 
 do_not_display_fs_size_translation: dict[str, CheckMetricEntry] = {

@@ -15,9 +15,9 @@ from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-imp
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
 factory_settings["msexch_info_store_defaultlevels"] = {
     # attention! those three dictionaries are tuples when returned by wato!
-    "store_latency": {"upper": (40.0, 50.0)},
-    "clienttype_latency": {"upper": (40.0, 50.0)},
-    "clienttype_requests": {"upper": (60, 70)},
+    "store_latency_s": (0.04, 0.05),
+    "clienttype_latency_s": (0.04, 0.05),
+    "clienttype_requests": (60, 70),
 }
 
 
@@ -27,16 +27,16 @@ def discover_msexch_isstore(parsed):
 
 def check_msexch_isstore(item, params, parsed):
     try:
-        average = wmi_calculate_raw_average(parsed[""], item, "RPCAverageLatency", 1)
+        average = wmi_calculate_raw_average(parsed[""], item, "RPCAverageLatency", 0.001)
     except KeyError:
         yield 3, "item not present anymore", []
     else:
         yield check_levels(
             average,
-            "average_latency",
-            get_levels_quadruple(params["store_latency"]),
+            "average_latency_s",
+            get_levels_quadruple(params["store_latency_s"]),
             infoname="Average latency",
-            unit="ms",
+            human_readable_func=lambda value: f"{(value*1000.0):.2f} ms",
         )
 
 

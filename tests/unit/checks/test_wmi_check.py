@@ -139,7 +139,7 @@ def test_wmi_timeout_exceptions(check_name, info, expected) -> None:  # type:ign
                 (
                     0,
                     "Average latency: 0.49 ms",
-                    [("average_latency", 0.48712422193702626, 40.0, 50.0)],
+                    [("average_latency_s", 0.00048712422193702634, 0.04, 0.05)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60.0, 70.0)]),
             ],
@@ -150,7 +150,7 @@ def test_wmi_timeout_exceptions(check_name, info, expected) -> None:  # type:ign
                 (
                     0,
                     "Average latency: 0.49 ms",
-                    [("average_latency", 0.48712422193702626, 41.0, 51.0)],
+                    [("average_latency_s", 0.00048712422193702634, 0.041, 0.051)],
                 ),
             ],
         ),
@@ -164,8 +164,8 @@ def test_wmi_msexch_isclienttype_wato_params(  # type:ignore[no-untyped-def]
         check.run_check(
             item="_total",
             params={
-                "store_latency": (41.0, 51.0),
-                "clienttype_latency": (40.0, 50.0),
+                "store_latency_s": (0.041, 0.051),
+                "clienttype_latency_s": (0.04, 0.05),
                 "clienttype_requests": (60, 70),
             },
             info=check.run_parse(info_msx_info_store_1),

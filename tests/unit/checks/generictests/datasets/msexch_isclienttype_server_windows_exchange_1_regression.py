@@ -1806,15 +1806,15 @@ checks = {
         (
             "_total",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.49 ms",
-                    [("average_latency", 0.48712422193702626, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 0.00048712422193702634, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -1822,39 +1822,39 @@ checks = {
         (
             "addriver",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "administrator",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "airsync",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.00 ms",
-                    [("average_latency", 2.6480752376567898e-05, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 2.64807523765679e-08, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -1862,51 +1862,51 @@ checks = {
         (
             "anchorservice",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "approvalapi",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "availabilityservice",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "contentindexing",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.00 ms",
-                    [("average_latency", 2.4164853195197893e-05, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 2.4164853195197893e-08, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -1914,51 +1914,51 @@ checks = {
         (
             "contentindexingmovedestination",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "ediscoverysearch",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "elc",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "eventbasedassistants",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.00 ms",
-                    [("average_latency", 9.352801363450964e-07, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 9.352801363450964e-10, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -1966,111 +1966,111 @@ checks = {
         (
             "ha",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "hrc",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "imap",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "inference",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "liveidbasicauth",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "loadgen",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "mailboxloadbalance",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "maintenance",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "management",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.00 ms",
-                    [("average_latency", 1.4505348153995004e-07, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 1.4505348153995005e-10, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -2078,15 +2078,15 @@ checks = {
         (
             "migration",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.17 ms",
-                    [("average_latency", 0.17399333574210124, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 0.00017399333574210124, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -2094,15 +2094,15 @@ checks = {
         (
             "momt",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.46 ms",
-                    [("average_latency", 0.45686453412547645, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 0.00045686453412547645, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -2110,15 +2110,15 @@ checks = {
         (
             "monitoring",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.34 ms",
-                    [("average_latency", 0.33911634330519236, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 0.00033911634330519236, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -2126,111 +2126,111 @@ checks = {
         (
             "notificationbroker",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "officegraph",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "outlookservice",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "owa",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "pop",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "publicfolderhierarchyreplication",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "publicfoldersystem",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "rpchttp",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "simplemigration",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.55 ms",
-                    [("average_latency", 0.5479212634542535, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 0.0005479212634542535, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -2238,39 +2238,39 @@ checks = {
         (
             "sms",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "snackyservice",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "storeactivemonitoring",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.31 ms",
-                    [("average_latency", 0.3072515295977602, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 0.0003072515295977602, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -2278,39 +2278,39 @@ checks = {
         (
             "system",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "teammailbox",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "timebasedassistants",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.00 ms",
-                    [("average_latency", 1.243283698179493e-05, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 1.243283698179493e-08, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -2318,15 +2318,15 @@ checks = {
         (
             "transport",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.00 ms",
-                    [("average_latency", 0.0001265842047257069, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 1.265842047257069e-07, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -2334,63 +2334,63 @@ checks = {
         (
             "transportsync",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "unifiedauditing",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "unifiedmessaging",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "unifiedpolicy",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),
         (
             "user",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
                 (
                     0,
                     "Average latency: 0.00 ms",
-                    [("average_latency", 0.0023127912843234713, 40.0, 50.0, None, None)],
+                    [("average_latency_s", 2.312791284323471e-06, 0.04, 0.05, None, None)],
                 ),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
@@ -2398,12 +2398,12 @@ checks = {
         (
             "webservices",
             {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
+                "store_latency_s": (0.04, 0.05),
+                "clienttype_requests": (60, 70),
+                "clienttype_latency_s": (0.04, 0.05),
             },
             [
-                (0, "Average latency: 0.00 ms", [("average_latency", 0.0, 40.0, 50.0, None, None)]),
+                (0, "Average latency: 0.00 ms", [("average_latency_s", 0.0, 0.04, 0.05, None, None)]),
                 (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
             ],
         ),

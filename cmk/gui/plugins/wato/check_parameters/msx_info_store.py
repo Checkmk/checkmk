@@ -9,7 +9,28 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Float, Integer, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Float, Integer, Migrate, TextInput, Transform, Tuple
+
+
+def _ms_to_s(v: float) -> float:
+    return v / 1000.0
+
+
+def _s_to_ms(v: float) -> float:
+    return v * 1000.0
+
+
+def _migrate_milliseconds(values: object) -> dict:
+    if not isinstance(values, dict):
+        raise TypeError(values)
+
+    if "store_latency_s" in values:
+        return values
+
+    values["store_latency_s"] = tuple(_ms_to_s(x) for x in values.pop("store_latency"))
+    values["clienttype_latency_s"] = tuple(_ms_to_s(x) for x in values.pop("clienttype_latency"))
+
+    return values
 
 
 def _item_spec_msx_info_store():
@@ -20,41 +41,68 @@ def _item_spec_msx_info_store():
 
 
 def _parameter_valuespec_msx_info_store():
-    return Dictionary(
-        title=_("Set Levels"),
-        elements=[
-            (
-                "store_latency",
-                Tuple(
-                    title=_("Average latency for store requests"),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("ms"), default_value=40.0),
-                        Float(title=_("Critical at"), unit=_("ms"), default_value=50.0),
-                    ],
+    return Migrate(
+        migrate=_migrate_milliseconds,
+        valuespec=Dictionary(
+            title=_("Set Levels"),
+            elements=[
+                (
+                    "store_latency_s",
+                    Tuple(
+                        title=_("Average latency for store requests"),
+                        elements=[
+                            Transform(
+                                valuespec=Float(
+                                    title=_("Warning at"), unit=_("ms"), default_value=40.0
+                                ),
+                                back=_ms_to_s,
+                                forth=_s_to_ms,
+                            ),
+                            Transform(
+                                valuespec=Float(
+                                    title=_("Critical at"), unit=_("ms"), default_value=50.0
+                                ),
+                                back=_ms_to_s,
+                                forth=_s_to_ms,
+                            ),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "clienttype_latency",
-                Tuple(
-                    title=_("Average latency for client type requests"),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("ms"), default_value=40.0),
-                        Float(title=_("Critical at"), unit=_("ms"), default_value=50.0),
-                    ],
+                (
+                    "clienttype_latency_s",
+                    Tuple(
+                        title=_("Average latency for client type requests"),
+                        elements=[
+                            Transform(
+                                valuespec=Float(
+                                    title=_("Warning at"), unit=_("ms"), default_value=40.0
+                                ),
+                                back=_ms_to_s,
+                                forth=_s_to_ms,
+                            ),
+                            Transform(
+                                valuespec=Float(
+                                    title=_("Critical at"), unit=_("ms"), default_value=50.0
+                                ),
+                                back=_ms_to_s,
+                                forth=_s_to_ms,
+                            ),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "clienttype_requests",
-                Tuple(
-                    title=_("Maximum number of client type requests per second"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("requests"), default_value=60),
-                        Integer(title=_("Critical at"), unit=_("requests"), default_value=70),
-                    ],
+                (
+                    "clienttype_requests",
+                    Tuple(
+                        title=_("Maximum number of client type requests per second"),
+                        elements=[
+                            Integer(title=_("Warning at"), unit=_("requests"), default_value=60),
+                            Integer(title=_("Critical at"), unit=_("requests"), default_value=70),
+                        ],
+                    ),
                 ),
-            ),
-        ],
-        optional_keys=[],
+            ],
+            optional_keys=[],
+        ),
     )
 
 

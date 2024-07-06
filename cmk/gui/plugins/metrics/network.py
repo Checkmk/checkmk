@@ -942,7 +942,7 @@ metric_info["current_users"] = {
     "color": "23/a",
 }
 
-metric_info["average_latency"] = {
+metric_info["average_latency_s"] = {
     "title": _("Average Latency"),
     "unit": "s",
     "color": "35/a",

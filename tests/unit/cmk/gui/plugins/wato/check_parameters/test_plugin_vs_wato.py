@@ -453,8 +453,6 @@ class ErrorReporter:
         ("check", "mounts", "checkgroup_parameters:fs_mount_options"),
         ("check", "mq_queues", "checkgroup_parameters:mq_queues"),
         ("check", "msexch_dag_copyqueue", "checkgroup_parameters:msexch_copyqueue"),
-        ("check", "msexch_isclienttype", "checkgroup_parameters:msx_info_store"),
-        ("check", "msexch_isstore", "checkgroup_parameters:msx_info_store"),
         ("check", "mssql_connections", "checkgroup_parameters:mssql_connections"),
         ("check", "mysql_slave", "checkgroup_parameters:mysql_slave"),
         ("check", "netapp_api_connection", "checkgroup_parameters:netapp_instance"),

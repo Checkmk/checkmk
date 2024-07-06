@@ -2227,18 +2227,25 @@ def _obj_repr(
             return f"graph_{_obj_var_name()} = {_graph_repr(unit_parser, obj)}"
 
 
-def _imports_repr(migration_objects: MigratedObjects) -> Iterator[str]:
-    if migration_objects.metrics:
-        yield "metrics"
-        yield "Title"
-    if migration_objects.translations:
-        yield "translations"
-    if migration_objects.perfometers:
-        yield "perfometers"
-        yield "Title"
-    if migration_objects.graph_templates:
-        yield "graphs"
-        yield "Title"
+def _imports_repr(migration_objects: MigratedObjects) -> str:
+    def _import_names() -> Iterator[str]:
+        if migration_objects.metrics:
+            yield "metrics"
+            yield "Title"
+        if migration_objects.translations:
+            yield "translations"
+        if migration_objects.perfometers:
+            yield "perfometers"
+            yield "Title"
+        if migration_objects.graph_templates:
+            yield "graphs"
+            yield "Title"
+
+    return (
+        f"from cmk.graphing.v1 import {', '.join(import_names)}"
+        if (import_names := sorted(set(_import_names())))
+        else ""
+    )
 
 
 # .
@@ -2310,7 +2317,7 @@ def main() -> None:
             migrated_objects.graph_templates,
         )
 
-    if imports := sorted(set(_imports_repr(migrated_objects))):
+    if imports_repr := _imports_repr(migrated_objects):
         if args.cmk_header:
             print(
                 f"""#!/usr/bin/env python3
@@ -2319,7 +2326,7 @@ def main() -> None:
 # conditions defined in the file COPYING, which is part of this source code package.
 """
             )
-        print(f"from cmk.graphing.v1 import {', '.join(imports)}\n")
+        print(f"{imports_repr}\n")
     if migrated_objects:
         print("\n".join([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]) + "\n")
     if migrated_metrics := [_obj_repr(unit_parser, o) for o in migrated_objects.metrics]:

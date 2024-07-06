@@ -10193,6 +10193,13 @@ msgstr "Nu se poate încărca %s: %s"
 
 #, fuzzy, python-format
 msgid ""
+"Cannot load HW/SW Inventory history %s. Please remove the corrupted files."
+msgstr ""
+"Nu se pot încărca intrările din istoricul inventarului HW/SW %s. Vă rugăm să "
+"eliminați fișierele corupte."
+
+#, fuzzy, python-format
+msgid ""
 "Cannot load HW/SW Inventory history entries %s. Please remove the corrupted "
 "files."
 msgstr ""
@@ -12828,7 +12835,8 @@ msgstr "Configurarea de Eventlogs individuale"
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Configurarea agenților de monitorizare pentru Linux, Windows și Unix"
 
-msgid "Configuration of the Checkmk Hardware and Software Inventory System"
+#, fuzzy
+msgid "Configuration of the Checkmk hardware- and software inventory system"
 msgstr "Configurarea sistemului de inventariere hardware și software Checkmk"
 
 msgid "Configuration of the Datadog special agent."
@@ -15905,7 +15913,8 @@ msgstr "Intervalul de date"
 msgid "Date sent"
 msgstr "Date trimise"
 
-msgid "Date/Time"
+#, fuzzy
+msgid "Date/time"
 msgstr "Data/ora"
 
 #, python-format
@@ -17204,7 +17213,7 @@ msgid "Deploy the Checkmk EMC ScaleIO plug-in"
 msgstr "Implementați pluginul Checkmk EMC ScaleIO"
 
 #, fuzzy
-msgid "Deploy the Checkmk Inventory plug-in"
+msgid "Deploy the Checkmk HW/SW Inventory plug-in"
 msgstr "Implementați plugin-ul Checkmk Inventory"
 
 #, fuzzy
@@ -18731,7 +18740,7 @@ msgid "Do not deploy the Checkmk EMC ScaleIO plug-in"
 msgstr "Nu implementați pluginul Checkmk EMC ScaleIO"
 
 #, fuzzy
-msgid "Do not deploy the Checkmk Inventory plug-in"
+msgid "Do not deploy the Checkmk HW/SW Inventory plug-in"
 msgstr "Nu implementați pluginul Checkmk Inventory"
 
 #, fuzzy
@@ -25069,12 +25078,12 @@ msgid "HW/SW Inventory"
 msgstr "Inventarul HW/SW"
 
 #, fuzzy
-msgid "HW/SW Inventory history of host"
-msgstr "Istoricul de inventariere a gazdei"
+msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
+msgstr "Inventar hardware/software (Linux, Windows, Solaris, AIX)"
 
 #, fuzzy
-msgid "HW/SW Inventory of host"
-msgstr "Inventarul gazdei"
+msgid "HW/SW Inventory history"
+msgstr "Istoricul de inventariere a gazdei"
 
 #, fuzzy
 msgid "HW/SW Inventory rules"
@@ -25196,9 +25205,6 @@ msgstr "Erori necorectabile ale hard-disk-ului"
 msgid "Hardware"
 msgstr "Hardware"
 
-msgid "Hardware / Software Inventory"
-msgstr "Inventar hardware / software"
-
 msgid "Hardware Sensors via OpenHardwareMonitor"
 msgstr "Senzori hardware prin OpenHardwareMonitor"
 
@@ -25217,9 +25223,6 @@ msgstr "Starea hardware"
 
 msgid "Hardware, BIOS"
 msgstr "Hardware, BIOS"
-
-msgid "Hardware/Software-Inventory (Linux, Windows, Solaris, AIX)"
-msgstr "Inventar hardware/software (Linux, Windows, Solaris, AIX)"
 
 msgid "Has Inventory Data"
 msgstr "Are date de inventar"
@@ -26343,10 +26346,6 @@ msgstr "Rotația jurnalului istoric: Interval regulat de rotații"
 msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr ""
 "Rotația jurnalului istoric: Rotire în funcție de mărime (Limita de mărime)"
-
-#, fuzzy
-msgid "History of HW/SW Inventory"
-msgstr "Istoria evenimentului"
 
 msgid "History of event"
 msgstr "Istoria evenimentului"
@@ -29795,9 +29794,8 @@ msgid ""
 "hardware and software and makes the information available in Multisite and "
 "for exporting to third-party software. <b>Note:</b> in order to actually use "
 "the inventory for a host you also need to enable it in the ruleset <a "
-"href='wato.py?varname=active_checks"
-"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do HW/SW "
-"Inventory</a>."
+"href='wato.py?varname=active_checks%3Acmk_inv&folder=&mode=edit_ruleset'>Do "
+"HW/SW Inventory</a>."
 msgstr ""
 "Dacă activați această opțiune, pluginul agent <tt>mk_inventory</tt> va fi "
 "implementat pe gazdele linux și windows. Acesta adună informații despre "
@@ -32599,18 +32597,6 @@ msgstr "Cec inventariat"
 msgid "Inventory"
 msgstr "Inventar"
 
-msgid "Inventory Date/Time"
-msgstr "Data/ora de inventariere"
-
-msgid "Inventory History"
-msgstr "Istoricul inventarului"
-
-msgid "Inventory Historys"
-msgstr "Istoricul inventarului"
-
-msgid "Inventory Tree"
-msgstr "Arbore de inventariere"
-
 #, fuzzy, python-format
 msgid "Inventory attribute: %s"
 msgstr "Atributul inventarului"
@@ -32621,6 +32607,22 @@ msgstr "Modificări ale stocurilor"
 #, fuzzy, python-format
 msgid "Inventory column: %s"
 msgstr "Coloana Inventar"
+
+#, fuzzy
+msgid "Inventory date/time"
+msgstr "Data/ora de inventariere"
+
+#, fuzzy
+msgid "Inventory histories"
+msgstr "Istoricul inventarului"
+
+#, fuzzy
+msgid "Inventory history"
+msgstr "Istoricul inventarului"
+
+#, fuzzy
+msgid "Inventory history of host"
+msgstr "Istoricul de inventariere a gazdei"
 
 #, fuzzy, python-format
 msgid "Inventory node: %s"
@@ -32635,12 +32637,17 @@ msgstr ""
 "Inventarul tuturor plugin-urilor de agent implementate și a versiunilor "
 "acestora"
 
+#, fuzzy
+msgid "Inventory of host"
+msgstr "Inventarul gazdei"
+
 #, fuzzy, python-format
 msgid "Inventory table: %s"
 msgstr "Tabelul de inventariere"
 
-msgid "Inventory: History"
-msgstr "Inventar: Istorie"
+#, fuzzy
+msgid "Inventory tree"
+msgstr "Arbore de inventariere"
 
 msgid "Invert matching"
 msgstr "Inversarea corespondenței"
@@ -48008,10 +48015,6 @@ msgstr ""
 
 msgid "Received messages"
 msgstr "Mesaje primite"
-
-#, fuzzy
-msgid "Recent HW/SW Inventory"
-msgstr "Inventarul HW/SW"
 
 msgid "Recent event history"
 msgstr "Istoricul evenimentelor recente"
@@ -81710,6 +81713,20 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Hardware / Software Inventory"
+#~ msgstr "Inventar hardware / software"
+
+#, fuzzy
+#~ msgid "History of HW/SW Inventory"
+#~ msgstr "Istoria evenimentului"
+
+#~ msgid "Inventory: History"
+#~ msgstr "Inventar: Istorie"
+
+#, fuzzy
+#~ msgid "Recent HW/SW Inventory"
+#~ msgstr "Inventarul HW/SW"
 
 #~ msgid "Do hardware/software inventory"
 #~ msgstr "Efectuați un inventar hardware/software"

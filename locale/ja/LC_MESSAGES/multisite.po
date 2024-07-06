@@ -9718,6 +9718,13 @@ msgstr "読み込めません %s: %s"
 
 #, fuzzy, python-format
 msgid ""
+"Cannot load HW/SW Inventory history %s. Please remove the corrupted files."
+msgstr ""
+"HW/SWインベントリ履歴エントリ %s を読み込めません。破損したファイルを削除して"
+"ください。"
+
+#, fuzzy, python-format
+msgid ""
 "Cannot load HW/SW Inventory history entries %s. Please remove the corrupted "
 "files."
 msgstr ""
@@ -12291,7 +12298,8 @@ msgstr "個々のイベントログの構成"
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Linux、Windows、およびUnix用の監視エージェントの構成"
 
-msgid "Configuration of the Checkmk Hardware and Software Inventory System"
+#, fuzzy
+msgid "Configuration of the Checkmk hardware- and software inventory system"
 msgstr "Checkmkハードウェアおよびソフトウェアインベントリシステムの構成"
 
 msgid "Configuration of the Datadog special agent."
@@ -15311,7 +15319,8 @@ msgstr "日付範囲"
 msgid "Date sent"
 msgstr "送信データ"
 
-msgid "Date/Time"
+#, fuzzy
+msgid "Date/time"
 msgstr "日付/時刻"
 
 #, python-format
@@ -16579,7 +16588,7 @@ msgid "Deploy the Checkmk EMC ScaleIO plug-in"
 msgstr "Checkmk EMCScaleIOプラグインをデプロイします"
 
 #, fuzzy
-msgid "Deploy the Checkmk Inventory plug-in"
+msgid "Deploy the Checkmk HW/SW Inventory plug-in"
 msgstr "Checkmk Inventoryプラグインをデプロイします"
 
 #, fuzzy
@@ -18081,7 +18090,7 @@ msgid "Do not deploy the Checkmk EMC ScaleIO plug-in"
 msgstr "Checkmk EMC ScaleIOプラグインを導入しないでください"
 
 #, fuzzy
-msgid "Do not deploy the Checkmk Inventory plug-in"
+msgid "Do not deploy the Checkmk HW/SW Inventory plug-in"
 msgstr "Checkmk Inventory プラグインをデプロイしない"
 
 #, fuzzy
@@ -24379,12 +24388,12 @@ msgid "HW/SW Inventory"
 msgstr "HW/SWインベントリ"
 
 #, fuzzy
-msgid "HW/SW Inventory history of host"
-msgstr "ホストのインベントリ履歴"
+msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
+msgstr "ハードウェア / ソフトウェア-インベントリ(Linux、Windows、Solaris、AIX)"
 
 #, fuzzy
-msgid "HW/SW Inventory of host"
-msgstr "ホストのインベントリ"
+msgid "HW/SW Inventory history"
+msgstr "ホストのインベントリ履歴"
 
 #, fuzzy
 msgid "HW/SW Inventory rules"
@@ -24507,9 +24516,6 @@ msgstr "ハードドライブの修正不可能なエラー"
 msgid "Hardware"
 msgstr "ハードウェア"
 
-msgid "Hardware / Software Inventory"
-msgstr "ハードウェア/ソフトウェア インベントリ"
-
 msgid "Hardware Sensors via OpenHardwareMonitor"
 msgstr "OpenHardwareMonitorを介したハードウェアセンサー"
 
@@ -24528,9 +24534,6 @@ msgstr "ハードウェアステータス"
 
 msgid "Hardware, BIOS"
 msgstr "ハードウェア、BIOS"
-
-msgid "Hardware/Software-Inventory (Linux, Windows, Solaris, AIX)"
-msgstr "ハードウェア / ソフトウェア-インベントリ(Linux、Windows、Solaris、AIX)"
 
 msgid "Has Inventory Data"
 msgstr "インベントリデータがあります"
@@ -25611,10 +25614,6 @@ msgstr "履歴ログローテーション:定期的なローテーション間�
 
 msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr "履歴ログローテーション:サイズで回転(サイズの制限)"
-
-#, fuzzy
-msgid "History of HW/SW Inventory"
-msgstr "イベントの履歴"
 
 #, fuzzy
 msgid "History of event"
@@ -29011,9 +29010,8 @@ msgid ""
 "hardware and software and makes the information available in Multisite and "
 "for exporting to third-party software. <b>Note:</b> in order to actually use "
 "the inventory for a host you also need to enable it in the ruleset <a "
-"href='wato.py?varname=active_checks"
-"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do HW/SW "
-"Inventory</a>."
+"href='wato.py?varname=active_checks%3Acmk_inv&folder=&mode=edit_ruleset'>Do "
+"HW/SW Inventory</a>."
 msgstr ""
 "このオプションを有効にすると、エージェントプラグイン<tt>mk _inventory</tt>が "
 "Linux と Windows ホストに配備されます。これはインストールされたハードウェアと"
@@ -31713,18 +31711,6 @@ msgstr "インベントライズドチェック"
 msgid "Inventory"
 msgstr "インベントリ"
 
-msgid "Inventory Date/Time"
-msgstr "インベントリ Date/Time"
-
-msgid "Inventory History"
-msgstr "インベントリ履歴"
-
-msgid "Inventory Historys"
-msgstr "インベントリー履歴"
-
-msgid "Inventory Tree"
-msgstr "インベントリツリー"
-
 #, fuzzy, python-format
 msgid "Inventory attribute: %s"
 msgstr "インベントリ属性"
@@ -31735,6 +31721,22 @@ msgstr "インベントリーの変更"
 #, fuzzy, python-format
 msgid "Inventory column: %s"
 msgstr "インベントリカラム"
+
+#, fuzzy
+msgid "Inventory date/time"
+msgstr "インベントリ Date/Time"
+
+#, fuzzy
+msgid "Inventory histories"
+msgstr "インベントリー履歴"
+
+#, fuzzy
+msgid "Inventory history"
+msgstr "インベントリ履歴"
+
+#, fuzzy
+msgid "Inventory history of host"
+msgstr "ホストのインベントリ履歴"
 
 #, fuzzy, python-format
 msgid "Inventory node: %s"
@@ -31748,12 +31750,17 @@ msgid "Inventory of all deployed agent plug-ins and their versions"
 msgstr ""
 "配備されたすべてのエージェントプラグインとそのバージョンのインベントリー"
 
+#, fuzzy
+msgid "Inventory of host"
+msgstr "ホストのインベントリ"
+
 #, fuzzy, python-format
 msgid "Inventory table: %s"
 msgstr "インベントリテーブル"
 
-msgid "Inventory: History"
-msgstr "インベントリ:履歴"
+#, fuzzy
+msgid "Inventory tree"
+msgstr "インベントリツリー"
 
 msgid "Invert matching"
 msgstr "マッチングを反転"
@@ -46920,10 +46927,6 @@ msgstr ""
 
 msgid "Received messages"
 msgstr "受信したメッセージ"
-
-#, fuzzy
-msgid "Recent HW/SW Inventory"
-msgstr "HW/SWインベントリ"
 
 msgid "Recent event history"
 msgstr "最近のイベント履歴"
@@ -79679,6 +79682,20 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Hardware / Software Inventory"
+#~ msgstr "ハードウェア/ソフトウェア インベントリ"
+
+#, fuzzy
+#~ msgid "History of HW/SW Inventory"
+#~ msgstr "イベントの履歴"
+
+#~ msgid "Inventory: History"
+#~ msgstr "インベントリ:履歴"
+
+#, fuzzy
+#~ msgid "Recent HW/SW Inventory"
+#~ msgstr "HW/SWインベントリ"
 
 #~ msgid "Do hardware/software inventory"
 #~ msgstr "ハードウェア/ソフトウェアのインベントリを行う"

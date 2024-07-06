@@ -10237,6 +10237,13 @@ msgstr "No se puede cargar %s: %s"
 
 #, fuzzy, python-format
 msgid ""
+"Cannot load HW/SW Inventory history %s. Please remove the corrupted files."
+msgstr ""
+"No se pueden cargar las entradas del historial de inventario de HW/SW %s. "
+"Por favor, elimine los archivos corruptos."
+
+#, fuzzy, python-format
+msgid ""
 "Cannot load HW/SW Inventory history entries %s. Please remove the corrupted "
 "files."
 msgstr ""
@@ -12922,7 +12929,8 @@ msgstr "Configuración de los registros de eventos individuales"
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Configuración de agentes de monitorización para Linux, Windows y Unix"
 
-msgid "Configuration of the Checkmk Hardware and Software Inventory System"
+#, fuzzy
+msgid "Configuration of the Checkmk hardware- and software inventory system"
 msgstr ""
 "Configuración del sistema de inventario de hardware y software de Checkmk"
 
@@ -16023,7 +16031,8 @@ msgstr "Rango de fechas"
 msgid "Date sent"
 msgstr "Datos enviados"
 
-msgid "Date/Time"
+#, fuzzy
+msgid "Date/time"
 msgstr "Fecha/hora"
 
 #, python-format
@@ -17321,7 +17330,7 @@ msgid "Deploy the Checkmk EMC ScaleIO plug-in"
 msgstr "Implantar el plugin Checkmk EMC ScaleIO"
 
 #, fuzzy
-msgid "Deploy the Checkmk Inventory plug-in"
+msgid "Deploy the Checkmk HW/SW Inventory plug-in"
 msgstr "Implemente el complemento de inventario Checkmk"
 
 #, fuzzy
@@ -18865,7 +18874,7 @@ msgid "Do not deploy the Checkmk EMC ScaleIO plug-in"
 msgstr "No implemente el plugin Checkmk EMC ScaleIO"
 
 #, fuzzy
-msgid "Do not deploy the Checkmk Inventory plug-in"
+msgid "Do not deploy the Checkmk HW/SW Inventory plug-in"
 msgstr "No despliegue el plugin Checkmk Inventory"
 
 #, fuzzy
@@ -25275,12 +25284,12 @@ msgid "HW/SW Inventory"
 msgstr "Inventario de HW/SW"
 
 #, fuzzy
-msgid "HW/SW Inventory history of host"
-msgstr "Historial de inventario del host"
+msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
+msgstr "Inventario de hardware/software (Linux, Windows, Solaris, AIX)"
 
 #, fuzzy
-msgid "HW/SW Inventory of host"
-msgstr "Inventario del host"
+msgid "HW/SW Inventory history"
+msgstr "Historial de inventario del host"
 
 #, fuzzy
 msgid "HW/SW Inventory rules"
@@ -25402,9 +25411,6 @@ msgstr "Errores no corregibles en el disco duro"
 msgid "Hardware"
 msgstr "Hardware"
 
-msgid "Hardware / Software Inventory"
-msgstr "Inventario de hardware y software"
-
 msgid "Hardware Sensors via OpenHardwareMonitor"
 msgstr "Sensores de hardware mediante OpenHardwareMonitor"
 
@@ -25423,9 +25429,6 @@ msgstr "Estado del hardware"
 
 msgid "Hardware, BIOS"
 msgstr "Hardware, BIOS"
-
-msgid "Hardware/Software-Inventory (Linux, Windows, Solaris, AIX)"
-msgstr "Inventario de hardware/software (Linux, Windows, Solaris, AIX)"
 
 msgid "Has Inventory Data"
 msgstr "Tiene datos de inventario"
@@ -26551,10 +26554,6 @@ msgstr "Rotación del registro histórico: Intervalo regular de rotaciones"
 msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr ""
 "Rotación del registro histórico: Rotación por tamaño (Límite del tamaño)"
-
-#, fuzzy
-msgid "History of HW/SW Inventory"
-msgstr "Historia del evento"
 
 #, fuzzy
 msgid "History of event"
@@ -30017,9 +30016,8 @@ msgid ""
 "hardware and software and makes the information available in Multisite and "
 "for exporting to third-party software. <b>Note:</b> in order to actually use "
 "the inventory for a host you also need to enable it in the ruleset <a "
-"href='wato.py?varname=active_checks"
-"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do HW/SW "
-"Inventory</a>."
+"href='wato.py?varname=active_checks%3Acmk_inv&folder=&mode=edit_ruleset'>Do "
+"HW/SW Inventory</a>."
 msgstr ""
 "Si activa esta opción, el plugin de agente <tt>mk_inventory</tt> se "
 "desplegará en los hosts linux y windows. Recoge información sobre el "
@@ -32803,18 +32801,6 @@ msgstr "Cheque inventariado"
 msgid "Inventory"
 msgstr "Inventario"
 
-msgid "Inventory Date/Time"
-msgstr "Fecha/hora del inventario"
-
-msgid "Inventory History"
-msgstr "Historia del inventario"
-
-msgid "Inventory Historys"
-msgstr "Historial de inventarios"
-
-msgid "Inventory Tree"
-msgstr "Árbol de inventario"
-
 #, fuzzy, python-format
 msgid "Inventory attribute: %s"
 msgstr "Atributo de inventario"
@@ -32825,6 +32811,22 @@ msgstr "Cambios en el inventario"
 #, fuzzy, python-format
 msgid "Inventory column: %s"
 msgstr "Columna de inventario"
+
+#, fuzzy
+msgid "Inventory date/time"
+msgstr "Fecha/hora del inventario"
+
+#, fuzzy
+msgid "Inventory histories"
+msgstr "Historial de inventarios"
+
+#, fuzzy
+msgid "Inventory history"
+msgstr "Historia del inventario"
+
+#, fuzzy
+msgid "Inventory history of host"
+msgstr "Historial de inventario del host"
 
 #, fuzzy, python-format
 msgid "Inventory node: %s"
@@ -32837,12 +32839,17 @@ msgstr "Inventario de la configuración del núcleo de Linux (sysctl)"
 msgid "Inventory of all deployed agent plug-ins and their versions"
 msgstr "Inventario de todos los plugins de agente desplegados y sus versiones"
 
+#, fuzzy
+msgid "Inventory of host"
+msgstr "Inventario del host"
+
 #, fuzzy, python-format
 msgid "Inventory table: %s"
 msgstr "Tabla de inventario"
 
-msgid "Inventory: History"
-msgstr "Inventario: Historia"
+#, fuzzy
+msgid "Inventory tree"
+msgstr "Árbol de inventario"
 
 msgid "Invert matching"
 msgstr "Invertir la correspondencia"
@@ -48379,10 +48386,6 @@ msgstr ""
 
 msgid "Received messages"
 msgstr "Mensajes recibidos"
-
-#, fuzzy
-msgid "Recent HW/SW Inventory"
-msgstr "Inventario de HW/SW"
 
 msgid "Recent event history"
 msgstr "Historial de eventos recientes"
@@ -82286,6 +82289,20 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#~ msgid "Hardware / Software Inventory"
+#~ msgstr "Inventario de hardware y software"
+
+#, fuzzy
+#~ msgid "History of HW/SW Inventory"
+#~ msgstr "Historia del evento"
+
+#~ msgid "Inventory: History"
+#~ msgstr "Inventario: Historia"
+
+#, fuzzy
+#~ msgid "Recent HW/SW Inventory"
+#~ msgstr "Inventario de HW/SW"
 
 #~ msgid "Do hardware/software inventory"
 #~ msgstr "Hacer un inventario de hardware/software"

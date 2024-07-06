@@ -155,39 +155,27 @@ checks = {
         (
             u'_total',
             {
-                'store_latency': {
-                    'upper': (40.0, 50.0)
-                },
-                'clienttype_requests': {
-                    'upper': (60, 70)
-                },
-                'clienttype_latency': {
-                    'upper': (40.0, 50.0)
-                }
+                'store_latency_s': (0.04, 0.05),
+                'clienttype_requests': (60, 70),
+                'clienttype_latency_s': (0.04, 0.05),
             },
             [(
                 0,
                 'Average latency: 0.16 ms',
-                [('average_latency', 0.15550288783670518, 40.0, 50.0, None, None)],
+                [('average_latency_s', 0.00015550288783670518, 0.04, 0.05, None, None)],
             )],
         ),
         (
             u'mailbox database 0356176343',
             {
-                'store_latency': {
-                    'upper': (40.0, 50.0)
-                },
-                'clienttype_requests': {
-                    'upper': (60, 70)
-                },
-                'clienttype_latency': {
-                    'upper': (40.0, 50.0)
-                }
+                'store_latency_s': (0.04, 0.05),
+                'clienttype_requests': (60, 70),
+                'clienttype_latency_s': (0.04, 0.05),
             },
             [(
                 0,
                 'Average latency: 0.16 ms',
-                [('average_latency', 0.15550288783670518, 40.0, 50.0, None, None)],
+                [('average_latency_s', 0.00015550288783670518, 0.04, 0.05, None, None)],
             )],
         ),
     ],

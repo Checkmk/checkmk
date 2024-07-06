@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-imp
 # source for these defaults:
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
 factory_settings["msexch_rpcclientaccess_defaultlevels"] = {
-    "latency": (200.0, 250.0),
+    "latency_s": (0.2, 0.25),
     "requests": (30, 40),
 }
 
@@ -26,15 +26,19 @@ def check_msexch_rpcclientaccess(_no_item, params, parsed):
     # despite the source being raw-data, the averaged latency is
     # pre-processed
     table = parsed[""]
-    yield from wmi_yield_raw_counter(
-        table,
-        None,
-        "RPCAveragedLatency",
-        infoname="Average latency",
-        perfvar="average_latency",
-        levels=params["latency"],
-        unit="ms",
-    )
+
+    try:
+        latency = table.get(0, "RPCAveragedLatency")
+    except KeyError:
+        latency = None
+    if latency is not None:
+        yield check_levels(
+            float(latency) / 1000.0,
+            "average_latency_s",
+            get_levels_quadruple(params["latency_s"]),
+            infoname="Average latency",
+            human_readable_func=lambda value: f"{(value*1000.0):.2f} ms",
+        )
     yield from wmi_yield_raw_persec(
         table,
         None,

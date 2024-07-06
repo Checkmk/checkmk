@@ -10,35 +10,71 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Float, Integer, Tuple
+from cmk.gui.valuespec import Dictionary, Float, Integer, Transform, Tuple
+
+
+def _ms_to_s(v: float) -> float:
+    return v / 1000.0
+
+
+def _s_to_ms(v: float) -> float:
+    return v * 1000.0
+
+
+def _migrate_milliseconds(values: object) -> dict:
+    if not isinstance(values, dict):
+        raise TypeError(values)
+
+    if "latency_s" in values:
+        return values
+
+    values["latency_s"] = tuple(_ms_to_s(x) for x in values.pop("latency"))
+
+    return values
 
 
 def _parameter_valuespec_msx_rpcclientaccess():
-    return Dictionary(
-        title=_("Set Levels"),
-        elements=[
-            (
-                "latency",
-                Tuple(
-                    title=_("Average latency for RPC requests"),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("ms"), default_value=200.0),
-                        Float(title=_("Critical at"), unit=_("ms"), default_value=250.0),
-                    ],
+    return Transform(
+        forth=_migrate_milliseconds,
+        back=lambda v: v,
+        valuespec=Dictionary(
+            title=_("Set levels"),
+            elements=[
+                (
+                    "latency_s",
+                    Tuple(
+                        title=_("Average latency for RPC requests"),
+                        elements=[
+                            Transform(
+                                valuespec=Float(
+                                    title=_("Warning at"), unit=_("ms"), default_value=200.0
+                                ),
+                                back=_ms_to_s,
+                                forth=_s_to_ms,
+                            ),
+                            Transform(
+                                valuespec=Float(
+                                    title=_("Critical at"), unit=_("ms"), default_value=250.0
+                                ),
+                                back=_ms_to_s,
+                                forth=_s_to_ms,
+                            ),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "requests",
-                Tuple(
-                    title=_("Maximum number of RPC requests per second"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("requests"), default_value=30),
-                        Integer(title=_("Critical at"), unit=_("requests"), default_value=40),
-                    ],
+                (
+                    "requests",
+                    Tuple(
+                        title=_("Maximum number of RPC requests per second"),
+                        elements=[
+                            Integer(title=_("Warning at"), unit=_("requests"), default_value=30),
+                            Integer(title=_("Critical at"), unit=_("requests"), default_value=40),
+                        ],
+                    ),
                 ),
-            ),
-        ],
-        optional_keys=[],
+            ],
+            optional_keys=[],
+        ),
     )
 
 

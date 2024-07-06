@@ -156,28 +156,16 @@ discovery = {'': [(u'_total', None), (u'db3', None)]}
 checks = {
     '': [
         (u'_total', {
-            'store_latency': {
-                'upper': (40.0, 50.0)
-            },
-            'clienttype_requests': {
-                'upper': (60, 70)
-            },
-            'clienttype_latency': {
-                'upper': (40.0, 50.0)
-            }
-        }, [(0, 'Average latency: 0.46 ms', [('average_latency', 0.45888430902913163, 40.0, 50.0,
+            'store_latency_s': (0.04, 0.05),
+            'clienttype_requests': (60, 70),
+            'clienttype_latency_s': (0.04, 0.05)
+        }, [(0, 'Average latency: 0.46 ms', [('average_latency_s', 0.00045888430902913163, 0.04, 0.05,
                                             None, None)])]),
         (u'db3', {
-            'store_latency': {
-                'upper': (40.0, 50.0)
-            },
-            'clienttype_requests': {
-                'upper': (60, 70)
-            },
-            'clienttype_latency': {
-                'upper': (40.0, 50.0)
-            }
-        }, [(0, 'Average latency: 0.46 ms', [('average_latency', 0.45888430902913163, 40.0, 50.0,
+            'store_latency_s': (0.04, 0.05),
+            'clienttype_requests': (60, 70),
+            'clienttype_latency_s': (0.04, 0.05)
+        }, [(0, 'Average latency: 0.46 ms', [('average_latency_s', 0.00045888430902913163, 0.04, 0.05,
                                             None, None)])]),
     ]
 }

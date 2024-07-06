@@ -392,18 +392,6 @@ metric_info["wlan_retries"] = {
     "color": "24/a",
 }
 
-metric_info["broadcast_packets"] = {
-    "title": _("Broadcast packets"),
-    "unit": "1/s",
-    "color": "11/a",
-}
-
-metric_info["multicast_packets"] = {
-    "title": _("Multicast packets"),
-    "unit": "1/s",
-    "color": "14/a",
-}
-
 metric_info["fw_connections_active"] = {
     "title": _("Active connections"),
     "unit": "count",
@@ -1121,12 +1109,6 @@ metric_info["outside_macs"] = {
     "title": _("Number of unique outside MAC addresses"),
     "unit": "count",
     "color": "33/a",
-}
-
-metric_info["queue"] = {
-    "title": _("Queue length"),
-    "unit": "count",
-    "color": "42/a",
 }
 
 metric_info["avg_response_time"] = {

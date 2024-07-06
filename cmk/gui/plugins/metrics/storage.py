@@ -21,12 +21,6 @@ from cmk.gui.i18n import _
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["last_updated"] = {
-    "title": _("Last updated"),
-    "unit": "s",
-    "color": "#80f000",
-}
-
 metric_info["deferred_age"] = {
     "title": _("Deferred files age"),
     "unit": "s",

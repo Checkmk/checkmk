@@ -808,7 +808,7 @@ def _parse_legacy_metric_info(
         rgb = _rgb_from_legacy_wheel(legacy_color)
     return metrics.Metric(
         name=name,
-        title=Title(str(info["title"])),
+        title=Title("%s") % str(info["title"]),
         unit=unit_parser.parse(info["unit"]),
         color=min(
             (_Distance.from_rgb(rgb, color) for color in metrics.Color),
@@ -941,7 +941,7 @@ def _make_percent(
     explicit_color: metrics.Color,
 ) -> metrics.Fraction:
     return metrics.Fraction(
-        Title(explicit_title),
+        Title("%s") % explicit_title,
         metrics.Unit(metrics.DecimalNotation("%")),
         explicit_color,
         dividend=metrics.Product(
@@ -1078,7 +1078,7 @@ def _resolve_stack(
             case "+":
                 resolved.append(
                     metrics.Sum(
-                        Title(explicit_title),
+                        Title("%s") % explicit_title,
                         explicit_color,
                         [left, right],
                     )
@@ -1086,7 +1086,7 @@ def _resolve_stack(
             case "*":
                 resolved.append(
                     metrics.Product(
-                        Title(explicit_title),
+                        Title("%s") % explicit_title,
                         unit_parser.parse(explicit_unit_name),
                         explicit_color,
                         [left, right],
@@ -1095,7 +1095,7 @@ def _resolve_stack(
             case "-":
                 resolved.append(
                     metrics.Difference(
-                        Title(explicit_title),
+                        Title("%s") % explicit_title,
                         explicit_color,
                         minuend=left,
                         subtrahend=right,
@@ -1105,7 +1105,7 @@ def _resolve_stack(
                 # Handle zero division by always adding a tiny bit to the divisor
                 resolved.append(
                     metrics.Fraction(
-                        Title(explicit_title),
+                        Title("%s") % explicit_title,
                         unit_parser.parse(explicit_unit_name),
                         explicit_color,
                         dividend=left,
@@ -1536,7 +1536,7 @@ def _parse_legacy_graph_info(
     if lower_compound_lines or lower_simple_lines:
         lower = graphs.Graph(
             name=name,
-            title=Title(str(info["title"])),
+            title=Title("%s") % str(info["title"]),
             minimal_range=minimal_range,
             compound_lines=lower_compound_lines,
             simple_lines=list(lower_simple_lines) + list(lower_scalars),
@@ -1554,7 +1554,7 @@ def _parse_legacy_graph_info(
             simple_lines.extend(scalars)
         upper = graphs.Graph(
             name=name,
-            title=Title(str(info["title"])),
+            title=Title("%s") % str(info["title"]),
             minimal_range=minimal_range,
             compound_lines=upper_compound_lines,
             simple_lines=simple_lines,
@@ -1584,7 +1584,7 @@ def _parse_legacy_graph_infos(
         if lower is not None and upper is not None:
             yield graphs.Bidirectional(
                 name=lower.name,
-                title=Title(str(info["title"])),
+                title=Title("%s") % str(info["title"]),
                 lower=graphs.Graph(
                     name=f"{lower.name}_lower",
                     title=lower.title,

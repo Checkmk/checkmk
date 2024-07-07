@@ -1755,10 +1755,21 @@ def _balance_colors_from_perfometer(
 
 
 def _collect_metric_names_from_graph(migrated_graph_template: graphs.Graph) -> Iterator[str]:
+    if migrated_graph_template.minimal_range:
+        if not isinstance(migrated_graph_template.minimal_range.lower, (int, float)):
+            yield from _collect_metric_names_from_quantity(
+                migrated_graph_template.minimal_range.lower
+            )
+        if not isinstance(migrated_graph_template.minimal_range.lower, (int, float)):
+            yield from _collect_metric_names_from_quantity(
+                migrated_graph_template.minimal_range.lower
+            )
     for compound_line in migrated_graph_template.compound_lines:
         yield from _collect_metric_names_from_quantity(compound_line)
     for simple_line in migrated_graph_template.simple_lines:
         yield from _collect_metric_names_from_quantity(simple_line)
+    yield from migrated_graph_template.optional
+    yield from migrated_graph_template.conflicting
 
 
 def _balance_colors_from_graph(

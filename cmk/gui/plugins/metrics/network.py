@@ -33,18 +33,6 @@ metric_info["connection_time"] = {
     "color": "#94b65a",
 }
 
-metric_info["active_sessions"] = {
-    "title": _("Active sessions"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["active_sessions_peak"] = {
-    "title": _("Peak value of active sessions"),
-    "unit": "count",
-    "color": "#000000",
-}
-
 metric_info["session_rate"] = {
     "title": _("Session rate"),
     "unit": "1/s",
@@ -805,19 +793,6 @@ graph_info["channel_utilization_5ghz"] = {
         "channel_utilization_5ghz:crit",
     ],
     "range": (0, 100),
-}
-
-graph_info["active_sessions_with_peak_value"] = {
-    "title": _("Active sessions"),
-    "metrics": [
-        ("active_sessions", "area"),
-        ("active_sessions_peak", "line"),
-    ],
-    "range": (0, "active_sessions_peak:max"),
-    "scalars": [
-        "active_sessions:warn",
-        "active_sessions:crit",
-    ],
 }
 
 graph_info["data_transfer"] = {

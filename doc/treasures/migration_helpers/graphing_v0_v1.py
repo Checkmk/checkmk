@@ -1123,6 +1123,39 @@ def _resolve_stack(
     return resolved[0]
 
 
+def _flat_summand(
+    summand: (
+        str
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
+    ),
+) -> Iterator[
+    str
+    | metrics.Constant
+    | metrics.WarningOf
+    | metrics.CriticalOf
+    | metrics.MinimumOf
+    | metrics.MaximumOf
+    | metrics.Sum
+    | metrics.Product
+    | metrics.Difference
+    | metrics.Fraction
+]:
+    match summand:
+        case metrics.Sum():
+            for sub_summand in summand.summands:
+                yield from _flat_summand(sub_summand)
+        case _:
+            yield summand
+
+
 def _parse_expression(
     unit_parser: UnitParser, expression: str, explicit_title: str
 ) -> (
@@ -1183,7 +1216,19 @@ def _parse_expression(
                     _parse_single_expression(unit_parser, word, explicit_title, explicit_color)
                 )
 
-    return _resolve_stack(unit_parser, stack, explicit_title, explicit_unit_name, explicit_color)
+    resolved = _resolve_stack(
+        unit_parser, stack, explicit_title, explicit_unit_name, explicit_color
+    )
+    # Flat summands if we have several, subsequent 'Sum's, eg. "metric1,metric2,metrics3,+,+"
+    return (
+        metrics.Sum(
+            resolved.title,
+            resolved.color,
+            [f for s in resolved.summands for f in _flat_summand(s)],
+        )
+        if isinstance(resolved, metrics.Sum)
+        else resolved
+    )
 
 
 def _raw_metric_names(

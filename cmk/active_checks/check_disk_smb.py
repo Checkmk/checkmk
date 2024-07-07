@@ -355,19 +355,21 @@ def _check_disk_usage_threshold(
     free_percentage = (smb_share.available_bytes / smb_share.total_bytes) * 100
     used_percentage = 100 - free_percentage
 
+    if used_percentage < warn:
+        return (
+            0,
+            f"Disk ok - {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
+        )
+
     if used_percentage >= crit:
         return (
             2,
             f"CRITICAL: Only {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
         )
-    if used_percentage >= warn:
-        return (
-            1,
-            f"WARNING: Only {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
-        )
+
     return (
-        0,
-        f"Disk ok - {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
+        1,
+        f"WARNING: Only {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
     )
 
 

@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Self
+from typing import Any, Self
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -38,13 +39,13 @@ class GUICrashReport(ABCCrashReport):
         cls,
         crashdir: Path,
         version_info: dict[str, object],
-        details: object | None = None,
-        type_specific_attributes: object | None = None,
+        details: Mapping[str, Any] | None = None,
+        type_specific_attributes: dict[str, Any] | None = None,
     ) -> Self:
-        return super().from_exception(
-            crashdir,
-            version_info,
-            details={
+        try:
+            # Access any attribute to trigger proxy object lookup
+            _x = request.meta
+            request_details = {
                 "page": requested_file_name(request) + ".py",
                 "vars": {
                     key: "***" if value in ["password", "_password"] else value
@@ -57,7 +58,15 @@ class GUICrashReport(ABCCrashReport):
                 "is_ssl_request": request.is_ssl_request,
                 "language": get_current_language(),
                 "request_method": request.request_method,
-            },
+            }
+        except RuntimeError:
+            request_details = {}
+
+        return super().from_exception(
+            crashdir,
+            version_info,
+            details={**request_details, **(details or {})},
+            type_specific_attributes=type_specific_attributes,
         )
 
     def url(self) -> str:

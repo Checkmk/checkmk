@@ -27,12 +27,6 @@ metric_info["streams"] = {
     "color": "35/a",
 }
 
-metric_info["zfs_l2_hit_ratio"] = {
-    "title": _("L2 cache hit ratio"),
-    "unit": "%",
-    "color": "46/a",
-}
-
 metric_info["zfs_metadata_used"] = {
     "title": _("Used meta data"),
     "unit": "bytes",

@@ -441,14 +441,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["cache_hit_ratio"],
-        "total": 100,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["zfs_l2_hit_ratio"],
         "total": 100,
     }

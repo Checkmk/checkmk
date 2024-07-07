@@ -27,28 +27,10 @@ metric_info["streams"] = {
     "color": "35/a",
 }
 
-metric_info["cache_hit_ratio"] = {
-    "title": _("Cache hit ratio"),
-    "unit": "%",
-    "color": "#60c0c0",
-}
-
 metric_info["zfs_l2_hit_ratio"] = {
     "title": _("L2 cache hit ratio"),
     "unit": "%",
     "color": "46/a",
-}
-
-metric_info["prefetch_data_hit_ratio"] = {
-    "title": _("Prefetch data hit ratio"),
-    "unit": "%",
-    "color": "41/b",
-}
-
-metric_info["prefetch_metadata_hit_ratio"] = {
-    "title": _("Prefetch metadata hit ratio"),
-    "unit": "%",
-    "color": "43/a",
 }
 
 metric_info["zfs_metadata_used"] = {
@@ -715,15 +697,6 @@ graph_info["zfs_meta_data"] = {
         ("zfs_metadata_max", "line"),
         ("zfs_metadata_used", "line"),
         ("zfs_metadata_limit", "line"),
-    ],
-}
-
-graph_info["cache_hit_ratio"] = {
-    "title": _("Cache hit ratio"),
-    "metrics": [
-        ("cache_hit_ratio", "line"),
-        ("prefetch_metadata_hit_ratio", "line"),
-        ("prefetch_data_hit_ratio", "line"),
     ],
 }
 

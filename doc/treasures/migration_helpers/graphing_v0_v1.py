@@ -2332,14 +2332,17 @@ def main() -> None:
             )
         print(f"{imports_repr}\n")
     if migrated_objects:
-        print("\n".join([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]) + "\n")
-    if migrated_metrics := [_obj_repr(unit_parser, o) for o in migrated_objects.metrics]:
+        print(
+            "\n".join(sorted([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]))
+            + "\n"
+        )
+    if migrated_metrics := sorted([_obj_repr(unit_parser, o) for o in migrated_objects.metrics]):
         print("\n".join(migrated_metrics) + "\n")
     if migrated_perfometers := [_obj_repr(unit_parser, o) for o in migrated_objects.perfometers]:
         print("\n".join(migrated_perfometers) + "\n")
-    if migrated_graph_templates := [
-        _obj_repr(unit_parser, o) for o in migrated_objects.graph_templates
-    ]:
+    if migrated_graph_templates := sorted(
+        [_obj_repr(unit_parser, o) for o in migrated_objects.graph_templates]
+    ):
         print("\n".join(migrated_graph_templates) + "\n")
 
     if migration_errors.metrics_without_def:

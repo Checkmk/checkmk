@@ -17,6 +17,20 @@ from cmk.utils.password_store import replace_passwords
 from cmk.utils.render import fmt_bytes, percent
 
 
+@dataclass
+class Metric:
+    name: str
+    value: float
+    levels: tuple[float, float] | None
+    boundaries: tuple[float, float] | None
+
+    def __str__(self) -> str:
+        l = f"{self.levels[0]};{self.levels[1]};" if self.levels else ";;"
+        b = f"{self.boundaries[0]};{self.boundaries[1]}" if self.boundaries else ";"
+        # I'm not too sure about the single quotes here, but keeping it for now
+        return f"'{self.name}'={self.value}B;{l}{b}"
+
+
 def main(
     argv: Sequence[str] | None = None,
     smb_share: SMBShareDiskUsageProto | None = None,
@@ -45,12 +59,8 @@ class SMBShareDiskUsageProto(Protocol):
     ) -> ErrorResult | SMBShare: ...
 
 
-def _output_check_result(
-    summary: str, perfdata: tuple[str, str, float, float, int, int] | None
-) -> None:
-    print(
-        summary + (f""" | '{perfdata[0]}'={";".join(map(str, perfdata[1:]))}""" if perfdata else "")
-    )
+def _output_check_result(summary: str, perfdata: Metric | None) -> None:
+    print(f"{summary} | {perfdata}" if perfdata else summary)
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -105,7 +115,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "--levels",
         type=float,
         nargs=2,
-        default=[85, 95],
+        default=None,
         metavar=("WARNING", "CRITICAL"),
         help="""Percent of used space at which a warning and critical will be generated (Defaults: 85 and 95).
             Warning percentage should be less than critical.""",
@@ -314,20 +324,18 @@ def _extract_data_from_not_matching_lines(
 
 def _check_smb_share(
     smb_share: ErrorResult | SMBShare,
-    warn: float,
-    crit: float,
+    levels: Sequence[float] | None,
     share_name: str,
-) -> tuple[int, str, tuple[str, str, float, float, int, int] | None]:
+) -> tuple[int, str, Metric | None]:
     if isinstance(smb_share, ErrorResult):
         return (smb_share.state, smb_share.summary, None)
 
-    return _check_disk_usage_threshold(smb_share, warn, crit) + (
+    return _check_disk_usage_threshold(smb_share, levels) + (
         _create_perfdata(
             share_name=share_name,
             total_bytes=smb_share.total_bytes,
             available_bytes=smb_share.available_bytes,
-            warn=warn,
-            crit=crit,
+            levels=levels,
         ),
     )
 
@@ -337,31 +345,32 @@ def _create_perfdata(
     share_name: str,
     total_bytes: int,
     available_bytes: int,
-    warn: float,
-    crit: float,
-) -> tuple[str, str, float, float, int, int]:
-    occupied_bytes = f"{total_bytes - available_bytes}B"
-    warn_bytes = (warn / 100) * total_bytes
-    crit_bytes = (crit / 100) * total_bytes
-
-    return (share_name, occupied_bytes, warn_bytes, crit_bytes, 0, total_bytes)
+    levels: Sequence[float] | None,
+) -> Metric:
+    return Metric(
+        name=share_name,
+        value=total_bytes - available_bytes,
+        levels=(
+            (levels[0] / 100.0 * total_bytes, levels[1] / 100.0 * total_bytes) if levels else None
+        ),
+        boundaries=(0, total_bytes),
+    )
 
 
 def _check_disk_usage_threshold(
     smb_share: SMBShare,
-    warn: float,
-    crit: float,
+    levels: Sequence[float] | None,
 ) -> tuple[int, str]:
     free_percentage = (smb_share.available_bytes / smb_share.total_bytes) * 100
     used_percentage = 100 - free_percentage
 
-    if used_percentage < warn:
+    if levels is None or used_percentage < levels[0]:
         return (
             0,
             f"Disk ok - {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
         )
 
-    if used_percentage >= crit:
+    if used_percentage >= levels[1]:
         return (
             2,
             f"CRITICAL: Only {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
@@ -376,9 +385,8 @@ def _check_disk_usage_threshold(
 def _check_disk_usage_main(
     argv: Sequence[str],
     smb_share_disk_usage: SMBShareDiskUsageProto,
-) -> tuple[int, str, tuple[str, str, float, float, int, int] | None]:
+) -> tuple[int, str, Metric | None]:
     args = parse_arguments(argv=argv)
-
     return _check_smb_share(
         smb_share=smb_share_disk_usage(
             share=args.share,
@@ -390,7 +398,6 @@ def _check_disk_usage_main(
             ip_address=args.address or None,
             configfile=args.configfile or None,
         ),
-        warn=args.levels[0],
-        crit=args.levels[1],
+        levels=args.levels,
         share_name=args.share,
     )

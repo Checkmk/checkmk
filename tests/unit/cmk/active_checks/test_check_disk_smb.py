@@ -44,6 +44,21 @@ class _SMBShareDiskUsageError:
         )
 
 
+def test_main_no_levels(capsys: pytest.CaptureFixture[str]) -> None:
+    assert (
+        main(
+            ["share", "-u", "cratus", "-p", "some-pw", "-H", "hostname"],
+            _SMBShareDiskUsageOK("\\\\hostname\\share", 1, 102400),
+        )
+        == 0
+    )
+    out, err = capsys.readouterr()
+    assert (
+        out == "Disk ok - 1.0 B (0.001%) free on \\\\hostname\\share | 'share'=102399B;;;0;102400\n"
+    )
+    assert not err
+
+
 def test_main_ok_state(capsys: pytest.CaptureFixture[str]) -> None:
     assert (
         main(

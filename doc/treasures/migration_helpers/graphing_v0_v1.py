@@ -67,13 +67,6 @@ def _parse_arguments() -> argparse.Namespace:
         help="Stop at the very first exception",
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Show informations during migration",
-    )
-    parser.add_argument(
         "--cmk-header",
         action="store_true",
         default=False,
@@ -111,9 +104,9 @@ def _parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _setup_logger(debug: bool, verbose: bool) -> None:
+def _setup_logger(debug: bool) -> None:
     handler: logging.StreamHandler[TextIO] | logging.NullHandler
-    if debug or verbose:
+    if debug:
         handler = logging.StreamHandler()
     else:
         handler = logging.NullHandler()
@@ -2264,7 +2257,7 @@ def _imports_repr(migration_objects: MigratedObjects) -> str:
 
 def main() -> None:
     args = _parse_arguments()
-    _setup_logger(args.debug, args.verbose)
+    _setup_logger(args.debug)
     metric_name_filter = _MetricNameFilter(args.filter_metric_names)
     migration_errors = MigrationErrors()
 

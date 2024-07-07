@@ -256,6 +256,7 @@ def test_registered_configvars() -> None:
             "cmc_statehist_cache",
             "cmc_timeperiod_horizon",
             "dcd_log_levels",
+            "dcd_site_update_interval",
             "dcd_web_api_connection",
             "liveproxyd_default_connection_params",
             "liveproxyd_log_levels",

@@ -374,12 +374,6 @@ metric_info["active_vpn_tunnels"] = {
     "color": "43/a",
 }
 
-metric_info["current_users"] = {
-    "title": _("Current users"),
-    "unit": "count",
-    "color": "23/a",
-}
-
 metric_info["tcp_active_sessions"] = {
     "title": _("Active TCP sessions"),
     "unit": "count",

@@ -27,24 +27,6 @@ metric_info["streams"] = {
     "color": "35/a",
 }
 
-metric_info["zfs_metadata_used"] = {
-    "title": _("Used meta data"),
-    "unit": "bytes",
-    "color": "31/a",
-}
-
-metric_info["zfs_metadata_max"] = {
-    "title": _("Maxmimum of meta data"),
-    "unit": "bytes",
-    "color": "33/a",
-}
-
-metric_info["zfs_metadata_limit"] = {
-    "title": _("Limit of meta data"),
-    "unit": "bytes",
-    "color": "36/a",
-}
-
 # cloud storage
 
 metric_info["used_space"] = {
@@ -683,15 +665,6 @@ graph_info["write_cache_usage"] = {
     "title": _("Write cache usage"),
     "metrics": [("write_cache_usage", "area")],
     "range": (0, 100),
-}
-
-graph_info["zfs_meta_data"] = {
-    "title": _("ZFS meta data"),
-    "metrics": [
-        ("zfs_metadata_max", "line"),
-        ("zfs_metadata_used", "line"),
-        ("zfs_metadata_limit", "line"),
-    ],
 }
 
 graph_info["wasted_space_of_tables_and_indexes"] = {

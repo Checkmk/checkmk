@@ -57,15 +57,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "backup_size",
-        "half_value": 150 * GB,
-        "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "stacked",
         "perfometers": [
             {

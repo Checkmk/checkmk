@@ -5,11 +5,27 @@ FROM ${IMAGE_CENTOS_7} as base
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"
 
+# CentOS-7 is deprecated since 2024-07-01
+RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo
+RUN sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo
+RUN sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
+
 RUN yum -y --enablerepo=extras install \
-    epel-release \
-    && yum -y install \
-    centos-release-scl-rh \
-    && yum -y install \
+    epel-release
+
+# Special handling for epel*.repo
+RUN sed -i 's/metalink=/#metalink=/g' /etc/yum.repos.d/epel*
+RUN sed -i 's|^#.*baseurl=http|baseurl=http|g' /etc/yum.repos.d/epel*
+
+RUN yum -y install \
+    centos-release-scl-rh
+
+# Special handling for CentOS-SCLo-rh.repo
+RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
+RUN sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
+RUN sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
+
+RUN yum -y install \
     bison \
     curl \
     dpkg \

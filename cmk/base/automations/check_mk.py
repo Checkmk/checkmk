@@ -1497,6 +1497,7 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
             f"{precompiled_hostchecks_dir}/{hostname}.py",
             f"{autochecks_dir}/{hostname}.mk",
             f"{counters_dir}/{hostname}",
+            f"{discovered_host_labels_dir}/{hostname}.mk",
             f"{tcp_cache_dir}/{hostname}",
             f"{var_dir}/persisted/{hostname}",
             f"{var_dir}/inventory/{hostname}",

@@ -17,6 +17,7 @@ from collections.abc import Mapping
 from typing import Any, cast
 
 from cmk.utils import paths
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.password_store import Password
 
 from cmk.gui.http import Response
@@ -124,16 +125,24 @@ def update_password(params: Mapping[str, Any]) -> Response:
     path_params=[NAME_ID_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[400],
 )
 def delete_password(params: Mapping[str, Any]) -> Response:
     """Delete a password"""
     user.need_permission("wato.edit")
     user.need_permission("wato.passwords")
     ident = params["name"]
-    if ident not in load_passwords():
+    if password := load_passwords().get(ident):
+        if is_locked_by_quick_setup(password.get("locked_by")):
+            return problem(
+                status=400,
+                title=f'The password "{ident}" is locked by Quick setup.',
+                detail="Locked passwords cannot be removed.",
+            )
+    else:
         return problem(
             status=404,
-            title='Password "{ident}" is not known.',
+            title=f'Password "{ident}" is not known.',
             detail="The password you asked for is not known. Please check for eventual misspellings.",
         )
     remove_password(ident)

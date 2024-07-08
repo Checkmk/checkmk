@@ -49,14 +49,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["mem_perm_used"],
-        "total": "mem_perm_used:max",
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["mem_heap"],
         "total": "mem_heap:max",
     }

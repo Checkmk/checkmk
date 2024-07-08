@@ -29,12 +29,6 @@ metric_info["streams"] = {
 
 # cloud storage
 
-metric_info["mem_perm_used"] = {
-    "color": "#80ff40",
-    "title": _("Permanent generation memory"),
-    "unit": "bytes",
-}
-
 metric_info["mem_growth"] = {
     "title": _("Memory usage growth"),
     "unit": "bytes/d",
@@ -803,15 +797,4 @@ graph_info["harddrive_health_statistic"] = {
         ("harddrive_uncorrectable_errors", "stack"),
         ("harddrive_udma_crc_errors", "stack"),
     ],
-}
-
-graph_info["mem_perm_used"] = {
-    "title": _("Permanent generation memory"),
-    "metrics": [("mem_perm_used", "area")],
-    "scalars": [
-        "mem_perm_used:warn",
-        "mem_perm_used:crit",
-        ("mem_perm_used:max#000000", _("Max Perm used")),
-    ],
-    "range": (0, "mem_perm_used:max"),
 }

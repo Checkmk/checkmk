@@ -103,31 +103,6 @@ metric_info["pci_io_util"] = {
     "color": "26/a",
 }
 
-metric_info["memory_util"] = {
-    "title": _l("Memory utilization"),
-    "unit": "%",
-    "color": "26/a",
-}
-
-metric_info["memory_util_50"] = {
-    "title": _l("Memory utilization (50th percentile)"),
-    "unit": "%",
-    "color": "26/a",
-}
-
-metric_info["memory_util_95"] = {
-    "title": _l("Memory utilization (95th percentile)"),
-    "unit": "%",
-    "color": "22/a",
-}
-
-metric_info["memory_util_99"] = {
-    "title": _l("Memory utilization (99th percentile)"),
-    "unit": "%",
-    "color": "22/a",
-}
-
-
 metric_info["generic_util"] = {
     "title": _l("Utilization"),
     "unit": "%",
@@ -558,15 +533,6 @@ graph_info["per_core_utilization_average"] = {
     "metrics": [("cpu_core_util_average_%d" % num, "line") for num in range(MAX_CORES)],
     "range": (0, 100),
     "optional_metrics": ["cpu_core_util_average_%d" % num for num in range(2, MAX_CORES)],
-}
-
-graph_info["memory_utilization_percentile"] = {
-    "title": _l("Memory utilization"),
-    "metrics": [
-        ("memory_util_50", "line"),
-        ("memory_util_95", "line"),
-        ("memory_util_99", "line"),
-    ],
 }
 
 graph_info["cpu_utilization"] = {

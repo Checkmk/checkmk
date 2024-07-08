@@ -77,14 +77,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["total_cache_usage"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "stacked",
         "perfometers": [
             {

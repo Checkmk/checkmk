@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["total_cache_usage"] = {
-    "title": _("Total cache usage"),
-    "unit": "%",
-    "color": "#0ae86d",
-}
-
 metric_info["harddrive_power_cycles"] = {
     "title": _("Harddrive power cycles"),
     "unit": "count",
@@ -136,12 +130,6 @@ metric_info["io_consumption_percent"] = {
 #   +----------------------------------------------------------------------+
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
-
-graph_info["total_cache_usage"] = {
-    "title": _("Total cache usage"),
-    "metrics": [("total_cache_usage", "area")],
-    "range": (0, 100),
-}
 
 # diskstat checks
 

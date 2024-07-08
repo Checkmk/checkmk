@@ -119,7 +119,6 @@ UNMIGRATED = {
     "jira",
     "jolokia",
     "mqtt",
-    "rabbitmq",
     "random",
     "ruckus_spot",
     "salesforce",

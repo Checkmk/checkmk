@@ -35,36 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["mem_lnx_dirty"] = {
-    "title": _("Dirty disk blocks"),
-    "color": "#f2904e",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_writeback"] = {
-    "title": _("Currently being written"),
-    "color": "#f2df40",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_nfs_unstable"] = {
-    "title": _("Modified NFS data"),
-    "color": "#c6f24e",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_bounce"] = {
-    "title": _("Bounce buffers"),
-    "color": "#4ef26c",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_writeback_tmp"] = {
-    "title": _("Dirty FUSE data"),
-    "color": "#4eeaf2",
-    "unit": "bytes",
-}
-
 metric_info["mem_lnx_total_total"] = {
     "title": _("Total virtual memory"),
     "color": "#1e8fff",
@@ -601,17 +571,6 @@ graph_info["ram_used"] = {
     "range": (0, "mem_used:max"),
 }
 
-
-graph_info["filesystem_writeback"] = {
-    "title": _("Filesystem writeback"),
-    "metrics": [
-        ("mem_lnx_dirty", "area"),
-        ("mem_lnx_writeback", "stack"),
-        ("mem_lnx_nfs_unstable", "stack"),
-        ("mem_lnx_bounce", "stack"),
-        ("mem_lnx_writeback_tmp", "stack"),
-    ],
-}
 
 graph_info["memory_committing"] = {
     "title": _("Memory committing"),

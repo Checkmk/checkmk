@@ -29,7 +29,7 @@ class FakeLocalConnection:
 def test_log_to_history(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(livestatus, "LocalConnection", FakeLocalConnection)
     with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))):
-        notify.log_to_history("ä")
+        notify.log_to_history(notify.SanitizedLivestatusLogStr("ä"))
 
     assert FakeLocalConnection.sent_command == "[1523811000] LOG;ä"
     assert FakeLocalConnection.timeout == 2

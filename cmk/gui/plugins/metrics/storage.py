@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["read_hits"] = {
-    "title": _("Read hits"),
-    "unit": "%",
-    "color": "31/a",
-}
-
 metric_info["disk_read_ql"] = {
     "title": _("Average disk read queue length"),
     "unit": "",

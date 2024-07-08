@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.graphing import perfometer_info
-from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB, TB
+from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB
 
 # .
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -346,15 +346,6 @@ perfometer_info.append(
         "metric": "current",
         "half_value": 10,
         "exponent": 4,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "disk_capacity",
-        "half_value": 25 * TB,
-        "exponent": 2,
     }
 )
 

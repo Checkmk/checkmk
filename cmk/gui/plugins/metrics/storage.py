@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["disk_capacity"] = {
-    "title": _("Total disk capacity"),
-    "unit": "bytes",
-    "color": "12/a",
-}
-
 metric_info["disks"] = {
     "title": _("Disks"),
     "unit": "count",

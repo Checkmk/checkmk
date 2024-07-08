@@ -29,24 +29,6 @@ metric_info["streams"] = {
 
 # cloud storage
 
-metric_info["tablespace_size"] = {
-    "title": _("Tablespace size"),
-    "unit": "bytes",
-    "color": "#092507",
-}
-
-metric_info["tablespace_used"] = {
-    "title": _("Tablespace used"),
-    "unit": "bytes",
-    "color": "#e59d12",
-}
-
-metric_info["tablespace_max_size"] = {
-    "title": _("Tablespace maximum size"),
-    "unit": "bytes",
-    "color": "#172121",
-}
-
 metric_info["tablespace_wasted"] = {
     "title": _("Tablespace wasted"),
     "unit": "bytes",
@@ -631,19 +613,6 @@ graph_info["number_of_shared_and_exclusive_locks"] = {
         ("shared_locks", "area"),
         ("exclusive_locks", "stack"),
     ],
-}
-
-graph_info["tablespace_sizes"] = {
-    "title": _("Tablespace sizes"),
-    "metrics": [
-        ("tablespace_size", "line"),
-        ("tablespace_used", "area"),
-    ],
-    "scalars": [
-        "tablespace_size:warn",
-        "tablespace_size:crit",
-    ],
-    "range": (0, "tablespace_max_size"),
 }
 
 graph_info["ram_swap_used"] = {

@@ -35,18 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["shared_locks"] = {
-    "title": _("Shared locks"),
-    "unit": "count",
-    "color": "#92ec89",
-}
-
-metric_info["exclusive_locks"] = {
-    "title": _("Exclusive locks"),
-    "unit": "count",
-    "color": "#ca5706",
-}
-
 metric_info["disk_ios"] = {
     "title": _("Disk I/O operations"),
     "unit": "1/s",
@@ -356,14 +344,6 @@ graph_info["spare_and_broken_disks"] = {
         ("disks", "area"),
         ("spare_disks", "stack"),
         ("failed_disks", "stack"),
-    ],
-}
-
-graph_info["number_of_shared_and_exclusive_locks"] = {
-    "title": _("Number of shared and exclusive locks"),
-    "metrics": [
-        ("shared_locks", "area"),
-        ("exclusive_locks", "stack"),
     ],
 }
 

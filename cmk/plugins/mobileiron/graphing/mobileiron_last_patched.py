@@ -13,12 +13,6 @@ metric_mobileiron_last_patched = metrics.Metric(
     unit=UNIT_TIME,
     color=metrics.Color.DARK_GRAY,
 )
-metric_mobileiron_last_build = metrics.Metric(
-    name="mobileiron_last_build",
-    title=Title("Age of OS build version"),
-    unit=UNIT_TIME,
-    color=metrics.Color.BROWN,
-)
 
 perfometer_mobileiron_last_patched = perfometers.Perfometer(
     name="mobileiron_last_patched",

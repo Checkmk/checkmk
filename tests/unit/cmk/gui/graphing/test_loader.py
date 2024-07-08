@@ -300,7 +300,6 @@ _SKIP_MODULES: Final[Sequence[str]] = [
     "cmk.plugins.gcp.graphing.gcp",
     "cmk.plugins.jenkins.graphing.jenkins",
     "cmk.plugins.memory.graphing.memory",
-    "cmk.plugins.mobileiron.graphing.statistics",
     "cmk.plugins.omd.graphing.mknotifyd",
     "cmk.plugins.omd.graphing.omd_apache",
     "cmk.plugins.oracle.graphing.oracle",
@@ -310,7 +309,6 @@ _SKIP_MODULES: Final[Sequence[str]] = [
     "cmk.plugins.collection.graphing.apache",
     "cmk.plugins.collection.graphing.file_stats",
     "cmk.plugins.collection.graphing.file_system",
-    "cmk.plugins.mobileiron.graphing.versions",
 ]
 
 

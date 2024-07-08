@@ -85,12 +85,6 @@ metric_info["idle"] = {
     "color": "#805022",
 }
 
-metric_info["overall_util"] = {
-    "title": _l("Overall utilization"),
-    "unit": "%",
-    "color": "26/a",
-}
-
 metric_info["pci_io_util"] = {
     "title": _l("PCI Express IO utilization"),
     "unit": "%",

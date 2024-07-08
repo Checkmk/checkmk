@@ -255,6 +255,7 @@ def test_registered_configvars() -> None:
             "cmc_state_retention_interval",
             "cmc_statehist_cache",
             "cmc_timeperiod_horizon",
+            "dcd_activate_changes_timeout",
             "dcd_log_levels",
             "dcd_site_update_interval",
             "dcd_web_api_connection",

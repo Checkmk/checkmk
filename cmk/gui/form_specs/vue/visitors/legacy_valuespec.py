@@ -15,6 +15,7 @@ from cmk.gui.form_specs.vue.utils import get_title_and_help
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
+from cmk.gui.valuespec import Transform
 
 
 class LegacyValuespecVisitor(FormSpecVisitor):
@@ -108,11 +109,8 @@ class LegacyValuespecVisitor(FormSpecVisitor):
                         self._prepare_request_context(value)
                         varprefix = value.get("varprefix", "")
                         value = self.form_spec.valuespec.from_html_vars(varprefix)
-                        self.form_spec.valuespec.validate_datatype(value, varprefix)
-                        self.form_spec.valuespec.validate_value(value, varprefix)
-                else:
-                    # DataOrigin.DISK
-                    self.form_spec.valuespec.render_input("", value)
+                self.form_spec.valuespec.validate_datatype(value, "")
+                self.form_spec.valuespec.validate_value(value, "")
             except MKUserError as e:
                 return [VueComponents.ValidationMessage(location=[e.varname or ""], message=str(e))]
             finally:
@@ -121,7 +119,14 @@ class LegacyValuespecVisitor(FormSpecVisitor):
         return []
 
     def to_disk(self, value: Any) -> Any:
-        assert self.options.data_origin == DataOrigin.FRONTEND
+        if self.options.data_origin == DataOrigin.DISK:
+            if (
+                isinstance(self.form_spec.valuespec, Transform)
+                and self.form_spec.valuespec.from_valuespec is not None
+            ):
+                return self.form_spec.valuespec.from_valuespec(value)
+            return value
+
         assert isinstance(value, dict)
         with request.stashed_vars():
             self._prepare_request_context(value)

@@ -17,6 +17,10 @@ $(REDIS_INSTALL): $(REDIS_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/
 	cd $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/ && \
 	$(LN) -sf ../init.d/redis 40-redis
+	# Quick hack to get rid of old artifacts fetched from workspace
+	if [ -f "$(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/85-redis" ]; then \
+		rm -f "$(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/85-redis"; \
+	fi
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/var/redis
 	chmod 640 $(DESTDIR)$(OMD_ROOT)/skel/etc/logrotate.d/redis
 	chmod 750 $(DESTDIR)$(OMD_ROOT)/skel/etc/redis

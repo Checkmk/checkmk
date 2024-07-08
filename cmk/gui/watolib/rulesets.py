@@ -37,7 +37,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionNE,
 )
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.version import edition, Edition
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
@@ -56,6 +55,7 @@ from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import edition, Edition
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
 
 from .changes import add_change

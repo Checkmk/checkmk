@@ -5,10 +5,10 @@
 
 from collections.abc import Callable
 
-# The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
-from cmk.utils.version import parse_check_mk_version  # pylint: disable=cmk-module-layer-violation
-
 from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, StringTable, TableRow
+
+# The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
+from cmk.ccc.version import parse_check_mk_version  # pylint: disable=cmk-module-layer-violation
 from cmk.plugins.lib.checkmk import Plugin, PluginSection
 
 

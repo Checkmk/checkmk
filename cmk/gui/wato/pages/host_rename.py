@@ -9,10 +9,9 @@ from collections.abc import Collection, Iterable, Mapping, Sequence
 from functools import partial
 from typing import Any
 
-from cmk.utils import paths, version
+from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
-from cmk.utils.version import edition_supports_nagvis
 
 from cmk.gui import background_job, forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -66,7 +65,9 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.site_changes import SiteChanges
 
+from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import edition_supports_nagvis
 
 
 def register(mode_registry: ModeRegistry) -> None:

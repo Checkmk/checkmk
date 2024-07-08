@@ -25,7 +25,7 @@ from tests.testlib.docker import (
 )
 from tests.testlib.version import CMKVersion, git_tag_exists, version_from_env
 
-from cmk.utils.version import Edition, Version, versions_compatible, VersionsCompatible
+from cmk.ccc.version import Edition, Version, versions_compatible, VersionsCompatible
 
 logger = logging.getLogger()
 

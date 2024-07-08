@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 from tests.testlib.site import Site
 
-from cmk.utils.version import __version__, parse_check_mk_version
+from cmk.ccc.version import __version__, parse_check_mk_version
 
 REQUESTS_TIMEOUT = 10
 

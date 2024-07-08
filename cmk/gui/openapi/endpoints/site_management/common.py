@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils import paths, version
+from cmk.utils import paths
 
 from cmk.gui.rest_api_types.site_connection import SiteConfig
+
+from cmk.ccc import version
 
 
 def default_config_example() -> SiteConfig:

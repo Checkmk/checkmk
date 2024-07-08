@@ -24,7 +24,6 @@ from livestatus import (
 )
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils import dateutils
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.hostaddress import HostName
@@ -66,6 +65,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view_utils import CSSClass
 
+import cmk.ccc.version as cmk_version
 from cmk.bi.lib import (
     BIHostSpec,
     BIHostStatusInfoRow,

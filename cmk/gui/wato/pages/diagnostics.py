@@ -12,7 +12,6 @@ from pathlib import Path
 from livestatus import SiteId
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import (
     CheckmkFileInfo,
     CheckmkFileSensitivity,
@@ -84,6 +83,7 @@ from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc.site import omd_site
 
 _CHECKMK_FILES_NOTE = _(

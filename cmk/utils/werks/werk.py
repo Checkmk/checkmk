@@ -8,9 +8,8 @@ from collections.abc import Iterable
 from functools import partial
 from typing import Literal
 
-from cmk.utils.version import parse_check_mk_version
-
 from cmk.ccc.i18n import _
+from cmk.ccc.version import parse_check_mk_version
 from cmk.werks.models import Class, Compatibility, Werk, WerkV2Base
 
 _CLASS_SORTING_VALUE = {

@@ -8,9 +8,10 @@ import abc
 from typing import Any
 
 import cmk.utils.plugin_registry
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_state
+
+import cmk.ccc.version as cmk_version
 
 
 class AutomationCommand(abc.ABC):

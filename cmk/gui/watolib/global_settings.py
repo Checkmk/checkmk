@@ -7,7 +7,6 @@ from collections.abc import Callable
 from typing import Any
 
 from cmk.utils import paths
-from cmk.utils.version import edition, Edition
 
 from cmk.gui.global_config import get_global_config, GlobalConfig
 from cmk.gui.type_defs import GlobalSettings
@@ -17,6 +16,8 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     UNREGISTERED_SETTINGS,
 )
+
+from cmk.ccc.version import edition, Edition
 
 
 def load_configuration_settings(

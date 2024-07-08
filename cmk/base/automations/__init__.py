@@ -12,7 +12,6 @@ from types import FrameType
 from typing import Any, NoReturn
 
 from cmk.utils import log, paths
-from cmk.utils import version as cmk_version
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
 
@@ -21,6 +20,7 @@ from cmk.automations.results import ABCAutomationResult
 from cmk.base import check_api, config, profiling
 
 import cmk.ccc.debug
+from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import MKException, MKTimeout
 
 

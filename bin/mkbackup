@@ -22,7 +22,6 @@ from typing import Any, IO, NamedTuple, NoReturn
 import cmk.utils.daemon as daemon
 import cmk.utils.render as render
 import cmk.utils.schedule as schedule
-import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config
 from cmk.utils.backup.job import Job
 from cmk.utils.backup.targets import TargetId
@@ -45,6 +44,7 @@ from cmk.utils.backup.utils import (
 )
 from cmk.utils.paths import mkbackup_lock_dir
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate
 
 ################

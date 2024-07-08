@@ -6,7 +6,8 @@
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.utils.version import __version__ as cmk_version
+
+from cmk.ccc.version import __version__ as cmk_version
 
 
 def packed_agent_path_windows_msi() -> Path:

@@ -9,8 +9,7 @@ from typing import NamedTuple
 
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined
 
-from cmk.utils.version import ReleaseType, Version
-
+from cmk.ccc.version import ReleaseType, Version
 from cmk.werks.models import Class, Compatibility, Edition, Werk
 
 from .. import has_content, load_raw_files

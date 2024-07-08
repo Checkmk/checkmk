@@ -35,7 +35,6 @@ from pydantic import BaseModel as PydanticBaseModel
 
 import cmk.utils.paths
 from cmk.utils.user import UserId
-from cmk.utils.version import edition, Edition
 
 import cmk.gui.pages
 from cmk.gui import sites, userdb, weblib
@@ -112,6 +111,7 @@ from cmk.gui.valuespec import (
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import edition, Edition
 
 SubPagesSpec = list[tuple[str, str, str]]
 PagetypePhrase = Literal["title", "title_plural", "add_to", "clone", "create", "edit", "new"]

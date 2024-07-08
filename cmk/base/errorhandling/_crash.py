@@ -11,7 +11,6 @@ from typing import Any, Literal
 
 import cmk.utils.encoding
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils import crash_reporting
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
@@ -23,6 +22,7 @@ from cmk.snmplib import SNMPBackendEnum
 from cmk.checkengine.checking import CheckPluginName
 
 import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
 from cmk.piggyback import get_piggyback_raw_data
 
 CrashReportStore = crash_reporting.CrashReportStore

@@ -9,7 +9,6 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -18,6 +17,8 @@ from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
 
 import cmk.base.automations
 import cmk.base.automations.check_mk as automations
+
+import cmk.ccc.version as cmk_version
 
 
 def test_registered_automations() -> None:

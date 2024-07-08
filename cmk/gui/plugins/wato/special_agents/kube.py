@@ -12,7 +12,6 @@ import pydantic_core
 
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import Edition, edition
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -38,6 +37,8 @@ from cmk.gui.wato import (
     RulespecGroupVMCloudContainer,
 )
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
+
+from cmk.ccc.version import Edition, edition
 
 OPENSHIFT_EDITIONS = (Edition.CME, Edition.CCE, Edition.CEE)
 

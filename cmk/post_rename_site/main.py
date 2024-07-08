@@ -12,7 +12,6 @@ from livestatus import SiteId
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.plugin_loader import load_plugins_with_exceptions, PluginFailures
-from cmk.utils.version import edition, Edition
 
 # This special script needs persistence and conversion code from different places of Checkmk. We may
 # centralize the conversion and move the persistence to a specific layer in the future, but for the
@@ -23,6 +22,7 @@ from cmk.gui.utils.script_helpers import gui_context
 
 import cmk.ccc.debug
 from cmk.ccc.site import omd_site
+from cmk.ccc.version import edition, Edition
 
 from .logger import logger, setup_logging
 from .registry import rename_action_registry

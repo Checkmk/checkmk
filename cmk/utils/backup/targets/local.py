@@ -21,9 +21,9 @@ from cmk.utils.backup.utils import (
     UnrecognizedBackupTypeError,
     verify_backup_file,
 )
-from cmk.utils.version import is_cma
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import is_cma
 
 from ..job import Job, JobConfig
 from . import TargetId

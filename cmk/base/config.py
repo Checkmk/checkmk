@@ -47,7 +47,6 @@ import cmk.utils.paths
 import cmk.utils.piggyback_config
 import cmk.utils.tags
 import cmk.utils.translations
-import cmk.utils.version as cmk_version
 from cmk.utils import config_warnings, ip_lookup, password_store, tty
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import cache_manager
@@ -124,6 +123,7 @@ from cmk.base.server_side_calls import load_special_agents, SpecialAgent, Specia
 from cmk.base.sources import SNMPFetcherConfig
 
 import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
 from cmk import piggyback
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate

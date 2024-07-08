@@ -8,8 +8,9 @@ from webtest import TestResponse  # type: ignore[import-untyped]
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
+
+import cmk.ccc.version as cmk_version
 
 
 def _get_version(app: WebTestAppForCMK, status: int = 200) -> TestResponse:

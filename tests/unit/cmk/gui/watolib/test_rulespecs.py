@@ -11,7 +11,6 @@ from collections.abc import Sequence
 import pytest
 from pytest import MonkeyPatch
 
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -42,6 +41,7 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.gui.watolib.search import MatchItem
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 
 

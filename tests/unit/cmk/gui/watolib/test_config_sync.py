@@ -19,7 +19,6 @@ from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils.user import UserId
 
 import cmk.gui.mkeventd.wato
@@ -27,6 +26,7 @@ from cmk.gui.config import active_config
 from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.watolib import activate_changes, config_sync
 
+import cmk.ccc.version as cmk_version
 from cmk.bi.type_defs import frozen_aggregations_dir
 
 

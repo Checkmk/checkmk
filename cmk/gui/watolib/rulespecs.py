@@ -14,7 +14,6 @@ from typing import Any, Literal
 import cmk.utils.plugin_registry
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, RuleGroupType
-from cmk.utils.version import Edition, edition, mark_edition_only
 
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -49,6 +48,7 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Edition, edition, mark_edition_only
 
 from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry

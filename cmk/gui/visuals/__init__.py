@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 
 from cmk.gui import hooks, utils
 from cmk.gui.pages import PageRegistry
 from cmk.gui.valuespec import autocompleter_registry
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 
 from . import _filters, info

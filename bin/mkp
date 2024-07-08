@@ -8,12 +8,12 @@ from typing import Final
 
 import cmk.utils.paths
 from cmk.utils.setup_search_index import request_index_rebuild
-from cmk.utils.version import __version__, parse_check_mk_version
 from cmk.utils.visuals import invalidate_visuals_cache
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.ccc.store
+from cmk.ccc.version import __version__, parse_check_mk_version
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import (
     cli,

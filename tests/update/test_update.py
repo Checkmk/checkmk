@@ -11,7 +11,8 @@ from tests.testlib.utils import get_services_with_status, version_spec_from_env
 from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.version import Edition
+
+from cmk.ccc.version import Edition
 
 from .conftest import get_site_status, update_site
 

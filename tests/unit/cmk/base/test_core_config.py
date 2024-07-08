@@ -16,7 +16,6 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.config_path
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils import ip_lookup, password_store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -31,6 +30,8 @@ from cmk.base import config, core_config
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_labels_from_attributes, get_tags_with_groups_from_attributes
 from cmk.base.core_factory import create_core
+
+import cmk.ccc.version as cmk_version
 
 
 @pytest.fixture(name="config_path")

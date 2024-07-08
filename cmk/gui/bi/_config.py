@@ -9,7 +9,6 @@ import json
 from collections.abc import Collection, Iterable
 from typing import Any, overload, TypedDict
 
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -92,6 +91,7 @@ from cmk.gui.watolib.main_menu import (
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
+import cmk.ccc.version as cmk_version
 from cmk.bi.actions import BICallARuleAction
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema

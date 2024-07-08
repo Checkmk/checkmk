@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-import cmk.utils.version as cmk_version
-from cmk.utils.version import parse_check_mk_version, Version
+import cmk.ccc.version as cmk_version
+from cmk.ccc.version import parse_check_mk_version, Version
 
 
 def test_version() -> None:

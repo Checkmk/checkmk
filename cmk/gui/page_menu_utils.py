@@ -5,7 +5,6 @@
 
 from collections.abc import Iterator
 
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 
 from cmk.gui import pagetypes, visuals
@@ -30,6 +29,8 @@ from cmk.gui.visual_link import get_linked_visual_request_vars, make_linked_visu
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.info import visual_info_registry, VisualInfo
 from cmk.gui.visuals.type import visual_type_registry, VisualType
+
+import cmk.ccc.version as cmk_version
 
 
 def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> list[PageMenuDropdown]:

@@ -13,7 +13,6 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, astuple, dataclass, field
 from typing import Any, Literal, TypedDict, TypeVar
 
-from cmk.utils import version as cmk_version
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.config_warnings import ConfigurationWarnings
@@ -30,6 +29,8 @@ from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResu
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
+
+from cmk.ccc import version as cmk_version
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 

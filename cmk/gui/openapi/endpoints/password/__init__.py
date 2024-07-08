@@ -16,7 +16,7 @@ however, the password itself is not returned for security reasons.
 from collections.abc import Mapping
 from typing import Any, cast
 
-from cmk.utils import paths, version
+from cmk.utils import paths
 from cmk.utils.password_store import Password
 
 from cmk.gui.http import Response
@@ -37,6 +37,8 @@ from cmk.gui.watolib.passwords import (
     remove_password,
     save_password,
 )
+
+from cmk.ccc import version
 
 PERMISSIONS = permissions.AllPerm(
     [

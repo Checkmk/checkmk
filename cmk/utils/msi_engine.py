@@ -22,7 +22,8 @@ from subprocess import PIPE, Popen
 from typing import Final, NoReturn
 
 from cmk.utils import msi_patch
-from cmk.utils.version import __version__
+
+from cmk.ccc.version import __version__
 
 
 def _extract_major_version(version: str) -> str:

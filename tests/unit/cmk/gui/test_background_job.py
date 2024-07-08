@@ -14,7 +14,6 @@ from tests.testlib.utils import wait_until
 
 import cmk.utils.log
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 
 import cmk.gui.log
 from cmk.gui.background_job import (
@@ -26,6 +25,8 @@ from cmk.gui.background_job import (
     job_registry,
     JobStatusStates,
 )
+
+import cmk.ccc.version as cmk_version
 
 
 def test_registered_background_jobs() -> None:

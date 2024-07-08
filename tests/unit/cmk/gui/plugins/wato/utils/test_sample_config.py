@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 
 import cmk.gui.watolib.config_domain_name as utils
+
+import cmk.ccc.version as cmk_version
 
 
 def test_registered_generators() -> None:

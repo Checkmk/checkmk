@@ -13,7 +13,6 @@ from wsgiref.types import StartResponse, WSGIEnvironment
 
 import cmk.utils.paths
 import cmk.utils.profile
-import cmk.utils.version as cmk_version
 
 import cmk.gui.auth
 import cmk.gui.session
@@ -31,6 +30,7 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
 import cmk.ccc.store
+import cmk.ccc.version as cmk_version
 from cmk.ccc.site import url_prefix
 
 # TODO

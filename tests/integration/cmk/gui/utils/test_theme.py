@@ -119,15 +119,15 @@ def test_base_dir(th: Theme) -> None:
 @pytest.mark.parametrize(
     "edition",
     [
-        cmk.utils.version.Edition.CRE,
-        cmk.utils.version.Edition.CEE,
-        cmk.utils.version.Edition.CME,
-        cmk.utils.version.Edition.CCE,
+        cmk.ccc.version.Edition.CRE,
+        cmk.ccc.version.Edition.CEE,
+        cmk.ccc.version.Edition.CME,
+        cmk.ccc.version.Edition.CCE,
     ],
 )
 @pytest.mark.parametrize("with_logo", [True, False])
 def test_has_custom_logo(
-    monkeypatch: MonkeyPatch, th: Theme, edition: cmk.utils.version.Edition, with_logo: bool
+    monkeypatch: MonkeyPatch, th: Theme, edition: cmk.ccc.version.Edition, with_logo: bool
 ) -> None:
     monkeypatch.setattr("cmk.gui.utils.theme.edition", lambda *args, **kw: edition)
     logo = th.base_dir().joinpath("images", "login_logo.png")
@@ -137,7 +137,7 @@ def test_has_custom_logo(
     elif logo.exists():
         logo.unlink()
     assert th.has_custom_logo("login_logo") is (
-        edition is cmk.utils.version.Edition.CME and with_logo
+        edition is cmk.ccc.version.Edition.CME and with_logo
     )
 
 

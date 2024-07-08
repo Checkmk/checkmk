@@ -18,7 +18,6 @@ from pytest import MonkeyPatch
 from tests.testlib.repo import is_managed_repo
 
 import cmk.utils.paths
-import cmk.utils.version
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.user import UserId
@@ -45,6 +44,8 @@ from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import load_custom_attr, save_two_factor_credentials, save_users
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.valuespec import Dictionary
+
+import cmk.ccc.version
 
 if TYPE_CHECKING:
     from tests.unit.cmk.gui.conftest import SetConfig, SingleRequest
@@ -652,8 +653,8 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
 def make_cme(
     monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig
 ) -> Generator[None, None, None]:
-    monkeypatch.setattr(cmk.utils.version, "omd_version", lambda: "2.0.0i1.cme")
-    assert cmk.utils.version.edition(cmk.utils.paths.omd_root) is cmk.utils.version.Edition.CME
+    monkeypatch.setattr(cmk.ccc.version, "omd_version", lambda: "2.0.0i1.cme")
+    assert cmk.ccc.version.edition(cmk.utils.paths.omd_root) is cmk.ccc.version.Edition.CME
 
     with set_config(current_customer="test-customer"):
         # Fix CRE mypy tests that do not have this attribute defined

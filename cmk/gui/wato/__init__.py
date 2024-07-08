@@ -13,7 +13,6 @@ backend business and persistence logic, which is also shared with the REST API.
 # for them, we can remove this here and the imports
 # pylint: disable=unused-import
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 
 import cmk.gui.valuespec
 import cmk.gui.view_utils
@@ -78,6 +77,7 @@ from cmk.gui.watolib.rulespecs import register_rule as register_rule
 from cmk.gui.watolib.sites import LivestatusViaTCP
 from cmk.gui.watolib.translation import HostnameTranslation
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 
 from ._check_mk_configuration import monitoring_macro_help as monitoring_macro_help

@@ -5,8 +5,7 @@
 
 import pytest
 
-from cmk.utils import version
-
+from cmk.ccc import version
 from cmk.special_agents import agent_jolokia, agent_vsphere
 
 

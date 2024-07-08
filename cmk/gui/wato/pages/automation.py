@@ -12,7 +12,6 @@ from contextlib import nullcontext
 from datetime import datetime
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.user import UserId
 
@@ -37,6 +36,7 @@ from cmk.gui.watolib.automations import (
     verify_request_compatibility,
 )
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site

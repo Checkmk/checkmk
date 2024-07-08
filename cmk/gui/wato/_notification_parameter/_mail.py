@@ -6,7 +6,6 @@
 from collections.abc import Sequence
 
 from cmk.utils import paths
-from cmk.utils.version import edition, Edition
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -21,6 +20,8 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     TextInput,
 )
+
+from cmk.ccc.version import edition, Edition
 
 from ._base import NotificationParameter
 from ._helpers import get_url_prefix_specs, local_site_url

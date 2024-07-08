@@ -10,14 +10,13 @@ from dataclasses import dataclass
 
 import pytest
 
-import cmk.utils.version as cmk_version
-
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 
 from cmk.gui.http import request, response
 from cmk.gui.wato.pages import automation
 from cmk.gui.watolib.utils import mk_repr
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 
 

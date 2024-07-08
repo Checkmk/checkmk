@@ -18,7 +18,7 @@ from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 from tests.update.conftest import DUMPS_DIR, inject_dumps
 
-from cmk.utils.version import Edition
+from cmk.ccc.version import Edition
 
 logger = logging.getLogger(__name__)
 

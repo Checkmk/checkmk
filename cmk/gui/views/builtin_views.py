@@ -6,7 +6,6 @@
 from collections.abc import Sequence
 from typing import Any
 
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
@@ -20,6 +19,8 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
 )
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
+
+import cmk.ccc.version as cmk_version
 
 builtin_views: dict[ViewName, ViewSpec] = {}
 

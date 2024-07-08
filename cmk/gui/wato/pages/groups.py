@@ -7,9 +7,7 @@ import abc
 from collections.abc import Collection, Iterator, Sequence
 
 import cmk.utils.paths
-from cmk.utils import version
 from cmk.utils.user import UserId
-from cmk.utils.version import edition_supports_nagvis
 
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
@@ -51,6 +49,9 @@ from cmk.gui.watolib.groups_io import (
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+
+from cmk.ccc import version
+from cmk.ccc.version import edition_supports_nagvis
 
 
 def register(mode_registry: ModeRegistry) -> None:

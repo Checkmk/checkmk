@@ -29,7 +29,6 @@ import requests
 import livestatus
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils import tty
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.diagnostics import (
@@ -61,6 +60,7 @@ from cmk.utils.paths import omd_root
 from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree
 from cmk.utils.user import UserId
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc import site, store
 from cmk.ccc.i18n import _
 from cmk.ccc.site import omd_site

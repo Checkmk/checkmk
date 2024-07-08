@@ -5,7 +5,9 @@
 
 import pytest
 
-from cmk.utils import paths, version
+from cmk.utils import paths
+
+from cmk.ccc import version
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"

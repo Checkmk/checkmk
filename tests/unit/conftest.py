@@ -37,7 +37,6 @@ import livestatus
 import cmk.utils.caching
 import cmk.utils.crypto.password_hashing
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils import redis, tty
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.licensing.handler import (
@@ -52,6 +51,7 @@ from cmk.utils.livestatus_helpers.testing import (
 )
 
 import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
 

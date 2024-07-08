@@ -22,7 +22,7 @@ from marshmallow import fields as _fields
 from marshmallow import post_load, pre_dump, utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk.utils import paths, version
+from cmk.utils import paths
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
@@ -50,6 +50,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.tags import load_tag_group
 
+from cmk.ccc import version
 from cmk.ccc.exceptions import MKException
 from cmk.fields import base, DateTime, validators
 

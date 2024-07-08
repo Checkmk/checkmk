@@ -73,7 +73,6 @@ from cmk.utils.labels import AndOrNotLiteral, LabelSources
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
-from cmk.utils.version import Version
 
 from cmk.gui import forms, site_config, user_sites, utils
 from cmk.gui.config import active_config
@@ -115,6 +114,7 @@ from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Version
 
 seconds_per_day = 86400
 

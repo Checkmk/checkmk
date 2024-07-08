@@ -22,7 +22,7 @@ A contact group object can have the following relations present in `links`:
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils import paths, version
+from cmk.utils import paths
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -64,6 +64,8 @@ from cmk.gui.watolib.groups import (
     UnknownGroupException,
 )
 from cmk.gui.watolib.groups_io import load_contact_group_information
+
+from cmk.ccc import version
 
 PERMISSIONS = permissions.Perm("wato.users")
 

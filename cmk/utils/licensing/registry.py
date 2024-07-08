@@ -13,7 +13,8 @@ from cmk.utils.licensing.handler import (
     RemainingTrialTime,
     UserEffect,
 )
-from cmk.utils.version import Edition, edition
+
+from cmk.ccc.version import Edition, edition
 
 
 class LicensingHandlerRegistry:

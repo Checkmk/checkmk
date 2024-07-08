@@ -7,10 +7,11 @@ import sys
 
 import pytest
 
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 
 import cmk.gui.pages
+
+import cmk.ccc.version as cmk_version
 
 
 def test_registered_pages() -> None:

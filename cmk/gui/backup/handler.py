@@ -23,7 +23,6 @@ from io import TextIOWrapper
 from pathlib import Path
 from typing import assert_never, cast, Final, Generic, TypeVar
 
-import cmk.utils.version as cmk_version
 from cmk.utils import render
 from cmk.utils.backup.config import Config as RawConfig
 from cmk.utils.backup.job import JobConfig, JobState, ScheduleConfig
@@ -102,6 +101,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato import IndividualOrStoredPassword
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 

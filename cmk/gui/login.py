@@ -11,7 +11,6 @@ from datetime import datetime
 from urllib.parse import unquote
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password
 from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.utils.licensing.registry import get_remaining_trial_time_rounded
@@ -45,6 +44,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
 from cmk.gui.utils.user_errors import user_errors
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc.site import omd_site, url_prefix
 
 

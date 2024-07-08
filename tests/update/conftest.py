@@ -19,7 +19,7 @@ from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import edition_from_env, parse_raw_edition, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
-from cmk.utils.version import Edition
+from cmk.ccc.version import Edition
 
 LOGGER = logging.getLogger(__name__)
 DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"

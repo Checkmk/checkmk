@@ -24,7 +24,6 @@ from cmk.utils.setup_search_index import (
     UpdateRequests,
     updates_requested,
 )
-from cmk.utils.version import edition, Edition
 
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -53,6 +52,7 @@ from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import edition, Edition
 
 
 class IndexNotFoundException(MKGeneralException):

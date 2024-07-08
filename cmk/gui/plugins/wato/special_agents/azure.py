@@ -7,7 +7,6 @@ from typing import Final
 
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import DocReference
@@ -31,6 +30,8 @@ from cmk.gui.wato import (
     RulespecGroupVMCloudContainer,
 )
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
+
+from cmk.ccc.version import edition, Edition
 
 # Note: the first element of the tuple should match the id of the metric specified in ALL_SERVICES
 # in the azure special agent

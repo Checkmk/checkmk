@@ -10,14 +10,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cmk.utils import version as cmk_version
-
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 
 from cmk.gui.http import request
 from cmk.gui.watolib import automations
 
 from cmk.ccc import store
+from cmk.ccc import version as cmk_version
 
 RESULT: object = None
 

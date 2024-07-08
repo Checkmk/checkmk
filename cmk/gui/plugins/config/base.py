@@ -12,10 +12,11 @@ from livestatus import SiteConfigurations
 
 from cmk.utils import paths
 from cmk.utils.tags import TagConfigSpec
-from cmk.utils.version import edition, Edition
 
 from cmk.gui.type_defs import GroupSpec, TrustedCertificateAuthorities, UserSpec
 from cmk.gui.utils.temperate_unit import TemperatureUnit
+
+from cmk.ccc.version import edition, Edition
 
 CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
 

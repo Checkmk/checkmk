@@ -20,7 +20,6 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -31,6 +30,7 @@ from cmk.checkengine.discovery import AutocheckEntry
 from cmk.base import config, core_nagios
 
 import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
 
 
 def ip_address_of_never_called(

@@ -13,7 +13,6 @@ from typing import Any
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
-from cmk.utils.version import edition, Edition
 
 from cmk.snmplib import get_single_oid, OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
@@ -24,6 +23,7 @@ from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-viol
 )
 
 import cmk.ccc.debug
+from cmk.ccc.version import edition, Edition
 
 if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
     from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=import-error,no-name-in-module,cmk-module-layer-violation

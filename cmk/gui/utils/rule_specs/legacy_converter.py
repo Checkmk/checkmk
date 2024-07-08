@@ -14,7 +14,6 @@ from typing import Any, assert_never, Literal, Self, TypeVar
 
 from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import Edition
 
 import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
@@ -39,6 +38,7 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
 )
 
+from cmk.ccc.version import Edition
 from cmk.rulesets import v1 as ruleset_api_v1
 
 try:

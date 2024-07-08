@@ -131,10 +131,10 @@ from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
 from cmk.utils.resulttype import Error, OK, Result
-from cmk.utils.version import Version, versions_compatible, VersionsIncompatible
 from cmk.utils.werks.acknowledgement import unacknowledged_incompatible_werks
 
 from cmk.ccc.exceptions import MKTerminate
+from cmk.ccc.version import Version, versions_compatible, VersionsIncompatible
 
 Arguments = list[str]
 ConfigChangeCommands = list[tuple[str, str]]

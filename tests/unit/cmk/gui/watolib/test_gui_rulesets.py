@@ -14,7 +14,7 @@ from pytest import FixtureRequest
 
 from tests.unit.cmk.gui.conftest import SetConfig
 
-from cmk.utils import paths, version
+from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets import ruleset_matcher
@@ -32,6 +32,7 @@ from cmk.gui.watolib import rulesets
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
 
+from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
 
 

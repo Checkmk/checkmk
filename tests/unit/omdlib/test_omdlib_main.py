@@ -19,7 +19,7 @@ import omdlib.main
 import omdlib.utils
 from omdlib.contexts import SiteContext
 
-from cmk.utils import version
+from cmk.ccc import version
 
 
 def test_initialize_site_ca(

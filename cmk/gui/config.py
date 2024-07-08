@@ -16,7 +16,6 @@ from typing import Any, Final
 from livestatus import SiteConfiguration, SiteConfigurations
 
 import cmk.utils.tags
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 
 from cmk.gui import log, utils
@@ -26,6 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.config.base import CREConfig  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.type_defs import Key, RoleName
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc.site import omd_site, url_prefix
 
 if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:

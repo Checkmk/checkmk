@@ -9,7 +9,6 @@ This folder collects individual endpoints not fitting into the other endpoint fo
 
 import sys
 
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 
 from cmk.gui.http import request
@@ -18,6 +17,7 @@ from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import serve_json
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc.site import omd_site
 
 

@@ -11,7 +11,6 @@ from typing import Any
 
 import cmk.utils.paths
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -46,6 +45,7 @@ from cmk.gui.watolib.config_sync import ReplicationPath
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
 
 from cmk.ccc import store
+from cmk.ccc.version import edition, Edition
 
 
 def register(

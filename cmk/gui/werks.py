@@ -14,7 +14,6 @@ from typing import Any, cast, Literal, TypedDict
 
 import cmk.utils.werks.werk as utils_werks_werk
 from cmk.utils.man_pages import make_man_page_path_map
-from cmk.utils.version import __version__, Edition, Version
 from cmk.utils.werks.acknowledgement import is_acknowledged
 from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
 from cmk.utils.werks.acknowledgement import load_werk_entries
@@ -68,6 +67,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
+from cmk.ccc.version import __version__, Edition, Version
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.werks.models import Compatibility, Werk
 

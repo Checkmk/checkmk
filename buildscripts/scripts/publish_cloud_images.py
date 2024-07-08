@@ -26,7 +26,7 @@ from azure.mgmt.resource import ResourceManagementClient
 from msrest.polling import LROPoller
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-from cmk.utils.version import _PatchVersion, Version
+from cmk.ccc.version import _PatchVersion, Version
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -98,8 +98,7 @@ class CloudPublisher(abc.ABC):
         self.image_name = image_name
 
     @abc.abstractmethod
-    async def publish(self):
-        ...
+    async def publish(self): ...
 
     @staticmethod
     def build_release_notes_url(version: str) -> str:

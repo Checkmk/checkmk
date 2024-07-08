@@ -15,8 +15,6 @@ import requests
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 from tests.testlib.version import ABCPackageManager, code_name
 
-from cmk.utils.version import Edition
-
 from buildscripts.scripts.lib.common import flatten, load_editions_file
 from buildscripts.scripts.lib.registry import (
     Credentials,
@@ -26,6 +24,7 @@ from buildscripts.scripts.lib.registry import (
     get_default_registries,
     Registry,
 )
+from cmk.ccc.version import Edition
 
 
 def hash_file(artifact_name: str) -> str:

@@ -5,7 +5,8 @@
 
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.licensing.registry import licensing_handler_registry, register_cre_licensing_handler
-from cmk.utils.version import Edition
+
+from cmk.ccc.version import Edition
 
 
 def test_licensing_handler_registry_cre() -> None:

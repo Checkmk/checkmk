@@ -13,7 +13,6 @@ from livestatus import MultiSiteConnection
 from cmk.utils import paths
 from cmk.utils.crash_reporting import crash_report_registry
 from cmk.utils.licensing.registry import register_cre_licensing_handler
-from cmk.utils.version import edition, Edition
 
 import cmk.gui.help
 from cmk.gui import (
@@ -109,6 +108,8 @@ from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.search import match_item_generator_registry
 from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
+
+from cmk.ccc.version import edition, Edition
 
 
 def register_sites_options() -> None:

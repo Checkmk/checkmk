@@ -14,7 +14,7 @@ from tests.testlib.version import get_min_version
 
 from tests.plugins_integration import checks
 
-from cmk.utils.version import Edition
+from cmk.ccc.version import Edition
 
 logger = logging.getLogger(__name__)
 

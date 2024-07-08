@@ -11,7 +11,7 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-from cmk.utils import paths, version
+from cmk.utils import paths
 from cmk.utils.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
 from cmk.utils.tags import TagID
 
@@ -44,6 +44,8 @@ from cmk.gui.wato._notification_parameter._registry import (
     register_notification_parameters,
 )
 from cmk.gui.watolib.user_scripts import load_notification_scripts
+
+from cmk.ccc import version
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"

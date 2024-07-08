@@ -25,7 +25,7 @@ from livestatus import (
     UnixSocketInfo,
 )
 
-from cmk.utils import paths, version
+from cmk.utils import paths
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config, prepare_raw_site_config
@@ -40,6 +40,7 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import SiteManagementFactory
 
+from cmk.ccc import version
 from cmk.ccc.site import omd_site
 
 

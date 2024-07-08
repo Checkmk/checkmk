@@ -31,7 +31,7 @@ from tests.testlib.utils import (
     version_spec_from_env,
 )
 
-from cmk.utils.version import Edition
+from cmk.ccc.version import Edition
 
 logger = logging.getLogger()
 

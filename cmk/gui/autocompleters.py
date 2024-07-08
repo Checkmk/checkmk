@@ -8,7 +8,6 @@ from collections.abc import Callable, Collection, Sequence
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
-import cmk.utils.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.regex import regex
 
@@ -22,6 +21,8 @@ from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import autocompleter_registry, AutocompleterRegistry, Labels
 from cmk.gui.visuals import get_only_sites_from_context, livestatus_query_bare_string
+
+import cmk.ccc.version as cmk_version
 
 
 def register(page_registry: PageRegistry, autocompleter_registry_: AutocompleterRegistry) -> None:

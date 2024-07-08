@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any, Self
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils.crash_reporting import ABCCrashReport, CrashReportRegistry, CrashReportStore
 
 from cmk.gui.breadcrumb import Breadcrumb
@@ -22,6 +21,7 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, requested_file_name
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc.site import omd_site
 
 

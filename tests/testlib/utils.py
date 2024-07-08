@@ -22,7 +22,7 @@ import pytest
 
 from tests.testlib.repo import branch_from_env, current_branch_name, repo_path
 
-from cmk.utils.version import Edition
+from cmk.ccc.version import Edition
 
 LOGGER = logging.getLogger(__name__)
 

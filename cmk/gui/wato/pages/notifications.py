@@ -20,7 +20,6 @@ from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import EventRule, is_always_bulk, NotifyAnalysisInfo
 from cmk.utils.statename import host_state_name, service_state_name
 from cmk.utils.user import UserId
-from cmk.utils.version import edition, Edition
 
 import cmk.gui.view_utils
 import cmk.gui.watolib.audit_log as _audit_log
@@ -109,6 +108,7 @@ from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
 
 from cmk.ccc import store
+from cmk.ccc.version import edition, Edition
 
 from .._group_selection import ContactGroupSelection
 from .._notification_parameter import notification_parameter_registry

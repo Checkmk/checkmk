@@ -15,7 +15,7 @@ from .markup import markdown_to_html, nowiki_to_markdown
 
 
 class Edition(Enum):
-    # would love to use cmk.utils.version.Edition
+    # would love to use cmk.ccc.version.Edition
     # but pydantic does not understand it.
     CRE = "cre"
     CSE = "cse"

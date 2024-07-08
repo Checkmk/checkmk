@@ -28,7 +28,7 @@ from tests.testlib.containers import execute_tests_in_container
 from tests.testlib.repo import current_base_branch_name
 from tests.testlib.version import CMKVersion, version_from_env
 
-from cmk.utils.version import Edition
+from cmk.ccc.version import Edition
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()

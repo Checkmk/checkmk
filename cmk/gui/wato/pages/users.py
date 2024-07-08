@@ -14,7 +14,6 @@ from typing import cast, Literal, overload
 from cmk.utils import paths, render
 from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
-from cmk.utils.version import Edition, edition
 
 from cmk.gui import background_job, forms, gui_background_job, userdb, weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -102,6 +101,8 @@ from cmk.gui.watolib.users import (
     verify_password_policy,
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
+
+from cmk.ccc.version import Edition, edition
 
 
 def register(_mode_registry: ModeRegistry) -> None:

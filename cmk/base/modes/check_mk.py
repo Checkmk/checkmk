@@ -21,7 +21,6 @@ import livestatus
 import cmk.utils.cleanup
 import cmk.utils.password_store
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils import config_warnings, ip_lookup, log, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
@@ -126,6 +125,7 @@ from cmk.base.sources import make_parser, SNMPFetcherConfig
 from cmk.base.utils import register_sigint_handler
 
 import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
 from cmk import piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.ccc import store

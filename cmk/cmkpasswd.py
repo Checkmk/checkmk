@@ -12,13 +12,14 @@ from collections.abc import Callable, Sequence
 from getpass import getpass
 from pathlib import Path
 
-import cmk.utils.version as cmk_version
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password
 from cmk.utils.paths import htpasswd_file
 from cmk.utils.user import UserId
 
 from cmk.gui.utils.htpasswd import Htpasswd
+
+import cmk.ccc.version as cmk_version
 
 HTPASSWD_FILE = Path(htpasswd_file)
 

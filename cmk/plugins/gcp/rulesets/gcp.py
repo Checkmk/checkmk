@@ -7,8 +7,8 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import Final
 
 from cmk.utils import paths
-from cmk.utils.version import edition, Edition
 
+from cmk.ccc.version import edition, Edition
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,

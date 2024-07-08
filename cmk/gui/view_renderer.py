@@ -9,7 +9,6 @@ import json
 from collections.abc import Callable, Iterator
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 
 import cmk.gui.pages
 import cmk.gui.view_utils
@@ -51,6 +50,8 @@ from cmk.gui.views.command import Command, do_actions, get_command_groups, shoul
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.filter import Filter
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
+
+import cmk.ccc.version as cmk_version
 
 
 def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: list[str]) -> Rows:

@@ -23,7 +23,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.registry import get_licensing_user_effect
 from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils.setup_search_index import request_index_rebuild
-from cmk.utils.version import edition, Edition, edition_has_enforced_licensing
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms, weblib
@@ -70,6 +69,8 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, D
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+
+from cmk.ccc.version import edition, Edition, edition_has_enforced_licensing
 
 from .sites import sort_sites
 

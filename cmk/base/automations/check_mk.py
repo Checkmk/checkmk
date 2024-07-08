@@ -31,7 +31,7 @@ import livestatus
 
 import cmk.utils.password_store
 import cmk.utils.paths
-from cmk.utils import config_warnings, ip_lookup, log, man_pages, tty, version
+from cmk.utils import config_warnings, ip_lookup, log, man_pages, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
@@ -67,7 +67,6 @@ from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import timeperiod_active
-from cmk.utils.version import edition_supports_nagvis
 
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -186,9 +185,10 @@ from cmk.base.sources import make_parser, SNMPFetcherConfig
 import cmk.ccc.debug
 import cmk.piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
-from cmk.ccc import store
+from cmk.ccc import store, version
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
 from cmk.ccc.i18n import _
+from cmk.ccc.version import edition_supports_nagvis
 from cmk.discover_plugins import discover_families, PluginGroup
 
 HistoryFile = str

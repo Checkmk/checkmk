@@ -8,8 +8,6 @@ import json
 import subprocess
 from pathlib import Path
 
-import cmk.utils.version as cmk_version
-
 from cmk.gui.htmllib.html import html  # pylint: disable=cmk-module-layer-violation
 
 # Does not detect the module hierarchy correctly. Imports are fine.
@@ -18,6 +16,8 @@ from cmk.gui.sidebar import (  # pylint: disable=cmk-module-layer-violation
     SidebarSnapin,
     snapin_registry,
 )
+
+import cmk.ccc.version as cmk_version
 
 
 def nav_modules_path() -> Path:

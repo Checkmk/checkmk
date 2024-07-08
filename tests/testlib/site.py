@@ -1171,6 +1171,12 @@ class Site:
             ["cp", "-r", self.path("var/log"), (self.result_dir() / "logs").as_posix()], sudo=True
         )
 
+        # Rename apache logs to get better handling by the browser when opening a log file
+        for log_name in ("access_log", "error_log"):
+            orig_log_path = self.result_dir() / "logs" / "apache" / log_name
+            if orig_log_path.exists():
+                orig_log_path.rename(orig_log_path.parent / log_name.replace("_", "."))
+
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
             execute(["cp", nagios_log_path, (self.result_dir() / "logs").as_posix()], sudo=True)
 

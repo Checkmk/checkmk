@@ -31,11 +31,16 @@ def navigate_to_edit_user_page(dashboard_page: Dashboard, user_name: str) -> Non
     )
 
 
-@pytest.fixture(name="with_password_policy")
-def fixture_with_password_policy(dashboard_page: Dashboard) -> Iterator[None]:
-    """Navigate to the global settings for the password policy.
+@pytest.fixture(name="char_groups_number_password_policy")
+def set_number_of_character_groups_password_policy(
+    request: pytest.FixtureRequest, dashboard_page: Dashboard
+) -> Iterator[None]:
+    """Set the number of character groups required in the password policy.
 
-    Set it to require `at least two groups` and disable the policy again when done.
+    Navigate to the global settings for the password policy. Set it to require
+    N(parameter) character groups and disable the policy again when done.
+
+    This fixture uses indirect pytest parametrization to define the number of character groups.
     """
 
     def _navigate_to_password_policy() -> None:
@@ -56,7 +61,7 @@ def fixture_with_password_policy(dashboard_page: Dashboard) -> Iterator[None]:
     _navigate_to_password_policy()
 
     dashboard_page.main_area.locator(num_groups_label).click()
-    dashboard_page.main_area.locator(num_groups_input).fill("2")
+    dashboard_page.main_area.locator(num_groups_input).fill(request.param)
     dashboard_page.main_area.locator(save_btn).click()
     _ = Dashboard(dashboard_page.page)
 
@@ -68,6 +73,36 @@ def fixture_with_password_policy(dashboard_page: Dashboard) -> Iterator[None]:
 
     dashboard_page.main_area.locator(num_groups_label).click()
     dashboard_page.main_area.locator(save_btn).click()
+
+
+def change_user_password_and_check_success(
+    test_site: Site, dashboard_page: Dashboard, new_password: str, confirm_new_password: str
+) -> None:
+    """Change user's password and check that the change was successful.
+
+    Change the password on 'Change Password' page, check for success message,
+    and login with the new password.
+    """
+    # Note: if these fail, we will probably also fail to reset the password to "cmk", so you might
+    # have to do this manually.
+
+    page = dashboard_page
+
+    change_password_page = ChangePassword(page.page)
+    change_password_page.change_password(
+        test_site.admin_password, new_password, confirm_new_password
+    )
+    change_password_page.main_area.check_success("Successfully changed password.")
+
+    # Logout and then login with the new password
+    change_password_page.main_menu.logout()
+    login_page = LoginPage(page.page, navigate_to_page=False)
+    new_credentials = CmkCredentials(username=ADMIN_USER, password=new_password)
+    login_page.login(new_credentials)
+    page.main_area.check_page_title("Main dashboard")
+
+    # Reset the password to the original one
+    test_site.reset_admin_password()
 
 
 @pytest.mark.parametrize(
@@ -89,25 +124,29 @@ def test_user_change_password_success(
     new_pw: str,
     new_pw_conf: str,
 ) -> None:
-    """Test changing the user's own password in the user profile menu"""
-    # Note: if these fail, we will probably also fail to reset the password to "cmk", so you might
-    # have to do this manually.
+    """Test changing the user's own password on 'Change Password' page"""
+    change_user_password_and_check_success(test_site, dashboard_page, new_pw, new_pw_conf)
 
-    page = dashboard_page
 
-    change_password_page = ChangePassword(page.page)
-    change_password_page.change_password(test_site.admin_password, new_pw, new_pw_conf)
-    change_password_page.main_area.check_success("Successfully changed password.")
+@pytest.mark.parametrize(
+    "char_groups_number_password_policy, password",
+    [
+        pytest.param("4", "012abcDEF-=#*&$@", id="4_groups-correct_password"),
+    ],
+    indirect=["char_groups_number_password_policy"],
+)
+def test_user_change_password_strict_policy_success(
+    test_site: Site,
+    dashboard_page: Dashboard,
+    char_groups_number_password_policy: None,
+    password: str,
+) -> None:
+    """Test user can successfully change password with a strict password policy.
 
-    # Logout and then login with the new password
-    change_password_page.main_menu.logout()
-    login_page = LoginPage(page.page, navigate_to_page=False)
-    new_credentials = CmkCredentials(username=ADMIN_USER, password=new_pw)
-    login_page.login(new_credentials)
-    page.main_area.check_page_title("Main dashboard")
-
-    # Reset the password to the original one
-    test_site.reset_admin_password()
+    Test changing the user's own password on 'Change Password' page
+    with a strict password policy (4 character groups)
+    """
+    change_user_password_and_check_success(test_site, dashboard_page, password, password)
 
 
 @pytest.mark.parametrize(
@@ -135,19 +174,30 @@ def test_user_change_password_errors(
     change_password_page.main_area.check_error(re.compile(f".*{expect_error_contains}.*"))
 
 
+@pytest.mark.parametrize(
+    "char_groups_number_password_policy, expected_groups_number, password",
+    [
+        pytest.param("2", 2, "012345678910", id="2_groups-digits"),
+        pytest.param("4", 4, "ABCD56789xyz", id="4_groups-uppercase_digits_lowercase"),
+        pytest.param("4", 4, "012abc-=#*&$@", id="4_groups-digits_lowercase_special_chars"),
+    ],
+    indirect=["char_groups_number_password_policy"],
+)
 def test_user_change_password_incompatible_with_policy(
     dashboard_page: Dashboard,
-    with_password_policy: None,
+    char_groups_number_password_policy: None,
+    expected_groups_number: int,
+    password: str,
 ) -> None:
     """
     Test changing the user's own password in the user profile menu to a PW that doesn't comply with
     the PW policy
     """
     change_password_page = ChangePassword(dashboard_page.page)
-    change_password_page.change_password("cmk", "123456789010", "123456789010")
+    change_password_page.change_password("cmk", password, password)
     change_password_page.main_area.check_error(
         "The password does not use enough character groups. You need to "
-        "set a password which uses at least %d of them." % 2
+        "set a password which uses at least %d of them." % expected_groups_number
     )
 
 
@@ -177,8 +227,18 @@ def test_edit_user_change_password_errors(
     page.main_area.check_error(re.compile(f".*{expect_error_contains}.*"))
 
 
+@pytest.mark.parametrize(
+    "char_groups_number_password_policy, expected_groups_number, password",
+    [
+        pytest.param("2", 2, "cmkcmkcmkcmk", id="2_groups-lowercase"),
+    ],
+    indirect=["char_groups_number_password_policy"],
+)
 def test_setting_password_incompatible_with_policy(
-    dashboard_page: Dashboard, with_password_policy: None
+    dashboard_page: Dashboard,
+    char_groups_number_password_policy: None,
+    expected_groups_number: int,
+    password: str,
 ) -> None:
     """
     Activate a password policy that requires at least 2 groups of characters (via fixture)
@@ -187,15 +247,11 @@ def test_setting_password_incompatible_with_policy(
     pw_field_suffix = "Y21rYWRtaW4="  # base64 'cmkadmin'
     navigate_to_edit_user_page(dashboard_page, ADMIN_USER)
 
-    dashboard_page.main_area.locator(f"input[name='_password_{pw_field_suffix}']").fill(
-        "cmkcmkcmkcmk"
-    )
-    dashboard_page.main_area.locator(f"input[name='_password2_{pw_field_suffix}']").fill(
-        "cmkcmkcmkcmk"
-    )
+    dashboard_page.main_area.locator(f"input[name='_password_{pw_field_suffix}']").fill(password)
+    dashboard_page.main_area.locator(f"input[name='_password2_{pw_field_suffix}']").fill(password)
     dashboard_page.main_area.locator("#suggestions >> text=Save").click()
 
     dashboard_page.main_area.check_error(
         "The password does not use enough character groups. You need to "
-        "set a password which uses at least %d of them." % 2
+        "set a password which uses at least %d of them." % expected_groups_number
     )

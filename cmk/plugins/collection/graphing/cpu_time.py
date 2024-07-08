@@ -11,7 +11,7 @@ metric_children_system_time = metrics.Metric(
     name="children_system_time",
     title=Title("Child time in system space"),
     unit=UNIT_TIME,
-    color=metrics.Color.ORANGE,
+    color=metrics.Color.DARK_RED,
 )
 metric_children_user_time = metrics.Metric(
     name="children_user_time",
@@ -23,7 +23,7 @@ metric_cmk_time_agent = metrics.Metric(
     name="cmk_time_agent",
     title=Title("Time spent waiting for Checkmk agent"),
     unit=UNIT_TIME,
-    color=metrics.Color.GREEN,
+    color=metrics.Color.LIGHT_GREEN,
 )
 metric_cmk_time_ds = metrics.Metric(
     name="cmk_time_ds",
@@ -41,7 +41,7 @@ metric_execution_time = metrics.Metric(
     name="execution_time",
     title=Title("Total execution time"),
     unit=UNIT_TIME,
-    color=metrics.Color.RED,
+    color=metrics.Color.ORANGE,
 )
 metric_system_time = metrics.Metric(
     name="system_time",
@@ -53,7 +53,7 @@ metric_user_time = metrics.Metric(
     name="user_time",
     title=Title("CPU time in user space"),
     unit=UNIT_TIME,
-    color=metrics.Color.GREEN,
+    color=metrics.Color.DARK_GREEN,
 )
 
 perfometer_execution_time = perfometers.Perfometer(
@@ -71,7 +71,7 @@ graph_cmk_cpu_time_by_phase = graphs.Graph(
     compound_lines=[
         metrics.Sum(
             Title("CPU time in user space"),
-            metrics.Color.GRAY,
+            metrics.Color.PINK,
             [
                 "user_time",
                 "children_user_time",
@@ -79,7 +79,7 @@ graph_cmk_cpu_time_by_phase = graphs.Graph(
         ),
         metrics.Sum(
             Title("CPU time in operating system"),
-            metrics.Color.GRAY,
+            metrics.Color.DARK_BLUE,
             [
                 "system_time",
                 "children_system_time",
@@ -127,7 +127,7 @@ graph_used_cpu_time = graphs.Graph(
     simple_lines=[
         metrics.Sum(
             Title("Total"),
-            metrics.Color.DARK_GRAY,
+            metrics.Color.DARK_BLUE,
             [
                 "user_time",
                 "children_user_time",

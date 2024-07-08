@@ -1,0 +1,13 @@
+Title: MS Exchange: Use consistent units (ms/s) in rules & graphs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1720433457
+Edition: cre
+Level: 1
+Version: 2.1.0p46
+
+The checks msexch_isclienttype, msexch_isstore, msexch_rpcclientaccess reported
+their values in ms in the summary/ruleset but displayed the same value as
+seconds in the graph. With this werk, all MS Exchange checks now report their
+values consistently.

@@ -332,14 +332,6 @@ perfometer_info.append(
     }
 )
 
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["storage_processor_util"],
-        "total": 100.0,
-    }
-)
-
 
 def register_hop_perfometers():
     for x in reversed(range(1, MAX_NUMBER_HOPS)):

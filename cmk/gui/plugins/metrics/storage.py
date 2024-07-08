@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["storage_processor_util"] = {
-    "title": _("Storage processor utilization"),
-    "unit": "%",
-    "color": "34/a",
-}
-
 metric_info["filehandler_perc"] = {
     "title": _("Used file handles"),
     "unit": "%",

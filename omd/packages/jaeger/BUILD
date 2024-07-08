@@ -22,3 +22,25 @@ genrule(
 	    jaeger-%s-linux-amd64/jaeger-all-in-one
     """ % JAEGER_VERSION,
 )
+
+genrule(
+    name = "hooks",
+    srcs = [
+        "@omd_packages//omd/packages/jaeger:TRACE_RECEIVE",
+        "@omd_packages//omd/packages/jaeger:TRACE_RECEIVE_ADDRESS",
+        "@omd_packages//omd/packages/jaeger:TRACE_RECEIVE_PORT",
+    ],
+    outs = [
+        "lib/omd/hooks/TRACE_RECEIVE",
+        "lib/omd/hooks/TRACE_RECEIVE_ADDRESS",
+        "lib/omd/hooks/TRACE_RECEIVE_PORT",
+    ],
+    cmd = """
+        mkdir -p $$(realpath $(RULEDIR))/lib/omd/hooks
+        cp \
+            $(execpath @omd_packages//omd/packages/jaeger:TRACE_RECEIVE) \
+            $(execpath @omd_packages//omd/packages/jaeger:TRACE_RECEIVE_ADDRESS) \
+            $(execpath @omd_packages//omd/packages/jaeger:TRACE_RECEIVE_PORT) \
+            $$(realpath $(RULEDIR))/lib/omd/hooks/
+    """,
+)

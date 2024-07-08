@@ -21,7 +21,7 @@ import re
 import subprocess
 import sys
 from collections.abc import Iterable
-from ipaddress import ip_network
+from ipaddress import ip_network, IPv4Address, IPv6Address
 from pathlib import Path
 from re import Pattern
 from typing import TYPE_CHECKING
@@ -70,6 +70,39 @@ class IpAddressListHasError(ConfigChoiceHasError):
                 ip_network(ip_address)
             except ValueError:
                 return result.Error(f"The IP address {ip_address} does match the expected format.")
+        return result.OK(None)
+
+
+class IpListenAddressHasError(ConfigChoiceHasError):
+    def __call__(self, value: str) -> result.Result[None, str]:
+        if not value:
+            return result.Error("Empty address")
+
+        if value.startswith("[") and value.endswith("]"):
+            try:
+                IPv6Address(value[1:-1])
+                return result.OK(None)
+            except ValueError:
+                return result.Error("Invalid IPv6 address")
+
+        try:
+            IPv4Address(value)
+        except ValueError:
+            return result.Error("Invalid IPv4 address")
+
+        return result.OK(None)
+
+
+class NetworkPortHasError(ConfigChoiceHasError):
+    def __call__(self, value: str) -> result.Result[None, str]:
+        try:
+            port = int(value)
+        except ValueError:
+            return result.Error("Invalid port number")
+
+        if port < 1024 or port > 65535:
+            return result.Error("Invalid port number")
+
         return result.OK(None)
 
 
@@ -180,6 +213,10 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
     match [choice.strip() for choice in hook_info.split("\n")]:
         case [""]:
             raise MKTerminate("Invalid output of hook: empty output")
+        case ["@{IP_LISTEN_ADDRESS}"]:
+            return IpListenAddressHasError()
+        case ["@{NETWORK_PORT}"]:
+            return NetworkPortHasError()
         case ["@{IP_ADDRESS_LIST}"]:
             return IpAddressListHasError()
         case ["@{APACHE_TCP_ADDR}"]:

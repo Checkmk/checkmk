@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Alias: IP address to listen for traces
+# Menu: Addons
+# Description:
+#  If receiving traces is configured, they are only received from the local host by default. In
+#  distributed setups it is useful to collect all traces in the central site. To do this, you can
+#  configure the IP address to listen for traces. The setting "[::]" makes the port available to all
+#  IPv4 and IPv6 clients.
+
+case "$1" in
+    default)
+        echo "[::1]"
+        ;;
+    choices)
+        echo "@{IP_LISTEN_ADDRESS}"
+        ;;
+    depends)
+        [ "$CONFIG_TRACE_RECEIVE" = on ]
+        ;;
+esac

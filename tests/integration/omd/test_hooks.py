@@ -30,6 +30,9 @@ def test_hooks(site: Site) -> None:
         "MULTISITE_COOKIE_AUTH",
         "PNP4NAGIOS",
         "TMPFS",
+        "TRACE_RECEIVE",
+        "TRACE_RECEIVE_ADDRESS",
+        "TRACE_RECEIVE_PORT",
     ]
 
     if not site.version.is_raw_edition():

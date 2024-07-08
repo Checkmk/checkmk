@@ -35,22 +35,10 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["read_latency"] = {
-    "title": _("Read latency"),
-    "unit": "s",
-    "color": "35/a",
-}
-
 metric_info["read_hits"] = {
     "title": _("Read hits"),
     "unit": "%",
     "color": "31/a",
-}
-
-metric_info["write_latency"] = {
-    "title": _("Write latency"),
-    "unit": "s",
-    "color": "45/a",
 }
 
 metric_info["disk_read_ql"] = {
@@ -275,12 +263,6 @@ graph_info["read_and_written_blocks"] = {
         ("read_blocks", "area"),
         ("write_blocks", "-area"),
     ],
-}
-
-# TODO: is this still used?
-graph_info["disk_latency"] = {
-    "title": _("Disk latency"),
-    "metrics": [("read_latency", "area"), ("write_latency", "-area")],
 }
 
 graph_info["read_write_queue_length"] = {

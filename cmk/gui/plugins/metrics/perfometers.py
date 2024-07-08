@@ -48,26 +48,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "checkpoint_age",
-                "half_value": 86400,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "backup_age",
-                "half_value": 86400,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "backup_age",
         "half_value": 86400,

@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["backup_age"] = {
-    "title": _("Time since last backup"),
-    "unit": "s",
-    "color": "34/a",
-}
-
 metric_info["logswitches_last_hour"] = {
     "title": _("Log switches in the last 60 minutes"),
     "unit": "count",
@@ -149,12 +143,6 @@ metric_info["log_file_utilization"] = {
     "color": "42/a",
 }
 
-metric_info["checkpoint_age"] = {
-    "title": _("Time since last checkpoint"),
-    "unit": "s",
-    "color": "#006040",
-}
-
 metric_info["io_consumption_percent"] = {
     "title": _("Storage IO consumption"),
     "unit": "%",
@@ -172,11 +160,6 @@ metric_info["io_consumption_percent"] = {
 #   +----------------------------------------------------------------------+
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
-
-graph_info["backup_time"] = {
-    "title": _("Backup time"),
-    "metrics": [("checkpoint_age", "area"), ("backup_age", "stack")],
-}
 
 graph_info["total_cache_usage"] = {
     "title": _("Total cache usage"),

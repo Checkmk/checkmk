@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Callable, Mapping, Sequence
 
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
@@ -28,7 +32,9 @@ class DictionaryVisitor(FormSpecVisitor):
             value = self.form_spec.migrate(value)
 
         if isinstance(value, DEFAULT_VALUE):
-            value = {key: default_value for key, el in self.form_spec.elements.items() if el.required}
+            value = {
+                key: default_value for key, el in self.form_spec.elements.items() if el.required
+            }
 
         if not isinstance(value, dict):
             raise TypeError(f"Expected a dictionary, got {type(value)}")

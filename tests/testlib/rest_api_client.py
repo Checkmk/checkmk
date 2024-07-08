@@ -313,27 +313,19 @@ class RestApiClient:
         url_is_complete: bool = False,
         use_default_headers: bool = True,
     ) -> Response:
-        if use_default_headers:
-            default_headers = JSON_HEADERS.copy()
-            default_headers.update(headers or {})
-        else:
-            default_headers = cast(
-                dict[str, str], headers
-            )  # TODO FIX this. Need this to test exceptions
+        default_headers: Mapping[str, str] = {
+            **(JSON_HEADERS if use_default_headers else {}),
+            **({} if headers is None else headers),
+        }
 
         if not url_is_complete:
             url = self._url_prefix + url
-
-        if body is not None:
-            request_body = json.dumps(body)
-        else:
-            request_body = ""
 
         resp = self.request_handler.request(
             method=method,
             url=url,
             query_params=query_params,
-            body=request_body,
+            body="" if body is None else json.dumps(body),
             headers=default_headers,
         )
 

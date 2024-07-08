@@ -131,16 +131,6 @@ perfometer_info.append(
     {
         "type": "linear",
         "segments": [
-            "generic_util",
-        ],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": [
             "util1",
         ],
         "total": 100.0,

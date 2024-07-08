@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["write_cache_usage"] = {
-    "title": _("Write cache usage"),
-    "unit": "%",
-    "color": "#030303",
-}
-
 metric_info["total_cache_usage"] = {
     "title": _("Total cache usage"),
     "unit": "%",
@@ -146,12 +140,6 @@ metric_info["io_consumption_percent"] = {
 graph_info["total_cache_usage"] = {
     "title": _("Total cache usage"),
     "metrics": [("total_cache_usage", "area")],
-    "range": (0, 100),
-}
-
-graph_info["write_cache_usage"] = {
-    "title": _("Write cache usage"),
-    "metrics": [("write_cache_usage", "area")],
     "range": (0, 100),
 }
 

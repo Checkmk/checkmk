@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["mem_pages_rate"] = {
-    "title": _("Memory pages"),
-    "unit": "1/s",
-    "color": "34/a",
-}
-
 metric_info["mem_lnx_active_anon"] = {
     "title": _("Active (anonymous)"),
     "color": "#ff4040",

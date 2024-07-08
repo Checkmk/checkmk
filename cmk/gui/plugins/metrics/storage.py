@@ -35,60 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["harddrive_power_cycles"] = {
-    "title": _("Harddrive power cycles"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["harddrive_reallocated_sectors"] = {
-    "title": _("Harddrive reallocated sectors"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["harddrive_reallocated_events"] = {
-    "title": _("Harddrive reallocated events"),
-    "unit": "count",
-    "color": "21/a",
-}
-
-metric_info["harddrive_spin_retries"] = {
-    "title": _("Harddrive spin retries"),
-    "unit": "count",
-    "color": "24/a",
-}
-
-metric_info["harddrive_pending_sectors"] = {
-    "title": _("Harddrive pending sectors"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["harddrive_cmd_timeouts"] = {
-    "title": _("Harddrive command timeouts"),
-    "unit": "count",
-    "color": "34/a",
-}
-
-metric_info["harddrive_end_to_end_errors"] = {
-    "title": _("Harddrive end-to-end errors"),
-    "unit": "count",
-    "color": "41/a",
-}
-
-metric_info["harddrive_udma_crc_errors"] = {
-    "title": _("Harddrive UDMA CRC errors"),
-    "unit": "count",
-    "color": "46/a",
-}
-
-metric_info["harddrive_uncorrectable_errors"] = {
-    "title": _("Harddrive uncorrectable errors"),
-    "unit": "count",
-    "color": "13/a",
-}
-
 metric_info["storage_processor_util"] = {
     "title": _("Storage processor utilization"),
     "unit": "%",
@@ -197,19 +143,4 @@ graph_info["ram_used"] = {
         ("mem_used:crit", "Critical"),
     ],
     "range": (0, "mem_used:max"),
-}
-
-graph_info["harddrive_health_statistic"] = {
-    "title": _("Harddrive health statistic"),
-    "metrics": [
-        ("harddrive_power_cycles", "stack"),
-        ("harddrive_reallocated_sectors", "stack"),
-        ("harddrive_reallocated_events", "stack"),
-        ("harddrive_spin_retries", "stack"),
-        ("harddrive_pending_sectors", "stack"),
-        ("harddrive_cmd_timeouts", "stack"),
-        ("harddrive_end_to_end_errors", "stack"),
-        ("harddrive_uncorrectable_errors", "stack"),
-        ("harddrive_udma_crc_errors", "stack"),
-    ],
 }

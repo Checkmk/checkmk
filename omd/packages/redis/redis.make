@@ -16,7 +16,7 @@ $(REDIS_INSTALL): $(REDIS_BUILD)
 	$(RSYNC) --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rwx,Fg=rwx,Fo=rx $(BAZEL_BIN_EXT)/redis/skeleton/ $(DESTDIR)$(OMD_ROOT)/skel
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/
 	cd $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/ && \
-	$(LN) -sf ../init.d/redis 85-redis
+	$(LN) -sf ../init.d/redis 40-redis
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/var/redis
 	chmod 640 $(DESTDIR)$(OMD_ROOT)/skel/etc/logrotate.d/redis
 	chmod 750 $(DESTDIR)$(OMD_ROOT)/skel/etc/redis

@@ -29,7 +29,7 @@ genrule(
     srcs = ["@omd_packages//omd/packages/redis/skeleton:skel", "@omd_packages//omd/packages/redis/skeleton:skel_root"],
     outs = ["skeleton/etc/init.d/redis",
             "skeleton/etc/logrotate.d/redis",
-            "skeleton/etc/rc.d/85-redis",
+            "skeleton/etc/rc.d/40-redis",
             "skeleton/etc/redis/redis.conf",
            ],
     cmd = """

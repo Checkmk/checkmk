@@ -7,7 +7,7 @@ from typing import Final
 
 import pytest
 
-from cmk.active_checks.check_disk_smb import ErrorResult, main, SMBShare
+from cmk.plugins.smb.lib.check_disk_smb import ErrorResult, main, SMBShare
 
 
 class _SMBShareDiskUsageOK:
@@ -53,9 +53,7 @@ def test_main_no_levels(capsys: pytest.CaptureFixture[str]) -> None:
         == 0
     )
     out, err = capsys.readouterr()
-    assert (
-        out == "Disk ok - 1.0 B (0.001%) free on \\\\hostname\\share | 'share'=102399B;;;0;102400\n"
-    )
+    assert out == "1 B (<0.01%) free on \\\\hostname\\share | 'share'=102399B;;;0;102400\n"
     assert not err
 
 
@@ -81,7 +79,7 @@ def test_main_ok_state(capsys: pytest.CaptureFixture[str]) -> None:
     out, err = capsys.readouterr()
     assert (
         out
-        == "Disk ok - 50.0 KiB (50.0%) free on \\\\hostname\\share | 'share'=51200B;81920.0;92160.0;0;102400\n"
+        == "50.0 KiB (50.00%) free on \\\\hostname\\share | 'share'=51200B;81920.0;92160.0;0;102400\n"
     )
     assert not err
 
@@ -108,7 +106,7 @@ def test_main_warn_state(capsys: pytest.CaptureFixture[str]) -> None:
     out, err = capsys.readouterr()
     assert (
         out
-        == "WARNING: Only 19.5 KiB (19.53%) free on \\\\hostname\\share | 'share'=82400B;81920.0;92160.0;0;102400\n"
+        == "19.5 KiB (19.53%) free on \\\\hostname\\share | 'share'=82400B;81920.0;92160.0;0;102400\n"
     )
     assert not err
 
@@ -135,7 +133,7 @@ def test_main_crit_state(capsys: pytest.CaptureFixture[str]) -> None:
     out, err = capsys.readouterr()
     assert (
         out
-        == "CRITICAL: Only 5.5 KiB (5.47%) free on \\\\hostname\\share | 'share'=96800B;81920.0;92160.0;0;102400\n"
+        == "5.47 KiB (5.47%) free on \\\\hostname\\share | 'share'=96800B;81920.0;92160.0;0;102400\n"
     )
     assert not err
 

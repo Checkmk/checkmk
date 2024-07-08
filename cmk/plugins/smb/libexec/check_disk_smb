@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.active_checks.check_disk_smb import main
+from cmk.plugins.smb.lib.check_disk_smb import main
 
 if __name__ == "__main__":
     sys.exit(main())

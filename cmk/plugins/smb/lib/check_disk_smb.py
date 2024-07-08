@@ -15,7 +15,8 @@ from pathlib import Path
 from typing import Protocol
 
 from cmk.utils import password_store
-from cmk.utils.render import fmt_bytes, percent
+
+from cmk.agent_based.v2 import render
 
 
 @dataclass
@@ -377,20 +378,15 @@ def _check_disk_usage_threshold(
     used_percentage = 100 - free_percentage
 
     if levels is None or used_percentage < levels[0]:
-        return (
-            0,
-            f"Disk ok - {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
-        )
-
-    if used_percentage >= levels[1]:
-        return (
-            2,
-            f"CRITICAL: Only {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
-        )
+        state = 0
+    elif used_percentage >= levels[1]:
+        state = 2
+    else:
+        state = 1
 
     return (
-        1,
-        f"WARNING: Only {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
+        state,
+        f"{render.bytes(smb_share.available_bytes)} ({render.percent(free_percentage)}) free on {smb_share.mountpoint}",
     )
 
 

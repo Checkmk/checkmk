@@ -395,14 +395,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["io_consumption_percent"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["cpu_reservation"],
         "total": 100.0,
     }

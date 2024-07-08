@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["io_consumption_percent"] = {
-    "title": _("Storage IO consumption"),
-    "unit": "%",
-    "color": "25/b",
-}
-
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

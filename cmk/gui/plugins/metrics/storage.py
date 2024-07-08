@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["mem_trend"] = {
-    "title": _("Trend of memory usage growth"),
-    "unit": "bytes/d",
-    "color": "#808080",
-}
-
 metric_info["mem_pages_rate"] = {
     "title": _("Memory pages"),
     "unit": "1/s",
@@ -595,13 +589,6 @@ graph_info["ram_swap_used"] = {
         ("mem_used:max#80ffff", _("Total RAM installed")),
     ],
     "range": (0, "swap_used:max,mem_used:max,+"),
-}
-
-graph_info["mem_trend"] = {
-    "title": _("Trend of memory usage growth"),
-    "metrics": [
-        ("mem_trend", "line"),
-    ],
 }
 
 graph_info["mem_growing"] = {

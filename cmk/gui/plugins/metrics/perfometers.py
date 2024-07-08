@@ -323,15 +323,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "database_size",
-        "half_value": GB,
-        "exponent": 5.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "dedup_rate",
         "half_value": 30.0,
         "exponent": 1.2,

@@ -29,51 +29,6 @@ metric_info["streams"] = {
 
 # cloud storage
 
-metric_info["database_size"] = {
-    "title": _("Database size"),
-    "unit": "bytes",
-    "color": "16/a",
-}
-
-metric_info["data_size"] = {
-    "title": _("Data size"),
-    "unit": "bytes",
-    "color": "25/a",
-}
-
-metric_info["unallocated_size"] = {
-    "title": _("Unallocated space"),
-    "help": _("Space in the database that has not been reserved for database objects"),
-    "unit": "bytes",
-    "color": "34/a",
-}
-
-metric_info["reserved_size"] = {
-    "title": _("Reserved space"),
-    "help": _("Total amount of space allocated by objects in the database"),
-    "unit": "bytes",
-    "color": "41/a",
-}
-
-metric_info["indexes_size"] = {
-    "title": _("Index space"),
-    "unit": "bytes",
-    "color": "31/a",
-}
-
-metric_info["unused_size"] = {
-    "title": _("Unused space"),
-    "help": _("Total amount of space reserved for objects in the database, but not yed used"),
-    "unit": "bytes",
-    "color": "46/a",
-}
-
-metric_info["allocated_size"] = {
-    "title": _("Allocated space"),
-    "unit": "bytes",
-    "color": "42/a",
-}
-
 metric_info["tablespace_size"] = {
     "title": _("Tablespace size"),
     "unit": "bytes",
@@ -102,12 +57,6 @@ metric_info["indexspace_wasted"] = {
     "title": _("Indexspace wasted"),
     "unit": "bytes",
     "color": "#20a080",
-}
-
-metric_info["database_reclaimable"] = {
-    "title": _("Database reclaimable size"),
-    "unit": "bytes",
-    "color": "45/a",
 }
 
 metric_info["cpu_mem_used_percent"] = {
@@ -676,27 +625,6 @@ graph_info["spare_and_broken_disks"] = {
     ],
 }
 
-graph_info["database_sizes"] = {
-    "title": _("Database sizes"),
-    "metrics": [
-        ("database_size", "area"),
-        ("unallocated_size", "stack"),
-        ("reserved_size", "stack"),
-        ("data_size", "stack"),
-        ("indexes_size", "stack"),
-        ("unused_size", "stack"),
-        ("database_reclaimable", "stack"),
-    ],
-    "optional_metrics": [
-        "unallocated_size",
-        "reserved_size",
-        "data_size",
-        "indexes_size",
-        "unused_size",
-        "database_reclaimable",
-    ],
-}
-
 graph_info["number_of_shared_and_exclusive_locks"] = {
     "title": _("Number of shared and exclusive locks"),
     "metrics": [
@@ -952,9 +880,4 @@ graph_info["mem_perm_used"] = {
         ("mem_perm_used:max#000000", _("Max Perm used")),
     ],
     "range": (0, "mem_perm_used:max"),
-}
-
-graph_info["datafile_sizes"] = {
-    "title": _("Datafile sizes"),
-    "metrics": [("allocated_size", "line"), ("data_size", "area")],
 }

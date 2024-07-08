@@ -35,24 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["disks"] = {
-    "title": _("Disks"),
-    "unit": "count",
-    "color": "41/a",
-}
-
-metric_info["spare_disks"] = {
-    "title": _("Spare disk"),
-    "unit": "count",
-    "color": "26/a",
-}
-
-metric_info["failed_disks"] = {
-    "title": _("Failed disk"),
-    "unit": "count",
-    "color": "13/a",
-}
-
 metric_info["read_blocks"] = {
     "title": _("Read blocks per second"),
     "unit": "1/s",
@@ -265,15 +247,6 @@ graph_info["direct_and_buffered_io_operations"] = {
     "metrics": [
         ("direct_io", "stack"),
         ("buffered_io", "stack"),
-    ],
-}
-
-graph_info["spare_and_broken_disks"] = {
-    "title": _("Spare and broken disks"),
-    "metrics": [
-        ("disks", "area"),
-        ("spare_disks", "stack"),
-        ("failed_disks", "stack"),
     ],
 }
 

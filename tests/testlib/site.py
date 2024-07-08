@@ -1204,6 +1204,16 @@ class Site:
             crash_json = crash_info.parent / (crash_info.stem + ".json")
             execute(["mv", crash_info.as_posix(), crash_json.as_posix()], sudo=True)
 
+        execute(
+            [
+                "cp",
+                "-r",
+                Path(self.root, "var/check_mk/background_jobs").as_posix(),
+                self.result_dir().as_posix(),
+            ],
+            sudo=True,
+        )
+
     def report_crashes(self):
         crash_dirs = [
             self.crash_report_dir / crash_type / crash_id

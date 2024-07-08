@@ -43,6 +43,7 @@ HACK_AGENTS = {
     "rabbitmq": True,
     "tinkerforge": False,  # needs no secret
     "couchbase": True,
+    "zerto": True,
 }
 
 

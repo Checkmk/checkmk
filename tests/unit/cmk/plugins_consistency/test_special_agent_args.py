@@ -129,7 +129,6 @@ UNMIGRATED = {
     "storeonce4x",
     "ucs_bladecenter",
     "vnx_quotas",
-    "zerto",
 }
 
 

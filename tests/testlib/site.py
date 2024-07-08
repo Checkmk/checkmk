@@ -1164,7 +1164,9 @@ class Site:
         logger.info("Saving to %s", self.result_dir())
         self.makedirs(self.result_dir())
 
-        execute(["cp", self.path("junit.xml"), self.result_dir().as_posix()], sudo=True)
+        if os.path.exists(self.path("junit.xml")):
+            execute(["cp", self.path("junit.xml"), self.result_dir().as_posix()], sudo=True)
+
         execute(
             ["cp", "-r", self.path("var/log"), (self.result_dir() / "logs").as_posix()], sudo=True
         )
@@ -1179,10 +1181,13 @@ class Site:
             ["cp", self.path("var/check_mk/core/history"), (cmc_dir / "history").as_posix()],
             sudo=True,
         )
-        execute(
-            ["cp", self.path("var/check_mk/core/core"), (cmc_dir / "core_dump").as_posix()],
-            sudo=True,
-        )
+
+        if os.path.exists(self.path("var/check_mk/core/core")):
+            execute(
+                ["cp", self.path("var/check_mk/core/core"), (cmc_dir / "core_dump").as_posix()],
+                sudo=True,
+            )
+
         execute(
             ["cp", "-r", self.crash_report_dir.as_posix(), self.crash_archive_dir.as_posix()],
             sudo=True,

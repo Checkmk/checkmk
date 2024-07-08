@@ -3,10 +3,38 @@ load("//omd/packages/rules:version.bzl", "mangle_version")
 
 CMK_VERSION = "2.4.0b1"
 
-# CC=/usr/bin/gcc-13 bazel build //packages/neb
+NEB_COPTS = [
+    "-std=c++20",
+    "-Ipackages/neb/third_party/include/",
+    "-gdwarf-4",
+    "-O3",
+]
+
+filegroup(
+    name = "all_hdrs",
+    srcs = glob(
+        ["include/neb/*.h"],
+    ) + glob(
+        # patched nagios headers
+        ["third_party/include/nagios/*.h"],
+    ),
+)
+
+# Keep code using VERSION apart to minimize cache invalidation.
 cc_library(
-    name = "neb",
+    name = "neb_version",
+    srcs = ["src/CmkVersion.cc"],
+    hdrs = ["include/neb/CmkVersion.h"],
+    copts = NEB_COPTS + [
+        r'-DVERSION=\"' + mangle_version(CMK_VERSION) + r'\"',
+    ],
+    includes = ["include"],
+)
+
+cc_library(
+    name = "neb_base",
     srcs = [
+        "include/neb/CmkVersion.h",
         "src/MacroExpander.cc",
         "src/NebCore.cc",
         "src/NebHost.cc",
@@ -36,18 +64,26 @@ cc_library(
         "include/neb/TimeperiodsCache.h",
         "include/neb/nagios.h",
     ],
-    copts = [
-        "-std=c++20",
-        "-Ipackages/neb/third_party/include/",
-        r'-DVERSION=\"' + mangle_version(CMK_VERSION) + r'\"',
-        "-fPIC",
-        "-gdwarf-4",
-        "-O3",
-    ],
+    copts = NEB_COPTS,
     includes = ["include"],
     deps = [
         "//packages/livestatus",
     ],
+)
+
+cc_library(
+    name = "neb",
+    includes = ["include"],
+    deps = [
+        ":neb_base",
+        ":neb_version",
+        "//packages/livestatus",
+    ],
+)
+
+cc_shared_library(
+    name = "neb_shared",
+    deps = [":neb"],
 )
 
 cc_library(
@@ -57,13 +93,7 @@ cc_library(
         "test/test_utilities.cc",
     ],
     hdrs = ["test/test_utilities.h"],
-    copts = [
-        "-Ipackages/neb/third_party/include/",
-        "-std=c++20",
-        "-fPIC",
-        "-gdwarf-4",
-        "-O2",
-    ],
+    copts = NEB_COPTS,
     deps = [
         ":neb",
         "//packages/livestatus",
@@ -75,13 +105,7 @@ cc_library(
     testonly = 1,
     srcs = ["test/DummyNagios.cc"],
     hdrs = ["test/DummyNagios.cc"],
-    copts = [
-        "-Ipackages/neb/third_party/include/",
-        "-std=c++20",
-        "-fPIC",
-        "-gdwarf-4",
-        "-O2",
-    ],
+    copts = NEB_COPTS,
     deps = [":neb"],
 )
 
@@ -94,13 +118,7 @@ cc_test(
         "test/test_DictFilter.cc",
         "test/test_MacroExpander.cc",
     ],
-    copts = [
-        "-Ipackages/neb/third_party/include/",
-        "-std=c++20",
-        "-fPIC",
-        "-gdwarf-4",
-        "-O2",
-    ],
+    copts = NEB_COPTS,
     deps = [
         ":dummy_nagios",
         ":neb",

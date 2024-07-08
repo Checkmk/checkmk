@@ -23,6 +23,7 @@
 #include "livestatus/PnpUtils.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/mk_logwatch.h"
+#include "neb/CmkVersion.h"
 #include "neb/Comment.h"
 #include "neb/Downtime.h"
 #include "neb/NebComment.h"
@@ -442,7 +443,7 @@ int32_t NebCore::externalCommandBufferMax() const {
 int32_t NebCore::livestatusActiveConnectionsNum() const {
     return g_livestatus_active_connections.load();
 }
-std::string NebCore::livestatusVersion() const { return VERSION; }
+std::string NebCore::livestatusVersion() const { return cmk::version(); }
 int32_t NebCore::livestatusQueuedConnectionsNum() const {
     return g_num_queued_connections;
 }

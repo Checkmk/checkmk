@@ -1,1 +1,5 @@
 test --test_output=all
+
+# https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html#index-fPIC
+# Required for dynamic linking.
+build --copt="-fPIC"

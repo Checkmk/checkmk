@@ -5,7 +5,7 @@
 
 set -e
 
-./run --build-all
+bazel build //packages/neb:neb_shared
 
 SITE=${SITE:-$(until [ "${PWD}" = "/" ]; do if [ -e .site ]; then
     cat .site
@@ -14,9 +14,7 @@ else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-(cd ../../packages/livestatus && ONLY_COPY=1 ./.f12)
-
-install -vD build/src/libneb.so "$ROOT/lib/mk-livestatus/livestatus.o"
+install -vD ../../bazel-bin/packages/neb/libneb_shared.so "$ROOT/lib/mk-livestatus/livestatus.o"
 
 if [ -z "$ONLY_COPY" ]; then
     echo "Restarting site $SITE"

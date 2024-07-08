@@ -51,6 +51,7 @@
 #include "livestatus/User.h"
 #include "livestatus/data_encoding.h"
 #include "livestatus/global_counters.h"
+#include "neb/CmkVersion.h"
 #include "neb/Comment.h"
 #include "neb/Downtime.h"
 #include "neb/NebCore.h"
@@ -1095,9 +1096,9 @@ void omd_advertize(Logger *logger) {
 #else
 #define BUILD_CXX "unknown C++ compiler"
 #endif
-    Notice(logger) << "version " << VERSION << " compiled " << __TIMESTAMP__
-                   << " with " << BUILD_CXX << ", using " << RegExp::engine()
-                   << " regex engine";
+    Notice(logger) << "version " << cmk::version() << " compiled "
+                   << __TIMESTAMP__ << " with " << BUILD_CXX << ", using "
+                   << RegExp::engine() << " regex engine";
     Notice(logger) << "please visit us at https://checkmk.com/";
     if (char *omd_site = getenv("OMD_SITE")) {
         Informational(logger)

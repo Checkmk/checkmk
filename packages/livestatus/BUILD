@@ -15,7 +15,6 @@ cc_library(
     ],
     copts = [
         "-std=c++20",
-        "-fPIC",
         "-gdwarf-4",
         "-O3",
     ],
@@ -40,7 +39,6 @@ cc_library(
         "-DHAVE_RE2",
         "-DASIO_DISABLE_CONCEPTS",
         "-DASIO_NO_DEPRECATED",
-        "-fPIC",
         "-gdwarf-4",
         "-O3",
     ],
@@ -55,6 +53,11 @@ cc_library(
     ],
 )
 
+cc_shared_library(
+    name = "livestatus_shared",
+    deps = [":livestatus"],
+)
+
 # CC=/usr/bin/gcc-13 bazel test --test_output=all //packages/livestatus:all
 cc_test(
     name = "test",
@@ -63,7 +66,6 @@ cc_test(
     copts = [
         "-std=c++20",
         "-Iexternal/re2",
-        "-fPIC",
         "-gdwarf-4",
         "-O3",
     ],

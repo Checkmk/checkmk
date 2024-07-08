@@ -29,12 +29,6 @@ metric_info["streams"] = {
 
 # cloud storage
 
-metric_info["used_space"] = {
-    "title": _("Used storage space"),
-    "unit": "bytes",
-    "color": "34/a",
-}
-
 metric_info["ingress"] = {
     "title": _("Data ingress"),
     "unit": "bytes",
@@ -975,14 +969,6 @@ graph_info["mem_perm_used"] = {
 graph_info["datafile_sizes"] = {
     "title": _("Datafile sizes"),
     "metrics": [("allocated_size", "line"), ("data_size", "area")],
-}
-
-# workaround for showing single metrics of multiple hosts on the same combined graph dashlet
-graph_info["used_space"] = {
-    "title": _("Used storage space"),
-    "metrics": [
-        ("used_space", "line"),
-    ],
 }
 
 graph_info["io_flow"] = {

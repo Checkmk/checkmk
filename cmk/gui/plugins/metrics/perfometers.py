@@ -647,15 +647,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "used_space",
-        "half_value": GB,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "nimble_read_latency_total",
         "half_value": 10,
         "exponent": 2.0,

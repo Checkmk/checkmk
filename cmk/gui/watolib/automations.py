@@ -63,7 +63,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automation_types import PhaseOneResult
 from cmk.gui.watolib.utils import mk_repr
 
-from cmk.ccc import store as store
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 auto_logger = logger.getChild("automations")

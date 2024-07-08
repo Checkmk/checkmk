@@ -17,6 +17,8 @@ from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, Ser
 from cmk.gui.http import request
 from cmk.gui.watolib import automations
 
+from cmk.ccc import store
+
 RESULT: object = None
 
 
@@ -45,11 +47,7 @@ class TestCheckmkAutomationBackgroundJob:
 
     @pytest.fixture(name="save_text_to_file")
     def save_text_to_file_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(
-            automations.store,
-            "save_text_to_file",
-            self._mock_save,
-        )
+        monkeypatch.setattr(store, "save_text_to_file", self._mock_save)
 
     @pytest.fixture(name="result_type_registry")
     def result_type_registry_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:

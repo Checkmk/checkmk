@@ -93,10 +93,3 @@ graph_apache_status = graphs.Graph(
         "apache_state_keep_alive",
     ],
 )
-
-metric_requests_per_second = metrics.Metric(
-    name="requests_per_second",
-    title=Title("Requests per second"),
-    unit=metrics.Unit(metrics.DecimalNotation("req/s")),
-    color=metrics.Color.GRAY,
-)

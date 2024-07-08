@@ -2174,3 +2174,9 @@ metric_fan_speed = metrics.Metric(
     unit=UNIT_REVOLUTIONS_PER_MINUTE,
     color=metrics.Color.ORANGE,
 )
+metric_requests_per_second = metrics.Metric(
+    name="requests_per_second",
+    title=Title("Requests per second"),
+    unit=metrics.Unit(metrics.DecimalNotation("req/s")),
+    color=metrics.Color.GRAY,
+)

@@ -22,12 +22,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["dedup_rate"] = {
-    "title": _l("Deduplication rate"),
-    "unit": "count",
-    "color": "12/a",
-}
-
 metric_info["vol_context_switches"] = {
     "title": _l("Voluntary context switches"),
     "help": _l(

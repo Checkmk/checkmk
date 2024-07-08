@@ -24,7 +24,7 @@ from cmk.gui.graphing._perfometer import (
     MetricRendererStack,
     parse_perfometer,
 )
-from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric, UnitInfo
+from cmk.gui.graphing._type_defs import TranslatedMetric, UnitInfo
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics, perfometers
@@ -135,33 +135,6 @@ def test_get_first_matching_perfometer(
     perfometer: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked,
 ) -> None:
     assert get_first_matching_perfometer(translated_metrics) == perfometer
-
-
-def test_get_first_matching_legacy_perfometer() -> None:
-    assert get_first_matching_perfometer(
-        {
-            "dedup_rate": TranslatedMetric(
-                orig_name=["dedup_rate"],
-                value=10,
-                scalar=ScalarBounds(),
-                scale=[1.0],
-                auto_graph=True,
-                title="Dedup rate",
-                unit=UnitInfo(
-                    title="Count",
-                    symbol="",
-                    render=str,
-                    js_render="v => v.toString()",
-                ),
-                color="#ffa000",
-            ),
-        }
-    ) == {
-        "exponent": 1.2,
-        "half_value": 30.0,
-        "metric": "dedup_rate",
-        "type": "logarithmic",
-    }
 
 
 def test_registered_renderers() -> None:

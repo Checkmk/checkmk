@@ -197,15 +197,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "dedup_rate",
-        "half_value": 30.0,
-        "exponent": 1.2,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["mem_used(%)"],
         "total": 100.0,

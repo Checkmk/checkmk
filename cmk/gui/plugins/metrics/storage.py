@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["job_duration"] = {
-    "title": _("Job duration"),
-    "unit": "s",
-    "color": "33/a",
-}
-
 metric_info["backup_age"] = {
     "title": _("Time since last backup"),
     "unit": "s",

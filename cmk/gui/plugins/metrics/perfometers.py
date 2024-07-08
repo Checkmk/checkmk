@@ -31,15 +31,6 @@ from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "job_duration",
-        "half_value": 120.0,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "mails_received_time",
         "half_value": 5,
         "exponent": 3,

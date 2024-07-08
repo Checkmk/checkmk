@@ -1,0 +1,13 @@
+Title: Delete PDF tmp files older one day
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1720422296
+Edition: cre
+Level: 1
+Version: 2.2.0p31
+
+Werk #15125 introduced a cleanup mechanism for old PFD tmp files but deleted
+files older 48hours.
+
+Now files older than one day are deleted.

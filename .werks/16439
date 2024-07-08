@@ -1,0 +1,11 @@
+Title: redis: Add Log Rotation
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1720420406
+Edition: cre
+Level: 1
+Version: 2.2.0p31
+
+Previously, the file <code>var/log/redis-server.log</code> would not be rotated. If you are unable to upgrade,
+you can adjust the file in <code>$OMD_ROOT/etc/logrotate.d/redis</code>.

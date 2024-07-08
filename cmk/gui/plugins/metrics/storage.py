@@ -35,24 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["mem_lnx_total_total"] = {
-    "title": _("Total virtual memory"),
-    "color": "#1e8fff",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_committed_as"] = {
-    "title": _("Committed memory"),
-    "color": "#32a852",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_commit_limit"] = {
-    "title": _("Commit limit"),
-    "color": "#ff64ff",
-    "unit": "bytes",
-}
-
 metric_info["mem_lnx_kernel_stack"] = {
     "title": _("Kernel stack"),
     "color": "#7192ad",
@@ -571,15 +553,6 @@ graph_info["ram_used"] = {
     "range": (0, "mem_used:max"),
 }
 
-
-graph_info["memory_committing"] = {
-    "title": _("Memory committing"),
-    "metrics": [
-        ("mem_lnx_total_total", "line"),
-        ("mem_lnx_committed_as", "stack"),
-        ("mem_lnx_commit_limit", "stack"),
-    ],
-}
 
 graph_info["memory_that_cannot_be_swapped_out"] = {
     "title": _("Memory that cannot be swapped out"),

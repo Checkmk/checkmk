@@ -48,22 +48,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["mem_heap"],
-        "total": "mem_heap:max",
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["mem_nonheap"],
-        "total": "mem_nonheap:max",
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "pressure",
         "half_value": 0.5,
@@ -143,26 +127,6 @@ perfometer_info.append(
         "type": "linear",
         "segments": ["total_cache_usage"],
         "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "mem_heap",
-                "half_value": 100 * MB,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "mem_nonheap",
-                "half_value": 100 * MB,
-                "exponent": 2,
-            },
-        ],
     }
 )
 

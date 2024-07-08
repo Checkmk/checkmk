@@ -35,30 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["mem_heap"] = {
-    "title": _("Heap memory usage"),
-    "unit": "bytes",
-    "color": "23/a",
-}
-
-metric_info["mem_heap_committed"] = {
-    "title": _("Heap memory committed"),
-    "unit": "bytes",
-    "color": "23/b",
-}
-
-metric_info["mem_nonheap"] = {
-    "title": _("Non-heap memory usage"),
-    "unit": "bytes",
-    "color": "16/a",
-}
-
-metric_info["mem_nonheap_committed"] = {
-    "title": _("Non-heap memory committed"),
-    "unit": "bytes",
-    "color": "16/b",
-}
-
 metric_info["tapes_total"] = {
     "title": _("Total number of tapes"),
     "unit": "count",
@@ -479,43 +455,6 @@ graph_info["ram_used"] = {
         ("mem_used:crit", "Critical"),
     ],
     "range": (0, "mem_used:max"),
-}
-
-graph_info["heap_and_non_heap_memory"] = {
-    "title": _("Heap and non-heap memory"),
-    "metrics": [
-        ("mem_heap", "area"),
-        ("mem_nonheap", "stack"),
-    ],
-    "conflicting_metrics": [
-        "mem_heap_committed",
-        "mem_nonheap_committed",
-    ],
-}
-
-graph_info["heap_memory_usage"] = {
-    "title": _("Heap memory usage"),
-    "metrics": [
-        ("mem_heap_committed", "line"),
-        ("mem_heap", "line"),
-    ],
-    "scalars": [
-        "mem_heap:warn",
-        "mem_heap:crit",
-    ],
-}
-
-graph_info["non-heap_memory_usage"] = {
-    "title": _("Non-heap memory usage"),
-    "metrics": [
-        ("mem_nonheap_committed", "line"),
-        ("mem_nonheap", "line"),
-    ],
-    "scalars": [
-        "mem_nonheap:warn",
-        "mem_nonheap:crit",
-        "mem_nonheap:max",
-    ],
 }
 
 graph_info["harddrive_health_statistic"] = {

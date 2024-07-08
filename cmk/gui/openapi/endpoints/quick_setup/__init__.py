@@ -14,13 +14,7 @@ from dataclasses import asdict
 from typing import Any
 
 from cmk.utils.encoding import json_encode
-
-from cmk.gui.http import Response
-from cmk.gui.openapi.restful_objects import Endpoint
-from cmk.gui.openapi.restful_objects.constructors import collection_href, object_href
-from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.quick_setup.aws_stages import aws_quicksetup
-from cmk.gui.quick_setup.definitions import (
+from cmk.utils.quick_setup.definitions import (
     IncomingStage,
     quick_setup_registry,
     QuickSetup,
@@ -28,6 +22,13 @@ from cmk.gui.quick_setup.definitions import (
     QuickSetupOverview,
     Stage,
 )
+
+from cmk.gui.http import Response
+from cmk.gui.openapi.restful_objects import Endpoint
+from cmk.gui.openapi.restful_objects.constructors import collection_href, object_href
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.quick_setup.aws_stages import aws_quicksetup
+from cmk.gui.quick_setup.to_frontend import quick_setup_overview, validate_current_stage
 
 from cmk import fields
 
@@ -62,7 +63,7 @@ def get_all_stage_overviews_and_first_stage(params: Mapping[str, Any]) -> Respon
         quick_setup: QuickSetup = quick_setup_registry.get(quick_setup_id)
     except QuickSetupNotFoundException as exc:
         return _serve_error(title="Quick setup not found", detail=str(exc))
-    return _serve_data(data=quick_setup.overview())
+    return _serve_data(data=quick_setup_overview(quick_setup=quick_setup))
 
 
 @Endpoint(
@@ -82,7 +83,7 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
         for stage in body["stages"]
     ]
 
-    next_stage = quick_setup.validate_current_stage(stages)
+    next_stage = validate_current_stage(quick_setup=quick_setup, stages=stages)
     if next_stage.validation_errors:
         return _serve_data(data=next_stage, status_code=400)
     return _serve_data(data=next_stage)

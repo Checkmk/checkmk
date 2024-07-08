@@ -191,10 +191,28 @@ def test_get_overview_non_existing_quicksetup_id(clients: ClientRegistry) -> Non
     clients.QuickSetup.get_overview("frodo", expect_ok=False).assert_status_code(404)
 
 
+@pytest.mark.usefixtures("patch_theme")
 def test_send_aws_stage_one(clients: ClientRegistry) -> None:
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="aws_quick_setup",
-        stages=[{"stage_id": 1, "form_data": {}}],
+        stages=[
+            {
+                "stage_id": 1,
+                "form_data": {
+                    "aws_account_name": {
+                        "account_name": "nombre_de_cuenta_de_aws",
+                    },
+                    "credentials": {
+                        "access_key_id": "identificación_de_clave_de_acceso",
+                        "secret_access_key": {
+                            "input_context": {
+                                "explicit": "clave de acceso secreta",
+                            },
+                        },
+                    },
+                },
+            }
+        ],
     )
     assert resp.json["stage_id"] == 2
     assert resp.json["validation_errors"] == []
@@ -205,8 +223,30 @@ def test_send_aws_stage_two(clients: ClientRegistry) -> None:
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="aws_quick_setup",
         stages=[
-            {"stage_id": 1, "form_data": {}},
-            {"stage_id": 2, "form_data": {}},
+            {
+                "stage_id": 1,
+                "form_data": {
+                    "aws_account_name": {
+                        "account_name": "nombre_de_cuenta_de_aws",
+                    },
+                    "credentials": {
+                        "access_key_id": "identificación_de_clave_de_acceso",
+                        "secret_access_key": {
+                            "input_context": {},
+                        },
+                    },
+                },
+            },
+            {
+                "stage_id": 2,
+                "form_data": {
+                    "configure_host_and_region": {
+                        "regions_to_monitor": {
+                            "input_context": {},
+                        },
+                    },
+                },
+            },
         ],
     )
     assert resp.json == {

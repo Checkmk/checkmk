@@ -5,8 +5,8 @@
 
 from collections.abc import Sequence
 
-from cmk.gui.quick_setup.definitions import QuickSetup, QuickSetupId, QuickSetupStage, StageId
-from cmk.gui.quick_setup.widgets import FormSpecWrapper, List, NoteText
+from cmk.utils.quick_setup.definitions import QuickSetup, QuickSetupId, QuickSetupStage, StageId
+from cmk.utils.quick_setup.widgets import FormSpecWrapper, List, NoteText
 
 from cmk.ccc.i18n import _
 from cmk.plugins.aws.rulesets import aws  # pylint: disable=cmk-module-layer-violation

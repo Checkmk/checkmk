@@ -12,12 +12,15 @@ from cmk.gui.valuespec import (
     FixedValue,
     HTTPUrl,
     Integer,
+    ListOf,
     TextAreaUnicode,
     TextInput,
+    Tuple,
 )
 from cmk.gui.wato import HTTPProxyReference, IndividualOrStoredPassword
 
 from ._base import NotificationParameter
+from ._helpers import notification_macro_help
 
 
 class NotificationParameterServiceNow(NotificationParameter):
@@ -185,6 +188,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                         default_value="low",
                     ),
                 ),
+                ("custom_fields", self._custom_fields_vs()),
                 (
                     "ack_state",
                     Dictionary(
@@ -344,6 +348,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                         default_value="low",
                     ),
                 ),
+                ("custom_fields", self._custom_fields_vs()),
                 ("recovery_state", self._recovery_state_vs(_("case"))),
             ],
         )
@@ -457,3 +462,34 @@ $LONGSERVICEOUTPUT$
             ("open", _("Open")),
             ("awaiting_info", _("Awaiting info")),
         ]
+
+    def _custom_fields_vs(self) -> ListOf:
+        return ListOf(
+            title=_("Custom fields"),
+            valuespec=Tuple(
+                elements=[
+                    TextInput(
+                        title=_("Name"),
+                        help=_(
+                            "Enter the technical name of the field as defined "
+                            "in the ServiceNow database."
+                        ),
+                        size=40,
+                        regex="^[-a-z0-9A-Z_]*$",
+                        regex_error=_(
+                            "Invalid custum field. Only the characters a-z, A-Z, "
+                            "0-9, _ and - are allowed."
+                        ),
+                        allow_empty=False,
+                    ),
+                    TextInput(
+                        title=_("Value"),
+                        help=notification_macro_help(),
+                        allow_empty=False,
+                        size=60,
+                    ),
+                ],
+                show_titles=True,
+                orientation="horizontal",
+            ),
+        )

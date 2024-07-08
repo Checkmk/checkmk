@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Alias: Send traces to this collector
+# Menu: Addons
+# Description:
+#  If sending traces is configured, they are sent to the address of the collector configured here.
+#  The most basic approach is to send traces to the site's local Jaeger instance, which needs to be
+#  enabled with the TRACE_RECEIVE setting To do so, configure "local_site" here. Alternatively
+#  you can configure the URL of a custom OTLP endpoint here.
+
+case "$1" in
+    default)
+        echo "local_site"
+        ;;
+    choices)
+        echo "^(local_site|https?://[^\:]+:[0-9]{4,5})$"
+        ;;
+    depends)
+        [ "$CONFIG_TRACE_SEND" = on ]
+        ;;
+esac

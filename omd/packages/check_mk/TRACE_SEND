@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Alias: Send traces
+# Menu: Addons
+# Description:
+#  Enable Checkmk to send OpenTelemetry traces.
+
+case "$1" in
+    default)
+        echo "off"
+        ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+        ;;
+esac

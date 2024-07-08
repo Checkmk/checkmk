@@ -45,6 +45,7 @@ from . import (
     _pre_21_plugin_api,
     _rulespec_groups,
     _snapins,
+    _tracing,
     filters,
 )
 from . import pages as wato_pages
@@ -120,6 +121,7 @@ def register(
     )
     _ac_tests.register(ac_test_registry)
     _omd_configuration.register(config_domain_registry, config_variable_registry)
+    _tracing.register(config_variable_registry)
     if edition_supports_nagvis(version.edition(paths.omd_root)):
         _nagvis_auth.register(permission_section_registry, permission_registry)
     _snapins.register(snapin_registry, match_item_generator_registry, mega_menu_registry)

@@ -624,6 +624,32 @@ class ConfigDomainOMD(ABCConfigDomain):
             else:
                 settings["MKEVENTD"] = None
 
+        if "TRACE_RECEIVE" in settings:
+            if settings["TRACE_RECEIVE"]:
+                settings["TRACE_RECEIVE"] = {
+                    "address": settings["TRACE_RECEIVE_ADDRESS"],
+                    "port": int(settings["TRACE_RECEIVE_PORT"]),
+                }
+                del settings["TRACE_RECEIVE_ADDRESS"]
+                del settings["TRACE_RECEIVE_PORT"]
+            else:
+                settings["TRACE_RECEIVE"] = None
+
+        if "TRACE_SEND" in settings:
+            if settings["TRACE_SEND"]:
+                target = settings.pop("TRACE_SEND_TARGET", "")
+                if target == "local_site":
+                    settings["TRACE_SEND"] = target
+                else:
+                    settings["TRACE_SEND"] = (
+                        "other_collector",
+                        {
+                            "url": target,
+                        },
+                    )
+            else:
+                settings["TRACE_SEND"] = "no_tracing"
+
         # Convert from OMD key (to lower, add "site_" prefix)
         settings = {"site_%s" % key.lower(): val for key, val in settings.items()}
 
@@ -667,6 +693,29 @@ class ConfigDomainOMD(ABCConfigDomain):
 
             else:
                 settings["MKEVENTD"] = "off"
+
+        if "TRACE_RECEIVE" in settings:
+            if settings["TRACE_RECEIVE"] is not None:
+                settings["TRACE_RECEIVE_ADDRESS"] = settings["TRACE_RECEIVE"]["address"]
+                settings["TRACE_RECEIVE_PORT"] = str(settings["TRACE_RECEIVE"]["port"])
+                settings["TRACE_RECEIVE"] = "on"
+            else:
+                settings["TRACE_RECEIVE"] = "off"
+
+        if "TRACE_SEND" in settings:
+            if settings["TRACE_SEND"] != "no_tracing":
+                if settings["TRACE_SEND"] == "local_site":
+                    settings["TRACE_SEND_TARGET"] = settings["TRACE_SEND"]
+                elif (
+                    isinstance(settings["TRACE_SEND"], tuple)
+                    and settings["TRACE_SEND"][0] == "other_collector"
+                ):
+                    settings["TRACE_SEND_TARGET"] = settings["TRACE_SEND"][1]["url"]
+                else:
+                    raise ValueError(f"Unhandled value: {settings["TRACE_SEND"]}")
+                settings["TRACE_SEND"] = "on"
+            else:
+                settings["TRACE_SEND"] = "off"
 
         omd_config = {}
         for key, value in settings.items():

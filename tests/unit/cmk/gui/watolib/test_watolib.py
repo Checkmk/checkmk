@@ -211,6 +211,8 @@ def test_registered_configvars() -> None:
         "experimental_features",
         "inject_js_profiling_code",
         "load_frontend_vue",
+        "site_trace_send",
+        "site_trace_receive",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:

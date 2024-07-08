@@ -427,14 +427,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["tapes_util"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "semaphore_ids",
         "half_value": 50,

@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["tapes_util"] = {
-    "title": _("Tape utilization"),
-    "unit": "count",
-    "color": "33/a",
-}
-
 metric_info["inodes_used"] = {
     "title": _("Used inodes"),
     "unit": "count",

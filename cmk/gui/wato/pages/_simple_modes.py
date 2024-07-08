@@ -52,6 +52,7 @@ from cmk.gui.valuespec import (
     RuleComment,
     SetupSiteChoice,
     TextInput,
+    ValueSpec,
 )
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.hosts_and_folders import make_action_link
@@ -68,7 +69,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def name_singular(self):
+    def name_singular(self) -> str:
         """Name of the object used. This is used in user visible messages, buttons and titles."""
         raise NotImplementedError()
 
@@ -392,9 +393,8 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         )
 
     def _vs_mandatory_elements(self) -> list[DictionaryEntry]:
-        ident_attr: list = []
         if self._new:
-            ident_attr = [
+            ident_attr: list[tuple[str, ValueSpec]] = [
                 (
                     "ident",
                     ID(

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import metrics, perfometers, Title
+from cmk.graphing.v1 import metrics, Title
 
 UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
@@ -56,17 +56,4 @@ metric_file_age_newest = metrics.Metric(
     title=Title("Newest file"),
     unit=UNIT_TIME,
     color=metrics.Color.BLUE,
-)
-
-metric_age = metrics.Metric(
-    name="age",
-    title=Title("Age"),
-    unit=UNIT_TIME,
-    color=metrics.Color.YELLOW,
-)
-
-perfometer_age = perfometers.Perfometer(
-    name="age",
-    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(5000000)),
-    segments=["age"],
 )

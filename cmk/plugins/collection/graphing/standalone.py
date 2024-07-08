@@ -1736,12 +1736,6 @@ metric_age_youngest = metrics.Metric(
     unit=UNIT_TIME,
     color=metrics.Color.YELLOW,
 )
-metric_fs_used_percent = metrics.Metric(
-    name="fs_used_percent",
-    title=Title("Used space %"),
-    unit=UNIT_PERCENTAGE,
-    color=metrics.Color.CYAN,
-)
 metric_fs_provisioning = metrics.Metric(
     name="fs_provisioning",
     title=Title("Provisioned space"),

@@ -3,7 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import perfometers
+from cmk.graphing.v1 import metrics, perfometers, Title
+
+UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
+
+metric_fs_used_percent = metrics.Metric(
+    name="fs_used_percent",
+    title=Title("Used space %"),
+    unit=UNIT_PERCENTAGE,
+    color=metrics.Color.CYAN,
+)
 
 perfometer_fs_used_percent = perfometers.Perfometer(
     name="fs_used_percent",

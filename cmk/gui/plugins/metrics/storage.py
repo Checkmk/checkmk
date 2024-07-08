@@ -29,18 +29,6 @@ metric_info["streams"] = {
 
 # cloud storage
 
-metric_info["ingress"] = {
-    "title": _("Data ingress"),
-    "unit": "bytes",
-    "color": "15/a",
-}
-
-metric_info["egress"] = {
-    "title": _("Data engress"),
-    "unit": "bytes",
-    "color": "43/a",
-}
-
 metric_info["database_size"] = {
     "title": _("Database size"),
     "unit": "bytes",
@@ -969,12 +957,4 @@ graph_info["mem_perm_used"] = {
 graph_info["datafile_sizes"] = {
     "title": _("Datafile sizes"),
     "metrics": [("allocated_size", "line"), ("data_size", "area")],
-}
-
-graph_info["io_flow"] = {
-    "title": "IO flow",
-    "metrics": [
-        ("egress", "-area"),
-        ("ingress", "area"),
-    ],
 }

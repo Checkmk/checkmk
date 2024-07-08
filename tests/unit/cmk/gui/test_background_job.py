@@ -6,6 +6,7 @@
 import logging
 import multiprocessing
 import sys
+import threading
 import time
 
 import pytest
@@ -24,6 +25,8 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     job_registry,
     JobStatusStates,
+    running_job_ids,
+    wait_for_background_jobs,
 )
 
 import cmk.ccc.version as cmk_version
@@ -278,3 +281,99 @@ def test_job_status_after_stop() -> None:
     assert job.exists() is True
     assert job.get_job_id() == "dummy_job"
     assert job.get_title() == "Dummy Job"
+
+
+def test_running_job_ids_none() -> None:
+    assert not running_job_ids(logging.getLogger())
+
+
+@pytest.mark.skip(reason="Takes too long: see CMK-18161")
+def test_running_job_ids_one_running() -> None:
+    job = DummyBackgroundJob()
+    job.start(
+        job.execute_endless,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=None,
+        ),
+    )
+    wait_until(
+        lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
+        timeout=20,
+        interval=0.1,
+    )
+
+    try:
+        assert running_job_ids(logging.getLogger()) == ["dummy_job"]
+    finally:
+        job.stop()
+
+
+@pytest.mark.skip(reason="Takes too long: see CMK-18161")
+def test_wait_for_background_jobs_while_one_running_for_too_long(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    job = DummyBackgroundJob()
+    job.start(
+        job.execute_endless,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=None,
+        ),
+    )
+    wait_until(
+        lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
+        timeout=20,
+        interval=0.1,
+    )
+
+    try:
+        with caplog.at_level(logging.INFO):
+            try:
+                job_registry.register(DummyBackgroundJob)
+                wait_for_background_jobs(logging.getLogger(), timeout=1)
+            finally:
+                job_registry.unregister("DummyBackgroundJob")
+
+        logs = [rec.message for rec in caplog.records]
+        assert "Waiting for dummy_job to finish..." in logs
+        assert "WARNING: Did not finish within 1 seconds" in logs
+    finally:
+        job.stop()
+
+
+@pytest.mark.skip(reason="Takes too long: see CMK-18161")
+def test_wait_for_background_jobs_while_one_running_but_finishes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    job = DummyBackgroundJob()
+    job.start(
+        job.execute_endless,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=None,
+        ),
+    )
+    wait_until(
+        lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
+        timeout=20,
+        interval=0.1,
+    )
+
+    with caplog.at_level(logging.INFO):
+        try:
+            job_registry.register(DummyBackgroundJob)
+            threading.Thread(target=job.stop).start()
+            wait_for_background_jobs(logging.getLogger(), timeout=2)
+        finally:
+            job_registry.unregister("DummyBackgroundJob")
+
+    logs = [rec.message for rec in caplog.records]
+    assert "Waiting for dummy_job to finish..." in logs
+    assert "WARNING: Did not finish within 2 seconds" not in logs

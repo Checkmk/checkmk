@@ -31,18 +31,20 @@ class BackgroundJobManager:
             job_id for job_id in all_jobs if BackgroundJob(job_id, logger=self._logger).is_active()
         ]
 
-    def get_all_job_ids(self, job_class: type[BackgroundJob]) -> list[JobId]:
-        """Checks for running jobs in the jobs default basedir"""
-        job_ids: list[JobId] = []
+    def get_all_job_ids(self, job_class: type[BackgroundJob] | None = None) -> list[JobId]:
+        """Returns existing job directory names (aka Job IDs)
+
+        Can optionally be called with a specific job class to get only job IDs related
+        to that job."""
         if not os.path.exists(BackgroundJobDefines.base_dir):
-            return job_ids
+            return []
 
-        for dirname in sorted(os.listdir(BackgroundJobDefines.base_dir)):
-            if not dirname.startswith(job_class.job_prefix):
-                continue
-            job_ids.append(dirname)
-
-        return job_ids
+        return [
+            dirname
+            for dirname in sorted(os.listdir(BackgroundJobDefines.base_dir))
+            if os.path.isdir(os.path.join(BackgroundJobDefines.base_dir, dirname))
+            and (job_class is None or dirname.startswith(job_class.job_prefix))
+        ]
 
     def do_housekeeping(self, job_classes: Sequence[type[BackgroundJob]]) -> None:
         try:

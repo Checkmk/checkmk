@@ -673,6 +673,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
     ModulePath("bin/cmk-compute-api-spec"): Component("cmk.gui"),
     ModulePath("bin/cmk-trigger-api-spec-job"): Component("cmk.gui"),
+    ModulePath("bin/cmk-wait-for-background-jobs"): Component("cmk.gui"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),
     ModulePath("bin/piggyback_hub"): Component("cmk.piggyback_hub"),

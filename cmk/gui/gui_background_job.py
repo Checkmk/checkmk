@@ -126,7 +126,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
         return self._filter_available_jobs(job_ids)
 
     def get_all_job_ids(
-        self, job_class: type[background_job.BackgroundJob]
+        self, job_class: type[background_job.BackgroundJob] | None = None
     ) -> list[background_job.JobId]:
         job_ids = super().get_all_job_ids(job_class)
         return self._filter_available_jobs(job_ids)

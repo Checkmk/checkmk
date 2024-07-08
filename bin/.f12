@@ -22,6 +22,7 @@ sudo install -m 755 \
     cmk-update-license-usage \
     cmk-passwd \
     cmk-trigger-api-spec-job \
+    cmk-wait-for-background-jobs \
     post-rename-site \
     init-redis \
     piggyback_hub \

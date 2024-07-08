@@ -17,3 +17,5 @@ from ._status import JobId as JobId
 from ._status import JobStatusSpec as JobStatusSpec
 from ._status import JobStatusStates as JobStatusStates
 from ._store import JobStatusStore as JobStatusStore
+from ._wait import running_job_ids as running_job_ids
+from ._wait import wait_for_background_jobs as wait_for_background_jobs

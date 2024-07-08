@@ -390,10 +390,19 @@ class BackgroundJob:
         This is here so we can mock this away cleanly."""
         os._exit(code)
 
-    def wait_for_completion(self) -> None:
-        """Wait for background job to be complete."""
-        while self.is_active():
+    def wait_for_completion(self, timeout: float | None = None) -> bool:
+        """Wait for background job to be complete.
+
+        Optionally timeout can be given to limit the waiting time. A return value of `True`
+        indicates that the job is completed and `False` if it isn't.
+        """
+        start = time.time()
+        while is_active := self.is_active():
             time.sleep(0.5)
+            if timeout is not None and time.time() >= start + timeout:
+                break
+
+        return not is_active
 
     def get_status_snapshot(self) -> BackgroundStatusSnapshot:
         status = self.get_status()

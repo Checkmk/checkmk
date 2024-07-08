@@ -304,8 +304,6 @@ _SKIP_MODULES: Final[Sequence[str]] = [
     "cmk.plugins.omd.graphing.omd_apache",
     "cmk.plugins.oracle.graphing.oracle",
     "cmk.plugins.robotmk.graphing.cee",
-    # Case 2: set(metric_names.from_metrics) != set(metric_names.bundles[0])
-    "cmk.plugins.bazel.graphing.bazel_cache",
 ]
 
 

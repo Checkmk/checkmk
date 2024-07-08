@@ -35,30 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["mem_lnx_huge_pages_total"] = {
-    "title": _("Huge pages total"),
-    "color": "#f0f0f0",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_huge_pages_free"] = {
-    "title": _("Huge pages free"),
-    "color": "#f0a0f0",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_huge_pages_rsvd"] = {
-    "title": _("Huge pages reserved part of free"),
-    "color": "#40f0f0",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_huge_pages_surp"] = {
-    "title": _("Huge pages surplus"),
-    "color": "#90f0b0",
-    "unit": "bytes",
-}
-
 metric_info["mem_lnx_vmalloc_total"] = {
     "title": _("Total address space"),
     "color": "#f0f0f0",
@@ -533,16 +509,6 @@ graph_info["ram_used"] = {
         ("mem_used:crit", "Critical"),
     ],
     "range": (0, "mem_used:max"),
-}
-
-graph_info["huge_pages"] = {
-    "title": _("Huge pages"),
-    "metrics": [
-        ("mem_lnx_huge_pages_total", "line"),
-        ("mem_lnx_huge_pages_free", "stack"),
-        ("mem_lnx_huge_pages_rsvd", "stack"),
-        ("mem_lnx_huge_pages_surp", "line"),
-    ],
 }
 
 graph_info["vmalloc_address_space_1"] = {

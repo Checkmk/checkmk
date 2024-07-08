@@ -35,18 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["mem_esx_shared"] = {
-    "title": _("Shared memory"),
-    "color": "34/a",
-    "unit": "bytes",
-}
-
-metric_info["mem_esx_private"] = {
-    "title": _("Private memory"),
-    "color": "25/a",
-    "unit": "bytes",
-}
-
 metric_info["mem_heap"] = {
     "title": _("Heap memory usage"),
     "unit": "bytes",
@@ -527,14 +515,6 @@ graph_info["non-heap_memory_usage"] = {
         "mem_nonheap:warn",
         "mem_nonheap:crit",
         "mem_nonheap:max",
-    ],
-}
-
-graph_info["private_and_shared_memory"] = {
-    "title": _("Private and shared memory"),
-    "metrics": [
-        ("mem_esx_shared", "stack"),
-        ("mem_esx_private", "stack"),
     ],
 }
 

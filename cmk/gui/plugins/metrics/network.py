@@ -77,16 +77,3 @@ graph_info["packet_loss"] = {
         "pl:crit",
     ],
 }
-
-graph_info["inodes_used"] = {
-    "title": _("Used inodes"),
-    "metrics": [
-        ("inodes_used", "area"),
-    ],
-    "scalars": [
-        "inodes_used:warn",
-        "inodes_used:crit",
-        ("inodes_used:max", _("Maximum inodes")),
-    ],
-    "range": (0, "inodes_used:max"),
-}

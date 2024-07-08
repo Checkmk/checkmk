@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["inodes_used"] = {
-    "title": _("Used inodes"),
-    "unit": "count",
-    "color": "#a0608f",
-}
-
 metric_info["shared_locks"] = {
     "title": _("Shared locks"),
     "unit": "count",

@@ -35,18 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["tapes_total"] = {
-    "title": _("Total number of tapes"),
-    "unit": "count",
-    "color": "36/a",
-}
-
-metric_info["tapes_free"] = {
-    "title": _("Free tapes"),
-    "unit": "count",
-    "color": "45/b",
-}
-
 metric_info["tapes_util"] = {
     "title": _("Tape utilization"),
     "unit": "count",

@@ -274,18 +274,6 @@ metric_info["cpu_reservation"] = {
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
 
-graph_info["tapes_utilization"] = {
-    "title": _l("Tapes utilization"),
-    "metrics": [
-        ("tapes_free", "area"),
-        ("tapes_total", "line"),
-    ],
-    "scalars": [
-        "tapes_free:warn",
-        "tapes_free:crit",
-    ],
-}
-
 graph_info["storage_processor_utilization"] = {
     "title": _l("Storage Processor utilization"),
     "metrics": [

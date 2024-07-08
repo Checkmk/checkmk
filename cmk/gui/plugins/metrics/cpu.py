@@ -22,22 +22,10 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["threads_idle"] = {
-    "title": _l("Idle threads"),
-    "unit": "count",
-    "color": "#8040f0",
-}
-
 metric_info["dedup_rate"] = {
     "title": _l("Deduplication rate"),
     "unit": "count",
     "color": "12/a",
-}
-
-metric_info["threads_busy"] = {
-    "title": _l("Busy threads"),
-    "unit": "count",
-    "color": "34/a",
 }
 
 metric_info["vol_context_switches"] = {
@@ -604,14 +592,6 @@ graph_info["context_switches"] = {
     "metrics": [
         ("vol_context_switches", "area"),
         ("invol_context_switches", "stack"),
-    ],
-}
-
-graph_info["threadpool"] = {
-    "title": _l("Threadpool"),
-    "metrics": [
-        ("threads_busy", "stack"),
-        ("threads_idle", "stack"),
     ],
 }
 

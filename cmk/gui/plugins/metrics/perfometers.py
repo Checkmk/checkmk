@@ -75,24 +75,6 @@ perfometer_info.append(
     }
 )
 
-perfometer_info.append(
-    {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "linear",
-                "segments": ["threads_idle"],
-                "total": "threads_idle:max",
-            },
-            {
-                "type": "linear",
-                "segments": ["threads_busy"],
-                "total": "threads_busy:max",
-            },
-        ],
-    }
-)
-
 perfometer_info.append({"type": "logarithmic", "metric": "rta", "half_value": 0.1, "exponent": 4})
 
 perfometer_info.append({"type": "logarithmic", "metric": "rtt", "half_value": 0.1, "exponent": 4})

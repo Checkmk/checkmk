@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["log_file_utilization"] = {
-    "title": _("Percentage of log file used"),
-    "unit": "%",
-    "color": "42/a",
-}
-
 metric_info["io_consumption_percent"] = {
     "title": _("Storage IO consumption"),
     "unit": "%",

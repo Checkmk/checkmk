@@ -387,14 +387,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["log_file_utilization"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["disk_utilization"],
         "total": 100.0,
     }

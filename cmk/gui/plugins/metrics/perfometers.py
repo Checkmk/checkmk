@@ -352,15 +352,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "disk_ios",
-        "half_value": 30,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "disk_capacity",
         "half_value": 25 * TB,
         "exponent": 2,

@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["disk_ios"] = {
-    "title": _("Disk I/O operations"),
-    "unit": "1/s",
-    "color": "#60e0a0",
-}
-
 metric_info["disk_read_latency"] = {
     "title": _("Disk read latency"),
     "unit": "s",

@@ -140,18 +140,6 @@ metric_info["util_99"] = {
 }
 
 
-metric_info["cpu_entitlement"] = {
-    "title": _l("Entitlement"),
-    "unit": "",
-    "color": "#77FF77",
-}
-
-metric_info["cpu_entitlement_util"] = {
-    "title": _l("Physical CPU consumption"),
-    "unit": "",
-    "color": "#FF0000",
-}
-
 for i in range(MAX_CORES):
     # generate different colors for each core.
     # unfortunately there are only 24 colors on our
@@ -478,11 +466,6 @@ graph_info["util_fallback"] = {
     ],
     "conflicting_metrics": ["util_average", "system", "engine_cpu_util"],
     "range": (0, "util,100,MAX"),
-}
-
-graph_info["cpu_entitlement"] = {
-    "title": _l("CPU entitlement"),
-    "metrics": [("cpu_entitlement", "area"), ("cpu_entitlement_util", "line")],
 }
 
 graph_info["per_core_utilization"] = {

@@ -275,7 +275,7 @@ def test__normalize_perf_data(
         (
             ["user", "system", "wait", "util", "cpu_entitlement", "cpu_entitlement_util"],
             "check_mk-lparstat_aix_cpu_util",
-            ["cpu_utilization_5_util", "cpu_entitlement"],
+            ["cpu_entitlement", "cpu_utilization_5_util"],
         ),
         (["ramused", "swapused", "memused"], "check_mk-statgrab_mem", ["ram_swap_used"]),
         (

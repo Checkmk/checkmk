@@ -946,9 +946,9 @@ class Site:
             return  # Nothing to do
         logger.info("Stopping site")
 
-        # logger.debug("= BEGIN PROCESSES BEFORE =======================================")
-        # os.system("ps -fwwu %s" % self.id)  # nosec
-        # logger.debug("= END PROCESSES BEFORE =======================================")
+        logger.debug("= BEGIN PROCESSES BEFORE =======================================")
+        logger.debug(subprocess.check_output(["ps", "-fwwu", str(self.id)], encoding="utf-8"))
+        logger.debug("= END PROCESSES BEFORE =======================================")
 
         stop_exit_code = self.omd("stop")
         if stop_exit_code != 0:

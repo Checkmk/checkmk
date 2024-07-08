@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["semaphore_ids"] = {
-    "title": _("IPC semaphore IDs"),
-    "unit": "count",
-    "color": "#404040",
-}
-
 metric_info["semaphores"] = {
     "title": _("IPC semaphores"),
     "unit": "count",

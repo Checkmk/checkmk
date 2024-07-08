@@ -28,7 +28,7 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local, wato_site_ids
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
@@ -124,8 +124,10 @@ def _hosts_to_be_removed_for_site(
                     [],
                 )
             )
-        except MKUserError:  # Site may be down
-            job_interface.send_progress_update(f"Skipping remote site {site_id}, might be down")
+        except (MKUserError, MKAutomationException) as e:
+            job_interface.send_progress_update(
+                f"Skipping remote site {site_id}, might be down or not logged in ({e})"
+            )
             return
         hostnames = json.loads(hostnames_serialized)
 

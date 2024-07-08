@@ -1,4 +1,4 @@
-###ROOT###/var/log/redis.log {
+###ROOT###/var/log/redis-server.log {
         missingok
         rotate 7
         compress

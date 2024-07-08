@@ -39,6 +39,9 @@ NotificationResultCode = NewType("NotificationResultCode", int)
 NotificationPluginName = NewType("NotificationPluginName", str)
 
 
+SanitizedLivestatusLogStr = NewType("SanitizedLivestatusLogStr", str)
+
+
 class NotificationResult(TypedDict, total=False):
     plugin: NotificationPluginName
     status: NotificationResultCode
@@ -72,7 +75,9 @@ def find_wato_folder(context: NotificationContext) -> str:
     )
 
 
-def notification_message(plugin: NotificationPluginName, context: NotificationContext) -> str:
+def notification_message(
+    plugin: NotificationPluginName, context: NotificationContext
+) -> SanitizedLivestatusLogStr:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     if service := context.get("SERVICEDESC"):
@@ -86,13 +91,15 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
         state = context["HOSTSTATE"]
         output = context["HOSTOUTPUT"]
     # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plug-in output.
-    return "{}: {};{};{};{};{}".format(
-        what,
-        contact,
-        spec,
-        state,
-        plugin,
-        output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
+    return SanitizedLivestatusLogStr(
+        "{}: {};{};{};{};{}".format(
+            what,
+            livestatus.lqencode(contact),
+            livestatus.lqencode(spec),
+            livestatus.lqencode(state),
+            livestatus.lqencode(plugin),
+            livestatus.lqencode(output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
+        )
     )
 
 
@@ -101,7 +108,7 @@ def notification_progress_message(
     context: NotificationContext,
     exit_code: NotificationResultCode,
     output: str,
-) -> str:
+) -> SanitizedLivestatusLogStr:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     if service := context.get("SERVICEDESC"):
@@ -111,13 +118,15 @@ def notification_progress_message(
         what = "HOST NOTIFICATION PROGRESS"
         spec = hostname
     state = _state_for(exit_code)
-    return "{}: {};{};{};{};{}".format(
-        what,
-        contact,
-        spec,
-        state,
-        plugin,
-        output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
+    return SanitizedLivestatusLogStr(
+        "{}: {};{};{};{};{}".format(
+            what,
+            livestatus.lqencode(contact),
+            livestatus.lqencode(spec),
+            state,
+            livestatus.lqencode(plugin),
+            livestatus.lqencode(output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
+        )
     )
 
 
@@ -126,7 +135,7 @@ def notification_result_message(
     context: NotificationContext,
     exit_code: NotificationResultCode,
     output: list[str],
-) -> str:
+) -> SanitizedLivestatusLogStr:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     if service := context.get("SERVICEDESC"):
@@ -138,14 +147,16 @@ def notification_result_message(
     state = _state_for(exit_code)
     comment = " -- ".join(output)
     short_output = output[-1] if output else ""
-    return "{}: {};{};{};{};{};{}".format(
-        what,
-        contact,
-        spec,
-        state,
-        plugin,
-        short_output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
-        comment[:MAX_COMMENT_LENGTH].replace(";", _SEMICOLON),
+    return SanitizedLivestatusLogStr(
+        "{}: {};{};{};{};{};{}".format(
+            what,
+            livestatus.lqencode(contact),
+            livestatus.lqencode(spec),
+            state,
+            livestatus.lqencode(plugin),
+            livestatus.lqencode(short_output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
+            livestatus.lqencode(comment[:MAX_COMMENT_LENGTH].replace(";", _SEMICOLON)),
+        )
     )
 
 
@@ -202,7 +213,7 @@ def create_spoolfile(
     store.save_object_to_file(file_path, data, pretty=True)
 
 
-def log_to_history(message: str) -> None:
+def log_to_history(message: SanitizedLivestatusLogStr) -> None:
     _livestatus_cmd(f"LOG;{message}")
 
 

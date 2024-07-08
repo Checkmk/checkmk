@@ -121,24 +121,6 @@ metric_info["util15"] = {
     "color": "#008000",
 }
 
-metric_info["util_50"] = {
-    "title": _l("CPU utilization (50th percentile)"),
-    "unit": "%",
-    "color": "#50ff20",
-}
-
-metric_info["util_95"] = {
-    "title": _l("CPU utilization (95th percentile)"),
-    "unit": "%",
-    "color": "#600020",
-}
-
-metric_info["util_99"] = {
-    "title": _l("CPU utilization (99th percentile)"),
-    "unit": "%",
-    "color": "#60f020",
-}
-
 
 for i in range(MAX_CORES):
     # generate different colors for each core.
@@ -444,15 +426,6 @@ graph_info["cpu_utilization_8"] = {
         ("interrupt", "stack"),
     ],
     "range": (0, "util,100,MAX"),
-}
-
-graph_info["cpu_utilization_percentile"] = {
-    "title": _l("CPU utilization"),
-    "metrics": [
-        ("util_50", "line"),
-        ("util_95", "line"),
-        ("util_99", "line"),
-    ],
 }
 
 graph_info["util_fallback"] = {

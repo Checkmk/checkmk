@@ -373,6 +373,9 @@ def check_brocade_fcport(  # pylint: disable=too-many-branches
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
+    """
+    Reference: https://dl.dell.com/manuals/all-products/esuprt_ser_stor_net/esuprt_poweredge/poweredge-m1000e_service%20manual7_en-us.pdf
+    """
     yield from _check_brocade_fcport(item, params, section, time.time(), get_value_store())
 
 
@@ -420,8 +423,9 @@ def _check_brocade_fcport(  # pylint: disable=too-many-branches
     )
     output.append(speedmsg % gbit)
 
-    # convert gbit netto link-rate to Byte/s (8/10 enc) -> 10 bits per byte
-    wirespeed = gbit * 1e8
+    # convert gbit link-rate to Byte/s (8/10 enc)
+    wirespeed = gbit * 1e9 / 8
+    # from word to bytes: 4 bytes per word
     in_bytes = 4 * get_rate(value_store, "rxwords.%s" % index, this_time, rxwords)
     out_bytes = 4 * get_rate(value_store, "txwords.%s" % index, this_time, txwords)
 

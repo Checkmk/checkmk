@@ -1,0 +1,18 @@
+Title: brocade_fcport: fix operating speed conversion
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1720516941
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+This werk affects anyone monitoring Brocade fibre channel ports
+by comparing current or average throughput to certain absolute or percentage levels
+via the <em>Brocade FibreChannel ports</em> rule.
+
+In the plugin the current operating speed of the interface,
+read from the SNMP interface data,
+was not properly converted to GByte/s,
+the unit of measurement displayed in the interface.
+This resulted in an erroneous comparison of values and the related service states.

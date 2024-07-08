@@ -47,97 +47,6 @@ metric_info["connection_time"] = {
 
 # Networking
 
-graph_info["bandwidth_translated"] = {
-    "title": _("Bandwidth"),
-    "metrics": [
-        ("if_in_octets,8,*@bits/s", "area", _("Input bandwidth")),
-        ("if_out_octets,8,*@bits/s", "-area", _("Output bandwidth")),
-    ],
-    "scalars": [
-        ("if_in_octets:warn", _("Warning (In)")),
-        ("if_in_octets:crit", _("Critical (In)")),
-        ("if_out_octets:warn,-1,*", _("Warning (Out)")),
-        ("if_out_octets:crit,-1,*", _("Critical (Out)")),
-    ],
-}
-
-# Same but for checks that have been translated in to bits/s
-graph_info["bandwidth"] = {
-    "title": _("Bandwidth"),
-    "metrics": [
-        (
-            "if_in_bps",
-            "area",
-        ),
-        (
-            "if_out_bps",
-            "-area",
-        ),
-    ],
-    "scalars": [
-        ("if_in_bps:warn", _("Warning (In)")),
-        ("if_in_bps:crit", _("Critical (In)")),
-        ("if_out_bps:warn,-1,*", _("Warning (Out)")),
-        ("if_out_bps:crit,-1,*", _("Critical (Out)")),
-    ],
-}
-
-graph_info["if_errors"] = {
-    "title": _("Errors"),
-    "metrics": [
-        ("if_in_errors", "area"),
-        ("if_in_discards", "stack"),
-        ("if_out_errors", "-area"),
-        ("if_out_discards", "-stack"),
-    ],
-}
-
-graph_info["bm_packets"] = {
-    "title": _("Broadcast/Multicast"),
-    "metrics": [
-        ("if_in_mcast", "line"),
-        ("if_in_bcast", "line"),
-        ("if_out_mcast", "-line"),
-        ("if_out_bcast", "-line"),
-    ],
-}
-
-graph_info["packets_1"] = {
-    "title": _("Packets"),
-    "metrics": [
-        ("if_in_unicast", "line"),
-        ("if_in_non_unicast", "line"),
-        ("if_out_unicast", "-line"),
-        ("if_out_non_unicast", "-line"),
-    ],
-}
-
-graph_info["packets_2"] = {
-    "title": _("Packets"),
-    "metrics": [
-        ("if_in_pkts", "area"),
-        ("if_out_non_unicast", "-area"),
-        ("if_out_unicast", "-stack"),
-    ],
-}
-
-graph_info["packets_3"] = {
-    "title": _("Packets"),
-    "metrics": [
-        ("if_in_pkts", "area"),
-        ("if_out_pkts", "-area"),
-    ],
-}
-
-graph_info["traffic"] = {
-    "title": _("Traffic"),
-    "metrics": [
-        ("if_in_octets", "area"),
-        ("if_out_non_unicast_octets", "-area"),
-        ("if_out_unicast_octets", "-stack"),
-    ],
-}
-
 graph_info["time_to_connect"] = {
     "title": _("Time to connect"),
     "metrics": [
@@ -180,12 +89,4 @@ graph_info["inodes_used"] = {
         ("inodes_used:max", _("Maximum inodes")),
     ],
     "range": (0, "inodes_used:max"),
-}
-
-graph_info["nodes_by_type"] = {
-    "title": _("Running nodes by nodes type"),
-    "metrics": [
-        ("number_of_nodes", "area"),
-        ("number_of_data_nodes", "line"),
-    ],
 }

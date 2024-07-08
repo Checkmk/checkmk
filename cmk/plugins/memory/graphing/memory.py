@@ -331,7 +331,7 @@ graph_caches = Graph(
 )
 
 graph_huge_pages = Graph(
-    name="huge_pages",
+    name="huge_pages_2",
     title=Title("Huge pages"),
     simple_lines=[
         "file_huge_pages",

@@ -35,24 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["mem_lnx_vmalloc_total"] = {
-    "title": _("Total address space"),
-    "color": "#f0f0f0",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_vmalloc_used"] = {
-    "title": _("Allocated space"),
-    "color": "#aaf76f",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_vmalloc_chunk"] = {
-    "title": _("Largest free chunk"),
-    "color": "#c6f7e9",
-    "unit": "bytes",
-}
-
 metric_info["mem_esx_shared"] = {
     "title": _("Shared memory"),
     "color": "34/a",
@@ -509,25 +491,6 @@ graph_info["ram_used"] = {
         ("mem_used:crit", "Critical"),
     ],
     "range": (0, "mem_used:max"),
-}
-
-graph_info["vmalloc_address_space_1"] = {
-    "title": _("VMalloc address space"),
-    "metrics": [
-        ("mem_lnx_vmalloc_total", "line"),
-        ("mem_lnx_vmalloc_used", "stack"),
-        ("mem_lnx_vmalloc_chunk", "stack"),
-    ],
-}
-
-# TODO: Warum ohne total? Dürfte eigentlich nicht
-# vorkommen.
-graph_info["vmalloc_address_space_2"] = {
-    "title": _("VMalloc address space"),
-    "metrics": [
-        ("mem_lnx_vmalloc_used", "area"),
-        ("mem_lnx_vmalloc_chunk", "stack"),
-    ],
 }
 
 graph_info["heap_and_non_heap_memory"] = {

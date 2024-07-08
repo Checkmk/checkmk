@@ -1,2 +1,2 @@
 # Once a day, at 00:15, search for PDF tmp files older than 1 day and delete them
-15 0 * * * [ -d "$OMD_ROOT/tmp/check_mk/pdf" ] && find $OMD_ROOT/tmp/check_mk/pdf -maxdepth 1 -name tmp\* -mtime +1 -delete
+15 0 * * * [ -d "$OMD_ROOT/tmp/check_mk/pdf" ] && find $OMD_ROOT/tmp/check_mk/pdf -maxdepth 1 -name tmp\* -mtime 1 -delete

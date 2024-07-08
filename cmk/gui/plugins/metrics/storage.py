@@ -35,42 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["mem_lnx_active_anon"] = {
-    "title": _("Active (anonymous)"),
-    "color": "#ff4040",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_active_file"] = {
-    "title": _("Active (files)"),
-    "color": "#ff8080",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_inactive_anon"] = {
-    "title": _("Inactive (anonymous)"),
-    "color": "#377cab",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_inactive_file"] = {
-    "title": _("Inactive (files)"),
-    "color": "#4eb0f2",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_active"] = {
-    "title": _("Active"),
-    "color": "#ff4040",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_inactive"] = {
-    "title": _("Inactive"),
-    "color": "#4040ff",
-    "unit": "bytes",
-}
-
 metric_info["mem_lnx_dirty"] = {
     "title": _("Dirty disk blocks"),
     "color": "#f2904e",
@@ -622,30 +586,6 @@ graph_info["swap"] = {
         ("swap_cached", "stack"),
     ],
 }
-
-graph_info["active_and_inactive_memory_anon"] = {
-    "title": _("Active and inactive memory"),
-    "metrics": [
-        ("mem_lnx_inactive_anon", "stack"),
-        ("mem_lnx_inactive_file", "stack"),
-        ("mem_lnx_active_anon", "stack"),
-        ("mem_lnx_active_file", "stack"),
-    ],
-}
-
-# TODO: Show this graph only, if the previous graph
-# is not possible. This cannot be done with a condition,
-# since we currently cannot state a condition on non-existing
-# metrics.
-graph_info["active_and_inactive_memory"] = {
-    "title": _("Active and inactive memory"),
-    "metrics": [
-        ("mem_lnx_active", "stack"),
-        ("mem_lnx_inactive", "stack"),
-    ],
-    "conflicting_metrics": ["mem_lnx_active_anon"],
-}
-
 
 graph_info["ram_used"] = {
     "title": _("RAM used"),

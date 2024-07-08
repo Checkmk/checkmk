@@ -11,9 +11,10 @@ import subprocess
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Protocol
 
-from cmk.utils.password_store import replace_passwords
+from cmk.utils import password_store
 from cmk.utils.render import fmt_bytes, percent
 
 
@@ -35,7 +36,6 @@ def main(
     argv: Sequence[str] | None = None,
     smb_share: SMBShareDiskUsageProto | None = None,
 ) -> int:
-    replace_passwords()
     exitcode, summary, perfdata = _check_disk_usage_main(
         argv or sys.argv[1:],
         smb_share or _SMBShareDiskUsage(),
@@ -128,8 +128,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         metavar="USER",
         help='Username to log in to server. (Defaults to "guest")',
     )
-    parser.add_argument(
-        "-p",
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--password-reference",
+        help="Password store reference to the password to log in to server.",
+    )
+    group.add_argument(
         "--password",
         type=str,
         default="",
@@ -152,6 +156,14 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
 
     return parser.parse_args(argv)
+
+
+def _make_secret(args: argparse.Namespace) -> str:
+    if (ref := args.password_reference) is None:
+        return args.password
+
+    pw_id, pw_file = ref.split(":", 1)
+    return password_store.lookup(Path(pw_file), pw_id)
 
 
 @dataclass(frozen=True)
@@ -392,7 +404,7 @@ def _check_disk_usage_main(
             share=args.share,
             hostname=args.hostname,
             user=args.user,
-            password=args.password,
+            password=_make_secret(args),
             workgroup=args.workgroup or None,
             port=args.port or None,
             ip_address=args.address or None,

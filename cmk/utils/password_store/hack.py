@@ -54,7 +54,7 @@ HACK_CHECKS = {
     "by_ssh": False,  # has no secret
     "cert": False,  # has no secret
     "cmk_inv": False,  # has no secret
-    "disk_smb": True,  # TODO
+    "disk_smb": False,
     "dns": False,  # has no secret
     "elasticsearch_query": False,
     "form_submit": False,  # has no secret

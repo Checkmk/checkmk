@@ -47,7 +47,7 @@ class _SMBShareDiskUsageError:
 def test_main_no_levels(capsys: pytest.CaptureFixture[str]) -> None:
     assert (
         main(
-            ["share", "-u", "cratus", "-p", "some-pw", "-H", "hostname"],
+            ["share", "-u", "cratus", "--password", "some-pw", "-H", "hostname"],
             _SMBShareDiskUsageOK("\\\\hostname\\share", 1, 102400),
         )
         == 0
@@ -62,7 +62,18 @@ def test_main_no_levels(capsys: pytest.CaptureFixture[str]) -> None:
 def test_main_ok_state(capsys: pytest.CaptureFixture[str]) -> None:
     assert (
         main(
-            ["share", "--levels", "80", "90", "-u", "cratus", "-p", "some-pw", "-H", "hostname"],
+            [
+                "share",
+                "--levels",
+                "80",
+                "90",
+                "-u",
+                "cratus",
+                "--password",
+                "some-pw",
+                "-H",
+                "hostname",
+            ],
             _SMBShareDiskUsageOK("\\\\hostname\\share", 51200, 102400),
         )
         == 0
@@ -78,7 +89,18 @@ def test_main_ok_state(capsys: pytest.CaptureFixture[str]) -> None:
 def test_main_warn_state(capsys: pytest.CaptureFixture[str]) -> None:
     assert (
         main(
-            ["share", "--levels", "80", "90", "-u", "cratus", "-p", "some-pw", "-H", "hostname"],
+            [
+                "share",
+                "--levels",
+                "80",
+                "90",
+                "-u",
+                "cratus",
+                "--password",
+                "some-pw",
+                "-H",
+                "hostname",
+            ],
             _SMBShareDiskUsageOK("\\\\hostname\\share", 20000, 102400),
         )
         == 1
@@ -94,7 +116,18 @@ def test_main_warn_state(capsys: pytest.CaptureFixture[str]) -> None:
 def test_main_crit_state(capsys: pytest.CaptureFixture[str]) -> None:
     assert (
         main(
-            ["share", "--levels", "80", "90", "-u", "cratus", "-p", "some-pw", "-H", "hostname"],
+            [
+                "share",
+                "--levels",
+                "80",
+                "90",
+                "-u",
+                "cratus",
+                "--password",
+                "some-pw",
+                "-H",
+                "hostname",
+            ],
             _SMBShareDiskUsageOK("\\\\hostname\\share", 5600, 102400),
         )
         == 2
@@ -110,7 +143,18 @@ def test_main_crit_state(capsys: pytest.CaptureFixture[str]) -> None:
 def test_main_access_denied(capsys: pytest.CaptureFixture[str]) -> None:
     assert (
         main(
-            ["share", "--levels", "80", "90", "-u", "cratus", "-p", "some-pw", "-H", "hostname"],
+            [
+                "share",
+                "--levels",
+                "80",
+                "90",
+                "-u",
+                "cratus",
+                "--password",
+                "some-pw",
+                "-H",
+                "hostname",
+            ],
             _SMBShareDiskUsageError(2, "Access denied"),
         )
         == 2
@@ -123,7 +167,18 @@ def test_main_access_denied(capsys: pytest.CaptureFixture[str]) -> None:
 def test_main_unknown_error(capsys: pytest.CaptureFixture[str]) -> None:
     assert (
         main(
-            ["sha", "--levels", "80", "90", "-u", "cratus", "-p", "some-pw", "-H", "hostname"],
+            [
+                "sha",
+                "--levels",
+                "80",
+                "90",
+                "-u",
+                "cratus",
+                "--password",
+                "some-pw",
+                "-H",
+                "hostname",
+            ],
             _SMBShareDiskUsageError(3, "Result from smbclient not suitable"),
         )
         == 3

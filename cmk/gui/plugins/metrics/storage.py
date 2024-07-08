@@ -35,24 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["mem_lnx_kernel_stack"] = {
-    "title": _("Kernel stack"),
-    "color": "#7192ad",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_page_tables"] = {
-    "title": _("Page tables"),
-    "color": "#71ad9f",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_mlocked"] = {
-    "title": _("Locked mmap() data"),
-    "color": "#a671ad",
-    "unit": "bytes",
-}
-
 metric_info["mem_lnx_huge_pages_total"] = {
     "title": _("Huge pages total"),
     "color": "#f0f0f0",
@@ -551,16 +533,6 @@ graph_info["ram_used"] = {
         ("mem_used:crit", "Critical"),
     ],
     "range": (0, "mem_used:max"),
-}
-
-
-graph_info["memory_that_cannot_be_swapped_out"] = {
-    "title": _("Memory that cannot be swapped out"),
-    "metrics": [
-        ("mem_lnx_kernel_stack", "area"),
-        ("mem_lnx_page_tables", "stack"),
-        ("mem_lnx_mlocked", "stack"),
-    ],
 }
 
 graph_info["huge_pages"] = {

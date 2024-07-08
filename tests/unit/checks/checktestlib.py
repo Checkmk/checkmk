@@ -255,7 +255,7 @@ class BasicCheckResult(Tuploid):
         if perfdata is not None:
             tp = type(perfdata)
             assert (
-                tp == list
+                tp is list
             ), "BasicCheckResult: perfdata {!r} must be of type list - not {!r}".format(
                 perfdata,
                 tp,

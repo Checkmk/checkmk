@@ -23,5 +23,5 @@ def test_import_module(capfd: CaptureFixture) -> None:
         out
         == "<<<plesk_backups>>>\nNo module named MySQLdb. Please install missing module via pip install <module>."
     )
-    assert pytest_wrapped_e.type == SystemExit
+    assert pytest_wrapped_e.type is SystemExit
     assert pytest_wrapped_e.value.code == 0

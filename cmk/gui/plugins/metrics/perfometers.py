@@ -356,26 +356,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "tablespace_wasted",
-                "half_value": 1000000,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "indexspace_wasted",
-                "half_value": 1000000,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "connections",
         "half_value": 50,

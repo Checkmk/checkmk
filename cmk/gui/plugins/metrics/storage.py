@@ -29,18 +29,6 @@ metric_info["streams"] = {
 
 # cloud storage
 
-metric_info["tablespace_wasted"] = {
-    "title": _("Tablespace wasted"),
-    "unit": "bytes",
-    "color": "#a02020",
-}
-
-metric_info["indexspace_wasted"] = {
-    "title": _("Indexspace wasted"),
-    "unit": "bytes",
-    "color": "#20a080",
-}
-
 metric_info["cpu_mem_used_percent"] = {
     "color": "#80ff40",
     "title": _("CPU Memory used"),
@@ -578,14 +566,6 @@ graph_info["write_cache_usage"] = {
     "title": _("Write cache usage"),
     "metrics": [("write_cache_usage", "area")],
     "range": (0, 100),
-}
-
-graph_info["wasted_space_of_tables_and_indexes"] = {
-    "title": _("Wasted space of tables and indexes"),
-    "metrics": [
-        ("tablespace_wasted", "area"),
-        ("indexspace_wasted", "stack"),
-    ],
 }
 
 # diskstat checks

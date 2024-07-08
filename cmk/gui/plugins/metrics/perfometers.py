@@ -77,15 +77,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "logswitches_last_hour",
-        "half_value": 15,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["total_cache_usage"],
         "total": 100.0,

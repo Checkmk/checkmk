@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["logswitches_last_hour"] = {
-    "title": _("Log switches in the last 60 minutes"),
-    "unit": "count",
-    "color": "#006040",
-}
-
 metric_info["direct_io"] = {
     "title": _("Direct I/O"),
     "unit": "bytes/s",

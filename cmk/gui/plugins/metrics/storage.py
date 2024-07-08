@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["shared_memory_segments"] = {
-    "title": _("Shared memory segments"),
-    "unit": "count",
-    "color": "#606060",
-}
-
 metric_info["semaphore_ids"] = {
     "title": _("IPC semaphore IDs"),
     "unit": "count",

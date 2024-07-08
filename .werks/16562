@@ -1,4 +1,4 @@
-Title: Fix automatic host removal in case one remote site is not logged in
+Title: Fix automatic host registration and removal in case one remote site is not logged in
 Class: fix
 Compatible: compat
 Component: wato
@@ -7,10 +7,10 @@ Edition: cre
 Level: 1
 Version: 2.2.0p31
 
-The automatic host removal job is executed regularly in the background to remove
-hosts from the monitoring once they cease to exist. In particular for but not
-limited to automatically registered hosts.
+The automatic host registration and removal jobs are executed regularly in the
+background to add or remove hosts. These are fundamental mechanisms to the
+automatic host registration.
 
-This job failed in case one remote site was configured but not logged in, not
-only affecting the not logged in site, but all sites. The not logged in site is
-now being skipped, leaving the mechanism intact for all other sites.
+The jobs failed completely in case one remote site was configured but not logged
+in, not only affecting the not logged in site, but all sites. The not logged in
+site is now being skipped, leaving the mechanism intact for all other sites.

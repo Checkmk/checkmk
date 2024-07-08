@@ -1,4 +1,4 @@
-Title: MS Exchange: Use consistent units (ms/s) in rules & graphs
+Title: msexch_database: Use consistent units (ms/s) in rules & graphs
 Class: fix
 Compatible: compat
 Component: checks
@@ -7,6 +7,6 @@ Edition: cee
 Level: 1
 Version: 2.2.0p28
 
-Various msexch_* checks reported its values in ms in the summary/ruleset
-but displayed the same value as seconds in the graph. With this werk,
-all units will be reported consistently.
+The msexch_database reported its values in ms in the summary/ruleset but
+displayed the same value as seconds in the graph. With this werk, all
+units will be reported consistently.

@@ -359,14 +359,6 @@ register_hop_perfometers()
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["capacity_perc"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "days",
         "half_value": 100,

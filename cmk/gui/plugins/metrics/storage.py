@@ -35,12 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["capacity_perc"] = {
-    "title": _("Available capacity"),
-    "unit": "%",
-    "color": "#4800ff",
-}
-
 metric_info["log_file_utilization"] = {
     "title": _("Percentage of log file used"),
     "unit": "%",

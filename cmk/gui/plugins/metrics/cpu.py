@@ -85,12 +85,6 @@ metric_info["idle"] = {
     "color": "#805022",
 }
 
-metric_info["fpga_util"] = {
-    "title": _l("FPGA utilization"),
-    "unit": "%",
-    "color": "#60f020",
-}
-
 metric_info["overall_util"] = {
     "title": _l("Overall utilization"),
     "unit": "%",
@@ -209,18 +203,6 @@ metric_info["cpu_reservation"] = {
 #   +----------------------------------------------------------------------+
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
-
-graph_info["fgpa_utilization"] = {
-    "title": _l("FGPA utilization"),
-    "metrics": [
-        ("fpga_util", "area"),
-    ],
-    "scalars": [
-        "fpga_util:warn",
-        "fpga_util:crit",
-    ],
-    "range": (0, 100),
-}
 
 #
 # CPU UTILIZATION

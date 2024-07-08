@@ -30,14 +30,6 @@ from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB, TB
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["cpu_mem_used_percent"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "job_duration",
         "half_value": 120.0,

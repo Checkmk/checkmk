@@ -29,12 +29,6 @@ metric_info["streams"] = {
 
 # cloud storage
 
-metric_info["cpu_mem_used_percent"] = {
-    "color": "#80ff40",
-    "title": _("CPU Memory used"),
-    "unit": "%",
-}
-
 metric_info["mem_perm_used"] = {
     "color": "#80ff40",
     "title": _("Permanent generation memory"),
@@ -607,15 +601,6 @@ graph_info["ram_swap_used"] = {
         ("mem_used:max#80ffff", _("Total RAM installed")),
     ],
     "range": (0, "swap_used:max,mem_used:max,+"),
-}
-
-graph_info["cpu_mem_used_percent"] = {
-    "title": _("Used CPU memory"),
-    "metrics": [
-        ("cpu_mem_used_percent", "area"),
-    ],
-    "scalars": ["cpu_mem_used_percent:warn", "cpu_mem_used_percent:crit"],
-    "range": (0, 100),
 }
 
 graph_info["mem_trend"] = {

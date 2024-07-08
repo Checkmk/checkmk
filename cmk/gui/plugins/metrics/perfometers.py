@@ -322,26 +322,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "read_blocks",
-                "half_value": 50000000,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "write_blocks",
-                "half_value": 50000000,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "current",
         "half_value": 10,

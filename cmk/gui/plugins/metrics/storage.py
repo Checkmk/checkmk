@@ -35,18 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["read_blocks"] = {
-    "title": _("Read blocks per second"),
-    "unit": "1/s",
-    "color": "11/a",
-}
-
-metric_info["write_blocks"] = {
-    "title": _("Write blocks per second"),
-    "unit": "1/s",
-    "color": "21/a",
-}
-
 metric_info["shared_memory_segments"] = {
     "title": _("Shared memory segments"),
     "unit": "count",
@@ -214,14 +202,6 @@ metric_info["io_consumption_percent"] = {
 #   +----------------------------------------------------------------------+
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
-
-graph_info["read_and_written_blocks"] = {
-    "title": _("Read and written blocks"),
-    "metrics": [
-        ("read_blocks", "area"),
-        ("write_blocks", "-area"),
-    ],
-}
 
 graph_info["backup_time"] = {
     "title": _("Backup time"),

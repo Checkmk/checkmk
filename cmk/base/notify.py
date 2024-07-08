@@ -63,6 +63,7 @@ from cmk.utils.notify import (
     NotificationResultCode,
     NotificationViaPlainMail,
     NotificationViaPlugin,
+    SanitizedLivestatusLogStr,
 )
 from cmk.utils.regex import regex
 from cmk.utils.timeout import MKTimeout, Timeout
@@ -2329,7 +2330,7 @@ def dead_nagios_variable(value: str) -> bool:
 
 
 # TODO: Copy'n paste: enterprise/cmk/cee/mknotifyd/utils.py, cmk/base/notify.py
-def _log_to_history(message: str) -> None:
+def _log_to_history(message: SanitizedLivestatusLogStr) -> None:
     _livestatus_cmd("LOG;%s" % message)
 
 

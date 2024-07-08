@@ -11,6 +11,8 @@ from logging import Logger
 from pathlib import Path
 from typing import Any, Dict, Final, List, Literal, NewType, Optional, TypedDict, Union
 
+import livestatus
+
 import cmk.utils.defines
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
@@ -35,6 +37,9 @@ NotificationPluginName = NewType("NotificationPluginName", str)
 RawNotificationContext = NewType("RawNotificationContext", Dict[str, str])
 # TODO: Consolidate with cmk.base.notify.PluginContext
 NotificationContext = NewType("NotificationContext", Dict[str, str])
+
+
+SanitizedLivestatusLogStr = NewType("SanitizedLivestatusLogStr", str)
 
 
 class NotificationResult(TypedDict, total=False):
@@ -77,7 +82,9 @@ def find_wato_folder(context: NotificationContext) -> str:
     return ""
 
 
-def notification_message(plugin: NotificationPluginName, context: NotificationContext) -> str:
+def notification_message(
+    plugin: NotificationPluginName, context: NotificationContext
+) -> SanitizedLivestatusLogStr:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")
@@ -91,14 +98,16 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
         spec = hostname
         state = context["HOSTSTATE"]
         output = context["HOSTOUTPUT"]
-    # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plugin output.
-    return "%s: %s;%s;%s;%s;%s" % (
-        what,
-        contact,
-        spec,
-        state,
-        plugin,
-        output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
+    # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plug-in output.
+    return SanitizedLivestatusLogStr(
+        "{}: {};{};{};{};{}".format(
+            what,
+            livestatus.lqencode(contact),
+            livestatus.lqencode(spec),
+            livestatus.lqencode(state),
+            livestatus.lqencode(plugin),
+            livestatus.lqencode(output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
+        )
     )
 
 
@@ -107,7 +116,7 @@ def notification_progress_message(
     context: NotificationContext,
     exit_code: NotificationResultCode,
     output: str,
-) -> str:
+) -> SanitizedLivestatusLogStr:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")
@@ -118,13 +127,15 @@ def notification_progress_message(
         what = "HOST NOTIFICATION PROGRESS"
         spec = hostname
     state = _state_for(exit_code)
-    return "%s: %s;%s;%s;%s;%s" % (
-        what,
-        contact,
-        spec,
-        state,
-        plugin,
-        output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
+    return SanitizedLivestatusLogStr(
+        "{}: {};{};{};{};{}".format(
+            what,
+            livestatus.lqencode(contact),
+            livestatus.lqencode(spec),
+            state,
+            livestatus.lqencode(plugin),
+            livestatus.lqencode(output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
+        )
     )
 
 
@@ -133,7 +144,7 @@ def notification_result_message(
     context: NotificationContext,
     exit_code: NotificationResultCode,
     output: List[str],
-) -> str:
+) -> SanitizedLivestatusLogStr:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")
@@ -146,14 +157,16 @@ def notification_result_message(
     state = _state_for(exit_code)
     comment = " -- ".join(output)
     short_output = output[-1] if output else ""
-    return "%s: %s;%s;%s;%s;%s;%s" % (
-        what,
-        contact,
-        spec,
-        state,
-        plugin,
-        short_output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
-        comment[:MAX_COMMENT_LENGTH].replace(";", _SEMICOLON),
+    return SanitizedLivestatusLogStr(
+        "{}: {};{};{};{};{};{}".format(
+            what,
+            livestatus.lqencode(contact),
+            livestatus.lqencode(spec),
+            state,
+            livestatus.lqencode(plugin),
+            livestatus.lqencode(short_output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
+            livestatus.lqencode(comment[:MAX_COMMENT_LENGTH].replace(";", _SEMICOLON)),
+        )
     )
 
 

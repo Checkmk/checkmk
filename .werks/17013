@@ -1,0 +1,25 @@
+Title: Livestatus injection in mknotifyd
+Class: security
+Compatible: compat
+Component: notifications
+Date: 1720439889
+Edition: cee
+Level: 1
+Version: 2.1.0p47
+
+Before this Werk a malicious notification sent via mknotifyd could allow an attacker to send arbitrary livestatus commands.
+
+With this Werk livestatus escaping was added to the relevant functions.
+
+This issue was found during internal review.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0 (EOL)
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 6.5 Medium (<code>CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L</code>) and assigned <code>CVE-2024-6542</code>.

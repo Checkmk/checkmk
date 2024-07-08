@@ -297,26 +297,6 @@ perfometer_info.append(
         "perfometers": [
             {
                 "type": "logarithmic",
-                "metric": "direct_io",
-                "half_value": 25,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "buffered_io",
-                "half_value": 25,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "logarithmic",
                 "metric": "mail_queue_deferred_length",
                 "half_value": 10000,
                 "exponent": 5,

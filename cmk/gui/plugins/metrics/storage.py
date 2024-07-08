@@ -35,18 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["direct_io"] = {
-    "title": _("Direct I/O"),
-    "unit": "bytes/s",
-    "color": "21/a",
-}
-
-metric_info["buffered_io"] = {
-    "title": _("Buffered I/O"),
-    "unit": "bytes/s",
-    "color": "23/a",
-}
-
 metric_info["write_cache_usage"] = {
     "title": _("Write cache usage"),
     "unit": "%",
@@ -168,14 +156,6 @@ graph_info["write_cache_usage"] = {
 }
 
 # diskstat checks
-
-graph_info["direct_and_buffered_io_operations"] = {
-    "title": _("Direct and buffered I/O operations"),
-    "metrics": [
-        ("direct_io", "stack"),
-        ("buffered_io", "stack"),
-    ],
-}
 
 graph_info["ram_swap_used"] = {
     "title": _("RAM + Swap used"),

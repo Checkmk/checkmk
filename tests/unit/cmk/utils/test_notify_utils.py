@@ -25,7 +25,7 @@ class FakeLocalConnection:
 def test_log_to_history(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     monkeypatch.setattr(livestatus, "LocalConnection", FakeLocalConnection)
     with on_time("2018-04-15 16:50", "CET"):
-        notify.log_to_history("ä")
+        notify.log_to_history(notify.SanitizedLivestatusLogStr("ä"))
 
     assert FakeLocalConnection.sent_command == "[1523811000] LOG;ä"
     assert FakeLocalConnection.timeout == 2

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import os
 import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -19,6 +20,10 @@ MKP_TO_TEST = {
 }
 
 
+@pytest.mark.skipif(
+    os.getenv("DISTRO", "") in ["centos-8", "almalinux-9", "sles-15sp5"],
+    reason="refer to CMK-18188.",
+)
 @pytest.mark.parametrize("package_name", MKP_TO_TEST)
 def test_enabling_shipped_mkp(site: Site, package_name: str) -> None:
     """

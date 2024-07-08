@@ -5,6 +5,7 @@
 
 import ast
 import logging
+import os
 import stat
 from collections.abc import Iterator
 from enum import IntFlag
@@ -55,6 +56,10 @@ def get_site_file_permission(site: Site) -> list[tuple[int, str]]:
     )
 
 
+@pytest.mark.skipif(
+    os.getenv("DISTRO", "") in ["centos-8", "almalinux-9", "sles-15sp5"],
+    reason="refer to CMK-18188.",
+)
 @pytest.mark.parametrize(
     "mode,known_files_set",
     ((Mode.WORLD_WRITEABLE, KNOWN_WORLD_WRITABLE_FILES),),
@@ -84,6 +89,10 @@ def test_world_accessible_files_parents(site: Site) -> None:
             assert has_permission(parent, Mode.WORLD_EXECUTE)
 
 
+@pytest.mark.skipif(
+    os.getenv("DISTRO", "") in ["centos-8", "almalinux-9", "sles-15sp5"],
+    reason="refer to CMK-18188.",
+)
 def test_version_file_permissions(site: Site) -> None:
     """test that there are no writeable files in the version dir
 

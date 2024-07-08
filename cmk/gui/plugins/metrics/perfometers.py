@@ -111,16 +111,6 @@ perfometer_info.append(
     {
         "type": "linear",
         "segments": [
-            "pci_io_util",
-        ],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": [
             "util",
         ],
         "total": 100.0,

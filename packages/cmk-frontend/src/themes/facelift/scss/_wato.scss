@@ -656,6 +656,10 @@ span.tagify__tag-text {
   }
 }
 
+.wato table.data td.buttons a.disabled img {
+  opacity: 0.5;
+}
+
 table.data.oddeven > tbody > .matches_search > td {
   background-color: $matches-search-bg-color;
 

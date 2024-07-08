@@ -304,6 +304,9 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         )
         html.icon_button(clone_url, _("Clone this %s") % self._mode_type.name_singular(), "clone")
 
+        self._show_delete_action(nr, ident, entry)
+
+    def _show_delete_action(self, nr: int, ident: str, entry: _T) -> None:
         confirm_delete: str = _("ID: %s") % ident
         if delete_confirm_msg := self._delete_confirm_message():
             confirm_delete += "<br><br>" + delete_confirm_msg
@@ -357,11 +360,14 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
 
             self._new = True
             self._ident = None
-            self._entry = copy.deepcopy(entry)
+            self._entry = self._clone_entry(entry)
             return
 
         self._new = True
         self._ident = None
+
+    def _clone_entry(self, entry: _T) -> _T:
+        return copy.deepcopy(entry)
 
     def title(self) -> str:
         if self._new:
@@ -537,6 +543,8 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
 
     def page(self) -> None:
         with html.form_context("edit", method="POST"):
+            self._page_form_quick_setup_warning()
+
             html.prevent_password_auto_completion()
 
             vs = self.valuespec()
@@ -546,3 +554,6 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             forms.end()
 
             html.hidden_fields()
+
+    def _page_form_quick_setup_warning(self) -> None:
+        pass

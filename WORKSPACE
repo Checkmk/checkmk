@@ -73,6 +73,8 @@ load(
     "HEIRLOOMMAILX_VERSION",
     "HEIRLOOM_PKGTOOLS_SHA256",
     "HEIRLOOM_PKGTOOLS_VERSION",
+    "JAEGER_SHA256",
+    "JAEGER_VERSION",
     "LCAB_SHA256",
     "LCAB_VERSION",
     "LIBGSF_SHA256",
@@ -414,4 +416,11 @@ redfish_mkp(
     commit_hash = REDFISH_MKP_COMMIT_HASH,
     sha256 = REDFISH_MKP_SHA256,
     version_str = REDFISH_MKP_VERSION,
+)
+
+load("//omd/packages/jaeger:jaeger_http.bzl", "jaeger")
+
+jaeger(
+    sha256 = JAEGER_SHA256,
+    version_str = JAEGER_VERSION,
 )

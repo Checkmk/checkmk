@@ -1,0 +1,14 @@
+JAEGER := jaeger
+
+JAEGER_BUILD := $(BUILD_HELPER_DIR)/$(JAEGER)-build
+JAEGER_INSTALL := $(BUILD_HELPER_DIR)/$(JAEGER)-install
+JAEGER_BAZEL_OUT := $(BAZEL_BIN)/omd/packages/$(JAEGER)
+
+.PHONY: $(JAEGER_BUILD)
+$(JAEGER_BUILD):
+	$(BAZEL_BUILD) //omd/packages/$(JAEGER):extract_binary
+
+.PHONY: $(JAEGER_INSTALL)
+$(JAEGER_INSTALL): $(JAEGER_BUILD)
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(JAEGER_BAZEL_OUT)/jaeger-all-in-one $(DESTDIR)$(OMD_ROOT)/bin/jaeger

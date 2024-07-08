@@ -64,7 +64,8 @@ PACKAGES := \
     neb \
     robotmk \
     xmlsec1 \
-    redfish_mkp
+    redfish_mkp \
+    jaeger
 
 ifeq ($(EDITION),enterprise)
 PACKAGES += enterprise

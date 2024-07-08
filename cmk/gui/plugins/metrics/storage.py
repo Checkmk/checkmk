@@ -35,18 +35,6 @@ metric_info["mem_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["disk_read_ql"] = {
-    "title": _("Average disk read queue length"),
-    "unit": "",
-    "color": "45/a",
-}
-
-metric_info["disk_write_ql"] = {
-    "title": _("Average disk write queue length"),
-    "unit": "",
-    "color": "#7060b0",
-}
-
 metric_info["disk_capacity"] = {
     "title": _("Total disk capacity"),
     "unit": "bytes",
@@ -257,11 +245,6 @@ graph_info["read_and_written_blocks"] = {
         ("read_blocks", "area"),
         ("write_blocks", "-area"),
     ],
-}
-
-graph_info["read_write_queue_length"] = {
-    "title": _("Read / Write queue length"),
-    "metrics": [("disk_read_ql", "area"), ("disk_write_ql", "-area")],
 }
 
 graph_info["backup_time"] = {

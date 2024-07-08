@@ -22,27 +22,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["vol_context_switches"] = {
-    "title": _l("Voluntary context switches"),
-    "help": _l(
-        "A voluntary context switch occurs when a thread blocks "
-        "because it requires a resource that is unavailable"
-    ),
-    "unit": "count",
-    "color": "36/a",
-}
-
-metric_info["invol_context_switches"] = {
-    "title": _l("Involuntary context switches"),
-    "help": _l(
-        "An involuntary context switch takes place when a thread "
-        "executes for the duration of its time slice or when the "
-        "system identifies a higher-priority thread to run"
-    ),
-    "unit": "count",
-    "color": "45/b",
-}
-
 # TODO: user -> cpu_util_user
 metric_info["user"] = {
     "title": _l("User"),
@@ -579,14 +558,6 @@ graph_info["per_core_utilization_average"] = {
     "metrics": [("cpu_core_util_average_%d" % num, "line") for num in range(MAX_CORES)],
     "range": (0, 100),
     "optional_metrics": ["cpu_core_util_average_%d" % num for num in range(2, MAX_CORES)],
-}
-
-graph_info["context_switches"] = {
-    "title": _l("Context switches"),
-    "metrics": [
-        ("vol_context_switches", "area"),
-        ("invol_context_switches", "stack"),
-    ],
 }
 
 graph_info["memory_utilization_percentile"] = {

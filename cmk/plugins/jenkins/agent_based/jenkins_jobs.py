@@ -62,6 +62,7 @@ MAP_BUILD_STATES = {
     "failure": State.CRIT,  # fatal error
     "aborted": State.OK,  # manually aborted
     "null": State.WARN,  # module was not built
+    "not_built": State.OK,  # module was not built
     "none": State.OK,  # running
 }
 

@@ -32,6 +32,7 @@ daily_extended: &daily_extended
     - "ubuntu-24.04"
     - "centos-8"
     - "almalinux-9"
+    - "sles-12sp5"
     - "sles-15sp5"
 
 # Builds for those distros will only be available internally for development purpose

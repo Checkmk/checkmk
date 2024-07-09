@@ -51,6 +51,7 @@ MAP_BUILD_STATES = {
     # The 'null' build state is only valid in Jenkins <= v1.622 - relevant commit:
     # https://github.com/jenkinsci/jenkins/commit/90f29f8cbc68312cbdbef8d4101fa5b5e971e021
     "null": State.WARN,  # module was not built (legacy)
+    "not_built": State.WARN,  # module was not built
     "none": 0,  # running
 }
 

@@ -1,0 +1,11 @@
+Title: Add missing Jenkins Job build result
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1731057198
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+Add <code>not_null</code> build result option to Jenkins Job parameters as it is a valid
+build state that can be returned by the Jenkins API.

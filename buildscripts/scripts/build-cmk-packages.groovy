@@ -310,6 +310,7 @@ def main() {
 
                                 sh("""echo ==== ${distro} =====
                                 ps wauxw
+                                [ ! -f bazel-memory.profile ] || mv bazel-memory.profile bazel-memory-${distro}.profile
                                 """)
 
                                 try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix)

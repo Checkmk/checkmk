@@ -11,7 +11,7 @@ import re
 import time
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, NamedTuple, TypedDict
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from cmk.utils.user import UserId
 
@@ -165,13 +165,16 @@ def log_audit(
     action: str,
     message: LogMessage,
     object_ref: ObjectRef | None = None,
-    user_id: UserId | None = None,
+    user_id: UserId | Literal[""] | None = None,
     diff_text: str | None = None,
+    use_git: bool | None = None,
 ) -> None:
+    if use_git is None:
+        use_git = active_config.wato_use_git
     if isinstance(message, LazyString):
         message = message.unlocalized_str()
 
-    if active_config.wato_use_git:
+    if use_git:
         if isinstance(message, HTML):
             message = escaping.strip_tags(str(message))
         cmk.gui.watolib.git.add_message(message)
@@ -183,13 +186,16 @@ def _log_entry(
     action: str,
     message: HTML | str,
     object_ref: ObjectRef | None,
-    user_id: UserId | None,
+    user_id: UserId | Literal[""] | None,
     diff_text: str | None,
 ) -> None:
+    if user_id is None:
+        user_id = user.id
+
     entry = AuditLogStore.Entry(
         time=int(time.time()),
         object_ref=object_ref,
-        user_id=str(user_id or user.id or "-"),
+        user_id=str(user_id) if user_id else "-",
         action=action,
         text=message,
         diff_text=diff_text,

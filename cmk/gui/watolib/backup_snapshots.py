@@ -23,7 +23,6 @@ from cmk.utils.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
 from cmk.gui.watolib.audit_log import log_audit
 
 from cmk.ccc import store
@@ -68,34 +67,45 @@ class SnapshotStatus(TypedDict):
     checksums: NotRequired[None | bool]
 
 
-def create_snapshot(comment: str) -> None:
+def create_snapshot(
+    comment: str,
+    created_by: Literal[""] | UserId,
+    secret: bytes,
+    max_snapshots: int,
+    use_git: bool,
+) -> None:
     logger.debug("Start creating backup snapshot")
     start = time.time()
-    store.mkdir(snapshot_dir)
+    store.makedirs(snapshot_dir)
 
     snapshot_name = "wato-snapshot-%s.tar" % time.strftime(
         "%Y-%m-%d-%H-%M-%S", time.localtime(time.time())
     )
 
     data: SnapshotData = {}
-    data["comment"] = _("Activated changes by %s.") % user.id
+    data["comment"] = _("Activated changes by %s.") % created_by
 
     if comment:
         data["comment"] += _("Comment: %s") % comment
 
     # with SuperUserContext the user.id is None; later this value will be encoded for tar
-    data["created_by"] = "" if user.id is None else user.id
+    data["created_by"] = created_by
     data["type"] = "automatic"
     data["snapshot_name"] = snapshot_name
 
-    _do_create_snapshot(data)
-    _do_snapshot_maintenance()
+    _do_create_snapshot(data, secret)
+    _do_snapshot_maintenance(max_snapshots)
 
-    log_audit("snapshot-created", "Created snapshot %s" % snapshot_name)
+    log_audit(
+        "snapshot-created",
+        "Created snapshot %s" % snapshot_name,
+        use_git=use_git,
+        user_id=created_by,
+    )
     logger.debug("Backup snapshot creation took %.4f", time.time() - start)
 
 
-def _do_create_snapshot(data: SnapshotData) -> None:
+def _do_create_snapshot(data: SnapshotData, secret: bytes) -> None:
     snapshot_name = data["snapshot_name"]
     work_dir = snapshot_dir.rstrip("/") + "/workdir/%s" % snapshot_name
 
@@ -158,7 +168,7 @@ def _do_create_snapshot(data: SnapshotData) -> None:
                 subtar_hash = sha256(subtar.read()).hexdigest()
 
             # TODO(Replace with HMAC?)
-            subtar_signed = sha256(subtar_hash.encode() + _snapshot_secret()).hexdigest()
+            subtar_signed = sha256(subtar_hash.encode() + secret).hexdigest()
             subtar_info[filename_subtar] = (subtar_hash, subtar_signed)
 
             # Append tar.gz subtar to snapshot
@@ -197,7 +207,7 @@ def _do_create_snapshot(data: SnapshotData) -> None:
         shutil.rmtree(work_dir)
 
 
-def _do_snapshot_maintenance() -> None:
+def _do_snapshot_maintenance(max_snapshots: int) -> None:
     snapshots = []
     for f in os.listdir(snapshot_dir):
         if f.startswith("wato-snapshot-"):
@@ -207,7 +217,7 @@ def _do_snapshot_maintenance() -> None:
                 snapshots.append(f)
 
     snapshots.sort(reverse=True)
-    while len(snapshots) > active_config.wato_max_snapshots:
+    while len(snapshots) > max_snapshots:
         # TODO can this be removed or will it ever come back to live?
         # log_audit("snapshot-removed", "Removed snapshot %s" % snapshots[-1])
         os.remove(snapshot_dir + snapshots.pop())
@@ -351,7 +361,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
 
             subtar = access_snapshot(handler)
             subtar_hash = sha256(subtar).hexdigest()
-            subtar_signed = sha256(subtar_hash.encode() + _snapshot_secret()).hexdigest()
+            subtar_signed = sha256(subtar_hash.encode() + snapshot_secret()).hexdigest()
 
             checksum_result = checksum == subtar_hash and signed == subtar_signed
             status["files"][filename]["checksum"] = checksum_result
@@ -457,7 +467,7 @@ def _get_default_backup_domains() -> dict[str, dict[str, Any]]:
     return domains
 
 
-def _snapshot_secret() -> bytes:
+def snapshot_secret() -> bytes:
     path = Path(cmk.utils.paths.default_config_dir, "snapshot.secret")
     try:
         return path.read_bytes()

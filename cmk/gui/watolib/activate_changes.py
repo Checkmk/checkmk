@@ -1548,7 +1548,14 @@ class ActivateChangesManager(ActivateChanges):
                 )
 
             backup_snapshot_proc = multiprocessing.Process(
-                target=backup_snapshots.create_snapshot, args=(self._comment,)
+                target=backup_snapshots.create_snapshot,
+                args=(
+                    self._comment,
+                    user.id or "",
+                    backup_snapshots.snapshot_secret(),
+                    active_config.wato_max_snapshots,
+                    active_config.wato_use_git,
+                ),
             )
             backup_snapshot_proc.start()
 

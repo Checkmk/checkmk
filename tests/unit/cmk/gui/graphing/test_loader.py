@@ -281,7 +281,6 @@ _SKIP_MODULES: Final[Sequence[str]] = [
     "cmk.plugins.collection.graphing.fireeye",
     "cmk.plugins.collection.graphing.gpu",
     "cmk.plugins.collection.graphing.hop",
-    "cmk.plugins.collection.graphing.ibm_mq",
     "cmk.plugins.collection.graphing.interfaces",
     "cmk.plugins.collection.graphing.kernel",
     "cmk.plugins.collection.graphing.kube",

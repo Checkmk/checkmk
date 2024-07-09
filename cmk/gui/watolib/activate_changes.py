@@ -1581,6 +1581,8 @@ class ActivateChangesManager(ActivateChanges):
 
             logger.debug("Waiting for backup snapshot creation to complete")
             backup_snapshot_proc.join()
+            if backup_snapshot_proc.exitcode != 0:
+                raise MKGeneralException("Failed to create backup snapshot")
 
         logger.debug("Finished all snapshots")
 

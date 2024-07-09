@@ -9,13 +9,6 @@ UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.SINotation("B/s"))
 UNIT_BYTES_PER_REQUEST = metrics.Unit(metrics.SINotation("B/req"))
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 
-metric_clients_connected = metrics.Metric(
-    name="clients_connected",
-    title=Title("Clients connected"),
-    unit=UNIT_NUMBER,
-    color=metrics.Color.PURPLE,
-)
-
 metric_data_transfer_rate = metrics.Metric(
     name="data_transfer_rate",
     title=Title("Data transfer rate"),

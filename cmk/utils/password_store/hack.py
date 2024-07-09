@@ -55,6 +55,7 @@ HACK_CHECKS = {
     # if we have to apply the password store hack.
     # Make sure to have *all* active check plug-ins listed here, so we
     # can test for it
+    "bi_aggr": True,  # TODO
     "by_ssh": False,  # has no secret
     "cert": False,  # has no secret
     "cmk_inv": False,  # has no secret

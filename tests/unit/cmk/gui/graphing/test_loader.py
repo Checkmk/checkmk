@@ -285,7 +285,6 @@ _SKIP_MODULES: Final[Sequence[str]] = [
     "cmk.plugins.collection.graphing.mail",
     "cmk.plugins.collection.graphing.mqtt",
     "cmk.plugins.collection.graphing.network",
-    "cmk.plugins.collection.graphing.nimble",
     "cmk.plugins.collection.graphing.notifications_and_messages",
     "cmk.plugins.collection.graphing.printer",
     "cmk.plugins.collection.graphing.processes",

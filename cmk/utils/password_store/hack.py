@@ -70,6 +70,7 @@ HACK_CHECKS = {
     "mail": True,  # TODO
     "mkevents": False,  # has no secret
     "notify_count": False,  # has no secret
+    "sftp": True,  # TODO
     "smtp": True,
     "sql": True,
     "ssh": False,  # has no secret

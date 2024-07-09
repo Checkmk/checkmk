@@ -7,9 +7,10 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from .checktestlib import ActiveCheck
+from cmk.plugins.collection.server_side_calls.check_sftp import active_check_sftp
+from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, Secret
 
-pytestmark = pytest.mark.checks
+HOST_CONFIG = HostConfig(name="hostname")
 
 
 @pytest.mark.parametrize(
@@ -19,29 +20,29 @@ pytestmark = pytest.mark.checks
             {
                 "host": "foo",
                 "user": "bar",
-                "secret": ("password", "baz"),
+                "secret": Secret(0),
                 "look_for_keys": True,
             },
-            [
+            (
                 "--host=foo",
                 "--user=bar",
-                "--secret=baz",
+                Secret(0).unsafe("--secret=%s"),
                 "--look-for-keys",
-            ],
+            ),
             id="look for keys",
         ),
         pytest.param(
             {
                 "host": "foo",
                 "user": "bar",
-                "secret": ("password", "baz"),
+                "secret": Secret(0),
                 "look_for_keys": False,
             },
-            [
+            (
                 "--host=foo",
                 "--user=bar",
-                "--secret=baz",
-            ],
+                Secret(0).unsafe("--secret=%s"),
+            ),
             id="do not look for keys",
         ),
     ],
@@ -51,5 +52,9 @@ def test_check_sftp_argument_parsing(
     expected_args: Sequence[str],
 ) -> None:
     """Tests if all required arguments are present."""
-    active_check = ActiveCheck("check_sftp")
-    assert active_check.run_argument_function(params) == expected_args
+    assert list(active_check_sftp(params, HOST_CONFIG)) == [
+        ActiveCheckCommand(
+            service_description="SFTP foo",
+            command_arguments=expected_args,
+        )
+    ]

@@ -300,7 +300,6 @@ _SKIP_MODULES: Final[Sequence[str]] = [
     "cmk.plugins.gcp.graphing.gcp",
     "cmk.plugins.jenkins.graphing.jenkins",
     "cmk.plugins.memory.graphing.memory",
-    "cmk.plugins.omd.graphing.mknotifyd",
     "cmk.plugins.omd.graphing.omd_apache",
     "cmk.plugins.oracle.graphing.oracle",
     "cmk.plugins.robotmk.graphing.cee",

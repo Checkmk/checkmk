@@ -3,17 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, perfometers, Title
+from cmk.graphing.v1 import graphs, metrics, Title
 
-UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
-
-metric_last_updated = metrics.Metric(
-    name="last_updated",
-    title=Title("Last Updated"),
-    unit=UNIT_TIME,
-    color=metrics.Color.GREEN,
-)
 
 metric_new_files = metrics.Metric(
     name="new_files",
@@ -34,12 +26,6 @@ metric_corrupted_files = metrics.Metric(
     title=Title("Corrupted files in Spool"),
     unit=UNIT_NUMBER,
     color=metrics.Color.CYAN,
-)
-
-perfometer_last_updated = perfometers.Perfometer(
-    name="last_updated",
-    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(70)),
-    segments=["last_updated"],
 )
 
 graph_files_notification_spool = graphs.Graph(

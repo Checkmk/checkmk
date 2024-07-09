@@ -136,6 +136,11 @@ class VSTransformer(cst.CSTTransformer):
                     cst.parse_expression("(validators.LengthInRange(min_value=1),)"),
                     cst.Name("custom_validate"),
                 )
+            case cst.Arg(value, cst.Name("default_value")):
+                return cst.Arg(
+                    cst.Call(cst.Name("DefaultValue"), args=[cst.Arg(value)]),
+                    cst.Name("prefill"),
+                )
         return updated_node
 
     def leave_Call(self, original_node: cst.Call, updated_node: cst.Call) -> cst.Call:

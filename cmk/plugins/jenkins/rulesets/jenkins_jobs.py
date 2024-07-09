@@ -158,6 +158,12 @@ def _parameter_valuespec_jenkins_jobs() -> Dictionary:
                                 prefill=DefaultValue(1),
                             )
                         ),
+                        "not_built": DictElement(
+                            parameter_form=ServiceState(
+                                title=Title("State when last build result is: module not built"),
+                                prefill=DefaultValue(1),
+                            )
+                        ),
                         "none": DictElement(
                             parameter_form=ServiceState(
                                 title=Title("State when build result is: running"),

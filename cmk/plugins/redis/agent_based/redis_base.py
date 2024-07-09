@@ -3,12 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from typing import Any
 
-def parse_redis_info(info):
+from cmk.agent_based.v2 import AgentSection, StringTable
+
+Section = Mapping[str, Mapping[str, Any]]
+
+
+def parse_redis_info(string_table: StringTable) -> Section:
     parsed: dict = {}
     instance = {}
     inst_section = {}
-    for line in info:
+    for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             name, host, port = line[0][3:-3].split("|")
             instance = parsed.setdefault(
@@ -51,3 +58,6 @@ def parse_redis_info(info):
         inst_section[line[0]] = raw_value
 
     return parsed
+
+
+agent_section_redis_info = AgentSection(name="redis_info", parse_function=parse_redis_info)

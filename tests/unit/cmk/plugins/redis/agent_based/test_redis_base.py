@@ -1,6 +1,7 @@
 import pytest
 
-from cmk.base.check_legacy_includes.redis import parse_redis_info
+from cmk.agent_based.v2 import StringTable
+from cmk.plugins.redis.agent_based.redis_base import parse_redis_info, Section
 
 
 @pytest.mark.parametrize(
@@ -102,5 +103,5 @@ from cmk.base.check_legacy_includes.redis import parse_redis_info
         ),
     ],
 )
-def test_parse_redis_info(string_table, expected):
+def test_parse_redis_info(string_table: StringTable, expected: Section) -> None:
     assert parse_redis_info(string_table) == expected

@@ -1,15 +1,20 @@
 import datetime
+from collections.abc import Mapping
+from typing import Any
 from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
 
-from cmk.base.legacy_checks.redis_info import (
-    check_redis_info,
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
+from cmk.plugins.redis.agent_based.redis_base import Section
+from cmk.plugins.redis.agent_based.redis_info import check_redis_info, discover_redis_info
+from cmk.plugins.redis.agent_based.redis_info_clients import (
     check_redis_info_clients,
-    check_redis_info_persistence,
-    discover_redis_info,
     discover_redis_info_clients,
+)
+from cmk.plugins.redis.agent_based.redis_info_persistence import (
+    check_redis_info_persistence,
     discover_redis_info_persistence,
 )
 
@@ -24,12 +29,12 @@ from cmk.base.legacy_checks.redis_info import (
         ),
         pytest.param(
             {"127.0.0.1:6379": {"host": "127.0.0.1", "port": "6379"}},
-            [("127.0.0.1:6379", {})],
+            [Service(item="127.0.0.1:6379")],
             id="info_found",
         ),
     ],
 )
-def test_discover_redis_info(section, expected):
+def test_discover_redis_info(section: Section, expected: DiscoveryResult) -> None:
     assert list(discover_redis_info(section)) == expected
 
 
@@ -53,17 +58,15 @@ def test_discover_redis_info(section, expected):
                 }
             },
             [
-                (0, "Mode: Standalone"),
-                (
-                    0,
-                    "Up since Fri Dec  6 08:44:54 2019, uptime: 2:51:06",
-                    [("uptime", 10266, None, None)],
-                ),
-                (0, "Version: 6.0.16"),
-                (0, "GCC compiler version: 7.4.0"),
-                (0, "PID: 1064"),
-                (0, "IP: 127.0.0.1"),
-                (0, "Port: 6379"),
+                Result(state=State.OK, summary="Mode: Standalone"),
+                Result(state=State.OK, summary="Up since 2019-12-06 08:44:54"),
+                Result(state=State.OK, summary="Uptime: 2 hours 51 minutes"),
+                Metric(name="uptime", value=10266),
+                Result(state=State.OK, summary="Version: 6.0.16"),
+                Result(state=State.OK, summary="GCC compiler version: 7.4.0"),
+                Result(state=State.OK, summary="PID: 1064"),
+                Result(state=State.OK, summary="IP: 127.0.0.1"),
+                Result(state=State.OK, summary="Port: 6379"),
             ],
             id="host_port",
         ),
@@ -77,7 +80,10 @@ def test_discover_redis_info(section, expected):
                     "Server": {"redis_version": "6.0.16"},
                 }
             },
-            [(0, "Version: 6.0.16"), (0, "Socket: /path/mysocket")],
+            [
+                Result(state=State.OK, summary="Version: 6.0.16"),
+                Result(state=State.OK, summary="Socket: /path/mysocket"),
+            ],
             id="socket",
         ),
         pytest.param(
@@ -91,16 +97,18 @@ def test_discover_redis_info(section, expected):
                 },
             },
             [
-                (
-                    2,
-                    "Error: Could not connect to Redis at /omd/sites/heute/tmp/run/redis: Permission denied",
+                Result(
+                    state=State.CRIT,
+                    summary="Error: Could not connect to Redis at /omd/sites/heute/tmp/run/redis: Permission denied",
                 )
             ],
             id="permission_denied",
         ),
     ],
 )
-def test_check_redis_info(item, params, section, expected):
+def test_check_redis_info(
+    item: str, params: Mapping[str, Any], section: Section, expected: CheckResult
+) -> None:
     with time_machine.travel(
         datetime.datetime.fromisoformat("2019-12-06T11:36:00Z").replace(tzinfo=ZoneInfo("UTC")),
         tick=False,
@@ -125,7 +133,7 @@ def test_check_redis_info(item, params, section, expected):
                     "port": "6379",
                 }
             },
-            [("127.0.0.1:6379", {})],
+            [Service(item="127.0.0.1:6379")],
             id="persistence_found",
         ),
     ],
@@ -160,16 +168,19 @@ def test_discover_redis_info_persistence(section, expected):
                 }
             },
             [
-                (0, "Last RDB save operation: successful"),
-                (0, "Last AOF rewrite operation: successful"),
-                (0, "Last successful RDB save: 2019-12-06 07:45:57"),
-                (0, "Number of changes since last dump: 0", [("changes_sld", "0", None, None)]),
+                Result(state=State.OK, summary="Last RDB save operation: successful"),
+                Result(state=State.OK, summary="Last AOF rewrite operation: successful"),
+                Result(state=State.OK, summary="Last successful RDB save: 2019-12-06 07:45:57"),
+                Result(state=State.OK, summary="Number of changes since last dump: 0"),
+                Metric("changes_sld", 0),
             ],
             id="full_persistence",
         ),
     ],
 )
-def test_check_redis_info_persistence(item, params, section, expected):
+def test_check_redis_info_persistence(
+    item: str, params: Mapping[str, Any], section: Section, expected: CheckResult
+) -> None:
 
     with time_machine.travel(
         datetime.datetime.fromisoformat("2019-12-06T11:36:00Z").replace(tzinfo=ZoneInfo("UTC")),
@@ -194,12 +205,12 @@ def test_check_redis_info_persistence(item, params, section, expected):
                     "port": "6379",
                 }
             },
-            [("127.0.0.1:6379", {})],
+            [Service(item="127.0.0.1:6379")],
             id="clients_found",
         ),
     ],
 )
-def test_discover_redis_info_clients(section, expected):
+def test_discover_redis_info_clients(section: Section, expected: DiscoveryResult) -> None:
     assert list(discover_redis_info_clients(section)) == expected
 
 
@@ -222,18 +233,20 @@ def test_discover_redis_info_clients(section, expected):
             },
             {},
             [
-                (0, "Number of client connections: 1", [("clients_connected", 1, None, None)]),
-                (0, "Longest output list: 0", [("clients_output", 0, None, None)]),
-                (0, "Biggest input buffer: 0", [("clients_input", 0, None, None)]),
-                (
-                    0,
-                    "Number of clients pending on a blocking call: 0",
-                    [("clients_blocked", 0, None, None)],
-                ),
+                Result(state=State.OK, summary="Number of client connections: 1"),
+                Metric("clients_connected", 1),
+                Result(state=State.OK, summary="Longest output list: 0"),
+                Metric("clients_output", 0),
+                Result(state=State.OK, summary="Biggest input buffer: 0"),
+                Metric("clients_input", 0),
+                Result(state=State.OK, summary="Number of clients pending on a blocking call: 0"),
+                Metric("clients_blocked", 0),
             ],
             id="full_clients",
         ),
     ],
 )
-def test_check_redis_info_clients(section, params, expected):
+def test_check_redis_info_clients(
+    params: Mapping[str, Any], section: Section, expected: CheckResult
+) -> None:
     assert list(check_redis_info_clients("127.0.0.1:6379", params, section)) == expected

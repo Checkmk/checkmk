@@ -62,12 +62,12 @@ rsync \
 grep -rl 'check_mk.make: do-not-deploy' "${ROOT}/lib/python3/cmk" | xargs rm -f
 
 # Restore site version after .f12
-sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/utils/version.py
+sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/ccc/version.py
 
 # Make the target a CME edition again if it was before after replacing the version.py from the git
 if [ "$CMK_EDITION" = "cme" ]; then
     echo "Make the target version a CME version..."
-    sed -i "/^def edition() -> Edition:/{n;n;s/.*/        return Edition.CME/}" "$ROOT/lib/python3/cmk/utils/version.py"
+    sed -i "/^def edition() -> Edition:/{n;n;s/.*/        return Edition.CME/}" "$ROOT/lib/python3/cmk/ccc/version.py"
 fi
 
 if [ -z "$ONLY_COPY" ]; then

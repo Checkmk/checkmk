@@ -23,6 +23,7 @@ HACK_AGENTS = {
     # can test for it
     "aws": False,
     "aws_status": False,  # needs no secret
+    "azure": True,
     "azure_status": False,  # needs no secret
     "bazel_cache": True,
     "bi": False,  # needs no secret

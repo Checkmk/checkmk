@@ -3,36 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 
-from cmk.gui.plugins.wato.special_agents.azure import (
-    _migrate_services,
-    CCE_AZURE_SERVICES,
-    RAW_AZURE_SERVICES,
-)
-
+from cmk.plugins.azure.rulesets.azure import CCE_AZURE_SERVICES, RAW_AZURE_SERVICES
 from cmk.special_agents.agent_azure import ALL_METRICS
-
-
-def test_migrate_services():
-    migrated_data = _migrate_services({})
-    some_expected_services = {
-        "ad_connect",
-        "usage_details",
-        "Microsoft.Compute/virtualMachines",
-        "Microsoft.Storage/storageAccounts",
-    }
-    enabled_services = set(migrated_data["services"])
-    assert some_expected_services.issubset(enabled_services)
-
-
-def test_migrate_services_already_migrated():
-    original_data = {"services": ["ad_connect", "Microsoft.Compute/virtualMachines"]}
-    migrated_data = _migrate_services(copy.deepcopy(original_data))
-    assert migrated_data == {
-        "services": ["ad_connect", "Microsoft.Compute/virtualMachines"],
-        "authority": "global",
-    }
 
 
 def test_all_services_present_in_gui():

@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from .checktestlib import SpecialAgent
+from cmk.plugins.azure.server_side_calls.agent_azure import (
+    agent_azure_arguments as commands_function,
+)
+from cmk.plugins.azure.server_side_calls.agent_azure import AzureParams
+from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
 
 
 @pytest.mark.parametrize(
@@ -15,12 +20,13 @@ from .checktestlib import SpecialAgent
     [
         pytest.param(
             {
+                "authority": "global_",
                 "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
-                "secret": ("password", "vurystrong"),
+                "secret": Secret(0),
                 "config": {},
-                "services": ["users_count", "Microsoft.DBforMySQL/servers"],
+                "services": ["users_count", "Microsoft_DBforMySQL_slash_servers"],
             },
             [
                 "--tenant",
@@ -28,7 +34,9 @@ from .checktestlib import SpecialAgent
                 "--client",
                 "blueberry",
                 "--secret",
-                "vurystrong",
+                Secret(0).unsafe(),
+                "--authority",
+                "global",
                 "--subscription",
                 "banana",
                 "--services",
@@ -39,14 +47,16 @@ from .checktestlib import SpecialAgent
         ),
         pytest.param(
             {
+                "authority": "global_",
                 "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
-                "secret": ("store", "azure"),
+                "secret": Secret(0),
                 "config": {
                     "explicit": [{"group_name": "my_res_group"}],
-                    "tag_based": [("my_tag", "exists")],
+                    "tag_based": [{"tag": "my_tag", "condition": ("exists", None)}],
                 },
+                "services": [],
             },
             [
                 "--tenant",
@@ -54,7 +64,9 @@ from .checktestlib import SpecialAgent
                 "--client",
                 "blueberry",
                 "--secret",
-                ("store", "azure", "%s"),
+                Secret(0).unsafe(),
+                "--authority",
+                "global",
                 "--subscription",
                 "banana",
                 "--explicit-config",
@@ -66,16 +78,21 @@ from .checktestlib import SpecialAgent
         ),
         pytest.param(
             {
+                "authority": "global_",
                 "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
-                "secret": ("store", "azure"),
+                "secret": Secret(0),
                 "config": {
                     "explicit": [{"group_name": "my_res_group", "resources": ["res1", "res2"]}],
-                    "tag_based": [("my_tag_1", "exists"), ("my_tag_2", ("value", "t1"))],
+                    "tag_based": [
+                        {"tag": "my_tag_1", "condition": ("exists", None)},
+                        {"tag": "my_tag_2", "condition": ("equals", "t1")},
+                    ],
                 },
-                "sequential": True,
-                "proxy": ("environment", "environment"),
+                "sequential": "singlethreaded",
+                "proxy": EnvProxy(),
+                "services": [],
             },
             [
                 "--tenant",
@@ -83,7 +100,9 @@ from .checktestlib import SpecialAgent
                 "--client",
                 "blueberry",
                 "--secret",
-                ("store", "azure", "%s"),
+                Secret(0).unsafe(),
+                "--authority",
+                "global",
                 "--subscription",
                 "banana",
                 "--sequential",
@@ -107,6 +126,8 @@ def test_azure_argument_parsing(
     expected_args: Sequence[Any],
 ) -> None:
     """Tests if all required arguments are present."""
-    agent = SpecialAgent("agent_azure")
-    arguments = agent.argument_func(params, "testhost", "address")
+    host_config = HostConfig(name="test")
+    commands = list(commands_function(AzureParams.model_validate(params), host_config))
+    assert len(commands) == 1
+    arguments = commands[0].command_arguments
     assert arguments == expected_args

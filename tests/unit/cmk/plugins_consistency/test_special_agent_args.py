@@ -106,7 +106,6 @@ UNMIGRATED = {
     "alertmanager",
     "allnet_ip_sensoric",
     "appdynamics",
-    "azure",
     "ddn_s2a",
     "gcp_status",
     "graylog",

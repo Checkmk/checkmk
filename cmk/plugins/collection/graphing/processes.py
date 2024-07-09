@@ -9,12 +9,6 @@ UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""))
 
-metric_process_handles = metrics.Metric(
-    name="process_handles",
-    title=Title("Process handles"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.CYAN,
-)
 metric_process_mapped_size = metrics.Metric(
     name="process_mapped_size",
     title=Title("Mapped size"),

@@ -2167,3 +2167,9 @@ metric_requests_per_second = metrics.Metric(
     unit=metrics.Unit(metrics.DecimalNotation("req/s")),
     color=metrics.Color.GRAY,
 )
+metric_process_handles = metrics.Metric(
+    name="process_handles",
+    title=Title("Process handles"),
+    unit=UNIT_COUNTER,
+    color=metrics.Color.CYAN,
+)

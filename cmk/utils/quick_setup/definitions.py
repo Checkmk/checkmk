@@ -27,6 +27,7 @@ class Stage:
     stage_id: StageId
     components: list[dict]
     validation_errors: list[str] = field(default_factory=list)
+    stage_summary: list[str] = field(default_factory=list)
 
 
 @dataclass

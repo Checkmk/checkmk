@@ -184,6 +184,7 @@ def test_get_overview(clients: ClientRegistry) -> None:
 
     assert resp.json["stage"]["stage_id"] == 1
     assert resp.json["stage"]["validation_errors"] == []
+    assert resp.json["stage"]["stage_summary"] == []
     verify_stage_1_components(components=resp.json["stage"]["components"])
 
 
@@ -216,6 +217,7 @@ def test_send_aws_stage_one(clients: ClientRegistry) -> None:
     )
     assert resp.json["stage_id"] == 2
     assert resp.json["validation_errors"] == []
+    assert resp.json["stage_summary"] == []
     verify_stage_2_components(components=resp.json["components"])
 
 
@@ -253,6 +255,7 @@ def test_send_aws_stage_two(clients: ClientRegistry) -> None:
         "stage_id": 3,
         "components": [],
         "validation_errors": [],
+        "stage_summary": [],
     }
 
 
@@ -267,8 +270,9 @@ def test_send_aws_stage_three(clients: ClientRegistry) -> None:
     )
     assert resp.json == {
         "stage_id": 4,
-        "components": [],
         "validation_errors": [],
+        "stage_summary": [],
+        "components": [],
     }
 
 
@@ -284,6 +288,7 @@ def test_send_aws_stage_four(clients: ClientRegistry) -> None:
     )
     assert resp.json == {
         "stage_id": -1,
-        "components": [],
         "validation_errors": [],
+        "stage_summary": [],
+        "components": [],
     }

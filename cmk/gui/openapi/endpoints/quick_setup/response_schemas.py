@@ -38,6 +38,11 @@ class QuickSetupStageResponse(BaseSchema):
         example=[],
         description="A collection of validation errors",
     )
+    stage_summary = fields.List(
+        fields.String,
+        example=[],
+        description="A collection of widget summaries",
+    )
 
 
 class QuickSetupOverviewResponse(BaseSchema):

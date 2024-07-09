@@ -3,17 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, perfometers, Title, translations
-
-translation_kernel = translations.Translation(
-    name="kernel",
-    check_commands=[translations.PassiveCheck("kernel")],
-    translations={
-        "ctxt": translations.RenameTo("context_switches"),
-        "pgmajfault": translations.RenameTo("major_page_faults"),
-        "processes": translations.RenameTo("process_creations"),
-    },
-)
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
 UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 

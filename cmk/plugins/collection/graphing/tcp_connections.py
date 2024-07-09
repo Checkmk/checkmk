@@ -3,30 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, perfometers, Title, translations
-
-translation_tcp_conn_stats_datapower_tcp = translations.Translation(
-    name="tcp_conn_stats_datapower_tcp",
-    check_commands=[
-        translations.PassiveCheck("tcp_conn_stats"),
-        translations.PassiveCheck("datapower_tcp"),
-    ],
-    translations={
-        "BOUND": translations.RenameTo("tcp_bound"),
-        "CLOSED": translations.RenameTo("tcp_closed"),
-        "CLOSE_WAIT": translations.RenameTo("tcp_close_wait"),
-        "CLOSING": translations.RenameTo("tcp_closing"),
-        "ESTABLISHED": translations.RenameTo("tcp_established"),
-        "FIN_WAIT1": translations.RenameTo("tcp_fin_wait1"),
-        "FIN_WAIT2": translations.RenameTo("tcp_fin_wait2"),
-        "IDLE": translations.RenameTo("tcp_idle"),
-        "LAST_ACK": translations.RenameTo("tcp_last_ack"),
-        "LISTEN": translations.RenameTo("tcp_listen"),
-        "SYN_RECV": translations.RenameTo("tcp_syn_recv"),
-        "SYN_SENT": translations.RenameTo("tcp_syn_sent"),
-        "TIME_WAIT": translations.RenameTo("tcp_time_wait"),
-    },
-)
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
 metric_tcp_bound = metrics.Metric(
     name="tcp_bound",

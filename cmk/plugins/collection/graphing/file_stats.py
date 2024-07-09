@@ -3,26 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import metrics, perfometers, Title, translations
-
-translation_fileinfo = translations.Translation(
-    name="fileinfo",
-    check_commands=[translations.PassiveCheck("fileinfo")],
-    translations={"size": translations.RenameTo("file_size")},
-)
-
-translation_fileinfo_groups = translations.Translation(
-    name="fileinfo_groups",
-    check_commands=[translations.PassiveCheck("fileinfo_groups")],
-    translations={
-        "age_newest": translations.RenameTo("file_age_newest"),
-        "age_oldest": translations.RenameTo("file_age_oldest"),
-        "count": translations.RenameTo("file_count"),
-        "size": translations.RenameTo("total_file_size"),
-        "size_largest": translations.RenameTo("file_size_largest"),
-        "size_smallest": translations.RenameTo("file_size_smallest"),
-    },
-)
+from cmk.graphing.v1 import metrics, perfometers, Title
 
 UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))

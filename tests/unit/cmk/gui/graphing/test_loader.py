@@ -273,7 +273,6 @@ _SKIP_MODULES: Final[Sequence[str]] = [
     "cmk.plugins.checkmk.graphing.cmk_site_statistics",
     "cmk.plugins.checkmk.graphing.livestatus_status",
     "cmk.plugins.checkmk.graphing.mkeventd_status",
-    "cmk.plugins.collection.graphing.couchbase",
     "cmk.plugins.collection.graphing.cpu_threads",
     "cmk.plugins.collection.graphing.diskstat",
     "cmk.plugins.collection.graphing.docker",

@@ -6,8 +6,6 @@
 from cmk.graphing.v1 import graphs, metrics, Title
 
 UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
-UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
-UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 
 metric_mem_high_wat = metrics.Metric(
     name="mem_high_wat",
@@ -27,30 +25,6 @@ metric_memused_couchbase_bucket = metrics.Metric(
     unit=UNIT_BYTES,
     color=metrics.Color.LIGHT_GREEN,
 )
-metric_docs_fragmentation = metrics.Metric(
-    name="docs_fragmentation",
-    title=Title("Documents fragmentation"),
-    unit=UNIT_PERCENTAGE,
-    color=metrics.Color.GREEN,
-)
-metric_views_fragmentation = metrics.Metric(
-    name="views_fragmentation",
-    title=Title("Views fragmentation"),
-    unit=UNIT_PERCENTAGE,
-    color=metrics.Color.BLUE,
-)
-metric_vbuckets = metrics.Metric(
-    name="vbuckets",
-    title=Title("vBuckets"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.PURPLE,
-)
-metric_pending_vbuckets = metrics.Metric(
-    name="pending_vbuckets",
-    title=Title("Pending vBuckets"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.PURPLE,
-)
 
 graph_couchbase_bucket_memory = graphs.Graph(
     name="couchbase_bucket_memory",
@@ -59,13 +33,5 @@ graph_couchbase_bucket_memory = graphs.Graph(
     simple_lines=[
         "mem_low_wat",
         "mem_high_wat",
-    ],
-)
-graph_couchbase_bucket_fragmentation = graphs.Graph(
-    name="couchbase_bucket_fragmentation",
-    title=Title("Fragmentation"),
-    compound_lines=[
-        "docs_fragmentation",
-        "views_fragmentation",
     ],
 )

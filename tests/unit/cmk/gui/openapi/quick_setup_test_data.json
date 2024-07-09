@@ -183,7 +183,7 @@
                         {
                             "ident": "regions_to_monitor",
                             "required": true,
-                            "default_value": {},
+                            "default_value": [],
                             "parameter_form": {
                                 "type": "legacy_valuespec",
                                 "title": "Regions to monitor",
@@ -194,7 +194,7 @@
                     ]
                 },
                 "data": {
-                    "regions_to_monitor": {}
+                    "regions_to_monitor": []
                 },
                 "validation": []
             }
@@ -218,15 +218,15 @@
                             "default_value": {
                                 "ce": [
                                     "none",
-                                    {}
+                                    null
                                 ],
                                 "route53": [
                                     "none",
-                                    {}
+                                    null
                                 ],
                                 "cloudfront": [
                                     "none",
-                                    {}
+                                    null
                                 ]
                             },
                             "parameter_form": {
@@ -240,7 +240,7 @@
                                         "required": true,
                                         "default_value": [
                                             "none",
-                                            {}
+                                            null
                                         ],
                                         "parameter_form": {
                                             "type": "cascading_single_choice",
@@ -251,7 +251,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -281,7 +281,7 @@
                                         "required": true,
                                         "default_value": [
                                             "none",
-                                            {}
+                                            null
                                         ],
                                         "parameter_form": {
                                             "type": "cascading_single_choice",
@@ -292,7 +292,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -322,7 +322,7 @@
                                         "required": true,
                                         "default_value": [
                                             "none",
-                                            {}
+                                            null
                                         ],
                                         "parameter_form": {
                                             "type": "cascading_single_choice",
@@ -333,7 +333,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -666,7 +666,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -901,7 +901,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -1136,7 +1136,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -1183,7 +1183,7 @@
                                                             {
                                                                 "ident": "requests",
                                                                 "required": false,
-                                                                "default_value": {},
+                                                                "default_value": null,
                                                                 "parameter_form": {
                                                                     "type": "legacy_valuespec",
                                                                     "title": "Request metrics",
@@ -1296,7 +1296,7 @@
                                                             {
                                                                 "ident": "requests",
                                                                 "required": false,
-                                                                "default_value": {},
+                                                                "default_value": null,
                                                                 "parameter_form": {
                                                                     "type": "legacy_valuespec",
                                                                     "title": "Request metrics",
@@ -1370,7 +1370,7 @@
                                                             {
                                                                 "ident": "requests",
                                                                 "required": false,
-                                                                "default_value": {},
+                                                                "default_value": null,
                                                                 "parameter_form": {
                                                                     "type": "legacy_valuespec",
                                                                     "title": "Request metrics",
@@ -1404,7 +1404,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -1639,7 +1639,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -1874,7 +1874,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -2109,7 +2109,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -2344,7 +2344,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -2477,7 +2477,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -2712,7 +2712,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -2759,7 +2759,7 @@
                                                             {
                                                                 "ident": "cloudfront",
                                                                 "required": false,
-                                                                "default_value": {},
+                                                                "default_value": null,
                                                                 "parameter_form": {
                                                                     "type": "legacy_valuespec",
                                                                     "title": "CloudFront WAFs",
@@ -2872,7 +2872,7 @@
                                                             {
                                                                 "ident": "cloudfront",
                                                                 "required": false,
-                                                                "default_value": {},
+                                                                "default_value": null,
                                                                 "parameter_form": {
                                                                     "type": "legacy_valuespec",
                                                                     "title": "CloudFront WAFs",
@@ -2946,7 +2946,7 @@
                                                             {
                                                                 "ident": "cloudfront",
                                                                 "required": false,
-                                                                "default_value": {},
+                                                                "default_value": null,
                                                                 "parameter_form": {
                                                                     "type": "legacy_valuespec",
                                                                     "title": "CloudFront WAFs",
@@ -2980,7 +2980,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -3215,7 +3215,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -3450,7 +3450,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -3685,7 +3685,7 @@
                                                 {
                                                     "name": "none",
                                                     "title": "Do not monitor service",
-                                                    "default_value": {},
+                                                    "default_value": null,
                                                     "parameter_form": {
                                                         "type": "legacy_valuespec",
                                                         "title": "",
@@ -3911,15 +3911,15 @@
                     "global_services": {
                         "ce": [
                             "none",
-                            {}
+                            null
                         ],
                         "route53": [
                             "none",
-                            {}
+                            null
                         ],
                         "cloudfront": [
                             "none",
-                            {}
+                            null
                         ]
                     },
                     "services": {

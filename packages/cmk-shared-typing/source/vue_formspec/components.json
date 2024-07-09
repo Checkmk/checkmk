@@ -42,10 +42,14 @@
         },
         "unit": {
           "type": "string"
+        },
+        "is_input_hint": {
+            "type": "boolean"
         }
       },
       "required": [
-        "type"
+        "type",
+        "is_input_hint"
       ],
       "allOf": [
         {

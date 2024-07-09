@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import auto, Enum
-from typing import Any, TypeVar
+from typing import Any
 
 DataForDisk = Any
 Value = Any
@@ -22,6 +22,3 @@ class DataOrigin(Enum):
 class VisitorOptions:
     # Depending on the origin, we will call the migrate function
     data_origin: DataOrigin
-
-
-ModelT = TypeVar("ModelT")

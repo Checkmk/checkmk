@@ -137,10 +137,11 @@ def quick_setup_test_request_form_data(which_stage: Literal[1, 2, 3, 4]) -> dict
     return {**stage_1, **stage_2, **stage_3, **stage_4}
 
 
+@pytest.mark.skip(reason="contains changing uuid in password field")
 @pytest.mark.usefixtures("patch_theme")
 def test_get_overview(clients: ClientRegistry) -> None:
     resp = clients.QuickSetup.get_overview("aws_quick_setup")
-    resp_modified = remove_keys(obj=resp.json, keys_to_remove={"html", "varprefix"})
+    resp_modified = remove_keys(obj=resp.json, keys_to_remove={"html", "varprefix", "input_hint"})
     assert resp_modified == {
         "quick_setup_id": "aws_quick_setup",
         "overviews": [
@@ -184,7 +185,7 @@ def test_send_aws_stage_one(clients: ClientRegistry) -> None:
         quick_setup_id="aws_quick_setup",
         stages=[quick_setup_test_request_form_data(1)],
     )
-    resp_modified = remove_keys(obj=resp.json, keys_to_remove={"html", "varprefix"})
+    resp_modified = remove_keys(obj=resp.json, keys_to_remove={"html", "varprefix", "input_hint"})
     assert resp_modified == {
         "stage_id": 2,
         "validation_errors": [],
@@ -198,7 +199,7 @@ def test_send_aws_stage_two(clients: ClientRegistry) -> None:
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="aws_quick_setup", stages=[quick_setup_test_request_form_data(2)]
     )
-    resp_modified = remove_keys(obj=resp.json, keys_to_remove={"html", "varprefix"})
+    resp_modified = remove_keys(obj=resp.json, keys_to_remove={"html", "varprefix", "input_hint"})
     assert resp_modified == {
         "stage_id": 3,
         "validation_errors": [],

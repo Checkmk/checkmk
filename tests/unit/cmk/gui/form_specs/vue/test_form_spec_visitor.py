@@ -12,12 +12,15 @@ from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
 from cmk.gui.form_specs.vue.type_defs import DataOrigin
 from cmk.gui.session import UserContext
 
-from cmk.rulesets.v1 import Message
+from cmk.rulesets.v1 import Message, Title
 from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
     DataSize,
     DefaultValue,
     DictElement,
     Dictionary,
+    FixedValue,
     FormSpec,
     SIMagnitude,
     String,
@@ -115,6 +118,52 @@ def test_validation(
             form_spec,
             "foo_field_id",
             DataOrigin.DISK,
+            do_validate=True,
+            value=value,
+        )
+
+        assert (not vue_app_config.validation) == valid
+
+
+@pytest.mark.parametrize(
+    "form_spec, value, valid",
+    [
+        (
+            CascadingSingleChoice(
+                elements=[
+                    CascadingSingleChoiceElement(
+                        title=Title("None"),
+                        name="none",
+                        parameter_form=FixedValue(value=None),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="regex",
+                        title=Title("Regex"),
+                        parameter_form=String(),
+                    ),
+                ]
+            ),
+            [
+                "regex",
+                "some_string",
+            ],
+            True,
+        ),
+    ],
+)
+def test_validation_frontend(
+    request_context: None,
+    patch_theme: None,
+    with_user: tuple[UserId, str],
+    form_spec: FormSpec,
+    value: Any,
+    valid: bool,
+) -> None:
+    with UserContext(with_user[0]):
+        vue_app_config = serialize_data_for_frontend(
+            form_spec,
+            "foo_field_id",
+            DataOrigin.FRONTEND,
             do_validate=True,
             value=value,
         )

@@ -21,7 +21,6 @@ UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_HERTZ = metrics.Unit(metrics.DecimalNotation("Hz"))
 UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""))
-UNIT_DECIBEL_MILLIVOLTS = metrics.Unit(metrics.DecimalNotation("dBmV"))
 UNIT_REVOLUTIONS_PER_MINUTE = metrics.Unit(metrics.DecimalNotation("rpm"), metrics.AutoPrecision(4))
 
 metric_uncommitted = metrics.Metric(
@@ -1130,12 +1129,6 @@ metric_signal_power_dbm = metrics.Metric(
     unit=UNIT_DECIBEL_MILLIWATTS,
     color=metrics.Color.DARK_CYAN,
 )
-metric_downstream_power = metrics.Metric(
-    name="downstream_power",
-    title=Title("Downstream power"),
-    unit=UNIT_DECIBEL_MILLIVOLTS,
-    color=metrics.Color.ORANGE,
-)
 metric_differential_current_ac = metrics.Metric(
     name="differential_current_ac",
     title=Title("Differential current AC"),
@@ -1237,12 +1230,6 @@ metric_port_temp_9 = metrics.Metric(
     title=Title("Temperature Lane 10"),
     unit=UNIT_DECIBEL_MILLIWATTS,
     color=metrics.Color.DARK_YELLOW,
-)
-metric_fan_perc = metrics.Metric(
-    name="fan_perc",
-    title=Title("Fan speed"),
-    unit=UNIT_PERCENTAGE,
-    color=metrics.Color.LIGHT_ORANGE,
 )
 metric_deferred_age = metrics.Metric(
     name="deferred_age",

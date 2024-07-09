@@ -276,7 +276,6 @@ _SKIP_MODULES: Final[Sequence[str]] = [
     "cmk.plugins.collection.graphing.diskstat",
     "cmk.plugins.collection.graphing.docker",
     "cmk.plugins.collection.graphing.emcvnx",
-    "cmk.plugins.collection.graphing.environment",
     "cmk.plugins.collection.graphing.fc",
     "cmk.plugins.collection.graphing.gpu",
     "cmk.plugins.collection.graphing.hop",

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, Title
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
 UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
@@ -12,6 +12,12 @@ metric_battery_capacity = metrics.Metric(
     title=Title("Battery capacity"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.DARK_PINK,
+)
+
+perfometer_battery_capacity = perfometers.Perfometer(
+    name="battery_capacity",
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100)),
+    segments=["battery_capacity"],
 )
 
 graph_battery_capacity = graphs.Graph(

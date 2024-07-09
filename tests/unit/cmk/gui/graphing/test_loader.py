@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import Counter
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Final, Literal
@@ -38,6 +39,28 @@ def test_graph_duplicates() -> None:
         if isinstance(p, (graphs.Graph, graphs.Bidirectional))
     }
     assert not set(graph_info).intersection(graph_names)
+
+
+def test_translations_to_be_standalone() -> None:
+    by_module: dict[str, Counter] = {}
+    for plugin_location, plugin in load_graphing_plugins().plugins.items():
+        counter = by_module.setdefault(plugin_location.module, Counter())
+        match plugin:
+            case translations.Translation():
+                counter.update(["translations"])
+            case _:
+                counter.update(["others"])
+    for module, counter in by_module.items():
+        if counter["translations"]:
+            assert not counter["rest"], (
+                f"The module {module!r} contains translations and other graphing plugins. Our"
+                " graphing modules are allowed to contain either translations or other plugins."
+            )
+        if counter["rest"]:
+            assert not counter["translations"], (
+                f"The module {module!r} contains translations and other graphing plugins. Our"
+                " graphing modules are allowed to contain either translations or other plugins."
+            )
 
 
 def _collect_metric_names_from_quantity(

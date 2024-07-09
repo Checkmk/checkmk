@@ -156,6 +156,13 @@ def _parameter_valuespec_jenkins_jobs():
                             ),
                         ),
                         (
+                            "not_built",
+                            MonitoringState(
+                                title=_("State when last build result is: module not built"),
+                                default_value=1,
+                            ),
+                        ),
+                        (
                             "none",
                             MonitoringState(
                                 title=_("State when build result is: running"),

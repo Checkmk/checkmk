@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-07-05 01:06+0000\n"
+"PO-Revision-Date: 2024-07-08 23:11+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -427,9 +427,9 @@ msgstr "%d Symbole und Aktionen"
 msgid "%d icons customized"
 msgstr "%d Icons angepasst"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d ignored HW/SW Inventory plug-ins found: %s"
-msgstr "%d ignorierte HW/SW-Inventur-Plugins gefunden: %s"
+msgstr "%d ignorierte Plugins der HW-/SW-Inventur gefunden: %s"
 
 #, python-format
 msgid "%d incompatible Werks have been acknowledged."
@@ -606,10 +606,6 @@ msgid "%s is parent of %s."
 msgstr "%s ist Parent von %s."
 
 #, python-format
-msgid "%s latency"
-msgstr "%s Latenz"
-
-#, python-format
 msgid "%s left in your Checkmk trial period"
 msgstr "%s in Ihrem Checkmk-Testzeitraum übrig"
 
@@ -666,28 +662,12 @@ msgid "%s on the exclusion list."
 msgstr "%s auf der Ausschlussliste."
 
 #, python-format
-msgid "%s operations"
-msgstr "%s Operationen"
-
-#, python-format
-msgid "%s other %s"
-msgstr "%s andere %s"
-
-#, python-format
 msgid "%s properties"
 msgstr "%s Eigenschaften"
 
 #, python-format
 msgid "%s rate"
 msgstr "%s-Rate"
-
-#, python-format
-msgid "%s read %s"
-msgstr "%s Lesen %s"
-
-#, python-format
-msgid "%s requests"
-msgstr "%s Anfragen"
 
 #, python-format
 msgid "%s resulting notifications"
@@ -706,16 +686,8 @@ msgid "%s this customer"
 msgstr "Diesen Kunden %s"
 
 #, python-format
-msgid "%s traffic"
-msgstr "%s Verkehr"
-
-#, python-format
 msgid "%s was stopped after %s at %s."
 msgstr "%s wurde nach %s um %s gestoppt."
-
-#, python-format
-msgid "%s write %s"
-msgstr "%s Schreiben %s"
 
 #, python-format
 msgid ""
@@ -1155,6 +1127,30 @@ msgstr "Vor 8 Tagen"
 
 msgid "802.3ad"
 msgstr "802.3ad"
+
+msgid "802.dot11a"
+msgstr ""
+
+msgid "802.dot11ac"
+msgstr ""
+
+msgid "802.dot11ax2_4"
+msgstr ""
+
+msgid "802.dot11ax5"
+msgstr ""
+
+msgid "802.dot11b"
+msgstr ""
+
+msgid "802.dot11g"
+msgstr ""
+
+msgid "802.dot11n2_4"
+msgstr ""
+
+msgid "802.dot11n5"
+msgstr ""
 
 #, no-python-format
 msgid "86% - 1.5 standard deviations"
@@ -5905,18 +5901,6 @@ msgstr "Anzahl der Dateien im Benachrichtigungs-Spooler"
 msgid "Amount of mails in queues"
 msgstr "Anzahl von Mails in den Mailqueues"
 
-msgid ""
-"Amount of time that the application of redo data on the standby database "
-"lags behind the primary database"
-msgstr ""
-"Zeit, welche die Anwendung von Redo-Daten auf die Standby-Datenbank nach der "
-"Primären Datenbank braucht"
-
-msgid ""
-"Amount of time that the replica server is lagging against the source server"
-msgstr ""
-"Zeitspanne, um die der Replikationsserver hinter dem Quellserver zurückliegt"
-
 msgid "An AWS region name such as 'eu-central-1'"
 msgstr "Name einer AWS-Region wie z.B. 'eu-central-1'"
 
@@ -5963,9 +5947,9 @@ msgstr "Ein Alias oder eine Beschreibung der Zeitperiode"
 msgid "An alias or description of this group."
 msgstr "Alias/Beschreibung der Gruppe."
 
-#, fuzzy, python-format
+#, python-format
 msgid "An connection error occurred: %s"
-msgstr "Es ist eine Ausnahme aufgetreten: %s"
+msgstr "Es ist ein Verbindungsfehler aufgetreten: %s"
 
 msgid "An empty value is not allowed here."
 msgstr "Leerer Wert ist hier nicht erlaubt."
@@ -9312,7 +9296,7 @@ msgid "Bytes uploaded"
 msgstr "Bytes hochgeladen"
 
 msgid "Bytes used by profiling bucket hash table"
-msgstr ""
+msgstr "Bytes, die durch die Analyse des Bucket Hash Table genutzt werden"
 
 msgid "Bytes used for cache upper levels"
 msgstr "Für Cache-Obergrenzen genutzte Bytes"
@@ -9367,6 +9351,70 @@ msgstr "Zu überwachende CCMS-Pfade"
 
 msgid "CIFS"
 msgstr "CIFS"
+
+#, fuzzy
+msgid "CIFS data read"
+msgstr "Gelesene Daten"
+
+#, fuzzy
+msgid "CIFS data written"
+msgstr "Geschriebene Daten"
+
+#, fuzzy
+msgid "CIFS latency"
+msgstr "IO-Latenz"
+
+#, fuzzy
+msgid "CIFS operations"
+msgstr "NFS Operationen"
+
+#, fuzzy
+msgid "CIFS other data"
+msgstr "ZFS Metadaten"
+
+#, fuzzy
+msgid "CIFS other latency"
+msgstr "Andere Latenz"
+
+#, fuzzy
+msgid "CIFS other ops"
+msgstr "%s andere %s"
+
+#, fuzzy
+msgid "CIFS read ios"
+msgstr "%s Lesen %s"
+
+#, fuzzy
+msgid "CIFS read latency"
+msgstr "Latenz beim Lesen der Festplatte"
+
+#, fuzzy
+msgid "CIFS read ops"
+msgstr "%s Lesen %s"
+
+#, fuzzy
+msgid "CIFS read throughput"
+msgstr "Lesedurchsatz"
+
+#, fuzzy
+msgid "CIFS traffic"
+msgstr "%s Verkehr"
+
+#, fuzzy
+msgid "CIFS write ios"
+msgstr "%s Schreiben %s"
+
+#, fuzzy
+msgid "CIFS write latency"
+msgstr "Latenz beim Schreiben der Festplatte"
+
+#, fuzzy
+msgid "CIFS write ops"
+msgstr "%s Schreiben %s"
+
+#, fuzzy
+msgid "CIFS write throughput"
+msgstr "schreibe den Durchsatz"
 
 msgid "CISCO Digital Optical Monitoring (DOM)"
 msgstr "CISCO Digital Optical Monitoring (DOM)"
@@ -9841,9 +9889,12 @@ msgstr "Kann Graphdefinitionen nicht berechnen: %s"
 
 msgid "Cannot change folder of rules managed by Quick setup."
 msgstr ""
+"Der Ordner der von Quick setup verwalteten Regeln kann nicht geändert werden."
 
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
+"Die Regelbedingungen der von Quick setup verwalteten Regeln können nicht "
+"geändert werden."
 
 #, python-format
 msgid "Cannot connect to event daemon via %s: %s"
@@ -9978,33 +10029,33 @@ msgstr "Kann %s von %s nicht laden: %s"
 msgid "Cannot load %s: %s"
 msgstr "Kann %s nicht laden: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Cannot load HW/SW Inventory history %s. Please remove the corrupted files."
 msgstr ""
-"Kann HW/SW-Inventory Einträge %s nicht laden. Bitte entfernen Sie die "
+"Kann Historie der HW-/SW-Inventur %s nicht laden. Bitte entfernen Sie die "
 "beschädigten Dateien."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Cannot load HW/SW Inventory history entries %s. Please remove the corrupted "
 "files."
 msgstr ""
-"Kann HW/SW-Inventory Einträge %s nicht laden. Bitte entfernen Sie die "
-"beschädigten Dateien."
+"Kann Historieneinträge der HW-/SW-Inventur %s nicht laden. Bitte entfernen "
+"Sie die beschädigten Dateien."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
 msgstr ""
-"Kann den HW/SW-Inventory Baum %s nicht laden. Bitte entfernen Sie die "
+"Kann den Baum der HW-/SW-Inventur %s nicht laden. Bitte entfernen Sie die "
 "beschädigte Datei."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
 msgstr ""
-"Kann den HW/SW-Inventory Baum %s nicht laden. Bitte entfernen Sie die "
-"beschädigte Dateien."
+"Kann die Bäume der HW-/SW-Inventur %s nicht laden. Bitte entfernen Sie die "
+"beschädigten Dateien."
 
 #, python-format
 msgid ""
@@ -11679,6 +11730,10 @@ msgstr "Leere Logdateien"
 msgid "Clear logs by deleting all stored messages"
 msgstr "Log-Datei durch Löschen aller gespeicherten Nachrichten bereinigen"
 
+#, fuzzy
+msgid "Cleared"
+msgstr "'Cleared' Status"
+
 msgid "Click for instant reload."
 msgstr "Klicken Sie zum sofortigen Reload."
 
@@ -12472,6 +12527,8 @@ msgstr "Bedingungen, damit diese Regel greift"
 
 msgid "Conditions of rules managed by Quick setup cannot be changed."
 msgstr ""
+"Regelbedingungen, die von Quick setup verwaltet werden, können nicht "
+"geändert werden."
 
 msgid "Conference Allocation Latency"
 msgstr "Latenz der Bereitstellung von Konferenzen"
@@ -12557,9 +12614,8 @@ msgstr "Konfiguration von bestimmten Ereignisprotokollen"
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Konfiguration von Monitoring-Agenten für Linux, Windows und Unix"
 
-#, fuzzy
 msgid "Configuration of the Checkmk hardware- and software inventory system"
-msgstr "Konfiguration der Checkmk Hardware/Software-Inventur"
+msgstr "Konfiguration des Checkmk Hardware- und Software-Inventursystems"
 
 msgid "Configuration of the Datadog special agent."
 msgstr "Konfiguration des Datadog-Spezialagenten."
@@ -12647,9 +12703,8 @@ msgstr "Konfiguriere forcierte Checks, ohne die Service-Erkennung zu benutzen"
 msgid "Configure grouping of interfaces"
 msgstr "Konfiguriere die Gruppierung von Interfaces"
 
-#, fuzzy
 msgid "Configure host & region"
-msgstr "Einstellungen"
+msgstr "Host & Region konfigurieren"
 
 #, no-python-format
 msgid ""
@@ -12693,9 +12748,8 @@ msgstr "Proxy-Server Gebrauch konfigurieren"
 msgid "Configure restrictions manually"
 msgstr "Einschränkungen manuell konfigurieren"
 
-#, fuzzy
 msgid "Configure services to monitor"
-msgstr "Zu überwachende Azure-Dienste"
+msgstr "Zu überwachende Dienste konfigurieren"
 
 msgid "Configure sidebar"
 msgstr "Konfiguriere Seitenleiste"
@@ -12942,7 +12996,7 @@ msgstr "Konfigurierte Parameter der Zeitperiode"
 
 #, python-format
 msgid "Configured with %s Quick setup"
-msgstr ""
+msgstr "Mit %s Quick setup konfiguriert"
 
 msgid ""
 "Configures the number of available filters in the network topology view."
@@ -13026,9 +13080,6 @@ msgstr "Bestätige Merkmaländerung"
 
 msgid "Confirmed renewal"
 msgstr "Bestätigte Erneuerung"
-
-msgid "Connect"
-msgstr "Verbindungsaufbau"
 
 msgid "Connect Checkmk with your InfluxDB to send metrics."
 msgstr "Verbinden Sie Checkmk mit Ihrer InfluxDB, um Metriken zu senden."
@@ -15058,6 +15109,10 @@ msgstr "DEB-Paketierung"
 msgid "DELETE"
 msgstr "DELETE"
 
+#, fuzzy
+msgid "DELETE requests"
+msgstr "Anfragen"
+
 msgid "DHCP"
 msgstr "DHCP"
 
@@ -15261,7 +15316,7 @@ msgstr ""
 "a> definieren."
 
 msgid "Dashlet too short to render graph"
-msgstr ""
+msgstr "Dashlet ist zu kurz für die Darstellung des Graphs"
 
 #, python-format
 msgid ""
@@ -15566,7 +15621,6 @@ msgstr "Datumsbereich"
 msgid "Date sent"
 msgstr "Gesendetes Datum"
 
-#, fuzzy
 msgid "Date/time"
 msgstr "Datum/Zeit"
 
@@ -16795,9 +16849,8 @@ msgstr "Checkmk CUPS Queues Plugin verteilen"
 msgid "Deploy the Checkmk EMC ScaleIO plug-in"
 msgstr "Checkmk EMC ScaleIO Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the Checkmk HW/SW Inventory plug-in"
-msgstr "Checkmk Inventory Plugin verteilen"
+msgstr "Plugin der Checkmk HW-/SW-Inventur verteilen"
 
 msgid "Deploy the Checkmk object counts plug-in"
 msgstr "Checkmk-Objektzählungs-Plugin verteilen"
@@ -16894,9 +16947,8 @@ msgstr "Verteilung"
 msgid "Deprecated"
 msgstr "Veraltet"
 
-#, fuzzy
 msgid "Deprecated HW/SW Inventory plug-ins"
-msgstr "Veraltete HW/SW-Inventar-Plugins"
+msgstr "Veraltete Plugins der HW-/SW-Inventur"
 
 msgid "Deprecated check plug-ins"
 msgstr "Veraltete Check-Plugins"
@@ -17999,9 +18051,8 @@ msgstr "Konfiguration des verteilten Monitorings"
 msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "Verteiltes Monitoring mit Hilfe mehrerer Checkmk-Instanzen"
 
-#, fuzzy
 msgid "Do HW/SW Inventory"
-msgstr "HW/SW-Inventur"
+msgstr "HW-/SW-Inventur ausführen"
 
 msgid "Do a full service scan"
 msgstr "Führe einen vollständigen Service-Scan durch"
@@ -18232,9 +18283,8 @@ msgstr "Checkmk CUPS Queues Plugin nicht verteilen"
 msgid "Do not deploy the Checkmk EMC ScaleIO plug-in"
 msgstr "Checkmk EMC ScaleIO Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Checkmk HW/SW Inventory plug-in"
-msgstr "Checkmk Inventory Plugin nicht verteilen"
+msgstr "Plugin der Checkmk HW-/SW-Inventur nicht verteilen"
 
 msgid "Do not deploy the Checkmk site objects plug-in"
 msgstr "Plugin für die Checkmk-Instanzobjekte nicht verteilen"
@@ -18659,9 +18709,8 @@ msgstr "DotNet (.Net) Runtime Speicher-Level"
 msgid "Double Integer (DINT)"
 msgstr "Doppelte Ganzzahl (DINT)"
 
-#, fuzzy
 msgid "Double check your configuration"
-msgstr "Remote-Konfiguration deaktivieren"
+msgstr "Überprüfen Sie Ihre Konfiguration"
 
 msgid "Double-click to grow further"
 msgstr "Doppelklick für weiteres Wachstum"
@@ -18975,7 +19024,6 @@ msgstr ""
 "gesendet. Wenn Sie diesen Wert niedriger als den Checkintervall des Hosts "
 "einstellen, werden Protokolle fehlen. "
 
-#, fuzzy
 msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
@@ -18993,8 +19041,8 @@ msgstr ""
 "normalerweise gelöscht. Es gibt allerdings auch Fälle in denen Dateien nur "
 "durch manuelles Löschen entfernt werden, z.B. wenn Sie einen Host von einer "
 "Instanz zu einer anderen verschieben oder einen Host über die "
-"Konfigurationsdateien direkt löschen.<br>Messwerte und HW/SW-Inventur-"
-"Archive werden beim Löschen eines Hosts nicht automatisch gelöscht. Diese "
+"Konfigurationsdateien direkt löschen.<br>Messwerte und Archive der HW-/SW-"
+"Inventur werden beim Löschen eines Hosts nicht automatisch gelöscht. Diese "
 "werden nur automatisch nach der konfigurierten Zeit gelöscht, wenn Sie diese "
 "Option konfigurieren."
 
@@ -19720,6 +19768,8 @@ msgstr ""
 
 msgid "Either increase the dashlet height or disable the graph legend."
 msgstr ""
+"Vergrößern Sie entweder die Höhe des Dashlets oder deaktivieren Sie die "
+"Graphbeschriftung."
 
 msgid ""
 "Either the minimum or maximum allowed value must be configured, otherwise "
@@ -19816,7 +19866,7 @@ msgstr "Elektrische Energie"
 msgid "Electrical power"
 msgstr "Elektrische Leistung"
 
-#, no-python-format
+#, python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Elektrische Spannung in % des Normwertes"
 
@@ -21046,9 +21096,9 @@ msgstr "Ausnahme"
 msgid "Exception"
 msgstr "Ausnahme"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Exception (Crash ID: %s): %s"
-msgstr "Exception im Symbol '%s': %s"
+msgstr "Exception (Absturz-ID: %s): %s"
 
 #, python-format
 msgid "Exception during element refresh (element '%s')"
@@ -21648,6 +21698,70 @@ msgstr "FC Ports"
 
 msgid "FCP"
 msgstr "FCP"
+
+#, fuzzy
+msgid "FCP data read"
+msgstr "Gelesene Daten"
+
+#, fuzzy
+msgid "FCP data written"
+msgstr "Geschriebene Daten"
+
+#, fuzzy
+msgid "FCP latency"
+msgstr "%s Latenz"
+
+#, fuzzy
+msgid "FCP operations"
+msgstr "NFS Operationen"
+
+#, fuzzy
+msgid "FCP other data"
+msgstr "Leistungsdaten"
+
+#, fuzzy
+msgid "FCP other latency"
+msgstr "Andere Latenz"
+
+#, fuzzy
+msgid "FCP other ops"
+msgstr "%s andere %s"
+
+#, fuzzy
+msgid "FCP read ios"
+msgstr "%s Lesen %s"
+
+#, fuzzy
+msgid "FCP read latency"
+msgstr "Latenz beim Lesen der Festplatte"
+
+#, fuzzy
+msgid "FCP read ops"
+msgstr "%s Lesen %s"
+
+#, fuzzy
+msgid "FCP read throughput"
+msgstr "Lesedurchsatz"
+
+#, fuzzy
+msgid "FCP traffic"
+msgstr "%s Verkehr"
+
+#, fuzzy
+msgid "FCP write ios"
+msgstr "%s Schreiben %s"
+
+#, fuzzy
+msgid "FCP write latency"
+msgstr "Latenz beim Schreiben der Festplatte"
+
+#, fuzzy
+msgid "FCP write ops"
+msgstr "%s Schreiben %s"
+
+#, fuzzy
+msgid "FCP write throughput"
+msgstr "schreibe den Durchsatz"
 
 msgid "FGPA utilization"
 msgstr "FPGA-Auslastung"
@@ -23612,6 +23726,10 @@ msgstr "GCP/Redis Replication Lag"
 msgid "GET"
 msgstr "GET"
 
+#, fuzzy
+msgid "GET requests"
+msgstr "Anfragen"
+
 msgid "GET/POST variables of this page"
 msgstr "GET/POST-Variablen auf dieser Seite"
 
@@ -24301,6 +24419,10 @@ msgstr "HAproxy Server Status"
 msgid "HEAD"
 msgstr "HEAD"
 
+#, fuzzy
+msgid "HEAD requests"
+msgstr "Anfragen"
+
 msgid "HELP"
 msgstr "HILFE"
 
@@ -24470,21 +24592,17 @@ msgstr "HW-Informationen"
 msgid "HW containers"
 msgstr "HW-Container"
 
-#, fuzzy
 msgid "HW/SW Inventory"
-msgstr "HW/SW-Inventur"
+msgstr "HW-/SW-Inventur"
 
-#, fuzzy
 msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
-msgstr "Hardware/Software-Inventur (Linux, Windows, Solaris, AIX)"
+msgstr "HW-/SW-Inventur (Linux, Windows, Solaris, AIX)"
 
-#, fuzzy
 msgid "HW/SW Inventory history"
-msgstr "Inventur-Geschichte von Host"
+msgstr "Historie der HW-/SW-Inventur"
 
-#, fuzzy
 msgid "HW/SW Inventory rules"
-msgstr "HW/SW-Inventur-Regeln"
+msgstr "Regeln der HW-/SW-Inventur"
 
 msgid "Half closed connections"
 msgstr "Halbgeschlossene Verbindungen"
@@ -25947,9 +26065,8 @@ msgstr "Hop 19 Umlauf-Standardabweichung"
 msgid "Hop 2 packet loss"
 msgstr "Hop 2 Paketverlust"
 
-#, fuzzy
 msgid "Hop 2 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 2 Antwortzeit"
 
 msgid "Hop 2 round trip average"
 msgstr "Hop 2 durchschnittlicher Umlauf"
@@ -25966,9 +26083,8 @@ msgstr "Hop 2 Umlauf-Standardabweichung"
 msgid "Hop 20 packet loss"
 msgstr "Hop 20 Paketverlust"
 
-#, fuzzy
 msgid "Hop 20 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 20 Antwortzeit"
 
 msgid "Hop 20 round trip average"
 msgstr "Hop 20 durchschnittlicher Umlauf"
@@ -25985,9 +26101,8 @@ msgstr "Hop 20 Umlauf-Standardabweichung"
 msgid "Hop 21 packet loss"
 msgstr "Hop 21 Paketverlust"
 
-#, fuzzy
 msgid "Hop 21 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 21 Antwortzeit"
 
 msgid "Hop 21 round trip average"
 msgstr "Hop 21 durchschnittlicher Umlauf"
@@ -26004,9 +26119,8 @@ msgstr "Hop 21 Umlauf-Standardabweichung"
 msgid "Hop 22 packet loss"
 msgstr "Hop 22 Paketverlust"
 
-#, fuzzy
 msgid "Hop 22 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 22 Antwortzeit"
 
 msgid "Hop 22 round trip average"
 msgstr "Hop 22 durchschnittlicher Umlauf"
@@ -26023,9 +26137,8 @@ msgstr "Hop 22 Umlauf-Standardabweichung"
 msgid "Hop 23 packet loss"
 msgstr "Hop 23 Paketverlust"
 
-#, fuzzy
 msgid "Hop 23 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 23 Antwortzeit"
 
 msgid "Hop 23 round trip average"
 msgstr "Hop 23 durchschnittlicher Umlauf"
@@ -26042,9 +26155,8 @@ msgstr "Hop 23 Umlauf-Standardabweichung"
 msgid "Hop 24 packet loss"
 msgstr "Hop 24 Paketverlust"
 
-#, fuzzy
 msgid "Hop 24 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 24 Antwortzeit"
 
 msgid "Hop 24 round trip average"
 msgstr "Hop 24 durchschnittlicher Umlauf"
@@ -26061,9 +26173,8 @@ msgstr "Hop 24 Umlauf-Standardabweichung"
 msgid "Hop 25 packet loss"
 msgstr "Hop 25 Paketverlust"
 
-#, fuzzy
 msgid "Hop 25 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 25 Antwortzeit"
 
 msgid "Hop 25 round trip average"
 msgstr "Hop 25 durchschnittlicher Umlauf"
@@ -26080,9 +26191,8 @@ msgstr "Hop 25 Umlauf-Standardabweichung"
 msgid "Hop 26 packet loss"
 msgstr "Hop 26 Paketverlust"
 
-#, fuzzy
 msgid "Hop 26 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 26 Antwortzeit"
 
 msgid "Hop 26 round trip average"
 msgstr "Hop 26 durchschnittlicher Umlauf"
@@ -26099,9 +26209,8 @@ msgstr "Hop 26 Umlauf-Standardabweichung"
 msgid "Hop 27 packet loss"
 msgstr "Hop 27 Paketverlust"
 
-#, fuzzy
 msgid "Hop 27 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 27 Antwortzeit"
 
 msgid "Hop 27 round trip average"
 msgstr "Hop 27 durchschnittlicher Umlauf"
@@ -26118,9 +26227,8 @@ msgstr "Hop 27 Umlauf-Standardabweichung"
 msgid "Hop 28 packet loss"
 msgstr "Hop 28 Paketverlust"
 
-#, fuzzy
 msgid "Hop 28 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 28 Antwortzeit"
 
 msgid "Hop 28 round trip average"
 msgstr "Hop 28 durchschnittlicher Umlauf"
@@ -26137,9 +26245,8 @@ msgstr "Hop 28 Umlauf-Standardabweichung"
 msgid "Hop 29 packet loss"
 msgstr "Hop 29 Paketverlust"
 
-#, fuzzy
 msgid "Hop 29 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 29 Antwortzeit"
 
 msgid "Hop 29 round trip average"
 msgstr "Hop 29 durchschnittlicher Umlauf"
@@ -26156,9 +26263,8 @@ msgstr "Hop 29 Umlauf-Standardabweichung"
 msgid "Hop 3 packet loss"
 msgstr "Hop 3 Paketverlust"
 
-#, fuzzy
 msgid "Hop 3 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 3 Antwortzeit"
 
 msgid "Hop 3 round trip average"
 msgstr "Hop 3 durchschnittlicher Umlauf"
@@ -26175,9 +26281,8 @@ msgstr "Hop 3 Umlauf-Standardabweichung"
 msgid "Hop 30 packet loss"
 msgstr "Hop 30 Paketverlust"
 
-#, fuzzy
 msgid "Hop 30 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 30 Antwortzeit"
 
 msgid "Hop 30 round trip average"
 msgstr "Hop 30 durchschnittlicher Umlauf"
@@ -26194,9 +26299,8 @@ msgstr "Hop 30 Umlauf-Standardabweichung"
 msgid "Hop 31 packet loss"
 msgstr "Hop 31 Paketverlust"
 
-#, fuzzy
 msgid "Hop 31 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 31 Antwortzeit"
 
 msgid "Hop 31 round trip average"
 msgstr "Hop 31 durchschnittlicher Umlauf"
@@ -26213,9 +26317,8 @@ msgstr "Hop 31 Umlauf-Standardabweichung"
 msgid "Hop 32 packet loss"
 msgstr "Hop 32 Paketverlust"
 
-#, fuzzy
 msgid "Hop 32 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 32 Antwortzeit"
 
 msgid "Hop 32 round trip average"
 msgstr "Hop 32 durchschnittlicher Umlauf"
@@ -26232,9 +26335,8 @@ msgstr "Hop 32 Umlauf-Standardabweichung"
 msgid "Hop 33 packet loss"
 msgstr "Hop 33 Paketverlust"
 
-#, fuzzy
 msgid "Hop 33 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 33 Antwortzeit"
 
 msgid "Hop 33 round trip average"
 msgstr "Hop 33 durchschnittlicher Umlauf"
@@ -26251,9 +26353,8 @@ msgstr "Hop 33 Umlauf-Standardabweichung"
 msgid "Hop 34 packet loss"
 msgstr "Hop 34 Paketverlust"
 
-#, fuzzy
 msgid "Hop 34 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 34 Antwortzeit"
 
 msgid "Hop 34 round trip average"
 msgstr "Hop 34 durchschnittlicher Umlauf"
@@ -26270,9 +26371,8 @@ msgstr "Hop 34 Umlauf-Standardabweichung"
 msgid "Hop 35 packet loss"
 msgstr "Hop 35 Paketverlust"
 
-#, fuzzy
 msgid "Hop 35 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 35 Antwortzeit"
 
 msgid "Hop 35 round trip average"
 msgstr "Hop 35 durchschnittlicher Umlauf"
@@ -26289,9 +26389,8 @@ msgstr "Hop 35 Umlauf-Standardabweichung"
 msgid "Hop 36 packet loss"
 msgstr "Hop 36 Paketverlust"
 
-#, fuzzy
 msgid "Hop 36 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 36 Antwortzeit"
 
 msgid "Hop 36 round trip average"
 msgstr "Hop 36 durchschnittlicher Umlauf"
@@ -26308,9 +26407,8 @@ msgstr "Hop 36 Umlauf-Standardabweichung"
 msgid "Hop 37 packet loss"
 msgstr "Hop 37 Paketverlust"
 
-#, fuzzy
 msgid "Hop 37 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 37 Antwortzeit"
 
 msgid "Hop 37 round trip average"
 msgstr "Hop 37 durchschnittlicher Umlauf"
@@ -26327,9 +26425,8 @@ msgstr "Hop 37 Umlauf-Standardabweichung"
 msgid "Hop 38 packet loss"
 msgstr "Hop 38 Paketverlust"
 
-#, fuzzy
 msgid "Hop 38 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 38 Antwortzeit"
 
 msgid "Hop 38 round trip average"
 msgstr "Hop 38 durchschnittlicher Umlauf"
@@ -26346,9 +26443,8 @@ msgstr "Hop 38 Umlauf-Standardabweichung"
 msgid "Hop 39 packet loss"
 msgstr "Hop 39 Paketverlust"
 
-#, fuzzy
 msgid "Hop 39 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 39 Antwortzeit"
 
 msgid "Hop 39 round trip average"
 msgstr "Hop 39 durchschnittlicher Umlauf"
@@ -26365,9 +26461,8 @@ msgstr "Hop 39 Umlauf-Standardabweichung"
 msgid "Hop 4 packet loss"
 msgstr "Hop 4 Paketverlust"
 
-#, fuzzy
 msgid "Hop 4 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 4 Antwortzeit"
 
 msgid "Hop 4 round trip average"
 msgstr "Hop 4 durchschnittlicher Umlauf"
@@ -26384,9 +26479,8 @@ msgstr "Hop 4 Umlauf-Standardabweichung"
 msgid "Hop 40 packet loss"
 msgstr "Hop 40 Paketverlust"
 
-#, fuzzy
 msgid "Hop 40 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 40 Antwortzeit"
 
 msgid "Hop 40 round trip average"
 msgstr "Hop 40 durchschnittlicher Umlauf"
@@ -26403,9 +26497,8 @@ msgstr "Hop 40 Umlauf-Standardabweichung"
 msgid "Hop 41 packet loss"
 msgstr "Hop 41 Paketverlust"
 
-#, fuzzy
 msgid "Hop 41 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 41 Antwortzeit"
 
 msgid "Hop 41 round trip average"
 msgstr "Hop 41 durchschnittlicher Umlauf"
@@ -26422,9 +26515,8 @@ msgstr "Hop 41 Umlauf-Standardabweichung"
 msgid "Hop 42 packet loss"
 msgstr "Hop 42 Paketverlust"
 
-#, fuzzy
 msgid "Hop 42 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 42 Antwortzeit"
 
 msgid "Hop 42 round trip average"
 msgstr "Hop 42 durchschnittlicher Umlauf"
@@ -26441,9 +26533,8 @@ msgstr "Hop 42 Umlauf-Standardabweichung"
 msgid "Hop 43 packet loss"
 msgstr "Hop 43 Paketverlust"
 
-#, fuzzy
 msgid "Hop 43 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 43 Antwortzeit"
 
 msgid "Hop 43 round trip average"
 msgstr "Hop 43 durchschnittlicher Umlauf"
@@ -26460,9 +26551,8 @@ msgstr "Hop 43 Umlauf-Standardabweichung"
 msgid "Hop 44 packet loss"
 msgstr "Hop 44 Paketverlust"
 
-#, fuzzy
 msgid "Hop 44 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 44 Antwortzeit"
 
 msgid "Hop 44 round trip average"
 msgstr "Hop 44 durchschnittlicher Umlauf"
@@ -26479,9 +26569,8 @@ msgstr "Hop 44 Umlauf-Standardabweichung"
 msgid "Hop 5 packet loss"
 msgstr "Hop 5 Paketverlust"
 
-#, fuzzy
 msgid "Hop 5 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 5 Antwortzeit"
 
 msgid "Hop 5 round trip average"
 msgstr "Hop 5 durchschnittlicher Umlauf"
@@ -26498,9 +26587,8 @@ msgstr "Hop 5 Umlauf-Standardabweichung"
 msgid "Hop 6 packet loss"
 msgstr "Hop 6 Paketverlust"
 
-#, fuzzy
 msgid "Hop 6 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 6 Antwortzeit"
 
 msgid "Hop 6 round trip average"
 msgstr "Hop 6 durchschnittlicher Umlauf"
@@ -26517,9 +26605,8 @@ msgstr "Hop 6 Umlauf-Standardabweichung"
 msgid "Hop 7 packet loss"
 msgstr "Hop 7 Paketverlust"
 
-#, fuzzy
 msgid "Hop 7 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 7 Antwortzeit"
 
 msgid "Hop 7 round trip average"
 msgstr "Hop 7 durchschnittlicher Umlauf"
@@ -26536,9 +26623,8 @@ msgstr "Hop 7 Umlauf-Standardabweichung"
 msgid "Hop 8 packet loss"
 msgstr "Hop 8 Paketverlust"
 
-#, fuzzy
 msgid "Hop 8 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 8 Antwortzeit"
 
 msgid "Hop 8 round trip average"
 msgstr "Hop 8 durchschnittlicher Umlauf"
@@ -26555,9 +26641,8 @@ msgstr "Hop 8 Umlauf-Standardabweichung"
 msgid "Hop 9 packet loss"
 msgstr "Hop 9 Paketverlust"
 
-#, fuzzy
 msgid "Hop 9 response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Hop 9 Antwortzeit"
 
 msgid "Hop 9 round trip average"
 msgstr "Hop 9 durchschnittlicher Umlauf"
@@ -26571,9 +26656,8 @@ msgstr "Hop 9 minimaler Umlauf"
 msgid "Hop 9 round trip standard devation"
 msgstr "Hop 9 Umlauf-Standardabweichung"
 
-#, fuzzy
 msgid "Hop response time"
-msgstr "Antwortzeiten des Hops"
+msgstr "Antwortzeit des Hops"
 
 msgid "Hop response times"
 msgstr "Antwortzeiten des Hops"
@@ -26919,7 +27003,6 @@ msgstr "Der Host hat das Tag <b>%s</b>"
 msgid "Host hover menu shown in BI visualization"
 msgstr "In BI-Visualisierung angezeigtes Host-Hover-Menü"
 
-#, fuzzy
 msgid "Host hover menu shown in topology visualization"
 msgstr "In Topologie-Visualisierung angezeigtes Host-Hover-Menü"
 
@@ -27811,35 +27894,29 @@ msgstr ""
 msgid "IP address of remote Event Console"
 msgstr "IP-Adresse der Remote Event Console"
 
-#, fuzzy
 msgid "IP address of the Spectrum server receiving the SNMP trap"
-msgstr "IP-Adresse des Spectrumservers, der die SNMP-Traps empfangen soll"
+msgstr "IP-Adresse des Spectrum-Servers, der die SNMP-Traps empfängt"
 
-#, fuzzy
 msgid "IP address of tunnel endpoint"
 msgstr "IP-Adresse des Tunnelendpunkts"
 
 msgid "IP address or FQDN of JVM webserver"
 msgstr "IP-Adresse oder FQDN des JVM-Webservers"
 
-#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "IP-Adresse oder Name des Tunnelendpunkts"
 
 msgid "IP addresses"
 msgstr "IP-Adressen"
 
-#, fuzzy
 msgid "IP network"
 msgstr "IP-Netzwerk"
 
-#, fuzzy
 msgid "IP prefix"
 msgstr "IP-Präfix"
 
-#, fuzzy
 msgid "IP range"
-msgstr "Zeitspanne"
+msgstr "IP-Bereich"
 
 msgid "IP ranges to exclude"
 msgstr "Auszuschließende IP-Bereiche"
@@ -27927,7 +28004,6 @@ msgstr "IPv4-Adresse"
 msgid "IPv4 only"
 msgstr "Nur IPv4"
 
-#, fuzzy
 msgid "IPv4 subnet"
 msgstr "IPv4-Subnetz"
 
@@ -27952,12 +28028,60 @@ msgstr "Via IPv6 verarbeitete Bytes"
 msgid "IPv6 requests"
 msgstr "IPv6-Anfragen"
 
-#, fuzzy
 msgid "IPv6 subnet"
 msgstr "IPv6-Subnetz"
 
 msgid "ISC DHCP-Daemon (Linux)"
 msgstr "ISC DHCP-Daemon (Linux)"
+
+#, fuzzy
+msgid "ISCSI data read"
+msgstr "Gelesene Daten"
+
+#, fuzzy
+msgid "ISCSI data written"
+msgstr "Geschriebene Daten"
+
+msgid "ISCSI other data"
+msgstr ""
+
+#, fuzzy
+msgid "ISCSI other latency"
+msgstr "Andere Latenz"
+
+#, fuzzy
+msgid "ISCSI other ops"
+msgstr "%s andere %s"
+
+msgid "ISCSI read ios"
+msgstr ""
+
+#, fuzzy
+msgid "ISCSI read latency"
+msgstr "Latenz beim Lesen der Festplatte"
+
+msgid "ISCSI read ops"
+msgstr ""
+
+#, fuzzy
+msgid "ISCSI read throughput"
+msgstr "Lesedurchsatz"
+
+#, fuzzy
+msgid "ISCSI write ios"
+msgstr "%s Schreiben %s"
+
+#, fuzzy
+msgid "ISCSI write latency"
+msgstr "Latenz beim Schreiben der Festplatte"
+
+#, fuzzy
+msgid "ISCSI write ops"
+msgstr "%s Schreiben %s"
+
+#, fuzzy
+msgid "ISCSI write throughput"
+msgstr "schreibe den Durchsatz"
 
 msgid "IT infrastructure efficiency"
 msgstr "Effizienz der IT-Infrastruktur"
@@ -28039,7 +28163,6 @@ msgstr ""
 "Unterordner, also verwenden Sie dies mit Bedacht in tief verschachtelten "
 "Dateisystemen."
 
-#, fuzzy
 msgid ""
 "If Checkmk is unable to notify users about problems, the site will warn "
 "about this situation very visibly inside the UI (both in the tactical "
@@ -28047,13 +28170,13 @@ msgid ""
 "Users with this permission will only see failed notifications that occured "
 "within the last 24 hours."
 msgstr ""
-"Wenn Checkmk Benutzer nicht über Probleme informieren kann, wird in der "
-"Oberfläche deutlich darauf hingewiesen (sowohl in der Gesamtübersicht als "
-"auch im Dashboard). Dies betrifft nur Benutzer mit entsprechender "
-"Berechtigung. Benutzer mit dieser Berechtigung sehen nur fehlgeschlagene "
-"Benachrichtigungen die innerhalb der letzten 24 Stunden aufgetreten sind."
+"Wenn Checkmk nicht in der Lage ist, Benutzer über Probleme zu "
+"benachrichtigen, warnt die Instanz in der Benutzeroberfläche (sowohl in der "
+"taktischen Übersicht als auch im Dashboard) deutlich sichtbar vor dieser "
+"Situation. Dies betrifft nur Benutzer mit dieser Berechtigung. Benutzer mit "
+"dieser Berechtigung sehen nur fehlgeschlagene Benachrichtigungen, die "
+"innerhalb der letzten 24 Stunden aufgetreten sind."
 
-#, fuzzy
 msgid ""
 "If Checkmk is unable to notify users about problems, the site will warn "
 "about this situation very visibly inside the UI (both in the tactical "
@@ -28063,13 +28186,14 @@ msgid ""
 "mode=edit_configvar&varname=failed_notification_horizon\">Failed "
 "notification horizon</a>."
 msgstr ""
-"Wenn Checkmk Benutzer nicht über Probleme informieren kann, wird in der "
-"Oberfläche deutlich darauf hingewiesen (sowohl in der Gesamtübersicht als "
-"auch im Dashboard). Dies betrifft nur Benutzer mit entsprechender "
-"Berechtigung. Benutzer mit dieser Berechtigung sehen fehlgeschlagene "
-"Benachrichtigungen, die zwischen jetzt und dem konfigurierten <a href=\"wato."
-"py?mode=edit_configvar&varname=failed_notification_horizon\">Zeitraum "
-"fehlgeschlagener Benachrichtigungen</a> aufgetreten sind."
+"Wenn Checkmk nicht in der Lage ist, Benutzer über Probleme zu "
+"benachrichtigen, warnt die Instanz in der Benutzeroberfläche (sowohl in der "
+"taktischen Übersicht als auch im Dashboard) deutlich sichtbar vor dieser "
+"Situation. Dies betrifft nur Benutzer mit dieser Berechtigung. Benutzer mit "
+"dieser Berechtigung sehen fehlgeschlagene Benachrichtigungen zwischen jetzt "
+"und dem konfigurierten <a href=\"wato.py?"
+"mode=edit_configvar&varname=failed_notification_horizon\">Zeithorizont "
+"fehlgeschlagene Benachrichtigungen</a>."
 
 msgid ""
 "If Windows event log generates multiple messages with same content, then "
@@ -28100,7 +28224,6 @@ msgstr ""
 "überschreiben. Dies hilft Ihnen, die Warnungen während des Update-Prozesses "
 "Ihrer Checkmk-Instanzen und -Agenten zu reduzieren."
 
-#, fuzzy
 msgid ""
 "If a cluster uses multiple namespaces you need to activate this option. "
 "Hosts for namespaced Kubernetes objects will then be prefixed with the names "
@@ -28197,7 +28320,6 @@ msgstr ""
 "Ohne diese Berechtigung kann ein Benutzer noch solche Events sehen, die von "
 "einem Host kommen, für den er ein Kontakt ist."
 
-#, fuzzy
 msgid ""
 "If access to the internet for downloading the sources for creating RCC "
 "environments is only possible via a network proxy, you can specify this here."
@@ -28332,7 +28454,6 @@ msgstr ""
 "Wenn diese Option aktiviert ist, enthalten die Service-Details den "
 "Benutzernamen des Prozessverantwortlichen."
 
-#, fuzzy
 msgid ""
 "If exceeded, an exception will appear. In extraordinary cases, consider "
 "calling Support Diagnostics from command line (see inline help)."
@@ -28361,7 +28482,7 @@ msgstr ""
 "Wenn Grenzwerte überwacht werden, werden alle Instanzen geholt, unabhängig "
 "von einer eventuell konfigurierten Einschränkung auf Namen oder Tags."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "If multiple entries are found, the first one of the sorted entries is used. "
 "If you use macros within inventory based views these macros are replaced "
@@ -28371,10 +28492,10 @@ msgid ""
 "found then it stays as it is."
 msgstr ""
 "Wenn mehrere Einträge gefunden werden, wird der erste der sortierten "
-"Einträge verwendet. Wenn Sie Makros in inventarbasierten Ansichten "
+"Einträge verwendet. Wenn Sie Makros in inventurbasierten Ansichten "
 "verwenden, werden diese Makros <tt>vor</tt> der Regex-Auswertung ersetzt."
-"<br>Hinweis: Wenn eine Service-Beschreibung Sonderzeichen wie <tt>%s</tt> "
-"enthält, müssen Sie diese mit einem Escape-Zeichen versehen, um zuverlässige "
+"<br>Hinweis: Wenn ein Service-Name Sonderzeichen wie <tt>%s</tt> enthält, "
+"müssen Sie diese mit einem Escape-Zeichen versehen, um zuverlässige "
 "Ergebnisse zu erhalten. Makros müssen nicht „escaped“ werden. Sollte ein "
 "Makro nicht gefunden werden, bleibt es so wie es ist."
 
@@ -28873,7 +28994,6 @@ msgstr ""
 "zurückliefern. Diese wird vom dann ausgewertet. Wenn die Prozedur "
 "Eingabeparameter benötigt, dann können diese unten angegeben werden."
 
-#, fuzzy
 msgid ""
 "If you activate this option, the agent plug-in <tt>mk_inventory</tt> will be "
 "deployed on linux and windows hosts. It gathers information about installed "
@@ -28883,14 +29003,14 @@ msgid ""
 "href='wato.py?varname=active_checks%3Acmk_inv&folder=&mode=edit_ruleset'>Do "
 "HW/SW Inventory</a>."
 msgstr ""
-"Wenn Sie diese Option aktivieren, wird das Agent-Plugin <tt>mk_inventory</"
+"Wenn Sie diese Option aktivieren, wird das Agentenplugin <tt>mk_inventory</"
 "tt> auf Linux- und Windows-Hosts eingesetzt. Es sammelt Informationen über "
 "die installierte Hard- und Software und stellt die Informationen in "
 "Multisite und für den Export in Drittanbieter-Software zur Verfügung. "
-"<b>Hinweis:</b> Um das Inventar für einen Host tatsächlich zu nutzen, müssen "
-"Sie es auch im Regelsatz <a href='wato.py?varname=active_checks"
-"%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventarisierung / "
-"Do hardware/software Inventory</a> aktivieren."
+"<b>Hinweis:</b> Um die Inventur für einen Host tatsächlich zu nutzen, müssen "
+"Sie diese auch im Regelsatz <a href='wato.py?varname=active_checks"
+"%3Acmk_inv&folder=&mode=edit_ruleset'>HW-/SW-Inventur ausführen</a> "
+"aktivieren."
 
 msgid ""
 "If you activate this option, then the agent plug-in <tt>apache_status</tt> "
@@ -32414,6 +32534,10 @@ msgstr "LDAP-Version"
 msgid "LED"
 msgstr "LED"
 
+#, fuzzy
+msgid "LIST requests"
+msgstr "IPv6-Anfragen"
+
 msgid "LISTEN"
 msgstr "LISTEN"
 
@@ -32690,10 +32814,6 @@ msgstr "Letztes Synchronisationsergebnis"
 #, fuzzy
 msgid "Last time the service was OK"
 msgstr "Letzter Zeitpunkt, zu dem der Service OK war"
-
-#, fuzzy
-msgid "Last updated"
-msgstr "Zuletzt Aktualisiert"
 
 msgid "Last user synchronization ran into an exception: "
 msgstr "Die letzte Benutzersynchronisation ist in eine Ausnahme geraten: "
@@ -34765,9 +34885,6 @@ msgstr "Untergrenzen für das Ablaufdatum"
 msgid "Lower case User-IDs"
 msgstr "Kleinbuchstabige Benutzer-IDs"
 
-msgid "Lower critical level"
-msgstr "Kritische Untergrenze"
-
 msgid "Lower fan speed levels"
 msgstr "Untergrenzen für Lüfterdrehzahl"
 
@@ -34931,9 +35048,6 @@ msgstr "Untergrenzen der Site-to-Site Bandbreite in Bytes pro Sekunde"
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Untergrenzen für die Anzahl der Pint-to-Site Verbindungen"
-
-msgid "Lower warning level"
-msgstr "Untere Warngrenze"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Am niedrigsten: keine Benachrichtigung, Hinweiszahl erhöhen"
@@ -37098,6 +37212,9 @@ msgstr "Wartezeit zwischen einzelnen Durchläufen"
 msgid "Minimum write wait time"
 msgstr "Minimale Schreibelatenz"
 
+msgid "Minor"
+msgstr ""
+
 msgid "Minute"
 msgstr "Minute"
 
@@ -38072,17 +38189,197 @@ msgstr "NFS IO Statistiken (Linux)"
 msgid "NFS IO statistics"
 msgstr "NFS IO Statistiken"
 
+#, fuzzy
+msgid "NFS data read"
+msgstr "Gelesene Daten"
+
+#, fuzzy
+msgid "NFS data written"
+msgstr "Geschriebene Daten"
+
+#, fuzzy
+msgid "NFS latency"
+msgstr "Sync-Latenz"
+
 msgid "NFS operations"
 msgstr "NFS Operationen"
+
+#, fuzzy
+msgid "NFS other data"
+msgstr "Keine Daten"
+
+#, fuzzy
+msgid "NFS other latency"
+msgstr "Andere Latenz"
+
+#, fuzzy
+msgid "NFS other ops"
+msgstr "%s andere %s"
+
+#, fuzzy
+msgid "NFS read ios"
+msgstr "NFS Operationen"
+
+#, fuzzy
+msgid "NFS read latency"
+msgstr "Latenz beim Lesen der Festplatte"
+
+#, fuzzy
+msgid "NFS read ops"
+msgstr "%s Lesen %s"
+
+#, fuzzy
+msgid "NFS read throughput"
+msgstr "Lesedurchsatz"
+
+#, fuzzy
+msgid "NFS traffic"
+msgstr "%s Verkehr"
+
+#, fuzzy
+msgid "NFS write ios"
+msgstr "%s Schreiben %s"
+
+#, fuzzy
+msgid "NFS write latency"
+msgstr "Latenz beim Schreiben der Festplatte"
+
+#, fuzzy
+msgid "NFS write ops"
+msgstr "%s Schreiben %s"
+
+#, fuzzy
+msgid "NFS write throughput"
+msgstr "schreibe den Durchsatz"
 
 msgid "NFS4 exports (Linux, Solaris)"
 msgstr "NFS4-Exporte (Linux, Solaris)"
 
+#, fuzzy
+msgid "NFSv4 data read"
+msgstr "Gelesene Daten"
+
+#, fuzzy
+msgid "NFSv4 data written"
+msgstr "Geschriebene Daten"
+
+#, fuzzy
+msgid "NFSv4 latency"
+msgstr "Serverlatenz"
+
 msgid "NFSv4 operations"
 msgstr "NFSv4-Operationen"
 
+#, fuzzy
+msgid "NFSv4 other data"
+msgstr "NFSv4-Operationen"
+
+#, fuzzy
+msgid "NFSv4 other latency"
+msgstr "Andere Latenz"
+
+#, fuzzy
+msgid "NFSv4 other ops"
+msgstr "NFSv4-Operationen"
+
+#, fuzzy
+msgid "NFSv4 read ios"
+msgstr "NFSv4-Operationen"
+
+#, fuzzy
+msgid "NFSv4 read latency"
+msgstr "Latenz beim Lesen der Festplatte"
+
+#, fuzzy
+msgid "NFSv4 read ops"
+msgstr "NFSv4-Operationen"
+
+#, fuzzy
+msgid "NFSv4 read throughput"
+msgstr "Lesedurchsatz"
+
+#, fuzzy
+msgid "NFSv4 traffic"
+msgstr "%s Verkehr"
+
+#, fuzzy
+msgid "NFSv4 write ios"
+msgstr "NFSv4-Operationen"
+
+#, fuzzy
+msgid "NFSv4 write latency"
+msgstr "Latenz beim Schreiben der Festplatte"
+
+#, fuzzy
+msgid "NFSv4 write ops"
+msgstr "NFSv4-Operationen"
+
+#, fuzzy
+msgid "NFSv4 write throughput"
+msgstr "schreibe den Durchsatz"
+
+#, fuzzy
+msgid "NFSv4.1 data read"
+msgstr "Gelesene Daten"
+
+#, fuzzy
+msgid "NFSv4.1 data written"
+msgstr "Geschriebene Daten"
+
+#, fuzzy
+msgid "NFSv4.1 latency"
+msgstr "Serverlatenz"
+
 msgid "NFSv4.1 operations"
 msgstr "NFSv4.1-Operationen"
+
+#, fuzzy
+msgid "NFSv4.1 other data"
+msgstr "NFSv4.1-Operationen"
+
+#, fuzzy
+msgid "NFSv4.1 other latency"
+msgstr "NFSv4.1-Operationen"
+
+#, fuzzy
+msgid "NFSv4.1 other ops"
+msgstr "NFSv4.1-Operationen"
+
+#, fuzzy
+msgid "NFSv4.1 read ios"
+msgstr "NFSv4.1-Operationen"
+
+#, fuzzy
+msgid "NFSv4.1 read latency"
+msgstr "Latenz beim Lesen der Festplatte"
+
+#, fuzzy
+msgid "NFSv4.1 read ops"
+msgstr "NFSv4.1-Operationen"
+
+#, fuzzy
+msgid "NFSv4.1 read throughput"
+msgstr "Lesedurchsatz"
+
+#, fuzzy
+msgid "NFSv4.1 traffic"
+msgstr "NFSv4.1-Operationen"
+
+#, fuzzy
+msgid "NFSv4.1 write ios"
+msgstr "NFSv4.1-Operationen"
+
+#, fuzzy
+msgid "NFSv4.1 write latency"
+msgstr "Latenz beim Schreiben der Festplatte"
+
+#, fuzzy
+msgid "NFSv4.1 write ops"
+msgstr "NFSv4.1-Operationen"
+
+#, fuzzy
+msgid "NFSv4.1 write throughput"
+msgstr "schreibe den Durchsatz"
 
 #, fuzzy
 msgid "NGINX web servers (Linux)"
@@ -38541,9 +38838,6 @@ msgstr ""
 
 msgid "Negotiate"
 msgstr "Verhandeln"
-
-msgid "Negotiate SSL"
-msgstr "SSL-Verbindungsaufbau"
 
 msgid "Neither"
 msgstr "Weder"
@@ -39063,9 +39357,8 @@ msgstr "Keine Hosts zu entdecken"
 msgid "No hosts/services found."
 msgstr "Keine Hosts/Services gefunden."
 
-#, fuzzy
 msgid "No ignored HW/SW Inventory plug-ins found"
-msgstr "Keine ignorierten HW/SW-Inventar-Plugins gefunden"
+msgstr "Keine ignorierten Plugins der HW-/SW-Inventur gefunden"
 
 msgid "No influence on element display"
 msgstr "Kein Einfluss auf Anzeige des Elements"
@@ -40414,7 +40707,7 @@ msgid "Number of power supply"
 msgstr "Nummer des Netzteils"
 
 msgid "Number of probes per hop"
-msgstr "Anzahl von Tests pro Sprung"
+msgstr "Anzahl von Tests pro Hop"
 
 msgid "Number of problem alerts"
 msgstr "Anzahl von Problemalarmen"
@@ -41526,8 +41819,44 @@ msgstr "Operationen pro Sekunde"
 msgid "Optical Signal Power"
 msgstr "Optische Signalstärke"
 
-#, python-format
-msgid "Optical Signal Power Lane %d"
+#, fuzzy
+msgid "Optical signal power lane 0"
+msgstr "Optische Signalstärke Lane %d"
+
+#, fuzzy
+msgid "Optical signal power lane 1"
+msgstr "Optische Signalstärke Lane %d"
+
+#, fuzzy
+msgid "Optical signal power lane 2"
+msgstr "Optische Signalstärke Lane %d"
+
+#, fuzzy
+msgid "Optical signal power lane 3"
+msgstr "Optische Signalstärke Lane %d"
+
+#, fuzzy
+msgid "Optical signal power lane 4"
+msgstr "Optische Signalstärke Lane %d"
+
+#, fuzzy
+msgid "Optical signal power lane 5"
+msgstr "Optische Signalstärke Lane %d"
+
+#, fuzzy
+msgid "Optical signal power lane 6"
+msgstr "Optische Signalstärke Lane %d"
+
+#, fuzzy
+msgid "Optical signal power lane 7"
+msgstr "Optische Signalstärke Lane %d"
+
+#, fuzzy
+msgid "Optical signal power lane 8"
+msgstr "Optische Signalstärke Lane %d"
+
+#, fuzzy
+msgid "Optical signal power lane 9"
 msgstr "Optische Signalstärke Lane %d"
 
 msgid "Optimize rule execution"
@@ -43054,6 +43383,10 @@ msgstr "POST"
 msgid "POST / GET Variables"
 msgstr "POST- / GET-Variablen"
 
+#, fuzzy
+msgid "POST requests"
+msgstr "IPv6-Anfragen"
+
 msgid "PROPFIND"
 msgstr "PROPFIND"
 
@@ -43087,6 +43420,10 @@ msgstr "PUBLISH-Nachrichten: Gesendete/empfangene Bytes"
 
 msgid "PUT"
 msgstr "PUT"
+
+#, fuzzy
+msgid "PUT requests"
+msgstr "IPv6-Anfragen"
 
 msgid "Pa"
 msgstr "Pa"
@@ -43786,10 +44123,6 @@ msgstr "Prozentuale Zeit in der Garbage Collection"
 msgid "Percentage"
 msgstr "Prozentwert"
 
-#, fuzzy, python-format
-msgid "Percentage %s requests"
-msgstr "Prozentwert %s Anfragen"
-
 #, python-format
 msgid "Percentage %s space"
 msgstr "Prozentsatz %s Speicher"
@@ -43808,6 +44141,34 @@ msgstr "Prozentwert - XX.XX %"
 
 msgid "Percentage - XX.XXX %"
 msgstr "Prozentwert - XX.XXX %"
+
+#, fuzzy
+msgid "Percentage DELETE requests"
+msgstr "Prozentwert %s Anfragen"
+
+#, fuzzy
+msgid "Percentage GET requests"
+msgstr "Prozentwert %s Anfragen"
+
+#, fuzzy
+msgid "Percentage HEAD requests"
+msgstr "Prozentwert %s Anfragen"
+
+#, fuzzy
+msgid "Percentage LIST requests"
+msgstr "Prozentwert %s Anfragen"
+
+#, fuzzy
+msgid "Percentage POST requests"
+msgstr "Prozentwert %s Anfragen"
+
+#, fuzzy
+msgid "Percentage PUT requests"
+msgstr "Prozentwert %s Anfragen"
+
+#, fuzzy
+msgid "Percentage SELECT requests"
+msgstr "Prozentwert %s Anfragen"
 
 msgid "Percentage free"
 msgstr "Prozent frei"
@@ -43909,6 +44270,10 @@ msgstr "Prozentsatz vom gesamten RAM"
 
 msgid "Percentage of total service problems"
 msgstr "Prozentualer Anteil der gesamten Serviceprobleme"
+
+#, fuzzy
+msgid "Percentage of unhealthy access points"
+msgstr "Prozentsatz der Warteschlangenlänge"
 
 #, fuzzy
 msgid "Percentage of write I/O operations per latency range"
@@ -44142,9 +44507,8 @@ msgstr "Berechtigt zum Löschen aller Karten."
 msgid "Permitted Contact Groups"
 msgstr "Berechtigte Kontaktgruppen"
 
-#, fuzzy
 msgid "Permitted HW/SW Inventory paths"
-msgstr "Erlaubte HW/SW-Inventurpfade"
+msgstr "Erlaubte Pfade der HW-/SW-Inventur"
 
 msgid "Persistent (long)"
 msgstr "Dauerhaft (lang)"
@@ -46488,12 +46852,48 @@ msgstr "RX Alarm"
 msgid "RX Signal Power"
 msgstr "RX Signalstärke"
 
-#, python-format
-msgid "RX Signal Power Lane %d"
+#, fuzzy
+msgid "RX signal power lane 1"
+msgstr "RX Signal Stromleitung %d"
+
+#, fuzzy
+msgid "RX signal power lane 2"
+msgstr "RX Signal Stromleitung %d"
+
+#, fuzzy
+msgid "RX signal power lane 3"
+msgstr "RX Signal Stromleitung %d"
+
+#, fuzzy
+msgid "RX signal power lane 4"
+msgstr "RX Signal Stromleitung %d"
+
+#, fuzzy
+msgid "RX signal power lane 5"
+msgstr "RX Signal Stromleitung %d"
+
+#, fuzzy
+msgid "RX signal power lane 6"
+msgstr "RX Signal Stromleitung %d"
+
+#, fuzzy
+msgid "RX signal power lane 7"
+msgstr "RX Signal Stromleitung %d"
+
+#, fuzzy
+msgid "RX signal power lane 8"
+msgstr "RX Signal Stromleitung %d"
+
+#, fuzzy
+msgid "RX signal power lane 9"
 msgstr "RX Signal Stromleitung %d"
 
 msgid "RX/TX"
 msgstr "RX/TX"
+
+#, fuzzy
+msgid "RXi signal power lane 0"
+msgstr "RX Signal Stromleitung %d"
 
 msgid "RabbitMQ"
 msgstr "RabbitMQ"
@@ -46849,12 +47249,6 @@ msgstr "Empfangsfehler"
 
 msgid "Receive fallback notifications"
 msgstr "Fallback-Benachrichtigungen empfangen"
-
-msgid "Receive full response"
-msgstr "Empfangen der kompletten Antwort"
-
-msgid "Receive start of response"
-msgstr "Empfangen des Anfangs der Antwort"
 
 msgid "Received"
 msgstr "Empfangen"
@@ -48373,10 +48767,10 @@ msgid "Response time"
 msgstr "Antwortzeit"
 
 msgid "Response timeout"
-msgstr "Antwort-Timeout"
+msgstr "Timeout der Antwort"
 
 msgid "Response timeout for a single query"
-msgstr "Antwortzeit auf eine einzelne Anfrage"
+msgstr "Timeout der Antwort auf eine einzelne Anfrage"
 
 msgid "Responsible teams"
 msgstr "Verantwortliche Teams"
@@ -48612,9 +49006,8 @@ msgstr "Fortsetzung"
 msgid "Retained messages"
 msgstr "Einbehaltene Nachrichten"
 
-#, fuzzy
 msgid "Retention intervals for HW/SW Inventory entities"
-msgstr "Aufbewahrungsintervalle für HW/SW-Inventarobjekte"
+msgstr "Aufbewahrungsintervalle für Objekte der HW-/SW-Inventur"
 
 msgid "Retention period"
 msgstr "Aufbewahrungsdauer"
@@ -48809,9 +49202,6 @@ msgstr "Round Trip Zeit (Durchschnitt)"
 
 msgid "Round trip time"
 msgstr "Umlaufzeit"
-
-msgid "Roundtrip"
-msgstr "Umlauf"
 
 msgid "Route53"
 msgstr "Route53"
@@ -49231,6 +49621,70 @@ msgstr "SAML-Verbindungen"
 msgid "SAN"
 msgstr "SAN"
 
+#, fuzzy
+msgid "SAN data read"
+msgstr "Gelesene Daten"
+
+#, fuzzy
+msgid "SAN data written"
+msgstr "Geschriebene Daten"
+
+#, fuzzy
+msgid "SAN latency"
+msgstr "Sync-Latenz"
+
+#, fuzzy
+msgid "SAN operations"
+msgstr "NFS Operationen"
+
+#, fuzzy
+msgid "SAN other data"
+msgstr "Keine Daten"
+
+#, fuzzy
+msgid "SAN other latency"
+msgstr "Andere Latenz"
+
+#, fuzzy
+msgid "SAN other ops"
+msgstr "%s andere %s"
+
+#, fuzzy
+msgid "SAN read ios"
+msgstr "%s Lesen %s"
+
+#, fuzzy
+msgid "SAN read latency"
+msgstr "Latenz beim Lesen der Festplatte"
+
+#, fuzzy
+msgid "SAN read ops"
+msgstr "%s Lesen %s"
+
+#, fuzzy
+msgid "SAN read throughput"
+msgstr "Lesedurchsatz"
+
+#, fuzzy
+msgid "SAN traffic"
+msgstr "%s Verkehr"
+
+#, fuzzy
+msgid "SAN write ios"
+msgstr "%s Schreiben %s"
+
+#, fuzzy
+msgid "SAN write latency"
+msgstr "Latenz beim Schreiben der Festplatte"
+
+#, fuzzy
+msgid "SAN write ops"
+msgstr "%s Schreiben %s"
+
+#, fuzzy
+msgid "SAN write throughput"
+msgstr "schreibe den Durchsatz"
+
 msgid "SAP Dialog"
 msgstr "SAP-Dialog"
 
@@ -49288,6 +49742,10 @@ msgstr "SELECT Objekt zurückgegeben"
 
 msgid "SELECT object scanned"
 msgstr "SELECT Objekt gescannt"
+
+#, fuzzy
+msgid "SELECT requests"
+msgstr "Anfragen"
 
 msgid "SELinux information"
 msgstr "SELinux-Information"
@@ -50645,9 +51103,6 @@ msgid ""
 msgstr ""
 "Senden unabhängig von Einschränkungen, z. B. Benachrichtigungsperiode oder "
 "deaktivierte Benachrichtigungen (erzwungen)"
-
-msgid "Send request"
-msgstr "Senden der Anfrage"
 
 msgid "Send seperate notifications to every recipient"
 msgstr "Einzelne Benachrichtigung für jeden Empfänger versenden"
@@ -52110,9 +52565,8 @@ msgstr "Zeige %ss für Services"
 msgid "Show / hide notification context"
 msgstr "Benachrichtigungskontext zeigen / verstecken"
 
-#, fuzzy
 msgid "Show HW/SW Inventory of this host"
-msgstr "Auf diesem Host Hardware/Software-Inventur zeigen"
+msgstr "HW-/SW-Inventur dieses Hosts anzeigen"
 
 msgid "Show MK Livestatus error messages"
 msgstr "Zeige MK Livestatus Fehlermeldungen"
@@ -56445,8 +56899,44 @@ msgstr "TX Licht Alarm"
 msgid "TX Signal Power"
 msgstr "TX Signalstärke"
 
-#, python-format
-msgid "TX Signal Power Lane %d"
+#, fuzzy
+msgid "TX signal power lane 0"
+msgstr "TX Signalstärke Lane %d"
+
+#, fuzzy
+msgid "TX signal power lane 1"
+msgstr "TX Signalstärke Lane %d"
+
+#, fuzzy
+msgid "TX signal power lane 2"
+msgstr "TX Signalstärke Lane %d"
+
+#, fuzzy
+msgid "TX signal power lane 3"
+msgstr "TX Signalstärke Lane %d"
+
+#, fuzzy
+msgid "TX signal power lane 4"
+msgstr "TX Signalstärke Lane %d"
+
+#, fuzzy
+msgid "TX signal power lane 5"
+msgstr "TX Signalstärke Lane %d"
+
+#, fuzzy
+msgid "TX signal power lane 6"
+msgstr "TX Signalstärke Lane %d"
+
+#, fuzzy
+msgid "TX signal power lane 7"
+msgstr "TX Signalstärke Lane %d"
+
+#, fuzzy
+msgid "TX signal power lane 8"
+msgstr "TX Signalstärke Lane %d"
+
+#, fuzzy
+msgid "TX signal power lane 9"
 msgstr "TX Signalstärke Lane %d"
 
 msgid "Table"
@@ -56690,10 +57180,11 @@ msgid ""
 "is applied both to the initial connection, as well as the time the plug-in "
 "has to wait between chunks of data it receives."
 msgstr ""
-"Weisen Sie das jolokia-Plugin an, nicht länger als die angegebene Anzahl von "
-"Sekunden auf eine Antwort von jeder konfigurierten Instanz zu warten. Diese "
-"Zeitbegrenzung gilt sowohl für die erste Verbindung als auch für die Zeit, "
-"die das Plugin zwischen den Datenblöcken warten muss, die es empfängt."
+"Weisen Sie das jolokia-Plugin an, nicht mehr auf eine Antwort von jeder "
+"konfigurierten Instanz zu warten, nachdem die angegebene Anzahl von Sekunden "
+"verstrichen ist. Dieses Zeitlimit gilt sowohl für die erste Verbindung als "
+"auch für die Zeit, die das Plugin zwischen den empfangenen Datenpaketen "
+"warten muss."
 
 msgid "Teltonika-TRB140"
 msgstr "Teltonika-TRB140"
@@ -56704,8 +57195,44 @@ msgstr "Temperatur"
 msgid "Temperature Alert"
 msgstr "Temperatur-Alarm"
 
-#, python-format
-msgid "Temperature Lane %d"
+#, fuzzy
+msgid "Temperature Lane 1"
+msgstr "Temperatur Lane %d"
+
+#, fuzzy
+msgid "Temperature Lane 10"
+msgstr "Temperatur Lane %d"
+
+#, fuzzy
+msgid "Temperature Lane 2"
+msgstr "Temperatur Lane %d"
+
+#, fuzzy
+msgid "Temperature Lane 3"
+msgstr "Temperatur Lane %d"
+
+#, fuzzy
+msgid "Temperature Lane 4"
+msgstr "Temperatur Lane %d"
+
+#, fuzzy
+msgid "Temperature Lane 5"
+msgstr "Temperatur Lane %d"
+
+#, fuzzy
+msgid "Temperature Lane 6"
+msgstr "Temperatur Lane %d"
+
+#, fuzzy
+msgid "Temperature Lane 7"
+msgstr "Temperatur Lane %d"
+
+#, fuzzy
+msgid "Temperature Lane 8"
+msgstr "Temperatur Lane %d"
+
+#, fuzzy
+msgid "Temperature Lane 9"
 msgstr "Temperatur Lane %d"
 
 msgid "Temperature Trend Analysis"
@@ -61311,9 +61838,9 @@ msgid ""
 "sends requests to and receives responses from it regarding the "
 "authentication process of a user."
 msgstr ""
-"Die Zeitüberschreitung, die für HTTP-Verbindungen mit dem Identitätsanbieter "
-"gilt. Checkmk sendet in Bezug auf den Authentifizierungsprozess eines "
-"Benutzers Anfragen an den Identitätsanbieter und erhält Antworten von ihm."
+"Das Timeout, das für HTTP-Verbindungen mit dem Identitätsanbieter gilt. "
+"Checkmk sendet in Bezug auf den Authentifizierungsprozess eines Benutzers "
+"Anfragen an den Identitätsanbieter und erhält Antworten von ihm."
 
 #, python-format
 msgid ""
@@ -63664,7 +64191,7 @@ msgid ""
 msgstr ""
 "Diese Option schaltet das Cachen von etlichen Anfragen ein, welche keine "
 "aktuellen Daten benötigen. Das reduziert die Anzahl der Livestatus-Anfragen "
-"zu den Instanzen und senkt so die Antwortzeit von Remote-Instanzen mit hohen "
+"an die Instanzen und senkt so die Antwortzeit von Remote-Instanzen mit hohen "
 "Latenzzeiten."
 
 msgid ""
@@ -64400,7 +64927,6 @@ msgstr ""
 "SSH-Schlüssel ausgetauscht werden muss, um eine passwortlose Verbindung zu "
 "ermöglichen."
 
-#, fuzzy
 msgid ""
 "This rule allows for defining regex-patterns for in- and excluding kernel "
 "configuration parameters in the inventory. By default, no parameters are "
@@ -64412,7 +64938,7 @@ msgstr ""
 "Ausschließen von Kernel-Konfigurationsparametern in der Inventur. "
 "Standardmäßig werden keine Parameter einbezogen. Beachten Sie, dass sich "
 "einige Kernel-Konfigurationsparameter häufig ändern. Die Inventarisierung "
-"eines dieser Parameter führt zu häufigen Änderungen in der HW/SW-Inventur, "
+"eines dieser Parameter führt zu häufigen Änderungen in der HW-/SW-Inventur, "
 "wodurch sich das temporäre Dateisystem schnell füllen kann."
 
 msgid ""
@@ -65558,6 +66084,11 @@ msgid ""
 "too high may cause CMC issues such as OOM kills and response timeouts.  "
 "Values in the range of 100-500 MB should work in most cases."
 msgstr ""
+"Hier wird die maximale Größe der von Livestatus gesendeten Nachrichten "
+"festgelegt. Ist der Wert zu niedrig, wird Livestatus längere Antworten "
+"verwerfen. Ist der Wert jedoch zu hoch, kann es zu CMC-Problemen wie OOM-"
+"Kills und Antwort-Timeouts kommen. Werte im Bereich von 100-500 MB sollten "
+"in den meisten Fällen funktionieren."
 
 msgid ""
 "This sets the time that the GUI waits for a connection to the site to be "
@@ -65571,10 +66102,9 @@ msgstr ""
 "eine Verbindung zur Instanz hergestellt wird, bevor die Instanz als "
 "unerreichbar angesehen wird. Es wird dringend empfohlen, hier einen "
 "möglichst niedrigen Wert einzustellen, da diese Einstellung direkt die GUI-"
-"Reaktionszeit beeinflusst, wenn die Destionierung nicht erreichbar ist. Bei "
-"Verwendung des Livestatus Proxy-Daemons verbindet sich die GUI mit dem "
-"lokalen Proxy, in dieser Situation wird ein niedrigerer Wert, wie z.B. 2 "
-"Sekunden empfohlen."
+"Antwortzeit beeinflusst, wenn das Ziel nicht erreichbar ist. Bei Verwendung "
+"des Livestatus Proxy-Daemons verbindet sich die GUI mit dem lokalen Proxy, "
+"in dieser Situation wird ein niedrigerer Wert, wie z.B. 2 Sekunden empfohlen."
 
 msgid ""
 "This setting affects service summaries and details only, which are user-"
@@ -67325,6 +67855,10 @@ msgstr "Kommentare insgesamt: %d"
 
 msgid "Total commitable memory"
 msgstr "Absoluter aktivierbarer Speicherplatz"
+
+#, fuzzy
+msgid "Total connections"
+msgstr "Normale Verbindung"
 
 #, fuzzy
 msgid "Total connections maximum"
@@ -70554,9 +71088,6 @@ msgstr "Obergrenzen für Temperatur"
 msgid "Upper absolute levels"
 msgstr "Absolute Obergrenzen"
 
-msgid "Upper critical level"
-msgstr "Kritische Obergrenze"
-
 msgid "Upper fan speed levels"
 msgstr "Obergrenzen für Lüftergeschwindigkeit"
 
@@ -71166,9 +71697,6 @@ msgstr "Prozentuale Obergrenzen für die DB-Speichergröße"
 
 msgid "Upper percentual levels for the logs usage size"
 msgstr "Prozentuale Obergrenzen für die Log-Nutzungsgröße"
-
-msgid "Upper warning level"
-msgstr "Obere Warnschwelle"
 
 msgid "Uptime"
 msgstr "Betriebszeit"
@@ -73019,12 +73547,12 @@ msgid ""
 "Inventory system."
 msgstr ""
 "Über <tt>Anzeige > Anzeigeoptionen verändern > Zeige interne Baumpfade</tt> "
-"auf der HW/SW-Inventurseite eines Hosts werden die internen Baumpfade "
+"auf der HW-/SW-Inventurseite eines Hosts werden die internen Baumpfade "
 "sichtbar, die zu Unterkategorien, den Schlüsseln von Einzelwerten oder "
 "Tabellenspaltennamen führen. Schlüsselspalten von Tabellen sind mit '*' "
 "gekennzeichnet. Siehe <a href=\"https://docs.checkmk.com/latest/de/inventory."
-"html\">HW/SW-Inventarisierung</a>. für weitere Details über das HW/SW-"
-"Inventarisierungssystem."
+"html\">HW-/SW-Inventur</a>. für weitere Details über das HW/SW-"
+"Inventursystem."
 
 msgid "Vibrate only"
 msgstr "Nur vibrieren"
@@ -73364,6 +73892,18 @@ msgstr "WLAN"
 
 msgid "WLAN errors, reset operations and transmission retries"
 msgstr "WLAN-Fehler, Reset-Operationen und Transmission-Retries"
+
+#, fuzzy
+msgid "WLAN physical errors"
+msgstr "Signalverlust-Fehler"
+
+#, fuzzy
+msgid "WLAN reset operations"
+msgstr "Schreibzugriffe"
+
+#, fuzzy
+msgid "WLAN transmission retries"
+msgstr "CTIO-Transmissionsfehler"
 
 msgid "WLC WiFi client connections"
 msgstr "WLC Wifi Clientverbindungen"
@@ -78649,6 +79189,18 @@ msgstr "iSCSI"
 msgid "iSCSI HBAs"
 msgstr "iSCSI HBAs"
 
+#, fuzzy
+msgid "iSCSI latency"
+msgstr "IO-Latenz"
+
+#, fuzzy
+msgid "iSCSI operations"
+msgstr "NFS Operationen"
+
+#, fuzzy
+msgid "iSCSI traffic"
+msgstr "%s Verkehr"
+
 msgid "icon not found"
 msgstr "Icon nicht gefunden"
 
@@ -79877,6 +80429,62 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
+#, python-format
+#~ msgid "%s operations"
+#~ msgstr "%s Operationen"
+
+#, python-format
+#~ msgid "%s requests"
+#~ msgstr "%s Anfragen"
+
+#~ msgid ""
+#~ "Amount of time that the application of redo data on the standby database "
+#~ "lags behind the primary database"
+#~ msgstr ""
+#~ "Zeit, welche die Anwendung von Redo-Daten auf die Standby-Datenbank nach "
+#~ "der Primären Datenbank braucht"
+
+#~ msgid ""
+#~ "Amount of time that the replica server is lagging against the source "
+#~ "server"
+#~ msgstr ""
+#~ "Zeitspanne, um die der Replikationsserver hinter dem Quellserver "
+#~ "zurückliegt"
+
+#~ msgid "Connect"
+#~ msgstr "Verbindungsaufbau"
+
+#, fuzzy
+#~ msgid "Last updated"
+#~ msgstr "Zuletzt Aktualisiert"
+
+#~ msgid "Lower critical level"
+#~ msgstr "Kritische Untergrenze"
+
+#~ msgid "Lower warning level"
+#~ msgstr "Untere Warngrenze"
+
+#~ msgid "Negotiate SSL"
+#~ msgstr "SSL-Verbindungsaufbau"
+
+#~ msgid "Receive full response"
+#~ msgstr "Empfangen der kompletten Antwort"
+
+#~ msgid "Receive start of response"
+#~ msgstr "Empfangen des Anfangs der Antwort"
+
+#~ msgid "Roundtrip"
+#~ msgstr "Umlauf"
+
+#~ msgid "Send request"
+#~ msgstr "Senden der Anfrage"
+
+#~ msgid "Upper critical level"
+#~ msgstr "Kritische Obergrenze"
+
+#~ msgid "Upper warning level"
+#~ msgstr "Obere Warnschwelle"
+
 #~ msgid "Hardware / Software Inventory"
 #~ msgstr "Hardware/Software-Inventur"
 
@@ -79903,9 +80511,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 #, python-format
 #~ msgid "Unknown (%s)"
 #~ msgstr "Unbekannt (%s)"
-
-#~ msgid "requests"
-#~ msgstr "Anfragen"
 
 #~ msgid "More information can be found in ~/var/log/web.log"
 #~ msgstr "Weitere Informationen finden sich in ~/var/log/web.log"

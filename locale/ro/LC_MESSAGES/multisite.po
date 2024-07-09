@@ -605,10 +605,6 @@ msgid "%s is parent of %s."
 msgstr "%s este părintele lui %s."
 
 #, python-format
-msgid "%s latency"
-msgstr "%s latență"
-
-#, python-format
 msgid "%s left in your Checkmk trial period"
 msgstr "%s rămas în perioada de probă Checkmk"
 
@@ -667,28 +663,12 @@ msgid "%s on the exclusion list."
 msgstr "%s pe lista de excludere."
 
 #, python-format
-msgid "%s operations"
-msgstr "%s operațiuni"
-
-#, python-format
-msgid "%s other %s"
-msgstr "%s alte %s"
-
-#, python-format
 msgid "%s properties"
 msgstr "%s proprietăți"
 
 #, python-format
 msgid "%s rate"
 msgstr "%s rata"
-
-#, python-format
-msgid "%s read %s"
-msgstr "%s citește %s"
-
-#, fuzzy, python-format
-msgid "%s requests"
-msgstr "%s Cereri"
 
 #, python-format
 msgid "%s resulting notifications"
@@ -707,16 +687,8 @@ msgid "%s this customer"
 msgstr "%s acest client"
 
 #, python-format
-msgid "%s traffic"
-msgstr "%s trafic"
-
-#, python-format
 msgid "%s was stopped after %s at %s."
 msgstr "%s a fost oprit după %s la %s."
-
-#, python-format
-msgid "%s write %s"
-msgstr "%s scrie %s"
 
 #, python-format
 msgid ""
@@ -1161,6 +1133,30 @@ msgstr "8 zile înapoi"
 
 msgid "802.3ad"
 msgstr "802.3ad"
+
+msgid "802.dot11a"
+msgstr ""
+
+msgid "802.dot11ac"
+msgstr ""
+
+msgid "802.dot11ax2_4"
+msgstr ""
+
+msgid "802.dot11ax5"
+msgstr ""
+
+msgid "802.dot11b"
+msgstr ""
+
+msgid "802.dot11g"
+msgstr ""
+
+msgid "802.dot11n2_4"
+msgstr ""
+
+msgid "802.dot11n5"
+msgstr ""
 
 #, no-python-format
 msgid "86% - 1.5 standard deviations"
@@ -6025,19 +6021,6 @@ msgstr "Cantitatea de fișiere din spool-ul de notificare"
 msgid "Amount of mails in queues"
 msgstr "Cantitatea de mailuri în cozi"
 
-msgid ""
-"Amount of time that the application of redo data on the standby database "
-"lags behind the primary database"
-msgstr ""
-"Cantitatea de timp în care aplicarea datelor redo pe baza de date în "
-"așteptare rămâne în urma bazei de date primare"
-
-msgid ""
-"Amount of time that the replica server is lagging against the source server"
-msgstr ""
-"Cantitatea de timp în care serverul de replică este în întârziere față de "
-"serverul sursă"
-
 msgid "An AWS region name such as 'eu-central-1'"
 msgstr "Un nume de regiune AWS, cum ar fi 'eu-central-1'"
 
@@ -9574,6 +9557,70 @@ msgstr "Căile CCMS pentru a monitoriza"
 msgid "CIFS"
 msgstr "CIFS"
 
+#, fuzzy
+msgid "CIFS data read"
+msgstr "Date citite"
+
+#, fuzzy
+msgid "CIFS data written"
+msgstr "Date scrise"
+
+#, fuzzy
+msgid "CIFS latency"
+msgstr "Latență IO"
+
+#, fuzzy
+msgid "CIFS operations"
+msgstr "Operațiuni NFS"
+
+#, fuzzy
+msgid "CIFS other data"
+msgstr "Meta-date ZFS"
+
+#, fuzzy
+msgid "CIFS other latency"
+msgstr "Alte latențe"
+
+#, fuzzy
+msgid "CIFS other ops"
+msgstr "%s alte %s"
+
+#, fuzzy
+msgid "CIFS read ios"
+msgstr "%s citește %s"
+
+#, fuzzy
+msgid "CIFS read latency"
+msgstr "Latența de citire a discului"
+
+#, fuzzy
+msgid "CIFS read ops"
+msgstr "%s citește %s"
+
+#, fuzzy
+msgid "CIFS read throughput"
+msgstr "Viteză de citire"
+
+#, fuzzy
+msgid "CIFS traffic"
+msgstr "%s trafic"
+
+#, fuzzy
+msgid "CIFS write ios"
+msgstr "%s scrie %s"
+
+#, fuzzy
+msgid "CIFS write latency"
+msgstr "Latența de scriere pe disc"
+
+#, fuzzy
+msgid "CIFS write ops"
+msgstr "%s scrie %s"
+
+#, fuzzy
+msgid "CIFS write throughput"
+msgstr "Viteza de scriere"
+
 msgid "CISCO Digital Optical Monitoring (DOM)"
 msgstr "CISCO Monitorizare optică digitală (DOM)"
 
@@ -11942,6 +11989,10 @@ msgstr "Ștergeți jurnalele"
 msgid "Clear logs by deleting all stored messages"
 msgstr "Ștergeți jurnalele prin ștergerea tuturor mesajelor stocate"
 
+#, fuzzy
+msgid "Cleared"
+msgstr "Starea \"Liber"
+
 msgid "Click for instant reload."
 msgstr "Faceți clic pentru reîncărcare instantanee."
 
@@ -13311,9 +13362,6 @@ msgstr "Confirmarea modificărilor de etichete"
 
 msgid "Confirmed renewal"
 msgstr "Reînnoire confirmată"
-
-msgid "Connect"
-msgstr "Conectați-vă"
 
 msgid "Connect Checkmk with your InfluxDB to send metrics."
 msgstr "Conectați Checkmk cu InfluxDB pentru a trimite măsurători."
@@ -15385,6 +15433,10 @@ msgstr "Ambalaje DEB"
 
 msgid "DELETE"
 msgstr "DELETE"
+
+#, fuzzy
+msgid "DELETE requests"
+msgstr "cereri"
 
 msgid "DHCP"
 msgstr "DHCP"
@@ -20340,7 +20392,7 @@ msgstr "Energie electrică"
 msgid "Electrical power"
 msgstr "Putere electrică"
 
-#, no-python-format
+#, python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Tensiunea electrică în % din valoarea normală"
 
@@ -22210,6 +22262,70 @@ msgstr "Porturi FC"
 
 msgid "FCP"
 msgstr "FCP"
+
+#, fuzzy
+msgid "FCP data read"
+msgstr "Date citite"
+
+#, fuzzy
+msgid "FCP data written"
+msgstr "Date scrise"
+
+#, fuzzy
+msgid "FCP latency"
+msgstr "%s latență"
+
+#, fuzzy
+msgid "FCP operations"
+msgstr "Operațiuni NFS"
+
+#, fuzzy
+msgid "FCP other data"
+msgstr "Perfdata"
+
+#, fuzzy
+msgid "FCP other latency"
+msgstr "Alte latențe"
+
+#, fuzzy
+msgid "FCP other ops"
+msgstr "%s alte %s"
+
+#, fuzzy
+msgid "FCP read ios"
+msgstr "%s citește %s"
+
+#, fuzzy
+msgid "FCP read latency"
+msgstr "Latența de citire a discului"
+
+#, fuzzy
+msgid "FCP read ops"
+msgstr "%s citește %s"
+
+#, fuzzy
+msgid "FCP read throughput"
+msgstr "Viteză de citire"
+
+#, fuzzy
+msgid "FCP traffic"
+msgstr "%s trafic"
+
+#, fuzzy
+msgid "FCP write ios"
+msgstr "%s scrie %s"
+
+#, fuzzy
+msgid "FCP write latency"
+msgstr "Latența de scriere pe disc"
+
+#, fuzzy
+msgid "FCP write ops"
+msgstr "%s scrie %s"
+
+#, fuzzy
+msgid "FCP write throughput"
+msgstr "Viteza de scriere"
 
 msgid "FGPA utilization"
 msgstr "Utilizarea FGPA"
@@ -24204,6 +24320,10 @@ msgstr "Decalajul de replicare GCP/Redis"
 msgid "GET"
 msgstr "GET"
 
+#, fuzzy
+msgid "GET requests"
+msgstr "cereri"
+
 msgid "GET/POST variables of this page"
 msgstr "Variabilele GET/POST ale acestei pagini"
 
@@ -24899,6 +25019,10 @@ msgstr "Starea serverului HAproxy"
 
 msgid "HEAD"
 msgstr "HEAD"
+
+#, fuzzy
+msgid "HEAD requests"
+msgstr "cereri"
 
 msgid "HELP"
 msgstr "AJUTOR"
@@ -28880,6 +29004,55 @@ msgstr "Subrețea IPv6"
 
 msgid "ISC DHCP-Daemon (Linux)"
 msgstr "ISC DHCP-Daemon (Linux)"
+
+#, fuzzy
+msgid "ISCSI data read"
+msgstr "Date citite"
+
+#, fuzzy
+msgid "ISCSI data written"
+msgstr "Date scrise"
+
+msgid "ISCSI other data"
+msgstr ""
+
+#, fuzzy
+msgid "ISCSI other latency"
+msgstr "Alte latențe"
+
+#, fuzzy
+msgid "ISCSI other ops"
+msgstr "%s alte %s"
+
+msgid "ISCSI read ios"
+msgstr ""
+
+#, fuzzy
+msgid "ISCSI read latency"
+msgstr "Latența de citire a discului"
+
+msgid "ISCSI read ops"
+msgstr ""
+
+#, fuzzy
+msgid "ISCSI read throughput"
+msgstr "Viteză de citire"
+
+#, fuzzy
+msgid "ISCSI write ios"
+msgstr "%s scrie %s"
+
+#, fuzzy
+msgid "ISCSI write latency"
+msgstr "Latența de scriere pe disc"
+
+#, fuzzy
+msgid "ISCSI write ops"
+msgstr "%s scrie %s"
+
+#, fuzzy
+msgid "ISCSI write throughput"
+msgstr "Viteza de scriere"
 
 msgid "IT infrastructure efficiency"
 msgstr "Eficiența infrastructurii IT"
@@ -33380,6 +33553,10 @@ msgstr "Versiunea LDAP"
 msgid "LED"
 msgstr "LED"
 
+#, fuzzy
+msgid "LIST requests"
+msgstr "Solicitări IPv6"
+
 msgid "LISTEN"
 msgstr "ASCULTĂ"
 
@@ -33659,10 +33836,6 @@ msgstr "Rezultatul ultimei sincronizări"
 #, fuzzy
 msgid "Last time the service was OK"
 msgstr "Ultima dată când serviciul a fost OK"
-
-#, fuzzy
-msgid "Last updated"
-msgstr "Ultima actualizare"
 
 msgid "Last user synchronization ran into an exception: "
 msgstr "Ultima sincronizare a utilizatorului a dat peste o excepție: "
@@ -35752,9 +35925,6 @@ msgstr "Niveluri de vârstă mai mici pentru data de expirare"
 msgid "Lower case User-IDs"
 msgstr "ID-uri de utilizator cu minuscule"
 
-msgid "Lower critical level"
-msgstr "Nivel critic inferior"
-
 msgid "Lower fan speed levels"
 msgstr "Niveluri mai mici de viteză a ventilatorului"
 
@@ -35929,9 +36099,6 @@ msgstr ""
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Niveluri mai mici ale numărului de conexiuni punct-la-sediu"
-
-msgid "Lower warning level"
-msgstr "Nivel de avertizare mai scăzut"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Cel mai mic: Nici o notificare, actualizarea numărului de legitimație"
@@ -38120,6 +38287,9 @@ msgstr "Timpul minim între runde"
 msgid "Minimum write wait time"
 msgstr "Timp minim de așteptare pentru scriere"
 
+msgid "Minor"
+msgstr ""
+
 msgid "Minute"
 msgstr "Minute"
 
@@ -39121,17 +39291,197 @@ msgstr "Statistici NFS IO (Linux)"
 msgid "NFS IO statistics"
 msgstr "Statistici NFS IO"
 
+#, fuzzy
+msgid "NFS data read"
+msgstr "Date citite"
+
+#, fuzzy
+msgid "NFS data written"
+msgstr "Date scrise"
+
+#, fuzzy
+msgid "NFS latency"
+msgstr "Latență de sincronizare"
+
 msgid "NFS operations"
 msgstr "Operațiuni NFS"
+
+#, fuzzy
+msgid "NFS other data"
+msgstr "Nu există date"
+
+#, fuzzy
+msgid "NFS other latency"
+msgstr "Alte latențe"
+
+#, fuzzy
+msgid "NFS other ops"
+msgstr "%s alte %s"
+
+#, fuzzy
+msgid "NFS read ios"
+msgstr "Operațiuni NFS"
+
+#, fuzzy
+msgid "NFS read latency"
+msgstr "Latența de citire a discului"
+
+#, fuzzy
+msgid "NFS read ops"
+msgstr "%s citește %s"
+
+#, fuzzy
+msgid "NFS read throughput"
+msgstr "Viteză de citire"
+
+#, fuzzy
+msgid "NFS traffic"
+msgstr "%s trafic"
+
+#, fuzzy
+msgid "NFS write ios"
+msgstr "%s scrie %s"
+
+#, fuzzy
+msgid "NFS write latency"
+msgstr "Latența de scriere pe disc"
+
+#, fuzzy
+msgid "NFS write ops"
+msgstr "%s scrie %s"
+
+#, fuzzy
+msgid "NFS write throughput"
+msgstr "Viteza de scriere"
 
 msgid "NFS4 exports (Linux, Solaris)"
 msgstr "Exporturi NFS4 (Linux, Solaris)"
 
+#, fuzzy
+msgid "NFSv4 data read"
+msgstr "Date citite"
+
+#, fuzzy
+msgid "NFSv4 data written"
+msgstr "Date scrise"
+
+#, fuzzy
+msgid "NFSv4 latency"
+msgstr "Latența serverului"
+
 msgid "NFSv4 operations"
 msgstr "Operațiuni NFSv4"
 
+#, fuzzy
+msgid "NFSv4 other data"
+msgstr "Operațiuni NFSv4"
+
+#, fuzzy
+msgid "NFSv4 other latency"
+msgstr "Alte latențe"
+
+#, fuzzy
+msgid "NFSv4 other ops"
+msgstr "Operațiuni NFSv4"
+
+#, fuzzy
+msgid "NFSv4 read ios"
+msgstr "Operațiuni NFSv4"
+
+#, fuzzy
+msgid "NFSv4 read latency"
+msgstr "Latența de citire a discului"
+
+#, fuzzy
+msgid "NFSv4 read ops"
+msgstr "Operațiuni NFSv4"
+
+#, fuzzy
+msgid "NFSv4 read throughput"
+msgstr "Viteză de citire"
+
+#, fuzzy
+msgid "NFSv4 traffic"
+msgstr "%s trafic"
+
+#, fuzzy
+msgid "NFSv4 write ios"
+msgstr "Operațiuni NFSv4"
+
+#, fuzzy
+msgid "NFSv4 write latency"
+msgstr "Latența de scriere pe disc"
+
+#, fuzzy
+msgid "NFSv4 write ops"
+msgstr "Operațiuni NFSv4"
+
+#, fuzzy
+msgid "NFSv4 write throughput"
+msgstr "Viteza de scriere"
+
+#, fuzzy
+msgid "NFSv4.1 data read"
+msgstr "Date citite"
+
+#, fuzzy
+msgid "NFSv4.1 data written"
+msgstr "Date scrise"
+
+#, fuzzy
+msgid "NFSv4.1 latency"
+msgstr "Latența serverului"
+
 msgid "NFSv4.1 operations"
 msgstr "Operațiuni NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 other data"
+msgstr "Operațiuni NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 other latency"
+msgstr "Operațiuni NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 other ops"
+msgstr "Operațiuni NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 read ios"
+msgstr "Operațiuni NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 read latency"
+msgstr "Latența de citire a discului"
+
+#, fuzzy
+msgid "NFSv4.1 read ops"
+msgstr "Operațiuni NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 read throughput"
+msgstr "Viteză de citire"
+
+#, fuzzy
+msgid "NFSv4.1 traffic"
+msgstr "Operațiuni NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 write ios"
+msgstr "Operațiuni NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 write latency"
+msgstr "Latența de scriere pe disc"
+
+#, fuzzy
+msgid "NFSv4.1 write ops"
+msgstr "Operațiuni NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 write throughput"
+msgstr "Viteza de scriere"
 
 #, fuzzy
 msgid "NGINX web servers (Linux)"
@@ -39597,9 +39947,6 @@ msgstr "Potrivire negativă (Excludeți serviciile corespunzătoare din set)"
 
 msgid "Negotiate"
 msgstr "Negociați"
-
-msgid "Negotiate SSL"
-msgstr "Negociați SSL"
 
 msgid "Neither"
 msgstr "Nici"
@@ -42613,8 +42960,44 @@ msgstr "Operațiuni pe secundă"
 msgid "Optical Signal Power"
 msgstr "Puterea semnalului optic"
 
-#, python-format
-msgid "Optical Signal Power Lane %d"
+#, fuzzy
+msgid "Optical signal power lane 0"
+msgstr "Linia de putere a semnalului optic %d"
+
+#, fuzzy
+msgid "Optical signal power lane 1"
+msgstr "Linia de putere a semnalului optic %d"
+
+#, fuzzy
+msgid "Optical signal power lane 2"
+msgstr "Linia de putere a semnalului optic %d"
+
+#, fuzzy
+msgid "Optical signal power lane 3"
+msgstr "Linia de putere a semnalului optic %d"
+
+#, fuzzy
+msgid "Optical signal power lane 4"
+msgstr "Linia de putere a semnalului optic %d"
+
+#, fuzzy
+msgid "Optical signal power lane 5"
+msgstr "Linia de putere a semnalului optic %d"
+
+#, fuzzy
+msgid "Optical signal power lane 6"
+msgstr "Linia de putere a semnalului optic %d"
+
+#, fuzzy
+msgid "Optical signal power lane 7"
+msgstr "Linia de putere a semnalului optic %d"
+
+#, fuzzy
+msgid "Optical signal power lane 8"
+msgstr "Linia de putere a semnalului optic %d"
+
+#, fuzzy
+msgid "Optical signal power lane 9"
 msgstr "Linia de putere a semnalului optic %d"
 
 msgid "Optimize rule execution"
@@ -44156,6 +44539,10 @@ msgstr "POST"
 msgid "POST / GET Variables"
 msgstr "Variabile POST / GET"
 
+#, fuzzy
+msgid "POST requests"
+msgstr "Solicitări IPv6"
+
 msgid "PROPFIND"
 msgstr "PROPFIND"
 
@@ -44189,6 +44576,10 @@ msgstr "Mesaje PUBLICE: Byte trimiși/recepționați"
 
 msgid "PUT"
 msgstr "PUT"
+
+#, fuzzy
+msgid "PUT requests"
+msgstr "Solicitări IPv6"
 
 msgid "Pa"
 msgstr "Pa"
@@ -44891,10 +45282,6 @@ msgstr "Procentul de timp petrecut în colectarea gunoiului"
 msgid "Percentage"
 msgstr "Procentul"
 
-#, fuzzy, python-format
-msgid "Percentage %s requests"
-msgstr "Procentul %s Cereri"
-
 #, python-format
 msgid "Percentage %s space"
 msgstr "Procentul de spațiu %s"
@@ -44913,6 +45300,34 @@ msgstr "Procentul - XX.XX %"
 
 msgid "Percentage - XX.XXX %"
 msgstr "Procentul - XX.XXX %"
+
+#, fuzzy
+msgid "Percentage DELETE requests"
+msgstr "Procentul %s Cereri"
+
+#, fuzzy
+msgid "Percentage GET requests"
+msgstr "Procentul %s Cereri"
+
+#, fuzzy
+msgid "Percentage HEAD requests"
+msgstr "Procentul %s Cereri"
+
+#, fuzzy
+msgid "Percentage LIST requests"
+msgstr "Procentul %s Cereri"
+
+#, fuzzy
+msgid "Percentage POST requests"
+msgstr "Procentul %s Cereri"
+
+#, fuzzy
+msgid "Percentage PUT requests"
+msgstr "Procentul %s Cereri"
+
+#, fuzzy
+msgid "Percentage SELECT requests"
+msgstr "Procentul %s Cereri"
 
 msgid "Percentage free"
 msgstr "Procentul liber"
@@ -45012,6 +45427,10 @@ msgstr "Procentul din totalul RAM"
 
 msgid "Percentage of total service problems"
 msgstr "Procent din totalul problemelor de serviciu"
+
+#, fuzzy
+msgid "Percentage of unhealthy access points"
+msgstr "Procentul de adâncime a cozii de așteptare"
 
 #, fuzzy
 msgid "Percentage of write I/O operations per latency range"
@@ -47611,12 +48030,48 @@ msgstr "Alertă RX Light"
 msgid "RX Signal Power"
 msgstr "Puterea semnalului RX"
 
-#, python-format
-msgid "RX Signal Power Lane %d"
+#, fuzzy
+msgid "RX signal power lane 1"
+msgstr "Culoarul de putere al semnalului RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 2"
+msgstr "Culoarul de putere al semnalului RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 3"
+msgstr "Culoarul de putere al semnalului RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 4"
+msgstr "Culoarul de putere al semnalului RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 5"
+msgstr "Culoarul de putere al semnalului RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 6"
+msgstr "Culoarul de putere al semnalului RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 7"
+msgstr "Culoarul de putere al semnalului RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 8"
+msgstr "Culoarul de putere al semnalului RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 9"
 msgstr "Culoarul de putere al semnalului RX %d"
 
 msgid "RX/TX"
 msgstr "RX/TX"
+
+#, fuzzy
+msgid "RXi signal power lane 0"
+msgstr "Culoarul de putere al semnalului RX %d"
 
 msgid "RabbitMQ"
 msgstr "RabbitMQ"
@@ -47972,12 +48427,6 @@ msgstr "Erori de recepție"
 
 msgid "Receive fallback notifications"
 msgstr "Primiți notificări de rezervă"
-
-msgid "Receive full response"
-msgstr "Primiți un răspuns complet"
-
-msgid "Receive start of response"
-msgstr "Primirea începutului de răspuns"
 
 msgid "Received"
 msgstr "Primită"
@@ -49962,9 +50411,6 @@ msgstr "Media călătoriei dus-întors"
 msgid "Round trip time"
 msgstr "Durata călătoriei dus-întors"
 
-msgid "Roundtrip"
-msgstr "Călătorie dus-întors"
-
 msgid "Route53"
 msgstr "Ruta53"
 
@@ -50391,6 +50837,70 @@ msgstr "Conexiuni SAML"
 msgid "SAN"
 msgstr "SAN"
 
+#, fuzzy
+msgid "SAN data read"
+msgstr "Date citite"
+
+#, fuzzy
+msgid "SAN data written"
+msgstr "Date scrise"
+
+#, fuzzy
+msgid "SAN latency"
+msgstr "Latență de sincronizare"
+
+#, fuzzy
+msgid "SAN operations"
+msgstr "Operațiuni NFS"
+
+#, fuzzy
+msgid "SAN other data"
+msgstr "Nu există date"
+
+#, fuzzy
+msgid "SAN other latency"
+msgstr "Alte latențe"
+
+#, fuzzy
+msgid "SAN other ops"
+msgstr "%s alte %s"
+
+#, fuzzy
+msgid "SAN read ios"
+msgstr "%s citește %s"
+
+#, fuzzy
+msgid "SAN read latency"
+msgstr "Latența de citire a discului"
+
+#, fuzzy
+msgid "SAN read ops"
+msgstr "%s citește %s"
+
+#, fuzzy
+msgid "SAN read throughput"
+msgstr "Viteză de citire"
+
+#, fuzzy
+msgid "SAN traffic"
+msgstr "%s trafic"
+
+#, fuzzy
+msgid "SAN write ios"
+msgstr "%s scrie %s"
+
+#, fuzzy
+msgid "SAN write latency"
+msgstr "Latența de scriere pe disc"
+
+#, fuzzy
+msgid "SAN write ops"
+msgstr "%s scrie %s"
+
+#, fuzzy
+msgid "SAN write throughput"
+msgstr "Viteza de scriere"
+
 msgid "SAP Dialog"
 msgstr "Dialogul SAP"
 
@@ -50448,6 +50958,10 @@ msgstr "Obiectul SELECT returnat"
 
 msgid "SELECT object scanned"
 msgstr "SELECT obiect scanat"
+
+#, fuzzy
+msgid "SELECT requests"
+msgstr "cereri"
 
 msgid "SELinux information"
 msgstr "Informații SELinux"
@@ -51829,9 +52343,6 @@ msgid ""
 msgstr ""
 "Trimiteți indiferent de restricții, de exemplu, perioada de notificare sau "
 "notificări dezactivate (forțate)"
-
-msgid "Send request"
-msgstr "Trimiteți o cerere"
 
 msgid "Send seperate notifications to every recipient"
 msgstr "Trimiteți notificări separate fiecărui destinatar"
@@ -57739,8 +58250,44 @@ msgstr "Alerta TX Light"
 msgid "TX Signal Power"
 msgstr "Puterea semnalului TX"
 
-#, python-format
-msgid "TX Signal Power Lane %d"
+#, fuzzy
+msgid "TX signal power lane 0"
+msgstr "Linia de putere a semnalului TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 1"
+msgstr "Linia de putere a semnalului TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 2"
+msgstr "Linia de putere a semnalului TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 3"
+msgstr "Linia de putere a semnalului TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 4"
+msgstr "Linia de putere a semnalului TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 5"
+msgstr "Linia de putere a semnalului TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 6"
+msgstr "Linia de putere a semnalului TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 7"
+msgstr "Linia de putere a semnalului TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 8"
+msgstr "Linia de putere a semnalului TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 9"
 msgstr "Linia de putere a semnalului TX %d"
 
 msgid "Table"
@@ -58002,8 +58549,44 @@ msgstr "Temperatura"
 msgid "Temperature Alert"
 msgstr "Alertă de temperatură"
 
-#, python-format
-msgid "Temperature Lane %d"
+#, fuzzy
+msgid "Temperature Lane 1"
+msgstr "Culoarul de temperatură %d"
+
+#, fuzzy
+msgid "Temperature Lane 10"
+msgstr "Culoarul de temperatură %d"
+
+#, fuzzy
+msgid "Temperature Lane 2"
+msgstr "Culoarul de temperatură %d"
+
+#, fuzzy
+msgid "Temperature Lane 3"
+msgstr "Culoarul de temperatură %d"
+
+#, fuzzy
+msgid "Temperature Lane 4"
+msgstr "Culoarul de temperatură %d"
+
+#, fuzzy
+msgid "Temperature Lane 5"
+msgstr "Culoarul de temperatură %d"
+
+#, fuzzy
+msgid "Temperature Lane 6"
+msgstr "Culoarul de temperatură %d"
+
+#, fuzzy
+msgid "Temperature Lane 7"
+msgstr "Culoarul de temperatură %d"
+
+#, fuzzy
+msgid "Temperature Lane 8"
+msgstr "Culoarul de temperatură %d"
+
+#, fuzzy
+msgid "Temperature Lane 9"
 msgstr "Culoarul de temperatură %d"
 
 msgid "Temperature Trend Analysis"
@@ -68674,6 +69257,10 @@ msgid "Total commitable memory"
 msgstr "Memorie totală de comisionare"
 
 #, fuzzy
+msgid "Total connections"
+msgstr "conexiune normală"
+
+#, fuzzy
 msgid "Total connections maximum"
 msgstr "Număr total de conexiuni Maxim"
 
@@ -72326,9 +72913,6 @@ msgstr "Niveluri superioare de temperatură"
 msgid "Upper absolute levels"
 msgstr "Niveluri superioare absolute"
 
-msgid "Upper critical level"
-msgstr "Nivelul critic superior"
-
 msgid "Upper fan speed levels"
 msgstr "Nivelurile superioare ale vitezei ventilatorului"
 
@@ -72961,9 +73545,6 @@ msgstr "Niveluri procentuale superioare pentru dimensiunea spațiului BD"
 msgid "Upper percentual levels for the logs usage size"
 msgstr ""
 "Niveluri procentuale superioare pentru dimensiunea de utilizare a jurnalelor"
-
-msgid "Upper warning level"
-msgstr "Nivelul superior de avertizare"
 
 msgid "Uptime"
 msgstr "Timp de funcționare"
@@ -75196,6 +75777,18 @@ msgstr "WLAN"
 
 msgid "WLAN errors, reset operations and transmission retries"
 msgstr "Erori WLAN, operațiuni de resetare și încercări de transmisie"
+
+#, fuzzy
+msgid "WLAN physical errors"
+msgstr "Erori de pierdere a semnalului"
+
+#, fuzzy
+msgid "WLAN reset operations"
+msgstr "Operațiuni de scriere"
+
+#, fuzzy
+msgid "WLAN transmission retries"
+msgstr "Erori de transmisie CTIO"
 
 msgid "WLC WiFi client connections"
 msgstr "Conexiuni client WLC WiFi"
@@ -80483,6 +81076,18 @@ msgstr "iSCSI"
 msgid "iSCSI HBAs"
 msgstr "HBA-uri iSCSI"
 
+#, fuzzy
+msgid "iSCSI latency"
+msgstr "Latență IO"
+
+#, fuzzy
+msgid "iSCSI operations"
+msgstr "Operațiuni NFS"
+
+#, fuzzy
+msgid "iSCSI traffic"
+msgstr "%s trafic"
+
 msgid "icon not found"
 msgstr "pictograma nu a fost găsită"
 
@@ -81714,6 +82319,62 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
+#, python-format
+#~ msgid "%s operations"
+#~ msgstr "%s operațiuni"
+
+#, fuzzy, python-format
+#~ msgid "%s requests"
+#~ msgstr "%s Cereri"
+
+#~ msgid ""
+#~ "Amount of time that the application of redo data on the standby database "
+#~ "lags behind the primary database"
+#~ msgstr ""
+#~ "Cantitatea de timp în care aplicarea datelor redo pe baza de date în "
+#~ "așteptare rămâne în urma bazei de date primare"
+
+#~ msgid ""
+#~ "Amount of time that the replica server is lagging against the source "
+#~ "server"
+#~ msgstr ""
+#~ "Cantitatea de timp în care serverul de replică este în întârziere față de "
+#~ "serverul sursă"
+
+#~ msgid "Connect"
+#~ msgstr "Conectați-vă"
+
+#, fuzzy
+#~ msgid "Last updated"
+#~ msgstr "Ultima actualizare"
+
+#~ msgid "Lower critical level"
+#~ msgstr "Nivel critic inferior"
+
+#~ msgid "Lower warning level"
+#~ msgstr "Nivel de avertizare mai scăzut"
+
+#~ msgid "Negotiate SSL"
+#~ msgstr "Negociați SSL"
+
+#~ msgid "Receive full response"
+#~ msgstr "Primiți un răspuns complet"
+
+#~ msgid "Receive start of response"
+#~ msgstr "Primirea începutului de răspuns"
+
+#~ msgid "Roundtrip"
+#~ msgstr "Călătorie dus-întors"
+
+#~ msgid "Send request"
+#~ msgstr "Trimiteți o cerere"
+
+#~ msgid "Upper critical level"
+#~ msgstr "Nivelul critic superior"
+
+#~ msgid "Upper warning level"
+#~ msgstr "Nivelul superior de avertizare"
+
 #~ msgid "Hardware / Software Inventory"
 #~ msgstr "Inventar hardware / software"
 
@@ -81740,9 +82401,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, python-format
 #~ msgid "Unknown (%s)"
 #~ msgstr "Necunoscut (%s)"
-
-#~ msgid "requests"
-#~ msgstr "cereri"
 
 #~ msgid "More information can be found in ~/var/log/web.log"
 #~ msgstr "Mai multe informații pot fi găsite în ~/var/log/web.log"

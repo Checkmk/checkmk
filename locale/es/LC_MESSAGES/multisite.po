@@ -606,10 +606,6 @@ msgid "%s is parent of %s."
 msgstr "%s es padre de %s."
 
 #, python-format
-msgid "%s latency"
-msgstr "%s latencia"
-
-#, python-format
 msgid "%s left in your Checkmk trial period"
 msgstr "%s días restantes en su periodo de prueba de Checkmk"
 
@@ -666,28 +662,12 @@ msgid "%s on the exclusion list."
 msgstr "%s en la lista de exclusión."
 
 #, python-format
-msgid "%s operations"
-msgstr "%s operaciones"
-
-#, python-format
-msgid "%s other %s"
-msgstr "%s otro %s"
-
-#, python-format
 msgid "%s properties"
 msgstr "%s propiedades"
 
 #, python-format
 msgid "%s rate"
 msgstr "%s tasa"
-
-#, python-format
-msgid "%s read %s"
-msgstr "%s leer %s"
-
-#, python-format
-msgid "%s requests"
-msgstr "%s solicitudes"
 
 #, python-format
 msgid "%s resulting notifications"
@@ -706,16 +686,8 @@ msgid "%s this customer"
 msgstr "%s este cliente"
 
 #, python-format
-msgid "%s traffic"
-msgstr "%s tráfico"
-
-#, python-format
 msgid "%s was stopped after %s at %s."
 msgstr "%s se detuvo después de %s en %s."
-
-#, python-format
-msgid "%s write %s"
-msgstr "%s escribe %s"
 
 #, python-format
 msgid ""
@@ -1149,6 +1121,30 @@ msgstr "8 días atrás"
 
 msgid "802.3ad"
 msgstr "802.3ad"
+
+msgid "802.dot11a"
+msgstr ""
+
+msgid "802.dot11ac"
+msgstr ""
+
+msgid "802.dot11ax2_4"
+msgstr ""
+
+msgid "802.dot11ax5"
+msgstr ""
+
+msgid "802.dot11b"
+msgstr ""
+
+msgid "802.dot11g"
+msgstr ""
+
+msgid "802.dot11n2_4"
+msgstr ""
+
+msgid "802.dot11n5"
+msgstr ""
 
 #, no-python-format
 msgid "86% - 1.5 standard deviations"
@@ -6071,19 +6067,6 @@ msgstr "Cantidad de archivos en el spool de notificación"
 msgid "Amount of mails in queues"
 msgstr "Cantidad de correos en cola"
 
-msgid ""
-"Amount of time that the application of redo data on the standby database "
-"lags behind the primary database"
-msgstr ""
-"Cantidad de tiempo que la aplicación de los datos de rehacer en la base de "
-"datos en espera va por detrás de la base de datos primaria"
-
-msgid ""
-"Amount of time that the replica server is lagging against the source server"
-msgstr ""
-"Cantidad de tiempo que el servidor de réplica se retrasa con respecto al "
-"servidor de origen"
-
 msgid "An AWS region name such as 'eu-central-1'"
 msgstr "Un nombre de región AWS como \"eu-central-1"
 
@@ -9617,6 +9600,70 @@ msgstr "Vías del CCMS para supervisar"
 msgid "CIFS"
 msgstr "CIFS"
 
+#, fuzzy
+msgid "CIFS data read"
+msgstr "Datos leídos"
+
+#, fuzzy
+msgid "CIFS data written"
+msgstr "Datos escritos"
+
+#, fuzzy
+msgid "CIFS latency"
+msgstr "Latencia IO"
+
+#, fuzzy
+msgid "CIFS operations"
+msgstr "Operaciones NFS"
+
+#, fuzzy
+msgid "CIFS other data"
+msgstr "Metadatos de ZFS"
+
+#, fuzzy
+msgid "CIFS other latency"
+msgstr "Otras latencias"
+
+#, fuzzy
+msgid "CIFS other ops"
+msgstr "%s otro %s"
+
+#, fuzzy
+msgid "CIFS read ios"
+msgstr "%s leer %s"
+
+#, fuzzy
+msgid "CIFS read latency"
+msgstr "Latencia de lectura del disco"
+
+#, fuzzy
+msgid "CIFS read ops"
+msgstr "%s leer %s"
+
+#, fuzzy
+msgid "CIFS read throughput"
+msgstr "Rendimiento de lectura"
+
+#, fuzzy
+msgid "CIFS traffic"
+msgstr "%s tráfico"
+
+#, fuzzy
+msgid "CIFS write ios"
+msgstr "%s escribe %s"
+
+#, fuzzy
+msgid "CIFS write latency"
+msgstr "Latencia de escritura del disco"
+
+#, fuzzy
+msgid "CIFS write ops"
+msgstr "%s escribe %s"
+
+#, fuzzy
+msgid "CIFS write throughput"
+msgstr "Rendimiento de escritura"
+
 msgid "CISCO Digital Optical Monitoring (DOM)"
 msgstr "Monitorización óptica digital (DOM) de CISCO"
 
@@ -12021,6 +12068,10 @@ msgstr "Limpiar los registros"
 msgid "Clear logs by deleting all stored messages"
 msgstr "Borrar los registros eliminando todos los mensajes almacenados"
 
+#, fuzzy
+msgid "Cleared"
+msgstr "estado 'Borrado'"
+
 msgid "Click for instant reload."
 msgstr "Haga clic para una recarga instantánea."
 
@@ -13410,9 +13461,6 @@ msgstr "Confirmar las modificaciones de las etiquetas"
 
 msgid "Confirmed renewal"
 msgstr "Renovación confirmada"
-
-msgid "Connect"
-msgstr "Conectar"
 
 msgid "Connect Checkmk with your InfluxDB to send metrics."
 msgstr "Conectar Checkmk con su InfluxDB para enviar métricas."
@@ -15497,6 +15545,10 @@ msgstr "Embalaje DEB"
 
 msgid "DELETE"
 msgstr ""
+
+#, fuzzy
+msgid "DELETE requests"
+msgstr "solicita"
 
 msgid "DHCP"
 msgstr "DHCP"
@@ -20474,7 +20526,7 @@ msgstr "Energía eléctrica"
 msgid "Electrical power"
 msgstr "Energía eléctrica"
 
-#, no-python-format
+#, python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Tensión eléctrica en % del valor normal"
 
@@ -22365,6 +22417,70 @@ msgstr "Puertos FC"
 
 msgid "FCP"
 msgstr "FCP"
+
+#, fuzzy
+msgid "FCP data read"
+msgstr "Datos leídos"
+
+#, fuzzy
+msgid "FCP data written"
+msgstr "Datos escritos"
+
+#, fuzzy
+msgid "FCP latency"
+msgstr "%s latencia"
+
+#, fuzzy
+msgid "FCP operations"
+msgstr "Operaciones NFS"
+
+#, fuzzy
+msgid "FCP other data"
+msgstr "Perfdata"
+
+#, fuzzy
+msgid "FCP other latency"
+msgstr "Otras latencias"
+
+#, fuzzy
+msgid "FCP other ops"
+msgstr "%s otro %s"
+
+#, fuzzy
+msgid "FCP read ios"
+msgstr "%s leer %s"
+
+#, fuzzy
+msgid "FCP read latency"
+msgstr "Latencia de lectura del disco"
+
+#, fuzzy
+msgid "FCP read ops"
+msgstr "%s leer %s"
+
+#, fuzzy
+msgid "FCP read throughput"
+msgstr "Rendimiento de lectura"
+
+#, fuzzy
+msgid "FCP traffic"
+msgstr "%s tráfico"
+
+#, fuzzy
+msgid "FCP write ios"
+msgstr "%s escribe %s"
+
+#, fuzzy
+msgid "FCP write latency"
+msgstr "Latencia de escritura del disco"
+
+#, fuzzy
+msgid "FCP write ops"
+msgstr "%s escribe %s"
+
+#, fuzzy
+msgid "FCP write throughput"
+msgstr "Rendimiento de escritura"
 
 msgid "FGPA utilization"
 msgstr "Utilización del FGPA"
@@ -24382,6 +24498,10 @@ msgstr "Retraso en la replicación de GCP/Redis"
 msgid "GET"
 msgstr ""
 
+#, fuzzy
+msgid "GET requests"
+msgstr "solicita"
+
 msgid "GET/POST variables of this page"
 msgstr "Variables GET/POST de esta página"
 
@@ -25089,6 +25209,10 @@ msgstr "Estado del servidor HAproxy"
 
 msgid "HEAD"
 msgstr ""
+
+#, fuzzy
+msgid "HEAD requests"
+msgstr "solicita"
 
 msgid "HELP"
 msgstr "AYUDA"
@@ -29102,6 +29226,55 @@ msgstr "Subred IPv6"
 
 msgid "ISC DHCP-Daemon (Linux)"
 msgstr "ISC DHCP-Daemon (Linux)"
+
+#, fuzzy
+msgid "ISCSI data read"
+msgstr "Datos leídos"
+
+#, fuzzy
+msgid "ISCSI data written"
+msgstr "Datos escritos"
+
+msgid "ISCSI other data"
+msgstr ""
+
+#, fuzzy
+msgid "ISCSI other latency"
+msgstr "Otras latencias"
+
+#, fuzzy
+msgid "ISCSI other ops"
+msgstr "%s otro %s"
+
+msgid "ISCSI read ios"
+msgstr ""
+
+#, fuzzy
+msgid "ISCSI read latency"
+msgstr "Latencia de lectura del disco"
+
+msgid "ISCSI read ops"
+msgstr ""
+
+#, fuzzy
+msgid "ISCSI read throughput"
+msgstr "Rendimiento de lectura"
+
+#, fuzzy
+msgid "ISCSI write ios"
+msgstr "%s escribe %s"
+
+#, fuzzy
+msgid "ISCSI write latency"
+msgstr "Latencia de escritura del disco"
+
+#, fuzzy
+msgid "ISCSI write ops"
+msgstr "%s escribe %s"
+
+#, fuzzy
+msgid "ISCSI write throughput"
+msgstr "Rendimiento de escritura"
 
 #, fuzzy
 msgid "IT infrastructure efficiency"
@@ -33581,6 +33754,10 @@ msgstr "Versión de LDAP"
 msgid "LED"
 msgstr "LED"
 
+#, fuzzy
+msgid "LIST requests"
+msgstr "Solicitudes de IPv6"
+
 msgid "LISTEN"
 msgstr "ESCUCHAR"
 
@@ -33861,10 +34038,6 @@ msgstr "Resultado de la última sincronización"
 #, fuzzy
 msgid "Last time the service was OK"
 msgstr "La última vez que el servicio estuvo bien"
-
-#, fuzzy
-msgid "Last updated"
-msgstr "Última actualización"
 
 msgid "Last user synchronization ran into an exception: "
 msgstr "La última sincronización del usuario se encontró con una excepción: "
@@ -36002,9 +36175,6 @@ msgstr "Niveles de edad más bajos para la fecha de caducidad"
 msgid "Lower case User-IDs"
 msgstr "ID de usuario en minúsculas"
 
-msgid "Lower critical level"
-msgstr "Nivel crítico inferior"
-
 msgid "Lower fan speed levels"
 msgstr "Niveles de velocidad del ventilador más bajos"
 
@@ -36182,9 +36352,6 @@ msgstr ""
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Niveles más bajos en el número de conexiones punto a punto"
-
-msgid "Lower warning level"
-msgstr "Nivel de advertencia más bajo"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Lo más bajo: No se notifica, se actualiza el número de placa"
@@ -38410,6 +38577,9 @@ msgstr "Tiempo mínimo entre pasadas"
 msgid "Minimum write wait time"
 msgstr "Tiempo mínimo de espera de escritura"
 
+msgid "Minor"
+msgstr ""
+
 msgid "Minute"
 msgstr "Minuto"
 
@@ -39413,17 +39583,197 @@ msgstr "Estadísticas NFS IO (Linux)"
 msgid "NFS IO statistics"
 msgstr "Estadísticas NFS IO"
 
+#, fuzzy
+msgid "NFS data read"
+msgstr "Datos leídos"
+
+#, fuzzy
+msgid "NFS data written"
+msgstr "Datos escritos"
+
+#, fuzzy
+msgid "NFS latency"
+msgstr "Latencia de sincronización"
+
 msgid "NFS operations"
 msgstr "Operaciones NFS"
+
+#, fuzzy
+msgid "NFS other data"
+msgstr "No hay datos"
+
+#, fuzzy
+msgid "NFS other latency"
+msgstr "Otras latencias"
+
+#, fuzzy
+msgid "NFS other ops"
+msgstr "%s otro %s"
+
+#, fuzzy
+msgid "NFS read ios"
+msgstr "Operaciones NFS"
+
+#, fuzzy
+msgid "NFS read latency"
+msgstr "Latencia de lectura del disco"
+
+#, fuzzy
+msgid "NFS read ops"
+msgstr "%s leer %s"
+
+#, fuzzy
+msgid "NFS read throughput"
+msgstr "Rendimiento de lectura"
+
+#, fuzzy
+msgid "NFS traffic"
+msgstr "%s tráfico"
+
+#, fuzzy
+msgid "NFS write ios"
+msgstr "%s escribe %s"
+
+#, fuzzy
+msgid "NFS write latency"
+msgstr "Latencia de escritura del disco"
+
+#, fuzzy
+msgid "NFS write ops"
+msgstr "%s escribe %s"
+
+#, fuzzy
+msgid "NFS write throughput"
+msgstr "Rendimiento de escritura"
 
 msgid "NFS4 exports (Linux, Solaris)"
 msgstr "Exportaciones NFS4 (Linux, Solaris)"
 
+#, fuzzy
+msgid "NFSv4 data read"
+msgstr "Datos leídos"
+
+#, fuzzy
+msgid "NFSv4 data written"
+msgstr "Datos escritos"
+
+#, fuzzy
+msgid "NFSv4 latency"
+msgstr "Latencia del servidor"
+
 msgid "NFSv4 operations"
 msgstr "Operaciones NFSv4"
 
+#, fuzzy
+msgid "NFSv4 other data"
+msgstr "Operaciones NFSv4"
+
+#, fuzzy
+msgid "NFSv4 other latency"
+msgstr "Otras latencias"
+
+#, fuzzy
+msgid "NFSv4 other ops"
+msgstr "Operaciones NFSv4"
+
+#, fuzzy
+msgid "NFSv4 read ios"
+msgstr "Operaciones NFSv4"
+
+#, fuzzy
+msgid "NFSv4 read latency"
+msgstr "Latencia de lectura del disco"
+
+#, fuzzy
+msgid "NFSv4 read ops"
+msgstr "Operaciones NFSv4"
+
+#, fuzzy
+msgid "NFSv4 read throughput"
+msgstr "Rendimiento de lectura"
+
+#, fuzzy
+msgid "NFSv4 traffic"
+msgstr "%s tráfico"
+
+#, fuzzy
+msgid "NFSv4 write ios"
+msgstr "Operaciones NFSv4"
+
+#, fuzzy
+msgid "NFSv4 write latency"
+msgstr "Latencia de escritura del disco"
+
+#, fuzzy
+msgid "NFSv4 write ops"
+msgstr "Operaciones NFSv4"
+
+#, fuzzy
+msgid "NFSv4 write throughput"
+msgstr "Rendimiento de escritura"
+
+#, fuzzy
+msgid "NFSv4.1 data read"
+msgstr "Datos leídos"
+
+#, fuzzy
+msgid "NFSv4.1 data written"
+msgstr "Datos escritos"
+
+#, fuzzy
+msgid "NFSv4.1 latency"
+msgstr "Latencia del servidor"
+
 msgid "NFSv4.1 operations"
 msgstr "Operaciones NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 other data"
+msgstr "Operaciones NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 other latency"
+msgstr "Operaciones NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 other ops"
+msgstr "Operaciones NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 read ios"
+msgstr "Operaciones NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 read latency"
+msgstr "Latencia de lectura del disco"
+
+#, fuzzy
+msgid "NFSv4.1 read ops"
+msgstr "Operaciones NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 read throughput"
+msgstr "Rendimiento de lectura"
+
+#, fuzzy
+msgid "NFSv4.1 traffic"
+msgstr "Operaciones NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 write ios"
+msgstr "Operaciones NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 write latency"
+msgstr "Latencia de escritura del disco"
+
+#, fuzzy
+msgid "NFSv4.1 write ops"
+msgstr "Operaciones NFSv4.1"
+
+#, fuzzy
+msgid "NFSv4.1 write throughput"
+msgstr "Rendimiento de escritura"
 
 #, fuzzy
 msgid "NGINX web servers (Linux)"
@@ -39879,9 +40229,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Negotiate"
-msgstr "Negociar SSL"
-
-msgid "Negotiate SSL"
 msgstr "Negociar SSL"
 
 msgid "Neither"
@@ -42937,8 +43284,44 @@ msgstr "Operaciones por segundo"
 msgid "Optical Signal Power"
 msgstr "Potencia de la señal óptica"
 
-#, python-format
-msgid "Optical Signal Power Lane %d"
+#, fuzzy
+msgid "Optical signal power lane 0"
+msgstr "Potencia de la Señal Óptica Carril %d"
+
+#, fuzzy
+msgid "Optical signal power lane 1"
+msgstr "Potencia de la Señal Óptica Carril %d"
+
+#, fuzzy
+msgid "Optical signal power lane 2"
+msgstr "Potencia de la Señal Óptica Carril %d"
+
+#, fuzzy
+msgid "Optical signal power lane 3"
+msgstr "Potencia de la Señal Óptica Carril %d"
+
+#, fuzzy
+msgid "Optical signal power lane 4"
+msgstr "Potencia de la Señal Óptica Carril %d"
+
+#, fuzzy
+msgid "Optical signal power lane 5"
+msgstr "Potencia de la Señal Óptica Carril %d"
+
+#, fuzzy
+msgid "Optical signal power lane 6"
+msgstr "Potencia de la Señal Óptica Carril %d"
+
+#, fuzzy
+msgid "Optical signal power lane 7"
+msgstr "Potencia de la Señal Óptica Carril %d"
+
+#, fuzzy
+msgid "Optical signal power lane 8"
+msgstr "Potencia de la Señal Óptica Carril %d"
+
+#, fuzzy
+msgid "Optical signal power lane 9"
 msgstr "Potencia de la Señal Óptica Carril %d"
 
 msgid "Optimize rule execution"
@@ -44490,6 +44873,10 @@ msgstr ""
 msgid "POST / GET Variables"
 msgstr "Variables POST / GET"
 
+#, fuzzy
+msgid "POST requests"
+msgstr "Solicitudes de IPv6"
+
 msgid "PROPFIND"
 msgstr ""
 
@@ -44524,6 +44911,10 @@ msgstr "Mensajes de publicación: Bytes enviados/recibidos"
 #, fuzzy
 msgid "PUT"
 msgstr "CPU"
+
+#, fuzzy
+msgid "PUT requests"
+msgstr "Solicitudes de IPv6"
 
 msgid "Pa"
 msgstr "Pa"
@@ -45232,10 +45623,6 @@ msgstr "Porcentaje de tiempo dedicado a la recogida de basura"
 msgid "Percentage"
 msgstr "Porcentaje"
 
-#, fuzzy, python-format
-msgid "Percentage %s requests"
-msgstr "Porcentaje %s Solicitudes"
-
 #, python-format
 msgid "Percentage %s space"
 msgstr "Porcentaje %s de espacio"
@@ -45254,6 +45641,34 @@ msgstr "Porcentaje - XX.XX %"
 
 msgid "Percentage - XX.XXX %"
 msgstr "Porcentaje - XX.XXX %"
+
+#, fuzzy
+msgid "Percentage DELETE requests"
+msgstr "Porcentaje %s Solicitudes"
+
+#, fuzzy
+msgid "Percentage GET requests"
+msgstr "Porcentaje %s Solicitudes"
+
+#, fuzzy
+msgid "Percentage HEAD requests"
+msgstr "Porcentaje %s Solicitudes"
+
+#, fuzzy
+msgid "Percentage LIST requests"
+msgstr "Porcentaje %s Solicitudes"
+
+#, fuzzy
+msgid "Percentage POST requests"
+msgstr "Porcentaje %s Solicitudes"
+
+#, fuzzy
+msgid "Percentage PUT requests"
+msgstr "Porcentaje %s Solicitudes"
+
+#, fuzzy
+msgid "Percentage SELECT requests"
+msgstr "Porcentaje %s Solicitudes"
 
 msgid "Percentage free"
 msgstr "Porcentaje libre"
@@ -45363,6 +45778,10 @@ msgstr "Porcentaje de la RAM total"
 
 msgid "Percentage of total service problems"
 msgstr "Porcentaje del total de problemas de servicio"
+
+#, fuzzy
+msgid "Percentage of unhealthy access points"
+msgstr "Porcentaje de profundidad de la cola"
 
 #, fuzzy
 msgid "Percentage of write I/O operations per latency range"
@@ -47981,12 +48400,48 @@ msgstr "Alerta RX Light"
 msgid "RX Signal Power"
 msgstr "Potencia de la señal RX"
 
-#, python-format
-msgid "RX Signal Power Lane %d"
+#, fuzzy
+msgid "RX signal power lane 1"
+msgstr "Carril de potencia de la señal RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 2"
+msgstr "Carril de potencia de la señal RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 3"
+msgstr "Carril de potencia de la señal RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 4"
+msgstr "Carril de potencia de la señal RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 5"
+msgstr "Carril de potencia de la señal RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 6"
+msgstr "Carril de potencia de la señal RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 7"
+msgstr "Carril de potencia de la señal RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 8"
+msgstr "Carril de potencia de la señal RX %d"
+
+#, fuzzy
+msgid "RX signal power lane 9"
 msgstr "Carril de potencia de la señal RX %d"
 
 msgid "RX/TX"
 msgstr "RX/TX"
+
+#, fuzzy
+msgid "RXi signal power lane 0"
+msgstr "Carril de potencia de la señal RX %d"
 
 msgid "RabbitMQ"
 msgstr "RabbitMQ"
@@ -48346,12 +48801,6 @@ msgstr "Recibir errores"
 
 msgid "Receive fallback notifications"
 msgstr "Recibir notificaciones de retroceso"
-
-msgid "Receive full response"
-msgstr "Recibir una respuesta completa"
-
-msgid "Receive start of response"
-msgstr "Recibir inicio de respuesta"
 
 msgid "Received"
 msgstr "Recibido"
@@ -50377,9 +50826,6 @@ msgstr "Media de ida y vuelta"
 msgid "Round trip time"
 msgstr "Tiempo de ida y vuelta"
 
-msgid "Roundtrip"
-msgstr "Viaje de ida y vuelta"
-
 msgid "Route53"
 msgstr "Ruta53"
 
@@ -50811,6 +51257,70 @@ msgstr "Conexiones SAML"
 msgid "SAN"
 msgstr "SAN"
 
+#, fuzzy
+msgid "SAN data read"
+msgstr "Datos leídos"
+
+#, fuzzy
+msgid "SAN data written"
+msgstr "Datos escritos"
+
+#, fuzzy
+msgid "SAN latency"
+msgstr "Latencia de sincronización"
+
+#, fuzzy
+msgid "SAN operations"
+msgstr "Operaciones NFS"
+
+#, fuzzy
+msgid "SAN other data"
+msgstr "No hay datos"
+
+#, fuzzy
+msgid "SAN other latency"
+msgstr "Otras latencias"
+
+#, fuzzy
+msgid "SAN other ops"
+msgstr "%s otro %s"
+
+#, fuzzy
+msgid "SAN read ios"
+msgstr "%s leer %s"
+
+#, fuzzy
+msgid "SAN read latency"
+msgstr "Latencia de lectura del disco"
+
+#, fuzzy
+msgid "SAN read ops"
+msgstr "%s leer %s"
+
+#, fuzzy
+msgid "SAN read throughput"
+msgstr "Rendimiento de lectura"
+
+#, fuzzy
+msgid "SAN traffic"
+msgstr "%s tráfico"
+
+#, fuzzy
+msgid "SAN write ios"
+msgstr "%s escribe %s"
+
+#, fuzzy
+msgid "SAN write latency"
+msgstr "Latencia de escritura del disco"
+
+#, fuzzy
+msgid "SAN write ops"
+msgstr "%s escribe %s"
+
+#, fuzzy
+msgid "SAN write throughput"
+msgstr "Rendimiento de escritura"
+
 msgid "SAP Dialog"
 msgstr "Diálogo SAP"
 
@@ -50870,6 +51380,10 @@ msgstr "Objeto SELECT devuelto"
 #, fuzzy
 msgid "SELECT object scanned"
 msgstr "SELECT Objeto escaneado"
+
+#, fuzzy
+msgid "SELECT requests"
+msgstr "solicita"
 
 #, fuzzy
 msgid "SELinux information"
@@ -52237,9 +52751,6 @@ msgid ""
 msgstr ""
 "Enviar independientemente de las restricciones, por ejemplo, periodo de "
 "notificación o notificaciones desactivadas (forzado)"
-
-msgid "Send request"
-msgstr "Enviar solicitud"
 
 msgid "Send seperate notifications to every recipient"
 msgstr "Enviar notificaciones por separado a cada destinatario"
@@ -58169,8 +58680,44 @@ msgstr "Alerta de luz de TX"
 msgid "TX Signal Power"
 msgstr "Potencia de la señal de transmisión"
 
-#, python-format
-msgid "TX Signal Power Lane %d"
+#, fuzzy
+msgid "TX signal power lane 0"
+msgstr "Carril de potencia de la señal TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 1"
+msgstr "Carril de potencia de la señal TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 2"
+msgstr "Carril de potencia de la señal TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 3"
+msgstr "Carril de potencia de la señal TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 4"
+msgstr "Carril de potencia de la señal TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 5"
+msgstr "Carril de potencia de la señal TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 6"
+msgstr "Carril de potencia de la señal TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 7"
+msgstr "Carril de potencia de la señal TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 8"
+msgstr "Carril de potencia de la señal TX %d"
+
+#, fuzzy
+msgid "TX signal power lane 9"
 msgstr "Carril de potencia de la señal TX %d"
 
 msgid "Table"
@@ -58438,8 +58985,44 @@ msgstr "Temperatura"
 msgid "Temperature Alert"
 msgstr "Alerta de temperatura"
 
-#, python-format
-msgid "Temperature Lane %d"
+#, fuzzy
+msgid "Temperature Lane 1"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature Lane 10"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature Lane 2"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature Lane 3"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature Lane 4"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature Lane 5"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature Lane 6"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature Lane 7"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature Lane 8"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature Lane 9"
 msgstr "Temperatura Carril %d"
 
 msgid "Temperature Trend Analysis"
@@ -69087,6 +69670,10 @@ msgid "Total commitable memory"
 msgstr "Memoria comprometedora absoluta"
 
 #, fuzzy
+msgid "Total connections"
+msgstr "conexión normal"
+
+#, fuzzy
 msgid "Total connections maximum"
 msgstr "Máximo de paquetes totales"
 
@@ -72839,9 +73426,6 @@ msgstr "Niveles de temperatura superiores"
 msgid "Upper absolute levels"
 msgstr "Niveles absolutos superiores"
 
-msgid "Upper critical level"
-msgstr "Nivel crítico superior"
-
 msgid "Upper fan speed levels"
 msgstr "Niveles superiores de velocidad del ventilador"
 
@@ -73483,9 +74067,6 @@ msgstr ""
 
 msgid "Upper percentual levels for the logs usage size"
 msgstr "Niveles porcentuales superiores para el tamaño de uso de los registros"
-
-msgid "Upper warning level"
-msgstr "Nivel de alerta superior"
 
 msgid "Uptime"
 msgstr "Tiempo de funcionamiento"
@@ -75732,6 +76313,18 @@ msgstr "WLAN"
 
 msgid "WLAN errors, reset operations and transmission retries"
 msgstr "Errores WLAN, operaciones de reinicio y reintentos de transmisión"
+
+#, fuzzy
+msgid "WLAN physical errors"
+msgstr "Errores de pérdida de señal"
+
+#, fuzzy
+msgid "WLAN reset operations"
+msgstr "Operaciones de escritura"
+
+#, fuzzy
+msgid "WLAN transmission retries"
+msgstr "Errores de transmisión CTIO"
 
 msgid "WLC WiFi client connections"
 msgstr "Conexiones de clientes WLC WiFi"
@@ -81046,6 +81639,18 @@ msgstr "iSCSI"
 msgid "iSCSI HBAs"
 msgstr "HBAs iSCSI"
 
+#, fuzzy
+msgid "iSCSI latency"
+msgstr "Latencia IO"
+
+#, fuzzy
+msgid "iSCSI operations"
+msgstr "Operaciones NFS"
+
+#, fuzzy
+msgid "iSCSI traffic"
+msgstr "%s tráfico"
+
 msgid "icon not found"
 msgstr "icono no encontrado"
 
@@ -82290,6 +82895,62 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
+#, python-format
+#~ msgid "%s operations"
+#~ msgstr "%s operaciones"
+
+#, python-format
+#~ msgid "%s requests"
+#~ msgstr "%s solicitudes"
+
+#~ msgid ""
+#~ "Amount of time that the application of redo data on the standby database "
+#~ "lags behind the primary database"
+#~ msgstr ""
+#~ "Cantidad de tiempo que la aplicación de los datos de rehacer en la base "
+#~ "de datos en espera va por detrás de la base de datos primaria"
+
+#~ msgid ""
+#~ "Amount of time that the replica server is lagging against the source "
+#~ "server"
+#~ msgstr ""
+#~ "Cantidad de tiempo que el servidor de réplica se retrasa con respecto al "
+#~ "servidor de origen"
+
+#~ msgid "Connect"
+#~ msgstr "Conectar"
+
+#, fuzzy
+#~ msgid "Last updated"
+#~ msgstr "Última actualización"
+
+#~ msgid "Lower critical level"
+#~ msgstr "Nivel crítico inferior"
+
+#~ msgid "Lower warning level"
+#~ msgstr "Nivel de advertencia más bajo"
+
+#~ msgid "Negotiate SSL"
+#~ msgstr "Negociar SSL"
+
+#~ msgid "Receive full response"
+#~ msgstr "Recibir una respuesta completa"
+
+#~ msgid "Receive start of response"
+#~ msgstr "Recibir inicio de respuesta"
+
+#~ msgid "Roundtrip"
+#~ msgstr "Viaje de ida y vuelta"
+
+#~ msgid "Send request"
+#~ msgstr "Enviar solicitud"
+
+#~ msgid "Upper critical level"
+#~ msgstr "Nivel crítico superior"
+
+#~ msgid "Upper warning level"
+#~ msgstr "Nivel de alerta superior"
+
 #~ msgid "Hardware / Software Inventory"
 #~ msgstr "Inventario de hardware y software"
 
@@ -82316,9 +82977,6 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 #, python-format
 #~ msgid "Unknown (%s)"
 #~ msgstr "Desconocido (%s)"
-
-#~ msgid "requests"
-#~ msgstr "solicita"
 
 #~ msgid "More information can be found in ~/var/log/web.log"
 #~ msgstr "Puede encontrar más información en ~/var/log/web.log"

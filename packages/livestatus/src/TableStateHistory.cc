@@ -38,13 +38,6 @@
 
 using row_type = HostServiceState;
 
-enum {
-    STATE_OK = 0,
-    STATE_WARNING = 1,
-    STATE_CRITICAL = 2,
-    STATE_UNKNOWN = 3,
-};
-
 using namespace std::chrono_literals;
 
 TableStateHistory::TableStateHistory(ICore *mc, LogCache *log_cache)

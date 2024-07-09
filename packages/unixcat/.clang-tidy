@@ -11,8 +11,9 @@ Checks: >
   performance-*,
   portability-*,
   readability-*,
+  -clang-analyzer-optin.core.EnumCastOutOfRange,
   -misc-include-cleaner,
-  -modernize-use-trailing-return-type
+  -modernize-use-trailing-return-type,
 
 WarningsAsErrors: '*'
 ...

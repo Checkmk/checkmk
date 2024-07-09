@@ -16,6 +16,7 @@ Checks: >
   -cert-err34-c,
   -cert-err58-cpp,
   -clang-analyzer-cplusplus.NewDeleteLeaks,
+  -clang-analyzer-optin.core.EnumCastOutOfRange,
   -cppcoreguidelines-avoid-c-arrays,
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-narrowing-conversions,
@@ -29,6 +30,8 @@ Checks: >
   -misc-non-private-member-variables-in-classes,
   -modernize-avoid-c-arrays,
   -modernize-use-trailing-return-type,
+  -readability-avoid-nested-conditional-operator,
+  -readability-avoid-return-with-void-value,
   -readability-function-cognitive-complexity,
   -readability-identifier-length,
   -readability-magic-numbers

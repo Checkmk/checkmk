@@ -18,7 +18,7 @@ using namespace std::chrono_literals;
 class UnboundedQueueTest
     : public ::testing::TestWithParam<queue_overflow_strategy> {
 public:
-    Queue<int> queue{};
+    Queue<int> queue;
 };
 
 TEST_P(UnboundedQueueTest, LimitIsNotSet) {
@@ -167,7 +167,7 @@ public:
         std::string id_;
     };
 
-    Queue<MoveOnly> queue{};
+    Queue<MoveOnly> queue;
 };
 
 TEST_F(MoveOnlyQueueTest, MoveOnlyTest) {

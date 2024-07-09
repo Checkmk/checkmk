@@ -195,8 +195,10 @@ InputBuffer::Result InputBuffer::readRequest() {
 
             }  // non-empty line: belongs to current request
             size_t length = r - _read_index;
-            for (size_t end = r; end > _read_index &&
-                                 (isspace(_readahead_buffer[--end]) != 0);) {
+            for (size_t end = r;
+                 end > _read_index &&
+                 // NOLINTNEXTLINE(bugprone-inc-dec-in-conditions)
+                 (isspace(_readahead_buffer[--end]) != 0);) {
                 length--;
             }
             if (length > 0) {

@@ -18,6 +18,7 @@ Checks: >
   -cert-dcl51-cpp,
   -cert-err34-c,
   -cert-err58-cpp,
+  -clang-analyzer-optin.core.EnumCastOutOfRange,
   -concurrency-mt-unsafe,
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-narrowing-conversions,

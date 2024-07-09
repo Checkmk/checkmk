@@ -35,8 +35,7 @@ std::unique_ptr<Renderer> Renderer::make(OutputFormat format, std::ostream &os,
 }
 
 void Renderer::output(double value) {
-    // Funny cast for older non-C++11 headers
-    if (static_cast<bool>(std::isnan(value))) {
+    if (std::isnan(value)) {
         output(Null());
     } else {
         _os << value;

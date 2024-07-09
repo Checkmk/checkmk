@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-07-05 05:05+0000\n"
+"PO-Revision-Date: 2024-07-08 23:11+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -9328,7 +9328,7 @@ msgid "Bytes uploaded"
 msgstr "Bytes hochgeladen"
 
 msgid "Bytes used by profiling bucket hash table"
-msgstr ""
+msgstr "Bytes, die durch die Analyse des Bucket Hash Table genutzt werden"
 
 msgid "Bytes used for cache upper levels"
 msgstr "Für Cache-Obergrenzen genutzte Bytes"
@@ -15223,7 +15223,7 @@ msgstr ""
 "a> definieren."
 
 msgid "Dashlet too short to render graph"
-msgstr ""
+msgstr "Dashlet ist zu kurz für die Darstellung des Graphs"
 
 #, python-format
 msgid ""
@@ -19658,6 +19658,8 @@ msgstr ""
 
 msgid "Either increase the dashlet height or disable the graph legend."
 msgstr ""
+"Vergrößern Sie entweder die Höhe des Dashlets oder deaktivieren Sie die "
+"Graphbeschriftung."
 
 msgid ""
 "Either the minimum or maximum allowed value must be configured, otherwise "
@@ -25994,7 +25996,6 @@ msgstr "Der Host hat das Tag <b>%s</b>"
 msgid "Host hover menu shown in BI visualization"
 msgstr "In BI-Visualisierung angezeigtes Host-Hover-Menü"
 
-#, fuzzy
 msgid "Host hover menu shown in topology visualization"
 msgstr "In Topologie-Visualisierung angezeigtes Host-Hover-Menü"
 
@@ -26877,35 +26878,29 @@ msgstr ""
 msgid "IP address of remote Event Console"
 msgstr "IP-Adresse der Remote Event Console"
 
-#, fuzzy
 msgid "IP address of the Spectrum server receiving the SNMP trap"
-msgstr "IP-Adresse des Spectrumservers, der die SNMP-Traps empfangen soll"
+msgstr "IP-Adresse des Spectrum-Servers, der die SNMP-Traps empfängt"
 
-#, fuzzy
 msgid "IP address of tunnel endpoint"
 msgstr "IP-Adresse des Tunnelendpunkts"
 
 msgid "IP address or FQDN of JVM webserver"
 msgstr "IP-Adresse oder FQDN des JVM-Webservers"
 
-#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "IP-Adresse oder Name des Tunnelendpunkts"
 
 msgid "IP addresses"
 msgstr "IP-Adressen"
 
-#, fuzzy
 msgid "IP network"
 msgstr "IP-Netzwerk"
 
-#, fuzzy
 msgid "IP prefix"
 msgstr "IP-Präfix"
 
-#, fuzzy
 msgid "IP range"
-msgstr "Zeitspanne"
+msgstr "IP-Bereich"
 
 msgid "IP ranges to exclude"
 msgstr "Auszuschließende IP-Bereiche"
@@ -26993,7 +26988,6 @@ msgstr "IPv4-Adresse"
 msgid "IPv4 only"
 msgstr "Nur IPv4"
 
-#, fuzzy
 msgid "IPv4 subnet"
 msgstr "IPv4-Subnetz"
 
@@ -27018,7 +27012,6 @@ msgstr "Via IPv6 verarbeitete Bytes"
 msgid "IPv6 requests"
 msgstr "IPv6-Anfragen"
 
-#, fuzzy
 msgid "IPv6 subnet"
 msgstr "IPv6-Subnetz"
 
@@ -27105,7 +27098,6 @@ msgstr ""
 "Unterordner, also verwenden Sie dies mit Bedacht in tief verschachtelten "
 "Dateisystemen."
 
-#, fuzzy
 msgid ""
 "If Checkmk is unable to notify users about problems, the site will warn "
 "about this situation very visibly inside the UI (both in the tactical "
@@ -27113,13 +27105,13 @@ msgid ""
 "Users with this permission will only see failed notifications that occured "
 "within the last 24 hours."
 msgstr ""
-"Wenn Checkmk Benutzer nicht über Probleme informieren kann, wird in der "
-"Oberfläche deutlich darauf hingewiesen (sowohl in der Gesamtübersicht als "
-"auch im Dashboard). Dies betrifft nur Benutzer mit entsprechender "
-"Berechtigung. Benutzer mit dieser Berechtigung sehen nur fehlgeschlagene "
-"Benachrichtigungen die innerhalb der letzten 24 Stunden aufgetreten sind."
+"Wenn Checkmk nicht in der Lage ist, Benutzer über Probleme zu "
+"benachrichtigen, warnt die Instanz in der Benutzeroberfläche (sowohl in der "
+"taktischen Übersicht als auch im Dashboard) deutlich sichtbar vor dieser "
+"Situation. Dies betrifft nur Benutzer mit dieser Berechtigung. Benutzer mit "
+"dieser Berechtigung sehen nur fehlgeschlagene Benachrichtigungen, die "
+"innerhalb der letzten 24 Stunden aufgetreten sind."
 
-#, fuzzy
 msgid ""
 "If Checkmk is unable to notify users about problems, the site will warn "
 "about this situation very visibly inside the UI (both in the tactical "
@@ -27129,13 +27121,14 @@ msgid ""
 "mode=edit_configvar&varname=failed_notification_horizon\">Failed "
 "notification horizon</a>."
 msgstr ""
-"Wenn Checkmk Benutzer nicht über Probleme informieren kann, wird in der "
-"Oberfläche deutlich darauf hingewiesen (sowohl in der Gesamtübersicht als "
-"auch im Dashboard). Dies betrifft nur Benutzer mit entsprechender "
-"Berechtigung. Benutzer mit dieser Berechtigung sehen fehlgeschlagene "
-"Benachrichtigungen, die zwischen jetzt und dem konfigurierten <a href=\"wato."
-"py?mode=edit_configvar&varname=failed_notification_horizon\">Zeitraum "
-"fehlgeschlagener Benachrichtigungen</a> aufgetreten sind."
+"Wenn Checkmk nicht in der Lage ist, Benutzer über Probleme zu "
+"benachrichtigen, warnt die Instanz in der Benutzeroberfläche (sowohl in der "
+"taktischen Übersicht als auch im Dashboard) deutlich sichtbar vor dieser "
+"Situation. Dies betrifft nur Benutzer mit dieser Berechtigung. Benutzer mit "
+"dieser Berechtigung sehen fehlgeschlagene Benachrichtigungen zwischen jetzt "
+"und dem konfigurierten <a href=\"wato.py?"
+"mode=edit_configvar&varname=failed_notification_horizon\">Zeithorizont "
+"fehlgeschlagene Benachrichtigungen</a>."
 
 msgid ""
 "If Windows event log generates multiple messages with same content, then "
@@ -27166,7 +27159,6 @@ msgstr ""
 "überschreiben. Dies hilft Ihnen, die Warnungen während des Update-Prozesses "
 "Ihrer Checkmk-Instanzen und -Agenten zu reduzieren."
 
-#, fuzzy
 msgid ""
 "If a cluster uses multiple namespaces you need to activate this option. "
 "Hosts for namespaced Kubernetes objects will then be prefixed with the names "
@@ -27251,7 +27243,6 @@ msgstr ""
 "Ohne diese Berechtigung kann ein Benutzer noch solche Events sehen, die von "
 "einem Host kommen, für den er ein Kontakt ist."
 
-#, fuzzy
 msgid ""
 "If access to the internet for downloading the sources for creating RCC "
 "environments is only possible via a network proxy, you can specify this here."
@@ -27379,7 +27370,6 @@ msgstr ""
 "Wenn diese Option aktiviert ist, enthalten die Service-Details den "
 "Benutzernamen des Prozessverantwortlichen."
 
-#, fuzzy
 msgid ""
 "If exceeded, an exception will appear. In extraordinary cases, consider "
 "calling Support Diagnostics from command line (see inline help)."
@@ -39406,7 +39396,7 @@ msgid "Number of power supply"
 msgstr "Nummer des Netzteils"
 
 msgid "Number of probes per hop"
-msgstr "Anzahl von Tests pro Sprung"
+msgstr "Anzahl von Tests pro Hop"
 
 msgid "Number of problem alerts"
 msgstr "Anzahl von Problemalarmen"
@@ -46580,10 +46570,10 @@ msgid "Response time"
 msgstr "Antwortzeit"
 
 msgid "Response timeout"
-msgstr "Antwort-Timeout"
+msgstr "Timeout der Antwort"
 
 msgid "Response timeout for a single query"
-msgstr "Antwortzeit auf eine einzelne Anfrage"
+msgstr "Timeout der Antwort auf eine einzelne Anfrage"
 
 msgid "Responsible teams"
 msgstr "Verantwortliche Teams"
@@ -54895,10 +54885,11 @@ msgid ""
 "is applied both to the initial connection, as well as the time the plug-in "
 "has to wait between chunks of data it receives."
 msgstr ""
-"Weisen Sie das jolokia-Plugin an, nicht länger als die angegebene Anzahl von "
-"Sekunden auf eine Antwort von jeder konfigurierten Instanz zu warten. Diese "
-"Zeitbegrenzung gilt sowohl für die erste Verbindung als auch für die Zeit, "
-"die das Plugin zwischen den Datenblöcken warten muss, die es empfängt."
+"Weisen Sie das jolokia-Plugin an, nicht mehr auf eine Antwort von jeder "
+"konfigurierten Instanz zu warten, nachdem die angegebene Anzahl von Sekunden "
+"verstrichen ist. Dieses Zeitlimit gilt sowohl für die erste Verbindung als "
+"auch für die Zeit, die das Plugin zwischen den empfangenen Datenpaketen "
+"warten muss."
 
 msgid "Teltonika-TRB140"
 msgstr "Teltonika-TRB140"
@@ -59497,9 +59488,9 @@ msgid ""
 "sends requests to and receives responses from it regarding the "
 "authentication process of a user."
 msgstr ""
-"Die Zeitüberschreitung, die für HTTP-Verbindungen mit dem Identitätsanbieter "
-"gilt. Checkmk sendet in Bezug auf den Authentifizierungsprozess eines "
-"Benutzers Anfragen an den Identitätsanbieter und erhält Antworten von ihm."
+"Das Timeout, das für HTTP-Verbindungen mit dem Identitätsanbieter gilt. "
+"Checkmk sendet in Bezug auf den Authentifizierungsprozess eines Benutzers "
+"Anfragen an den Identitätsanbieter und erhält Antworten von ihm."
 
 #, python-format
 msgid ""
@@ -61833,7 +61824,7 @@ msgid ""
 msgstr ""
 "Diese Option schaltet das Cachen von etlichen Anfragen ein, welche keine "
 "aktuellen Daten benötigen. Das reduziert die Anzahl der Livestatus-Anfragen "
-"zu den Instanzen und senkt so die Antwortzeit von Remote-Instanzen mit hohen "
+"an die Instanzen und senkt so die Antwortzeit von Remote-Instanzen mit hohen "
 "Latenzzeiten."
 
 msgid ""
@@ -63747,6 +63738,11 @@ msgid ""
 "too high may cause CMC issues such as OOM kills and response timeouts.  "
 "Values in the range of 100-500 MB should work in most cases."
 msgstr ""
+"Hier wird die maximale Größe der von Livestatus gesendeten Nachrichten "
+"festgelegt. Ist der Wert zu niedrig, wird Livestatus längere Antworten "
+"verwerfen. Ist der Wert jedoch zu hoch, kann es zu CMC-Problemen wie OOM-"
+"Kills und Antwort-Timeouts kommen. Werte im Bereich von 100-500 MB sollten "
+"in den meisten Fällen funktionieren."
 
 msgid ""
 "This sets the time that the GUI waits for a connection to the site to be "
@@ -63760,10 +63756,9 @@ msgstr ""
 "eine Verbindung zur Instanz hergestellt wird, bevor die Instanz als "
 "unerreichbar angesehen wird. Es wird dringend empfohlen, hier einen "
 "möglichst niedrigen Wert einzustellen, da diese Einstellung direkt die GUI-"
-"Reaktionszeit beeinflusst, wenn die Destionierung nicht erreichbar ist. Bei "
-"Verwendung des Livestatus Proxy-Daemons verbindet sich die GUI mit dem "
-"lokalen Proxy, in dieser Situation wird ein niedrigerer Wert, wie z.B. 2 "
-"Sekunden empfohlen."
+"Antwortzeit beeinflusst, wenn das Ziel nicht erreichbar ist. Bei Verwendung "
+"des Livestatus Proxy-Daemons verbindet sich die GUI mit dem lokalen Proxy, "
+"in dieser Situation wird ein niedrigerer Wert, wie z.B. 2 Sekunden empfohlen."
 
 msgid ""
 "This setting affects service summaries and details only, which are user-"
@@ -71142,12 +71137,12 @@ msgid ""
 "Inventory system."
 msgstr ""
 "Über <tt>Anzeige > Anzeigeoptionen verändern > Zeige interne Baumpfade</tt> "
-"auf der HW/SW-Inventurseite eines Hosts werden die internen Baumpfade "
+"auf der HW-/SW-Inventurseite eines Hosts werden die internen Baumpfade "
 "sichtbar, die zu Unterkategorien, den Schlüsseln von Einzelwerten oder "
 "Tabellenspaltennamen führen. Schlüsselspalten von Tabellen sind mit '*' "
 "gekennzeichnet. Siehe <a href=\"https://docs.checkmk.com/latest/de/inventory."
-"html\">HW/SW-Inventarisierung</a>. für weitere Details über das HW/SW-"
-"Inventarisierungssystem."
+"html\">HW-/SW-Inventur</a>. für weitere Details über das HW/SW-"
+"Inventursystem."
 
 msgid "Vibrate only"
 msgstr "Nur vibrieren"

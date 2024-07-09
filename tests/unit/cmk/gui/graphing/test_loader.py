@@ -278,7 +278,6 @@ _SKIP_MODULES: Final[Sequence[str]] = [
     "cmk.plugins.collection.graphing.emcvnx",
     "cmk.plugins.collection.graphing.environment",
     "cmk.plugins.collection.graphing.fc",
-    "cmk.plugins.collection.graphing.fireeye",
     "cmk.plugins.collection.graphing.gpu",
     "cmk.plugins.collection.graphing.hop",
     "cmk.plugins.collection.graphing.interfaces",

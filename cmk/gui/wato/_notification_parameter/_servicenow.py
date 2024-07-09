@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
+
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
@@ -13,6 +15,7 @@ from cmk.gui.valuespec import (
     HTTPUrl,
     Integer,
     ListOf,
+    Migrate,
     TextAreaUnicode,
     TextInput,
     Tuple,
@@ -30,83 +33,114 @@ class NotificationParameterServiceNow(NotificationParameter):
 
     @property
     def spec(self) -> Dictionary:
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            required_keys=["url", "username", "password", "mgmt_type"],
-            elements=[
-                (
-                    "url",
-                    HTTPUrl(
-                        title=_("ServiceNow URL"),
-                        help=_(
-                            "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
+        return Migrate(  # type: ignore[return-value]
+            valuespec=Dictionary(
+                title=_("Create notification with the following parameters"),
+                required_keys=["url", "mgmt_type", "auth"],
+                elements=[
+                    (
+                        "url",
+                        HTTPUrl(
+                            title=_("ServiceNow URL"),
+                            help=_(
+                                "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
+                            ),
+                            allow_empty=False,
                         ),
-                        allow_empty=False,
                     ),
-                ),
-                ("proxy_url", HTTPProxyReference()),
-                (
-                    "username",
-                    TextInput(
-                        title=_("Username"),
-                        help=_(
-                            "The user, used for login, has to have at least the "
-                            "role 'itil' in ServiceNow."
+                    ("proxy_url", HTTPProxyReference()),
+                    (
+                        "auth",
+                        CascadingDropdown(
+                            title=_("Authentication"),
+                            choices=[
+                                (
+                                    "auth_basic",
+                                    _("Basic authentication"),
+                                    Dictionary(
+                                        elements=[
+                                            (
+                                                "username",
+                                                TextInput(
+                                                    title=_("Login username"),
+                                                    allow_empty=False,
+                                                ),
+                                            ),
+                                            (
+                                                "password",
+                                                IndividualOrStoredPassword(
+                                                    title=_("Password"),
+                                                    allow_empty=False,
+                                                ),
+                                            ),
+                                        ],
+                                        optional_keys=[],
+                                    ),
+                                ),
+                                (
+                                    "auth_token",
+                                    _("OAuth token authentication"),
+                                    Dictionary(
+                                        elements=[
+                                            (
+                                                "token",
+                                                IndividualOrStoredPassword(
+                                                    title=_("OAuth token"),
+                                                    allow_empty=False,
+                                                ),
+                                            ),
+                                        ],
+                                        optional_keys=[],
+                                    ),
+                                ),
+                            ],
                         ),
-                        size=40,
-                        allow_empty=False,
                     ),
-                ),
-                (
-                    "password",
-                    IndividualOrStoredPassword(
-                        title=_("Password of the user"),
-                        allow_empty=False,
-                    ),
-                ),
-                (
-                    "use_site_id",
-                    Alternative(
-                        title=_("Use site ID prefix"),
-                        help=_(
-                            "Please use this option if you have multiple "
-                            "sites in a distributed setup which send their "
-                            "notifications to the same ServiceNow instance. "
-                            "The site ID will be used as prefix for the "
-                            "problem ID on incident creation."
+                    (
+                        "use_site_id",
+                        Alternative(
+                            title=_("Use site ID prefix"),
+                            help=_(
+                                "Please use this option if you have multiple "
+                                "sites in a distributed setup which send their "
+                                "notifications to the same ServiceNow instance. "
+                                "The site ID will be used as prefix for the "
+                                "problem ID on incident creation."
+                            ),
+                            elements=[
+                                FixedValue(value=False, title=_("Deactivated"), totext=""),
+                                FixedValue(value=True, title=_("Use site ID"), totext=""),
+                            ],
+                            default_value=False,
                         ),
-                        elements=[
-                            FixedValue(value=False, title=_("Deactivated"), totext=""),
-                            FixedValue(value=True, title=_("Use site ID"), totext=""),
-                        ],
-                        default_value=False,
                     ),
-                ),
-                (
-                    "timeout",
-                    TextInput(
-                        title=_("Set optional timeout for connections to ServiceNow"),
-                        help=_("Here you can configure timeout settings in seconds."),
-                        default_value="10",
-                        size=3,
-                    ),
-                ),
-                (
-                    "mgmt_type",
-                    CascadingDropdown(
-                        title=_("Management type"),
-                        help=_(
-                            "With ServiceNow you can create different "
-                            "types of management issues, currently "
-                            "supported are indicents and cases."
+                    (
+                        "timeout",
+                        TextInput(
+                            title=_("Set optional timeout for connections to ServiceNow"),
+                            help=_("Here you can configure timeout settings in seconds."),
+                            default_value="10",
+                            size=3,
                         ),
-                        choices=[
-                            ("incident", _("Incident"), self._incident_vs()),
-                            ("case", _("Case"), self._case_vs()),
-                        ],
                     ),
-                ),
-            ],
+                    (
+                        "mgmt_type",
+                        CascadingDropdown(
+                            title=_("Management type"),
+                            help=_(
+                                "With ServiceNow you can create different "
+                                "types of management issues, currently "
+                                "supported are indicents and cases."
+                            ),
+                            choices=[
+                                ("incident", _("Incident"), self._incident_vs()),
+                                ("case", _("Case"), self._case_vs()),
+                            ],
+                        ),
+                    ),
+                ],
+            ),
+            migrate=_migrate_auth_section,
         )
 
     def _incident_vs(self) -> Dictionary:
@@ -493,3 +527,13 @@ $LONGSERVICEOUTPUT$
                 orientation="horizontal",
             ),
         )
+
+
+def _migrate_auth_section(params: dict[str, Any]) -> dict[str, Any]:
+    if "auth" in params:
+        return params
+    username = params.pop("username")
+    password = params.pop("password")
+    params["auth"] = ("auth_basic", {"username": username, "password": ("password", password[1])})
+
+    return params

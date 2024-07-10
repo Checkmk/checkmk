@@ -281,7 +281,6 @@ _SKIP_MODULES: Final[Sequence[str]] = [
     "cmk.plugins.collection.graphing.printer",
     "cmk.plugins.collection.graphing.varnish",
     "cmk.plugins.gcp.graphing.gcp",
-    "cmk.plugins.memory.graphing.memory",
     "cmk.plugins.oracle.graphing.oracle",
     "cmk.plugins.robotmk.graphing.cee",
 ]

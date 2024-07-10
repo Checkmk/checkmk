@@ -81,7 +81,6 @@ tests/.hypothesis/
 /buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
 /bazel-*
 /bazel_log*
-/MODULE.bazel
 /MODULE.bazel.lock
 user.bazelrc
 

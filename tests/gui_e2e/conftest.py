@@ -27,11 +27,13 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(name="test_site", scope="session")
 def get_site() -> Iterator[Site]:
+    """Return Checkmk site(object) where GUI tests are being run."""
     yield from get_site_factory(prefix="gui_e2e_").get_test_site()
 
 
 @pytest.fixture(name="credentials", scope="session")
 def _credentials(test_site: Site) -> CmkCredentials:
+    """Return admin user credentials of the Checkmk site."""
     return CmkCredentials(username=ADMIN_USER, password=test_site.admin_password)
 
 
@@ -71,6 +73,7 @@ def _logged_in_mobile(
 def _dashboard_page(
     page: Page, _logged_in_page: None, test_site: Site, credentials: CmkCredentials
 ) -> Dashboard:
+    """Entrypoint to test browser GUI. Navigates to 'Main Dashboard'."""
     _obj = _navigate_to_dashboard(page, test_site.internal_url, credentials)
     if isinstance(_obj, Dashboard):
         return _obj  # handle type-hinting
@@ -81,6 +84,7 @@ def _dashboard_page(
 def _dashboard_page_mobile(
     page_mobile: Page, _logged_in_page_mobile: None, test_site: Site, credentials: CmkCredentials
 ) -> DashboardMobile:
+    """Entrypoint to test mobile GUI. Navigates to 'Mobile Dashboard'"""
     _obj = _navigate_to_dashboard(page_mobile, test_site.internal_url_mobile, credentials)
     if isinstance(_obj, DashboardMobile):
         return _obj  # handle type-hinting

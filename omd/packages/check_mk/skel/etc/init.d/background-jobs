@@ -19,7 +19,9 @@ case "$1" in
         $0 start
         ;;
 
-    status) ;;
+    status)
+        exit 5 # Ignore this script in "omd status"
+        ;;
     *)
         echo "Usage: background-jobs {start|stop|restart|status}"
         exit 1

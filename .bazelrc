@@ -9,6 +9,8 @@ common --remote_cache_compression
 common --experimental_remote_cache_compression_threshold=1048576
 common --remote_local_fallback
 common --cycles
+common --local_resources=cpu=HOST_CPUS-2
+common --local_resources=memory=HOST_RAM*.5
 
 ## For specific commands
 # https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html#index-fPIC
@@ -28,6 +30,8 @@ common:ci --show_progress_rate_limit=0
 common:ci --show_timestamps
 common:ci --memory_profile=bazel-memory.profile
 common:ci --extra_toolchains="//omd/packages/toolchain:cc_toolchain_for_linux_x86_64"
+common:ci --local_resources=cpu=HOST_CPUS
+common:ci --local_resources=memory=HOST_RAM*.67
 
 ## For specific commands
 # build:ci ...

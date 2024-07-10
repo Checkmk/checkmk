@@ -11,6 +11,7 @@ from netapp_ontap import resources as NetAppResource
 from netapp_ontap.error import NetAppRestError
 from netapp_ontap.host_connection import HostConnection
 from pydantic import BaseModel
+from requests.adapters import HTTPAdapter
 
 from cmk.plugins.netapp import models  # pylint: disable=cmk-module-layer-violation
 from cmk.special_agents.v0_unstable.agent_common import CannotRecover, special_agent_main
@@ -19,6 +20,16 @@ from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default
 __version__ = "2.3.0b1"
 
 USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
+
+
+class HostNameValidationAdapter(HTTPAdapter):
+    def __init__(self, host_name: str) -> None:
+        super().__init__()
+        self._reference_host_name = host_name
+
+    def cert_verify(self, conn, url, verify, cert):
+        conn.assert_hostname = self._reference_host_name
+        return super().cert_verify(conn, url, verify, cert)
 
 
 def write_section(
@@ -842,8 +853,13 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
             "to each individual subquery. (Default is %(default)s seconds)"
         ),
     )
-    parser.add_argument(
+    cert_args = parser.add_mutually_exclusive_group()
+    cert_args.add_argument(
         "--no-cert-check", action="store_true", help="Do not verify TLS certificate"
+    )
+    cert_args.add_argument(
+        "--cert-server-name",
+        help="Expect this as the servers name in the ssl certificate. Overrides '--no-cert-check'.",
     )
 
     return parser.parse_args(argv)
@@ -871,6 +887,12 @@ def agent_netapp_main(args: Args) -> int:
         verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
         headers={"User-Agent": USER_AGENT},
     ) as connection:
+
+        if isinstance(args.cert_server_name, str):
+            connection.session.mount(
+                connection.origin, HostNameValidationAdapter(args.cert_server_name)
+            )
+
         logger.debug("Start writing sections")
         try:
             write_sections(connection, logger, args)

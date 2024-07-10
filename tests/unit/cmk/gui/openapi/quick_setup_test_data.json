@@ -1,13 +1,25 @@
 {
     "stage_1": [
         {
-            "widget_type": "list",
+            "widget_type": "list_of_widgets",
             "items": [
-                "Go to AWS root account > Services > IAM.",
-                "Click 'Add user' under Users, select 'Access key - Programmatic access', and attach the 'ReadOnlyAccess' policy*.",
-                "Save the generated access key and secret key for later use."
+                {
+                    "widget_type": "text",
+                    "text": "Go to AWS root account > Services > IAM.",
+                    "tooltip": null
+                },
+                {
+                    "widget_type": "text",
+                    "text": "Click 'Add user' under Users, select 'Access key - Programmatic access', and attach the 'ReadOnlyAccess' policy.",
+                    "tooltip": null
+                },
+                {
+                    "widget_type": "text",
+                    "text": "Save the generated access key and secret key for later use.",
+                    "tooltip": "Since this is a ReadOnlyAccess, we won't create any resources on your AWS account"
+                }
             ],
-            "ordered": false
+            "list_type": "ordered"
         },
         {
             "id": "aws_account_name",
@@ -43,10 +55,6 @@
                 "account_name": ""
             },
             "validation": []
-        },
-        {
-            "widget_type": "note_text",
-            "text": "*Since this is a ReadOnlyAccess, we will never create any resources on your AWS account"
         },
         {
             "id": "credentials",

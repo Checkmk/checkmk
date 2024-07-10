@@ -12,7 +12,7 @@ from cmk.utils.quick_setup.definitions import (
     QuickSetupStage,
     StageId,
 )
-from cmk.utils.quick_setup.widgets import FormSpecWrapper, List, NoteText
+from cmk.utils.quick_setup.widgets import FormSpecWrapper, ListOfWidgets, Text
 
 from cmk.ccc.i18n import _
 from cmk.plugins.aws.rulesets import aws  # pylint: disable=cmk-module-layer-violation
@@ -25,14 +25,22 @@ def prepare_aws(stage_id: StageId) -> QuickSetupStage:
         stage_id=stage_id,
         title=_("Prepare AWS for Checkmk"),
         components=[
-            List(
+            ListOfWidgets(
                 items=[
-                    _("Go to AWS root account > Services > IAM."),
-                    _(
-                        "Click 'Add user' under Users, select 'Access key - Programmatic access', and attach the 'ReadOnlyAccess' policy*."
+                    Text(
+                        text=_("Go to AWS root account > Services > IAM."),
                     ),
-                    _("Save the generated access key and secret key for later use."),
-                ]
+                    Text(
+                        text=_(
+                            "Click 'Add user' under Users, select 'Access key - Programmatic access', and attach the 'ReadOnlyAccess' policy."
+                        ),
+                    ),
+                    Text(
+                        text=_("Save the generated access key and secret key for later use."),
+                        tooltip="Since this is a ReadOnlyAccess, we won't create any resources on your AWS account",
+                    ),
+                ],
+                list_type="ordered",
             ),
             FormSpecWrapper(
                 id="aws_account_name",
@@ -48,11 +56,6 @@ def prepare_aws(stage_id: StageId) -> QuickSetupStage:
                         )
                     }
                 ),
-            ),
-            NoteText(
-                text=_(
-                    "*Since this is a ReadOnlyAccess, we will never create any resources on your AWS account"
-                )
             ),
             FormSpecWrapper(
                 id="credentials",

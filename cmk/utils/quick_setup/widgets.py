@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass, field
+from typing import Literal
 
 
 @dataclass
@@ -14,7 +15,8 @@ class Widget:
 @dataclass
 class Text(Widget):
     widget_type: str = "text"
-    text: str = field(default="text", init=False)
+    text: str = ""
+    tooltip: str | None = None
 
 
 @dataclass
@@ -24,10 +26,10 @@ class NoteText(Widget):
 
 
 @dataclass
-class List(Widget):
-    widget_type: str = field(default="list", init=False)
-    items: list[str] = field(default_factory=list)
-    ordered: bool = False
+class ListOfWidgets(Widget):
+    widget_type: str = field(default="list_of_widgets", init=False)
+    items: list[Widget] = field(default_factory=list)
+    list_type: None | Literal["bullet", "ordered", "check"] = None
 
 
 @dataclass

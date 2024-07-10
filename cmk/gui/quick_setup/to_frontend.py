@@ -16,12 +16,20 @@ from cmk.utils.quick_setup.definitions import (
     Stage,
     StageId,
 )
-from cmk.utils.quick_setup.widgets import FormSpecWrapper
+from cmk.utils.quick_setup.widgets import FormSpecWrapper, ListOfWidgets, Widget
 
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
 from cmk.gui.form_specs.vue.type_defs import DataOrigin
 
 from cmk.rulesets.v1.form_specs import FormSpec
+
+
+def get_stage_components_from_widget(widget: Widget) -> dict:
+    if isinstance(widget, ListOfWidgets):
+        widget_as_dict = asdict(widget)
+        widget_as_dict["items"] = [get_stage_components_from_widget(item) for item in widget.items]
+        return widget_as_dict
+    return asdict(widget)
 
 
 def get_stage_components_for_the_frontend(
@@ -42,7 +50,7 @@ def get_stage_components_for_the_frontend(
                 ),
             )
         else:
-            components.append(asdict(widget))
+            components.append(get_stage_components_from_widget(widget))
     return components
 
 

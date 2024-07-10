@@ -19,7 +19,7 @@ from cmk.plugins.lib.azure import (
     Section,
 )
 
-DB_MYSQL_RESOURCE_TYPES = ["Microsoft.DBforMySQL/servers"]
+DB_MYSQL_RESOURCE_TYPES = ["Microsoft.DBforMySQL/servers", "Microsoft.DBforMySQL/flexibleServers"]
 
 
 check_plugin_azure_mysql_memory = CheckPlugin(
@@ -51,12 +51,19 @@ def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResu
     return create_check_metrics_function(
         [
             MetricData(
-                "maximum_seconds_behind_master",
+                "maximum_seconds_behind_master",  # single server metric name
                 "replication_lag",
                 "Replication lag",
                 render.timespan,
                 upper_levels_param="levels",
-            )
+            ),
+            MetricData(
+                "maximum_replication_lag",  # flexible server metric name
+                "replication_lag",
+                "Replication lag",
+                render.timespan,
+                upper_levels_param="levels",
+            ),
         ]
     )
 
@@ -66,7 +73,8 @@ check_plugin_azure_mysql_replication = CheckPlugin(
     sections=["azure_servers"],
     service_name="Azure/DB for MySQL %s Replication",
     discovery_function=create_discover_by_metrics_function(
-        "maximum_seconds_behind_master",
+        "maximum_seconds_behind_master",  # single server metric name
+        "maximum_replication_lag",  # flexible server metric name
         resource_types=DB_MYSQL_RESOURCE_TYPES,
     ),
     check_function=check_replication(),
@@ -80,7 +88,8 @@ check_plugin_azure_mysql_connections = CheckPlugin(
     service_name="Azure/DB for MySQL %s Connections",
     discovery_function=create_discover_by_metrics_function(
         "average_active_connections",
-        "total_connections_failed",
+        "total_connections_failed",  # single server metric name
+        "total_aborted_connections",  # flexible server metric name
         resource_types=DB_MYSQL_RESOURCE_TYPES,
     ),
     check_function=check_connections(),

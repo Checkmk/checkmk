@@ -118,9 +118,9 @@ PARSED_RESOURCES = {
 }
 
 MULTIPLE_RESOURCE_SECTION = {
-    "checkmk-mysql-server-1": Resource(
-        id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server",
-        name="checkmk-mysql-server",
+    "checkmk-mysql-single-server": Resource(
+        id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-single-server",
+        name="checkmk-mysql-single-server",
         type="Microsoft.DBforMySQL/servers",
         group="BurningMan",
         kind=None,
@@ -135,10 +135,10 @@ MULTIPLE_RESOURCE_SECTION = {
         },
         subscription="2fac104f-cb9c-461d-be57-037039662426",
     ),
-    "checkmk-mysql-server-2": Resource(
-        id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server",
-        name="checkmk-mysql-server",
-        type="Microsoft.DBforMySQL/servers",
+    "checkmk-mysql-flexible-server": Resource(
+        id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-flexible-server",
+        name="checkmk-mysql-flexible-server",
+        type="Microsoft.DBforMySQL/flexibleServers",
         group="BurningMan",
         kind=None,
         location="westeurope",
@@ -283,14 +283,14 @@ def test_parse_resources() -> None:
             MULTIPLE_RESOURCE_SECTION,
             [
                 Service(
-                    item="checkmk-mysql-server-1",
+                    item="checkmk-mysql-single-server",
                     labels=[
                         ServiceLabel("cmk/azure/tag/tag1", "value1"),
                         ServiceLabel("cmk/azure/tag/tag2", "value2"),
                     ],
                 ),
                 Service(
-                    item="checkmk-mysql-server-2",
+                    item="checkmk-mysql-flexible-server",
                     labels=[
                         ServiceLabel("cmk/azure/tag/tag3", "value3"),
                         ServiceLabel("cmk/azure/tag/tag4", "value4"),
@@ -312,6 +312,47 @@ def test_parse_resources() -> None:
                 ),
             ],
             id="single resource, matching resource type",
+        ),
+        pytest.param(
+            ["Microsoft.DBforMySQL/flexibleServers"],
+            PARSED_RESOURCES,
+            [],
+            id="single resource, non-matching resource type",
+        ),
+        pytest.param(
+            ["Microsoft.DBforMySQL/servers"],
+            MULTIPLE_RESOURCE_SECTION,
+            [
+                Service(
+                    item="checkmk-mysql-single-server",
+                    labels=[
+                        ServiceLabel("cmk/azure/tag/tag1", "value1"),
+                        ServiceLabel("cmk/azure/tag/tag2", "value2"),
+                    ],
+                )
+            ],
+            id="multiple resources, one matching resource type",
+        ),
+        pytest.param(
+            ["Microsoft.DBforMySQL/servers", "Microsoft.DBforMySQL/flexibleServers"],
+            MULTIPLE_RESOURCE_SECTION,
+            [
+                Service(
+                    item="checkmk-mysql-single-server",
+                    labels=[
+                        ServiceLabel("cmk/azure/tag/tag1", "value1"),
+                        ServiceLabel("cmk/azure/tag/tag2", "value2"),
+                    ],
+                ),
+                Service(
+                    item="checkmk-mysql-flexible-server",
+                    labels=[
+                        ServiceLabel("cmk/azure/tag/tag3", "value3"),
+                        ServiceLabel("cmk/azure/tag/tag4", "value4"),
+                    ],
+                ),
+            ],
+            id="multiple resources, multiple matching resource type",
         ),
     ],
 )
@@ -355,7 +396,18 @@ def test_create_discover_by_metrics_function(
             ],
             id="single resource, matching resource type",
         ),
-        pytest.param(None, MULTIPLE_RESOURCE_SECTION, [], id="multiple resources"),
+        pytest.param(
+            ["Microsoft.DBforMySQL/flexibleServers"],
+            PARSED_RESOURCES,
+            [],
+            id="single resource, non-matching resource type",
+        ),
+        pytest.param(
+            ["Microsoft.DBforMySQL/servers", "Microsoft.DBforMySQL/flexibleServers"],
+            MULTIPLE_RESOURCE_SECTION,
+            [],
+            id="multiple resources, matching resource types",
+        ),
     ],
 )
 def test_create_discover_by_metrics_function_single(

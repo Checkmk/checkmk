@@ -212,7 +212,7 @@ register.check_plugin(
     service_name="%s",
     sections=["sap"],
     discovery_function=discover_sap_value,
-    discovery_default_parameters={"match": "~$^"},
+    discovery_default_parameters={"match": ("pattern", "$^")},
     discovery_ruleset_name="inventory_sap_values",
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_sap_value,

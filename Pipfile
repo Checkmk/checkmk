@@ -199,6 +199,13 @@ typing-extensions = "*"
 netapp-ontap = "==9.14.1.0"  # used by netapp special agent
 redfish = "~= 3.2.2"  # used for management board monitoring via Redfish, used by optional MKP
 robotframework = "~=7.0"  # used for parsing robotmk agent data
+opentelemetry-api = "==1.25.0" # used for distributed tracing of Checkmk
+opentelemetry-sdk = "==1.25.0" # used for distributed tracing of Checkmk
+opentelemetry-exporter-otlp = "==1.25.0" # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-wsgi = "==0.46b0" # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-requests = "==0.46b0" # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-redis = "==0.46b0" # used for distributed tracing of Checkmk
+opentelemetry-semantic-conventions = "==0.46b0" # used for distributed tracing of Checkmk
 
 [requires]
 python_version = "3.12"

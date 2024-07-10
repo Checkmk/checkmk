@@ -10,7 +10,7 @@ from playwright.sync_api import expect
 
 from tests.testlib.playwright.pom.dashboard import Dashboard
 
-_backup_passphrase = "cmk"
+_backup_passphrase = "cmk-12-chars"
 
 
 def _go_to_backups_page(dashboard_page: Dashboard) -> None:
@@ -34,7 +34,13 @@ def _create_encryption_key(dashboard_page: Dashboard) -> None:
     dashboard_page.main_area.get_suggestion("Backup encryption keys").click()
     dashboard_page.main_area.expect_no_entries()
 
+    # Use a too short password
     dashboard_page.main_area.get_suggestion("Generate key").click()
+    dashboard_page.main_area.get_input("key_p_alias").fill("Won't work")
+    dashboard_page.main_area.get_input("key_p_passphrase").fill("tooshort")
+    dashboard_page.main_area.get_suggestion("Create").click()
+    dashboard_page.main_area.check_error("You need to provide at least 12 characters.")
+
     dashboard_page.main_area.get_input("key_p_alias").fill("My backup key")
     dashboard_page.main_area.get_input("key_p_passphrase").fill(_backup_passphrase)
     dashboard_page.main_area.get_suggestion("Create").click()

@@ -249,8 +249,8 @@ class PageKeyManagement:
 class PageEditKey:
     back_mode: str
 
-    def __init__(self, key_store: KeypairStore, passphrase_min_len: int | None = None) -> None:
-        self._minlen = passphrase_min_len
+    def __init__(self, key_store: KeypairStore) -> None:
+        self._minlen = 12
         self.key_store = key_store
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

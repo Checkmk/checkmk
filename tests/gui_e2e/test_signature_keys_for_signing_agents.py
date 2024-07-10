@@ -153,10 +153,10 @@ def test_generate_key(dashboard_page: Dashboard) -> None:
     dashboard_page.main_area.get_input("key_p_alias").fill("Won't work")
     dashboard_page.main_area.get_input("key_p_passphrase").fill("short")
     dashboard_page.main_area.get_suggestion("Create").click()
-    dashboard_page.main_area.check_error("You need to provide at least 8 characters.")
+    dashboard_page.main_area.check_error("You need to provide at least 12 characters.")
 
     dashboard_page.main_area.get_input("key_p_alias").fill("e2e-test")
-    dashboard_page.main_area.get_input("key_p_passphrase").fill("12345678")
+    dashboard_page.main_area.get_input("key_p_passphrase").fill("123456789012")
     dashboard_page.main_area.get_suggestion("Create").click()
     expect(dashboard_page.main_area.get_text("e2e-test")).to_be_visible()
 

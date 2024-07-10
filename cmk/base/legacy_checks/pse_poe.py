@@ -31,6 +31,8 @@ def parse_pse_poe(string_table):
     """
     poe_dict = {}
     for oid_end, poe_max, pse_op_status, poe_used in string_table:
+        if not poe_max or not pse_op_status or not poe_used:
+            continue
         poe_dict[str(oid_end)] = PoeValues(
             poe_max=int(poe_max),
             poe_used=int(poe_used),

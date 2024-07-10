@@ -1,0 +1,10 @@
+Title: multipath: Allow for dots in the UUID
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1720624648
+Edition: cre
+Level: 1
+Version: 2.2.0p31
+
+Previously devices with dots in their UUID have not been discovered.

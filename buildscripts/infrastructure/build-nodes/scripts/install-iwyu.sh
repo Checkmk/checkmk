@@ -53,26 +53,10 @@ fi
 
 # The tag/version numbering scheme is a big mess...
 case $CLANG_VERSION in
-    3.5) TAG_NAME="3.5" LIB_VERSION="3.5" ;;
-    3.6) TAG_NAME="3.6" LIB_VERSION="3.6" ;;
-    3.7) TAG_NAME="3.7" LIB_VERSION="3.7" ;;
-    3.8) TAG_NAME="3.8" LIB_VERSION="3.8" ;;
-    3.9) TAG_NAME="3.9" LIB_VERSION="3.9" ;;
-    4) TAG_NAME="4.0" LIB_VERSION="4.0" ;;
-    5) TAG_NAME="5.0" LIB_VERSION="5.0" ;;
-    6) TAG_NAME="6.0" LIB_VERSION="6.0" ;;
     7) TAG_NAME="7.0" LIB_VERSION="7" ;;
     8) TAG_NAME="8.0" LIB_VERSION="8" ;;
     9) TAG_NAME="9.0" LIB_VERSION="9" ;;
-    10) TAG_NAME="10" LIB_VERSION="10" ;;
-    11) TAG_NAME="11" LIB_VERSION="11" ;;
-    12) TAG_NAME="12" LIB_VERSION="12" ;;
-    13) TAG_NAME="13" LIB_VERSION="13" ;;
-    14) TAG_NAME="14" LIB_VERSION="14" ;;
-    15) TAG_NAME="15" LIB_VERSION="15" ;;
-    16) TAG_NAME="16" LIB_VERSION="16" ;;
-    17) TAG_NAME="17" LIB_VERSION="17" ;;
-    *) failure "Unknown Clang version '${CLANG_VERSION}'" ;;
+    *) TAG_NAME="${CLANG_VERSION}" LIB_VERSION="${CLANG_VERSION}" ;;
 esac
 
 CLANG_LIB_PATH=/usr/lib/llvm-${LIB_VERSION}
@@ -105,7 +89,7 @@ trap cleanup EXIT
 cd "${WORK_DIR}"
 git clone \
     --depth 1 \
-    --branch clang_${TAG_NAME} \
+    --branch "clang_${TAG_NAME}" \
     https://github.com/include-what-you-use/include-what-you-use
 
 IWYU_VERSION=$(grep --word-regexp IWYU_VERSION_STRING include-what-you-use/iwyu_version.h | sed 's/^.*"\(.*\)"$/\1/')
@@ -116,7 +100,7 @@ cd include-what-you-use-build
 cmake -Wno-dev \
     -G "Unix Makefiles" \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_PREFIX_PATH=${CLANG_LIB_PATH} \
+    -DCMAKE_PREFIX_PATH="${CLANG_LIB_PATH}" \
     -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}${IWYU_PATH}" \
     ../include-what-you-use
 make -j8 install

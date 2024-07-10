@@ -99,7 +99,7 @@ check_info["esx_vsphere_objects"] = LegacyCheckDefinition(
     check_default_parameters={
         "states": {
             "poweredOn": 0,
-            "standBy": 0,
+            "standBy": 1,
             "poweredOff": 1,
             "suspended": 1,
             "unknown": 3,

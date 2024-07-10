@@ -1,0 +1,11 @@
+Title: HPE Proliant Servers: RAID Controllers: Adapt to changes in iLO firmware
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1720613772
+Edition: cre
+Level: 1
+Version: 2.2.0p31
+
+This fixes crashes in the plugin "HPE Proliant Servers: RAID Controllers".
+A recent update of the HPE iLO firmware left Checkmk unable to interpret some of the reported states.

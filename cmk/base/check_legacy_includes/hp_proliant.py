@@ -83,9 +83,23 @@ hp_proliant_da_cntlr_role_map = {
 hp_proliant_da_cntlr_state_map = {
     "1": (3, "other"),
     "2": (0, "ok"),
-    "3": (2, "generalFailure"),
-    "4": (2, "cableProblem"),
-    "5": (2, "poweredOff"),
+    "3": (2, "general failure"),
+    "4": (2, "cable problem"),
+    "5": (2, "powered off"),
+    "6": (1, "cache module missing"),
+    "7": (2, "degraded"),
+    "8": (0, "enabled"),
+    "9": (0, "disabled"),
+    "10": (1, "standby (offline)"),
+    "11": (0, "standby (spare)"),
+    "12": (1, "in test"),
+    "13": (0, "starting"),
+    "14": (2, "absent"),
+    "16": (2, "unavailable (offline)"),
+    "17": (0, "deferring"),
+    "18": (0, "quiesced"),
+    "19": (1, "updating"),
+    "20": (0, "qualified"),
 }
 
 

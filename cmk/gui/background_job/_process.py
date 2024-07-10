@@ -51,6 +51,7 @@ def run_process(job_parameters: JobParameters) -> None:
 
     try:
         job_status = jobstatus_store.read()
+        _load_ui()
         with (
             BackgroundJobFlaskApp().test_request_context("/"),
             SuperUserContext() if job_status.user is None else UserContext(UserId(job_status.user)),
@@ -141,7 +142,6 @@ def _initialize_environment(
     config.initialize()
     _enable_logging_to_stdout()
     _init_job_logging(logger, override_job_log_level)
-    _load_ui()
     _register_signal_handlers(logger, is_stoppable, job_id)
     _lock_configuration(lock_wato)
 

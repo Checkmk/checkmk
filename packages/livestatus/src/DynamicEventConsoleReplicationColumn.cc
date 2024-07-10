@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "livestatus/BlobColumn.h"
+#include "livestatus/Column.h"
 #include "livestatus/EventConsoleConnection.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"

@@ -3,12 +3,12 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <variant>
 #include <vector>
 
 #include "gtest/gtest.h"

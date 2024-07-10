@@ -18,7 +18,6 @@
 #include <unistd.h>
 
 #include <compare>
-#include <ratio>
 #include <thread>
 
 #include "livestatus/Logger.h"

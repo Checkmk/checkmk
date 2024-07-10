@@ -5,6 +5,7 @@
 
 #include <pthread.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
 
@@ -13,7 +14,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include <ratio>
 #include <string>
 #include <vector>
 

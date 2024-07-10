@@ -13,6 +13,7 @@
 
 #include "gtest/gtest.h"
 #include "livestatus/BlobColumn.h"
+#include "livestatus/Column.h"
 #include "livestatus/Row.h"
 
 namespace {

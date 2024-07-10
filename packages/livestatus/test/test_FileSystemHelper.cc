@@ -5,7 +5,6 @@
 
 #include <cassert>
 #include <filesystem>
-#include <memory>
 #include <tuple>
 
 #include "gtest/gtest.h"

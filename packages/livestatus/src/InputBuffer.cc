@@ -5,6 +5,7 @@
 
 #include "livestatus/InputBuffer.h"
 
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <algorithm>

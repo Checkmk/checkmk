@@ -6,6 +6,7 @@
 #include "neb/MacroExpander.h"
 
 #include <cstdlib>
+#include <functional>
 #include <unordered_map>
 #include <utility>
 

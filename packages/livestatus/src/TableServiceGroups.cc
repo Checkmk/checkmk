@@ -5,7 +5,6 @@
 
 #include "livestatus/TableServiceGroups.h"
 
-#include <algorithm>
 #include <functional>
 #include <memory>
 #include <vector>

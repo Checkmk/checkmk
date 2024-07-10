@@ -5,7 +5,6 @@
 
 #include "livestatus/Column.h"
 
-#include <algorithm>
 #include <utility>
 
 Column::Column(std::string name, std::string description, ColumnOffsets offsets)

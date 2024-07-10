@@ -8,6 +8,7 @@
 #include <string>
 
 #include "gtest/gtest.h"
+#include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"

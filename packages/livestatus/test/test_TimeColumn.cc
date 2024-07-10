@@ -5,10 +5,10 @@
 
 #include <chrono>
 #include <functional>
-#include <ratio>
 #include <string>
 
 #include "gtest/gtest.h"
+#include "livestatus/Column.h"
 #include "livestatus/Row.h"
 #include "livestatus/TimeColumn.h"
 

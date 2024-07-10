@@ -170,11 +170,11 @@ class ModeEditPassword(SimpleEditMode[Password]):
         return ModePasswords
 
     def __init__(self) -> None:
+        self._orig_locked_by: GlobalIdent | None = None
         super().__init__(
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )
-        self._orig_locked_by: GlobalIdent | None = None
 
     def _clone_entry(self, entry: Password) -> Password:
         clone = copy.deepcopy(entry)

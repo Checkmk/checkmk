@@ -294,7 +294,6 @@ _SKIP_MODULES: Final[Sequence[str]] = [
     "cmk.plugins.aws.graphing.graphs",
     "cmk.plugins.aws.graphing.perfometers",
     "cmk.plugins.collection.graphing.fc",
-    "cmk.plugins.collection.graphing.gpu",
     "cmk.plugins.collection.graphing.hop",
     "cmk.plugins.collection.graphing.interfaces",
     "cmk.plugins.collection.graphing.network",

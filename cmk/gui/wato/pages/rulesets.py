@@ -64,6 +64,12 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     search_form,
 )
+from cmk.gui.quick_setup.html import (
+    quick_setup_duplication_warning,
+    quick_setup_locked_warning,
+    quick_setup_render_link,
+    quick_setup_source_cell,
+)
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
@@ -136,12 +142,6 @@ from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
-from ._html_elements import (
-    quick_setup_duplication_warning,
-    quick_setup_locked_warning,
-    quick_setup_render_link,
-    quick_setup_source_cell,
-)
 from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition
 

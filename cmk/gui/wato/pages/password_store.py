@@ -12,6 +12,12 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.quick_setup.html import (
+    quick_setup_duplication_warning,
+    quick_setup_locked_warning,
+    quick_setup_render_link,
+    quick_setup_source_cell,
+)
 from cmk.gui.table import Table
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import (
@@ -23,12 +29,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.valuespec import Password as PasswordValuespec
 from cmk.gui.valuespec import ValueSpec
-from cmk.gui.wato.pages._html_elements import (
-    quick_setup_duplication_warning,
-    quick_setup_locked_warning,
-    quick_setup_render_link,
-    quick_setup_source_cell,
-)
 from cmk.gui.wato.pages._simple_modes import SimpleEditMode, SimpleListMode, SimpleModeType
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore

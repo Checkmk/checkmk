@@ -6,10 +6,13 @@ distribution: check_mk
 description:
  This check reports the number of active and failed connections.
  You can configure levels using the rule "Database Connections".
+ (Note that for MySQL flexible servers Azure speaks of "aborted"
+ rather than "failed" connections.)
 
 item:
  The name of the resource.
 
 discovery:
- One service is created for each database if any of required metrics
- (average_active_connections, total_connections_failed) are given.
+ One service is created for each database if any of the required metrics
+ (average_active_connections, total_connections_failed,
+ total_aborted_connections) are given.

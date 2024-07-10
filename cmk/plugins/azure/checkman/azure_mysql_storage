@@ -12,6 +12,6 @@ item:
  The name of the resource.
 
 discovery:
- One service is created for each database if any of required metrics
+ One service is created for each database if any of the required metrics
  (average_io_consumption_percent, average_storage_percent,
  average_serverlog_storage_percent) are given.

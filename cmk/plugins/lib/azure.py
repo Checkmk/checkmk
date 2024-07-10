@@ -349,6 +349,14 @@ def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResu
                 lambda x: str(int(x)),
                 upper_levels_param="failed_connections",
             ),
+            MetricData(
+                # MySQL flexible server equivalent to "total_connections_failed"
+                "total_aborted_connections",
+                "failed_connections",
+                "Failed connections",
+                lambda x: str(int(x)),
+                upper_levels_param="failed_connections",
+            ),
         ]
     )
 

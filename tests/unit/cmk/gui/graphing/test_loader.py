@@ -270,7 +270,6 @@ _SKIP_MODULES: Final[Sequence[str]] = [
     # Case 1: len(metric_names.bundles) > 1
     "cmk.plugins.aws.graphing.graphs",
     "cmk.plugins.aws.graphing.perfometers",
-    "cmk.plugins.checkmk.graphing.livestatus_status",
     "cmk.plugins.checkmk.graphing.mkeventd_status",
     "cmk.plugins.collection.graphing.docker",
     "cmk.plugins.collection.graphing.emcvnx",

@@ -25,6 +25,7 @@ clean_up_fake_proc_mounts() {
 }
 
 fake_waitmax() {
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     waitmax() {
         shift 3
         "$@"

@@ -1,0 +1,9 @@
+Title: esx_vsphere_objects: Allow configuration of "Stand by" state
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1720598913
+Edition: cre
+Level: 1
+Version: 2.2.0p31
+

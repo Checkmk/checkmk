@@ -25,6 +25,7 @@ vsphere_object_names = {
 
 factory_settings["esx_vsphere_objects_default_levels"] = {
     "states": {
+        "standBy": 0,
         "poweredOn": 0,
         "poweredOff": 1,
         "suspended": 1,

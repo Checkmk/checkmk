@@ -106,6 +106,27 @@ ALL_METRICS: dict[str, list[tuple]] = {
             None,
         ),
     ],
+    "Microsoft.DBforMySQL/flexibleServers": [
+        (
+            "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
+            "storage_percent,active_connections",
+            "PT1M",
+            "average",
+            None,
+        ),
+        (
+            "aborted_connections,network_bytes_ingress,network_bytes_egress",
+            "PT1M",
+            "total",
+            None,
+        ),
+        (
+            "replication_lag",
+            "PT1M",
+            "maximum",
+            None,
+        ),
+    ],
     "Microsoft.DBforPostgreSQL/servers": [
         (
             "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
@@ -1356,6 +1377,8 @@ def process_resource(
         process_virtual_net_gw(mgmt_client, resource)
     elif resource_type == "Microsoft.Network/loadBalancers":
         process_load_balancer(mgmt_client, resource)
+    elif resource_type == "Microsoft.DBforMySQL/flexibleServers":
+        resource.section = "servers"  # use the same section as for single servers
 
     # metrics aren't collected for VMs if they are mapped to a resource host
     err = (

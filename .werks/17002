@@ -1,0 +1,17 @@
+Title: Support Azure Databases for MySQL flexible server
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1720519796
+Edition: cre
+Level: 1
+Version: 2.2.0p31
+
+Microsoft is retiring the Azure resource "Database for MySQL single server" (see https://learn.microsoft.com/en-us/azure/mysql/migrate/whats-happening-to-mysql-single-server).
+
+With this Werk we now support monitoring the recommended Azure resource "Database for MySQL flexible server".
+In the rule "Microsoft Azure" under "Azure services to monitor" users can now select the new option "Database for MySQL flexible server".
+(Note that the former option "Database for MySQL" was renamed to "Database for MySQL single server" and stays in place.)
+
+The metrics monitored for flexible servers correspond to those monitored for single servers and the same checks are used.
+See the <a href="https://checkmk.com/integrations?distributions%5B%5D=check_mk&amp;distributions%5B%5D=check_mk_cloud&amp;search=azure_mysql">check plugin catalog</a> for more details.

@@ -189,8 +189,8 @@ setproctitle = "==1.3.3"  # used by mkbench/dcd/liveproxyd
 meraki = "==1.41.0"  # used by special agent Cisco Meraki
 feedparser = "*"  # used by special agent Microsoft Azure Status
 pysaml2 = "~=7.4"  # used by SSO via SAML2.0
-azure-storage-blob = "==12.15.0"  # used for backups to Azure Blob Storage
-azure-identity = "==1.12.0"  # used for backups to Azure Blob Storage
+azure-storage-blob = "~=12.20.0"  # used for backups to Azure Blob Storage
+azure-identity = "~=1.17.0"  # used for backups to Azure Blob Storage
 pyjwt = {version = "*", extras = ["crypto"]}  # used for SSO via OAUTH2
 GitPython = "~=3.1"  # used for werk collecting
 icalendar = "==5.0.7"  # used for importing .ical files

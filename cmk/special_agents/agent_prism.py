@@ -169,7 +169,7 @@ def agent_prism_main(args: Args) -> int:
 
     output_entities(gateway_objs["containers"], "containers")
     output_entities(gateway_objs["alerts"], "alerts")
-    output_entities(gateway_objs["cluster"], "cluster")
+    output_entities(gateway_objs["cluster"], "info")
     output_entities(gateway_objs["storage_pools"], "storage_pools")
     output_hosts(gateway_objs["hosts"], gateway_objs["hosts_networks"])
     output_vms(gateway_objs["vms"])

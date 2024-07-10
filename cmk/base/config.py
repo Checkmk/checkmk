@@ -1310,8 +1310,7 @@ legacy_check_plugin_names: dict[CheckPluginName, str] = {}
 precompile_params: dict[str, Callable[[str, str, dict[str, Any]], Any]] = {}
 # factory settings for dictionary-configured checks
 factory_settings: dict[str, Mapping[str, Any]] = {}
-# definitions of active "legacy" checks
-active_check_info: dict[str, dict[str, Any]] = {}
+# definitions of special agents
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
 
 # workaround: set of check-groups that are to be treated as service-checks even if
@@ -1357,7 +1356,6 @@ def _initialize_data_structures() -> None:
     legacy_check_plugin_names.clear()
     precompile_params.clear()
     factory_settings.clear()
-    active_check_info.clear()
     special_agent_info.clear()
 
 
@@ -1445,7 +1443,6 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
     context = {
         "check_info": check_info,
         "precompile_params": precompile_params,
-        "active_check_info": active_check_info,
         "special_agent_info": special_agent_info,
     }
     # NOTE: For better separation it would be better to copy the values, but

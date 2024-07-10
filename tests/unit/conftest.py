@@ -322,7 +322,6 @@ class FixPluginLegacy:
             for k, v in config.check_info.items()
             if isinstance(k, str) and isinstance(v, LegacyCheckDefinition)
         }
-        self.active_check_info = copy.deepcopy(config.active_check_info)
         self.factory_settings = copy.deepcopy(config.factory_settings)
 
 

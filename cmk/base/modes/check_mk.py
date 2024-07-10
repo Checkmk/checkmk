@@ -477,13 +477,7 @@ def mode_list_checks() -> None:
         p.name for p in agent_based_register.iter_all_check_plugins()
     ]
 
-    # active checks using both new and old API have to be collected
-    all_checks += [
-        "check_" + name
-        for name in itertools.chain(
-            config.active_check_info, (p.name for p in load_active_checks()[1].values())
-        )
-    ]
+    all_checks.extend("check_" + p.name for p in load_active_checks()[1].values())
 
     for plugin_name in sorted(all_checks, key=str):
         ds_protocol = _get_ds_protocol(plugin_name)

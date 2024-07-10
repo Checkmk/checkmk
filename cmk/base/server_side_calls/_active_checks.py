@@ -195,11 +195,6 @@ class ActiveCheck:
 
 
 def _autodetect_plugin(command: str, module_name: str | None) -> str:
-    # This condition can only be true in the legacy case.
-    # Remove it when possible!
-    if command.startswith(("$", "/")):
-        return command
-
     libexec_paths = (family_libexec_dir(module_name),) if module_name else ()
     nagios_paths = (
         cmk.utils.paths.local_lib_dir / "nagios/plugins",

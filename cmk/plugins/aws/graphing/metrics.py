@@ -70,13 +70,6 @@ metric_aws_num_objects = metrics.Metric(
     color=metrics.Color.YELLOW,
 )
 
-metric_aws_bucket_size = metrics.Metric(
-    name="aws_bucket_size",
-    title=Title("Bucket size"),
-    unit=UNIT_BYTES,
-    color=metrics.Color.ORANGE,
-)
-
 metric_aws_largest_bucket_size = metrics.Metric(
     name="aws_largest_bucket_size",
     title=Title("Largest bucket size"),
@@ -227,13 +220,6 @@ metric_aws_lambda_users_errors_rate = metrics.Metric(
 metric_aws_lambda_users_errors_perc = metrics.Metric(
     name="aws_lambda_users_errors_perc",
     title=Title("Percentage of Lambda user errors"),
-    unit=UNIT_PERCENTAGE,
-    color=metrics.Color.LIGHT_BLUE,
-)
-
-metric_aws_overall_hosts_health_perc = metrics.Metric(
-    name="aws_overall_hosts_health_perc",
-    title=Title("Proportion of healthy host"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.LIGHT_BLUE,
 )
@@ -3498,13 +3484,6 @@ metric_aws_s3_select_object_returned = metrics.Metric(
     title=Title("SELECT object returned"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.LIGHT_BLUE,
-)
-
-metric_aws_s3_buckets = metrics.Metric(
-    name="aws_s3_buckets",
-    title=Title("Buckets"),
-    unit=UNIT_NUMBER,
-    color=metrics.Color.PURPLE,
 )
 
 metric_aws_elb_load_balancers = metrics.Metric(

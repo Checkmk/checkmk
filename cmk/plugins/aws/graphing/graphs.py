@@ -1641,9 +1641,3 @@ graph_num_objects = graphs.Graph(
     title=Title("Number of bucket objects"),
     simple_lines=["aws_num_objects"],
 )
-
-graph_buckets = graphs.Graph(
-    name="buckets",
-    title=Title("Buckets"),
-    simple_lines=["aws_s3_buckets"],
-)

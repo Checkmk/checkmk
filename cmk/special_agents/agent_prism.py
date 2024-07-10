@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from typing import Any, TypedDict
 
 import requests
+from requests.adapters import HTTPAdapter
 
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
@@ -18,6 +19,16 @@ from cmk.special_agents.v0_unstable.agent_common import (
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 LOGGING = logging.getLogger("agent_prism")
+
+
+class HostNameValidationAdapter(HTTPAdapter):
+    def __init__(self, host_name: str) -> None:
+        super().__init__()
+        self._reference_host_name = host_name
+
+    def cert_verify(self, conn, url, verify, cert):
+        conn.assert_hostname = self._reference_host_name
+        return super().cert_verify(conn, url, verify, cert)
 
 
 class GatewayData(TypedDict):
@@ -36,15 +47,17 @@ class GatewayData(TypedDict):
 
 class SessionManager:
     def __init__(
-        self, username: str, password: str, timeout: int, no_cert_check: bool = False
+        self, username: str, password: str, timeout: int, cert_check: bool | str, base_url: str
     ) -> None:
         self._session = requests.Session()
         auth_encoded = base64.b64encode(f"{username}:{password}".encode()).decode()
         self._session.headers.update({"Authorization": f"Basic {auth_encoded}"})
         self._verify = (
-            False if no_cert_check else True  # pylint: disable=simplifiable-if-expression
+            False if cert_check is False else True  # pylint: disable=simplifiable-if-expression
         )
         self._timeout = timeout
+        if isinstance(cert_check, str):
+            self._session.mount(base_url, HostNameValidationAdapter(cert_check))
 
     def get(self, url: str, params: dict[str, str] | None = None) -> Any:
         try:
@@ -80,25 +93,32 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser.add_argument(
         "--password", type=str, required=True, metavar="PASSWORD", help="password for that account"
     )
-    parser.add_argument(
+    cert_args = parser.add_mutually_exclusive_group()
+    cert_args.add_argument(
         "--no-cert-check", action="store_true", help="Do not verify TLS certificate"
+    )
+    cert_args.add_argument(
+        "--cert-server-name",
+        help="Expect this as the servers name in the ssl certificate. Overrides '--no-cert-check'.",
     )
 
     return parser.parse_args(argv)
 
 
 def fetch_from_gateway(
-    server: str, port: int, username: str, password: str, timeout: int, no_cert_check: bool
+    server: str, port: int, username: str, password: str, timeout: int, cert_check: bool | str
 ) -> GatewayData:
     LOGGING.info("setup HTTPS connection..")
+    base_url = f"https://{server}:{port}"
     session_manager = SessionManager(
         username=username,
         password=password,
         timeout=timeout,
-        no_cert_check=no_cert_check,
+        cert_check=cert_check,
+        base_url=base_url,
     )
-    base_url_v1 = f"https://{server}:{port}/PrismGateway/services/rest/v1"
-    base_url_v2 = f"https://{server}:{port}/PrismGateway/services/rest/v2.0"
+    base_url_v1 = f"{base_url}/PrismGateway/services/rest/v1"
+    base_url_v2 = f"{base_url}/PrismGateway/services/rest/v2.0"
 
     hosts_obj = session_manager.get(f"{base_url_v2}/hosts")
     hosts_networks = {}
@@ -162,7 +182,7 @@ def agent_prism_main(args: Args) -> int:
             username=args.username,
             password=args.password,
             timeout=args.timeout,
-            no_cert_check=args.no_cert_check,
+            cert_check=args.cert_server_name or not args.no_cert_check,
         )
     except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError):
         return 1

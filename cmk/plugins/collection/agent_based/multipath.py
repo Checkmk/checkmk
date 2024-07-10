@@ -31,8 +31,8 @@ from cmk.plugins.lib import multipath
 # 3: matched regex-group id of dm-device (optional)
 REG_HEADERS = [
     (re.compile(r"^[0-9a-z]{33}$"), 0, None, None),  # 1. (should be included in 3.)
-    (re.compile(r"^([^\s]+)\s\(([-0-9A-Za-z_:]+)\)\s(dm.[0-9]+)"), 2, 1, 3),  # 2.
-    (re.compile(r"^([^\s]+)\s\(([-0-9A-Za-z_]+)\)"), 2, 1, None),  # 2.
+    (re.compile(r"^([^\s]+)\s\(([^)]+)\)\s(dm.[0-9]+)"), 2, 1, 3),  # 2.
+    (re.compile(r"^([^\s]+)\s\(([^)]+)\)"), 2, 1, None),  # 2.
     (re.compile(r"^[a-zA-Z0-9_]+$"), 0, None, None),  # 3.
     (re.compile(r"^([0-9a-z]{33}|[0-9a-z]{49})\s?(dm.[0-9]+).*$"), 1, None, 2),  # 4.
     (re.compile(r"^[a-zA-Z0-9_]+(dm-[0-9]+).*$"), 0, None, 1),  # 5. Remove this line in 1.2.0

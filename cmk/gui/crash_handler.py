@@ -59,7 +59,7 @@ class GUICrashReport(ABCCrashReport):
                 "language": get_current_language(),
                 "request_method": request.request_method,
             }
-        except RuntimeError:
+        except (RuntimeError, AttributeError):
             request_details = {}
 
         return super().from_exception(

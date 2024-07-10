@@ -9,7 +9,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Dictionary, DropdownChoice, NetworkPort, TextInput, Tuple
 from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
-from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _special_agents_jolokia_mk_jolokia_elements():
@@ -74,11 +74,6 @@ def _special_agents_jolokia_mk_jolokia_elements():
     ]
 
 
-def _factory_default_special_agents_jolokia():
-    # No default, do not use setting if no rule matches
-    return Rulespec.FACTORY_DEFAULT_UNUSED
-
-
 def _valuespec_special_agents_jolokia():
     return Dictionary(
         title=_("Jolokia"),
@@ -89,7 +84,6 @@ def _valuespec_special_agents_jolokia():
 
 rulespec_registry.register(
     HostRulespec(
-        factory_default=_factory_default_special_agents_jolokia(),
         group=RulespecGroupDatasourceProgramsApps,
         name=RuleGroup.SpecialAgents("jolokia"),
         valuespec=_valuespec_special_agents_jolokia,

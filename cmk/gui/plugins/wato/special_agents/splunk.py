@@ -9,12 +9,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ListChoice, NetworkPort, TextInput
 from cmk.gui.wato import IndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
-from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
-
-
-def _factory_default_special_agents_splunk():
-    # No default, do not use setting if no rule matches
-    return Rulespec.FACTORY_DEFAULT_UNUSED
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _valuespec_special_agents_splunk():
@@ -100,7 +95,6 @@ def _valuespec_special_agents_splunk():
 
 rulespec_registry.register(
     HostRulespec(
-        factory_default=_factory_default_special_agents_splunk(),
         group=RulespecGroupDatasourceProgramsApps,
         name=RuleGroup.SpecialAgents("splunk"),
         valuespec=_valuespec_special_agents_splunk,

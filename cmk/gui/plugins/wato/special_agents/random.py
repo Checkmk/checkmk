@@ -10,12 +10,6 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import FixedValue
 from cmk.gui.wato import RulespecGroupDatasourceProgramsTesting
-from cmk.gui.watolib.rulespecs import Rulespec
-
-
-def _factory_default_special_agents_random():
-    # No default, do not use setting if no rule matches
-    return Rulespec.FACTORY_DEFAULT_UNUSED
 
 
 def _valuespec_special_agents_random():
@@ -32,7 +26,6 @@ def _valuespec_special_agents_random():
 
 rulespec_registry.register(
     HostRulespec(
-        factory_default=_factory_default_special_agents_random(),
         group=RulespecGroupDatasourceProgramsTesting,
         name=RuleGroup.SpecialAgents("random"),
         valuespec=_valuespec_special_agents_random,

@@ -304,7 +304,7 @@ def _validate_function_args(arg_infos: list[tuple[Any, bool, bool]], hint: str) 
 
 class Rulespec(abc.ABC):
     NO_FACTORY_DEFAULT: list = []
-    # means this ruleset is not used if no rule is entered
+    # This option has the same effect as `NO_FACTORY_DEFAULT`. It's often used in MKPs.
     FACTORY_DEFAULT_UNUSED: list = []
 
     def __init__(

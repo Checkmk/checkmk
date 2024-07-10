@@ -14,12 +14,6 @@ from cmk.gui.wato import (
     MigrateToIndividualOrStoredPassword,
     RulespecGroupDatasourceProgramsHardware,
 )
-from cmk.gui.watolib.rulespecs import Rulespec
-
-
-def _factory_default_special_agents_innovaphone():
-    # No default, do not use setting if no rule matches
-    return Rulespec.FACTORY_DEFAULT_UNUSED
 
 
 def _valuespec_special_agents_innovaphone() -> Dictionary:
@@ -68,7 +62,6 @@ def _valuespec_special_agents_innovaphone() -> Dictionary:
 
 rulespec_registry.register(
     HostRulespec(
-        factory_default=_factory_default_special_agents_innovaphone(),
         group=RulespecGroupDatasourceProgramsHardware,
         name=RuleGroup.SpecialAgents("innovaphone"),
         valuespec=_valuespec_special_agents_innovaphone,

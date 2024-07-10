@@ -596,56 +596,37 @@ class ModeObjectParameters(WatoMode):
                     raise
                 html.write_text_permissive(_("Invalid parameter %r: %s") % (known_settings, e))
 
-        else:
-            # For match type "dict" it can be the case the rule define some of the keys
-            # while other keys are taken from the factory defaults. We need to show the
-            # complete outcoming value here.
-            if rules and ruleset.match_type() == "dict":
-                if (
-                    rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT
-                    and rulespec.factory_default is not Rulespec.FACTORY_DEFAULT_UNUSED
-                ):
-                    fd = rulespec.factory_default.copy()
-                    fd.update(setting)
-                    setting = fd
+        elif valuespec and not rules:  # show the default value
+            if rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT:
+                # If there is a factory default then show that one
+                setting = rulespec.factory_default
+                html.write_text_permissive(valuespec.value_to_html(setting))
 
-            if valuespec and not rules:  # show the default value
-                if rulespec.factory_default is Rulespec.FACTORY_DEFAULT_UNUSED:
-                    # Some rulesets are ineffective if they are empty
-                    html.write_text_permissive(_("(unused)"))
+            elif ruleset.match_type() in ("all", "list"):
+                # Rulesets that build lists are empty if no rule matches
+                html.write_text_permissive(_("(no entry)"))
 
-                elif rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT:
-                    # If there is a factory default then show that one
-                    setting = rulespec.factory_default
-                    html.write_text_permissive(valuespec.value_to_html(setting))
-
-                elif ruleset.match_type() in ("all", "list"):
-                    # Rulesets that build lists are empty if no rule matches
-                    html.write_text_permissive(_("(no entry)"))
-
-                else:
-                    # Else we use the default value of the valuespec
-                    html.write_text_permissive(valuespec.value_to_html(valuespec.default_value()))
-
-            # We have a setting
-            elif valuespec:
-                if ruleset.match_type() == "all":
-                    if not isinstance(setting, list):
-                        raise ValueError(f"Expected list, got {setting}")
-                    html.write_html(
-                        HTML.without_escaping(", ").join(
-                            [valuespec.value_to_html(value) for value in setting]
-                        )
-                    )
-                else:
-                    html.write_text_permissive(valuespec.value_to_html(setting))
-
-            # Binary rule, no valuespec, outcome is True or False
             else:
-                icon_name = "rule_{}{}".format(
-                    "yes" if setting else "no", "_off" if not rules else ""
+                # Else we use the default value of the valuespec
+                html.write_text_permissive(valuespec.value_to_html(valuespec.default_value()))
+
+        # We have a setting
+        elif valuespec:
+            if ruleset.match_type() == "all":
+                if not isinstance(setting, list):
+                    raise ValueError(f"Expected list, got {setting}")
+                html.write_html(
+                    HTML.without_escaping(", ").join(
+                        [valuespec.value_to_html(value) for value in setting]
+                    )
                 )
-                html.icon(icon_name, title=_("yes") if setting else _("no"))
+            else:
+                html.write_text_permissive(valuespec.value_to_html(setting))
+
+        # Binary rule, no valuespec, outcome is True or False
+        else:
+            icon_name = "rule_{}{}".format("yes" if setting else "no", "_off" if not rules else "")
+            html.icon(icon_name, title=_("yes") if setting else _("no"))
         html.close_td()
         html.close_tr()
         html.close_table()

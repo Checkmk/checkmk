@@ -19,12 +19,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato import IndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
-from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
-
-
-def _factory_default_special_agents_jira():
-    # No default, do not use setting if no rule matches
-    return Rulespec.FACTORY_DEFAULT_UNUSED
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _validate_jira_projects(value, varprefix):
@@ -255,7 +250,6 @@ def _valuespec_special_agents_jira():
 
 rulespec_registry.register(
     HostRulespec(
-        factory_default=_factory_default_special_agents_jira(),
         group=RulespecGroupDatasourceProgramsApps,
         name=RuleGroup.SpecialAgents("jira"),
         valuespec=_valuespec_special_agents_jira,

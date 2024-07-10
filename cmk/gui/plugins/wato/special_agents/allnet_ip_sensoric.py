@@ -10,12 +10,6 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Dictionary, Integer
 from cmk.gui.wato import RulespecGroupDatasourceProgramsHardware
-from cmk.gui.watolib.rulespecs import Rulespec
-
-
-def _factory_default_special_agents_allnet_ip_sensoric():
-    # No default, do not use setting if no rule matches
-    return Rulespec.FACTORY_DEFAULT_UNUSED
 
 
 def _valuespec_special_agents_allnet_ip_sensoric():
@@ -47,7 +41,6 @@ def _valuespec_special_agents_allnet_ip_sensoric():
 
 rulespec_registry.register(
     HostRulespec(
-        factory_default=_factory_default_special_agents_allnet_ip_sensoric(),
         group=RulespecGroupDatasourceProgramsHardware,
         name=RuleGroup.SpecialAgents("allnet_ip_sensoric"),
         valuespec=_valuespec_special_agents_allnet_ip_sensoric,

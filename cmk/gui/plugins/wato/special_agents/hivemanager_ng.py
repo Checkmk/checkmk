@@ -12,12 +12,7 @@ from cmk.gui.wato import (
     MigrateToIndividualOrStoredPassword,
     RulespecGroupDatasourceProgramsHardware,
 )
-from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
-
-
-def _factory_default_special_agents_hivemanager_ng():
-    # No default, do not use setting if no rule matches
-    return Rulespec.FACTORY_DEFAULT_UNUSED
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _valuespec_special_agents_hivemanager_ng():
@@ -75,7 +70,6 @@ def _valuespec_special_agents_hivemanager_ng():
 
 rulespec_registry.register(
     HostRulespec(
-        factory_default=_factory_default_special_agents_hivemanager_ng(),
         group=RulespecGroupDatasourceProgramsHardware,
         name=RuleGroup.SpecialAgents("hivemanager_ng"),
         valuespec=_valuespec_special_agents_hivemanager_ng,

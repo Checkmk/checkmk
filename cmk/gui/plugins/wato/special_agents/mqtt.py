@@ -9,7 +9,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Dictionary, DropdownChoice, HostAddress, NetworkPort, TextInput
 from cmk.gui.wato import IndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
-from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _valuespec_special_agents_mqtt() -> Dictionary:
@@ -103,7 +103,6 @@ def _valuespec_special_agents_mqtt() -> Dictionary:
 
 rulespec_registry.register(
     HostRulespec(
-        factory_default=Rulespec.FACTORY_DEFAULT_UNUSED,
         group=RulespecGroupDatasourceProgramsApps,
         name=RuleGroup.SpecialAgents("mqtt"),
         valuespec=_valuespec_special_agents_mqtt,

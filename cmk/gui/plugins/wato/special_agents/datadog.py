@@ -28,7 +28,7 @@ from cmk.gui.wato import (
     IndividualOrStoredPassword,
     RulespecGroupDatasourceProgramsApps,
 )
-from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 from cmk.ccc.version import edition, Edition
 from cmk.rulesets.v1.form_specs import migrate_to_proxy as migrate_proxy_back
@@ -393,7 +393,6 @@ def _fetch_events_and_logs_elements() -> list[DictionaryEntry]:
 
 rulespec_registry.register(
     HostRulespec(
-        factory_default=Rulespec.FACTORY_DEFAULT_UNUSED,
         group=RulespecGroupDatasourceProgramsApps,
         name=RuleGroup.SpecialAgents("datadog"),
         valuespec=_valuespec_special_agents_datadog,

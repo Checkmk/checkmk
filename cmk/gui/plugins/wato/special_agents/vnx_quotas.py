@@ -12,12 +12,7 @@ from cmk.gui.wato import (
     MigrateToIndividualOrStoredPassword,
     RulespecGroupDatasourceProgramsHardware,
 )
-from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
-
-
-def _factory_default_special_agents_vnx_quotas():
-    # No default, do not use setting if no rule matches
-    return Rulespec.FACTORY_DEFAULT_UNUSED
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _valuespec_special_agents_vnx_quotas():
@@ -34,7 +29,6 @@ def _valuespec_special_agents_vnx_quotas():
 
 rulespec_registry.register(
     HostRulespec(
-        factory_default=_factory_default_special_agents_vnx_quotas(),
         group=RulespecGroupDatasourceProgramsHardware,
         name=RuleGroup.SpecialAgents("vnx_quotas"),
         valuespec=_valuespec_special_agents_vnx_quotas,

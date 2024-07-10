@@ -83,14 +83,14 @@ register.snmp_section(
             "19",  # etherStatsPkts1024to1518Octets
         ],
     ),
-    # for the scan we need to check for any single object in the RMON tree,
-    # we choose netDefaultGateway in the hope that it will always be present
-    detect=any_of(
-        startswith(".1.3.6.1.2.1.1.1.0", "cisco"),
-        all_of(
+    detect=all_of(
+        any_of(
+            startswith(".1.3.6.1.2.1.1.1.0", "cisco"),
             equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11863.1.1.3"),
-            exists(".1.3.6.1.2.1.16.19.12.0"),
         ),
+        # for the scan we need to check for any single object in the RMON tree,
+        # we choose netDefaultGateway in the hope that it will always be present
+        exists(".1.3.6.1.2.1.16.19.12.0"),
     ),
 )
 

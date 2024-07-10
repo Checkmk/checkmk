@@ -29,7 +29,7 @@ def _item_spec_esx_vsphere_objects():
 
 def _migrate_add_stand_by(params: object) -> Mapping[str, object]:
     if isinstance(params, dict):
-        return {"standBy": 0, **params}
+        return {"standBy": 1, **params}
     raise ValueError(params)
 
 
@@ -54,7 +54,7 @@ def _parameter_valuespec_esx_vsphere_objects():
                                 MonitoringState(
                                     title=_("Stand by"),
                                     help=_("Check result if the host or VM is in stand by"),
-                                    default_value=0,
+                                    default_value=1,
                                 ),
                             ),
                             (

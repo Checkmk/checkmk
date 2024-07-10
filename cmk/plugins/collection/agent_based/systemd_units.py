@@ -8,7 +8,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Self
 
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
@@ -124,6 +124,79 @@ _SYSTEMD_UNIT_FILE_STATES = [
 _STATUS_SYMBOLS = {"●", "○", "↻", "×", "x", "*"}
 
 
+@dataclass(frozen=True)
+class Memory:
+    bytes: int
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Memory):
+            raise NotImplementedError("Cannot compare Memory with other types")
+        return self.bytes == other.bytes
+
+    @classmethod
+    def from_raw(cls, raw: str) -> Self:
+        """
+        >>> Memory.from_raw("8B").bytes
+        8
+        >>> Memory.from_raw("214K").bytes
+        219136
+        >>> Memory.from_raw("5.0M").bytes
+        5242880
+        >>> Memory.from_raw("14G").bytes
+        15032385536
+        """
+        pattern = re.compile(r"(\d+(\.\d+)?)([BKMG]?)")
+        if not (match := pattern.match(raw)):
+            raise ValueError(f"Cannot create {cls.__name__} from: {raw}")
+        value, _, unit = match.groups()
+        return cls(int(float(value) * {"B": 1, "K": 1024, "M": 1024**2, "G": 1024**3}[unit]))
+
+    def render(self):
+        return render.bytes(self.bytes)
+
+
+@dataclass(frozen=True)
+class CpuTimeSeconds:
+    value: float
+
+    @classmethod
+    def parse_raw(cls, raw: str) -> Self:
+        """
+        >>> CpuTimeSeconds.parse_raw("815u").value
+        0.000815
+        >>> CpuTimeSeconds.parse_raw("1ms").value
+        0.001
+        >>> CpuTimeSeconds.parse_raw("1s").value
+        1.0
+        >>> CpuTimeSeconds.parse_raw("12min 23.378s").value
+        743.378
+        """
+        pattern = re.compile(
+            r"(?:(\d+)d)?\s*(?:(\d+)h)?\s*(?:(\d+)min)?\s*(?:(\d+(?:\.\d+)?)s)?\s*(?:(\d+)ms)?\s*(?:(\d+)u)?"
+        )
+        if not (match := pattern.match(raw)):
+            raise ValueError(f"Cannot parse from raw: {raw}")
+
+        days, hours, minutes, seconds, milliseconds, microseconds = match.groups()
+        if all(v is None for v in (days, hours, minutes, seconds, milliseconds, microseconds)):
+            raise ValueError(f"Raw does not contain any known value/unit pair: {raw}")
+
+        return cls(
+            value=sum(
+                float(v) * f
+                for (v, f) in (
+                    (days, 24 * 60 * 60),
+                    (hours, 60 * 60),
+                    (minutes, 60),
+                    (seconds, 1),
+                    (milliseconds, 1 / 1000),
+                    (microseconds, 1 / 1000000.0),
+                )
+                if v is not None
+            )
+        )
+
+
 # See: https://www.freedesktop.org/software/systemd/man/systemd.unit.html
 class UnitTypes(Enum):
     # When adding new systemd units, keep in mind to extend the gathering of the data via
@@ -149,6 +222,9 @@ class UnitStatus:
     name: str
     status: str
     time_since_change: timedelta | None
+    cpu: CpuTimeSeconds | None = None
+    memory: Memory | None = None
+    number_of_tasks: int | None = None
 
     @classmethod
     def from_entry(cls, entry: Sequence[Sequence[str]]) -> "UnitStatus":
@@ -158,7 +234,25 @@ class UnitStatus:
             time_since_change = _parse_time_str(timestr.replace("ago", "").strip())
         else:
             time_since_change = None
-        return cls(name=name, status=entry[2][1], time_since_change=time_since_change)
+        cpu = memory = number_of_tasks = None
+        for line in entry[3:]:
+            match line[0]:
+                case "CPU:":
+                    cpu = CpuTimeSeconds.parse_raw(line[1])
+                case "Memory:":
+                    memory = Memory.from_raw(line[1])
+                case "Tasks:":
+                    number_of_tasks = int(line[1].split()[0])
+                case _:
+                    pass
+        return cls(
+            name=name,
+            status=entry[2][1],
+            time_since_change=time_since_change,
+            cpu=cpu,
+            memory=memory,
+            number_of_tasks=number_of_tasks,
+        )
 
 
 @dataclass(frozen=True)
@@ -170,6 +264,9 @@ class UnitEntry:
     description: str
     enabled_status: str
     time_since_change: timedelta | None = None
+    cpu_seconds: CpuTimeSeconds | None = None
+    memory: Memory | None = None
+    number_of_tasks: int | None = None
 
     @classmethod
     def _parse_name_and_unit_type(cls, raw: str) -> None | tuple[str, UnitTypes]:
@@ -202,9 +299,6 @@ class UnitEntry:
         if len(remains) == 3:
             remains.append("")
         loaded_status, active_status, current_state, descr = remains
-        time_since_change = (
-            status_details[name].time_since_change if name in status_details else None
-        )
         return unit_type, UnitEntry(
             name=name,
             loaded_status=loaded_status,
@@ -212,7 +306,14 @@ class UnitEntry:
             current_state=current_state,
             description=descr,
             enabled_status=enabled,
-            time_since_change=time_since_change,
+            time_since_change=(
+                status_details[name].time_since_change if name in status_details else None
+            ),
+            memory=status_details[name].memory if name in status_details else None,
+            cpu_seconds=status_details[name].cpu if name in status_details else None,
+            number_of_tasks=(
+                status_details[name].number_of_tasks if name in status_details else None
+            ),
         )
 
 

@@ -3,14 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from typing import Any
 
-# mypy: disable-error-code="arg-type"
-
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.poe import check_poe_data, PoeValues
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import exists, OIDEnd, SNMPTree
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    exists,
+    OIDEnd,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.poe import check_poe_data, PoeStatus, PoeValues
 
 # We fetch the following columns from SNMP:
 # 2 pethMainPsePower (The nominal power of the PSE expressed in Watts)
@@ -18,7 +25,10 @@ from cmk.agent_based.v2 import exists, OIDEnd, SNMPTree
 # 4 pethMainPseConsumptionPower (Measured usage power expressed in Watts)
 
 
-def parse_pse_poe(string_table):
+Section = Mapping[str, PoeValues]
+
+
+def parse_pse_poe(string_table: StringTable) -> Section:
     """
     parse string_table data and create dictionary with namedtuples for each OID.
 
@@ -36,31 +46,35 @@ def parse_pse_poe(string_table):
         poe_dict[str(oid_end)] = PoeValues(
             poe_max=int(poe_max),
             poe_used=int(poe_used),
-            poe_status=int(pse_op_status),
+            poe_status=PoeStatus(int(pse_op_status)),
             poe_status_detail=None,
         )
     return poe_dict
 
 
-def inventory_pse_poe(parsed):
-    return [(oid_end, {}) for oid_end in parsed]
+def discover_pse_poe(section: Section) -> DiscoveryResult:
+    yield from [Service(item=oid_end) for oid_end in section]
 
 
-def check_pse_poe(item, params, parsed):
-    if not (poe_data := parsed.get(item)):
+def check_pse_poe(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (poe_data := section.get(item)):
         return
-    yield check_poe_data(params, poe_data)
+    yield from check_poe_data(params, poe_data)
 
 
-check_info["pse_poe"] = LegacyCheckDefinition(
+snmp_section_pse_poe = SimpleSNMPSection(
+    name="pse_poe",
     detect=exists(".1.3.6.1.2.1.105.1.3.1.1.*"),
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.105.1.3.1.1",
         oids=[OIDEnd(), "2", "3", "4"],
     ),
     parse_function=parse_pse_poe,
+)
+check_plugin_pse_poe = CheckPlugin(
+    name="pse_poe",
     service_name="POE%s consumption ",
-    discovery_function=inventory_pse_poe,
+    discovery_function=discover_pse_poe,
     check_function=check_pse_poe,
-    check_default_parameters={"levels": (90.0, 95.0)},
+    check_default_parameters={"levels": ("fixed", (90.0, 95.0))},
 )

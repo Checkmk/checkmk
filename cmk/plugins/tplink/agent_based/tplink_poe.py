@@ -4,12 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.poe import check_poe_data, PoeStatus, PoeValues
-from cmk.base.config import check_info
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.poe import check_poe_data, PoeStatus, PoeValues
 from cmk.plugins.lib.tplink import DETECT_TPLINK
+
+Section = Mapping[str, PoeValues]
+
 
 # Maps poe power status to faulty status detail string.
 # See tpPoePowerStatus in TPLINK-POWER-OVER-ETHERNET-MIB
@@ -29,7 +40,7 @@ def _deci_watt_to_watt(deci_watt):
     return float(deci_watt) / 10
 
 
-def parse_tplink_poe(string_table):
+def parse_tplink_poe(string_table: Sequence[StringTable]) -> Section:
     """
     parse string_table data and create dictionary with namedtuples for each item.
 
@@ -78,17 +89,18 @@ def parse_tplink_poe(string_table):
     return poe_dict
 
 
-def inventory_tplink_poe(parsed):
-    return [(item, {}) for item in parsed]
+def discover_tplink_poe(section: Section) -> DiscoveryResult:
+    yield from [Service(item=item) for item in section]
 
 
-def check_tplink_poe(item, params, parsed):
-    if not (poe_data := parsed.get(item)):
+def check_tplink_poe(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (poe_data := section.get(item)):
         return
-    yield check_poe_data(params, poe_data)
+    yield from check_poe_data(params, poe_data)
 
 
-check_info["tplink_poe"] = LegacyCheckDefinition(
+snmp_section_tplink_poe = SNMPSection(
+    name="tplink_poe",
     detect=DETECT_TPLINK,
     fetch=[
         SNMPTree(
@@ -101,7 +113,11 @@ check_info["tplink_poe"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_tplink_poe,
+)
+check_plugin_tplink_poe = CheckPlugin(
+    name="tplink_poe",
     service_name="POE%s consumption",
-    discovery_function=inventory_tplink_poe,
+    discovery_function=discover_tplink_poe,
     check_function=check_tplink_poe,
+    check_default_parameters={"levels": ("fixed", (90.0, 95.0))},
 )

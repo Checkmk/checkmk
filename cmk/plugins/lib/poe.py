@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from typing import NamedTuple
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
-from cmk.base.check_api import check_levels
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.agent_based.v2 import check_levels, CheckResult, render, Result, State
 
-poe_default_levels = (90.0, 95.0)
+poe_default_levels = ("fixed", (90.0, 95.0))
 
 
 #  constants for operational status of poe interface
@@ -27,18 +27,14 @@ class PoeValues(NamedTuple):
     poe_status_detail: str | None
 
 
-def check_poe_data(params, poe_data):
+def check_poe_data(params: Mapping[str, Any], poe_data: PoeValues) -> CheckResult:
     # data sanity-check
     if poe_data.poe_max < 0 or poe_data.poe_used < 0 or poe_data.poe_status not in range(1, 4):
-        return (
-            3,
-            "Device returned faulty data: nominal power: %s, power consumption: %s, operational status: %s"
-            % (
-                str(poe_data.poe_max),
-                str(poe_data.poe_used),
-                str(poe_data.poe_status),
-            ),
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Device returned faulty data: nominal power: {poe_data.poe_max}, power consumption: {poe_data.poe_used}, operational status: {poe_data.poe_status}",
         )
+        return
 
     # PoE on device is turned ON
     if poe_data.poe_status == PoeStatus.ON:
@@ -49,17 +45,19 @@ def check_poe_data(params, poe_data):
             else 0
         )
 
-        return check_levels(
+        yield from check_levels(
             poe_used_percentage,
-            "power_usage_percentage",
-            params.get("levels", poe_default_levels),
-            human_readable_func=render.percent,
-            infoname=f"POE usage ({poe_data.poe_used}W/{poe_data.poe_max}W): ",
+            metric_name="power_usage_percentage",
+            levels_upper=params.get("levels", poe_default_levels),
+            render_func=render.percent,
+            label=f"POE usage ({poe_data.poe_used}W/{poe_data.poe_max}W): ",
         )
+        return
 
     # PoE on device is turned OFF
     if poe_data.poe_status == PoeStatus.OFF:
-        return 0, "Operational status of the PSE is OFF"
+        yield Result(state=State.OK, summary="Operational status of the PSE is OFF")
+        return
 
     # PoE on device is FAULTY
     if poe_data.poe_status == PoeStatus.FAULTY:
@@ -67,5 +65,8 @@ def check_poe_data(params, poe_data):
         if poe_data.poe_status_detail:
             # optionally concat fault detail string
             fault_detail = " (%s)" % poe_data.poe_status_detail
-        return 2, "Operational status of the PSE is FAULTY" + fault_detail
-    return None
+
+        yield Result(
+            state=State.CRIT, summary=f"Operational status of the PSE is FAULTY{fault_detail}"
+        )
+        return

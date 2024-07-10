@@ -28,6 +28,8 @@ def generate_netapp_ontap_command(
 
     if params.no_cert_check:
         args += ["--no-cert-check"]
+    else:
+        args += ["--cert-server-name", host_config.name]
 
     yield SpecialAgentCommand(command_arguments=args)
 

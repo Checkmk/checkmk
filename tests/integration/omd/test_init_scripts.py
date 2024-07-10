@@ -21,6 +21,7 @@ def test_init_scripts(site: Site) -> None:
         "redis",
         "agent-receiver",
         "piggyback-hub",
+        "background-jobs",
     ]
 
     if not site.version.is_raw_edition():

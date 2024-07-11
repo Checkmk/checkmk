@@ -2288,18 +2288,6 @@ class AuditLogClient(RestApiClient):
 
         return result
 
-    def clear(self, expect_ok: bool = True) -> Response:
-        result = self.request(
-            "delete",
-            url=f"/domain-types/{self.domain}/collections/all",
-            expect_ok=expect_ok,
-        )
-
-        if expect_ok:
-            result.assert_status_code(204)
-
-        return result
-
 
 class BiPackClient(RestApiClient):
     domain: API_DOMAIN = "bi_pack"

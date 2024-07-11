@@ -1249,29 +1249,6 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
     )
 
 
-@pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_discover_single_service(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_discovery_preview: MagicMock,
-    mock_set_autochecks: MagicMock,
-) -> None:
-    resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        f"{base}/objects/host/example.com/actions/update_discovery_phase/invoke",
-        params='{"check_type": "systemd_units_services_summary", "service_item": "Summary", "target_phase": "monitored"}',
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-        status=204,
-    )
-    assert resp.text == ""
-    mock_discovery_preview.assert_called_once()
-    # TODO: This seems to be a bug. Might be caused by the fact that the service is currently not
-    # known to the host. I have not verified this. But in case something like this happens, the
-    # endpoint should fail with some error instead instead of continuing silently.
-    mock_set_autochecks.assert_not_called()
-
-
 def test_openapi_bulk_discovery_with_default_options(base: str, clients: ClientRegistry) -> None:
     # create some sample hosts
     clients.HostConfig.bulk_create(
@@ -1357,19 +1334,3 @@ def test_openapi_refresh_job_status(
     assert "state" in resp.json["extensions"]
     assert "result" in resp.json["extensions"]["logs"]
     assert "progress" in resp.json["extensions"]["logs"]
-
-
-@pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_deprecated_execute_discovery_endpoint(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_discovery_preview: MagicMock,
-) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/objects/host/example.com/actions/discover_services/invoke",
-        params='{"mode": "refresh"}',
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-        status=302,
-    )

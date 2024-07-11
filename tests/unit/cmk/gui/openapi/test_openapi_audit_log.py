@@ -85,21 +85,6 @@ def test_openapi_audit_log_archive(audit_log_store: AuditLogStore, clients: Clie
     assert len(res_archive.json["value"]) == 0
 
 
-def test_openapi_audit_log_archive_via_clear(
-    audit_log_store: AuditLogStore, clients: ClientRegistry
-) -> None:
-    deserialized_entries = LogEntryFactory.batch(4, time=BASE_DATE_TIMESTAMP)
-    _populate_audit_log(audit_log_store, deserialized_entries)
-
-    res_new = clients.AuditLog.get_all(date=BASE_DATE)
-    assert len(res_new.json["value"]) == 4
-
-    clients.AuditLog.clear()
-
-    res_archive = clients.AuditLog.get_all(date=BASE_DATE)
-    assert len(res_archive.json["value"]) == 0
-
-
 def test_openapi_audit_log_no_filter(
     audit_log_store: AuditLogStore, clients: ClientRegistry
 ) -> None:

@@ -29,12 +29,7 @@ from cmk.gui.openapi.endpoints.service_discovery.response_schemas import (
     DiscoveryBackgroundJobStatusObject,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
-from cmk.gui.openapi.restful_objects.constructors import (
-    collection_href,
-    domain_object,
-    link_rel,
-    object_property,
-)
+from cmk.gui.openapi.restful_objects.constructors import domain_object, link_rel, object_property
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import LinkType
@@ -183,40 +178,6 @@ def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
         )
 
     return serve_json(serialize_discovery_result(host, discovery_result))
-
-
-@Endpoint(
-    collection_href("service", "services"),
-    ".../collection",
-    method="get",
-    response_schema=response_schemas.DomainObject,
-    tag_group="Setup",
-    query_params=[
-        {
-            "host_name": gui_fields.HostField(
-                description="The host of the discovered services.",
-                example="example.com",
-                required=True,
-            ),
-            "discovery_phase": fields.String(
-                description="The discovery phase of the services.",
-                enum=sorted(SERVICE_DISCOVERY_PHASES.keys()),
-                example="monitored",
-                required=True,
-            ),
-        }
-    ],
-    deprecated_urls={"/domain-types/service/collections/services": 14537},
-)
-def show_services(params: Mapping[str, Any]) -> Response:
-    """Show all services of specific phase"""
-    host = Host.load_host(params["host_name"])
-    discovery_result = get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
-    return _serve_services(
-        host,
-        discovery_result.check_table,
-        [params["discovery_phase"]],
-    )
 
 
 class UpdateDiscoveryPhase(BaseSchema):
@@ -372,10 +333,6 @@ def service_discovery_run_wait_for_completion(params: Mapping[str, Any]) -> Resp
     return Response(status=204)
 
 
-class DiscoverServicesDeprecated(BaseSchema):
-    mode = _discovery_mode(default_mode="fix_all")
-
-
 class DiscoverServices(BaseSchema):
     host_name = gui_fields.HostField(
         description="The host of the service which shall be updated.",
@@ -404,35 +361,6 @@ def execute_service_discovery(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     body = params["body"]
     host = Host.load_host(body["host_name"])
-    discovery_action = APIDiscoveryAction(body["mode"])
-    return _execute_service_discovery(discovery_action, host)
-
-
-@Endpoint(
-    constructors.object_action_href("host", "{host_name}", "discover_services"),
-    ".../update",
-    method="post",
-    tag_group="Setup",
-    status_descriptions={
-        302: "The service discovery background job has been initialized. Redirecting to the "
-        "'Wait for service discovery completion' endpoint.",
-        404: "Host could not be found",
-        409: "A service discovery background job is currently running",
-    },
-    additional_status_codes=[302, 409],
-    path_params=[HOST_NAME],
-    request_schema=DiscoverServicesDeprecated,
-    response_schema=response_schemas.DomainObject,
-    permissions_required=DISCOVERY_PERMISSIONS,
-    deprecated_urls={
-        "/objects/host/{host_name}/actions/discover_services/invoke": 14538,
-    },
-)
-def execute(params: Mapping[str, Any]) -> Response:
-    """Execute a service discovery on a host"""
-    user.need_permission("wato.edit")
-    host = Host.load_host(params["host_name"])
-    body = params["body"]
     discovery_action = APIDiscoveryAction(body["mode"])
     return _execute_service_discovery(discovery_action, host)
 
@@ -885,11 +813,9 @@ def _serve_services(
 
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(show_service_discovery_result)
-    endpoint_registry.register(show_services)
     endpoint_registry.register(update_service_phase)
     endpoint_registry.register(show_service_discovery_run)
     endpoint_registry.register(service_discovery_run_wait_for_completion)
     endpoint_registry.register(execute_service_discovery)
-    endpoint_registry.register(execute)
     endpoint_registry.register(execute_bulk_discovery)
     endpoint_registry.register(show_bulk_discovery_status)

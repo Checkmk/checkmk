@@ -112,6 +112,7 @@ cc_library(
 # CC=/usr/bin/gcc-13 bazel test --test_output=all //packages/neb:all
 cc_test(
     name = "test",
+    size = "small",
     testonly = 1,
     srcs = [
         "test/test_CrashReport.cc",

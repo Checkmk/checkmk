@@ -61,6 +61,7 @@ cc_shared_library(
 # CC=/usr/bin/gcc-13 bazel test --test_output=all //packages/livestatus:all
 cc_test(
     name = "test",
+    size = "small",
     testonly = 1,
     srcs = glob(["test/*.cc"]),
     copts = [

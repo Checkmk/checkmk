@@ -10996,6 +10996,10 @@ msgstr "Vérifier la correspondance des plugins"
 msgid "Check result did not arrive in time"
 msgstr "Le résultat du contrôle n'est pas arrivé à temps"
 
+#, fuzzy
+msgid "Check result if the host or VM is in stand by"
+msgstr "Résultat de la vérification si l'hôte ou la VM est suspendu"
+
 msgid "Check result if the host or VM is powered off"
 msgstr "Résultat de la vérification si l'hôte ou la VM est éteint(e)"
 
@@ -41152,6 +41156,26 @@ msgstr "Sur des sites sélectionnés"
 msgid "On selected users"
 msgstr "Sur les utilisateurs sélectionnés"
 
+#, fuzzy, python-format
+msgid ""
+"On the %s you can configure a push configuration, where the monitored host "
+"is expected to send the data to the monitoring server without being actively "
+"triggered.\n"
+"\n"
+"If you are configuring agent only monitoring, you might want to also set the "
+"\"%s\" attribute to \"%s\"."
+msgstr ""
+"Par défaut, le serveur essaiera de contacter l'hôte surveillé et d'extraire "
+"les données en initialisant une connexion TCP. Sur la page %s, vous pouvez "
+"configurer une configuration \"push\", dans laquelle l'hôte surveillé est "
+"censé envoyer les données au serveur de surveillance sans être déclenché "
+"activement.\n"
+"\n"
+"Si vous configurez cela, vous pouvez également définir l'attribut \"%s\" ; à "
+"\"%s\" ;. Le fait que l'hôte ne soit pas joignable par le site est l'une des "
+"principales raisons pour lesquelles vous souhaitez utiliser la connexion "
+"push en premier lieu."
+
 msgid ""
 "On this page you can test the defined logfile patterns against a custom "
 "text, for example a line from a logfile. Using this dialog it is possible to "
@@ -54111,6 +54135,10 @@ msgstr "Staleness"
 
 msgid "Staleness value to mark hosts / services stale"
 msgstr "Valeur d'obsolescence pour marquer les hôtes / services obsolètes"
+
+#, fuzzy
+msgid "Stand by"
+msgstr "Standby"
 
 msgid "Standalone"
 msgstr "Standalone"

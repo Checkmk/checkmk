@@ -10924,6 +10924,10 @@ msgstr "Verificați plugin-urile care se potrivesc"
 msgid "Check result did not arrive in time"
 msgstr "Rezultatul verificării nu a sosit la timp"
 
+#, fuzzy
+msgid "Check result if the host or VM is in stand by"
+msgstr "Rezultatul verificării dacă gazda sau VM este suspendată"
+
 msgid "Check result if the host or VM is powered off"
 msgstr "Rezultatul verificării dacă gazda sau mașina virtuală este dezactivată"
 
@@ -40798,6 +40802,26 @@ msgstr "Pe site-uri selectate"
 msgid "On selected users"
 msgstr "La utilizatorii selectați"
 
+#, fuzzy, python-format
+msgid ""
+"On the %s you can configure a push configuration, where the monitored host "
+"is expected to send the data to the monitoring server without being actively "
+"triggered.\n"
+"\n"
+"If you are configuring agent only monitoring, you might want to also set the "
+"\"%s\" attribute to \"%s\"."
+msgstr ""
+"În mod implicit, serverul va încerca să contacteze gazda monitorizată și să "
+"extragă datele prin inițializarea unei conexiuni TCP. Pe %s puteți configura "
+"o configurație de tip \"push\", în care se așteaptă ca gazda monitorizată să "
+"trimită datele către serverul de monitorizare fără a fi declanșată în mod "
+"activ.\n"
+"\n"
+"Dacă configurați acest lucru, este posibil să doriți să setați, de asemenea, "
+"atributul \"%s\" la \"%s\". Faptul că gazda nu este accesibilă de către site "
+"este unul dintre principalele motive pentru care doriți să utilizați "
+"conexiunea push în primul rând."
+
 msgid ""
 "On this page you can test the defined logfile patterns against a custom "
 "text, for example a line from a logfile. Using this dialog it is possible to "
@@ -53671,6 +53695,10 @@ msgstr "Stagnare"
 
 msgid "Staleness value to mark hosts / services stale"
 msgstr "Valoarea de staleness pentru a marca gazdele/serviciile stale"
+
+#, fuzzy
+msgid "Stand by"
+msgstr "Standby"
 
 msgid "Standalone"
 msgstr "Standalone"

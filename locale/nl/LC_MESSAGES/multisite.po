@@ -10913,6 +10913,10 @@ msgstr "Controleer plugins die overeenkomen"
 msgid "Check result did not arrive in time"
 msgstr "Controle resultaat kwam niet op tijd"
 
+#, fuzzy
+msgid "Check result if the host or VM is in stand by"
+msgstr "Controleer het resultaat als de host of VM is opgeschort"
+
 msgid "Check result if the host or VM is powered off"
 msgstr "Controleer het resultaat als de host of VM is uitgeschakeld"
 
@@ -40776,6 +40780,26 @@ msgstr "Op geselecteerde plaatsen"
 msgid "On selected users"
 msgstr "Op geselecteerde gebruikers"
 
+#, fuzzy, python-format
+msgid ""
+"On the %s you can configure a push configuration, where the monitored host "
+"is expected to send the data to the monitoring server without being actively "
+"triggered.\n"
+"\n"
+"If you are configuring agent only monitoring, you might want to also set the "
+"\"%s\" attribute to \"%s\"."
+msgstr ""
+"Standaard zal de server proberen contact op te nemen met de bewaakte host en "
+"de gegevens ophalen door een TCP-verbinding te initialiseren. Op de %s kunt "
+"u een push-configuratie configureren, waarbij van de bewaakte host wordt "
+"verwacht dat deze de gegevens naar de monitoring server stuurt zonder actief "
+"getriggerd te worden.\n"
+"\n"
+"Als u dit configureert, wilt u misschien ook het \"%s\" attribuut instellen "
+"op \"%s\". Het niet bereikbaar zijn van de host door de site is een van de "
+"belangrijkste redenen waarom u in de eerste plaats de push-verbinding wilt "
+"gebruiken."
+
 msgid ""
 "On this page you can test the defined logfile patterns against a custom "
 "text, for example a line from a logfile. Using this dialog it is possible to "
@@ -53556,6 +53580,10 @@ msgstr "Stalen"
 
 msgid "Staleness value to mark hosts / services stale"
 msgstr "Stalenheidswaarde om hosts / diensten als oud te markeren"
+
+#, fuzzy
+msgid "Stand by"
+msgstr "Stand-by"
 
 msgid "Standalone"
 msgstr "Standalone"

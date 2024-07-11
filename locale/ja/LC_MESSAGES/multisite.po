@@ -10425,6 +10425,10 @@ msgstr "一致するプラグインを確認する"
 msgid "Check result did not arrive in time"
 msgstr "チェック結果が間に合わなかった"
 
+#, fuzzy
+msgid "Check result if the host or VM is in stand by"
+msgstr "ホストまたはVMが一時停止されているかどうかの結果を確認します"
+
 msgid "Check result if the host or VM is powered off"
 msgstr "ホストまたはVMの電源がオフになっているかどうかの結果を確認します"
 
@@ -39792,6 +39796,23 @@ msgstr "選択したサイト"
 msgid "On selected users"
 msgstr "選択したユーザーについて"
 
+#, fuzzy, python-format
+msgid ""
+"On the %s you can configure a push configuration, where the monitored host "
+"is expected to send the data to the monitoring server without being actively "
+"triggered.\n"
+"\n"
+"If you are configuring agent only monitoring, you might want to also set the "
+"\"%s\" attribute to \"%s\"."
+msgstr ""
+"デフォルトでは、サーバーはTCP接続を初期化することにより、監視対象ホストに接触"
+"し、データを引き出そうとします。%s では、監視するホストが積極的にトリガーされ"
+"ることなくデータを監視サーバーに送信することを期待するプッシュ構成を設定する"
+"ことができます。\n"
+"\n"
+"設定する場合は、\"%s\"属性も\"%s\"に設定するとよいでしょう。サイトからホスト"
+"に到達できないことが、まずプッシュ接続を使いたい大きな理由の一つです。"
+
 msgid ""
 "On this page you can test the defined logfile patterns against a custom "
 "text, for example a line from a logfile. Using this dialog it is possible to "
@@ -52401,6 +52422,10 @@ msgstr "ステートレス"
 
 msgid "Staleness value to mark hosts / services stale"
 msgstr "ホスト/サービスが古いStalenessの値"
+
+#, fuzzy
+msgid "Stand by"
+msgstr "待機する"
 
 msgid "Standalone"
 msgstr "スタンドアロン"

@@ -10995,6 +10995,10 @@ msgstr "Comprobar la coincidencia de los plugins"
 msgid "Check result did not arrive in time"
 msgstr "El resultado del control no llegó a tiempo"
 
+#, fuzzy
+msgid "Check result if the host or VM is in stand by"
+msgstr "Comprobar el resultado si el host o la VM están suspendidos"
+
 msgid "Check result if the host or VM is powered off"
 msgstr "Comprobar el resultado si el host o la VM están apagados"
 
@@ -41130,6 +41134,26 @@ msgstr "En sitios seleccionados"
 msgid "On selected users"
 msgstr "En usuarios seleccionados"
 
+#, fuzzy, python-format
+msgid ""
+"On the %s you can configure a push configuration, where the monitored host "
+"is expected to send the data to the monitoring server without being actively "
+"triggered.\n"
+"\n"
+"If you are configuring agent only monitoring, you might want to also set the "
+"\"%s\" attribute to \"%s\"."
+msgstr ""
+"Por defecto, el servidor intentará ponerse en contacto con el host "
+"monitorizado y extraer los datos inicializando una conexión TCP. En el %s "
+"puede configurar una configuración push, en la que se espera que el host "
+"monitorizado envíe los datos al servidor de monitorización sin ser activado "
+"activamente.\n"
+"\n"
+"Si está configurando esto, es posible que desee establecer también la \"%s\" "
+"atributo a \"%s\". El host no es accesible por el sitio es una de las "
+"principales razones por las que desea utilizar la conexión push en el primer "
+"lugar."
+
 msgid ""
 "On this page you can test the defined logfile patterns against a custom "
 "text, for example a line from a logfile. Using this dialog it is possible to "
@@ -54082,6 +54106,10 @@ msgstr "Estanqueidad"
 
 msgid "Staleness value to mark hosts / services stale"
 msgstr "Valor de caducidad para marcar los hosts / servicios como caducos"
+
+#, fuzzy
+msgid "Stand by"
+msgstr "Standby"
 
 msgid "Standalone"
 msgstr "Independiente"

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2024-07-10 09:57+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -10717,6 +10717,10 @@ msgstr "Übereinstimmende Check-Plugins"
 
 msgid "Check result did not arrive in time"
 msgstr "Checkergebnis ist nicht rechtzeitig eingetroffen"
+
+#, fuzzy
+msgid "Check result if the host or VM is in stand by"
+msgstr "Status, wenn der Host oder die VM angehalten ist"
 
 msgid "Check result if the host or VM is powered off"
 msgstr "Status, wenn der Host oder die VM ausgeschaltet ist"
@@ -39974,6 +39978,26 @@ msgstr "Bei ausgewählten Instanzen"
 msgid "On selected users"
 msgstr "Bei ausgewählten Benutzern"
 
+#, fuzzy, python-format
+msgid ""
+"On the %s you can configure a push configuration, where the monitored host "
+"is expected to send the data to the monitoring server without being actively "
+"triggered.\n"
+"\n"
+"If you are configuring agent only monitoring, you might want to also set the "
+"\"%s\" attribute to \"%s\"."
+msgstr ""
+"Standardmäßig versucht der Server, den überwachten Host zu kontaktieren und "
+"die Daten durch Initialisierung einer TCP-Verbindung abzurufen. Auf der "
+"Seite %s können Sie eine Push-Konfiguration konfigurieren, bei welcher der "
+"überwachte Host die Daten an den Monitoring-Server senden soll, ohne aktiv "
+"ausgelöst zu werden.\n"
+"\n"
+"Wenn Sie dies konfigurieren, wollen Sie gegebenenfalls auch das Attribut \"%s"
+"\" auf \"%s\" setzen. Ein Host, der von einer Instanz nicht erreicht werden "
+"kann, ist einer der Hauptgründe, warum Sie eine Push-Verbindung einsetzen "
+"wollen werden."
+
 msgid ""
 "On this page you can test the defined logfile patterns against a custom "
 "text, for example a line from a logfile. Using this dialog it is possible to "
@@ -52654,6 +52678,10 @@ msgstr "Veraltung"
 
 msgid "Staleness value to mark hosts / services stale"
 msgstr "Veraltungswert, ab dem Hosts/Services als veraltet gelten"
+
+#, fuzzy
+msgid "Stand by"
+msgstr "Standby"
 
 msgid "Standalone"
 msgstr "Allein stehend"

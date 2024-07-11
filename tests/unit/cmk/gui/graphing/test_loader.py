@@ -6,7 +6,7 @@
 from collections import Counter
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Final, Literal
+from typing import Literal
 
 import pytest
 
@@ -289,17 +289,8 @@ def _metric_names_by_module(
     return metric_names_by_module
 
 
-_SKIP_MODULES: Final[Sequence[str]] = [
-    # Case 1: len(metric_names.bundles) > 1
-    "cmk.plugins.aws.graphing.graphs",
-    "cmk.plugins.collection.graphing.network",
-]
-
-
 def test_bundles() -> None:
     for module, metric_names in _metric_names_by_module(load_graphing_plugins().plugins).items():
-        if module in _SKIP_MODULES:
-            continue
         bundles = metric_names.bundles
         assert len(bundles) <= 1, (
             f"The module {module!r} defines multiple bundles. Our graphing modules are allowed to"

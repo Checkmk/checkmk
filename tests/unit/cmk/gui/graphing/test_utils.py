@@ -285,7 +285,7 @@ def test__normalize_perf_data(
                 "aws_ec2_running_ondemand_instances_t2.nano",
             ],
             "check_mk-aws_ec2_limits",
-            ["aws_ec2_running_ondemand_instances", "aws_ec2_running_ondemand_instances_t2"],
+            ["aws_ec2_running_ondemand_instances_t2", "aws_ec2_running_ondemand_instances"],
         ),
     ],
 )

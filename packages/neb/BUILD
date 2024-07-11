@@ -25,10 +25,11 @@ cc_library(
     name = "neb_version",
     srcs = ["src/CmkVersion.cc"],
     hdrs = ["include/neb/CmkVersion.h"],
-    copts = NEB_COPTS + [
-        r'-DVERSION=\"' + mangle_version(CMK_VERSION) + r'\"',
-    ],
+    copts = NEB_COPTS,
     includes = ["include"],
+    local_defines = [
+        r'VERSION=\"' + mangle_version(CMK_VERSION) + r'\"',
+    ],
 )
 
 cc_library(

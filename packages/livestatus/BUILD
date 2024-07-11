@@ -36,13 +36,15 @@ cc_library(
     copts = [
         "-std=c++20",
         "-Iexternal/re2",
-        "-DHAVE_RE2",
-        "-DASIO_DISABLE_CONCEPTS",
-        "-DASIO_NO_DEPRECATED",
         "-gdwarf-4",
         "-O3",
     ],
     includes = ["include"],
+    local_defines = [
+        "HAVE_RE2",
+        "ASIO_DISABLE_CONCEPTS",
+        "ASIO_NO_DEPRECATED",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":lspoller",

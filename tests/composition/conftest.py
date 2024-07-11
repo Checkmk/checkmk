@@ -64,7 +64,6 @@ def _add_remote_site_to_central_site(
     central_site: Site,
     remote_site: Site,
 ) -> None:
-    central_site.open_livestatus_tcp(encrypted=False)
     central_site.openapi.create_site(
         {
             "basic_settings": {

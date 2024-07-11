@@ -1009,9 +1009,16 @@ class Site:
 
         try:
             self.check_output(["omd", "status", "--bare"])
+            logger.info("Exit code was: 0 (fully running)")
             return 0
         except subprocess.CalledProcessError as e:
-            logger.info("%s Output: %sSTDERR: %s", e, _fmt_output(e.output), _fmt_output(e.stderr))
+            status_text = {
+                0: "fully running",
+                1: "fully stopped",
+                2: "partially running",
+            }.get(e.returncode, "unknown meaning")
+            logger.info("Exit code was: %d (%s)", e.returncode, status_text)
+            logger.debug("%s Output: %sSTDERR: %s", e, _fmt_output(e.output), _fmt_output(e.stderr))
             return e.returncode
 
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
@@ -1118,8 +1125,9 @@ class Site:
         ):
             return
 
-        restart_site = self.is_running()
-        self.stop()
+        was_stopped = self.is_stopped()
+        if not was_stopped:
+            self.stop()
         self.set_config("LIVESTATUS_TCP", "on")
         self.gather_livestatus_port()
         self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
@@ -1127,7 +1135,7 @@ class Site:
         # So we need to read the port from the config again.
         self.gather_livestatus_port(from_config=True)
         self.set_config("LIVESTATUS_TCP_TLS", "on" if encrypted else "off")
-        if restart_site:
+        if not was_stopped:
             self.start()
 
     def gather_livestatus_port(self, from_config: bool = False) -> None:

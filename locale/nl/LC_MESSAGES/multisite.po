@@ -563,6 +563,10 @@ msgid "%s by host"
 msgstr "%s door host"
 
 #, python-format
+msgid "%s can only be deleted via Quick setup"
+msgstr ""
+
+#, python-format
 msgid ""
 "%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)"
 msgstr ""
@@ -897,6 +901,11 @@ msgstr "(niet gezet)"
 
 msgid "(unused)"
 msgstr "(ongebruikt)"
+
+msgid ""
+"*Since this is a ReadOnlyAccess, we will never create any resources on your "
+"AWS account"
+msgstr ""
 
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ", maar wordt verworpen door een match in de voorgaande regels."
@@ -2583,6 +2592,10 @@ msgstr "Toegewezen opslag"
 
 msgid "AWS S3 Bucket"
 msgstr "AWS S3 emmer"
+
+#, fuzzy
+msgid "AWS account name"
+msgstr "Naam opslagrekening"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "Kosten en gebruik van AWS/CE"
@@ -10126,6 +10139,10 @@ msgstr ""
 "Kan geen macro's definiëren die standaard \"CUSTOMER_ID\" of \"CUSTOMER_NAME"
 "\" overschrijven"
 
+#, fuzzy, python-format
+msgid "Cannot delete %s because it's managed by Quick setup."
+msgstr "U kunt geen rollen verwijderen, die nog in gebruik zijn (%s)!"
+
 msgid "Cannot delete job. Job cannot be stopped."
 msgstr "Kan taak niet verwijderen. Taak kan niet worden gestopt."
 
@@ -10992,6 +11009,10 @@ msgstr "Controleer plugins die overeenkomen"
 
 msgid "Check result did not arrive in time"
 msgstr "Controle resultaat kwam niet op tijd"
+
+#, fuzzy
+msgid "Check result if the host or VM is in stand by"
+msgstr "Controleer het resultaat als de host of VM is opgeschort"
 
 msgid "Check result if the host or VM is powered off"
 msgstr "Controleer het resultaat als de host of VM is uitgeschakeld"
@@ -11979,6 +12000,11 @@ msgstr "Logboeken wissen door alle opgeslagen berichten te verwijderen"
 #, fuzzy
 msgid "Cleared"
 msgstr "Status 'bevestigd'"
+
+msgid ""
+"Click 'Add user' under Users, select 'Access key - Programmatic access', and "
+"attach the 'ReadOnlyAccess' policy*."
+msgstr ""
 
 msgid "Click for instant reload."
 msgstr "Klik voor onmiddellijk herladen."
@@ -12971,7 +12997,7 @@ msgid "Configure grouping of interfaces"
 msgstr "Groepering van interfaces configureren"
 
 #, fuzzy
-msgid "Configure host & region"
+msgid "Configure host and regions"
 msgstr "Configuratie"
 
 #, no-python-format
@@ -14740,12 +14766,6 @@ msgstr "Crit/Down"
 msgid "Critical"
 msgstr "Kritisch"
 
-msgid "Critical (In)"
-msgstr "Kritisch (In)"
-
-msgid "Critical (Out)"
-msgstr "Kritisch (uit)"
-
 msgid "Critical above"
 msgstr "Kritisch boven"
 
@@ -15090,6 +15110,10 @@ msgstr "Aangepaste controles - gedefinieerd via regels"
 
 msgid "Custom event limit"
 msgstr "Aangepaste gebeurtenislimiet"
+
+#, fuzzy
+msgid "Custom fields"
+msgstr "Aangepast"
 
 msgid "Custom footer links"
 msgstr "Aangepaste voettekst links"
@@ -19226,10 +19250,6 @@ msgstr "DotNet (.Net) runtime geheugen niveaus"
 msgid "Double Integer (DINT)"
 msgstr "Dubbel geheel getal (DINT)"
 
-#, fuzzy
-msgid "Double check your configuration"
-msgstr "Externe configuratie uitschakelen"
-
 msgid "Double-click to grow further"
 msgstr ""
 
@@ -21033,6 +21053,10 @@ msgstr ""
 "<b>niet</b> de volledige UNC zoals <tt>servername</tt>"
 
 msgid "Enter the six-digit code from your authenticator app to log in."
+msgstr ""
+
+msgid ""
+"Enter the technical name of the field as defined in the ServiceNow database."
 msgstr ""
 
 #, fuzzy
@@ -24549,6 +24573,9 @@ msgstr "Globbing patroon voor invoerbestanden"
 
 msgid "Go critical if all licenses are used"
 msgstr "Ga kritisch als alle licenties zijn gebruikt"
+
+msgid "Go to AWS root account > Services > IAM."
+msgstr ""
 
 msgid "Go to extension packages"
 msgstr "Ga naar uitbreidingspakketten"
@@ -28814,6 +28841,10 @@ msgid "IO Groups"
 msgstr "IO Groepen"
 
 #, fuzzy
+msgid "IO flow"
+msgstr "Luchtstroom"
+
+#, fuzzy
 msgid "IO latency"
 msgstr "IO latentie"
 
@@ -32415,6 +32446,12 @@ msgstr "Ongeldige configuratie hash"
 
 msgid "Invalid credentials"
 msgstr "Ongeldige inloggegevens"
+
+#, fuzzy
+msgid ""
+"Invalid custum field. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
+msgstr ""
+"Ongeldige tag ID. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn toegestaan."
 
 #, python-format
 msgid "Invalid data source: %s"
@@ -37094,9 +37131,6 @@ msgstr "Matrix van prestatiegegevens"
 msgid "Max Cache Age"
 msgstr "Max Cache Leeftijd"
 
-msgid "Max Perm used"
-msgstr "Max. gebruikt Perm"
-
 msgid "Max age of the oldest snapshot"
 msgstr "Maximum leeftijd van de oudste momentopname"
 
@@ -37369,9 +37403,6 @@ msgstr "Maximale grootte"
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "Maximale afbeeldingsgrootte: %dx%dpx"
-
-msgid "Maximum inodes"
-msgstr "Maximum inodes"
 
 msgid "Maximum latency of successful GetItem requests"
 msgstr "Maximale latentie van succesvolle GetItem-verzoeken"
@@ -39782,7 +39813,9 @@ msgstr "Naam resolutie"
 msgid "Name your %s for easy recognition."
 msgstr "Geef uw %s een naam voor gemakkelijke herkenning."
 
-msgid "Name your host, path and select the region you would like to monitor"
+msgid ""
+"Name your host, define the path and select the regions you would like to "
+"monitor"
 msgstr ""
 
 #, python-format
@@ -42165,6 +42198,14 @@ msgstr ""
 #, fuzzy
 msgid "OAUth authentication"
 msgstr "Authenticatie"
+
+#, fuzzy
+msgid "OAuth token"
+msgstr "API sleutel/teken"
+
+#, fuzzy
+msgid "OAuth token authentication"
+msgstr "Token authenticatie"
 
 msgid "OAuth2 (ClientID/TenantID)"
 msgstr "OAuth2 (ClientID/TenantID)"
@@ -50242,7 +50283,11 @@ msgid "Revert foreign changes"
 msgstr "Buitenlandse wijzigingen activeren"
 
 #, fuzzy
-msgid "Review & run service discovery"
+msgid "Review and run service discovery"
+msgstr "Save & run service discovery"
+
+#, fuzzy
+msgid "Review your configuration, run and preview service discovery"
 msgstr "Save & run service discovery"
 
 msgid "Revolutions per minute"
@@ -51358,6 +51403,9 @@ msgstr "Bewaar filters & ga naar ontwerper"
 msgid "Save response"
 msgstr "Reactie opslaan"
 
+msgid "Save the generated access key and secret key for later use."
+msgstr ""
+
 msgid "Save this host and go to"
 msgstr "Sla deze host op en ga naar"
 
@@ -51915,9 +51963,6 @@ msgstr "Bekijk de beschikbaarheidsoverzichten van hosts en diensten"
 msgid "See user %s"
 msgstr "Zie gebruiker %s"
 
-msgid "Select & configure AWS services you would like to monitor"
-msgstr ""
-
 msgid "Select a time period"
 msgstr "Selecteer een periode"
 
@@ -51935,6 +51980,10 @@ msgstr "Kies een pictogram"
 
 msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "Selecteer een iCalendar bestand (<tt>*.ics</tt>) van uw PC"
+
+#, fuzzy
+msgid "Select and configure AWS services you would like to monitor"
+msgstr "Te controleren Azure diensten"
 
 #, fuzzy
 msgid "Select datasource"
@@ -55296,9 +55345,6 @@ msgstr "Bronnen"
 msgid "Space Alarm"
 msgstr "Ruimte alarm"
 
-msgid "Space in the database that has not been reserved for database objects"
-msgstr "Ruimte in de database die niet is gereserveerd voor databaseobjecten"
-
 msgid "Space savings"
 msgstr "Ruimtebesparing"
 
@@ -56113,6 +56159,10 @@ msgstr "Stalen"
 
 msgid "Staleness value to mark hosts / services stale"
 msgstr "Stalenheidswaarde om hosts / diensten als oud te markeren"
+
+#, fuzzy
+msgid "Stand by"
+msgstr "Stand-by"
 
 msgid "Standalone"
 msgstr "Standalone"
@@ -63145,12 +63195,6 @@ msgid "The user you are trying to edit notification rules for does not exist."
 msgstr ""
 "De gebruiker waarvoor u de meldingsregels probeert te bewerken, bestaat niet."
 
-msgid ""
-"The user, used for login, has to have at least the role 'itil' in ServiceNow."
-msgstr ""
-"De gebruiker die wordt gebruikt om in te loggen, moet ten minste de rol "
-"\"itil\" hebben in ServiceNow."
-
 msgid "The user, used for login."
 msgstr "De gebruiker, gebruikt voor het inloggen."
 
@@ -69017,15 +69061,6 @@ msgstr "Totaal aantal signaleringen lagere niveaus"
 
 msgid "Total alerts count upper levels"
 msgstr "Totaal aantal signaleringen bovenste niveaus"
-
-msgid "Total amount of space allocated by objects in the database"
-msgstr "Totale hoeveelheid ruimte toegewezen door objecten in de database"
-
-msgid ""
-"Total amount of space reserved for objects in the database, but not yed used"
-msgstr ""
-"Totale hoeveelheid ruimte gereserveerd voor objecten in de database, maar "
-"niet gebruikt"
 
 msgid "Total amount of space used by the oplog"
 msgstr "Totale hoeveelheid ruimte gebruikt door het oplog"
@@ -75781,12 +75816,6 @@ msgstr ""
 msgid "Warning"
 msgstr "Waarschuwing"
 
-msgid "Warning (In)"
-msgstr "Waarschuwing (In)"
-
-msgid "Warning (Out)"
-msgstr "Waarschuwing (Uit)"
-
 #, fuzzy
 msgid "Warning Asserts"
 msgstr "Waarschuwing bij"
@@ -82189,6 +82218,50 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Max Perm used"
+#~ msgstr "Max. gebruikt Perm"
+
+#~ msgid "Maximum inodes"
+#~ msgstr "Maximum inodes"
+
+#~ msgid ""
+#~ "Space in the database that has not been reserved for database objects"
+#~ msgstr ""
+#~ "Ruimte in de database die niet is gereserveerd voor databaseobjecten"
+
+#~ msgid "Total amount of space allocated by objects in the database"
+#~ msgstr "Totale hoeveelheid ruimte toegewezen door objecten in de database"
+
+#~ msgid ""
+#~ "Total amount of space reserved for objects in the database, but not yed "
+#~ "used"
+#~ msgstr ""
+#~ "Totale hoeveelheid ruimte gereserveerd voor objecten in de database, maar "
+#~ "niet gebruikt"
+
+#~ msgid "Critical (In)"
+#~ msgstr "Kritisch (In)"
+
+#~ msgid "Critical (Out)"
+#~ msgstr "Kritisch (uit)"
+
+#, fuzzy
+#~ msgid "Double check your configuration"
+#~ msgstr "Externe configuratie uitschakelen"
+
+#~ msgid ""
+#~ "The user, used for login, has to have at least the role 'itil' in "
+#~ "ServiceNow."
+#~ msgstr ""
+#~ "De gebruiker die wordt gebruikt om in te loggen, moet ten minste de rol "
+#~ "\"itil\" hebben in ServiceNow."
+
+#~ msgid "Warning (In)"
+#~ msgstr "Waarschuwing (In)"
+
+#~ msgid "Warning (Out)"
+#~ msgstr "Waarschuwing (Uit)"
 
 #, python-format
 #~ msgid "%s operations"

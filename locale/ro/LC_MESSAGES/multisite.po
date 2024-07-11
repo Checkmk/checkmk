@@ -562,6 +562,10 @@ msgid "%s by host"
 msgstr "%s de către gazdă"
 
 #, python-format
+msgid "%s can only be deleted via Quick setup"
+msgstr ""
+
+#, python-format
 msgid ""
 "%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)"
 msgstr ""
@@ -902,6 +906,11 @@ msgstr "(neconfigurat)"
 
 msgid "(unused)"
 msgstr "(nefolosit)"
+
+msgid ""
+"*Since this is a ReadOnlyAccess, we will never create any resources on your "
+"AWS account"
+msgstr ""
 
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ", dar este anulată de o potrivire dintr-un pachet de reguli anterior."
@@ -2604,6 +2613,10 @@ msgstr "AWS S3 (stocare de obiecte)"
 
 msgid "AWS S3 Bucket"
 msgstr "Bucket AWS S3"
+
+#, fuzzy
+msgid "AWS account name"
+msgstr "Numele contului de stocare"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "Costurile și utilizarea AWS/CE"
@@ -10152,6 +10165,10 @@ msgstr ""
 "Nu se pot defini macro-uri care să suprascrie \"CUSTOMER_ID\" sau "
 "\"CUSTOMER_NAME\" implicite;"
 
+#, fuzzy, python-format
+msgid "Cannot delete %s because it's managed by Quick setup."
+msgstr "Nu puteți șterge rolurile care sunt încă în uz (%s)!"
+
 msgid "Cannot delete job. Job cannot be stopped."
 msgstr "Nu se poate șterge sarcina. Lucrarea nu poate fi oprită."
 
@@ -11006,6 +11023,10 @@ msgstr "Verificați plugin-urile care se potrivesc"
 
 msgid "Check result did not arrive in time"
 msgstr "Rezultatul verificării nu a sosit la timp"
+
+#, fuzzy
+msgid "Check result if the host or VM is in stand by"
+msgstr "Rezultatul verificării dacă gazda sau VM este suspendată"
 
 msgid "Check result if the host or VM is powered off"
 msgstr "Rezultatul verificării dacă gazda sau mașina virtuală este dezactivată"
@@ -11992,6 +12013,11 @@ msgstr "Ștergeți jurnalele prin ștergerea tuturor mesajelor stocate"
 #, fuzzy
 msgid "Cleared"
 msgstr "Starea \"Liber"
+
+msgid ""
+"Click 'Add user' under Users, select 'Access key - Programmatic access', and "
+"attach the 'ReadOnlyAccess' policy*."
+msgstr ""
 
 msgid "Click for instant reload."
 msgstr "Faceți clic pentru reîncărcare instantanee."
@@ -12981,7 +13007,7 @@ msgid "Configure grouping of interfaces"
 msgstr "Configurați gruparea interfețelor"
 
 #, fuzzy
-msgid "Configure host & region"
+msgid "Configure host and regions"
 msgstr "Configurație"
 
 #, no-python-format
@@ -14752,12 +14778,6 @@ msgstr "Crit/Down"
 msgid "Critical"
 msgstr "Critică"
 
-msgid "Critical (In)"
-msgstr "Critic (în)"
-
-msgid "Critical (Out)"
-msgstr "Critic (Out)"
-
 msgid "Critical above"
 msgstr "Critic de mai sus"
 
@@ -15098,6 +15118,10 @@ msgstr "Verificări personalizate - definite prin intermediul unei reguli"
 
 msgid "Custom event limit"
 msgstr "Limita evenimentului personalizat"
+
+#, fuzzy
+msgid "Custom fields"
+msgstr "Personalizat"
 
 msgid "Custom footer links"
 msgstr "Legături personalizate în subsol"
@@ -19249,10 +19273,6 @@ msgstr "Nivelurile de memorie în timpul execuției DotNet (.Net)"
 msgid "Double Integer (DINT)"
 msgstr "Număr întreg dublu (DINT)"
 
-#, fuzzy
-msgid "Double check your configuration"
-msgstr "Dezactivați configurarea la distanță"
-
 msgid "Double-click to grow further"
 msgstr ""
 
@@ -21065,6 +21085,10 @@ msgid "Enter the six-digit code from your authenticator app to log in."
 msgstr ""
 "Introduceți codul din șase cifre din aplicația de autentificare pentru a vă "
 "conecta."
+
+msgid ""
+"Enter the technical name of the field as defined in the ServiceNow database."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -24569,6 +24593,9 @@ msgstr "Model de globbing pentru fișierele de intrare"
 
 msgid "Go critical if all licenses are used"
 msgstr "Devine critic dacă sunt folosite toate licențele"
+
+msgid "Go to AWS root account > Services > IAM."
+msgstr ""
 
 msgid "Go to extension packages"
 msgstr "Mergeți la pachetele de extensii"
@@ -28823,6 +28850,10 @@ msgid "IO Groups"
 msgstr "Grupuri IO"
 
 #, fuzzy
+msgid "IO flow"
+msgstr "Fluxul de aer"
+
+#, fuzzy
 msgid "IO latency"
 msgstr "Latență IO"
 
@@ -32478,6 +32509,13 @@ msgstr "Hash de configurare invalid"
 
 msgid "Invalid credentials"
 msgstr "Acreditări invalide"
+
+#, fuzzy
+msgid ""
+"Invalid custum field. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
+msgstr ""
+"ID-ul etichetei nu este valid. Sunt permise numai caracterele a-z, A-Z, 0-9, "
+"_ și -."
 
 #, python-format
 msgid "Invalid data source: %s"
@@ -37126,9 +37164,6 @@ msgstr "Matricea de date privind performanța"
 msgid "Max Cache Age"
 msgstr "Vârsta maximă a cache-ului"
 
-msgid "Max Perm used"
-msgstr "Max Perm utilizat"
-
 msgid "Max age of the oldest snapshot"
 msgstr "Vârsta maximă a celui mai vechi instantaneu"
 
@@ -37398,9 +37433,6 @@ msgstr "Dimensiunea maximă"
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "Dimensiunea maximă a imaginii: %dx%dpx"
-
-msgid "Maximum inodes"
-msgstr "Noduri maxime"
 
 msgid "Maximum latency of successful GetItem requests"
 msgstr "Latența maximă a cererilor GetItem reușite"
@@ -39822,7 +39854,9 @@ msgstr "Rezoluția numelui"
 msgid "Name your %s for easy recognition."
 msgstr "Dați un nume %s pentru a fi ușor de recunoscut."
 
-msgid "Name your host, path and select the region you would like to monitor"
+msgid ""
+"Name your host, define the path and select the regions you would like to "
+"monitor"
 msgstr ""
 
 #, python-format
@@ -42190,6 +42224,14 @@ msgstr "OAUTH 2.0"
 
 msgid "OAUth authentication"
 msgstr "Autentificare OAUth"
+
+#, fuzzy
+msgid "OAuth token"
+msgstr "Token API"
+
+#, fuzzy
+msgid "OAuth token authentication"
+msgstr "Autentificare cu jeton"
 
 msgid "OAuth2 (ClientID/TenantID)"
 msgstr "OAuth2 (ClientID/TenantID)"
@@ -50282,7 +50324,11 @@ msgid "Revert foreign changes"
 msgstr "Activați modificările străine"
 
 #, fuzzy
-msgid "Review & run service discovery"
+msgid "Review and run service discovery"
+msgstr "Salvați & rulați descoperirea serviciilor"
+
+#, fuzzy
+msgid "Review your configuration, run and preview service discovery"
 msgstr "Salvați & rulați descoperirea serviciilor"
 
 msgid "Revolutions per minute"
@@ -51395,6 +51441,9 @@ msgstr "Salvați filtrele și mergeți la designer"
 msgid "Save response"
 msgstr "Salvați răspunsul"
 
+msgid "Save the generated access key and secret key for later use."
+msgstr ""
+
 msgid "Save this host and go to"
 msgstr "Salvați această gazdă și mergeți la"
 
@@ -51950,9 +51999,6 @@ msgstr "Vedeți vizualizările de disponibilitate ale gazdelor și serviciilor"
 msgid "See user %s"
 msgstr "Vezi utilizator %s"
 
-msgid "Select & configure AWS services you would like to monitor"
-msgstr ""
-
 msgid "Select a time period"
 msgstr "Selectați o perioadă de timp"
 
@@ -51969,6 +52015,10 @@ msgstr "Selectați o pictogramă"
 
 msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "Selectați un fișier iCalendar (<tt>*.ics</tt>) de pe PC-ul dvs."
+
+#, fuzzy
+msgid "Select and configure AWS services you would like to monitor"
+msgstr "Servicii Azure de monitorizat"
 
 #, fuzzy
 msgid "Select datasource"
@@ -55402,11 +55452,6 @@ msgstr "Surse"
 msgid "Space Alarm"
 msgstr "Alarma spațială"
 
-msgid "Space in the database that has not been reserved for database objects"
-msgstr ""
-"Spațiu din baza de date care nu a fost rezervat pentru obiectele bazei de "
-"date"
-
 msgid "Space savings"
 msgstr "Economii de spațiu"
 
@@ -56233,6 +56278,10 @@ msgstr "Stagnare"
 
 msgid "Staleness value to mark hosts / services stale"
 msgstr "Valoarea de staleness pentru a marca gazdele/serviciile stale"
+
+#, fuzzy
+msgid "Stand by"
+msgstr "Standby"
 
 msgid "Standalone"
 msgstr "Standalone"
@@ -63291,12 +63340,6 @@ msgstr ""
 "Utilizatorul pentru care încercați să editați regulile de notificare nu "
 "există."
 
-msgid ""
-"The user, used for login, has to have at least the role 'itil' in ServiceNow."
-msgstr ""
-"Utilizatorul utilizat pentru autentificare trebuie să aibă cel puțin rolul "
-"'itil' în ServiceNow."
-
 msgid "The user, used for login."
 msgstr "Utilizatorul, utilizat pentru autentificare."
 
@@ -69227,15 +69270,6 @@ msgstr "Număr total de alerte niveluri inferioare"
 
 msgid "Total alerts count upper levels"
 msgstr "Numărul total de alerte niveluri superioare"
-
-msgid "Total amount of space allocated by objects in the database"
-msgstr "Volumul total de spațiu alocat de obiectele din baza de date"
-
-msgid ""
-"Total amount of space reserved for objects in the database, but not yed used"
-msgstr ""
-"Cantitatea totală de spațiu rezervat pentru obiectele din baza de date, dar "
-"care nu este utilizat"
 
 msgid "Total amount of space used by the oplog"
 msgstr "Cantitatea totală de spațiu utilizată de oplog"
@@ -75919,12 +75953,6 @@ msgstr ""
 msgid "Warning"
 msgstr "Avertisment"
 
-msgid "Warning (In)"
-msgstr "Avertisment (în)"
-
-msgid "Warning (Out)"
-msgstr "Avertisment (Out)"
-
 #, fuzzy
 msgid "Warning Asserts"
 msgstr "Avertisment la"
@@ -82318,6 +82346,51 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Max Perm used"
+#~ msgstr "Max Perm utilizat"
+
+#~ msgid "Maximum inodes"
+#~ msgstr "Noduri maxime"
+
+#~ msgid ""
+#~ "Space in the database that has not been reserved for database objects"
+#~ msgstr ""
+#~ "Spațiu din baza de date care nu a fost rezervat pentru obiectele bazei de "
+#~ "date"
+
+#~ msgid "Total amount of space allocated by objects in the database"
+#~ msgstr "Volumul total de spațiu alocat de obiectele din baza de date"
+
+#~ msgid ""
+#~ "Total amount of space reserved for objects in the database, but not yed "
+#~ "used"
+#~ msgstr ""
+#~ "Cantitatea totală de spațiu rezervat pentru obiectele din baza de date, "
+#~ "dar care nu este utilizat"
+
+#~ msgid "Critical (In)"
+#~ msgstr "Critic (în)"
+
+#~ msgid "Critical (Out)"
+#~ msgstr "Critic (Out)"
+
+#, fuzzy
+#~ msgid "Double check your configuration"
+#~ msgstr "Dezactivați configurarea la distanță"
+
+#~ msgid ""
+#~ "The user, used for login, has to have at least the role 'itil' in "
+#~ "ServiceNow."
+#~ msgstr ""
+#~ "Utilizatorul utilizat pentru autentificare trebuie să aibă cel puțin "
+#~ "rolul 'itil' în ServiceNow."
+
+#~ msgid "Warning (In)"
+#~ msgstr "Avertisment (în)"
+
+#~ msgid "Warning (Out)"
+#~ msgstr "Avertisment (Out)"
 
 #, python-format
 #~ msgid "%s operations"

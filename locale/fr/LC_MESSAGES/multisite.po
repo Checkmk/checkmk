@@ -561,6 +561,10 @@ msgid "%s by host"
 msgstr "%s par hôte"
 
 #, python-format
+msgid "%s can only be deleted via Quick setup"
+msgstr ""
+
+#, python-format
 msgid ""
 "%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)"
 msgstr ""
@@ -900,6 +904,11 @@ msgstr "(non défini)"
 
 msgid "(unused)"
 msgstr "(inutilisé)"
+
+msgid ""
+"*Since this is a ReadOnlyAccess, we will never create any resources on your "
+"AWS account"
+msgstr ""
 
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ""
@@ -2627,6 +2636,10 @@ msgstr "AWS S3 (stockage des objets)"
 
 msgid "AWS S3 Bucket"
 msgstr "AWS S3 Bucket"
+
+#, fuzzy
+msgid "AWS account name"
+msgstr "Nom du compte de stockage"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "Coûts et utilisation de l'AWS/CE"
@@ -10203,6 +10216,10 @@ msgstr ""
 "Impossible de définir des macros qui écrasent les valeurs par défaut "
 "\"CUSTOMER_ID\" ou \"CUSTOMER_NAME\""
 
+#, fuzzy, python-format
+msgid "Cannot delete %s because it's managed by Quick setup."
+msgstr "Vous ne pouvez pas supprimer les rôles qui sont encore utilisés (%s) !"
+
 msgid "Cannot delete job. Job cannot be stopped."
 msgstr ""
 "Impossible de supprimer le travail. Le travail ne peut pas être arrêté."
@@ -11077,6 +11094,10 @@ msgstr "Vérifier la correspondance des plugins"
 
 msgid "Check result did not arrive in time"
 msgstr "Le résultat du contrôle n'est pas arrivé à temps"
+
+#, fuzzy
+msgid "Check result if the host or VM is in stand by"
+msgstr "Résultat de la vérification si l'hôte ou la VM est suspendu"
 
 msgid "Check result if the host or VM is powered off"
 msgstr "Résultat de la vérification si l'hôte ou la VM est éteint(e)"
@@ -12077,6 +12098,11 @@ msgstr "Effacer les journaux en supprimant tous les messages stockés"
 #, fuzzy
 msgid "Cleared"
 msgstr "État \"effacé\""
+
+msgid ""
+"Click 'Add user' under Users, select 'Access key - Programmatic access', and "
+"attach the 'ReadOnlyAccess' policy*."
+msgstr ""
 
 msgid "Click for instant reload."
 msgstr "Cliquez pour une recharge instantanée."
@@ -13083,7 +13109,7 @@ msgid "Configure grouping of interfaces"
 msgstr "Configurer le regroupement des interfaces"
 
 #, fuzzy
-msgid "Configure host & region"
+msgid "Configure host and regions"
 msgstr "Configuration"
 
 #, no-python-format
@@ -14875,12 +14901,6 @@ msgstr "Crit/Down"
 msgid "Critical"
 msgstr "Critique"
 
-msgid "Critical (In)"
-msgstr "Critique (en)"
-
-msgid "Critical (Out)"
-msgstr "Critique (Out)"
-
 msgid "Critical above"
 msgstr "Critique ci-dessus"
 
@@ -15225,6 +15245,10 @@ msgstr "Contrôles personnalisés - définis par une règle"
 
 msgid "Custom event limit"
 msgstr "Limite d'événement personnalisée"
+
+#, fuzzy
+msgid "Custom fields"
+msgstr "Personnalisé"
 
 msgid "Custom footer links"
 msgstr "Liens personnalisés en bas de page"
@@ -19397,10 +19421,6 @@ msgstr "Niveaux de mémoire d'exécution de DotNet (.Net)"
 msgid "Double Integer (DINT)"
 msgstr "Entier double (DINT)"
 
-#, fuzzy
-msgid "Double check your configuration"
-msgstr "Désactiver la configuration à distance"
-
 msgid "Double-click to grow further"
 msgstr ""
 
@@ -21227,6 +21247,10 @@ msgstr ""
 "<b>non</b> l'UNC complet comme <tt>\\servername\\iso</tt>"
 
 msgid "Enter the six-digit code from your authenticator app to log in."
+msgstr ""
+
+msgid ""
+"Enter the technical name of the field as defined in the ServiceNow database."
 msgstr ""
 
 #, fuzzy
@@ -24770,6 +24794,9 @@ msgstr "Modèle de globalisation pour les fichiers d'entrée"
 
 msgid "Go critical if all licenses are used"
 msgstr "Devenir critique si toutes les licences sont utilisées"
+
+msgid "Go to AWS root account > Services > IAM."
+msgstr ""
 
 msgid "Go to extension packages"
 msgstr "Aller dans les paquets d'extension"
@@ -29078,6 +29105,10 @@ msgid "IO Groups"
 msgstr "Groupes IO"
 
 #, fuzzy
+msgid "IO flow"
+msgstr "Débit d'air"
+
+#, fuzzy
 msgid "IO latency"
 msgstr "Latence IO"
 
@@ -32723,6 +32754,13 @@ msgstr "Hachage de configuration invalide"
 
 msgid "Invalid credentials"
 msgstr "Informations d'identification non valides"
+
+#, fuzzy
+msgid ""
+"Invalid custum field. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
+msgstr ""
+"ID de balise non valide. Seuls les caractères a-z, A-Z, 0-9, _ et - sont "
+"autorisés."
 
 #, python-format
 msgid "Invalid data source: %s"
@@ -37432,9 +37470,6 @@ msgstr "Matrice des données de performance"
 msgid "Max Cache Age"
 msgstr "Âge maximal du cache"
 
-msgid "Max Perm used"
-msgstr "Max Perm utilisé"
-
 msgid "Max age of the oldest snapshot"
 msgstr "Âge maximal de l'instantané le plus ancien"
 
@@ -37706,9 +37741,6 @@ msgstr "Taille maximale"
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "Taille maximale de l'image : %dx%dpx"
-
-msgid "Maximum inodes"
-msgstr "Inodes maximum"
 
 msgid "Maximum latency of successful GetItem requests"
 msgstr "Latence maximale des demandes GetItem réussies"
@@ -40139,7 +40171,9 @@ msgstr "Résolution du nom"
 msgid "Name your %s for easy recognition."
 msgstr "Nommez votre %s pour qu'il soit facilement reconnaissable."
 
-msgid "Name your host, path and select the region you would like to monitor"
+msgid ""
+"Name your host, define the path and select the regions you would like to "
+"monitor"
 msgstr ""
 
 #, python-format
@@ -42537,6 +42571,14 @@ msgstr ""
 #, fuzzy
 msgid "OAUth authentication"
 msgstr "Authentification"
+
+#, fuzzy
+msgid "OAuth token"
+msgstr "Jeton API"
+
+#, fuzzy
+msgid "OAuth token authentication"
+msgstr "Authentification par jeton"
 
 msgid "OAuth2 (ClientID/TenantID)"
 msgstr "OAuth2 (ClientID/TenantID)"
@@ -50720,7 +50762,11 @@ msgid "Revert foreign changes"
 msgstr "Activer les changements étrangers"
 
 #, fuzzy
-msgid "Review & run service discovery"
+msgid "Review and run service discovery"
+msgstr "Sauvegarder & ; lancer la découverte des services"
+
+#, fuzzy
+msgid "Review your configuration, run and preview service discovery"
 msgstr "Sauvegarder & ; lancer la découverte des services"
 
 msgid "Revolutions per minute"
@@ -51845,6 +51891,9 @@ msgstr "Sauvegarder les filtres et passer au concepteur"
 msgid "Save response"
 msgstr "Sauvegarder la réponse"
 
+msgid "Save the generated access key and secret key for later use."
+msgstr ""
+
 msgid "Save this host and go to"
 msgstr "Sauvegardez cet hôte et allez à"
 
@@ -52408,9 +52457,6 @@ msgstr "Voir la disponibilité des hôtes et des services"
 msgid "See user %s"
 msgstr "Voir l'utilisateur %s"
 
-msgid "Select & configure AWS services you would like to monitor"
-msgstr ""
-
 msgid "Select a time period"
 msgstr "Sélectionner une période"
 
@@ -52428,6 +52474,10 @@ msgstr "Sélectionnez une icône"
 
 msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "Sélectionnez un fichier iCalendar (<tt>*.ics</tt>) sur votre PC"
+
+#, fuzzy
+msgid "Select and configure AWS services you would like to monitor"
+msgstr "Services Azure à surveiller"
 
 #, fuzzy
 msgid "Select datasource"
@@ -55838,11 +55888,6 @@ msgstr "Sources"
 msgid "Space Alarm"
 msgstr "Alarme spatiale"
 
-msgid "Space in the database that has not been reserved for database objects"
-msgstr ""
-"Espace dans la base de données qui n'a pas été réservé pour les objets de la "
-"base de données"
-
 msgid "Space savings"
 msgstr "Economies d'espace"
 
@@ -56666,6 +56711,10 @@ msgstr "Staleness"
 
 msgid "Staleness value to mark hosts / services stale"
 msgstr "Valeur d'obsolescence pour marquer les hôtes / services obsolètes"
+
+#, fuzzy
+msgid "Stand by"
+msgstr "Standby"
 
 msgid "Standalone"
 msgstr "Standalone"
@@ -63762,12 +63811,6 @@ msgstr ""
 "L'utilisateur pour lequel vous essayez de modifier les règles de "
 "notification n'existe pas."
 
-msgid ""
-"The user, used for login, has to have at least the role 'itil' in ServiceNow."
-msgstr ""
-"L'utilisateur, utilisé pour la connexion, doit avoir au moins le rôle 'itil' "
-"dans ServiceNow."
-
 msgid "The user, used for login."
 msgstr "L'utilisateur, utilisé pour la connexion."
 
@@ -69716,15 +69759,6 @@ msgstr "Nombre total de signalements niveaux inférieurs"
 
 msgid "Total alerts count upper levels"
 msgstr "Nombre total de signalements niveaux supérieurs"
-
-msgid "Total amount of space allocated by objects in the database"
-msgstr "Espace total alloué par les objets de la base de données"
-
-msgid ""
-"Total amount of space reserved for objects in the database, but not yed used"
-msgstr ""
-"Montant total de l'espace réservé aux objets de la base de données, mais non "
-"utilisé"
 
 msgid "Total amount of space used by the oplog"
 msgstr "Quantité totale d'espace utilisé par l'oplog"
@@ -76553,12 +76587,6 @@ msgstr ""
 msgid "Warning"
 msgstr "Avertissement"
 
-msgid "Warning (In)"
-msgstr "Avertissement (In)"
-
-msgid "Warning (Out)"
-msgstr "Avertissement (Out)"
-
 #, fuzzy
 msgid "Warning Asserts"
 msgstr "Avertissement à"
@@ -83039,6 +83067,51 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "Max Perm used"
+#~ msgstr "Max Perm utilisé"
+
+#~ msgid "Maximum inodes"
+#~ msgstr "Inodes maximum"
+
+#~ msgid ""
+#~ "Space in the database that has not been reserved for database objects"
+#~ msgstr ""
+#~ "Espace dans la base de données qui n'a pas été réservé pour les objets de "
+#~ "la base de données"
+
+#~ msgid "Total amount of space allocated by objects in the database"
+#~ msgstr "Espace total alloué par les objets de la base de données"
+
+#~ msgid ""
+#~ "Total amount of space reserved for objects in the database, but not yed "
+#~ "used"
+#~ msgstr ""
+#~ "Montant total de l'espace réservé aux objets de la base de données, mais "
+#~ "non utilisé"
+
+#~ msgid "Critical (In)"
+#~ msgstr "Critique (en)"
+
+#~ msgid "Critical (Out)"
+#~ msgstr "Critique (Out)"
+
+#, fuzzy
+#~ msgid "Double check your configuration"
+#~ msgstr "Désactiver la configuration à distance"
+
+#~ msgid ""
+#~ "The user, used for login, has to have at least the role 'itil' in "
+#~ "ServiceNow."
+#~ msgstr ""
+#~ "L'utilisateur, utilisé pour la connexion, doit avoir au moins le rôle "
+#~ "'itil' dans ServiceNow."
+
+#~ msgid "Warning (In)"
+#~ msgstr "Avertissement (In)"
+
+#~ msgid "Warning (Out)"
+#~ msgstr "Avertissement (Out)"
 
 #, python-format
 #~ msgid "%s operations"

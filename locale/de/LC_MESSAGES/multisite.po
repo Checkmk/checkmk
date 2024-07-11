@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-07-08 23:11+0000\n"
+"PO-Revision-Date: 2024-07-10 05:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -562,6 +562,10 @@ msgstr "%s erstellte Dump-Datei abrufen"
 msgid "%s by host"
 msgstr "%s pro Host"
 
+#, fuzzy, python-format
+msgid "%s can only be deleted via Quick setup"
+msgstr "Regel kann nur durch Quick Setup gelöscht werden"
+
 #, python-format
 msgid ""
 "%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)"
@@ -902,6 +906,11 @@ msgstr "(nicht gesetzt)"
 msgid "(unused)"
 msgstr "(unbenutzt)"
 
+msgid ""
+"*Since this is a ReadOnlyAccess, we will never create any resources on your "
+"AWS account"
+msgstr ""
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ""
 ", wird aber durch eine Übereinstimmung in einem früheren Regelpaket "
@@ -1129,28 +1138,28 @@ msgid "802.3ad"
 msgstr "802.3ad"
 
 msgid "802.dot11a"
-msgstr ""
+msgstr "802.dot11a"
 
 msgid "802.dot11ac"
-msgstr ""
+msgstr "802.dot11ac"
 
 msgid "802.dot11ax2_4"
-msgstr ""
+msgstr "802.dot11ax2_4"
 
 msgid "802.dot11ax5"
-msgstr ""
+msgstr "802.dot11ax5"
 
 msgid "802.dot11b"
-msgstr ""
+msgstr "802.dot11b"
 
 msgid "802.dot11g"
-msgstr ""
+msgstr "802.dot11g"
 
 msgid "802.dot11n2_4"
-msgstr ""
+msgstr "802.dot11n2_4"
 
 msgid "802.dot11n5"
-msgstr ""
+msgstr "802.dot11n5"
 
 #, no-python-format
 msgid "86% - 1.5 standard deviations"
@@ -2576,6 +2585,10 @@ msgstr "AWS S3 (Objektspeicher)"
 
 msgid "AWS S3 Bucket"
 msgstr "AWS S3 Bucket"
+
+#, fuzzy
+msgid "AWS account name"
+msgstr "Zugangsname des Storageaccounts"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CE Kosten und Nutzung"
@@ -5881,7 +5894,7 @@ msgid "Amazon S3 Glacier (Glacier)"
 msgstr "Amazon S3 Glacier (Glacier)"
 
 msgid "Amazon Web Services (AWS)"
-msgstr "Amazon web Services (AWS)"
+msgstr "Amazon Web Services (AWS)"
 
 msgid "Amazon Web Services (AWS) Status"
 msgstr "Status der Amazon Web Services (AWS)"
@@ -6925,7 +6938,7 @@ msgstr "Authentifizierungssystem-Fehler"
 
 #, python-format
 msgid "Authentication to web service failed.<br>Message:<br>%s"
-msgstr "Authentifizierung beim Webservice fehlgeschlagen.<br>Nachricht:<br>%s"
+msgstr "Authentifizierung beim Webdienst fehlgeschlagen.<br>Nachricht:<br>%s"
 
 msgid "Authentication types"
 msgstr "Authentifizierungsarten"
@@ -9352,69 +9365,53 @@ msgstr "Zu überwachende CCMS-Pfade"
 msgid "CIFS"
 msgstr "CIFS"
 
-#, fuzzy
 msgid "CIFS data read"
-msgstr "Gelesene Daten"
+msgstr "Gelesene CIFS-Daten"
 
-#, fuzzy
 msgid "CIFS data written"
-msgstr "Geschriebene Daten"
+msgstr "Geschriebene CIFS-Daten"
 
-#, fuzzy
 msgid "CIFS latency"
-msgstr "IO-Latenz"
+msgstr "CIFS-Latenz"
 
-#, fuzzy
 msgid "CIFS operations"
-msgstr "NFS Operationen"
+msgstr "CIFS-Operationen"
 
-#, fuzzy
 msgid "CIFS other data"
-msgstr "ZFS Metadaten"
+msgstr "andere CIFS-Daten"
 
-#, fuzzy
 msgid "CIFS other latency"
-msgstr "Andere Latenz"
+msgstr "Andere CIFS-Latenz"
 
-#, fuzzy
 msgid "CIFS other ops"
-msgstr "%s andere %s"
+msgstr "andere CIFS-Ops"
 
-#, fuzzy
 msgid "CIFS read ios"
-msgstr "%s Lesen %s"
+msgstr ""
 
-#, fuzzy
 msgid "CIFS read latency"
-msgstr "Latenz beim Lesen der Festplatte"
+msgstr "Latenz beim CIFS-Lesen"
 
-#, fuzzy
 msgid "CIFS read ops"
-msgstr "%s Lesen %s"
+msgstr ""
 
-#, fuzzy
 msgid "CIFS read throughput"
-msgstr "Lesedurchsatz"
+msgstr "CIFS-Lesedurchsatz"
 
-#, fuzzy
 msgid "CIFS traffic"
-msgstr "%s Verkehr"
+msgstr "CIFS-Verkehr"
 
-#, fuzzy
 msgid "CIFS write ios"
-msgstr "%s Schreiben %s"
+msgstr ""
 
-#, fuzzy
 msgid "CIFS write latency"
-msgstr "Latenz beim Schreiben der Festplatte"
+msgstr "Latenz beim CIFS-Schreiben"
 
-#, fuzzy
 msgid "CIFS write ops"
-msgstr "%s Schreiben %s"
+msgstr ""
 
-#, fuzzy
 msgid "CIFS write throughput"
-msgstr "schreibe den Durchsatz"
+msgstr "CIFS-Schreibdurchsatz"
 
 msgid "CISCO Digital Optical Monitoring (DOM)"
 msgstr "CISCO Digital Optical Monitoring (DOM)"
@@ -9889,11 +9886,11 @@ msgstr "Kann Graphdefinitionen nicht berechnen: %s"
 
 msgid "Cannot change folder of rules managed by Quick setup."
 msgstr ""
-"Der Ordner der von Quick setup verwalteten Regeln kann nicht geändert werden."
+"Der Ordner der von Quick Setup verwalteten Regeln kann nicht geändert werden."
 
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
-"Die Regelbedingungen der von Quick setup verwalteten Regeln können nicht "
+"Die Regelbedingungen der von Quick Setup verwalteten Regeln können nicht "
 "geändert werden."
 
 #, python-format
@@ -9939,13 +9936,17 @@ msgstr ""
 "Man kann keine Makros definieren, die Standard Einträge \"CUSTOMER_ID\" oder "
 "\"CUSTOMER_NAME\" überschreiben"
 
+#, fuzzy, python-format
+msgid "Cannot delete %s because it's managed by Quick setup."
+msgstr ""
+"Sie können keine Rollen löschen, die durch \"Quick Setup\" gesteuert werden."
+
 msgid "Cannot delete job. Job cannot be stopped."
 msgstr "Kann Prozess nicht löschen. Der Prozess kann nicht gestoppt werden."
 
 msgid "Cannot delete rules that are managed by Quick setup."
 msgstr ""
-"Sie können keine Rollen löschen, die durch die \"Schnelle Einrichtung\" "
-"gesteuert werden."
+"Sie können keine Rollen löschen, die durch \"Quick Setup\" gesteuert werden."
 
 #, python-format
 msgid ""
@@ -10579,8 +10580,8 @@ msgstr ""
 "testen, Umleitungen folgen, nach Zeichenketten und regulären Ausdrücken "
 "suchen, Verbindungszeiten prüfen und Ablaufzeiten von Zertifikaten melden. "
 "Bitte beachten Sie, dass dieses Plugin veraltet ist und nicht mehr verwendet "
-"werden soll. Bitte verwenden Sie stattdessen das neue \"Check HTTP web "
-"service\"."
+"werden soll. Bitte verwenden Sie stattdessen das neue \"Check HTTP Webdienst"
+"\"."
 
 msgid ""
 "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections (Deprecated/"
@@ -10780,6 +10781,10 @@ msgstr "Übereinstimmende Check-Plugins"
 
 msgid "Check result did not arrive in time"
 msgstr "Checkergebnis ist nicht rechtzeitig eingetroffen"
+
+#, fuzzy
+msgid "Check result if the host or VM is in stand by"
+msgstr "Status, wenn der Host oder die VM angehalten ist"
 
 msgid "Check result if the host or VM is powered off"
 msgstr "Status, wenn der Host oder die VM ausgeschaltet ist"
@@ -11730,9 +11735,13 @@ msgstr "Leere Logdateien"
 msgid "Clear logs by deleting all stored messages"
 msgstr "Log-Datei durch Löschen aller gespeicherten Nachrichten bereinigen"
 
-#, fuzzy
 msgid "Cleared"
-msgstr "'Cleared' Status"
+msgstr "Bereinigt"
+
+msgid ""
+"Click 'Add user' under Users, select 'Access key - Programmatic access', and "
+"attach the 'ReadOnlyAccess' policy*."
+msgstr ""
 
 msgid "Click for instant reload."
 msgstr "Klicken Sie zum sofortigen Reload."
@@ -12527,7 +12536,7 @@ msgstr "Bedingungen, damit diese Regel greift"
 
 msgid "Conditions of rules managed by Quick setup cannot be changed."
 msgstr ""
-"Regelbedingungen, die von Quick setup verwaltet werden, können nicht "
+"Regelbedingungen, die von Quick Setup verwaltet werden, können nicht "
 "geändert werden."
 
 msgid "Conference Allocation Latency"
@@ -12703,7 +12712,8 @@ msgstr "Konfiguriere forcierte Checks, ohne die Service-Erkennung zu benutzen"
 msgid "Configure grouping of interfaces"
 msgstr "Konfiguriere die Gruppierung von Interfaces"
 
-msgid "Configure host & region"
+#, fuzzy
+msgid "Configure host and regions"
 msgstr "Host & Region konfigurieren"
 
 #, no-python-format
@@ -12996,7 +13006,7 @@ msgstr "Konfigurierte Parameter der Zeitperiode"
 
 #, python-format
 msgid "Configured with %s Quick setup"
-msgstr "Mit %s Quick setup konfiguriert"
+msgstr "Mit %s Quick Setup konfiguriert"
 
 msgid ""
 "Configures the number of available filters in the network topology view."
@@ -14436,12 +14446,6 @@ msgstr "Krit/Unten"
 msgid "Critical"
 msgstr "Kritisch"
 
-msgid "Critical (In)"
-msgstr "Kritisch (In)"
-
-msgid "Critical (Out)"
-msgstr "Kritisch (Out)"
-
 msgid "Critical above"
 msgstr "Kritisch über"
 
@@ -14777,6 +14781,10 @@ msgstr "Benutzerdefinierter Check - definiert über eine Regel"
 msgid "Custom event limit"
 msgstr "Individuelle Ereignisbegrenzung"
 
+#, fuzzy
+msgid "Custom fields"
+msgstr "Angepasst"
+
 msgid "Custom footer links"
 msgstr "Benutzerdefinierte Fußzeilen-Links"
 
@@ -15109,9 +15117,8 @@ msgstr "DEB-Paketierung"
 msgid "DELETE"
 msgstr "DELETE"
 
-#, fuzzy
 msgid "DELETE requests"
-msgstr "Anfragen"
+msgstr "Anfragen löschen"
 
 msgid "DHCP"
 msgstr "DHCP"
@@ -15339,13 +15346,13 @@ msgid "Data files"
 msgstr "Datendateien"
 
 msgid "Data files size"
-msgstr "Datafiles-Größe"
+msgstr "Größe der Datendateien"
 
 msgid "Data hitratio"
 msgstr "Daten-Hitrate"
 
 msgid "Data ingress"
-msgstr "Datafiles-Größe"
+msgstr "Dateneingang"
 
 msgid "Data is outdated and will be removed with the next check execution"
 msgstr ""
@@ -18709,9 +18716,6 @@ msgstr "DotNet (.Net) Runtime Speicher-Level"
 msgid "Double Integer (DINT)"
 msgstr "Doppelte Ganzzahl (DINT)"
 
-msgid "Double check your configuration"
-msgstr "Überprüfen Sie Ihre Konfiguration"
-
 msgid "Double-click to grow further"
 msgstr "Doppelklick für weiteres Wachstum"
 
@@ -19951,7 +19955,7 @@ msgid "Empty output from remote site."
 msgstr "Leere Ausgabe von Remote-Instanz."
 
 msgid "Empty response from web service"
-msgstr "Leere Antwort vom Webservice"
+msgstr "Leere Antwort vom Webdienst"
 
 msgid "Enable"
 msgstr "Einschalten"
@@ -20527,6 +20531,10 @@ msgid "Enter the six-digit code from your authenticator app to log in."
 msgstr ""
 "Geben Sie den sechsstelligen Code aus Ihrer Authenticator-App ein, um sich "
 "anzumelden."
+
+msgid ""
+"Enter the technical name of the field as defined in the ServiceNow database."
+msgstr ""
 
 msgid ""
 "Enter the uniserve service name here (has nothing to do with service name)."
@@ -21699,69 +21707,53 @@ msgstr "FC Ports"
 msgid "FCP"
 msgstr "FCP"
 
-#, fuzzy
 msgid "FCP data read"
-msgstr "Gelesene Daten"
+msgstr "Gelesene FCP-Daten"
 
-#, fuzzy
 msgid "FCP data written"
-msgstr "Geschriebene Daten"
+msgstr "Geschriebene FCP-Daten"
 
-#, fuzzy
 msgid "FCP latency"
-msgstr "%s Latenz"
+msgstr "FCP-Latenz"
 
-#, fuzzy
 msgid "FCP operations"
-msgstr "NFS Operationen"
+msgstr "FCP-Operationen"
 
-#, fuzzy
 msgid "FCP other data"
-msgstr "Leistungsdaten"
+msgstr "andere FCP-Daten"
 
-#, fuzzy
 msgid "FCP other latency"
-msgstr "Andere Latenz"
+msgstr "Andere FCP-Latenz"
 
-#, fuzzy
 msgid "FCP other ops"
-msgstr "%s andere %s"
+msgstr ""
 
-#, fuzzy
 msgid "FCP read ios"
-msgstr "%s Lesen %s"
+msgstr ""
 
-#, fuzzy
 msgid "FCP read latency"
-msgstr "Latenz beim Lesen der Festplatte"
+msgstr "Latenz beim FCP-Lesen"
 
-#, fuzzy
 msgid "FCP read ops"
-msgstr "%s Lesen %s"
+msgstr ""
 
-#, fuzzy
 msgid "FCP read throughput"
-msgstr "Lesedurchsatz"
+msgstr "FCP-Lesedurchsatz"
 
-#, fuzzy
 msgid "FCP traffic"
-msgstr "%s Verkehr"
+msgstr "FCP-Verkehr"
 
-#, fuzzy
 msgid "FCP write ios"
-msgstr "%s Schreiben %s"
+msgstr ""
 
-#, fuzzy
 msgid "FCP write latency"
-msgstr "Latenz beim Schreiben der Festplatte"
+msgstr "Latenz beim FCP-Schreiben"
 
-#, fuzzy
 msgid "FCP write ops"
-msgstr "%s Schreiben %s"
+msgstr ""
 
-#, fuzzy
 msgid "FCP write throughput"
-msgstr "schreibe den Durchsatz"
+msgstr "FCP-Schreibdurchsatz"
 
 msgid "FGPA utilization"
 msgstr "FPGA-Auslastung"
@@ -23726,9 +23718,8 @@ msgstr "GCP/Redis Replication Lag"
 msgid "GET"
 msgstr "GET"
 
-#, fuzzy
 msgid "GET requests"
-msgstr "Anfragen"
+msgstr "GET-Anfragen"
 
 msgid "GET/POST variables of this page"
 msgstr "GET/POST-Variablen auf dieser Seite"
@@ -23972,6 +23963,9 @@ msgstr "Globbing-Muster für Eingabedateien"
 
 msgid "Go critical if all licenses are used"
 msgstr "Kritisch melden, wenn alle Lizenzen in Verwendung sind"
+
+msgid "Go to AWS root account > Services > IAM."
+msgstr ""
 
 msgid "Go to extension packages"
 msgstr "Gehe zu Erweiterungspakete"
@@ -24419,9 +24413,8 @@ msgstr "HAproxy Server Status"
 msgid "HEAD"
 msgstr "HEAD"
 
-#, fuzzy
 msgid "HEAD requests"
-msgstr "Anfragen"
+msgstr "HEAD-Anfragen"
 
 msgid "HELP"
 msgstr "HILFE"
@@ -24806,7 +24799,7 @@ msgid "Heap bytes waiting to be used"
 msgstr "Heap-Bytes, die auf ihre Verwendung warten"
 
 msgid "Heap bytes when next garbage collection will take place"
-msgstr ""
+msgstr "Heap-Bytes, wenn die nächste Garbage Collection stattfindet"
 
 msgid "Heap memory committed"
 msgstr "Heapspeicher Committed"
@@ -27650,6 +27643,8 @@ msgid ""
 "However, the duplicated %s will no longer be associated with the Quick setup "
 "and this source."
 msgstr ""
+"Die duplizierten %s werden jedoch nicht mehr mit dem Quick Setup und dieser "
+"Quelle verknüpft sein."
 
 msgid "Hub"
 msgstr "Hub"
@@ -27863,6 +27858,10 @@ msgstr "IO Bandbreite"
 msgid "IO Groups"
 msgstr "IO-Gruppen"
 
+#, fuzzy
+msgid "IO flow"
+msgstr "Luftströmung"
+
 msgid "IO latency"
 msgstr "IO-Latenz"
 
@@ -28034,54 +28033,44 @@ msgstr "IPv6-Subnetz"
 msgid "ISC DHCP-Daemon (Linux)"
 msgstr "ISC DHCP-Daemon (Linux)"
 
-#, fuzzy
 msgid "ISCSI data read"
-msgstr "Gelesene Daten"
+msgstr "Gelesene ISCSI-Daten"
 
-#, fuzzy
 msgid "ISCSI data written"
-msgstr "Geschriebene Daten"
+msgstr "Geschriebene ISCSI-Daten"
 
 msgid "ISCSI other data"
-msgstr ""
+msgstr "andere ISCSI-Daten"
 
-#, fuzzy
 msgid "ISCSI other latency"
-msgstr "Andere Latenz"
+msgstr "Andere ISCSI-Latenz"
 
-#, fuzzy
 msgid "ISCSI other ops"
-msgstr "%s andere %s"
+msgstr ""
 
 msgid "ISCSI read ios"
 msgstr ""
 
-#, fuzzy
 msgid "ISCSI read latency"
-msgstr "Latenz beim Lesen der Festplatte"
+msgstr "Latenz beim ISCSI-Lesen"
 
 msgid "ISCSI read ops"
 msgstr ""
 
-#, fuzzy
 msgid "ISCSI read throughput"
-msgstr "Lesedurchsatz"
+msgstr "ISCSI-Lesedurchsatz"
 
-#, fuzzy
 msgid "ISCSI write ios"
-msgstr "%s Schreiben %s"
+msgstr ""
 
-#, fuzzy
 msgid "ISCSI write latency"
-msgstr "Latenz beim Schreiben der Festplatte"
+msgstr "Latenz beim ISCSI-Schreiben"
 
-#, fuzzy
 msgid "ISCSI write ops"
-msgstr "%s Schreiben %s"
+msgstr ""
 
-#, fuzzy
 msgid "ISCSI write throughput"
-msgstr "schreibe den Durchsatz"
+msgstr "ISCSI-Schreibdurchsatz"
 
 msgid "IT infrastructure efficiency"
 msgstr "Effizienz der IT-Infrastruktur"
@@ -29254,7 +29243,6 @@ msgstr ""
 "                STATUS NOT AVAILABLE: OK<br>\n"
 "             "
 
-#, fuzzy
 msgid ""
 "If you don't configure the user name and password, the special agent tries "
 "to authenticate against the EMC VNX device by Security Files. These need to "
@@ -29264,15 +29252,15 @@ msgid ""
 "<tt>SecuredCLISecurityFile.xml</tt> and <tt>SecuredCLIXMLEncrypted.key</tt> "
 "in the home directory of the user and these files are used then."
 msgstr ""
-"Wenn Sie Benutzername und Passwort leer lassen, dann wird der Spezialagent "
-"versuchen, sich bei den EMC VNX-Geräten mithilfe von Security Files "
-"anzumelden. Erzeugen Sie diese bitte manuell, bevor Sie diese Methode "
-"verwenden. Dazu rufen Sie als Instanzbenutzer oder Nagios-Benutzer ein "
-"Kommando auf wie etwa <tt>naviseccli -AddUserSecurity -scope 0 -password "
-"PASSWORD -user USER</tt>. Dies erzeugt die Dateien "
-"<tt>SecuredCLISecurityFile.xml</tt> und <tt>SecuredCLIXMLEncrypted.key</tt> "
-"im Homeverzeichnis des Benutzers. Dort werden diese Dateien dann automatisch "
-"gefunden und benutzt."
+"Wenn Sie Benutzername und Kennwort nicht konfigurieren, versucht der Special "
+"Agent, sich anhand von Sicherheitsdateien gegenüber dem EMC VNX-Gerät zu "
+"authentifizieren. Diese müssen vor der Verwendung manuell erstellt werden. "
+"Dazu führen Sie als Instanzbenutzer (wenn Sie OMD verwenden) oder Nagios-"
+"Benutzer (wenn Sie OMD nicht verwenden) einen Befehl wie <tt>naviseccli -"
+"AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> aus. Dies "
+"erzeugt <tt>SecuredCLISecurityFile.xml</tt> und <tt>SecuredCLIXMLEncrypted."
+"key</tt> im Home-Verzeichnis des Benutzers und diese Dateien werden dann "
+"verwendet."
 
 msgid ""
 "If you enable a wait time then this number of PINGs will always be sent in "
@@ -29389,7 +29377,6 @@ msgstr ""
 "auf die Anwendung passen. Für vollständige Übereinstimmung benutzen Sie die "
 "Zeichen <tt>^</tt> und <tt>$</tt>."
 
-#, fuzzy
 msgid ""
 "If you enter an item name here, this will be used as part of the service "
 "name after the prefix \"Events \". The prefix plus the configured item must "
@@ -29397,12 +29384,12 @@ msgid ""
 "the string provided in \"Application\" is used as item or the service gets "
 "no item when the \"Application\" field is also not configured."
 msgstr ""
-"Wenn Sie hier einen Namen eingeben, dann wird dieser an den Präfix \"Events "
-"\" angehängt, um die Service-Beschreibung zu bilden. Der Präfix plus dieser "
-"name muss eine für den Host eindeutige Service-Beschreibung ergeben. Wenn "
-"Sie diese Feld leer lassen, dann wird entweder der Text aus \"Anwendung\" "
-"verwendet, oder der Service heißt nur \"Events\", wenn auch keine Anwendung "
-"konfiguriert wurde."
+"Wenn Sie hier einen Item-Namen eingeben, wird dieser als Teil des Service-"
+"Namens nach dem Präfix \"Ereignisse\" verwendet. Das Präfix plus das "
+"konfigurierte Item muss einen eindeutigen Service-Namen pro Host ergeben. "
+"Wenn Sie dieses Feld leer lassen, wird entweder die in \"Anwendung\" "
+"angegebene Zeichenfolge als Item verwendet oder der Service erhält kein "
+"Item, wenn das Feld \"Anwendung\" ebenfalls nicht konfiguriert ist."
 
 msgid ""
 "If you enter the names of host/service-custom macros here then for each "
@@ -29608,14 +29595,14 @@ msgstr ""
 "handelt, die von dieser Regel nicht betroffen sind. Sie können die Regel "
 "jedoch für den aktiven Checkmk-Check verwenden."
 
-#, fuzzy
 msgid ""
 "If you specify a host name here, then a dynamic DNS lookup will be done "
 "instead of using the IP address of the host as configured in your host "
 "properties."
 msgstr ""
-"Wenn Sie einen Host-Namen anlegen, dann wird eine DNS-Abfrage durchgeführt. "
-"Die IP-Adresse des Hosts wird nicht verwendet."
+"Wenn Sie hier einen Hostnamen angeben, wird eine dynamische DNS-Suche "
+"durchgeführt, anstatt die IP-Adresse des Hosts zu verwenden, wie sie in "
+"Ihren Host-Eigenschaften konfiguriert ist."
 
 msgid ""
 "If you specify a notification period for a host then notifications about "
@@ -29718,7 +29705,6 @@ msgstr ""
 "Schnittstelle nicht mit der erwarteten Geschwindigkeit arbeitet (z.B. 8Gbit/"
 "s an Stelle von 16Gbit/s)."
 
-#, fuzzy
 msgid ""
 "If you want the user to be able to login then specify a password here. Users "
 "without a login make sense if they are monitoring contacts that are just "
@@ -29736,7 +29722,7 @@ msgstr ""
 "aus Ansichten zur weiteren Verarbeitung), setzen Sie die Methode auf "
 "<u>geheim</u>. Das Geheimnis wird in einer lokalen Datei gespeichert. "
 "Prozesse, die Lesezugriff auf diese Datei haben, können Multisite ohne "
-"weitere Konfiguration als Webservice nutzen."
+"weitere Konfiguration als Webdienst nutzen."
 
 #, python-format
 msgid ""
@@ -29926,7 +29912,6 @@ msgstr ""
 msgid "Ignore styles specified in rules"
 msgstr "Ignoriere Stile die in Regeln spezifizierten wurden"
 
-#, fuzzy
 msgid "Ignore temporary tablespaces (Default)"
 msgstr "Temporäre Tablespaces ignorieren (Standard)"
 
@@ -29960,7 +29945,6 @@ msgstr "Version ignorieren"
 msgid "Ignore these levels"
 msgstr "Diese Level ignorieren"
 
-#, fuzzy
 msgid "Ignore undo tablespaces (Default)"
 msgstr "Undo Tablespaces ignorieren (Standard)"
 
@@ -30046,8 +30030,8 @@ msgid ""
 "Important! This check is only for monitoring of datafiles who were left in "
 "backup mode. (alter database datafile ... begin backup;)"
 msgstr ""
-"Wichtig! Dieser Check überwacht nur Datenfiles, die im Backup-Modus gelassen "
-"wurden. (alter database datafile ... begin backup;)"
+"Wichtig! Dieser Check überwacht nur Datendateien, die im Backup-Modus "
+"gelassen wurden. (alter database datafile ... begin backup;)"
 
 #, python-format
 msgid "Imported %d hosts into the current folder."
@@ -30578,11 +30562,9 @@ msgstr "inaktive Hosts"
 msgid "Inactive sessions"
 msgstr "Inaktive Sessions"
 
-#, fuzzy
 msgid "Inbound NAT rule"
 msgstr "Inbound NAT Regel"
 
-#, fuzzy
 msgid "Inbound NAT rules"
 msgstr "Inbound NAT Regeln"
 
@@ -30684,21 +30666,17 @@ msgstr ""
 "angelegt. Es wird kein \"offenes Ereignis\" angelegt, was von den Operatoren "
 "behandelt werden müsste."
 
-#, fuzzy
 msgid "Incoming packets maximum"
-msgstr "Eingehende Pakete Maximum"
+msgstr "Maximum für eingehende Pakete"
 
-#, fuzzy
 msgid "Incoming packets minimum"
-msgstr "Eingehende Pakete Minimum"
+msgstr "Minimum für eingehende Pakete"
 
-#, fuzzy
 msgid "Incoming traffic maximum"
-msgstr "Eingehende Bandbreite Maximum"
+msgstr ""
 
-#, fuzzy
 msgid "Incoming traffic minimum"
-msgstr "Eingehende Bandbreite Minimum"
+msgstr ""
 
 msgid "Incompatible"
 msgstr "Inkompatibel"
@@ -30729,9 +30707,8 @@ msgid "Incorrect username or password. Please try again."
 msgstr ""
 "Falscher Benutzername oder falsches Passwort. Bitte versuchen Sie es erneut."
 
-#, fuzzy
 msgid "Increase limit"
-msgstr "Ignoriere hartes Abfragelimit"
+msgstr "Limit erhöhen"
 
 msgid "Increase limit for future entries"
 msgstr "Limit für zukünftige Einträge erhöhen"
@@ -30867,9 +30844,8 @@ msgstr "Unwirksame Regel"
 msgid "Ineffective rules"
 msgstr "Unwirksame Regeln"
 
-#, fuzzy
 msgid "Infected per second"
-msgstr "Sekunden pro Sekunde"
+msgstr "Infizierte pro Sekunde"
 
 msgid "Infections"
 msgstr "Infizierungen"
@@ -30886,7 +30862,6 @@ msgstr "InfluxDB-Verbindungen"
 msgid "InfluxDB instance"
 msgstr "InfluxDB-Instanz"
 
-#, fuzzy
 msgid "InfluxDB overflows rate"
 msgstr "InfluxDB Overflows Rate"
 
@@ -31016,13 +30991,11 @@ msgstr "Eingehende Broadcastpakete"
 msgid "Input channel"
 msgstr "Eingangskanal"
 
-#, fuzzy
 msgid "Input discards"
-msgstr "Eingehende verworfene Pakete"
+msgstr "Verworfene Eingaben"
 
-#, fuzzy
 msgid "Input errors"
-msgstr "Eingehende Fehler"
+msgstr "Eingabefehler"
 
 msgid "Input multicast packets"
 msgstr "Eingehende Multicastpakete"
@@ -31030,15 +31003,12 @@ msgstr "Eingehende Multicastpakete"
 msgid "Input non-unicast packets"
 msgstr "Eingehende Nichtunicast-Pakete"
 
-#, fuzzy
 msgid "Input octets"
-msgstr "Eingehende Oktets"
+msgstr "Eingabe-Oktets"
 
-#, fuzzy
 msgid "Input packets"
-msgstr "Eingehende Pakete"
+msgstr "Eingabepakete"
 
-#, fuzzy
 msgid "Input parameters"
 msgstr "Eingabeparameter"
 
@@ -31092,7 +31062,6 @@ msgstr "Systemd-Service installieren und aktivieren"
 msgid "Install and activate xinetd service"
 msgstr "Installieren und aktivieren des xinetd-Service"
 
-#, fuzzy
 msgid "Install date"
 msgstr "Installationsdatum"
 
@@ -31469,6 +31438,13 @@ msgstr "Ungültiger Konfigurationshashwert"
 msgid "Invalid credentials"
 msgstr "Anmeldedaten sind ungültig"
 
+#, fuzzy
+msgid ""
+"Invalid custum field. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
+msgstr ""
+"Ungültige Merkmal ID. Erlaubte Zeichen: a-z, A-Z, 0-9, <tt>_</tt>, <tt>-</"
+"tt>."
+
 #, python-format
 msgid "Invalid data source: %s"
 msgstr "Ungültige Datenquelle: %s"
@@ -31773,21 +31749,17 @@ msgstr "Änderungen in der Inventur"
 msgid "Inventory column: %s"
 msgstr "Inventar-Spalte: %s"
 
-#, fuzzy
 msgid "Inventory date/time"
 msgstr "Datum/Zeit der Inventur"
 
-#, fuzzy
 msgid "Inventory histories"
-msgstr "Inventurgeschichten"
+msgstr "Inventurhistorien"
 
-#, fuzzy
 msgid "Inventory history"
-msgstr "Inventur-Geschichte"
+msgstr "Inventurhistorie"
 
-#, fuzzy
 msgid "Inventory history of host"
-msgstr "Inventur-Geschichte von Host"
+msgstr "Inventurhistorie des Hosts"
 
 #, python-format
 msgid "Inventory node: %s"
@@ -31799,17 +31771,15 @@ msgstr "Inventur der Linux-Kernel-Konfiguration (sysctl)"
 msgid "Inventory of all deployed agent plug-ins and their versions"
 msgstr "Inventur aller verteilten Agenten-Plugins und ihrer Versionen"
 
-#, fuzzy
 msgid "Inventory of host"
-msgstr "Hostinventar"
+msgstr "Inventur des Hosts"
 
 #, python-format
 msgid "Inventory table: %s"
 msgstr "Inventartabelle: %s"
 
-#, fuzzy
 msgid "Inventory tree"
-msgstr "Inventarbaum"
+msgstr "Inventurbaum"
 
 msgid "Invert matching"
 msgstr "Bedingung invertieren"
@@ -31835,7 +31805,6 @@ msgstr "Iptables Filterkonfiguration"
 msgid "Is CA"
 msgstr "Ist CA"
 
-#, fuzzy
 msgid "Is cluster host"
 msgstr "Ist Cluster-Host"
 
@@ -32008,9 +31977,8 @@ msgstr ""
 msgid "Item"
 msgstr "Punkt"
 
-#, fuzzy
 msgid "Item (used in service name)"
-msgstr "Item (wird in der Service-Beschreibung verwendet)"
+msgstr "Item (im Service-Namen verwendet)"
 
 msgid "Item appearance"
 msgstr "Aussehen des Eintrags"
@@ -32110,9 +32078,8 @@ msgstr "Jenkins Knoten"
 msgid "Jenkins queue"
 msgstr "Warteschlange in Jenkins"
 
-#, fuzzy
 msgid "Jira URL"
-msgstr "JIRA URL"
+msgstr "Jira-URL"
 
 msgid "Jira custom service"
 msgstr "Jira Custom Service"
@@ -35199,7 +35166,7 @@ msgid "MSSQL Databases properties"
 msgstr "Eigenschaften von MSSQL-Datenbanken"
 
 msgid "MSSQL Datafile"
-msgstr "MSSQL-Datenfile"
+msgstr "MSSQL-Datendatei"
 
 msgid "MSSQL File Sizes"
 msgstr "MSSQL Datengrößen"
@@ -35261,9 +35228,8 @@ msgstr "MSSQL Zähler Entdeckung"
 msgid "MSSQL datafile and transactionlog discovery"
 msgstr "MSSQL Datendatei- und Transaktionslog-Erkennung"
 
-#, fuzzy
 msgid "MSSQL datafile sizes"
-msgstr "MSSQL Datendatei Größen"
+msgstr "MSSQL Datendatei-Größen"
 
 msgid "MTR (Matt's traceroute) (Linux)"
 msgstr "MTR (Matt's traceroute) (Linux)"
@@ -36057,9 +36023,6 @@ msgstr "Matrix von Metriken"
 msgid "Max Cache Age"
 msgstr "Maximales Cachealter"
 
-msgid "Max Perm used"
-msgstr "Max Perm used"
-
 msgid "Max age of the oldest snapshot"
 msgstr "Höchstalter des ältesten Snapshot"
 
@@ -36326,9 +36289,6 @@ msgstr "Maximale Sechseckgröße"
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "Maximale Bildgröße: %dx%dpx"
-
-msgid "Maximum inodes"
-msgstr "Maximale Inodes"
 
 msgid "Maximum latency of successful GetItem requests"
 msgstr "Maximale Latenzzeit für erfolgreiche GetItem-Anfragen"
@@ -38716,8 +38676,13 @@ msgstr "Namensauflösung"
 msgid "Name your %s for easy recognition."
 msgstr "Benennen Sie Ihr %s zur einfachen Wiedererkennung."
 
-msgid "Name your host, path and select the region you would like to monitor"
+#, fuzzy
+msgid ""
+"Name your host, define the path and select the regions you would like to "
+"monitor"
 msgstr ""
+"Benennen Sie Ihren Host, den Pfad und wählen Sie die Region, die Sie "
+"überwachen möchten"
 
 #, python-format
 msgid "Name: %s"
@@ -41054,6 +41019,14 @@ msgstr "OAUTH 2.0"
 
 msgid "OAUth authentication"
 msgstr "OAUth-Authentifizierung"
+
+#, fuzzy
+msgid "OAuth token"
+msgstr "API-Token"
+
+#, fuzzy
+msgid "OAuth token authentication"
+msgstr "Token-Authentifizierung"
 
 msgid "OAuth2 (ClientID/TenantID)"
 msgstr "OAuth2 (ClientID/TenantID)"
@@ -46612,7 +46585,7 @@ msgid "Quick search"
 msgstr "Schnellsuche"
 
 msgid "Quick setup"
-msgstr "Schnelle Einrichtung"
+msgstr "Quick Setup"
 
 msgid "Quicksearch"
 msgstr "Schnellsuche"
@@ -49080,7 +49053,11 @@ msgid "Revert foreign changes"
 msgstr "Aktiviere fremde Änderungen"
 
 #, fuzzy
-msgid "Review & run service discovery"
+msgid "Review and run service discovery"
+msgstr "Speichern & Service-Erkennung durchführen"
+
+#, fuzzy
+msgid "Review your configuration, run and preview service discovery"
 msgstr "Speichern & Service-Erkennung durchführen"
 
 msgid "Revolutions per minute"
@@ -49261,13 +49238,11 @@ msgid "Rule activation"
 msgstr "Regelaktivierung"
 
 msgid "Rule can only be deleted via Quick setup"
-msgstr ""
+msgstr "Regel kann nur durch Quick Setup gelöscht werden"
 
-#, fuzzy
 msgid "Rule cannot be moved, because it is managed by Quick setup"
 msgstr ""
-"Sie können keine Rollen löschen, die durch die \"Schnelle Einrichtung\" "
-"gesteuert werden."
+"Sie können keine Rollen löschen, die durch Quick Setup gesteuert werden."
 
 msgid "Rule contact groups"
 msgstr "Regel-Kontaktgruppen"
@@ -50176,6 +50151,9 @@ msgstr "Filter speichern & zum Designer gehen"
 msgid "Save response"
 msgstr "Antwort speichern"
 
+msgid "Save the generated access key and secret key for later use."
+msgstr ""
+
 msgid "Save this host and go to"
 msgstr "Speichere Host und gehe zu"
 
@@ -50713,9 +50691,6 @@ msgstr "Verfügbarkeitsansichten aller Hosts und Services ansehen"
 msgid "See user %s"
 msgstr "%s anderer Benutzer sehen"
 
-msgid "Select & configure AWS services you would like to monitor"
-msgstr ""
-
 msgid "Select a time period"
 msgstr "Zeitperiode auswählen"
 
@@ -50733,6 +50708,11 @@ msgstr "Wählen Sie ein Symbol aus"
 
 msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "Wählen Sie eine iCalender-Datei (<tt>*.ics</tt>) von Ihrem Rechner"
+
+#, fuzzy
+msgid "Select and configure AWS services you would like to monitor"
+msgstr ""
+"Wählen und konfigurieren Sie die AWS-Services, die Sie überwachen möchten"
 
 #, fuzzy
 msgid "Select datasource"
@@ -53169,7 +53149,7 @@ msgstr "Einfache Checks für BIOS/Hardware Fehler"
 msgid ""
 "Simple summary page of all BI aggregates that is used as a web services."
 msgstr ""
-"Einfache Übersichtsseite, die alle BI-Aggregate anzeigt und als Webservice "
+"Einfache Übersichtsseite, die alle BI-Aggregate anzeigt und als Webdienste "
 "verwendet werden kann."
 
 msgid "Simply defines the thresholds for the time a request may take."
@@ -54102,9 +54082,6 @@ msgstr "Quellen"
 msgid "Space Alarm"
 msgstr "Raumalarm"
 
-msgid "Space in the database that has not been reserved for database objects"
-msgstr "Platz in der Datenbank, der nicht für Datenbankobjekte reserviert ist"
-
 msgid "Space savings"
 msgstr "Platzersparnis"
 
@@ -54918,6 +54895,10 @@ msgstr "Veraltung"
 
 msgid "Staleness value to mark hosts / services stale"
 msgstr "Veraltungswert, ab dem Hosts/Services als veraltet gelten"
+
+#, fuzzy
+msgid "Stand by"
+msgstr "Standby"
 
 msgid "Standalone"
 msgstr "Allein stehend"
@@ -61971,12 +61952,6 @@ msgstr ""
 "Der Benutzer, für den Sie Benachrichtigungsregeln editieren möchten, "
 "existiert nicht."
 
-msgid ""
-"The user, used for login, has to have at least the role 'itil' in ServiceNow."
-msgstr ""
-"Der Benutzer, der für das Login verwendet wird, muss mindestens die Rolle "
-"'itil' in ServiceNow haben."
-
 msgid "The user, used for login."
 msgstr "Der Benutzer, der für das Login verwendet wird."
 
@@ -62150,7 +62125,8 @@ msgstr ""
 "werden, da das Layout nicht existiert."
 
 msgid "The view is intended for NagStaMon as web service."
-msgstr "Diese Ansicht ist gedacht für die Nutzung durch NagStaMon."
+msgstr ""
+"Diese Ansicht ist gedacht für die Nutzung durch NagStaMon als Webdienst."
 
 #, python-format
 msgid "There are %d pending changes that would get lost. The most recent are: "
@@ -66561,7 +66537,8 @@ msgid "This view does not support cluster hosts."
 msgstr "Diese Ansicht unterstützt keine Cluster-Hosts."
 
 msgid "This view is intended for usage as web service for NagStaMon."
-msgstr "Diese Ansicht ist für die Verwendung durch NagStaMon gedacht."
+msgstr ""
+"Diese Ansicht ist für die Verwendung als Webdienst durch NagStaMon gedacht."
 
 msgid "This view is used by the mobile GUI"
 msgstr "Diese Tabellenansicht wird von der GUI für Mobilgeräte genutzt"
@@ -66820,6 +66797,10 @@ msgid ""
 "Some options cannot be edited to avoid conflicts.<br>Go to Quick setup to "
 "edit all parameters of {host_name}."
 msgstr ""
+"Dieser {type_name} ist Teil der {host_name}-Konfiguration mit Quick Setup. "
+"Einige Optionen können nicht bearbeitet werden, um Konflikte zu vermeiden."
+"<br> Gehen Sie zu Quick Setup, um alle Parameter von {host_name} zu "
+"bearbeiten."
 
 msgid "Thread creations per second"
 msgstr "Threaderstellungen pro Sekunde"
@@ -67827,16 +67808,6 @@ msgstr "Untergrenzen für Gesamtanzahl der Alerts"
 msgid "Total alerts count upper levels"
 msgstr "Obergrenzen für Gesamtanzahl der Alerts"
 
-msgid "Total amount of space allocated by objects in the database"
-msgstr ""
-"Gesamtanteil des zugewiesenen Speicherplatzes von Objekten in einer Datenbank"
-
-msgid ""
-"Total amount of space reserved for objects in the database, but not yed used"
-msgstr ""
-"Gesamtanteil des reservierten Speicherplatzes von Objekten in einer "
-"Datenbank, der aber noch nicht benutzt wird"
-
 msgid "Total amount of space used by the oplog"
 msgstr "Gesamter vom oplog belegter Speicherplatz"
 
@@ -67902,7 +67873,7 @@ msgid "Total execution time"
 msgstr "Gesamt-Ausführungszeit"
 
 msgid "Total file size"
-msgstr "Datafile-Größe"
+msgstr "Gesamtgröße der Datei"
 
 msgid "Total freeable PGA memory"
 msgstr "Insgesamt frei verfügbarer PGA-Speicher"
@@ -74031,12 +74002,6 @@ msgstr ""
 msgid "Warning"
 msgstr "Warnung"
 
-msgid "Warning (In)"
-msgstr "Warnung (Eingang)"
-
-msgid "Warning (Out)"
-msgstr "Warnung (Ausgang)"
-
 #, fuzzy
 msgid "Warning Asserts"
 msgstr "Warnung bei"
@@ -76117,7 +76082,7 @@ msgid "Write operations/s"
 msgstr "Schreibzugriffe/s"
 
 msgid "Write queue-length"
-msgstr ""
+msgstr "Länge der Schreib-Warteschlange"
 
 msgid "Write retransmission"
 msgstr "Schreibe erneute Übertragung"
@@ -76262,6 +76227,8 @@ msgid ""
 "You are duplicating a %s that has been created by the Quick setup and "
 "associated with the source"
 msgstr ""
+"Sie duplizieren ein %s, das durch Quick Setup erstellt und mit der Quelle "
+"verknüpft wurde"
 
 #, python-format
 msgid ""
@@ -78342,9 +78309,9 @@ msgstr "Zypper-Aktualisierungen"
 msgid "Zypper normal and security updates (Linux)"
 msgstr "Normale und Sicherheitsupdates für Zypper (Linux)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "[%s] - Quick setup"
-msgstr "[%s] Schnelle Einrichtung"
+msgstr "[%s] - Quick Setup"
 
 #, python-format
 msgid "[%s] Exception: %s"
@@ -80428,6 +80395,51 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Max Perm used"
+#~ msgstr "Max Perm used"
+
+#~ msgid "Maximum inodes"
+#~ msgstr "Maximale Inodes"
+
+#~ msgid ""
+#~ "Space in the database that has not been reserved for database objects"
+#~ msgstr ""
+#~ "Platz in der Datenbank, der nicht für Datenbankobjekte reserviert ist"
+
+#~ msgid "Total amount of space allocated by objects in the database"
+#~ msgstr ""
+#~ "Gesamtanteil des zugewiesenen Speicherplatzes von Objekten in einer "
+#~ "Datenbank"
+
+#~ msgid ""
+#~ "Total amount of space reserved for objects in the database, but not yed "
+#~ "used"
+#~ msgstr ""
+#~ "Gesamtanteil des reservierten Speicherplatzes von Objekten in einer "
+#~ "Datenbank, der aber noch nicht benutzt wird"
+
+#~ msgid "Critical (In)"
+#~ msgstr "Kritisch (In)"
+
+#~ msgid "Critical (Out)"
+#~ msgstr "Kritisch (Out)"
+
+#~ msgid "Double check your configuration"
+#~ msgstr "Überprüfen Sie Ihre Konfiguration"
+
+#~ msgid ""
+#~ "The user, used for login, has to have at least the role 'itil' in "
+#~ "ServiceNow."
+#~ msgstr ""
+#~ "Der Benutzer, der für das Login verwendet wird, muss mindestens die Rolle "
+#~ "'itil' in ServiceNow haben."
+
+#~ msgid "Warning (In)"
+#~ msgstr "Warnung (Eingang)"
+
+#~ msgid "Warning (Out)"
+#~ msgstr "Warnung (Ausgang)"
 
 #, python-format
 #~ msgid "%s operations"

@@ -554,6 +554,10 @@ msgid "%s by host"
 msgstr "ホスト別の %s"
 
 #, python-format
+msgid "%s can only be deleted via Quick setup"
+msgstr ""
+
+#, python-format
 msgid ""
 "%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)"
 msgstr ""
@@ -891,6 +895,11 @@ msgstr "(未設定)"
 
 msgid "(unused)"
 msgstr "(未使用)"
+
+msgid ""
+"*Since this is a ReadOnlyAccess, we will never create any resources on your "
+"AWS account"
+msgstr ""
 
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr "、ただし、以前のルールパックの一致によって無効にされます。"
@@ -2487,6 +2496,10 @@ msgstr "AWS S3 (オブジェクトストレージ)"
 
 msgid "AWS S3 Bucket"
 msgstr "AWS S3 バケット"
+
+#, fuzzy
+msgid "AWS account name"
+msgstr "ストレージアカウント名"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CEのコストと使用法"
@@ -9684,6 +9697,10 @@ msgstr ""
 "デフォルトの\"CUSTOMER_ID\" または \"CUSTOMER_NAME\"を上書きするマクロを定義"
 "できません"
 
+#, fuzzy, python-format
+msgid "Cannot delete %s because it's managed by Quick setup."
+msgstr "まだ使用中のロール (%s)は削除できません！"
+
 msgid "Cannot delete job. Job cannot be stopped."
 msgstr "ジョブを削除できません。ジョブを停止することはできません。"
 
@@ -10508,6 +10525,10 @@ msgstr "一致するプラグインを確認する"
 
 msgid "Check result did not arrive in time"
 msgstr "チェック結果が間に合わなかった"
+
+#, fuzzy
+msgid "Check result if the host or VM is in stand by"
+msgstr "ホストまたはVMが一時停止されているかどうかの結果を確認します"
 
 msgid "Check result if the host or VM is powered off"
 msgstr "ホストまたはVMの電源がオフになっているかどうかの結果を確認します"
@@ -11466,6 +11487,11 @@ msgstr "保存メッセージをすべて削除しログをクリアする"
 #, fuzzy
 msgid "Cleared"
 msgstr "\"クリア\"状態"
+
+msgid ""
+"Click 'Add user' under Users, select 'Access key - Programmatic access', and "
+"attach the 'ReadOnlyAccess' policy*."
+msgstr ""
 
 msgid "Click for instant reload."
 msgstr "クリックしてインスタントリロードします。"
@@ -12443,7 +12469,7 @@ msgid "Configure grouping of interfaces"
 msgstr "インターフェイスのグループ化を構成します"
 
 #, fuzzy
-msgid "Configure host & region"
+msgid "Configure host and regions"
 msgstr "コンフィギュレーション"
 
 #, no-python-format
@@ -14158,12 +14184,6 @@ msgstr "クリティカル/ダウン"
 msgid "Critical"
 msgstr "クリティカル"
 
-msgid "Critical (In)"
-msgstr "クリティカル(イン)"
-
-msgid "Critical (Out)"
-msgstr "クリティカル(アウト)"
-
 msgid "Critical above"
 msgstr "上記のクリティカル"
 
@@ -14503,6 +14523,10 @@ msgstr "カスタムチェック(ルールによる定義)"
 
 msgid "Custom event limit"
 msgstr "カスタムイベント制限"
+
+#, fuzzy
+msgid "Custom fields"
+msgstr "カスタマイズ"
 
 msgid "Custom footer links"
 msgstr "カスタムフッターリンク"
@@ -18602,10 +18626,6 @@ msgstr "DotNet (.Net)ランタイムメモリレベル"
 msgid "Double Integer (DINT)"
 msgstr "二重整数(DINT)"
 
-#, fuzzy
-msgid "Double check your configuration"
-msgstr "リモート構成を無効にする"
-
 msgid "Double-click to grow further"
 msgstr "ダブルクリックでさらに拡大"
 
@@ -20406,6 +20426,10 @@ msgstr ""
 
 msgid "Enter the six-digit code from your authenticator app to log in."
 msgstr "認証アプリから6桁のコードを入力してログインします。"
+
+msgid ""
+"Enter the technical name of the field as defined in the ServiceNow database."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -23871,6 +23895,9 @@ msgstr "入力ファイルのグロブパターン"
 
 msgid "Go critical if all licenses are used"
 msgstr "すべてのライセンスが使用されている場合はクリティカルに変化します"
+
+msgid "Go to AWS root account > Services > IAM."
+msgstr ""
 
 msgid "Go to extension packages"
 msgstr "拡張パッケージへ"
@@ -28086,6 +28113,10 @@ msgid "IO Groups"
 msgstr "IOグループ"
 
 #, fuzzy
+msgid "IO flow"
+msgstr "エアフロー"
+
+#, fuzzy
 msgid "IO latency"
 msgstr "IOレイテンシー"
 
@@ -31600,6 +31631,11 @@ msgstr "無効な構成ハッシュ"
 
 msgid "Invalid credentials"
 msgstr "無効な資格情報"
+
+#, fuzzy
+msgid ""
+"Invalid custum field. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
+msgstr "タグIDが無効です。文字a-z, A-Z, 0-9, _ および - のみが許可されます。"
 
 #, python-format
 msgid "Invalid data source: %s"
@@ -36184,9 +36220,6 @@ msgstr "パフォーマンスデータのマトリックス"
 msgid "Max Cache Age"
 msgstr "最大キャッシュ経過時間"
 
-msgid "Max Perm used"
-msgstr "使用される最大パーマ"
-
 msgid "Max age of the oldest snapshot"
 msgstr "最も古いスナップショットの最大経過時間"
 
@@ -36457,9 +36490,6 @@ msgstr "最大サイズ"
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "最大画像サイズ: %dx%dpx"
-
-msgid "Maximum inodes"
-msgstr "最大 iノード"
 
 msgid "Maximum latency of successful GetItem requests"
 msgstr "成功したGetItemリクエストの最大レイテンシ"
@@ -38858,7 +38888,9 @@ msgstr "名前解決"
 msgid "Name your %s for easy recognition."
 msgstr "わかりやすいように%sに名前をつけます。"
 
-msgid "Name your host, path and select the region you would like to monitor"
+msgid ""
+"Name your host, define the path and select the regions you would like to "
+"monitor"
 msgstr ""
 
 #, python-format
@@ -41190,6 +41222,14 @@ msgstr "OAUTH 2.0"
 
 msgid "OAUth authentication"
 msgstr "OAUth認証"
+
+#, fuzzy
+msgid "OAuth token"
+msgstr "APIトークン"
+
+#, fuzzy
+msgid "OAuth token authentication"
+msgstr "トークン認証"
 
 msgid "OAuth2 (ClientID/TenantID)"
 msgstr "OAuth2（クライアントID/テナントID）"
@@ -49190,7 +49230,11 @@ msgid "Revert foreign changes"
 msgstr "外国の変更を有効にする"
 
 #, fuzzy
-msgid "Review & run service discovery"
+msgid "Review and run service discovery"
+msgstr "サービスディスカバリの実行と保存"
+
+#, fuzzy
+msgid "Review your configuration, run and preview service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
 msgid "Revolutions per minute"
@@ -50300,6 +50344,9 @@ msgstr "フィルタを保存してデザイナーに移動"
 msgid "Save response"
 msgstr "応答を保存"
 
+msgid "Save the generated access key and secret key for later use."
+msgstr ""
+
 msgid "Save this host and go to"
 msgstr "このホストを保存して、行く"
 
@@ -50846,9 +50893,6 @@ msgstr "ホストとサービスの可用性ビューを見る"
 msgid "See user %s"
 msgstr "ユーザー%sを参照してください"
 
-msgid "Select & configure AWS services you would like to monitor"
-msgstr ""
-
 msgid "Select a time period"
 msgstr "期間を選択してください"
 
@@ -50864,6 +50908,10 @@ msgstr "アイコンを選択してください"
 
 msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "PCからiCalendarファイル (<tt>*.ics</tt>) を選択します"
+
+#, fuzzy
+msgid "Select and configure AWS services you would like to monitor"
+msgstr "監視するAzureサービス"
 
 #, fuzzy
 msgid "Select datasource"
@@ -54182,9 +54230,6 @@ msgstr "ソース"
 msgid "Space Alarm"
 msgstr "スペースアラーム"
 
-msgid "Space in the database that has not been reserved for database objects"
-msgstr "データベースオブジェクト用に予約されていないデータベース内のスペース"
-
 msgid "Space savings"
 msgstr "スペースの節約"
 
@@ -54952,6 +54997,10 @@ msgstr "ステートレス"
 
 msgid "Staleness value to mark hosts / services stale"
 msgstr "ホスト/サービスが古いStalenessの値"
+
+#, fuzzy
+msgid "Stand by"
+msgstr "待機する"
 
 msgid "Standalone"
 msgstr "スタンドアロン"
@@ -61767,12 +61816,6 @@ msgstr "編集しようとしているユーザーは存在しません。"
 msgid "The user you are trying to edit notification rules for does not exist."
 msgstr "通知ルールを編集しようとしているユーザーは存在しません。"
 
-msgid ""
-"The user, used for login, has to have at least the role 'itil' in ServiceNow."
-msgstr ""
-"ログインに使用されるユーザーは、ServiceNowで少なくともロール \"itil\" を持っ"
-"ている必要があります。"
-
 msgid "The user, used for login."
 msgstr "ログイン用のユーザー。"
 
@@ -67404,15 +67447,6 @@ msgstr "合計アラート数の下位レベル"
 
 msgid "Total alerts count upper levels"
 msgstr "合計アラート数の上位レベル"
-
-msgid "Total amount of space allocated by objects in the database"
-msgstr "データベース内オブジェクトに割り当てられている領域の総量"
-
-msgid ""
-"Total amount of space reserved for objects in the database, but not yed used"
-msgstr ""
-"データベース内のオブジェクト用に予約されているが、使用されていないスペースの"
-"合計量"
 
 msgid "Total amount of space used by the oplog"
 msgstr "oplogによって使用されるスペースの合計量"
@@ -74073,12 +74107,6 @@ msgstr ""
 msgid "Warning"
 msgstr "警告"
 
-msgid "Warning (In)"
-msgstr "警告(In)"
-
-msgid "Warning (Out)"
-msgstr "警告(Out)"
-
 #, fuzzy
 msgid "Warning Asserts"
 msgstr "警告"
@@ -80290,6 +80318,50 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Max Perm used"
+#~ msgstr "使用される最大パーマ"
+
+#~ msgid "Maximum inodes"
+#~ msgstr "最大 iノード"
+
+#~ msgid ""
+#~ "Space in the database that has not been reserved for database objects"
+#~ msgstr ""
+#~ "データベースオブジェクト用に予約されていないデータベース内のスペース"
+
+#~ msgid "Total amount of space allocated by objects in the database"
+#~ msgstr "データベース内オブジェクトに割り当てられている領域の総量"
+
+#~ msgid ""
+#~ "Total amount of space reserved for objects in the database, but not yed "
+#~ "used"
+#~ msgstr ""
+#~ "データベース内のオブジェクト用に予約されているが、使用されていないスペース"
+#~ "の合計量"
+
+#~ msgid "Critical (In)"
+#~ msgstr "クリティカル(イン)"
+
+#~ msgid "Critical (Out)"
+#~ msgstr "クリティカル(アウト)"
+
+#, fuzzy
+#~ msgid "Double check your configuration"
+#~ msgstr "リモート構成を無効にする"
+
+#~ msgid ""
+#~ "The user, used for login, has to have at least the role 'itil' in "
+#~ "ServiceNow."
+#~ msgstr ""
+#~ "ログインに使用されるユーザーは、ServiceNowで少なくともロール \"itil\" を"
+#~ "持っている必要があります。"
+
+#~ msgid "Warning (In)"
+#~ msgstr "警告(In)"
+
+#~ msgid "Warning (Out)"
+#~ msgstr "警告(Out)"
 
 #, python-format
 #~ msgid "%s operations"

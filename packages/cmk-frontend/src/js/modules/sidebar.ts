@@ -743,11 +743,12 @@ function getCookie(cookieName: string) {
 }
 
 export function initialize_scroll_position() {
+    if (!g_scrollbar) return;
     const scrollPosFromCookie = getCookie("sidebarScrollPos");
     const scrollPos: number = scrollPosFromCookie
         ? parseInt(scrollPosFromCookie)
         : 0;
-    g_scrollbar!.getScrollElement().scrollTop = scrollPos;
+    g_scrollbar.getScrollElement().scrollTop = scrollPos;
 }
 
 function store_scroll_position() {

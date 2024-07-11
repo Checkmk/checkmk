@@ -156,8 +156,8 @@ export class SubPlot<PD extends SubPlotPlotDefinition = SubPlotPlotDefinition> {
         this.svg = this.main_g!.selectAll("svg.subplot")
             .data([null])
             .join("svg")
-            .attr("width", plot_size.width)
-            .attr("height", plot_size.height)
+            .attr("width", Math.max(0.0, plot_size.width))
+            .attr("height", Math.max(0.0, plot_size.height))
             .classed("subplot", true);
     }
 

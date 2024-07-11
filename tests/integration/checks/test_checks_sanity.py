@@ -14,6 +14,7 @@ from tests.testlib.agent import (
 )
 from tests.testlib.site import Site
 from tests.testlib.utils import get_services_with_status, ServiceInfo
+from tests.testlib.version import version_from_env
 
 from cmk.utils.hostaddress import HostName
 
@@ -62,6 +63,10 @@ def _host_services(site: Site, agent_ctl: Path) -> Iterator[dict[str, ServiceInf
         site.activate_changes_and_wait_for_core_reload()
 
 
+@pytest.mark.skipif(
+    version_from_env().is_saas_edition(),
+    reason="pull mode not supported in saas edition",
+)
 def test_checks_sanity(host_services: dict[str, ServiceInfo]) -> None:
     """Assert sanity of the discovered checks."""
     ok_services = get_services_with_status(host_services, 0)

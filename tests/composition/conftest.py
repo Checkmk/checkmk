@@ -20,16 +20,15 @@ from tests.testlib.utils import is_containerized
 from tests.composition.utils import bake_agent, get_cre_agent_path
 
 site_factory = get_site_factory(prefix="comp_")
+central_site_ids: list[str] = []
 
 
 # The scope of the site fixtures is "module" to avoid that changing the site properties in a module
-# may result in a test failing in another one
+# may result in a test failing in another one. It also makes analyzing the job artifacts easier.
 @pytest.fixture(name="central_site", scope="module")
 def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
-    # Using a different site for every module to avoid having issues when saving the results for the
-    # tests: if you call SiteFactory.save_results() twice with the same site_id, it will crash
-    # because the results are already there.
-    site_number = len([_ for _ in site_factory.sites if _.endswith("_central")])
+    site_number = len(central_site_ids)
+    central_site_ids.append(f"{site_number}_central")
     yield from site_factory.get_test_site(
         f"{site_number}_central",
         description=request.node.name,

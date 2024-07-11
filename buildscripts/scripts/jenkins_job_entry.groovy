@@ -30,6 +30,8 @@ def main(job_definition_file) {
     build_date = (new SimpleDateFormat("yyyy.MM.dd")).format(new Date());
 
     // FIXME: should be defined elsewhere
+    // only used by build-cmk-packages.groovy
+    // in all nightly "build-cmk-packages"
     DOCKER_TAG_FOLDER = "2.3.0-latest";
 
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");

@@ -158,7 +158,8 @@ def get_docker_artifact_name(edition, cmk_version) {
     return "check-mk-${edition}-docker-${cmk_version}.tar.gz";
 }
 
-def select_docker_tag(BRANCH, BUILD_TAG, FOLDER_TAG) {
+def select_docker_tag(BUILD_TAG, FOLDER_TAG, BRANCH) {
+    // BUILD_TAG > FOLDER_TAG > BRANCH
     return BUILD_TAG ?: FOLDER_TAG ?: "${BRANCH}-latest";
 }
 

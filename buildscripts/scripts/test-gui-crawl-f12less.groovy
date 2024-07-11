@@ -23,9 +23,9 @@ def main() {
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version = versioning.get_cmk_version(safe_branch_name, branch_version, "daily");
     def docker_tag = versioning.select_docker_tag(
-        safe_branch_name,  // 'branch'
         "",                // 'build tag'
         "",                // 'folder tag'
+        safe_branch_name,  // 'branch'
     )
     def distro = params.DISTRO;
     def edition = params.EDITION;

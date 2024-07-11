@@ -40,14 +40,17 @@ def get_stage_components_for_the_frontend(
         if isinstance(widget, FormSpecWrapper):
             form_spec = cast(FormSpec, widget.form_spec)
             components.append(
-                asdict(
-                    serialize_data_for_frontend(
-                        form_spec=form_spec,
-                        field_id=widget.id,
-                        origin=DataOrigin.DISK,
-                        do_validate=False,
+                {
+                    "widget_type": widget.widget_type,
+                    "form_spec": asdict(
+                        serialize_data_for_frontend(
+                            form_spec=form_spec,
+                            field_id=widget.id,
+                            origin=DataOrigin.DISK,
+                            do_validate=False,
+                        ),
                     ),
-                ),
+                }
             )
         else:
             components.append(get_stage_components_from_widget(widget))

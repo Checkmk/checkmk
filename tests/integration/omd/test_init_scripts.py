@@ -32,6 +32,9 @@ def test_init_scripts(site: Site) -> None:
             "mknotifyd",
         ]
 
+    if not site.version.is_saas_edition():
+        scripts.append("jaeger")
+
     installed_scripts = site.listdir("etc/init.d")
 
     assert sorted(scripts) == sorted(installed_scripts)

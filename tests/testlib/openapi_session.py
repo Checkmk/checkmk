@@ -125,6 +125,7 @@ class CMKOpenApiSession(requests.Session):
                 "application/problem+json",
             ):
                 logger.debug("< [%s] %s", response.status_code, response.text)
+            else:
                 logger.debug(
                     "< [%s] Unhandled content type %r (length: %d)",
                     response.status_code,

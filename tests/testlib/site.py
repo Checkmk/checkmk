@@ -729,8 +729,6 @@ class Site:
         # starts.
         self._update_cmk_core_config()
 
-        self.makedirs(self.result_dir())
-
         self.openapi.port = self.apache_port
         self.openapi.set_authentication_header(
             user=AUTOMATION_USER, password=self.get_automation_secret()
@@ -1163,7 +1161,7 @@ class Site:
             logger.info("Not containerized: not copying results")
             return
         logger.info("Saving to %s", self.result_dir())
-        self.makedirs(self.result_dir())
+        makedirs(self.result_dir(), sudo=True)
 
         if os.path.exists(self.path("junit.xml")):
             execute(["cp", self.path("junit.xml"), self.result_dir().as_posix()], sudo=True)
@@ -1173,8 +1171,15 @@ class Site:
         # Rename apache logs to get better handling by the browser when opening a log file
         for log_name in ("access_log", "error_log"):
             orig_log_path = self.result_dir() / "log" / "apache" / log_name
-            if orig_log_path.exists():
-                orig_log_path.rename(orig_log_path.parent / log_name.replace("_", "."))
+            if self.file_exists(orig_log_path):
+                execute(
+                    [
+                        "mv",
+                        orig_log_path.as_posix(),
+                        (orig_log_path.parent / log_name.replace("_", ".")).as_posix(),
+                    ],
+                    sudo=True,
+                )
 
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
             execute(["cp", nagios_log_path, (self.result_dir() / "log").as_posix()], sudo=True)

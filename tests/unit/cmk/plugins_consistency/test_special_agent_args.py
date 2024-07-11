@@ -107,7 +107,6 @@ UNMIGRATED = {
     "allnet_ip_sensoric",
     "appdynamics",
     "azure",
-    "couchbase",
     "ddn_s2a",
     "gcp_status",
     "graylog",

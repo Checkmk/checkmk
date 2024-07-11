@@ -41,6 +41,7 @@ HACK_AGENTS = {
     "three_par": True,
     "emcvnx": True,
     "tinkerforge": False,  # needs no secret
+    "couchbase": True,
 }
 
 

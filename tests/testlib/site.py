@@ -736,7 +736,7 @@ class Site:
         # set the sites timezone according to TZ
         self.set_timezone(os.getenv("TZ", "UTC"))
 
-        self.toggle_autostart(enabled=False)
+        self._disable_autostart()
 
     def _ensure_sample_config_is_present(self) -> None:
         if missing_files := self._missing_but_required_wato_files():
@@ -1123,6 +1123,9 @@ class Site:
         self.set_config("LIVESTATUS_TCP", "on")
         self.gather_livestatus_port()
         self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
+        # It might happen that OMD decides for another port (e.g. in case it is already in use).
+        # So we need to read the port from the config again.
+        self.gather_livestatus_port(from_config=True)
         self.set_config("LIVESTATUS_TCP_TLS", "on" if encrypted else "off")
         if restart_site:
             self.start()
@@ -1153,8 +1156,8 @@ class Site:
         self.set_config("LIVEPROXYD", "on" if enabled else "off", with_restart=True)
         assert self.file_exists("tmp/run/liveproxyd.pid") == enabled
 
-    def toggle_autostart(self, enabled: bool = True) -> None:
-        self.set_config("AUTOSTART", "on" if enabled else "off", with_restart=True)
+    def _disable_autostart(self) -> None:
+        self.set_config("AUTOSTART", "off", with_restart=False)
 
     def save_results(self) -> None:
         if not is_containerized():

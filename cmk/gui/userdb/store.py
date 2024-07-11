@@ -22,7 +22,7 @@ from cmk.utils.config_validation_layer.users.contacts import validate_contacts
 from cmk.utils.config_validation_layer.users.users import validate_users
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
-from cmk.utils.crypto.secrets import AutomationUserSecret
+from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.paths import htpasswd_file, var_dir
 from cmk.utils.user import UserId
 

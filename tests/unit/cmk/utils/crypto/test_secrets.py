@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 from pathlib import Path
 
-import pytest
-
-from cmk.utils.crypto import secrets
-from cmk.utils.user import UserId
+from cmk.utils.crypto.secrets import LocalSecret, Secret
 
 
 def test_create_secret_and_hmac(tmp_path: Path) -> None:
@@ -19,7 +14,7 @@ def test_create_secret_and_hmac(tmp_path: Path) -> None:
     my_secret_file = tmp_path / "mytest.secret"
     my_secret_file.write_bytes(b"my test secret")
 
-    class MySecret(secrets._LocalSecret):
+    class MySecret(LocalSecret):
         path = my_secret_file
 
     secret = MySecret()
@@ -31,19 +26,8 @@ def test_create_secret_and_hmac(tmp_path: Path) -> None:
     )
 
 
-def test_automation_user_secret(patch_omd_site: None) -> None:
-    aus = secrets.AutomationUserSecret(UserId("crypto_secrets_new_user"))
+def test_secret_base64() -> None:
+    """Secrets can be converted to and from base64"""
 
-    assert not aus.exists()
-    with pytest.raises(FileNotFoundError):
-        aus.read()
-
-    aus.path.parent.mkdir()  # profile dir of the test user
-    aus.save(secret := "this is a test 🤡")
-
-    assert aus.exists()
-    assert aus.read() == secret
-
-    assert not aus.check("")
-    assert not aus.check("wrong")
-    assert aus.check(secret)
+    secret = Secret.generate(length=8)
+    assert secret.compare(Secret.from_b64(secret.b64_str))

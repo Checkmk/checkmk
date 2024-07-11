@@ -30,7 +30,6 @@ import livestatus
 
 import cmk.utils.paths
 from cmk.utils import tty
-from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.diagnostics import (
     CheckmkFileEncryption,
     CheckmkFileInfoByRelFilePathMap,
@@ -55,6 +54,7 @@ from cmk.utils.diagnostics import (
 )
 from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.usage import deserialize_dump
+from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree

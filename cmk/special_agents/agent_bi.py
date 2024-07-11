@@ -13,7 +13,7 @@ from typing import Any
 import requests
 import urllib3
 
-from cmk.utils.crypto.secrets import AutomationUserSecret
+from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.password_store import extract
 from cmk.utils.paths import omd_root
 from cmk.utils.regex import regex

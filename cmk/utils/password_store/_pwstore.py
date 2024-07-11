@@ -11,9 +11,9 @@ from uuid import uuid4
 
 import cmk.utils.paths
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
-from cmk.utils.crypto.secrets import PasswordStoreSecret
 from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 from cmk.utils.global_ident_type import GlobalIdent
+from cmk.utils.local_secrets import PasswordStoreSecret
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException

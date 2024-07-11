@@ -20,7 +20,7 @@ from collections.abc import Mapping
 from dataclasses import asdict
 from datetime import datetime
 
-from cmk.utils.crypto.secrets import AuthenticationSecret
+from cmk.utils.local_secrets import AuthenticationSecret
 from cmk.utils.user import UserId
 
 from cmk.gui import utils

@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 from cmk.utils import tty
-from cmk.utils.crypto.secrets import SiteInternalSecret
+from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import VERBOSE
 from cmk.utils.log.security_event import log_security_event, SiteStartStoppedEvent
 

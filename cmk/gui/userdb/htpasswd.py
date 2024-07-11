@@ -8,7 +8,7 @@ from pathlib import Path
 import cmk.utils.paths
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
-from cmk.utils.crypto.secrets import AutomationUserSecret
+from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError

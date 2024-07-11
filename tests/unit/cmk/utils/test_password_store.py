@@ -13,7 +13,7 @@ from cryptography.exceptions import InvalidTag
 
 import cmk.utils.paths
 from cmk.utils import password_store
-from cmk.utils.crypto.secrets import PasswordStoreSecret
+from cmk.utils.local_secrets import PasswordStoreSecret
 from cmk.utils.password_store import PasswordId, PasswordStore
 
 from cmk.ccc.exceptions import MKGeneralException

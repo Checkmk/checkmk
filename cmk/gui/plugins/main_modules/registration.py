@@ -63,6 +63,7 @@ from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.query_filters import cre_sites_options
+from cmk.gui.quick_setup import registration as quick_setup_registration
 from cmk.gui.sidebar import snapin_registry
 from cmk.gui.userdb import register_config_file as user_connections_config
 from cmk.gui.userdb import register_userroles_config_file as register_userroles
@@ -283,6 +284,7 @@ def register() -> None:
     register_sites_options()
     register_row_post_processor(inventory_row_post_processor)
     register_row_post_processor(join_service_row_post_processor)
+    quick_setup_registration.register(main_module_registry)
     background_job_registration.register(page_registry, mode_registry, main_module_registry)
     gui_background_job.register(permission_section_registry, permission_registry)
     graphing.register(page_registry, config_variable_registry, autocompleter_registry)

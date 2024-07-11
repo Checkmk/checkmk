@@ -53,6 +53,13 @@ class NotificationParameterServiceNow(NotificationParameter):
                         "auth",
                         CascadingDropdown(
                             title=_("Authentication"),
+                            help=_(
+                                "Authentication details for communicating with "
+                                "ServiceNow. If you want to create incidents, at "
+                                "least the role 'itil' is required. If you want "
+                                "to create cases, at least 'csm_ws_integration' "
+                                "and 'sn_customerservice_agent' are required."
+                            ),
                             choices=[
                                 (
                                     "auth_basic",

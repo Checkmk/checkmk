@@ -16,4 +16,4 @@ def test_jaeger_exists(site: Site) -> None:
 
 @skip_if_saas_edition
 def test_jaeger_executable(site: Site) -> None:
-    assert "Jaeger all-in-one distribution" in site.check_output(["jaeger", "version"])
+    assert "Jaeger all-in-one distribution" in site.check_output(["jaeger", "--help"])

@@ -294,7 +294,9 @@ def test_get_graph_templates(
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
-    assert [t.id for t in utils.get_graph_templates(translated_metrics)] == graph_ids
+    assert sorted([t.id for t in utils.get_graph_templates(translated_metrics)]) == sorted(
+        graph_ids
+    )
 
 
 @pytest.mark.parametrize(

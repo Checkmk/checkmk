@@ -25,11 +25,11 @@ def main() {
 
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_tests");
 
-    def branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name(scm);
     def docker_tag = versioning.select_docker_tag(
-        branch_name,     // 'branch' returns '<BRANCH>-latest'
-        env.DOCKER_TAG,  // 'build tag'
-        env.DOCKER_TAG); // FIXME was DOCKER_TAG_DEFAULT before, 'folder tag'
+        safe_branch_name,   // 'branch' returns '<BRANCH>-latest'
+        env.DOCKER_TAG,     // 'build tag'
+        env.DOCKER_TAG);    // FIXME was DOCKER_TAG_DEFAULT before, 'folder tag'
 
     currentBuild.description = (
         """
@@ -55,9 +55,9 @@ def main() {
             VERSION: VERSION,
             DOCKER_TAG: docker_tag,
             MAKE_TARGET: "test-composition-docker",
-            BRANCH: branch_name,  // FIXME was BRANCH before
-            cmk_version: versioning.get_cmk_version(branch_name, VERSION),
-        )
+            BRANCH: safe_branch_name,  // FIXME was BRANCH before
+            cmk_version: versioning.get_cmk_version(safe_branch_name, VERSION),
+        );
     }
 }
 

@@ -8,8 +8,8 @@ def main() {
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
-    def branch_name = versioning.safe_branch_name(scm);
-    def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
+    def safe_branch_name = versioning.safe_branch_name(scm);
+    def cmk_version = versioning.get_cmk_version(safe_branch_name, VERSION);
 
     dir("${checkout_dir}") {
         stage("make setversion") {

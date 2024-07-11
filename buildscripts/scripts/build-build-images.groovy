@@ -27,7 +27,7 @@ def main() {
     def distros = versioning.configured_or_overridden_distros("enterprise", OVERRIDE_DISTROS);
 
     def vers_tag = versioning.get_docker_tag(scm, checkout_dir);
-    def branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
     def publish_images = PUBLISH_IMAGES=='true';  // FIXME should be case sensitive
 
@@ -37,7 +37,7 @@ def main() {
         |distros:........................(local)  │${distros}│
         |publish_images:.................(local)  │${publish_images}│
         |vers_tag:.......................(local)  │${vers_tag}│
-        |branch_name:....................(local)  │${branch_name}│
+        |safe_branch_name:...............(local)  │${safe_branch_name}│
         |branch_version:.................(local)  │${branch_version}│
         |===================================================
         """.stripMargin());
@@ -101,7 +101,7 @@ def main() {
                 docker.withRegistry(DOCKER_REGISTRY, "nexus") {
                     images.each { distro, image ->
                         image.push();
-                        image.push("${branch_name}-latest");
+                        image.push("${safe_branch_name}-latest");
                     }
                 }
             }

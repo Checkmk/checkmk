@@ -61,9 +61,18 @@ class NotificationParameterJiraIssues(NotificationParameter):
                 (
                     "password",
                     Password(
-                        title=_("Password"),
+                        title=_("API/Access token"),
                         help=_(
-                            "You need to provide a valid password to be able to send notifications."
+                            "Enter the %s to connect Checkmk to Jira Cloud and "
+                            "enter your %s to connect to self-hosted Jira. If "
+                            "you are still using %s, we recommend switching to "
+                            "an API/Access token, as the password authentication "
+                            "is deprecated.",
+                        )
+                        % (
+                            "<a href='https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/#Create-an-API-token' target='_blank'>API token</a>",
+                            "<a href='https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html' target='_blank'>personal access token</a>",
+                            "<a href='https://developer.atlassian.com/cloud/jira/platform/deprecation-notice-basic-auth-and-cookie-based-auth/' target='_blank'>basic authentication with a password</a>",
                         ),
                         size=40,
                         allow_empty=False,

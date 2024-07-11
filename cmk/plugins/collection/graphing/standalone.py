@@ -853,12 +853,6 @@ metric_dtu_percent = metrics.Metric(
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.DARK_BLUE,
 )
-metric_op_s = metrics.Metric(
-    name="op_s",
-    title=Title("Operations per second"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.LIGHT_GREEN,
-)
 metric_rpc_backlog = metrics.Metric(
     name="rpc_backlog",
     title=Title("RPC Backlog"),
@@ -2160,12 +2154,6 @@ metric_fan_speed = metrics.Metric(
     title=Title("Fan speed"),
     unit=UNIT_REVOLUTIONS_PER_MINUTE,
     color=metrics.Color.ORANGE,
-)
-metric_requests_per_second = metrics.Metric(
-    name="requests_per_second",
-    title=Title("Requests per second"),
-    unit=metrics.Unit(metrics.DecimalNotation("req/s")),
-    color=metrics.Color.GRAY,
 )
 metric_process_handles = metrics.Metric(
     name="process_handles",

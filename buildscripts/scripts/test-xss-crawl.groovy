@@ -19,9 +19,9 @@ def main() {
             EDITION: "enterprise",
             VERSION: version,
             DOCKER_TAG: versioning.select_docker_tag(
-                safe_branch_name,
-                "",
-                ""),   // FIXME was DOCKER_TAG_DEFAULT before
+                "", // 'build tag'
+                "", // 'folder tag'
+                safe_branch_name),  // 'branch' returns '<BRANCH>-latest'
             MAKE_TARGET: "test-xss-crawl-docker",
             BRANCH: safe_branch_name,
             cmk_version: versioning.get_cmk_version(safe_branch_name, version),

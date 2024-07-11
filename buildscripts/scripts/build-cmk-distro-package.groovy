@@ -12,7 +12,7 @@ def main() {
         ["DISTRO", true],
         "VERSION",  // should be deprecated
         "DEPENDENCY_PATH_HASHES",
-        "DOCKER_TAG_BUILD",
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "DISABLE_CACHE",
     ]);
 
@@ -47,9 +47,9 @@ def main() {
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     def docker_tag = versioning.select_docker_tag(
-        branch_name,        // 'branch' returns '<BRANCH>-latest'
-        DOCKER_TAG_BUILD,   // 'build tag'
-        DOCKER_TAG_BUILD);  // 'folder tag'
+        branch_name,                        // 'branch' returns '<BRANCH>-latest'
+        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
+        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD); // 'folder tag'
     /* groovylint-disable LineLength */
     def container_name = "build-cmk-package-${distro}-${edition}-${cmd_output("git --git-dir=${checkout_dir}/.git log -n 1 --pretty=format:'%h'")}";
     /* groovylint-enable LineLength */

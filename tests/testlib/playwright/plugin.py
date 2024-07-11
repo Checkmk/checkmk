@@ -11,6 +11,7 @@ See: https://github.com/microsoft/playwright-pytest
 """
 import logging
 import os
+import re
 import typing as t
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -52,12 +53,16 @@ def fixture_browser_type_launch_args(pytestconfig: t.Any) -> dict:
 
 def _build_artifact_path(
     request: pytest.FixtureRequest, artifact_name: str = "", suffix: str = ""
-) -> str:
+) -> Path:
     output_dir = request.config.getoption("--output")
     node_safepath = os.path.splitext(os.path.split(request.node.path)[1])[0]
-    node_safename = request.node.name.replace("[", "__").replace("]", "__")
-    _name = f"{artifact_name}" if artifact_name else f"{node_safepath}__{node_safename}"
-    build_artifact_path = os.path.join(output_dir, f"{_name}{suffix}")
+    # replace `[]`, `()`, whitespaces with `_`.
+    _name = re.sub(
+        r"[\[\]\(\)\s]",
+        "_",
+        f"{artifact_name}" if artifact_name else f"{node_safepath}__{request.node.name}",
+    )
+    build_artifact_path = Path(output_dir).absolute() / f"{_name}{suffix}"
     logger.debug("build_artifact_path=%s", build_artifact_path)
     return build_artifact_path
 

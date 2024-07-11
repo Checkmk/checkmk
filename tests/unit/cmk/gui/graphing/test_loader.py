@@ -300,13 +300,14 @@ def test_bundles() -> None:
     for module, metric_names in _metric_names_by_module(load_graphing_plugins().plugins).items():
         if module in _SKIP_MODULES:
             continue
-        assert len(metric_names.bundles) <= 1, (
+        bundles = metric_names.bundles
+        assert len(bundles) <= 1, (
             f"The module {module!r} defines multiple bundles. Our graphing modules are allowed to"
             " contain either standalone metric definitions or exactly one cohesive bundle of"
             " metric, perfometer or graph template definitions."
         )
-        if metric_names.bundles:
-            assert set(metric_names.from_metrics) == set(metric_names.bundles[0]), (
+        if bundles:
+            assert set(metric_names.from_metrics) == set(bundles[0]), (
                 f"The module {module!r} contains metric definitions which do not belong to a"
                 " bundle. Our graphing modules are allowed to contain either standalone metric"
                 " definitions or exactly one cohesive bundle of metric, perfometer or graph"

@@ -33,6 +33,7 @@ def test_registered_config_domains() -> None:
         "multisite",
         "omd",
         "rrdcached",
+        "piggyback_hub",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
@@ -284,6 +285,7 @@ def test_registered_configvars() -> None:
             "reporting_view_limit",
             "site_liveproxyd",
             "ntop_connection",
+            "piggyback_hub_enabled",
         ]
 
     registered = sorted(config_variable_registry.keys())
@@ -325,6 +327,7 @@ def test_registered_configvar_groups() -> None:
             "Reporting",
             "Monitoring core",
             "Ntopng (chargeable add-on)",
+            "Distributed piggyback",
         ]
 
     registered = sorted(config_variable_group_registry.keys())

@@ -34,6 +34,7 @@ from cmk.gui import (
     mobile,
     notifications,
     painter_options,
+    piggyback_hub,
     prediction,
     sidebar,
     sites,
@@ -175,6 +176,11 @@ def register() -> None:
         timeperiod_usage_finder_registry,
         config_variable_group_registry,
         autocompleter_registry,
+    )
+    piggyback_hub.register(
+        config_domain_registry,
+        config_variable_group_registry,
+        config_variable_registry,
     )
 
     if edition(paths.omd_root) is not Edition.CSE:  # disabled in CSE

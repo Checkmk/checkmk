@@ -5,8 +5,30 @@
 
 PIDFILE=$OMD_ROOT/tmp/run/piggyback-hub.pid
 LOGFILE=$OMD_ROOT/var/log/piggyback-hub.log
+CONFDIR=$OMD_ROOT/etc/check_mk/piggyback_hub.d/wato
 DAEMON=$OMD_ROOT/bin/piggyback_hub
 PID=$(cat "$PIDFILE" 2>/dev/null)
+
+contains_string() {
+    grep -e "$2" -r "$1" >/dev/null 2>&1
+}
+
+distributed_piggyback_enabled() {
+    if [ -a "$CONFDIR/sitespecific.mk" ] && contains_string "$CONFDIR/sitespecific.mk" "piggyback_hub_enabled"; then
+        contains_string "$CONFDIR/sitespecific.mk" "piggyback_hub_enabled = True"
+        return $?
+
+    elif [ -a "$CONFDIR/global.mk" ] && contains_string "$CONFDIR/global.mk" "piggyback_hub_enabled"; then
+        contains_string "$CONFDIR/global.mk" "piggyback_hub_enabled = True"
+        return $?
+    fi
+
+    return 0
+}
+
+if ! distributed_piggyback_enabled; then
+    exit 5
+fi
 
 case "$1" in
 

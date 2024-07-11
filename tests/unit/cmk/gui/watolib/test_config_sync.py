@@ -315,6 +315,9 @@ def _get_expected_paths(
         "etc/omd",
         "etc/omd/distributed.mk",
         "etc/omd/sitespecific.mk",
+        "etc/check_mk/piggyback_hub.d",
+        "etc/check_mk/piggyback_hub.d/wato",
+        "etc/check_mk/piggyback_hub.d/wato/sitespecific.mk",
     ]
 
     if edition is not cmk_version.Edition.CRE:

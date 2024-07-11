@@ -301,6 +301,12 @@ def get_replication_paths() -> list[ReplicationPath]:
             site_path="etc/check_mk/apache.d/wato",
             excludes=[],
         ),
+        ReplicationPath(
+            ty="dir",
+            ident="piggyback_hub",
+            site_path="etc/check_mk/piggyback_hub.d/wato",
+            excludes=[],
+        ),
     ]
 
     # Include rule configuration into backup/restore/replication. Current

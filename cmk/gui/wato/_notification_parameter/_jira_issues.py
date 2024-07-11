@@ -30,6 +30,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                 "timeout",
                 "label",
                 "proxy_url",
+                "assign",
             ],
             elements=[
                 (
@@ -138,6 +139,18 @@ class NotificationParameterJiraIssues(NotificationParameter):
                         help=_(
                             "Configure the base URL for the monitoring web-GUI here. Include the site name. "
                             "Used for link to Checkmk out of Jira."
+                        ),
+                    ),
+                ),
+                (
+                    "assign",
+                    TextInput(
+                        title=_("Assignee"),
+                        allow_empty=False,
+                        help=_(
+                            "Assign created issues to "
+                            "defined user. This is the username "
+                            "of the user (not Email)."
                         ),
                     ),
                 ),

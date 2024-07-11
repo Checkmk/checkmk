@@ -35,23 +35,35 @@ def _credentials(test_site: Site) -> CmkCredentials:
     return CmkCredentials(username=ADMIN_USER, password=test_site.admin_password)
 
 
-def _log_in(context: BrowserContext, test_site: Site, credentials: CmkCredentials) -> None:
-    page = context.new_page()
-    login_page = LoginPage(page, site_url=test_site.internal_url)
-    login_page.login(credentials)
-    page.close()
+def _log_in(
+    context: BrowserContext,
+    credentials: CmkCredentials,
+    request: pytest.FixtureRequest,
+    test_site: Site,
+) -> None:
+    with manage_new_page_from_browser_context(context, request) as page:
+        login_page = LoginPage(page, site_url=test_site.internal_url)
+        login_page.login(credentials)
 
 
 @pytest.fixture(name="_logged_in_page", scope="module")
-def _logged_in(test_site: Site, credentials: CmkCredentials, _context: BrowserContext) -> None:
-    _log_in(_context, test_site, credentials)
+def _logged_in(
+    test_site: Site,
+    credentials: CmkCredentials,
+    _context: BrowserContext,
+    request: pytest.FixtureRequest,
+) -> None:
+    _log_in(_context, credentials, request, test_site)
 
 
 @pytest.fixture(name="_logged_in_page_mobile", scope="module")
 def _logged_in_mobile(
-    test_site: Site, credentials: CmkCredentials, _context_mobile: BrowserContext
+    test_site: Site,
+    credentials: CmkCredentials,
+    _context_mobile: BrowserContext,
+    request: pytest.FixtureRequest,
 ) -> None:
-    _log_in(_context_mobile, test_site, credentials)
+    _log_in(_context_mobile, credentials, request, test_site)
 
 
 @pytest.fixture(name="dashboard_page")

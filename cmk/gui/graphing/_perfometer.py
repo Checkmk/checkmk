@@ -308,10 +308,6 @@ class _ArcTan:
         )
 
 
-def _raise(value: int | float) -> float:
-    raise ValueError(value)
-
-
 @dataclass(frozen=True, kw_only=True)
 class _Projection:
     lower_x: float
@@ -360,19 +356,22 @@ def _make_projection(
     if lower_x > upper_x:
         raise ValueError((lower_x, upper_x))
 
+    # Note: if we have closed boundaries and a value exceeds the lower or upper limit then we use
+    # the related limit. With this the value is always visible, we don't have any execption and the
+    # perfometer is not filled resp. completely filled.
     match focus_range.lower, focus_range.upper:
         case perfometers.Closed(), perfometers.Closed():
             return _Projection(
                 lower_x=lower_x,
                 upper_x=upper_x,
-                lower_atan=_raise,
+                lower_atan=lambda v: lower_x,
                 focus_linear=_Linear.from_points(
                     lower_x,
                     projection_parameters.lower_closed,
                     upper_x,
                     projection_parameters.upper_closed,
                 ),
-                upper_atan=_raise,
+                upper_atan=lambda v: upper_x,
                 limit=projection_parameters.upper_closed,
             )
 
@@ -394,7 +393,7 @@ def _make_projection(
                     projection_parameters.scale,
                 ),
                 focus_linear=linear,
-                upper_atan=_raise,
+                upper_atan=lambda v: upper_x,
                 limit=projection_parameters.upper_closed,
             )
 
@@ -408,7 +407,7 @@ def _make_projection(
             return _Projection(
                 lower_x=lower_x,
                 upper_x=upper_x,
-                lower_atan=_raise,
+                lower_atan=lambda v: lower_x,
                 focus_linear=linear,
                 upper_atan=_ArcTan.from_parameters(
                     lower_x,

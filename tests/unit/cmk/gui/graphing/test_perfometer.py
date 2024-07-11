@@ -26,7 +26,7 @@ from cmk.gui.graphing._perfometer import (
     MetricRendererStack,
     parse_perfometer,
 )
-from cmk.gui.graphing._type_defs import TranslatedMetric, UnitInfo
+from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric, UnitInfo
 
 from cmk.graphing.v1 import metrics, perfometers
 
@@ -504,20 +504,21 @@ def test_perfometer_projection_closed_closed(value: int | float, result: float) 
 
 
 @pytest.mark.parametrize(
-    "value",
+    "value, result",
     [
-        pytest.param(-11, id="left-too-low"),
-        pytest.param(21, id="right-too-high"),
+        pytest.param(-11, -10, id="left-too-low"),
+        pytest.param(21, 20, id="right-too-high"),
     ],
 )
-def test_perfometer_projection_closed_closed_error(value: int | float) -> None:
+def test_perfometer_projection_closed_closed_exceeds(
+    value: int | float, result: int | float
+) -> None:
     projection = _make_projection(
         perfometers.FocusRange(perfometers.Closed(-10), perfometers.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
-    with pytest.raises(ValueError):
-        projection(value)
+    assert projection(value) == result
 
 
 @pytest.mark.parametrize(
@@ -539,19 +540,18 @@ def test_perfometer_projection_open_closed(value: int | float, result: float) ->
 
 
 @pytest.mark.parametrize(
-    "value",
+    "value, result",
     [
-        pytest.param(21, id="right-too-high"),
+        pytest.param(21, 20, id="right-too-high"),
     ],
 )
-def test_perfometer_projection_open_closed_error(value: int | float) -> None:
+def test_perfometer_projection_open_closed_exceeds(value: int | float, result: int | float) -> None:
     projection = _make_projection(
         perfometers.FocusRange(perfometers.Open(-10), perfometers.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
-    with pytest.raises(ValueError):
-        projection(value)
+    assert projection(value) == result
 
 
 @pytest.mark.parametrize(
@@ -573,19 +573,18 @@ def test_perfometer_projection_closed_open(value: int | float, result: float) ->
 
 
 @pytest.mark.parametrize(
-    "value",
+    "value, result",
     [
-        pytest.param(-11, id="left-too-low"),
+        pytest.param(-11, -10, id="left-too-low"),
     ],
 )
-def test_perfometer_projection_closed_open_error(value: int | float) -> None:
+def test_perfometer_projection_closed_open_exceeds(value: int | float, result: int | float) -> None:
     projection = _make_projection(
         perfometers.FocusRange(perfometers.Closed(-10), perfometers.Open(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
-    with pytest.raises(ValueError):
-        projection(value)
+    assert projection(value) == result
 
 
 @pytest.mark.parametrize(
@@ -789,6 +788,101 @@ def test_perfometer_renderer_stack_same_values() -> None:
             },
         },
     ).get_stack() == [[(42.63, "#111111"), (42.63, "#222222"), (14.74, "#bdbdbd")]]
+
+
+@pytest.mark.parametrize(
+    "segments, translated_metrics, stack, label",
+    [
+        pytest.param(
+            ["metric-name"],
+            {
+                "metric-name": TranslatedMetric(
+                    orig_name=["metric-name"],
+                    value=101.0,
+                    scalar=ScalarBounds(),
+                    scale=[1.0],
+                    auto_graph=True,
+                    title="Metric name",
+                    unit=UnitInfo(
+                        title="Title",
+                        symbol="",
+                        render=lambda v: f"{v}",
+                        js_render="v => v",
+                    ),
+                    color="#111111",
+                ),
+            },
+            [[(100.0, "#111111"), (0.0, "#bdbdbd")]],
+            "101.0",
+            id="one-metric",
+        ),
+        pytest.param(
+            ["metric-name1", "metric-name2"],
+            {
+                "metric-name1": TranslatedMetric(
+                    orig_name=["metric-name1"],
+                    value=99.0,
+                    scalar=ScalarBounds(),
+                    scale=[1.0],
+                    auto_graph=True,
+                    title="Metric name 1",
+                    unit=UnitInfo(
+                        title="Title",
+                        symbol="",
+                        render=lambda v: f"{v}",
+                        js_render="v => v",
+                    ),
+                    color="#111111",
+                ),
+                "metric-name2": TranslatedMetric(
+                    orig_name=["metric-name2"],
+                    value=2.0,
+                    scalar=ScalarBounds(),
+                    scale=[1.0],
+                    auto_graph=True,
+                    title="Metric name 2",
+                    unit=UnitInfo(
+                        title="Title",
+                        symbol="",
+                        render=lambda v: f"{v}",
+                        js_render="v => v",
+                    ),
+                    color="#111111",
+                ),
+            },
+            [[(98.02, "#111111"), (1.98, "#111111"), (0.0, "#bdbdbd")]],
+            "101.0",
+            id="two-metrics",
+        ),
+    ],
+)
+def test_perfometer_renderer_exceeds_limit(
+    segments: Sequence[
+        str
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
+    ],
+    translated_metrics: Mapping[str, TranslatedMetric],
+    stack: Sequence[Sequence[tuple[float, str]]],
+    label: str,
+) -> None:
+    metricometer = MetricometerRendererPerfometer(
+        perfometers.Perfometer(
+            name="name",
+            focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100)),
+            segments=segments,
+        ),
+        translated_metrics,
+    )
+    assert metricometer.get_stack() == stack
+    assert metricometer.get_label() == label
 
 
 @pytest.mark.parametrize(

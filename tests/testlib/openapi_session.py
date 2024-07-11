@@ -117,20 +117,20 @@ class CMKOpenApiSession(requests.Session):
         logger.debug("> [%s] %s (%s, %s)", method, url, args, kwargs)
         response = super().request(method, url, *args, **kwargs)
 
-        if (content_type := response.headers.get("content-type")) in (
-            "application/json",
-            "application/json; charset=utf-8",
-            "text/html; charset=utf-8",
-            "application/problem+json",
-        ):
-            logger.debug("< [%s] %s", response.status_code, response.text)
-        else:
-            logger.debug(
-                "< [%s] Unhandled content type %r (length: %d)",
-                response.status_code,
-                content_type,
-                len(response.content),
-            )
+        if response.status_code != 204:
+            if (content_type := response.headers.get("content-type")) in (
+                "application/json",
+                "application/json; charset=utf-8",
+                "text/html; charset=utf-8",
+                "application/problem+json",
+            ):
+                logger.debug("< [%s] %s", response.status_code, response.text)
+                logger.debug(
+                    "< [%s] Unhandled content type %r (length: %d)",
+                    response.status_code,
+                    content_type,
+                    len(response.content),
+                )
 
         if response.status_code == 401:
             assert isinstance(self.headers["Authorization"], str)  # HACK

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 from contextlib import suppress
 from pathlib import Path
 
@@ -13,23 +12,6 @@ from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
 from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostName
-
-
-def _activate_changes_and_wait_for_completion_with_retries(site: Site) -> None:
-    """The CMC might be started, but not quite ready. Retry a couple of times.
-
-    Since we added valgrind in c024fd3ebcc the initialization of the core takes longer.
-    Livestatus might not be available for an "activate changes" shortly after a core restart (as during host renaming).
-    """
-    for _atempt in range(10):
-        try:
-            site.openapi.activate_changes_and_wait_for_completion()
-            return
-        except UnexpectedResponse:  # kind of 'expected' after all
-            time.sleep(1)
-
-    # try once more to reveal the exception
-    site.openapi.activate_changes_and_wait_for_completion()
 
 
 def _test_rename_preserves_registration(
@@ -59,7 +41,7 @@ def _test_rename_preserves_registration(
             hostname_new=new_hostname,
             etag=response_create.headers["ETag"],
         )
-        _activate_changes_and_wait_for_completion_with_retries(central_site)
+        central_site.openapi.activate_changes_and_wait_for_completion()
         controller_status = controller_status_json(agent_ctl)
         try:
             assert (

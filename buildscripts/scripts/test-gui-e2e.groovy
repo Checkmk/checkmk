@@ -7,8 +7,8 @@ def main() {
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
     def safe_branch_name = versioning.safe_branch_name(scm);
 
-    check_environment_variables([
-        "DOCKER_TAG",
+    check_job_parameters([
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
     ]);
 
     testing_helper.run_make_targets(
@@ -25,4 +25,5 @@ def main() {
         cmk_version: versioning.get_cmk_version(safe_branch_name, "daily"),
     );
 }
+
 return this;

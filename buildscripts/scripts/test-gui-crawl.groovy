@@ -9,8 +9,8 @@ def main() {
     def cmk_version = versioning.get_cmk_version(safe_branch_name, "daily");
     def docker_group_id = get_docker_group_id();
 
-    check_environment_variables([
-        "DOCKER_TAG",
+    check_job_parameters([
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
     ]);
 
     try {
@@ -43,4 +43,5 @@ def main() {
         }
     }
 }
+
 return this;

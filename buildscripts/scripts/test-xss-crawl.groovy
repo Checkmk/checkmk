@@ -8,8 +8,8 @@ def main() {
     def safe_branch_name = versioning.safe_branch_name(scm);
     def version = "daily";
 
-    check_environment_variables([
-        "DOCKER_TAG",
+    check_job_parameters([
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
     ]);
 
     try {
@@ -40,4 +40,5 @@ def main() {
         }
     }
 }
+
 return this;

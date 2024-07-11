@@ -19,14 +19,13 @@ def main() {
         "OVERRIDE_DISTROS",
         "SKIP_DEPLOY_TO_WEBSITE",
         "DEPLOY_TO_WEBSITE_ONLY",
-        "DOCKER_TAG_BUILD",
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "FAKE_WINDOWS_ARTIFACTS",
         "USE_CASE",
     ]);
 
     check_environment_variables([
         "DOCKER_TAG_FOLDER",
-        "DOCKER_TAG_BUILD",
         "INTERNAL_DEPLOY_URL",
         "INTERNAL_DEPLOY_DEST",
         "INTERNAL_DEPLOY_PORT",
@@ -73,9 +72,9 @@ def main() {
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(
-        safe_branch_name,   // 'branch' returns '<BRANCH>-latest'
-        DOCKER_TAG_BUILD,   // 'build tag'
-        DOCKER_TAG_FOLDER); // 'folder tag'
+        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
+        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
+        DOCKER_TAG_FOLDER);                 // 'folder tag'
     def branch_version = versioning.get_branch_version(checkout_dir);
 
     /// Get the ID of the docker group from the node(!). This must not be

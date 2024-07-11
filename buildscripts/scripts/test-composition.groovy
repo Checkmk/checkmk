@@ -13,11 +13,8 @@ def main() {
         "EDITION",
         "VERSION",
         "OVERRIDE_DISTROS",
-        "USE_CASE"
-    ]);
-
-    check_environment_variables([
-        "DOCKER_TAG",
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
+        "USE_CASE",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -27,9 +24,9 @@ def main() {
 
     def safe_branch_name = versioning.safe_branch_name(scm);
     def docker_tag = versioning.select_docker_tag(
-        safe_branch_name,   // 'branch' returns '<BRANCH>-latest'
-        env.DOCKER_TAG,     // 'build tag'
-        env.DOCKER_TAG);    // FIXME was DOCKER_TAG_DEFAULT before, 'folder tag'
+        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
+        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
+        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD); // FIXME was DOCKER_TAG_DEFAULT then DOCKER_TAG, 'folder tag'
 
     currentBuild.description = (
         """

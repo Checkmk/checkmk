@@ -22,17 +22,21 @@ from typing import (
 )
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
+from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.definition import RuleGroupType
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 from cmk.gui.watolib import check_mk_automations
-from cmk.gui.watolib.hosts_and_folders import Folder, Host
-from cmk.gui.watolib.passwords import load_passwords, remove_password
+from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.passwords import load_passwords, remove_password, save_password
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, SingleRulesetRecursively
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 _T = TypeVar("_T")
 BundleId = NewType("BundleId", str)
@@ -68,12 +72,44 @@ def _get_affected_entities(bundle_group: str) -> set[Entity]:
     return set(domain.entity for domain in bundle_domain) if bundle_domain else ALL_ENTITIES
 
 
+class CreateHost(TypedDict):
+    folder: str
+    name: HostName
+    attributes: HostAttributes
+    cluster_nodes: NotRequired[Sequence[HostName]]
+
+
+class CreatePassword(TypedDict):
+    id: str
+    spec: Password
+
+
+class CreateRule(TypedDict):
+    folder: str
+    ruleset: str
+    spec: RuleSpec[object]
+
+
+class CreateDCDConnection(TypedDict):
+    id: str
+    spec: DCDConnectionSpec
+
+
+@dataclass
+class CreateBundleEntities:
+    hosts: Iterable[CreateHost] | None = None
+    passwords: Iterable[CreatePassword] | None = None
+    rules: Iterable[CreateRule] | None = None
+    dcd_connections: Iterable[CreateDCDConnection] | None = None
+
+
 def _dcd_unsupported(*_args: Any, **_kwargs: Any) -> None:
     raise MKGeneralException("DCD not supported")
 
 
 class DCDConnectionHook:
     load_dcd_connections: Callable[[], DCDConnectionDict] = lambda: {}
+    create_dcd_connection: Callable[[str, DCDConnectionSpec], None] = _dcd_unsupported
     delete_dcd_connection: Callable[[str], None] = _dcd_unsupported
 
 
@@ -129,6 +165,29 @@ def identify_bundle_references(
     }
 
 
+def create_config_bundle(
+    bundle_id: BundleId, bundle: "ConfigBundle", entities: CreateBundleEntities
+) -> None:
+    bundle_ident = GlobalIdent(
+        site_id=omd_site(), program_id=bundle["program_id"], instance_id=bundle_id
+    )
+    store = ConfigBundleStore()
+    all_bundles = store.load_for_modification()
+    if bundle_id in all_bundles:
+        raise MKGeneralException(f'Configuration bundle "{bundle_id}" already exists.')
+    all_bundles[bundle_id] = bundle
+    store.save(all_bundles)
+
+    if entities.passwords:
+        _create_passwords(bundle_ident, entities.passwords)
+    if entities.hosts:
+        _create_hosts(bundle_ident, entities.hosts)
+    if entities.rules:
+        _create_rules(bundle_ident, entities.rules)
+    if entities.dcd_connections:
+        _create_dcd_connections(bundle_ident, entities.dcd_connections)
+
+
 def delete_config_bundle(bundle_id: BundleId) -> None:
     store = ConfigBundleStore()
     all_bundles = store.load_for_modification()
@@ -164,6 +223,42 @@ def _collect_hosts(finder: IdentFinder, hosts: Iterable[Host]) -> Iterable[tuple
             yield bundle_id, host
 
 
+def _get_host_attributes(bundle_ident: GlobalIdent, params: CreateHost) -> HostAttributes:
+    attributes = params["attributes"]
+    attributes["locked_by"] = [
+        bundle_ident["site_id"],
+        bundle_ident["program_id"],
+        bundle_ident["instance_id"],
+    ]
+    return attributes
+
+
+def _create_hosts(bundle_ident: GlobalIdent, hosts: Iterable[CreateHost]) -> None:
+    folder_getter = itemgetter("folder")
+    hosts_sorted_by_folder: list[CreateHost] = sorted(hosts, key=folder_getter)
+    folder_and_valid_hosts = []
+    for folder_name, hosts_iter in groupby(
+        hosts_sorted_by_folder, key=folder_getter
+    ):  # type: str, Iterable[CreateHost]
+        folder = folder_tree().folder(folder_name)
+        folder.prepare_create_hosts()
+        valid_hosts = [
+            (
+                host["name"],
+                folder.verify_and_update_host_details(
+                    host["name"],
+                    _get_host_attributes(bundle_ident, host),
+                ),
+                host.get("cluster_nodes"),
+            )
+            for host in hosts_iter
+        ]
+        folder_and_valid_hosts.append((folder, valid_hosts))
+
+    for folder, valid_hosts in folder_and_valid_hosts:
+        folder.create_validated_hosts(valid_hosts)
+
+
 def _delete_hosts(hosts: Iterable[Host]) -> None:
     folder_getter = itemgetter(0)
     folders_and_hosts = sorted(
@@ -185,6 +280,13 @@ def _collect_passwords(
     for password_id, password in passwords.items():
         if bundle_id := finder(password.get("locked_by")):
             yield bundle_id, (password_id, password)
+
+
+def _create_passwords(bundle_ident: GlobalIdent, passwords: Iterable[CreatePassword]) -> None:
+    for password in passwords:
+        spec = password["spec"]
+        spec["locked_by"] = bundle_ident
+        save_password(password["id"], spec, new_password=True)
 
 
 def _delete_passwords(passwords: Iterable[tuple[str, Password]]) -> None:
@@ -214,6 +316,27 @@ def _collect_rules(
             yield bundle_id, rule
 
 
+def _create_rules(bundle_ident: GlobalIdent, rules: Iterable[CreateRule]) -> None:
+    # sort by folder, then ruleset
+    sorted_rules = sorted(rules, key=itemgetter("folder", "ruleset"))
+    for folder_name, rule_iter_outer in groupby(
+        sorted_rules, key=itemgetter("folder")
+    ):  # type: str, Iterable[CreateRule]
+        folder = folder_tree().folder(folder_name)
+        rulesets = FolderRulesets.load_folder_rulesets(folder)
+
+        for ruleset_name, rule_iter_inner in groupby(
+            rule_iter_outer, key=itemgetter("ruleset")
+        ):  # type: str, Iterable[CreateRule]
+            ruleset = rulesets.get(ruleset_name)
+            for create_rule in rule_iter_inner:
+                rule = Rule.from_config(folder, ruleset, create_rule["spec"])
+                rule.locked_by = bundle_ident
+                ruleset.append_rule(folder, rule)
+
+        rulesets.save_folder()
+
+
 def _delete_rules(rules: Iterable[Rule]) -> None:
     folder_getter = itemgetter(0)
     sorted_rules = sorted(((rule.folder, rule) for rule in rules), key=folder_getter)
@@ -236,6 +359,15 @@ def _collect_dcd_connections(
     for connection_id, connection in dcd_connections.items():
         if bundle_id := finder(connection.get("locked_by")):
             yield bundle_id, (connection_id, connection)
+
+
+def _create_dcd_connections(
+    bundle_ident: GlobalIdent, dcd_connections: Iterable[CreateDCDConnection]
+) -> None:
+    for dcd_connection in dcd_connections:
+        spec = dcd_connection["spec"]
+        spec["locked_by"] = bundle_ident
+        DCDConnectionHook.create_dcd_connection(dcd_connection["id"], spec)
 
 
 def _delete_dcd_connections(dcd_connections: Iterable[tuple[str, DCDConnectionSpec]]) -> None:

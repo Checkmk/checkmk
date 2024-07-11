@@ -41,7 +41,7 @@ def _test_rename_preserves_registration(
             hostname_new=new_hostname,
             etag=response_create.headers["ETag"],
         )
-        central_site.openapi.activate_changes_and_wait_for_completion()
+        assert central_site.openapi.get_host(new_hostname) is not None
         controller_status = controller_status_json(agent_ctl)
         try:
             assert (

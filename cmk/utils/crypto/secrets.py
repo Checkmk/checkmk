@@ -21,10 +21,19 @@ from cmk.utils.user import UserId
 
 
 class Secret:
+    """A class for cryptographic secrets.
+
+    Similar to passwords, but suitable for cryptographic operations and not for human use.
+    """
+
     def __init__(self, value: bytes) -> None:
         self._value = value
 
     def compare(self, other: Secret) -> bool:
+        """Check if a given secret is the same as this one in a timing attack safe manner.
+
+        You should use this method instead of `==` to compare secrets.
+        """
         return secrets.compare_digest(self._value, other._value)
 
     @property
@@ -48,6 +57,8 @@ class Secret:
 
 
 class _LocalSecret(ABC):
+    """Base class for secrets that are stored locally on disk"""
+
     def __init__(self) -> None:
         """Read the secret; create it if the file doesn't exist.
 
@@ -79,15 +90,6 @@ class _LocalSecret(ABC):
     def path(self) -> Path:
         raise NotImplementedError
 
-    def derive_secret_key(self, salt: bytes) -> bytes:
-        """Derive a symmetric key from the local secret"""
-        # TODO: in a future step (that requires migration of passwords) we could switch to HKDF.
-        # Scrypt is slow by design but that isn't necessary here because the secret is not just a
-        # password but "real" random data.
-        # Note that key derivation and encryption/decryption of passwords is duplicated in omd
-        # cmk_password_store.h and must be kept compatible!
-        return hashlib.scrypt(self.secret._value, salt=salt, n=2**14, r=8, p=1, dklen=32)
-
 
 class AuthenticationSecret(_LocalSecret):
     """Secret used to derive cookie authentication hash"""
@@ -108,6 +110,15 @@ class PasswordStoreSecret(_LocalSecret):
     @property
     def path(self) -> Path:
         return paths.password_store_secret_file
+
+    def derive_secret_key(self, salt: bytes) -> bytes:
+        """Derive a symmetric key from the local secret"""
+        # TODO: in a future step (that requires migration of passwords) we could switch to HKDF.
+        # Scrypt is slow by design but that isn't necessary here because the secret is not just a
+        # password but "real" random data.
+        # Note that key derivation and encryption/decryption of passwords is duplicated in omd
+        # cmk_password_store.h and must be kept compatible!
+        return hashlib.scrypt(self.secret._value, salt=salt, n=2**14, r=8, p=1, dklen=32)
 
 
 class SiteInternalSecret(_LocalSecret):

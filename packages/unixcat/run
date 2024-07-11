@@ -187,7 +187,7 @@ run_iwyu() {
     test ${#FILES_TO_USE[@]} -eq 0 && return
     python3 "$(command -v iwyu_tool.py)" \
         --jobs="${JOBS}" \
-        -p=build \
+        -p=../.. \
         --output-format=clang \
         "${FILES_TO_USE[@]}" -- \
         -Xiwyu --error \
@@ -199,7 +199,6 @@ run_clang_tidy() {
     test ${#FILES_TO_USE[@]} -eq 0 && return
     python3 "$(command -v "run-clang-tidy-${CLANG_VERSION}.py")" \
         -j "${JOBS}" \
-        -p=build \
         -quiet \
         ${GCC_TOOLCHAIN:+"-extra-arg-before=--gcc-toolchain=${GCC_TOOLCHAIN}"} \
         "${FILES_TO_USE[@]}" # NOTE: args are regexes, we pass (full) filenames

@@ -10,10 +10,9 @@ refresh_compile_commands(
     name = "refresh_compile_commands",
     targets = {
         # target: build-flags
-        "//packages/cmc:cmc": "",
-        "//packages/cmc:icmpreceiver": "",
-        "//packages/cmc:icmpsender": "",
-        "//packages/cmc:checkhelper": "",
-        "//packages/neb:neb_shared": "",
+        "//packages/cmc:all": "",
+        "//packages/livestatus:all": "",
+        "//packages/neb:all": "",
+        "//packages/unixcat:all": "",
     },
 )

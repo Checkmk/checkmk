@@ -202,11 +202,27 @@ def _activate_changes(sites: Iterable[SiteId]) -> None:
     manager = ActivateChangesManager()
     manager.load()
     with SuperUserContext():
-        manager.start(
+        activation_id = manager.start(
             list(sites),
             source="INTERNAL",
             activate_foreign=True,
         )
+        logger.info("Activation %s started", activation_id)
+
+        timeout = 60
+        while manager.is_running() and timeout > 0:
+            logger.info("Waiting for activation to finish...")
+            time.sleep(1)
+            timeout -= 1
+
+        for site_id in sites:
+            state = manager.get_site_state(site_id)
+            if state and state["_state"] != "success":
+                logger.error(
+                    "Activation of site %s failed: %s", site_id, state.get("_status_details")
+                )
+
+        logger.info("Activation finished")
 
 
 class AutomationHostsForAutoRemoval(AutomationCommand):

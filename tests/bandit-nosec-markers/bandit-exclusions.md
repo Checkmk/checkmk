@@ -32,3 +32,4 @@ Note that Bandit is picky about the exact format.
 | `BNS:13b2c8` | `B108` | Using /tmp directory on host, reviewed. |
 | `BNS:248184` | `B602` | The hardcoded find command used here outputs the modification time (as a number), assuming the input is strictly a path.|
 | `BNS:b00359` | `B602` |Intended Shell functionality.|
+| `BNS:ff2c84` | `B411` |The xmlrpc submodule version being used is safe to xml attacks.|

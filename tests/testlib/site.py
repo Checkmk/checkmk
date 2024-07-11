@@ -1061,25 +1061,8 @@ class Site:
     def core_history_log_timeout(self) -> int:
         return 10 if self.core_name() == "cmc" else 30
 
-    # These things are needed to make the site basically being setup. So this
-    # is checked during site initialization instead of a dedicated test.
-    def verify_cmk(self) -> None:
-        p = self.execute(
-            ["cmk", "--help"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True
-        )
-        stdout = p.communicate()[0]
-        assert p.returncode == 0, "Failed to execute 'cmk': %s" % stdout
-
-        p = self.execute(
-            ["cmk", "-U"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True
-        )
-        stdout = p.communicate()[0]
-        assert p.returncode == 0, "Failed to execute 'cmk -U': %s" % stdout
-
     def prepare_for_tests(self) -> None:
         logger.info("Prepare for tests")
-        self.verify_cmk()
-
         if self.enforce_english_gui:
             web = CMKWebSession(self)
             if not self.version.is_saas_edition():

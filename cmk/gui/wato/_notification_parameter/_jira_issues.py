@@ -8,6 +8,7 @@ from cmk.gui.valuespec import Dictionary, FixedValue, HTTPUrl, Password, TextInp
 from cmk.gui.wato import HTTPProxyReference
 
 from ._base import NotificationParameter
+from ._helpers import notification_macro_help
 
 
 class NotificationParameterJiraIssues(NotificationParameter):
@@ -172,9 +173,10 @@ class NotificationParameterJiraIssues(NotificationParameter):
                     TextInput(
                         title=_("Label"),
                         help=_(
-                            "Here you can set a custom label for new issues. "
-                            "If not set, 'monitoring' will be used."
-                        ),
+                            "Set a custom label for new issues. If not set, "
+                            "'monitoring' will be used.<br><br>%s"
+                        )
+                        % notification_macro_help(),
                         size=16,
                     ),
                 ),

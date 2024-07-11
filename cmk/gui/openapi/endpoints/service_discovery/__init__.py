@@ -392,11 +392,11 @@ class DiscoverServices(BaseSchema):
     method="post",
     tag_group="Setup",
     status_descriptions={
-        302: "The service discovery background job has been initialized. Redirecting to the "
+        303: "The service discovery background job has been initialized. Redirecting to the "
         "'Wait for service discovery completion' endpoint.",
         409: "A service discovery background job is currently running",
     },
-    additional_status_codes=[302, 409],
+    additional_status_codes=[303, 409],
     request_schema=DiscoverServices,
     response_schema=response_schemas.DomainObject,
     permissions_required=DISCOVERY_PERMISSIONS,
@@ -416,12 +416,12 @@ def execute_service_discovery(params: Mapping[str, Any]) -> Response:
     method="post",
     tag_group="Setup",
     status_descriptions={
-        302: "The service discovery background job has been initialized. Redirecting to the "
+        303: "The service discovery background job has been initialized. Redirecting to the "
         "'Wait for service discovery completion' endpoint.",
         404: "Host could not be found",
         409: "A service discovery background job is currently running",
     },
-    additional_status_codes=[302, 409],
+    additional_status_codes=[303, 409],
     path_params=[HOST_NAME],
     request_schema=DiscoverServicesDeprecated,
     response_schema=response_schemas.DomainObject,
@@ -481,7 +481,7 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
             )
         case APIDiscoveryAction.refresh | APIDiscoveryAction.tabula_rasa:
             discovery_run = _discovery_wait_for_completion_link(host.name())
-            response = Response(status=302)
+            response = Response(status=303)
             response.location = urlparse(discovery_run["href"]).path
             return response
         case APIDiscoveryAction.only_host_labels:

@@ -169,7 +169,7 @@ class CMKOpenApiSession(requests.Session):
             return True  # changes are activated
         if response.status_code == 422:
             return False  # no changes
-        if response.status_code == 302:
+        if 300 <= response.status_code < 400:
             raise Redirect(redirect_url=response.headers["Location"])  # activation pending
         raise UnexpectedResponse.from_response(response)
 
@@ -382,7 +382,7 @@ class CMKOpenApiSession(requests.Session):
             json={"new_name": hostname_new},
             allow_redirects=False,
         )
-        if response.status_code == 302:
+        if 300 <= response.status_code < 400:
             raise Redirect(redirect_url=response.headers["Location"])
         if not response.ok:
             raise UnexpectedResponse.from_response(response)
@@ -436,7 +436,7 @@ class CMKOpenApiSession(requests.Session):
             # handle that for us.
             allow_redirects=False,
         )
-        if response.status_code == 302:
+        if 300 <= response.status_code < 400:
             raise Redirect(redirect_url=response.headers["Location"])  # activation pending
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
@@ -539,7 +539,7 @@ class CMKOpenApiSession(requests.Session):
                 if response.status_code == 204 and not response.content:  # job has finished
                     break
 
-                if response.status_code != 302:
+                if not 300 <= response.status_code < 400:
                     raise UnexpectedResponse.from_response(response)
 
                 time.sleep(0.5)

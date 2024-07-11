@@ -893,8 +893,8 @@ class Endpoint:
 
     @property
     def does_redirects(self):
-        # created, moved permanently, found
-        return any(code in self._expected_status_codes for code in [201, 301, 302])
+        # created, moved permanently, found, see other
+        return any(code in self._expected_status_codes for code in [201, 301, 302, 303])
 
     @property
     def ident(self) -> str:

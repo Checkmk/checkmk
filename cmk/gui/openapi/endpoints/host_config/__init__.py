@@ -551,9 +551,9 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
         }
     ],
     etag="both",
-    additional_status_codes=[302, 409, 422],
+    additional_status_codes=[303, 409, 422],
     status_descriptions={
-        302: "The host rename process is still running. Redirecting to the 'Wait for completion' endpoint",
+        303: "The host rename process is still running. Redirecting to the 'Wait for completion' endpoint",
         409: "There are pending changes not yet activated or a rename background job is already running.",
         422: "The host could not be renamed.",
     },
@@ -605,7 +605,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
             detail="A host rename process is already running",
         )
 
-    response = Response(status=302)
+    response = Response(status=303)
     response.location = urlparse(
         constructors.link_endpoint(
             "cmk.gui.openapi.endpoints.host_config",

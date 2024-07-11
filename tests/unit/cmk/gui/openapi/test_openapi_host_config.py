@@ -631,9 +631,7 @@ def test_openapi_host_rename(
     clients.HostConfig.rename(
         host_name="foobar",
         new_name="foobaz",
-        follow_redirects=False,
-    )
-    clients.HostConfig.rename_wait_for_completion().assert_status_code(204)
+    ).assert_status_code(204)
 
 
 def test_openapi_host_rename_wait_for_completion_without_job(clients: ClientRegistry) -> None:

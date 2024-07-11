@@ -789,6 +789,9 @@ def _to_operation_dict(  # pylint: disable=too-many-branches
     if 302 in endpoint.expected_status_codes:
         responses["302"] = _path_item(endpoint, 302, DefaultStatusCodeDescription.Code302.value)
 
+    if 303 in endpoint.expected_status_codes:
+        responses["303"] = _path_item(endpoint, 303, DefaultStatusCodeDescription.Code302.value)
+
     if 400 in endpoint.expected_status_codes:
         responses["400"] = _error_response_path_item(
             endpoint, 400, DefaultStatusCodeDescription.Code400

@@ -996,7 +996,7 @@ def test_openapi_discovery_refresh_services(
         params='{"mode": "refresh", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=302,
+        status=303,
     )
     assert (
         resp.location
@@ -1023,7 +1023,7 @@ def test_openapi_discovery_tabula_rasa(
         params='{"mode": "tabula_rasa", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=302,
+        status=303,
     )
     mock_set_autochecks.assert_not_called()
     assert mock_discovery.mock_calls == [
@@ -1060,7 +1060,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         params='{"mode": "refresh", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=302,
+        status=303,
     )
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
@@ -1267,7 +1267,7 @@ def test_openapi_refresh_job_status(
         params='{"mode": "refresh", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=302,
+        status=303,
     )
 
     aut_user_auth_wsgi_app.call_method(
@@ -1302,5 +1302,5 @@ def test_openapi_deprecated_execute_discovery_endpoint(
         params='{"mode": "refresh"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=302,
+        status=303,
     )

@@ -675,7 +675,7 @@ def formatted_if_statement_for_responses(
                     formatted_str += retrieve_data_code
             elif status_code == 204:
                 formatted_str += "    print('Done')\n"
-            elif status_code == 302:
+            elif status_code >= 300:
                 formatted_str += "    print('Redirected to', resp.headers['location'])\n"
 
     if target_requests:

@@ -372,6 +372,7 @@ ResponseType = TypedDict(
         "204": PathItem,
         "301": PathItem,
         "302": PathItem,
+        "303": PathItem,
         "400": PathItem,
         "401": PathItem,
         "403": PathItem,
@@ -463,6 +464,7 @@ SuccessStatusCodeInt = Literal[
 RedirectStatusCodeInt = Literal[
     301,
     302,
+    303,
 ]
 
 StatusCodeInt = Literal[
@@ -477,6 +479,7 @@ StatusCode = Literal[
     "204",
     "301",
     "302",
+    "303",
     "400",
     "401",
     "403",

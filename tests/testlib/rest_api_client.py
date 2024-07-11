@@ -337,7 +337,7 @@ class RestApiClient:
             )
         if follow_redirects and 300 <= resp.status_code < 400:
             return self.request(
-                method=method,
+                method="get" if resp.status_code == 303 else method,
                 url=resp.headers["Location"],
                 query_params=query_params,
                 body=body,
@@ -500,14 +500,14 @@ class ActivateChangesClient(RestApiClient):
             follow_redirects=False,
         )
 
-        if response.status_code != 302:
+        if not 300 <= response.status_code < 400:
             return response
 
         que: multiprocessing.Queue[Response] = multiprocessing.Queue()
 
         def waiter(result_que: multiprocessing.Queue, initial_response: Response) -> None:
             wait_response = initial_response
-            while wait_response.status_code == 302:
+            while 300 <= wait_response.status_code < 400:
                 wait_response = self.request(
                     "get",
                     url=wait_response.headers["Location"],

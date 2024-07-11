@@ -80,7 +80,7 @@ PERMISSIONS = permissions.AllPerm(
     method="post",
     status_descriptions={
         200: "Activation has been started, but not completed (if you need to wait for completion, see documentation for this endpoint).",
-        302: (
+        303: (
             "The activation has been started and is still running. Redirecting to the "
             "'Wait for completion' endpoint."
         ),
@@ -93,7 +93,7 @@ PERMISSIONS = permissions.AllPerm(
         422: "There are no changes to be activated.",
         423: "There is already an activation running.",
     },
-    additional_status_codes=[302, 401, 403, 409, 422, 423],
+    additional_status_codes=[303, 401, 403, 409, 422, 423],
     etag="input",
     request_schema=ActivateChanges,
     response_schema=ActivationRunResponse,
@@ -131,7 +131,7 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
 
     if body["redirect"]:
         wait_for = _completion_link(activation_response.activation_id)
-        response = Response(status=302)
+        response = Response(status=303)
         response.location = urlparse(wait_for["href"]).path
         return response
 

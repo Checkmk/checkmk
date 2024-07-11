@@ -70,13 +70,13 @@ def main() {
 
     def agent_list = get_agent_list(EDITION);
 
-    def branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name(scm);
 
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, VERSION);
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(
-        branch_name,        // 'branch' returns '<BRANCH>-latest'
+        safe_branch_name,   // 'branch' returns '<BRANCH>-latest'
         DOCKER_TAG_BUILD,   // 'build tag'
         DOCKER_TAG_FOLDER); // 'folder tag'
 
@@ -91,7 +91,7 @@ def main() {
         |===== CONFIGURATION ===============================
         |distros:.................. │${distros}│
         |deploy_to_website:........ │${deploy_to_website}│
-        |branch_name:.............. │${branch_name}│
+        |safe_branch_name:......... │${safe_branch_name}│
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |omd_env_vars:............. │${omd_env_vars}│

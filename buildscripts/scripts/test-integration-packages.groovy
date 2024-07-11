@@ -15,7 +15,6 @@ def main() {
     check_environment_variables([
         "BRANCH",
         "DOCKER_TAG",
-        "DOCKER_TAG_DEFAULT",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -27,7 +26,7 @@ def main() {
     def docker_tag = versioning.select_docker_tag(
         branch_name,
         env.DOCKER_TAG,  // FIXME
-        env.DOCKER_TAG_DEFAULT);
+        env.DOCKER_TAG); // FIXME was DOCKER_TAG_DEFAULT before, 'folder tag'
 
     currentBuild.description = (
         """

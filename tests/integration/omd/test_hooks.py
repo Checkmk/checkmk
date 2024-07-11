@@ -40,6 +40,13 @@ def test_hooks(site: Site) -> None:
             "LIVEPROXYD",
         ]
 
+    if not site.version.is_saas_edition():
+        hooks += [
+            "TRACE_RECEIVE",
+            "TRACE_RECEIVE_ADDRESS",
+            "TRACE_RECEIVE_PORT",
+        ]
+
     installed_hooks = os.listdir(os.path.join(site.root, "lib/omd/hooks"))
 
     assert sorted(hooks) == sorted(installed_hooks)

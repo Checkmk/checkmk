@@ -23,7 +23,7 @@ from livestatus import SiteId
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 
-from cmk.automations.results import DeleteHostsResult, RenameHostsResult
+from cmk.automations.results import DeleteHostsResult
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib import bakery
@@ -623,25 +623,23 @@ def test_openapi_host_rename(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("cmk.gui.openapi.endpoints.host_config.has_pending_changes", lambda: False)
-    monkeypatch.setattr(
-        "cmk.gui.watolib.host_rename.rename_hosts",
-        lambda *args, **kwargs: RenameHostsResult({}),
-    )
 
     clients.HostConfig.create(
         host_name="foobar",
         folder="/",
     )
-    clients.HostConfig.get("foobar")
-    resp = clients.HostConfig.rename(
+    clients.HostConfig.rename(
         host_name="foobar",
         new_name="foobaz",
         follow_redirects=False,
     )
-    assert (
-        resp.headers["Location"]
-        == "/NO_SITE/check_mk/api/1.0/domain-types/host_config/actions/wait-for-completion/invoke"
-    )
+    clients.HostConfig.rename_wait_for_completion().assert_status_code(204)
+
+
+def test_openapi_host_rename_wait_for_completion_without_job(clients: ClientRegistry) -> None:
+    clients.HostConfig.rename_wait_for_completion(
+        expect_ok=False, follow_redirects=False
+    ).assert_status_code(404)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")

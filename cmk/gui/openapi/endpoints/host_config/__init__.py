@@ -619,7 +619,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
 @Endpoint(
     constructors.domain_type_action_href("host_config", "wait-for-completion"),
     "cmk/wait-for-completion",
-    method="post",
+    method="get",
     status_descriptions={
         204: "The renaming job has been completed.",
         302: (

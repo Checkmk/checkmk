@@ -898,11 +898,14 @@ class HostConfigClient(RestApiClient):
             headers=self._set_etag_header(host_name, etag),
         )
 
-    def rename_wait_for_completion(self, expect_ok: bool = True) -> Response:
+    def rename_wait_for_completion(
+        self, expect_ok: bool = True, follow_redirects: bool = True
+    ) -> Response:
         return self.request(
-            "post",
+            "get",
             url=f"/domain-types/{self.domain}/actions/wait-for-completion/invoke",
             expect_ok=expect_ok,
+            follow_redirects=follow_redirects,
         )
 
     def _set_etag_header(

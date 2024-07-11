@@ -395,7 +395,7 @@ class CMKOpenApiSession(requests.Session):
         etag: str,
         timeout: int = 60,
     ) -> None:
-        with self._wait_for_completion(timeout, "post"):
+        with self._wait_for_completion(timeout, "get"):
             self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
 
     def create_host_group(self, name: str, alias: str) -> requests.Response:

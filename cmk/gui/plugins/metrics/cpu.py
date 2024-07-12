@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._color import indexed_color
-from cmk.gui.graphing._utils import graph_info, MAX_CORES, metric_info
+from cmk.gui.graphing._utils import graph_info, metric_info
 from cmk.gui.i18n import _l
 
 # .
@@ -120,23 +119,6 @@ metric_info["util15"] = {
     "unit": "%",
     "color": "#008000",
 }
-
-
-for i in range(MAX_CORES):
-    # generate different colors for each core.
-    # unfortunately there are only 24 colors on our
-    # color wheel, times two for two shades each, we
-    # can only draw 48 differently colored graphs
-    metric_info["cpu_core_util_%d" % i] = {
-        "title": _l("Utilization Core %d") % i,
-        "unit": "%",
-        "color": indexed_color(i, MAX_CORES),
-    }
-    metric_info["cpu_core_util_average_%d" % i] = {
-        "title": _l("Average utilization core %d") % i,
-        "unit": "%",
-        "color": indexed_color(i, MAX_CORES),
-    }
 
 # .
 #   .--Graphs--------------------------------------------------------------.
@@ -433,20 +415,6 @@ graph_info["util_fallback"] = {
     ],
     "conflicting_metrics": ["util_average", "system", "engine_cpu_util"],
     "range": (0, "util,100,MAX"),
-}
-
-graph_info["per_core_utilization"] = {
-    "title": _l("Per Core utilization"),
-    "metrics": [("cpu_core_util_%d" % num, "line") for num in range(MAX_CORES)],
-    "range": (0, 100),
-    "optional_metrics": ["cpu_core_util_%d" % num for num in range(2, MAX_CORES)],
-}
-
-graph_info["per_core_utilization_average"] = {
-    "title": _l("Average utilization per core"),
-    "metrics": [("cpu_core_util_average_%d" % num, "line") for num in range(MAX_CORES)],
-    "range": (0, 100),
-    "optional_metrics": ["cpu_core_util_average_%d" % num for num in range(2, MAX_CORES)],
 }
 
 graph_info["cpu_utilization"] = {

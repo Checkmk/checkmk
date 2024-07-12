@@ -29,7 +29,6 @@ def test_hooks(site: Site) -> None:
         "MULTISITE_AUTHORISATION",
         "MULTISITE_COOKIE_AUTH",
         "PNP4NAGIOS",
-        "RABBITMQ_PORT",
         "TMPFS",
     ]
 
@@ -43,6 +42,7 @@ def test_hooks(site: Site) -> None:
             "TRACE_RECEIVE",
             "TRACE_RECEIVE_ADDRESS",
             "TRACE_RECEIVE_PORT",
+            "RABBITMQ_PORT",
         ]
 
     installed_hooks = os.listdir(os.path.join(site.root, "lib/omd/hooks"))

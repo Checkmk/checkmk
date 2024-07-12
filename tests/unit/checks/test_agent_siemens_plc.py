@@ -38,8 +38,16 @@ pytestmark = pytest.mark.checks
                         "rack": 2,
                     },
                 ],
+                "timeout": 30,
             },
-            ["--hostspec", "device1;host;2;2;102", "--hostspec", "device2;hostaddress;2;1;22"],
+            [
+                "--timeout",
+                30,
+                "--hostspec",
+                "device1;host;2;2;102",
+                "--hostspec",
+                "device2;hostaddress;2;1;22",
+            ],
         ),
     ],
 )

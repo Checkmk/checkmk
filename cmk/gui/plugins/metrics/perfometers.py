@@ -118,21 +118,3 @@ perfometer_info.append(
         "exponent": 4.0,
     }
 )
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "nimble_read_latency_total",
-        "half_value": 10,
-        "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "nimble_write_latency_total",
-        "half_value": 10,
-        "exponent": 2.0,
-    }
-)

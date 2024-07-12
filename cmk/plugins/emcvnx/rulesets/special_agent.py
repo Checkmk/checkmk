@@ -18,7 +18,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
-def parameter_form() -> Dictionary:
+def _parameter_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
             "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "
@@ -130,5 +130,5 @@ rule_spec_special_agent_emcvnx = SpecialAgent(
     name="emcvnx",
     title=Title("EMC VNX storage systems"),
     topic=Topic.STORAGE,
-    parameter_form=parameter_form,
+    parameter_form=_parameter_form,
 )

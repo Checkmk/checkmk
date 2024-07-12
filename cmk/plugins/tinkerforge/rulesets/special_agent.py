@@ -15,7 +15,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
-def form_spec() -> Dictionary:
+def _parameter_form() -> Dictionary:
     return Dictionary(
         elements={
             "port": DictElement(
@@ -52,5 +52,5 @@ rule_spec_special_agent_tinkerforge = SpecialAgent(
     name="tinkerforge",
     title=Title("Tinkerforge"),
     topic=Topic.SERVER_HARDWARE,
-    parameter_form=form_spec,
+    parameter_form=_parameter_form,
 )

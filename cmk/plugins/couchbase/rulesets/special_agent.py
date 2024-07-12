@@ -18,7 +18,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
-def parameter_form():
+def _parameter_form() -> Dictionary:
     return Dictionary(
         migrate=_migrate,
         help_text=Help(
@@ -78,7 +78,7 @@ rule_spec_special_agent_couchbase = SpecialAgent(
     name="couchbase",
     title=Title("Couchbase servers"),
     topic=Topic.DATABASES,
-    parameter_form=parameter_form,
+    parameter_form=_parameter_form,
 )
 
 

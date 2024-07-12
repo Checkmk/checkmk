@@ -72,7 +72,6 @@ cc_library(
         "-I/usr/include/glib-2.0/",
         "-Wno-int-conversion",
         "-Wno-stringop-truncation",
-        "-fPIC",
         "-O2",
     ],
     linkopts = [
@@ -104,7 +103,6 @@ cc_library(
     ],
     copts = [
         '-DNUMVERS="' + NUMVERS + '"',
-        "-fPIC",
         "-O2",  # maybe O3?
     ],
     linkstatic = True,
@@ -134,7 +132,6 @@ cc_library(
         "-Wno-implicit-function-declaration",
         "-Wno-format-truncation",
         "-Wno-strict-aliasing",
-        "-fPIC",
         "-O2",
     ],
     linkopts = [
@@ -153,7 +150,6 @@ cc_binary(
     name = "rrdupdate",
     srcs = ["src/rrdupdate.c"],
     copts = [
-        "-fPIC",
         "-O2",
     ],
     visibility = ["//visibility:public"],
@@ -166,7 +162,6 @@ cc_binary(
     copts = [
         "-Wno-implicit-function-declaration",
         "-Wno-format-truncation",
-        "-fPIC",
         "-O2",
     ],
     visibility = ["//visibility:public"],
@@ -180,7 +175,6 @@ cc_binary(
         "-Wno-format-truncation",
         "-I/usr/include/glib-2.0/",
         "-DLOCALSTATEDIR=",
-        "-fPIC",
         "-O2",
     ],
     linkopts = [

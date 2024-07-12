@@ -54,19 +54,6 @@ graph_info["time_to_connect"] = {
     ],
 }
 
-graph_info["round_trip_average"] = {
-    "title": _("Round trip average"),
-    "metrics": [
-        ("rtmax", "line"),
-        ("rtmin", "line"),
-        ("rta", "line"),
-    ],
-    "scalars": [
-        "rta:warn",
-        "rta:crit",
-    ],
-}
-
 graph_info["packet_loss"] = {
     "title": _("Packet loss"),
     "metrics": [

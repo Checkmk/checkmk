@@ -10,14 +10,14 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
-class Params(BaseModel):
+class _Params(BaseModel, frozen=True):
     user: str | None = None
     password: Secret | None = None
     infos: Sequence[str]
 
 
-def commands_function(
-    params: Params,
+def _commands_function(
+    params: _Params,
     host_config: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
     auth_args: list[str | Secret] = []
@@ -37,6 +37,6 @@ def commands_function(
 
 special_agent_emcvnx = SpecialAgentConfig(
     name="emcvnx",
-    parameter_parser=Params.model_validate,
-    commands_function=commands_function,
+    parameter_parser=_Params.model_validate,
+    commands_function=_commands_function,
 )

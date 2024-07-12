@@ -7,39 +7,39 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.plugins.tinkerforge.server_side_calls.special_agent import commands_function, Params
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config
+from cmk.plugins.tinkerforge.server_side_calls.special_agent import special_agent_tinkerforge
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, SpecialAgentCommand
 
 
 @pytest.mark.parametrize(
-    "raw_params,host_config,expected_args",
+    ["raw_params", "host_config", "expected_result"],
     [
         (
             {},
             HostConfig(name="test", ipv4_config=IPv4Config(address="address")),
-            ["--host", "address"],
+            SpecialAgentCommand(command_arguments=["--host", "address"]),
         ),
         (
             {"segment_display_brightness": 5, "segment_display_uid": "8888", "port": 4223},
             HostConfig(name="test", ipv4_config=IPv4Config(address="address")),
-            [
-                "--host",
-                "address",
-                "--port",
-                "4223",
-                "--segment_display_uid",
-                "8888",
-                "--segment_display_brightness",
-                "5",
-            ],
+            SpecialAgentCommand(
+                command_arguments=[
+                    "--host",
+                    "address",
+                    "--port",
+                    "4223",
+                    "--segment_display_uid",
+                    "8888",
+                    "--segment_display_brightness",
+                    "5",
+                ]
+            ),
         ),
     ],
 )
 def test_tinkerforge_argument_parsing(
-    raw_params: Mapping[str, object], host_config: HostConfig, expected_args: list[str]
+    raw_params: Mapping[str, object],
+    host_config: HostConfig,
+    expected_result: SpecialAgentCommand,
 ) -> None:
-    """Tests if all required arguments are present."""
-    commands = list(commands_function(Params.model_validate(raw_params), host_config))
-    assert len(commands) == 1
-    arguments = commands[0].command_arguments
-    assert arguments == expected_args
+    assert list(special_agent_tinkerforge(raw_params, host_config)) == [expected_result]

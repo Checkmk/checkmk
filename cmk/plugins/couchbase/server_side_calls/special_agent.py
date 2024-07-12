@@ -10,20 +10,20 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
-class AuthenticationParams(BaseModel, frozen=True):
+class _AuthenticationParams(BaseModel, frozen=True):
     username: str
     password: Secret
 
 
-class Params(BaseModel, frozen=True):
+class _Params(BaseModel, frozen=True):
     buckets: Sequence[str] = []
     timeout: int | None = None
     port: int | None = None
-    authentication: AuthenticationParams | None = None
+    authentication: _AuthenticationParams | None = None
 
 
-def commands_function(
-    params: Params,
+def _commands_function(
+    params: _Params,
     host_config: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
     args: list[str | Secret] = []
@@ -53,6 +53,6 @@ def commands_function(
 
 special_agent_couchbase = SpecialAgentConfig(
     name="couchbase",
-    parameter_parser=Params.model_validate,
-    commands_function=commands_function,
+    parameter_parser=_Params.model_validate,
+    commands_function=_commands_function,
 )

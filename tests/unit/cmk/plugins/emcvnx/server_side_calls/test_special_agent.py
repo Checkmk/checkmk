@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.plugins.emcvnx.server_side_calls.special_agent import commands_function, Params
+from cmk.plugins.emcvnx.server_side_calls.special_agent import special_agent_emcvnx
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
 
@@ -62,8 +62,8 @@ def test_command_creation(
     expected_result: SpecialAgentCommand,
 ) -> None:
     assert list(
-        commands_function(
-            Params.model_validate(raw_params),
+        special_agent_emcvnx(
+            raw_params,
             host_config,
         )
     ) == [expected_result]

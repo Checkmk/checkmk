@@ -10,14 +10,14 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
 
 
-class Params(BaseModel):
+class _Params(BaseModel, frozen=True):
     port: int | None = None
     segment_display_uid: str | None = None
     segment_display_brightness: int | None = None
 
 
-def commands_function(
-    params: Params,
+def _commands_function(
+    params: _Params,
     host_config: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
     args = ["--host", host_config.primary_ip_config.address]
@@ -32,6 +32,6 @@ def commands_function(
 
 special_agent_tinkerforge = SpecialAgentConfig(
     name="tinkerforge",
-    parameter_parser=Params.model_validate,
-    commands_function=commands_function,
+    parameter_parser=_Params.model_validate,
+    commands_function=_commands_function,
 )

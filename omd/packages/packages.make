@@ -234,6 +234,6 @@ else
 # Ship nagvis for all but saas edition: CMK-14926
 # also exclude jaeger
 include \
-    packages/nagvis/nagvis.make
+    packages/nagvis/nagvis.make \
     packages/jaeger/jaeger.make
 endif

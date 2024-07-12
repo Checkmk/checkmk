@@ -121,7 +121,6 @@ UNMIGRATED = {
     "random",
     "ruckus_spot",
     "salesforce",
-    "siemens_plc",
     "smb_share",
     "splunk",
     "storeonce",

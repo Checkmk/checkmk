@@ -45,6 +45,7 @@ HACK_AGENTS = {
     "tinkerforge": False,  # needs no secret
     "couchbase": True,
     "zerto": True,
+    "siemens_plc": False,  # needs no secret
 }
 
 

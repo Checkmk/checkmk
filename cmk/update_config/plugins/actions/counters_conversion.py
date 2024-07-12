@@ -5,12 +5,28 @@
 
 import ast
 import json
+from collections.abc import Sequence
 from logging import Logger
 from pathlib import Path
 
 import cmk.utils.paths
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
+
+
+def _is_json(raw: str) -> bool:
+    try:
+        _ = json.loads(raw)
+    except json.JSONDecodeError:
+        return False
+    return True
+
+
+def _ls(counters_path: Path) -> Sequence[Path]:
+    try:
+        return list(counters_path.iterdir())
+    except FileNotFoundError:
+        return ()
 
 
 class ConvertCounters(UpdateAction):
@@ -20,15 +36,8 @@ class ConvertCounters(UpdateAction):
     @staticmethod
     def convert_counter_files(counters_path: Path) -> None:
 
-        def is_json(raw: str) -> bool:
-            try:
-                _ = json.loads(raw)
-            except json.JSONDecodeError:
-                return False
-            return True
-
-        for f in counters_path.iterdir():
-            if not (content := f.read_text().strip()) or is_json(content):
+        for f in _ls(counters_path):
+            if not (content := f.read_text().strip()) or _is_json(content):
                 continue
 
             f.write_text(

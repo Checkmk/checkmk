@@ -30,15 +30,6 @@ from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "backup_age",
-        "half_value": 86400,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "stacked",
         "perfometers": [
             {

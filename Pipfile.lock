@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d657b910a50c8c1a40728699151b22241c5a17d6d464f45c873417fc78af0673"
+            "sha256": "de96006e175a0ddc83fd30e8ab1b272558184151e39ab2141d24bd52dbdeed3a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -3182,6 +3182,15 @@
             "markers": "python_full_version >= '3.8.1'",
             "version": "==7.1.0"
         },
+        "furo": {
+            "hashes": [
+                "sha256:490a00d08c0a37ecc90de03ae9227e8eb5d6f7f750edf9807f398a2bdf2358de",
+                "sha256:81f205a6605ebccbb883350432b4831c0196dd3d1bc92f61e1f459045b3d2b0b"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.8'",
+            "version": "==2024.5.6"
+        },
         "graphql-core": {
             "hashes": [
                 "sha256:06d2aad0ac723e35b1cb47885d3e5c45e956a53bc1b209a9fc5369007fe46676",
@@ -4602,12 +4611,21 @@
         },
         "sphinx": {
             "hashes": [
-                "sha256:4bcce443b66139eb9556117ba881246269edce396e7f939e22c5ed85186bfd5b",
-                "sha256:8385520a28dc129ebf8b5fccfa1beb71215fd4455c6d10fa418e08c3c7a2ff9c"
+                "sha256:a3c295d0e8be6277e0a5ba5c6909a308bd208876b0f4f68c7cc591f566129412",
+                "sha256:bd846bcb09fd2b6e94ce3e1ad50f4618bccf03cc7c17d0f3fa87393c0bd9178b"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==7.4.0"
+            "version": "==7.4.3"
+        },
+        "sphinx-autoapi": {
+            "hashes": [
+                "sha256:8d672bd2baa8365ac844d3f52c0d3360aa492299131d3dea156a20a26f048d23",
+                "sha256:fa5eb188f67ae39e19b2e7d2527c75d064e0f0b9ac7f77a3558ec26ccb731c26"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.8'",
+            "version": "==3.1.2"
         },
         "sphinx-autodoc-typehints": {
             "hashes": [
@@ -4617,6 +4635,14 @@
             "index": "pypi",
             "markers": "python_version >= '3.9'",
             "version": "==2.2.2"
+        },
+        "sphinx-basic-ng": {
+            "hashes": [
+                "sha256:9ec55a47c90c8c002b5960c57492ec3021f5193cb26cebc2dc4ea226848651c9",
+                "sha256:eb09aedbabfb650607e9b4b68c9d240b90b1e1be221d6ad71d61c52e29f7932b"
+            ],
+            "markers": "python_version >= '3.7'",
+            "version": "==1.0.0b2"
         },
         "sphinx-rtd-theme": {
             "hashes": [
@@ -4800,11 +4826,11 @@
         },
         "types-awscrt": {
             "hashes": [
-                "sha256:026f882d4d23f04c5b2ab08d6fefd627842537009cd00e9f78dd4960314d51aa",
-                "sha256:06aa247fe5ccf0b86428e5289aeabf67f967e10861f211c16c19e7d2542a70a9"
+                "sha256:8b9a3fc729a13d14ce77b686721a222837f6e0c1f49f907c657b3b94a5585e67",
+                "sha256:9948d735459c4d3ecab502cbe619e00aea0c72e74979babd622fb6379b1e5247"
             ],
             "markers": "python_version >= '3.7' and python_version < '4.0'",
-            "version": "==0.21.0"
+            "version": "==0.21.1"
         },
         "types-beautifulsoup4": {
             "hashes": [

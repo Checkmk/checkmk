@@ -23,6 +23,7 @@ dockerpty = "*"  # used by dockerized tests for opening debug shells
 fakeredis = {version = "*", extras = ["lua"]}  # used for testing code which uses Redis (lua is needed for faking features like "lock")
 fastapi = "*"  # needed to run fake idp for cse tests
 flake8 = "*"
+furo = "*"  # sphinx theme
 hypothesis = "*"    # used by unit tests
 hypothesis-jsonschema = "*"  # used by unit tests
 isort = "*"  # used as a plugin for editors
@@ -59,6 +60,7 @@ ruff = "*"
 schemathesis = "*"  # used for openapi tests
 semver = "*"
 sphinx = "*"  # used for the plugin API documentation
+sphinx-autoapi = "*"  # used for automatically generating plugin API documentation
 sphinx-autodoc-typehints = "*"  # used for the plugin API documentation
 sphinx-rtd-theme = "*"  # used for the plugin API documentation
 sphinxcontrib-plantuml = "*"  # used for the API and architecture

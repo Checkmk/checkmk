@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.graphing import perfometer_info
-from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS
+from cmk.gui.graphing._utils import GB
 
 # .
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -118,31 +118,6 @@ perfometer_info.append(
         "exponent": 4.0,
     }
 )
-
-
-def register_hop_perfometers():
-    for x in reversed(range(1, MAX_NUMBER_HOPS)):
-        perfometer_info.append(
-            {
-                "type": "dual",
-                "perfometers": [
-                    {
-                        "type": "linear",
-                        "segments": ["hop_%d_pl" % x],
-                        "total": 100.0,
-                    },
-                    {
-                        "type": "logarithmic",
-                        "metric": "hop_%d_rta" % x,
-                        "half_value": 0.1,
-                        "exponent": 4,
-                    },
-                ],
-            }
-        )
-
-
-register_hop_perfometers()
 
 perfometer_info.append(
     {

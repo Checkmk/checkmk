@@ -42,14 +42,19 @@ def _parameter_valuespec_connections():
         title=_("Levels connections"),
         elements=[
             (
+                "active_connections_lower",
+                SimpleLevels(Integer, title=_("Lower levels for active connections")),
+            ),
+            (
                 "active_connections",
-                SimpleLevels(Integer, title=_("Active connections")),
+                SimpleLevels(Integer, title=_("Upper levels for active connections")),
             ),
             (
                 "failed_connections",
                 SimpleLevels(Integer, title=_("Failed connections")),
             ),
         ],
+        required_keys=[],
     )
 
 

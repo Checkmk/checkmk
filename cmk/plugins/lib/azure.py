@@ -356,6 +356,7 @@ def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResu
                 "active_connections",
                 "Active connections",
                 lambda x: str(int(x)),
+                lower_levels_param="active_connections_lower",
                 upper_levels_param="active_connections",
             ),
             MetricData(

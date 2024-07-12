@@ -9,7 +9,10 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.azure.agent_based.azure_postgresql import check_replication
+from cmk.plugins.azure.agent_based.azure_postgresql import (
+    check_plugin_azure_postgresql_connections,
+    check_replication,
+)
 from cmk.plugins.lib.azure import AzureMetric, Resource, Section
 
 
@@ -53,3 +56,32 @@ def test_check_replication(
     expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_replication()(item, params, section)) == expected_result
+
+
+def test_azure_postgresql_connections_active_connections_lower() -> None:
+    assert list(
+        check_plugin_azure_postgresql_connections.check_function(
+            "item",
+            {"active_connections_lower": (11, 9)},
+            {
+                "item": Resource(
+                    id="id",
+                    name="name",
+                    type="type",
+                    group="group",
+                    location="location",
+                    metrics={
+                        "average_active_connections": AzureMetric(
+                            name="name",
+                            aggregation="aggregation",
+                            value=10,
+                            unit="unit",
+                        )
+                    },
+                )
+            },
+        )
+    ) == [
+        Result(state=State.WARN, summary="Active connections: 10 (warn/crit below 11/9)"),
+        Metric("active_connections", 10.0),
+    ]

@@ -1256,7 +1256,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     "etc matching group."
                 )
                 + _(
-                    "The placeholder <tt>\\0</tt> will be replaced by the original text. "
+                    "The placeholder <tt>\\0</tt> will be replaced by the original text of this field. "
                     "This allows you to add new information in front or at the end. "
                 )
                 + _(
@@ -1278,7 +1278,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     "etc matching group."
                 )
                 + _(
-                    "The placeholder <tt>\\0</tt> will be replaced by the original text "
+                    "The placeholder <tt>\\0</tt> will be replaced by the original text of this field "
                     "to match. Note that as an alternative, you may also use the rule "
                     "Hostname translation for Incoming Messages in the Global Settings "
                     "of the EC to accomplish your task."
@@ -1301,7 +1301,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     "etc matching group."
                 )
                 + _(
-                    "The placeholder <tt>\\0</tt> will be replaced by the original text. "
+                    "The placeholder <tt>\\0</tt> will be replaced by the original text of this field. "
                     "This allows you to add new information in front or at the end."
                 )
                 + _(
@@ -1322,7 +1322,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     "etc matching group."
                 )
                 + _(
-                    "The placeholder <tt>\\0</tt> will be replaced by the original text. "
+                    "The placeholder <tt>\\0</tt> will be replaced by the original text of this field. "
                     "This allows you to add new information in front or at the end."
                 ),
                 size=64,
@@ -1340,7 +1340,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     "etc matching group."
                 )
                 + _(
-                    "The placeholder <tt>\\0</tt> will be replaced by the original text. "
+                    "The placeholder <tt>\\0</tt> will be replaced by the original text of this field. "
                     "This allows you to add new information in front or at the end."
                 ),
                 size=64,

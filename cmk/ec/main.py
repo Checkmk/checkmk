@@ -1551,7 +1551,7 @@ class EventServer(ECServerThread):
             event["first"] = event["time"]
         event["last"] = event["time"]
         if "set_comment" in rule:
-            event["comment"] = replace_groups(rule["set_comment"], event["text"], groups)
+            event["comment"] = replace_groups(rule["set_comment"], event.get("comment", ""), groups)
         if "set_text" in rule:
             event["text"] = replace_groups(rule["set_text"], event["text"], groups)
         if "set_host" in rule:

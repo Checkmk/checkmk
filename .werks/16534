@@ -1,0 +1,9 @@
+Title: Use comment during event rewrite instead of text
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1720789064
+Edition: cee
+Level: 1
+Version: 2.2.0p32
+

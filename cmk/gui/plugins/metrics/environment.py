@@ -32,12 +32,6 @@ metric_info["fluidflow"] = {
     "color": "#ff6234",
 }
 
-metric_info["pressure"] = {
-    "title": _("Pressure"),
-    "unit": "bar",
-    "color": "#ff6234",
-}
-
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

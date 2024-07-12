@@ -1177,6 +1177,9 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         self._site.setdefault("globals", {})[varname] = self._current_settings[varname]
         self._site_mgmt.save_sites(self._configured_sites, activate=False)
 
+        if self._site_id == omd_site():
+            save_site_global_settings(self._current_settings)
+
         _changes.add_change(
             "edit-configvar",
             msg,

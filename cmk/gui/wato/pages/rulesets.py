@@ -1607,7 +1607,13 @@ class ModeRuleSearchForm(WatoMode):
                 (
                     "rule_host_list",
                     RegExp(
-                        title=_("Host match list"),
+                        title=_("Explicit host matching"),
+                        help=_(
+                            "Use this field to search for rules which have their "
+                            "explicit host condition set up in such a way that it"
+                            " matches the given host (either by being unset or "
+                            "set)."
+                        ),
                         size=60,
                         mode=RegExp.infix,
                     ),
@@ -1615,7 +1621,14 @@ class ModeRuleSearchForm(WatoMode):
                 (
                     "rule_item_list",
                     RegExp(
-                        title=_("Item match list"),
+                        title=_("Explicit item matching"),
+                        help=_(
+                            "Use this field to search for rules which have their "
+                            "item condition set up in such a way that it matches "
+                            "the given item (either by being unset or set). The "
+                            "item condition name depends on the rule, the item is"
+                            " always part of the service name."
+                        ),
                         size=60,
                         mode=RegExp.infix,
                     ),

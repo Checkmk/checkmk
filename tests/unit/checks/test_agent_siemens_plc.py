@@ -17,9 +17,8 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize(
     "params,expected_args",
     [
-        (
+        pytest.param(
             {
-                "values": [],
                 "devices": [
                     {
                         "slot": 2,
@@ -38,6 +37,7 @@ pytestmark = pytest.mark.checks
                         "rack": 2,
                     },
                 ],
+                "values": [],
                 "timeout": 30,
             },
             [
@@ -48,6 +48,43 @@ pytestmark = pytest.mark.checks
                 "--hostspec",
                 "device2;hostaddress;2;1;22",
             ],
+            id="without values",
+        ),
+        pytest.param(
+            {
+                "devices": [
+                    {
+                        "slot": 2,
+                        "tcp_port": 102,
+                        "values": [
+                            (("db", 1), 1.2, "dint", None, "id1"),
+                            ("merker", 1.3, "real", "seconds_since_service", "id2"),
+                        ],
+                        "host_name": "device1",
+                        "host_address": "host",
+                        "rack": 2,
+                    },
+                    {
+                        "slot": 1,
+                        "tcp_port": 22,
+                        "values": [],
+                        "host_name": "device2",
+                        "host_address": "hostaddress",
+                        "rack": 2,
+                    },
+                ],
+                "values": [
+                    ("timer", 2.5, "bit", "temp", "t1"),
+                    ("counter", 3.4, ("str", 2), "text", "s1"),
+                ],
+            },
+            [
+                "--hostspec",
+                "device1;host;2;2;102;timer,2.5,bit,temp,t1;counter,3.4,str:2,text,s1;db:1,1.2,dint,None,id1;merker,1.3,real,seconds_since_service,id2",
+                "--hostspec",
+                "device2;hostaddress;2;1;22;timer,2.5,bit,temp,t1;counter,3.4,str:2,text,s1",
+            ],
+            id="with values",
         ),
     ],
 )

@@ -122,15 +122,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "connections",
-        "half_value": 50,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "current",
         "half_value": 10,
         "exponent": 4,

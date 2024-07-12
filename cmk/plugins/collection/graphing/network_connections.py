@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, Title
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 
@@ -36,6 +36,15 @@ metric_open_network_sockets = metrics.Metric(
     title=Title("Open network sockets"),
     unit=UNIT_NUMBER,
     color=metrics.Color.YELLOW,
+)
+
+perfometer_connections = perfometers.Perfometer(
+    name="connections",
+    focus_range=perfometers.FocusRange(
+        perfometers.Closed(0),
+        perfometers.Open(90),
+    ),
+    segments=["connections"],
 )
 
 graph_connections = graphs.Graph(

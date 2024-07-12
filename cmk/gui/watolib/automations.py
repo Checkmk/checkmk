@@ -13,6 +13,7 @@ import json
 import logging
 import re
 import subprocess
+import time
 import uuid
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
@@ -642,6 +643,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
             result = response.result
             auto_logger.debug("Job is not active anymore. Return the result: %s", result)
             break
+        time.sleep(0.25)
 
     assert isinstance(result, str)
 

@@ -161,11 +161,3 @@ perfometer_info.append(
         "exponent": 2.0,
     }
 )
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["disk_utilization"],
-        "total": 100.0,
-    }
-)

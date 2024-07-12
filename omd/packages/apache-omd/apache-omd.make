@@ -36,7 +36,9 @@ APACHE_MODULES := \
     mod_setenvif.so \
     mod_status.so \
     mod_unixd.so \
-    mod_version.so
+    mod_version.so \
+    mod_proxy.so \
+    mod_proxy_http.so
 
 CENTOS_WORKAROUND := 0
 

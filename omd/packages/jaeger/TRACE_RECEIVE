@@ -15,4 +15,12 @@ case "$1" in
         echo "on: enable"
         echo "off: disable"
         ;;
+    set)
+        # Toggle the apache reverse proxy for accessing the Jaeger UI
+        if [ "$2" = "on" ]; then
+            ln -sf ../../jaeger/apache.conf "$OMD_ROOT"/etc/apache/conf.d/jaeger.conf
+        elif [ -f "$OMD_ROOT"/etc/apache/conf.d/jaeger.conf ]; then
+            rm "$OMD_ROOT"/etc/apache/conf.d/jaeger.conf
+        fi
+        ;;
 esac

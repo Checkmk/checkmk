@@ -15,7 +15,6 @@ from cmk.plugins.collection.agent_based import uptime
 from cmk.plugins.lib import uptime as uptime_utils
 
 # Mark all tests in this file as check related tests
-pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(

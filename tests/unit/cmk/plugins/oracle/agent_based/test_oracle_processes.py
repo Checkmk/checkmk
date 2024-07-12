@@ -18,8 +18,6 @@ from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.lib.oracle import OraErrors
 from cmk.plugins.oracle.agent_based.oracle_processes import OracleProcess, SectionOracleProcesses
 
-pytestmark = pytest.mark.checks
-
 
 @pytest.mark.parametrize(
     "info, parse_result",

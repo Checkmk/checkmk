@@ -11,8 +11,6 @@ import pytest
 from cmk.plugins.datadog.server_side_calls.agent_datadog import special_agent_datadog
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, URLProxy
 
-pytestmark = pytest.mark.checks
-
 
 @pytest.mark.parametrize(
     "params, expected_result",

@@ -5,13 +5,9 @@
 
 from collections import Counter
 
-import pytest
-
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.collection.agent_based.inotify import _check_inotify as check_inotify
 from cmk.plugins.collection.agent_based.inotify import discover_inotify, parse_inotify, Section
-
-pytestmark = pytest.mark.checks
 
 Params = dict[str, list[tuple[str, float, float]]]
 

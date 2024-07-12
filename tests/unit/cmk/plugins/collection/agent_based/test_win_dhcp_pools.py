@@ -10,8 +10,6 @@ import pytest
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.collection.agent_based import win_dhcp_pools as wdp
 
-pytestmark = pytest.mark.checks
-
 
 @pytest.mark.parametrize(
     "string_table,expected_check_result",

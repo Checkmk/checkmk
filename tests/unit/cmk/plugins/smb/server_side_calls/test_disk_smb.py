@@ -10,8 +10,6 @@ import pytest
 from cmk.plugins.smb.server_side_calls.disk_smb import active_check_config
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
-pytestmark = pytest.mark.checks
-
 HOST_CONFIG = HostConfig(
     name="hostname",
     ipv4_config=IPv4Config(address="0.0.0.1"),

@@ -13,8 +13,6 @@ from cmk.plugins.collection.agent_based.fjdarye_ca_ports import (
     parse_fjdarye_ca_ports,
 )
 
-pytestmark = pytest.mark.checks
-
 
 @pytest.mark.parametrize(
     "string_table, parse_result",

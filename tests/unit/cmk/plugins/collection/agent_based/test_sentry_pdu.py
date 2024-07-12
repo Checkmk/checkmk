@@ -17,8 +17,6 @@ from cmk.plugins.collection.agent_based.sentry_pdu import (
     Section,
 )
 
-pytestmark = pytest.mark.checks
-
 _SECTION = {
     "TowerA_InfeedA": PDU(state=1, power=1097),
     "TowerA_InfeedB": PDU(state=1, power=261),

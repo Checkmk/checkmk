@@ -11,9 +11,6 @@ import pytest
 from cmk.plugins.collection.agent_based import multipath
 from cmk.plugins.lib import multipath as multipath_utils
 
-# Mark all tests in this file as check related tests
-pytestmark = pytest.mark.checks
-
 
 class TupleTestData(t.NamedTuple):
     input: t.List[str]

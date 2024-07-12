@@ -15,8 +15,6 @@ from cmk.plugins.collection.agent_based.fjdarye_pcie_flash_modules import (
     PCIeFlashModuleSection,
 )
 
-pytestmark = pytest.mark.checks
-
 
 @pytest.mark.parametrize(
     "string_table, parse_result",

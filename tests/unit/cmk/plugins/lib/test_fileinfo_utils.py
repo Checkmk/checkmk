@@ -29,8 +29,6 @@ from cmk.plugins.lib.fileinfo import (
     parse_fileinfo,
 )
 
-pytestmark = pytest.mark.checks
-
 
 @pytest.mark.parametrize(
     "value, cast_type",

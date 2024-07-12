@@ -29,8 +29,6 @@ from cmk.plugins.lib.fileinfo import (
     FileinfoItem,
 )
 
-pytestmark = pytest.mark.checks
-
 INFO = [
     ["1563288717"],
     ["[[[header]]]"],

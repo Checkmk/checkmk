@@ -10,8 +10,6 @@ import pytest
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.liebert.agent_based import liebert_system_events as lse
 
-pytestmark = pytest.mark.checks
-
 
 @pytest.mark.parametrize(
     "string_table, section",

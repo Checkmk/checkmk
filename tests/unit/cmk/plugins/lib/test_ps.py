@@ -11,8 +11,6 @@ import pytest
 from cmk.agent_based.v2 import HostLabel, Result, State
 from cmk.plugins.lib import ps
 
-pytestmark = pytest.mark.checks
-
 
 def test_host_labels_ps_no_match_attr() -> None:
     section = (

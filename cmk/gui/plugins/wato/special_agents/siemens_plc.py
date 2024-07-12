@@ -184,19 +184,6 @@ def _valuespec_special_agents_siemens_plc():
                                 ),
                             ),
                             (
-                                "timeout",
-                                Integer(
-                                    title=_("Connect Timeout"),
-                                    help=_(
-                                        "The connect timeout in seconds when establishing a connection "
-                                        "with the PLC."
-                                    ),
-                                    default_value=60,
-                                    minvalue=1,
-                                    unit=_("seconds"),
-                                ),
-                            ),
-                            (
                                 "values",
                                 ListOf(
                                     valuespec=Tuple(
@@ -209,7 +196,7 @@ def _valuespec_special_agents_siemens_plc():
                                 ),
                             ),
                         ],
-                        optional_keys=["timeout"],
+                        optional_keys=[],
                     ),
                     title=_("Devices to fetch information from"),
                 ),
@@ -223,6 +210,19 @@ def _valuespec_special_agents_siemens_plc():
                     ),
                     title=_("Values to fetch from all devices"),
                     validate=_special_agents_siemens_plc_validate_siemens_plc_values,
+                ),
+            ),
+            (
+                "timeout",
+                Integer(
+                    title=_("Connect Timeout"),
+                    help=_(
+                        "The connect timeout in seconds when establishing a connection with the "
+                        "PLC."
+                    ),
+                    default_value=10,
+                    minvalue=1,
+                    unit=_("seconds"),
                 ),
             ),
         ],

@@ -1,0 +1,13 @@
+Title: Siemens PLC agent configuration: Take timeout parameter into account
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1720781249
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+When configuring the Siemens PLC agent, users could configure a per-device timeout. However, the
+configured values had no effect. Instead, the agent always used a default value of 10 seconds. As
+of this werk, users can instead configure one global timeout value, which is taken into account by
+the agent.

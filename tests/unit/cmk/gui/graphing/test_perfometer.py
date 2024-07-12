@@ -643,6 +643,7 @@ def test_perfometer_renderer_stack(
             segments=segments,
         ),
         translated_metrics,
+        "#bdbdbd",
     ).get_stack() == [list(value_projections) + [(14.73, "#bdbdbd")]]
 
 
@@ -685,6 +686,7 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                 "color": "#222222",
             },
         },
+        "#bdbdbd",
     ).get_stack() == [[(42.63, "#111111"), (42.63, "#222222"), (14.74, "#bdbdbd")]]
 
 

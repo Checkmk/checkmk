@@ -28,7 +28,7 @@ from cmk.gui.views.perfometer.sorter import SorterPerfometer
         [1, None, 0, -1],
     ],
 )
-def test_cmp_of_missing_values(sort_values: Sequence[float | None]) -> None:
+def test_cmp_of_missing_values(sort_values: Sequence[float | None], request_context: None) -> None:
     """If perfometer values are missing, sort_value() of Perfometer will return (None, None).
     The sorting chosen below is consistent with how _data_sort from cmk.gui.views.__init__.py
     treats missing values."""

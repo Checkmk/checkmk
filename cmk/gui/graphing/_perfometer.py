@@ -244,9 +244,17 @@ class MetricometerRendererRegistry(plugin_registry.Registry[type[MetricometerRen
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricometerRenderer:
         if isinstance(perfometer, perfometers.Perfometer):
-            return MetricometerRendererPerfometer(perfometer, translated_metrics)
+            return MetricometerRendererPerfometer(
+                perfometer,
+                translated_metrics,
+                get_themed_perfometer_bg_color(),
+            )
         if isinstance(perfometer, perfometers.Bidirectional):
-            return MetricometerRendererBidirectional(perfometer, translated_metrics)
+            return MetricometerRendererBidirectional(
+                perfometer,
+                translated_metrics,
+                get_themed_perfometer_bg_color(),
+            )
         if isinstance(perfometer, perfometers.Stacked):
             return MetricometerRendererStacked(perfometer, translated_metrics)
         if perfometer["type"] == "logarithmic":
@@ -482,6 +490,7 @@ def _compute_segments(
 def _project_segments(
     projection: _Projection,
     segments: Sequence[_StackEntry],
+    themed_perfometer_bg_color: str,
 ) -> list[tuple[float, str]]:
     total = sum(s.value for s in segments)
     total_projection = projection(total)
@@ -495,7 +504,7 @@ def _project_segments(
     projections.append(
         (
             round(projection.limit - sum(p[0] for p in projections), 2),
-            get_themed_perfometer_bg_color(),
+            themed_perfometer_bg_color,
         )
     )
     return projections
@@ -506,9 +515,11 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
         self,
         perfometer: perfometers.Perfometer,
         translated_metrics: Mapping[str, TranslatedMetric],
+        themed_perfometer_bg_color: str,
     ) -> None:
         self.perfometer = perfometer
         self.translated_metrics = translated_metrics
+        self.themed_perfometer_bg_color = themed_perfometer_bg_color
 
     @classmethod
     def type_name(cls) -> str:
@@ -525,6 +536,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
                 self.perfometer.segments,
                 self.translated_metrics,
             ),
+            self.themed_perfometer_bg_color,
         ):
             return [projections]
         return []
@@ -550,9 +562,11 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
         self,
         perfometer: perfometers.Bidirectional,
         translated_metrics: Mapping[str, TranslatedMetric],
+        themed_perfometer_bg_color: str,
     ) -> None:
         self.perfometer = perfometer
         self.translated_metrics = translated_metrics
+        self.themed_perfometer_bg_color = themed_perfometer_bg_color
 
     @classmethod
     def type_name(cls) -> str:
@@ -574,6 +588,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self.perfometer.left.segments,
                 self.translated_metrics,
             ),
+            self.themed_perfometer_bg_color,
         ):
             projections.extend(left_projections[::-1])
 
@@ -590,6 +605,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self.perfometer.right.segments,
                 self.translated_metrics,
             ),
+            self.themed_perfometer_bg_color,
         ):
             projections.extend(right_projections)
 

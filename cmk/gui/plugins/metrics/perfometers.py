@@ -28,8 +28,6 @@ from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
 
-perfometer_info.append({"type": "logarithmic", "metric": "rtt", "half_value": 0.1, "exponent": 4})
-
 perfometer_info.append(
     {"type": "logarithmic", "metric": "temp", "half_value": 40.0, "exponent": 1.2}
 )

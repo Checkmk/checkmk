@@ -13,6 +13,7 @@ from cmk.plugins.collection.agent_based.mem_used import (
     check_mem_used,
     discover_mem_used,
     inventory_mem_used,
+    MemBytes,
 )
 from cmk.plugins.lib import memory
 
@@ -800,3 +801,24 @@ def test_inventory_memory(
     assert sort_inventory_result(inventory_mem_used(section)) == sort_inventory_result(
         expected_result
     )
+
+
+@pytest.mark.parametrize(
+    "value_as_kb, expected_bytes, expected_kb, expected_mb, expected_render",
+    [
+        (0, 0, 0, 0, "0 B"),
+        (1000, 1024000, 1000, 0.9765625, "1000 KiB"),
+    ],
+)
+def test_mem_bytes(
+    value_as_kb,
+    expected_bytes,
+    expected_kb,
+    expected_mb,
+    expected_render,
+):
+    mem = MemBytes(value_as_kb)
+    assert mem.bytes == expected_bytes
+    assert mem.kb == expected_kb
+    assert mem.mb == expected_mb
+    assert mem.render() == expected_render

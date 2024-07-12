@@ -229,6 +229,17 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         tasks: Sequence[DiscoveryTask],
         job_interface: BackgroundProcessInterface,
     ) -> None:
+        with job_interface.gui_context():
+            self._do_execute(mode, do_scan, ignore_errors, tasks, job_interface)
+
+    def _do_execute(
+        self,
+        mode: DiscoverySettings,
+        do_scan: DoFullScan,
+        ignore_errors: IgnoreErrors,
+        tasks: Sequence[DiscoveryTask],
+        job_interface: BackgroundProcessInterface,
+    ) -> None:
         self._initialize_statistics(
             num_hosts_total=sum(len(task.host_names) for task in tasks),
         )

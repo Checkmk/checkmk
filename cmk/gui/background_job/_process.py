@@ -14,11 +14,13 @@ import os
 import signal
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from functools import partial
 from logging import Formatter, Logger, StreamHandler
 from pathlib import Path
 from types import FrameType
+from typing import ContextManager
 
 from setproctitle import setthreadtitle
 
@@ -26,10 +28,11 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.user import UserId
 
-from cmk.gui import config, log
+from cmk.gui import log
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext, UserContext
+from cmk.gui.single_global_setting import load_gui_log_levels
 from cmk.gui.utils import get_failed_plugins
 
 from cmk.ccc import store
@@ -51,18 +54,19 @@ def run_process(job_parameters: JobParameters) -> None:
 
     try:
         job_status = jobstatus_store.read()
-        _load_ui()
-        with (
-            BackgroundJobFlaskApp().test_request_context("/"),
-            SuperUserContext() if job_status.user is None else UserContext(UserId(job_status.user)),
-        ):
-            _initialize_environment(
-                logger, job_id, Path(work_dir), lock_wato, is_stoppable, override_job_log_level
-            )
-            logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
-            jobstatus_store.update({"pid": os.getpid(), "state": JobStatusStates.RUNNING})
+        _initialize_environment(
+            logger, job_id, Path(work_dir), lock_wato, is_stoppable, override_job_log_level
+        )
+        logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
+        jobstatus_store.update({"pid": os.getpid(), "state": JobStatusStates.RUNNING})
 
-            _execute_function(logger, target, BackgroundProcessInterface(work_dir, job_id, logger))
+        _execute_function(
+            logger,
+            target,
+            BackgroundProcessInterface(
+                work_dir, job_id, logger, gui_job_context_manager(job_status.user)
+            ),
+        )
 
         # Final status update
         job_status = jobstatus_store.read()
@@ -89,6 +93,19 @@ def run_process(job_parameters: JobParameters) -> None:
             exc_info=True,
         )
         jobstatus_store.update({"state": JobStatusStates.EXCEPTION})
+
+
+def gui_job_context_manager(user: str | None) -> Callable[[], ContextManager[None]]:
+    @contextmanager
+    def gui_job_context() -> Iterator[None]:
+        _load_ui()
+        with (
+            BackgroundJobFlaskApp().test_request_context("/"),
+            SuperUserContext() if user is None else UserContext(UserId(user)),
+        ):
+            yield None
+
+    return gui_job_context
 
 
 def _load_ui() -> None:
@@ -143,16 +160,23 @@ def _initialize_environment(
 ) -> None:
     """Setup environment (Logging, Livestatus handles, etc.)"""
     _open_stdout_and_stderr(work_dir)
-    config.initialize()
+    _set_log_levels(override_job_log_level)
     _enable_logging_to_stdout()
-    _init_job_logging(logger, override_job_log_level)
     _register_signal_handlers(logger, is_stoppable, job_id)
     _lock_configuration(lock_wato)
 
 
-def _init_job_logging(logger: Logger, override_job_log_level: int | None) -> None:
-    if override_job_log_level:
-        logger.setLevel(override_job_log_level)
+def _set_log_levels(override_job_log_level: int | None) -> None:
+    log.set_log_levels(
+        {
+            **load_gui_log_levels(),
+            **(
+                {"cmk.web.background-job": override_job_log_level}
+                if override_job_log_level is not None
+                else {}
+            ),
+        }
+    )
 
 
 def _execute_function(

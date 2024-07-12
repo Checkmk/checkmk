@@ -2405,22 +2405,24 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         self._source = source
 
     def schedule_sites(self, job_interface: BackgroundProcessInterface) -> None:
-        job_interface.send_progress_update(
-            _("Activate Changes Scheduler started"), with_timestamp=True
-        )
+        with job_interface.gui_context():
+            job_interface.send_progress_update(
+                _("Activate Changes Scheduler started"), with_timestamp=True
+            )
 
-        job_interface.send_progress_update(
-            _("Going to update %d sites") % len(self._site_snapshot_settings), with_timestamp=True
-        )
+            job_interface.send_progress_update(
+                _("Going to update %d sites") % len(self._site_snapshot_settings),
+                with_timestamp=True,
+            )
 
-        sync_and_activate(
-            self._activation_id,
-            self._site_snapshot_settings,
-            ActivateChangesSchedulerBackgroundJob.file_filter_func,
-            self._source,
-            self._prevent_activate,
-        )
-        job_interface.send_result_message(_("Activate changes finished"))
+            sync_and_activate(
+                self._activation_id,
+                self._site_snapshot_settings,
+                ActivateChangesSchedulerBackgroundJob.file_filter_func,
+                self._source,
+                self._prevent_activate,
+            )
+            job_interface.send_result_message(_("Activate changes finished"))
 
 
 def _render_warnings(configuration_warnings: ConfigWarnings) -> str:

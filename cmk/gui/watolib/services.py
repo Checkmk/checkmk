@@ -35,6 +35,7 @@ from cmk.checkengine.discovery import AutocheckEntry, CheckPreviewEntry
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.background_job import (
     BackgroundJob,
+    BackgroundProcessInterface,
     InitialStatusArgs,
     job_registry,
     JobStatusSpec,
@@ -946,12 +947,13 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
 # multiprocessing needs picklable objects and neither lambdas nor
 # local functions are picklable.
 def _discovery_job_target(
-    job_interface: object,
+    job_interface: BackgroundProcessInterface,
     job: ServiceDiscoveryBackgroundJob,
     action: DiscoveryAction,
     raise_errors: bool,
 ) -> None:
-    job.discover(action, raise_errors=raise_errors)
+    with job_interface.gui_context():
+        job.discover(action, raise_errors=raise_errors)
 
 
 def execute_discovery_job(

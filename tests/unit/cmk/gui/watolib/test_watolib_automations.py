@@ -3,15 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
+import os
 from collections.abc import Sequence
+from contextlib import nullcontext
 from dataclasses import dataclass
 from typing import Any
-from unittest.mock import MagicMock
 
 import pytest
 
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 
+from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.http import request
 from cmk.gui.watolib import automations
 
@@ -92,8 +95,15 @@ class TestCheckmkAutomationBackgroundJob:
                 stdin_data=None,
                 timeout=None,
             )
-            automations.CheckmkAutomationBackgroundJob("job_id").execute_automation(
-                MagicMock(),
+            job = automations.CheckmkAutomationBackgroundJob("job_id")
+            os.makedirs(job.get_work_dir())
+            job._execute_automation(  # pylint: disable=protected-access
+                BackgroundProcessInterface(
+                    job.get_work_dir(),
+                    "job_id",
+                    logging.getLogger(),
+                    lambda: nullcontext(),  # pylint: disable=unnecessary-lambda
+                ),
                 api_request,
             )
             assert RESULT == "(2, None)"
@@ -117,8 +127,15 @@ class TestCheckmkAutomationBackgroundJob:
                 stdin_data=None,
                 timeout=None,
             )
-            automations.CheckmkAutomationBackgroundJob("job_id").execute_automation(
-                MagicMock(),
+            job = automations.CheckmkAutomationBackgroundJob("job_id")
+            os.makedirs(job.get_work_dir())
+            job._execute_automation(  # pylint: disable=protected-access
+                BackgroundProcessInterface(
+                    job.get_work_dir(),
+                    "job_id",
+                    logging.getLogger(),
+                    lambda: nullcontext(),  # pylint: disable=unnecessary-lambda
+                ),
                 api_request,
             )
             assert RESULT == "i was very different previously"

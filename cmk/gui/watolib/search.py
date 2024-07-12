@@ -536,7 +536,8 @@ class _SearchResultWithPermissionsCheck:
 
 
 def _index_building_in_background_job(job_interface: BackgroundProcessInterface) -> None:
-    _build_index(job_interface, get_redis_client())
+    with job_interface.gui_context():
+        _build_index(job_interface, get_redis_client())
 
 
 def _build_index(job_interface: BackgroundProcessInterface, redis_client: redis.Redis[str]) -> None:
@@ -564,22 +565,23 @@ def launch_requests_processing_background() -> None:
 
 
 def _process_update_requests_background(job_interface: BackgroundProcessInterface) -> None:
-    redis_client = get_redis_client()
-    if not redis_server_reachable(redis_client):
-        job_interface.send_progress_update(_("Redis is not reachable, terminating"))
-        return
+    with job_interface.gui_context():
+        redis_client = get_redis_client()
+        if not redis_server_reachable(redis_client):
+            job_interface.send_progress_update(_("Redis is not reachable, terminating"))
+            return
 
-    try:
-        while updates_requested():
-            _process_update_requests(
-                read_and_remove_update_requests(),
-                job_interface,
-                redis_client,
-            )
-    except RedisConnectionError as e:
-        # This can happen when Redis or the whole site is stopped while the background job is
-        # running. Report an error in the background job result but don't create a crash report.
-        job_interface.send_exception(_("An connection error occurred: %s") % e)
+        try:
+            while updates_requested():
+                _process_update_requests(
+                    read_and_remove_update_requests(),
+                    job_interface,
+                    redis_client,
+                )
+        except RedisConnectionError as e:
+            # This can happen when Redis or the whole site is stopped while the background job is
+            # running. Report an error in the background job result but don't create a crash report.
+            job_interface.send_exception(_("An connection error occurred: %s") % e)
 
 
 def _process_update_requests(

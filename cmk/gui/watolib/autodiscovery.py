@@ -56,6 +56,10 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
         )
 
     def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
+        with job_interface.gui_context():
+            self._execute(job_interface)
+
+    def _execute(self, job_interface: BackgroundProcessInterface) -> None:
         result = autodiscovery(self.site_id)
 
         if not result.hosts:

@@ -7,7 +7,7 @@ import sys
 import time
 from logging import Logger
 from pathlib import Path
-from typing import Callable, NamedTuple
+from typing import Callable, ContextManager, NamedTuple
 
 from cmk.utils import render
 
@@ -15,10 +15,17 @@ from ._defines import BackgroundJobDefines
 
 
 class BackgroundProcessInterface:
-    def __init__(self, work_dir: str, job_id: str, logger: Logger) -> None:
+    def __init__(
+        self,
+        work_dir: str,
+        job_id: str,
+        logger: Logger,
+        gui_context: Callable[[], ContextManager[None]],
+    ) -> None:
         self._work_dir = work_dir
         self._job_id = job_id
         self._logger = logger
+        self.gui_context = gui_context
 
     def get_work_dir(self) -> str:
         return self._work_dir

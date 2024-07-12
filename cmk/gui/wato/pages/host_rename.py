@@ -13,7 +13,12 @@ from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
 
-from cmk.gui import background_job, forms
+from cmk.gui import forms
+from cmk.gui.background_job import (
+    BackgroundJobAlreadyRunning,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+)
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -171,7 +176,7 @@ class ModeBulkRenameHost(WatoMode):
             try:
                 host_renaming_job.start(
                     partial(rename_hosts_background_job, renamings),
-                    background_job.InitialStatusArgs(
+                    InitialStatusArgs(
                         title=title,
                         lock_wato=True,
                         stoppable=False,
@@ -179,7 +184,7 @@ class ModeBulkRenameHost(WatoMode):
                         user=str(user.id) if user.id else None,
                     ),
                 )
-            except background_job.BackgroundJobAlreadyRunning as e:
+            except BackgroundJobAlreadyRunning as e:
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
             return redirect(host_renaming_job.detail_url())
@@ -416,26 +421,27 @@ def _confirm(html_title, message):
 
 def rename_hosts_background_job(
     renamings: Sequence[tuple[Folder, HostName, HostName]],
-    job_interface: background_job.BackgroundProcessInterface,
+    job_interface: BackgroundProcessInterface,
 ) -> None:
-    actions, auth_problems = rename_hosts(
-        renamings, job_interface=job_interface
-    )  # Already activates the changes!
+    with job_interface.gui_context():
+        actions, auth_problems = _rename_hosts(
+            renamings, job_interface
+        )  # Already activates the changes!
 
-    for site_id in group_renamings_by_site(renamings):
-        ActivateChanges().confirm_site_changes(site_id)
+        for site_id in group_renamings_by_site(renamings):
+            ActivateChanges().confirm_site_changes(site_id)
 
-    action_txt = "".join(["<li>%s</li>" % a for a in actions])
-    message = _("Renamed %d %s at the following places:<br><ul>%s</ul>") % (
-        len(renamings),
-        ungettext("host", "hosts", len(renamings)),
-        action_txt,
-    )
-    if auth_problems:
-        message += _(
-            "The following hosts could not be renamed because of missing permissions: %s"
-        ) % ", ".join([f"{host_name} ({reason})" for (host_name, reason) in auth_problems])
-    job_interface.send_result_message(message)
+        action_txt = "".join(["<li>%s</li>" % a for a in actions])
+        message = _("Renamed %d %s at the following places:<br><ul>%s</ul>") % (
+            len(renamings),
+            ungettext("host", "hosts", len(renamings)),
+            action_txt,
+        )
+        if auth_problems:
+            message += _(
+                "The following hosts could not be renamed because of missing permissions: %s"
+            ) % ", ".join([f"{host_name} ({reason})" for (host_name, reason) in auth_problems])
+        job_interface.send_result_message(message)
 
 
 class ModeRenameHost(WatoMode):
@@ -533,7 +539,7 @@ class ModeRenameHost(WatoMode):
         try:
             host_renaming_job.start(
                 partial(rename_hosts_background_job, renamings),
-                background_job.InitialStatusArgs(
+                InitialStatusArgs(
                     title=_("Renaming of %s -> %s") % (self._host.name(), newname),
                     lock_wato=True,
                     stoppable=False,
@@ -541,7 +547,7 @@ class ModeRenameHost(WatoMode):
                     user=str(user.id) if user.id else None,
                 ),
             )
-        except background_job.BackgroundJobAlreadyRunning as e:
+        except BackgroundJobAlreadyRunning as e:
             raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
         return redirect(host_renaming_job.detail_url())
@@ -587,8 +593,10 @@ class ModeRenameHost(WatoMode):
             html.hidden_fields()
 
 
-# renamings is a list of tuples of (folder, oldname, newname)
-def rename_hosts(renamings, job_interface=None):
+def _rename_hosts(
+    renamings: Sequence[tuple[Folder, HostName, HostName]],
+    job_interface: BackgroundProcessInterface,
+) -> tuple[list[str], list[tuple[HostName, MKAuthException]]]:
     action_counts, auth_problems = perform_rename_hosts(renamings, job_interface)
     action_texts = render_renaming_actions(action_counts)
     return action_texts, auth_problems

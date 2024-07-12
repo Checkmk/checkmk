@@ -44,7 +44,7 @@ def execute_host_removal_background_job() -> None:
         return
 
     job.start(
-        _remove_hosts,
+        _do_remove_hosts,
         InitialStatusArgs(
             title=job.gui_title(),
             lock_wato=False,
@@ -63,6 +63,11 @@ class HostRemovalBackgroundJob(BackgroundJob):
 
     def __init__(self) -> None:
         super().__init__(self.job_prefix)
+
+
+def _do_remove_hosts(job_interface: BackgroundProcessInterface) -> None:
+    with job_interface.gui_context():
+        _remove_hosts(job_interface)
 
 
 def _remove_hosts(job_interface: BackgroundProcessInterface) -> None:

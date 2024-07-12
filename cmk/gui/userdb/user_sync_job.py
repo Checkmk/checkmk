@@ -118,18 +118,21 @@ class UserSyncBackgroundJob(BackgroundJob):
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, datetime], None],
     ) -> None:
-        job_interface.send_progress_update(_("Synchronization started..."))
-        if self._execute_sync_action(
-            job_interface,
-            add_to_changelog,
-            enforce_sync,
-            load_users_func,
-            save_users_func,
-            datetime.now(),
-        ):
-            job_interface.send_result_message(_("The user synchronization completed successfully."))
-        else:
-            job_interface.send_exception(_("The user synchronization failed."))
+        with job_interface.gui_context():
+            job_interface.send_progress_update(_("Synchronization started..."))
+            if self._execute_sync_action(
+                job_interface,
+                add_to_changelog,
+                enforce_sync,
+                load_users_func,
+                save_users_func,
+                datetime.now(),
+            ):
+                job_interface.send_result_message(
+                    _("The user synchronization completed successfully.")
+                )
+            else:
+                job_interface.send_exception(_("The user synchronization failed."))
 
     def _execute_sync_action(
         self,

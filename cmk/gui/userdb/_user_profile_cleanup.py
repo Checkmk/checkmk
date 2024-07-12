@@ -61,11 +61,12 @@ class UserProfileCleanupBackgroundJob(BackgroundJob):
         super().__init__(self.job_prefix)
 
     def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
-        try:
-            cleanup_abandoned_profiles(self._logger, datetime.now(), timedelta(days=30))
-            job_interface.send_result_message(_("Job finished"))
-        finally:
-            UserProfileCleanupBackgroundJob.last_run_path().touch(exist_ok=True)
+        with job_interface.gui_context():
+            try:
+                cleanup_abandoned_profiles(self._logger, datetime.now(), timedelta(days=30))
+                job_interface.send_result_message(_("Job finished"))
+            finally:
+                UserProfileCleanupBackgroundJob.last_run_path().touch(exist_ok=True)
 
 
 def cleanup_abandoned_profiles(logger: Logger, now: datetime, max_age: timedelta) -> None:

@@ -158,7 +158,9 @@ def test_start_job() -> None:
     assert status.state == JobStatusStates.FINISHED
 
     output = "\n".join(status.loginfo["JobProgressUpdate"])
+    # Make sure we get the generic background job output
     assert "Initialized background job" in output
+    # Make sure we get the job specific output
     assert "Hallo :-)" in output
 
 

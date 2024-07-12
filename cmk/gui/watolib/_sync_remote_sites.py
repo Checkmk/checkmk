@@ -138,6 +138,10 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         self._audit_log_store = AuditLogStore()
 
     def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
+        with job_interface.gui_context():
+            self._execute(job_interface)
+
+    def _execute(self, job_interface: BackgroundProcessInterface) -> None:
         with store.locked(self._last_audit_log_timestamps_path):
             prev_last_timestamps = self._last_audit_log_timestamps_store.load()
 

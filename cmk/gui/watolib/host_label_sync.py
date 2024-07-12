@@ -156,9 +156,10 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
         super().__init__(self.job_prefix)
 
     def do_sync(self, job_interface: BackgroundProcessInterface) -> None:
-        job_interface.send_progress_update(_("Synchronization started..."))
-        self._execute_sync()
-        job_interface.send_result_message(_("The synchronization finished."))
+        with job_interface.gui_context():
+            job_interface.send_progress_update(_("Synchronization started..."))
+            self._execute_sync()
+            job_interface.send_result_message(_("The synchronization finished."))
 
     def _execute_sync(self) -> None:
         newest_host_labels = self._load_newest_host_labels_per_site()

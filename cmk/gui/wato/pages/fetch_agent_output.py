@@ -14,6 +14,7 @@ from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,
     BackgroundJobRegistry,
+    BackgroundProcessInterface,
     InitialStatusArgs,
     JobStatusSpec,
 )
@@ -298,7 +299,11 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
         )
         super().__init__(job_id)
 
-    def fetch_agent_output(self, job_interface):
+    def fetch_agent_output(self, job_interface: BackgroundProcessInterface) -> None:
+        with job_interface.gui_context():
+            self._fetch_agent_output(job_interface)
+
+    def _fetch_agent_output(self, job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Fetching '%s'...") % self._request.agent_type)
 
         agent_output_result = get_agent_output(

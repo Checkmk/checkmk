@@ -72,22 +72,9 @@ rename_host_hook_registry = RenameHostHookRegistry()
 
 def perform_rename_hosts(
     renamings: Iterable[tuple[Folder, HostName, HostName]],
-    job_interface: BackgroundProcessInterface | None = None,
+    job_interface: BackgroundProcessInterface,
 ) -> tuple[dict[str, int], list[tuple[HostName, MKAuthException]]]:
-    """Rename hosts mechanism
-
-    Args:
-        renamings:
-            tuple consisting of folder, oldname, newname
-
-        job_interface:
-            only relevant for Setup interaction, allows to update the interface with the current
-            update info
-    """
-
     def update_interface(message: str) -> None:
-        if job_interface is None:
-            return
         job_interface.send_progress_update(message)
 
     actions: list[str] = []

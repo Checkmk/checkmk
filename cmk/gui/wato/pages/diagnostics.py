@@ -668,6 +668,14 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         diagnostics_parameters: DiagnosticsParameters,
         job_interface: BackgroundProcessInterface,
     ) -> None:
+        with job_interface.gui_context():
+            self._do_execute(diagnostics_parameters, job_interface)
+
+    def _do_execute(
+        self,
+        diagnostics_parameters: DiagnosticsParameters,
+        job_interface: BackgroundProcessInterface,
+    ) -> None:
         job_interface.send_progress_update(_("Diagnostics dump started..."))
 
         chunks = serialize_wato_parameters(diagnostics_parameters)

@@ -755,6 +755,14 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
         api_request: CheckmkAutomationRequest,
     ) -> None:
+        with job_interface.gui_context():
+            self._execute_automation(job_interface, api_request)
+
+    def _execute_automation(
+        self,
+        job_interface: BackgroundProcessInterface,
+        api_request: CheckmkAutomationRequest,
+    ) -> None:
         self._logger.info("Starting automation: %s", api_request.command)
         self._logger.debug(api_request)
         cmdline_cmd, serialized_result = check_mk_local_automation_serialized(

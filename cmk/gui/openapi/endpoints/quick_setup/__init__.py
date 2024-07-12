@@ -17,8 +17,6 @@ from cmk.utils.encoding import json_encode
 from cmk.utils.quick_setup.definitions import (
     IncomingStage,
     quick_setup_registry,
-    QuickSetup,
-    QuickSetupNotFoundException,
     QuickSetupOverview,
     QuickSetupSaveRedirect,
     Stage,
@@ -32,7 +30,6 @@ from cmk.gui.openapi.restful_objects.constructors import (
     object_href,
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.quick_setup.aws_stages import aws_quicksetup
 from cmk.gui.quick_setup.to_frontend import (
     complete_quick_setup,
     quick_setup_overview,
@@ -47,10 +44,6 @@ from .response_schemas import (
     QuickSetupSaveResponse,
     QuickSetupStageResponse,
 )
-
-# TODO: CMK-18110: Investigate registration mechanism for Quick setups
-quick_setup_registry.add_quick_setup(aws_quicksetup)
-
 
 QUICKSETUP_ID = {
     "quick_setup_id": fields.String(
@@ -72,10 +65,12 @@ QUICKSETUP_ID = {
 def get_all_stage_overviews_and_first_stage(params: Mapping[str, Any]) -> Response:
     """Get all stages overview together with the first stage components"""
     quick_setup_id = params["quick_setup_id"]
-    try:
-        quick_setup: QuickSetup = quick_setup_registry.get(quick_setup_id)
-    except QuickSetupNotFoundException as exc:
-        return _serve_error(title="Quick setup not found", detail=str(exc))
+    quick_setup = quick_setup_registry.get(quick_setup_id)
+    if quick_setup is None:
+        return _serve_error(
+            title="Quick setup not found",
+            detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
+        )
     return _serve_data(data=quick_setup_overview(quick_setup=quick_setup))
 
 
@@ -90,7 +85,13 @@ def get_all_stage_overviews_and_first_stage(params: Mapping[str, Any]) -> Respon
 def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Response:
     """Validate the current stage and retrieve the next"""
     body = params["body"]
-    quick_setup: QuickSetup = quick_setup_registry.get(body["quick_setup_id"])
+    quick_setup_id = body["quick_setup_id"]
+    quick_setup = quick_setup_registry.get(quick_setup_id)
+    if quick_setup is None:
+        return _serve_error(
+            title="Quick setup not found",
+            detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
+        )
     stages = [
         IncomingStage(stage_id=stage["stage_id"], form_data=stage["form_data"])
         for stage in body["stages"]
@@ -115,7 +116,13 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
 def complete_quick_setup_action(params: Mapping[str, Any]) -> Response:
     """Save the quick setup"""
     body = params["body"]
-    quick_setup: QuickSetup = quick_setup_registry.get(params["quick_setup_id"])
+    quick_setup_id = params["quick_setup_id"]
+    quick_setup = quick_setup_registry.get(quick_setup_id)
+    if quick_setup is None:
+        return _serve_error(
+            title="Quick setup not found",
+            detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
+        )
     return _serve_data(
         data=complete_quick_setup(quick_setup=quick_setup, stages=body["stages"]),
         status_code=201,

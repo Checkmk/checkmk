@@ -13,6 +13,7 @@ from livestatus import MultiSiteConnection
 from cmk.utils import paths
 from cmk.utils.crash_reporting import crash_report_registry
 from cmk.utils.licensing.registry import register_cre_licensing_handler
+from cmk.utils.quick_setup.definitions import quick_setup_registry
 
 import cmk.gui.help
 from cmk.gui import (
@@ -284,7 +285,7 @@ def register() -> None:
     register_sites_options()
     register_row_post_processor(inventory_row_post_processor)
     register_row_post_processor(join_service_row_post_processor)
-    quick_setup_registration.register(main_module_registry)
+    quick_setup_registration.register(main_module_registry, quick_setup_registry)
     background_job_registration.register(page_registry, mode_registry, main_module_registry)
     gui_background_job.register(permission_section_registry, permission_registry)
     graphing.register(page_registry, config_variable_registry, autocompleter_registry)

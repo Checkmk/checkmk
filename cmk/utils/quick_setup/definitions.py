@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Callable, NewType
 
+from cmk.utils.plugin_registry import Registry
 from cmk.utils.quick_setup.widgets import Widget
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -84,19 +85,9 @@ class QuickSetupNotFoundException(MKGeneralException):
     pass
 
 
-class QuickSetupRegistry:
-    def __init__(self):
-        self.quick_setups: dict[QuickSetupId, QuickSetup] = {}
-
-    def add_quick_setup(self, quick_setup: QuickSetup) -> None:
-        self.quick_setups[quick_setup.id] = quick_setup
-
-    def get(self, quick_setup_id: QuickSetupId) -> QuickSetup:
-        if quick_setup_id not in self.quick_setups:
-            raise QuickSetupNotFoundException(
-                f"The Quick setup with id '{quick_setup_id}' does not exist."
-            )
-        return self.quick_setups[quick_setup_id]
+class QuickSetupRegistry(Registry[QuickSetup]):
+    def plugin_name(self, instance: QuickSetup) -> str:
+        return str(instance.id)
 
 
 quick_setup_registry = QuickSetupRegistry()

@@ -176,7 +176,7 @@ def save_action(stages: list[IncomingStage]) -> str:
     return "http://save/url"
 
 
-aws_quicksetup = QuickSetup(
+quick_setup_aws = QuickSetup(
     id=QuickSetupId("aws_quick_setup"),
     stages=aws_stages(),
     save_action=save_action,

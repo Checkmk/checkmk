@@ -5,7 +5,6 @@ cc_binary(
     srcs = ["src/unixcat.cc"],
     copts = [
         "-fPIC",
-        "-gdwarf-4",
         "-O3",
     ],
     linkopts = [

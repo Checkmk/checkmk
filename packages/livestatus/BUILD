@@ -13,10 +13,7 @@ cc_library(
         "include/livestatus/POSIXUtils.h",
         "include/livestatus/Poller.h",
     ],
-    copts = [
-        "-gdwarf-4",
-        "-O3",
-    ],
+    copts = ["-O3"],
     includes = ["include"],
     visibility = ["//visibility:public"],
 )
@@ -34,7 +31,6 @@ cc_library(
     hdrs = glob(["include/livestatus/*.h"]),
     copts = [
         "-Iexternal/re2",
-        "-gdwarf-4",
         "-O3",
     ],
     includes = ["include"],
@@ -66,7 +62,6 @@ cc_test(
     srcs = glob(["test/*.cc"]),
     copts = [
         "-Iexternal/re2",
-        "-gdwarf-4",
         "-O3",
     ],
     deps = [

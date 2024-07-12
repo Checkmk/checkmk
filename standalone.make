@@ -31,7 +31,7 @@ else
         CXX := clang++ -std=c++20
 endif
 
-CXXFLAGS    := -gdwarf-4 -O3 -Wall -Wextra
+CXXFLAGS    := -g -O3 -Wall -Wextra
 LDFLAGS     := -static-libstdc++
 
 .PHONY: all clean

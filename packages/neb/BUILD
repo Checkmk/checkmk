@@ -5,7 +5,6 @@ CMK_VERSION = "2.4.0b1"
 
 NEB_COPTS = [
     "-Ipackages/neb/third_party/include/",
-    "-gdwarf-4",
     "-O3",
 ]
 

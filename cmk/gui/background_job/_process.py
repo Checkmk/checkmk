@@ -26,7 +26,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.user import UserId
 
-from cmk.gui import config, log, main_modules
+from cmk.gui import config, log
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext, UserContext
@@ -93,6 +93,10 @@ def run_process(job_parameters: JobParameters) -> None:
 
 def _load_ui() -> None:
     """This triggers loading all modules of the UI, internal ones and plugins"""
+    # Import locally to only have it executed in the background job process and not in the launching
+    # process. Moving it to the module level will significantly slow down the launching process.
+    from cmk.gui import main_modules
+
     main_modules.load_plugins()
     if errors := get_failed_plugins():
         raise Exception(f"The following errors occured during plug-in loading: {errors}")

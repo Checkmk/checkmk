@@ -536,6 +536,9 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
             Version.from_str("2.2.0p8"),  # Here we started to sign agents with SHA256
         ),
     ),
+    _BaseVersion(2, 4, 0): max(
+        (Version.from_str("2.3.0p11"),),  # dcd piggyback config converted to modern format
+    ),
 }
 
 

@@ -19,7 +19,7 @@ from .utils.azure import (
     Section,
 )
 
-DB_POSTGRESQL_RESOURCE_NAME = "Microsoft.DBforPostgreSQL/servers"
+DB_POSTGRESQL_RESOURCE_TYPES = ["Microsoft.DBforPostgreSQL/servers"]
 
 
 register.check_plugin(
@@ -27,7 +27,7 @@ register.check_plugin(
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s Memory",
     discovery_function=create_discover_by_metrics_function(
-        "average_memory_percent", resource_type=DB_POSTGRESQL_RESOURCE_NAME
+        "average_memory_percent", resource_types=DB_POSTGRESQL_RESOURCE_TYPES
     ),
     check_function=check_memory(),
     check_ruleset_name="memory_utilization",
@@ -40,7 +40,7 @@ register.check_plugin(
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s CPU",
     discovery_function=create_discover_by_metrics_function(
-        "average_cpu_percent", resource_type=DB_POSTGRESQL_RESOURCE_NAME
+        "average_cpu_percent", resource_types=DB_POSTGRESQL_RESOURCE_TYPES
     ),
     check_function=check_cpu(),
     check_ruleset_name="cpu_utilization_with_item",
@@ -67,7 +67,7 @@ register.check_plugin(
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s Replication",
     discovery_function=create_discover_by_metrics_function(
-        "maximum_pg_replica_log_delay_in_seconds", resource_type=DB_POSTGRESQL_RESOURCE_NAME
+        "maximum_pg_replica_log_delay_in_seconds", resource_types=DB_POSTGRESQL_RESOURCE_TYPES
     ),
     check_function=check_replication(),
     check_ruleset_name="replication_lag",
@@ -82,7 +82,7 @@ register.check_plugin(
     discovery_function=create_discover_by_metrics_function(
         "average_active_connections",
         "total_connections_failed",
-        resource_type=DB_POSTGRESQL_RESOURCE_NAME,
+        resource_types=DB_POSTGRESQL_RESOURCE_TYPES,
     ),
     check_function=check_connections(),
     check_ruleset_name="database_connections",
@@ -97,7 +97,7 @@ register.check_plugin(
     discovery_function=create_discover_by_metrics_function(
         "total_network_bytes_ingress",
         "total_network_bytes_egress",
-        resource_type=DB_POSTGRESQL_RESOURCE_NAME,
+        resource_types=DB_POSTGRESQL_RESOURCE_TYPES,
     ),
     check_function=check_network(),
     check_ruleset_name="network_io",
@@ -113,7 +113,7 @@ register.check_plugin(
         "average_io_consumption_percent",
         "average_serverlog_storage_percent",
         "average_storage_percent",
-        resource_type=DB_POSTGRESQL_RESOURCE_NAME,
+        resource_types=DB_POSTGRESQL_RESOURCE_TYPES,
     ),
     check_function=check_storage(),
     check_ruleset_name="azure_db_storage",

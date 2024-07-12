@@ -140,7 +140,7 @@ MULTIPLE_RESOURCE_SECTION = {
         group="BurningMan",
         kind=None,
         location="westeurope",
-        tags={"tag1": "value1", "tag2": "value2"},
+        tags={"tag3": "value3", "tag4": "value4"},
         properties={},
         specific_info={},
         metrics={
@@ -259,25 +259,68 @@ def test_parse_resources() -> None:
     assert parse_resources(RESOURCES) == PARSED_RESOURCES
 
 
-def test_create_discover_by_metrics_function() -> None:
+@pytest.mark.parametrize(
+    "resource_types,section,expected_discovery",
+    [
+        pytest.param(
+            None,
+            PARSED_RESOURCES,
+            [Service(item="checkmk-mysql-server")],
+            id="single resource, no resource type",
+        ),
+        pytest.param(
+            None,
+            MULTIPLE_RESOURCE_SECTION,
+            [
+                Service(item="checkmk-mysql-server-1"),
+                Service(item="checkmk-mysql-server-2"),
+            ],
+            id="multiple resources, no resource type",
+        ),
+        pytest.param(
+            ["Microsoft.DBforMySQL/servers"],
+            PARSED_RESOURCES,
+            [Service(item="checkmk-mysql-server")],
+            id="single resource, matching resource type",
+        ),
+    ],
+)
+def test_create_discover_by_metrics_function(
+    resource_types: Sequence[str] | None, section: Section, expected_discovery: DiscoveryResult
+) -> None:
     discovery_func = create_discover_by_metrics_function(
-        "average_storage_percent", "average_active_connections"
+        "average_storage_percent",
+        "average_active_connections",
+        resource_types=resource_types,
     )
-    assert list(discovery_func(PARSED_RESOURCES)) == [Service(item="checkmk-mysql-server")]
+    assert list(discovery_func(section)) == expected_discovery
 
 
 @pytest.mark.parametrize(
-    "section,expected_discovery",
+    "resource_types,section,expected_discovery",
     [
-        pytest.param(PARSED_RESOURCES, [Service()], id="one resource"),
-        pytest.param(MULTIPLE_RESOURCE_SECTION, [], id="multiple resources"),
+        pytest.param(
+            None,
+            PARSED_RESOURCES,
+            [Service()],
+            id="single resource, no resource type",
+        ),
+        pytest.param(
+            ["Microsoft.DBforMySQL/servers"],
+            PARSED_RESOURCES,
+            [Service()],
+            id="single resource, matching resource type",
+        ),
+        pytest.param(None, MULTIPLE_RESOURCE_SECTION, [], id="multiple resources"),
     ],
 )
 def test_create_discover_by_metrics_function_single(
-    section: Section, expected_discovery: DiscoveryResult
+    resource_types: Sequence[str] | None, section: Section, expected_discovery: DiscoveryResult
 ) -> None:
     discovery_func = create_discover_by_metrics_function_single(
-        "average_storage_percent", "average_active_connections"
+        "average_storage_percent",
+        "average_active_connections",
+        resource_types=resource_types,
     )
     assert list(discovery_func(section)) == expected_discovery
 

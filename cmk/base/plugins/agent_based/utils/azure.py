@@ -171,15 +171,15 @@ def parse_resources(string_table: StringTable) -> Mapping[str, Resource]:
 
 def create_discover_by_metrics_function(
     *desired_metrics: str,
-    resource_type: str | None = None,
+    resource_types: Sequence[str] | None = None,
 ) -> Callable[[Section], DiscoveryResult]:
     """Return a discovery function, that will discover if any of the metrics are found"""
 
     def discovery_function(section: Section) -> DiscoveryResult:
         for item, resource in section.items():
-            if (resource_type is None or resource_type == resource.type) and (
-                set(desired_metrics) & set(resource.metrics)
-            ):
+            if (
+                resource_types is None or any(rtype == resource.type for rtype in resource_types)
+            ) and (set(desired_metrics) & set(resource.metrics)):
                 yield Service(item=item)
 
     return discovery_function
@@ -187,7 +187,7 @@ def create_discover_by_metrics_function(
 
 def create_discover_by_metrics_function_single(
     *desired_metrics: str,
-    resource_type: str | None = None,
+    resource_types: Sequence[str] | None = None,
 ) -> Callable[[Section], DiscoveryResult]:
     """
     Return a discovery function, that will discover if any of the metrics are found
@@ -199,7 +199,7 @@ def create_discover_by_metrics_function_single(
             return
 
         resource = list(section.values())[0]
-        if (resource_type is None or resource_type == resource.type) and (
+        if (resource_types is None or any(rtype == resource.type for rtype in resource_types)) and (
             set(desired_metrics) & set(resource.metrics)
         ):
             yield Service()

@@ -181,15 +181,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "fluidflow",
-        "half_value": 0.2,
-        "exponent": 5,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "stacked",
         "perfometers": [
             {

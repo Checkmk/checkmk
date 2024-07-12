@@ -102,10 +102,10 @@ cc_library(
         "src/rrd_version.c",
     ],
     copts = [
-        '-DNUMVERS="' + NUMVERS + '"',
         "-O2",  # maybe O3?
     ],
     linkstatic = True,
+    local_defines = ['NUMVERS="' + NUMVERS + '"'],
     visibility = ["//visibility:public"],
     deps = [
         ":rrdupd",
@@ -174,12 +174,12 @@ cc_binary(
     copts = [
         "-Wno-format-truncation",
         "-I/usr/include/glib-2.0/",
-        "-DLOCALSTATEDIR=",
         "-O2",
     ],
     linkopts = [
         "-lglib-2.0",
     ],
+    local_defines = ["LOCALSTATEDIR="],
     visibility = ["//visibility:public"],
     deps = [
         ":rrd",

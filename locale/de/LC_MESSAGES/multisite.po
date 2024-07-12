@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-07-10 09:57+0000\n"
+"PO-Revision-Date: 2024-07-12 09:57+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -1673,22 +1673,22 @@ msgid ""
 msgstr ""
 "<p>Der Checkmk Micro Core nutzt Checkmk Checker-Prozesse um die von Checkmk "
 "überwachten Checkmk- und Checkmk-Discovery-Services der überwachten Hosts "
-"auszuführen. Es sollten immer genügend Hilfsprozesse vorhanden sein um die "
+"auszuführen. Es sollten immer genügend Helper-Prozesse vorhanden sein um die "
 "konfigurierten Checks zu bearbeiten.</p><p>Wenn der Checker-Helper-Pool zu "
 "100 % ausgelastet ist, werden die Checks nicht rechtzeitig ausgeführt, die "
 "Latenzzeit für die Checks steigt und die Zustände sind nicht mehr aktuell.</"
 "p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-Timeouts "
-"verringen können</li><li>Prüfen Sie, welche Checks/Plugins <a href=\"view.py?"
-"view_name=service_check_durations\">viel Zeit der Hilfsprozesse verbrauchen</"
-"a></li><li>Erhöhen Sie die <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk Checker-"
-"Prozesse</a></li></ul></p><p>Achten Sie bei der Konfiguration der Anzahl der "
-"Checkmk Checker-Prozesse darauf, nicht zu viele Prozesse zu konfigurieren, "
-"da diese relativ viel Arbeitsspeicher benötigen. Ihr System muss in der Lage "
-"sein den Speicherbedarf zu decken. Ein weiteres Problem ist, dass die "
-"Checker-Prozesse beim Start des Micro Cores gleichzeitig initialisiert "
-"werden, was zu Lastspitzen bzw. einer längeren Initialisierungsphase führen "
-"kann.</p>"
+"verringen können</li><li>Prüfen Sie, welche Checks/Plugins <a href=\"view."
+"py?view_name=service_check_durations\">viel Zeit der Helper-Prozesse "
+"verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato."
+"py?mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk "
+"Checker-Prozesse</a></li></ul></p><p>Sie müssen jedoch darauf achten, dass "
+"Sie nicht zu viele Checkmk-Checker-Helper konfigurieren, da diese sehr viel "
+"Speicher verbrauchen. Ihr System muss in der Lage sein, den Speicherbedarf "
+"für alle auf einmal zu bewältigen. Ein weiteres Problem besteht darin, dass "
+"die Checkmk-Helper beim Start des Micro Core parallel initialisiert werden, "
+"was zu Lastspitzen führen kann, wenn viele Checkmk-Helper-Prozesse "
+"konfiguriert sind.</p>"
 
 #, no-python-format
 msgid ""
@@ -1708,24 +1708,22 @@ msgid ""
 "parallel during startup of the Micro Core, which may cause load peaks when "
 "having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
-"<p>Der Checkmk Micro Core nutzt Checkmk Checker-Prozesse um die von Checkmk "
-"überwachten Checkmk- und Checkmk-Discovery-Services der überwachten Hosts "
-"auszuführen. Es sollten immer genügend Hilfsprozesse vorhanden sein um die "
-"konfigurierten Checks zu bearbeiten.</p><p>Wenn der Checker-Helper-Pool zu "
-"100 % ausgelastet ist, werden die Checks nicht rechtzeitig ausgeführt, die "
-"Latenzzeit für die Checks steigt und die Zustände sind nicht mehr aktuell.</"
-"p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-Timeouts "
-"verringern können</li><li>Prüfen Sie, welche Checks/Plugins <a href=\"view."
-"py?view_name=service_check_durations\">viel Zeit der Hilfsprozesse "
-"verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk Checker-"
-"Prozesse</a></li></ul></p><p>Achten Sie bei der Konfiguration der Anzahl der "
-"Checkmk Checker-Prozesse darauf, nicht zu viele Prozesse zu konfigurieren, "
-"da diese relativ viel Arbeitsspeicher benötigen. Ihr System muss in der Lage "
-"sein den Speicherbedarf zu decken. Ein weiteres Problem ist, dass die "
-"Checker-Prozesse beim Start des Micro Cores gleichzeitig initialisiert "
-"werden, was zu Lastspitzen bzw. einer längeren Initialisierungsphase führen "
-"kann.</p>"
+"<p>Der Checkmk Micro Core verwendet Checkmk-Fetcher-Prozesse, um Daten über "
+"die Checkmk- und Checkmk-Discovery-Dienste der mit Checkmk überwachten Hosts "
+"zu erhalten. Es sollten immer genügend Fetcher-Prozesse vorhanden sein, um "
+"die konfigurierten Checks zu bearbeiten.</p><p>Wenn der Fetcher-Helper-Pool "
+"zu 100 % ausgelastet ist, werden die Checks nicht rechtzeitig ausgeführt, "
+"die Latenzzeit für die Checks steigt und die Zustände sind nicht mehr "
+"aktuell.</p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-"
+"Timeouts verringern können</li><li>Prüfen Sie, welche Checks/Plugins <a href="
+"\"view.py?view_name=service_check_durations\">viel Zeit der Helper-Prozesse "
+"verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato."
+"py?mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk "
+"Fetcher</a></li></ul></p><p>Sie müssen jedoch darauf achten, dass Sie nicht "
+"zu viele Checkmk-Fetcher-Helper konfigurieren, da diese Ressourcen "
+"verbrauchen. Ein zusätzliches Problem ist, dass die Checkmk-Fetcher beim "
+"Start des Micro Core parallel initialisiert werden, was zu Lastspitzen "
+"führen kann, wenn viele Checkmk-Helper-Prozesse konfiguriert sind.</p>"
 
 #, no-python-format
 msgid ""
@@ -1746,24 +1744,24 @@ msgid ""
 "parallel during startup of the Micro Core, which may cause load peaks when "
 "having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
-"<p>Der Checkmk Micro Core nutzt Checkmk Checker-Prozesse um die von Checkmk "
-"überwachten Checkmk- und Checkmk-Discovery-Services der überwachten Hosts "
-"auszuführen. Es sollten immer genügend Hilfsprozesse vorhanden sein um die "
-"konfigurierten Checks zu bearbeiten.</p><p>Wenn der Checker-Helper-Pool zu "
-"100 % ausgelastet ist, werden die Checks nicht rechtzeitig ausgeführt, die "
+"<p>Der Checkmk Micro Core verwendet Checkmk-Helper-Prozesse, um die Checkmk- "
+"und Checkmk-Discovery-Dienste der mit Checkmk überwachten Hosts auszuführen. "
+"Es sollten immer genügend Helper-Prozesse vorhanden sein, um die "
+"konfigurierten Checks zu bearbeiten.</p><p>Wenn der Helper-Pool zu 100 % "
+"ausgelastet ist, werden die Checks nicht rechtzeitig ausgeführt, die "
 "Latenzzeit für die Checks steigt und die Zustände sind nicht mehr aktuell.</"
 "p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-Timeouts "
-"verringen können</li><li>Prüfen Sie, welche Checks/Plugins <a href=\"view.py?"
-"view_name=service_check_durations\">viel Zeit der Hilfsprozesse verbrauchen</"
-"a></li><li>Erhöhen Sie die <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk Checker-"
-"Prozesse</a></li></ul></p><p>Achten Sie bei der Konfiguration der Anzahl der "
-"Checkmk Checker-Prozesse darauf, nicht zu viele Prozesse zu konfigurieren, "
-"da diese relativ viel Arbeitsspeicher benötigen. Ihr System muss in der Lage "
-"sein, den Speicherbedarf zu decken. Ein weiteres Problem ist, dass die "
-"Checker-Prozesse beim Start des Micro Cores gleichzeitig initialisiert "
-"werden, was zu Lastspitzen bzw. einer längeren Initialisierungsphase führen "
-"kann.</p>"
+"verringen können</li><li>Prüfen Sie, welche Checks/Plugins <a href=\"view."
+"py?view_name=service_check_durations\">viel Zeit der Helper-Prozesse "
+"verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato."
+"py?mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk "
+"Helper</a></li></ul></p><p>Sie müssen jedoch darauf achten, dass Sie nicht "
+"zu viele Checkmk-Check-Helper konfigurieren, da diese viel Speicher "
+"verbrauchen. Ihr System muss in der Lage sein, den Speicherbedarf für alle "
+"auf einmal zu bewältigen. Ein weiteres Problem besteht darin, dass die "
+"Checkmk-Helper beim Start des Micro Core parallel initialisiert werden, was "
+"zu Lastspitzen führen kann, wenn viele Checkmk-Helper-Prozesse konfiguriert "
+"sind.</p>"
 
 #, no-python-format
 msgid ""
@@ -1779,18 +1777,17 @@ msgid ""
 "mode=edit_configvar&varname=cmc_check_helpers\">number of check helpers</a></"
 "li></ul></p>"
 msgstr ""
-"<p>Der Checkmk Micro Core nutzt Hilfsprozesse zur Ausführung von aktiven "
-"Checks (z.B. check_http, check_...). Es sollten immer genügend Hilfsprozesse "
-"vorhanden sein um die konfigurierten Checks zu bearbeiten.</p><p>Wenn die "
-"Hilfsprozesse zu 100% ausgelastet sind, werden die konfigurierten Checks "
-"nicht rechtzeitig ausgeführt. Infolge dessen steigt die Latenz der Checks "
-"und die Check-Ergebnisse sind nicht aktuelle.</p><p>Mögliche Aktionen:"
-"<ul><li>Prüfen Sie, ob Sie die Check-Timeouts verringen können</"
-"li><li>Prüfen Sie, welche Checks/Plugins <a href=\"view.py?"
-"view_name=service_check_durations\">viel Zeit der Hilfsprozesse verbrauchen</"
-"a></li><li>Erhöhen Sie die <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_check_helpers\">Anzahl der Hilfsprozesse</"
-"a></li></ul></p>"
+"<p>Der Checkmk Micro Core verwendet generische Check-Helper-Prozesse, um die "
+"auf aktiven Checks basierenden Services (z.B. check_http, check_...) "
+"auszuführen. Es sollten immer genügend Helper-Prozesse vorhanden sein, um "
+"die konfigurierten Prüfungen zu verarbeiten.</p><p>Wenn der Helper-Pool zu "
+"100% ausgelastet ist, wird die Latenzzeit für die Checks größer und die "
+"Zustände sind nicht mehr aktuell.</p><p>Mögliche Aktionen:<ul><li>Prüfen "
+"Sie, ob Sie die Check-Timeouts verringen können</li><li>Prüfen Sie, welche "
+"Checks/Plugins <a href=\"view.py?view_name=service_check_durations\">viel "
+"Zeit der Helper-Prozesse verbrauchen</a></li><li>Erhöhen Sie die <a href="
+"\"wato.py?mode=edit_configvar&varname=cmc_check_helpers\">Anzahl der Check-"
+"Helper</a></li></ul></p>"
 
 #, python-format
 msgid ""
@@ -9406,10 +9403,10 @@ msgid "CMC status"
 msgstr "CMC-Status"
 
 msgid "CMK helper"
-msgstr "CMK-Hilfsprozesse"
+msgstr "CMK-Helper"
 
 msgid "CMK helper usage"
-msgstr "CMK Helper Verbrauch"
+msgstr "CMK-Helper-Verbrauch"
 
 msgid "CPG member name"
 msgstr "CPG Mitglieds Name"
@@ -10649,7 +10646,7 @@ msgstr ""
 "gelöscht, wenn die Datei nicht von diesem aktiven Check erstellt wurde."
 
 msgid "Check helper usage"
-msgstr "Belegung Check-Hilfsprozesse"
+msgstr "Auslastung Check-Helper"
 
 msgid "Check hosts with PING (ICMP Echo Request)"
 msgstr "Hosts mit PING überwachen (ICMP Echo Request)"
@@ -10718,9 +10715,9 @@ msgstr "Übereinstimmende Check-Plugins"
 msgid "Check result did not arrive in time"
 msgstr "Checkergebnis ist nicht rechtzeitig eingetroffen"
 
-#, fuzzy
 msgid "Check result if the host or VM is in stand by"
-msgstr "Status, wenn der Host oder die VM angehalten ist"
+msgstr ""
+"Check-Ergebnis, wenn sich der Host oder die VM im Standby-Modus befindet"
 
 msgid "Check result if the host or VM is powered off"
 msgstr "Status, wenn der Host oder die VM ausgeschaltet ist"
@@ -10827,10 +10824,10 @@ msgid "Checked"
 msgstr "Geprüft"
 
 msgid "Checker helper"
-msgstr "Checker-Hilfsprozesse"
+msgstr "Checker-Helper"
 
 msgid "Checker helper usage"
-msgstr "Belegung Checker-Hilfsprozesse"
+msgstr "Auslastung Checker Helper"
 
 msgid "Checking of Datadog monitors"
 msgstr "Check der Monitore von Datadog"
@@ -10858,7 +10855,7 @@ msgid ""
 "(Agent plug-in mk_inventory needs to be installed)"
 msgstr ""
 "Checkmk Agent, Anzahl, Version und Edition der Instanzen, Cluster-Host; "
-"Anzahl der Hosts, Dienste, CMK Helper, Live Helper, Helper-Verwendung; "
+"Anzahl der Hosts, Dienste, CMK-Helper, Live-Helper, Helper-Auslastung; "
 "Status der Daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (Agentenplugin mk_inventory muss installiert sein)"
 
@@ -10948,7 +10945,7 @@ msgstr ""
 "werden."
 
 msgid "Checkmk check helpers"
-msgstr "Checkmk-Check-Hilfsprozesse"
+msgstr "Checkmk-Check-Helper"
 
 msgid "Checkmk checker count"
 msgstr "Checkmk Checker Anzahl"
@@ -11010,7 +11007,7 @@ msgstr ""
 "diese Hosts zu deaktivieren."
 
 msgid "Checkmk helper usage"
-msgstr "Checkmk Hilfsprozess Auslastung"
+msgstr "Auslastung Checkmk-Helper"
 
 msgid "Checkmk partner or reseller"
 msgstr "Checkmk-Partner und -Reseller"
@@ -15652,7 +15649,7 @@ msgid "Debugging (log every single action)"
 msgstr "Debugging (jede Aktion loggen)"
 
 msgid "Debugging of Checkmk helpers"
-msgstr "Debugging von Checkmk-Hilfsprozessen"
+msgstr "Debugging von Checkmk-Helper"
 
 msgid "December"
 msgstr "Dezember"
@@ -22073,10 +22070,10 @@ msgid "Fetch zero length"
 msgstr "Anfrage mit Länge 0"
 
 msgid "Fetcher helper"
-msgstr "Fetcher-Helfer"
+msgstr "Fetcher-Helper"
 
 msgid "Fetcher helper usage"
-msgstr "Verwendung der Fetcher-Helfer"
+msgstr "Auslastung der Fetcher-Helper"
 
 msgid "Fetches"
 msgstr "Abfragen"
@@ -24617,7 +24614,7 @@ msgid "Help text"
 msgstr "Hilfe-Text"
 
 msgid "Helper usage"
-msgstr "Helper-Verbrauch"
+msgstr "Helper-Auslastung"
 
 msgid "Helvetica"
 msgstr "Helvetica"
@@ -25366,7 +25363,7 @@ msgstr ""
 
 msgid "Here you can specify debugging options of the Checkmk check helpers."
 msgstr ""
-"Hier können Sie Optionen zum Debugging der Checkmk-Hilfsprozesse einstellen."
+"Hier können Sie Optionen zum Debugging der Checkmk-Check-Helpers einstellen."
 
 msgid ""
 "Here you can specify exceptional time ranges for certain dates in the form "
@@ -26846,13 +26843,13 @@ msgid "INotify Operation"
 msgstr "INotify Operation"
 
 msgid "IO Bandwith"
-msgstr "IO Bandbreite"
+msgstr "E/A-Bandbreite"
 
 msgid "IO Groups"
-msgstr "IO-Gruppen"
+msgstr "E/A-Gruppen"
 
 msgid "IO latency"
-msgstr "IO-Latenz"
+msgstr "E/A-Latenz"
 
 msgid "IOPS"
 msgstr "IOPS"
@@ -28665,7 +28662,6 @@ msgstr ""
 "Wenn Sie Checkmk weiterhin nutzen möchten, erwerben Sie bitte eine Lizenz, "
 "die %s unterstützt oder kontaktieren Sie das Checkmk-Verkaufsteam unter %s."
 
-#, fuzzy
 msgid ""
 "If you want to run your own custom agent plug-ins on Windows, simply put "
 "them into the subdirectory <tt>plugins</tt> of your agent's installation "
@@ -28679,7 +28675,7 @@ msgid ""
 "in lower case and without a leading dot."
 msgstr ""
 "Wenn Sie Ihre eigenen Agenten-Plugins unter Windows ausführen wollen, "
-"schieben Sie sie einfach in den Unterordner <tt>plugins</tt> des "
+"schieben Sie diese einfach in den Unterordner <tt>plugins</tt> des "
 "Installationsverzeichnisses Ihres Agenten. <i>Lokale Checks</i> "
 "funktionieren genauso, werden aber in <tt>local</tt> installiert. Von der "
 "Agentenbäckerei verteilte Plugins werden vom MSI-Installer in dasselbe "
@@ -29328,7 +29324,6 @@ msgstr ""
 "diese Zahl auf 0 setzen, werden die Zeilen aus bis zu einer Logdatei "
 "zeitweise im Speicher gehalten."
 
-#, fuzzy
 msgid ""
 "In previous Checkmk versions it was possible to use an automation user to "
 "display specific pages within Checkmk. To authenticate these requests it was "
@@ -29568,9 +29563,8 @@ msgstr "Verworfene eingehende Anfragen"
 msgid "Incoming Responses Dropped"
 msgstr "Verworfene eingehende Antworten"
 
-#, fuzzy
 msgid "Incoming cache request hit"
-msgstr "Verworfene eingehende Anfragen"
+msgstr "Treffer bei eingehender Cache-Anfrage"
 
 #, python-format
 msgid "Incoming connections on port %s communicate via plain text"
@@ -29596,10 +29590,10 @@ msgid "Incoming packets minimum"
 msgstr "Minimum für eingehende Pakete"
 
 msgid "Incoming traffic maximum"
-msgstr ""
+msgstr "Maximaler eingehender Verkehr"
 
 msgid "Incoming traffic minimum"
-msgstr ""
+msgstr "Minimaler eingehender Verkehr"
 
 msgid "Incompatible"
 msgstr "Inkompatibel"
@@ -31045,7 +31039,6 @@ msgstr "Job-Status"
 msgid "Jobs"
 msgstr "Jobs"
 
-#, fuzzy
 msgid "Join Launcher service failures"
 msgstr "Fehler des \"Join Launcher\" Service"
 
@@ -31443,7 +31436,6 @@ msgstr "LVM, Logical Volume Groups (Linux)"
 msgid "Label"
 msgstr "Label"
 
-#, fuzzy
 msgid "Labelling options"
 msgstr "Beschriftungsoptionen"
 
@@ -31505,7 +31497,6 @@ msgstr "Größte Dateigröße an"
 msgid "Largest file size below"
 msgstr "Größte Dateigröße unter"
 
-#, fuzzy
 msgid "Largest free VMalloc chunk"
 msgstr "Größter freier VMalloc-Bereich"
 
@@ -31573,7 +31564,6 @@ msgstr "Letztes Backup"
 msgid "Last bake result"
 msgstr "Letztes Back-Ergebnis"
 
-#, fuzzy
 msgid "Last change"
 msgstr "Letzte Änderung"
 
@@ -31662,7 +31652,6 @@ msgstr "Letzte erfolgreiche Verifizierung"
 msgid "Last synchronization result"
 msgstr "Letztes Synchronisationsergebnis"
 
-#, fuzzy
 msgid "Last time the service was OK"
 msgstr "Letzter Zeitpunkt, zu dem der Service OK war"
 
@@ -31722,9 +31711,8 @@ msgstr "Letzte RTT-Ausführungszeit"
 msgid "Latest RTT state"
 msgstr "Letzter RTT-Status"
 
-#, fuzzy
 msgid "Latest service pack"
-msgstr "Letztes Service-Pack"
+msgstr "Letztes Service-Paket"
 
 msgid "Layout"
 msgstr "Layout"
@@ -31735,16 +31723,15 @@ msgstr "Layout-Konfiguration"
 msgid "Layout options"
 msgstr "Layout Optionen"
 
-#, fuzzy
 msgid ""
 "Learn how to setup a REST endpoint <a href=\"https://help.victorops.com/"
 "knowledge-base/victorops-restendpoint-integration/\" target=\"_blank\">here</"
 "a><br />This URL can also be collected from the password store from Checkmk."
 msgstr ""
-"Erfahren Sie <a href=\"https://help.victorops.com/knowledge-base/victorops-"
-"restendpoint-integration/\" target=\"_blank\">hier</a><br />, wie Sie einen "
-"REST-Endpunkt einrichten. Diese URL kann auch über den Passwortspeicher von "
-"Checkmk abgefragt werden."
+"Erfahren Sie <a href=\"https://help.victorops.com/knowledge-base/"
+"victorops-restendpoint-integration/\" target=\"_blank\">hier</a><br />, wie "
+"Sie einen REST-Endpunkt einrichten. Diese URL kann auch über den "
+"Passwortspeicher von Checkmk abgefragt werden."
 
 msgid "Learning Checkmk"
 msgstr "Checkmk kennenlernen"
@@ -31881,9 +31868,8 @@ msgstr "Level für die CPU-Auslastung"
 msgid "Levels for Cisco CPU memory"
 msgstr "Level für Cisco CPU Speicher"
 
-#, fuzzy
 msgid "Levels for DB time"
-msgstr "Level für DB Zeit"
+msgstr "Level für DB-Zeit"
 
 msgid "Levels for Data"
 msgstr "Level für Daten"
@@ -31909,13 +31895,11 @@ msgstr "Level für die IO-Latenz."
 msgid "Levels for IO operations per second."
 msgstr "Level für die IO-Operationen pro Sekunde."
 
-#, fuzzy
 msgid "Levels for IO stats bytes"
-msgstr "Level für IO-Stats in Bytes"
+msgstr "Level für E/A-Status in Bytes"
 
-#, fuzzy
 msgid "Levels for IO stats requests"
-msgstr "Level für E/A-Stats-Anfragen"
+msgstr "Level für E/A-Status-Anfragen"
 
 msgid "Levels for IO traffic per second."
 msgstr "Level für den IO-Verkehr pro Sekunde."
@@ -32058,7 +32042,6 @@ msgstr "Level für ausstehende optionale Updates"
 msgid "Levels for power state count"
 msgstr "Level für die Anzahl von Stromzuständen"
 
-#, fuzzy
 msgid "Levels for power supply wattage"
 msgstr "Level für die Wattleistung des Netzteils"
 
@@ -32117,9 +32100,8 @@ msgstr "Level für die Socket-Nutzung"
 msgid "Levels for swap usage"
 msgstr "Level für die Swap-Nutzung"
 
-#, fuzzy
 msgid "Levels for system wait"
-msgstr "Level für Systemwartezeiten"
+msgstr "Level für System Wait"
 
 #, python-format
 msgid "Levels for the %s %s size"
@@ -32226,25 +32208,20 @@ msgstr "Level für Wartezeiten"
 msgid "Levels health"
 msgstr "Level Gesundheit"
 
-#, fuzzy
 msgid "Levels helper usage Checkmk"
-msgstr "Level der Hilfsprozessauslastung Checkmk"
+msgstr "Level der Helper-Auslastung Checkmk"
 
-#, fuzzy
 msgid "Levels helper usage check"
-msgstr "Level der Hilfsprozessauslastung Checker"
+msgstr "Level der Helper-Auslastung Check"
 
-#, fuzzy
 msgid "Levels helper usage checker"
-msgstr "Level der Hilfsprozessauslastung Checker"
+msgstr "Level der Helper-Auslastung Checker"
 
-#, fuzzy
 msgid "Levels helper usage fetcher"
-msgstr "Level der Hilfsprozessauslastung Fetcher"
+msgstr "Level der Helper-Auslastung Fetcher"
 
-#, fuzzy
 msgid "Levels hosts"
-msgstr "Level Hosts"
+msgstr "Levels Hosts"
 
 msgid "Levels in percentage of total RAM"
 msgstr "Level in Prozent des gesamten RAM"
@@ -32255,9 +32232,8 @@ msgstr "Level in Prozent der gesamten Speicherauslastung"
 msgid "Levels instance"
 msgstr "Level für Instanzen"
 
-#, fuzzy
 msgid "Levels latency check"
-msgstr "Level Checklatenz"
+msgstr "Levels Checklatenz"
 
 msgid "Levels latency checker"
 msgstr "Level Latenz Checker"
@@ -32733,7 +32709,7 @@ msgid "Link State: ERROR_STATE"
 msgstr "Link Status: ERROR_STATE"
 
 msgid "Link State: FWDEAD"
-msgstr "Link Status: FWDEAD"
+msgstr "Link-Status: FWDEAD"
 
 msgid "Link State: IDLE_FOR_RESET"
 msgstr "Link Status: IDLE_FOR_RESET"
@@ -32754,7 +32730,7 @@ msgid "Link State: PENDING_RESET"
 msgstr "Link Status: PENDING_RESET"
 
 msgid "Link State: READY"
-msgstr "Link Status: READY"
+msgstr "Link-Status: READY"
 
 msgid "Link State: XXX"
 msgstr "Link Status: XXX"
@@ -32988,10 +32964,10 @@ msgid "Liters per second"
 msgstr "Liter pro Sekunde"
 
 msgid "Live helper"
-msgstr "Live-Helfer"
+msgstr "Live-Helper"
 
 msgid "Live helper usage"
-msgstr "Aktuelle Helper-Nutzung"
+msgstr "Aktuelle Helper-Auslastung"
 
 msgid "Live monitor of the overall performance of all monitoring servers"
 msgstr "Gesamtleistung aller Monitoring-Server live beobachten"
@@ -33087,7 +33063,6 @@ msgstr "Fehlerindex für Leseaufrufe"
 msgid "Load as new page (hide sidebar)"
 msgstr "Als neue Seite laden (Seitenleiste verbergen)"
 
-#, fuzzy
 msgid "Load balancer"
 msgstr "Load Balancer"
 
@@ -33327,7 +33302,6 @@ msgstr "Sperrungen"
 msgid "Locks/Batch"
 msgstr "Locks/Batch"
 
-#, fuzzy
 msgid "Locks/batch"
 msgstr "Locks/Batch"
 
@@ -33833,7 +33807,6 @@ msgstr "Untergrenzen für SMS-Ausgaben"
 msgid "Lower levels for SMS Success Rate"
 msgstr "Untergrenzen für SMS-Erfolgsrate"
 
-#, fuzzy
 msgid "Lower levels for Voltage"
 msgstr "Untergrenzen für Spannung"
 
@@ -34467,7 +34440,6 @@ msgstr "Autoregistrierung der Controller verwalten"
 msgid "Manage users of the monitoring system."
 msgstr "Benutzer des Monitoring-Systems verwalten."
 
-#, fuzzy
 msgid "Managed objects"
 msgstr "Verwaltete Objekte"
 
@@ -34909,9 +34881,8 @@ msgstr "Matrix"
 msgid "Matrix layout"
 msgstr "Matrixlayout"
 
-#, fuzzy
 msgid "Matrix of performance data"
-msgstr "Matrix von Metriken"
+msgstr "Matrix der Leistungsdaten"
 
 msgid "Max Cache Age"
 msgstr "Maximales Cachealter"
@@ -34925,18 +34896,15 @@ msgstr "Höchstalter des ältesten Snapshot"
 msgid "Max allowed connections"
 msgstr "Maximal erlaubte Anzahl an Verbindungen"
 
-#, fuzzy
 msgid "Max cache age (interval)"
 msgstr "Maximales Cache-Alter (Intervall)"
 
-#, fuzzy
 msgid "Max depth"
 msgstr "maximale Tiefe"
 
 msgid "Max file descriptors"
 msgstr "Maximale Dateideskriptoren"
 
-#, fuzzy
 msgid "Max length"
 msgstr "maximale Länge"
 
@@ -35088,7 +35056,6 @@ msgstr "Maximal zulässiges Alter der gemeldeten Daten in Sekunden"
 msgid "Maximum age"
 msgstr "Maximales Alter"
 
-#, fuzzy
 msgid "Maximum age for RMAN backups"
 msgstr "Maximales Alter für RMAN-Backups"
 
@@ -35137,7 +35104,6 @@ msgstr "Das maximale Cache-Alter muss größer als der Zeitraum sein."
 msgid "Maximum cache file age for clusters"
 msgstr "Maximales Cache-Dateialter für Cluster"
 
-#, fuzzy
 msgid "Maximum capacity"
 msgstr "Maximalkapazität"
 
@@ -35197,20 +35163,17 @@ msgstr "Maximale Latenzzeit für erfolgreiche PutItem-Anfragen"
 msgid "Maximum latency of successful query requests"
 msgstr "Maximale Latenzzeit erfolgreicher Query-Anfragen"
 
-#, fuzzy
 msgid "Maximum levels for Voltage"
 msgstr "Obergrenzen für die Spannung"
 
-#, fuzzy
 msgid "Maximum levels for load in percent"
 msgstr "Obergrenzen für die Last in Prozent"
 
 msgid "Maximum levels if using magic factor"
 msgstr "Maximale Level bei Verwendung von Magic Factor"
 
-#, fuzzy
 msgid "Maximum livestatus response size"
-msgstr "Maximale Sechseckgröße"
+msgstr "Maximale Livestatus-Antwortgröße"
 
 msgid "Maximum log age"
 msgstr "Maximales Logalter"
@@ -35264,9 +35227,8 @@ msgstr "Maximale Anzahl von Verbindungen oder Listeners"
 msgid "Maximum number of delivery attempts"
 msgstr "Maximale Anzahl Zustellungsversuche"
 
-#, fuzzy
 msgid "Maximum number of emails in queue"
-msgstr "Maximale anzahl von Emails in der Schlange"
+msgstr "Maximale Anzahl von Emails in der Warteschlange"
 
 msgid "Maximum number of executions"
 msgstr "Maximale Anzahl an Ausführungen"
@@ -35281,9 +35243,8 @@ msgstr "Maximale Anzahl von Meldungen"
 msgid "Maximum number of nodes exceeded %d/%d"
 msgstr "Maximale Anzahl von Knoten überschritten %d/%d"
 
-#, fuzzy
 msgid "Maximum number of open file descriptors"
-msgstr "Erwartete Anzahl Open File Descriptors"
+msgstr "Maximale Anzahl an Open File-Deskriptoren"
 
 msgid "Maximum number of parsed lines per log file"
 msgstr "Maximale Anzahl Zeilen, die pro Datei gelesen werden"
@@ -35353,7 +35314,6 @@ msgstr "Maximale Laufzeit der letzten Ausführung"
 msgid "Maximum session duration"
 msgstr "Maximale Sitzungsdauer"
 
-#, fuzzy
 msgid ""
 "Maximum session duration almost reached. Re-authenticate session to prevent "
 "data loss."
@@ -35370,7 +35330,6 @@ msgstr "Maximale Größe"
 msgid "Maximum size of all files on backup space"
 msgstr "Maximale Größe aller Dateien am Sicherungsspeicherplatz"
 
-#, fuzzy
 msgid "Maximum speed"
 msgstr "Maximale Geschwindigkeit"
 
@@ -35380,23 +35339,20 @@ msgstr "Maximale Dauer der Zwischenspeicherung"
 msgid "Maximum spool size"
 msgstr "Maximale Größe des Zwischenspeichers"
 
-#, fuzzy
 msgid "Maximum test runtime"
 msgstr "Maximale Testlaufzeit"
 
 msgid "Maximum time since last start of job execution"
 msgstr "Maximale Zeit seit der letzten Ausführung des Jobs"
 
-#, fuzzy
 msgid "Maximum uptime of the device"
 msgstr "Maximale Laufzeit des Geräts"
 
 msgid "Maximum used parallel connections"
 msgstr "Maximale Anzahl genutzter paralleler Verbindungen"
 
-#, fuzzy
 msgid "Maximum virtual memory available"
-msgstr "Freier virtueller Speicher (gemittelt)"
+msgstr "Maximal verfügbarer virtueller Speicher"
 
 msgid "Maximum wait time of all tasks in queue"
 msgstr "Maximale Wartezeit für alle Tasks in der Warteschlange"
@@ -35499,7 +35455,6 @@ msgstr "Medien- und Datenintegritätsfehler"
 msgid "Median %s"
 msgstr "%s Median"
 
-#, fuzzy
 msgid "Mediation Server - Media connectivity check failure"
 msgstr "Mediation Server - Fehler der Medienverbindungsprüfung"
 
@@ -35515,7 +35470,6 @@ msgstr ""
 "Mediation Server - Fehlgeschlagene Anrufe durch unerwarteter Interaktion des "
 "Proxy"
 
-#, fuzzy
 msgid "MediationServer - Load call failure index"
 msgstr "Mediation Server - Fehlerindex für Leseaufrufe"
 
@@ -35585,13 +35539,11 @@ msgstr "Speicher/CPU-Prozesse auf Windows"
 msgid "Memory and Pagefile"
 msgstr "Hauptspeicher und Auslagerungsdatei"
 
-#, fuzzy
 msgid "Memory and swap usage on Arbor devices"
-msgstr "Hauptspeicher und Swap-Auslastung von Arbor-Geräten"
+msgstr "Speicher- und Swap-Auslastung von Arbor-Geräten"
 
-#, fuzzy
 msgid "Memory and swap usage on Linux"
-msgstr "Hauptspeicher und Swap-Auslastung bei Linux"
+msgstr "Speicher- und Swap-Auslastung bei Linux"
 
 msgid "Memory committing"
 msgstr "Speicherübertragung"
@@ -35616,11 +35568,9 @@ msgstr ""
 "Speicher-Level für einfache Geräte, auf denen keine komplexeren "
 "Betriebssysteme laufen"
 
-#, fuzzy
 msgid "Memory pages"
 msgstr "Speicherseiten"
 
-#, fuzzy
 msgid "Memory pages statistics"
 msgstr "Speicherseitenstatistik"
 
@@ -35945,9 +35895,8 @@ msgstr "Benutzer auf eine andere Verbindung migrieren"
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "%d %s auf Connector '%s': %s migriert"
 
-#, fuzzy
 msgid "Migrated Parents"
-msgstr "Benutzer migrieren"
+msgstr "Parents migrieren"
 
 msgid "Migrating"
 msgstr "Migration"
@@ -36017,13 +35966,11 @@ msgstr "Minimale Verbindungen pro Sekunde"
 msgid "Minimum error count"
 msgstr "Minimale Fehleranzahl"
 
-#, fuzzy
 msgid "Minimum levels for Voltage"
-msgstr "Untergrenze für die Spannung"
+msgstr "Untergrenzen für die Spannung"
 
-#, fuzzy
 msgid "Minimum levels for load in percent"
-msgstr "Untergrenze für die Last in Prozent"
+msgstr "Untergrenzen für die Last in Prozent"
 
 msgid "Minimum levels if using magic factor"
 msgstr "Minimale Level bei Verwendung von Magic Factor"
@@ -36176,7 +36123,6 @@ msgstr "Fehlender oder ungültiger Modus. Erlaubt sind 'agent' und 'status'"
 msgid "Missing parameter \"%s\"."
 msgstr "Der Parameter \"%s\" fehlt."
 
-#, fuzzy
 msgid "Missing prerequisite"
 msgstr "Fehlende Voraussetzung"
 
@@ -40323,7 +40269,7 @@ msgid ""
 "start and end time (flexible)"
 msgstr ""
 "Wartungszeit nur starten, wenn der Host/Service zwischen der definierten "
-"Start- und Endezeit auf DOWN/UNREACH geht (flexibel)"
+"Start- und Endzeit auf DOWN/UNREACH geht (flexibel)"
 
 #, python-format
 msgid "Only str and unicode values are allowed, got %s"
@@ -42317,11 +42263,10 @@ msgstr "Metriken für einzelne Protokolle"
 msgid "Performance data for queue length"
 msgstr "Leistungsdaten für Wartenschlangen-Länge"
 
-#, fuzzy
 msgid ""
 "Performance data related to sizing, e.g. number of helpers, hosts, services"
 msgstr ""
-"Leistungsdaten in Bezug auf die Dimensionierung, z. B. Anzahl der Helfer, "
+"Leistungsdaten in Bezug auf die Dimensionierung, z. B. Anzahl der Helper, "
 "Hosts, Services"
 
 msgid "Performance data settings"
@@ -49620,9 +49565,8 @@ msgstr "Höhe setzen"
 msgid "Set levels"
 msgstr "Level einstellen"
 
-#, fuzzy
 msgid "Set levels for the Checkmk helper usage"
-msgstr "Level für die Nutzung der Checkmk Helper festlegen"
+msgstr "Level für die Auslastung der Checkmk-Helper festlegen"
 
 #, fuzzy
 msgid "Set levels for the Checkmk livestatus overflows"
@@ -49632,25 +49576,22 @@ msgstr "Level für Überläufe von Checkmk Livestatus festlegen"
 msgid "Set levels for the Checkmk livestatus usage"
 msgstr "Level für die Nutzung von Checkmk Livestatus festlegen"
 
-#, fuzzy
 msgid "Set levels for the check helper usage"
-msgstr "Level für die Nutzung der Checker festlegen"
+msgstr "Level für die Auslastung der Check-Helper festlegen"
 
 #, fuzzy
 msgid "Set levels for the check latency time"
 msgstr "Level für die Check-Latenzzeit einstellen"
 
-#, fuzzy
 msgid "Set levels for the checker helper usage"
-msgstr "Level für die Nutzung der Checker festlegen"
+msgstr "Level für die Auslastung der Checker-Helper festlegen"
 
 #, fuzzy
 msgid "Set levels for the checker latency time"
 msgstr "Level für die Checker-Latenzzeit einstellen"
 
-#, fuzzy
 msgid "Set levels for the fetcher helper usage"
-msgstr "Level für die Nutzung der fetcher helper festlegen"
+msgstr "Level für die Auslastung der Fetcher-Helper festlegen"
 
 #, fuzzy
 msgid "Set levels for the fetcher latency time"
@@ -56616,7 +56557,7 @@ msgstr ""
 
 #, python-format
 msgid "The current check helper usage is %.2f%%"
-msgstr "Die aktuelle Auslastung der Check-Hilfsprozesse ist %.2f%%"
+msgstr "Die aktuelle Auslastung der Check-Helper ist %.2f%%"
 
 #, python-format
 msgid ""
@@ -57670,14 +57611,14 @@ msgid ""
 "RRD helper and the RRD cache daemon"
 msgstr ""
 "Loglevel für die Kommunikation zwischen dem Checkmk Micro Core und seinem "
-"RRD Helper bzw. dem RRD Cache Daemon"
+"RRD Helper und dem RRD Cache Daemon"
 
 msgid ""
 "The log level for the communication of the Checkmk Micro Core with its check "
 "helpers"
 msgstr ""
 "Log-Level für die Kommunikation zwischen dem Checkmk Micro Core und seinen "
-"Check Helpern"
+"Check-Helpers"
 
 msgid "The log level for the handling of Livestatus queries"
 msgstr "Der Log-Level für die Behandlung von Livestatus-Abfragen"
@@ -64885,11 +64826,12 @@ msgstr "Zeit bis zum Alert, wenn die Bedingung CONTAINERSREADY falsch ist"
 msgid "Time until alert, if INITIALIZED condition is false"
 msgstr "Zeit bis zum Alert, wenn die Bedingung INITIALIZED falsch ist"
 
-#, fuzzy
 msgid ""
 "Time until alert, if PODREADYTOSTARTCONTAINERS (PODHASNETWORK in Kubernetes "
 "version 1.27 and below) condition is false"
-msgstr "Zeit bis zum Alert, wenn die Bedingung PODHASNETWORK falsch ist"
+msgstr ""
+"Zeit bis zum Alert, wenn die Bedingung PODREADYTOSTARTCONTAINERS ("
+"PODHASNETWORK in Kubernetes Version 1.27 und älter) falsch ist"
 
 msgid "Time until alert, if PODSCHEDULED condition is false"
 msgstr "Zeit bis zum Alert, wenn die Bedingung PODSCHEDULED falsch ist"
@@ -70707,7 +70649,7 @@ msgid "VCenter authentication"
 msgstr "VCenter-Authentifizierung"
 
 msgid "VEEAM tape backup jobs"
-msgstr "VEEAM Bandsicherungsjobs"
+msgstr "VEEAM Band-Backup-Jobs"
 
 msgid "VLAN type"
 msgstr "VLAN-Typ"
@@ -72105,8 +72047,8 @@ msgid ""
 "through and directly result in termination of the helper process."
 msgstr ""
 "Falls Sie alle Ausnahmebehandlungen eingeschaltet haben, die während der "
-"Ausführung der Helper auftreten, werden sie nach oben durchschlagen und den "
-"entsprechenden Helperprozess beenden."
+"Ausführung der Helper auftreten, werden diese nach oben durchschlagen und "
+"den entsprechenden Helper-Prozess beenden."
 
 msgid ""
 "When enabled, a subfolder is not shown, when the user does not have "

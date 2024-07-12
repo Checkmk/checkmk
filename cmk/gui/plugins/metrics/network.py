@@ -3,31 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._utils import graph_info, metric_info
+from cmk.gui.graphing._utils import graph_info
 from cmk.gui.i18n import _
 
-# .
-#   .--Metrics-------------------------------------------------------------.
-#   |                   __  __      _        _                             |
-#   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
-#   |                  | |\/| |/ _ \ __| '__| |/ __/ __|                   |
-#   |                  | |  | |  __/ |_| |  | | (__\__ \                   |
-#   |                  |_|  |_|\___|\__|_|  |_|\___|___/                   |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Definitions of metrics                                              |
-#   '----------------------------------------------------------------------'
-
-# Title are always lower case - except the first character!
-# Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
-
-metric_info["connection_time"] = {
-    "title": _("Connection time"),
-    "unit": "s",
-    "color": "#94b65a",
-}
-
-# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -40,13 +18,6 @@ metric_info["connection_time"] = {
 #   '----------------------------------------------------------------------'
 
 # Networking
-
-graph_info["time_to_connect"] = {
-    "title": _("Time to connect"),
-    "metrics": [
-        ("connection_time", "area"),
-    ],
-}
 
 graph_info["packet_loss"] = {
     "title": _("Packet loss"),

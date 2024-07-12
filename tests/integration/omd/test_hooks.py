@@ -29,7 +29,6 @@ def test_hooks(site: Site) -> None:
         "MULTISITE_AUTHORISATION",
         "MULTISITE_COOKIE_AUTH",
         "PNP4NAGIOS",
-        "RABBITMQ_PORT",
         "TMPFS",
     ]
 

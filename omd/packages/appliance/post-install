@@ -23,6 +23,7 @@ for PROGRAM in $CAP_PROGRAMS; do
         CAP="cap_net_bind_service+ep"
     fi
 
-    setcap "$CAP" "$PROGRAM_PATH"
+    # setcap "$CAP" "$PROGRAM_PATH"
+    chmod 4750 "$PROGRAM_PATH"
   fi
 done

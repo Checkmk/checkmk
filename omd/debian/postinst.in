@@ -82,7 +82,8 @@ case "$1" in
         # other conditions, like filesystems without support for this. To keep Checkmk working
         # as before on these systems and as secure as possible on newer systems we first try to
         # set the capabilities and once that fails we fall back to setuid.
-        if ! setcap "$CAP" "$PROGRAM_PATH"; then
+        # HACK(setcap) for CMK-18270
+        if true; then
             echo "Failed to set capabilities $CAP for $PROGRAM. Falling back to setuid."
             chmod 4750 "$PROGRAM"
         fi

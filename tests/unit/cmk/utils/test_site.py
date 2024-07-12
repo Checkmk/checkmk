@@ -32,6 +32,7 @@ def test_get_omd_config(patch_omd_site: None) -> None:
         "CONFIG_NSCA": "off",
         "CONFIG_NSCA_TCP_PORT": "5667",
         "CONFIG_PNP4NAGIOS": "on",
+        "CONFIG_RABBITMQ": "5672",
         "CONFIG_TMPFS": "on",
     }
 

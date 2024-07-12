@@ -12,9 +12,10 @@ from cmk.utils.quick_setup.definitions import (
     QuickSetupStage,
     StageId,
 )
-from cmk.utils.quick_setup.widgets import FormSpecWrapper, ListOfWidgets, Text
+from cmk.utils.quick_setup.widgets import Collapsible, FormSpecWrapper, ListOfWidgets, Text
 
 from cmk.ccc.i18n import _
+from cmk.plugins.aws import ruleset_helper  # pylint: disable=cmk-module-layer-violation
 from cmk.plugins.aws.rulesets import aws  # pylint: disable=cmk-module-layer-violation
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String, validators
@@ -74,6 +75,29 @@ def configure_host_and_region(stage_id: StageId) -> QuickSetupStage:
         ),
         components=[
             FormSpecWrapper(
+                id="host_data",
+                form_spec=Dictionary(
+                    elements={
+                        "host_name": DictElement(
+                            parameter_form=String(
+                                title=Title("Host name"),
+                                field_size=FieldSize.MEDIUM,
+                                custom_validate=(validators.LengthInRange(min_value=1),),
+                            ),
+                            required=True,
+                        ),
+                        "host_path": DictElement(
+                            parameter_form=String(
+                                title=Title("Host path"),
+                                field_size=FieldSize.MEDIUM,
+                                custom_validate=(validators.LengthInRange(min_value=1),),
+                            ),
+                            required=True,
+                        ),
+                    }
+                ),
+            ),
+            FormSpecWrapper(
                 id="configure_host_and_region",
                 form_spec=Dictionary(elements=aws.quick_setup_stage_2()),
             ),
@@ -90,6 +114,40 @@ def configure_services_to_monitor(stage_id: StageId) -> QuickSetupStage:
             FormSpecWrapper(
                 id="configure_services_to_monitor",
                 form_spec=Dictionary(elements=aws.quick_setup_stage_3()),
+            ),
+            Collapsible(
+                title="Other options",
+                items=[
+                    FormSpecWrapper(  # TODO Placeholder for site selection
+                        id="site",
+                        form_spec=Dictionary(
+                            elements={
+                                "site_selection": DictElement(
+                                    parameter_form=String(
+                                        title=Title("Site selection"),
+                                        field_size=FieldSize.MEDIUM,
+                                        custom_validate=(validators.LengthInRange(min_value=1),),
+                                    ),
+                                    required=True,
+                                ),
+                            }
+                        ),
+                    ),
+                    FormSpecWrapper(
+                        id="aws_tags",
+                        form_spec=Dictionary(
+                            elements={
+                                "overall_tags": DictElement(
+                                    parameter_form=ruleset_helper.formspec_aws_tags(
+                                        Title(
+                                            "Restrict monitoring services by one of these AWS tags"
+                                        )
+                                    ),
+                                ),
+                            },
+                        ),
+                    ),
+                ],
             ),
         ],
     )

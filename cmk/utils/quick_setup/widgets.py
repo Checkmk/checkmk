@@ -37,3 +37,10 @@ class FormSpecWrapper(Widget):
     id: str
     widget_type: str = field(default="form_spec", init=False)
     form_spec: object | None = None
+
+
+@dataclass
+class Collapsible(Widget):
+    widget_type: str = field(default="collapsible", init=False)
+    title: str
+    items: list[Widget] = field(default_factory=list)

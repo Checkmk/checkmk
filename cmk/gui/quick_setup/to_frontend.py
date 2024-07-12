@@ -16,7 +16,7 @@ from cmk.utils.quick_setup.definitions import (
     Stage,
     StageId,
 )
-from cmk.utils.quick_setup.widgets import FormSpecWrapper, ListOfWidgets, Widget
+from cmk.utils.quick_setup.widgets import Collapsible, FormSpecWrapper, ListOfWidgets, Widget
 
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
 from cmk.gui.form_specs.vue.type_defs import DataOrigin
@@ -24,37 +24,27 @@ from cmk.gui.form_specs.vue.type_defs import DataOrigin
 from cmk.rulesets.v1.form_specs import FormSpec
 
 
-def get_stage_components_from_widget(widget: Widget) -> dict:
-    if isinstance(widget, ListOfWidgets):
+def get_stage_components_from_widget(widget: Widget | FormSpecWrapper) -> dict:
+    if isinstance(widget, (ListOfWidgets, Collapsible)):
         widget_as_dict = asdict(widget)
         widget_as_dict["items"] = [get_stage_components_from_widget(item) for item in widget.items]
         return widget_as_dict
+
+    if isinstance(widget, FormSpecWrapper):
+        form_spec = cast(FormSpec, widget.form_spec)
+        return {
+            "widget_type": widget.widget_type,
+            "form_spec": asdict(
+                serialize_data_for_frontend(
+                    form_spec=form_spec,
+                    field_id=widget.id,
+                    origin=DataOrigin.DISK,
+                    do_validate=False,
+                ),
+            ),
+        }
+
     return asdict(widget)
-
-
-def get_stage_components_for_the_frontend(
-    quick_setup_stage: QuickSetupStage,
-) -> list[dict]:
-    components: list[dict] = []
-    for widget in quick_setup_stage.components:
-        if isinstance(widget, FormSpecWrapper):
-            form_spec = cast(FormSpec, widget.form_spec)
-            components.append(
-                {
-                    "widget_type": widget.widget_type,
-                    "form_spec": asdict(
-                        serialize_data_for_frontend(
-                            form_spec=form_spec,
-                            field_id=widget.id,
-                            origin=DataOrigin.DISK,
-                            do_validate=False,
-                        ),
-                    ),
-                }
-            )
-        else:
-            components.append(get_stage_components_from_widget(widget))
-    return components
 
 
 def retrieve_next_stage(
@@ -69,7 +59,7 @@ def retrieve_next_stage(
 
     return Stage(
         stage_id=next_stage.stage_id,
-        components=get_stage_components_for_the_frontend(next_stage),
+        components=[get_stage_components_from_widget(widget) for widget in next_stage.components],
     )
 
 
@@ -90,7 +80,7 @@ def form_spec_validate(
                     value=form_data[widget.id],
                 )
             # TODO: What does a validation error look like, and how should they be returned to the frontend?
-            except (AssertionError, AttributeError) as exc:
+            except (AssertionError, AttributeError, KeyError) as exc:
                 validation_errors.append(str(exc))
 
     return validation_errors
@@ -103,7 +93,9 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
         overviews=[stage.stage_overview() for stage in quick_setup.stages],
         stage=Stage(
             stage_id=first_stage.stage_id,
-            components=get_stage_components_for_the_frontend(first_stage),
+            components=[
+                get_stage_components_from_widget(widget) for widget in first_stage.components
+            ],
         ),
     )
 
@@ -125,7 +117,9 @@ def validate_current_stage(
     if validation_errors:
         return Stage(
             stage_id=current_stage_id,
-            components=get_stage_components_for_the_frontend(current_stage),
+            components=[
+                get_stage_components_from_widget(widget) for widget in current_stage.components
+            ],
             validation_errors=validation_errors,
         )
 

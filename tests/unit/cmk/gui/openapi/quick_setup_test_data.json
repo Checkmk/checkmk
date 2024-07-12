@@ -114,6 +114,64 @@
         {
             "widget_type": "form_spec",
             "form_spec": {
+                "id": "host_data",
+                "app_name": "form_spec",
+                "spec": {
+                    "type": "dictionary",
+                    "title": "",
+                    "help": "",
+                    "validators": [],
+                    "elements": [
+                        {
+                            "ident": "host_name",
+                            "required": true,
+                            "default_value": "",
+                            "parameter_form": {
+                                "type": "string",
+                                "title": "Host name",
+                                "help": "",
+                                "validators": [
+                                    {
+                                        "type": "length_in_range",
+                                        "min_value": 1,
+                                        "max_value": null,
+                                        "error_message": "The minimum allowed length is 1."
+                                    }
+                                ],
+                                "placeholder": null
+                            }
+                        },
+                        {
+                            "ident": "host_path",
+                            "required": true,
+                            "default_value": "",
+                            "parameter_form": {
+                                "type": "string",
+                                "title": "Host path",
+                                "help": "",
+                                "validators": [
+                                    {
+                                        "type": "length_in_range",
+                                        "min_value": 1,
+                                        "max_value": null,
+                                        "error_message": "The minimum allowed length is 1."
+                                    }
+                                ],
+                                "placeholder": null
+                            }
+                        }
+                    ]
+                },
+                "data": {
+                    "host_name": "",
+                    "host_path": ""
+                },
+                "validation": []
+            }
+        },
+        {
+            "widget_type": "form_spec",
+            "form_spec": {
                 "id": "configure_host_and_region",
                 "app_name": "form_spec",
                 "spec": {
@@ -3953,6 +4011,129 @@
                 },
                 "validation": []
             }
+        },
+        {
+            "widget_type": "collapsible",
+            "title": "Other options",
+            "items": [
+                {
+                    "widget_type": "form_spec",
+                    "form_spec": {
+                        "id": "site",
+                        "app_name": "form_spec",
+                        "spec": {
+                            "type": "dictionary",
+                            "title": "",
+                            "help": "",
+                            "validators": [],
+                            "elements": [
+                                {
+                                    "ident": "site_selection",
+                                    "required": true,
+                                    "default_value": "",
+                                    "parameter_form": {
+                                        "type": "string",
+                                        "title": "Site selection",
+                                        "help": "",
+                                        "validators": [
+                                            {
+                                                "type": "length_in_range",
+                                                "min_value": 1,
+                                                "max_value": null,
+                                                "error_message": "The minimum allowed length is 1."
+                                            }
+                                        ],
+                                        "placeholder": null
+                                    }
+                                }
+                            ]
+                        },
+                        "data": {
+                            "site_selection": ""
+                        },
+                        "validation": []
+                    }
+                },
+                {
+                    "widget_type": "form_spec",
+                    "form_spec": {
+                        "id": "aws_tags",
+                        "app_name": "form_spec",
+                        "spec": {
+                            "type": "dictionary",
+                            "title": "",
+                            "help": "",
+                            "validators": [],
+                            "elements": [
+                                {
+                                    "ident": "overall_tags",
+                                    "required": false,
+                                    "default_value": [],
+                                    "parameter_form": {
+                                        "type": "list",
+                                        "title": "Restrict monitoring services by one of these AWS tags",
+                                        "help": "For information on AWS tag configuration, visit https:\/\/docs.aws.amazon.com\/AWSEC2\/latest\/UserGuide\/Using_Tags.html",
+                                        "validators": [],
+                                        "element_template": {
+                                            "type": "dictionary",
+                                            "title": "",
+                                            "help": "",
+                                            "validators": [],
+                                            "elements": [
+                                                {
+                                                    "ident": "key",
+                                                    "required": true,
+                                                    "default_value": "",
+                                                    "parameter_form": {
+                                                        "type": "string",
+                                                        "title": "Key",
+                                                        "help": "",
+                                                        "validators": [],
+                                                        "placeholder": null
+                                                    }
+                                                },
+                                                {
+                                                    "ident": "values",
+                                                    "required": true,
+                                                    "default_value": [],
+                                                    "parameter_form": {
+                                                        "type": "list",
+                                                        "title": "",
+                                                        "help": "",
+                                                        "validators": [],
+                                                        "element_template": {
+                                                            "type": "string",
+                                                            "title": "",
+                                                            "help": "",
+                                                            "validators": [],
+                                                            "placeholder": null
+                                                        },
+                                                        "element_default_value": "",
+                                                        "editable_order": false,
+                                                        "add_element_label": "Add new value",
+                                                        "remove_element_label": "Remove value",
+                                                        "no_element_label": "No values defined"
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        "element_default_value": {
+                                            "key": "",
+                                            "values": []
+                                        },
+                                        "editable_order": false,
+                                        "add_element_label": "Add new tag",
+                                        "remove_element_label": "Remove tag",
+                                        "no_element_label": "No tags defined"
+                                    }
+                                }
+                            ]
+                        },
+                        "data": {},
+                        "validation": []
+                    }
+                }
+            ]
         }
     ]
 }

@@ -4,7 +4,6 @@ cc_binary(
     name = "unixcat",
     srcs = ["src/unixcat.cc"],
     copts = [
-        "-std=c++20",
         "-fPIC",
         "-gdwarf-4",
         "-O3",

@@ -4,7 +4,6 @@ load("//omd/packages/rules:version.bzl", "mangle_version")
 CMK_VERSION = "2.4.0b1"
 
 NEB_COPTS = [
-    "-std=c++20",
     "-Ipackages/neb/third_party/include/",
     "-gdwarf-4",
     "-O3",

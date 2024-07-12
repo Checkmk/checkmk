@@ -14,7 +14,6 @@ cc_library(
         "include/livestatus/Poller.h",
     ],
     copts = [
-        "-std=c++20",
         "-gdwarf-4",
         "-O3",
     ],
@@ -34,7 +33,6 @@ cc_library(
     ),
     hdrs = glob(["include/livestatus/*.h"]),
     copts = [
-        "-std=c++20",
         "-Iexternal/re2",
         "-gdwarf-4",
         "-O3",
@@ -67,7 +65,6 @@ cc_test(
     testonly = 1,
     srcs = glob(["test/*.cc"]),
     copts = [
-        "-std=c++20",
         "-Iexternal/re2",
         "-gdwarf-4",
         "-O3",

@@ -169,7 +169,9 @@ class CoreAPI(RawAPI):
                 "GET", self._config.url(f"/api/v1/nodes/{node_name}/proxy/metrics")
             )
             with contextlib.suppress(requests.RequestException):
-                result.append(send_request(self._config, self._client, request).text)
+                response = send_request(self._config, self._client, request)
+                response.raise_for_status()
+                result.append(response.text)
         return result
 
     def query_raw_nodes(self) -> JSONNodeList:

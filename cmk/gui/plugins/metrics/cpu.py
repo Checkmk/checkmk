@@ -138,12 +138,6 @@ for i in range(MAX_CORES):
         "color": indexed_color(i, MAX_CORES),
     }
 
-metric_info["cpu_reservation"] = {
-    "title": _l("CPU reservation"),
-    "unit": "%",
-    "color": "13/a",
-}
-
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

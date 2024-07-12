@@ -121,35 +121,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "mail_queue_deferred_length",
-                "half_value": 10000,
-                "exponent": 5,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "mail_queue_active_length",
-                "half_value": 10000,
-                "exponent": 5,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "mail_queue_deferred_length",
-        "half_value": 10000,
-        "exponent": 5,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "dual",
         "perfometers": [
             {

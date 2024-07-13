@@ -281,7 +281,7 @@ def process_by_status_code(response: requests.Response, success_code: [200, 202]
     status_code = response.status_code
     summary = f"{status_code}: {http_responses[status_code]}"
 
-    if status_code not in success_code:
+    if status_code in success_code:
         sys.stderr.write(summary)
         return 0
     if 500 <= status_code <= 599:

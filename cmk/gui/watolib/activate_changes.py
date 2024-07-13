@@ -67,6 +67,7 @@ from cmk.gui.config import active_config
 from cmk.gui.crash_handler import crash_dump_message, handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.http import request as _request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -1413,7 +1414,7 @@ class ActivateChangesManager(ActivateChanges):
         # However, if the file is still missing after a considerable amount
         # of time, we consider this site activation as dead
         seconds_since_start = time.time() - self._time_started
-        if site_state == {} and seconds_since_start > _request.request_timeout - 10:
+        if site_state == {} and seconds_since_start > Request.request_timeout - 10:
             return False
 
         if site_state == {} or site_state["_phase"] == PHASE_INITIALIZED:

@@ -311,6 +311,10 @@ class Request(
     These should be basic HTTP request handling things and no application specific mechanisms.
     """
 
+    # The system web servers configured request timeout.
+    # This is the time before the request terminates from the view of the client.
+    request_timeout = 110
+
     # TODO investigate why there are so many form_parts
     max_form_parts = 20000
     meta: dict[str, Any]
@@ -338,15 +342,6 @@ class Request(
                     "module to make Checkmk work."
                 )
             )
-
-    @property
-    def request_timeout(self) -> int:
-        """The system web servers configured request timeout.
-
-        This is the time before the request terminates from the view of the client."""
-        # TODO: Found no way to get this information from WSGI environment. Hard code
-        #       the timeout for the moment.
-        return 110
 
     @property
     def remote_ip(self) -> str | None:

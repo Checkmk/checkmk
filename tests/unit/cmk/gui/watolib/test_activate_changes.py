@@ -7,7 +7,9 @@
 
 import io
 import logging
+import os
 import tarfile
+from contextlib import nullcontext
 from pathlib import Path
 
 import pytest
@@ -20,9 +22,11 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.paths
 
 import cmk.gui.watolib.utils
+from cmk.gui.background_job import BackgroundProcessInterface
+from cmk.gui.background_job._defines import BackgroundJobDefines
 from cmk.gui.http import Request
 from cmk.gui.watolib import activate_changes
-from cmk.gui.watolib.activate_changes import ConfigSyncFileInfo
+from cmk.gui.watolib.activate_changes import ActivationCleanupBackgroundJob, ConfigSyncFileInfo
 from cmk.gui.watolib.config_sync import ReplicationPath
 
 import cmk.ccc.version as cmk_version
@@ -728,3 +732,72 @@ def test_get_current_config_generation() -> None:
     activate_changes.update_config_generation()
     activate_changes.update_config_generation()
     assert activate_changes._get_current_config_generation() == 3
+
+
+def test_activation_cleanup_background_job(capsys: pytest.CaptureFixture[str]) -> None:
+
+    act_dir = (
+        cmk.utils.paths.tmp_dir / "wato" / "activation" / "9a61e24f-d991-4710-b8e7-04700c309594"
+    )
+    act_dir.mkdir(parents=True, exist_ok=True)
+    (act_dir / "info.mk").write_text(
+        repr(
+            {
+                "_sites": ["heute"],
+                "_activate_until": "bf4b5431-bb60-4c89-973b-147b9e012188",
+                "_comment": None,
+                "_activate_foreign": False,
+                "_activation_id": "9a61e24f-d991-4710-b8e7-04700c309594",
+                "_time_started": 1720800187.7206023,
+                "_persisted_changes": [
+                    {
+                        "id": "bf4b5431-bb60-4c89-973b-147b9e012188",
+                        "user_id": "cmkadmin",
+                        "action_name": "edit-folder",
+                        "text": "Edited properties of folder Main",
+                        "time": 1720800176.985953,
+                    }
+                ],
+            }
+        )
+    )
+    (act_dir / "site_heute.mk").write_text(
+        repr(
+            {
+                "_site_id": "heute",
+                "_activation_id": "9a61e24f-d991-4710-b8e7-04700c309594",
+                "_phase": "done",
+                "_state": "success",
+                "_status_text": "Success",
+                "_status_details": "Started at: 21:49:52. Finished at: 21:49:57.",
+                "_time_started": 1720800192.3661854,
+                "_time_updated": 1720800197.2661166,
+                "_time_ended": 1720800197.2661166,
+                "_expected_duration": 4.40388298034668,
+                "_pid": 794410,
+                "_user_id": "cmkadmin",
+                "_source": "GUI",
+            }
+        )
+    )
+    os.utime(act_dir, (1720800187.7206023, 1720800187.7206023))
+
+    job = ActivationCleanupBackgroundJob()
+    os.makedirs(job.get_work_dir())
+    interface = BackgroundProcessInterface(
+        job.get_work_dir(),
+        job.get_job_id(),
+        logging.getLogger(),
+        lambda: nullcontext(),  # pylint: disable=unnecessary-lambda
+    )
+
+    job.do_execute(interface)
+
+    stdout, stderr = capsys.readouterr()
+    assert stdout == ""
+    assert stderr == ""
+
+    result = Path(job.get_work_dir(), BackgroundJobDefines.result_message_filename).read_text()
+    assert result == "Activation cleanup finished\n"
+
+    assert not act_dir.exists()

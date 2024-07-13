@@ -907,11 +907,6 @@ msgstr "(neconfigurat)"
 msgid "(unused)"
 msgstr "(nefolosit)"
 
-msgid ""
-"*Since this is a ReadOnlyAccess, we will never create any resources on your "
-"AWS account"
-msgstr ""
-
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ", dar este anulată de o potrivire dintr-un pachet de reguli anterior."
 
@@ -2422,13 +2417,6 @@ msgstr "O vizualizare pentru căutarea în datele de inventar pentru %s"
 #, python-format
 msgid "A view for the %s of one host"
 msgstr "O vizualizare pentru %s a unei singure gazde"
-
-msgid ""
-"A voluntary context switch occurs when a thread blocks because it requires a "
-"resource that is unavailable"
-msgstr ""
-"O schimbare voluntară de context are loc atunci când un fir se blochează "
-"pentru că are nevoie de o resursă care nu este disponibilă."
 
 #, fuzzy
 msgid "A/V Auth - Bad requests received"
@@ -6013,6 +6001,10 @@ msgstr "Întotdeauna când un eveniment este anulat"
 msgid "Amazon S3 Glacier (Glacier)"
 msgstr "Amazon S3 Glacier (Glacier)"
 
+#, fuzzy
+msgid "Amazon Web Service (AWS)"
+msgstr "Servicii Web Amazon (AWS)"
+
 msgid "Amazon Web Services (AWS)"
 msgstr "Servicii Web Amazon (AWS)"
 
@@ -6161,15 +6153,6 @@ msgstr ""
 "Puteți raporta această problemă administratorului dumneavoastră Checkmk. "
 "Informații detaliate pot fi găsite pe pagina de raport de eroare sau în "
 "<tt>var/log/web.log</tt>."
-
-msgid ""
-"An involuntary context switch takes place when a thread executes for the "
-"duration of its time slice or when the system identifies a higher-priority "
-"thread to run"
-msgstr ""
-"O comutare involuntară de context are loc atunci când un fir se execută pe "
-"durata feliei sale de timp sau când sistemul identifică un fir cu prioritate "
-"mai mare pentru a rula."
 
 #, python-format
 msgid ""
@@ -7032,6 +7015,13 @@ msgstr "Expirarea autentificării"
 
 msgid "Authentication code (OTP / TOTP)"
 msgstr "Codul de autentificare (OTP / TOTP)"
+
+msgid ""
+"Authentication details for communicating with ServiceNow. If you want to "
+"create incidents, at least the role 'itil' is required. If you want to "
+"create cases, at least 'csm_ws_integration' and 'sn_customerservice_agent' "
+"are required."
+msgstr ""
 
 msgid "Authentication error"
 msgstr "Eroare de autentificare"
@@ -8237,12 +8227,6 @@ msgstr ""
 
 msgid "Biggest input buffer"
 msgstr "Cel mai mare buffer de intrare"
-
-msgid "Biggest input buffer lower level"
-msgstr "Cel mai mare nivel inferior al bufferului de intrare"
-
-msgid "Biggest input buffer upper level"
-msgstr "Cel mai mare nivel superior al bufferului de intrare"
 
 msgid "Bike"
 msgstr "Bicicleta"
@@ -12016,7 +12000,7 @@ msgstr "Starea \"Liber"
 
 msgid ""
 "Click 'Add user' under Users, select 'Access key - Programmatic access', and "
-"attach the 'ReadOnlyAccess' policy*."
+"attach the 'ReadOnlyAccess' policy."
 msgstr ""
 
 msgid "Click for instant reload."
@@ -12944,6 +12928,10 @@ msgstr ""
 
 msgid "Configure"
 msgstr "Configurați"
+
+#, fuzzy
+msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
+msgstr "Monitorizarea serviciilor web Amazon (AWS)"
 
 msgid "Configure SNMP related settings using rulesets"
 msgstr "Configurarea setărilor legate de SNMP utilizând seturi de reguli"
@@ -16020,6 +16008,9 @@ msgstr "Ziua săptămânii (1-7, 1 este luni)"
 
 msgid "Day rate"
 msgstr "Tarif pe zi"
+
+msgid "Days"
+msgstr ""
 
 msgid "Deactivate"
 msgstr "Dezactivați"
@@ -19620,7 +19611,15 @@ msgstr "Bucket dinamic de jetoane"
 msgid "Dynamic configuration"
 msgstr "Configurație dinamică"
 
+#, fuzzy
+msgid "Dynamic configuration activate changes timeout"
+msgstr "Înregistrarea configurației dinamice"
+
 msgid "Dynamic configuration logging"
+msgstr "Înregistrarea configurației dinamice"
+
+#, fuzzy
+msgid "Dynamic configuration site update interval"
 msgstr "Înregistrarea configurației dinamice"
 
 msgid "Dynamic host configuration"
@@ -28165,6 +28164,10 @@ msgstr "Prezentare generală a gazdei"
 msgid "Host parent/child topology"
 msgstr "Topologia gazdă părinte/copil"
 
+#, fuzzy
+msgid "Host path"
+msgstr "Alertă gazdă"
+
 msgid "Host performance data"
 msgstr "Date privind performanța gazdei"
 
@@ -35889,12 +35892,6 @@ msgstr "Cel mai lung"
 msgid "Longest output list"
 msgstr "Cea mai lungă listă de ieșire"
 
-msgid "Longest output list lower level"
-msgstr "Cea mai lungă listă de ieșire nivel inferior"
-
-msgid "Longest output list upper level"
-msgstr "Cea mai lungă listă de ieșire nivel superior"
-
 msgid "Look for keys"
 msgstr "Căutați cheile"
 
@@ -36137,6 +36134,24 @@ msgstr ""
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Niveluri mai mici ale numărului de conexiuni punct-la-sediu"
+
+#, fuzzy
+msgid "Lower levels on the biggest input buffer"
+msgstr "Niveluri inferioare pentru primul element de ieșire"
+
+#, fuzzy
+msgid "Lower levels on the longest output list"
+msgstr "Niveluri inferioare pentru primul element de ieșire"
+
+#, fuzzy
+msgid "Lower levels on the total number of client connections"
+msgstr "Nivelul inferior pentru numărul total de conexiuni"
+
+#, fuzzy
+msgid "Lower levels on the total number of clients pending on a blocking call"
+msgstr ""
+"Numărul total de clienți în așteptare pentru un apel de blocare Nivel "
+"inferior"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Cel mai mic: Nici o notificare, actualizarea numărului de legitimație"
@@ -36453,6 +36468,10 @@ msgstr "Mesaje în coada de corespondență de ieșire (coadă unică)"
 
 msgid "Mails in outgoing mail queue/deferred mails"
 msgstr "Mesaje în coada de corespondență de ieșire/mesaje amânate"
+
+#, fuzzy
+msgid "Mails received time"
+msgstr "Primirea corespondenței"
 
 msgid "Main"
 msgstr "Principal"
@@ -38246,6 +38265,10 @@ msgstr "Speranța de viață minimă a paginii"
 msgid "Minimum allowed age"
 msgstr "Vârsta minimă permisă"
 
+#, fuzzy
+msgid "Minimum allowed uptime"
+msgstr "Timpul maxim permis pentru uptime"
+
 msgid "Minimum amount of alert rules in a group to create a group service"
 msgstr ""
 "Numărul minim de reguli de alertă dintr-un grup pentru a crea un serviciu de "
@@ -39984,6 +40007,9 @@ msgstr "Negociați"
 
 msgid "Neither"
 msgstr "Nici"
+
+msgid "Neither a valid IP address nor a macro"
+msgstr ""
 
 msgid "Nested group memberships are resolved"
 msgstr "Se rezolvă apartenența la grupuri imbricate"
@@ -47822,6 +47848,10 @@ msgstr "Cozile de așteptare care urmează să fie sărite"
 msgid "Queues to monitor"
 msgstr "Cozi de monitorizare"
 
+#, fuzzy
+msgid "Quick Setup"
+msgstr "Configurare rapidă"
+
 msgid "Quick search"
 msgstr "Căutare rapidă"
 
@@ -50453,6 +50483,14 @@ msgstr "Rotund"
 
 msgid "Round trip average"
 msgstr "Media călătoriei dus-întors"
+
+#, fuzzy
+msgid "Round trip maximum"
+msgstr "%sMajor de călătorie dus-întors"
+
+#, fuzzy
+msgid "Round trip minimum"
+msgstr "%sMinimum pentru călătoria dus-întors"
 
 msgid "Round trip time"
 msgstr "Durata călătoriei dus-întors"
@@ -54749,6 +54787,10 @@ msgstr "Restaurarea site-ului"
 
 msgid "Site restriction"
 msgstr "Restricție de amplasare"
+
+#, fuzzy
+msgid "Site selection"
+msgstr "Selecția fișierelor"
 
 msgid "Site setting and global setting are identical."
 msgstr "Setarea site-ului și setarea globală sunt identice."
@@ -67345,8 +67387,9 @@ msgstr ""
 "este configurată cu acest set de reguli va folosi apoi informațiile din acel "
 "fișier în loc să folosească SNMP real."
 
+#, fuzzy
 msgid ""
-"This ruleset helps you to configure the classical Nagios plugin "
+"This ruleset helps you to configure the active check plugin "
 "<tt>check_disk_smb</tt> that checks the access to filesystem shares that are "
 "exported via SMB/CIFS."
 msgstr ""
@@ -67642,6 +67685,16 @@ msgstr ""
 "Nu are sens ca pasul să fie mai mic decât intervalul normal de verificare "
 "pentru o revizie. Valoarea implicită este de 60 de secunde - care corespunde "
 "intervalului de verificare implicit."
+
+msgid ""
+"This setting decides how often the dynamic configuration daemon will get "
+"updates from the the site. Default is 5 minutes"
+msgstr ""
+
+msgid ""
+"This setting decides when the activate changes operation will be timed out. "
+"Default is 2 minutes"
+msgstr ""
 
 msgid ""
 "This setting decides which types of messages to log into the daemon log of "
@@ -69397,22 +69450,6 @@ msgstr "Numărul total de cioburi active nivel inferior"
 
 msgid "Total number of active shards upper level"
 msgstr "Numărul total de fragmente active nivel superior"
-
-msgid "Total number of client connections lower level"
-msgstr "Numărul total de conexiuni client nivel inferior"
-
-msgid "Total number of client connections upper level"
-msgstr "Numărul total de conexiuni client nivel superior"
-
-msgid "Total number of clients pending on a blocking call lower level"
-msgstr ""
-"Numărul total de clienți în așteptare pentru un apel de blocare Nivel "
-"inferior"
-
-msgid "Total number of clients pending on a blocking call upper level"
-msgstr ""
-"Numărul total de clienți în așteptare pentru un apel de blocare Nivel "
-"superior"
 
 msgid "Total number of collections lower level"
 msgstr "Număr total de colecții nivel inferior"
@@ -73508,6 +73545,14 @@ msgstr "Niveluri superioare ale numărului de conexiuni punct-la-sediu"
 msgid "Upper levels on percentage of %s requests"
 msgstr "Niveluri superioare la procentul de cereri %s"
 
+#, fuzzy
+msgid "Upper levels on the biggest input buffer"
+msgstr "Nivelurile superioare pentru dimensiunea găleții"
+
+#, fuzzy
+msgid "Upper levels on the longest output list"
+msgstr "Nivelurile superioare pentru primul element de ieșire"
+
 msgid "Upper levels on the oldest replication slot lag"
 msgstr ""
 "Nivelurile superioare pe cel mai vechi decalaj al slotului de replicare"
@@ -73517,6 +73562,16 @@ msgstr "Niveluri superioare pe replica lag"
 
 msgid "Upper levels on the replication lag"
 msgstr "Nivelurile superioare ale decalajului de replicare"
+
+#, fuzzy
+msgid "Upper levels on the total number of client connections"
+msgstr "Nivelul superior pentru numărul total de conexiuni"
+
+#, fuzzy
+msgid "Upper levels on the total number of clients pending on a blocking call"
+msgstr ""
+"Numărul total de clienți în așteptare pentru un apel de blocare Nivel "
+"superior"
 
 msgid "Upper levels on total request latency"
 msgstr "Niveluri superioare ale latenței totale a cererilor"
@@ -82343,9 +82398,47 @@ msgstr "{actual} este prea mare. Valoarea maximă admisă este {bound}."
 msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 
+#, python-brace-format
+msgid "{region} ({id_})"
+msgstr ""
+
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Biggest input buffer lower level"
+#~ msgstr "Cel mai mare nivel inferior al bufferului de intrare"
+
+#~ msgid "Biggest input buffer upper level"
+#~ msgstr "Cel mai mare nivel superior al bufferului de intrare"
+
+#~ msgid "Longest output list lower level"
+#~ msgstr "Cea mai lungă listă de ieșire nivel inferior"
+
+#~ msgid "Longest output list upper level"
+#~ msgstr "Cea mai lungă listă de ieșire nivel superior"
+
+#~ msgid "Total number of client connections lower level"
+#~ msgstr "Numărul total de conexiuni client nivel inferior"
+
+#~ msgid "Total number of client connections upper level"
+#~ msgstr "Numărul total de conexiuni client nivel superior"
+
+#~ msgid ""
+#~ "A voluntary context switch occurs when a thread blocks because it "
+#~ "requires a resource that is unavailable"
+#~ msgstr ""
+#~ "O schimbare voluntară de context are loc atunci când un fir se blochează "
+#~ "pentru că are nevoie de o resursă care nu este disponibilă."
+
+#~ msgid ""
+#~ "An involuntary context switch takes place when a thread executes for the "
+#~ "duration of its time slice or when the system identifies a higher-"
+#~ "priority thread to run"
+#~ msgstr ""
+#~ "O comutare involuntară de context are loc atunci când un fir se execută "
+#~ "pe durata feliei sale de timp sau când sistemul identifică un fir cu "
+#~ "prioritate mai mare pentru a rula."
 
 #~ msgid "Max Perm used"
 #~ msgstr "Max Perm utilizat"

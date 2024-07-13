@@ -896,11 +896,6 @@ msgstr "(未設定)"
 msgid "(unused)"
 msgstr "(未使用)"
 
-msgid ""
-"*Since this is a ReadOnlyAccess, we will never create any resources on your "
-"AWS account"
-msgstr ""
-
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr "、ただし、以前のルールパックの一致によって無効にされます。"
 
@@ -2314,13 +2309,6 @@ msgstr "インベントリデータで %sを検索するためのビュー"
 #, python-format
 msgid "A view for the %s of one host"
 msgstr "1つのホストの%sのビュー"
-
-msgid ""
-"A voluntary context switch occurs when a thread blocks because it requires a "
-"resource that is unavailable"
-msgstr ""
-"自発的なコンテキストスイッチは、スレッドが利用できないリソースを必要とするた"
-"めにブロックした時に発生します"
 
 msgid "A/V Auth - Bad requests received"
 msgstr "A/V 認証 - 不正なリクエストを受信しました"
@@ -5733,6 +5721,10 @@ msgstr "イベントがキャンセルされるときは常に"
 msgid "Amazon S3 Glacier (Glacier)"
 msgstr "Amazon S3 Glacier (Glacier)"
 
+#, fuzzy
+msgid "Amazon Web Service (AWS)"
+msgstr "Amazon Web Services (AWS)"
+
 msgid "Amazon Web Services (AWS)"
 msgstr "Amazon Web Services (AWS)"
 
@@ -5874,15 +5866,6 @@ msgstr ""
 "リクエストの処理中に内部エラーが発生しました。この問題は、Checkmk管理者に報告"
 "できます。詳細情報は、クラッシュレポートページまたは<tt>var/log/web.log</tt>"
 "にあります。"
-
-msgid ""
-"An involuntary context switch takes place when a thread executes for the "
-"duration of its time slice or when the system identifies a higher-priority "
-"thread to run"
-msgstr ""
-"スレッドがそのタイムスライスの期間中に実行されたとき、またはシステムが実行す"
-"る優先度の高いスレッドを識別したときに、非自発的なコンテキストスイッチが発生"
-"します"
 
 #, python-format
 msgid ""
@@ -6709,6 +6692,13 @@ msgstr "認証の有効期限"
 
 msgid "Authentication code (OTP / TOTP)"
 msgstr "認証コード(OTP / TOTP)"
+
+msgid ""
+"Authentication details for communicating with ServiceNow. If you want to "
+"create incidents, at least the role 'itil' is required. If you want to "
+"create cases, at least 'csm_ws_integration' and 'sn_customerservice_agent' "
+"are required."
+msgstr ""
 
 msgid "Authentication error"
 msgstr "認証エラー"
@@ -7876,12 +7866,6 @@ msgstr "BigQueryテーブルID"
 
 msgid "Biggest input buffer"
 msgstr "最大入力バッファ"
-
-msgid "Biggest input buffer lower level"
-msgstr "最大の入力バッファの下位レベル"
-
-msgid "Biggest input buffer upper level"
-msgstr "最大の入力バッファ上位レベル"
 
 msgid "Bike"
 msgstr "バイク"
@@ -11490,7 +11474,7 @@ msgstr "\"クリア\"状態"
 
 msgid ""
 "Click 'Add user' under Users, select 'Access key - Programmatic access', and "
-"attach the 'ReadOnlyAccess' policy*."
+"attach the 'ReadOnlyAccess' policy."
 msgstr ""
 
 msgid "Click for instant reload."
@@ -12410,6 +12394,10 @@ msgstr ""
 
 msgid "Configure"
 msgstr "設定"
+
+#, fuzzy
+msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
+msgstr "Amazon Web Services (AWS)監視"
 
 msgid "Configure SNMP related settings using rulesets"
 msgstr "ルールセットを使用してSNMP関連の設定を設定する"
@@ -15430,6 +15418,9 @@ msgstr "曜日(1-7、1は月曜日)"
 
 msgid "Day rate"
 msgstr "日割り"
+
+msgid "Days"
+msgstr ""
 
 msgid "Deactivate"
 msgstr "非アクティブ化"
@@ -18985,7 +18976,15 @@ msgstr "動的トークンバケット"
 msgid "Dynamic configuration"
 msgstr "動的構成"
 
+#, fuzzy
+msgid "Dynamic configuration activate changes timeout"
+msgstr "動的構成ロギング"
+
 msgid "Dynamic configuration logging"
+msgstr "動的構成ロギング"
+
+#, fuzzy
+msgid "Dynamic configuration site update interval"
 msgstr "動的構成ロギング"
 
 msgid "Dynamic host configuration"
@@ -27435,6 +27434,10 @@ msgstr "ホストの概要"
 msgid "Host parent/child topology"
 msgstr "ホストの親/子トポロジ"
 
+#, fuzzy
+msgid "Host path"
+msgstr "ホストアラート"
+
 msgid "Host performance data"
 msgstr "ホストのパフォーマンスデータ"
 
@@ -34968,12 +34971,6 @@ msgstr "最長"
 msgid "Longest output list"
 msgstr "最長の出力リスト"
 
-msgid "Longest output list lower level"
-msgstr "最長の出力リスト下位レベル"
-
-msgid "Longest output list upper level"
-msgstr "最長出力リスト上位レベル"
-
 msgid "Look for keys"
 msgstr "キーを探す"
 
@@ -35209,6 +35206,22 @@ msgstr "1秒あたりのバイト数で表したサイト間帯域幅の下位�
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Point-to-site接続の数の下位レベル"
+
+#, fuzzy
+msgid "Lower levels on the biggest input buffer"
+msgstr "最初の出力項目の下位レベル"
+
+#, fuzzy
+msgid "Lower levels on the longest output list"
+msgstr "最初の出力項目の下位レベル"
+
+#, fuzzy
+msgid "Lower levels on the total number of client connections"
+msgstr "接続総数の下位レベル"
+
+#, fuzzy
+msgid "Lower levels on the total number of clients pending on a blocking call"
+msgstr "ブロッキングコールで保留中のクライアントの総数の下位レベル"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "最低: 通知なし、バッジ番号を更新"
@@ -35524,6 +35537,10 @@ msgstr "送信メールキュー内のメール"
 
 msgid "Mails in outgoing mail queue/deferred mails"
 msgstr "送信メールキュー内のメール/遅延メール"
+
+#, fuzzy
+msgid "Mails received time"
+msgstr "メール受信"
 
 msgid "Main"
 msgstr "メイン"
@@ -37297,6 +37314,10 @@ msgstr "最小ページ寿命"
 msgid "Minimum allowed age"
 msgstr "最小許容期間"
 
+#, fuzzy
+msgid "Minimum allowed uptime"
+msgstr "最大許容稼働時間"
+
 msgid "Minimum amount of alert rules in a group to create a group service"
 msgstr "グループサービスを作成するためのグループ内のアラートルール最小数"
 
@@ -39010,6 +39031,9 @@ msgstr "SSLをネゴシエートする"
 
 msgid "Neither"
 msgstr "どちらでもない"
+
+msgid "Neither a valid IP address nor a macro"
+msgstr ""
 
 msgid "Nested group memberships are resolved"
 msgstr "ネストされたグループメンバーシップが解決されます"
@@ -46729,6 +46753,10 @@ msgstr "スキップするキュー"
 msgid "Queues to monitor"
 msgstr "監視するキュー"
 
+#, fuzzy
+msgid "Quick Setup"
+msgstr "クイックセットアップ"
+
 msgid "Quick search"
 msgstr "クイック検索"
 
@@ -49361,6 +49389,14 @@ msgstr "円形"
 
 msgid "Round trip average"
 msgstr "往復平均"
+
+#, fuzzy
+msgid "Round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Round trip minimum"
+msgstr "%s往復の最小値"
 
 msgid "Round trip time"
 msgstr "ラウンドトリップタイム"
@@ -53546,6 +53582,10 @@ msgstr "サイトの復元"
 
 msgid "Site restriction"
 msgstr "サイト制限"
+
+#, fuzzy
+msgid "Site selection"
+msgstr "フォルダの選択"
 
 msgid "Site setting and global setting are identical."
 msgstr "サイト設定とグローバル設定は同じです。"
@@ -65589,8 +65629,9 @@ msgstr ""
 "構成されたホストは、実際のSNMPを使用する代わりに、そのファイルの情報を使用し"
 "ます。"
 
+#, fuzzy
 msgid ""
-"This ruleset helps you to configure the classical Nagios plugin "
+"This ruleset helps you to configure the active check plugin "
 "<tt>check_disk_smb</tt> that checks the access to filesystem shares that are "
 "exported via SMB/CIFS."
 msgstr ""
@@ -65867,6 +65908,16 @@ msgstr ""
 "正確になりますが、RRDは大きくなります。ステップをサービスの通常のチェック間隔"
 "よりも小さくすることは意味がありません。デフォルトは60秒の値で、これはデフォ"
 "ルトのチェック間隔と一致します。"
+
+msgid ""
+"This setting decides how often the dynamic configuration daemon will get "
+"updates from the the site. Default is 5 minutes"
+msgstr ""
+
+msgid ""
+"This setting decides when the activate changes operation will be timed out. "
+"Default is 2 minutes"
+msgstr ""
 
 msgid ""
 "This setting decides which types of messages to log into the daemon log of "
@@ -67575,18 +67626,6 @@ msgstr "アクティブなシャード総数の上位レベル"
 
 msgid "Total number of active shards upper level"
 msgstr "アクティブなシャード総数の上位レベル"
-
-msgid "Total number of client connections lower level"
-msgstr "クライアント接続総数の下位レベル"
-
-msgid "Total number of client connections upper level"
-msgstr "クライアント接続総数の下位レベル"
-
-msgid "Total number of clients pending on a blocking call lower level"
-msgstr "ブロッキングコールで保留中のクライアントの総数の下位レベル"
-
-msgid "Total number of clients pending on a blocking call upper level"
-msgstr "ブロッキングコールで保留中のクライアント総数の上位レベル"
 
 msgid "Total number of collections lower level"
 msgstr "コレクション総数の下位レベル"
@@ -71728,6 +71767,14 @@ msgstr "ポイントツーサイト接続数の上位レベル"
 msgid "Upper levels on percentage of %s requests"
 msgstr "%sリクエストの割合の上位レベル"
 
+#, fuzzy
+msgid "Upper levels on the biggest input buffer"
+msgstr "バケットサイズの上位レベル"
+
+#, fuzzy
+msgid "Upper levels on the longest output list"
+msgstr "最初の出力項目の上位レベル"
+
 msgid "Upper levels on the oldest replication slot lag"
 msgstr "最も古いレプリケーションスロットラグの上位レベル"
 
@@ -71736,6 +71783,14 @@ msgstr "レプリカラグの上位レベル"
 
 msgid "Upper levels on the replication lag"
 msgstr "レプリケーションラグの上位レベル"
+
+#, fuzzy
+msgid "Upper levels on the total number of client connections"
+msgstr "接続総数の上位レベル"
+
+#, fuzzy
+msgid "Upper levels on the total number of clients pending on a blocking call"
+msgstr "ブロッキングコールで保留中のクライアント総数の上位レベル"
 
 msgid "Upper levels on total request latency"
 msgstr "リクエストの合計レイテンシの上位レベル"
@@ -80315,9 +80370,47 @@ msgstr "{actual}%s が高すぎます。最大許容値は {bound}です。"
 msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 
+#, python-brace-format
+msgid "{region} ({id_})"
+msgstr ""
+
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Biggest input buffer lower level"
+#~ msgstr "最大の入力バッファの下位レベル"
+
+#~ msgid "Biggest input buffer upper level"
+#~ msgstr "最大の入力バッファ上位レベル"
+
+#~ msgid "Longest output list lower level"
+#~ msgstr "最長の出力リスト下位レベル"
+
+#~ msgid "Longest output list upper level"
+#~ msgstr "最長出力リスト上位レベル"
+
+#~ msgid "Total number of client connections lower level"
+#~ msgstr "クライアント接続総数の下位レベル"
+
+#~ msgid "Total number of client connections upper level"
+#~ msgstr "クライアント接続総数の下位レベル"
+
+#~ msgid ""
+#~ "A voluntary context switch occurs when a thread blocks because it "
+#~ "requires a resource that is unavailable"
+#~ msgstr ""
+#~ "自発的なコンテキストスイッチは、スレッドが利用できないリソースを必要とする"
+#~ "ためにブロックした時に発生します"
+
+#~ msgid ""
+#~ "An involuntary context switch takes place when a thread executes for the "
+#~ "duration of its time slice or when the system identifies a higher-"
+#~ "priority thread to run"
+#~ msgstr ""
+#~ "スレッドがそのタイムスライスの期間中に実行されたとき、またはシステムが実行"
+#~ "する優先度の高いスレッドを識別したときに、非自発的なコンテキストスイッチが"
+#~ "発生します"
 
 #~ msgid "Max Perm used"
 #~ msgstr "使用される最大パーマ"

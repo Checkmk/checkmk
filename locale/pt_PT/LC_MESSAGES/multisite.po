@@ -904,11 +904,6 @@ msgstr "(não definido)"
 msgid "(unused)"
 msgstr "(não usado)"
 
-msgid ""
-"*Since this is a ReadOnlyAccess, we will never create any resources on your "
-"AWS account"
-msgstr ""
-
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr "mas é anulado por uma partida num pacote de regras anterior."
 
@@ -2397,13 +2392,6 @@ msgstr "Uma visão para pesquisar nos dados do inventário por %s"
 #, python-format
 msgid "A view for the %s of one host"
 msgstr "Uma visão para as %s de um anfitrião"
-
-msgid ""
-"A voluntary context switch occurs when a thread blocks because it requires a "
-"resource that is unavailable"
-msgstr ""
-"Uma mudança de contexto voluntária ocorre quando uma thread bloqueia porque "
-"requer um recurso que não está disponível"
 
 #, fuzzy
 msgid "A/V Auth - Bad requests received"
@@ -6011,6 +5999,10 @@ msgstr "Sempre quando um evento está sendo cancelado"
 msgid "Amazon S3 Glacier (Glacier)"
 msgstr "Glaciar S3 Amazônia (Glaciar)"
 
+#, fuzzy
+msgid "Amazon Web Service (AWS)"
+msgstr "Serviços Web da Amazon (AWS)"
+
 msgid "Amazon Web Services (AWS)"
 msgstr "Serviços Web da Amazon (AWS)"
 
@@ -6159,15 +6151,6 @@ msgstr ""
 "relatar este problema ao seu administrador Checkmk. Informações detalhadas "
 "podem ser encontradas na página do relatório de falha ou em <tt>var/log/web."
 "log</tt>."
-
-msgid ""
-"An involuntary context switch takes place when a thread executes for the "
-"duration of its time slice or when the system identifies a higher-priority "
-"thread to run"
-msgstr ""
-"Um interruptor de contexto involuntário ocorre quando um fio é executado "
-"pela duração de sua fatia de tempo ou quando o sistema identifica um fio de "
-"maior prioridade para ser executado"
 
 #, python-format
 msgid ""
@@ -7036,6 +7019,13 @@ msgstr "Validade da Autenticação"
 #, fuzzy
 msgid "Authentication code (OTP / TOTP)"
 msgstr "Modo de Autenticação"
+
+msgid ""
+"Authentication details for communicating with ServiceNow. If you want to "
+"create incidents, at least the role 'itil' is required. If you want to "
+"create cases, at least 'csm_ws_integration' and 'sn_customerservice_agent' "
+"are required."
+msgstr ""
 
 #, fuzzy
 msgid "Authentication error"
@@ -8255,12 +8245,6 @@ msgstr ""
 
 msgid "Biggest input buffer"
 msgstr "O maior buffer de entrada"
-
-msgid "Biggest input buffer lower level"
-msgstr "O maior buffer de entrada de nível inferior"
-
-msgid "Biggest input buffer upper level"
-msgstr "O maior buffer de entrada do nível superior"
 
 msgid "Bike"
 msgstr "Bicicleta"
@@ -12002,7 +11986,7 @@ msgstr "Estado 'limpo'"
 
 msgid ""
 "Click 'Add user' under Users, select 'Access key - Programmatic access', and "
-"attach the 'ReadOnlyAccess' policy*."
+"attach the 'ReadOnlyAccess' policy."
 msgstr ""
 
 msgid "Click for instant reload."
@@ -12929,6 +12913,10 @@ msgstr ""
 
 msgid "Configure"
 msgstr "Configure"
+
+#, fuzzy
+msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
+msgstr "Monitorização de Amazon Web Services (AWS)"
 
 msgid "Configure SNMP related settings using rulesets"
 msgstr ""
@@ -16011,6 +15999,9 @@ msgstr "Dia da semana (1-7, 1 é segunda-feira)"
 
 msgid "Day rate"
 msgstr "Preço por dia"
+
+msgid "Days"
+msgstr ""
 
 msgid "Deactivate"
 msgstr "Desativar"
@@ -19587,7 +19578,15 @@ msgstr "Balde Dinâmico Token"
 msgid "Dynamic configuration"
 msgstr "Configuração dinâmica"
 
+#, fuzzy
+msgid "Dynamic configuration activate changes timeout"
+msgstr "Registro dinâmico de configuração"
+
 msgid "Dynamic configuration logging"
+msgstr "Registro dinâmico de configuração"
+
+#, fuzzy
+msgid "Dynamic configuration site update interval"
 msgstr "Registro dinâmico de configuração"
 
 msgid "Dynamic host configuration"
@@ -28149,6 +28148,10 @@ msgstr "Visão geral do anfitrião"
 msgid "Host parent/child topology"
 msgstr "Topologia do pai/mãe anfitrião/criança"
 
+#, fuzzy
+msgid "Host path"
+msgstr "Alerta do anfitrião"
+
 msgid "Host performance data"
 msgstr "Dados de desempenho do host"
 
@@ -35829,12 +35832,6 @@ msgstr "O mais longo"
 msgid "Longest output list"
 msgstr "Lista de saída mais longa"
 
-msgid "Longest output list lower level"
-msgstr "Lista de saída mais longa nível inferior"
-
-msgid "Longest output list upper level"
-msgstr "Lista de saída mais longa nível superior"
-
 msgid "Look for keys"
 msgstr "Procurar chaves"
 
@@ -36078,6 +36075,24 @@ msgstr ""
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Níveis mais baixos em número de ligações ponto a ponto"
+
+#, fuzzy
+msgid "Lower levels on the biggest input buffer"
+msgstr "Níveis inferiores para o primeiro item de saída"
+
+#, fuzzy
+msgid "Lower levels on the longest output list"
+msgstr "Níveis inferiores para o primeiro item de saída"
+
+#, fuzzy
+msgid "Lower levels on the total number of client connections"
+msgstr "Nível inferior para o número total de ligações"
+
+#, fuzzy
+msgid "Lower levels on the total number of clients pending on a blocking call"
+msgstr ""
+"Número total de clientes pendentes em uma chamada de bloqueio de nível "
+"inferior"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "O mais baixo: Sem notificação, atualizar número do crachá"
@@ -36395,6 +36410,10 @@ msgstr "Correspondência em fila de correio de saída"
 
 msgid "Mails in outgoing mail queue/deferred mails"
 msgstr "Correios em fila de correio de saída/correspondência"
+
+#, fuzzy
+msgid "Mails received time"
+msgstr "Receção de correio"
 
 msgid "Main"
 msgstr "Principal"
@@ -38206,6 +38225,10 @@ msgstr "Expectativa de Vida Mínima da Página"
 msgid "Minimum allowed age"
 msgstr "Idade mínima permitida"
 
+#, fuzzy
+msgid "Minimum allowed uptime"
+msgstr "Tempo máximo de atividade permitido"
+
 msgid "Minimum amount of alert rules in a group to create a group service"
 msgstr ""
 "Quantidade mínima de regras de alerta num grupo para criar um serviço de "
@@ -39916,6 +39939,9 @@ msgstr "Negociar SSL"
 
 msgid "Neither"
 msgstr "Nem"
+
+msgid "Neither a valid IP address nor a macro"
+msgstr ""
 
 msgid "Nested group memberships are resolved"
 msgstr "Os membros de grupos aninhados são resolvidos"
@@ -47740,6 +47766,10 @@ msgstr "Filas de espera a serem puladas"
 msgid "Queues to monitor"
 msgstr "Filas de espera para monitorar"
 
+#, fuzzy
+msgid "Quick Setup"
+msgstr "Configuração rápida"
+
 msgid "Quick search"
 msgstr "Pesquisa rápida"
 
@@ -50397,6 +50427,14 @@ msgstr "Rodada"
 
 msgid "Round trip average"
 msgstr "Média da viagem de ida e volta"
+
+#, fuzzy
+msgid "Round trip maximum"
+msgstr "%sRotagem máxima"
+
+#, fuzzy
+msgid "Round trip minimum"
+msgstr "%sRotagem mínima"
 
 msgid "Round trip time"
 msgstr "Tempo de viagem de ida e volta"
@@ -54637,6 +54675,10 @@ msgstr "Restauração do local"
 
 msgid "Site restriction"
 msgstr "Restrição do sítio"
+
+#, fuzzy
+msgid "Site selection"
+msgstr "Seleção de Pasta"
 
 msgid "Site setting and global setting are identical."
 msgstr "A configuração do local e a configuração global são idênticas."
@@ -67094,8 +67136,9 @@ msgstr ""
 "HOSTNAME. Um host que é configurado com este conjunto de regras irá então "
 "utilizar a informação desse ficheiro em vez de utilizar o SNMP real."
 
+#, fuzzy
 msgid ""
-"This ruleset helps you to configure the classical Nagios plugin "
+"This ruleset helps you to configure the active check plugin "
 "<tt>check_disk_smb</tt> that checks the access to filesystem shares that are "
 "exported via SMB/CIFS."
 msgstr ""
@@ -67389,6 +67432,16 @@ msgstr ""
 "sentido ter o passo menor que o seu intervalo normal de verificação para um "
 "serviço. O padrão é um valor de 60 segundos - que corresponde ao intervalo "
 "de verificação padrão."
+
+msgid ""
+"This setting decides how often the dynamic configuration daemon will get "
+"updates from the the site. Default is 5 minutes"
+msgstr ""
+
+msgid ""
+"This setting decides when the activate changes operation will be timed out. "
+"Default is 2 minutes"
+msgstr ""
 
 msgid ""
 "This setting decides which types of messages to log into the daemon log of "
@@ -69137,22 +69190,6 @@ msgstr "Número total de estilhaços ativos nível inferior"
 
 msgid "Total number of active shards upper level"
 msgstr "Número total de estilhaços ativos no nível superior"
-
-msgid "Total number of client connections lower level"
-msgstr "Número total de conexões de clientes nível inferior"
-
-msgid "Total number of client connections upper level"
-msgstr "Número total de ligações de clientes nível superior"
-
-msgid "Total number of clients pending on a blocking call lower level"
-msgstr ""
-"Número total de clientes pendentes em uma chamada de bloqueio de nível "
-"inferior"
-
-msgid "Total number of clients pending on a blocking call upper level"
-msgstr ""
-"Número total de clientes pendentes em uma chamada de bloqueio no nível "
-"superior"
 
 msgid "Total number of collections lower level"
 msgstr "Número total de cobranças nível inferior"
@@ -73320,6 +73357,14 @@ msgstr "Níveis superiores em número de ligações ponto-a-ponto"
 msgid "Upper levels on percentage of %s requests"
 msgstr "Níveis superiores em percentagem de pedidos %s"
 
+#, fuzzy
+msgid "Upper levels on the biggest input buffer"
+msgstr "Níveis superiores para o tamanho do balde"
+
+#, fuzzy
+msgid "Upper levels on the longest output list"
+msgstr "Níveis superiores para o primeiro item de saída"
+
 msgid "Upper levels on the oldest replication slot lag"
 msgstr "Níveis superiores no intervalo de replicação mais antigo"
 
@@ -73328,6 +73373,16 @@ msgstr "Níveis superiores no desfasamento das réplicas"
 
 msgid "Upper levels on the replication lag"
 msgstr "Níveis superiores do desfasamento de replicação"
+
+#, fuzzy
+msgid "Upper levels on the total number of client connections"
+msgstr "Nível superior para o número total de ligações"
+
+#, fuzzy
+msgid "Upper levels on the total number of clients pending on a blocking call"
+msgstr ""
+"Número total de clientes pendentes em uma chamada de bloqueio no nível "
+"superior"
 
 msgid "Upper levels on total request latency"
 msgstr "Níveis superiores na latência total de pedidos"
@@ -82100,9 +82155,47 @@ msgstr "{actual} é demasiado elevado. O valor máximo permitido é {bound}."
 msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 
+#, python-brace-format
+msgid "{region} ({id_})"
+msgstr ""
+
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "Biggest input buffer lower level"
+#~ msgstr "O maior buffer de entrada de nível inferior"
+
+#~ msgid "Biggest input buffer upper level"
+#~ msgstr "O maior buffer de entrada do nível superior"
+
+#~ msgid "Longest output list lower level"
+#~ msgstr "Lista de saída mais longa nível inferior"
+
+#~ msgid "Longest output list upper level"
+#~ msgstr "Lista de saída mais longa nível superior"
+
+#~ msgid "Total number of client connections lower level"
+#~ msgstr "Número total de conexões de clientes nível inferior"
+
+#~ msgid "Total number of client connections upper level"
+#~ msgstr "Número total de ligações de clientes nível superior"
+
+#~ msgid ""
+#~ "A voluntary context switch occurs when a thread blocks because it "
+#~ "requires a resource that is unavailable"
+#~ msgstr ""
+#~ "Uma mudança de contexto voluntária ocorre quando uma thread bloqueia "
+#~ "porque requer um recurso que não está disponível"
+
+#~ msgid ""
+#~ "An involuntary context switch takes place when a thread executes for the "
+#~ "duration of its time slice or when the system identifies a higher-"
+#~ "priority thread to run"
+#~ msgstr ""
+#~ "Um interruptor de contexto involuntário ocorre quando um fio é executado "
+#~ "pela duração de sua fatia de tempo ou quando o sistema identifica um fio "
+#~ "de maior prioridade para ser executado"
 
 #~ msgid "Max Perm used"
 #~ msgstr "Max Perm usado"

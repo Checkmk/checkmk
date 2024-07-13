@@ -902,11 +902,6 @@ msgstr "(niet gezet)"
 msgid "(unused)"
 msgstr "(ongebruikt)"
 
-msgid ""
-"*Since this is a ReadOnlyAccess, we will never create any resources on your "
-"AWS account"
-msgstr ""
-
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ", maar wordt verworpen door een match in de voorgaande regels."
 
@@ -2398,13 +2393,6 @@ msgstr "Een weergave voor het zoeken in de inventarisgegevens voor %s"
 #, python-format
 msgid "A view for the %s of one host"
 msgstr "Een view voor de %s van een host"
-
-msgid ""
-"A voluntary context switch occurs when a thread blocks because it requires a "
-"resource that is unavailable"
-msgstr ""
-"Een vrijwillige contextwisseling treedt op wanneer een thread blokkeert "
-"omdat hij een middel nodig heeft dat niet beschikbaar is"
 
 #, fuzzy
 msgid "A/V Auth - Bad requests received"
@@ -6010,6 +5998,10 @@ msgstr "Altijd als een evenement wordt geannuleerd"
 msgid "Amazon S3 Glacier (Glacier)"
 msgstr "Amazon S3 Glacier (Glacier)"
 
+#, fuzzy
+msgid "Amazon Web Service (AWS)"
+msgstr "Amazon Web Services (AWS)"
+
 msgid "Amazon Web Services (AWS)"
 msgstr "Amazon Web Services (AWS)"
 
@@ -6155,15 +6147,6 @@ msgstr ""
 "Er is een interne fout opgetreden tijdens het verwerken van uw aanvraag. U "
 "kunt dit probleem melden aan uw Checkmk-beheerder. Gedetailleerde informatie "
 "kunt u vinden op de crash report pagina of in <tt>var/log/web.log</tt>."
-
-msgid ""
-"An involuntary context switch takes place when a thread executes for the "
-"duration of its time slice or when the system identifies a higher-priority "
-"thread to run"
-msgstr ""
-"Een onvrijwillige contextwisseling vindt plaats wanneer een thread wordt "
-"uitgevoerd voor de duur van zijn time slice of wanneer het systeem een "
-"thread met een hogere prioriteit identificeert om uit te voeren"
 
 #, python-format
 msgid ""
@@ -7027,6 +7010,13 @@ msgstr "Authenticatie Verval"
 #, fuzzy
 msgid "Authentication code (OTP / TOTP)"
 msgstr "Authenticatie modus"
+
+msgid ""
+"Authentication details for communicating with ServiceNow. If you want to "
+"create incidents, at least the role 'itil' is required. If you want to "
+"create cases, at least 'csm_ws_integration' and 'sn_customerservice_agent' "
+"are required."
+msgstr ""
 
 #, fuzzy
 msgid "Authentication error"
@@ -8248,12 +8238,6 @@ msgstr ""
 
 msgid "Biggest input buffer"
 msgstr "Grootste ingangsbuffer"
-
-msgid "Biggest input buffer lower level"
-msgstr "Grootste ingangsbuffer lager niveau"
-
-msgid "Biggest input buffer upper level"
-msgstr "Grootste ingangsbuffer bovenste niveau"
 
 msgid "Bike"
 msgstr "Fiets"
@@ -12003,7 +11987,7 @@ msgstr "Status 'bevestigd'"
 
 msgid ""
 "Click 'Add user' under Users, select 'Access key - Programmatic access', and "
-"attach the 'ReadOnlyAccess' policy*."
+"attach the 'ReadOnlyAccess' policy."
 msgstr ""
 
 msgid "Click for instant reload."
@@ -12934,6 +12918,10 @@ msgstr ""
 
 msgid "Configure"
 msgstr "Configureer"
+
+#, fuzzy
+msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
+msgstr "Toezicht op Amazon Web Services (AWS)"
 
 msgid "Configure SNMP related settings using rulesets"
 msgstr "SNMP gerelateerde instellingen configureren met regelsets"
@@ -16021,6 +16009,9 @@ msgstr "Dag van de week (1-7, 1 is maandag)"
 
 msgid "Day rate"
 msgstr "Dagtarief"
+
+msgid "Days"
+msgstr ""
 
 msgid "Deactivate"
 msgstr "Deactiveer"
@@ -19601,7 +19592,15 @@ msgstr "Dynamische Token Emmer"
 msgid "Dynamic configuration"
 msgstr "Dynamische configuratie"
 
+#, fuzzy
+msgid "Dynamic configuration activate changes timeout"
+msgstr "Loggen van dynamische configuratie"
+
 msgid "Dynamic configuration logging"
+msgstr "Loggen van dynamische configuratie"
+
+#, fuzzy
+msgid "Dynamic configuration site update interval"
 msgstr "Loggen van dynamische configuratie"
 
 msgid "Dynamic host configuration"
@@ -28153,6 +28152,10 @@ msgstr "Overzicht gastheren"
 msgid "Host parent/child topology"
 msgstr "Gastheer Ouder-Kind topologie"
 
+#, fuzzy
+msgid "Host path"
+msgstr "Gastheer alarm"
+
 msgid "Host performance data"
 msgstr "Prestatiegegevens van de gastheer"
 
@@ -35857,12 +35860,6 @@ msgstr "Langste"
 msgid "Longest output list"
 msgstr "Langste uitvoerlijst"
 
-msgid "Longest output list lower level"
-msgstr "Langste uitvoerlijst lager niveau"
-
-msgid "Longest output list upper level"
-msgstr "Langste uitvoerlijst bovenste niveau"
-
 msgid "Look for keys"
 msgstr "Zoek naar sleutels"
 
@@ -36101,6 +36098,23 @@ msgstr "Lagere niveaus op Site-to-site bandbreedte in bytes per seconde"
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Lagere niveaus voor het aantal Point-to-site verbindingen"
+
+#, fuzzy
+msgid "Lower levels on the biggest input buffer"
+msgstr "Lagere niveaus voor eerste uitgangsitem"
+
+#, fuzzy
+msgid "Lower levels on the longest output list"
+msgstr "Lagere niveaus voor eerste uitgangsitem"
+
+#, fuzzy
+msgid "Lower levels on the total number of client connections"
+msgstr "Onderste niveau voor totaal aantal verbindingen"
+
+#, fuzzy
+msgid "Lower levels on the total number of clients pending on a blocking call"
+msgstr ""
+"Totaal aantal cliënten in afwachting van een blokkerend gesprek lager niveau"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Laagste: Geen kennisgeving, update badge nummer"
@@ -36421,6 +36435,10 @@ msgstr "Mails in uitgaande mail wachtrij"
 
 msgid "Mails in outgoing mail queue/deferred mails"
 msgstr "Mails in de wachtrij voor uitgaande mail/uitgestelde mails"
+
+#, fuzzy
+msgid "Mails received time"
+msgstr "Ontvangst van post"
 
 msgid "Main"
 msgstr "Hoofd"
@@ -38220,6 +38238,10 @@ msgstr "Minimum levensduur pagina"
 msgid "Minimum allowed age"
 msgstr "Toegestane minimumleeftijd"
 
+#, fuzzy
+msgid "Minimum allowed uptime"
+msgstr "Maximaal toegestane uptime"
+
 msgid "Minimum amount of alert rules in a group to create a group service"
 msgstr ""
 "Minimum aantal waarschuwingsregels in een groep om een groepsdienst aan te "
@@ -39934,6 +39956,9 @@ msgstr "Onderhandelen over SSL"
 
 msgid "Neither"
 msgstr "Noch"
+
+msgid "Neither a valid IP address nor a macro"
+msgstr ""
 
 msgid "Nested group memberships are resolved"
 msgstr "Geneste groepslidmaatschappen worden opgelost"
@@ -47776,6 +47801,10 @@ msgstr "Wachtrijen die moeten worden overgeslagen"
 msgid "Queues to monitor"
 msgstr "Te bewaken wachtrijen"
 
+#, fuzzy
+msgid "Quick Setup"
+msgstr "Snelle installatie"
+
 msgid "Quick search"
 msgstr "Snel zoeken"
 
@@ -50413,6 +50442,14 @@ msgstr "Rond"
 
 msgid "Round trip average"
 msgstr "Gemiddelde heen- en terugreis"
+
+#, fuzzy
+msgid "Round trip maximum"
+msgstr "%sRondreis maximum"
+
+#, fuzzy
+msgid "Round trip minimum"
+msgstr "%sRondreis minimum"
 
 msgid "Round trip time"
 msgstr "Tijd voor rondreis"
@@ -54653,6 +54690,10 @@ msgstr "Plaats herstellen"
 
 msgid "Site restriction"
 msgstr "Beperking van de locatie"
+
+#, fuzzy
+msgid "Site selection"
+msgstr "Map Selectie"
 
 msgid "Site setting and global setting are identical."
 msgstr "Site-instelling en globale instelling zijn identiek."
@@ -67143,8 +67184,9 @@ msgstr ""
 "geconfigureerd is met deze regelset zal dan de informatie uit dat bestand "
 "gebruiken in plaats van echte SNMP te gebruiken."
 
+#, fuzzy
 msgid ""
-"This ruleset helps you to configure the classical Nagios plugin "
+"This ruleset helps you to configure the active check plugin "
 "<tt>check_disk_smb</tt> that checks the access to filesystem shares that are "
 "exported via SMB/CIFS."
 msgstr ""
@@ -67438,6 +67480,16 @@ msgstr ""
 "Het heeft geen zin om de stap kleiner te maken dan het normale controle-"
 "interval voor een onderhoudsbeurt. De standaardwaarde is 60 seconden - wat "
 "overeenkomt met het standaard controle-interval."
+
+msgid ""
+"This setting decides how often the dynamic configuration daemon will get "
+"updates from the the site. Default is 5 minutes"
+msgstr ""
+
+msgid ""
+"This setting decides when the activate changes operation will be timed out. "
+"Default is 2 minutes"
+msgstr ""
 
 msgid ""
 "This setting decides which types of messages to log into the daemon log of "
@@ -69189,21 +69241,6 @@ msgstr "Totaal aantal actieve scherven lager niveau"
 
 msgid "Total number of active shards upper level"
 msgstr "Totaal aantal actieve scherven bovenste niveau"
-
-msgid "Total number of client connections lower level"
-msgstr "Totaal aantal cliëntverbindingen lager niveau"
-
-msgid "Total number of client connections upper level"
-msgstr "Totaal aantal cliëntverbindingen bovenste niveau"
-
-msgid "Total number of clients pending on a blocking call lower level"
-msgstr ""
-"Totaal aantal cliënten in afwachting van een blokkerend gesprek lager niveau"
-
-msgid "Total number of clients pending on a blocking call upper level"
-msgstr ""
-"Totaal aantal cliënten in afwachting van een blokkerend gesprek bovenste "
-"niveau"
 
 msgid "Total number of collections lower level"
 msgstr "Totaal aantal collecties lager niveau"
@@ -73378,6 +73415,14 @@ msgstr "Bovenste niveaus op aantal Point-to-site verbindingen"
 msgid "Upper levels on percentage of %s requests"
 msgstr "Bovenste niveaus op percentage van %s verzoeken"
 
+#, fuzzy
+msgid "Upper levels on the biggest input buffer"
+msgstr "Bovenste niveaus voor de emmer"
+
+#, fuzzy
+msgid "Upper levels on the longest output list"
+msgstr "Bovenste niveaus voor eerste uitgangsitem"
+
 msgid "Upper levels on the oldest replication slot lag"
 msgstr "Bovenste niveaus op de oudste replicatiesleuf achterstand"
 
@@ -73386,6 +73431,16 @@ msgstr "Hogere niveaus op de replica lag"
 
 msgid "Upper levels on the replication lag"
 msgstr "Bovenste niveaus van de replicatievertraging"
+
+#, fuzzy
+msgid "Upper levels on the total number of client connections"
+msgstr "Bovenste niveau voor totaal aantal verbindingen"
+
+#, fuzzy
+msgid "Upper levels on the total number of clients pending on a blocking call"
+msgstr ""
+"Totaal aantal cliënten in afwachting van een blokkerend gesprek bovenste "
+"niveau"
 
 msgid "Upper levels on total request latency"
 msgstr "Bovenste niveaus op totale verzoeklatentie"
@@ -82215,9 +82270,47 @@ msgstr "{actual} is te hoog. De maximaal toegestane waarde is {bound}."
 msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 
+#, python-brace-format
+msgid "{region} ({id_})"
+msgstr ""
+
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Biggest input buffer lower level"
+#~ msgstr "Grootste ingangsbuffer lager niveau"
+
+#~ msgid "Biggest input buffer upper level"
+#~ msgstr "Grootste ingangsbuffer bovenste niveau"
+
+#~ msgid "Longest output list lower level"
+#~ msgstr "Langste uitvoerlijst lager niveau"
+
+#~ msgid "Longest output list upper level"
+#~ msgstr "Langste uitvoerlijst bovenste niveau"
+
+#~ msgid "Total number of client connections lower level"
+#~ msgstr "Totaal aantal cliëntverbindingen lager niveau"
+
+#~ msgid "Total number of client connections upper level"
+#~ msgstr "Totaal aantal cliëntverbindingen bovenste niveau"
+
+#~ msgid ""
+#~ "A voluntary context switch occurs when a thread blocks because it "
+#~ "requires a resource that is unavailable"
+#~ msgstr ""
+#~ "Een vrijwillige contextwisseling treedt op wanneer een thread blokkeert "
+#~ "omdat hij een middel nodig heeft dat niet beschikbaar is"
+
+#~ msgid ""
+#~ "An involuntary context switch takes place when a thread executes for the "
+#~ "duration of its time slice or when the system identifies a higher-"
+#~ "priority thread to run"
+#~ msgstr ""
+#~ "Een onvrijwillige contextwisseling vindt plaats wanneer een thread wordt "
+#~ "uitgevoerd voor de duur van zijn time slice of wanneer het systeem een "
+#~ "thread met een hogere prioriteit identificeert om uit te voeren"
 
 #~ msgid "Max Perm used"
 #~ msgstr "Max. gebruikt Perm"

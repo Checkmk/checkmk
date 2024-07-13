@@ -41,6 +41,10 @@ def execute_userdb_job() -> None:
         gui_logger.debug("Another synchronization job is already running: Skipping this sync")
         return
 
+    if not job.shall_start():
+        gui_logger.debug("Job shall not start")
+        return
+
     job.start(
         partial(
             job.do_sync,
@@ -109,6 +113,12 @@ class UserSyncBackgroundJob(BackgroundJob):
 
     def _back_url(self) -> str:
         return makeuri_contextless(request, [("mode", "users")], filename="wato.py")
+
+    def shall_start(self) -> bool:
+        """Some basic preliminary check to decide quickly whether to start the job"""
+        return any(
+            connection.sync_is_needed() for _connection_id, connection in active_connections()
+        )
 
     def do_sync(
         self,

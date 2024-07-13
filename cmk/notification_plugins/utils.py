@@ -277,11 +277,11 @@ def post_request(
     return response
 
 
-def process_by_status_code(response: requests.Response, success_code: int = 200) -> int:
+def process_by_status_code(response: requests.Response, success_code: [200, 202]) -> int:
     status_code = response.status_code
     summary = f"{status_code}: {http_responses[status_code]}"
 
-    if status_code == success_code:
+    if status_code not in success_code:
         sys.stderr.write(summary)
         return 0
     if 500 <= status_code <= 599:

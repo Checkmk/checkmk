@@ -1928,6 +1928,10 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
         super().__init__(self.job_prefix)
         self.maximum_age = maximum_age
 
+    def shall_start(self) -> bool:
+        """Some basic preliminary check to decide quickly whether to start the job"""
+        return bool(self._existing_activation_ids())
+
     def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
         self._do_housekeeping()
         job_interface.send_result_message(_("Activation cleanup finished"))
@@ -1991,7 +1995,7 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
                             exc_info=True,
                         )
 
-    def _existing_activation_ids(self):
+    def _existing_activation_ids(self) -> list[str]:
         files = set()
 
         for base_dir in (
@@ -2021,6 +2025,10 @@ def execute_activation_cleanup_background_job(maximum_age: int | None = None) ->
 
     if job.is_active():
         logger.debug("Another activation cleanup job is already running: Skipping this time")
+        return
+
+    if not job.shall_start():
+        logger.debug("Job shall not start")
         return
 
     try:

@@ -1779,6 +1779,10 @@ def render_hidden_if_locked(vs: ValueSpec, varprefix: str, value: object, locked
 
 
 class ABCEditRuleMode(WatoMode):
+    def __init__(self):
+        super().__init__()
+        self._do_validate_on_render = False
+
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
         return []
@@ -2000,6 +2004,7 @@ class ABCEditRuleMode(WatoMode):
 
         # VALUE
         render_mode, registered_form_spec = self._get_render_mode()
+        self._do_validate_on_render = True
         match render_mode:
             case ExperimentalRenderMode.FRONTEND | ExperimentalRenderMode.BACKEND_AND_FRONTEND:
                 assert registered_form_spec is not None
@@ -2132,14 +2137,18 @@ class ABCEditRuleMode(WatoMode):
                         self._vue_field_id(),
                         value,
                         origin,
-                        True,
+                        self._do_validate_on_render,
                     )
                 case ExperimentalRenderMode.BACKEND_AND_FRONTEND:
                     forms.section("Current setting as VUE")
                     assert registered_form_spec is not None
                     value, origin = self._get_rule_value_and_origin()
                     render_form_spec(
-                        registered_form_spec, self._vue_field_id(), value, origin, True
+                        registered_form_spec,
+                        self._vue_field_id(),
+                        value,
+                        origin,
+                        self._do_validate_on_render,
                     )
                     forms.section("Backend rendered (read only)")
                     valuespec.validate_datatype(self._rule.value, "ve")

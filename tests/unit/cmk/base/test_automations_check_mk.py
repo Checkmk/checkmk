@@ -17,11 +17,13 @@ from cmk.automations.results import DiagHostResult
 
 from cmk.fetchers import PiggybackFetcher
 
-from cmk.base import config, core_config
+from cmk.base import config, core_config, server_side_calls
 from cmk.base.automations import check_mk
 from cmk.base.config import ConfigCache
 
 import cmk.ccc.debug
+from cmk.discover_plugins import PluginLocation
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 
 
 class TestAutomationDiagHost:
@@ -65,27 +67,43 @@ class TestAutomationDiagHost:
         )
 
 
-def mock_argument_function(params: Mapping[str, str]) -> str:
-    return "--arg1 arument1 --host_alias $HOSTALIAS$"
+MOCK_PLUGIN = ActiveCheckConfig(
+    name="my_active_check",
+    parameter_parser=lambda x: x,
+    commands_function=lambda params, host_config: (
+        ActiveCheckCommand(
+            service_description=f"Active check of {host_config.name}",
+            command_arguments=("--arg1", "arument1", "--host_alias", f"{host_config.alias}"),
+        ),
+    ),
+)
 
 
-def mock_service_description(params: Mapping[str, str]) -> str:
-    return "Active check of $HOSTNAME$"
+def _patch_plugin_loading(
+    monkeypatch: pytest.MonkeyPatch,
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
+) -> None:
+    monkeypatch.setattr(
+        check_mk,
+        server_side_calls.load_active_checks.__name__,
+        lambda: ((), loaded_active_checks),
+    )
+
+
+class AutomationActiveCheckTestable(check_mk.AutomationActiveCheck):
+    def _execute_check_plugin(self, commandline: Sequence[str]) -> tuple[int, str]:
+        return (0, f"Assume I ran {commandline!r}")
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, host_attrs, service_attrs, active_check_args, expected_result",
+    "active_checks, loaded_active_checks, host_attrs, service_attrs, active_check_args, expected_result",
     [
         pytest.param(
             [
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {
-                "my_active_check": {
-                    "command_line": "echo $ARG1$",
-                    "argument_function": mock_argument_function,
-                    "service_description": mock_service_description,
-                }
+                PluginLocation("cmk.plugins", "some_name"): MOCK_PLUGIN,
             },
             {
                 "alias": "my_host_alias",
@@ -97,7 +115,8 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             {},
             ["my_host", "my_active_check", "Active check of my_host"],
             automation_results.ActiveCheckResult(
-                state=0, output="--arg1 arument1 --host_alias my_host_alias"
+                state=0,
+                output="Assume I ran 'check_my_active_check --arg1 arument1 --host_alias my_host'",
             ),
             id="active_check",
         ),
@@ -106,11 +125,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {
-                "my_active_check": {
-                    "command_line": "echo $ARG1$",
-                    "argument_function": mock_argument_function,
-                    "service_description": mock_service_description,
-                }
+                PluginLocation("cmk.plugins", "some_name"): MOCK_PLUGIN,
             },
             {
                 "alias": "my_host_alias",
@@ -131,76 +146,18 @@ def mock_service_description(params: Mapping[str, str]) -> str:
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {
-                "my_active_check": {
-                    "command_line": "echo $ARG1$",
-                    "argument_function": lambda _: [
-                        "-n",  # relevant for quoting -- echo should eat this
-                        "--arg1",
-                        "arument1",
-                        "--host_alias",
-                        "$HOSTALIAS$",
-                    ],
-                    "service_description": mock_service_description,
-                }
-            },
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
-            {},
-            ["my_host", "my_active_check", "Active check of my_host"],
-            automation_results.ActiveCheckResult(
-                state=0, output="--arg1 arument1 --host_alias my_host_alias"
-            ),
-            id="arguments_list",
-        ),
-        pytest.param(
-            [
-                (
-                    "http",
-                    [
-                        {
-                            "description": "My http check",
-                            "param1": "param1",
-                            "name": "my special HTTP",
-                        }
-                    ],
+                PluginLocation("cmk.plugins", "some_name"): ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda x: x,
+                    commands_function=lambda params, host_config: (
+                        ActiveCheckCommand(
+                            service_description=f"Active check of {host_config.name}",
+                            command_arguments=(
+                                replace_macros("$_SERVICEFOO$", host_config.macros),
+                            ),
+                        ),
+                    ),
                 ),
-            ],
-            {
-                "http": {
-                    "command_line": "echo $ARG1$",
-                    "argument_function": mock_argument_function,
-                    "service_description": lambda x: "HTTP my special HTTP",
-                }
-            },
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
-            {},
-            ["my_host", "http", "HTTP my special HTTP"],
-            automation_results.ActiveCheckResult(
-                state=0, output="--arg1 arument1 --host_alias my_host_alias"
-            ),
-            id="arguments_list",
-        ),
-        pytest.param(
-            [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
-            ],
-            {
-                "my_active_check": {
-                    "command_line": "echo $ARG1$",
-                    "argument_function": lambda _: ["echo", "$_SERVICEFOO$"],
-                    "service_description": mock_service_description,
-                }
             },
             {
                 "alias": "my_host_alias",
@@ -211,21 +168,23 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             },
             {"_FOO": "BAR"},
             ["my_host", "my_active_check", "Active check of my_host"],
-            automation_results.ActiveCheckResult(state=0, output="echo BAR"),
+            automation_results.ActiveCheckResult(
+                state=0, output="Assume I ran \"check_my_active_check 'BAR'\""
+            ),
             id="custom_service_attribute",
         ),
     ],
 )
 def test_automation_active_check(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
-    active_check_info: Mapping[str, Mapping[str, str]],
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: Mapping[str, str],
     service_attrs: Mapping[str, str],
     active_check_args: list[str],
     expected_result: automation_results.ActiveCheckResult,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(config, "active_check_info", active_check_info)
+    _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *_: host_attrs)
     monkeypatch.setattr(core_config, "get_service_attributes", lambda *_: service_attrs)
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
@@ -233,23 +192,28 @@ def test_automation_active_check(
     config_cache = config.reset_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
-    active_check = check_mk.AutomationActiveCheck()
+    active_check = AutomationActiveCheckTestable()
     assert active_check.execute(active_check_args) == expected_result
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, host_attrs, active_check_args, error_message",
+    "active_checks, loaded_active_checks, host_attrs, active_check_args, error_message",
     [
         pytest.param(
             [
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {
-                "my_active_check": {
-                    "command_line": "echo $ARG1$",
-                    "argument_function": lambda _: None,
-                    "service_description": mock_service_description,
-                }
+                PluginLocation("some_module", "some_name"): ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda x: x,
+                    commands_function=lambda params, host_config: (
+                        ActiveCheckCommand(
+                            service_description=f"Active check of {host_config.name}",
+                            command_arguments=(1, 2, 3),  # type: ignore[arg-type]  # wrong on purpose
+                        ),
+                    ),
+                ),
             },
             {
                 "alias": "my_host_alias",
@@ -259,23 +223,24 @@ def test_automation_active_check(
                 "display_name": "my_host",
             },
             ["my_host", "my_active_check", "Active check of my_host"],
-            "\nWARNING: Config creation for active check my_active_check failed on my_host: "
-            "The check argument function needs to return either a list of arguments or a string of "
-            "the concatenated arguments (Service: Active check of my_host).\n",
+            (
+                "\nWARNING: Config creation for active check my_active_check failed on my_host: "
+                "Got invalid argument list from SSC plugin: 1 at index 0 in (1, 2, 3). Expected either `str` or `Secret`.\n"
+            ),
             id="invalid_args",
         ),
     ],
 )
 def test_automation_active_check_invalid_args(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
-    active_check_info: Mapping[str, Mapping[str, str]],
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: Mapping[str, str],
     active_check_args: list[str],
     error_message: str,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(config, "active_check_info", active_check_info)
+    _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(
         config, config.lookup_ip_address.__name__, lambda *a, **kw: HostAddress("127.0.0.1")
     )

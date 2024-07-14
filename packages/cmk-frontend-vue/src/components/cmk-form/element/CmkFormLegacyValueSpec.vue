@@ -2,13 +2,29 @@
 import { type ValidationMessages } from '@/utils'
 import { FormValidation } from '@/components/cmk-form/'
 import type { LegacyValuespec } from '@/vue_formspec_components'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { select } from 'd3-selection'
 
 const props = defineProps<{
   spec: LegacyValuespec
-  validation: ValidationMessages
 }>()
+
+const validation = ref<ValidationMessages>([])
+function setValidation(new_validation: ValidationMessages) {
+  const validations: ValidationMessages = []
+  new_validation.forEach((message) => {
+    validations.push({
+      location: [''],
+      message: message.message,
+      invalid_value: message.invalid_value
+    })
+  })
+  validation.value = validations
+}
+
+defineExpose({
+  setValidation
+})
 
 defineModel<unknown>('data', { required: true })
 const legacy_dom = ref<HTMLFormElement>()
@@ -33,17 +49,6 @@ function collect_data() {
 const emit = defineEmits<{
   (e: 'update:data', value: unknown): void
 }>()
-
-const remaining_validations = computed(() => {
-  const messages: ValidationMessages = []
-  props.validation.forEach((msg) => {
-    messages.push({
-      location: [],
-      message: msg.message
-    })
-  })
-  return messages
-})
 </script>
 
 <template>
@@ -55,5 +60,5 @@ const remaining_validations = computed(() => {
     v-html="spec.html"
   ></form>
   <!--eslint-enable-->
-  <FormValidation :validation="remaining_validations"></FormValidation>
+  <FormValidation :validation="validation"></FormValidation>
 </template>

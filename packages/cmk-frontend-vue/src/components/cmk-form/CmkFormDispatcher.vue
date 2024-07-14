@@ -9,10 +9,11 @@ import type { FormSpec } from '@/vue_formspec_components'
 import CmkFormCascadingSingleChoice from '@/components/cmk-form/container/CmkFormCascadingSingleChoice.vue'
 import CmkFormList from '@/components/cmk-form/container/CmkFormList.vue'
 import CmkFormLegacyValueSpec from '@/components/cmk-form/element/CmkFormLegacyValueSpec.vue'
+import type { IComponent } from '@/types'
+import { ref } from 'vue'
 
 const props = defineProps<{
   spec: FormSpec
-  validation: ValidationMessages
 }>()
 
 const data = defineModel<unknown>('data', { required: true })
@@ -29,13 +30,19 @@ const components: Record<string, unknown> = {
   legacy_valuespec: CmkFormLegacyValueSpec
 }
 
-// TODO: we should enforce an interface as return value?!
-function get_component(): unknown {
-  return components[props.spec.type]
+function getComponent(): IComponent {
+  return components[props.spec.type] as IComponent
 }
+const component_ref = ref<IComponent>()
+function setValidation(validation: ValidationMessages) {
+  component_ref.value!.setValidation(validation)
+}
+
+defineExpose({
+  setValidation
+})
 </script>
 
 <template>
-  <component :is="get_component()" v-model:data="data" :spec="spec" :validation="validation">
-  </component>
+  <component :is="getComponent()" ref="component_ref" v-model:data="data" :spec="spec" />
 </template>

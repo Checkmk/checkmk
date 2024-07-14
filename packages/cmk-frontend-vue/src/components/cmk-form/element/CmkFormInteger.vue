@@ -1,22 +1,25 @@
 <script setup lang="ts">
-import { computed, ref, onBeforeUpdate } from 'vue'
+import { computed, ref } from 'vue'
 import { is_integer, validate_value, type ValidationMessages } from '@/utils'
 import { FormValidation } from '@/components/cmk-form/'
 import type { Integer } from '@/vue_formspec_components'
 
 const props = defineProps<{
   spec: Integer
-  validation: ValidationMessages
 }>()
 
-const data = defineModel<number>('data', { required: true })
-const local_validation = ref<ValidationMessages | null>(null)
+const data = defineModel<number | string>('data', { required: true })
+const validation = ref<ValidationMessages>([])
 
-onBeforeUpdate(() => {
-  local_validation.value === null
-  validate_value(data.value, props.spec.validators!).forEach((error) => {
-    local_validation.value = [{ message: error, location: [] }]
+function setValidation(new_validation: ValidationMessages) {
+  new_validation.forEach((message) => {
+    data.value = message.invalid_value as string
   })
+  validation.value = new_validation
+}
+
+defineExpose({
+  setValidation
 })
 
 const emit = defineEmits<{
@@ -28,7 +31,7 @@ const value = computed({
     return data.value
   },
   set(value: unknown) {
-    local_validation.value = []
+    validation.value = []
     let emitted_value: string | number
     if (is_integer(value as string)) {
       emitted_value = parseInt(value as string)
@@ -36,24 +39,20 @@ const value = computed({
       emitted_value = value as string
     }
     validate_value(emitted_value, props.spec.validators!).forEach((error) => {
-      local_validation.value = [{ message: error, location: [] }]
+      validation.value = [{ message: error, location: [], invalid_value: emitted_value }]
     })
     emit('update:data', emitted_value)
   }
 })
 
-const validation = computed(() => {
-  // If the local validation was never used (null), return the props.validation (backend validation)
-  if (local_validation.value === null) {
-    return props.validation
-  }
-  return local_validation.value
+const placeholder = computed(() => {
+  return props.spec.input_hint || ''
 })
 </script>
 
 <template>
   <label v-if="props.spec.label" :for="$componentId">{{ props.spec.label }}</label>
-  <input :id="$componentId" v-model="value" class="number" type="text" />
+  <input :id="$componentId" v-model="value" :placeholder="placeholder" class="number" type="text" />
   <span v-if="props.spec.unit" class="vs_floating_text">{{ props.spec.unit }}</span>
   <FormValidation :validation="validation"></FormValidation>
 </template>

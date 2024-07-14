@@ -29,7 +29,7 @@ const value = computed({
       emitted_value = value as string
     }
     validate_value(emitted_value, props.spec.validators!).forEach((error) => {
-      local_validation.value = [{ message: error, location: [] }]
+      local_validation.value = [{ message: error, location: [], invalid_value: emitted_value }]
     })
     emit('update:data', emitted_value)
   }

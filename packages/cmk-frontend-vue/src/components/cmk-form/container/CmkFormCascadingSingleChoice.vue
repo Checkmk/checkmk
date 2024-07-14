@@ -8,11 +8,31 @@ import type {
   FormSpec
 } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
+import type { IComponent } from '@/types'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
-  validation: ValidationMessages
 }>()
+
+const validation = ref<ValidationMessages>([])
+function setValidation(validation: ValidationMessages) {
+  const element_messages: ValidationMessages = []
+  validation.forEach((msg) => {
+    if (msg.location.length === 0) {
+      return
+    }
+    element_messages.push({
+      location: msg.location.slice(1),
+      message: msg.message,
+      invalid_value: msg.invalid_value
+    })
+  })
+  active_element_ref.value['active']!.setValidation(element_messages)
+}
+
+defineExpose({
+  setValidation
+})
 
 const data = defineModel('data', {
   type: Object as PropType<[string, unknown]>,
@@ -51,7 +71,7 @@ const value = computed({
     local_validation.value = []
     const new_value: [string, unknown] = [value, current_values[value]]
     validate_value(value, props.spec.validators!).forEach((error) => {
-      local_validation.value = [{ message: error, location: [''] }]
+      local_validation.value = [{ message: error, location: [''], invalid_value: value }]
     })
     emit('update:data', new_value)
   }
@@ -71,19 +91,7 @@ const active_element = computed((): ActiveElement => {
     validation: []
   }
 })
-
-function get_validation_for_child(ident: string): ValidationMessages {
-  const child_messages: ValidationMessages = []
-  props.validation.forEach((msg) => {
-    if (msg.location[0] === ident) {
-      child_messages.push({
-        location: msg.location.slice(1),
-        message: msg.message
-      })
-    }
-  })
-  return child_messages
-}
+const active_element_ref = ref<Record<string, IComponent>>({})
 </script>
 
 <template>
@@ -96,9 +104,13 @@ function get_validation_for_child(ident: string): ValidationMessages {
     </select>
   </div>
   <CmkFormDispatcher
+    :ref="
+      (el) => {
+        active_element_ref['active'] = el as unknown as IComponent
+      }
+    "
     v-model:data="data[1]"
     :spec="active_element.spec"
-    :validation="get_validation_for_child(value[0]!)"
   ></CmkFormDispatcher>
   <FormValidation :validation="validation"></FormValidation>
 </template>

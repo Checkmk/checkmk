@@ -50,7 +50,8 @@ function getValidationForChild(index: number): ValidationMessages {
     if (msg.location[0] === index.toString()) {
       child_messages.push({
         location: msg.location.slice(1),
-        message: msg.message
+        message: msg.message,
+        invalid_value: msg.invalid_value
       })
     }
   })
@@ -107,7 +108,7 @@ function dragging(event: DragEvent) {
 
 function validateList() {
   validate_value(data.value, props.spec.validators!).forEach((error) => {
-    local_validation.value = [{ message: error, location: [] }]
+    local_validation.value = [{ message: error, location: [], invalid_value: data.value }]
   })
 }
 

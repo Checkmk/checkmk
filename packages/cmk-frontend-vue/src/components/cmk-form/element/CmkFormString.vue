@@ -6,8 +6,19 @@ import * as FormSpec from '@/vue_formspec_components'
 
 const props = defineProps<{
   spec: FormSpec.String
-  validation: ValidationMessages
 }>()
+
+const validation = ref<ValidationMessages>([])
+function setValidation(new_validation: ValidationMessages) {
+  new_validation.forEach((message) => {
+    data.value = message.invalid_value as string
+  })
+  validation.value = new_validation
+}
+
+defineExpose({
+  setValidation
+})
 
 const data = defineModel('data', { type: String, required: true })
 const local_validation = ref<ValidationMessages | null>(null)
@@ -23,18 +34,10 @@ const value = computed({
   set(value: string) {
     local_validation.value = []
     validate_value(value, props.spec.validators!).forEach((error) => {
-      local_validation.value = [{ message: error, location: [] }]
+      local_validation.value = [{ message: error, location: [], invalid_value: value }]
     })
     emit('update:data', value)
   }
-})
-
-const validation = computed(() => {
-  // If the local validation was never used (null), return the props.validation (backend validation)
-  if (local_validation.value === null) {
-    return props.validation
-  }
-  return local_validation.value
 })
 </script>
 

@@ -43,13 +43,11 @@
         "unit": {
           "type": "string"
         },
-        "is_input_hint": {
-            "type": "boolean"
-        }
+        "input_hint": {}
       },
       "required": [
         "type",
-        "is_input_hint"
+        "input_hint"
       ],
       "allOf": [
         {
@@ -69,10 +67,12 @@
         },
         "unit": {
           "type": "string"
-        }
+        },
+        "input_hint": {}
       },
       "required": [
-        "type"
+        "type",
+        "input_hint"
       ],
       "allOf": [
         {
@@ -114,10 +114,12 @@
         },
         "placeholder": {
           "type": "string"
-        }
+        },
+        "input_hint": {}
       },
       "required": [
-        "type"
+        "type",
+        "input_hint"
       ],
       "allOf": [
         {
@@ -222,7 +224,7 @@
       },
       "required": [
         "name",
-        "title"
+        "title",
       ]
     },
     "single_choice": {
@@ -247,12 +249,14 @@
         },
         "label": {
           "type": "string"
-        }
+        },
+        "input_hint": {}
       },
       "required": [
         "type",
         "frozen",
-        "elements"
+        "elements",
+        "input_hint"
       ],
       "allOf": [
         {
@@ -300,11 +304,13 @@
         },
         "label": {
           "type": "string"
-        }
+        },
+        "input_hint": {}
       },
       "required": [
         "type",
-        "elements"
+        "elements",
+        "input_hint"
       ],
       "allOf": [
         {

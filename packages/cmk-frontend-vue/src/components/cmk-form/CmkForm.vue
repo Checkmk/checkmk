@@ -1,18 +1,27 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import CmkFormDispatcher from './CmkFormDispatcher.vue'
 import type { FormSpec } from '@/vue_formspec_components'
 import type { ValidationMessages } from '@/utils'
+import type { IComponent } from '@/types'
 
 defineProps<{
   id: string
   spec: FormSpec
-  validation: ValidationMessages
 }>()
 
 const data = defineModel<unknown>('data', { required: true })
 const value_as_json = computed(() => {
   return JSON.stringify(data.value)
+})
+
+const component_ref = ref<IComponent>()
+function setValidation(validation: ValidationMessages) {
+  component_ref.value!.setValidation(validation)
+}
+
+defineExpose({
+  setValidation
 })
 </script>
 
@@ -20,7 +29,7 @@ const value_as_json = computed(() => {
   <table class="nform">
     <tr>
       <td>
-        <CmkFormDispatcher v-model:data="data" :spec="spec" :validation="validation" />
+        <CmkFormDispatcher ref="component_ref" v-model:data="data" :spec="spec" />
       </td>
     </tr>
     <!-- This input field contains the computed json value which is sent when the form is submitted -->

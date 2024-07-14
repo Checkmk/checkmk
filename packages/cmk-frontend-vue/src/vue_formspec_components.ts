@@ -18,16 +18,19 @@ export type Integer = FormSpec & {
   type: "integer";
   label?: string;
   unit?: string;
+  input_hint: string;
 };
 export type Validators = IsInteger | IsFloat | NumberInRange | LengthInRange;
 export type Float = FormSpec & {
   type: "float";
   label?: string;
   unit?: string;
+  input_hint: unknown;
 };
 export type String = FormSpec & {
   type: "string";
   placeholder?: string;
+  input_hint: unknown;
 };
 export type Dictionary = FormSpec & {
   type: "dictionary";
@@ -53,12 +56,14 @@ export type SingleChoice = FormSpec & {
   no_elements_text?: string;
   frozen: boolean;
   label?: string;
+  input_hint: unknown;
 };
 export type CascadingSingleChoice = FormSpec & {
   type: "cascading_single_choice";
   elements: CascadingSingleChoiceElement[];
   no_elements_text?: string;
   label?: string;
+  input_hint: unknown;
 };
 
 export interface VueFormspecComponents {
@@ -110,4 +115,5 @@ export interface CascadingSingleChoiceElement {
 export interface ValidationMessage {
   location: string[];
   message: string;
+  invalid_value: unknown;
 }

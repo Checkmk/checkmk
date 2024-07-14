@@ -13,11 +13,13 @@
         },
         "message": {
           "type": "string"
-        }
+        },
+        "invalid_value": {}
       },
       "required": [
         "location",
-        "message"
+        "message",
+        "invalid_value"
       ]
     }
   }

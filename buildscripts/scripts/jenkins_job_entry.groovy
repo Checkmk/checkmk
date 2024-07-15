@@ -29,11 +29,6 @@ def main(job_definition_file) {
     // TODO: this should be passed through by trigger-jobs
     build_date = (new SimpleDateFormat("yyyy.MM.dd")).format(new Date());
 
-    // FIXME: should be defined elsewhere
-    // only used by build-cmk-packages.groovy
-    // in all nightly "build-cmk-packages"
-    DOCKER_TAG_FOLDER = "2.3.0-latest";
-
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
     try {
         load("${checkout_dir}/${job_definition_file}").main();

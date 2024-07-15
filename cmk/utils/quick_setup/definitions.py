@@ -70,6 +70,7 @@ class QuickSetupSaveRedirect:
 
 @dataclass
 class QuickSetup:
+    title: str
     id: QuickSetupId
     stages: Sequence[QuickSetupStage]
     save_action: Callable[[list[IncomingStage]], str] | None = None

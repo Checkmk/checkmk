@@ -177,6 +177,7 @@ def save_action(stages: list[IncomingStage]) -> str:
 
 
 quick_setup_aws = QuickSetup(
+    title=_("Amazon Web Services (AWS)"),
     id=QuickSetupId("aws_quick_setup"),
     stages=aws_stages(),
     save_action=save_action,

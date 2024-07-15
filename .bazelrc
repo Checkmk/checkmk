@@ -13,8 +13,6 @@ common --local_resources=cpu=HOST_CPUS-2
 common --local_resources=memory=HOST_RAM*.5
 
 ## For specific commands
-# Default C++ standard to C++20.
-build --action_env=BAZEL_CXXOPTS="-std=c++20"
 # Always require debug info.
 # build --copt="-g"
 clean --async
@@ -36,7 +34,7 @@ common:ci --local_resources=memory=HOST_RAM*.67
 
 ## For specific commands
 # Add standard here as well as the CI eats environment variables.
-build:ci --cxxopt="-std=c++20"
+# build:ci ...
 # clean:ci ...
 # run:ci ...
 # test:ci ...

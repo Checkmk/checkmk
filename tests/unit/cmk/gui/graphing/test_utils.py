@@ -156,7 +156,7 @@ def test_parse_perf_data2(request_context: None, set_config: SetConfig) -> None:
         (
             "memused",
             "check_mk-hr_mem",
-            {"auto_graph": False, "name": "mem_lnx_total_used", "scale": 1024**2},
+            {"auto_graph": True, "name": "mem_lnx_total_used", "scale": 1024**2},
         ),
         ("fake", "check_mk-imaginary", {"auto_graph": True, "name": "fake", "scale": 1.0}),
     ],
@@ -284,7 +284,7 @@ def test__normalize_perf_data(
         (
             ["ramused", "swapused", "memused"],
             "check_mk-statgrab_mem",
-            ["METRIC_mem_used", "METRIC_swap_used"],
+            ["METRIC_mem_lnx_total_used", "METRIC_mem_used", "METRIC_swap_used"],
         ),
         (
             [
@@ -315,7 +315,7 @@ def test_get_graph_templates_1(
             ["ramused", "swapused", "memused"],
             (0, 1, 2, 3),
             "check_mk-statgrab_mem",
-            ["ram_swap_used"],
+            ["METRIC_mem_lnx_total_used", "ram_swap_used"],
             id="ram_swap_used",
         ),
     ],

@@ -4,6 +4,8 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
+register_toolchains("//omd/packages/toolchain:local")
+
 RULES_FOREIGN_CC_VERSION = "0.9.0"
 
 http_archive(

@@ -33,7 +33,7 @@ common:ci --color=no
 common:ci --show_progress_rate_limit=0
 common:ci --show_timestamps
 common:ci --memory_profile=bazel-memory.profile
-common:ci --extra_toolchains="//omd/packages/toolchain:cc_toolchain_for_linux_x86_64"
+common:ci --extra_toolchains="//omd/packages/toolchain:ci"
 common:ci --local_resources=cpu=HOST_CPUS
 common:ci --local_resources=memory=HOST_RAM*.67
 

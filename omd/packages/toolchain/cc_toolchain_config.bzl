@@ -1,98 +1,84 @@
-load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
+"""Configuration of our CC toolchains."""
+
 load(
-    "@bazel_tools//tools/cpp:cc_toolchain_config_lib.bzl",
-    "feature",
-    "flag_group",
-    "flag_set",
-    "tool_path",
+    "@bazel_tools//tools/cpp:unix_cc_toolchain_config.bzl",
+    unix_cc_toolchain_config = "cc_toolchain_config",
 )
 
-all_link_actions = [
-    ACTION_NAMES.cpp_link_executable,
-    ACTION_NAMES.cpp_link_dynamic_library,
-    ACTION_NAMES.cpp_link_nodeps_dynamic_library,
-]
+def cc_toolchain_config(
+        name,
+        tool_paths,
+        compiler,
+        toolchain_identifier,
+        cxx_builtin_include_directories):
+    """Wrapper for unix_cc_toolchain_config.
 
-prefix = "/opt/gcc-13.2.0"
+    Sets defaults taken from the local builtin toolchain.
 
-def _impl(ctx):
-    tool_paths = [
-        tool_path(
-            name = "gcc",
-            path = prefix + "/bin/gcc-13",
-        ),
-        tool_path(
-            name = "ld",
-            path = prefix + "/bin/ld",
-        ),
-        tool_path(
-            name = "ar",
-            path = prefix + "/bin/gcc-ar-13",
-        ),
-        tool_path(
-            name = "cpp",
-            path = prefix + "/bin/cpp-13",
-        ),
-        tool_path(
-            name = "gcov",
-            path = prefix + "/bin/gcov-13",
-        ),
-        tool_path(
-            name = "nm",
-            path = prefix + "/bin/gcc-nm-13",
-        ),
-        tool_path(
-            name = "objdump",
-            path = prefix + "/bin/objdump",
-        ),
-        tool_path(
-            name = "strip",
-            path = prefix + "/bin/strip",
-        ),
+    Args:
+        name: Forwarded to unix_cc_toolchain_config
+        tool_paths: Forwarded to unix_cc_toolchain_config
+        compiler: Forwarded to unix_cc_toolchain_config
+        toolchain_identifier: Forwarded to unix_cc_toolchain_config
+        cxx_builtin_include_directories: Forwarded to unix_cc_toolchain_config
+
+    """
+    compile_flags = [
+        "-fstack-protector",
+        "-Wall",
+        "-Wunused-but-set-parameter",
+        "-Wno-free-nonheap-object",
+        "-fno-omit-frame-pointer",
+    ]
+    cxx_flags = ["-std=c++20"]
+    dbg_compile_flags = ["-g"]
+    link_flags = [
+        "-fuse-ld=gold",
+        "-Wl,-no-as-needed",
+        "-Wl,-z,relro,-z,now",
+        "-pass-exit-codes",
+    ]
+    link_libs = ["-lstdc++", "-lm"]
+    opt_compile_flags = [
+        "-g0",
+        "-O2",
+        "-D_FORTIFY_SOURCE=1",
+        "-DNDEBUG",
+        "-ffunction-sections",
+        "-fdata-sections",
+    ]
+    opt_link_flags = ["-Wl,--gc-sections"]
+    unfiltered_compile_flags = [
+        "-fno-canonical-system-headers",
+        "-Wno-builtin-macro-redefined",
+        "-D__DATE__=\"redacted\"",
+        "-D__TIMESTAMP__=\"redacted\"",
+        "-D__TIME__=\"redacted\"",
     ]
 
-    features = [
-        feature(
-            name = "default_linker_flags",
-            enabled = True,
-            flag_sets = [
-                flag_set(
-                    actions = all_link_actions,
-                    flag_groups = ([
-                        flag_group(
-                            flags = [
-                                "-lstdc++",
-                            ],
-                        ),
-                    ]),
-                ),
-            ],
-        ),
-    ]
-
-    return cc_common.create_cc_toolchain_config_info(
-        ctx = ctx,
-        features = features,
-        cxx_builtin_include_directories = [
-            prefix + "/lib/gcc/x86_64-pc-linux-gnu/13.2.0/include",
-            prefix + "/lib/gcc/x86_64-pc-linux-gnu/13.2.0/include-fixed",
-            prefix + "/include",
-            "/usr/include",
-            "/usr/lib64/",
-        ],
-        toolchain_identifier = "local",
+    # We use unix_cc_toolchain_config[1] but the builtin toolchain[2] could be another
+    # starting point.
+    #
+    # [1] https://cs.opensource.google/bazel/bazel/+/master:tools/cpp/unix_cc_toolchain_config.bzl
+    # [2] https://cs.opensource.google/bazel/bazel/+/master:tools/cpp/unix_cc_configure.bzl
+    unix_cc_toolchain_config(
+        name = name,
+        cpu = "k8",
+        compiler = compiler,
+        toolchain_identifier = toolchain_identifier,
         host_system_name = "local",
         target_system_name = "local",
-        target_cpu = "k8",
-        target_libc = "unknown",
-        compiler = "gcc-13",
-        abi_version = "unknown",
-        abi_libc_version = "unknown",
+        target_libc = "local",
+        abi_version = "local",
+        abi_libc_version = "local",
+        cxx_builtin_include_directories = cxx_builtin_include_directories,
         tool_paths = tool_paths,
+        compile_flags = compile_flags,
+        dbg_compile_flags = dbg_compile_flags,
+        opt_compile_flags = opt_compile_flags,
+        cxx_flags = cxx_flags,
+        link_flags = link_flags,
+        link_libs = link_libs,
+        opt_link_flags = opt_link_flags,
+        unfiltered_compile_flags = unfiltered_compile_flags,
     )
-
-cc_toolchain_config = rule(
-    implementation = _impl,
-    attrs = {},
-    provides = [CcToolchainConfigInfo],
-)

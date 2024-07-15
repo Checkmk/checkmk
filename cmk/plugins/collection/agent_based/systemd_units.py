@@ -159,6 +159,9 @@ class Memory:
 class CpuTimeSeconds:
     value: float
 
+    def render(self):
+        return render.time_offset(self.value)
+
     @classmethod
     def parse_raw(cls, raw: str) -> Self:
         """
@@ -522,6 +525,38 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
     state = params["states"].get(unit.active_status, params["states_default"])
     yield Result(state=State(state), summary=f"Status: {unit.active_status}")
     yield Result(state=State.OK, summary=unit.description)
+    if unit.cpu_seconds:
+        yield from check_levels(
+            unit.cpu_seconds.value,
+            levels_upper=params.get("cpu_time"),
+            label="CPU Time",
+            metric_name="cpu_time",
+            render_func=render.timespan,
+        )
+    if unit.time_since_change is not None and unit.active_status == "active":
+        yield from check_levels(
+            unit.time_since_change.total_seconds(),
+            levels_lower=params.get("active_since_lower"),
+            levels_upper=params.get("active_since_upper"),
+            label="Active since",
+            metric_name="active_since",
+            render_func=render.timespan,
+        )
+    if unit.memory:
+        yield from check_levels(
+            unit.memory.bytes,
+            levels_upper=params.get("memory"),
+            label="Memory",
+            metric_name="mem_used",
+            render_func=render.bytes,
+        )
+    if unit.number_of_tasks:
+        yield from check_levels(
+            unit.number_of_tasks,
+            label="Number of tasks",
+            metric_name="number_of_tasks",
+            render_func=lambda v: f"{v:d}",
+        )
 
 
 CHECK_DEFAULT_PARAMETERS = {

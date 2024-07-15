@@ -9,7 +9,7 @@ import pytest
 
 from cmk.utils.check_utils import ParametersTypeAlias
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.systemd_units import (
     _services_split,
     check_systemd_services,
@@ -645,6 +645,18 @@ SECTION = Section(
             enabled_status="unknown",
             time_since_change=timedelta(seconds=2),
         ),
+        "cmktest": UnitEntry(
+            name="cmktest",
+            loaded_status="loaded",
+            active_status="active",
+            current_state="running",
+            description="NOT FROM SYSTEMD",
+            enabled_status="unknown",
+            time_since_change=timedelta(minutes=33),
+            cpu_seconds=CpuTimeSeconds(value=0.000815),
+            number_of_tasks=1,
+            memory=Memory(180224),
+        ),
         "bar": UnitEntry(
             name="bar",
             loaded_status="loaded",
@@ -717,6 +729,7 @@ SECTION = Section(
             ],
             [
                 Service(item="virtualbox"),
+                Service(item="cmktest"),
                 Service(item="bar"),
                 Service(item="foo"),
                 Service(item="check-mk-enterprise-2021.09.07"),
@@ -797,6 +810,27 @@ def test_discover_systemd_units_services_summary(
     "item, params, section, check_results",
     [
         (
+            "cmktest",
+            {
+                "else": 2,
+                "states": {"active": 0, "failed": 2, "inactive": 0},
+                "states_default": 2,
+            },
+            SECTION,
+            [
+                Result(state=State.OK, summary="Status: active"),
+                Result(state=State.OK, summary="NOT FROM SYSTEMD"),
+                Result(state=State.OK, summary="CPU Time: 815 microseconds"),
+                Metric("cpu_time", 0.000815),
+                Result(state=State.OK, summary="Active since: 33 minutes 0 seconds"),
+                Metric("active_since", 1980.0),
+                Result(state=State.OK, summary="Memory: 176 KiB"),
+                Metric("mem_used", 180224.0),
+                Result(state=State.OK, summary="Number of tasks: 1"),
+                Metric("number_of_tasks", 1.0),
+            ],
+        ),
+        (
             "virtualbox",
             {
                 "else": 2,
@@ -807,6 +841,8 @@ def test_discover_systemd_units_services_summary(
             [
                 Result(state=State.OK, summary="Status: active"),
                 Result(state=State.OK, summary="LSB: VirtualBox Linux kernel module"),
+                Result(state=State.OK, summary="Active since: 2 seconds"),
+                Metric("active_since", 2.0),
             ],
         ),
         (
@@ -906,7 +942,7 @@ def test_check_systemd_units_sockets(
             },
             SECTION,
             [
-                Result(state=State.OK, summary="Total: 5"),
+                Result(state=State.OK, summary="Total: 6"),
                 Result(state=State.OK, summary="Disabled: 0"),
                 Result(state=State.OK, summary="Failed: 2"),
                 Result(state=State.CRIT, summary="2 services failed (bar, foo)"),

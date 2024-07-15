@@ -43,6 +43,8 @@ def test_hooks(site: Site) -> None:
             "TRACE_RECEIVE_ADDRESS",
             "TRACE_RECEIVE_PORT",
             "RABBITMQ_PORT",
+            "TRACE_JAEGER_UI_PORT",
+            "TRACE_JAEGER_ADMIN_PORT",
         ]
 
     installed_hooks = os.listdir(os.path.join(site.root, "lib/omd/hooks"))

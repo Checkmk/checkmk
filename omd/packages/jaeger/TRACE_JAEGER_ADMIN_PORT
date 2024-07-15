@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Alias: Jaeger admin API port
+# Menu: Addons
+# Description:
+#  If receiving traces is configured, you can customize the admin API port here.
+
+case "$1" in
+    default)
+        PORT=$("$OMD_ROOT"/lib/omd/next_free_port TRACE_JAEGER_ADMIN_PORT 14269)
+        echo "$PORT"
+        ;;
+    choices)
+        echo "@{NETWORK_PORT}"
+        ;;
+    set)
+        PORT=$("$OMD_ROOT"/lib/omd/next_free_port TRACE_JAEGER_ADMIN_PORT "$2")
+
+        if [ "$PORT" != "$2" ]; then
+            echo "The port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+        fi
+        ;;
+    depends)
+        [ "$CONFIG_TRACE_RECEIVE" = on ]
+        ;;
+esac

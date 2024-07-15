@@ -955,6 +955,9 @@ class Document:
     ) -> tuple[SizeInternal, SizeInternal]:
         # Get bounding box of image in order to get aspect (width / height)
         bbox = pil.getbbox()
+        assert (
+            bbox is not None
+        )  # getbbox could be None, but apparently it is checked before this line? if not the unpacking here would have failed all along?
         pix_width, pix_height = bbox[2], bbox[3]
         if resolution_dpi is not None:
             resolution_mm = resolution_dpi / 2.45

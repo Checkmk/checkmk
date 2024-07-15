@@ -125,7 +125,7 @@ class ModeIcons(WatoMode):
         meta = PngImagePlugin.PngInfo()
         for k, v in im.info.items():
             if isinstance(v, (bytes, str)):
-                meta.add_text(k, v, 0)
+                meta.add_text(k, v, False)
 
         # and finally save the image
         dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.utils.paths.omd_root

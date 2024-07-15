@@ -26,7 +26,6 @@ def main() {
     def cmk_version = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
     def docker_tag = versioning.select_docker_tag(
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // FIXME, 'build tag'
-        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // FIXME was DOCKER_TAG_DEFAULT before, 'folder tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
 

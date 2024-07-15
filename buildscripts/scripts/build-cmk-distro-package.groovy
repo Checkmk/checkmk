@@ -48,7 +48,6 @@ def main() {
 
     def docker_tag = versioning.select_docker_tag(
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
-        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'folder tag'
         branch_name,                        // 'branch' returns '<BRANCH>-latest'
     );
     /* groovylint-disable LineLength */

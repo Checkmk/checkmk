@@ -26,7 +26,6 @@ def main() {
     ]);
 
     check_environment_variables([
-        "DOCKER_TAG_FOLDER",
         "INTERNAL_DEPLOY_URL",
         "INTERNAL_DEPLOY_DEST",
         "INTERNAL_DEPLOY_PORT",
@@ -73,7 +72,6 @@ def main() {
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
-        DOCKER_TAG_FOLDER,                  // 'folder tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
 

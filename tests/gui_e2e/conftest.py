@@ -26,13 +26,13 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="test_site", scope="session")
-def get_site() -> Iterator[Site]:
-    """Return Checkmk site(object) where GUI tests are being run."""
+def fixture_test_site() -> Iterator[Site]:
+    """Return the Checkmk site object."""
     yield from get_site_factory(prefix="gui_e2e_").get_test_site()
 
 
 @pytest.fixture(name="credentials", scope="session")
-def _credentials(test_site: Site) -> CmkCredentials:
+def fixture_credentials(test_site: Site) -> CmkCredentials:
     """Return admin user credentials of the Checkmk site."""
     return CmkCredentials(username=ADMIN_USER, password=test_site.admin_password)
 
@@ -70,7 +70,7 @@ def _logged_in_mobile(
 
 
 @pytest.fixture(name="dashboard_page")
-def _dashboard_page(
+def fixture_dashboard_page(
     page: Page, _logged_in_page: None, test_site: Site, credentials: CmkCredentials
 ) -> Dashboard:
     """Entrypoint to test browser GUI. Navigates to 'Main Dashboard'."""
@@ -81,7 +81,7 @@ def _dashboard_page(
 
 
 @pytest.fixture(name="dashboard_page_mobile")
-def _dashboard_page_mobile(
+def fixture_dashboard_page_mobile(
     page_mobile: Page, _logged_in_page_mobile: None, test_site: Site, credentials: CmkCredentials
 ) -> DashboardMobile:
     """Entrypoint to test mobile GUI. Navigates to 'Mobile Dashboard'"""
@@ -112,7 +112,7 @@ def _navigate_to_dashboard(
 
 
 @pytest.fixture(name="new_browser_context_and_page")
-def _new_browser_context_and_page(
+def fixture_new_browser_context_and_page(
     _browser: Browser,
     context_launch_kwargs: dict[str, Any],
     request: pytest.FixtureRequest,
@@ -143,7 +143,8 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 
 @pytest.fixture(name="branch", scope="session")
-def current_branch(test_site: Site) -> str:
+def fixture_current_branch(test_site: Site) -> str:
+    """Return the git branch name corresponding Checkmk version."""
     if test_site.version.branch_version == "2.4.0":
         branch = "master"
     elif test_site.version.branch_version == "2.3.0":

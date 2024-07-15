@@ -1,2 +1,3 @@
 bandit.ini
 .py-import-cycles.txt
+**/docs/html/*

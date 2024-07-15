@@ -35,7 +35,11 @@ _mobile_devices = ["iPhone 6", "Galaxy S8"]
 
 
 @pytest.fixture(scope="session", name="browser_type_launch_args")
-def _browser_type_launch_args(pytestconfig: t.Any) -> dict:
+def fixture_browser_type_launch_args(pytestconfig: t.Any) -> dict:
+    """Return arguments to initialize playwright `Browser`_ object.
+
+    .. _Browser: https://playwright.dev/python/docs/api/class-browser
+    """
     launch_options = {}
     headed_option = pytestconfig.getoption("--headed")
     if headed_option:
@@ -58,29 +62,33 @@ def _build_artifact_path(
     return build_artifact_path
 
 
-@pytest.fixture(scope="session", name="playwright")
+@pytest.fixture(scope="session")
 def _playwright() -> t.Generator[Playwright, None, None]:
     pw = sync_playwright().start()
     yield pw
     pw.stop()
 
 
-@pytest.fixture(scope="session", name="browser_type")
-def _browser_type(playwright: Playwright, browser_name: str) -> BrowserType:
-    return t.cast(BrowserType, getattr(playwright, browser_name))
+@pytest.fixture(scope="session")
+def _browser_type(_playwright: Playwright, browser_name: str) -> BrowserType:
+    return t.cast(BrowserType, getattr(_playwright, browser_name))
 
 
 @pytest.fixture(scope="session")
 def _browser(
-    browser_type: BrowserType, browser_type_launch_args: dict
+    _browser_type: BrowserType, browser_type_launch_args: dict
 ) -> t.Generator[Browser, None, None]:
-    browser = browser_type.launch(**browser_type_launch_args)
+    browser = _browser_type.launch(**browser_type_launch_args)
     yield browser
     browser.close()
 
 
 @pytest.fixture(name="context_launch_kwargs", scope="session")
-def _context_launch_kwargs(pytestconfig: pytest.Config) -> dict[str, t.Any]:
+def fixture_context_launch_kwargs(pytestconfig: pytest.Config) -> dict[str, t.Any]:
+    """Define and return arguments to initialize a playwright `BrowserContext`_ object.
+
+    .. _BrowserContext: https://playwright.dev/python/docs/api/class-browsercontext
+    """
     kwargs = {"locale": pytestconfig.getoption("--locale")}
     if pytestconfig.getoption("--video"):
         kwargs["record_video_dir"] = str(pytestconfig.getoption("--output"))
@@ -100,13 +108,13 @@ def _context(
 
 @pytest.fixture(scope="module", params=_mobile_devices)
 def _context_mobile(
-    playwright: Playwright,
+    _playwright: Playwright,
     _browser: Browser,
     context_launch_kwargs: dict[str, t.Any],
     request: pytest.FixtureRequest,
 ) -> t.Generator[BrowserContext, None, None]:
     """Create a browser context(mobile testing) for one test-module at a time."""
-    devices = playwright.devices[str(request.param)]
+    devices = _playwright.devices[str(request.param)]
     with manage_new_browser_context(_browser, (context_launch_kwargs | devices)) as context:
         yield context
 
@@ -115,9 +123,11 @@ def _context_mobile(
 def manage_new_browser_context(
     browser: Browser, context_kwargs: dict[str, t.Any] | None = None
 ) -> Iterator[BrowserContext]:
-    """Creates a browser context and makes sure to close it.
+    """Creates a browser context and makes sure to close it (contextmanager).
 
-    `context_kwargs` are the arguments passed to `Browser.new_context`
+    `context_kwargs` are the arguments passed to `BrowserContext`_.
+
+    .. _BrowserContext: https://playwright.dev/python/docs/api/class-browsercontext
     """
     if not context_kwargs:
         context_kwargs = {}
@@ -127,7 +137,7 @@ def manage_new_browser_context(
 
 
 @pytest.fixture(name="page")
-def _page(
+def fixture_page(
     _context: BrowserContext, request: pytest.FixtureRequest
 ) -> t.Generator[Page, None, None]:
     """Create a new page in a browser for every test-case."""
@@ -136,7 +146,7 @@ def _page(
 
 
 @pytest.fixture(name="page_mobile")
-def _page_mobile(
+def fixture_page_mobile(
     _context_mobile: BrowserContext,
     is_chromium: bool,
     request: pytest.FixtureRequest,
@@ -154,13 +164,14 @@ def manage_new_page_from_browser_context(
     request: pytest.FixtureRequest | None = None,
     video_name: str = "",
 ) -> Iterator[Page]:
-    """Create a new page from the provided `BrowserContext` and close it.
+    """Create a new page from the provided `BrowserContext` and close it (contextmanager).
 
     Optionally, includes functionality
         * to take a screenshot when a test-case fails.
         * to record interactions occuring on the page.
             + videos are recorded within the directory provided to `--output`
             + custom `video_name` can be provided, exclude file extension.
+
         NOTE: requires access to pytest fixture: `request`.
     """
     pages: t.List[Page] = []
@@ -201,23 +212,26 @@ def _may_record_video(page: Page, request: pytest.FixtureRequest | None, video_n
         logger.debug("Video recording is disabled.")
 
 
-@pytest.fixture(scope="session")
-def is_webkit(browser_name: str) -> bool:
+@pytest.fixture(scope="session", name="is_webkit")
+def fixture_is_webkit(browser_name: str) -> bool:
+    """Identify whether browser is Webkit."""
     return browser_name == "webkit"
 
 
-@pytest.fixture(scope="session")
-def is_firefox(browser_name: str) -> bool:
+@pytest.fixture(scope="session", name="is_firefox")
+def fixture_is_firefox(browser_name: str) -> bool:
+    """Identify whether browser is Firefox."""
     return browser_name == "firefox"
 
 
-@pytest.fixture(name="is_chromium", scope="session")
-def _is_chromium(browser_name: str) -> bool:
+@pytest.fixture(scope="session", name="is_chromium")
+def fixture_is_chromium(browser_name: str) -> bool:
+    """Identify whether browser is Chromium."""
     return browser_name == "chromium"
 
 
-@pytest.fixture(name="browser_name", scope="session", params=_browser_engines)
-def _browser_name(request: pytest.FixtureRequest) -> str:
+@pytest.fixture(scope="session", name="browser_name", params=_browser_engines)
+def fixture_browser_name(request: pytest.FixtureRequest) -> str:
     """Returns the browser name(s).
 
     Fixture returning the parametrized browser name(s). A subset of the parametrized browser names
@@ -241,17 +255,18 @@ def _browser_name(request: pytest.FixtureRequest) -> str:
 # NOTE: hookimpl is poorly typed, so the decorator effectively removes the types from the decorated function!
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item: t.Any) -> t.Generator[None, t.Any, None]:
+    """Set a report attribute for each phase of a pytest test execution call.
+
+    Phases can be "setup", "call", "teardown.
+    """
     # execute all other hooks to obtain the report object
     outcome = yield
     rep = outcome.get_result()
-
-    # set a report attribute for each phase of a call, which can
-    # be "setup", "call", "teardown"
-
     setattr(item, "rep_" + rep.when, rep)
 
 
 def pytest_addoption(parser: t.Any) -> None:
+    """Add custom CLI arguments to GUI end to end testing framework."""
     group = parser.getgroup("playwright", "Playwright")
     group.addoption(
         "--browser",

@@ -153,5 +153,7 @@ class Keys(Enum):
 
 
 class CmkCredentials(NamedTuple):
+    """Credentials to a Checkmk site."""
+
     username: str
     password: str

@@ -344,7 +344,6 @@ CEE_UNUSED_PACKAGES = [
     "grpcio",
     "itsdangerous",
     "jmespath",
-    "markupsafe",
     "more-itertools",
     "multidict",
     "pbr",

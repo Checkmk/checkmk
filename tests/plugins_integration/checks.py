@@ -8,6 +8,7 @@ import os
 import re
 import shlex
 import subprocess
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -460,6 +461,14 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
 
+    if config.piggyback:
+        _wait_for_piggyback_hosts(site, main_host=host_name)
+        count = 0
+        while (n_pending_changes := len(site.openapi.pending_changes([site.id]))) > 0 and count < 3:
+            site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
+            count += 1
+        assert n_pending_changes == 0, "Pending changes found!"
+
     logger.info("Scheduling checks & checking for pending services...")
     pending_checks = []
     for idx in range(3):
@@ -563,3 +572,19 @@ def cleanup_hosts(site: Site, host_names: list[str]) -> None:
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
+
+
+def _get_piggyback_hosts(site: Site, main_host: str) -> list[str]:
+    return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != main_host]
+
+
+def _wait_for_piggyback_hosts(
+    site: Site, main_host: str, max_count: int = 10, sleep_time: float = 1, strict: bool = True
+) -> None:
+    count = 0
+    while not (piggyback_hosts := _get_piggyback_hosts(site, main_host)) and count < max_count:
+        logger.info("Waiting for piggyback hosts to be created...")
+        time.sleep(sleep_time)
+        count += 1
+    if strict:
+        assert piggyback_hosts, "No piggyback hosts found."

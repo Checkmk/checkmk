@@ -21,15 +21,6 @@ from cmk.notification_plugins.utils import (
     substitute_context,
 )
 
-MAP_STATES: dict[str, str] = {
-    "OK": "2eb886",
-    "WARNING": "daa038",
-    "CRITICAL": "a30200",
-    "UNKNOWN": "cccccc",
-    "DOWN": "a30200",
-    "UP": "2eb886",
-}
-
 MAP_TYPES: dict[str, str] = {
     "PROBLEM": "Problem notification",
     "RECOVERY": "Recovery notification",
@@ -44,7 +35,6 @@ def _msteams_msg(
     context: PluginNotificationContext,
 ) -> dict[str, object]:
     title, summary, details, subtitle = _get_text_fields(context, notify_what := context["WHAT"])
-    color = _get_theme_color(context, notify_what)
     section_facts = _get_section_facts(context, details)
     info_url: str = (
         service_url_from_context(context)
@@ -53,23 +43,51 @@ def _msteams_msg(
     )
 
     return {
-        "@type": "MessageCard",
-        "@context": "http://schema.org/extensions",
-        "title": substitute_context(title, context),
-        "themeColor": color,
-        "summary": substitute_context(summary, context),
-        "sections": [
+        "type": "message",
+        "attachments": [
             {
-                "activitySubtitle": f"**{subtitle}**",  # bold seems to be nicer here
-                "facts": section_facts,
-                "markdown": "True",
-            }
-        ],
-        "potentialAction": [
-            {
-                "@type": "OpenUri",
-                "name": "View %s details in Checkmk" % notify_what.lower(),
-                "targets": [{"os": "default", "uri": info_url}],
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "contentUrl": "null",
+                "content": {
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                    "type": "AdaptiveCard",
+                    "version": "1.3",
+                    "body": [
+                        {
+                            "type": "TextBlock",
+                            "text": substitute_context(title, context),
+                            "weight": "bolder",
+                            "size": "large",
+                            "style": "heading",
+                            "wrap": True,
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": substitute_context(subtitle, context),
+                            "weight": "bolder",
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": substitute_context(summary, context),
+                        },
+                        {
+                            "type": "FactSet",
+                            "facts": section_facts,
+                            "separator": True,
+                        },
+                    ],
+                    "actions": [
+                        {
+                            "type": "Action.OpenUrl",
+                            "title": f"View {notify_what.lower()} details in Checkmk",
+                            "url": info_url,
+                            "role": "Button",
+                        },
+                    ],
+                    "msteams": {
+                        "width": "Full",
+                    },
+                },
             }
         ],
     }
@@ -98,35 +116,23 @@ def _get_text_fields(
 
 def _get_section_facts(context: PluginNotificationContext, details: str) -> list[dict[str, str]]:
     section_facts = [
-        {"name": "Detail", "value": substitute_context(details, context)},
+        {
+            "title": "Detail",
+            "value": substitute_context(details, context).replace("\\n", "\n\n\n\n"),
+        },
     ]
 
     if "PARAMETER_AFFECTED_HOST_GROUPS" in context:
-        section_facts += [{"name": "Affected host groups", "value": context["HOSTGROUPNAMES"]}]
+        section_facts += [{"title": "Affected host groups", "value": context["HOSTGROUPNAMES"]}]
 
     if context["NOTIFICATIONAUTHOR"] != "":
         section_facts += [
-            {"name": "Author", "value": context["NOTIFICATIONAUTHOR"]},
-            {"name": "Comment", "value": context["NOTIFICATIONCOMMENT"]},
+            {"title": "Author", "value": context["NOTIFICATIONAUTHOR"]},
+            {"title": "Comment", "value": context["NOTIFICATIONCOMMENT"]},
         ]
 
     return section_facts
 
 
-def _get_theme_color(context: PluginNotificationContext, notify_what: str) -> str:
-    if context["NOTIFICATIONTYPE"] == "DOWNTIMESTART":
-        return "439FE0"
-    if context["NOTIFICATIONTYPE"] == "DOWNTIMEEND":
-        return "33cccc"
-    if context["NOTIFICATIONTYPE"] == "ACKNOWLEDGEMENT":
-        return "8f006b"
-
-    return (
-        MAP_STATES[context["SERVICESTATE"]]
-        if notify_what == "SERVICE"
-        else MAP_STATES[context["HOSTSTATE"]]
-    )
-
-
 def main() -> int:
-    return process_by_status_code(post_request(_msteams_msg))
+    return process_by_status_code(post_request(_msteams_msg), 202)

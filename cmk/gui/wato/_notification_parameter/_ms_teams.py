@@ -45,6 +45,9 @@ class NotificationParameterMsTeams(NotificationParameter):
                     CascadingDropdown(
                         title=_("Webhook URL"),
                         help=_(
+                            "Create a workflow 'Post to a channel when a "
+                            "webhook request is received' for a channel in MS "
+                            "Teams and use the generated webook URL.<br><br>"
                             "This URL can also be collected from the Password "
                             "Store from Checkmk."
                         ),

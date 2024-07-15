@@ -37,8 +37,9 @@ def cc_toolchain_config(
         "-Wl,-no-as-needed",
         "-Wl,-z,relro,-z,now",
         "-pass-exit-codes",
+        "-lm",
     ]
-    link_libs = ["-lstdc++", "-lm"]
+    link_libs = ["-lstdc++"]
     opt_compile_flags = [
         "-g0",
         "-O2",

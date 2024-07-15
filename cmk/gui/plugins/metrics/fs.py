@@ -27,12 +27,6 @@ metric_info["fs_growth"] = {
     "color": "#29cfaa",
 }
 
-metric_info["fs_trend"] = {
-    "title": _("Growth trend"),
-    "unit": "bytes/d",
-    "color": "#808080",
-}
-
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -61,12 +55,5 @@ graph_info["shrinking"] = {
     "consolidation_function": "min",
     "metrics": [
         ("fs_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage")),
-    ],
-}
-
-graph_info["fs_trend"] = {
-    "title": _("Growth trend"),
-    "metrics": [
-        ("fs_trend", "line"),
     ],
 }

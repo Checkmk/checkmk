@@ -20,50 +20,8 @@ from tests.plugins_integration.checks import (
 
 logger = logging.getLogger(__name__)
 
-HOST_NAMES = [
-    name
-    for name in get_host_names()
-    if name
-    not in (
-        "agent-2.2.0p14-isc-dhcpd",
-        "agent-2.2.0p6-rhel-9.2",
-        "agent-2.0.0p21-aix-7.2-nim",
-        "agent-2.1.0p33-postgreSQL-14.9",
-        "agent-1.2.4p2-quemu-kvm",
-        "agent-1.2.6-win-bonding",
-        "agent-2.2.0p8-ceph-17.2.6",
-        "agent-2.1.0p34-cma-1.7",
-        "agent-2.2.0p14-windows-mssql",
-        "agent-0.0.0p0-prometheus-promql",
-        "agent-2.2.0p12-mk-oracle-centos",
-        "agent-2.2.0p14-proxmox",
-        "agent-1.2.6-server-windows-oracle",
-        "agent-1.4.0p19-jolokia",
-        "agent-2.2.0p9-windows-citrix",
-        "agent-6.5.0p0-vcenter",
-        "agent-2.2.0p14-windows-dhcp",
-        "agent-2.0.0p21-aix",
-        "agent-2.2.0p14-windows-veeam-backup",
-        "agent-2.1.0p2-f5-bigip",
-        "agent-1.2.6p0-linux-multipath",
-        "agent-1.2.6b12-win-ad-replication",
-        "agent-0.0.0p0-nutanix-prism",
-        "agent-1.2.4p5-server-solaris",
-        "agent-2.2.0-osx",
-        "agent-1.2.7i2-zfs-solaris",
-        "agent-2.1.0p11-ms-exchange",
-        "agent-2.1.0p9-postgreSQL-12.0",
-        "snmp-citrix-netscaler-11.1",
-        "snmp-checkpoint-firewall",
-        "snmp-opnsense-22.1",
-        "snmp-dell-openmanage",
-        "snmp-hp-proliant",
-        "snmp-f5-bigip-failover-cluster",
-    )
-]
 
-
-@pytest.mark.parametrize("host_name", HOST_NAMES)
+@pytest.mark.parametrize("host_name", get_host_names())
 def test_plugin(
     test_site: Site,
     host_name: str,

@@ -5,7 +5,7 @@ Component: rest-api
 Date: 1709803120
 Edition: cre
 Level: 1
-Version: 2.2.0p31
+Version: 2.2.0p32
 
 This werk addresses an issue with the REST-API password endpoint
 response. The response schema listed the title and the ident as

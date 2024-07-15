@@ -5,7 +5,7 @@ Component: checks
 Date: 1718697625
 Edition: cre
 Level: 1
-Version: 2.2.0p31
+Version: 2.2.0p32
 
 With newer infoblox NIOS devices the <code>IB-PLATFORMONE-MIB::IBServiceName</code> have
 changed. We use these name as service items. Please run a re-discovery on the

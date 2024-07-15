@@ -5,7 +5,7 @@ Component: checks
 Date: 1720433457
 Edition: cre
 Level: 1
-Version: 2.2.0p31
+Version: 2.2.0p32
 
 The checks msexch_isclienttype, msexch_isstore, msexch_rpcclientaccess reported
 their values in ms in the summary/ruleset but displayed the same value as

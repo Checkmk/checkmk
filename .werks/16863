@@ -5,7 +5,7 @@ Component: checks
 Date: 1719585241
 Edition: cre
 Level: 1
-Version: 2.2.0p31
+Version: 2.2.0p32
 
 The backup log format changed in Proxmox version 3.2.4 which resulted in a crash
 in the Proxmox special agent.

@@ -5,7 +5,7 @@ Component: wato
 Date: 1718804769
 Edition: cre
 Level: 1
-Version: 2.2.0p31
+Version: 2.2.0p32
 
 Checkmk has some complex functionalities that are hidden behind an internal HTTP endpoint page.
 These pages are only meant to be accessed by internal processes, e.g. a cron runner or creating diagrams for notifications.

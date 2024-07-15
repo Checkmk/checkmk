@@ -5,7 +5,7 @@ Component: wato
 Date: 1720418941
 Edition: cre
 Level: 1
-Version: 2.2.0p31
+Version: 2.2.0p32
 
 The automatic host registration and removal jobs are executed regularly in the
 background to add or remove hosts. These are fundamental mechanisms to the

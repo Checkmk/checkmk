@@ -279,7 +279,7 @@ preamble_5() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.1.0p46"
+    echo "Version: 2.1.0p47"
     echo "AgentOS: solaris"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"

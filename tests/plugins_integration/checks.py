@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SkippedDumps:
-    SKIPPED_DUMPS = ["snmp-sw-arista.demo.checkmk.com_2_2_p12"]
+    SKIPPED_DUMPS = []  # type: ignore
 
 
 @dataclass

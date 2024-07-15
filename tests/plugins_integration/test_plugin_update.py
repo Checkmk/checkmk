@@ -14,6 +14,15 @@ from tests.plugins_integration.checks import (  # pylint: disable=ungrouped-impo
 
 logger = logging.getLogger(__name__)
 
+# * Arista dumps containing several checks that have been removed after 2.3.0.
+SKIPPED_DUMPS = ["snmp-sw-arista.demo.checkmk.com_2_2_p12"]
+
+# * The 'Postfix status' service has been renamed into 'Postfix status default'.
+#   Related: CMK-13774
+# * The 'Postfix Queue' has been renamed into 'Postfix Queue default'
+#   See Werk #16377 or commit daf9d3ab9a5e9d698733f0af345d88120de863f0
+SKIPPED_CHECKS = ["Postfix status", "Postfix Queue"]
+
 
 def test_plugin_update(
     test_site_update: Site,
@@ -32,17 +41,13 @@ def test_plugin_update(
     psd_rules_base = test_site_update.openapi.get_rules("periodic_discovery")
     base_data = {}
     base_data_status_0 = {}
-    for host_name in get_host_names():
+    for host_name in (_ for _ in get_host_names() if _ not in SKIPPED_DUMPS):
         with setup_host(test_site_update, host_name, skip_cleanup=True):
             base_data[host_name] = test_site_update.get_host_services(host_name)
 
-            # * The 'Postfix status' service has been renamed into 'Postfix status default'.
-            #   Related: CMK-13774
-            # * The 'Postfix Queue' has been renamed into 'Postfix Queue default'
-            #   See Werk #16377 or commit daf9d3ab9a5e9d698733f0af345d88120de863f0
-            for changed_service in ["Postfix status", "Postfix Queue"]:
-                if changed_service in base_data[host_name]:
-                    base_data[host_name].pop(changed_service)
+            for skipped_check in SKIPPED_CHECKS:
+                if skipped_check in base_data[host_name]:
+                    base_data[host_name].pop(skipped_check)
 
             base_data_status_0[host_name] = get_services_with_status(base_data[host_name], 0)
 

@@ -20,7 +20,6 @@ def main() {
             VERSION: version,
             DOCKER_TAG: versioning.select_docker_tag(
                 "", // 'build tag'
-                "", // 'folder tag'
                 safe_branch_name),  // 'branch' returns '<BRANCH>-latest'
             MAKE_TARGET: "test-xss-crawl-docker",
             BRANCH: safe_branch_name,

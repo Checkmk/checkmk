@@ -599,6 +599,10 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   }
 }
 
+.wato h1.edit_configuration_bundle_header {
+  padding-top: $spacing;
+}
+
 .wato form.rule_editor {
   table.locked tbody {
     pointer-events: none;

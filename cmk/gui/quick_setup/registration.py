@@ -6,6 +6,7 @@
 from cmk.utils.quick_setup.definitions import QuickSetupRegistry
 
 from cmk.gui.watolib.main_menu import MainModuleRegistry
+from cmk.gui.watolib.mode import ModeRegistry
 
 from . import _modes
 from .config_setups import register as register_config_setups
@@ -13,7 +14,8 @@ from .config_setups import register as register_config_setups
 
 def register(
     main_module_registry: MainModuleRegistry,
+    mode_registry: ModeRegistry,
     quick_setup_registry: QuickSetupRegistry,
 ) -> None:
-    _modes.register(main_module_registry)
+    _modes.register(main_module_registry, mode_registry)
     register_config_setups(quick_setup_registry)

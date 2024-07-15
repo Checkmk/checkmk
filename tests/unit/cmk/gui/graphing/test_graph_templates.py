@@ -331,10 +331,7 @@ def test_non_trivial_perfometer_declarations() -> None:
         if not isinstance(perfometer, dict):
             continue
         non_trivial_perfometers.extend(_perfometer_with_non_trivial_declarations(perfometer))
-
-    assert non_trivial_perfometers == [
-        {"type": "linear", "segments": ["mem_used(%)"], "total": 100.0},
-    ]
+    assert not non_trivial_perfometers
 
 
 def test_non_trivial_graph_declarations() -> None:
@@ -368,8 +365,6 @@ def test_non_trivial_graph_declarations() -> None:
         "growing",
         "mem_growing",
         "mem_shrinking",
-        "ram_swap_overview",
-        "ram_swap_used",
         "savings",
         "shrinking",
         "util_average_1",

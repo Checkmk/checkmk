@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.graphing import perfometer_info
-from cmk.gui.graphing._utils import GB
 
 # .
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -91,30 +90,5 @@ perfometer_info.append(
         "type": "linear",
         "segments": ["user", "system", "streams"],
         "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["mem_used(%)"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["mem_used"],
-        "total": "mem_used:max",
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "mem_used",
-        "half_value": GB,
-        "exponent": 4.0,
     }
 )

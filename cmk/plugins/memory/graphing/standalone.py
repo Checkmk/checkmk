@@ -32,15 +32,3 @@ metric_sunreclaim = Metric(
     unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
-metric_swap_total = Metric(
-    name="swap_total",
-    title=Title("Swap installed"),
-    unit=UNIT_BYTES,
-    color=Color.LIGHT_PINK,
-)
-metric_swap_used = Metric(
-    name="swap_used",
-    title=Title("Swap used"),
-    unit=UNIT_BYTES,
-    color=Color.DARK_GREEN,
-)

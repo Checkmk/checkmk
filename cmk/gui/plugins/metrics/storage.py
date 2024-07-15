@@ -49,20 +49,6 @@ metric_info["mem_growth"] = {
 
 # diskstat checks
 
-graph_info["ram_swap_used"] = {
-    "title": _("RAM + Swap used"),
-    "metrics": [
-        ("mem_used", "stack"),
-        ("swap_used", "stack"),
-    ],
-    "conflicting_metrics": ["swap_total"],
-    "scalars": [
-        ("swap_used:max,mem_used:max,+#008080", _("Total RAM + Swap installed")),
-        ("mem_used:max#80ffff", _("Total RAM installed")),
-    ],
-    "range": (0, "swap_used:max,mem_used:max,+"),
-}
-
 graph_info["mem_growing"] = {
     "title": _("Growing"),
     "metrics": [
@@ -80,37 +66,4 @@ graph_info["mem_shrinking"] = {
     "metrics": [
         ("mem_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage")),
     ],
-}
-
-# Linux memory graphs. They are a lot...
-
-graph_info["ram_swap_overview"] = {
-    "title": _("RAM + swap overview"),
-    "metrics": [
-        ("mem_total,swap_total,+#87cefa", "area", _("RAM + swap installed")),
-        ("mem_used,swap_used,+#37fa37", "line", _("RAM + swap used")),
-    ],
-}
-
-graph_info["swap"] = {
-    "title": _("Swap"),
-    "metrics": [
-        ("swap_total", "line"),
-        ("swap_used", "stack"),
-        ("swap_cached", "stack"),
-    ],
-}
-
-graph_info["ram_used"] = {
-    "title": _("RAM used"),
-    "metrics": [
-        ("mem_used", "area"),
-    ],
-    "conflicting_metrics": ["swap_used"],
-    "scalars": [
-        ("mem_used:max#000000", "Maximum"),
-        ("mem_used:warn", "Warning"),
-        ("mem_used:crit", "Critical"),
-    ],
-    "range": (0, "mem_used:max"),
 }

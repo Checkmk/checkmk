@@ -277,7 +277,11 @@ def test__normalize_perf_data(
             "check_mk-lparstat_aix_cpu_util",
             ["cpu_entitlement", "cpu_utilization_5_util"],
         ),
-        (["ramused", "swapused", "memused"], "check_mk-statgrab_mem", ["ram_swap_used"]),
+        (
+            ["ramused", "swapused", "memused"],
+            "check_mk-statgrab_mem",
+            ["METRIC_mem_used", "METRIC_swap_used"],
+        ),
         (
             [
                 "aws_ec2_running_ondemand_instances_total",
@@ -289,10 +293,35 @@ def test__normalize_perf_data(
         ),
     ],
 )
-def test_get_graph_templates(
+def test_get_graph_templates_1(
     metric_names: Sequence[str], check_command: str, graph_ids: Sequence[str]
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
+    translated_metrics = utils.translate_metrics(perfdata, check_command)
+    assert sorted([t.id for t in utils.get_graph_templates(translated_metrics)]) == sorted(
+        graph_ids
+    )
+
+
+@pytest.mark.parametrize(
+    "metric_names, warn_crit_min_max, check_command, graph_ids",
+    [
+        pytest.param(
+            ["ramused", "swapused", "memused"],
+            (0, 1, 2, 3),
+            "check_mk-statgrab_mem",
+            ["ram_swap_used"],
+            id="ram_swap_used",
+        ),
+    ],
+)
+def test_get_graph_templates_2(
+    metric_names: Sequence[str],
+    warn_crit_min_max: tuple[int, int, int, int],
+    check_command: str,
+    graph_ids: Sequence[str],
+) -> None:
+    perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", *warn_crit_min_max) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
     assert sorted([t.id for t in utils.get_graph_templates(translated_metrics)]) == sorted(
         graph_ids
@@ -1006,8 +1035,8 @@ def test_get_graph_templates_with_predictive_metrics(
         # storage.py
         pytest.param(
             ["mem_used", "swap_used"],
-            ["ram_swap_used"],
-            id="ram_swap_used",
+            ["METRIC_mem_used", "METRIC_swap_used"],
+            id="ram_used_conflicting_metrics",
         ),
         pytest.param(
             ["mem_used", "swap_used", "swap_total"],
@@ -1034,11 +1063,6 @@ def test_get_graph_templates_with_predictive_metrics(
             id="ram_used",
         ),
         pytest.param(
-            ["mem_used", "swap_used"],
-            ["ram_swap_used"],
-            id="ram_used_conflicting_metrics",
-        ),
-        pytest.param(
             ["mem_heap", "mem_nonheap"],
             ["heap_and_non_heap_memory"],
             id="heap_and_non_heap_memory",
@@ -1057,7 +1081,9 @@ def test_conflicting_metrics(metric_names: Sequence[str], graph_ids: Sequence[st
     # 2. use metric names from (1) and conflicting metrics
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, "check_command")
-    assert [t.id for t in utils.get_graph_templates(translated_metrics)] == graph_ids
+    assert sorted([t.id for t in utils.get_graph_templates(translated_metrics)]) == sorted(
+        graph_ids
+    )
 
 
 def test_graph_titles() -> None:

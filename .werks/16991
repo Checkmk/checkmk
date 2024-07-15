@@ -1,0 +1,14 @@
+Title: Extraneous characters in rule representation
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1721028183
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+With long rulesets, the rule representation (Export this rule for API) often
+would display extraneous characters such as newlines or whitespace.
+
+This did not affect the functionality of the feature, but could be confusing, so now
+these characters are no longer displayed.

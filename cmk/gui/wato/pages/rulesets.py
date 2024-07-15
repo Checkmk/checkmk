@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import abc
 import json
-import pprint
 import re
 from collections.abc import Collection, Iterable
 from dataclasses import asdict
@@ -2816,7 +2815,7 @@ class ModeExportRule(ABCEditRuleMode):
         pass
 
     def page(self) -> None:
-        pretty_rule_config = pprint.pformat(self._rule.ruleset.valuespec().mask(self._rule.value))
+        rule_config = self._rule.ruleset.valuespec().mask(self._rule.value)
         content_id = "rule_representation"
         success_msg_id = "copy_success"
 
@@ -2839,7 +2838,7 @@ class ModeExportRule(ABCEditRuleMode):
         html.p(_("You can copy and use the data structure below in your REST API requests."))
         forms.header(_("Rule value representation for REST API"))
         forms.section("Rule value representation")
-        html.text_area(content_id, deflt=repr(pretty_rule_config), id_=content_id, readonly="true")
+        html.text_area(content_id, deflt=repr(repr(rule_config)), id_=content_id, readonly="true")
         html.icon_button(
             url=None,
             title=_("Copy rule value representation to clipboard"),

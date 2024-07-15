@@ -19,7 +19,7 @@ build --action_env=BAZEL_CXXOPTS="-std=c++20"
 # Required for dynamic linking.
 build --copt="-fPIC"
 # Always require debug info.
-build --copt="-g"
+# build --copt="-g"
 clean --async
 # all bazel-created temporary and build output files
 # clean --expunge

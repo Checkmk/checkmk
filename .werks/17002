@@ -5,7 +5,7 @@ Component: checks
 Date: 1720519796
 Edition: cre
 Level: 1
-Version: 2.2.0p31
+Version: 2.2.0p32
 
 Microsoft is retiring the Azure resource "Database for MySQL single server" (see https://learn.microsoft.com/en-us/azure/mysql/migrate/whats-happening-to-mysql-single-server).
 

@@ -85,7 +85,7 @@ from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.wato import registration as wato_registration
-from cmk.gui.watolib import groups_io
+from cmk.gui.watolib import configuration_bundles, groups_io
 from cmk.gui.watolib import notifications as notifications_config
 from cmk.gui.watolib import password_store
 from cmk.gui.watolib import registration as watolib_registration
@@ -304,6 +304,7 @@ def register() -> None:
     user_connections_config(config_file_registry)
     user_config.register(config_file_registry)
     rule_config.register(config_file_registry)
+    configuration_bundles.register(config_file_registry)
 
 
 register()

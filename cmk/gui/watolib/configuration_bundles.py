@@ -6,7 +6,7 @@
 from pathlib import Path
 from typing import Literal, NotRequired, TypedDict
 
-from cmk.gui.watolib.simple_config_file import WatoSingleConfigFile
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
 
@@ -36,3 +36,7 @@ class ConfigBundleStore(WatoSingleConfigFile[ConfigBundle]):
             config_variable="configuration_bundles",
             spec_class=ConfigBundle,
         )
+
+
+def register(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(ConfigBundleStore())

@@ -132,6 +132,13 @@ class BackgroundJob:
         return self.get_status().user != user.id
 
     def _verify_running(self, job_status: JobStatusSpec) -> bool:
+        if job_status.state == JobStatusStates.INITIALIZED:
+            # The process was created a millisecond ago
+            # The child process however, did not have time to update the statefile with its PID
+            # We consider this scenario as OK, if the start time was recent enough
+            if time.time() - job_status.started < 5:  # 5 seconds
+                return True
+
         if job_status.pid is None:
             return False
 

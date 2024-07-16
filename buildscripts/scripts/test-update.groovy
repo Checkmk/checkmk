@@ -25,7 +25,6 @@ def main() {
     ]);
 
     check_environment_variables([
-        "DOCKER_TAG",
         "EDITION",
     ]);
 

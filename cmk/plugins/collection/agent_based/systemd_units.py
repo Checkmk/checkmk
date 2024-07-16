@@ -123,6 +123,8 @@ _SYSTEMD_UNIT_FILE_STATES = [
 # https://github.com/systemd/systemd/blob/7d4054464318d15ecd35c93fb477011aec63391e/src/basic/glyph-util.c#L38
 _STATUS_SYMBOLS = {"●", "○", "↻", "×", "x", "*"}
 
+MEMORY_PATTERN = re.compile(r"(\d+(\.\d+)?)([BKMG]?)")
+
 
 @dataclass(frozen=True)
 class Memory:
@@ -145,14 +147,18 @@ class Memory:
         >>> Memory.from_raw("14G").bytes
         15032385536
         """
-        pattern = re.compile(r"(\d+(\.\d+)?)([BKMG]?)")
-        if not (match := pattern.match(raw)):
+        if not (match := MEMORY_PATTERN.match(raw)):
             raise ValueError(f"Cannot create {cls.__name__} from: {raw}")
         value, _, unit = match.groups()
         return cls(int(float(value) * {"B": 1, "K": 1024, "M": 1024**2, "G": 1024**3}[unit]))
 
     def render(self):
         return render.bytes(self.bytes)
+
+
+CPU_PATTERN = re.compile(
+    r"(?:(\d+)d)?\s*(?:(\d+)h)?\s*(?:(\d+)min)?\s*(?:(\d+(?:\.\d+)?)s)?\s*(?:(\d+)ms)?\s*(?:(\d+)u)?"
+)
 
 
 @dataclass(frozen=True)
@@ -174,10 +180,7 @@ class CpuTimeSeconds:
         >>> CpuTimeSeconds.parse_raw("12min 23.378s").value
         743.378
         """
-        pattern = re.compile(
-            r"(?:(\d+)d)?\s*(?:(\d+)h)?\s*(?:(\d+)min)?\s*(?:(\d+(?:\.\d+)?)s)?\s*(?:(\d+)ms)?\s*(?:(\d+)u)?"
-        )
-        if not (match := pattern.match(raw)):
+        if not (match := CPU_PATTERN.match(raw)):
             raise ValueError(f"Cannot parse from raw: {raw}")
 
         days, hours, minutes, seconds, milliseconds, microseconds = match.groups()

@@ -262,7 +262,6 @@ CEE_UNUSED_PACKAGES = [
     "defusedxml",
     "docutils",
     "gunicorn",
-    "idna",
     "importlib_metadata",
     "jmespath",
     "jsonschema",

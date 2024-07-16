@@ -344,24 +344,7 @@ def test_non_trivial_graph_declarations() -> None:
         if _is_non_trivial(expressions):
             non_trivial_graphs.append(ident)
 
-    assert set(non_trivial_graphs) == {
-        "cpu_utilization_3",
-        "cpu_utilization_4",
-        "cpu_utilization_5",
-        "cpu_utilization_5_util",
-        "cpu_utilization_6_guest",
-        "cpu_utilization_6_guest_util",
-        "cpu_utilization_6_steal",
-        "cpu_utilization_6_steal_util",
-        "cpu_utilization_7",
-        "cpu_utilization_7_util",
-        "cpu_utilization_8",
-        "cpu_utilization_numcpus",
-        "cpu_utilization_simple",
-        "util_average_1",
-        "util_average_2",
-        "util_fallback",
-    }
+    assert not non_trivial_graphs
 
 
 def test_graph_templates_with_consolidation_function() -> None:

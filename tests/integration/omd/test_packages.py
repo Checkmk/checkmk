@@ -2,6 +2,8 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+import os
 import subprocess
 from dataclasses import dataclass
 from typing import Literal
@@ -14,15 +16,13 @@ from tests.testlib.site import Site
 StreamType = Literal["stderr", "stdout"]
 
 
-@dataclass
+@dataclass(frozen=True)
 class MonitoringPlugin:
     binary_name: str
+    path: str = "lib/nagios/plugins"
     stream: StreamType = "stdout"
     cmd_line_option: str = "-V"
     expected: str = "v2.3.3"
-
-    def __post_init__(self):
-        self.path = f"lib/nagios/plugins/{self.binary_name}"
 
 
 # Not all plugins have the same cmd_line options nor using the same stream...
@@ -145,6 +145,7 @@ MONITORING_PLUGINS = (
     ),
     MonitoringPlugin(
         "check_disk_smb",
+        path="lib/check_mk/plugins/smb/libexec",
         cmd_line_option="-h",
         expected="usage: check_disk_smb",
     ),
@@ -165,7 +166,12 @@ MONITORING_PLUGINS = (
 @pytest.mark.parametrize(
     "cmd_line,stream_type,expected",
     (
-        pytest.param([p.path, p.cmd_line_option], p.stream, p.expected, id=f"{p.binary_name}")
+        pytest.param(
+            [os.path.join(p.path, p.binary_name), p.cmd_line_option],
+            p.stream,
+            p.expected,
+            id=f"{p.binary_name}",
+        )
         for p in MONITORING_PLUGINS
     ),
 )

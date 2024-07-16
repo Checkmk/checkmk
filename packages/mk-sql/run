@@ -23,8 +23,7 @@ usage() {
     echo "  -u, --unit-tests                    run unit tests"
     echo "  -C, --clippy                        run clippy linter"
     echo "  -I F1,F2,..., --features=F1,F2,...  list of features to activate"
-    echo "  -a, --all                           shortcut for -F -b -U -u -C"
-    echo "  -A, --build-all                     shortcut for -b -U"
+    echo "  -a, --all                           shortcut for -F -b -u -C"
     echo "  -f, --format                        format sources"
     echo "  -D, --documentation                 generate documentation"
     echo "  -j N, --jobs=N                      allow N jobs at once, default is ${JOBS}"
@@ -43,7 +42,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'ecFbuCIaAfDj:h' --long 'setup-environment,clean,check-format,build,unit-tests,clippy,features:,all,build-all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'ecFbuCIaAfDj:h' --long 'setup-environment,clean,check-format,build,unit-tests,clippy,features:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -92,11 +91,6 @@ parse_options() {
                 RUN_BUILD=yes
                 RUN_UNIT_TESTS=yes
                 RUN_CLIPPY=yes
-                shift
-                continue
-                ;;
-            '-A' | '--build-all')
-                RUN_BUILD=yes
                 shift
                 continue
                 ;;

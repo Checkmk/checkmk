@@ -18,7 +18,7 @@ usage() {
     echo "  -c, --clean                remove artifacts first"
     echo "  -F, --check-format         check for correct formatting"
     echo "  -b, --build                build"
-    echo "  -a, --all                  shortcut for -F -b -U -u -i -t"
+    echo "  -a, --all                  shortcut for -F -b -u -i -t"
     echo "  -f, --format               format sources"
     echo "  -T, --tsc                  run tsc"
     echo "  -E, --eslint               run eslint"

@@ -1,0 +1,12 @@
+Title: Fix path for snmpget in check_snmp and check_hpjd
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1721119141
+Edition: cre
+Level: 1
+Version: 2.1.0p47
+
+Werk 13585 introduced a bug in the path calculation for snmpget, so the
+check_snmp and check_hpjd active checks failed randomly. This has been
+fixed.

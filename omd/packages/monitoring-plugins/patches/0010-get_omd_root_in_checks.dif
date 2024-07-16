@@ -73,7 +73,7 @@
 +            die(STATE_UNKNOWN, _("OMD_ROOT not set"));
 +        }
 +
-+        char * absolute_snmpcmd_path = malloc(strlen(omd_root) + strlen(relativ_snmp_cmd) + 1);
++        char * absolute_snmpcmd_path = calloc(1, strlen(omd_root) + strlen(relativ_snmp_cmd) + 1);
 +        strcat(absolute_snmpcmd_path, omd_root);
 +        strcat(absolute_snmpcmd_path, relativ_snmp_cmd);
 +

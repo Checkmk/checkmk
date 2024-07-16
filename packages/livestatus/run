@@ -86,6 +86,7 @@ parse_options() {
             '-a' | '--all')
                 RUN_CHECK_FORMAT=yes
                 RUN_BUILD=yes
+                RUN_UNIT_TESTS=yes
                 RUN_IWYU=yes
                 RUN_CLANG_TIDY=yes
                 shift

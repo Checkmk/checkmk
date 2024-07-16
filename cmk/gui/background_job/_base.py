@@ -132,13 +132,6 @@ class BackgroundJob:
         return self.get_status().user != user.id
 
     def _verify_running(self, job_status: JobStatusSpec) -> bool:
-        if job_status.state == JobStatusStates.INITIALIZED:
-            # The process was created a millisecond ago
-            # The child process however, did not have time to update the statefile with its PID
-            # We consider this scenario as OK, if the start time was recent enough
-            if time.time() - job_status.started < 5:  # 5 seconds
-                return True
-
         if job_status.pid is None:
             return False
 
@@ -242,10 +235,23 @@ class BackgroundJob:
     def _is_correct_process(
         self, job_status: JobStatusSpec, psutil_process: psutil.Process
     ) -> bool:
-        if psutil_process.name() != BackgroundJobDefines.process_name:
-            return False
+        # Once the process has executed setthreadtitle, this is the best indicator
+        # that the process is the correct one.
+        if psutil_process.name() == BackgroundJobDefines.process_name:
+            return True
 
-        return True
+        # Before that, we try our best to decide whether the process is the correct one with some
+        # kind of finger printing. If this does not work, a look at the other information
+        # psutil_process has to offer might be necessary.
+        # Alternatively, maybe we can hand over the process some argument or environment variable
+        # to identify it.
+        if (
+            job_status.state == JobStatusStates.INITIALIZED
+            and "--multiprocessing-fork" in psutil_process.cmdline()
+        ):
+            return True
+
+        return False
 
     def get_status(self) -> JobStatusSpec:
         status = self._jobstatus_store.read()

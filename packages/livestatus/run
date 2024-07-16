@@ -172,7 +172,7 @@ run_unit_tests() {
         VALGRIND="valgrind --quiet --num-callers=30 --error-exitcode=42"
     fi
     (
-        GTEST_OUTPUT=xml ${VALGRIND} bazel test --test_output=all //packages/neb:all
+        GTEST_OUTPUT=xml ${VALGRIND} bazel test --test_output=all //packages/livestatus:all
     )
 }
 

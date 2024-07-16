@@ -1086,17 +1086,6 @@ def test_conflicting_metrics(metric_names: Sequence[str], graph_ids: Sequence[st
     )
 
 
-def test_graph_titles() -> None:
-    graphs_without_title = sorted(
-        graph_id
-        for graph_id, graph_info in utils._graph_templates_internal().items()
-        if not graph_info.title
-    )
-    assert (
-        not graphs_without_title
-    ), f"Please provide titles for the following graphs: {', '.join(graphs_without_title)}"
-
-
 @pytest.mark.parametrize(
     ["default_temperature_unit", "expected_value", "expected_scalars"],
     [

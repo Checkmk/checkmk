@@ -10,7 +10,9 @@ from typing import Literal
 
 import pytest
 
+from cmk.gui.graphing import perfometer_info
 from cmk.gui.graphing._loader import load_graphing_plugins
+from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.graphing._utils import graph_info, metric_info
 
 from cmk.discover_plugins import PluginLocation
@@ -24,15 +26,34 @@ def test_load_graphing_plugins() -> None:
 
 
 def test_metric_duplicates() -> None:
-    assert metric_info
+    assert metric_info == {
+        "temp": {
+            "title": "Temperature",
+            "unit": "c",
+            "color": "16/a",
+        }
+    }
+    assert "c" in list(unit_info.keys())
     metric_names = {
         p.name for p in load_graphing_plugins().plugins.values() if isinstance(p, metrics.Metric)
     }
     assert not set(metric_info).intersection(metric_names)
 
 
+def test_perfometers() -> None:
+    assert perfometer_info == [
+        {"type": "logarithmic", "metric": "temp", "half_value": 40.0, "exponent": 1.2}
+    ]
+
+
 def test_graph_duplicates() -> None:
-    assert graph_info
+    assert graph_info == {
+        "temperature": {
+            "title": "Temperature",
+            "metrics": [("temp", "area")],
+            "scalars": ["temp:warn", "temp:crit"],
+        }
+    }
     graph_names = {
         p.name
         for p in load_graphing_plugins().plugins.values()

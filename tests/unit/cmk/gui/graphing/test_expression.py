@@ -28,7 +28,7 @@ from cmk.gui.graphing._expression import (
     WarningOf,
 )
 from cmk.gui.graphing._unit_info import unit_info
-from cmk.gui.graphing._utils import graph_info, metric_info, parse_perf_data, translate_metrics
+from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
 
@@ -68,9 +68,6 @@ def test_evaluate_cpu_utilization(
     This test provides a sanity check that the stack_resolver clamps the values in the way it
     should.
     """
-    # Assemble
-    assert metric_info, "Global variable is empty/has not been initialized."
-    assert graph_info, "Global variable is empty/has not been initialized."
     perf_data_parsed, check_command = parse_perf_data(
         perf_data, check_command, config=active_config
     )

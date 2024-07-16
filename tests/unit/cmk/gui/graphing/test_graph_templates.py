@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -19,33 +19,15 @@ from cmk.utils.hostaddress import HostName
 from cmk.gui import metrics
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
-from cmk.gui.graphing import perfometer_info
-from cmk.gui.graphing._expression import (
-    Constant,
-    CriticalOf,
-    MaximumOf,
-    Metric,
-    MetricExpression,
-    MinimumOf,
-    parse_expression,
-    Product,
-    WarningOf,
-)
+from cmk.gui.graphing._expression import Constant, CriticalOf, Metric, Product, WarningOf
 from cmk.gui.graphing._graph_specification import (
     HorizontalRule,
     MetricOpOperator,
     MetricOpRRDSource,
 )
 from cmk.gui.graphing._graph_templates import matching_graph_templates
-from cmk.gui.graphing._perfometer import (
-    _DualPerfometerSpec,
-    _LinearPerfometerSpec,
-    _StackedPerfometerSpec,
-    LogarithmicPerfometerSpec,
-)
 from cmk.gui.graphing._utils import (
     _graph_templates_internal,
-    graph_info,
     GraphTemplate,
     ScalarDefinition,
     translate_metrics,
@@ -257,102 +239,6 @@ def test_graph_template_with_layered_areas() -> None:
         if areas.pos.count("area") > 1 or areas.neg.count("-area") > 1
     ]
     assert not templates_with_more_than_one_layer
-
-
-def _conditional_perfometer(
-    perfometer: (
-        _LinearPerfometerSpec
-        | LogarithmicPerfometerSpec
-        | _DualPerfometerSpec
-        | _StackedPerfometerSpec
-    ),
-) -> Iterator[_LinearPerfometerSpec]:
-    if perfometer["type"] == "linear":
-        if "condition" in perfometer:
-            yield perfometer
-    elif perfometer["type"] == "logarithmic":
-        pass
-    elif perfometer["type"] in ("dual", "stacked"):
-        for p in perfometer["perfometers"]:
-            yield from _conditional_perfometer(p)
-
-
-def test_conditional_perfometer() -> None:
-    conditional_perfometers: list[_LinearPerfometerSpec] = []
-    for perfometer in perfometer_info:
-        if not isinstance(perfometer, dict):
-            continue
-        conditional_perfometers.extend(_conditional_perfometer(perfometer))
-
-    assert not conditional_perfometers
-
-
-def _is_non_trivial(expressions: Sequence[MetricExpression]) -> bool:
-    return any(
-        not isinstance(
-            e,
-            (Constant, Metric, WarningOf, CriticalOf, MinimumOf, MaximumOf),
-        )
-        for e in expressions
-    )
-
-
-def _perfometer_with_non_trivial_declarations(
-    perfometer: (
-        _LinearPerfometerSpec
-        | LogarithmicPerfometerSpec
-        | _DualPerfometerSpec
-        | _StackedPerfometerSpec
-    ),
-) -> Iterator[_LinearPerfometerSpec | LogarithmicPerfometerSpec]:
-    if perfometer["type"] == "linear":
-        expressions = [parse_expression(s, {}) for s in perfometer["segments"]]
-        if (total := perfometer.get("total")) is not None:
-            expressions.append(parse_expression(total, {}))
-        if (label := perfometer.get("label")) is not None:
-            expressions.append(parse_expression(label[0], {}))
-        if _is_non_trivial(expressions):
-            yield perfometer
-
-    elif perfometer["type"] == "logarithmic":
-        if _is_non_trivial([parse_expression(perfometer["metric"], {})]):
-            yield perfometer
-
-    elif perfometer["type"] in ("dual", "stacked"):
-        for p in perfometer["perfometers"]:
-            yield from _perfometer_with_non_trivial_declarations(p)
-
-
-def test_non_trivial_perfometer_declarations() -> None:
-    non_trivial_perfometers: list[_LinearPerfometerSpec | LogarithmicPerfometerSpec] = []
-    for perfometer in perfometer_info:
-        if not isinstance(perfometer, dict):
-            continue
-        non_trivial_perfometers.extend(_perfometer_with_non_trivial_declarations(perfometer))
-    assert not non_trivial_perfometers
-
-
-def test_non_trivial_graph_declarations() -> None:
-    non_trivial_graphs = []
-    for ident, raw_template in graph_info.items():
-        template = GraphTemplate.from_template(ident, raw_template)
-        expressions = [m.expression for m in template.metrics] + [
-            s.expression for s in template.scalars
-        ]
-        if template.range:
-            expressions.extend((template.range.min, template.range.max))
-        if _is_non_trivial(expressions):
-            non_trivial_graphs.append(ident)
-
-    assert not non_trivial_graphs
-
-
-def test_graph_templates_with_consolidation_function() -> None:
-    assert [
-        ident
-        for ident, template in _graph_templates_internal().items()
-        if template.consolidation_function
-    ] == []
 
 
 @pytest.mark.parametrize(

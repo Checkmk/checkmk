@@ -469,27 +469,29 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
             count += 1
         assert n_pending_changes == 0, "Pending changes found!"
 
-    logger.info("Scheduling checks & checking for pending services...")
-    pending_checks = []
-    for idx in range(3):
-        # we have to schedule the checks multiple times (twice at least):
-        # => once to get baseline data
-        # => a second time to calculate differences
-        # => a third time since some checks require it
-        site.schedule_check(host_name, "Check_MK", 0, 60)
-        pending_checks = site.openapi.get_host_services(host_name, pending=True)
-        if idx > 0 and len(pending_checks) == 0:
-            break
+    hostnames = [_.get("id") for _ in site.openapi.get_hosts()]  # including piggyback hosts
+    for hostname in hostnames:
+        logger.info("Scheduling checks & checking for pending services...")
+        pending_checks = []
+        for idx in range(3):
+            # we have to schedule the checks multiple times (twice at least):
+            # => once to get baseline data
+            # => a second time to calculate differences
+            # => a third time since some checks require it
+            site.schedule_check(hostname, "Check_MK", 0, 60)
+            pending_checks = site.openapi.get_host_services(hostname, pending=True)
+            if idx > 0 and len(pending_checks) == 0:
+                break
 
-    if pending_checks:
-        logger.info(
-            '%s pending service(s) found on host "%s": %s',
-            len(pending_checks),
-            host_name,
-            ",".join(
-                _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
-            ),
-        )
+        if pending_checks:
+            logger.info(
+                '%s pending service(s) found on host "%s": %s',
+                len(pending_checks),
+                hostname,
+                ",".join(
+                    _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
+                ),
+            )
 
     try:
         yield

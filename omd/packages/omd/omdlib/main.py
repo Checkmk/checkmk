@@ -3701,6 +3701,21 @@ def postprocess_restore_as_site_user(
     )
 
 
+def select_matching_packages(version: str, installed_packages: Sequence[str]) -> list[str]:
+    raw_version = _get_raw_version(version)
+    target_package_name = f"{_get_edition(version)}-{raw_version}"
+    with_version_str = [package for package in installed_packages if target_package_name in package]
+    if "p" in raw_version:
+        return with_version_str
+    if "-" in raw_version:
+        return with_version_str
+    return [
+        package
+        for package in with_version_str
+        if f"{raw_version}p" not in package and f"{raw_version}-" not in package
+    ]
+
+
 def main_cleanup(
     version_info: VersionInfo,
     _site: object,
@@ -3739,14 +3754,7 @@ def main_cleanup(
             )
             continue
 
-        target_package_name = "{}-{}".format(
-            _get_edition(version),
-            _get_raw_version(version),
-        )
-
-        matching_installed_packages = [
-            package for package in all_installed_packages if target_package_name in package
-        ]
+        matching_installed_packages = select_matching_packages(version, all_installed_packages)
 
         if len(matching_installed_packages) != 1:
             sys.stdout.write(

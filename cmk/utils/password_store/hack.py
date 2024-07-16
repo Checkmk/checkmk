@@ -46,6 +46,7 @@ HACK_AGENTS = {
     "couchbase": True,
     "zerto": True,
     "siemens_plc": False,  # needs no secret
+    "acme_sbc": False,  # needs no secret
 }
 
 

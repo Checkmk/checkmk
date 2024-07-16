@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, NewType
+
+FormSpecId = NewType("FormSpecId", str)
 
 
 @dataclass
@@ -34,7 +36,7 @@ class ListOfWidgets(Widget):
 
 @dataclass
 class FormSpecWrapper(Widget):
-    id: str
+    id: FormSpecId
     widget_type: str = field(default="form_spec", init=False)
     form_spec: object | None = None
 

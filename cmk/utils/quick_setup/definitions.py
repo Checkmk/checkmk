@@ -2,15 +2,17 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Callable, NewType
+from typing import Callable, Mapping, NewType
 
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.quick_setup.widgets import Widget
+from cmk.utils.quick_setup.widgets import FormSpecId, Widget
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.rulesets.v1.form_specs import FormSpec
 
 StageId = NewType("StageId", int)
 QuickSetupId = NewType("QuickSetupId", str)
@@ -26,16 +28,18 @@ class StageOverview:
 @dataclass
 class Stage:
     stage_id: StageId
-    components: list[dict]
-    validation_errors: list[str] = field(default_factory=list)
-    stage_summary: list[str] = field(default_factory=list)
+    components: Sequence[dict]
+    validation_errors: Sequence[str] = field(default_factory=list)
+    stage_summary: Sequence[str] = field(default_factory=list)
 
 
 @dataclass
 class QuickSetupStage:
     stage_id: StageId
     title: str
-    components: list[Widget] = field(default_factory=list)
+    configure_components: Sequence[Widget]
+    validators: Iterable[Callable[[Sequence[dict], Mapping[FormSpecId, FormSpec]], Sequence[str]]]
+    recap: Iterable[Callable[[Sequence[dict]], Sequence[Widget]]]
     sub_title: str | None = None
 
     def stage_overview(self) -> StageOverview:
@@ -56,7 +60,7 @@ class QuickSetupOverview:
 @dataclass
 class IncomingStage:  # Request
     stage_id: StageId
-    form_data: dict
+    form_data: dict[FormSpecId, object]
 
 
 class InvalidStageException(MKGeneralException):
@@ -73,7 +77,7 @@ class QuickSetup:
     title: str
     id: QuickSetupId
     stages: Sequence[QuickSetupStage]
-    save_action: Callable[[list[IncomingStage]], str] | None = None
+    save_action: Callable[[Sequence[IncomingStage]], str] | None = None
 
     def get_stage_with_id(self, stage_id: StageId) -> QuickSetupStage:
         for stage in self.stages:

@@ -124,7 +124,7 @@ def _render_exception(e: Exception, title: str) -> Response:
         html.open_ts_container(
             container="div",
             function_name="insert_before",
-            options={"targetElementId": "main_page_content"},
+            arguments={"targetElementId": "main_page_content"},
         )
         html.show_error(str(e))
         html.close_div()

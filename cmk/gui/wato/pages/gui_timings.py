@@ -31,7 +31,7 @@ class GuiTimingsPage(Page):
         html.call_ts_function(
             container="div",
             function_name="render_stats_table",
-            options=None,
+            arguments=None,
         )
 
         html.final_javascript_code()

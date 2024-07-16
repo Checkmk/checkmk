@@ -641,9 +641,11 @@ class HTMLWriter:
         *,
         container: str,
         function_name: KnownTSFunction,
-        options: dict[str, str] | None = None,
+        arguments: dict[str, str] | None = None,
     ) -> None:
-        self.open_ts_container(container=container, function_name=function_name, options=options)
+        self.open_ts_container(
+            container=container, function_name=function_name, arguments=arguments
+        )
         self.write_html(render_end_tag(container))
 
     def open_ts_container(
@@ -651,18 +653,18 @@ class HTMLWriter:
         *,
         container: str,
         function_name: KnownTSFunction,
-        options: dict[str, str] | None = None,
+        arguments: dict[str, str] | None = None,
     ) -> None:
-        json_options: str
-        if options is None:
-            json_options = "{}"
+        json_arguments: str
+        if arguments is None:
+            json_arguments = "{}"
         else:
-            json_options = json.dumps(options)
+            json_arguments = json.dumps(arguments)
         self.write_html(
             render_start_tag(
                 container,
                 data_cmk_call_ts_function=function_name,
-                data_cmk_call_ts_options=json_options,
+                data_cmk_call_ts_arguments=json_arguments,
             )
         )
 

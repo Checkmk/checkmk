@@ -546,7 +546,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
             html.call_ts_function(
                 container="div",
                 function_name="render_qr_code",
-                options={
+                arguments={
                     "qrcode": "otpauth://totp/%s?secret=%s&issuer=%s"
                     % (
                         parse.quote(user.alias, safe=""),

@@ -67,10 +67,10 @@ import * as webauthn from "./modules/webauthn";
 
 register();
 
-type CallableFunctionOptions = {[key: string]: string};
+type CallableFunctionArguments = {[key: string]: string};
 type CallableFunction = (
     node: HTMLElement,
-    options: CallableFunctionOptions
+    options: CallableFunctionArguments
 ) => Promise<void>;
 
 // See cmk.gui.htmllib.generator:KnownTSFunction
@@ -95,15 +95,15 @@ $(() => {
         .forEach((container, _) => {
             const data = container.dataset;
             const function_name: string = data.cmk_call_ts_function!;
-            let options: CallableFunctionOptions;
-            if (data.cmk_call_ts_options) {
-                options = JSON.parse(data.cmk_call_ts_options);
+            let args: CallableFunctionArguments; // arguments is a restricted name in JavaScript
+            if (data.cmk_call_ts_arguments) {
+                args = JSON.parse(data.cmk_call_ts_arguments);
             } else {
-                options = {};
+                args = {};
             }
             const ts_function = callable_functions[function_name];
             // The function has the responsibility to take the container and do it's thing with it.
-            ts_function(container, options);
+            ts_function(container, args);
         });
 
     document

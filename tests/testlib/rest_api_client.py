@@ -2756,7 +2756,7 @@ class ParentScanClient(RestApiClient):
 class QuickSetupClient(RestApiClient):
     domain: API_DOMAIN = "quick_setup"
 
-    def get_overview(
+    def get_overview_and_first_stage(
         self,
         quick_setup_id: str,
         expect_ok: bool = True,

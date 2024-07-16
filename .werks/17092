@@ -5,7 +5,7 @@ Component: wato
 Date: 1719997630
 Edition: cre
 Level: 1
-Version: 2.1.0p47
+Version: 2.1.0p45
 
 Werk #17090 in Checkmk 2.3.0p8 and 2.2.0p29 introduced additional CSRF token checks in the GUI.
 This caused some buttons to not work anymore because the CSRF token was missing, including, but likely not limited to:

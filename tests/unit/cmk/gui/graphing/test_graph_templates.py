@@ -227,7 +227,6 @@ def test_duplicate_graph_templates() -> None:
 
     assert {tuple(idents) for idents in idents_by_metrics.values() if len(idents) >= 2} == {
         ("livestatus_requests_per_connection", "livestatus_connects_and_requests"),
-        ("mem_growing", "mem_shrinking"),
     }
 
 
@@ -359,8 +358,6 @@ def test_non_trivial_graph_declarations() -> None:
         "cpu_utilization_8",
         "cpu_utilization_numcpus",
         "cpu_utilization_simple",
-        "mem_growing",
-        "mem_shrinking",
         "util_average_1",
         "util_average_2",
         "util_fallback",
@@ -368,13 +365,11 @@ def test_non_trivial_graph_declarations() -> None:
 
 
 def test_graph_templates_with_consolidation_function() -> None:
-    assert sorted(
-        [
-            ident
-            for ident, template in _graph_templates_internal().items()
-            if template.consolidation_function
-        ]
-    ) == sorted(["mem_shrinking"])
+    assert [
+        ident
+        for ident, template in _graph_templates_internal().items()
+        if template.consolidation_function
+    ] == []
 
 
 @pytest.mark.parametrize(

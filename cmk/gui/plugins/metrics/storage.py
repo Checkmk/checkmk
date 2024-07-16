@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._utils import graph_info, metric_info
+from cmk.gui.graphing._utils import metric_info
 from cmk.gui.i18n import _
 
 # .
@@ -25,45 +25,4 @@ metric_info["streams"] = {
     "title": _("Streams"),
     "unit": "%",
     "color": "35/a",
-}
-
-# cloud storage
-
-metric_info["mem_growth"] = {
-    "title": _("Memory usage growth"),
-    "unit": "bytes/d",
-    "color": "#29cfaa",
-}
-
-# .
-#   .--Graphs--------------------------------------------------------------.
-#   |                    ____                 _                            |
-#   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
-#   |                  | |  _| '__/ _` | '_ \| '_ \/ __|                   |
-#   |                  | |_| | | | (_| | |_) | | | \__ \                   |
-#   |                   \____|_|  \__,_| .__/|_| |_|___/                   |
-#   |                                  |_|                                 |
-#   +----------------------------------------------------------------------+
-#   |  Definitions of time series graphs                                   |
-#   '----------------------------------------------------------------------'
-
-# diskstat checks
-
-graph_info["mem_growing"] = {
-    "title": _("Growing"),
-    "metrics": [
-        (
-            "mem_growth.max,0,MAX",
-            "area",
-            _("Growth"),
-        ),
-    ],
-}
-
-graph_info["mem_shrinking"] = {
-    "title": _("Shrinking"),
-    "consolidation_function": "min",
-    "metrics": [
-        ("mem_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage")),
-    ],
 }

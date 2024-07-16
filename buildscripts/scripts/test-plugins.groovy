@@ -12,7 +12,6 @@ def main() {
 
     check_environment_variables([
         "DOCKER_REGISTRY",
-        "DOCKER_TAG",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");

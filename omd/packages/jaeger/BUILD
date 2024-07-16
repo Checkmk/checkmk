@@ -29,11 +29,15 @@ genrule(
         "@omd_packages//omd/packages/jaeger:TRACE_RECEIVE",
         "@omd_packages//omd/packages/jaeger:TRACE_RECEIVE_ADDRESS",
         "@omd_packages//omd/packages/jaeger:TRACE_RECEIVE_PORT",
+        "@omd_packages//omd/packages/jaeger:TRACE_JAEGER_ADMIN_PORT",
+        "@omd_packages//omd/packages/jaeger:TRACE_JAEGER_UI_PORT",
     ],
     outs = [
         "lib/omd/hooks/TRACE_RECEIVE",
         "lib/omd/hooks/TRACE_RECEIVE_ADDRESS",
         "lib/omd/hooks/TRACE_RECEIVE_PORT",
+        "lib/omd/hooks/TRACE_JAEGER_ADMIN_PORT",
+        "lib/omd/hooks/TRACE_JAEGER_UI_PORT",
     ],
     cmd = """
         mkdir -p $$(realpath $(RULEDIR))/lib/omd/hooks
@@ -41,6 +45,8 @@ genrule(
             $(execpath @omd_packages//omd/packages/jaeger:TRACE_RECEIVE) \
             $(execpath @omd_packages//omd/packages/jaeger:TRACE_RECEIVE_ADDRESS) \
             $(execpath @omd_packages//omd/packages/jaeger:TRACE_RECEIVE_PORT) \
+            $(execpath @omd_packages//omd/packages/jaeger:TRACE_JAEGER_ADMIN_PORT) \
+            $(execpath @omd_packages//omd/packages/jaeger:TRACE_JAEGER_UI_PORT) \
             $$(realpath $(RULEDIR))/lib/omd/hooks/
     """,
 )

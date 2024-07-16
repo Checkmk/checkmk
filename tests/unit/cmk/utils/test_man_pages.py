@@ -167,7 +167,7 @@ def test_cmk_plugins_families_manpages() -> None:
         for location, plugin in check_plugins.plugins.items()
         if (
             (expected := os.path.join(*location.module.split(".")[:3]))
-            not in (actual := str(man_page_path_map[plugin.name]))
+            not in (actual := str(man_page_path_map.get(plugin.name, "")))
         )
     }
 
@@ -217,9 +217,6 @@ def test_no_subtree_and_entries_on_same_level(catalog: man_pages.ManPageCatalog)
         assert (
             has_entries != has_categories
         ), "A category must only have entries or categories, not both"
-
-
-# TODO: print_man_page_browser()
 
 
 def test_print_man_page_nowiki_content() -> None:

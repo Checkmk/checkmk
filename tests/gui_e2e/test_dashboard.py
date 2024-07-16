@@ -13,7 +13,7 @@ def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
         expect(dashboard_page.dashlet(dashlet_title)).to_be_visible()
 
     for dropdown_button_name in dashboard_page.dropdown_buttons:
-        expect(dashboard_page.dropdown_button(dropdown_button_name)).to_be_visible()
+        expect(dashboard_page.main_area.dropdown_button(dropdown_button_name)).to_be_visible()
 
     for icon_title in dashboard_page.icons_list:
         expect(dashboard_page.menu_icon(icon_title)).to_be_visible()

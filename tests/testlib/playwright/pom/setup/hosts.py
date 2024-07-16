@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from typing import NamedTuple
+from dataclasses import dataclass
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
@@ -14,10 +14,14 @@ from tests.testlib.playwright.pom.page import CmkPage
 logger = logging.getLogger(__name__)
 
 
-class HostDetails(NamedTuple):
-    # extend as new test-cases are added
+@dataclass
+class HostDetails:
     name: str
     ip: str
+    site: str | None = None
+    tag_agent: str | None = None
+    tag_address_family: str | None = None
+    labels: dict | None = None
 
 
 class SetupHost(CmkPage):
@@ -147,7 +151,7 @@ class HostProperties(CmkPage):
     def delete_host(self) -> None:
         """On `setup -> Hosts -> Properties`, delete host and activate changes."""
         logger.info("Delete host: %s", self.details.name)
-        self.dropdown_button("Host").click()
+        self.main_area.dropdown_button("Host").click()
         self.get_link("Delete").click()
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
         self.page.wait_for_url(

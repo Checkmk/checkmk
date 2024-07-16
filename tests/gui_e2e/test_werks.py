@@ -38,7 +38,7 @@ def test_werks_available(werks_page: Werks) -> None:
 def test_navigate_to_werks(werks_page: Werks) -> None:
     # validate presence of dropdown buttons
     for button_name in werks_page.dropdown_buttons:
-        expect(werks_page.dropdown_button(button_name)).to_be_visible()
+        expect(werks_page.main_area.dropdown_button(button_name)).to_be_visible()
 
     # validate 'Filter' button works
     werks_page.get_link("Filter").click()

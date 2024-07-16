@@ -116,9 +116,6 @@ class CmkPage(LocatorHelper):
         """
         return self.page.goto(urljoin(self._url, url), wait_until=wait_until, referer=referer)
 
-    def dropdown_button(self, name: str, exact: bool = True) -> Locator:
-        return self.main_area.locator().get_by_role(role="heading", name=name, exact=exact)
-
 
 class MainMenu(LocatorHelper):
     """functionality to find items from the main menu"""
@@ -327,6 +324,15 @@ class MainArea(LocatorHelper):
     def locator_via_xpath(self, element: str, text: str) -> Locator:
         """Return a locator defined by element and text via xpath."""
         return self.locator(f"//{element}[text() = '{text}']")
+
+    def dropdown_button(self, name: str, exact: bool = True) -> Locator:
+        return self.locator().get_by_role(role="heading", name=name, exact=exact)
+
+    def dropdown_menu(self, menu_id: str) -> Locator:
+        return self.locator(f"div#{menu_id}")
+
+    def dropdown_menu_item(self, menu_id: str, item_name: str) -> Locator:
+        return self.dropdown_menu(menu_id).locator(f"span:has-text('{item_name}')")
 
 
 class Sidebar(LocatorHelper):

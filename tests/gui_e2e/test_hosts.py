@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import logging
 import re
 from collections.abc import Iterator
 from urllib.parse import quote_plus
@@ -12,7 +12,12 @@ from faker import Faker
 from playwright.sync_api import expect
 
 from tests.testlib.playwright.pom.dashboard import Dashboard
+from tests.testlib.playwright.pom.monitor.host_search import HostSearch
+from tests.testlib.playwright.pom.monitor.host_status import HostStatus
 from tests.testlib.playwright.pom.setup.hosts import HostDetails, HostProperties
+from tests.testlib.site import Site
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="host")
@@ -67,3 +72,68 @@ def test_reschedule(host: HostProperties) -> None:
     # In case of a success the page is reloaded, therefore the div is hidden,
     # otherwise the div stays open...
     host.main_area.locator("div#popup_menu").wait_for(state="hidden")
+
+
+@pytest.fixture(name="hosts_with_labels")
+def create_and_delete_hosts_with_labels(test_site: Site) -> Iterator[tuple[list[HostDetails], str]]:
+    site = test_site
+    label_key = "label_key"
+    label_value_foo = "foo"
+    label_value_bar = "bar"
+    foo_label_hosts = []
+    bar_label_hosts = []
+    faker = Faker()
+
+    logger.info("Create hosts with labels via API")
+    for i in range(8):
+        host_details = HostDetails(
+            name=f"test_host_{faker.unique.first_name()}",
+            ip="127.0.0.1",
+            site=site.id,
+            tag_agent="no-agent",
+            tag_address_family="ip-v4-only",
+        )
+        if i % 2 == 0:
+            host_details.labels = {label_key: label_value_foo}
+            foo_label_hosts.append(host_details)
+        else:
+            host_details.labels = {label_key: label_value_bar}
+            bar_label_hosts.append(host_details)
+        test_site.openapi.create_host(
+            host_details.name,
+            attributes={
+                "ipaddress": host_details.ip,
+                "site": host_details.site,
+                "tag_agent": host_details.tag_agent,
+                "tag_address_family": host_details.tag_address_family,
+                "labels": host_details.labels,
+            },
+        )
+    site.activate_changes_and_wait_for_core_reload()
+
+    yield foo_label_hosts, f"{label_key}:{label_value_foo}"
+
+    logger.info("Delete all hosts via API")
+    for host in foo_label_hosts + bar_label_hosts:
+        site.openapi.delete_host(host.name)
+    site.activate_changes_and_wait_for_core_reload()
+
+
+def test_filter_hosts_with_host_labels(
+    hosts_with_labels: tuple[list[HostDetails], str], dashboard_page: Dashboard
+) -> None:
+
+    expected_hosts_list, expected_label = hosts_with_labels
+    host_status_page = HostStatus(dashboard_page.page, expected_hosts_list[0])
+
+    host_status_page.host_label(expected_label).click()
+    host_search_page = HostSearch(host_status_page.page, navigate_to_page=False)
+
+    host_search_page.check_label_filter_applied("is", expected_label)
+
+    assert host_search_page.found_hosts.count() == len(
+        expected_hosts_list
+    ), "Unexpected number of hosts after applying label filter."
+    assert sorted(host_search_page.found_hosts.all_inner_texts()) == sorted(
+        [host.name for host in expected_hosts_list]
+    ), "Unexpected host names after applying label filter."

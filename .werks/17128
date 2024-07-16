@@ -1,0 +1,9 @@
+Title: mk_filestats: Do not compute file statistics in case of a folder
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1721111293
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+

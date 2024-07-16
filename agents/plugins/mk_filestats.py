@@ -98,7 +98,6 @@ import operator
 import os
 import re
 import shlex
-import stat
 import sys
 import time
 
@@ -199,14 +198,9 @@ class FileStat:
             stat_status = str(exc)
             return cls(raw_path, stat_status, size)
 
-        isfile = stat.S_ISREG(file_stat.st_mode)
-        isdir = stat.S_ISDIR(file_stat.st_mode)
+        return cls(raw_path, "ok", size, age, m_time)
 
-        return cls(raw_path, "ok", size, age, m_time, isfile, isdir)
-
-    def __init__(
-        self, raw_path, stat_status, size=None, age=None, m_time=None, isfile=True, isdir=False
-    ):
+    def __init__(self, raw_path, stat_status, size=None, age=None, m_time=None):
         super().__init__()
         if sys.version_info[0] >= 3:
             self.writeable_path = raw_path.encode("utf-8", "surrogateescape").decode(
@@ -222,8 +216,6 @@ class FileStat:
         self.size = size
         self.age = age
         self._m_time = m_time
-        self.isfile = isfile
-        self.isdir = isdir
 
     def dumps(self):
         data = {
@@ -270,12 +262,11 @@ class PatternIterator:
             # If we pass "*".encode("utf-8"), then a non-UTF-8 filesystem may no longer realize that
             # b'\x2A' refers to a wildcard. Instead iglob is responsible for conversion.
             for item in glob.iglob(pattern):
-                filestat = FileStat.from_path(item)
-                if filestat.isfile:
-                    yield filestat
-                if filestat.isdir:
+                if os.path.isdir(item):
                     for filestat in self._iterate_folder(item):
                         yield filestat
+                else:
+                    yield FileStat.from_path(item)
 
 
 def get_file_iterator(config):

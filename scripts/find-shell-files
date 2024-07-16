@@ -130,6 +130,7 @@ get_files_from_filesystem() {
         $(: various artifact directories ------------------------------------) \
         --exclude-dir="bazel-*" \
         --exclude-dir="build" \
+        --exclude-dir="external" \
         --exclude-dir="node_modules" \
         --exclude-dir="shared_cargo_folder" \
         $(: docker directories ----------------------------------------------) \

@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
-from typing import Annotated, final, Literal, NamedTuple
+from typing import Annotated, final, Literal
 
 from pydantic import BaseModel, computed_field, field_validator, PlainValidator, SerializeAsAny
 
@@ -27,7 +27,8 @@ from ._timeseries import AugmentedTimeSeries, derive_num_points_twindow, time_se
 from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData, RRDDataKey
 
 
-class HorizontalRule(NamedTuple):
+@dataclass(frozen=True)
+class HorizontalRule:
     value: float
     rendered_value: str
     color: str

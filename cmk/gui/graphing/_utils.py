@@ -10,7 +10,7 @@ import shlex
 from collections import Counter, OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, NamedTuple, NewType, NotRequired, Self, TypedDict
+from typing import Literal, NewType, NotRequired, Self, TypedDict
 
 from livestatus import livestatus_lql
 
@@ -72,7 +72,8 @@ class MetricUnitColor:
     color: str
 
 
-class MetricDefinition(NamedTuple):
+@dataclass(frozen=True)
+class MetricDefinition:
     expression: MetricExpression
     line_type: LineType
     title: str = ""

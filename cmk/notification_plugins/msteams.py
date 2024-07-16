@@ -65,10 +65,12 @@ def _msteams_msg(
                             "type": "TextBlock",
                             "text": substitute_context(subtitle, context),
                             "weight": "bolder",
+                            "wrap": True,
                         },
                         {
                             "type": "TextBlock",
                             "text": substitute_context(summary, context),
+                            "wrap": True,
                         },
                         {
                             "type": "FactSet",

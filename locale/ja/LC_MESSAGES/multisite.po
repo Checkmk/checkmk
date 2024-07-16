@@ -7231,8 +7231,516 @@ msgstr "メッセージがキューにとどまる平均時間"
 msgid "Average usage"
 msgstr "平均使用量"
 
-#, python-format
-msgid "Average utilization core %d"
+#, fuzzy
+msgid "Average utilization core 0"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 1"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 10"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 100"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 101"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 102"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 103"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 104"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 105"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 106"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 107"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 108"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 109"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 11"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 110"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 111"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 112"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 113"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 114"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 115"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 116"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 117"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 118"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 119"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 12"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 120"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 121"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 122"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 123"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 124"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 125"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 126"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 127"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 13"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 14"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 15"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 16"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 17"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 18"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 19"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 2"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 20"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 21"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 22"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 23"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 24"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 25"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 26"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 27"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 28"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 29"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 3"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 30"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 31"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 32"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 33"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 34"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 35"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 36"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 37"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 38"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 39"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 4"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 40"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 41"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 42"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 43"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 44"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 45"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 46"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 47"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 48"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 49"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 5"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 50"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 51"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 52"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 53"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 54"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 55"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 56"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 57"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 58"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 59"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 6"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 60"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 61"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 62"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 63"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 64"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 65"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 66"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 67"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 68"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 69"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 7"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 70"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 71"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 72"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 73"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 74"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 75"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 76"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 77"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 78"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 79"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 8"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 80"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 81"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 82"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 83"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 84"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 85"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 86"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 87"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 88"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 89"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 9"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 90"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 91"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 92"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 93"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 94"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 95"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 96"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 97"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 98"
+msgstr "平均使用率コア %d"
+
+#, fuzzy
+msgid "Average utilization core 99"
 msgstr "平均使用率コア %d"
 
 msgid "Average utilization of memory on the active supervisor"
@@ -8731,12 +9239,15 @@ msgstr ""
 "デフォルトでは、すべてのメールボックスがこれらのパラメータでチェックされま"
 "す。ここでメールボックスを指定すると、それらだけが監視されます。"
 
+#, fuzzy, python-format
 msgid ""
 "By default, all resources associated to the configured tenant ID will be "
-"monitored."
+"monitored. However, since Microsoft limits API calls to %s per hour (%s per "
+"minute), you can restrict the monitoring to individual resource groups and "
+"resources."
 msgstr ""
-"デフォルトでは、構成されたテナントIDに関連付けられているすべてのリソースが監"
-"視されます。"
+"ただし、MicrosoftはAPI呼び出しを1時間あたり %s (1分あたり %s )に制限している"
+"ため、監視を個々のリソースグループおよびリソースに制限できます。"
 
 msgid ""
 "By default, certificate validation is disabled because it is not security-"
@@ -13822,6 +14333,12 @@ msgstr "すべてのアラートルールに対するサマリーサービスを
 msgid "Create a summary service for all alert rules"
 msgstr "すべてのアラートルールに対するサマリーサービスを作成する"
 
+msgid ""
+"Create a workflow 'Post to a channel when a webhook request is received' for "
+"a channel in MS Teams and use the generated webook URL.<br><br>This URL can "
+"also be collected from the Password Store from Checkmk."
+msgstr ""
+
 #, fuzzy
 msgid "Create additional service for IO stats bytes"
 msgstr "IO統計バイト用の追加サービスを作成する"
@@ -15240,7 +15757,12 @@ msgstr "データベースの差分バックアップ"
 msgid "Database files are restored"
 msgstr "データベースファイルが復元されます"
 
-msgid "Database for MySQL"
+#, fuzzy
+msgid "Database for MySQL flexible server"
+msgstr "MySQL用データベース"
+
+#, fuzzy
+msgid "Database for MySQL single server"
 msgstr "MySQL用データベース"
 
 msgid "Database for PostgreSQL"
@@ -27613,6 +28135,10 @@ msgstr "Hostalias"
 msgid "Hostalias (regex)"
 msgstr "ホストのエイリアス(正規表現)"
 
+#, fuzzy
+msgid "Hostname"
+msgstr "ホスト名"
+
 msgid "Hosts"
 msgstr "ホスト"
 
@@ -27878,14 +28404,6 @@ msgstr ""
 "場合も<b>含まない場合</b>もあり) が OK になるように構成できます。このオプショ"
 "ンは、将来のCheckmkのバージョンで効果がなくなる可能性があることに注意してくだ"
 "さい。"
-
-#, python-format
-msgid ""
-"However, since Microsoft limits API calls to %s per hour (%s per minute), "
-"you can restrict the monitoring to individual resource groups and resources."
-msgstr ""
-"ただし、MicrosoftはAPI呼び出しを1時間あたり %s (1分あたり %s )に制限している"
-"ため、監視を個々のリソースグループおよびリソースに制限できます。"
 
 #, python-format
 msgid ""
@@ -30226,6 +30744,10 @@ msgstr "iCalendarファイルをインポートしてtime periodを作成しま�
 
 msgid "Import state from Nagios core"
 msgstr "Nagiosコアから状態をインポートします"
+
+#, fuzzy
+msgid "Import tags as host/service labels"
+msgstr "サービス名としてポート名を使用する"
 
 msgid ""
 "Important! This check is only for monitoring of datafiles who were left in "
@@ -35140,6 +35662,10 @@ msgstr "SMS成功率の下位レベル"
 msgid "Lower levels for Voltage"
 msgstr "電圧の低レベル"
 
+#, fuzzy
+msgid "Lower levels for active connections"
+msgstr "アクティブな接続のレベル"
+
 msgid "Lower levels for burst balance"
 msgstr "バーストバランスの下位レベル"
 
@@ -38873,6 +39399,10 @@ msgstr "プールの名前"
 
 msgid "Name of the process"
 msgstr "プロセスの名前"
+
+#, fuzzy
+msgid "Name of the resource"
+msgstr "リソースグループの名前"
 
 msgid "Name of the resource group"
 msgstr "リソースグループの名前"
@@ -59691,9 +60221,6 @@ msgstr ""
 msgid "The icon type is %s, but should be str"
 msgstr "アイコンの種類は%sですが、strにする必要があります"
 
-msgid "The ident of a value needs to be unique per valuetype."
-msgstr "値のIDは、値タイプごとに一意である必要があります。"
-
 msgid "The identificator of the fan."
 msgstr "ファンの識別子。"
 
@@ -59726,6 +60253,10 @@ msgstr "センサーの識別子。"
 
 msgid "The identifier of the thermal sensor."
 msgstr "温度センサーの識別子。"
+
+#, fuzzy
+msgid "The identifiers need to be unique per value type."
+msgstr "値のIDは、値タイプごとに一意である必要があります。"
 
 msgid ""
 "The ignore option can target alert rules on different levels including "
@@ -62590,9 +63121,6 @@ msgstr "このルールセットは、湿度センサーのしきい値制限を
 #, fuzzy
 msgid "This SLA has no computation plug-ins configured"
 msgstr "このSLAには、計算プラグインが設定されていません"
-
-msgid "This URL can also be collected from the Password Store from Checkmk."
-msgstr "このURLはCheckmkのパスワードストアから収集することも可能です。"
 
 #, fuzzy
 msgid ""
@@ -67791,6 +68319,10 @@ msgid "Total query timeout"
 msgstr "合計クエリタイムアウト"
 
 #, fuzzy
+msgid "Total read latency"
+msgstr "ディスク読み取りの待ち時間"
+
+#, fuzzy
 msgid "Total reservation utilization"
 msgstr "総メモリ使用率"
 
@@ -69874,6 +70406,10 @@ msgstr "合計仮想メモリ"
 msgid "Total width"
 msgstr "全ての幅"
 
+#, fuzzy
+msgid "Total write latency"
+msgstr "ディスク書き込みの待ち時間"
+
 msgid "Trace level"
 msgstr "トレースレベル"
 
@@ -71448,6 +71984,10 @@ msgstr "SOAPサービスエラーの上位レベル"
 #, fuzzy
 msgid "Upper levels for Voltage"
 msgstr "電圧の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for active connections"
+msgstr "アクティブな接続のレベル"
 
 msgid "Upper levels for allocated storage size"
 msgstr "割り当てられたストレージサイズの上位レベル"
@@ -73207,8 +73747,516 @@ msgstr ""
 msgid "Utilization"
 msgstr "利用"
 
-#, python-format
-msgid "Utilization Core %d"
+#, fuzzy
+msgid "Utilization Core 0"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 1"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 10"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 100"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 101"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 102"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 103"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 104"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 105"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 106"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 107"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 108"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 109"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 11"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 110"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 111"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 112"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 113"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 114"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 115"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 116"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 117"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 118"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 119"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 12"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 120"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 121"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 122"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 123"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 124"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 125"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 126"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 127"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 13"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 14"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 15"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 16"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 17"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 18"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 19"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 2"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 20"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 21"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 22"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 23"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 24"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 25"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 26"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 27"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 28"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 29"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 3"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 30"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 31"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 32"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 33"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 34"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 35"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 36"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 37"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 38"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 39"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 4"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 40"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 41"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 42"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 43"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 44"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 45"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 46"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 47"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 48"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 49"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 5"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 50"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 51"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 52"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 53"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 54"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 55"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 56"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 57"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 58"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 59"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 6"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 60"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 61"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 62"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 63"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 64"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 65"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 66"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 67"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 68"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 69"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 7"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 70"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 71"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 72"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 73"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 74"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 75"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 76"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 77"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 78"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 79"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 8"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 80"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 81"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 82"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 83"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 84"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 85"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 86"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 87"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 88"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 89"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 9"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 90"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 91"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 92"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 93"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 94"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 95"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 96"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 97"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 98"
+msgstr "使用率コア %d"
+
+#, fuzzy
+msgid "Utilization Core 99"
 msgstr "使用率コア %d"
 
 msgid "V"
@@ -80377,6 +81425,16 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "By default, all resources associated to the configured tenant ID will be "
+#~ "monitored."
+#~ msgstr ""
+#~ "デフォルトでは、構成されたテナントIDに関連付けられているすべてのリソースが"
+#~ "監視されます。"
+
+#~ msgid "This URL can also be collected from the Password Store from Checkmk."
+#~ msgstr "このURLはCheckmkのパスワードストアから収集することも可能です。"
 
 #~ msgid "Biggest input buffer lower level"
 #~ msgstr "最大の入力バッファの下位レベル"

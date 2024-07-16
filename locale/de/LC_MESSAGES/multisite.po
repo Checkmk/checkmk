@@ -7422,8 +7422,516 @@ msgstr "Durchnittliche Zeit, die eine Nachricht in der Warteschlange verbringt"
 msgid "Average usage"
 msgstr "Durschnittliche Nutzung"
 
-#, python-format
-msgid "Average utilization core %d"
+#, fuzzy
+msgid "Average utilization core 0"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 1"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 10"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 100"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 101"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 102"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 103"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 104"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 105"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 106"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 107"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 108"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 109"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 11"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 110"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 111"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 112"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 113"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 114"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 115"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 116"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 117"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 118"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 119"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 12"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 120"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 121"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 122"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 123"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 124"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 125"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 126"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 127"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 13"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 14"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 15"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 16"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 17"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 18"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 19"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 2"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 20"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 21"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 22"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 23"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 24"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 25"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 26"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 27"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 28"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 29"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 3"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 30"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 31"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 32"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 33"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 34"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 35"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 36"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 37"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 38"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 39"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 4"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 40"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 41"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 42"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 43"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 44"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 45"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 46"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 47"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 48"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 49"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 5"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 50"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 51"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 52"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 53"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 54"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 55"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 56"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 57"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 58"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 59"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 6"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 60"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 61"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 62"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 63"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 64"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 65"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 66"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 67"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 68"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 69"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 7"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 70"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 71"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 72"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 73"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 74"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 75"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 76"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 77"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 78"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 79"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 8"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 80"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 81"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 82"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 83"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 84"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 85"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 86"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 87"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 88"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 89"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 9"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 90"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 91"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 92"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 93"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 94"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 95"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 96"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 97"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 98"
+msgstr "Durchschnittliche Auslastung Kern %d"
+
+#, fuzzy
+msgid "Average utilization core 99"
 msgstr "Durchschnittliche Auslastung Kern %d"
 
 msgid "Average utilization of memory on the active supervisor"
@@ -8960,12 +9468,16 @@ msgstr ""
 "Standardmäßig werden alle Mailboxen mit diesen Parametern überprüft. Wenn "
 "Sie hier Mailboxen angeben, werden nur diese überwacht."
 
+#, fuzzy, python-format
 msgid ""
 "By default, all resources associated to the configured tenant ID will be "
-"monitored."
+"monitored. However, since Microsoft limits API calls to %s per hour (%s per "
+"minute), you can restrict the monitoring to individual resource groups and "
+"resources."
 msgstr ""
-"Standardmäßig werden alle Ressourcen, die der konfigurierten Mandanten-ID "
-"zugeordnet sind, überwacht."
+"Da Microsoft API-Aufrufe jedoch auf %s pro Stunde (%s pro Minute) "
+"beschränkt, können Sie das Monitoring auf einzelne Ressourcengruppen und "
+"Ressourcen beschränken."
 
 msgid ""
 "By default, certificate validation is disabled because it is not security-"
@@ -14081,6 +14593,12 @@ msgstr "Zusammenfassung für alle physischen Festplatten erstellen"
 msgid "Create a summary service for all alert rules"
 msgstr "Erstellen Sie einen zusammenfassenden Service für alle Warnregeln"
 
+msgid ""
+"Create a workflow 'Post to a channel when a webhook request is received' for "
+"a channel in MS Teams and use the generated webook URL.<br><br>This URL can "
+"also be collected from the Password Store from Checkmk."
+msgstr ""
+
 msgid "Create additional service for IO stats bytes"
 msgstr "Zusätzlichen Service für IO Stats Bytes erstellen"
 
@@ -15478,7 +15996,12 @@ msgstr "Datenbank diff Backup"
 msgid "Database files are restored"
 msgstr "Datenbankdateien sind wiederhergestellt"
 
-msgid "Database for MySQL"
+#, fuzzy
+msgid "Database for MySQL flexible server"
+msgstr "Datenbank für MySQL"
+
+#, fuzzy
+msgid "Database for MySQL single server"
 msgstr "Datenbank für MySQL"
 
 msgid "Database for PostgreSQL"
@@ -27374,6 +27897,10 @@ msgstr "Host-Alias"
 msgid "Hostalias (regex)"
 msgstr "Host-Alias (regex)"
 
+#, fuzzy
+msgid "Hostname"
+msgstr "Host-Name"
+
 msgid "Hosts"
 msgstr "Hosts"
 
@@ -27629,15 +28156,6 @@ msgstr ""
 "möglicherweise oder <b>möglicherweise nicht</b> Verschlüsselung beinhaltet) "
 "mit dieser Einstellung als OK konfigurieren. Beachten Sie, dass diese Option "
 "in einer zukünftigen Checkmk-Version unwirksam werden kann."
-
-#, python-format
-msgid ""
-"However, since Microsoft limits API calls to %s per hour (%s per minute), "
-"you can restrict the monitoring to individual resource groups and resources."
-msgstr ""
-"Da Microsoft API-Aufrufe jedoch auf %s pro Stunde (%s pro Minute) "
-"beschränkt, können Sie das Monitoring auf einzelne Ressourcengruppen und "
-"Ressourcen beschränken."
 
 #, python-format
 msgid ""
@@ -30023,6 +30541,10 @@ msgstr "iCalender-Datei importieren, um eine Zeitperiode zu definieren"
 
 msgid "Import state from Nagios core"
 msgstr "Zustand von Nagios-Kern übernehmen"
+
+#, fuzzy
+msgid "Import tags as host/service labels"
+msgstr "Portnamen als Service-Namen verwenden"
 
 msgid ""
 "Important! This check is only for monitoring of datafiles who were left in "
@@ -34914,6 +35436,10 @@ msgstr "Untergrenzen für SMS-Erfolgsrate"
 msgid "Lower levels for Voltage"
 msgstr "Untergrenzen für Spannung"
 
+#, fuzzy
+msgid "Lower levels for active connections"
+msgstr "Level für aktive Verbindungen"
+
 msgid "Lower levels for burst balance"
 msgstr "Untergrenzen für Burst-Balance"
 
@@ -38599,6 +39125,10 @@ msgstr "Name des Pools"
 
 msgid "Name of the process"
 msgstr "Name des Prozesses"
+
+#, fuzzy
+msgid "Name of the resource"
+msgstr "Name der Ressourcengruppe"
 
 msgid "Name of the resource group"
 msgstr "Name der Ressourcengruppe"
@@ -59632,9 +60162,6 @@ msgstr ""
 msgid "The icon type is %s, but should be str"
 msgstr "Der Icon-Typ ist %s, sollte aber str sein"
 
-msgid "The ident of a value needs to be unique per valuetype."
-msgstr "Der Identifikator eines Werts muss pro Typ eindeutig sein."
-
 msgid "The identificator of the fan."
 msgstr "Die ID des Lüfters."
 
@@ -59669,6 +60196,10 @@ msgstr "Der Identifier für den Sensor."
 
 msgid "The identifier of the thermal sensor."
 msgstr "Der Identifier für den Wärme-Fühler."
+
+#, fuzzy
+msgid "The identifiers need to be unique per value type."
+msgstr "Der Identifikator eines Werts muss pro Typ eindeutig sein."
 
 msgid ""
 "The ignore option can target alert rules on different levels including "
@@ -62695,10 +63226,6 @@ msgstr ""
 
 msgid "This SLA has no computation plug-ins configured"
 msgstr "Diese SLA hat keine Berechnungsplugins konfiguriert"
-
-msgid "This URL can also be collected from the Password Store from Checkmk."
-msgstr ""
-"Diese URL kann auch über den Password Store von Checkmk abgefragt werden."
 
 #, fuzzy
 msgid ""
@@ -68086,6 +68613,10 @@ msgstr "Gesamte gedruckte Seiten"
 msgid "Total query timeout"
 msgstr "Gesamttimeout für Anfragen"
 
+#, fuzzy
+msgid "Total read latency"
+msgstr "Latenz beim FCP-Lesen"
+
 msgid "Total reservation utilization"
 msgstr "Gesamte Reservierungsauslastung"
 
@@ -69666,6 +70197,10 @@ msgstr "Gesamter virtueller Speicher"
 
 msgid "Total width"
 msgstr "Gesamt-Breite"
+
+#, fuzzy
+msgid "Total write latency"
+msgstr "Latenz beim FCP-Schreiben"
 
 msgid "Trace level"
 msgstr "Tracelevel"
@@ -71249,6 +71784,10 @@ msgstr "Obergrenzen für Soap-Service-Fehler"
 #, fuzzy
 msgid "Upper levels for Voltage"
 msgstr "Obergrenzen für Spannung"
+
+#, fuzzy
+msgid "Upper levels for active connections"
+msgstr "Level für aktive Verbindungen"
 
 msgid "Upper levels for allocated storage size"
 msgstr "Obergrenzen für zugewiesene Speichergröße"
@@ -73040,8 +73579,516 @@ msgstr ""
 msgid "Utilization"
 msgstr "Auslastung"
 
-#, python-format
-msgid "Utilization Core %d"
+#, fuzzy
+msgid "Utilization Core 0"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 1"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 10"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 100"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 101"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 102"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 103"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 104"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 105"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 106"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 107"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 108"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 109"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 11"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 110"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 111"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 112"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 113"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 114"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 115"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 116"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 117"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 118"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 119"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 12"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 120"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 121"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 122"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 123"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 124"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 125"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 126"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 127"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 13"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 14"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 15"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 16"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 17"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 18"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 19"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 2"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 20"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 21"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 22"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 23"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 24"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 25"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 26"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 27"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 28"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 29"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 3"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 30"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 31"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 32"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 33"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 34"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 35"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 36"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 37"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 38"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 39"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 4"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 40"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 41"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 42"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 43"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 44"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 45"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 46"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 47"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 48"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 49"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 5"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 50"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 51"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 52"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 53"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 54"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 55"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 56"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 57"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 58"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 59"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 6"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 60"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 61"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 62"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 63"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 64"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 65"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 66"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 67"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 68"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 69"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 7"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 70"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 71"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 72"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 73"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 74"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 75"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 76"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 77"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 78"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 79"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 8"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 80"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 81"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 82"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 83"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 84"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 85"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 86"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 87"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 88"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 89"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 9"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 90"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 91"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 92"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 93"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 94"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 95"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 96"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 97"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 98"
+msgstr "Auslastung Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 99"
 msgstr "Auslastung Kern %d"
 
 msgid "V"
@@ -80388,6 +81435,17 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid ""
+#~ "By default, all resources associated to the configured tenant ID will be "
+#~ "monitored."
+#~ msgstr ""
+#~ "Standardmäßig werden alle Ressourcen, die der konfigurierten Mandanten-ID "
+#~ "zugeordnet sind, überwacht."
+
+#~ msgid "This URL can also be collected from the Password Store from Checkmk."
+#~ msgstr ""
+#~ "Diese URL kann auch über den Password Store von Checkmk abgefragt werden."
 
 #~ msgid "Biggest input buffer lower level"
 #~ msgstr "Untergrenzen für den größten Eingabepuffer"

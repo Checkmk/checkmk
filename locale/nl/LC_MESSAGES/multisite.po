@@ -7579,8 +7579,516 @@ msgstr "Gemiddelde tijd dat berichten in de wachtrij staan"
 msgid "Average usage"
 msgstr "Gemiddeld gebruik"
 
-#, python-format
-msgid "Average utilization core %d"
+#, fuzzy
+msgid "Average utilization core 0"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 1"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 10"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 100"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 101"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 102"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 103"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 104"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 105"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 106"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 107"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 108"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 109"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 11"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 110"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 111"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 112"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 113"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 114"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 115"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 116"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 117"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 118"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 119"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 12"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 120"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 121"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 122"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 123"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 124"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 125"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 126"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 127"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 13"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 14"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 15"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 16"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 17"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 18"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 19"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 2"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 20"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 21"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 22"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 23"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 24"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 25"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 26"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 27"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 28"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 29"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 3"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 30"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 31"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 32"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 33"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 34"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 35"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 36"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 37"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 38"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 39"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 4"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 40"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 41"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 42"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 43"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 44"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 45"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 46"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 47"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 48"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 49"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 5"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 50"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 51"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 52"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 53"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 54"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 55"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 56"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 57"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 58"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 59"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 6"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 60"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 61"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 62"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 63"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 64"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 65"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 66"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 67"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 68"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 69"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 7"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 70"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 71"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 72"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 73"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 74"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 75"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 76"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 77"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 78"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 79"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 8"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 80"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 81"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 82"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 83"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 84"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 85"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 86"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 87"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 88"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 89"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 9"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 90"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 91"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 92"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 93"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 94"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 95"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 96"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 97"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 98"
+msgstr "Gemiddelde bezettingsgraad kern %d"
+
+#, fuzzy
+msgid "Average utilization core 99"
 msgstr "Gemiddelde bezettingsgraad kern %d"
 
 #, fuzzy
@@ -9141,12 +9649,16 @@ msgstr ""
 "Standaard worden alle mailboxen met deze parameters gecontroleerd. Als u "
 "hier mailboxen specificeert, worden alleen die gecontroleerd."
 
+#, fuzzy, python-format
 msgid ""
 "By default, all resources associated to the configured tenant ID will be "
-"monitored."
+"monitored. However, since Microsoft limits API calls to %s per hour (%s per "
+"minute), you can restrict the monitoring to individual resource groups and "
+"resources."
 msgstr ""
-"Standaard zullen alle middelen die geassocieerd zijn met de geconfigureerde "
-"tenant ID gemonitord worden."
+"Aangezien Microsoft API-oproepen echter beperkt tot %s per uur (%s per "
+"minuut), kunt u de bewaking beperken tot afzonderlijke resourcegroepen en "
+"resources."
 
 msgid ""
 "By default, certificate validation is disabled because it is not security-"
@@ -14399,6 +14911,12 @@ msgstr "Maak een overzichtsdienst voor alle waarschuwingsregels"
 msgid "Create a summary service for all alert rules"
 msgstr "Maak een overzichtsdienst voor alle waarschuwingsregels"
 
+msgid ""
+"Create a workflow 'Post to a channel when a webhook request is received' for "
+"a channel in MS Teams and use the generated webook URL.<br><br>This URL can "
+"also be collected from the Password Store from Checkmk."
+msgstr ""
+
 #, fuzzy
 msgid "Create additional service for IO stats bytes"
 msgstr "Maak extra Dienst voor IO Stats Bytes"
@@ -15831,7 +16349,12 @@ msgstr "Database diff back-up"
 msgid "Database files are restored"
 msgstr "Database Bestanden worden hersteld"
 
-msgid "Database for MySQL"
+#, fuzzy
+msgid "Database for MySQL flexible server"
+msgstr "Database voor MySQL"
+
+#, fuzzy
+msgid "Database for MySQL single server"
 msgstr "Database voor MySQL"
 
 msgid "Database for PostgreSQL"
@@ -28332,6 +28855,10 @@ msgstr "Hostalias"
 msgid "Hostalias (regex)"
 msgstr "Hostalias"
 
+#, fuzzy
+msgid "Hostname"
+msgstr "Host naam"
+
 msgid "Hosts"
 msgstr "Hosts"
 
@@ -28601,15 +29128,6 @@ msgstr ""
 "b> encryptie kan bevatten) configureren om OK te zijn met deze instelling. "
 "Merk op dat deze optie ineffectief kan worden in een toekomstige Checkmk "
 "versie."
-
-#, python-format
-msgid ""
-"However, since Microsoft limits API calls to %s per hour (%s per minute), "
-"you can restrict the monitoring to individual resource groups and resources."
-msgstr ""
-"Aangezien Microsoft API-oproepen echter beperkt tot %s per uur (%s per "
-"minuut), kunt u de bewaking beperken tot afzonderlijke resourcegroepen en "
-"resources."
 
 #, python-format
 msgid ""
@@ -31028,6 +31546,10 @@ msgstr "Importeer iCalendar bestand om een tijdsperiode aan te maken"
 
 msgid "Import state from Nagios core"
 msgstr "Importeer toestand van Nagios core"
+
+#, fuzzy
+msgid "Import tags as host/service labels"
+msgstr "Gebruik poortnaam als dienstnaam"
 
 #, fuzzy
 msgid ""
@@ -36029,6 +36551,10 @@ msgstr "Lagere niveaus voor SMS-succespercentage"
 msgid "Lower levels for Voltage"
 msgstr "Lagere spanningsniveaus"
 
+#, fuzzy
+msgid "Lower levels for active connections"
+msgstr "Niveaus voor actieve verbindingen"
+
 msgid "Lower levels for burst balance"
 msgstr "Lagere niveaus voor burst balans"
 
@@ -39799,6 +40325,10 @@ msgstr "Naam van het zwembad"
 
 msgid "Name of the process"
 msgstr "Naam van het proces"
+
+#, fuzzy
+msgid "Name of the resource"
+msgstr "Naam van de resource groep"
 
 msgid "Name of the resource group"
 msgstr "Naam van de resource groep"
@@ -61021,9 +61551,6 @@ msgstr ""
 msgid "The icon type is %s, but should be str"
 msgstr "Het icoontype is %s, maar moet str zijn"
 
-msgid "The ident of a value needs to be unique per valuetype."
-msgstr "De ident van een waarde moet uniek zijn per waardetype."
-
 msgid "The identificator of the fan."
 msgstr "De identificator van de ventilator."
 
@@ -61058,6 +61585,10 @@ msgstr "De identificatiecode van de sensor."
 
 msgid "The identifier of the thermal sensor."
 msgstr "De identificator van de thermische sensor."
+
+#, fuzzy
+msgid "The identifiers need to be unique per value type."
+msgstr "De ident van een waarde moet uniek zijn per waardetype."
 
 msgid ""
 "The ignore option can target alert rules on different levels including "
@@ -63997,9 +64528,6 @@ msgstr "Deze regelset stelt de drempelwaarden voor vochtigheidssensoren in"
 #, fuzzy
 msgid "This SLA has no computation plug-ins configured"
 msgstr "Deze SLA heeft geen computation plugins geconfigureerd"
-
-msgid "This URL can also be collected from the Password Store from Checkmk."
-msgstr "Deze URL kan ook worden opgehaald uit de Password Store van Checkmk."
 
 #, fuzzy
 msgid ""
@@ -69406,6 +69934,10 @@ msgid "Total query timeout"
 msgstr "Totale query timeout"
 
 #, fuzzy
+msgid "Total read latency"
+msgstr "Schijf lees latentie"
+
+#, fuzzy
 msgid "Total reservation utilization"
 msgstr "Totaal geheugengebruik"
 
@@ -71488,6 +72020,10 @@ msgstr "Totaal virtueel geheugen"
 msgid "Total width"
 msgstr "Totale breedte"
 
+#, fuzzy
+msgid "Total write latency"
+msgstr "Schijf schrijf latentie"
+
 msgid "Trace level"
 msgstr "Sporenniveau"
 
@@ -73084,6 +73620,10 @@ msgstr "Bovenste niveaus voor Zeep Service Fouten"
 #, fuzzy
 msgid "Upper levels for Voltage"
 msgstr "Bovengrenzen voor spanning"
+
+#, fuzzy
+msgid "Upper levels for active connections"
+msgstr "Niveaus voor actieve verbindingen"
 
 msgid "Upper levels for allocated storage size"
 msgstr "Bovenste niveaus voor toegewezen opslagruimte"
@@ -74904,8 +75444,516 @@ msgstr ""
 msgid "Utilization"
 msgstr "Gebruik"
 
-#, python-format
-msgid "Utilization Core %d"
+#, fuzzy
+msgid "Utilization Core 0"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 1"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 10"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 100"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 101"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 102"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 103"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 104"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 105"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 106"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 107"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 108"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 109"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 11"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 110"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 111"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 112"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 113"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 114"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 115"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 116"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 117"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 118"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 119"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 12"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 120"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 121"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 122"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 123"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 124"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 125"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 126"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 127"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 13"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 14"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 15"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 16"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 17"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 18"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 19"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 2"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 20"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 21"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 22"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 23"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 24"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 25"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 26"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 27"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 28"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 29"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 3"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 30"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 31"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 32"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 33"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 34"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 35"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 36"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 37"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 38"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 39"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 4"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 40"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 41"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 42"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 43"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 44"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 45"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 46"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 47"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 48"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 49"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 5"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 50"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 51"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 52"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 53"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 54"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 55"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 56"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 57"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 58"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 59"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 6"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 60"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 61"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 62"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 63"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 64"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 65"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 66"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 67"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 68"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 69"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 7"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 70"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 71"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 72"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 73"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 74"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 75"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 76"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 77"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 78"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 79"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 8"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 80"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 81"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 82"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 83"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 84"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 85"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 86"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 87"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 88"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 89"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 9"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 90"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 91"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 92"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 93"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 94"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 95"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 96"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 97"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 98"
+msgstr "Gebruik Kern %d"
+
+#, fuzzy
+msgid "Utilization Core 99"
 msgstr "Gebruik Kern %d"
 
 msgid "V"
@@ -82277,6 +83325,17 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "By default, all resources associated to the configured tenant ID will be "
+#~ "monitored."
+#~ msgstr ""
+#~ "Standaard zullen alle middelen die geassocieerd zijn met de "
+#~ "geconfigureerde tenant ID gemonitord worden."
+
+#~ msgid "This URL can also be collected from the Password Store from Checkmk."
+#~ msgstr ""
+#~ "Deze URL kan ook worden opgehaald uit de Password Store van Checkmk."
 
 #~ msgid "Biggest input buffer lower level"
 #~ msgstr "Grootste ingangsbuffer lager niveau"

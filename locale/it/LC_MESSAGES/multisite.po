@@ -7515,8 +7515,516 @@ msgstr "Tempo medio di permanenza dei messaggi in coda"
 msgid "Average usage"
 msgstr "Utilizzo medio"
 
-#, python-format
-msgid "Average utilization core %d"
+#, fuzzy
+msgid "Average utilization core 0"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 1"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 10"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 100"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 101"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 102"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 103"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 104"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 105"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 106"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 107"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 108"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 109"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 11"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 110"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 111"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 112"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 113"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 114"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 115"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 116"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 117"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 118"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 119"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 12"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 120"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 121"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 122"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 123"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 124"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 125"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 126"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 127"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 13"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 14"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 15"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 16"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 17"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 18"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 19"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 2"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 20"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 21"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 22"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 23"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 24"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 25"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 26"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 27"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 28"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 29"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 3"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 30"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 31"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 32"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 33"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 34"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 35"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 36"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 37"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 38"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 39"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 4"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 40"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 41"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 42"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 43"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 44"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 45"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 46"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 47"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 48"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 49"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 5"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 50"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 51"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 52"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 53"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 54"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 55"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 56"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 57"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 58"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 59"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 6"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 60"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 61"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 62"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 63"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 64"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 65"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 66"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 67"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 68"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 69"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 7"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 70"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 71"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 72"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 73"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 74"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 75"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 76"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 77"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 78"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 79"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 8"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 80"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 81"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 82"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 83"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 84"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 85"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 86"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 87"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 88"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 89"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 9"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 90"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 91"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 92"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 93"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 94"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 95"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 96"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 97"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 98"
+msgstr "Utilizzo medio del nucleo %d"
+
+#, fuzzy
+msgid "Average utilization core 99"
 msgstr "Utilizzo medio del nucleo %d"
 
 msgid "Average utilization of memory on the active supervisor"
@@ -9048,12 +9556,16 @@ msgstr ""
 "questi parametri. Se specifichi qui le caselle di posta, solo quelle vengono "
 "monitorate."
 
+#, fuzzy, python-format
 msgid ""
 "By default, all resources associated to the configured tenant ID will be "
-"monitored."
+"monitored. However, since Microsoft limits API calls to %s per hour (%s per "
+"minute), you can restrict the monitoring to individual resource groups and "
+"resources."
 msgstr ""
-"Per impostazione predefinita, tutte le risorse associate all'ID del tenant "
-"configurato saranno monitorate."
+"Tuttavia, poiché Microsoft limita le chiamate API a %s per ora (%s per "
+"minuto), è possibile limitare il monitoraggio a singoli gruppi di risorse e "
+"risorse."
 
 msgid ""
 "By default, certificate validation is disabled because it is not security-"
@@ -14247,6 +14759,12 @@ msgstr "Creare un servizio di riepilogo per tutte le regole di avviso"
 msgid "Create a summary service for all alert rules"
 msgstr "Creare un servizio di riepilogo per tutte le regole di avviso"
 
+msgid ""
+"Create a workflow 'Post to a channel when a webhook request is received' for "
+"a channel in MS Teams and use the generated webook URL.<br><br>This URL can "
+"also be collected from the Password Store from Checkmk."
+msgstr ""
+
 #, fuzzy
 msgid "Create additional service for IO stats bytes"
 msgstr "Creare un servizio aggiuntivo per IO Stats Bytes"
@@ -15665,7 +16183,12 @@ msgstr "Backup diff del database"
 msgid "Database files are restored"
 msgstr "I file del database vengono ripristinati"
 
-msgid "Database for MySQL"
+#, fuzzy
+msgid "Database for MySQL flexible server"
+msgstr "Database per MySQL"
+
+#, fuzzy
+msgid "Database for MySQL single server"
 msgstr "Database per MySQL"
 
 msgid "Database for PostgreSQL"
@@ -28076,6 +28599,10 @@ msgstr "Hostalias"
 msgid "Hostalias (regex)"
 msgstr "Hostalias (regex)"
 
+#, fuzzy
+msgid "Hostname"
+msgstr "Nome dell'host"
+
 msgid "Hosts"
 msgstr "Ospiti"
 
@@ -28342,15 +28869,6 @@ msgstr ""
 "(che può o <b> non può</b> includere la crittografia) in modo che sia OK "
 "utilizzando questa impostazione. Si noti che questa opzione potrebbe "
 "diventare inefficace in una versione futura di Checkmk."
-
-#, python-format
-msgid ""
-"However, since Microsoft limits API calls to %s per hour (%s per minute), "
-"you can restrict the monitoring to individual resource groups and resources."
-msgstr ""
-"Tuttavia, poiché Microsoft limita le chiamate API a %s per ora (%s per "
-"minuto), è possibile limitare il monitoraggio a singoli gruppi di risorse e "
-"risorse."
 
 #, python-format
 msgid ""
@@ -30744,6 +31262,10 @@ msgstr "Importazione di file iCalendar per creare un periodo di tempo"
 
 msgid "Import state from Nagios core"
 msgstr "Importare lo stato dal nucleo di Nagios"
+
+#, fuzzy
+msgid "Import tags as host/service labels"
+msgstr "Usa il nome della porta come nome del servizio"
 
 #, fuzzy
 msgid ""
@@ -35699,6 +36221,10 @@ msgstr "Livelli più bassi per la percentuale di successo degli SMS"
 msgid "Lower levels for Voltage"
 msgstr "Livelli inferiori per la tensione"
 
+#, fuzzy
+msgid "Lower levels for active connections"
+msgstr "Livelli per le connessioni attive"
+
 msgid "Lower levels for burst balance"
 msgstr "Livelli più bassi per l'equilibrio della raffica"
 
@@ -39432,6 +39958,10 @@ msgstr "Nome della piscina"
 
 msgid "Name of the process"
 msgstr "Nome del processo"
+
+#, fuzzy
+msgid "Name of the resource"
+msgstr "Nome del gruppo di risorse"
 
 msgid "Name of the resource group"
 msgstr "Nome del gruppo di risorse"
@@ -60452,10 +60982,6 @@ msgstr ""
 msgid "The icon type is %s, but should be str"
 msgstr "Il tipo di icona è %s, ma dovrebbe essere str"
 
-msgid "The ident of a value needs to be unique per valuetype."
-msgstr ""
-"L'identificativo di un valore deve essere unico per ogni tipo di valore."
-
 msgid "The identificator of the fan."
 msgstr "L'identificatore del ventilatore."
 
@@ -60490,6 +61016,11 @@ msgstr "L'identificatore del sensore."
 
 msgid "The identifier of the thermal sensor."
 msgstr "L'identificatore del sensore termico."
+
+#, fuzzy
+msgid "The identifiers need to be unique per value type."
+msgstr ""
+"L'identificativo di un valore deve essere unico per ogni tipo di valore."
 
 msgid ""
 "The ignore option can target alert rules on different levels including "
@@ -63425,9 +63956,6 @@ msgstr ""
 #, fuzzy
 msgid "This SLA has no computation plug-ins configured"
 msgstr "Questo SLA non ha plugin di calcolo configurati"
-
-msgid "This URL can also be collected from the Password Store from Checkmk."
-msgstr "Questo URL può essere raccolto anche dal Password Store di Checkmk."
 
 #, fuzzy
 msgid ""
@@ -68798,6 +69326,10 @@ msgstr "Totale pagine stampate"
 msgid "Total query timeout"
 msgstr "Timeout totale della query"
 
+#, fuzzy
+msgid "Total read latency"
+msgstr "Latenza di lettura del disco"
+
 msgid "Total reservation utilization"
 msgstr "Utilizzo totale delle prenotazioni"
 
@@ -70806,6 +71338,10 @@ msgstr "Memoria virtuale totale"
 msgid "Total width"
 msgstr "Larghezza totale"
 
+#, fuzzy
+msgid "Total write latency"
+msgstr "Latenza di scrittura del disco"
+
 msgid "Trace level"
 msgstr "Livello delle tracce"
 
@@ -72391,6 +72927,10 @@ msgstr "Livelli superiori per gli errori di servizio del sapone"
 #, fuzzy
 msgid "Upper levels for Voltage"
 msgstr "Livelli superiori di tensione"
+
+#, fuzzy
+msgid "Upper levels for active connections"
+msgstr "Livelli per le connessioni attive"
 
 msgid "Upper levels for allocated storage size"
 msgstr "Livelli superiori per la dimensione dello stoccaggio assegnato"
@@ -74204,8 +74744,516 @@ msgstr ""
 msgid "Utilization"
 msgstr "Utilizzo"
 
-#, python-format
-msgid "Utilization Core %d"
+#, fuzzy
+msgid "Utilization Core 0"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 1"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 10"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 100"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 101"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 102"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 103"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 104"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 105"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 106"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 107"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 108"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 109"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 11"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 110"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 111"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 112"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 113"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 114"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 115"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 116"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 117"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 118"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 119"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 12"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 120"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 121"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 122"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 123"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 124"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 125"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 126"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 127"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 13"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 14"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 15"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 16"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 17"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 18"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 19"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 2"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 20"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 21"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 22"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 23"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 24"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 25"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 26"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 27"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 28"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 29"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 3"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 30"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 31"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 32"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 33"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 34"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 35"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 36"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 37"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 38"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 39"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 4"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 40"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 41"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 42"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 43"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 44"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 45"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 46"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 47"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 48"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 49"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 5"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 50"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 51"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 52"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 53"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 54"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 55"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 56"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 57"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 58"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 59"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 6"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 60"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 61"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 62"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 63"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 64"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 65"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 66"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 67"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 68"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 69"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 7"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 70"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 71"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 72"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 73"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 74"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 75"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 76"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 77"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 78"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 79"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 8"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 80"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 81"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 82"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 83"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 84"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 85"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 86"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 87"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 88"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 89"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 9"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 90"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 91"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 92"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 93"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 94"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 95"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 96"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 97"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 98"
+msgstr "Utilizzo Core %d"
+
+#, fuzzy
+msgid "Utilization Core 99"
 msgstr "Utilizzo Core %d"
 
 msgid "V"
@@ -81490,6 +82538,16 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid ""
+#~ "By default, all resources associated to the configured tenant ID will be "
+#~ "monitored."
+#~ msgstr ""
+#~ "Per impostazione predefinita, tutte le risorse associate all'ID del "
+#~ "tenant configurato saranno monitorate."
+
+#~ msgid "This URL can also be collected from the Password Store from Checkmk."
+#~ msgstr "Questo URL può essere raccolto anche dal Password Store di Checkmk."
 
 #~ msgid "Biggest input buffer lower level"
 #~ msgstr "Maggior livello del buffer d'ingresso"

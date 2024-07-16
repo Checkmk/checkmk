@@ -171,6 +171,8 @@ class CpuTimeSeconds:
     @classmethod
     def parse_raw(cls, raw: str) -> Self:
         """
+        >>> CpuTimeSeconds.parse_raw("0").value
+        0
         >>> CpuTimeSeconds.parse_raw("815u").value
         0.000815
         >>> CpuTimeSeconds.parse_raw("1ms").value
@@ -180,6 +182,9 @@ class CpuTimeSeconds:
         >>> CpuTimeSeconds.parse_raw("12min 23.378s").value
         743.378
         """
+        if raw == "0":
+            return cls(value=0)
+
         if not (match := CPU_PATTERN.match(raw)):
             raise ValueError(f"Cannot parse from raw: {raw}")
 

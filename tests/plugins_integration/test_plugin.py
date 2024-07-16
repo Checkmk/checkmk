@@ -24,12 +24,7 @@ logger = logging.getLogger(__name__)
 HOSTNAMES = [
     name
     for name in get_host_names()
-    if name
-    not in (
-        "agent-2.1.0p11-ms-exchange",
-        "agent-1.2.6b12-win-ad-replication",
-        "agent-2.2.0p14-proxmox",
-    )
+    if name not in ("agent-2.1.0p11-ms-exchange", "agent-1.2.6b12-win-ad-replication")
 ]
 
 

@@ -8,10 +8,11 @@
 import math
 import time
 from collections.abc import Callable, Iterable, Iterator, Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 from itertools import zip_longest
-from typing import assert_never, Literal, NamedTuple, TypedDict, TypeVar
+from typing import assert_never, Literal, TypedDict, TypeVar
 
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
@@ -599,7 +600,8 @@ def _compute_labels_from_api(
             raise ValueError((min_y, max_y))
 
 
-class _VAxisMinMax(NamedTuple):
+@dataclass(frozen=True)
+class _VAxisMinMax:
     distance: float
     label_range: tuple[float, float]
 

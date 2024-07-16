@@ -20,12 +20,12 @@ usage() {
     echo "given, run any formatting, IWYU, or clang-tidy steps only on these."
     echo
     echo "  -c, --clean             remove artifacts first"
-    echo "  -F, --check-format      check for correct formatting"
     echo "  -b, --build             build package"
     echo "  -u, --unit-tests        run unit tests"
+    echo "  -F, --check-format      check for correct formatting"
     echo "  -i, --iwyu              check C/C++ includes via include-what-you-use"
     echo "  -t, --clang-tidy        check sources with clang-tidy linter"
-    echo "  -a, --all               shortcut for -F -b -u -i -t"
+    echo "  -a, --all               shortcut for -b -u -F -i -t"
     echo "  -f, --format            format sources"
     echo "  -D, --documentation     generate documentation"
     echo "  -j N, --jobs=N          allow N jobs at once, default is ${JOBS}"
@@ -35,16 +35,16 @@ usage() {
 parse_options() {
     # Yes, all those option variables are global.
     RUN_CLEAN=no
-    RUN_CHECK_FORMAT=no
     RUN_BUILD=no
     RUN_UNIT_TESTS=no
+    RUN_CHECK_FORMAT=no
     RUN_IWYU=no
     RUN_CLANG_TIDY=no
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
     FILES=()
 
-    if ! OPTIONS=$(getopt --options 'cFbuitafDj:h' --long 'clean,check-format,build,unit-tests,iwyu,clang-tidy,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cbuFitafDj:h' --long 'clean,build,unit-tests,check-format,iwyu,clang-tidy,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -58,11 +58,6 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-F' | '--check-format')
-                RUN_CHECK_FORMAT=yes
-                shift
-                continue
-                ;;
             '-b' | '--build')
                 RUN_BUILD=yes
                 shift
@@ -70,6 +65,11 @@ parse_options() {
                 ;;
             '-u' | '--unit-tests')
                 RUN_UNIT_TESTS=yes
+                shift
+                continue
+                ;;
+            '-F' | '--check-format')
+                RUN_CHECK_FORMAT=yes
                 shift
                 continue
                 ;;
@@ -84,9 +84,9 @@ parse_options() {
                 continue
                 ;;
             '-a' | '--all')
-                RUN_CHECK_FORMAT=yes
                 RUN_BUILD=yes
                 RUN_UNIT_TESTS=yes
+                RUN_CHECK_FORMAT=yes
                 RUN_IWYU=yes
                 RUN_CLANG_TIDY=yes
                 shift
@@ -130,7 +130,7 @@ parse_options() {
         RUN_BUILD=yes
     fi
 
-    readonly RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_UNIT_TESTS RUN_IWYU RUN_CLANG_TIDY RUN_FORMAT RUN_DOCUMENTATION FILES JOBS
+    readonly RUN_CLEAN RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_IWYU RUN_CLANG_TIDY RUN_FORMAT RUN_DOCUMENTATION FILES JOBS
 }
 
 run_clean() {
@@ -143,16 +143,6 @@ run_clang_format() {
     # shellcheck disable=SC2068 # Yes, we want splitting for FILES.
     find ${FILES[@]:-src test include} -type f \( -name "*.h" -o -name "*.cc" \) -print0 |
         xargs --no-run-if-empty --null "clang-format-${CLANG_VERSION}" -style=file "$@"
-}
-
-run_check_format() {
-    run_clang_format --dry-run -Werror
-    buildifier -mode=check -lint=warn BUILD
-}
-
-run_format() {
-    run_clang_format -i
-    buildifier -mode=fix -lint=fix BUILD
 }
 
 run_build() {
@@ -176,6 +166,11 @@ run_unit_tests() {
     )
 }
 
+run_check_format() {
+    run_clang_format --dry-run -Werror
+    buildifier -mode=check -lint=warn BUILD
+}
+
 run_iwyu() {
     test ${#FILES_TO_USE[@]} -eq 0 && return
     python3 "$(command -v iwyu_tool.py)" \
@@ -197,6 +192,11 @@ run_clang_tidy() {
         "${FILES_TO_USE[@]}" # NOTE: args are regexes, we pass (full) filenames
 }
 
+run_format() {
+    run_clang_format -i
+    buildifier -mode=fix -lint=fix BUILD
+}
+
 run_documentation() {
     doxygen doc/Doxyfile
 }
@@ -207,10 +207,10 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     test ${RUN_CLEAN} = yes && run_clean
-    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_BUILD} = yes && run_build
     calculate_files_to_use
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests
+    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_IWYU} = yes && run_iwyu
     test ${RUN_CLANG_TIDY} = yes && run_clang_tidy
     test ${RUN_FORMAT} = yes && run_format

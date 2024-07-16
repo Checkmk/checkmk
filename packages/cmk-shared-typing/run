@@ -17,8 +17,8 @@ usage() {
     echo "Run the CI pipeline or parts of it."
     echo
     echo "  -c, --clean             remove artifacts first"
-    echo "  -F, --check-format      check for correct formatting"
     echo "  -b, --build             build"
+    echo "  -F, --check-format      check for correct formatting"
     echo "  -a, --all               shortcut for -F -u -m -p -B -C"
     echo "  -f, --format            format sources"
     echo "  -j N, --jobs=N          allow N jobs at once, default is ${JOBS}"
@@ -32,7 +32,7 @@ parse_options() {
     RUN_CHECK_FORMAT=no
     RUN_FORMAT=no
 
-    if ! OPTIONS=$(getopt --options 'cbFafj:h' --long 'build,clean,check-format,all,format,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cbFafj:h' --long 'clean,build,check-format,all,format,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -46,13 +46,13 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-F' | '--check-format')
-                RUN_CHECK_FORMAT=yes
+            '-b' | '--build')
+                RUN_BUILD=yes
                 shift
                 continue
                 ;;
-            '-b' | '--build')
-                RUN_BUILD=yes
+            '-F' | '--check-format')
+                RUN_CHECK_FORMAT=yes
                 shift
                 continue
                 ;;
@@ -84,7 +84,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_CLEAN RUN_CHECK_FORMAT RUN_FORMAT JOBS
+    readonly RUN_CLEAN RUN_BUILD RUN_CHECK_FORMAT RUN_FORMAT JOBS
 }
 
 run_pipenv() {
@@ -136,6 +136,14 @@ run_build() {
             --custom-formatters "utils.format"
         npm run json2ts "${file}" -o "typescript/${target_base}.ts"
     done
+}
+
+run_check_format() {
+    echo "TODO..."
+}
+
+run_format() {
+    echo "TODO..."
 }
 
 main() {

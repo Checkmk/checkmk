@@ -18,12 +18,12 @@ usage() {
     echo
     echo "  -e, --setup-environment             setup environment"
     echo "  -c, --clean                         remove artifacts first"
-    echo "  -F, --check-format                  check for correct formatting"
     echo "  -b, --build                         build executable"
     echo "  -u, --unit-tests                    run unit tests"
+    echo "  -F, --check-format                  check for correct formatting"
     echo "  -C, --clippy                        run clippy linter"
     echo "  -I F1,F2,..., --features=F1,F2,...  list of features to activate"
-    echo "  -a, --all                           shortcut for -F -b -u -C"
+    echo "  -a, --all                           shortcut for -b -u -F -C"
     echo "  -f, --format                        format sources"
     echo "  -D, --documentation                 generate documentation"
     echo "  -j N, --jobs=N                      allow N jobs at once, default is ${JOBS}"
@@ -34,15 +34,15 @@ parse_options() {
     # Yes, all those option variables are global.
     RUN_SETUP_ENVIRONMENT=no
     RUN_CLEAN=no
-    RUN_CHECK_FORMAT=no
     RUN_BUILD=no
     RUN_UNIT_TESTS=no
+    RUN_CHECK_FORMAT=no
     RUN_CLIPPY=no
     FEATURES=""
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'ecFbuCIaAfDj:h' --long 'setup-environment,clean,check-format,build,unit-tests,clippy,features:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'ecbuFCIaAfDj:h' --long 'setup-environment,clean,build,unit-tests,check-format,clippy,features:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -61,11 +61,6 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-F' | '--check-format')
-                RUN_CHECK_FORMAT=yes
-                shift
-                continue
-                ;;
             '-b' | '--build')
                 RUN_BUILD=yes
                 shift
@@ -73,6 +68,11 @@ parse_options() {
                 ;;
             '-u' | '--unit-tests')
                 RUN_UNIT_TESTS=yes
+                shift
+                continue
+                ;;
+            '-F' | '--check-format')
+                RUN_CHECK_FORMAT=yes
                 shift
                 continue
                 ;;
@@ -87,9 +87,9 @@ parse_options() {
                 continue
                 ;;
             '-a' | '--all')
-                RUN_CHECK_FORMAT=yes
                 RUN_BUILD=yes
                 RUN_UNIT_TESTS=yes
+                RUN_CHECK_FORMAT=yes
                 RUN_CLIPPY=yes
                 shift
                 continue
@@ -122,7 +122,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_UNIT_TESTS RUN_CLIPPY FEATURES RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY FEATURES RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 # TODO: This needs some serious massaging, some stuff probably don't even belong
@@ -168,10 +168,10 @@ main() {
     parse_options "$@"
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
     test ${RUN_CLEAN} = yes && cargo clean
-    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && cargo build --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
     test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full cargo test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && cargo clippy --release --all-targets ${FEATURES:+"--features=$FEATURES"} -- --deny warnings
     test ${RUN_FORMAT} = yes && run_format
     test ${RUN_DOCUMENTATION} = yes && cargo doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}

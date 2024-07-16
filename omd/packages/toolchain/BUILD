@@ -45,16 +45,24 @@ ci_cxx_builtin_include_directories = [
     "/usr/lib64/",
 ]
 
-cc_toolchain_config(
-    name = "local_config",
-    compiler = "gcc-13",
-    cxx_builtin_include_directories = local_cxx_builtin_include_directories,
-    tool_paths = local_tool_paths,
-    toolchain_identifier = "local",
-)
+TOOLCHAINS = {
+    "local": (local_cxx_builtin_include_directories, local_tool_paths),
+    "ci": (ci_cxx_builtin_include_directories, ci_tool_paths),
+}
 
-cc_toolchain(
-    name = "local_toolchain",
+[
+    cc_toolchain_config(
+        name = identifier + "_config",
+        compiler = "gcc-13",
+        cxx_builtin_include_directories = cxx_builtin_include_directories,
+        tool_paths = tool_paths,
+        toolchain_identifier = identifier,
+    )
+    for identifier, (cxx_builtin_include_directories, tool_paths) in TOOLCHAINS.items()
+]
+
+[cc_toolchain(
+    name = identifier + "_toolchain",
     all_files = ":empty",
     compiler_files = ":empty",
     dwp_files = ":empty",
@@ -63,12 +71,12 @@ cc_toolchain(
     static_runtime_lib = ":empty",
     strip_files = ":empty",
     supports_param_files = 0,
-    toolchain_config = ":local_config",
-    toolchain_identifier = "local",
-)
+    toolchain_config = ":" + identifier + "_config",
+    toolchain_identifier = identifier,
+) for identifier in TOOLCHAINS]
 
-toolchain(
-    name = "local",
+[toolchain(
+    name = identifier,
     exec_compatible_with = [
         "@platforms//cpu:x86_64",
         "@platforms//os:linux",
@@ -77,42 +85,6 @@ toolchain(
         "@platforms//cpu:x86_64",
         "@platforms//os:linux",
     ],
-    toolchain = ":local_toolchain",
+    toolchain = ":" + identifier + "_toolchain",
     toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
-)
-
-cc_toolchain_config(
-    name = "ci_config",
-    compiler = "gcc-13",
-    cxx_builtin_include_directories = ci_cxx_builtin_include_directories,
-    tool_paths = ci_tool_paths,
-    toolchain_identifier = "ci",
-)
-
-cc_toolchain(
-    name = "ci_toolchain",
-    all_files = ":empty",
-    compiler_files = ":empty",
-    dwp_files = ":empty",
-    linker_files = ":empty",
-    objcopy_files = ":empty",
-    static_runtime_lib = ":empty",
-    strip_files = ":empty",
-    supports_param_files = 0,
-    toolchain_config = ":ci_config",
-    toolchain_identifier = "ci",
-)
-
-toolchain(
-    name = "ci",
-    exec_compatible_with = [
-        "@platforms//cpu:x86_64",
-        "@platforms//os:linux",
-    ],
-    target_compatible_with = [
-        "@platforms//cpu:x86_64",
-        "@platforms//os:linux",
-    ],
-    toolchain = ":ci_toolchain",
-    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
-)
+) for identifier in TOOLCHAINS]

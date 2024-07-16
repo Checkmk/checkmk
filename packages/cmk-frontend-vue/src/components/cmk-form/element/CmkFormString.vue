@@ -39,10 +39,14 @@ const value = computed({
     emit('update:data', value)
   }
 })
+
+const placeholder = computed(() => {
+  return props.spec.input_hint || ''
+})
 </script>
 
 <template>
   <label :for="$componentId">{{ props.spec.title }}</label>
-  <input :id="$componentId" v-model="value" type="text" />
+  <input :id="$componentId" v-model="value" :placeholder="placeholder" type="text" />
   <FormValidation :validation="validation"></FormValidation>
 </template>

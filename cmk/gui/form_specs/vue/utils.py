@@ -10,13 +10,11 @@ from cmk.gui.form_specs.vue.registries import (
     form_specs_recomposer_registry,
     form_specs_visitor_registry,
     FormSpecVisitor,
-    InputHintValue,
-    InvalidValue,
-    ParsedValue,
     RecomposerFunction,
-    ValidValue,
 )
-from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, VisitorOptions
+from cmk.gui.form_specs.vue.type_defs import DataOrigin
+from cmk.gui.form_specs.vue.type_defs import DefaultValue as FormSpecDefaultValue
+from cmk.gui.form_specs.vue.type_defs import EMPTY_VALUE, EmptyValue, VisitorOptions
 from cmk.gui.i18n import translate_to_current_language
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -83,11 +81,13 @@ def register_form_spec_recomposer(
     form_specs_recomposer_registry[form_spec_class] = decomposer
 
 
-def create_validation_error(value: InvalidValue) -> list[VueComponents.ValidationMessage]:
+def create_validation_error(
+    value: object, error_message: Title | str
+) -> list[VueComponents.ValidationMessage]:
+    if isinstance(error_message, Title):
+        error_message = error_message.localize(translate_to_current_language)
     return [
-        VueComponents.ValidationMessage(
-            location=[], message=value.error_message, invalid_value=value.invalid_value
-        )
+        VueComponents.ValidationMessage(location=[], message=error_message, invalid_value=value)
     ]
 
 
@@ -102,13 +102,9 @@ def compute_validation_errors(
     ]
 
 
-def compute_valid_value(value: ParsedValue, default: Any) -> Any:
-    return value.value if isinstance(value, ValidValue) else default
-
-
 def migrate_value(form_spec: FormSpec, options: VisitorOptions, value: Any) -> Any:
     if (
-        not isinstance(value, DEFAULT_VALUE)
+        not isinstance(value, FormSpecDefaultValue)
         and options.data_origin == DataOrigin.DISK
         and form_spec.migrate
     ):
@@ -123,40 +119,15 @@ class WithPrefill(Protocol[ModelT]):
     ) -> Prefill[ModelT]: ...
 
 
-def process_prefills(form_spec: WithPrefill, value: ModelT | DEFAULT_VALUE) -> tuple[ModelT, bool]:
-    if not isinstance(value, DEFAULT_VALUE):
-        return value, False
-
-    return form_spec.prefill.value, isinstance(form_spec.prefill, InputHint)
+def get_prefill_default(form_spec: WithPrefill) -> ModelT | EmptyValue:
+    if not isinstance(form_spec.prefill, DefaultValue):
+        return EMPTY_VALUE
+    return form_spec.prefill.value
 
 
 class WithPrefillTitle(Protocol[ModelT]):
     @property
     def prefill(self) -> DefaultValue[ModelT] | InputHint[Title]: ...
-
-
-def process_prefills_with_title(
-    form_spec: WithPrefillTitle, value: ModelT | DEFAULT_VALUE
-) -> tuple[ModelT | str, bool]:
-    if not isinstance(value, DEFAULT_VALUE):
-        return value, False
-
-    if isinstance(form_spec.prefill, InputHint):
-        return form_spec.prefill.value.localize(translate_to_current_language), True
-    return form_spec.prefill.value, False
-
-
-def compute_parsed_value(
-    value: Any, is_input_hint: bool, value_type: type[ModelT]
-) -> ParsedValue[ModelT]:
-    if not isinstance(value, value_type):
-        return InvalidValue(
-            invalid_value=repr(value), error_message=f"Expected a {value_type}, got {type(value)}"
-        )
-
-    if is_input_hint:
-        return InputHintValue[ModelT](value=value)
-    return ValidValue[ModelT](value=value)
 
 
 def compute_input_hint(form_spec: WithPrefill | WithPrefillTitle) -> ModelT | None | str:
@@ -165,11 +136,3 @@ def compute_input_hint(form_spec: WithPrefill | WithPrefillTitle) -> ModelT | No
             return form_spec.prefill.value.localize(translate_to_current_language)
         return form_spec.prefill.value
     return None
-
-
-def compute_text_input_value(parsed_value: ParsedValue) -> ModelT | str:
-    if isinstance(parsed_value, InputHintValue):
-        return ""
-    if isinstance(parsed_value, ValidValue):
-        return parsed_value.value
-    return parsed_value.invalid_value

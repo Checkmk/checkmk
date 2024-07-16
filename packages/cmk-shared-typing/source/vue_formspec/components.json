@@ -43,7 +43,9 @@
         "unit": {
           "type": "string"
         },
-        "input_hint": {}
+        "input_hint": {
+          "type": "string"
+        }
       },
       "required": [
         "type",
@@ -68,7 +70,9 @@
         "unit": {
           "type": "string"
         },
-        "input_hint": {}
+        "input_hint": {
+          "type": "string"
+        }
       },
       "required": [
         "type",
@@ -115,7 +119,9 @@
         "placeholder": {
           "type": "string"
         },
-        "input_hint": {}
+        "input_hint": {
+          "type": "string"
+        }
       },
       "required": [
         "type",

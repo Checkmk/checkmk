@@ -2,14 +2,14 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 import pytest
 
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
-from cmk.gui.form_specs.vue.type_defs import DataOrigin
+from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE
 from cmk.gui.session import UserContext
 
 from cmk.rulesets.v1 import Message, Title
@@ -21,7 +21,10 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     FixedValue,
+    Float,
     FormSpec,
+    InputHint,
+    Integer,
     SIMagnitude,
     String,
     validators,
@@ -60,6 +63,31 @@ def _generate_validation_func(comparator: Callable[[Any], bool]) -> Callable[[An
             raise validators.ValidationError(Message("Validation failed"))
 
     return validation_func
+
+
+class _Unconvertible:
+    def __str__(self):
+        raise TypeError("Cannot convert to string")
+
+
+def _build_value_validation_for_class_with_input_hint(
+    class_type: type, prefill_value: Any, good_values: list[Any], bad_values: list[Any]
+) -> Iterable[tuple[FormSpec, Any, bool]]:
+    for good_value in good_values:
+        yield class_type(), good_value, True
+        yield class_type(
+            prefill=DefaultValue(prefill_value),
+        ), good_value, True
+
+    for bad_value in bad_values:
+        yield class_type(), bad_value, False
+        yield class_type(
+            prefill=DefaultValue(prefill_value),
+        ), bad_value, False
+
+    yield class_type(), DEFAULT_VALUE, False
+    yield class_type(prefill=DefaultValue(prefill_value)), DEFAULT_VALUE, True
+    yield class_type(prefill=InputHint(prefill_value)), DEFAULT_VALUE, False
 
 
 @pytest.mark.parametrize(
@@ -103,7 +131,20 @@ def _generate_validation_func(comparator: Callable[[Any], bool]) -> Callable[[An
             5,
             False,
         ),
-    ],
+    ]
+    + list(
+        _build_value_validation_for_class_with_input_hint(
+            Integer, 5, [5, 10], [10.1, "10", "asdf", {}, None]
+        )
+    )
+    + list(
+        _build_value_validation_for_class_with_input_hint(
+            Float, 5.0, [5.0, 10.0, 5, 10], ["10.0", "10", "asdf", {}, None]
+        )
+    )
+    + list(
+        _build_value_validation_for_class_with_input_hint(String, "5", ["10"], [_Unconvertible()])
+    ),
 )
 def test_validation(
     request_context: None,
@@ -148,8 +189,21 @@ def test_validation(
                 "some_string",
             ],
             True,
-        ),
-    ],
+        )
+    ]
+    + list(
+        _build_value_validation_for_class_with_input_hint(
+            Integer, 5, [5, 10], [10.1, "10", "asdf", {}, None]
+        )
+    )
+    + list(
+        _build_value_validation_for_class_with_input_hint(
+            Float, 5.0, [5.0, 10.0, 5, 10], ["10.0", "10", "asdf", {}, None]
+        )
+    )
+    + list(
+        _build_value_validation_for_class_with_input_hint(String, "5", ["10"], [_Unconvertible()])
+    ),
 )
 def test_validation_frontend(
     request_context: None,

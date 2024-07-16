@@ -25,12 +25,12 @@ export type Float = FormSpec & {
   type: "float";
   label?: string;
   unit?: string;
-  input_hint: unknown;
+  input_hint: string;
 };
 export type String = FormSpec & {
   type: "string";
   placeholder?: string;
-  input_hint: unknown;
+  input_hint: string;
 };
 export type Dictionary = FormSpec & {
   type: "dictionary";

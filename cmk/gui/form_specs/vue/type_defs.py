@@ -6,11 +6,11 @@ DataForDisk = Any
 Value = Any
 
 
-class DEFAULT_VALUE:
+class DefaultValue:
     pass
 
 
-default_value = DEFAULT_VALUE()
+DEFAULT_VALUE = DefaultValue()
 
 
 class DataOrigin(Enum):
@@ -22,3 +22,10 @@ class DataOrigin(Enum):
 class VisitorOptions:
     # Depending on the origin, we will call the migrate function
     data_origin: DataOrigin
+
+
+class EmptyValue:
+    pass
+
+
+EMPTY_VALUE = EmptyValue()

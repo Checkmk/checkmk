@@ -9,18 +9,23 @@ from typing import Any
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
-from cmk.gui.form_specs.vue.registries import (
-    FormSpecVisitor,
-    ParsedValue,
-    ValidateValue,
-    ValidValue,
+from cmk.gui.form_specs.vue.registries import FormSpecVisitor
+from cmk.gui.form_specs.vue.type_defs import (
+    DataOrigin,
+    DefaultValue,
+    EMPTY_VALUE,
+    EmptyValue,
+    Value,
+    VisitorOptions,
 )
-from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, Value, VisitorOptions
-from cmk.gui.form_specs.vue.utils import get_title_and_help, migrate_value
+from cmk.gui.form_specs.vue.utils import create_validation_error, get_title_and_help, migrate_value
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Transform
+
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.rulesets.v1 import Title
 
 
 class LegacyValuespecVisitor(FormSpecVisitor):
@@ -35,42 +40,38 @@ class LegacyValuespecVisitor(FormSpecVisitor):
         self.form_spec = form_spec
         self.options = options
 
-    def parse_value(self, value: Any) -> ParsedValue[Any]:
-        """Only handles DataOrigin.DISK and default values.
-        Data from the frontend can not be parsed at this stage, since the raw data
-        (including its errors) is required in the followup functions
-        """
-        value = migrate_value(self.form_spec, self.options, value)
-        # The legacy valuespec has its own ways to handle errors and everything else...
-        return ValidValue(value=value)
+    def _parse_value(self, raw_value: object) -> object | EmptyValue:
+        try:
+            return migrate_value(self.form_spec, self.options, raw_value)
+        except MKUserError:
+            return EMPTY_VALUE
 
     def _prepare_request_context(self, value: dict[str, Any]) -> None:
         assert "input_context" in value
         for url_key, url_value in value.get("input_context", {}).items():
             request.set_var(url_key, url_value)
 
-    def to_vue(self, parsed_value: ParsedValue[Any]) -> tuple[VueComponents.LegacyValuespec, Value]:
+    def _to_vue(
+        self, raw_value: object, parsed_value: object | EmptyValue
+    ) -> tuple[VueComponents.LegacyValuespec, Value]:
         title, help_text = get_title_and_help(self.form_spec)
 
-        assert isinstance(parsed_value, ValidValue)
-        value = parsed_value.value
-
         varprefix = None
-        if isinstance(value, DEFAULT_VALUE):
-            value = self.form_spec.valuespec.default_value()
+        if isinstance(parsed_value, DefaultValue):
+            value_to_render = self.form_spec.valuespec.default_value()
         elif self.options.data_origin == DataOrigin.FRONTEND:
             # Try to extract the value from the input_context
             # On error:   Render the form in error mode, highlighting problem fields
             # On success: Replace value with the extracted value and rendered it with a new
             #             varprefix to avoid conflicts with the previous form and stored
             #             request vars.
-            assert isinstance(value, dict)
-            varprefix = value.get("varprefix", "")
+            assert isinstance(parsed_value, dict)
+            varprefix = parsed_value.get("varprefix", "")
             with request.stashed_vars():
-                self._prepare_request_context(value)
+                self._prepare_request_context(parsed_value)
 
                 try:
-                    value = self.form_spec.valuespec.from_html_vars(varprefix)
+                    value_to_render = self.form_spec.valuespec.from_html_vars(varprefix)
                 except MKUserError as e:
                     user_errors.add(e)
                     with output_funnel.plugged():
@@ -89,12 +90,14 @@ class LegacyValuespecVisitor(FormSpecVisitor):
                             ),
                             None,
                         )
+        else:
+            value_to_render = parsed_value
 
         varprefix = f"legacy_varprefix_{uuid.uuid4()}" if varprefix is None else varprefix
 
         # Renders data from disk or data which was successfully parsed from frontend
         with output_funnel.plugged():
-            self.form_spec.valuespec.render_input(varprefix, value)
+            self.form_spec.valuespec.render_input(varprefix, value_to_render)
             return (
                 VueComponents.LegacyValuespec(
                     title=title,
@@ -102,24 +105,28 @@ class LegacyValuespecVisitor(FormSpecVisitor):
                     html=output_funnel.drain(),
                     varprefix=varprefix,
                 ),
-                value,
+                value_to_render,  # Note: this value is not used in the frontend
             )
 
-    def validate(self, parsed_value: ValidateValue[Any]) -> list[VueComponents.ValidationMessage]:
-        assert isinstance(parsed_value, ValidValue)
+    def _validate(
+        self, raw_value: object, parsed_value: object | EmptyValue
+    ) -> list[VueComponents.ValidationMessage]:
+        if isinstance(parsed_value, EmptyValue):
+            return create_validation_error(raw_value, Title("Invalid value for valuespec"))
 
-        value = parsed_value.value
         varprefix = ""
         with output_funnel.plugged():
             try:
-                if isinstance(value, DEFAULT_VALUE):
+                if isinstance(parsed_value, DefaultValue):
                     value = self.form_spec.valuespec.default_value()
                 elif self.options.data_origin == DataOrigin.FRONTEND:
-                    assert isinstance(value, dict)
+                    assert isinstance(parsed_value, dict)
                     with request.stashed_vars(), output_funnel.plugged():
-                        self._prepare_request_context(value)
-                        varprefix = value.get("varprefix", "")
+                        self._prepare_request_context(parsed_value)
+                        varprefix = parsed_value.get("varprefix", "")
                         value = self.form_spec.valuespec.from_html_vars(varprefix)
+                else:
+                    value = parsed_value
 
                 self.form_spec.valuespec.validate_datatype(value, varprefix)
                 self.form_spec.valuespec.validate_value(value, varprefix)
@@ -134,10 +141,11 @@ class LegacyValuespecVisitor(FormSpecVisitor):
                 output_funnel.drain()
         return []
 
-    def to_disk(self, parsed_value: ValidValue[Any]) -> Any:
-        value = parsed_value.value
+    def _to_disk(self, raw_value: object, parsed_value: object | EmptyValue) -> Any:
+        if isinstance(parsed_value, EmptyValue):
+            raise MKGeneralException("Unable to serialize empty value")
 
-        if isinstance(value, DEFAULT_VALUE):
+        if isinstance(parsed_value, DefaultValue):
             return self.form_spec.valuespec.default_value()
 
         if self.options.data_origin == DataOrigin.DISK:
@@ -145,11 +153,11 @@ class LegacyValuespecVisitor(FormSpecVisitor):
                 isinstance(self.form_spec.valuespec, Transform)
                 and self.form_spec.valuespec.from_valuespec is not None
             ):
-                return self.form_spec.valuespec.from_valuespec(value)
-            return value
+                return self.form_spec.valuespec.from_valuespec(parsed_value)
+            return parsed_value
 
-        assert isinstance(value, dict)
+        assert isinstance(parsed_value, dict)
         with request.stashed_vars():
-            self._prepare_request_context(value)
-            varprefix = value.get("varprefix", "")
+            self._prepare_request_context(parsed_value)
+            varprefix = parsed_value.get("varprefix", "")
             return self.form_spec.valuespec.from_html_vars(varprefix)

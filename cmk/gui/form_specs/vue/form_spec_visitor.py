@@ -18,8 +18,7 @@ from cmk.gui.form_specs.vue.form_spec_recomposers.percentage import (
 from cmk.gui.form_specs.vue.form_spec_recomposers.unknown_form_spec import (
     recompose as recompose_unknown_form_spec,
 )
-from cmk.gui.form_specs.vue.registries import InputHintValue, ValidValue
-from cmk.gui.form_specs.vue.type_defs import DataOrigin, default_value, VisitorOptions
+from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, VisitorOptions
 from cmk.gui.form_specs.vue.utils import (
     get_visitor,
     register_form_spec_recomposer,
@@ -123,16 +122,8 @@ def parse_data_from_frontend(form_spec: FormSpec, field_id: str) -> Any:
         raise MKGeneralException("Formular data is missing in request")
     value_from_frontend = json.loads(request.get_str_input_mandatory(field_id))
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
-    parsed_value = visitor.parse_value(value_from_frontend)
-
-    if isinstance(parsed_value, InputHintValue):
-        # TODO: add top level validation message
-        raise MKGeneralException(f"Cannot validate {form_spec.title} with InputHint")
-    _process_validation_errors(visitor.validate(parsed_value))
-
-    if not isinstance(parsed_value, ValidValue):
-        raise MKGeneralException(f"Expected a valid value, got {type(parsed_value)}")
-    return visitor.to_disk(parsed_value)
+    _process_validation_errors(visitor.validate(value_from_frontend))
+    return visitor.to_disk(value_from_frontend)
 
 
 def serialize_data_for_frontend(
@@ -140,19 +131,15 @@ def serialize_data_for_frontend(
     field_id: str,
     origin: DataOrigin,
     do_validate: bool,
-    value: Any = default_value,
+    value: Any = DEFAULT_VALUE,
 ) -> VueAppConfig:
     """Serializes backend value to vue app compatible config."""
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=origin))
-    parsed_value = visitor.parse_value(value)
-    vue_component, vue_value = visitor.to_vue(parsed_value)
+    vue_component, vue_value = visitor.to_vue(value)
 
     validation: list[VueComponents.ValidationMessage] = []
     if do_validate:
-        # TODO: add top level validation message
-        if isinstance(parsed_value, InputHintValue):
-            raise MKGeneralException(f"Cannot validate {form_spec.title} with InputHint")
-        validation = visitor.validate(parsed_value)
+        validation = visitor.validate(value)
 
     return VueAppConfig(
         id=field_id,

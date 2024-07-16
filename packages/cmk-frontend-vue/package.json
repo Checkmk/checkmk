@@ -11,7 +11,7 @@
     "test-eslint": "eslint . --max-warnings 0 --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-path .gitignore",
     "test-tsc": "vue-tsc --build",
     "test-prettier": "prettier  --check src/ *.json *.ts *.html",
-    "prettier": "prettier --write src/ *.json *.ts *.html"
+    "prettier": "prettier --write tests/ src/ *.json *.ts *.html"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.0",

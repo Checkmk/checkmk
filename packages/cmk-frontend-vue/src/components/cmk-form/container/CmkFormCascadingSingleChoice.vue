@@ -15,10 +15,12 @@ const props = defineProps<{
 }>()
 
 const validation = ref<ValidationMessages>([])
-function setValidation(validation: ValidationMessages) {
+function setValidation(new_validation: ValidationMessages) {
+  validation.value = []
   const element_messages: ValidationMessages = []
-  validation.forEach((msg) => {
+  new_validation.forEach((msg) => {
     if (msg.location.length === 0) {
+      validation.value.push(msg)
       return
     }
     element_messages.push({

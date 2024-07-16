@@ -3,10 +3,12 @@ import CmkFormSingleChoice from '@/components/cmk-form/element/CmkFormSingleChoi
 import * as FormSpec from '@/vue_formspec_components'
 import { type ValidationMessages } from '@/utils'
 import { renderFormWithData } from '../cmk-form-helper'
+import { mount } from '@vue/test-utils'
 
 const spec: FormSpec.SingleChoice = {
   type: 'single_choice',
   title: 'fooTitle',
+  input_hint: '',
   help: 'fooHelp',
   elements: [
     { name: 'choice1', title: 'Choice 1' },
@@ -21,7 +23,6 @@ test('CmkFormSingleChoice renders value', () => {
   render(CmkFormSingleChoice, {
     props: {
       spec,
-      validation: [],
       data: 'choice1'
     }
   })
@@ -34,7 +35,6 @@ test('CmkFormSingleChoice renders value', () => {
 test('CmkFormSingleChoice updates data', async () => {
   const { getCurrentData } = renderFormWithData({
     spec,
-    validation: [],
     data: 'choice1'
   })
 
@@ -44,14 +44,22 @@ test('CmkFormSingleChoice updates data', async () => {
   expect(getCurrentData()).toBe('"choice2"')
 })
 
-test('CmkFormSingleChoice renders backend validation messages', () => {
-  render(CmkFormSingleChoice, {
+test('CmkFormSingleChoice renders backend validation messages', async () => {
+  const wrapper = mount(CmkFormSingleChoice, {
     props: {
       spec,
-      validation: [{ location: [], message: 'Backend error message' }] as ValidationMessages,
       data: 'choice1'
     }
   })
 
-  screen.getByText('Backend error message')
+  const validation_messages = [
+    {
+      location: [],
+      message: 'Backend error message',
+      invalid_value: ''
+    }
+  ] as ValidationMessages
+  wrapper.vm.setValidation(validation_messages)
+  await wrapper.vm.$nextTick()
+  expect(wrapper.get('li').text()).toBe('Backend error message')
 })

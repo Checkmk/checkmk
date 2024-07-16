@@ -3,6 +3,7 @@ import CmkFormFloat from '@/components/cmk-form/element/CmkFormFloat.vue'
 import * as FormSpec from '@/vue_formspec_components'
 import { type ValidationMessages } from '@/utils'
 import { renderFormWithData } from '../cmk-form-helper'
+import { mount } from '@vue/test-utils'
 
 const validators: FormSpec.Validators[] = [
   {
@@ -19,14 +20,14 @@ const spec: FormSpec.Float = {
   help: 'fooHelp',
   validators: validators,
   label: 'fooLabel',
-  unit: 'fooUnit'
+  unit: 'fooUnit',
+  input_hint: 'fooInputHint'
 }
 
 test('CmkFormFloat renders value', () => {
   render(CmkFormFloat, {
     props: {
       spec,
-      validation: [],
       data: 42.5
     }
   })
@@ -39,7 +40,6 @@ test('CmkFormFloat renders value', () => {
 test('CmkFormFloat updates data', async () => {
   const { getCurrentData } = renderFormWithData({
     spec,
-    validation: [],
     data: 42.5
   })
 
@@ -53,7 +53,6 @@ test('CmkFormFloat checks validators', async () => {
   render(CmkFormFloat, {
     props: {
       spec,
-      validation: [],
       data: 42.5
     }
   })
@@ -64,14 +63,18 @@ test('CmkFormFloat checks validators', async () => {
   screen.getByText('Value must be between 1 and 100')
 })
 
-test('CmkFormFloat renders backend validation messages', () => {
-  render(CmkFormFloat, {
+test('CmkFormFloat renders backend validation messages', async () => {
+  const wrapper = mount(CmkFormFloat, {
     props: {
       spec,
-      validation: [{ location: [], message: 'Backend error message' }] as ValidationMessages,
       data: 42.0
     }
   })
 
-  screen.getByText('Backend error message')
+  const validation_messages = [
+    { location: [], message: 'Backend error message', invalid_value: '' }
+  ] as ValidationMessages
+  wrapper.vm.setValidation(validation_messages)
+  await wrapper.vm.$nextTick()
+  expect(wrapper.get('li').text()).toBe('Backend error message')
 })

@@ -152,6 +152,10 @@ run_format() {
     npm run prettier
 }
 
+run_tests() {
+    npm run test
+}
+
 main() {
     # Change to the directory where this script resides, it makes many things easier
     # and we can call this script from everywhere.

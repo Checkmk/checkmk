@@ -21,7 +21,6 @@ defineExpose({
 })
 
 const data = defineModel('data', { type: String, required: true })
-const local_validation = ref<ValidationMessages | null>(null)
 
 const emit = defineEmits<{
   (e: 'update:data', value: number | string): void
@@ -32,9 +31,9 @@ const value = computed({
     return data.value
   },
   set(value: string) {
-    local_validation.value = []
+    validation.value = []
     validate_value(value, props.spec.validators!).forEach((error) => {
-      local_validation.value = [{ message: error, location: [], invalid_value: value }]
+      validation.value = [{ message: error, location: [], invalid_value: value }]
     })
     emit('update:data', value)
   }

@@ -385,6 +385,8 @@ def test_dependencies_are_used() -> None:
         "opentelemetry-sdk",
         "opentelemetry-semantic-conventions",
     }
+    # Not used yet, can be removed soon (CMK-17725)
+    known_unused_packages |= {"pika"}
 
     assert (
         unused_dependencies >= known_unused_packages

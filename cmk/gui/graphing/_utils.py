@@ -60,7 +60,8 @@ from ._type_defs import (
 from ._unit_info import unit_info
 
 
-class ScalarDefinition(NamedTuple):
+@dataclass(frozen=True)
+class ScalarDefinition:
     expression: MetricExpression
     title: str
 

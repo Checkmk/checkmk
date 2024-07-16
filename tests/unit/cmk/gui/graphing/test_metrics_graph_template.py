@@ -33,6 +33,7 @@ from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._utils import (
     GraphTemplate,
     MetricDefinition,
+    MetricUnitColor,
     MinimalGraphTemplateRange,
     ScalarDefinition,
 )
@@ -265,16 +266,14 @@ def test_metric_unit_color(
     assert translated_metric is not None
     unit = translated_metric.get("unit")
     assert unit is not None
-    unit_id = unit.get("id")
-    reference = {
-        "color": result_color,
-        "unit": unit_id,
-    }
     metric_definition = MetricDefinition(
         expression=parse_expression(expression, translated_metrics),
         line_type="line",
     )
-    assert metric_definition.compute_unit_color(translated_metrics, ["test"]) == reference
+    assert metric_definition.compute_unit_color(translated_metrics, ["test"]) == MetricUnitColor(
+        unit=unit["id"],
+        color=result_color,
+    )
 
 
 @pytest.mark.parametrize(

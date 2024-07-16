@@ -65,7 +65,8 @@ class ScalarDefinition(NamedTuple):
     title: str
 
 
-class MetricUnitColor(TypedDict):
+@dataclass(frozen=True)
+class MetricUnitColor:
     unit: str
     color: str
 

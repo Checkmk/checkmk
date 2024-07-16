@@ -218,8 +218,8 @@ def create_graph_recipe_from_template(
                 row,
                 graph_template.consolidation_function or "max",
             ),
-            unit=unit_color["unit"] if unit_color else "",
-            color=unit_color["color"] if unit_color else "#000000",
+            unit=unit_color.unit if unit_color else "",
+            color=unit_color.color if unit_color else "#000000",
             visible=True,
         )
 

@@ -334,8 +334,11 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
     def _vs_individual_elements(self) -> list[DictionaryEntry]:
         raise NotImplementedError()
 
-    def _from_vars(self) -> None:
-        ident = request.get_ascii_input("ident")
+    def from_vars(self, ident_var: str) -> None:
+        self._from_vars(ident_var)
+
+    def _from_vars(self, ident_var: str = "ident") -> None:
+        ident = request.get_ascii_input(ident_var)
         if ident is not None:
             try:
                 entry = self._store.filter_editable_entries(self._store.load_for_reading())[ident]
@@ -541,8 +544,8 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
     def _save(self, entries: dict[str, _T]) -> None:
         self._store.save(entries)
 
-    def page(self) -> None:
-        with html.form_context("edit", method="POST"):
+    def page(self, form_name: str = "edit") -> None:
+        with html.form_context(form_name, method="POST"):
             self._page_form_quick_setup_warning()
 
             html.prevent_password_auto_completion()

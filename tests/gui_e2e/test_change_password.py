@@ -2,7 +2,7 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import logging
 import re
 from collections.abc import Iterator
 from urllib.parse import quote_plus
@@ -17,8 +17,11 @@ from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.playwright.pom.setup.global_settings import GlobalSettings
 from tests.testlib.site import ADMIN_USER, Site
 
+logger = logging.getLogger(__name__)
+
 
 def navigate_to_edit_user_page(dashboard_page: Dashboard, user_name: str) -> None:
+    logger.info("Navigate to 'Edit user' page")
     dashboard_page.main_menu.setup_menu("Users").click()
     dashboard_page.page.wait_for_url(
         url=re.compile(quote_plus("wato.py?mode=users")), wait_until="load"
@@ -45,6 +48,7 @@ def set_number_of_character_groups_password_policy(
 
     def _navigate_to_password_policy() -> None:
         _setting_name = "Password policy for local accounts"
+        logger.info("Navigate to '%s' setting page", _setting_name)
         settings_page.search_settings(_setting_name)
         settings_page.setting_link(_setting_name).click()
         dashboard_page.page.wait_for_url(
@@ -60,6 +64,7 @@ def set_number_of_character_groups_password_policy(
     settings_page = GlobalSettings(dashboard_page.page)
     _navigate_to_password_policy()
 
+    logger.info("Set the number of character groups to %s", request.param)
     dashboard_page.main_area.locator(num_groups_label).click()
     dashboard_page.main_area.locator(num_groups_input).fill(request.param)
     dashboard_page.main_area.locator(save_btn).click()
@@ -67,10 +72,10 @@ def set_number_of_character_groups_password_policy(
 
     yield
 
-    # now disable
     settings_page.navigate()
     _navigate_to_password_policy()
 
+    logger.info("Reset the password policy")
     dashboard_page.main_area.locator(num_groups_label).click()
     dashboard_page.main_area.locator(save_btn).click()
 
@@ -88,13 +93,14 @@ def change_user_password_and_check_success(
 
     page = dashboard_page
 
+    logger.info("Change current password and check success message")
     change_password_page = ChangePassword(page.page)
     change_password_page.change_password(
         test_site.admin_password, new_password, confirm_new_password
     )
     change_password_page.main_area.check_success("Successfully changed password.")
 
-    # Logout and then login with the new password
+    logger.info("Logout and then login with the new password")
     change_password_page.main_menu.logout()
     login_page = LoginPage(page.page, navigate_to_page=False)
     new_credentials = CmkCredentials(username=ADMIN_USER, password=new_password)
@@ -221,9 +227,11 @@ def test_edit_user_change_password_errors(
     pw_field_suffix = "Y21rYWRtaW4="  # base64 'cmkadmin'
     navigate_to_edit_user_page(page, ADMIN_USER)
 
+    logger.info("Change current password on 'Edit user' page")
     page.main_area.locator(f"input[name='_password_{pw_field_suffix}']").fill(new_pw)
     page.main_area.locator(f"input[name='_password2_{pw_field_suffix}']").fill(new_pw_conf)
     page.main_area.locator("#suggestions >> text=Save").click()
+
     page.main_area.check_error(re.compile(f".*{expect_error_contains}.*"))
 
 
@@ -247,6 +255,7 @@ def test_setting_password_incompatible_with_policy(
     pw_field_suffix = "Y21rYWRtaW4="  # base64 'cmkadmin'
     navigate_to_edit_user_page(dashboard_page, ADMIN_USER)
 
+    logger.info("Change current password on 'Edit user' page")
     dashboard_page.main_area.locator(f"input[name='_password_{pw_field_suffix}']").fill(password)
     dashboard_page.main_area.locator(f"input[name='_password2_{pw_field_suffix}']").fill(password)
     dashboard_page.main_area.locator("#suggestions >> text=Save").click()

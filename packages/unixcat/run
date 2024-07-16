@@ -22,7 +22,6 @@ usage() {
     echo "  -c, --clean             remove artifacts first"
     echo "  -F, --check-format      check for correct formatting"
     echo "  -b, --build             build package"
-    echo "  -U, --build-unit-tests  build unit tests"
     echo "  -u, --unit-tests        run unit tests"
     echo "  -i, --iwyu              check C/C++ includes via include-what-you-use"
     echo "  -t, --clang-tidy        check sources with clang-tidy linter"
@@ -46,7 +45,7 @@ parse_options() {
     RUN_DOCUMENTATION=no
     FILES=()
 
-    if ! OPTIONS=$(getopt --options 'cFbUuitaAfDj:h' --long 'clean,check-format,build,build-unit-tests,unit-tests,iwyu,clang-tidy,all,build-all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cFbuitaAfDj:h' --long 'clean,check-format,build,unit-tests,iwyu,clang-tidy,all,build-all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi

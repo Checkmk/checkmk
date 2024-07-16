@@ -45,7 +45,7 @@ parse_options() {
     RUN_DOCUMENTATION=no
     FILES=()
 
-    if ! OPTIONS=$(getopt --options 'cFbUuitaAfDj:h' --long 'clean,check-format,build,build-unit-tests,unit-tests,iwyu,clang-tidy,all,build-all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cFbuitaAfDj:h' --long 'clean,check-format,build,unit-tests,iwyu,clang-tidy,all,build-all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi

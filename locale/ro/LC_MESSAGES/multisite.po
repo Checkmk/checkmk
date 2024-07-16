@@ -14261,6 +14261,12 @@ msgstr "Creați un serviciu pentru fiecare adresă IP pingată"
 msgid "Create a summary service for all alert rules"
 msgstr "Creați un serviciu de rezumat pentru toate regulile de alertă"
 
+msgid ""
+"Create a workflow 'Post to a channel when a webhook request is received' for "
+"a channel in MS Teams and use the generated webook URL.<br><br>This URL can "
+"also be collected from the Password Store from Checkmk."
+msgstr ""
+
 #, fuzzy
 msgid "Create additional service for IO stats bytes"
 msgstr "Crearea unui serviciu suplimentar pentru IO Stats Bytes"
@@ -15699,7 +15705,12 @@ msgstr "Baza de date diff backup"
 msgid "Database files are restored"
 msgstr "Fișierele bazei de date sunt restaurate"
 
-msgid "Database for MySQL"
+#, fuzzy
+msgid "Database for MySQL flexible server"
+msgstr "Baza de date pentru MySQL"
+
+#, fuzzy
+msgid "Database for MySQL single server"
 msgstr "Baza de date pentru MySQL"
 
 msgid "Database for PostgreSQL"
@@ -61427,11 +61438,6 @@ msgstr ""
 msgid "This SLA has no computation plug-ins configured"
 msgstr "Acest SLA nu are configurate plugin-uri de calcul."
 
-msgid "This URL can also be collected from the Password Store from Checkmk."
-msgstr ""
-"Această adresă URL poate fi, de asemenea, colectată din Password Store de la "
-"Checkmk."
-
 msgid ""
 "This URL is opened when clicking on the action / icon. You can use some "
 "macros within the URL which are dynamically replaced for each object. These "
@@ -79626,6 +79632,11 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "This URL can also be collected from the Password Store from Checkmk."
+#~ msgstr ""
+#~ "Această adresă URL poate fi, de asemenea, colectată din Password Store de "
+#~ "la Checkmk."
 
 #~ msgid "Exclude following SIDs (if detected or manually added)"
 #~ msgstr ""

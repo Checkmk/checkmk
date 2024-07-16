@@ -13679,6 +13679,12 @@ msgstr "Pingを送信したIPアドレスごとにサービスを作成する"
 msgid "Create a summary service for all alert rules"
 msgstr "すべてのアラートルールに対するサマリーサービスを作成する"
 
+msgid ""
+"Create a workflow 'Post to a channel when a webhook request is received' for "
+"a channel in MS Teams and use the generated webook URL.<br><br>This URL can "
+"also be collected from the Password Store from Checkmk."
+msgstr ""
+
 #, fuzzy
 msgid "Create additional service for IO stats bytes"
 msgstr "IO統計バイト用の追加サービスを作成する"
@@ -15106,7 +15112,12 @@ msgstr "データベースの差分バックアップ"
 msgid "Database files are restored"
 msgstr "データベースファイルが復元されます"
 
-msgid "Database for MySQL"
+#, fuzzy
+msgid "Database for MySQL flexible server"
+msgstr "MySQL用データベース"
+
+#, fuzzy
+msgid "Database for MySQL single server"
 msgstr "MySQL用データベース"
 
 msgid "Database for PostgreSQL"
@@ -59885,9 +59896,6 @@ msgstr "このルールセットは、湿度センサーのしきい値制限を
 msgid "This SLA has no computation plug-ins configured"
 msgstr "このSLAには、計算プラグインが設定されていません"
 
-msgid "This URL can also be collected from the Password Store from Checkmk."
-msgstr "このURLはCheckmkのパスワードストアから収集することも可能です。"
-
 msgid ""
 "This URL is opened when clicking on the action / icon. You can use some "
 "macros within the URL which are dynamically replaced for each object. These "
@@ -77609,6 +77617,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "This URL can also be collected from the Password Store from Checkmk."
+#~ msgstr "このURLはCheckmkのパスワードストアから収集することも可能です。"
 
 #, fuzzy
 #~ msgid "Exclude following SIDs (if detected or manually added)"

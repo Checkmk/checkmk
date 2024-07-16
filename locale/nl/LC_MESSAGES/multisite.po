@@ -14260,6 +14260,12 @@ msgstr "Creëer een dienst voor elk gepingd IP-adres"
 msgid "Create a summary service for all alert rules"
 msgstr "Maak een overzichtsdienst voor alle waarschuwingsregels"
 
+msgid ""
+"Create a workflow 'Post to a channel when a webhook request is received' for "
+"a channel in MS Teams and use the generated webook URL.<br><br>This URL can "
+"also be collected from the Password Store from Checkmk."
+msgstr ""
+
 #, fuzzy
 msgid "Create additional service for IO stats bytes"
 msgstr "Maak extra Dienst voor IO Stats Bytes"
@@ -15701,7 +15707,12 @@ msgstr "Database diff back-up"
 msgid "Database files are restored"
 msgstr "Database Bestanden worden hersteld"
 
-msgid "Database for MySQL"
+#, fuzzy
+msgid "Database for MySQL flexible server"
+msgstr "Database voor MySQL"
+
+#, fuzzy
+msgid "Database for MySQL single server"
 msgstr "Database voor MySQL"
 
 msgid "Database for PostgreSQL"
@@ -61281,9 +61292,6 @@ msgstr "Deze regelset stelt de drempelwaarden voor vochtigheidssensoren in"
 msgid "This SLA has no computation plug-ins configured"
 msgstr "Deze SLA heeft geen computation plugins geconfigureerd"
 
-msgid "This URL can also be collected from the Password Store from Checkmk."
-msgstr "Deze URL kan ook worden opgehaald uit de Password Store van Checkmk."
-
 msgid ""
 "This URL is opened when clicking on the action / icon. You can use some "
 "macros within the URL which are dynamically replaced for each object. These "
@@ -79501,6 +79509,10 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "This URL can also be collected from the Password Store from Checkmk."
+#~ msgstr ""
+#~ "Deze URL kan ook worden opgehaald uit de Password Store van Checkmk."
 
 #, fuzzy
 #~ msgid "Exclude following SIDs (if detected or manually added)"

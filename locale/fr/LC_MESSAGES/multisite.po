@@ -14380,6 +14380,12 @@ msgstr "Création d'un service pour chaque adresse IP interrogée"
 msgid "Create a summary service for all alert rules"
 msgstr "Créer un service de résumé pour toutes les règles d'alerte"
 
+msgid ""
+"Create a workflow 'Post to a channel when a webhook request is received' for "
+"a channel in MS Teams and use the generated webook URL.<br><br>This URL can "
+"also be collected from the Password Store from Checkmk."
+msgstr ""
+
 #, fuzzy
 msgid "Create additional service for IO stats bytes"
 msgstr "Créer un service supplémentaire pour les octets de statistiques d'E/S"
@@ -15836,7 +15842,12 @@ msgstr "Sauvegarde différée de la base de données"
 msgid "Database files are restored"
 msgstr "Les fichiers de la base de données sont restaurés"
 
-msgid "Database for MySQL"
+#, fuzzy
+msgid "Database for MySQL flexible server"
+msgstr "Base de données pour MySQL"
+
+#, fuzzy
+msgid "Database for MySQL single server"
 msgstr "Base de données pour MySQL"
 
 msgid "Database for PostgreSQL"
@@ -61902,11 +61913,6 @@ msgstr ""
 msgid "This SLA has no computation plug-ins configured"
 msgstr "Cet ANS n'a pas de plugins de calcul configurés"
 
-msgid "This URL can also be collected from the Password Store from Checkmk."
-msgstr ""
-"Cette URL peut également être récupérée dans le magasin de mots de passe de "
-"Checkmk."
-
 msgid ""
 "This URL is opened when clicking on the action / icon. You can use some "
 "macros within the URL which are dynamically replaced for each object. These "
@@ -80352,6 +80358,11 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "This URL can also be collected from the Password Store from Checkmk."
+#~ msgstr ""
+#~ "Cette URL peut également être récupérée dans le magasin de mots de passe "
+#~ "de Checkmk."
 
 #, fuzzy
 #~ msgid "Exclude following SIDs (if detected or manually added)"

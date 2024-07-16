@@ -137,6 +137,10 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         )
         self._audit_log_store = AuditLogStore()
 
+    def shall_start(self) -> bool:
+        """Some basic preliminary check to decide quickly whether to start the job"""
+        return bool(wato_slave_sites())
+
     def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
         with job_interface.gui_context():
             self._execute(job_interface)
@@ -307,6 +311,10 @@ def execute_sync_remote_sites() -> None:
     job = SyncRemoteSitesBackgroundJob()
     if job.is_active():
         logger.debug("Another 'sync remote sites' job is already running: Skipping this time.")
+        return
+
+    if not job.shall_start():
+        logger.debug("Job shall not start")
         return
 
     job.start(

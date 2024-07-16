@@ -45,6 +45,20 @@ class ActiveServiceDescription:
     params: Mapping[str, object] | object
 
 
+# yet another collection of description / command / arguments
+# see if we can conslidate these.
+@dataclass(frozen=True)
+class _RawActiveServiceData:
+    plugin_name: str
+    description: str
+    arguments: str
+    configuration: Mapping[str, object]
+
+    @property
+    def command_line(self) -> str:
+        return f"check_{self.plugin_name} {self.arguments}"
+
+
 class ActiveCheck:
     def __init__(
         self,
@@ -87,7 +101,7 @@ class ActiveCheck:
 
     def _iterate_services(
         self, plugin_name: str, plugin_params: Iterable[ConfigSet]
-    ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
+    ) -> Iterator[_RawActiveServiceData]:
         if (active_check := self._plugins.get(plugin_name)) is None:
             return
         for conf_dict in plugin_params:
@@ -106,61 +120,60 @@ class ActiveCheck:
                         active_check.name, False
                     ),
                 )
-                command_line = f"check_{active_check.name} {arguments}"
-                yield service.service_description, arguments, command_line, conf_dict
+                yield _RawActiveServiceData(
+                    plugin_name=active_check.name,
+                    description=service.service_description,
+                    arguments=arguments,
+                    configuration=conf_dict,
+                )
 
     def _get_service_data(
         self,
         plugin_name: str,
-        service_iterator: Iterator[tuple[str, str, str, object]],
+        service_iterator: Iterator[_RawActiveServiceData],
     ) -> Iterator[ActiveServiceData]:
         existing_descriptions: dict[str, str] = {}
 
-        for description, args, command_line, params in service_iterator:
-            if not description:
+        for raw_service in service_iterator:
+            if not raw_service.description:
                 config_warnings.warn(
                     f"Skipping invalid service with empty description "
-                    f"(active check: {plugin_name}) on host {self.host_name}"
+                    f"(active check: {raw_service.plugin_name}) on host {self.host_name}"
                 )
                 continue
 
-            if description in existing_descriptions:
+            if raw_service.description in existing_descriptions:
                 # If we have the same active check again with the same description,
                 # then we do not regard this as an error, but simply ignore the
                 # second one. That way one can override a check with other settings.
                 continue
 
-            existing_descriptions[description] = plugin_name
+            existing_descriptions[raw_service.description] = raw_service.plugin_name
 
-            command, detected_exectutable, exec_command_line = self._get_command(
-                plugin_name, command_line
-            )
+            command, detected_exectutable, exec_command_line = self._get_command(raw_service)
 
             yield ActiveServiceData(
                 plugin_name=plugin_name,
-                description=description,
+                description=raw_service.description,
                 command=command,
-                command_display=f"{command}!{self.escape_func(args)}",
+                command_display=f"{command}!{self.escape_func(raw_service.arguments)}",
                 command_line=exec_command_line,
-                params=params,
-                expanded_args=self.escape_func(args),
+                params=raw_service.configuration,
+                expanded_args=self.escape_func(raw_service.arguments),
                 detected_executable=detected_exectutable,
             )
 
-    def _get_command(self, plugin_name: str, command_line: str) -> tuple[str, str, str]:
-        # TODO: check why/if we need this. Couldn't we have for example an active check that
-        # queries some RestAPI?
-        # This may be a leftover from a time where we would try to replace these in a macro?
+    def _get_command(self, raw_service: _RawActiveServiceData) -> tuple[str, str, str]:
         if self.host_attrs["address"] in ["0.0.0.0", "::"]:
             command = "check-mk-custom"
             command_line = 'echo "CRIT - Failed to lookup IP address and no explicit IP address configured"; exit 2'
 
             return command, "echo", command_line
 
-        command = f"check_mk_active-{plugin_name}"
-        executable, *args = command_line.split(None, 1)
+        command = f"check_mk_active-{raw_service.plugin_name}"
+        executable, *args = raw_service.command_line.split(None, 1)
         detected_executable = _autodetect_plugin(
-            executable, self._modules.get(plugin_name.removeprefix("check_"))
+            executable, self._modules.get(raw_service.plugin_name)
         )
         return command, detected_executable, " ".join((detected_executable, *args))
 
@@ -169,11 +182,10 @@ class ActiveCheck:
     ) -> Iterator[ActiveServiceDescription]:
         for plugin_name, plugin_params in active_checks_rules:
             try:
-                for desc, _args, _command_line, params in self._iterate_services(
-                    plugin_name, plugin_params
-                ):
-                    yield ActiveServiceDescription(plugin_name, desc, params)
-
+                for raw_service in self._iterate_services(plugin_name, plugin_params):
+                    yield ActiveServiceDescription(
+                        plugin_name, raw_service.description, raw_service.configuration
+                    )
             except Exception as e:
                 if cmk.ccc.debug.enabled():
                     raise

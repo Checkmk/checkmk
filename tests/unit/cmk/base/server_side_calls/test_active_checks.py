@@ -305,7 +305,11 @@ def test_get_active_service_data_password_with_hack(
     monkeypatch.setattr(
         ActiveCheck,
         "_get_command",
-        lambda self, pn, cl: ("check_mk_active-check_path", f"/path/to/check_{pn}", cl),
+        lambda self, r: (
+            "check_mk_active-check_path",
+            f"/path/to/check_{r.plugin_name}",
+            r.command_line,
+        ),
     )
     monkeypatch.setitem(password_store.hack.HACK_CHECKS, "test_check", True)
     active_check = ActiveCheck(
@@ -360,7 +364,11 @@ def test_get_active_service_data_password_without_hack(
     monkeypatch.setattr(
         ActiveCheck,
         "_get_command",
-        lambda self, pn, cl: ("check_mk_active-check_path", f"/path/to/check_{pn}", cl),
+        lambda self, r: (
+            "check_mk_active-check_path",
+            f"/path/to/check_{r.plugin_name}",
+            r.command_line,
+        ),
     )
     active_check = ActiveCheck(
         plugins=_PASSWORD_TEST_ACTIVE_CHECKS,

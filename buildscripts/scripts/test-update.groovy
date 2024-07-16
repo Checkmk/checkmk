@@ -10,10 +10,6 @@ def main() {
         ["OVERRIDE_DISTROS"],
     ]);
 
-    check_environment_variables([
-        "DOCKER_TAG",
-    ]);
-
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_tests");
 
     testing_helper.run_make_targets(

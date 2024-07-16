@@ -204,7 +204,6 @@ def test_download_key(dashboard_page: Dashboard, with_key: str) -> None:
     ), "Signature key couldn't be downloaded, even after providing correct passphrase."
 
 
-@pytest.mark.skip(reason="Due to CMK-18295")
 def test_bake_and_sign(dashboard_page: Dashboard, test_site: Site, with_key: str) -> None:
     """Go to agents and click bake and sign.
 
@@ -238,7 +237,6 @@ def test_bake_and_sign(dashboard_page: Dashboard, test_site: Site, with_key: str
     )
 
 
-@pytest.mark.skip(reason="Due to CMK-18295")
 def test_bake_and_sign_disabled(dashboard_page: Dashboard) -> None:
     """Delete all keys, go to agents and check that the sign buttons are disabled."""
     go_to_signature_page(dashboard_page)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import CmkFormDispatcher from './CmkFormDispatcher.vue'
 import type { FormSpec } from '@/vue_formspec_components'
 import type { ValidationMessages } from '@/utils'
@@ -17,7 +17,9 @@ const value_as_json = computed(() => {
 
 const component_ref = ref<IComponent>()
 function setValidation(validation: ValidationMessages) {
-  component_ref.value!.setValidation(validation)
+  nextTick(() => {
+    component_ref.value!.setValidation(validation)
+  })
 }
 
 defineExpose({

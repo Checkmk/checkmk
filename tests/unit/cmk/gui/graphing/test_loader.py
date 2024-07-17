@@ -311,17 +311,42 @@ def _metric_names_by_module(
 
 
 def test_bundles() -> None:
-    for module, metric_names in _metric_names_by_module(load_graphing_plugins().plugins).items():
-        bundles = metric_names.bundles
+    offenders = [
+        (module, metric_names)
+        for module, metric_names in _metric_names_by_module(load_graphing_plugins().plugins).items()
+        if (bundles := metric_names.bundles)
+        and (len(bundles) > 1 or set(metric_names.from_metrics) != set(bundles[0]))
+    ]
+
+    for module, metric_names in (
+        (module, metric_names)
+        for module, metric_names in offenders
+        if module not in _ALLOWED_BUNDLE_VIOLATIONS
+    ):
         assert len(bundles) <= 1, (
-            f"The module {module!r} defines multiple bundles. Our graphing modules are allowed to"
+            f"The module {module} defines multiple bundles. Our graphing modules are allowed to"
             " contain either standalone metric definitions or exactly one cohesive bundle of"
             " metric, perfometer or graph template definitions."
         )
-        if bundles:
-            assert set(metric_names.from_metrics) == set(bundles[0]), (
-                f"The module {module!r} contains metric definitions which do not belong to a"
-                " bundle. Our graphing modules are allowed to contain either standalone metric"
-                " definitions or exactly one cohesive bundle of metric, perfometer or graph"
-                " template definitions."
-            )
+        raise AssertionError(
+            f"The module {module} contains metric definitions which do not belong to a"
+            " bundle. Our graphing modules are allowed to contain either standalone metric"
+            " definitions or exactly one cohesive bundle of metric, perfometer or graph"
+            " template definitions."
+        )
+
+    allowed_but_not_offending_modules = _ALLOWED_BUNDLE_VIOLATIONS - {
+        module for module, _ in offenders
+    }
+    assert not allowed_but_not_offending_modules, (
+        "The followin modules are allowed to violate our graphing module but they don't so so:\n"
+        f"{', '.join(sorted(allowed_but_not_offending_modules))}\n"
+        "Please remove them from the list of allowed violations."
+    )
+
+
+_ALLOWED_BUNDLE_VIOLATIONS = {
+    # we cannot have sub-modules below the cee folder, so we have to allow the following violations
+    # in cmk.cee.robotmk, the module layout of the metric etc. defintions is correct
+    "cmk.plugins.robotmk.graphing.cee",
+}

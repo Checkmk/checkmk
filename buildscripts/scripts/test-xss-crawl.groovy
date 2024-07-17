@@ -7,6 +7,10 @@ def main() {
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
     def safe_branch_name = versioning.safe_branch_name(scm);
     def version = "daily";
+    def docker_tag = versioning.select_docker_tag(
+        "",                // 'build tag'
+        safe_branch_name,  // 'branch'
+    )
 
     check_job_parameters([
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
@@ -18,9 +22,7 @@ def main() {
             DISTRO_LIST: ["ubuntu-20.04"],
             EDITION: "enterprise",
             VERSION: version,
-            DOCKER_TAG: versioning.select_docker_tag(
-                "", // 'build tag'
-                safe_branch_name),  // 'branch' returns '<BRANCH>-latest'
+            DOCKER_TAG: docker_tag,
             MAKE_TARGET: "test-xss-crawl-docker",
             BRANCH: safe_branch_name,
             cmk_version: versioning.get_cmk_version(safe_branch_name, version),

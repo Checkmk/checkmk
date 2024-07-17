@@ -8,6 +8,10 @@ def main() {
     def safe_branch_name = versioning.safe_branch_name(scm);
     def cmk_version = versioning.get_cmk_version(safe_branch_name, "daily");
     def docker_group_id = get_docker_group_id();
+    def docker_tag = versioning.select_docker_tag(
+        "",                // 'build tag'
+        safe_branch_name,  // 'branch'
+    )
 
     check_job_parameters([
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
@@ -19,10 +23,7 @@ def main() {
             DISTRO_LIST: ["ubuntu-20.04"],
             EDITION: "enterprise",
             VERSION: "git",
-            DOCKER_TAG: versioning.select_docker_tag(
-                safe_branch_name,
-                "",
-                ""),   // FIXME was DOCKER_TAG_DEFAULT before
+            DOCKER_TAG: docker_tag,
             MAKE_TARGET: "test-gui-crawl-docker",
             BRANCH: safe_branch_name,
             cmk_version: cmk_version,

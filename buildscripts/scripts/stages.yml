@@ -165,79 +165,79 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend/' || true"
 
 STAGES:
-    - NAME: 'Python Typing'
+    - NAME: "Python Typing"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_MYPY_SCRIPT
-      DIR: 'tests'
+      DIR: "tests"
       ENV_VARS:
-        MYPY_ADDOPTS: "--no-color-output --junit-xml ${RESULTS}/mypy.xml --no-incremental"
-      COMMAND: 'make --quiet test-mypy-docker &> ${RESULTS}/python-typing.txt'
-      TEXT_ON_SKIP: 'No Python files changed'
+          MYPY_ADDOPTS: "--no-color-output --junit-xml ${RESULTS}/mypy.xml --no-incremental"
+      COMMAND: "make --quiet test-mypy-docker &> ${RESULTS}/python-typing.txt"
+      TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "MYPY"
       RESULT_CHECK_FILE_PATTERN: "results/python-typing.txt"
 
-    - NAME: 'Python Format'
+    - NAME: "Python Format"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_BLACK_SCRIPT
-      DIR: 'tests'
+      DIR: "tests"
       ENV_VARS:
-        PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
+          PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
       COMMAND: "make --quiet test-format-python-docker &> ${RESULTS}/python-format.txt"
-      TEXT_ON_SKIP: 'No Python files changed'
+      TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/python-format.txt"
 
-    - NAME: 'Python Cyclic Dependencies'
+    - NAME: "Python Cyclic Dependencies"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_TESTS_MAKEFILE,CHANGED_PIPFILE_LOCK,CHANGED_CMK_WERKS_FILES,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
-      DIR: 'tests'
-      COMMAND: 'make test-cycles-docker &> ${RESULTS}/py-import-cycles.txt'
-      TEXT_ON_SKIP: 'No Python files changed'
+      DIR: "tests"
+      COMMAND: "make test-cycles-docker &> ${RESULTS}/py-import-cycles.txt"
+      TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_FILE_PATTERN: "results/py-import-cycles.txt"
 
-    - NAME: 'omdlib Unit Tests'
+    - NAME: "omdlib Unit Tests"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_OMDLIB_FILES,CHANGED_OMDLIB_TESTS
-      DIR: 'tests'
+      DIR: "tests"
       ENV_VARS:
-        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-omdlib-junit.xml --color=no"
+          PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-omdlib-junit.xml --color=no"
       COMMAND: "../scripts/run-in-docker.sh make --quiet test-unit-omdlib"
-      TEXT_ON_SKIP: 'No omdlib files changed'
+      TEXT_ON_SKIP: "No omdlib files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-omdlib-junit.xml"
 
-    - NAME: 'Python Unit Tests'
+    - NAME: "Python Unit Tests"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_CHECKMAN_FILES
-      DIR: 'tests'
+      DIR: "tests"
       ENV_VARS:
-        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"
+          PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"
       COMMAND: "make test-unit-docker"
-      TEXT_ON_SKIP: 'No Python files changed'
+      TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
 
-    - NAME: 'Python License Headers Test'
+    - NAME: "Python License Headers Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
-      DIR: 'tests'
+      DIR: "tests"
       ENV_VARS:
-        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-license-headers-junit.xml --color=no"
-        PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
+          PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-license-headers-junit.xml --color=no"
+          PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
       COMMAND: "make test-license-headers-docker"
-      TEXT_ON_SKIP: 'No Python files changed'
+      TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-license-headers-junit.xml"
 
-    - NAME: 'Python Pipfile Test'
+    - NAME: "Python Pipfile Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PIPFILE,CHANGED_PIPFILE_LOCK,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
-      DIR: 'tests'
+      DIR: "tests"
       ENV_VARS:
-        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-pipfile-junit.xml --color=no"
+          PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-pipfile-junit.xml --color=no"
       COMMAND: "make test-pipfile-docker"
-      TEXT_ON_SKIP: 'Pipfile and Pipfile.lock files not changed'
+      TEXT_ON_SKIP: "Pipfile and Pipfile.lock files not changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-pipfile-junit.xml"
 
-    - NAME: 'Python File Content Test'
+    - NAME: "Python File Content Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FILES_REL
-      DIR: 'tests'
+      DIR: "tests"
       ENV_VARS:
-        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-file-content-junit.xml --color=no"
+          PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-file-content-junit.xml --color=no"
       # ${CHANGED_FILES_REL} can be huge, so we use a file to transport the list
       # to the pytest command. This will be tidied up with CMK-17048
       COMMAND: |
@@ -245,139 +245,139 @@ STAGES:
           echo "${CHANGED_FILES_REL}" > $CHANGED_FILES_REL_FILE
           trap "rm -f $CHANGED_FILES_REL_FILE" EXIT
           make test-file-content-docker
-      TEXT_ON_SKIP: 'No files changed'
+      TEXT_ON_SKIP: "No files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-file-content-junit.xml"
 
-    - NAME: 'Python Werks Test'
+    - NAME: "Python Werks Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_FILES
-      DIR: 'tests'
+      DIR: "tests"
       ENV_VARS:
-        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-werks-junit.xml --color=no"
+          PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-werks-junit.xml --color=no"
       COMMAND: "make test-werks-docker"
-      TEXT_ON_SKIP: 'No Werk files changed'
+      TEXT_ON_SKIP: "No Werk files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-werks-junit.xml"
 
-    - NAME: 'Python Werks validate'
+    - NAME: "Python Werks validate"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_FILES
-      DIR: ''
+      DIR: ""
       ENV_VARS:
-        CHANGED_WERK_FILES: "${CHANGED_WERK_FILES}"
+          CHANGED_WERK_FILES: "${CHANGED_WERK_FILES}"
       COMMAND: "./scripts/run-in-docker.sh ./scripts/run-pipenv run python -m cmk.werks.validate &> ${RESULTS}/werk_validate.txt"
-      TEXT_ON_SKIP: 'No Werk files changed'
+      TEXT_ON_SKIP: "No Werk files changed"
       RESULT_CHECK_FILE_PATTERN: "results/werk_validate.txt"
 
-    - NAME: 'Python Werks Commands'
+    - NAME: "Python Werks Commands"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_CODE_FILES
-      DIR: ''
+      DIR: ""
       COMMAND: |
-        scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks collect cmk . --substitute-branches $(git symbolic-ref --short HEAD):HEAD &> ${RESULTS}/werk_commands.txt
-        scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format md &>> ${RESULTS}/werk_commands.txt
-        scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format txt &>> ${RESULTS}/werk_commands.txt
-        scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks precompile .werks precompiled.json &>> ${RESULTS}/werk_commands.txt
-        scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks changelog CHANGELOG precompiled.json &>> ${RESULTS}/werk_commands.txt
-        # we don't have access to the fixup notes in ci, we might have to fetch them, or temporarily disable this check:
-        scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks mail . HEAD werk_mail --assume-no-notes-but=$(git log --before="$(date --date="4 weeks ago" --iso=seconds)" --format="%H" --max-count=1) &>> ${RESULTS}/werk_commands.txt
-        scripts/run-in-docker.sh scripts/run-pipenv run ./werk list &>> ${RESULTS}/werk_commands.txt
-      TEXT_ON_SKIP: 'No Werk code files changed'
+          scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks collect cmk . --substitute-branches $(git symbolic-ref --short HEAD):HEAD &> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format md &>> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format txt &>> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks precompile .werks precompiled.json &>> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks changelog CHANGELOG precompiled.json &>> ${RESULTS}/werk_commands.txt
+          # we don't have access to the fixup notes in ci, we might have to fetch them, or temporarily disable this check:
+          scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks mail . HEAD werk_mail --assume-no-notes-but=$(git log --before="$(date --date="4 weeks ago" --iso=seconds)" --format="%H" --max-count=1) &>> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-pipenv run ./werk list &>> ${RESULTS}/werk_commands.txt
+      TEXT_ON_SKIP: "No Werk code files changed"
       RESULT_CHECK_FILE_PATTERN: "results/werk_commands.txt"
 
-    - NAME: 'Python Pylint'
+    - NAME: "Python Pylint"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYLINT_RC_FILE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
-      DIR: 'tests'
+      DIR: "tests"
       ENV_VARS:
-        PYLINT_ARGS: "--jobs=10 --output-format=parseable"
+          PYLINT_ARGS: "--jobs=10 --output-format=parseable"
       COMMAND: "make test-pylint-docker &> ${RESULTS}/pylint.txt"
-      TEXT_ON_SKIP: 'Neither .pylintrc nor Python files changed'
+      TEXT_ON_SKIP: "Neither .pylintrc nor Python files changed"
       RESULT_CHECK_TYPE: "PYLINT"
       RESULT_CHECK_FILE_PATTERN: "results/pylint.txt"
 
-    - NAME: 'Python Bandit'
+    - NAME: "Python Bandit"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_CMK_WERKS_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
-      DIR: 'tests'
+      DIR: "tests"
       ENV_VARS:
-        BANDIT_OUTPUT_ARGS: "-f xml -o ${RESULTS}/bandit_results.xml"
+          BANDIT_OUTPUT_ARGS: "-f xml -o ${RESULTS}/bandit_results.xml"
       COMMAND: "make test-bandit-docker"
-      TEXT_ON_SKIP: 'No Python files changed'
+      TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/bandit_results.xml"
 
-    - NAME: 'Shell Format'
+    - NAME: "Shell Format"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SHELL_FILES
-      DIR: 'tests'
+      DIR: "tests"
       COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt"
       RESULT_CHECK_FILE_PATTERN: "results/shell-format.txt"
 
-    - NAME: 'Shellcheck'
+    - NAME: "Shellcheck"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SHELL_FILES
-      DIR: 'tests'
+      DIR: "tests"
       COMMAND: "make test-shellcheck-docker &> ${RESULTS}/shellcheck.txt"
-      TEXT_ON_SKIP: 'No Shell files changed'
+      TEXT_ON_SKIP: "No Shell files changed"
       RESULT_CHECK_TYPE: "SHELLCHECK"
       RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"
 
-    - NAME: 'Shell Unit Tests'
+    - NAME: "Shell Unit Tests"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SHELL_FILES
-      DIR: 'tests'
+      DIR: "tests"
       COMMAND: "make test-unit-shell-docker &> ${RESULTS}/shell-unit.txt"
-      TEXT_ON_SKIP: 'No Shell files changed'
+      TEXT_ON_SKIP: "No Shell files changed"
       RESULT_CHECK_TYPE: "SHELLUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/shell-unit.txt"
 
-    - NAME: 'Bazel Format'
+    - NAME: "Bazel Format"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_BAZEL_FILES
-      DIR: 'tests'
+      DIR: "tests"
       COMMAND: "make --quiet test-format-bazel-docker &> ${RESULTS}/bazel-prettier.txt"
-      TEXT_ON_SKIP: 'No Bazel files changed'
+      TEXT_ON_SKIP: "No Bazel files changed"
       RESULT_CHECK_TYPE: "BAZELFORMAT"
       RESULT_CHECK_FILE_PATTERN: "results/bazel-prettier.txt"
 
-    - NAME: 'Bazel Lint'
+    - NAME: "Bazel Lint"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_BAZEL_FILES
-      DIR: 'tests'
+      DIR: "tests"
       COMMAND: "make --quiet test-lint-bazel-docker &> ${RESULTS}/bazel-lint.txt"
-      TEXT_ON_SKIP: 'No Bazel files changed'
+      TEXT_ON_SKIP: "No Bazel files changed"
       RESULT_CHECK_TYPE: "BAZELLINT"
       RESULT_CHECK_FILE_PATTERN: "results/bazel-lint.txt"
 
-    - NAME: 'Groovy Lint'
+    - NAME: "Groovy Lint"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_GROOVY_FILE
-      DIR: 'tests'
+      DIR: "tests"
       ENV_VARS:
-        GROOVYLINT_OUTPUT_ARGS: "-o ${RESULTS}/groovy-lint.xml"
+          GROOVYLINT_OUTPUT_ARGS: "-o ${RESULTS}/groovy-lint.xml"
       COMMAND: "make --quiet test-lint-groovy-docker"
-      TEXT_ON_SKIP: 'No Groovy files changed'
+      TEXT_ON_SKIP: "No Groovy files changed"
       RESULT_CHECK_TYPE: "GROOVY"
       RESULT_CHECK_FILE_PATTERN: "results/groovy-lint.xml"
 
-    - NAME: 'Agent Plugin Unit Tests'
+    - NAME: "Agent Plugin Unit Tests"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_AGENT_PLUGINS,CHANGED_AGENT_PLUGINS_TESTS,CHANGED_TESTS_MAKEFILE
-      DIR: 'tests'
+      DIR: "tests"
       COMMAND: "make test-agent-plugin-docker > ${RESULTS}/agent-plugin-unit-junit.txt"
-      TEXT_ON_SKIP: 'No agent files changed'
+      TEXT_ON_SKIP: "No agent files changed"
       RESULT_CHECK_FILE_PATTERN: "results/agent-plugin-unit-junit.txt"
 
-    - NAME: 'Software Documentation Generation'
+    - NAME: "Software Documentation Generation"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SW_DOC_FILES,CHANGED_MAKEFILE
       COMMAND: "make sw-documentation-docker &> ${RESULTS}/sw-documentation.txt"
-      TEXT_ON_SKIP: 'No SW Documentation files changed'
+      TEXT_ON_SKIP: "No SW Documentation files changed"
       RESULT_CHECK_FILE_PATTERN: "results/sw-documentation.txt"
 
     ########## packages ########################################################
 
-    - NAME: 'Package check-cert'
+    - NAME: "Package check-cert"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_CERT_FILES
-      DIR: 'packages/check-cert'
+      DIR: "packages/check-cert"
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all --features=vendored &> ${RESULTS}/check-cert.txt"
-      TEXT_ON_SKIP: 'No check-cert files changed'
+      TEXT_ON_SKIP: "No check-cert files changed"
       RESULT_CHECK_FILE_PATTERN: "results/check-cert.txt"
 
-    - NAME: 'Package check-http'
+    - NAME: "Package check-http"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_HTTP_FILES
-      DIR: 'packages/check-http'
+      DIR: "packages/check-http"
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all --features=reqwest/native-tls-vendored &> ${RESULTS}/check-http.txt"
-      TEXT_ON_SKIP: 'No check-http files changed'
+      TEXT_ON_SKIP: "No check-http files changed"
       RESULT_CHECK_FILE_PATTERN: "results/check-http.txt"
 
     # NOTE: This has to come *before* the neb & cmc packages, as they depend on
@@ -385,144 +385,144 @@ STAGES:
     # invocations, leading to IWYU/clang-tidy/... not being called on enough
     # files. The ordering is a bit ad hoc, perhaps we should keep the list of
     # steps here in dependency order.
-    - NAME: 'Package livestatus'
+    - NAME: "Package livestatus"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
-      DIR: 'packages/livestatus'
+      DIR: "packages/livestatus"
       COMMAND: >
-        ../../scripts/run-in-docker.sh
-        "bazel test --config=ci //packages/livestatus:all
-        && bazel build --config=ci //packages/livestatus:all
-        && bazel run --config=ci //:refresh_compile_commands
-        && ./run --check-format"
-        &> ${RESULTS}/livestatus.txt
-      TEXT_ON_SKIP: 'No Livestatus files changed'
+          ../../scripts/run-in-docker.sh
+          "bazel test --config=ci //packages/livestatus:all
+          && bazel build --config=ci //packages/livestatus:all
+          && bazel run --config=ci //:refresh_compile_commands
+          && ./run --check-format"
+          &> ${RESULTS}/livestatus.txt
+      TEXT_ON_SKIP: "No Livestatus files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
 
-    - NAME: 'Package cmc'
+    - NAME: "Package cmc"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
-      DIR: 'packages/cmc'
+      DIR: "packages/cmc"
       COMMAND: >
-        ../../scripts/run-in-docker.sh
-        "bazel test --config=ci //packages/cmc:all
-        && bazel build --config=ci //packages/cmc:all
-        && bazel run --config=ci //:refresh_compile_commands
-        && ./run --check-format"
-        &> ${RESULTS}/cmc.txt
-      TEXT_ON_SKIP: 'No cmc files changed'
+          ../../scripts/run-in-docker.sh
+          "bazel test --config=ci //packages/cmc:all
+          && bazel build --config=ci //packages/cmc:all
+          && bazel run --config=ci //:refresh_compile_commands
+          && ./run --check-format"
+          &> ${RESULTS}/cmc.txt
+      TEXT_ON_SKIP: "No cmc files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/cmc.txt"
 
-    - NAME: 'Package cmk-agent-based'
+    - NAME: "Package cmk-agent-based"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_BASED_FILES
-      DIR: 'packages/cmk-agent-based'
+      DIR: "packages/cmk-agent-based"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-agent-based.txt"
-      TEXT_ON_SKIP: 'No cmk-agent-based files changed'
+      TEXT_ON_SKIP: "No cmk-agent-based files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-based.txt"
 
-    - NAME: 'Package cmk-agent-ctl'
+    - NAME: "Package cmk-agent-ctl"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_CTL_FILES
-      DIR: 'packages/cmk-agent-ctl'
+      DIR: "packages/cmk-agent-ctl"
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/cmk-agent-ctl.txt"
-      TEXT_ON_SKIP: 'No cmk-agent-ctl files changed'
+      TEXT_ON_SKIP: "No cmk-agent-ctl files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-ctl.txt"
 
-    - NAME: 'Package cmk-agent-receiver'
+    - NAME: "Package cmk-agent-receiver"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_RECEIVER_FILES
-      DIR: 'packages/cmk-agent-receiver'
+      DIR: "packages/cmk-agent-receiver"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-agent-receiver.txt"
-      TEXT_ON_SKIP: 'No cmk-agent-receiver files changed'
+      TEXT_ON_SKIP: "No cmk-agent-receiver files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-receiver.txt"
 
-    - NAME: 'Package cmk-graphing'
+    - NAME: "Package cmk-graphing"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_GRAPHING_FILES
-      DIR: 'packages/cmk-graphing'
+      DIR: "packages/cmk-graphing"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-graphing.txt"
-      TEXT_ON_SKIP: 'No cmk-graphing files changed'
+      TEXT_ON_SKIP: "No cmk-graphing files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-graphing.txt"
 
-    - NAME: 'Package cmk-livestatus-client'
+    - NAME: "Package cmk-livestatus-client"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_LIVESTATUS_CLIENT_FILES
-      DIR: 'packages/cmk-livestatus-client'
+      DIR: "packages/cmk-livestatus-client"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-livestatus-client.txt"
-      TEXT_ON_SKIP: 'No cmk-livestatus-client files changed'
+      TEXT_ON_SKIP: "No cmk-livestatus-client files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-livestatus-client.txt"
 
-    - NAME: 'Package cmk-mkp-tool'
+    - NAME: "Package cmk-mkp-tool"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_MKP_TOOL_FILES
-      DIR: 'packages/cmk-mkp-tool'
+      DIR: "packages/cmk-mkp-tool"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mkp-tool.txt"
-      TEXT_ON_SKIP: 'No cmk-mkp-tool files changed'
+      TEXT_ON_SKIP: "No cmk-mkp-tool files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
 
-    - NAME: 'Package cmk-rulesets'
+    - NAME: "Package cmk-rulesets"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_RULESETS_FILES
-      DIR: 'packages/cmk-rulesets'
+      DIR: "packages/cmk-rulesets"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-rulesets.txt"
-      TEXT_ON_SKIP: 'No cmk-rulesets files changed'
+      TEXT_ON_SKIP: "No cmk-rulesets files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-rulesets.txt"
 
-    - NAME: 'Package cmk-server-side-calls'
+    - NAME: "Package cmk-server-side-calls"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_SERVER_SIDE_CALLS_FILES
-      DIR: 'packages/cmk-server-side-calls'
+      DIR: "packages/cmk-server-side-calls"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-server-side-calls.txt"
-      TEXT_ON_SKIP: 'No cmk-server-side-calls files changed'
+      TEXT_ON_SKIP: "No cmk-server-side-calls files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-server-side-calls.txt"
 
-    - NAME: 'Package cmk-werks'
+    - NAME: "Package cmk-werks"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_WERKS_FILES
-      DIR: 'packages/cmk-werks'
+      DIR: "packages/cmk-werks"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-werks.txt"
-      TEXT_ON_SKIP: 'No cmk-werks package files changed'
+      TEXT_ON_SKIP: "No cmk-werks package files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-werks.txt"
 
-    - NAME: 'Package cmk-frontend-vue'
+    - NAME: "Package cmk-frontend-vue"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES
-      DIR: 'packages/cmk-frontend-vue'
+      DIR: "packages/cmk-frontend-vue"
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/cmk-frontend-vue.txt"
-      TEXT_ON_SKIP: 'No cmk-frontend-vue files changed'
+      TEXT_ON_SKIP: "No cmk-frontend-vue files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend-vue.txt"
 
-    - NAME: 'Package mk-sql'
+    - NAME: "Package mk-sql"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_SQL_FILES
       SEC_VAR_LIST:
-        - 'CI_TEST_SQL_DB_ENDPOINT'
-      DIR: 'packages/mk-sql'
+          - "CI_TEST_SQL_DB_ENDPOINT"
+      DIR: "packages/mk-sql"
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/mk-sql.txt"
-      TEXT_ON_SKIP: 'No mk-sql files changed'
+      TEXT_ON_SKIP: "No mk-sql files changed"
       RESULT_CHECK_FILE_PATTERN: "results/mk-sql.txt"
 
-    - NAME: 'Package neb'
+    - NAME: "Package neb"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
-      DIR: 'packages/neb'
+      DIR: "packages/neb"
       COMMAND: >
-        ../../scripts/run-in-docker.sh
-        "bazel test --config=ci //packages/neb:all
-        && bazel build --config=ci //packages/neb:all
-        && bazel run --config=ci //:refresh_compile_commands
-        && ./run --check-format"
-        &> ${RESULTS}/neb.txt
-      TEXT_ON_SKIP: 'No neb files changed'
+          ../../scripts/run-in-docker.sh
+          "bazel test --config=ci //packages/neb:all
+          && bazel build --config=ci //packages/neb:all
+          && bazel run --config=ci //:refresh_compile_commands
+          && ./run --check-format"
+          &> ${RESULTS}/neb.txt
+      TEXT_ON_SKIP: "No neb files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/neb.txt"
 
-    - NAME: 'Package unixcat'
+    - NAME: "Package unixcat"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_UNIXCAT_FILES
-      DIR: 'packages/unixcat'
+      DIR: "packages/unixcat"
       COMMAND: >
-        ../../scripts/run-in-docker.sh
-        "bazel test --config=ci //packages/unixcat:all
-        && bazel build --config=ci //packages/unixcat:all
-        && bazel run --config=ci //:refresh_compile_commands
-        && ./run --check-format"
-        &> ${RESULTS}/unixcat.txt
-      TEXT_ON_SKIP: 'No unixcat files changed'
+          ../../scripts/run-in-docker.sh
+          "bazel test --config=ci //packages/unixcat:all
+          && bazel build --config=ci //packages/unixcat:all
+          && bazel run --config=ci //:refresh_compile_commands
+          && ./run --check-format"
+          &> ${RESULTS}/unixcat.txt
+      TEXT_ON_SKIP: "No unixcat files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/unixcat.txt"
 
-    - NAME: 'Package cmk-frontend'
+    - NAME: "Package cmk-frontend"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_FRONTEND_FILES
-      DIR: 'packages/cmk-frontend'
+      DIR: "packages/cmk-frontend"
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/cmk-frontend.txt"
-      TEXT_ON_SKIP: 'No cmk-frontend files changed'
+      TEXT_ON_SKIP: "No cmk-frontend files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend.txt"

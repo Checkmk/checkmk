@@ -437,17 +437,17 @@ def setup_site(site: Site, dump_path: str) -> None:
 
 
 @contextmanager
-def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterator:
-    logger.info('Creating host "%s"...', host_name)
+def setup_source_host(site: Site, source_host_name: str, skip_cleanup: bool = False) -> Iterator:
+    logger.info('Creating host "%s"...', source_host_name)
     host_attributes = {
         "ipaddress": "127.0.0.1",
-        "tag_agent": ("no-agent" if "snmp" in host_name else "cmk-agent"),
+        "tag_agent": ("no-agent" if "snmp" in source_host_name else "cmk-agent"),
     }
-    if "snmp" in host_name:
+    if "snmp" in source_host_name:
         host_attributes["tag_snmp_ds"] = "snmp-v2"
     site.openapi.create_host(
-        hostname=host_name,
-        folder="/snmp" if "snmp" in host_name else "/agent",
+        hostname=source_host_name,
+        folder="/snmp" if "snmp" in source_host_name else "/agent",
         attributes=host_attributes,
         bake_agent=False,
     )
@@ -456,13 +456,13 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
     site.activate_changes_and_wait_for_core_reload()
 
     logger.info("Running service discovery...")
-    site.openapi.discover_services_and_wait_for_completion(host_name)
+    site.openapi.discover_services_and_wait_for_completion(source_host_name)
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
 
     if config.piggyback:
-        _wait_for_piggyback_hosts(site, main_host=host_name)
+        _wait_for_piggyback_hosts(site, source_host=source_host_name)
         count = 0
         while (n_pending_changes := len(site.openapi.pending_changes([site.id]))) > 0 and count < 3:
             site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
@@ -497,8 +497,8 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
         yield
     finally:
         if not (config.skip_cleanup or skip_cleanup):
-            logger.info('Deleting host "%s"...', host_name)
-            site.openapi.delete_host(host_name)
+            logger.info('Deleting host "%s"...', source_host_name)
+            site.openapi.delete_host(source_host_name)
 
 
 def setup_hosts(site: Site, host_names: list[str]) -> None:
@@ -576,15 +576,15 @@ def cleanup_hosts(site: Site, host_names: list[str]) -> None:
     site.activate_changes_and_wait_for_core_reload()
 
 
-def _get_piggyback_hosts(site: Site, main_host: str) -> list[str]:
-    return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != main_host]
+def _get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
+    return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != source_host]
 
 
 def _wait_for_piggyback_hosts(
-    site: Site, main_host: str, max_count: int = 10, sleep_time: float = 1, strict: bool = True
+    site: Site, source_host: str, max_count: int = 10, sleep_time: float = 1, strict: bool = True
 ) -> None:
     count = 0
-    while not (piggyback_hosts := _get_piggyback_hosts(site, main_host)) and count < max_count:
+    while not (piggyback_hosts := _get_piggyback_hosts(site, source_host)) and count < max_count:
         logger.info("Waiting for piggyback hosts to be created...")
         time.sleep(sleep_time)
         count += 1

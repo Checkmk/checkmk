@@ -9,7 +9,7 @@ from tests.testlib.utils import get_services_with_status
 
 from tests.plugins_integration.checks import (  # pylint: disable=ungrouped-imports
     get_host_names,
-    setup_host,
+    setup_source_host,
 )
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ def test_plugin_update(
     base_data = {}
     base_data_status_0 = {}
     for host_name in (_ for _ in get_host_names() if _ not in SKIPPED_DUMPS):
-        with setup_host(test_site_update, host_name, skip_cleanup=True):
+        with setup_source_host(test_site_update, host_name, skip_cleanup=True):
             base_data[host_name] = test_site_update.get_host_services(host_name)
 
             for skipped_check in SKIPPED_CHECKS:

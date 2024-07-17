@@ -15,7 +15,7 @@ from tests.plugins_integration.checks import (
     process_check_output,
     read_cmk_dump,
     read_disk_dump,
-    setup_host,
+    setup_source_host,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,23 +28,23 @@ HOSTNAMES = [
 ]
 
 
-@pytest.mark.parametrize("host_name", HOSTNAMES)
+@pytest.mark.parametrize("source_host_name", HOSTNAMES)
 def test_plugin(
     test_site: Site,
-    host_name: str,
+    source_host_name: str,
     dcd_connector: None,
     tmp_path_factory: pytest.TempPathFactory,
     pytestconfig: pytest.Config,
 ) -> None:
     with (
-        setup_host(test_site, host_name)
+        setup_source_host(test_site, source_host_name)
         if not pytestconfig.getoption(name="--bulk-mode")
         else nullcontext()
     ):
-        disk_dump = read_disk_dump(host_name)
+        disk_dump = read_disk_dump(source_host_name)
         dump_type = "snmp" if disk_dump[0] == "." else "agent"
         if dump_type == "agent":
-            cmk_dump = read_cmk_dump(host_name, test_site, "agent")
+            cmk_dump = read_cmk_dump(source_host_name, test_site, "agent")
             assert disk_dump == cmk_dump != "", "Raw data mismatch!"
 
         # perform assertion over check data

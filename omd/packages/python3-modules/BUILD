@@ -108,6 +108,7 @@ genrule(
             "rulesets",
             "server-side-calls",
             "werks",
+            "trace",
             "livestatus-client",
             "netapp-ontap",
         ]

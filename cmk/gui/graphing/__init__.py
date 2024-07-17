@@ -21,7 +21,6 @@ from ._graph_specification import (
 from ._graph_templates import TemplateGraphSpecification
 from ._perfometer import (
     get_first_matching_perfometer,
-    LogarithmicPerfometerSpec,
     MetricometerRendererLegacyLogarithmic,
     parse_perfometer,
     perfometer_info,
@@ -53,7 +52,6 @@ def register(
 __all__ = [
     "register",
     "get_first_matching_perfometer",
-    "LogarithmicPerfometerSpec",
     "MetricometerRendererLegacyLogarithmic",
     "parse_perfometer",
     "perfometer_info",

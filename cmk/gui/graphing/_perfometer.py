@@ -40,7 +40,7 @@ class _LinearPerfometerSpec(TypedDict):
     label: NotRequired[tuple[str, str] | None]  # (expression, unit)
 
 
-class LogarithmicPerfometerSpec(TypedDict):
+class _LogarithmicPerfometerSpec(TypedDict):
     type: Literal["logarithmic"]
     metric: str
     half_value: int | float
@@ -49,17 +49,20 @@ class LogarithmicPerfometerSpec(TypedDict):
 
 class _DualPerfometerSpec(TypedDict):
     type: Literal["dual"]
-    perfometers: Sequence[_LinearPerfometerSpec | LogarithmicPerfometerSpec]
+    perfometers: Sequence[_LinearPerfometerSpec | _LogarithmicPerfometerSpec]
 
 
 class _StackedPerfometerSpec(TypedDict):
     type: Literal["stacked"]
-    perfometers: Sequence[_LinearPerfometerSpec | LogarithmicPerfometerSpec]
+    perfometers: Sequence[_LinearPerfometerSpec | _LogarithmicPerfometerSpec]
 
 
 LegacyPerfometer = tuple[str, Any]
 PerfometerSpec: TypeAlias = (
-    _LinearPerfometerSpec | LogarithmicPerfometerSpec | _DualPerfometerSpec | _StackedPerfometerSpec
+    _LinearPerfometerSpec
+    | _LogarithmicPerfometerSpec
+    | _DualPerfometerSpec
+    | _StackedPerfometerSpec
 )
 perfometer_info: list[LegacyPerfometer | PerfometerSpec] = []
 MetricRendererStack = Sequence[Sequence[tuple[int | float, str]]]
@@ -67,7 +70,7 @@ MetricRendererStack = Sequence[Sequence[tuple[int | float, str]]]
 
 def _parse_sub_perfometer(
     perfometer: LegacyPerfometer | PerfometerSpec,
-) -> _LinearPerfometerSpec | LogarithmicPerfometerSpec:
+) -> _LinearPerfometerSpec | _LogarithmicPerfometerSpec:
     parsed = _parse_perfometer(perfometer)
     if parsed["type"] == "linear" or parsed["type"] == "logarithmic":
         return parsed
@@ -699,7 +702,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
 class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
     def __init__(
         self,
-        perfometer: LogarithmicPerfometerSpec,
+        perfometer: _LogarithmicPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
         if "metric" not in perfometer:

@@ -3,11 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterable, Literal, Mapping, NewType, NotRequired, TypedDict
+from typing import (
+    Callable,
+    get_args,
+    Iterable,
+    Literal,
+    Mapping,
+    NewType,
+    NotRequired,
+    Sequence,
+    TypedDict,
+    TypeVar,
+)
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.password_store import Password
+from cmk.utils.rulesets.definition import RuleGroupType
 
 from cmk.gui.watolib.hosts_and_folders import Folder, Host
 from cmk.gui.watolib.passwords import load_passwords
@@ -15,92 +28,95 @@ from cmk.gui.watolib.rulesets import AllRulesets, Rule
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
-from cmk.ccc.exceptions import MKGeneralException
-
+_T = TypeVar("_T")
 BundleId = NewType("BundleId", str)
 IDENT_FINDER = Callable[[GlobalIdent | None], BundleId | None]
+ENTITIES = Literal["host", "rule", "password", "dcd"]
+ALL_ENTITIES: set[ENTITIES] = set(get_args(ENTITIES))
+BUNDLE_DOMAINS: Mapping[RuleGroupType, set[ENTITIES]] = {
+    RuleGroupType.SPECIAL_AGENTS: {"host", "rule", "password", "dcd"}
+}
 
 
-class SpecialAgentBundleReferences(TypedDict):
+def _get_affected_entities(bundle_group: str) -> set[ENTITIES]:
+    rule_group_type = RuleGroupType(bundle_group.split(":", maxsplit=1)[0])
+    return BUNDLE_DOMAINS.get(rule_group_type, ALL_ENTITIES)
+
+
+@dataclass
+class BundleReferences:
     # TODO: introduce dcd
-    host: Host
-    password: tuple[str, Password] | None  # PasswordId, Password
-    special_agent_rule: Rule
+    hosts: Sequence[Host] | None = None
+    passwords: Sequence[tuple[str, Password]] | None = None  # PasswordId, Password
+    rules: Sequence[Rule] | None = None
 
 
-def identify_special_agent_bundle_references(
+def identify_bundle_references(
     bundle_group: str, bundle_ids: set[BundleId]
-) -> Mapping[BundleId, SpecialAgentBundleReferences]:
-    """Identify the configuration references of the special agent based configuration bundles.
-
-    Assumptions currently made (this could change in the future if necessary):
-        * one bundle references exactly one host, one special agent rule and optionally one
-        password and dcd config
-        * it is therefore a config error if multiple entities of the same config type are
-        referenced by the same bundle
-    """
-    bundles: dict[BundleId, SpecialAgentBundleReferences] = {}
+) -> Mapping[BundleId, BundleReferences]:
+    """Identify the configuration references of the configuration bundles."""
     bundle_id_finder = prepare_bundle_id_finder(PROGRAM_ID_QUICK_SETUP, bundle_ids)
-    bundle_rule_ids = dict(
-        collect_rules(
-            finder=bundle_id_finder,
-            rules=AllRulesets.load_all_rulesets().get(bundle_group).get_rules(),
+    affected_entities = _get_affected_entities(bundle_group)
+    bundle_rule_ids = (
+        _collect_many(
+            collect_rules(
+                finder=bundle_id_finder,
+                rules=AllRulesets.load_all_rulesets().get(bundle_group).get_rules(),
+            )
         )
+        if "rule" in affected_entities
+        else {}
     )
-    bundle_password_ids = dict(
-        collect_passwords(finder=bundle_id_finder, passwords=load_passwords())
+    bundle_password_ids = (
+        _collect_many(collect_passwords(finder=bundle_id_finder, passwords=load_passwords()))
+        if "password" in affected_entities
+        else {}
     )
+    bundle_hosts = (
+        _collect_many(collect_hosts(finder=bundle_id_finder, hosts=Host.all().values()))
+        if "host" in affected_entities
+        else {}
+    )
+    return {
+        bundle_id: BundleReferences(
+            hosts=bundle_hosts.get(bundle_id),
+            passwords=bundle_password_ids.get(bundle_id),
+            rules=bundle_rule_ids.get(bundle_id),
+        )
+        for bundle_id in bundle_ids
+    }
 
-    for bundle_id, host in collect_hosts(finder=bundle_id_finder, hosts=Host.all().values()):
-        bundles[bundle_id] = {
-            "host": host,
-            "password": bundle_password_ids.get(bundle_id),
-            "special_agent_rule": bundle_rule_ids[bundle_id],
-        }
 
-    if len(bundles) != len(bundle_ids):
-        raise MKGeneralException("Not all bundle ids could be resolved")
+def _collect_many(values: Iterable[tuple[BundleId, _T]]) -> Mapping[BundleId, Sequence[_T]]:
+    mapping: dict[BundleId, list[_T]] = {}
+    for bundle_id, value in values:
+        if bundle_id in mapping:
+            mapping[bundle_id].append(value)
+        else:
+            mapping[bundle_id] = [value]
 
-    return bundles
+    return mapping
 
 
 def collect_hosts(finder: IDENT_FINDER, hosts: Iterable[Host]) -> Iterable[tuple[BundleId, Host]]:
-    seen_ids: set[BundleId] = set()
     for host in hosts:
         if bundle_id := finder(host.locked_by()):
-            if bundle_id in seen_ids:
-                raise MKGeneralException(
-                    f"One bundle should reference only one host, but bundle {bundle_id} references multiple hosts"
-                )
-            seen_ids.add(bundle_id)
             yield bundle_id, host
 
 
 def collect_passwords(
     finder: IDENT_FINDER, passwords: Mapping[str, Password]
 ) -> Iterable[tuple[BundleId, tuple[str, Password]]]:
-    seen_ids: set[BundleId] = set()
     for password_id, password in passwords.items():
         if bundle_id := finder(password.get("locked_by")):
-            if bundle_id in seen_ids:
-                raise MKGeneralException(
-                    f"One bundle should reference only one password, but bundle {bundle_id} references multiple passwords"
-                )
-            seen_ids.add(bundle_id)
             yield bundle_id, (password_id, password)
 
 
 def collect_rules(
     finder: IDENT_FINDER, rules: Iterable[tuple[Folder, int, Rule]]
 ) -> Iterable[tuple[BundleId, Rule]]:
-    seen_ids: set[BundleId] = set()
     for _folder, _idx, rule in rules:
         if bundle_id := finder(rule.locked_by):
-            if bundle_id in seen_ids:
-                raise MKGeneralException(
-                    f"One bundle should reference only one rule, but bundle {bundle_id} references multiple rules"
-                )
-            seen_ids.add(bundle_id)
             yield bundle_id, rule
 
 

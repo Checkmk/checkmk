@@ -40,17 +40,18 @@ def generate_sql_command(
     params: SQLParams,
     host_config: HostConfig,
 ) -> Iterator[ActiveCheckCommand]:  # pylint: disable=too-many-branches
-    args: list[str | Secret] = []
-
-    if params.host:
-        args += [f"--hostname={replace_macros(params.host, host_config.macros)}"]
-    else:
-        args += [f"--hostname={host_config.primary_ip_config.address}"]
-
-    args.append(f"--dbms={params.dbms}")
-    args.append(f"--name={replace_macros(params.name, host_config.macros)}")
-    args.append(f"--user={replace_macros(params.user, host_config.macros)}")
-    args.append(params.password.unsafe("--password=%s"))
+    args: list[str | Secret] = [
+        (
+            f"--hostname={replace_macros(params.host, host_config.macros)}"
+            if params.host
+            else f"--hostname={host_config.primary_ip_config.address}"
+        ),
+        f"--dbms={params.dbms}",
+        f"--name={replace_macros(params.name, host_config.macros)}",
+        f"--user={replace_macros(params.user, host_config.macros)}",
+        "--password-reference",
+        params.password,
+    ]
 
     match params.port:
         case "explicit", int(value):

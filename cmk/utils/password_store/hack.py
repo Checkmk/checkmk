@@ -77,7 +77,7 @@ HACK_CHECKS = {
     "notify_count": False,  # has no secret
     "sftp": True,  # TODO
     "smtp": True,
-    "sql": True,
+    "sql": False,
     "ssh": False,  # has no secret
     "tcp": False,  # has no secret
     "traceroute": False,  # has no secret

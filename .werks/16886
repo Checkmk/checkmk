@@ -1,0 +1,15 @@
+Title: ruleset ewon warning about "Invalid check parameter: Undefined key 'device'.." in UI
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1721369292
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+The `ewon` ruleset didn't know a `device` key, which was created during recovery, resulting in
+a warning displayed with the rendered rule in UI saying
+
+    "Invalid check parameter: Undefined key 'device'..."
+
+This change marks `device` as ignored key, satisfying the rule validity check.

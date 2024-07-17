@@ -18,21 +18,21 @@ else:
     import agents.plugins.mk_filestats as mk_filestats
 
 
-MYLAZYFILE = mk_filestats.FileStat.from_path(__file__)
+MYLAZYFILE = mk_filestats.FileStat.from_path(__file__, __file__)
 # Overwrite the path to be reproducable...
-MYLAZYFILE.writeable_path = mk_filestats.ensure_str("test_mk_filestats.py")
+MYLAZYFILE.file_path = mk_filestats.ensure_str("test_mk_filestats.py")
 MYLAZYFILE.regex_matchable_path = mk_filestats.ensure_str("test_mk_filestats.py")
 
 
 def test_lazy_file() -> None:
-    lfile = mk_filestats.FileStat.from_path("/bla/no such file.txt")
-    assert lfile.writeable_path == "/bla/no such file.txt"
+    lfile = mk_filestats.FileStat.from_path("/bla/no such file.txt", "/bla/no such file.txt")
+    assert lfile.file_path == "/bla/no such file.txt"
     assert lfile.size is None
     assert lfile.age is None
     assert lfile.stat_status == "file vanished"
 
-    lfile = mk_filestats.FileStat.from_path(__file__)  # this should exist...
-    assert lfile.writeable_path == __file__
+    lfile = mk_filestats.FileStat.from_path(__file__, __file__)  # this should exist...
+    assert lfile.file_path == __file__
     assert lfile.size == os.stat(__file__).st_size
     assert lfile.stat_status == "ok"
     assert isinstance(lfile.age, int)
@@ -96,8 +96,7 @@ def test_numeric_filter_raises(invalid_arg) -> None:  # type:ignore[no-untyped-d
 def test_path_filter(reg_pat, paths, results) -> None:  # type:ignore[no-untyped-def]
     path_filter = mk_filestats.RegexFilter(reg_pat)
     for path, result in zip(paths, results):
-        lazy_file = mk_filestats.FileStat.from_path(path)
-        assert result == path_filter.matches(lazy_file)
+        assert result == path_filter.matches(mk_filestats._sanitize_path(path))
 
 
 @pytest.mark.parametrize(
@@ -323,8 +322,7 @@ def test_grouping_multiple_groups(
         assert section_name_arg == expected_results_list[results_idx][0]
         for files_idx, single_file in enumerate(files):
             assert (
-                single_file.writeable_path
-                == expected_results_list[results_idx][1][files_idx].writeable_path
+                single_file.file_path == expected_results_list[results_idx][1][files_idx].file_path
             )
 
 

@@ -1,0 +1,9 @@
+Title: mk_filestats: Apply regex filters while iterating, not afterwards
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1721215996
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+

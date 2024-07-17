@@ -183,7 +183,7 @@ def evaluate_quantity(
                 _("Warning of ") + metric["title"],
                 metric["unit"],
                 "#ffff00",
-                translated_metrics[quantity.metric_name]["scalar"]["warn"],
+                metric["scalar"]["warn"],
             )
         case metrics.CriticalOf():
             metric = translated_metrics[quantity.metric_name]
@@ -191,7 +191,7 @@ def evaluate_quantity(
                 _("Critical of ") + metric["title"],
                 metric["unit"],
                 "#ff0000",
-                translated_metrics[quantity.metric_name]["scalar"]["crit"],
+                metric["scalar"]["crit"],
             )
         case metrics.MinimumOf():
             metric = translated_metrics[quantity.metric_name]
@@ -199,7 +199,7 @@ def evaluate_quantity(
                 _("Minimum of ") + metric["title"],
                 metric["unit"],
                 parse_color(quantity.color),
-                translated_metrics[quantity.metric_name]["scalar"]["min"],
+                metric["scalar"]["min"],
             )
         case metrics.MaximumOf():
             metric = translated_metrics[quantity.metric_name]
@@ -207,7 +207,7 @@ def evaluate_quantity(
                 _("Maximum of ") + metric["title"],
                 metric["unit"],
                 parse_color(quantity.color),
-                translated_metrics[quantity.metric_name]["scalar"]["max"],
+                metric["scalar"]["max"],
             )
         case metrics.Sum():
             evaluated_first_summand = evaluate_quantity(quantity.summands[0], translated_metrics)

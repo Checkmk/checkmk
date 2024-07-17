@@ -471,7 +471,7 @@ def setup_source_host(site: Site, source_host_name: str, skip_cleanup: bool = Fa
             count += 1
         assert n_pending_changes == 0, "Pending changes found!"
 
-    hostnames = [_.get("id") for _ in site.openapi.get_hosts()]  # including piggyback hosts
+    hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
     for hostname in hostnames:
         logger.info("Scheduling checks & checking for pending services...")
         pending_checks = []

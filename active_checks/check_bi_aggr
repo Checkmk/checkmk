@@ -18,11 +18,9 @@ import requests
 import urllib3
 from requests_kerberos import HTTPKerberosAuth  # type: ignore[import-untyped]
 
-import cmk.utils.password_store
+from cmk.utils import password_store
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.user import UserId
-
-cmk.utils.password_store.replace_passwords()
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -57,11 +55,15 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
             "User ID of an automation user which is permitted to see all contents of the aggregation."
         ),
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--secret-reference",
+        help="Password store reference of the automation secret of the user.",
+    )
+    group.add_argument(
         "-s",
         "--secret",
         metavar="SECRET",
-        required=False,  # depends on --use-automation-user
         help="Automation secret of the user.",
     )
     parser.add_argument(
@@ -136,6 +138,10 @@ def _make_credentials(args: argparse.Namespace) -> tuple[str, str]:
     if (user := args.user_name) is None:
         sys.stderr.write("Please provide a valid user name.\n")
         sys.exit(1)
+
+    if (ref := args.secret_reference) is not None:
+        pw_id, pw_file = ref.split(":", 1)
+        return user, password_store.lookup(Path(pw_file), pw_id)
 
     if args.secret is not None:
         return user, args.secret

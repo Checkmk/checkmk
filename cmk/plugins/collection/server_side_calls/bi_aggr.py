@@ -48,12 +48,7 @@ def _check_bi_aggr_services(
         case None:
             args.append("--use-automation-user")
         case Credentials() as cred:
-            args += [
-                "-u",
-                cred.user,
-                "-s",
-                cred.secret.unsafe(),
-            ]
+            args += ["-u", cred.user, "--secret-reference", cred.secret]
 
     if params.optional.auth_mode:
         args += ["-m", params.optional.auth_mode]

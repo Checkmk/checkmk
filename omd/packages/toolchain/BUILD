@@ -3,7 +3,7 @@ load(":cc_toolchain_config.bzl", "cc_toolchain_config")
 
 filegroup(name = "empty")
 
-local_tool_paths = {
+linux_gcc13_tool_paths = {
     "ar": "/usr/bin/gcc-ar-13",
     "cpp": "/usr/bin/cpp-13",
     "gcc": "/usr/bin/gcc-13",
@@ -16,7 +16,7 @@ local_tool_paths = {
     "objcopy": "/usr/bin/objcopy",
 }
 
-local_cxx_builtin_include_directories = [
+linux_gcc13_cxx_builtin_include_directories = [
     "/usr/lib/gcc/x86_64-linux-gnu/13/include",
     "/usr/lib/gcc/x86_64-linux-gnu/13/include-fixed",
     "/include",
@@ -46,7 +46,7 @@ ci_cxx_builtin_include_directories = [
 ]
 
 TOOLCHAINS = {
-    "local": (local_cxx_builtin_include_directories, local_tool_paths),
+    "linux_gcc13": (linux_gcc13_cxx_builtin_include_directories, linux_gcc13_tool_paths),
     "ci": (ci_cxx_builtin_include_directories, ci_tool_paths),
 }
 

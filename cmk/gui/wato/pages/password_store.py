@@ -5,7 +5,7 @@
 import copy
 from collections.abc import Collection
 
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
+from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
 from cmk.utils.password_store import Password
 
 from cmk.gui.exceptions import MKUserError
@@ -170,17 +170,17 @@ class ModeEditPassword(SimpleEditMode[Password]):
         return ModePasswords
 
     def __init__(self) -> None:
-        self._clone_source: Password | None = None
+        self._orig_locked_by: GlobalIdent | None = None
         super().__init__(
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )
 
     def _clone_entry(self, entry: Password) -> Password:
-        self._clone_source = entry
         clone = copy.deepcopy(entry)
-        # remove the lock when cloning
-        clone.pop("locked_by", None)
+        # remove the source association when cloning
+        # store it for later, so that we can display a warning
+        self._orig_locked_by = clone.pop("locked_by", None)
         return clone
 
     def _vs_mandatory_elements(self) -> list[DictionaryEntry]:
@@ -274,5 +274,5 @@ class ModeEditPassword(SimpleEditMode[Password]):
         if is_locked_by_quick_setup(locked_by):
             quick_setup_locked_warning(locked_by, self._mode_type.name_singular())
 
-        elif self._clone_source and (locked_by := self._clone_source.get("locked_by")):
-            quick_setup_duplication_warning(locked_by, self._mode_type.name_singular())
+        elif self._orig_locked_by:
+            quick_setup_duplication_warning(self._orig_locked_by, self._mode_type.name_singular())

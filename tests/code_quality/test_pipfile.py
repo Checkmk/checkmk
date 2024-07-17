@@ -47,6 +47,7 @@ BUILD_DIRS = {
     repo_path() / "bazel-check_mk",
     repo_path() / "bazel-checkout",
     repo_path() / "bazel-out",
+    repo_path() / "external",
     repo_path() / "omd/build",
     repo_path() / "packages/cmc/build",
     repo_path() / "packages/cmc/test",

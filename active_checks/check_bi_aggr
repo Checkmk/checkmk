@@ -50,11 +50,11 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "-u",
-        "--username",
+        "--user-name",
         metavar="USER",
         required=False,  # depends on --use-automation-user
         help=(
-            "User-ID of an automation user which is permitted to see all contents of the aggregation."
+            "User ID of an automation user which is permitted to see all contents of the aggregation."
         ),
     )
     parser.add_argument(
@@ -125,24 +125,31 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _make_credentials(args: argparse.Namespace) -> tuple[str, str]:
+    if args.use_automation_user:
+        try:
+            return "automation", AutomationUserSecret(UserId("automation")).read()
+        except (OSError, ValueError):
+            sys.stderr.write('Unable to read credentials for "automation" user.\n')
+            sys.exit(1)
+
+    if (user := args.user_name) is None:
+        sys.stderr.write("Please provide a valid user name.\n")
+        sys.exit(1)
+
+    if args.secret is not None:
+        return user, args.secret
+
+    sys.stderr.write("Please provide a valid login secret.\n")
+    sys.exit(1)
+
+
 # returning int requires more refactoring atm
 def main(argv: Sequence[str]) -> None:  # pylint: disable=too-many-branches
 
     args = parse_arguments(argv=argv)
 
-    if args.use_automation_user:
-        username = "automation"
-        try:
-            secret = AutomationUserSecret(UserId(username)).read()
-        except (OSError, ValueError):
-            sys.stderr.write('Unable to read credentials for "automation" user.\n')
-            sys.exit(1)
-    else:
-        if not args.username or not args.secret:
-            sys.stderr.write("Please provide valid user credentials.\n")
-            sys.exit(1)
-        username = args.username
-        secret = args.secret
+    username, secret = _make_credentials(args=args)
 
     if args.track_downtime and not args.hostname:
         sys.stderr.write("Please provide a hostname when using downtime tracking.\n")

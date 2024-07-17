@@ -319,6 +319,7 @@ def process_check_output(
     site: Site,
     host_name: str,
     output_dir: Path,
+    piggyback_host: bool,
 ) -> dict[str, str]:
     """Process the check output and either dump or compare it."""
     if host_name in SkippedDumps.SKIPPED_DUMPS:
@@ -383,7 +384,8 @@ def process_check_output(
 
     if config.mode != CheckModes.DEFAULT:
         with open(
-            f"{config.response_dir}/{host_name}.json",
+            f"{config.response_dir}/{"piggyback_hosts" if piggyback_host else "source_hosts"}/"
+            f"{host_name}.json",
             mode="w",
             encoding="utf-8",
         ) as json_file:
@@ -576,7 +578,7 @@ def cleanup_hosts(site: Site, host_names: list[str]) -> None:
     site.activate_changes_and_wait_for_core_reload()
 
 
-def _get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
+def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
     return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != source_host]
 
 
@@ -584,7 +586,7 @@ def _wait_for_piggyback_hosts(
     site: Site, source_host: str, max_count: int = 10, sleep_time: float = 1, strict: bool = True
 ) -> None:
     count = 0
-    while not (piggyback_hosts := _get_piggyback_hosts(site, source_host)) and count < max_count:
+    while not (piggyback_hosts := get_piggyback_hosts(site, source_host)) and count < max_count:
         logger.info("Waiting for piggyback hosts to be created...")
         time.sleep(sleep_time)
         count += 1

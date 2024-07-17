@@ -12,6 +12,7 @@ from tests.testlib.site import Site
 
 from tests.plugins_integration.checks import (
     get_host_names,
+    get_piggyback_hosts,
     process_check_output,
     read_cmk_dump,
     read_disk_dump,
@@ -50,11 +51,13 @@ def test_plugin(
         # perform assertion over check data
         tmp_path = tmp_path_factory.mktemp("responses")
         logger.info(tmp_path)
-        hostnames = [
-            _.get("id") for _ in test_site.openapi.get_hosts()
-        ]  # including piggyback hosts
+
+        piggyback_hostnames = get_piggyback_hosts(test_site, source_host_name)
+        hostnames = piggyback_hostnames + [source_host_name]
         for hostname in hostnames:
-            diffing_checks = process_check_output(test_site, hostname, tmp_path)
+            diffing_checks = process_check_output(
+                test_site, hostname, tmp_path, piggyback_host=hostname in piggyback_hostnames
+            )
             err_msg = f"Check output mismatch for host {hostname}:\n" + "".join(
                 [textwrap.dedent(f"{check}:\n" + diffing_checks[check]) for check in diffing_checks]
             )

@@ -18,9 +18,9 @@ from cmk.gui.form_specs.vue.type_defs import EMPTY_VALUE, EmptyValue, VisitorOpt
 from cmk.gui.i18n import translate_to_current_language
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.rulesets.v1.form_specs._base import DefaultValue, InputHint, ModelT, Prefill
+from cmk.rulesets.v1.form_specs._base import DefaultValue, InputHint, ModelT
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 
@@ -112,27 +112,25 @@ def migrate_value(form_spec: FormSpec, options: VisitorOptions, value: Any) -> A
     return value
 
 
-class WithPrefill(Protocol[ModelT]):
-    @property
-    def prefill(
-        self,
-    ) -> Prefill[ModelT]: ...
+_PrefillTypes = DefaultValue[ModelT] | InputHint[ModelT] | InputHint[Title]
 
 
-def get_prefill_default(form_spec: WithPrefill) -> ModelT | EmptyValue:
-    if not isinstance(form_spec.prefill, DefaultValue):
+def get_prefill_default(prefill: _PrefillTypes) -> ModelT | EmptyValue:
+    if not isinstance(prefill, DefaultValue):
         return EMPTY_VALUE
-    return form_spec.prefill.value
+    return prefill.value
 
 
-class WithPrefillTitle(Protocol[ModelT]):
-    @property
-    def prefill(self) -> DefaultValue[ModelT] | InputHint[Title]: ...
+def compute_input_hint(prefill: _PrefillTypes) -> ModelT | None | str:
+    if not isinstance(prefill, InputHint):
+        return None
+
+    if isinstance(prefill.value, Title):
+        return prefill.value.localize(translate_to_current_language)
+    return prefill.value
 
 
-def compute_input_hint(form_spec: WithPrefill | WithPrefillTitle) -> ModelT | None | str:
-    if isinstance(form_spec.prefill, InputHint):
-        if isinstance(form_spec.prefill.value, Title):
-            return form_spec.prefill.value.localize(translate_to_current_language)
-        return form_spec.prefill.value
-    return None
+def compute_label(label: Label | None) -> str | None:
+    if label is None:
+        return None
+    return label.localize(translate_to_current_language)

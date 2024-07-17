@@ -32,7 +32,9 @@ class IntegerVisitor(FormSpecVisitor):
     def _parse_value(self, raw_value: object) -> int | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
-            if isinstance(prefill_default := get_prefill_default(self.form_spec), EmptyValue):
+            if isinstance(
+                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+            ):
                 return prefill_default
             raw_value = prefill_default
 
@@ -55,7 +57,7 @@ class IntegerVisitor(FormSpecVisitor):
                 help=help_text,
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(self._validators()),
-                input_hint=compute_input_hint(self.form_spec),
+                input_hint=compute_input_hint(self.form_spec.prefill),
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

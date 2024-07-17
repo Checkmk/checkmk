@@ -42,7 +42,9 @@ class SingleChoiceVisitor(FormSpecVisitor):
     def _parse_value(self, raw_value: object) -> str | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
-            if isinstance(prefill_default := get_prefill_default(self.form_spec), EmptyValue):
+            if isinstance(
+                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+            ):
                 return prefill_default
             raw_value = prefill_default
 
@@ -70,7 +72,7 @@ class SingleChoiceVisitor(FormSpecVisitor):
                 elements=elements,
                 validators=build_vue_validators(self._validators()),
                 frozen=self.form_spec.frozen,
-                input_hint=compute_input_hint(self.form_spec),
+                input_hint=compute_input_hint(self.form_spec.prefill),
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

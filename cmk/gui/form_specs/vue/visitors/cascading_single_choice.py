@@ -17,6 +17,7 @@ from cmk.gui.form_specs.vue.type_defs import (
 )
 from cmk.gui.form_specs.vue.utils import (
     compute_input_hint,
+    compute_label,
     compute_validation_errors,
     create_validation_error,
     get_prefill_default,
@@ -38,13 +39,14 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor):
         self.options = options
 
     def _validators(self) -> Sequence[Callable[[tuple[str, object]], object]]:
-        # TODO: add special __post_init__ / element validators for this form spec
         return self.form_spec.custom_validate if self.form_spec.custom_validate else []
 
     def _parse_value(self, raw_value: object) -> list | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
-            if isinstance(prefill_default := get_prefill_default(self.form_spec), EmptyValue):
+            if isinstance(
+                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+            ):
                 return prefill_default
             # The default value for a cascading_single_choice element only
             # contains the name of the selected element, not the value.
@@ -84,10 +86,11 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor):
         return (
             VueComponents.CascadingSingleChoice(
                 title=title,
+                label=compute_label(self.form_spec.label),
                 help=help_text,
                 elements=vue_elements,
                 validators=build_vue_validators(self._validators()),
-                input_hint=compute_input_hint(self.form_spec),
+                input_hint=compute_input_hint(self.form_spec.prefill),
             ),
             (selected_name, selected_value),
         )

@@ -57,6 +57,16 @@ TEST_F(AgentPluginsTest, File) {
     }));
 }
 
+TEST_F(AgentPluginsTest, DISABLED_Exe) {
+    // Test is disabled because we need a binary to build: not appropriate for
+    // unit testing. You may enable this test manually
+    auto v_file = tst::GetSolutionRoot() / "test_files" / "tools" / "v" /
+                  "target" / "release" / "v.exe";
+    fs::copy(v_file, fs::path{cfg::GetUserPluginsDir()});
+    auto rows = getRows();
+    EXPECT_TRUE(rows[3].ends_with("v.exe:CMK_VERSION = \"0.1.0\""));
+}
+
 TEST_F(AgentPluginsTest, FileMix) {
     const std::vector<std::tuple<fs::path, std::string, std::string>>
         to_create = {

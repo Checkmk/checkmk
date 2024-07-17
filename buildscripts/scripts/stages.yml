@@ -389,12 +389,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: "packages/livestatus"
       COMMAND: >
-          ../../scripts/run-in-docker.sh
-          "bazel test --config=ci //packages/livestatus:all
-          && bazel build --config=ci //packages/livestatus:all
-          && bazel run --config=ci //:refresh_compile_commands
-          && ./run --check-format"
-          &> ${RESULTS}/livestatus.txt
+          ../../scripts/run-in-docker.sh "./run --all" &> ${RESULTS}/livestatus.txt
       TEXT_ON_SKIP: "No Livestatus files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
@@ -403,12 +398,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: "packages/cmc"
       COMMAND: >
-          ../../scripts/run-in-docker.sh
-          "bazel test --config=ci //packages/cmc:all
-          && bazel build --config=ci //packages/cmc:all
-          && bazel run --config=ci //:refresh_compile_commands
-          && ./run --check-format"
-          &> ${RESULTS}/cmc.txt
+          ../../scripts/run-in-docker.sh "./run --all" &> ${RESULTS}/cmc.txt
       TEXT_ON_SKIP: "No cmc files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/cmc.txt"
@@ -496,12 +486,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: "packages/neb"
       COMMAND: >
-          ../../scripts/run-in-docker.sh
-          "bazel test --config=ci //packages/neb:all
-          && bazel build --config=ci //packages/neb:all
-          && bazel run --config=ci //:refresh_compile_commands
-          && ./run --check-format"
-          &> ${RESULTS}/neb.txt
+          ../../scripts/run-in-docker.sh "./run --all" &> ${RESULTS}/neb.txt
       TEXT_ON_SKIP: "No neb files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/neb.txt"
@@ -510,12 +495,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_UNIXCAT_FILES
       DIR: "packages/unixcat"
       COMMAND: >
-          ../../scripts/run-in-docker.sh
-          "bazel test --config=ci //packages/unixcat:all
-          && bazel build --config=ci //packages/unixcat:all
-          && bazel run --config=ci //:refresh_compile_commands
-          && ./run --check-format"
-          &> ${RESULTS}/unixcat.txt
+          ../../scripts/run-in-docker.sh "./run --all" &> ${RESULTS}/unixcat.txt
       TEXT_ON_SKIP: "No unixcat files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/unixcat.txt"

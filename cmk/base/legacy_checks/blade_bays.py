@@ -8,7 +8,7 @@ from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
-from cmk.plugins.lib.blade import DETECT_BLADE
+from cmk.plugins.blade.agent_based.detection import DETECT_BLADE
 
 # mypy: disable-error-code="var-annotated"
 

@@ -44,7 +44,6 @@ def test_detect_spec_dedup(
         ("artec_documents", "artec_temp"),
         ("bdt_tape_info", "bdt_tape_status"),
         ("bintec_brrp_status", "bintec_sensors"),
-        ("blade_powerfan", "blade_powermod"),
         ("bluecoat_diskcpu", "bluecoat_sensors"),
         ("bluenet_meter", "bluenet_sensor"),
         ("cisco_asa_conn", "cisco_asa_connections"),

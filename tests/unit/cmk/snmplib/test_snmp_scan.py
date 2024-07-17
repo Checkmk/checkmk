@@ -27,7 +27,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
 from cmk.ccc.exceptions import MKSNMPError, OnError
-from cmk.plugins.collection.agent_based import aironet_clients
+from cmk.plugins.collection.agent_based import aironet_clients, brocade_info
 
 
 @pytest.mark.parametrize(
@@ -57,49 +57,6 @@ from cmk.plugins.collection.agent_based import aironet_clients
             {".1.3.6.1.2.1.1.1.0": "contains STE2"},
             True,
         ),
-        # for one example do all 6 permutations:
-        (
-            "brocade_info",
-            {
-                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.1588.Moo",
-                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None",
-            },
-            True,
-        ),
-        (
-            "brocade_info",
-            {
-                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.1588.Moo",
-                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None,
-            },
-            False,
-        ),
-        (
-            "brocade_info",
-            {
-                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.24.1.1588.2.1.1.Quack",
-                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None",
-            },
-            True,
-        ),
-        (
-            "brocade_info",
-            {
-                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.24.1.1588.2.1.1.Quack",
-                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None,
-            },
-            False,
-        ),
-        (
-            "brocade_info",
-            {".1.3.6.1.2.1.1.2.0": "Moo.Quack", ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None"},
-            False,
-        ),
-        (
-            "brocade_info",
-            {".1.3.6.1.2.1.1.2.0": "Moo.Quack", ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None},
-            False,
-        ),
     ],
 )
 def test_evaluate_snmp_detection_legacy(
@@ -127,6 +84,49 @@ def test_evaluate_snmp_detection_legacy(
             aironet_clients.snmp_section_aironet_clients,
             {".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.9.1.525"},
             True,
+        ),
+        # for one example do all 6 permutations:
+        (
+            brocade_info.snmp_section_brocade_info,
+            {
+                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.1588.Moo",
+                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None",
+            },
+            True,
+        ),
+        (
+            brocade_info.snmp_section_brocade_info,
+            {
+                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.1588.Moo",
+                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None,
+            },
+            False,
+        ),
+        (
+            brocade_info.snmp_section_brocade_info,
+            {
+                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.24.1.1588.2.1.1.Quack",
+                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None",
+            },
+            True,
+        ),
+        (
+            brocade_info.snmp_section_brocade_info,
+            {
+                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.24.1.1588.2.1.1.Quack",
+                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None,
+            },
+            False,
+        ),
+        (
+            brocade_info.snmp_section_brocade_info,
+            {".1.3.6.1.2.1.1.2.0": "Moo.Quack", ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None"},
+            False,
+        ),
+        (
+            brocade_info.snmp_section_brocade_info,
+            {".1.3.6.1.2.1.1.2.0": "Moo.Quack", ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None},
+            False,
         ),
     ],
 )

@@ -4,18 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.v2 import contains, SNMPTree, StringTable
+
+def inventory_bdt_tape_status(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def inventory_bdt_tape_status(info):
-    return [(None, None)]
-
-
-def check_bdt_tape_status(_no_item, _no_params, info):
-    status_id = info[0][0]
+def check_bdt_tape_status(section: StringTable) -> CheckResult:
+    status_id = section[0][0]
 
     status = {
         "1": "other",
@@ -27,28 +35,32 @@ def check_bdt_tape_status(_no_item, _no_params, info):
     }.get(status_id, "unknown")
 
     state = {
-        "other": 3,
-        "unknown": 3,
-        "ok": 0,
-        "non-critical": 1,
-        "critical": 2,
-        "non-recoverable": 2,
-    }.get(status, 3)
+        "other": State.UNKNOWN,
+        "unknown": State.UNKNOWN,
+        "ok": State.OK,
+        "non-critical": State.WARN,
+        "critical": State.CRIT,
+        "non-recoverable": State.CRIT,
+    }.get(status, State.UNKNOWN)
 
-    return state, status
+    yield Result(state=state, summary=status)
 
 
 def parse_bdt_tape_status(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-check_info["bdt_tape_status"] = LegacyCheckDefinition(
-    parse_function=parse_bdt_tape_status,
+snmp_section_bdt_tape_status = SimpleSNMPSection(
+    name="bdt_tape_status",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20884.10893.2.101"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20884.10893.2.101.2",
         oids=["1"],
     ),
+    parse_function=parse_bdt_tape_status,
+)
+check_plugin_bdt_tape_status = CheckPlugin(
+    name="bdt_tape_status",
     service_name="Tape Library Status",
     discovery_function=inventory_bdt_tape_status,
     check_function=check_bdt_tape_status,

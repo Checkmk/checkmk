@@ -9,7 +9,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.blade import DETECT_BLADE_BX
+from cmk.plugins.blade.agent_based.detection import DETECT_BLADE_BX
 
 
 def saveint(i: str) -> int:

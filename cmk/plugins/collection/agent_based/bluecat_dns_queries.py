@@ -6,39 +6,51 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.lib.bluecat import DETECT_BLUECAT
 
 
-def inventory_bluecat_dns_queries(info):
-    return [(None, None)]
+def inventory_bluecat_dns_queries(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def check_bluecat_dns_queries(item, _no_params, info):
+def check_bluecat_dns_queries(section: StringTable) -> CheckResult:
     value_names = ["Success", "Referral", "NXRSet", "NXDomain", "Recursion", "Failure"]
     value_store = get_value_store()
     now = time.time()
-    for value, name in zip(info[0], value_names):
+    for value, name in zip(section[0], value_names):
         rate = get_rate(
             value_store, f"bluecat_dns_queries.{name}", now, int(value), raise_overflow=True
         )
-        yield 0, f"{name}: {rate}", [(name, rate)]
+        yield from check_levels(rate, metric_name=name, label=name, render_func=str)
 
 
 def parse_bluecat_dns_queries(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-check_info["bluecat_dns_queries"] = LegacyCheckDefinition(
-    parse_function=parse_bluecat_dns_queries,
+snmp_section_bluecat_dns_queries = SimpleSNMPSection(
+    name="bluecat_dns_queries",
     detect=DETECT_BLUECAT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.2.2.2.1",
         oids=["1", "2", "3", "4", "5", "6"],
     ),
+    parse_function=parse_bluecat_dns_queries,
+)
+check_plugin_bluecat_dns_queries = CheckPlugin(
+    name="bluecat_dns_queries",
     service_name="DNS Queries",
     discovery_function=inventory_bluecat_dns_queries,
     check_function=check_bluecat_dns_queries,

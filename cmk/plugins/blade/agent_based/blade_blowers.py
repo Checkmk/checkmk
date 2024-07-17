@@ -3,11 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.blade import DETECT_BLADE
+from .detection import DETECT_BLADE
 
 # The BLADE-MIB is somewhat goofy redarding the blower
 # information. The blowers are listed sequentially
@@ -40,41 +49,40 @@ from cmk.plugins.lib.blade import DETECT_BLADE
 # inventory only)
 
 
-# mypy: disable-error-code="list-item"
-
-
-def number_of_blowers(info):
+def number_of_blowers(info: StringTable) -> int:
     n = 0
     while len(info) > n and len(info[n][0]) > 1:  # state lines
         n += 1
     return n
 
 
-def inventory_blade_blowers(info):
-    n = number_of_blowers(info)
+def inventory_blade_blowers(section: StringTable) -> DiscoveryResult:
+    n = number_of_blowers(section)
     for i in range(0, n):
-        if info[i + n][0] != "0":  # skip unknown blowers
-            yield "%d/%d" % (i + 1, n), None
+        if section[i + n][0] != "0":  # skip unknown blowers
+            yield Service(item="%d/%d" % (i + 1, n))
 
 
-def check_blade_blowers(item, _no_params, info):
+# This can be done much better; but I'm resisting the temptation to rewrite this.
+# This is a result of a brainless migration from an much older API.
+def check_blade_blowers(item: str, section: StringTable) -> CheckResult:
     blower, num_blowers = map(int, item.split("/"))
-    text = info[blower - 1][0]
-    perfdata = []
+    text = section[blower - 1][0]
+    perfdata: list[Metric] = []
     output = ""
 
-    state = info[blower - 1 + num_blowers][0]
+    state = section[blower - 1 + num_blowers][0]
 
     try:
-        rpm = int(info[blower - 1 + 2 * num_blowers][0])
-        perfdata += [("rpm", rpm)]
+        rpm = int(section[blower - 1 + 2 * num_blowers][0])
+        perfdata += [Metric("rpm", rpm)]
         output += "Speed at %d RMP" % rpm
     except Exception:
         pass
 
     try:
         perc = int(text.split("%")[0])
-        perfdata += [("perc", perc, None, None, 0, 100)]
+        perfdata += [Metric("perc", perc, boundaries=(0, 100))]
         if output == "":
             output += "Speed is at %d%% of max" % perc
         else:
@@ -83,21 +91,30 @@ def check_blade_blowers(item, _no_params, info):
         pass
 
     if state == "1":
-        return (0, output, perfdata)
-    return (2, output, perfdata)
+        yield Result(state=State.OK, summary=output)
+        yield from perfdata
+        return
+
+    yield Result(state=State.CRIT, summary=output)
+    yield from perfdata
+    return
 
 
 def parse_blade_blowers(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["blade_blowers"] = LegacyCheckDefinition(
-    parse_function=parse_blade_blowers,
+snmp_section_blade_blowers = SimpleSNMPSection(
+    name="blade_blowers",
     detect=DETECT_BLADE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.2.2",
         oids=["3"],
     ),
+    parse_function=parse_blade_blowers,
+)
+check_plugin_blade_blowers = CheckPlugin(
+    name="blade_blowers",
     service_name="Blower %s",
     discovery_function=inventory_blade_blowers,
     check_function=check_blade_blowers,

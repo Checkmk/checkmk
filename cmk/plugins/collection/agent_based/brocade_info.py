@@ -6,17 +6,28 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    exists,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    startswith,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, startswith, StringTable
 
-
-def inventory_brocade_info(info):
-    data = "".join(brocade_info_try_it(info))
+def inventory_brocade_info(section: Sequence[StringTable]) -> DiscoveryResult:
+    data = "".join(brocade_info_try_it(section))
     if data != "----":
-        return [(None, None)]
-    return []
+        yield Service()
 
 
 def brocade_info_try_it(info):
@@ -49,8 +60,8 @@ def brocade_info_parse_wwn(val):
     return val
 
 
-def check_brocade_info(item, params, info):
-    model, ssn, fw, wwn = brocade_info_try_it(info)
+def check_brocade_info(section: Sequence[StringTable]) -> CheckResult:
+    model, ssn, fw, wwn = brocade_info_try_it(section)
     data = "".join((model, ssn, fw, wwn))
     if data != "----":
         wwn = brocade_info_parse_wwn(wwn)
@@ -60,16 +71,18 @@ def check_brocade_info(item, params, info):
             fw,
             wwn,
         )
-        return 0, infotext
-    return 3, "no information found"
+        yield Result(state=State.OK, summary=infotext)
+        return
+    yield Result(state=State.UNKNOWN, summary="no information found")
+    return
 
 
 def parse_brocade_info(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
     return string_table
 
 
-check_info["brocade_info"] = LegacyCheckDefinition(
-    parse_function=parse_brocade_info,
+snmp_section_brocade_info = SNMPSection(
+    name="brocade_info",
     detect=all_of(
         any_of(
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588"),
@@ -92,6 +105,10 @@ check_info["brocade_info"] = LegacyCheckDefinition(
             oids=["1"],
         ),
     ],
+    parse_function=parse_brocade_info,
+)
+check_plugin_brocade_info = CheckPlugin(
+    name="brocade_info",
     service_name="Brocade Info",
     discovery_function=inventory_brocade_info,
     check_function=check_brocade_info,

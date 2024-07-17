@@ -318,7 +318,7 @@ class SiteManagement:
             multisiteurl = site_configuration.get("multisiteurl")
             if not site_configuration.get("multisiteurl"):
                 raise MKUserError(
-                    "multisiteurl", _("Please enter the Multisite URL of the slave site.")
+                    "multisiteurl", _("Please enter the Multisite URL of the remote site.")
                 )
 
             if not multisiteurl.endswith("/check_mk/"):

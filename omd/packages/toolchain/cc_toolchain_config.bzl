@@ -33,7 +33,8 @@ def cc_toolchain_config(
     cxx_flags = ["-std=c++20"]
     dbg_compile_flags = ["-g"]
     link_flags = [
-        "-fuse-ld=gold",
+        # DO NOT USE -fuse-ld=gold here: it is not available on sles15sp5
+        # However, I still don't understand why it would fail as were hardcoding the ld path for the CI toolchain
         "-Wl,-no-as-needed",
         "-Wl,-z,relro,-z,now",
         "-pass-exit-codes",

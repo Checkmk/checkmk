@@ -41,7 +41,6 @@ def main() {
         [$class: 'BooleanParameterValue', name: 'SKIP_DEPLOY_TO_WEBSITE', value: params.SKIP_DEPLOY_TO_WEBSITE],
         [$class: 'BooleanParameterValue', name: 'DEPLOY_TO_WEBSITE_ONLY', value: params.DEPLOY_TO_WEBSITE_ONLY],
         [$class: 'BooleanParameterValue', name: 'FAKE_WINDOWS_ARTIFACTS', value: params.FAKE_WINDOWS_ARTIFACTS],
-        [$class: 'StringParameterValue',  name: 'DOCKER_TAG', value: DOCKER_TAG],
         [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_DOCKER_TAG_BUILD', value: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD],
         [$class: 'BooleanParameterValue', name: 'SET_LATEST_TAG', value: params.SET_LATEST_TAG],
         [$class: 'BooleanParameterValue', name: 'SET_BRANCH_LATEST_TAG', value: params.SET_BRANCH_LATEST_TAG],

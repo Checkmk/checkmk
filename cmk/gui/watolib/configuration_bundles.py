@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
+from itertools import groupby
+from operator import itemgetter
 from pathlib import Path
 from typing import (
     Any,
@@ -23,17 +25,24 @@ from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.definition import RuleGroupType
 
+from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.hosts_and_folders import Folder, Host
-from cmk.gui.watolib.passwords import load_passwords
-from cmk.gui.watolib.rulesets import AllRulesets, Rule, SingleRulesetRecursively
+from cmk.gui.watolib.passwords import load_passwords, remove_password
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, SingleRulesetRecursively
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
+
+from cmk.ccc.exceptions import MKGeneralException
 
 _T = TypeVar("_T")
 BundleId = NewType("BundleId", str)
 IdentFinder = Callable[[GlobalIdent | None], BundleId | None]
 Entity = Literal["host", "rule", "password", "dcd"]
 Permission = Literal["hosts", "rulesets", "passwords", "dcd_connections"]
+
+# TODO: deduplicate with cmk/gui/cee/dcd/_store.py
+DCDConnectionSpec = dict[str, Any]
+DCDConnectionDict = dict[str, DCDConnectionSpec]
 
 
 @dataclass(frozen=True)
@@ -59,13 +68,13 @@ def _get_affected_entities(bundle_group: str) -> set[Entity]:
     return set(domain.entity for domain in bundle_domain) if bundle_domain else ALL_ENTITIES
 
 
-# TODO: deduplicate with cmk/gui/cee/dcd/_store.py
-DCDConnectionSpec = dict[str, Any]
-DCDConnectionDict = dict[str, DCDConnectionSpec]
+def _dcd_unsupported(*_args: Any, **_kwargs: Any) -> None:
+    raise MKGeneralException("DCD not supported")
 
 
 class DCDConnectionHook:
     load_dcd_connections: Callable[[], DCDConnectionDict] = lambda: {}
+    delete_dcd_connection: Callable[[str], None] = _dcd_unsupported
 
 
 @dataclass
@@ -120,6 +129,24 @@ def identify_bundle_references(
     }
 
 
+def delete_config_bundle(bundle_id: BundleId) -> None:
+    store = ConfigBundleStore()
+    all_bundles = store.load_for_modification()
+    if (bundle := all_bundles.pop(bundle_id, None)) is None:
+        raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
+
+    references = identify_bundle_references(bundle["group"], {bundle_id})[bundle_id]
+    # delete resources in inverse order to create, as rules may reference hosts for example
+    if references.rules:
+        _delete_rules(references.rules)
+    if references.hosts:
+        _delete_hosts(references.hosts)
+    if references.passwords:
+        _delete_passwords(references.passwords)
+    if references.dcd_connections:
+        _delete_dcd_connections(references.dcd_connections)
+
+
 def _collect_many(values: Iterable[tuple[BundleId, _T]]) -> Mapping[BundleId, Sequence[_T]]:
     mapping: dict[BundleId, list[_T]] = {}
     for bundle_id, value in values:
@@ -137,12 +164,32 @@ def _collect_hosts(finder: IdentFinder, hosts: Iterable[Host]) -> Iterable[tuple
             yield bundle_id, host
 
 
+def _delete_hosts(hosts: Iterable[Host]) -> None:
+    folder_getter = itemgetter(0)
+    folders_and_hosts = sorted(
+        ((host.folder(), host) for host in hosts),
+        key=folder_getter,
+    )
+    for folder, host_iter in groupby(
+        folders_and_hosts, key=folder_getter
+    ):  # type: Folder, Iterable[tuple[Folder, Host]]
+        host_names = [host.name() for _folder, host in host_iter]
+        folder.delete_hosts(
+            host_names, automation=check_mk_automations.delete_hosts, allow_locked_deletion=True
+        )
+
+
 def _collect_passwords(
     finder: IdentFinder, passwords: Mapping[str, Password]
 ) -> Iterable[tuple[BundleId, tuple[str, Password]]]:
     for password_id, password in passwords.items():
         if bundle_id := finder(password.get("locked_by")):
             yield bundle_id, (password_id, password)
+
+
+def _delete_passwords(passwords: Iterable[tuple[str, Password]]) -> None:
+    for password_id, _password in passwords:
+        remove_password(password_id)
 
 
 def _iter_all_rules(rulespecs: set[str] | None) -> Iterable[tuple[Folder, int, Rule]]:
@@ -167,12 +214,33 @@ def _collect_rules(
             yield bundle_id, rule
 
 
+def _delete_rules(rules: Iterable[Rule]) -> None:
+    folder_getter = itemgetter(0)
+    sorted_rules = sorted(((rule.folder, rule) for rule in rules), key=folder_getter)
+    for folder, rule_iter in groupby(
+        sorted_rules, key=folder_getter
+    ):  # type: Folder, Iterable[tuple[Folder, Rule]]
+        rulesets = FolderRulesets.load_folder_rulesets(folder)
+        for _folder, rule in rule_iter:
+            # the rule objects loaded into `rulesets` are different instances
+            ruleset = rulesets.get(rule.ruleset.name)
+            actual_rule = ruleset.get_rule_by_id(rule.id)
+            rulesets.get(rule.ruleset.name).delete_rule(actual_rule)
+
+        rulesets.save_folder()
+
+
 def _collect_dcd_connections(
     finder: IdentFinder, dcd_connections: DCDConnectionDict
 ) -> Iterable[tuple[BundleId, tuple[str, DCDConnectionSpec]]]:
     for connection_id, connection in dcd_connections.items():
         if bundle_id := finder(connection.get("locked_by")):
             yield bundle_id, (connection_id, connection)
+
+
+def _delete_dcd_connections(dcd_connections: Iterable[tuple[str, DCDConnectionSpec]]) -> None:
+    for dcd_connection_id, _spec in dcd_connections:
+        DCDConnectionHook.delete_dcd_connection(dcd_connection_id)
 
 
 def _prepare_bundle_id_finder(bundle_program_id: str, bundle_ids: set[BundleId]) -> IdentFinder:

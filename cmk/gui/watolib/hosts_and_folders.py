@@ -1640,6 +1640,12 @@ class Folder(FolderProtocol):
     def __eq__(self, other: object) -> bool:
         return id(self) == id(other) or (isinstance(other, Folder) and self.path() == other.path())
 
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, Folder):
+            return NotImplemented
+
+        return self.path() < other.path()
+
     def __hash__(self) -> int:
         return id(self)
 
@@ -2412,6 +2418,7 @@ class Folder(FolderProtocol):
         host_names: Sequence[HostName],
         *,
         automation: Callable[[SiteId, Sequence[HostName]], ABCAutomationResult],
+        allow_locked_deletion: bool = False,
     ) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
@@ -2419,7 +2426,7 @@ class Folder(FolderProtocol):
         self.permissions.need_permission("write")
 
         # 2. Check if hosts can be deleted
-        self._validate_delete_hosts(host_names)
+        self._validate_delete_hosts(host_names, allow_locked_deletion)
 
         # 3. Delete host specific files (caches, tempfiles, ...)
         self._delete_host_files(host_names, automation=automation)
@@ -2441,10 +2448,14 @@ class Folder(FolderProtocol):
         self.save_hosts()
         folder_lookup_cache().delete_hosts(host_names)
 
-    def _validate_delete_hosts(self, host_names: Collection[HostName]) -> None:
+    def _validate_delete_hosts(
+        self, host_names: Collection[HostName], allow_locked_deletion: bool = False
+    ) -> None:
         # 1. check if hosts are locked by quick setup
         errors: list[str] = []
-        if hosts := self._get_hosts_locked_by_quick_setup(host_names):
+        if not allow_locked_deletion and (
+            hosts := self._get_hosts_locked_by_quick_setup(host_names)
+        ):
             errors.extend(_("%s is locked by Quick setup.") % host_name for host_name in hosts)
 
         # 2. check if hosts have parents

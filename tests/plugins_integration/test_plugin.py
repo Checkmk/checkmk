@@ -50,8 +50,12 @@ def test_plugin(
         # perform assertion over check data
         tmp_path = tmp_path_factory.mktemp("responses")
         logger.info(tmp_path)
-        diffing_checks = process_check_output(test_site, host_name, tmp_path)
-        err_msg = f"Check output mismatch for host {host_name}:\n" + "".join(
-            [textwrap.dedent(f"{check}:\n" + diffing_checks[check]) for check in diffing_checks]
-        )
-        assert not diffing_checks, err_msg
+        hostnames = [
+            _.get("id") for _ in test_site.openapi.get_hosts()
+        ]  # including piggyback hosts
+        for hostname in hostnames:
+            diffing_checks = process_check_output(test_site, hostname, tmp_path)
+            err_msg = f"Check output mismatch for host {hostname}:\n" + "".join(
+                [textwrap.dedent(f"{check}:\n" + diffing_checks[check]) for check in diffing_checks]
+            )
+            assert not diffing_checks, err_msg

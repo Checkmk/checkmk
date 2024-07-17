@@ -6,6 +6,7 @@
 from cmk.utils.paths import omd_root
 
 from cmk.ccc import site
+from cmk.trace import LocalTarget, TraceSendConfig
 
 
 def test_get_omd_config(patch_omd_site: None) -> None:
@@ -53,6 +54,6 @@ def test_trace_receive_port(patch_omd_site: None) -> None:
 
 
 def test_trace_send_config(patch_omd_site: None) -> None:
-    assert site.trace_send_config(omd_root) == site.TraceSendConfig(
-        enabled=False, target="local_site"
+    assert site.trace_send_config(omd_root) == TraceSendConfig(
+        enabled=False, target=LocalTarget(4321)
     )

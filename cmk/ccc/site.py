@@ -4,22 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import Literal
 
 from livestatus import SiteId
 
 from cmk.ccc.i18n import _
+from cmk.trace import LocalTarget, TraceSendConfig
 
 OMDConfig = dict[str, str]
-
-
-@dataclass
-class TraceSendConfig:
-    enabled: bool
-    target: Literal["local_site"] | str
 
 
 #
@@ -66,7 +59,10 @@ def trace_receive_port(omd_root: Path) -> int:
 
 def trace_send_config(omd_root: Path) -> TraceSendConfig:
     config = get_omd_config(omd_root)
+    target: LocalTarget | str
+    if (target := config.get("CONFIG_TRACE_SEND_TARGET", "local_site")) == "local_site":
+        target = LocalTarget(trace_receive_port(omd_root))
     return TraceSendConfig(
         enabled=config.get("CONFIG_TRACE_SEND") == "on",
-        target=config.get("CONFIG_TRACE_SEND_TARGET", "local_site"),
+        target=target,
     )

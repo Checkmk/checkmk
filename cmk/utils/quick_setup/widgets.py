@@ -42,6 +42,12 @@ class FormSpecWrapper(Widget):
 
 
 @dataclass
+class FormSpecRecap(Widget):
+    id: FormSpecId
+    widget_type: str = field(default="form_spec_recap", init=False)
+
+
+@dataclass
 class Collapsible(Widget):
     widget_type: str = field(default="collapsible", init=False)
     title: str

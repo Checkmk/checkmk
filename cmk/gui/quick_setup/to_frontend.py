@@ -8,17 +8,20 @@ from dataclasses import asdict
 from typing import cast, Mapping
 
 from cmk.utils.quick_setup.definitions import (
+    FormData,
     IncomingStage,
     InvalidStageException,
     QuickSetup,
     QuickSetupOverview,
     QuickSetupSaveRedirect,
+    QuickSetupStage,
     Stage,
     StageId,
 )
 from cmk.utils.quick_setup.widgets import (
     Collapsible,
     FormSpecId,
+    FormSpecRecap,
     FormSpecWrapper,
     ListOfWidgets,
     Widget,
@@ -55,10 +58,11 @@ def _get_stage_components_from_widget(widget: Widget) -> dict:
 
 def _retrieve_next_stage(
     quick_setup: QuickSetup,
-    current_stage_id: StageId,
+    current_stage: QuickSetupStage,
+    incoming_stages: Sequence[IncomingStage],
 ) -> Stage:
     try:
-        next_stage = quick_setup.get_stage_with_id(StageId(current_stage_id + 1))
+        next_stage = quick_setup.get_stage_with_id(StageId(current_stage.stage_id + 1))
     except InvalidStageException:
         # TODO: What should we return in this case?
         return Stage(stage_id=StageId(-1), components=[])
@@ -68,11 +72,16 @@ def _retrieve_next_stage(
         components=[
             _get_stage_components_from_widget(widget) for widget in next_stage.configure_components
         ],
+        stage_recap=[
+            r
+            for recap_callable in current_stage.recap
+            for r in recap_callable([stage.form_data for stage in incoming_stages])
+        ],
     )
 
 
 def form_spec_validate(
-    all_stages_form_data: Sequence[dict[FormSpecId, object]],
+    all_stages_form_data: Sequence[FormData],
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
 ) -> list[str]:
     validation_errors: list = []
@@ -126,30 +135,41 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
     )
 
 
-def validate_current_stage(quick_setup: QuickSetup, stages: list[IncomingStage]) -> Stage:
-    current_stage_id = stages[-1].stage_id
+def form_spec_recap(stages_form_data: Sequence[FormData]) -> Sequence[Widget]:
+    return [FormSpecRecap(id=form_spec_id) for form_spec_id in stages_form_data[-1]]
+
+
+def validate_current_stage(
+    quick_setup: QuickSetup, incoming_stages: Sequence[IncomingStage]
+) -> Stage:
+    current_stage_id = incoming_stages[-1].stage_id
     current_stage = quick_setup.get_stage_with_id(current_stage_id)
     validation_errors = [
         error
         for validator in current_stage.validators
         for error in validator(
-            [stage.form_data for stage in stages], _build_expected_formspec_map(quick_setup)
+            [stage.form_data for stage in incoming_stages],
+            _build_expected_formspec_map(quick_setup),
         )
     ]
 
     if validation_errors:
         return Stage(
             stage_id=current_stage_id,
-            components=[],
             validation_errors=validation_errors,
+            components=[],
         )
 
-    return _retrieve_next_stage(quick_setup=quick_setup, current_stage_id=current_stage_id)
+    return _retrieve_next_stage(
+        quick_setup=quick_setup,
+        current_stage=current_stage,
+        incoming_stages=incoming_stages,
+    )
 
 
 def complete_quick_setup(
     quick_setup: QuickSetup,
-    stages: list[IncomingStage],
+    stages: Sequence[IncomingStage],
 ) -> QuickSetupSaveRedirect:
     if quick_setup.save_action is None:
         return QuickSetupSaveRedirect(redirect_url=None)

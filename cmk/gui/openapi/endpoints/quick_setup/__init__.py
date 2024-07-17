@@ -97,7 +97,7 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
         for stage in body["stages"]
     ]
 
-    next_stage = validate_current_stage(quick_setup=quick_setup, stages=stages)
+    next_stage = validate_current_stage(quick_setup=quick_setup, incoming_stages=stages)
     if next_stage.validation_errors:
         return _serve_data(data=next_stage, status_code=400)
     return _serve_data(data=next_stage)

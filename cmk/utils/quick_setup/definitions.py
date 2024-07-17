@@ -16,6 +16,7 @@ from cmk.rulesets.v1.form_specs import FormSpec
 
 StageId = NewType("StageId", int)
 QuickSetupId = NewType("QuickSetupId", str)
+FormData = NewType("FormData", Mapping[FormSpecId, object])
 
 
 @dataclass
@@ -30,7 +31,7 @@ class Stage:
     stage_id: StageId
     components: Sequence[dict]
     validation_errors: Sequence[str] = field(default_factory=list)
-    stage_summary: Sequence[str] = field(default_factory=list)
+    stage_recap: Sequence[Widget] = field(default_factory=list)
 
 
 @dataclass
@@ -38,8 +39,10 @@ class QuickSetupStage:
     stage_id: StageId
     title: str
     configure_components: Sequence[Widget]
-    validators: Iterable[Callable[[Sequence[dict], Mapping[FormSpecId, FormSpec]], Sequence[str]]]
-    recap: Iterable[Callable[[Sequence[dict]], Sequence[Widget]]]
+    validators: Iterable[
+        Callable[[Sequence[FormData], Mapping[FormSpecId, FormSpec]], Sequence[str]]
+    ]
+    recap: Iterable[Callable[[Sequence[FormData]], Sequence[Widget]]]
     sub_title: str | None = None
 
     def stage_overview(self) -> StageOverview:
@@ -60,7 +63,7 @@ class QuickSetupOverview:
 @dataclass
 class IncomingStage:  # Request
     stage_id: StageId
-    form_data: dict[FormSpecId, object]
+    form_data: FormData
 
 
 class InvalidStageException(MKGeneralException):

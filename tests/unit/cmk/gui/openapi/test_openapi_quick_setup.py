@@ -16,7 +16,7 @@ from cmk.utils.quick_setup.definitions import (
 )
 from cmk.utils.quick_setup.widgets import FormSpecId, FormSpecWrapper
 
-from cmk.gui.quick_setup.to_frontend import form_spec_validate
+from cmk.gui.quick_setup.to_frontend import form_spec_recap, form_spec_validate
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String, validators
@@ -90,7 +90,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
                     ),
                 ],
                 validators=[form_spec_validate],
-                recap=[],
+                recap=[form_spec_recap],
             ),
             QuickSetupStage(
                 stage_id=StageId(2),
@@ -108,7 +108,8 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
         ],
     )
     assert resp.json["stage_id"] == 2
-    assert resp.json["validation_errors"] == []
+    assert len(resp.json["validation_errors"]) == 0
+    assert len(resp.json["stage_recap"]) == 1
 
 
 def test_failing_validate(clients: ClientRegistry) -> None:
@@ -136,6 +137,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
 
 
 def test_quick_setup_save(clients: ClientRegistry) -> None:
+    register_quick_setup()
     resp = clients.QuickSetup.complete_quick_setup(
         quick_setup_id="quick_setup_test",
         payload={"stages": []},

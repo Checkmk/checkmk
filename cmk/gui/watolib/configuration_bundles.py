@@ -128,7 +128,6 @@ class ConfigBundle(TypedDict):
     """
 
     # General properties
-    id: BundleId
     title: str
     comment: str
 
@@ -138,12 +137,12 @@ class ConfigBundle(TypedDict):
     customer: NotRequired[str]  # CME specific
 
 
-class ConfigBundleStore(WatoSingleConfigFile[ConfigBundle]):
+class ConfigBundleStore(WatoSingleConfigFile[dict[BundleId, ConfigBundle]]):
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(multisite_dir()) / "configuration_bundles.mk",
             config_variable="configuration_bundles",
-            spec_class=ConfigBundle,
+            spec_class=dict[BundleId, ConfigBundle],
         )
 
 

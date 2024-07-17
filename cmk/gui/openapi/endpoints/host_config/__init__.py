@@ -44,7 +44,6 @@ from functools import partial
 from typing import Any
 from urllib.parse import urlparse
 
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui import fields as gui_fields
@@ -81,7 +80,6 @@ from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
@@ -444,31 +442,6 @@ def update_nodes(params: Mapping[str, Any]) -> Response:
     )
 
 
-def _validate_host_attributes_for_quick_setup(host: Host, body: dict[str, Any]) -> bool:
-    if not is_locked_by_quick_setup(host.locked_by()):
-        return True
-
-    locked_attributes: Sequence[str] = host.attributes.get("locked_attributes", [])
-    new_attributes: HostAttributes | None = body.get("attributes")
-    update_attributes: HostAttributes | None = body.get("update_attributes")
-    remove_attributes: Sequence[str] | None = body.get("remove_attributes")
-
-    if new_attributes and (
-        new_attributes.get("locked_by") != host.attributes.get("locked_by")
-        or new_attributes.get("locked_attributes") != locked_attributes
-        or any(new_attributes.get(key) != host.attributes.get(key) for key in locked_attributes)
-    ):
-        return False
-
-    if update_attributes and any(
-        key in locked_attributes and host.attributes.get(key) != attr
-        for key, attr in update_attributes.items()
-    ):
-        return False
-
-    return not (remove_attributes and any(key in locked_attributes for key in remove_attributes))
-
-
 @Endpoint(
     constructors.object_href("host_config", "{host_name}"),
     ".../update",
@@ -486,13 +459,6 @@ def update_host(params: Mapping[str, Any]) -> Response:
     host: Host = Host.load_host(params["host_name"])
     _require_host_etag(host)
     body = params["body"]
-
-    if not _validate_host_attributes_for_quick_setup(host, body):
-        return problem(
-            status=400,
-            title=f'The host "{host.name()}" is locked by Quick setup.',
-            detail="Cannot modify locked attributes.",
-        )
 
     if new_attributes := body.get("attributes"):
         new_attributes["meta_data"] = host.attributes.get("meta_data", {})
@@ -547,10 +513,6 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     for update_detail in body["entries"]:
         host_name = update_detail["host_name"]
         host: Host = Host.load_host(host_name)
-
-        if not _validate_host_attributes_for_quick_setup(host, update_detail):
-            failed_hosts[host_name] = "Host is locked by Quick setup."
-
         faulty_attributes = []
 
         if new_attributes := update_detail.get("attributes"):
@@ -623,13 +585,6 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     host_name = params["host_name"]
     host: Host = Host.load_host(host_name)
     new_name = params["body"]["new_name"]
-
-    if is_locked_by_quick_setup(host.locked_by()):
-        return problem(
-            status=400,
-            title=f'The host "{host_name}" is locked by Quick setup.',
-            detail="Locked hosts cannot be renamed.",
-        )
 
     try:
         background_job = RenameHostBackgroundJob(host)

@@ -860,11 +860,10 @@ class HostConfigClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def delete(self, host_name: str, expect_ok: bool = True) -> Response:
+    def delete(self, host_name: str) -> Response:
         return self.request(
             "delete",
             url=f"/objects/{self.domain}/{host_name}",
-            expect_ok=expect_ok,
         )
 
     def move(

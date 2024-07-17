@@ -5,12 +5,10 @@
 """Modes for creating and editing hosts"""
 
 import abc
-import copy
 from collections.abc import Collection, Iterator
 from typing import overload
 
 import cmk.utils.tags
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.watolib.sites as watolib_sites
@@ -30,7 +28,6 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
@@ -255,8 +252,6 @@ class ABCHostMode(WatoMode, abc.ABC):
         if lock_message:
             html.div(lock_message, class_="info")
 
-        self._page_form_quick_setup_warning()
-
         with html.form_context("edit_host", method="POST"):
             html.prevent_password_auto_completion()
 
@@ -289,10 +284,6 @@ class ABCHostMode(WatoMode, abc.ABC):
 
             forms.end()
             html.hidden_fields()
-
-    def _page_form_quick_setup_warning(self) -> None:
-        if (locked_by := self._host.locked_by()) and is_locked_by_quick_setup(locked_by):
-            quick_setup_locked_warning(locked_by, "host")
 
     def _vs_cluster_nodes(self):
         return ListOfStrings(
@@ -544,8 +535,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
     yield from _host_page_menu_hook(host.name())
 
     if mode_name == "edit_host" and not host.locked():
-        locked_by_quick_setup = is_locked_by_quick_setup(host.locked_by())
-        if user.may("wato.rename_hosts") and not locked_by_quick_setup:
+        if user.may("wato.rename_hosts"):
             yield PageMenuEntry(
                 title=_("Rename"),
                 icon_name="rename_host",
@@ -561,18 +551,17 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
                 item=make_simple_link(host.clone_url()),
             )
 
-        if not locked_by_quick_setup:
-            yield PageMenuEntry(
-                title=_("Delete"),
-                icon_name="delete",
-                item=make_simple_link(
-                    make_confirm_delete_link(
-                        url=makeactionuri(request, transactions, [("delete", "1")]),
-                        title=_("Delete host"),
-                        suffix=host.name(),
-                    )
-                ),
-            )
+        yield PageMenuEntry(
+            title=_("Delete"),
+            icon_name="delete",
+            item=make_simple_link(
+                make_confirm_delete_link(
+                    url=makeactionuri(request, transactions, [("delete", "1")]),
+                    title=_("Delete host"),
+                    suffix=host.name(),
+                )
+            ),
+        )
 
         if user.may("wato.auditlog"):
             yield PageMenuEntry(
@@ -631,25 +620,13 @@ class CreateHostMode(ABCHostMode):
             self._mode = "new"
 
     def _init_host(self) -> Host:
-        self._clone_source: Host | None = None
-        clone_source_name = request.get_ascii_input("clone")
-        if not clone_source_name:
+        clonename = request.get_ascii_input("clone")
+        if not clonename:
             return self._init_new_host_object()
-
         folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
-        if not folder.has_host(HostName(clone_source_name)):
+        if not folder.has_host(HostName(clonename)):
             raise MKUserError("host", _("You called this page with an invalid host name."))
-
-        # save the original host
-        self._clone_source = folder.load_host(HostName(clone_source_name))
-
-        host = copy.deepcopy(self._clone_source)
-
-        # remove the quick setup lock from the clone
-        if is_locked_by_quick_setup(host.locked_by()):
-            host.attributes.pop("locked_by", None)
-            host.attributes.pop("locked_attributes", None)
-
+        host = folder.load_host(HostName(clonename))
         self._verify_host_type(host)
         return host
 
@@ -703,14 +680,6 @@ class CreateHostMode(ABCHostMode):
             )
 
         return redirect(mode_url("folder", folder=folder.path()))
-
-    def _page_form_quick_setup_warning(self) -> None:
-        if (
-            self._clone_source
-            and (locked_by := self._clone_source.locked_by())
-            and is_locked_by_quick_setup(locked_by)
-        ):
-            quick_setup_duplication_warning(locked_by, "host")
 
     def _vs_host_name(self):
         return Hostname(

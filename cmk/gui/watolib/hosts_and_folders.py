@@ -26,7 +26,6 @@ from redis.client import Pipeline
 from livestatus import SiteId
 
 import cmk.utils.paths
-from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
 from cmk.utils.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
@@ -2187,8 +2186,19 @@ class Folder(FolderProtocol):
         if subfolder is None:
             return
 
-        # 2. Check if hosts can be deleted
-        self._validate_delete_hosts(subfolder.all_hosts_recursively().keys())
+        # 2. Check if hosts have parents
+        hosts_with_children = self._get_parents_of_hosts(subfolder.all_hosts_recursively().keys())
+        if hosts_with_children:
+            raise MKUserError(
+                "delete_host",
+                _("You cannot delete these hosts: %s")
+                % ", ".join(
+                    [
+                        _("%s is parent of %s.") % (parent, ", ".join(children))
+                        for parent, children in sorted(hosts_with_children.items())
+                    ]
+                ),
+            )
 
         # 3. Actual modification
         hooks.call("folder-deleted", subfolder)
@@ -2418,8 +2428,19 @@ class Folder(FolderProtocol):
         self.need_unlocked_hosts()
         self.permissions.need_permission("write")
 
-        # 2. Check if hosts can be deleted
-        self._validate_delete_hosts(host_names)
+        # 2. check if hosts have parents
+        hosts_with_children = self._get_parents_of_hosts(host_names)
+        if hosts_with_children:
+            raise MKUserError(
+                "delete_host",
+                _("You cannot delete these hosts: %s")
+                % ", ".join(
+                    [
+                        _("%s is parent of %s.") % (parent, ", ".join(children))
+                        for parent, children in sorted(hosts_with_children.items())
+                    ]
+                ),
+            )
 
         # 3. Delete host specific files (caches, tempfiles, ...)
         self._delete_host_files(host_names, automation=automation)
@@ -2441,46 +2462,17 @@ class Folder(FolderProtocol):
         self.save_hosts()
         folder_lookup_cache().delete_hosts(host_names)
 
-    def _validate_delete_hosts(self, host_names: Collection[HostName]) -> None:
-        # 1. check if hosts are locked by quick setup
-        errors: list[str] = []
-        if hosts := self._get_hosts_locked_by_quick_setup(host_names):
-            errors.extend(_("%s is locked by Quick setup.") % host_name for host_name in hosts)
-
-        # 2. check if hosts have parents
-        if hosts_with_children := self._get_parents_of_hosts(host_names):
-            errors.extend(
-                _("%s is parent of %s.") % (parent, ", ".join(children))
-                for parent, children in sorted(hosts_with_children.items())
-            )
-
-        if errors:
-            raise MKUserError(
-                "delete_host",
-                _("You cannot delete these hosts: %s") % ", ".join(errors),
-            )
-
-    def _get_hosts_locked_by_quick_setup(self, host_names: Collection[HostName]) -> list[HostName]:
-        hosts = self.hosts()
-        return [
-            host_name
-            for host_name in host_names
-            if is_locked_by_quick_setup(hosts[host_name].locked_by())
-        ]
-
-    def _get_parents_of_hosts(
-        self, host_names: Collection[HostName]
-    ) -> dict[HostName, list[HostName]]:
+    def _get_parents_of_hosts(self, host_names):
         # Note: Deletion of chosen hosts which are parents
         # is possible if and only if all children are chosen, too.
-        hosts_with_children: dict[HostName, list[HostName]] = {}
+        hosts_with_children: dict[str, list[str]] = {}
         for child_key, child in folder_tree().root_folder().all_hosts_recursively().items():
             for host_name in host_names:
                 if host_name in child.parents():
                     hosts_with_children.setdefault(host_name, [])
                     hosts_with_children[host_name].append(child_key)
 
-        result: dict[HostName, list[HostName]] = {}
+        result: dict[str, list[str]] = {}
         for parent, children in hosts_with_children.items():
             if not set(children) < set(host_names):
                 result.setdefault(parent, children)
@@ -2553,19 +2545,13 @@ class Folder(FolderProtocol):
         folder_path = target_folder.path()
         folder_lookup_cache().add_hosts([(x, folder_path) for x in host_names])
 
-    def rename_host(self, oldname: HostName, newname: HostName) -> None:
+    def rename_host(self, oldname, newname):
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
         user.need_permission("wato.edit_hosts")
         self.need_unlocked_hosts()
         host = self.hosts()[oldname]
         host.permissions.need_permission("write")
-
-        if is_locked_by_quick_setup(host.locked_by()):
-            raise MKUserError(
-                "rename-host",
-                _('You cannot rename host "%s", because it is managed by Quick setup.') % oldname,
-            )
 
         # 2. Actual modification
         host.rename(newname)
@@ -3128,18 +3114,6 @@ class Host:
 
     def parents(self) -> Sequence[HostName]:
         return self.effective_attributes().get("parents", [])
-
-    def locked_by(self) -> GlobalIdent | None:
-        # locked_by cannot be inherited, so no need to use effective_attributes()
-        locked = self.attributes.get("locked_by")
-        if locked and len(locked) == 3:
-            # convert list/tuple to dict structure
-            return GlobalIdent(
-                site_id=locked[0],
-                program_id=locked[1],
-                instance_id=locked[2],
-            )
-        return None
 
     def tag_groups(self) -> Mapping[TagGroupID, TagID]:
         """Compute tags from host attributes

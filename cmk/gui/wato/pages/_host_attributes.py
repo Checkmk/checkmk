@@ -8,7 +8,6 @@ from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 
 from cmk.utils import paths
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -19,10 +18,9 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
-from cmk.gui.quick_setup.html import quick_setup_render_link
 from cmk.gui.utils.html import HTML as HTML
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import FixedValue, ValueSpec
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
     get_sorted_host_attribute_topics,
@@ -360,20 +358,6 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
             html.write_text_permissive(explanation)
             html.close_div()
-
-        if (
-            topic_id == "basic"
-            and isinstance(host, Host)
-            and (locked_by := host.locked_by())
-            and is_locked_by_quick_setup(locked_by)
-        ):
-            vs = FixedValue(
-                value=locked_by["instance_id"],
-                title=_u("Source"),
-                totext=quick_setup_render_link(locked_by),
-            )
-            forms.section(vs.title())
-            vs.render_input("_internal_source", locked_by["instance_id"])
 
         if topic_is_volatile:
             volatile_topics.append(topic_id)

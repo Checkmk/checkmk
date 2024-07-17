@@ -21,7 +21,6 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 from livestatus import SiteId
 
 from cmk.utils import paths
-from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
 
 from cmk.automations.results import DeleteHostsResult
@@ -676,90 +675,6 @@ def test_openapi_host_rename_on_invalid_hostname(
     clients.HostConfig.rename(
         host_name="foobar",
         new_name="foobar",
-        expect_ok=False,
-    ).assert_status_code(400)
-
-
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_rename_locked_by_quick_setup(
-    clients: ClientRegistry,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr("cmk.gui.openapi.endpoints.host_config.has_pending_changes", lambda: False)
-
-    clients.HostConfig.create(
-        host_name="foobar",
-        folder="/",
-        attributes={
-            "locked_by": {
-                "site_id": "heute",
-                "program_id": PROGRAM_ID_QUICK_SETUP,
-                "instance_id": "some-rule",
-            }
-        },
-    )
-    clients.HostConfig.rename(
-        host_name="foobar",
-        new_name="foobar123",
-        expect_ok=False,
-    ).assert_status_code(400)
-
-
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_delete_locked_by_quick_setup(
-    clients: ClientRegistry,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    clients.HostConfig.create(
-        host_name="foobar",
-        folder="/",
-        attributes={
-            "locked_by": {
-                "site_id": "heute",
-                "program_id": PROGRAM_ID_QUICK_SETUP,
-                "instance_id": "some-rule",
-            }
-        },
-    )
-    clients.HostConfig.delete(
-        host_name="foobar",
-        expect_ok=False,
-    ).assert_status_code(400)
-
-
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_update_locked_by_quick_setup(
-    clients: ClientRegistry,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    clients.HostConfig.create(
-        host_name="foobar",
-        folder="/",
-        attributes={
-            "tag_address_family": "no-ip",
-            "locked_attributes": ["tag_address_family"],
-            "locked_by": {
-                "site_id": "heute",
-                "program_id": PROGRAM_ID_QUICK_SETUP,
-                "instance_id": "some-rule",
-            },
-        },
-    )
-    clients.HostConfig.edit(
-        host_name="foobar",
-        attributes={"tag_address_family": "no-ip"},  # should fail because we remove the lock
-        expect_ok=False,
-    ).assert_status_code(400)
-
-    clients.HostConfig.edit(
-        host_name="foobar",
-        update_attributes={"tag_address_family": "ip-v4-only"},
-        expect_ok=False,
-    ).assert_status_code(400)
-
-    clients.HostConfig.edit(
-        host_name="foobar",
-        remove_attributes=["tag_address_family"],
         expect_ok=False,
     ).assert_status_code(400)
 

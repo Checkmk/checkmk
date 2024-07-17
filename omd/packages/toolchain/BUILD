@@ -28,6 +28,10 @@ LINK_FLAGS = [
     "-lm",
 ]
 
+linux_gcc13_link_flags = ["-B/usr/bin"]
+
+ci_link_flags = ["-B/opt/bin"]
+
 LINK_LIBS = ["-lstdc++"]
 
 OPT_COMPILE_FLAGS = [
@@ -92,8 +96,16 @@ ci_cxx_builtin_include_directories = [
 ]
 
 TOOLCHAINS = {
-    "linux_gcc13": (linux_gcc13_cxx_builtin_include_directories, linux_gcc13_tool_paths),
-    "ci": (ci_cxx_builtin_include_directories, ci_tool_paths),
+    "linux_gcc13": (
+        linux_gcc13_cxx_builtin_include_directories,
+        linux_gcc13_tool_paths,
+        linux_gcc13_link_flags,
+    ),
+    "ci": (
+        ci_cxx_builtin_include_directories,
+        ci_tool_paths,
+        ci_link_flags,
+    ),
 }
 
 [
@@ -108,7 +120,7 @@ TOOLCHAINS = {
         cxx_flags = CXX_FLAGS,
         dbg_compile_flags = DBG_COMPILE_FLAGS,
         host_system_name = "local",
-        link_flags = LINK_FLAGS,
+        link_flags = LINK_FLAGS + link_flags,
         link_libs = LINK_LIBS,
         opt_compile_flags = OPT_COMPILE_FLAGS,
         opt_link_flags = OPT_LINK_FLAGS,
@@ -118,7 +130,11 @@ TOOLCHAINS = {
         toolchain_identifier = identifier,
         unfiltered_compile_flags = UNFILTERED_COMPILE_FLAGS,
     )
-    for identifier, (cxx_builtin_include_directories, tool_paths) in TOOLCHAINS.items()
+    for identifier, (
+        cxx_builtin_include_directories,
+        tool_paths,
+        link_flags,
+    ) in TOOLCHAINS.items()
 ]
 
 [cc_toolchain(

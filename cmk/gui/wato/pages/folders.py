@@ -9,6 +9,7 @@ import re
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from typing import TypeVar
 
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroupID, TagID
@@ -39,6 +40,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.quick_setup.html import quick_setup_source_cell
 from cmk.gui.table import show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, Choices, HTTPVariables, PermissionName
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
@@ -1130,6 +1132,8 @@ class ModeFolder(WatoMode):
             table.cell(_("Folder"))
             html.a(host.folder().alias_path(), href=host.folder().url())
 
+        quick_setup_source_cell(table, host.locked_by())
+
     def _limit_labels(self, labels: TagsOrLabels) -> tuple[TagsOrLabels, HTML]:
         show_all, limit = HTML.empty(), 3
         if len(labels) > limit and request.var("_show_all") != "1":
@@ -1165,16 +1169,20 @@ class ModeFolder(WatoMode):
                 )
             html.icon_button(host.services_url(), msg, image)
 
-        action_menu_show_flags: list[str] = []
         if not host.locked():
             if user.may("wato.edit_hosts") and user.may("wato.move_hosts"):
                 self._show_move_to_folder_action(host)
 
-            if user.may("wato.manage_hosts"):
+        self._show_host_actions_menu(host)
+
+    def _show_host_actions_menu(self, host: Host) -> None:
+        action_menu_show_flags: list[str] = []
+        if not host.locked() and user.may("wato.manage_hosts"):
+            if not is_locked_by_quick_setup(host.locked_by()):
                 action_menu_show_flags.append("show_delete_link")
 
-                if user.may("wato.clone_hosts"):
-                    action_menu_show_flags.append("show_clone_link")
+            if user.may("wato.clone_hosts"):
+                action_menu_show_flags.append("show_clone_link")
 
         if not self._folder.locked_hosts() and user.may("wato.parentscan"):
             action_menu_show_flags.append("show_parentscan_link")

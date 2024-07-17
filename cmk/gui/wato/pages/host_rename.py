@@ -10,6 +10,7 @@ from functools import partial
 from typing import Any
 
 from cmk.utils import paths
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
 
@@ -205,6 +206,7 @@ class ModeBulkRenameHost(WatoMode):
         invalid_names = set()
         name_collisions = set()
         seen_names = set()
+        locked_by_quick_setup = set()
         all_host_names = Host.all().keys()
         updated_renamings = []
         for folder, old_name, new_name in renamings:
@@ -216,6 +218,9 @@ class ModeBulkRenameHost(WatoMode):
             except ValueError:
                 invalid_names.add(new_name)
 
+            if (host := folder.host(old_name)) and is_locked_by_quick_setup(host.locked_by()):
+                locked_by_quick_setup.add(old_name)
+
         warning = ""
         if invalid_names:
             warning += self._format_renamings_warning(
@@ -226,6 +231,14 @@ class ModeBulkRenameHost(WatoMode):
             warning += self._format_renamings_warning(
                 _("You cannot do this renaming since the following host names would collide:"),
                 name_collisions,
+            )
+        if locked_by_quick_setup:
+            warning += self._format_renamings_warning(
+                _(
+                    "You cannot do this renaming since the following hosts are locked by "
+                    "Quick setup:"
+                ),
+                locked_by_quick_setup,
             )
         if warning:
             raise HostRenamingException(warning)
@@ -526,6 +539,12 @@ class ModeRenameHost(WatoMode):
                     "pending changes on the site the host is monitored on (%s)."
                 )
                 % renamed_host_site,
+            )
+        if is_locked_by_quick_setup(self._host.locked_by()):
+            raise MKUserError(
+                "host",
+                _('You cannot rename host "%s", because it is managed by Quick setup.')
+                % self._host.name(),
             )
 
         newname = request.get_validated_type_input_mandatory(HostName, "newname")

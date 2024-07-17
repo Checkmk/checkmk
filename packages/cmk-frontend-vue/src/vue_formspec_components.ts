@@ -35,6 +35,8 @@ export type String = FormSpec & {
 export type Dictionary = FormSpec & {
   type: "dictionary";
   elements: DictionaryElement[];
+  no_elements_text?: string;
+  ignored_elements?: unknown[];
 };
 export type List = FormSpec & {
   type: "list";

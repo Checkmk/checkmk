@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { validate_value, type ValidationMessages } from '@/utils'
 import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
 import type { List } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
+import type { IComponent } from '@/types'
 
 const props = defineProps<{
   spec: List
-  validation: ValidationMessages
 }>()
 
 const data = defineModel<unknown[]>('data', { required: true })
@@ -15,48 +15,50 @@ const local_validation = ref<ValidationMessages | null>(null)
 
 type DataWithID = {
   value: unknown
-  validation: ValidationMessages
   key: string
 }
 
 const data_with_id = ref<DataWithID[]>([])
 
 onMounted(() => {
-  data.value.forEach((element, index) => {
+  data.value.forEach((element) => {
     data_with_id.value.push({
       value: element,
-      validation: getValidationForChild(index),
       key: crypto.randomUUID()
     })
   })
 })
 
-const validation = computed({
-  get(): ValidationMessages {
-    // If the local validation was never used (null), return the props.validation (backend validation)
-    if (local_validation.value === null) {
-      return props.validation
-    }
-    return local_validation.value
-  },
-  set(value: ValidationMessages) {
-    local_validation.value = value
-  }
-})
+const validation = ref<ValidationMessages>([])
 
-function getValidationForChild(index: number): ValidationMessages {
-  const child_messages: ValidationMessages = []
-  validation.value.forEach((msg) => {
-    if (msg.location[0] === index.toString()) {
-      child_messages.push({
-        location: msg.location.slice(1),
-        message: msg.message,
-        invalid_value: msg.invalid_value
-      })
+function setValidation(new_validation: ValidationMessages) {
+  const all_element_messages: Record<number, ValidationMessages> = {}
+  new_validation.forEach((msg) => {
+    if (msg.location.length === 0) {
+      return
+    }
+    const element_index = parseInt(msg.location[0]!)
+    const element_messages = all_element_messages[element_index] || []
+    element_messages.push({
+      location: msg.location.slice(1),
+      message: msg.message,
+      invalid_value: msg.invalid_value
+    })
+    all_element_messages[element_index] = element_messages
+  })
+
+  data_with_id.value.forEach((element, index) => {
+    const element_messages = all_element_messages[index] || []
+    const element_component = list_elements.value[element.key]
+    if (element_component) {
+      element_component.setValidation(element_messages)
     }
   })
-  return child_messages
 }
+
+defineExpose({
+  setValidation
+})
 
 let table_ref = ref<HTMLTableElement | null>(null)
 const class_listof_element = 'listof_element'
@@ -64,11 +66,11 @@ const class_element_dragger = 'element_dragger'
 const class_vlof_buttons = 'vlof_buttons'
 
 function dragStart(event: DragEvent) {
-  ;(event.target! as HTMLTableRowElement).closest('tr')!.classList.add('dragging')
+  ;(event.target! as HTMLTableCellElement).closest('tr')!.classList.add('dragging')
 }
 
 function dragEnd(event: DragEvent) {
-  ;(event.target! as HTMLTableRowElement).closest('tr')!.classList.remove('dragging')
+  ;(event.target! as HTMLTableCellElement).closest('tr')!.classList.remove('dragging')
 }
 
 function dragging(event: DragEvent) {
@@ -121,7 +123,6 @@ function removeElement(index: number) {
 function addElement() {
   data_with_id.value.push({
     value: props.spec.element_default_value,
-    validation: [],
     key: crypto.randomUUID()
   })
   sendDataUpstream()
@@ -142,14 +143,20 @@ function sendDataUpstream() {
     data.value.push(element.value)
   })
 }
+
+const list_elements = ref<Record<string, IComponent>>({})
 </script>
 
 <template>
   <table ref="table_ref" class="valuespec_listof">
     <template v-for="(element, index) in data_with_id" :key="element.key">
       <tr :class="class_listof_element">
-        <td :class="class_vlof_buttons" @dragstart="dragStart" @drag="dragging" @dragend="dragEnd">
+        <td :class="class_vlof_buttons">
           <a
+            v-if="props.spec.editable_order"
+            @dragstart="dragStart"
+            @drag="dragging"
+            @dragend="dragEnd"
             ><img src="themes/modern-dark/images/icon_drag.svg" :class="class_element_dragger" />
           </a>
           <a title="Delete this entry">
@@ -162,9 +169,13 @@ function sendDataUpstream() {
         </td>
         <td class="vlof_content">
           <CmkFormDispatcher
+            :ref="
+              (el) => {
+                list_elements[element.key] = el as unknown as IComponent
+              }
+            "
             v-model:data="element.value"
             :spec="spec.element_template"
-            :validation="element.validation"
             @update:data="(new_value) => updateElementData(new_value, element.key)"
           ></CmkFormDispatcher>
         </td>

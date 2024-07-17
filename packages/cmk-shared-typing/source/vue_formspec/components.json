@@ -206,6 +206,12 @@
             "$ref": "#/$defs/dictionary_element"
           },
           "default": []
+        },
+        "no_elements_text": {
+          "type": "string"
+        },
+        "ignored_elements": {
+          "type": "array"
         }
       },
       "required": [
@@ -230,7 +236,7 @@
       },
       "required": [
         "name",
-        "title",
+        "title"
       ]
     },
     "single_choice": {

@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Callable, Iterable, Literal, Mapping, NewType, NotRequired, TypedDict
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
-from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password
 
 from cmk.gui.watolib.hosts_and_folders import Folder, Host
@@ -24,9 +23,9 @@ IDENT_FINDER = Callable[[GlobalIdent | None], BundleId | None]
 
 class SpecialAgentBundleReferences(TypedDict):
     # TODO: introduce dcd
-    host_name: HostName
-    password_id: str | None
-    special_agent_rule_id: str
+    host: Host
+    password: tuple[str, Password] | None  # PasswordId, Password
+    special_agent_rule: Rule
 
 
 def identify_special_agent_bundle_references(
@@ -52,11 +51,11 @@ def identify_special_agent_bundle_references(
         collect_passwords(finder=bundle_id_finder, passwords=load_passwords())
     )
 
-    for bundle_id, hostname in collect_hosts(finder=bundle_id_finder, hosts=Host.all().values()):
+    for bundle_id, host in collect_hosts(finder=bundle_id_finder, hosts=Host.all().values()):
         bundles[bundle_id] = {
-            "host_name": hostname,
-            "password_id": bundle_password_ids.get(bundle_id),
-            "special_agent_rule_id": bundle_rule_ids[bundle_id],
+            "host": host,
+            "password": bundle_password_ids.get(bundle_id),
+            "special_agent_rule": bundle_rule_ids[bundle_id],
         }
 
     if len(bundles) != len(bundle_ids):
@@ -65,9 +64,7 @@ def identify_special_agent_bundle_references(
     return bundles
 
 
-def collect_hosts(
-    finder: IDENT_FINDER, hosts: Iterable[Host]
-) -> Iterable[tuple[BundleId, HostName]]:
+def collect_hosts(finder: IDENT_FINDER, hosts: Iterable[Host]) -> Iterable[tuple[BundleId, Host]]:
     seen_ids: set[BundleId] = set()
     for host in hosts:
         if bundle_id := finder(host.locked_by()):
@@ -76,12 +73,12 @@ def collect_hosts(
                     f"One bundle should reference only one host, but bundle {bundle_id} references multiple hosts"
                 )
             seen_ids.add(bundle_id)
-            yield bundle_id, host.name()
+            yield bundle_id, host
 
 
 def collect_passwords(
     finder: IDENT_FINDER, passwords: Mapping[str, Password]
-) -> Iterable[tuple[BundleId, str]]:
+) -> Iterable[tuple[BundleId, tuple[str, Password]]]:
     seen_ids: set[BundleId] = set()
     for password_id, password in passwords.items():
         if bundle_id := finder(password.get("locked_by")):
@@ -90,12 +87,12 @@ def collect_passwords(
                     f"One bundle should reference only one password, but bundle {bundle_id} references multiple passwords"
                 )
             seen_ids.add(bundle_id)
-            yield bundle_id, password_id
+            yield bundle_id, (password_id, password)
 
 
 def collect_rules(
     finder: IDENT_FINDER, rules: Iterable[tuple[Folder, int, Rule]]
-) -> Iterable[tuple[BundleId, str]]:
+) -> Iterable[tuple[BundleId, Rule]]:
     seen_ids: set[BundleId] = set()
     for _folder, _idx, rule in rules:
         if bundle_id := finder(rule.locked_by):
@@ -104,7 +101,7 @@ def collect_rules(
                     f"One bundle should reference only one rule, but bundle {bundle_id} references multiple rules"
                 )
             seen_ids.add(bundle_id)
-            yield bundle_id, rule.id
+            yield bundle_id, rule
 
 
 def prepare_bundle_id_finder(bundle_program_id: str, bundle_ids: set[BundleId]) -> IDENT_FINDER:

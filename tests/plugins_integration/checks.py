@@ -315,7 +315,7 @@ def process_raw_data(site: Site, host_name: str) -> tuple[str, str]:
     return disk_dump, read_cmk_dump(host_name, site, dump_type)
 
 
-def process_check_output(
+def process_check_output(  # pylint: disable=too-many-branches
     site: Site,
     host_name: str,
     output_dir: Path,
@@ -327,12 +327,16 @@ def process_check_output(
 
     logger.info('> Processing agent host "%s"...', host_name)
     diffs = {}
+    if config.piggyback:
+        response_path = (
+            f"{config.response_dir}/"
+            f"{"piggyback_hosts" if piggyback_host else "source_hosts"}/{host_name}.json"
+        )
+    else:
+        response_path = f"{config.response_dir}/{host_name}.json"
 
-    if os.path.exists(f"{config.response_dir}/{host_name}.json"):
-        with open(
-            f"{config.response_dir}/{host_name}.json",
-            encoding="utf-8",
-        ) as json_file:
+    if os.path.exists(response_path):
+        with open(response_path, encoding="utf-8") as json_file:
             check_canons = json.load(json_file)
     else:
         check_canons = {}
@@ -384,8 +388,7 @@ def process_check_output(
 
     if config.mode != CheckModes.DEFAULT:
         with open(
-            f"{config.response_dir}/{"piggyback_hosts" if piggyback_host else "source_hosts"}/"
-            f"{host_name}.json",
+            response_path,
             mode="w",
             encoding="utf-8",
         ) as json_file:

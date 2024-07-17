@@ -1792,8 +1792,9 @@ def render_hidden_if_locked(vs: ValueSpec, varprefix: str, value: object, locked
 
 class ABCEditRuleMode(WatoMode):
     def __init__(self):
-        super().__init__()
+        self._varname = "varname"
         self._do_validate_on_render = False
+        super().__init__()
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
@@ -1809,12 +1810,12 @@ class ABCEditRuleMode(WatoMode):
         return ModeEditRuleset
 
     def _from_vars(self) -> None:
-        self._name = request.get_ascii_input_mandatory("varname")
+        self._name = request.get_ascii_input_mandatory(self._varname)
 
         try:
             self._rulespec = rulespec_registry[self._name]
         except KeyError:
-            raise MKUserError("varname", _('The ruleset "%s" does not exist.') % self._name)
+            raise MKUserError(self._varname, _('The ruleset "%s" does not exist.') % self._name)
 
         self._back_mode = request.get_ascii_input_mandatory("back_mode", "edit_ruleset")
 
@@ -1923,7 +1924,7 @@ class ABCEditRuleMode(WatoMode):
         if self._back_mode == "edit_ruleset":
             var_list: HTTPVariables = [
                 ("mode", "edit_ruleset"),
-                ("varname", self._name),
+                (self._varname, self._name),
                 ("host", request.get_ascii_input_mandatory("host", "")),
             ]
             if request.has_var("item"):
@@ -2940,6 +2941,10 @@ class RuleConditionRenderer:
 
 
 class ModeEditRule(ABCEditRuleMode):
+    def __init__(self, varname: str = "varname"):
+        self._varname = varname
+        super().__init__()
+
     @classmethod
     def name(cls) -> str:
         return "edit_rule"

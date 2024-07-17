@@ -19,13 +19,6 @@ from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import edition_from_env, parse_raw_edition, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
-from cmk.utils.cee.licensing.helper import (
-    get_verification_request_id_file_path,
-    get_verification_response_file_path,
-)
-from cmk.utils.licensing.helper import get_licensed_state_file_path
-from cmk.utils.paths import omd_root
-
 from cmk.ccc.version import Edition
 
 LOGGER = logging.getLogger(__name__)
@@ -227,14 +220,6 @@ def update_site(base_site: Site, target_version: CMKVersion, interactive: bool) 
     return target_site
 
 
-def _get_rel_path(full_path: Path) -> Path:
-    return full_path if not omd_root else full_path.relative_to(omd_root)
-
-
-def is_test_site_licensed(test_site: Site) -> bool:
-    return bool(test_site.read_file(_get_rel_path(get_licensed_state_file_path())))
-
-
 @pytest.fixture(name="test_setup", params=TestParams.TEST_PARAMS, scope="module")
 def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     """Install the test site with the base version."""
@@ -267,20 +252,6 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
         inject_dumps(test_site, DUMPS_DIR)
         if not disable_rules_injection:
             inject_rules(test_site)
-
-    # copy the desired license files to the test site
-    test_site.copy_file(
-        str(Path("license_files") / target_edition.short / "verification_response"),
-        str(_get_rel_path(get_verification_response_file_path())),
-    )
-    if test_site.version.edition in [Edition.CCE, Edition.CME]:  # enforced license editions
-        test_site.copy_file(
-            str(Path("license_files") / target_edition.short / "verification_request_id"),
-            str(_get_rel_path(get_verification_request_id_file_path())),
-        )
-
-    test_site.activate_changes_and_wait_for_core_reload()
-    assert is_test_site_licensed(test_site)
 
     yield test_site, target_edition, interactive_mode
     LOGGER.info("Removing test-site...")

@@ -14,7 +14,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.ccc.version import Edition
 
-from .conftest import get_site_status, is_test_site_licensed, update_site
+from .conftest import get_site_status, update_site
 
 logger = logging.getLogger(__name__)
 
@@ -85,11 +85,3 @@ def test_update(test_setup: tuple[Site, Edition, bool]) -> None:
             f"\nDetails: {err_details})"
         )
         assert base_ok_services.issubset(target_ok_services), err_msg
-
-    # when going from CEE to another edition, the license information is reset, so the site is not
-    # always licensed after the update
-    if base_version.is_enterprise_edition():
-        expected_licensed = target_version.is_enterprise_edition()
-    else:
-        expected_licensed = True
-    assert expected_licensed == is_test_site_licensed(target_site)

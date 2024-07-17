@@ -55,6 +55,7 @@ class IntegerVisitor(FormSpecVisitor):
             VueComponents.Integer(
                 title=title,
                 help=help_text,
+                unit=self.form_spec.unit_symbol,
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(self._validators()),
                 input_hint=compute_input_hint(self.form_spec.prefill),

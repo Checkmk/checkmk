@@ -192,6 +192,8 @@ RUN /opt/install-patchelf.sh
 # Jenkins is using this group ID everywhere, so lets move it
 RUN groupmod -g 3000 ubuntu
 
+COPY --from=scripts ci.bazelrc /etc/
+
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt
 

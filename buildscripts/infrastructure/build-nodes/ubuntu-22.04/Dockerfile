@@ -189,6 +189,8 @@ RUN /opt/install-cmk-dependencies.sh
 COPY --from=scripts install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh
 
+COPY --from=scripts ci.bazelrc /etc/
+
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt
 

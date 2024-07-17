@@ -231,6 +231,8 @@ RUN /opt/install-patchelf.sh
 # simply solve this by pre-creating the empty file here.
 RUN touch /etc/fstab
 
+COPY --from=scripts ci.bazelrc /etc/
+
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt
 

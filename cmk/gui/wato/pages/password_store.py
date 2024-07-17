@@ -10,6 +10,7 @@ from cmk.utils.password_store import Password
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.html import (
@@ -271,7 +272,10 @@ class ModeEditPassword(SimpleEditMode[Password]):
 
     def _page_form_quick_setup_warning(self) -> None:
         locked_by = None if self._new else self._entry.get("locked_by")
-        if is_locked_by_quick_setup(locked_by):
+        if (
+            is_locked_by_quick_setup(locked_by)
+            and request.get_ascii_input("mode") != "edit_configuration_bundle"
+        ):
             quick_setup_locked_warning(locked_by, self._mode_type.name_singular())
 
         elif self._clone_source and (locked_by := self._clone_source.get("locked_by")):

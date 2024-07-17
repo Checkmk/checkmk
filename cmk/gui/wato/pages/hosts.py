@@ -295,7 +295,11 @@ class ABCHostMode(WatoMode, abc.ABC):
             html.hidden_fields()
 
     def _page_form_quick_setup_warning(self) -> None:
-        if (locked_by := self._host.locked_by()) and is_locked_by_quick_setup(locked_by):
+        if (
+            (locked_by := self._host.locked_by())
+            and is_locked_by_quick_setup(locked_by)
+            and request.get_ascii_input("mode") != "edit_configuration_bundle"
+        ):
             quick_setup_locked_warning(locked_by, "host")
 
     def _vs_cluster_nodes(self):

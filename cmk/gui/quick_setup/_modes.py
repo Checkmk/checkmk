@@ -218,8 +218,6 @@ class ModeConfigurationBundle(WatoMode):
                 edit_password.page(f"edit_password_{index}")
 
     def page(self) -> None:
-        # TODO: as we use the same rendering for this mode and the individual modes we need to
-        #  disable the quick setup warnings
         match self._rule_group_type:
             case RuleGroupType.SPECIAL_AGENTS:
                 self._sub_page_configuration()

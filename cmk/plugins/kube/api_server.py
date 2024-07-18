@@ -41,7 +41,7 @@ from cmk.plugins.kube.transform_json import (
 
 LOGGER = logging.getLogger()
 VERSION_MATCH_RE = re.compile(r"\s*v?([0-9]+(?:\.[0-9]+)*).*")
-SUPPORTED_VERSIONS = [(1, 24), (1, 25), (1, 26), (1, 27), (1, 28)]
+SUPPORTED_VERSIONS = [(1, 24), (1, 25), (1, 26), (1, 27), (1, 28), (1, 29)]
 # PM decision: LOWEST_FUNCTIONING_VERSION is incremented, if an issue is reported by a customer.
 # Otherwise, we try not change anything in monitoring (despite lack of support).
 LOWEST_FUNCTIONING_VERSION = (1, 21)

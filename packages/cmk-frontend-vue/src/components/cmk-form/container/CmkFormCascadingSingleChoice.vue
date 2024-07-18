@@ -16,6 +16,10 @@ const props = defineProps<{
 
 const validation = ref<ValidationMessages>([])
 function setValidation(new_validation: ValidationMessages) {
+  if (active_component.value === undefined) {
+    throw new Error('active_component is undefined')
+  }
+
   validation.value = []
   const element_messages: ValidationMessages = []
   new_validation.forEach((msg) => {
@@ -29,7 +33,7 @@ function setValidation(new_validation: ValidationMessages) {
       invalid_value: msg.invalid_value
     })
   })
-  active_element_ref.value['active']!.setValidation(element_messages)
+  active_component.value.setValidation(element_messages)
 }
 
 defineExpose({
@@ -93,7 +97,7 @@ const active_element = computed((): ActiveElement => {
     validation: []
   }
 })
-const active_element_ref = ref<Record<string, IComponent>>({})
+const active_component = ref<IComponent>()
 </script>
 
 <template>
@@ -106,11 +110,7 @@ const active_element_ref = ref<Record<string, IComponent>>({})
     </select>
   </div>
   <CmkFormDispatcher
-    :ref="
-      (el) => {
-        active_element_ref['active'] = el as unknown as IComponent
-      }
-    "
+    ref="active_component"
     v-model:data="data[1]"
     :spec="active_element.spec"
   ></CmkFormDispatcher>

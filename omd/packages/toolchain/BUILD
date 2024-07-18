@@ -1,6 +1,5 @@
 load(
-    # https://cs.opensource.google/bazel/bazel/+/master:tools/cpp/unix_cc_toolchain_config.bzl
-    "@bazel_tools//tools/cpp:unix_cc_toolchain_config.bzl",
+    "@forked_cc_toolchain_config//:unix_cc_toolchain_config.bzl",
     unix_cc_toolchain_config = "cc_toolchain_config",
 )
 load("@rules_cc//cc:defs.bzl", "cc_toolchain")
@@ -25,14 +24,13 @@ LINK_FLAGS = [
     "-Wl,-no-as-needed",
     "-Wl,-z,relro,-z,now",
     "-pass-exit-codes",
-    "-lm",
 ]
 
 linux_gcc13_link_flags = ["-B/usr/bin"]
 
 ci_link_flags = ["-B/opt/bin"]
 
-LINK_LIBS = ["-lstdc++"]
+LINK_LIBS = ["-lm"]
 
 OPT_COMPILE_FLAGS = [
     "-g0",

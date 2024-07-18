@@ -1,0 +1,38 @@
+diff --git a/tools/cpp/unix_cc_toolchain_config.bzl b/tools/cpp/unix_cc_toolchain_config.bzl
+index ed5d2d3659..fa1a3a8cba 100644
+--- a/tools/cpp/unix_cc_toolchain_config.bzl
++++ b/tools/cpp/unix_cc_toolchain_config.bzl
+@@ -218,6 +218,17 @@ def _impl(ctx):
+     static_link_cpp_runtimes_feature = feature(
+         name = "static_link_cpp_runtimes",
+         enabled = False,
++        flag_sets = [
++            flag_set(
++                actions = [
++                    ACTION_NAMES.cpp_link_executable,
++                    ACTION_NAMES.cpp_link_dynamic_library,
++                    ACTION_NAMES.lto_index_for_executable,
++                    ACTION_NAMES.lto_index_for_dynamic_library,
++                ],
++                flag_groups = [flag_group(flags = ["-static-libstdc++"])],
++            ),
++        ],
+     )
+ 
+     default_compile_flags_feature = feature(
+@@ -944,6 +955,15 @@ def _impl(ctx):
+                     ),
+                 ],
+             ),
++            flag_set(
++                actions = all_link_actions + lto_index_actions,
++                flag_groups = [flag_group(flags = ["-lstdc++"])],
++                with_features = [
++                    with_feature_set(
++                        not_features = ["static_link_cpp_runtimes"],
++                    ),
++                ],
++            ),
+         ],
+     )
+ 

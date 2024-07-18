@@ -3,6 +3,11 @@ workspace(name = "omd_packages")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
+load("//omd/packages/toolchain:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
+
+fork_cc_toolchain_config(
+    name = "forked_cc_toolchain_config",
+)
 
 register_toolchains("//omd/packages/toolchain:linux_gcc13")
 

@@ -10,11 +10,14 @@ from typing import Literal
 
 import pytest
 
+from cmk.utils.paths import omd_root
+
 from cmk.gui.graphing import perfometer_info
 from cmk.gui.graphing._loader import load_graphing_plugins
 from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.graphing._utils import graph_info, metric_info
 
+from cmk.ccc.version import Edition, edition
 from cmk.discover_plugins import PluginLocation
 from cmk.graphing.v1 import graphs, metrics, perfometers, translations
 
@@ -345,8 +348,12 @@ def test_bundles() -> None:
     )
 
 
-_ALLOWED_BUNDLE_VIOLATIONS = {
-    # we cannot have sub-modules below the cee folder, so we have to allow the following violations
-    # in cmk.cee.robotmk, the module layout of the metric etc. defintions is correct
-    "cmk.plugins.robotmk.graphing.cee",
-}
+_ALLOWED_BUNDLE_VIOLATIONS = (
+    set()
+    if edition(omd_root) is Edition.CRE
+    else {
+        # we cannot have sub-modules below the cee folder, so we have to allow the following violations
+        # in cmk.cee.robotmk, the module layout of the metric etc. defintions is correct
+        "cmk.plugins.robotmk.graphing.cee",
+    }
+)

@@ -869,13 +869,13 @@ class LDAPConnectionConfigRequest(BaseSchema):
         example={
             "directory_type": {
                 "type": "active_directory_manual",
-                "ldap_server": "10.200.3.32",
+                "ldap_server": "123.31.12.34",
             },
             "bind_credentials": {
                 "state": "enabled",
                 "type": "explicit",
-                "bind_dn": "cn=ldap,ou=Benutzer,dc=corp,dc=de",
-                "explicit_password": "ldap",
+                "bind_dn": "cn=commonname,ou=OrgUnit,dc=domaincomp,dc=de",
+                "explicit_password": "yourpass",
             },
             "tcp_port": {"state": "enabled", "port": 389},
             "ssl_encryption": "enable_ssl",
@@ -883,14 +883,14 @@ class LDAPConnectionConfigRequest(BaseSchema):
             "ldap_version": {"state": "enabled", "version": 3},
             "page_size": {"state": "enabled", "size": 1000},
             "response_timeout": {"state": "enabled", "seconds": 60},
-            "connection_suffix": {"state": "enabled", "suffix": "dc=corp,dc=de"},
+            "connection_suffix": {"state": "enabled", "suffix": "dc=domaincomp,dc=de"},
         },
     )
     users = fields.Nested(
         LDAPUsersRequest,
         description="The LDAP user configuration",
         example={
-            "user_base_dn": "ou=Benutzer,dc=corp,dc=de",
+            "user_base_dn": "ou=OrgUnit,dc=domaincomp,dc=de",
             "search_scope": "search_only_base_dn_entry",
             "search_filter": {
                 "state": "enabled",
@@ -917,7 +917,7 @@ class LDAPConnectionConfigRequest(BaseSchema):
         LDAPGroupsRequest,
         description="The LDAP group configuration",
         example={
-            "group_base_dn": "ou=Gruppen,dc=corp,dc=de",
+            "group_base_dn": "ou=OrgUnit,dc=domaincomp,dc=de",
             "search_scope": "search_whole_subtree",
             "search_filter": {"state": "enabled", "filter": "(objectclass=group)"},
             "member_attribute": {"state": "enabled", "attribute": "member"},

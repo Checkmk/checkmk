@@ -686,7 +686,7 @@ ldap_config_example: dict[str, dict[str, Any]] = {
     "ldap_connection": {
         "directory_type": {
             "type": "active_directory_manual",
-            "ldap_server": "10.200.3.32",
+            "ldap_server": "123.31.12.34",
             "failover_servers": [],
         },
         "bind_credentials": {"state": "disabled"},

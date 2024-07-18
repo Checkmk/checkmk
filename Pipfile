@@ -77,7 +77,6 @@ types-mypy-extensions = "*"  # used for type checking
 types-oauthlib = "*"  # used for type checking
 types-paho-mqtt = "*"  # used for type checking
 types-paramiko = "*"  # used for type checking
-types-pika-ts = "*"  # used for type checking
 types-pillow = "*"  # used for type checking
 types-protobuf = "*"  # used for type checking
 types-psutil = "*"  # used for type checking
@@ -175,6 +174,7 @@ protobuf = "*"  # For development, Runtime modules are shipped by omd/packages/p
 cmk-agent-based = {editable = true, path = "./packages/cmk-agent-based"}
 cmk-agent-receiver = {editable = true, path = "./packages/cmk-agent-receiver"}
 cmk-graphing = {editable = true, path = "./packages/cmk-graphing"}
+cmk-messaging = {editable = true, path = "./packages/cmk-messaging"}
 cmk-mkp-tool = {editable = true, path = "./packages/cmk-mkp-tool"}
 cmk-rulesets = {editable = true, path = "./packages/cmk-rulesets"}
 cmk-server-side-calls = {editable = true, path = "./packages/cmk-server-side-calls"}
@@ -209,7 +209,6 @@ opentelemetry-instrumentation-wsgi = "==0.46b0" # used for distributed tracing o
 opentelemetry-instrumentation-requests = "==0.46b0" # used for distributed tracing of Checkmk
 opentelemetry-instrumentation-redis = "==0.46b0" # used for distributed tracing of Checkmk
 opentelemetry-semantic-conventions = "==0.46b0" # used for distributed tracing of Checkmk
-pika = "*" # used by distributed piggybacking to communicate with RabbitMQ
 
 [requires]
 python_version = "3.12"

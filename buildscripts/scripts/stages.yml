@@ -131,6 +131,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_GRAPHING_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-graphing/' || true"
 
+    - NAME: CHANGED_CMK_MESSAGING_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-messaging/' || true"
+
     - NAME: CHANGED_CMK_MKP_TOOL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-mkp-tool/' || true"
 
@@ -437,6 +440,13 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-livestatus-client.txt"
       TEXT_ON_SKIP: "No cmk-livestatus-client files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-livestatus-client.txt"
+
+    - NAME: "Package cmk-messaging"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_MESSAGING_FILES
+      DIR: "packages/cmk-messaging"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-messaging.txt"
+      TEXT_ON_SKIP: "No cmk-messaging files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-messaging.txt"
 
     - NAME: "Package cmk-mkp-tool"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_MKP_TOOL_FILES

@@ -66,23 +66,18 @@ cc_library(
     copts = NEB_COPTS,
     includes = ["include"],
     deps = [
-        "//packages/livestatus",
-    ],
-)
-
-cc_library(
-    name = "neb",
-    includes = ["include"],
-    deps = [
-        ":neb_base",
-        ":neb_version",
-        "//packages/livestatus",
+        "//packages/livestatus:livestatus_headers",
+        "@asio",
     ],
 )
 
 cc_shared_library(
     name = "neb_shared",
-    deps = [":neb"],
+    dynamic_deps = ["//packages/livestatus:livestatus_shared"],
+    deps = [
+        ":neb_base",
+        ":neb_version",
+    ],
 )
 
 cc_library(
@@ -94,8 +89,9 @@ cc_library(
     hdrs = ["test/test_utilities.h"],
     copts = NEB_COPTS,
     deps = [
-        ":neb",
-        "//packages/livestatus",
+        ":neb_base",
+        ":neb_version",
+        "//packages/livestatus:livestatus_base",
     ],
 )
 
@@ -103,12 +99,13 @@ cc_library(
     name = "dummy_nagios",
     testonly = 1,
     srcs = ["test/DummyNagios.cc"],
-    hdrs = ["test/DummyNagios.cc"],
     copts = NEB_COPTS,
-    deps = [":neb"],
+    deps = [
+        ":neb_base",
+        ":neb_version",
+    ],
 )
 
-# CC=/usr/bin/gcc-13 bazel test --test_output=all //packages/neb:all
 cc_test(
     name = "test",
     size = "small",
@@ -121,7 +118,6 @@ cc_test(
     copts = NEB_COPTS,
     deps = [
         ":dummy_nagios",
-        ":neb",
         ":test_utilities",
         "@gtest//:gtest_main",
     ],

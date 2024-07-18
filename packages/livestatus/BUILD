@@ -19,7 +19,14 @@ cc_library(
 )
 
 cc_library(
-    name = "livestatus",
+    name = "livestatus_headers",
+    hdrs = glob(["include/livestatus/*.h"]),
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "livestatus_base",
     srcs = glob(
         ["src/*.cc"],
         exclude = [
@@ -27,12 +34,10 @@ cc_library(
             "src/POSIXUtils.cc",
         ],
     ),
-    hdrs = glob(["include/livestatus/*.h"]),
     copts = [
         "-Iexternal/re2",
         "-O3",
     ],
-    includes = ["include"],
     local_defines = [
         "HAVE_RE2",
         "ASIO_DISABLE_CONCEPTS",
@@ -41,6 +46,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":livestatus_poller",
+        ":livestatus_headers",
         "@asio",
         "@re2",
         # rrdgraph for rrd_xport
@@ -50,7 +56,12 @@ cc_library(
 
 cc_shared_library(
     name = "livestatus_shared",
-    deps = [":livestatus"],
+    shared_lib_name = "liblivestatus.so",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":livestatus_base",
+        "@re2",
+    ],
 )
 
 cc_test(
@@ -63,7 +74,7 @@ cc_test(
         "-O3",
     ],
     deps = [
-        ":livestatus",
+        ":livestatus_base",
         "@gtest//:gtest_main",
         "@re2",
     ],

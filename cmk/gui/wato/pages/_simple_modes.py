@@ -337,6 +337,10 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
     def from_vars(self, ident_var: str) -> None:
         self._from_vars(ident_var)
 
+    @property
+    def entry(self) -> _T:
+        return self._entry
+
     def _from_vars(self, ident_var: str = "ident") -> None:
         ident = request.get_ascii_input(ident_var)
         if ident is not None:

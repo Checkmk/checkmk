@@ -2116,6 +2116,14 @@ class ABCEditRuleMode(WatoMode):
             )
         return self._rule.value, DataOrigin.DISK
 
+    @property
+    def folder(self) -> Folder:
+        return self._folder
+
+    @property
+    def rule(self) -> Rule:
+        return self._rule
+
     def _page_form_quick_setup_warning(self) -> None:
         if is_locked_by_quick_setup(self._rule.locked_by):
             quick_setup_locked_warning(self._rule.locked_by, "rule")

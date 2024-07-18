@@ -36,7 +36,7 @@ def _core_api() -> CoreAPI:
 
 
 CALL_API = "cmk.special_agents.utils_kubernetes.api_server.send_request"
-SUPPORTED_VERSION_STR = "Supported versions are v1.24, v1.25, v1.26, v1.27, v1.28."
+SUPPORTED_VERSION_STR = "Supported versions are v1.24, v1.25, v1.26, v1.27, v1.28, v1.29."
 
 
 def test_raw_api_get_healthz_ok(core_api: CoreAPI) -> None:
@@ -287,9 +287,9 @@ def test_decompose_git_version(
             [],
         ),
         (
-            api.KubernetesVersion(git_version=api.GitVersion("v1.29.0"), major=1, minor=29),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.30.0"), major=1, minor=30),
             [
-                "WARNING Unsupported Kubernetes version 'v1.29.0'. " + SUPPORTED_VERSION_STR,
+                "WARNING Unsupported Kubernetes version 'v1.30.0'. " + SUPPORTED_VERSION_STR,
                 "WARNING Processing data is done on a best effort basis.",
             ],
         ),

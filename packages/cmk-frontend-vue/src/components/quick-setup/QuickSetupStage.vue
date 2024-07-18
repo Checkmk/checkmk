@@ -9,15 +9,15 @@ import LoadingIcon from '@/components/LoadingIcon.vue'
 import StepNumber from './element/StepNumber.vue'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
 
-import { type QuickSetupStepWithIndexSpec, type StageData } from './quick_setup_types'
+import { type QuickSetupStageWithIndexSpec, type StageData } from './quick_setup_types'
 import AlertBox from '../AlertBox.vue'
 
-const emit = defineEmits(['prevStep', 'nextStep', 'save', 'update'])
-const props = defineProps<QuickSetupStepWithIndexSpec>()
+const emit = defineEmits(['prevStage', 'nextStage', 'save', 'update'])
+const props = defineProps<QuickSetupStageWithIndexSpec>()
 
 const isFirst = computed(() => props.index == 0)
-const isLast = computed(() => props.index == props.steps - 1)
-const isCompleted = computed(() => props.index < props.selectedStep)
+const isLast = computed(() => props.index == props.numberOfStages - 1)
+const isCompleted = computed(() => props.index < props.selectedStage)
 
 let userInput: StageData = (props?.spec.user_input as StageData) || {}
 
@@ -31,15 +31,16 @@ const updateData = (id: string, value: object) => {
   <li
     class="cmk-stepper__item"
     :class="{
-      active: props.index == props.selectedStep,
-      complete: props.index < props.selectedStep
+      active: props.index == props.selectedStage,
+      complete: props.index < props.selectedStage
     }"
   >
     <div class="cmk-stepper__content">
+      <!-- this component will be removed in the follow-up commit -->
       <StepNumber
         :number="index + 1"
-        :active="props.index == props.selectedStep"
-        :complete="props.index < props.selectedStep"
+        :active="props.index == props.selectedStage"
+        :complete="props.index < props.selectedStage"
       />
       <Label class="cmk-stepper__title">{{ props.spec.title }}</Label>
 
@@ -47,7 +48,7 @@ const updateData = (id: string, value: object) => {
         <CompositeWidget v-if="isCompleted" :items="props.spec.recap || []" @update="updateData" />
       </ErrorBoundary>
 
-      <Collapsible :open="props.index == props.selectedStep" class="cmk-stepper__content">
+      <Collapsible :open="props.index == props.selectedStage" class="cmk-stepper__content">
         <CollapsibleContent class="cmk-animated-collapsible">
           <div style="padding-left: 1rem">
             <div v-if="props.spec.sub_title">
@@ -74,7 +75,7 @@ const updateData = (id: string, value: object) => {
               v-if="!isLast"
               :label="props.spec.next_button_label || 'Next'"
               variant="next"
-              @click="$emit('nextStep')"
+              @click="$emit('nextStage')"
             />
             <Button v-if="isLast" label="Save" variant="save" @click="$emit('save')" />
             <Button
@@ -82,7 +83,7 @@ const updateData = (id: string, value: object) => {
               style="padding-left: 1rem"
               label="Back"
               variant="prev"
-              @click="$emit('prevStep')"
+              @click="$emit('prevStage')"
             />
           </div>
           <div v-else class="cmk-stepper__loading"><LoadingIcon :height="16" /> Please wait...</div>

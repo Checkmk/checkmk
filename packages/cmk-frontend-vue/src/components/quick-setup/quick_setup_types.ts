@@ -18,7 +18,7 @@ export interface QuickSetupStageSpec {
   /** @property {string} sub_title - String to be displayed below the title in current stage */
   sub_title?: string | null
 
-  /** @property {string} next_button_label - Label for the "go to the next step" button */
+  /** @property {string} next_button_label - Label for the "go to the next stage" button */
   next_button_label?: string | null
 
   /** @property {ComponentSpec[]} components - List of widgets to render in current stage */
@@ -37,15 +37,15 @@ export interface QuickSetupStageSpec {
   other_errors?: string[]
 }
 
-export interface QuickSetupStepWithIndexSpec {
-  /**@property {number} index - The index of the current step */
+export interface QuickSetupStageWithIndexSpec {
+  /**@property {number} index - The index of the current stage */
   index: number
 
-  /**@property {number} steps - Total steps count */
-  steps: number
+  /**@property {number} numberOfStages - Total stages count */
+  numberOfStages: number
 
-  /**@property {number} selectedStep - The selected step's index  */
-  selectedStep: number
+  /**@property {number} selectedStage - The selected stage's index  */
+  selectedStage: number
 
   /** @property {boolean} loading - A flag to indicate if the quick-setup is performing a request */
   loading: boolean

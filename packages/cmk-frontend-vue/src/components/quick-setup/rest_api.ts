@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { GET_QUICK_SETUP_OVERVIEW_URL, VALIDATE_QUICK_SETUP_STEP_URL } from '@/constants/rest_api'
+import { GET_QUICK_SETUP_OVERVIEW_URL, VALIDATE_QUICK_SETUP_STAGE_URL } from '@/constants/rest_api'
 import { type StageData } from './quick_setup_types'
 
 import {
@@ -50,15 +50,15 @@ export const getOverview = async (quickSetupId: string): Promise<QSInitializatio
   })
 }
 
-export const validateStep = async (
+export const validateStage = async (
   quickSetupId: string,
   formData: StageData[]
 ): Promise<QSStageResponse> => {
   return new Promise((resolve, reject) => {
-    const url = VALIDATE_QUICK_SETUP_STEP_URL
+    const url = VALIDATE_QUICK_SETUP_STAGE_URL
     const payload: QSValidateStagesRequest = {
       quick_setup_id: quickSetupId,
-      stages: formData.map((step, index) => ({ stage_id: index + 1, form_data: step }))
+      stages: formData.map((stage, index) => ({ stage_id: index + 1, form_data: stage }))
     }
 
     axios

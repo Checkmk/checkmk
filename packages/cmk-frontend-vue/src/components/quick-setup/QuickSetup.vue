@@ -4,7 +4,7 @@ import { computed, ref, onBeforeMount } from 'vue'
 import LoadingIcon from '@/components/LoadingIcon.vue'
 
 import AlertBox from '@/components/AlertBox.vue'
-import QuickSetupStep from './QuickSetupStep.vue'
+import QuickSetupStage from './QuickSetupStage.vue'
 
 import { type QuickSetupSpec, type QuickSetupStageSpec, type StageData } from './quick_setup_types'
 import {
@@ -14,19 +14,19 @@ import {
   type RestApiError,
   type QSStageResponse
 } from './rest_api_types'
-import { getOverview, validateStep } from './rest_api'
+import { getOverview, validateStage } from './rest_api'
 
 const props = defineProps<QuickSetupSpec>()
-const currentStep = ref(0) //Selected step. We start in step 0
+const currentStage = ref(0) //Selected stage. We start in stage 0
 const ready = ref(false) //When data is fully loaded, we set the ready flag
-const stage = ref<QuickSetupStageSpec[]>([]) //New Stage data
-const steps = computed(() => stage.value.length) //Total steps
+const stages = ref<QuickSetupStageSpec[]>([]) //New Stage data
+const numberOfStages = computed(() => stages.value.length) //Number of stages
 const globalError = ref<string | null>(null) //Main error message
 const loading = ref(false)
 const buttonCompleteLabel = ref('Save')
 
-// Lets store all the user input in this object. The record index is the step number
-// When sending data to the Rest API, we send all from index 0..currentStep.
+// Lets store all the user input in this object. The record index is the stage number
+// When sending data to the Rest API, we send all from index 0..currentStage.
 let formData = ref<{ [key: number]: StageData }>({})
 
 const initializeStagesData = (skeleton: QSInitializationResponse) => {
@@ -34,7 +34,7 @@ const initializeStagesData = (skeleton: QSInitializationResponse) => {
     const isFirst = index === 0
     const overview = skeleton.overviews[index]!
 
-    stage.value.push({
+    stages.value.push({
       title: overview.title,
       sub_title: overview.sub_title || null,
       next_button_label: isFirst ? skeleton.stage.next_stage_structure.button_label || null : null,
@@ -53,7 +53,7 @@ const initializeQuickSetup = async (quickSetupId: string) => {
     initializeStagesData(data)
     buttonCompleteLabel.value = data.button_complete_label
     globalError.value = null
-    currentStep.value = 0
+    currentStage.value = 0
   } catch (err) {
     globalError.value = err as string
   } finally {
@@ -66,7 +66,7 @@ onBeforeMount(() => {
 })
 
 const update = (index: number, value: StageData) => {
-  stage.value[index]!.user_input = value
+  stages.value[index]!.user_input = value
   formData.value[index] = value
 }
 
@@ -74,35 +74,35 @@ const save = async () => {
   console.log('Trigger save data and go to activate changes if success')
 
   //This will be changed in the next commit
-  await nextStep()
+  await nextStage()
 }
 
 const handleError = (err: RestApiError) => {
   if (err.type === 'general') {
     globalError.value = (err as GeneralError).general_error
   } else {
-    stage.value[currentStep.value]!.form_spec_errors = (err as ValidationError).formspec_errors
+    stages.value[currentStage.value]!.form_spec_errors = (err as ValidationError).formspec_errors
   }
 }
 
-const nextStep = async () => {
+const nextStage = async () => {
   loading.value = true
   globalError.value = null
 
-  const thisStage = currentStep.value
+  const thisStage = currentStage.value
   const nextStage = thisStage + 1
 
   const userInput: StageData[] = []
 
   for (let i = 0; i <= thisStage; i++) {
-    const formData = (stage.value[i]!.user_input || {}) as StageData
+    const formData = (stages.value[i]!.user_input || {}) as StageData
     userInput.push(formData)
   }
 
   let result: QSStageResponse | null = null
 
   try {
-    result = await validateStep(props.quick_setup_id, userInput)
+    result = await validateStage(props.quick_setup_id, userInput)
   } catch (err) {
     handleError(err as RestApiError)
   }
@@ -113,14 +113,14 @@ const nextStep = async () => {
   }
 
   //Clear form_spec_errors and other_errors from thisStage
-  stage.value[thisStage]!.form_spec_errors = {}
-  stage.value[thisStage]!.other_errors = []
-  stage.value[thisStage]!.recap = result.stage_recap
+  stages.value[thisStage]!.form_spec_errors = {}
+  stages.value[thisStage]!.other_errors = []
+  stages.value[thisStage]!.recap = result.stage_recap
 
   //If we have not finished the quick setup yet, update data and display next stage
-  if (nextStage < steps.value) {
-    stage.value[nextStage] = {
-      ...stage.value[nextStage]!,
+  if (nextStage < numberOfStages.value) {
+    stages.value[nextStage] = {
+      ...stages.value[nextStage]!,
       components: result.next_stage_structure.components,
       next_button_label: result.next_stage_structure.button_label || '',
       recap: [],
@@ -128,30 +128,30 @@ const nextStep = async () => {
       other_errors: []
     }
 
-    currentStep.value = nextStage
+    currentStage.value = nextStage
   } else {
     //Otherwise, we are done. Display last info and prepare to launch
   }
 }
 
-const prevStep = () => {
-  currentStep.value = Math.max(currentStep.value - 1, 0)
+const prevStage = () => {
+  currentStage.value = Math.max(currentStage.value - 1, 0)
 }
 </script>
 
 <template>
   <AlertBox v-if="globalError" variant="error">{{ globalError }}</AlertBox>
   <ol v-if="ready" class="cmk-stepper">
-    <QuickSetupStep
-      v-for="(stg, index) in stage"
+    <QuickSetupStage
+      v-for="(stg, index) in stages"
       :key="index"
       :index="index"
-      :selected-step="currentStep"
-      :steps="steps"
+      :selected-stage="currentStage"
+      :number-of-stages="numberOfStages"
       :loading="loading"
       :spec="stg"
-      @prev-step="prevStep"
-      @next-step="nextStep"
+      @prev-stage="prevStage"
+      @next-stage="nextStage"
       @save="save"
       @update="update"
     />

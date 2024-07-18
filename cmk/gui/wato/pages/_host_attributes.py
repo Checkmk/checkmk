@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 
 from cmk.utils import paths
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -18,9 +19,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
+from cmk.gui.quick_setup.html import quick_setup_render_link
 from cmk.gui.utils.html import HTML as HTML
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.valuespec import FixedValue, ValueSpec
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
     get_sorted_host_attribute_topics,
@@ -36,6 +38,12 @@ import cmk.ccc.version as cmk_version
 #   "host_search" -> host search dialog
 #   "bulk"        -> bulk change
 DialogIdent = Literal["host", "cluster", "folder", "host_search", "bulk"]
+
+
+def _get_single_host(hosts: Mapping[str, object]) -> Host | None:
+    if len(hosts) == 1 and (host := next(iter(hosts.values()))) and isinstance(host, Host):
+        return host
+    return None
 
 
 # TODO: Wow, this function REALLY has to be cleaned up
@@ -80,6 +88,8 @@ def configure_attributes(  # pylint: disable=too-many-branches
     for topic_id, topic_title in get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
         topic_attributes = get_sorted_host_attributes_by_topic(topic_id)
+
+        single_edit_host = _get_single_host(hosts)
 
         forms.header(
             topic_title,
@@ -154,12 +164,6 @@ def configure_attributes(  # pylint: disable=too-many-branches
             # either no host has a value for this attribute, or all have
             # one and have the same value
             unique = num_haveit == 0 or (len(values) == 1 and num_haveit == len(hosts))
-
-            if for_what in ["host", "cluster", "folder"]:
-                if hosts:
-                    host: Host | Folder | None = list(hosts.values())[0]
-                else:
-                    host = None
 
             # Collect information about attribute values inherited from folder.
             # This information is just needed for informational display to the user.
@@ -240,8 +244,8 @@ def configure_attributes(  # pylint: disable=too-many-branches
                 active = unique and len(values) > 0
             elif for_what == "folder" and myself:
                 active = attrname in myself.attributes
-            elif for_what in ["host", "cluster"] and host:  # "host"
-                active = attrname in host.attributes
+            elif for_what in ["host", "cluster"] and single_edit_host:
+                active = attrname in single_edit_host.attributes
             else:
                 active = False
 
@@ -358,6 +362,21 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
             html.write_text_permissive(explanation)
             html.close_div()
+
+        # if host is managed by a config bundle, show the source (which is not a real attribute)
+        if (
+            topic_id == "basic"
+            and single_edit_host
+            and (locked_by := single_edit_host.locked_by())
+            and is_locked_by_quick_setup(locked_by)
+        ):
+            vs = FixedValue(
+                value=locked_by["instance_id"],
+                title=_u("Source"),
+                totext=quick_setup_render_link(locked_by),
+            )
+            forms.section(vs.title())
+            vs.render_input("_internal_source", locked_by["instance_id"])
 
         if topic_is_volatile:
             volatile_topics.append(topic_id)

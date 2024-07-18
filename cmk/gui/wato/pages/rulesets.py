@@ -1791,8 +1791,8 @@ def render_hidden_if_locked(vs: ValueSpec, varprefix: str, value: object, locked
 
 
 class ABCEditRuleMode(WatoMode):
-    def __init__(self):
-        self._varname = "varname"
+    def __init__(self, varname: str = "varname"):
+        self._varname = varname
         self._do_validate_on_render = False
         super().__init__()
 
@@ -2941,10 +2941,6 @@ class RuleConditionRenderer:
 
 
 class ModeEditRule(ABCEditRuleMode):
-    def __init__(self, varname: str = "varname"):
-        self._varname = varname
-        super().__init__()
-
     @classmethod
     def name(cls) -> str:
         return "edit_rule"

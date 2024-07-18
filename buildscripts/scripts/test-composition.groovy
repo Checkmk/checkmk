@@ -53,8 +53,8 @@ def main() {
             VERSION: VERSION,
             DOCKER_TAG: docker_tag,
             MAKE_TARGET: "test-composition-docker",
-            BRANCH: branch_name,  // FIXME was BRANCH before
-            cmk_version: versioning.get_cmk_version(branch_name, branch_version, VERSION),
+            BRANCH: safe_branch_name,  // FIXME was BRANCH before
+            cmk_version: versioning.get_cmk_version(safe_branch_name, branch_version, VERSION),
         );
     }
 }

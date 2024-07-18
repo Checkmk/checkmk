@@ -8,7 +8,7 @@ cc_binary(
         "-pthread",
     ],
     deps = [
-        "//packages/livestatus:lspoller",
+        "//packages/livestatus:livestatus_poller",
     ],
 )
 

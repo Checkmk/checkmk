@@ -1,7 +1,7 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
-    name = "lspoller",
+    name = "livestatus_poller",
     srcs = [
         "src/Logger.cc",
         "src/POSIXUtils.cc",
@@ -41,7 +41,7 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        ":lspoller",
+        ":livestatus_poller",
         "@asio",
         "@re2",
         # rrdgraph for rrd_xport

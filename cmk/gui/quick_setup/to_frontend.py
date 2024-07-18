@@ -8,15 +8,17 @@ from dataclasses import asdict
 from typing import cast, Mapping
 
 from cmk.utils.quick_setup.definitions import (
+    Errors,
     FormData,
+    GeneralStageErrors,
     IncomingStage,
     InvalidStageException,
     QuickSetup,
     QuickSetupOverview,
     QuickSetupSaveRedirect,
-    QuickSetupStage,
     Stage,
     StageId,
+    ValidationErrorMap,
 )
 from cmk.utils.quick_setup.widgets import (
     Collapsible,
@@ -56,51 +58,33 @@ def _get_stage_components_from_widget(widget: Widget) -> dict:
     return asdict(widget)
 
 
-def _retrieve_next_stage(
-    quick_setup: QuickSetup,
-    current_stage: QuickSetupStage,
-    incoming_stages: Sequence[IncomingStage],
-) -> Stage:
-    try:
-        next_stage = quick_setup.get_stage_with_id(StageId(current_stage.stage_id + 1))
-    except InvalidStageException:
-        # TODO: What should we return in this case?
-        return Stage(stage_id=StageId(-1), components=[])
-
-    return Stage(
-        stage_id=next_stage.stage_id,
-        components=[
-            _get_stage_components_from_widget(widget) for widget in next_stage.configure_components
-        ],
-        stage_recap=[
-            r
-            for recap_callable in current_stage.recap
-            for r in recap_callable([stage.form_data for stage in incoming_stages])
-        ],
-    )
-
-
 def form_spec_validate(
     all_stages_form_data: Sequence[FormData],
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
-) -> list[str]:
-    validation_errors: list = []
+) -> tuple[ValidationErrorMap, GeneralStageErrors]:
+    general_errors: GeneralStageErrors = []
+    validation_errors: ValidationErrorMap = {}
     last_stage = all_stages_form_data[-1]
-    for form_spec_id, form_data in last_stage.items():
+    for formspec_id, form_data in last_stage.items():
+        if formspec_id not in expected_formspecs_map:
+            general_errors.append(f"Formspec id '{formspec_id}' not found")
+            continue
+
         try:
-            form_spec = expected_formspecs_map[form_spec_id]
-            serialize_data_for_frontend(
+            form_spec = expected_formspecs_map[formspec_id]
+            result = serialize_data_for_frontend(
                 form_spec=form_spec,
-                field_id=form_spec_id,
+                field_id=formspec_id,
                 origin=DataOrigin.FRONTEND,
                 do_validate=True,
                 value=form_data,
             )
+            if result.validation:
+                validation_errors[formspec_id] = result.validation
+        except (AssertionError, AttributeError) as exc:
+            general_errors.append(str(exc))
 
-        # TODO: What does a validation error look like, and how should they be returned to the frontend?
-        except (AssertionError, AttributeError, KeyError) as exc:
-            validation_errors.append(str(exc))
-    return validation_errors
+    return validation_errors, general_errors
 
 
 def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpecWrapper]:
@@ -140,30 +124,56 @@ def form_spec_recap(stages_form_data: Sequence[FormData]) -> Sequence[Widget]:
 
 
 def validate_current_stage(
-    quick_setup: QuickSetup, incoming_stages: Sequence[IncomingStage]
-) -> Stage:
+    quick_setup: QuickSetup,
+    incoming_stages: Sequence[IncomingStage],
+) -> Stage | None:
     current_stage_id = incoming_stages[-1].stage_id
     current_stage = quick_setup.get_stage_with_id(current_stage_id)
-    validation_errors = [
-        error
-        for validator in current_stage.validators
-        for error in validator(
+
+    errors = Errors()
+    for validator in current_stage.validators:
+        errors_formspec, errors_stage = validator(
             [stage.form_data for stage in incoming_stages],
             _build_expected_formspec_map(quick_setup),
         )
-    ]
+        for form_spec_id, fs_errors in errors_formspec.items():
+            errors.formspec_errors.setdefault(form_spec_id, [])
+            errors.formspec_errors[form_spec_id].extend(fs_errors)
 
-    if validation_errors:
+        errors.stage_errors.extend(errors_stage)
+
+    if errors.formspec_errors or errors.stage_errors:
         return Stage(
             stage_id=current_stage_id,
-            validation_errors=validation_errors,
+            errors=errors,
             components=[],
         )
+    return None
 
-    return _retrieve_next_stage(
-        quick_setup=quick_setup,
-        current_stage=current_stage,
-        incoming_stages=incoming_stages,
+
+def retrieve_next_stage(
+    quick_setup: QuickSetup,
+    incoming_stages: Sequence[IncomingStage],
+) -> Stage:
+    current_stage_id = incoming_stages[-1].stage_id
+    current_stage = quick_setup.get_stage_with_id(current_stage_id)
+
+    try:
+        next_stage = quick_setup.get_stage_with_id(StageId(current_stage.stage_id + 1))
+    except InvalidStageException:
+        # TODO: What should we return in this case?
+        return Stage(stage_id=StageId(-1), components=[])
+
+    return Stage(
+        stage_id=next_stage.stage_id,
+        components=[
+            _get_stage_components_from_widget(widget) for widget in next_stage.configure_components
+        ],
+        stage_recap=[
+            r
+            for recap_callable in current_stage.recap
+            for r in recap_callable([stage.form_data for stage in incoming_stages])
+        ],
     )
 
 

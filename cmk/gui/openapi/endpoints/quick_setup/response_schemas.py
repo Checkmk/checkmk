@@ -23,6 +23,18 @@ class QuickSetupStageOverviewResponse(BaseSchema):
     )
 
 
+class Errors(BaseSchema):
+    formspec_errors = fields.Dict(
+        example={},
+        description="A mapping of formspec ids to formspec validation errors",
+    )
+    stage_errors = fields.List(
+        fields.String,
+        example=[],
+        description="A collection of general stage errors",
+    )
+
+
 class QuickSetupStageResponse(BaseSchema):
     stage_id = fields.Integer(
         example=1,
@@ -33,10 +45,11 @@ class QuickSetupStageResponse(BaseSchema):
         example=[],
         description="A collection of stage components",
     )
-    validation_errors = fields.List(
-        fields.String,
-        example=[],
-        description="A collection of validation errors",
+    errors = fields.Nested(
+        Errors,
+        example={},
+        description="All formspec errors and general stage errors",
+        allow_none=True,
     )
     stage_recap = fields.List(
         fields.String,

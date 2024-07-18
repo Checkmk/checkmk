@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, MutableMapping, MutableSequence, Sequence
 from dataclasses import dataclass, field
-from typing import Callable, Mapping, NewType
+from typing import Any, Callable, Mapping, NewType
 
 from cmk.utils.quick_setup.widgets import FormSpecId, Widget
 
@@ -19,6 +19,25 @@ QuickSetupId = NewType("QuickSetupId", str)
 FormData = NewType("FormData", Mapping[FormSpecId, object])
 
 
+# TODO: This dataclass is already defined in
+# cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components
+# but can't be imported here. Once we move this module, we can remove this
+# and use the one from the other module.
+@dataclass
+class QuickSetupValidationError:
+    message: str
+    invalid_value: Any
+    location: Sequence[str] = field(default_factory=list)
+
+
+GeneralStageErrors = MutableSequence[str]
+ValidationErrorMap = MutableMapping[FormSpecId, MutableSequence[QuickSetupValidationError]]
+CallableValidator = Callable[
+    [Sequence[FormData], Mapping[FormSpecId, FormSpec]],
+    tuple[ValidationErrorMap, GeneralStageErrors],
+]
+
+
 @dataclass
 class StageOverview:
     stage_id: StageId
@@ -27,10 +46,16 @@ class StageOverview:
 
 
 @dataclass
+class Errors:
+    formspec_errors: ValidationErrorMap = field(default_factory=dict)
+    stage_errors: GeneralStageErrors = field(default_factory=list)
+
+
+@dataclass
 class Stage:
     stage_id: StageId
     components: Sequence[dict]
-    validation_errors: Sequence[str] = field(default_factory=list)
+    errors: Errors | None = None
     stage_recap: Sequence[Widget] = field(default_factory=list)
 
 
@@ -39,9 +64,7 @@ class QuickSetupStage:
     stage_id: StageId
     title: str
     configure_components: Sequence[Widget]
-    validators: Iterable[
-        Callable[[Sequence[FormData], Mapping[FormSpecId, FormSpec]], Sequence[str]]
-    ]
+    validators: Iterable[CallableValidator]
     recap: Iterable[Callable[[Sequence[FormData]], Sequence[Widget]]]
     sub_title: str | None = None
 

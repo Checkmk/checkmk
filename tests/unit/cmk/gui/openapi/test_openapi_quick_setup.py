@@ -3,23 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils.quick_setup.definitions import (
+    FormData,
+    GeneralStageErrors,
     quick_setup_registry,
     QuickSetup,
     QuickSetupId,
     QuickSetupStage,
+    QuickSetupValidationError,
     StageId,
+    ValidationErrorMap,
 )
 from cmk.utils.quick_setup.widgets import FormSpecId, FormSpecWrapper
 
 from cmk.gui.quick_setup.to_frontend import form_spec_recap, form_spec_validate
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String, validators
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    Dictionary,
+    FieldSize,
+    FormSpec,
+    String,
+    validators,
+)
 
 
 def register_quick_setup(setup_stages: Sequence[QuickSetupStage] | None = None) -> None:
@@ -108,8 +119,23 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
         ],
     )
     assert resp.json["stage_id"] == 2
-    assert len(resp.json["validation_errors"]) == 0
+    assert resp.json["errors"] is None
     assert len(resp.json["stage_recap"]) == 1
+
+
+def _form_spec_extra_validate(
+    _stages: Sequence[FormData], formspec_map: Mapping[FormSpecId, FormSpec]
+) -> tuple[ValidationErrorMap, GeneralStageErrors]:
+    return {
+        FormSpecId(form_spec_id): [
+            QuickSetupValidationError(
+                location=[],
+                message="this is a simulated error",
+                invalid_value="invalid_data",
+            ),
+        ]
+        for form_spec_id, _ in formspec_map.items()
+    }, ["this is a general error", "and another one"]
 
 
 def test_failing_validate(clients: ClientRegistry) -> None:
@@ -118,8 +144,24 @@ def test_failing_validate(clients: ClientRegistry) -> None:
             QuickSetupStage(
                 stage_id=StageId(1),
                 title="stage2",
-                configure_components=[],
-                validators=[form_spec_validate],
+                configure_components=[
+                    FormSpecWrapper(
+                        id=FormSpecId("wrapper_id"),
+                        form_spec=Dictionary(
+                            elements={
+                                "account_name": DictElement(
+                                    parameter_form=String(
+                                        title=Title("test account name"),
+                                        field_size=FieldSize.MEDIUM,
+                                        custom_validate=(validators.LengthInRange(min_value=1),),
+                                    ),
+                                    required=True,
+                                )
+                            }
+                        ),
+                    ),
+                ],
+                validators=[form_spec_validate, _form_spec_extra_validate],
                 recap=[],
             ),
         ],
@@ -127,13 +169,32 @@ def test_failing_validate(clients: ClientRegistry) -> None:
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="quick_setup_test",
         stages=[
-            {"stage_id": 1, "form_data": {"unknown_id_1": {}, "unknown_id_2": {}}},
+            {
+                "stage_id": 1,
+                "form_data": {"wrapper_id": {"account_name": 5}},
+            },
         ],
         expect_ok=False,
     )
     assert resp.assert_status_code(400)
     assert resp.json["stage_id"] == 1
-    assert resp.json["validation_errors"] == ["'unknown_id_1'", "'unknown_id_2'"]
+    assert resp.json["errors"] == {
+        "formspec_errors": {
+            "wrapper_id": [
+                {
+                    "location": ["account_name"],
+                    "message": "Expected a <class 'str'>, got <class 'int'>",
+                    "invalid_value": "5",
+                },
+                {
+                    "location": [],
+                    "message": "this is a simulated error",
+                    "invalid_value": "invalid_data",
+                },
+            ],
+        },
+        "stage_errors": ["this is a general error", "and another one"],
+    }
 
 
 def test_quick_setup_save(clients: ClientRegistry) -> None:

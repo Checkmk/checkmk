@@ -33,6 +33,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.to_frontend import (
     complete_quick_setup,
     quick_setup_overview,
+    retrieve_next_stage,
     validate_current_stage,
 )
 
@@ -97,10 +98,11 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
         for stage in body["stages"]
     ]
 
-    next_stage = validate_current_stage(quick_setup=quick_setup, incoming_stages=stages)
-    if next_stage.validation_errors:
-        return _serve_data(data=next_stage, status_code=400)
-    return _serve_data(data=next_stage)
+    if (
+        error_stage := validate_current_stage(quick_setup=quick_setup, incoming_stages=stages)
+    ) is not None:
+        return _serve_data(data=error_stage, status_code=400)
+    return _serve_data(data=retrieve_next_stage(quick_setup=quick_setup, incoming_stages=stages))
 
 
 @Endpoint(

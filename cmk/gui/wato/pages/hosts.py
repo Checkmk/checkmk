@@ -355,6 +355,10 @@ class ModeEditHost(ABCHostMode):
     def set_vars(cls, host: HostName) -> None:
         request.set_var(cls.VAR_HOST, host)
 
+    @property
+    def host(self) -> Host:
+        return self._host
+
     def _init_host(self) -> Host:
         hostname = request.get_validated_type_input_mandatory(HostName, self.VAR_HOST)
         folder = folder_from_request(request.var("folder"), hostname)

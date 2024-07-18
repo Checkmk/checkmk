@@ -131,11 +131,6 @@ run_build() {
     npm run build
 }
 
-run_tests() {
-    echo "skipped tests"
-    #npm run test
-}
-
 run_check_format() {
     npm run test-prettier
 }

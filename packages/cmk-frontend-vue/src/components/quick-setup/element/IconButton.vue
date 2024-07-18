@@ -67,20 +67,22 @@ if ('variant' in props && props?.variant) {
 </script>
 
 <template>
-  <Button class="cmk-icon-button button" :aria-label="selectedAriaLabel" @click="$emit('click')">
+  <Button class="qs-icon-button button" :aria-label="selectedAriaLabel" @click="$emit('click')">
     <img :src="selectedIconUrl" height="16" />
     <span>&nbsp; {{ props.label }}</span>
   </Button>
 </template>
 
 <style scoped>
-.cmk-icon-button img {
-  position: relative;
-  top: 2px;
-}
+.qs-icon-button {
+  img {
+    position: relative;
+    top: 2px;
+  }
 
-.cmk-icon-button span {
-  position: relative;
-  top: -2px;
+  span {
+    position: relative;
+    top: -2px;
+  }
 }
 </style>

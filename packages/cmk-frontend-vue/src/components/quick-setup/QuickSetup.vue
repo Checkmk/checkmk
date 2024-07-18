@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, onBeforeMount } from 'vue'
 
-import LoadingIcon from '@/components/LoadingIcon.vue'
+import AlertBox from '@/components/common/AlertBox.vue'
+import LoadingIcon from '@/components/common/LoadingIcon.vue'
 
-import AlertBox from '@/components/AlertBox.vue'
 import QuickSetupStage from './QuickSetupStage.vue'
-
 import { type QuickSetupSpec, type QuickSetupStageSpec, type StageData } from './quick_setup_types'
 import {
   type QSInitializationResponse,
@@ -141,7 +140,7 @@ const prevStage = () => {
 
 <template>
   <AlertBox v-if="globalError" variant="error">{{ globalError }}</AlertBox>
-  <ol v-if="ready" class="cmk-stepper">
+  <ol v-if="ready" class="quick-setup">
     <QuickSetupStage
       v-for="(stg, index) in stages"
       :key="index"
@@ -160,7 +159,8 @@ const prevStage = () => {
 </template>
 
 <style scoped>
-.cmk-stepper {
+.quick-setup {
+  counter-reset: stage-index;
   --size: 3rem;
   --spacing: 0.5rem;
 }

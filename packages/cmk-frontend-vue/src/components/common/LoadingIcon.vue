@@ -13,12 +13,9 @@ withDefaults(defineProps<LoadingIconProps>(), {
 
 <template>
   <img
-    class="loading"
     :height="height || DEFAULT_HEIGHT"
     src="themes/facelift/images/load_graph.png"
     alt="Loading"
     aria-label="Loading"
   />
 </template>
-
-<style scoped></style>

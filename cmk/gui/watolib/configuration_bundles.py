@@ -25,7 +25,7 @@ from cmk.utils.rulesets.definition import RuleGroupType
 
 from cmk.gui.watolib.hosts_and_folders import Folder, Host
 from cmk.gui.watolib.passwords import load_passwords
-from cmk.gui.watolib.rulesets import AllRulesets, Rule
+from cmk.gui.watolib.rulesets import AllRulesets, Rule, SingleRulesetRecursively
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
@@ -77,17 +77,15 @@ class BundleReferences:
 
 
 def identify_bundle_references(
-    bundle_group: str, bundle_ids: set[BundleId]
+    bundle_group: str, bundle_ids: set[BundleId], *, rulespecs_hint: set[str] | None = None
 ) -> Mapping[BundleId, BundleReferences]:
     """Identify the configuration references of the configuration bundles."""
     bundle_id_finder = _prepare_bundle_id_finder(PROGRAM_ID_QUICK_SETUP, bundle_ids)
     affected_entities = _get_affected_entities(bundle_group)
+
     bundle_rule_ids = (
         _collect_many(
-            _collect_rules(
-                finder=bundle_id_finder,
-                rules=AllRulesets.load_all_rulesets().get(bundle_group).get_rules(),
-            )
+            _collect_rules(finder=bundle_id_finder, rules=_iter_all_rules(rulespecs_hint))
         )
         if "rule" in affected_entities
         else {}
@@ -145,6 +143,20 @@ def _collect_passwords(
     for password_id, password in passwords.items():
         if bundle_id := finder(password.get("locked_by")):
             yield bundle_id, (password_id, password)
+
+
+def _iter_all_rules(rulespecs: set[str] | None) -> Iterable[tuple[Folder, int, Rule]]:
+    if rulespecs:
+        for rulespec in rulespecs:
+            ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(rulespec).get(
+                rulespec
+            )
+            yield from ruleset.get_rules()
+
+    else:
+        all_rulesets = AllRulesets.load_all_rulesets()
+        for ruleset in all_rulesets.get_rulesets().values():
+            yield from ruleset.get_rules()
 
 
 def _collect_rules(

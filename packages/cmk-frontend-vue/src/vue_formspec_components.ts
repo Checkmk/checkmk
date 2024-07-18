@@ -18,25 +18,25 @@ export type Integer = FormSpec & {
   type: "integer";
   label?: string;
   unit?: string;
-  input_hint: string;
+  input_hint?: string;
 };
 export type Validators = IsInteger | IsFloat | NumberInRange | LengthInRange;
 export type Float = FormSpec & {
   type: "float";
   label?: string;
   unit?: string;
-  input_hint: string;
+  input_hint?: string;
 };
 export type String = FormSpec & {
   type: "string";
   placeholder?: string;
-  input_hint: string;
+  input_hint?: string;
 };
 export type Dictionary = FormSpec & {
   type: "dictionary";
   elements: DictionaryElement[];
   no_elements_text?: string;
-  additional_static_elements?: string;
+  additional_static_elements?: {};
 };
 export type List = FormSpec & {
   type: "list";

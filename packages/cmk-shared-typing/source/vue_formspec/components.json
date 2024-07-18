@@ -48,8 +48,7 @@
                 }
             },
             "required": [
-                "type",
-                "input_hint"
+                "type"
             ],
             "allOf": [
                 {
@@ -75,8 +74,7 @@
                 }
             },
             "required": [
-                "type",
-                "input_hint"
+                "type"
             ],
             "allOf": [
                 {
@@ -124,8 +122,7 @@
                 }
             },
             "required": [
-                "type",
-                "input_hint"
+                "type"
             ],
             "allOf": [
                 {
@@ -211,15 +208,13 @@
                     "type": "string"
                 },
                 "additional_static_elements": {
-                    "type": "string",
-                    "examples": [
-                        "{'deprecated_key': ('unknown', 'data'), 'other_key': 3}"
-                    ]
+                    "type": "object"
                 }
             },
             "required": [
                 "type",
-                "elements"
+                "elements",
+                "static_elements_key"
             ],
             "allOf": [
                 {

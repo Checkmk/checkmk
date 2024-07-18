@@ -2,11 +2,13 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import ast
 from typing import Callable, Mapping, Sequence
 
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
 from cmk.gui.form_specs.vue.type_defs import (
+    DataOrigin,
     DEFAULT_VALUE,
     DefaultValue,
     EMPTY_VALUE,
@@ -37,9 +39,24 @@ class DictionaryVisitor(FormSpecVisitor):
     def _compute_default_values(self) -> dict:
         return {key: DEFAULT_VALUE for key, el in self.form_spec.elements.items() if el.required}
 
+    def _get_static_elements(self) -> set[str]:
+        return set(self.form_spec.ignored_elements or ())
+
+    def _compute_static_elements(self, parsed_value: dict) -> dict[str, str]:
+        return {x: repr(y) for x, y in parsed_value.items() if x in self._get_static_elements()}
+
+    def _resolve_static_elements(self, raw_value: Mapping) -> dict:
+        # Create a shallow copy, we might modify some of the keys in the raw_value
+        value = dict(raw_value)
+        if self.options.data_origin == DataOrigin.FRONTEND:
+            for ignored_key in self._get_static_elements():
+                if ignored_value := value.get(ignored_key):
+                    value[ignored_key] = ast.literal_eval(ignored_value)
+        return value
+
     def _has_invalid_keys(self, value: dict) -> bool:
         valid_keys = self.form_spec.elements.keys()
-        if len(set(value.keys() - valid_keys)) > 0:
+        if value.keys() - valid_keys - self._get_static_elements():
             return True
         return False
 
@@ -50,11 +67,12 @@ class DictionaryVisitor(FormSpecVisitor):
         )
         if not isinstance(raw_value, Mapping):
             return EMPTY_VALUE
+
         try:
-            result_dict = dict(raw_value)
-            if self._has_invalid_keys(result_dict):
+            resolved_dict = self._resolve_static_elements(raw_value)
+            if self._has_invalid_keys(resolved_dict):
                 return EMPTY_VALUE
-            return result_dict
+            return resolved_dict
         except ValueError:
             return EMPTY_VALUE
 
@@ -88,7 +106,12 @@ class DictionaryVisitor(FormSpecVisitor):
             )
 
         return (
-            VueComponents.Dictionary(title=title, help=help_text, elements=elements_keyspec),
+            VueComponents.Dictionary(
+                title=title,
+                help=help_text,
+                elements=elements_keyspec,
+                additional_static_elements=self._compute_static_elements(parsed_value),
+            ),
             vue_values,
         )
 
@@ -129,4 +152,7 @@ class DictionaryVisitor(FormSpecVisitor):
             if is_active:
                 disk_values[key_name] = element_visitor.to_disk(parsed_value[key_name])
 
+        for key in self._get_static_elements():
+            if key in parsed_value:
+                disk_values[key] = parsed_value[key]
         return disk_values

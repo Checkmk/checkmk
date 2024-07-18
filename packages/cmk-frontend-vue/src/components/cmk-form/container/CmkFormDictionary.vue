@@ -21,6 +21,11 @@ onBeforeMount(() => {
     const key = element.ident
     default_values[key] = element.default_value
   })
+  if (props.spec.additional_static_elements) {
+    for (const [key, value] of Object.entries(props.spec.additional_static_elements)) {
+      data.value[key] = value
+    }
+  }
 })
 
 function setValidation(validation: ValidationMessages) {

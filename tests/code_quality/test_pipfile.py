@@ -44,6 +44,7 @@ IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 BUILD_DIRS = {
     # This directory needs to be ignored for a few days (until all workspaces were cleared)
     repo_path() / "agent-receiver/build",
+    repo_path() / "bazel-bin",
     repo_path() / "bazel-check_mk",
     repo_path() / "bazel-checkout",
     repo_path() / "bazel-out",

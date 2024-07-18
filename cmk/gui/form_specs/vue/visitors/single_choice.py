@@ -19,6 +19,7 @@ from cmk.gui.form_specs.vue.utils import (
     create_validation_error,
     get_prefill_default,
     get_title_and_help,
+    localize,
     migrate_value,
 )
 from cmk.gui.form_specs.vue.validators import build_vue_validators
@@ -70,8 +71,9 @@ class SingleChoiceVisitor(FormSpecVisitor):
                 title=title,
                 help=help_text,
                 elements=elements,
+                label=localize(self.form_spec.label),
                 validators=build_vue_validators(self._validators()),
-                frozen=self.form_spec.frozen,
+                frozen=self.form_spec.frozen and isinstance(raw_value, str),
                 input_hint=compute_input_hint(self.form_spec.prefill),
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,

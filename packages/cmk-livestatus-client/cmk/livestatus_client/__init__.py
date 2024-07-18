@@ -1189,14 +1189,13 @@ class MultiSiteConnection(Helpers):
         self.connections = stillalive
         return result
 
-    # New parallelized version of query(). The semantics differs in the handling
-    # of Limit: since all sites are queried in parallel, the Limit: is simply
-    # applied to all sites - resulting in possibly more results then Limit requests.
-    def query_parallel(  # pylint: disable=too-many-branches
-        self,
-        query: Query,
-        add_headers: str = "",
-    ) -> LivestatusResponse:
+    def query_parallel(self, query: Query, add_headers: str = "") -> LivestatusResponse:
+        """New parallelized version of query()
+
+        The semantics differs in the handling of Limit: since all sites are queried in parallel, the
+        Limit: is simply applied to all sites - resulting in possibly more results then Limit
+        requests.
+        """
         stillalive = []
         if self.only_sites is not None:
             connect_to_sites = [c for c in self.connections if c[0] in self.only_sites]
@@ -1205,13 +1204,26 @@ class MultiSiteConnection(Helpers):
         else:
             connect_to_sites = self.connections
 
-        limit = self.limit
-        if limit is not None:
-            limit_header = "Limit: %d\n" % limit
-        else:
-            limit_header = ""
-
         # First send all queries
+        retrieve_responses = self._send_queries(
+            query,
+            add_headers,
+            connect_to_sites,
+            limit_header="Limit: %d\n" % self.limit if self.limit is not None else "",
+        )
+
+        # Then retrieve all raw responses. We will be as slow as the slowest of all connections.
+        site_responses = self._retrieve_responses(query, retrieve_responses, stillalive)
+
+        # Convert responses to python format
+        result = self._parse_responses(query, site_responses, stillalive)
+
+        self.connections = stillalive
+        return LivestatusResponse(result)
+
+    def _send_queries(
+        self, query: Query, add_headers: str, connect_to_sites: ConnectedSites, limit_header: str
+    ) -> list[tuple[str, ConnectedSite]]:
         retrieve_responses: list[tuple[str, ConnectedSite]] = []
         for connected_site in connect_to_sites:
             try:
@@ -1225,8 +1237,14 @@ class MultiSiteConnection(Helpers):
                     "exception": e,
                     "site": connected_site.config,
                 }
+        return retrieve_responses
 
-        # Then retrieve all raw responses. We will be as slow as the slowest of all connections.
+    def _retrieve_responses(
+        self,
+        query: Query,
+        retrieve_responses: list[tuple[str, ConnectedSite]],
+        stillalive: ConnectedSites,
+    ) -> list[tuple[ConnectedSite, bytes]]:
         site_responses: list[tuple[ConnectedSite, bytes]] = []
         for str_query, connected_site in retrieve_responses:
             try:
@@ -1250,8 +1268,14 @@ class MultiSiteConnection(Helpers):
                     "exception": e,
                     "site": connected_site.config,
                 }
+        return site_responses
 
-        # Convert responses to python format
+    def _parse_responses(
+        self,
+        query: Query,
+        site_responses: list[tuple[ConnectedSite, bytes]],
+        stillalive: ConnectedSites,
+    ) -> list[LivestatusRow]:
         result: list[LivestatusRow] = []
         for connected_site, raw_response in site_responses:
             try:
@@ -1272,9 +1296,7 @@ class MultiSiteConnection(Helpers):
                     "exception": e,
                     "site": connected_site.config,
                 }
-
-        self.connections = stillalive
-        return LivestatusResponse(result)
+        return result
 
     def command(self, command: str, sitename: SiteId | None = SiteId("local")) -> None:
         if sitename in self.deadsites:

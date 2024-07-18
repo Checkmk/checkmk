@@ -62,7 +62,7 @@ def generate_sql_command(
     if params.procedure and "useprocs" in params.procedure:
         args.append("--procedure")
         if "input" in params.procedure:
-            args.append(f"--inputvars={params.procedure['input']}")
+            args.append(f"--input={params.procedure['input']}")
 
     upper = _extract_levels(params.levels)
     lower = _extract_levels(params.levels_low)

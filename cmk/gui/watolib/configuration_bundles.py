@@ -80,11 +80,11 @@ def identify_bundle_references(
     bundle_group: str, bundle_ids: set[BundleId]
 ) -> Mapping[BundleId, BundleReferences]:
     """Identify the configuration references of the configuration bundles."""
-    bundle_id_finder = prepare_bundle_id_finder(PROGRAM_ID_QUICK_SETUP, bundle_ids)
+    bundle_id_finder = _prepare_bundle_id_finder(PROGRAM_ID_QUICK_SETUP, bundle_ids)
     affected_entities = _get_affected_entities(bundle_group)
     bundle_rule_ids = (
         _collect_many(
-            collect_rules(
+            _collect_rules(
                 finder=bundle_id_finder,
                 rules=AllRulesets.load_all_rulesets().get(bundle_group).get_rules(),
             )
@@ -93,12 +93,12 @@ def identify_bundle_references(
         else {}
     )
     bundle_password_ids = (
-        _collect_many(collect_passwords(finder=bundle_id_finder, passwords=load_passwords()))
+        _collect_many(_collect_passwords(finder=bundle_id_finder, passwords=load_passwords()))
         if "password" in affected_entities
         else {}
     )
     bundle_hosts = (
-        _collect_many(collect_hosts(finder=bundle_id_finder, hosts=Host.all().values()))
+        _collect_many(_collect_hosts(finder=bundle_id_finder, hosts=Host.all().values()))
         if "host" in affected_entities
         else {}
     )
@@ -133,13 +133,13 @@ def _collect_many(values: Iterable[tuple[BundleId, _T]]) -> Mapping[BundleId, Se
     return mapping
 
 
-def collect_hosts(finder: IdentFinder, hosts: Iterable[Host]) -> Iterable[tuple[BundleId, Host]]:
+def _collect_hosts(finder: IdentFinder, hosts: Iterable[Host]) -> Iterable[tuple[BundleId, Host]]:
     for host in hosts:
         if bundle_id := finder(host.locked_by()):
             yield bundle_id, host
 
 
-def collect_passwords(
+def _collect_passwords(
     finder: IdentFinder, passwords: Mapping[str, Password]
 ) -> Iterable[tuple[BundleId, tuple[str, Password]]]:
     for password_id, password in passwords.items():
@@ -147,7 +147,7 @@ def collect_passwords(
             yield bundle_id, (password_id, password)
 
 
-def collect_rules(
+def _collect_rules(
     finder: IdentFinder, rules: Iterable[tuple[Folder, int, Rule]]
 ) -> Iterable[tuple[BundleId, Rule]]:
     for _folder, _idx, rule in rules:
@@ -163,7 +163,7 @@ def _collect_dcd_connections(
             yield bundle_id, (connection_id, connection)
 
 
-def prepare_bundle_id_finder(bundle_program_id: str, bundle_ids: set[BundleId]) -> IdentFinder:
+def _prepare_bundle_id_finder(bundle_program_id: str, bundle_ids: set[BundleId]) -> IdentFinder:
     def find_matching_bundle_id(
         ident: GlobalIdent | None,
     ) -> BundleId | None:

@@ -686,7 +686,6 @@ class CMKOpenApiSession(requests.Session):
         interval: int = 60,
         host_attributes: dict | None = None,
         delete_hosts: bool = False,
-        activate_changes_interval: int = 60,
         discover_on_creation: bool = True,
         no_deletion_time_after_init: int = 600,
         max_cache_age: int = 3600,
@@ -711,7 +710,6 @@ class CMKOpenApiSession(requests.Session):
                         "delete_hosts": delete_hosts,
                     }
                 ],
-                "activate_changes_interval": activate_changes_interval,
                 "discover_on_creation": discover_on_creation,
                 "no_deletion_time_after_init": no_deletion_time_after_init,
                 "max_cache_age": max_cache_age,

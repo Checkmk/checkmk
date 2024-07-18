@@ -2371,7 +2371,7 @@ class Folder(FolderProtocol):
         for host_name, attributes, cluster_nodes in entries:
             self.propagate_hosts_changes(host_name, attributes, cluster_nodes)
 
-        self.persist_instance()  # num_hosts has changed
+        self.save()  # num_hosts has changed
         self.save_hosts()
 
         folder_path = self.path()
@@ -2460,17 +2460,16 @@ class Folder(FolderProtocol):
                 _("You cannot delete these hosts: %s") % ", ".join(errors),
             )
 
-    def _get_hosts_locked_by_quick_setup(self, host_names: Collection[HostName]) -> list[HostName]:
-        hosts = self.hosts()
+    @staticmethod
+    def _get_hosts_locked_by_quick_setup(host_names: Collection[HostName]) -> list[HostName]:
         return [
             host_name
             for host_name in host_names
-            if is_locked_by_quick_setup(hosts[host_name].locked_by())
+            if is_locked_by_quick_setup(Host.load_host(host_name).locked_by())
         ]
 
-    def _get_parents_of_hosts(
-        self, host_names: Collection[HostName]
-    ) -> dict[HostName, list[HostName]]:
+    @staticmethod
+    def _get_parents_of_hosts(host_names: Collection[HostName]) -> dict[HostName, list[HostName]]:
         # Note: Deletion of chosen hosts which are parents
         # is possible if and only if all children are chosen, too.
         hosts_with_children: dict[HostName, list[HostName]] = {}

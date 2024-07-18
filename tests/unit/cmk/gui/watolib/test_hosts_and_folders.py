@@ -227,6 +227,23 @@ def test_write_and_read_host_attributes(attributes: HostAttributes) -> None:
         }
 
 
+def test_create_multiple_hosts() -> None:
+    root = folder_tree().root_folder()
+    subfolder = root.create_subfolder("subfolder", "subfolder", {})
+
+    root.create_hosts([(HostName("host-1"), {}, [])])
+    subfolder.create_hosts([(HostName("host-2"), {}, [])])
+
+    all_hosts = root.all_hosts_recursively()
+    # to ensure that new folder instances contain the new hosts
+    all_hosts_new = folder_tree().root_folder().all_hosts_recursively()
+
+    assert "host-1" in all_hosts
+    assert "host-2" in all_hosts
+    assert "host-1" in all_hosts_new
+    assert "host-2" in all_hosts_new
+
+
 @contextmanager
 def in_chdir(directory: str) -> Iterator[None]:
     cur = os.getcwd()

@@ -1,7 +1,53 @@
+load(
+    # https://cs.opensource.google/bazel/bazel/+/master:tools/cpp/unix_cc_toolchain_config.bzl
+    "@bazel_tools//tools/cpp:unix_cc_toolchain_config.bzl",
+    unix_cc_toolchain_config = "cc_toolchain_config",
+)
 load("@rules_cc//cc:defs.bzl", "cc_toolchain")
-load(":cc_toolchain_config.bzl", "cc_toolchain_config")
 
 filegroup(name = "empty")
+
+COMPILE_FLAGS = [
+    "-fstack-protector",
+    "-Wall",
+    "-Wunused-but-set-parameter",
+    "-Wno-free-nonheap-object",
+    "-fno-omit-frame-pointer",
+]
+
+CXX_FLAGS = ["-std=c++20"]
+
+DBG_COMPILE_FLAGS = ["-g"]
+
+LINK_FLAGS = [
+    # DO NOT USE -fuse-ld=gold here: it is not available on sles15sp5
+    # However, I still don't understand why it would fail as were hardcoding the ld path for the CI toolchain
+    "-Wl,-no-as-needed",
+    "-Wl,-z,relro,-z,now",
+    "-pass-exit-codes",
+    "-lm",
+]
+
+LINK_LIBS = ["-lstdc++"]
+
+OPT_COMPILE_FLAGS = [
+    "-g0",
+    "-O2",
+    "-D_FORTIFY_SOURCE=1",
+    "-DNDEBUG",
+    "-ffunction-sections",
+    "-fdata-sections",
+]
+
+OPT_LINK_FLAGS = ["-Wl,--gc-sections"]
+
+UNFILTERED_COMPILE_FLAGS = [
+    "-fno-canonical-system-headers",
+    "-Wno-builtin-macro-redefined",
+    "-D__DATE__=\"redacted\"",
+    "-D__TIMESTAMP__=\"redacted\"",
+    "-D__TIME__=\"redacted\"",
+]
 
 linux_gcc13_tool_paths = {
     "ar": "/usr/bin/gcc-ar-13",
@@ -51,12 +97,26 @@ TOOLCHAINS = {
 }
 
 [
-    cc_toolchain_config(
+    unix_cc_toolchain_config(
         name = identifier + "_config",
+        abi_libc_version = "local",
+        abi_version = "local",
+        compile_flags = COMPILE_FLAGS,
         compiler = "gcc-13",
+        cpu = "k8",
         cxx_builtin_include_directories = cxx_builtin_include_directories,
+        cxx_flags = CXX_FLAGS,
+        dbg_compile_flags = DBG_COMPILE_FLAGS,
+        host_system_name = "local",
+        link_flags = LINK_FLAGS,
+        link_libs = LINK_LIBS,
+        opt_compile_flags = OPT_COMPILE_FLAGS,
+        opt_link_flags = OPT_LINK_FLAGS,
+        target_libc = "local",
+        target_system_name = "local",
         tool_paths = tool_paths,
         toolchain_identifier = identifier,
+        unfiltered_compile_flags = UNFILTERED_COMPILE_FLAGS,
     )
     for identifier, (cxx_builtin_include_directories, tool_paths) in TOOLCHAINS.items()
 ]

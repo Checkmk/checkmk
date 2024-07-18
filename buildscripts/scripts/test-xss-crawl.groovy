@@ -12,10 +12,6 @@ def main() {
         safe_branch_name,  // 'branch'
     )
 
-    check_job_parameters([
-        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
-    ]);
-
     try {
         testing_helper.run_make_targets(
             DOCKER_GROUP_ID: get_docker_group_id(),

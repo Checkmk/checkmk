@@ -261,11 +261,11 @@ test-update-cse:
 
 test-update-cross-edition-cce: # from CEE to CCE
 	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) -m cee --log-cli-level=INFO \
-	--latest-base-version --target-edition=CCE
+	--latest-base-version --target-edition=CCE --disable-interactive-mode
 
 test-update-cross-edition-cme: # from CEE to CME
 	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) -m cee --log-cli-level=INFO \
-	--latest-base-version --target-edition=CME
+	--latest-base-version --target-edition=CME --disable-interactive-mode
 
 test-schemathesis-openapi:
 	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi)

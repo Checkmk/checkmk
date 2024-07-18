@@ -18,7 +18,6 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
-# CC=/usr/bin/gcc-13 bazel build //packages/livestatus
 cc_library(
     name = "livestatus",
     srcs = glob(
@@ -54,7 +53,6 @@ cc_shared_library(
     deps = [":livestatus"],
 )
 
-# CC=/usr/bin/gcc-13 bazel test --test_output=all //packages/livestatus:all
 cc_test(
     name = "test",
     size = "small",

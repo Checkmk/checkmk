@@ -208,7 +208,7 @@ opentelemetry-instrumentation-wsgi = "==0.46b0" # used for distributed tracing o
 opentelemetry-instrumentation-requests = "==0.46b0" # used for distributed tracing of Checkmk
 opentelemetry-instrumentation-redis = "==0.46b0" # used for distributed tracing of Checkmk
 opentelemetry-semantic-conventions = "==0.46b0" # used for distributed tracing of Checkmk
-pika = "==1.3.2" # used by distributed piggybacking to communicate with RabbitMQ
+pika = "*" # used by distributed piggybacking to communicate with RabbitMQ
 
 [requires]
 python_version = "3.12"

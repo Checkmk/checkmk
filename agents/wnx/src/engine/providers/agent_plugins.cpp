@@ -76,16 +76,19 @@ std::string FindVersionInfo(const fs::path &file, FileType file_type) {
         switch (file_type) {
             case FileType::exe: {
                 // code below is tested manually
-                auto result =
-                    wtools::RunCommand(file.wstring() + L" --version");
-                tools::AllTrim(result);
-                const auto output = tools::SplitString(result, " ", 2);
-                if (file.stem().string() == output[0] && output.size() == 2) {
-                    return fmt::format("{}:CMK_VERSION = \"{}\"", file,
-                                       output[1]);
-                } else {
-                    return fmt::format("{}:CMK_VERSION = unversioned", file);
+                const auto plugin_name = file.stem().string();
+                if (plugin_name == "mk-sql") {
+                    auto result =
+                        wtools::RunCommand(file.wstring() + L" --version");
+                    tools::AllTrim(result);
+                    const auto output = tools::SplitString(result, " ");
+                    if (file.stem().string() == output[0] &&
+                        output.size() == 2) {
+                        return fmt::format("{}:CMK_VERSION = \"{}\"", file,
+                                           output[1]);
+                    }
                 }
+                return {};
             }
             case FileType::ps1:
             case FileType::cmd:

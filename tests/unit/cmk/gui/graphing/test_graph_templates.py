@@ -26,12 +26,12 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpRRDSource,
 )
 from cmk.gui.graphing._graph_templates import matching_graph_templates
-from cmk.gui.graphing._utils import (
-    _graph_templates_internal,
+from cmk.gui.graphing._graph_templates_from_plugins import (
+    _graph_templates_from_plugins,
     GraphTemplate,
     ScalarDefinition,
-    translate_metrics,
 )
+from cmk.gui.graphing._utils import translate_metrics
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
 _GRAPH_TEMPLATES = [
@@ -196,7 +196,7 @@ def test_horizontal_rules_from_thresholds(
 
 def test_duplicate_graph_templates() -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
-    for ident, template in _graph_templates_internal().items():
+    for ident, template in _graph_templates_from_plugins().items():
         expressions = [m.expression for m in template.metrics] + [
             s.expression for s in template.scalars
         ]
@@ -222,7 +222,7 @@ def test_graph_template_with_layered_areas() -> None:
         neg: list[Literal["-area", "-stack"]] = field(default_factory=list)
 
     areas_by_ident: dict[str, _GraphTemplateArea] = {}
-    for ident, template in _graph_templates_internal().items():
+    for ident, template in _graph_templates_from_plugins().items():
         for metric in template.metrics:
             if metric.line_type == "area":
                 areas_by_ident.setdefault(ident, _GraphTemplateArea()).pos.append(metric.line_type)

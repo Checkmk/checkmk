@@ -31,12 +31,18 @@ from cmk.gui.graphing._expression import (
     Sum,
     WarningOf,
 )
+from cmk.gui.graphing._graph_templates_from_plugins import (
+    _compute_predictive_metrics,
+    get_graph_templates,
+    GraphTemplate,
+    MetricDefinition,
+    MinimalGraphTemplateRange,
+    ScalarDefinition,
+)
 from cmk.gui.graphing._type_defs import UnitInfo
 from cmk.gui.graphing._utils import (
-    _compute_predictive_metrics,
     _NormalizedPerfData,
     AutomaticDict,
-    MetricDefinition,
     MetricInfoExtended,
     metrics_from_api,
     TranslationInfo,
@@ -298,9 +304,7 @@ def test_get_graph_templates_1(
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
-    assert sorted([t.id for t in utils.get_graph_templates(translated_metrics)]) == sorted(
-        graph_ids
-    )
+    assert sorted([t.id for t in get_graph_templates(translated_metrics)]) == sorted(graph_ids)
 
 
 @pytest.mark.parametrize(
@@ -323,9 +327,7 @@ def test_get_graph_templates_2(
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", *warn_crit_min_max) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
-    assert sorted([t.id for t in utils.get_graph_templates(translated_metrics)]) == sorted(
-        graph_ids
-    )
+    assert sorted([t.id for t in get_graph_templates(translated_metrics)]) == sorted(graph_ids)
 
 
 @pytest.mark.parametrize(
@@ -545,7 +547,7 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
             ],
             "check_mk-inbound_and_outbound_messages",
             [
-                utils.GraphTemplate(
+                GraphTemplate(
                     id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
                     scalars=[],
@@ -600,7 +602,7 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
             ],
             "check_mk-inbound_and_outbound_messages",
             [
-                utils.GraphTemplate(
+                GraphTemplate(
                     id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
                     scalars=[],
@@ -622,18 +624,18 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                         ),
                     ],
                 ),
-                utils.GraphTemplate(
+                GraphTemplate(
                     id="METRIC_foo",
                     title=None,
                     scalars=[
-                        utils.ScalarDefinition(
+                        ScalarDefinition(
                             expression=WarningOf(
                                 metric=Metric(name="foo"),
                                 name="warn",
                             ),
                             title="Warning",
                         ),
-                        utils.ScalarDefinition(
+                        ScalarDefinition(
                             expression=CriticalOf(
                                 metric=Metric(name="foo"),
                                 name="crit",
@@ -653,18 +655,18 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                         )
                     ],
                 ),
-                utils.GraphTemplate(
+                GraphTemplate(
                     id="METRIC_predict_foo",
                     title=None,
                     scalars=[
-                        utils.ScalarDefinition(
+                        ScalarDefinition(
                             expression=WarningOf(
                                 metric=Metric(name="predict_foo"),
                                 name="warn",
                             ),
                             title="Warning",
                         ),
-                        utils.ScalarDefinition(
+                        ScalarDefinition(
                             expression=CriticalOf(
                                 metric=Metric(name="predict_foo"),
                                 name="crit",
@@ -684,18 +686,18 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                         )
                     ],
                 ),
-                utils.GraphTemplate(
+                GraphTemplate(
                     id="METRIC_predict_lower_foo",
                     title=None,
                     scalars=[
-                        utils.ScalarDefinition(
+                        ScalarDefinition(
                             expression=WarningOf(
                                 metric=Metric(name="predict_lower_foo"),
                                 name="warn",
                             ),
                             title="Warning",
                         ),
-                        utils.ScalarDefinition(
+                        ScalarDefinition(
                             expression=CriticalOf(
                                 metric=Metric(name="predict_lower_foo"),
                                 name="crit",
@@ -725,7 +727,7 @@ def test_get_graph_templates_with_predictive_metrics(
     predict_metric_names: Sequence[str],
     predict_lower_metric_names: Sequence[str],
     check_command: str,
-    graph_templates: Sequence[utils.GraphTemplate],
+    graph_templates: Sequence[GraphTemplate],
 ) -> None:
     perfdata: Perfdata = (
         [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
@@ -736,7 +738,7 @@ def test_get_graph_templates_with_predictive_metrics(
         ]
     )
     translated_metrics = utils.translate_metrics(perfdata, check_command)
-    found_graph_templates = list(utils.get_graph_templates(translated_metrics))
+    found_graph_templates = list(get_graph_templates(translated_metrics))
     assert found_graph_templates == graph_templates
 
 
@@ -1081,9 +1083,7 @@ def test_conflicting_metrics(metric_names: Sequence[str], graph_ids: Sequence[st
     # 2. use metric names from (1) and conflicting metrics
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, "check_command")
-    assert sorted([t.id for t in utils.get_graph_templates(translated_metrics)]) == sorted(
-        graph_ids
-    )
+    assert sorted([t.id for t in get_graph_templates(translated_metrics)]) == sorted(graph_ids)
 
 
 @pytest.mark.parametrize(
@@ -1240,19 +1240,19 @@ def test_automatic_dict_append() -> None:
                 metrics=[],
                 scalars=["metric", "metric:warn", "metric:crit"],
             ),
-            utils.GraphTemplate(
+            GraphTemplate(
                 id="ident",
                 title=None,
                 scalars=[
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         expression=Metric("metric"),
                         title="metric",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         expression=WarningOf(Metric("metric")),
                         title="Warning",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         expression=CriticalOf(Metric("metric")),
                         title="Critical",
                     ),
@@ -1271,19 +1271,19 @@ def test_automatic_dict_append() -> None:
                 metrics=[],
                 scalars=[("metric", "Title"), ("metric:warn", "Warn"), ("metric:crit", "Crit")],
             ),
-            utils.GraphTemplate(
+            GraphTemplate(
                 id="ident",
                 title=None,
                 scalars=[
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         expression=Metric("metric"),
                         title="Title",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         expression=WarningOf(Metric("metric")),
                         title="Warn",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         expression=CriticalOf(Metric("metric")),
                         title="Crit",
                     ),
@@ -1301,7 +1301,7 @@ def test_automatic_dict_append() -> None:
             utils.RawGraphTemplate(
                 metrics=[("metric", "line")],
             ),
-            utils.GraphTemplate(
+            GraphTemplate(
                 id="ident",
                 title=None,
                 scalars=[],
@@ -1323,7 +1323,7 @@ def test_automatic_dict_append() -> None:
             utils.RawGraphTemplate(
                 metrics=[("metric", "line", "Title")],
             ),
-            utils.GraphTemplate(
+            GraphTemplate(
                 id="ident",
                 title=None,
                 scalars=[],
@@ -1346,11 +1346,10 @@ def test_automatic_dict_append() -> None:
 )
 def test_graph_template_from_template(
     graph_template_registation: utils.RawGraphTemplate,
-    expected_graph_template: utils.GraphTemplate,
+    expected_graph_template: GraphTemplate,
 ) -> None:
     assert (
-        utils.GraphTemplate.from_template("ident", graph_template_registation)
-        == expected_graph_template
+        GraphTemplate.from_template("ident", graph_template_registation) == expected_graph_template
     )
 
 
@@ -1410,7 +1409,7 @@ COLOR_HEX = "#1e90ff"
                 "metric-name-9",
                 "metric-name-10",
             ],
-            utils.GraphTemplate(
+            GraphTemplate(
                 id="name",
                 title="Title",
                 scalars=[],
@@ -1549,26 +1548,26 @@ COLOR_HEX = "#1e90ff"
                 "metric-name-9",
                 "metric-name-10",
             ],
-            utils.GraphTemplate(
+            GraphTemplate(
                 id="name",
                 title="Title",
                 scalars=[
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         WarningOf(Metric("metric-name-2")),
                         "Warning of metric-name-2",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         CriticalOf(Metric("metric-name-3")),
                         "Critical of metric-name-3",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         MinimumOf(
                             Metric("metric-name-4"),
                             explicit_color=COLOR_HEX,
                         ),
                         "metric-name-4",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         MaximumOf(
                             Metric("metric-name-5"),
                             explicit_color=COLOR_HEX,
@@ -1644,10 +1643,10 @@ COLOR_HEX = "#1e90ff"
                 simple_lines=["metric-name"],
             ),
             ["metric-name"],
-            utils.GraphTemplate(
+            GraphTemplate(
                 id="name",
                 title="Title",
-                range=utils.MinimalGraphTemplateRange(min=Constant(0), max=Constant(100.0)),
+                range=MinimalGraphTemplateRange(min=Constant(0), max=Constant(100.0)),
                 scalars=[],
                 conflicting_metrics=(),
                 optional_metrics=(),
@@ -1666,7 +1665,7 @@ COLOR_HEX = "#1e90ff"
                 conflicting=["metric-name-confl"],
             ),
             ["metric-name"],
-            utils.GraphTemplate(
+            GraphTemplate(
                 id="name",
                 title="Title",
                 range=None,
@@ -1682,7 +1681,7 @@ COLOR_HEX = "#1e90ff"
     ],
 )
 def test_graph_template_from_graph(
-    graph: graphs.Graph, raw_metric_names: Sequence[str], expected_template: utils.GraphTemplate
+    graph: graphs.Graph, raw_metric_names: Sequence[str], expected_template: GraphTemplate
 ) -> None:
     for r in raw_metric_names:
         metrics_from_api.register(
@@ -1698,7 +1697,7 @@ def test_graph_template_from_graph(
                 color="#000000",
             )
         )
-    assert utils.GraphTemplate.from_graph(graph) == expected_template
+    assert GraphTemplate.from_graph(graph) == expected_template
 
 
 @pytest.mark.parametrize(
@@ -1751,40 +1750,40 @@ def test_graph_template_from_graph(
                 "metric-name-u5",
                 "metric-name-u6",
             ],
-            utils.GraphTemplate(
+            GraphTemplate(
                 id="name",
                 title="Title",
                 range=None,
                 scalars=[
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         WarningOf(Metric("metric-name-l3"), "warn"),
                         "Warning of metric-name-l3",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         CriticalOf(Metric("metric-name-l4"), "crit"),
                         "Critical of metric-name-l4",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         MinimumOf(Metric("metric-name-l5"), "min", explicit_color=COLOR_HEX),
                         "metric-name-l5",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         MaximumOf(Metric("metric-name-l6"), "max", explicit_color=COLOR_HEX),
                         "metric-name-l6",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         WarningOf(Metric("metric-name-u3"), "warn"),
                         "Warning of metric-name-u3",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         CriticalOf(Metric("metric-name-u4"), "crit"),
                         "Critical of metric-name-u4",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         MinimumOf(Metric("metric-name-u5"), "min", explicit_color=COLOR_HEX),
                         "metric-name-u5",
                     ),
-                    utils.ScalarDefinition(
+                    ScalarDefinition(
                         MaximumOf(Metric("metric-name-u6"), "max", explicit_color=COLOR_HEX),
                         "metric-name-u6",
                     ),
@@ -1820,10 +1819,10 @@ def test_graph_template_from_graph(
                 ),
             ),
             ["metric-name-l", "metric-name-u"],
-            utils.GraphTemplate(
+            GraphTemplate(
                 id="name",
                 title="Title",
-                range=utils.MinimalGraphTemplateRange(
+                range=MinimalGraphTemplateRange(
                     min=Minimum([Constant(1), Constant(2)]),
                     max=Maximum([Constant(10), Constant(11)]),
                 ),
@@ -1856,10 +1855,10 @@ def test_graph_template_from_graph(
                 ),
             ),
             ["metric-name-l", "metric-name-u"],
-            utils.GraphTemplate(
+            GraphTemplate(
                 id="name",
                 title="Title",
-                range=utils.MinimalGraphTemplateRange(
+                range=MinimalGraphTemplateRange(
                     min=Minimum([Constant(1)]),
                     max=Maximum([Constant(10)]),
                 ),
@@ -1892,10 +1891,10 @@ def test_graph_template_from_graph(
                 ),
             ),
             ["metric-name-l", "metric-name-u"],
-            utils.GraphTemplate(
+            GraphTemplate(
                 id="name",
                 title="Title",
-                range=utils.MinimalGraphTemplateRange(
+                range=MinimalGraphTemplateRange(
                     min=Minimum([Constant(2)]),
                     max=Maximum([Constant(11)]),
                 ),
@@ -1916,7 +1915,7 @@ def test_graph_template_from_graph(
 def test_graph_template_from_bidirectional(
     graph: graphs.Bidirectional,
     raw_metric_names: Sequence[str],
-    expected_template: utils.GraphTemplate,
+    expected_template: GraphTemplate,
 ) -> None:
     for r in raw_metric_names:
         metrics_from_api.register(
@@ -1932,7 +1931,7 @@ def test_graph_template_from_bidirectional(
                 color="#000000",
             )
         )
-    assert utils.GraphTemplate.from_bidirectional(graph) == expected_template
+    assert GraphTemplate.from_bidirectional(graph) == expected_template
 
 
 @pytest.mark.parametrize(

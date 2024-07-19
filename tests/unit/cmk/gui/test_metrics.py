@@ -4,16 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.graphing._expression import CriticalOf, Metric, WarningOf
-from cmk.gui.graphing._loader import load_graphing_plugins
-from cmk.gui.graphing._utils import (
-    _graph_templates_internal,
-    add_graphing_plugins,
-    check_metrics,
+from cmk.gui.graphing._graph_templates_from_plugins import (
+    _graph_templates_from_plugins,
     GraphTemplate,
     MetricDefinition,
-    metrics_from_api,
     ScalarDefinition,
 )
+from cmk.gui.graphing._loader import load_graphing_plugins
+from cmk.gui.graphing._utils import add_graphing_plugins, check_metrics, metrics_from_api
 
 
 def test_add_graphing_plugins() -> None:
@@ -49,7 +47,7 @@ def test_add_graphing_plugins() -> None:
         "write_latency": {"scale": 0.001},
     }
 
-    graph_templates = _graph_templates_internal()
+    graph_templates = _graph_templates_from_plugins()
     assert "db_connections" in graph_templates
     assert graph_templates["db_connections"] == GraphTemplate(
         id="db_connections",

@@ -45,17 +45,16 @@ from ._graph_specification import (
     MetricOpRRDSource,
     MinimalVerticalRange,
 )
-from ._type_defs import GraphConsoldiationFunction, TranslatedMetric
-from ._utils import (
+from ._graph_templates_from_plugins import (
     FixedGraphTemplateRange,
-    get_graph_data_from_livestatus,
     get_graph_templates,
     GraphTemplate,
     MetricDefinition,
     MinimalGraphTemplateRange,
     ScalarDefinition,
-    translated_metrics_from_row,
 )
+from ._type_defs import GraphConsoldiationFunction, TranslatedMetric
+from ._utils import get_graph_data_from_livestatus, translated_metrics_from_row
 
 
 class TemplateGraphSpecification(GraphSpecification, frozen=True):

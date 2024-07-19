@@ -33,6 +33,7 @@ from cmk.gui.graphing import _utils as graphing_utils
 from cmk.gui.graphing import perfometer_info
 from cmk.gui.graphing._graph_render_config import GraphRenderConfig
 from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
+from cmk.gui.graphing._graph_templates_from_plugins import GraphTemplate
 from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
@@ -92,7 +93,6 @@ def _register_pre_21_plugin_api() -> None:
         "G",
         "GB",
         "graph_info",
-        "GraphTemplate",
         "K",
         "KB",
         "m",
@@ -110,6 +110,9 @@ def _register_pre_21_plugin_api() -> None:
     ):
         legacy_api_module.__dict__[name] = graphing_utils.__dict__[name]
         legacy_plugin_utils.__dict__[name] = graphing_utils.__dict__[name]
+
+    legacy_api_module.__dict__["GraphTemplate"] = GraphTemplate
+    legacy_plugin_utils.__dict__["GraphTemplate"] = GraphTemplate
 
     legacy_api_module.__dict__["perfometer_info"] = perfometer_info
     legacy_plugin_utils.__dict__["perfometer_info"] = perfometer_info

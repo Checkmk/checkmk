@@ -33,11 +33,9 @@ logger = logging.getLogger(__name__)
 
 class UtilCalledProcessError(subprocess.CalledProcessError):
     def __str__(self) -> str:
-        return (
-            super().__str__()
-            if self.stderr is None
-            else f"{super().__str__()[:-1]} ({self.stderr!r})."
-        )
+        base_msg = f"\n{super().__str__()}"
+        err_msg = f"\nSTDERR:\n{self.stderr}" if self.stderr else ""
+        return f"{base_msg}{err_msg}"
 
 
 @dataclasses.dataclass

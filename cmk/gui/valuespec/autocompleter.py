@@ -7,9 +7,9 @@
 
 from collections.abc import Callable
 
-from cmk.utils.plugin_registry import Registry
-
 from cmk.gui.type_defs import Choices
+
+from cmk.ccc.plugin_registry import Registry
 
 AutocompleterFunc = Callable[[str, dict], Choices]
 

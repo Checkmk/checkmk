@@ -8,7 +8,6 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
-import cmk.utils.plugin_registry
 import cmk.utils.render
 
 from cmk.gui import background_job as background_job
@@ -30,6 +29,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
 
+import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 
 

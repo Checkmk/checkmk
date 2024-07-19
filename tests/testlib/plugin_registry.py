@@ -7,7 +7,7 @@ import contextlib
 from collections.abc import Iterator
 from typing import Any
 
-from cmk.utils.plugin_registry import Registry
+from cmk.ccc.plugin_registry import Registry
 
 
 @contextlib.contextmanager

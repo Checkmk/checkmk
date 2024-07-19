@@ -7,12 +7,13 @@ from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
 import cmk.utils
-import cmk.utils.plugin_registry
 
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterParameters, Rows
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.view_utils import CellSpec
+
+import cmk.ccc.plugin_registry
 
 T = TypeVar("T")
 
@@ -88,7 +89,7 @@ class Painter(Generic[T]):
         return self.ident
 
 
-class ExperimentalPainterRegistry(cmk.utils.plugin_registry.Registry[Painter]):
+class ExperimentalPainterRegistry(cmk.ccc.plugin_registry.Registry[Painter]):
     def plugin_name(self, instance):
         return instance.ident
 

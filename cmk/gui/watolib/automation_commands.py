@@ -7,10 +7,10 @@
 import abc
 from typing import Any
 
-import cmk.utils.plugin_registry
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_state
 
+import cmk.ccc.plugin_registry
 import cmk.ccc.version as cmk_version
 
 
@@ -35,7 +35,7 @@ class AutomationCommand(abc.ABC):
         raise NotImplementedError()
 
 
-class AutomationCommandRegistry(cmk.utils.plugin_registry.Registry[type[AutomationCommand]]):
+class AutomationCommandRegistry(cmk.ccc.plugin_registry.Registry[type[AutomationCommand]]):
     def plugin_name(self, instance: type[AutomationCommand]) -> str:
         return instance().command_name()
 

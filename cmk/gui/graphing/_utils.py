@@ -16,7 +16,6 @@ from livestatus import livestatus_lql
 
 import cmk.utils.regex
 from cmk.utils.metrics import MetricName
-from cmk.utils.plugin_registry import Registry
 
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
@@ -28,6 +27,7 @@ from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 from cmk.gui.utils.speaklater import LazyString
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
 from cmk.discover_plugins import DiscoveredPlugins
 from cmk.graphing.v1 import graphs, metrics, perfometers, translations
 

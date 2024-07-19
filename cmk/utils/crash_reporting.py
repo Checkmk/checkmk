@@ -23,8 +23,7 @@ from itertools import islice
 from pathlib import Path
 from typing import Any, Final, Self
 
-import cmk.utils.plugin_registry
-
+import cmk.ccc.plugin_registry
 from cmk.ccc import store
 
 CrashInfo = dict[str, Any]  # TODO: improve this type
@@ -270,7 +269,7 @@ def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 10
     return val
 
 
-class CrashReportRegistry(cmk.utils.plugin_registry.Registry[type[ABCCrashReport]]):
+class CrashReportRegistry(cmk.ccc.plugin_registry.Registry[type[ABCCrashReport]]):
     def plugin_name(self, instance: type[ABCCrashReport]) -> str:
         return instance.type()
 

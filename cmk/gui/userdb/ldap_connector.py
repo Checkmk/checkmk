@@ -1709,7 +1709,7 @@ class LDAPAttributePlugin(abc.ABC):
         return []
 
 
-class LDAPAttributePluginRegistry(cmk.utils.plugin_registry.Registry[type[LDAPAttributePlugin]]):
+class LDAPAttributePluginRegistry(cmk.ccc.plugin_registry.Registry[type[LDAPAttributePlugin]]):
     def plugin_name(self, instance):
         return instance().ident
 

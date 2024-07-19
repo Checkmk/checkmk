@@ -7,7 +7,7 @@
 
 import abc
 
-from cmk.utils.plugin_registry import Registry
+from cmk.ccc.plugin_registry import Registry
 
 
 class CommandGroup(abc.ABC):

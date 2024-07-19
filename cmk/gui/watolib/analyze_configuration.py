@@ -208,7 +208,7 @@ class ACTest:
         )
 
 
-class ACTestRegistry(cmk.utils.plugin_registry.Registry[type[ACTest]]):
+class ACTestRegistry(cmk.ccc.plugin_registry.Registry[type[ACTest]]):
     def plugin_name(self, instance: type[ACTest]) -> str:
         return instance.__name__
 

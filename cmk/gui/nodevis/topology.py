@@ -16,7 +16,6 @@ from typing import Any, Literal
 import livestatus
 
 import cmk.utils.paths
-import cmk.utils.plugin_registry
 from cmk.utils.hostaddress import HostName
 from cmk.utils.user import UserId
 
@@ -81,6 +80,7 @@ from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import FilterRegistry
 
+import cmk.ccc.plugin_registry
 from cmk.ccc import store
 from cmk.ccc.store import locked
 
@@ -1365,7 +1365,7 @@ def _compute_mesh_links(topology: Topology) -> list[TopologyLink]:
     return list(mesh_links.values())
 
 
-class TopologyLayerRegistry(cmk.utils.plugin_registry.Registry[type[ABCTopologyNodeDataGenerator]]):
+class TopologyLayerRegistry(cmk.ccc.plugin_registry.Registry[type[ABCTopologyNodeDataGenerator]]):
     def plugin_name(self, instance: type[ABCTopologyNodeDataGenerator]) -> str:
         return instance.ident
 

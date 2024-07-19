@@ -48,7 +48,6 @@ from cmk.utils.certs import CertManagementEvent
 from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.paths import omd_root
-from cmk.utils.plugin_registry import Registry
 from cmk.utils.schedule import next_scheduled_time
 
 from cmk.gui import forms, key_mgmt
@@ -103,6 +102,7 @@ from cmk.gui.wato import IndividualOrStoredPassword
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
 
 

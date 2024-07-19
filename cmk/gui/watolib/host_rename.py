@@ -19,7 +19,6 @@ from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.hostaddress import HostName
 from cmk.utils.notify_types import EventRule
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.plugin_registry import Registry
 
 from cmk.gui import userdb
 from cmk.gui.background_job import (
@@ -34,6 +33,7 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.urls import makeuri
 
 from cmk.ccc import store
+from cmk.ccc.plugin_registry import Registry
 
 from ..config import active_config
 from .audit_log import log_audit

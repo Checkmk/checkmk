@@ -29,7 +29,7 @@ class Registry(Mapping[str, _VT]):
 
     Examples:
 
-        >>> from cmk.utils.plugin_registry import Registry
+        >>> from cmk.ccc.plugin_registry import Registry
         >>> class A:
         ...     def __init__(self, name: str) -> None:
         ...         self.name = name

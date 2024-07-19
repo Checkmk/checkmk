@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any, Literal
 
 import cmk.utils.paths
-from cmk.utils.plugin_registry import Registry
 
 from cmk.gui import visuals
 from cmk.gui.config import active_config, Config
@@ -51,6 +50,7 @@ from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
 
 from ..v1.painter_lib import experimental_painter_registry, Formatters
 from ..v1.painter_lib import Painter as V1Painter

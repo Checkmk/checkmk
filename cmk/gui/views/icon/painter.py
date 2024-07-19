@@ -10,7 +10,6 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
-import cmk.utils.plugin_registry
 import cmk.utils.regex
 from cmk.utils.tags import TagID
 
@@ -25,6 +24,8 @@ from cmk.gui.type_defs import Icon as IconSpec
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec, CSVExportError
+
+import cmk.ccc.plugin_registry
 
 from .base import Icon
 from .registry import get_multisite_icons

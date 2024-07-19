@@ -17,7 +17,6 @@ from typing import Final, Literal, TypeVar
 
 import livestatus
 
-import cmk.utils.plugin_registry
 from cmk.utils.redis import get_redis_client
 
 import cmk.gui.utils
@@ -58,6 +57,7 @@ from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, PermissionsHandler
 
+import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKException, MKGeneralException
 
 from ._base import PageHandlers, SidebarSnapin
@@ -902,7 +902,7 @@ class ABCLivestatusMatchPlugin(ABCMatchPlugin):
         raise NotImplementedError()
 
 
-class MatchPluginRegistry(cmk.utils.plugin_registry.Registry[ABCMatchPlugin]):
+class MatchPluginRegistry(cmk.ccc.plugin_registry.Registry[ABCMatchPlugin]):
     def plugin_name(self, instance):
         return instance.name
 

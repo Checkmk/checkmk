@@ -439,7 +439,7 @@ class ABCReportRenderer(abc.ABC):
         raise NotImplementedError()
 
 
-class ReportRendererRegistry(cmk.utils.plugin_registry.Registry[type[ABCReportRenderer]]):
+class ReportRendererRegistry(cmk.ccc.plugin_registry.Registry[type[ABCReportRenderer]]):
     def plugin_name(self, instance):
         return instance.type()
 

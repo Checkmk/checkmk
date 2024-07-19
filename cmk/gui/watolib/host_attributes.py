@@ -20,7 +20,6 @@ from marshmallow import fields
 
 from livestatus import SiteId
 
-import cmk.utils.plugin_registry
 from cmk.utils import deprecation_warnings
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
@@ -42,6 +41,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.gui.watolib.utils import host_attribute_matches
 
+import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.fields import String
 
@@ -172,7 +172,7 @@ class HostAttributeTopic(abc.ABC):
         raise NotImplementedError()
 
 
-class HostAttributeTopicRegistry(cmk.utils.plugin_registry.Registry[type[HostAttributeTopic]]):
+class HostAttributeTopicRegistry(cmk.ccc.plugin_registry.Registry[type[HostAttributeTopic]]):
     def plugin_name(self, instance: type[HostAttributeTopic]) -> str:
         return instance().ident
 
@@ -504,7 +504,7 @@ class ABCHostAttribute(abc.ABC):
         raise NotImplementedError()
 
 
-class HostAttributeRegistry(cmk.utils.plugin_registry.Registry[type[ABCHostAttribute]]):
+class HostAttributeRegistry(cmk.ccc.plugin_registry.Registry[type[ABCHostAttribute]]):
     _index = 0
 
     def plugin_name(self, instance: type[ABCHostAttribute]) -> str:

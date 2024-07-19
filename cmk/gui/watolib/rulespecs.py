@@ -11,7 +11,6 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-import cmk.utils.plugin_registry
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, RuleGroupType
 
@@ -47,6 +46,7 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 
+import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition, mark_edition_only
 
@@ -170,7 +170,7 @@ class RulespecSubGroup(RulespecBaseGroup, abc.ABC):
         return None  # Sub groups currently have no help text
 
 
-class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[type[RulespecBaseGroup]]):
+class RulespecGroupRegistry(cmk.ccc.plugin_registry.Registry[type[RulespecBaseGroup]]):
     def __init__(self) -> None:
         super().__init__()
         self._main_groups: list[type[RulespecGroup]] = []
@@ -1089,7 +1089,7 @@ def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -
     return BinaryHostRulespec
 
 
-class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
+class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
     def __init__(self, group_registry: RulespecGroupRegistry) -> None:
         super().__init__()
         self._group_registry = group_registry

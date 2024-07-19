@@ -10,7 +10,6 @@ from typing import Any, Literal
 
 from cmk.utils import paths
 from cmk.utils.notify_types import EventRule
-from cmk.utils.plugin_registry import Registry
 from cmk.utils.regex import GROUP_NAME_PATTERN
 from cmk.utils.timeperiod import timeperiod_spec_alias
 
@@ -47,6 +46,7 @@ from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.timeperiods import load_timeperiods
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.plugin_registry import Registry
 
 ContactGroupUsageFinder = Callable[[GroupName, GlobalSettings], list[tuple[str, str]]]
 

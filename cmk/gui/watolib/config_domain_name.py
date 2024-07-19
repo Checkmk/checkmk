@@ -13,7 +13,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final
 
-import cmk.utils.plugin_registry
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.hostaddress import HostName
 
@@ -24,6 +23,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.site_changes import ChangeSpec
 
+import cmk.ccc.plugin_registry
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -183,7 +183,7 @@ def get_always_activate_domains() -> Sequence[type[ABCConfigDomain]]:
     return [d for d in config_domain_registry.values() if d.always_activate]
 
 
-class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[type[ABCConfigDomain]]):
+class ConfigDomainRegistry(cmk.ccc.plugin_registry.Registry[type[ABCConfigDomain]]):
     def plugin_name(self, instance: type[ABCConfigDomain]) -> str:
         return instance.ident()
 
@@ -213,9 +213,7 @@ class SampleConfigGenerator(abc.ABC):
         raise NotImplementedError()
 
 
-class SampleConfigGeneratorRegistry(
-    cmk.utils.plugin_registry.Registry[type[SampleConfigGenerator]]
-):
+class SampleConfigGeneratorRegistry(cmk.ccc.plugin_registry.Registry[type[SampleConfigGenerator]]):
     def plugin_name(self, instance):
         return instance.ident()
 
@@ -269,7 +267,7 @@ class ConfigVariableGroup:
         return None
 
 
-class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVariableGroup]]):
+class ConfigVariableGroupRegistry(cmk.ccc.plugin_registry.Registry[type[ConfigVariableGroup]]):
     def plugin_name(self, instance):
         return instance().ident()
 
@@ -316,7 +314,7 @@ class ConfigVariable:
         return HTML.empty()
 
 
-class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVariable]]):
+class ConfigVariableRegistry(cmk.ccc.plugin_registry.Registry[type[ConfigVariable]]):
     def plugin_name(self, instance):
         return instance().ident()
 

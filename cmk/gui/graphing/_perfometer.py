@@ -11,12 +11,11 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, NotRequired, TypeAlias, TypedDict
 
-from cmk.utils import plugin_registry
-
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.i18n import _
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
+from cmk.ccc import plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics, perfometers
 

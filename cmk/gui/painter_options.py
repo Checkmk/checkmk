@@ -11,7 +11,6 @@ from collections.abc import Sequence
 from typing import Any
 
 import cmk.utils.render
-from cmk.utils.plugin_registry import Registry
 
 from cmk.gui import forms, valuespec
 from cmk.gui.config import active_config
@@ -24,6 +23,8 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_utils import CellSpec
+
+from cmk.ccc.plugin_registry import Registry
 
 
 def register(painter_option_registry_: PainterOptionRegistry) -> None:

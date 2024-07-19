@@ -8,9 +8,9 @@
 import re
 from typing import Any
 
-from cmk.utils.plugin_registry import Registry
-
 from cmk.gui.permissions import permission_registry
+
+from cmk.ccc.plugin_registry import Registry
 
 from .base import Command
 from .group import command_group_registry

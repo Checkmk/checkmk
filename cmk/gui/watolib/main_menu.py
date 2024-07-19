@@ -8,14 +8,14 @@ import re
 from collections.abc import Iterable, Sequence
 from typing import NamedTuple
 
-import cmk.utils.plugin_registry
-
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
+
+import cmk.ccc.plugin_registry
 
 
 class MenuItem:
@@ -103,7 +103,7 @@ class MainModuleTopic(NamedTuple):
     sort_index: int
 
 
-class MainModuleTopicRegistry(cmk.utils.plugin_registry.Registry[MainModuleTopic]):
+class MainModuleTopicRegistry(cmk.ccc.plugin_registry.Registry[MainModuleTopic]):
     def plugin_name(self, instance: MainModuleTopic) -> str:
         return instance.name
 
@@ -174,7 +174,7 @@ class ABCMainModule(MenuItem, abc.ABC):
         return []
 
 
-class MainModuleRegistry(cmk.utils.plugin_registry.Registry[type[ABCMainModule]]):
+class MainModuleRegistry(cmk.ccc.plugin_registry.Registry[type[ABCMainModule]]):
     def plugin_name(self, instance: type[ABCMainModule]) -> str:
         return instance().mode_or_url
 

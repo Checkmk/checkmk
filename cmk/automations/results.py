@@ -20,7 +20,6 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels, LabelSources
 from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
-from cmk.utils.plugin_registry import Registry
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.servicename import Item, ServiceName
 
@@ -31,6 +30,7 @@ from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 from cmk.ccc import version as cmk_version
+from cmk.ccc.plugin_registry import Registry
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 

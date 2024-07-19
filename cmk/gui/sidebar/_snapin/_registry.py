@@ -5,11 +5,11 @@
 
 from typing import Any
 
-from cmk.utils.plugin_registry import Registry
-
 from cmk.gui.pages import page_registry
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import PermissionName
+
+from cmk.ccc.plugin_registry import Registry
 
 from ._base import CustomizableSidebarSnapin, SidebarSnapin
 from ._permission_section import PermissionSectionSidebarSnapins

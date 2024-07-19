@@ -7,8 +7,6 @@
 
 from typing import Any
 
-from cmk.utils.plugin_registry import Registry
-
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
@@ -18,6 +16,8 @@ from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
 from cmk.gui.utils.theme import theme
+
+from cmk.ccc.plugin_registry import Registry
 
 from .base import Sorter
 

@@ -12,8 +12,6 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-import cmk.utils.plugin_registry
-
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
@@ -22,6 +20,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.log import logger
 
+import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKException
 
 PageHandlerFunc = Callable[[], None]
@@ -120,7 +119,7 @@ class AjaxPage(Page, abc.ABC):
         response.set_data(json.dumps(resp))
 
 
-class PageRegistry(cmk.utils.plugin_registry.Registry[type[Page]]):
+class PageRegistry(cmk.ccc.plugin_registry.Registry[type[Page]]):
     def plugin_name(self, instance: type[Page]) -> str:
         return instance.ident()
 

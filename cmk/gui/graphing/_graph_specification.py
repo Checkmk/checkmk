@@ -17,10 +17,11 @@ from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
-from cmk.utils.plugin_registry import Registry
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.time_series import TimeSeries
+
+from cmk.ccc.plugin_registry import Registry
 
 from ._graph_render_config import GraphRenderOptions
 from ._timeseries import AugmentedTimeSeries, derive_num_points_twindow, time_series_math

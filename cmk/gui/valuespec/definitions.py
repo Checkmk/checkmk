@@ -63,7 +63,6 @@ from livestatus import SiteId
 
 import cmk.utils.log
 import cmk.utils.paths
-import cmk.utils.plugin_registry
 import cmk.utils.regex
 from cmk.utils import dateutils
 from cmk.utils.crypto import certificate, keys
@@ -113,6 +112,7 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
 
+import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Version
 

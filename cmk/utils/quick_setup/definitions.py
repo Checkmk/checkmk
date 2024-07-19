@@ -8,10 +8,10 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from typing import Callable, Mapping, NewType
 
-from cmk.utils.plugin_registry import Registry
 from cmk.utils.quick_setup.widgets import FormSpecId, Widget
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
 from cmk.rulesets.v1.form_specs import FormSpec
 
 StageId = NewType("StageId", int)

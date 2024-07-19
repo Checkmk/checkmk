@@ -6,14 +6,14 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-import cmk.utils.plugin_registry
+import cmk.ccc.plugin_registry
 
 
 class Plugin:
     pass
 
 
-class PluginRegistry(cmk.utils.plugin_registry.Registry[type[Plugin]]):
+class PluginRegistry(cmk.ccc.plugin_registry.Registry[type[Plugin]]):
     def plugin_name(self, instance):
         return instance.__name__
 
@@ -94,6 +94,6 @@ def test_get(basic_registry: PluginRegistry) -> None:
     assert basic_registry.get("Plugin") == Plugin
 
 
-class InstanceRegistry(cmk.utils.plugin_registry.Registry[Plugin]):
+class InstanceRegistry(cmk.ccc.plugin_registry.Registry[Plugin]):
     def plugin_name(self, instance):
         return instance.__class__.__name__

@@ -93,7 +93,9 @@ def build_summary(parsed_logs: list[ExecutionMetrics]) -> Summary:
         overallTargets=overall_targets,
         cacheHits=cache_hits,
         percentRemoteCacheHits=round(cache_hits / overall_targets * 100, 2),
-        targetsWithMissedCache=[log.targetLabel for log in parsed_logs if not log.cacheHit],
+        targetsWithMissedCache=sorted(
+            list({log.targetLabel for log in parsed_logs if not log.cacheHit})
+        ),
         numberUncacheableTargets=sum(1 for log in parsed_logs if not log.cacheable),
         numberRemotableTargets=sum(1 for log in parsed_logs if log.remotable),
     )

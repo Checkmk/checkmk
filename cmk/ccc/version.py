@@ -21,7 +21,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import Any, Final, NamedTuple, Self
+from typing import Any, Final, Literal, NamedTuple, Self
 
 from cmk.ccc.site import get_omd_config
 
@@ -374,10 +374,17 @@ def parse_check_mk_version(v: str) -> int:
     return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
 
 
-class VersionsCompatible: ...
+class VersionsCompatible:
+    @property
+    def is_compatible(self) -> Literal[True]:
+        return True
 
 
 class VersionsIncompatible:
+    @property
+    def is_compatible(self) -> Literal[False]:
+        return False
+
     def __init__(self, reason: str) -> None:
         self._reason = reason
 

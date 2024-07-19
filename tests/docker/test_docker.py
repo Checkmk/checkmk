@@ -25,7 +25,7 @@ from tests.testlib.docker import (
 )
 from tests.testlib.version import CMKVersion, git_tag_exists, version_from_env
 
-from cmk.ccc.version import Edition, Version, versions_compatible, VersionsCompatible
+from cmk.ccc.version import Edition, Version, versions_compatible
 
 logger = logging.getLogger()
 
@@ -348,9 +348,8 @@ def test_update(client: docker.DockerClient, version: CMKVersion) -> None:
     update_compatibility = versions_compatible(
         Version.from_str(old_version.version), Version.from_str(version.version)
     )
-    assert isinstance(
-        update_compatibility,
-        VersionsCompatible,
+    assert (
+        update_compatibility.is_compatible
     ), f"Version {old_version} and {version} are incompatible, reason: {update_compatibility}"
 
     # 1. create container with old version and add a file to mark the pre-update state

@@ -115,7 +115,7 @@ private:
 
     template <typename T>
     std::ostream &outputHex(char prefix, int width, T value) {
-        OStreamStateSaver s(_os);
+        const OStreamStateSaver s(_os);
         return _os << '\\' << prefix << std::hex << std::setw(width)
                    << std::setfill('0') << value;
     }
@@ -140,7 +140,7 @@ public:
     };
 
     QueryRenderer(Renderer &rend, EmitBeginEnd emitBeginEnd)
-        : _renderer(rend), _emitBeginEnd(emitBeginEnd), _first(true) {
+        : _renderer{rend}, _emitBeginEnd{emitBeginEnd} {
         if (_emitBeginEnd == EmitBeginEnd::on) {
             renderer().beginQuery();
         }
@@ -158,7 +158,7 @@ public:
 private:
     Renderer &_renderer;
     EmitBeginEnd _emitBeginEnd;
-    bool _first;
+    bool _first{true};
 };
 
 class RowRenderer {
@@ -175,8 +175,7 @@ public:
         RowRenderer &_row;
     };
 
-    explicit RowRenderer(QueryRenderer &query)
-        : _query(query), _be(query), _first(true) {
+    explicit RowRenderer(QueryRenderer &query) : _query{query}, _be{query} {
         if (_query.emitBeginEnd() == EmitBeginEnd::on) {
             renderer().beginRow();
         }
@@ -197,14 +196,14 @@ public:
 
     template <typename T>
     void output(T value) {
-        BeginEnd be(*this);
+        const BeginEnd be(*this);
         renderer().output(value);
     }
 
 private:
     QueryRenderer &_query;
     QueryRenderer::BeginEnd _be;
-    bool _first;
+    bool _first{true};
 
     void separate() {
         if (_first) {
@@ -231,8 +230,7 @@ public:
         ListRenderer &_list;
     };
 
-    explicit ListRenderer(RowRenderer &row)
-        : _row(row), _be(row), _first(true) {
+    explicit ListRenderer(RowRenderer &row) : _row{row}, _be{row} {
         renderer().beginList();
     }
 
@@ -242,14 +240,14 @@ public:
 
     template <typename T>
     void output(T value) {
-        BeginEnd be(*this);
+        const BeginEnd be(*this);
         renderer().output(value);
     }
 
 private:
     RowRenderer &_row;
     RowRenderer::BeginEnd _be;
-    bool _first;
+    bool _first{true};
 };
 
 class SublistRenderer {
@@ -268,8 +266,7 @@ public:
         SublistRenderer &_sublist;
     };
 
-    explicit SublistRenderer(ListRenderer &list)
-        : _list(list), _be(list), _first(true) {
+    explicit SublistRenderer(ListRenderer &list) : _list{list}, _be{list} {
         renderer().beginSublist();
     }
 
@@ -279,14 +276,14 @@ public:
 
     template <typename T>
     void output(T value) {
-        BeginEnd be(*this);
+        const BeginEnd be(*this);
         renderer().output(value);
     }
 
 private:
     ListRenderer &_list;
     ListRenderer::BeginEnd _be;
-    bool _first;
+    bool _first{true};
 };
 
 class DictRenderer {
@@ -305,8 +302,7 @@ public:
         DictRenderer &_dict;
     };
 
-    explicit DictRenderer(RowRenderer &row)
-        : _row(row), _be(row), _first(true) {
+    explicit DictRenderer(RowRenderer &row) : _row{row}, _be{row} {
         renderer().beginDict();
     }
 
@@ -315,14 +311,14 @@ public:
     [[nodiscard]] Renderer &renderer() const { return _row.renderer(); }
 
     void output(const std::string &key, const std::string &value) {
-        BeginEnd be(*this);
+        const BeginEnd be(*this);
         renderer().output(key);
         renderer().separateDictKeyValue();
         renderer().output(value);
     }
 
     void output(const std::string &key, double value) {
-        BeginEnd be(*this);
+        const BeginEnd be(*this);
         renderer().output(key);
         renderer().separateDictKeyValue();
         renderer().output(value);
@@ -331,7 +327,7 @@ public:
 private:
     RowRenderer &_row;
     RowRenderer::BeginEnd _be;
-    bool _first;
+    bool _first{true};
 };
 
 #endif  // Renderer_h

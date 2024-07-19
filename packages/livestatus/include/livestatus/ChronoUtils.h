@@ -121,7 +121,7 @@ struct FormattedTimePoint {
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const FormattedTimePoint &f) {
-        tm local = to_tm(f.tp);
+        const tm local = to_tm(f.tp);
         return os << std::put_time(&local, "%Y-%m-%d %H:%M:%S");
     }
 };

@@ -277,6 +277,8 @@ private:
     // process_external_command1 / submit_external_command.
     std::mutex _command_mutex;
 
+    // TODO(sp): Avoid the suppression below.
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     void *implInternal() const override { return const_cast<NebCore *>(this); }
 
     void logRequest(const std::string &line,

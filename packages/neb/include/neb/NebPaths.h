@@ -8,6 +8,7 @@
 
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
+#include "neb/NebCore.h"
 
 class NebPaths : public IPaths {
 public:

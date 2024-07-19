@@ -34,8 +34,25 @@ def test_get_omd_config(patch_omd_site: None) -> None:
         "CONFIG_PNP4NAGIOS": "on",
         "CONFIG_RABBITMQ_PORT": "5672",
         "CONFIG_TMPFS": "on",
+        "CONFIG_TRACE_JAEGER_ADMIN_PORT": "14269",
+        "CONFIG_TRACE_JAEGER_UI_PORT": "13333",
+        "CONFIG_TRACE_RECEIVE": "off",
+        "CONFIG_TRACE_RECEIVE_ADDRESS": "[::1]",
+        "CONFIG_TRACE_RECEIVE_PORT": "4321",
+        "CONFIG_TRACE_SEND": "off",
+        "CONFIG_TRACE_SEND_TARGET": "local_site",
     }
 
 
 def test_get_apache_port(patch_omd_site: None) -> None:
     assert site.get_apache_port(omd_root) == 5002
+
+
+def test_trace_receive_port(patch_omd_site: None) -> None:
+    assert site.trace_receive_port(omd_root) == 4321
+
+
+def test_trace_send_config(patch_omd_site: None) -> None:
+    assert site.trace_send_config(omd_root) == site.TraceSendConfig(
+        enabled=False, target="local_site"
+    )

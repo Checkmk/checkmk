@@ -8,7 +8,7 @@ import "select2";
 
 import {select} from "d3";
 import $ from "jquery";
-import {set} from "lodash";
+import set from "lodash.set";
 import type {QueryOptions} from "select2";
 
 import {call_ajax} from "./ajax";

@@ -340,7 +340,7 @@ def test_container_agent(checkmk: docker.models.containers.Container) -> None:
 
 @pytest.mark.skipif(
     not git_tag_exists(old_version),
-    reason="Skipping as long as we have the first 2.3 release",
+    reason=f"Test is skipped until we have {old_version} available as git tag",
 )
 def test_update(client: docker.DockerClient, version: CMKVersion) -> None:
     container_name = "%s-monitoring" % version.branch

@@ -82,8 +82,8 @@ std::string FindVersionInfo(const fs::path &file, FileType file_type) {
                         wtools::RunCommand(file.wstring() + L" --version");
                     tools::AllTrim(result);
                     const auto output = tools::SplitString(result, " ");
-                    if (file.stem().string() == output[0] &&
-                        output.size() == 2) {
+                    if (output.size() == 2 &&
+                        file.stem().string() == output[0]) {
                         return fmt::format("{}:CMK_VERSION = \"{}\"", file,
                                            output[1]);
                     }

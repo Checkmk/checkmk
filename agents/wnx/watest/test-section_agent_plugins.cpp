@@ -62,8 +62,9 @@ TEST_F(AgentPluginsTest, DISABLED_Exe) {
     // unit testing. You may enable this test manually
     auto v_file = tst::GetSolutionRoot() / "test_files" / "tools" / "v" /
                   "target" / "release" / "v.exe";
-    fs::copy(v_file, fs::path{cfg::GetUserPluginsDir()});
+    fs::copy(v_file, fs::path{cfg::GetUserPluginsDir()} / "mk-sql.exe");
     auto rows = getRows();
+    ASSERT_EQ(rows.size(), 4);
     EXPECT_TRUE(rows[3].ends_with("v.exe:CMK_VERSION = \"0.1.0\""));
 }
 

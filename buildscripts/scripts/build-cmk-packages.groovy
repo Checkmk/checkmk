@@ -291,6 +291,10 @@ def main() {
                                 sh("rm -rf ${distro_dir}");
                                 sh("rsync -a ${checkout_dir}/ ${distro_dir}/");
                                 sh("rm -rf ${distro_dir}/bazel_execution_log*");
+                                
+                                // Clean Bazel cache for now to avoid copying outdated artifacts
+                                // and stop the local caches from growing.
+                                sh("cd ${distro_dir}; bazel clean");
                             }
 
                             stage("${distro} build package") {

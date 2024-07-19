@@ -5,7 +5,7 @@
 
 from cmk.gui.graphing._expression import CriticalOf, Metric, WarningOf
 from cmk.gui.graphing._graph_templates_from_plugins import (
-    _graph_templates_from_plugins,
+    get_graph_template,
     GraphTemplate,
     MetricDefinition,
     ScalarDefinition,
@@ -47,9 +47,8 @@ def test_add_graphing_plugins() -> None:
         "write_latency": {"scale": 0.001},
     }
 
-    graph_templates = _graph_templates_from_plugins()
-    assert "db_connections" in graph_templates
-    assert graph_templates["db_connections"] == GraphTemplate(
+    graph_template = get_graph_template("db_connections")
+    assert graph_template == GraphTemplate(
         id="db_connections",
         title="DB Connections",
         scalars=[

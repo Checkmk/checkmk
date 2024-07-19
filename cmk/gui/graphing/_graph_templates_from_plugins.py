@@ -35,6 +35,37 @@ from ._type_defs import GraphConsoldiationFunction, LineType, TranslatedMetric
 from ._utils import get_extended_metric_info, graph_info, RawGraphTemplate
 
 
+def _graph_templates_from_plugins() -> (
+    Iterator[tuple[str, graphs.Graph | graphs.Bidirectional | RawGraphTemplate]]
+):
+    # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
+    known_graph_templates: set[str] = set()
+    for graph in graphs_from_api.values():
+        if isinstance(graph, (graphs.Graph, graphs.Bidirectional)):
+            known_graph_templates.add(graph.name)
+            yield graph.name, graph
+    for template_id, template in graph_info.items():
+        if template_id not in known_graph_templates:
+            yield template_id, template
+
+
+def _parse_title(template: graphs.Graph | graphs.Bidirectional | RawGraphTemplate) -> str:
+    match template:
+        case graphs.Graph() | graphs.Bidirectional():
+            return template.title.localize(translate_to_current_language)
+        case _:
+            return str(template.get("title", ""))
+
+
+def get_graph_template_choices() -> list[tuple[str, str]]:
+    # TODO: v.get("title", k): Use same algorithm as used in
+    # GraphIdentificationTemplateBased._parse_template_metric()
+    return sorted(
+        [(t_id, _parse_title(t)) for t_id, t in _graph_templates_from_plugins()],
+        key=lambda k_v: k_v[1],
+    )
+
+
 @dataclass(frozen=True)
 class ScalarDefinition:
     expression: MetricExpression
@@ -290,10 +321,10 @@ class GraphTemplate:
         )
 
     @classmethod
-    def from_raw(cls, ident: str, raw: RawGraphTemplate) -> Self:
+    def from_raw(cls, id_: str, raw: RawGraphTemplate) -> Self:
         return cls(
-            id=ident,
-            title=str(raw.get("title", "")),
+            id=id_,
+            title=_parse_title(raw),
             scalars=[_parse_raw_scalar_definition(r) for r in raw.get("scalars", [])],
             conflicting_metrics=raw.get("conflicting_metrics", []),
             optional_metrics=raw.get("optional_metrics", []),
@@ -304,7 +335,7 @@ class GraphTemplate:
         )
 
     @classmethod
-    def from_graph(cls, graph: graphs.Graph) -> Self:
+    def from_graph(cls, id_: str, graph: graphs.Graph) -> Self:
         metrics_ = [_parse_quantity(l, "stack") for l in graph.compound_lines]
         scalars: list[ScalarDefinition] = []
         for line in graph.simple_lines:
@@ -320,8 +351,8 @@ class GraphTemplate:
                 case _:
                     metrics_.append(_parse_quantity(line, "line"))
         return cls(
-            id=graph.name,
-            title=graph.title.localize(translate_to_current_language),
+            id=id_,
+            title=_parse_title(graph),
             range=(
                 None if graph.minimal_range is None else _parse_minimal_range(graph.minimal_range)
             ),
@@ -334,23 +365,23 @@ class GraphTemplate:
         )
 
     @classmethod
-    def from_bidirectional(cls, graph: graphs.Bidirectional) -> Self:
+    def from_bidirectional(cls, id_: str, bidirectional: graphs.Bidirectional) -> Self:
         ranges_min = []
         ranges_max = []
-        if graph.lower.minimal_range is not None:
-            lower_range = _parse_minimal_range(graph.lower.minimal_range)
+        if bidirectional.lower.minimal_range is not None:
+            lower_range = _parse_minimal_range(bidirectional.lower.minimal_range)
             ranges_min.append(lower_range.min)
             ranges_max.append(lower_range.max)
-        if graph.upper.minimal_range is not None:
-            upper_range = _parse_minimal_range(graph.upper.minimal_range)
+        if bidirectional.upper.minimal_range is not None:
+            upper_range = _parse_minimal_range(bidirectional.upper.minimal_range)
             ranges_min.append(upper_range.min)
             ranges_max.append(upper_range.max)
 
-        metrics_ = [_parse_quantity(l, "-stack") for l in graph.lower.compound_lines] + [
-            _parse_quantity(l, "stack") for l in graph.upper.compound_lines
+        metrics_ = [_parse_quantity(l, "-stack") for l in bidirectional.lower.compound_lines] + [
+            _parse_quantity(l, "stack") for l in bidirectional.upper.compound_lines
         ]
         scalars: list[ScalarDefinition] = []
-        for line in graph.lower.simple_lines:
+        for line in bidirectional.lower.simple_lines:
             match line:
                 case (
                     metrics.WarningOf()
@@ -362,7 +393,7 @@ class GraphTemplate:
                     scalars.append(ScalarDefinition(parsed.expression, parsed.title))
                 case _:
                     metrics_.append(_parse_quantity(line, "-line"))
-        for line in graph.upper.simple_lines:
+        for line in bidirectional.upper.simple_lines:
             match line:
                 case (
                     metrics.WarningOf()
@@ -375,8 +406,8 @@ class GraphTemplate:
                 case _:
                     metrics_.append(_parse_quantity(line, "line"))
         return cls(
-            id=graph.name,
-            title=graph.title.localize(translate_to_current_language),
+            id=id_,
+            title=_parse_title(bidirectional),
             range=(
                 MinimalGraphTemplateRange(
                     min=Minimum(ranges_min),
@@ -387,41 +418,35 @@ class GraphTemplate:
             ),
             metrics=metrics_,
             scalars=scalars,
-            optional_metrics=list(graph.lower.optional) + list(graph.upper.optional),
-            conflicting_metrics=list(graph.lower.conflicting) + list(graph.upper.conflicting),
+            optional_metrics=(
+                list(bidirectional.lower.optional) + list(bidirectional.upper.optional)
+            ),
+            conflicting_metrics=(
+                list(bidirectional.lower.conflicting) + list(bidirectional.upper.conflicting)
+            ),
             consolidation_function=None,
             omit_zero_metrics=False,
         )
 
 
-def _graph_templates_from_plugins() -> dict[str, GraphTemplate]:
-    # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
-    graph_templates: dict[str, GraphTemplate] = {}
-    for graph in graphs_from_api.values():
-        if isinstance(graph, graphs.Graph):
-            graph_templates[graph.name] = GraphTemplate.from_graph(graph)
-        elif isinstance(graph, graphs.Bidirectional):
-            graph_templates[graph.name] = GraphTemplate.from_bidirectional(graph)
-    for template_id, template in graph_info.items():
-        if template_id not in graph_templates:
-            graph_templates[template_id] = GraphTemplate.from_raw(template_id, template)
-    return graph_templates
-
-
-def get_graph_template_choices() -> list[tuple[str, str]]:
-    # TODO: v.get("title", k): Use same algorithm as used in
-    # GraphIdentificationTemplateBased._parse_template_metric()
-    return sorted(
-        [(k, v.title or k) for k, v in _graph_templates_from_plugins().items()],
-        key=lambda k_v: k_v[1],
-    )
+def _parse_graph_template(
+    id_: str, template: graphs.Graph | graphs.Bidirectional | RawGraphTemplate
+) -> GraphTemplate:
+    match template:
+        case graphs.Graph():
+            return GraphTemplate.from_graph(id_, template)
+        case graphs.Bidirectional():
+            return GraphTemplate.from_bidirectional(id_, template)
+        case _:
+            return GraphTemplate.from_raw(id_, template)
 
 
 def get_graph_template(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return GraphTemplate.from_name(template_id)
-    if template := _graph_templates_from_plugins().get(template_id):
-        return template
+    for id_, template in _graph_templates_from_plugins():
+        if template_id == id_:
+            return _parse_graph_template(id_, template)
     raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
 
@@ -486,25 +511,26 @@ def applicable_metrics(
 
 
 def _get_explicit_graph_templates(
-    graph_templates: Iterable[GraphTemplate],
+    graph_templates: Iterable[tuple[str, graphs.Graph | graphs.Bidirectional | RawGraphTemplate]],
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterable[GraphTemplate]:
-    for graph_template in graph_templates:
+    for id_, template in graph_templates:
+        parsed = _parse_graph_template(id_, template)
         if metrics_ := applicable_metrics(
-            metrics_to_consider=graph_template.metrics,
-            conflicting_metrics=graph_template.conflicting_metrics,
-            optional_metrics=graph_template.optional_metrics,
+            metrics_to_consider=parsed.metrics,
+            conflicting_metrics=parsed.conflicting_metrics,
+            optional_metrics=parsed.optional_metrics,
             translated_metrics=translated_metrics,
         ):
             yield GraphTemplate(
-                id=graph_template.id,
-                title=graph_template.title,
-                scalars=graph_template.scalars,
-                conflicting_metrics=graph_template.conflicting_metrics,
-                optional_metrics=graph_template.optional_metrics,
-                consolidation_function=graph_template.consolidation_function,
-                range=graph_template.range,
-                omit_zero_metrics=graph_template.omit_zero_metrics,
+                id=parsed.id,
+                title=parsed.title,
+                scalars=parsed.scalars,
+                conflicting_metrics=parsed.conflicting_metrics,
+                optional_metrics=parsed.optional_metrics,
+                consolidation_function=parsed.consolidation_function,
+                range=parsed.range,
+                omit_zero_metrics=parsed.omit_zero_metrics,
                 metrics=(
                     list(metrics_) + list(_compute_predictive_metrics(translated_metrics, metrics_))
                 ),
@@ -529,7 +555,7 @@ def get_graph_templates(
 
     explicit_templates = list(
         _get_explicit_graph_templates(
-            _graph_templates_from_plugins().values(),
+            _graph_templates_from_plugins(),
             translated_metrics,
         )
     )

@@ -28,6 +28,7 @@ from cmk.gui.graphing._graph_specification import (
 from cmk.gui.graphing._graph_templates import matching_graph_templates
 from cmk.gui.graphing._graph_templates_from_plugins import (
     _graph_templates_from_plugins,
+    _parse_graph_template,
     GraphTemplate,
     ScalarDefinition,
 )
@@ -196,16 +197,17 @@ def test_horizontal_rules_from_thresholds(
 
 def test_duplicate_graph_templates() -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
-    for ident, template in _graph_templates_from_plugins().items():
-        expressions = [m.expression for m in template.metrics] + [
-            s.expression for s in template.scalars
+    for id_, template in _graph_templates_from_plugins():
+        parsed = _parse_graph_template(id_, template)
+        expressions = [m.expression for m in parsed.metrics] + [
+            s.expression for s in parsed.scalars
         ]
-        if template.range:
-            expressions.extend((template.range.min, template.range.max))
+        if parsed.range:
+            expressions.extend((parsed.range.min, parsed.range.max))
 
         idents_by_metrics.setdefault(
             tuple(sorted(m.name for e in expressions for m in e.metrics())), []
-        ).append(ident)
+        ).append(parsed.id)
 
     assert {tuple(idents) for idents in idents_by_metrics.values() if len(idents) >= 2} == {
         ("livestatus_requests_per_connection", "livestatus_connects_and_requests"),
@@ -222,16 +224,25 @@ def test_graph_template_with_layered_areas() -> None:
         neg: list[Literal["-area", "-stack"]] = field(default_factory=list)
 
     areas_by_ident: dict[str, _GraphTemplateArea] = {}
-    for ident, template in _graph_templates_from_plugins().items():
-        for metric in template.metrics:
+    for id_, template in _graph_templates_from_plugins():
+        parsed = _parse_graph_template(id_, template)
+        for metric in parsed.metrics:
             if metric.line_type == "area":
-                areas_by_ident.setdefault(ident, _GraphTemplateArea()).pos.append(metric.line_type)
+                areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).pos.append(
+                    metric.line_type
+                )
             elif metric.line_type == "stack":
-                areas_by_ident.setdefault(ident, _GraphTemplateArea()).pos.append(metric.line_type)
+                areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).pos.append(
+                    metric.line_type
+                )
             elif metric.line_type == "-area":
-                areas_by_ident.setdefault(ident, _GraphTemplateArea()).neg.append(metric.line_type)
+                areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).neg.append(
+                    metric.line_type
+                )
             elif metric.line_type == "-stack":
-                areas_by_ident.setdefault(ident, _GraphTemplateArea()).neg.append(metric.line_type)
+                areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).neg.append(
+                    metric.line_type
+                )
 
     templates_with_more_than_one_layer = [
         ident

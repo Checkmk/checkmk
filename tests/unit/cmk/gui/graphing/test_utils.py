@@ -45,6 +45,7 @@ from cmk.gui.graphing._utils import (
     AutomaticDict,
     MetricInfoExtended,
     metrics_from_api,
+    RawGraphTemplate,
     TranslationInfo,
 )
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
@@ -1236,7 +1237,7 @@ def test_automatic_dict_append() -> None:
     "raw, expected_graph_template",
     [
         pytest.param(
-            utils.RawGraphTemplate(
+            RawGraphTemplate(
                 metrics=[],
                 scalars=["metric", "metric:warn", "metric:crit"],
             ),
@@ -1267,7 +1268,7 @@ def test_automatic_dict_append() -> None:
             id="scalar str",
         ),
         pytest.param(
-            utils.RawGraphTemplate(
+            RawGraphTemplate(
                 metrics=[],
                 scalars=[("metric", "Title"), ("metric:warn", "Warn"), ("metric:crit", "Crit")],
             ),
@@ -1298,7 +1299,7 @@ def test_automatic_dict_append() -> None:
             id="scalar tuple",
         ),
         pytest.param(
-            utils.RawGraphTemplate(
+            RawGraphTemplate(
                 metrics=[("metric", "line")],
             ),
             GraphTemplate(
@@ -1320,7 +1321,7 @@ def test_automatic_dict_append() -> None:
             id="metrics 2-er tuple",
         ),
         pytest.param(
-            utils.RawGraphTemplate(
+            RawGraphTemplate(
                 metrics=[("metric", "line", "Title")],
             ),
             GraphTemplate(
@@ -1345,7 +1346,7 @@ def test_automatic_dict_append() -> None:
     ],
 )
 def test_graph_template_from_raw(
-    raw: utils.RawGraphTemplate,
+    raw: RawGraphTemplate,
     expected_graph_template: GraphTemplate,
 ) -> None:
     assert GraphTemplate.from_raw("ident", raw) == expected_graph_template
@@ -1695,7 +1696,7 @@ def test_graph_template_from_graph(
                 color="#000000",
             )
         )
-    assert GraphTemplate.from_graph(graph) == expected_template
+    assert GraphTemplate.from_graph(graph.name, graph) == expected_template
 
 
 @pytest.mark.parametrize(
@@ -1929,7 +1930,7 @@ def test_graph_template_from_bidirectional(
                 color="#000000",
             )
         )
-    assert GraphTemplate.from_bidirectional(graph) == expected_template
+    assert GraphTemplate.from_bidirectional(graph.name, graph) == expected_template
 
 
 @pytest.mark.parametrize(

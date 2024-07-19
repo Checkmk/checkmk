@@ -14,8 +14,8 @@
 // - update_if_older_than (seconds)
 import {json} from "d3";
 
-import type {CMKAjaxReponse} from "../types";
-import {is_window_active} from "../utils";
+import type {CMKAjaxReponse} from "@/modules/types";
+import {is_window_active} from "@/modules/utils";
 
 export class Scheduler {
     _scheduled_function: () => void;

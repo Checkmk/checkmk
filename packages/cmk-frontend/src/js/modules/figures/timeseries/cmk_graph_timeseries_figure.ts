@@ -6,6 +6,7 @@
 
 import {max, mean, min, select} from "d3";
 
+import type {SubPlotPlotDefinition} from "@/modules/figures/cmk_enterprise_figure_types";
 import {figure_registry} from "@/modules/figures/cmk_figures";
 import type {
     ElementSize,
@@ -19,7 +20,6 @@ import type {
 } from "@/modules/graphs";
 import type {CMKAjaxReponse} from "@/modules/types";
 
-import type {SubPlotPlotDefinition} from "../cmk_enterprise_figure_types";
 import {TimeseriesFigure} from "./cmk_timeseries";
 import type {SubPlot} from "./sub_plot";
 

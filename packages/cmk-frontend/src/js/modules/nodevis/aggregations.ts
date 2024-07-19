@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {call_ajax} from "../ajax";
+import {call_ajax} from "@/modules/ajax";
+
 import {ForceConfig} from "./force_utils";
 import type {
     SerializedNodevisLayout,

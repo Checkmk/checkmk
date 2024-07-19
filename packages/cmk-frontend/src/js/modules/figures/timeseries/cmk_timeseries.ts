@@ -27,6 +27,11 @@ import {
 } from "d3";
 import range from "lodash.range";
 
+import type {
+    Domain,
+    SubPlotPlotDefinition,
+    TimeseriesFigureData,
+} from "@/modules/figures/cmk_enterprise_figure_types";
 import {FigureTooltip} from "@/modules/figures/cmk_figure_tooltip";
 import {FigureBase} from "@/modules/figures/cmk_figures";
 import {getIn} from "@/modules/figures/cmk_figures_utils";
@@ -36,11 +41,6 @@ import type {
 } from "@/modules/figures/figure_types";
 import {domainIntervals, partitionableDomain} from "@/modules/number_format";
 
-import type {
-    Domain,
-    SubPlotPlotDefinition,
-    TimeseriesFigureData,
-} from "../cmk_enterprise_figure_types";
 import type {
     AreaPlot,
     BarPlot,

@@ -17,6 +17,17 @@ import {
     select,
 } from "d3";
 
+import type {
+    AreaPlotPlotDefinition,
+    BarPlotPlotDefinition,
+    Domain,
+    DrawSubplotStyles,
+    LinePlotPlotDefinition,
+    ScatterPlotPlotDefinition,
+    SingleValuePlotDefinition,
+    SubPlotPlotDefinition,
+    TimeseriesFigureDataData,
+} from "@/modules/figures/cmk_enterprise_figure_types";
 import {
     adjust_domain,
     background_status_component,
@@ -33,17 +44,6 @@ import type {
     TransformedData,
 } from "@/modules/figures/figure_types";
 
-import type {
-    AreaPlotPlotDefinition,
-    BarPlotPlotDefinition,
-    Domain,
-    DrawSubplotStyles,
-    LinePlotPlotDefinition,
-    ScatterPlotPlotDefinition,
-    SingleValuePlotDefinition,
-    SubPlotPlotDefinition,
-    TimeseriesFigureDataData,
-} from "../cmk_enterprise_figure_types";
 import type {SubplotSubs, TimeseriesFigure} from "./cmk_timeseries";
 import {SubPlotFactory} from "./sub_plot_factory";
 

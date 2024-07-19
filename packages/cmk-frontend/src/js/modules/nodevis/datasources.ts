@@ -22,8 +22,9 @@
 
 import {json} from "d3";
 
-import type {CMKAjaxReponse} from "../types";
-import {is_window_active} from "../utils";
+import type {CMKAjaxReponse} from "@/modules/types";
+import {is_window_active} from "@/modules/utils";
+
 import type {SerializedNodevisLayout} from "./layout_utils";
 import type {
     DatasourceCallback,

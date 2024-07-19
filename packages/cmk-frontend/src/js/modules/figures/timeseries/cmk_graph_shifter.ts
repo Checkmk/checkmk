@@ -7,10 +7,10 @@
 import type {BaseType, Selection} from "d3";
 import {select} from "d3";
 
+import type {Shift} from "@/modules/figures/cmk_enterprise_figure_types";
 import {figure_registry} from "@/modules/figures/cmk_figures";
 import type {ElementSize, FigureData} from "@/modules/figures/figure_types";
 
-import type {Shift} from "../cmk_enterprise_figure_types";
 import {CmkGraphTimeseriesFigure} from "./cmk_graph_timeseries_figure";
 import type {SubPlot} from "./sub_plot";
 

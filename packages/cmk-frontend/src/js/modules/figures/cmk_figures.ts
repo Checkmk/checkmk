@@ -9,8 +9,9 @@ import crossfilter from "crossfilter2";
 import type {BaseType, Selection} from "d3";
 import {json, select} from "d3";
 
-import type {CMKAjaxReponse} from "../types";
-import {get_computed_style} from "../utils";
+import type {CMKAjaxReponse} from "@/modules/types";
+import {get_computed_style} from "@/modules/utils";
+
 import {
     add_scheduler_debugging,
     plot_render_function,

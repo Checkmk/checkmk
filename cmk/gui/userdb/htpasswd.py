@@ -8,7 +8,6 @@ from pathlib import Path
 import cmk.utils.paths
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
-from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
@@ -85,9 +84,6 @@ class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
         if not (pw_hash := self._htpasswd.get_hash(user_id)):
             return None  # not user in htpasswd, skip so other connectors can try
 
-        if self._is_automation_user(user_id):
-            raise MKUserError(None, _("Automation user rejected"))
-
         if pw_hash.startswith("!"):
             raise MKUserError(None, _("User is locked"))
 
@@ -96,9 +92,6 @@ class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
         except (password_hashing.PasswordInvalidError, ValueError):
             return False
         return user_id
-
-    def _is_automation_user(self, user_id: UserId) -> bool:
-        return AutomationUserSecret(user_id).exists()
 
     def save_users(self, users: dict[UserId, UserSpec]) -> None:
         # Apache htpasswd. We only store passwords here. During

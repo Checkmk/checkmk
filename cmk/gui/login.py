@@ -14,6 +14,7 @@ import cmk.utils.paths
 from cmk.utils.crypto.password import Password
 from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.utils.licensing.registry import get_remaining_trial_time_rounded
+from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
@@ -210,6 +211,9 @@ class LoginPage(Page):
                 # might have transformed the username provided by the user. e.g. switched
                 # from mixed case to lower case.
                 username = result
+
+                if _is_automation_user(username):
+                    raise MKUserError(None, _("Automation user rejected"))
 
                 # The login succeeded! Now:
                 # a) Set the auth cookie
@@ -426,6 +430,10 @@ def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None
     html.close_div()
 
     html.close_div()
+
+
+def _is_automation_user(user_id: UserId) -> bool:
+    return AutomationUserSecret(user_id).exists()
 
 
 class LogoutPage(Page):

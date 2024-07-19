@@ -18,6 +18,9 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.trace.span import INVALID_SPAN
 
+# Re-export 3rd party names to avoid direct dependencies in the code
+SpanKind = trace.SpanKind
+
 
 @dataclass(frozen=True)
 class LocalTarget:

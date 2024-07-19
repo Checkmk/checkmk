@@ -345,10 +345,8 @@ def test_container_agent(checkmk: docker.models.containers.Container) -> None:
 def test_update(client: docker.DockerClient, version: CMKVersion) -> None:
     container_name = "%s-monitoring" % version.branch
 
-    update_compatibility = (
-        versions_compatible(
-            Version.from_str(old_version.version), Version.from_str(version.version)
-        ),
+    update_compatibility = versions_compatible(
+        Version.from_str(old_version.version), Version.from_str(version.version)
     )
     assert isinstance(
         update_compatibility,

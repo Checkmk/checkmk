@@ -4,13 +4,13 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "../ajax";
+import {call_ajax} from "../ajax";
 import {ForceConfig} from "./force_utils";
 import type {
     SerializedNodevisLayout,
     StyleOptionSpecRange,
 } from "./layout_utils";
-import * as texts from "./texts";
+import {get} from "./texts";
 import type {d3SelectionDiv, NodevisWorld} from "./type_defs";
 import {render_save_delete} from "./utils";
 
@@ -28,7 +28,7 @@ export class LayoutAggregations {
     save_layout_for_aggregation(layout_config: {
         [name: string]: SerializedNodevisLayout;
     }): void {
-        ajax.call_ajax("ajax_save_bi_aggregation_layout.py", {
+        call_ajax("ajax_save_bi_aggregation_layout.py", {
             method: "POST",
             post_data:
                 "layout=" + encodeURIComponent(JSON.stringify(layout_config)),
@@ -39,7 +39,7 @@ export class LayoutAggregations {
     }
 
     delete_layout_for_aggregation(aggregation_name: string) {
-        ajax.call_ajax("ajax_delete_bi_aggregation_layout.py", {
+        call_ajax("ajax_delete_bi_aggregation_layout.py", {
             method: "POST",
             post_data:
                 "aggregation_name=" + encodeURIComponent(aggregation_name),
@@ -102,13 +102,13 @@ export class LayoutAggregations {
 
         const buttons: [string, string, string, () => void][] = [
             [
-                texts.get("save"),
+                get("save"),
                 "button save_delete save",
-                texts.get("save_aggregation"),
+                get("save_aggregation"),
                 () => this._save_explicit_layout_clicked(),
             ],
             [
-                texts.get("delete_layout"),
+                get("delete_layout"),
                 "button save_delete delete",
                 "",
                 () => this._delete_explicit_layout_clicked(),

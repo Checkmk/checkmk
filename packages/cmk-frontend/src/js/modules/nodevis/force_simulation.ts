@@ -5,7 +5,14 @@
  */
 
 import type {Simulation} from "d3";
-import * as d3 from "d3";
+import {
+    forceCollide,
+    forceLink,
+    forceManyBody,
+    forceSimulation,
+    forceX as d3_forceX,
+    forceY as d3_forceY,
+} from "d3";
 
 import type {ForceConfig, ForceOptions, SimulationForce} from "./force_utils";
 import type {StyleOptionValues} from "./layout_utils";
@@ -24,7 +31,7 @@ export class ForceSimulation {
 
     constructor(viewport: Viewport, force_config_class: typeof ForceConfig) {
         this._viewport = viewport;
-        this._simulation = d3.forceSimulation<NodevisNode>();
+        this._simulation = forceSimulation<NodevisNode>();
         this._simulation.stop();
         this._simulation.alpha(0);
         this._simulation.alphaMin(0.1);
@@ -158,8 +165,7 @@ export class ForceSimulation {
     }
 
     _update_charge_force(): void {
-        const charge_force = d3
-            .forceManyBody<NodevisNode>()
+        const charge_force = forceManyBody<NodevisNode>()
             .strength(node => {
                 return this._compute_force(node, "charge");
             })
@@ -168,7 +174,7 @@ export class ForceSimulation {
     }
 
     _update_collision_force(): void {
-        const collide_force = d3.forceCollide<NodevisNode>(node => {
+        const collide_force = forceCollide<NodevisNode>(node => {
             return this._compute_force(node, "collide");
         });
         this._simulation.force("collide", collide_force);
@@ -178,29 +184,24 @@ export class ForceSimulation {
         const size = this._viewport.get_size();
         const half_width = size.width / 2;
         const half_height = size.height / 2;
-        const forceX = d3
-            .forceX<NodevisNode>(_d => {
-                // X Position is currently fixed
-                return half_width;
-            })
-            .strength(d => {
-                return this._compute_force(d, "center");
-            });
+        const forceX = d3_forceX<NodevisNode>(_d => {
+            // X Position is currently fixed
+            return half_width;
+        }).strength(d => {
+            return this._compute_force(d, "center");
+        });
 
-        const forceY = d3
-            .forceY<NodevisNode>(_d => {
-                return half_height;
-            })
-            .strength(d => {
-                return this._compute_force(d, "center");
-            });
+        const forceY = d3_forceY<NodevisNode>(_d => {
+            return half_height;
+        }).strength(d => {
+            return this._compute_force(d, "center");
+        });
         this._simulation.force("x", forceX);
         this._simulation.force("y", forceY);
     }
 
     _update_link_force(): void {
-        const link_force = d3
-            .forceLink<NodevisNode, NodevisLink>(this._all_links)
+        const link_force = forceLink<NodevisNode, NodevisLink>(this._all_links)
             .id(function (d) {
                 return d.data.id;
             })

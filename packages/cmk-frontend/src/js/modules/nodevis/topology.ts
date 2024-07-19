@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
 import type {ForceOptions, SimulationForce} from "./force_utils";
@@ -20,7 +21,7 @@ import {
     node_type_class_registry,
 } from "./node_utils";
 import type {TranslationKey} from "./texts";
-import * as texts from "./texts";
+import {get} from "./texts";
 import type {
     ContextMenuElement,
     d3SelectionDiv,
@@ -54,8 +55,8 @@ function render_hierarchy_flat(
     toggle_panel: d3SelectionDiv
 ) {
     const options = [
-        new RadioGroupOption("flat", texts.get("flat")),
-        new RadioGroupOption("full", texts.get("full")),
+        new RadioGroupOption("flat", get("flat")),
+        new RadioGroupOption("full", get("full")),
     ];
 
     const hierarchy_div = toggle_panel
@@ -68,7 +69,7 @@ function render_hierarchy_flat(
         );
     render_radio_group(
         hierarchy_div,
-        texts.get("hierarchy"),
+        get("hierarchy"),
         "hierarchy_depth",
         options,
         viewport.get_overlays_config().computation_options.hierarchy,
@@ -87,9 +88,9 @@ function render_toggle_services(
     toggle_panel: d3SelectionDiv
 ) {
     const options = [
-        new RadioGroupOption("all", texts.get("all")),
-        new RadioGroupOption("only_problems", texts.get("only_problems")),
-        new RadioGroupOption("none", texts.get("none")),
+        new RadioGroupOption("all", get("all")),
+        new RadioGroupOption("only_problems", get("only_problems")),
+        new RadioGroupOption("none", get("none")),
     ];
 
     const services_div = toggle_panel
@@ -102,7 +103,7 @@ function render_toggle_services(
         );
     render_radio_group(
         services_div,
-        texts.get("services"),
+        get("services"),
         "service_visibility",
         options,
         "all",
@@ -145,7 +146,7 @@ function render_toggle_panel(
     const data: [string, string, (new_value: boolean) => void, boolean][] = [];
     data.push([
         "merge_nodes",
-        texts.get("merge_data"),
+        get("merge_data"),
         new_value => {
             viewport.get_overlays_config().computation_options.merge_nodes =
                 new_value;
@@ -239,13 +240,13 @@ export class LayoutTopology {
     ): void {
         const buttons: [string, string, string, () => void][] = [
             [
-                texts.get("save"),
+                get("save"),
                 "button save_delete save",
                 "",
                 this._world.save_layout,
             ],
             [
-                texts.get("delete_layout"),
+                get("delete_layout"),
                 "button save_delete delete",
                 "",
                 this._world.delete_layout,
@@ -379,10 +380,10 @@ class TopologyHost extends TopologyCoreEntity {
         const custom_settings = get_custom_node_settings(this.node);
         const current_setting = custom_settings.show_services || "default";
         const options: [string, string][] = [
-            ["default", texts.get("global_default")],
-            ["all", texts.get("all")],
-            ["only_problems", texts.get("only_problems")],
-            ["none", texts.get("none")],
+            ["default", get("global_default")],
+            ["all", get("all")],
+            ["only_problems", get("only_problems")],
+            ["none", get("none")],
         ];
 
         function changed_option(world: NodevisWorld, new_option: string) {
@@ -394,7 +395,7 @@ class TopologyHost extends TopologyCoreEntity {
         }
 
         const service_choice: ContextMenuElement = {
-            text: texts.get("show_services"),
+            text: get("show_services"),
             children: [],
         };
 
@@ -510,11 +511,11 @@ class TopologyUnknownHost extends TopologyHost {
     override _get_basic_quickinfo(): QuickinfoEntry[] {
         return [
             {
-                name: texts.get("unknown_host"),
+                name: get("unknown_host"),
                 value: "",
             },
             {
-                name: texts.get("host"),
+                name: get("host"),
                 value: get_core_info(this.node)!.hostname,
             },
         ];
@@ -540,15 +541,15 @@ class TopologyUnknownService extends TopologyService {
     override _get_basic_quickinfo(): QuickinfoEntry[] {
         return [
             {
-                name: texts.get("unknown_service"),
+                name: get("unknown_service"),
                 value: "",
             },
             {
-                name: texts.get("host"),
+                name: get("host"),
                 value: this.node.data.type_specific.core.hostname,
             },
             {
-                name: texts.get("service"),
+                name: get("service"),
                 value: this.node.data.type_specific.core.service,
             },
         ];
@@ -648,7 +649,7 @@ class NetworkLink extends AbstractLink {
                     .data([entry[0]])
                     .join("title")
                     .classed("topology_info", true)
-                    .text(d => texts.get(d));
+                    .text(d => get(d));
             }
         });
     }

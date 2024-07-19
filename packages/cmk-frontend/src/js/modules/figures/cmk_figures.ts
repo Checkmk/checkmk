@@ -6,10 +6,11 @@
 
 import type {Crossfilter} from "crossfilter2";
 import crossfilter from "crossfilter2";
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
 import type {CMKAjaxReponse} from "../types";
-import * as utils from "../utils";
+import {get_computed_style} from "../utils";
 import {
     add_scheduler_debugging,
     plot_render_function,
@@ -317,7 +318,7 @@ export abstract class FigureBase<
             .attr("text-anchor", "middle");
 
         let title_padding_left = 0;
-        const title_padding_left_raw = utils.get_computed_style(
+        const title_padding_left_raw = get_computed_style(
             d3.select("div.dashlet div.title").node() as HTMLElement,
             "padding-left"
         );

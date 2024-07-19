@@ -7,6 +7,7 @@
 // eslint-disable-next-line no-duplicate-imports -- Explicitly imported for side-effects
 import "./layout";
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
 import {ForceSimulation} from "./force_simulation";

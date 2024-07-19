@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import {zoomIdentity} from "d3";
 
-import * as cmk_figures from "@/modules/figures/cmk_figures";
+import {figure_registry} from "@/modules/figures/cmk_figures";
 import type {
     ElementSize,
     SingleGraphDashletConfig,
@@ -37,7 +37,7 @@ export class SingleMetricFigure extends TimeseriesFigure<SingleGraphDashletConfi
     }
 
     override _setup_zoom() {
-        this._current_zoom = d3.zoomIdentity;
+        this._current_zoom = zoomIdentity;
     }
 
     override update_domains() {
@@ -95,4 +95,4 @@ export class SingleMetricFigure extends TimeseriesFigure<SingleGraphDashletConfi
     }
 }
 
-cmk_figures.figure_registry.register(SingleMetricFigure);
+figure_registry.register(SingleMetricFigure);

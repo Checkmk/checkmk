@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as utils from "./utils";
+import {stop_reload_timer} from "./utils";
 
 // Stores the reload pause timer object once the regular reload has
 // been paused e.g. by modifying a graphs timerange or vertical axis.
@@ -15,7 +15,7 @@ let g_reload_pause_timer: number | null = null;
 // the pause ends. Once the user clicks on the pause icon or the time
 // is reached, the whole page is reloaded.
 export function pause(seconds: number) {
-    utils.stop_reload_timer();
+    stop_reload_timer();
     draw_overlay(seconds);
     // Reset the timer if pause was used. Otherwise the page will reload even
     // in pause mode.

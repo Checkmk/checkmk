@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
+import {call_ajax} from "./ajax";
 import type {CMKAjaxReponse} from "./types";
-import * as utils from "./utils";
+import {reload_whole_page} from "./utils";
 
 type ReplicationImage =
     | "repl_success"
@@ -26,7 +26,7 @@ export function prepare(num: number, back_url: string) {
 }
 
 export function start(siteid: string, est: number, progress_text: string) {
-    ajax.call_ajax("wato_ajax_profile_repl.py", {
+    call_ajax("wato_ajax_profile_repl.py", {
         response_handler: function (
             handler_data: {site_id: string},
             response_json: string
@@ -108,5 +108,5 @@ function set_result(site_id: string, success: boolean, msg: string) {
 }
 
 function finish() {
-    utils.reload_whole_page(g_back_url);
+    reload_whole_page(g_back_url);
 }

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as utils from "./utils";
+import {add_class, remove_class} from "./utils";
 
 function urlsafe_base64_decode(base64str: string): string {
     return window.atob(base64str.replace(/_/g, "/").replace(/-/g, "+"));
@@ -169,9 +169,9 @@ function show_error(text: string) {
 
 function show_message(text: string, cls: string) {
     const msg = document.getElementById("webauthn_message")!;
-    utils.remove_class(msg, "error");
-    utils.remove_class(msg, "success");
-    utils.add_class(msg, cls);
+    remove_class(msg, "error");
+    remove_class(msg, "success");
+    add_class(msg, cls);
 
     msg.innerHTML = text;
 }

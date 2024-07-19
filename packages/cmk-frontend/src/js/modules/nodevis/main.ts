@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import {select} from "d3";
 
 import {BIForceConfig} from "./aggregations";
 import {
@@ -20,7 +20,7 @@ import {link_type_class_registry} from "./link_utils";
 import {get_custom_node_settings, node_type_class_registry} from "./node_utils";
 import {SearchNodes} from "./search";
 import type {TranslationKey} from "./texts";
-import * as texts from "./texts";
+import {get, set_translations} from "./texts";
 import {TopologyForceConfig} from "./topology";
 import type {
     BackendResponse,
@@ -55,11 +55,11 @@ export class NodeVisualization {
         translations: Record<TranslationKey, string> | null = null
     ) {
         this._div_id = div_id;
-        this._div_selection = d3
-            .select<HTMLDivElement, null>("#" + this._div_id)
-            .append("div");
+        this._div_selection = select<HTMLDivElement, null>(
+            "#" + this._div_id
+        ).append("div");
 
-        if (translations) texts.set_translations(translations);
+        if (translations) set_translations(translations);
         this._world = this._create_world(datasource);
         this._world.datasource_manager.schedule(true);
     }
@@ -156,9 +156,7 @@ export class BIVisualization extends NodeVisualization {
 
     _show_aggregations(list_of_aggregations: string[]): void {
         if (list_of_aggregations.length > 0)
-            d3.select("table.header td.heading a").text(
-                list_of_aggregations[0]
-            );
+            select("table.header td.heading a").text(list_of_aggregations[0]);
 
         const aggr_ds = this._world.datasource_manager.get_datasource(
             AggregationsDatasource.id()
@@ -301,7 +299,7 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     toggle_compare_history(): boolean {
-        const div_compare = d3.select(".suggestion.topology_compare_history");
+        const div_compare = select(".suggestion.topology_compare_history");
         const icon = div_compare.select("img");
         const new_state = !icon.classed("on");
         icon.classed("on", new_state);
@@ -323,8 +321,8 @@ export class TopologyVisualization extends NodeVisualization {
             ]);
         });
         const data: SpanConfig[] = [
-            [texts.get("reference"), "reference", reference_options],
-            [texts.get("compare_to"), "compare_to", compare_to_options],
+            [get("reference"), "reference", reference_options],
+            [get("compare_to"), "compare_to", compare_to_options],
         ];
 
         if (!new_state) {
@@ -400,8 +398,7 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     show_topology(data: TopologyBackendResponse) {
-        if (data.headline)
-            d3.select("div.titlebar a.title").text(data.headline);
+        if (data.headline) select("div.titlebar a.title").text(data.headline);
 
         this._show_topology_errors(data.errors);
         this._frontend_configuration = data.frontend_configuration;
@@ -440,7 +437,7 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     _show_topology_errors(errors: string): void {
-        d3.select("label#max_nodes_error_text").text(errors);
+        select("label#max_nodes_error_text").text(errors);
     }
 
     override _get_force_config(): typeof ForceConfig {

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
+import {call_ajax} from "./ajax";
 
 // @ts-ignore
 declare let XDomainRequest;
@@ -16,7 +16,7 @@ export function submit_crash_report(url: string, post_data: string) {
     document.getElementById("pending_msg")!.style.display = "block";
 
     if (has_cross_domain_ajax_support()) {
-        ajax.call_ajax(url, {
+        call_ajax(url, {
             method: "POST",
             post_data: post_data,
             response_handler: handle_report_response,

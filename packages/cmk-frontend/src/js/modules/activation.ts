@@ -4,11 +4,19 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as async_progress from "./async_progress";
-import * as page_menu from "./page_menu";
+import {call_ajax} from "./ajax";
+import {monitor, show_error, show_info} from "./async_progress";
+import {enable_menu_entry} from "./page_menu";
 import type {CMKAjaxReponse} from "./types";
-import * as utils from "./utils";
+import {
+    add_class,
+    makeuri,
+    reload_whole_page,
+    remove_class,
+    remove_classes_by_prefix,
+    schedule_reload,
+    time,
+} from "./utils";
 
 //#.
 //#   .-Activation---------------------------------------------------------.
@@ -45,7 +53,7 @@ export function activate_changes(mode: "selected" | "site", site_id: string) {
         }
 
         if (sites.length == 0) {
-            async_progress.show_error("You have to select a site.");
+            show_error("You have to select a site.");
             return;
         }
     } else if (mode == "site") {
@@ -80,7 +88,7 @@ function start_activation(
     comment: string,
     activate_foreign: 0 | 1
 ) {
-    async_progress.show_info("Initializing activation...");
+    show_info("Initializing activation...");
 
     const post_data =
         "activate_until=" +
@@ -92,7 +100,7 @@ function start_activation(
         "&activate_foreign=" +
         encodeURIComponent(activate_foreign);
 
-    ajax.call_ajax("ajax_start_activation.py", {
+    call_ajax("ajax_start_activation.py", {
         response_handler: handle_start_activation,
         error_handler: handle_start_activation_error,
         method: "POST",
@@ -107,20 +115,20 @@ function handle_start_activation(_unused: unknown, response_json: string) {
         JSON.parse(response_json);
 
     if (response.result_code == 1) {
-        async_progress.show_error(String(response.result));
+        show_error(String(response.result));
         lock_activation_controls(false);
     } else {
-        async_progress.show_info("Activating...");
-        async_progress.monitor({
+        show_info("Activating...");
+        monitor({
             update_url:
                 "ajax_activation_state.py?activation_id=" +
                 encodeURIComponent(response.result.activation_id),
-            start_time: utils.time(),
+            start_time: time(),
             update_function: update_activation_state,
             is_finished_function: is_activation_progress_finished,
             finish_function: finish_activation,
             error_function: function (response) {
-                async_progress.show_error(response);
+                show_error(response);
             },
             post_data: "",
         });
@@ -132,7 +140,7 @@ function handle_start_activation_error(
     status_code: number,
     error_msg: string
 ) {
-    async_progress.show_error(
+    show_error(
         "Failed to start activation [" + status_code + "]: " + error_msg
     );
 }
@@ -162,14 +170,14 @@ function lock_activation_controls(lock: boolean) {
     for (let i = 0; i < elements.length; i++) {
         if (!elements[i]) continue;
 
-        if (lock) utils.add_class(elements[i], "disabled");
-        else utils.remove_class(elements[i], "disabled");
+        if (lock) add_class(elements[i], "disabled");
+        else remove_class(elements[i], "disabled");
 
         (elements[i] as HTMLButtonElement).disabled = Boolean(lock);
     }
 
-    page_menu.enable_menu_entry("activate_selected", !lock);
-    page_menu.enable_menu_entry("discard_changes", !lock);
+    enable_menu_entry("activate_selected", !lock);
+    enable_menu_entry("discard_changes", !lock);
 }
 
 function is_activation_progress_finished(response: {
@@ -237,11 +245,11 @@ export function update_site_activation_state(site_state: Record<string, any>) {
     msg.innerHTML = site_state["_status_text"];
 
     if (site_state["_phase"] == "done") {
-        utils.remove_class(msg, "in_progress");
-        utils.add_class(msg, "state_" + site_state["_state"]);
+        remove_class(msg, "in_progress");
+        add_class(msg, "state_" + site_state["_state"]);
     } else {
-        utils.remove_classes_by_prefix(msg, "state_");
-        utils.add_class(msg, "in_progress");
+        remove_classes_by_prefix(msg, "state_");
+        add_class(msg, "in_progress");
     }
 
     // Show status details
@@ -280,12 +288,12 @@ function update_site_progress(site_state: Record<string, any>) {
     if (site_state["_phase"] == "done") {
         progress.style.width = max_width + "px";
 
-        utils.remove_class(progress, "in_progress");
-        utils.add_class(progress, "state_" + site_state["_state"]);
+        remove_class(progress, "in_progress");
+        add_class(progress, "state_" + site_state["_state"]);
         return;
     } else {
-        utils.remove_classes_by_prefix(progress, "state_");
-        utils.add_class(progress, "in_progress");
+        remove_classes_by_prefix(progress, "state_");
+        add_class(progress, "in_progress");
     }
 
     // TODO: Visualize overdue
@@ -294,7 +302,7 @@ function update_site_progress(site_state: Record<string, any>) {
         return; // Do not update width in case it was not started yet
     }
 
-    const duration = utils.time() - site_state["_time_started"];
+    const duration = time() - site_state["_time_started"];
 
     const expected_duration = site_state["_expected_duration"];
     const duration_percent = (duration * 100.0) / expected_duration;
@@ -306,7 +314,7 @@ function update_site_progress(site_state: Record<string, any>) {
 }
 
 function finish_activation(result: {sites: Record<string, any>}) {
-    utils.schedule_reload(utils.makeuri({_finished: "1"}), 1000);
+    schedule_reload(makeuri({_finished: "1"}), 1000);
 
     // Handle special state "Locked" with a timeout to show the message to the
     // user. We can only determine this state via warning state for now
@@ -322,9 +330,9 @@ function finish_activation(result: {sites: Record<string, any>}) {
     // Trigger a reload of the sidebar (to update changes in WATO snapin)
     if (is_warning) {
         setTimeout(function () {
-            utils.reload_whole_page();
+            reload_whole_page();
         }, 1000);
     } else {
-        utils.reload_whole_page();
+        reload_whole_page();
     }
 }

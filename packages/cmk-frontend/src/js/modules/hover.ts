@@ -4,7 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as utils from "./utils";
+import {
+    content_wrapper_size,
+    execute_javascript_by_object,
+    get_content_wrapper_object,
+} from "./utils";
 
 //#   +--------------------------------------------------------------------+
 //#   | Mouseover hover menu, used for performance graph popups            |
@@ -46,7 +50,7 @@ export function update_content(code: string, event_: MouseEvent) {
     }
 
     g_hover_menu.innerHTML = code;
-    utils.execute_javascript_by_object(g_hover_menu);
+    execute_javascript_by_object(g_hover_menu);
     update_position(event_);
 }
 
@@ -75,7 +79,7 @@ export function update_position(event_: MouseEvent) {
 
     let x = event_.clientX;
     let y = event_.clientY;
-    const content_wrapper = utils.get_content_wrapper_object();
+    const content_wrapper = get_content_wrapper_object();
     if (content_wrapper) {
         x = x - content_wrapper.offsetLeft;
         y = y - content_wrapper.offsetTop;
@@ -87,7 +91,7 @@ export function update_position(event_: MouseEvent) {
     g_hover_menu.style.top = scrollTop + y + hoverSpacer + "px";
 
     const hoverLeft = parseInt(g_hover_menu.style.left.replace("px", ""));
-    const container_size = utils.content_wrapper_size();
+    const container_size = content_wrapper_size();
     let covers_full_width = false;
 
     if (
@@ -174,7 +178,7 @@ function hover_container() {
     // Return the simplebar wrapper div (if it exists) to avoid the default browser scrollbar for
     // long hover menu contents. If it doesn't exist try the content wrapper div. If that doesn't
     // exist either, fall back to the document body.
-    const container = utils.get_content_wrapper_object();
+    const container = get_content_wrapper_object();
     if (!container) {
         return document.body;
     }

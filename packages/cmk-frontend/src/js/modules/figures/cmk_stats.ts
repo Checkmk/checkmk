@@ -4,10 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import type * as d3 from "d3";
-import * as d3Hexbin from "d3-hexbin";
+import {hexbin as d3Hexbin_hexbin} from "d3-hexbin";
 
-import * as cmk_figures from "./cmk_figures";
+import {FigureBase} from "./cmk_figures";
 import type {FigureData} from "./figure_types";
 
 interface FigurePart {
@@ -31,7 +32,7 @@ interface HexConfig {
     count: number;
 }
 
-export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
+export class HostStats extends FigureBase<FigureResponseData> {
     _table_div!: d3.Selection<HTMLDivElement, any, d3.BaseType, any>;
     _hexagon_box!: d3.Selection<SVGGElement, unknown, d3.BaseType, unknown>;
     _max_radius!: number;
@@ -83,7 +84,7 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
 
         this.resize();
         const parts = this._data.parts;
-        const hexbin = d3Hexbin.hexbin();
+        const hexbin = d3Hexbin_hexbin();
         const hexagon_config: HexConfig[] = [];
 
         let largest_element_count = 0;

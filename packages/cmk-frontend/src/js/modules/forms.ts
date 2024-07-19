@@ -12,9 +12,9 @@ import Tagify from "@yaireo/tagify";
 import $ from "jquery";
 import Swal from "sweetalert2";
 
-import * as ajax from "./ajax";
+import {call_ajax} from "./ajax";
 import type {CMKAjaxReponse, RequireConfirmation} from "./types";
-import * as utils from "./utils";
+import {add_class, prevent_default_events, remove_class} from "./utils";
 import {
     initialize_autocompleters,
     toggle_label_row_opacity,
@@ -308,7 +308,7 @@ function ajax_call_autocomplete_labels(
     value: string,
     element: HTMLInputElement
 ) {
-    g_ajax_obj = ajax.call_ajax("ajax_vs_autocomplete.py", {
+    g_ajax_obj = call_ajax("ajax_vs_autocomplete.py", {
         method: "POST",
         post_data: post_data,
         response_handler: function (
@@ -381,7 +381,7 @@ export function textinput_enter_submit(
             const button = document.getElementById(submit);
             if (button) button.click();
         }
-        return utils.prevent_default_events(event);
+        return prevent_default_events(event);
     }
 }
 
@@ -462,7 +462,7 @@ export function add_confirm_on_submit(
         confirm_dialog(confirmation_args, () => {
             form.submit();
         });
-        return utils.prevent_default_events(e!);
+        return prevent_default_events(e!);
     });
 }
 
@@ -527,7 +527,7 @@ export function replace_error_msg_with_confirm_dialog() {
     )[0] as HTMLDivElement;
 
     error_msg.replaceWith(dialog);
-    utils.remove_class(dialog, "hidden");
+    remove_class(dialog, "hidden");
 }
 
 export function add_filter_form_error_listener(elem_id: string) {
@@ -560,10 +560,10 @@ export function enable_submit_buttons_on_nonempty_input(
 
         const submit_container = submit.parentNode as HTMLDivElement;
         if (input.value != "") {
-            utils.remove_class(submit, "disabled");
+            remove_class(submit, "disabled");
             submit_container.title = "";
         } else {
-            utils.add_class(submit, "disabled");
+            add_class(submit, "disabled");
             if (submit_container.dataset.title) {
                 submit_container.title = submit_container.dataset.title;
             }

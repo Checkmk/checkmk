@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
 import {LayoutAggregations} from "./aggregations";
@@ -28,7 +29,7 @@ import {
     NodeVisualizationLayout,
     render_style_options,
 } from "./layout_utils";
-import * as texts from "./texts";
+import {get} from "./texts";
 import {LayoutTopology} from "./topology";
 import type {
     ContextMenuElement,
@@ -538,7 +539,7 @@ export class LayoutStyleConfiguration {
         style_div
             .append("h2")
             .attr("id", "styleconfig_headline")
-            .text(texts.get("selected_style_configuration"));
+            .text(get("selected_style_configuration"));
 
         return style_div;
     }
@@ -648,7 +649,7 @@ function show_viewport_information(viewport: Viewport) {
         const panning_info_cell = new_row
             .append("td")
             .attr("id", "panning_info");
-        panning_info_cell.append("div").text(texts.get("panning"));
+        panning_info_cell.append("div").text(get("panning"));
         panning_info_cell
             .append("div")
             .attr("id", "panning_value")
@@ -684,7 +685,7 @@ function show_viewport_information(viewport: Viewport) {
             .selectAll("option")
             .data([
                 ["current_zoom", "100%"],
-                ["zoom_fit", texts.get("zoom_fit")],
+                ["zoom_fit", get("zoom_fit")],
                 ["50%", "50%"],
                 ["100%", "100%"],
                 ["150%", "150%"],
@@ -777,7 +778,7 @@ export class LayoutingToolbar {
             .enter()
             .append("h2")
             .attr("id", "layout_configuration_headline")
-            .text(texts.get("layout_configuration"));
+            .text(get("layout_configuration"));
 
         this._render_line_style(toolbar_selection, "straight");
         this._show_viewport_information();
@@ -796,13 +797,13 @@ export class LayoutingToolbar {
         line_style: LineStyle
     ): void {
         const options = [
-            new RadioGroupOption("round", texts.get("round")),
-            new RadioGroupOption("straight", texts.get("straight")),
-            new RadioGroupOption("elbow", texts.get("elbow")),
+            new RadioGroupOption("round", get("round")),
+            new RadioGroupOption("straight", get("straight")),
+            new RadioGroupOption("elbow", get("elbow")),
         ];
         render_radio_group(
             into_selection,
-            texts.get("line_style"),
+            get("line_style"),
             "line_style",
             options,
             line_style,
@@ -1086,9 +1087,7 @@ class LayoutApplier {
         const styles = this.layout_style_factory.get_styles();
 
         const nested: ContextMenuElement = {
-            text: node
-                ? texts.get("convert_to")
-                : texts.get("convert_all_nodes_to"),
+            text: node ? get("convert_to") : get("convert_all_nodes_to"),
             children: [],
         };
         for (const [_key, style] of Object.entries(styles)) {
@@ -1108,7 +1107,7 @@ class LayoutApplier {
         }
         if (!node) {
             nested.children!.push({
-                text: texts.get("free_floating_style"),
+                text: get("free_floating_style"),
                 on: () => this._convert_all(null),
                 href: "",
             });
@@ -1118,7 +1117,7 @@ class LayoutApplier {
 
         if (node && node.data.use_style) {
             elements.push({
-                text: texts.get("remove_style"),
+                text: get("remove_style"),
                 on: () => this._convert_node(node, null),
                 href: "",
                 img: "themes/facelift/images/icon_aggr.svg",
@@ -1126,7 +1125,7 @@ class LayoutApplier {
         }
 
         elements.push({
-            text: texts.get("show_force_configuration"),
+            text: get("show_force_configuration"),
             on: () => this._layout_manager.show_force_config(),
             href: "",
             img: "",

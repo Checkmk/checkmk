@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import {change_class, has_class, toggle_folding} from "./utils";
 
 // fetch_url: dynamically load content of opened element.
 export function toggle(
@@ -18,7 +18,7 @@ export function toggle(
     const box = document.getElementById("tree." + treename + "." + id);
 
     toggle_tree_state(treename, id, box, fetch_url, save_state);
-    if (img) utils.toggle_folding(img, !utils.has_class(box, "closed"));
+    if (img) toggle_folding(img, !has_class(box, "closed"));
 }
 
 function toggle_tree_state(
@@ -31,12 +31,12 @@ function toggle_tree_state(
     const outer_container = oContainer!.parentNode as HTMLElement | null;
     let state: "on" | "off";
 
-    if (utils.has_class(oContainer, "closed")) {
-        utils.change_class(oContainer, "closed", "open");
-        utils.change_class(outer_container, "closed", "open");
+    if (has_class(oContainer, "closed")) {
+        change_class(oContainer, "closed", "open");
+        change_class(outer_container, "closed", "open");
 
         if (fetch_url && !oContainer!.innerHTML) {
-            ajax.call_ajax(fetch_url, {
+            call_ajax(fetch_url, {
                 method: "GET",
                 response_handler: function (
                     handler_data: {container: HTMLElement},
@@ -52,8 +52,8 @@ function toggle_tree_state(
 
         state = "on";
     } else {
-        utils.change_class(oContainer, "open", "closed");
-        utils.change_class(outer_container, "open", "closed");
+        change_class(oContainer, "open", "closed");
+        change_class(outer_container, "open", "closed");
         state = "off";
     }
 
@@ -65,7 +65,7 @@ export function persist_tree_state(
     name: string,
     state: "on" | "off"
 ) {
-    ajax.call_ajax(
+    call_ajax(
         "tree_openclose.py?tree=" +
             encodeURIComponent(tree) +
             "&name=" +

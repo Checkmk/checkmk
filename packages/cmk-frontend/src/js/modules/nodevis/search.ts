@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import {select} from "d3";
 
-import * as texts from "./texts";
+import {get} from "./texts";
 import type {
     d3SelectionDiv,
     NodevisWorld,
@@ -29,8 +29,7 @@ export class SearchNodes {
     }
 
     _setup_search_panel(): void {
-        const search_nodes_cell = d3
-            .select("table#page_menu_bar tr")
+        const search_nodes_cell = select("table#page_menu_bar tr")
             .selectAll("td.inpage_search.node_vis")
             .data([null])
             .enter()
@@ -168,7 +167,7 @@ class InfoboxNodeFormatter {
     ): void {
         let entries = data.entries;
 
-        const heading_info = texts.get("matching_nodes");
+        const heading_info = get("matching_nodes");
         selection.append("label").text(heading_info);
 
         const current_height = this._world.viewport.get_size().height;
@@ -200,7 +199,7 @@ class InfoboxNodeFormatter {
             .classed("infobox_entry", true)
             .text(d => d.name)
             .each(function (d) {
-                d3.select(this).classed("state" + d.state, true);
+                select(this).classed("state" + d.state, true);
             })
             .on("click", (_event: Event, d) => this._zoom_node(d.name))
             .on("mouseover", (_event: Event, d) =>

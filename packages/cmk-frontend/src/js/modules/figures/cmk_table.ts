@@ -7,11 +7,12 @@
 /* eslint-disable indent */
 
 import crossfilter from "crossfilter2";
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 import type {PieChart} from "dc";
-import * as dc from "dc";
+import {pieChart} from "dc";
 
-import * as cmk_figures from "./cmk_figures";
+import {figure_registry, FigureBase} from "./cmk_figures";
 import type {FigureData} from "./figure_types";
 
 export interface Cell<Config = PieChartData | NtopTalkerData> {
@@ -80,7 +81,7 @@ export interface TableFigureData<Config = PieChartData | NtopTalkerData>
     classes?: string[];
 }
 
-export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
+export class TableFigure extends FigureBase<TableFigureData> {
     _table!: d3.Selection<HTMLTableElement, unknown, d3.BaseType, unknown>;
 
     override ident() {
@@ -92,7 +93,7 @@ export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
     }
 
     override initialize(debug?: boolean) {
-        cmk_figures.FigureBase.prototype.initialize.call(this, debug);
+        FigureBase.prototype.initialize.call(this, debug);
         this._table = this._div_selection.append("table");
     }
 
@@ -148,7 +149,7 @@ export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
 }
 
 class HTMLTableCellElement extends HTMLElement {
-    __figure_instance__?: cmk_figures.FigureBase<FigureData>;
+    __figure_instance__?: FigureBase<FigureData>;
     __crossfilter__: any;
 }
 
@@ -160,7 +161,7 @@ function _update_figures_in_selection(
         .each((d, idx, nodes) => {
             const figure_config = d["figure_config"];
             if (nodes[idx].__figure_instance__ == undefined) {
-                const figure_class = cmk_figures.figure_registry.get_figure(
+                const figure_class = figure_registry.get_figure(
                     //@ts-ignore
                     figure_config["figure_type"]
                 );
@@ -203,7 +204,7 @@ function _update_dc_graphs_in_selection(
                 const label_group = label_dimension
                     .group()
                     .reduceSum(d => +d.value);
-                const pie_chart = dc.pieChart(
+                const pie_chart = pieChart(
                     d.figure_config.selector,
                     String(graph_group)
                 );

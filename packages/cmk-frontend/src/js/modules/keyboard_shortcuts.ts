@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as utils from "./utils";
+import {add_event_handler} from "./utils";
 
 function handle_main_menu_shortcuts(event: Event): void {
     if (!(event instanceof KeyboardEvent)) return;
@@ -39,5 +39,5 @@ function handle_main_menu_shortcuts(event: Event): void {
 }
 
 export function register_shortcuts(): void {
-    utils.add_event_handler("keydown", handle_main_menu_shortcuts, document);
+    add_event_handler("keydown", handle_main_menu_shortcuts, document);
 }

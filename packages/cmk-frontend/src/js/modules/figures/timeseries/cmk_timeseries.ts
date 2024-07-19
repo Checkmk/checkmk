@@ -5,12 +5,12 @@
  */
 
 import type {Dimension} from "crossfilter2";
-import * as crossfilter from "crossfilter2";
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 import range from "lodash.range";
 
 import {FigureTooltip} from "@/modules/figures/cmk_figure_tooltip";
-import * as cmk_figures from "@/modules/figures/cmk_figures";
+import {FigureBase} from "@/modules/figures/cmk_figures";
 import {getIn} from "@/modules/figures/cmk_figures_utils";
 import type {
     ElementSize,
@@ -46,7 +46,7 @@ export type SubplotSubs = LinePlot | ScatterPlot | AreaPlot | BarPlot;
 
 export class TimeseriesFigure<
     _DashletSpec extends FigureBaseDashletSpec = FigureBaseDashletSpec
-> extends cmk_figures.FigureBase<TimeseriesFigureData, _DashletSpec> {
+> extends FigureBase<TimeseriesFigureData, _DashletSpec> {
     _subplots: SubPlot[];
     _subplots_by_id: Record<string, SubPlot>;
     g!: d3.Selection<SVGGElement, unknown, d3.BaseType, unknown>;
@@ -279,7 +279,7 @@ export class TimeseriesFigure<
         data.data.forEach(d => {
             d.date = new Date(d.timestamp * 1000);
         });
-        cmk_figures.FigureBase.prototype.update_data.call(this, data);
+        FigureBase.prototype.update_data.call(this, data);
         this._title = data.title;
         this._title_url = data.title_url;
         this._update_zoom_settings();

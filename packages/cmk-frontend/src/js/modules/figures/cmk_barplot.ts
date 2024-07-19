@@ -5,10 +5,11 @@
  */
 
 import type {Dimension} from "crossfilter2";
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 import range from "lodash.range";
 
-import * as cmk_figures from "@/modules/figures/cmk_figures";
+import {FigureBase} from "@/modules/figures/cmk_figures";
 import {getIn, make_levels} from "@/modules/figures/cmk_figures_utils";
 import type {
     BarplotDashletConfig,
@@ -20,7 +21,7 @@ import {domainIntervals, partitionableDomain} from "@/modules/number_format";
 
 //Barplot Figures extends SingleMetricDashlet in python
 // see cmk.gui.cee.plugins.dashboard.single_metric.SingleMetricDashlet
-export class BarplotFigure extends cmk_figures.FigureBase<
+export class BarplotFigure extends FigureBase<
     SingleMetricData,
     BarplotDashletConfig
 > {
@@ -79,7 +80,7 @@ export class BarplotFigure extends cmk_figures.FigureBase<
         } else {
             this.margin.top = 20;
         }
-        cmk_figures.FigureBase.prototype.resize.call(this);
+        FigureBase.prototype.resize.call(this);
         this.svg!.attr("width", this.figure_size.width).attr(
             "height",
             this.figure_size.height

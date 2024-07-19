@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import {add_class, remove_class, time} from "./utils";
 
 //#.
 //#   .-AsyncProg.---------------------------------------------------------.
@@ -36,7 +36,7 @@ interface AsyncProgressHandlerData {
 // Is called after the activation has been started (got the activation_id) and
 // then in interval of 500 ms for updating the dialog state
 export function monitor(handler_data: AsyncProgressHandlerData) {
-    ajax.call_ajax(handler_data.update_url, {
+    call_ajax(handler_data.update_url, {
         response_handler: handle_update,
         error_handler: handle_error,
         handler_data: handler_data,
@@ -72,7 +72,7 @@ function handle_error(
     status_code: string | number,
     error_msg: string
 ) {
-    if (utils.time() - handler_data.start_time! <= 10 && status_code == 503) {
+    if (time() - handler_data.start_time! <= 10 && status_code == 503) {
         show_info(
             "Failed to fetch state. This may be normal for a period of some seconds."
         );
@@ -102,8 +102,8 @@ export function show_error(text: string) {
     container.style.display = "block";
     const msg = container.childNodes[0] as HTMLElement;
 
-    utils.add_class(msg, "error");
-    utils.remove_class(msg, "success");
+    add_class(msg, "error");
+    remove_class(msg, "success");
 
     msg.innerHTML = text;
 }
@@ -118,8 +118,8 @@ export function show_info(text: string) {
         container.appendChild(msg);
     }
 
-    utils.add_class(msg, "success");
-    utils.remove_class(msg, "error");
+    add_class(msg, "success");
+    remove_class(msg, "error");
 
     msg.innerHTML = text;
 }

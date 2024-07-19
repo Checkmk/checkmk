@@ -26,6 +26,7 @@
         "simple-import-sort",
         "license-header"],
     "rules": {
+        "import/no-namespace": "error",
         "simple-import-sort/exports": "error",
         "simple-import-sort/imports": "error",
         "license-header/header": [ "error", "./resources/license-header.js" ],

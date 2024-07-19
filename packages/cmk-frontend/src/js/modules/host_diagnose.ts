@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import {add_class, remove_class} from "./utils";
 
 export function getFirstElementByNameAsInput(name: string): HTMLInputElement {
     return document.getElementsByName(name)[0] as HTMLInputElement;
@@ -134,7 +134,7 @@ export function start_test(ident: string, hostname: string, transid: string) {
         );
 
     img.src = img.src.replace(/(.*\/icon_).*(\.svg$)/i, "$1reload$2");
-    utils.add_class(img, "reloading");
+    add_class(img, "reloading");
 
     log.innerHTML = "...";
 
@@ -145,7 +145,7 @@ export function start_test(ident: string, hostname: string, transid: string) {
         encodeURIComponent(ident) +
         vars;
 
-    ajax.call_ajax("wato_ajax_diag_host.py", {
+    call_ajax("wato_ajax_diag_host.py", {
         method: "POST",
         response_handler: handle_host_diag_result,
         handler_data: {hostname: hostname, ident: ident},
@@ -168,7 +168,7 @@ function handle_host_diag_result(
     const retry = document.getElementById(
         data.ident + "_retry"
     ) as HTMLImageElement;
-    utils.remove_class(img, "reloading");
+    remove_class(img, "reloading");
 
     let text = "";
     let new_icon = "";

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as utils from "./utils";
+import {add_class, remove_class} from "./utils";
 
 export function timeline_hover(
     timeline_nr: number,
@@ -17,9 +17,9 @@ export function timeline_hover(
     if (!row) return;
 
     if (onoff) {
-        utils.add_class(row, "hilite");
+        add_class(row, "hilite");
     } else {
-        utils.remove_class(row, "hilite");
+        remove_class(row, "hilite");
     }
 }
 
@@ -34,8 +34,8 @@ export function timetable_hover(
     if (!slice) return;
 
     if (onoff) {
-        utils.add_class(slice, "hilite");
+        add_class(slice, "hilite");
     } else {
-        utils.remove_class(slice, "hilite");
+        remove_class(slice, "hilite");
     }
 }

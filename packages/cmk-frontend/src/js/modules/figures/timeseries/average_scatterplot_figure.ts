@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import {bisector, line as d3_line} from "d3";
 
-import * as cmk_figures from "@/modules/figures/cmk_figures";
+import {figure_registry} from "@/modules/figures/cmk_figures";
 import {getIn, plot_render_function} from "@/modules/figures/cmk_figures_utils";
 import type {
     AverageScatterplotDashletConfig,
@@ -102,8 +102,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
             const points = scatter_plot.transformed_data.filter(
                 d => d.label == scatter_point.label
             );
-            const line = d3
-                .line<TransformedData>()
+            const line = d3_line<TransformedData>()
                 .x(d => d.scaled_x)
                 .y(d => d.scaled_y)
                 .context(ctx);
@@ -137,7 +136,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
         }
 
         // @ts-ignore
-        const nearest_bisect = d3.bisector(d => d.timestamp).left;
+        const nearest_bisect = bisector(d => d.timestamp).left;
 
         // Find nearest mean point
         //@ts-ignore
@@ -200,7 +199,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
                 .classed("pin", true)
                 .attr(
                     "d",
-                    d3.line()([
+                    d3_line()([
                         [x, 0],
                         [x, this.plot_size.height],
                     ])
@@ -280,4 +279,4 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
     }
 }
 
-cmk_figures.figure_registry.register(AverageScatterplotFigure);
+figure_registry.register(AverageScatterplotFigure);

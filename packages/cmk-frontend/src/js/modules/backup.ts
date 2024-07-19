@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import {reload_whole_page} from "./utils";
 
 type BackupHandlerData = {url: string; ident: string; is_site: boolean};
 
@@ -20,7 +20,7 @@ export function refresh_job_details(
 }
 
 function do_job_detail_refresh(url: string, ident: string, is_site: boolean) {
-    ajax.call_ajax(url, {
+    call_ajax(url, {
         method: "GET",
         post_data: "job=" + encodeURIComponent(ident),
         response_handler: handle_job_detail_response,
@@ -52,7 +52,7 @@ function handle_job_detail_response(
             handler_data["is_site"]
         );
     } else {
-        utils.reload_whole_page();
+        reload_whole_page();
     }
 }
 

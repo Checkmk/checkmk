@@ -4,18 +4,18 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import {schemePaired} from "d3";
 
 import type {
     NtopTalkerData,
     NtopTalkerDataPlotDefinition,
     TableFigureData,
 } from "@/modules/figures/cmk_table";
-import * as cmk_table from "@/modules/figures/cmk_table";
+import {TableFigure} from "@/modules/figures/cmk_table";
 
-import * as ntop_utils from "./ntop_utils";
+import {ifid_dep} from "./ntop_utils";
 
-export class TopTalkersDashlet extends cmk_table.TableFigure {
+export class TopTalkersDashlet extends TableFigure {
     _default_params;
     //the following parameters are directly set after initializing
     //the class in cmk/gui/cee/plugins/dashboard/ntop_dashlets.py:215
@@ -30,8 +30,8 @@ export class TopTalkersDashlet extends cmk_table.TableFigure {
     }
 
     override initialize() {
-        cmk_table.TableFigure.prototype.initialize.call(this, false);
-        this._div_selection.classed(ntop_utils.ifid_dep, true);
+        TableFigure.prototype.initialize.call(this, false);
+        this._div_selection.classed(ifid_dep, true);
     }
 
     set_ids(ifid: string, vlanid = "0") {
@@ -61,10 +61,10 @@ export class TopTalkersDashlet extends cmk_table.TableFigure {
         );
         definitions_to_update.forEach(entry => {
             entry.forEach((definition, idx) => {
-                definition.color = d3.schemePaired[idx];
+                definition.color = schemePaired[idx];
             });
         });
 
-        cmk_table.TableFigure.prototype.update_data.call(this, data);
+        TableFigure.prototype.update_data.call(this, data);
     }
 }

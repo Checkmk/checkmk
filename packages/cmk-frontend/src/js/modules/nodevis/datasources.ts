@@ -20,10 +20,10 @@
 //#   |                                       |___/                        |
 //#   +--------------------------------------------------------------------+
 
-import * as d3 from "d3";
+import {json} from "d3";
 
 import type {CMKAjaxReponse} from "../types";
-import * as utils from "../utils";
+import {is_window_active} from "../utils";
 import type {SerializedNodevisLayout} from "./layout_utils";
 import type {
     DatasourceCallback,
@@ -64,7 +64,7 @@ export class DatasourceManager {
     }
 
     schedule(enforce = false): void {
-        if (!utils.is_window_active()) return;
+        if (!is_window_active()) return;
         const now = Math.floor(new Date().getTime() / 1000);
         for (const idx in this.datasources) {
             const datasource = this.datasources[idx];
@@ -143,7 +143,7 @@ export class AbstractDatasource extends Object {
 
     _fetch(): void {
         if (!this._fetch_url) return;
-        d3.json(encodeURI(this._fetch_url), {
+        json(encodeURI(this._fetch_url), {
             credentials: "include",
             method: "POST",
             body: this._fetch_params,

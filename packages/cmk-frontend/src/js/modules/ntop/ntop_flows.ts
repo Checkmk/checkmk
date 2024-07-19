@@ -6,16 +6,20 @@
 
 import type {Dimension} from "crossfilter2";
 import crossfilter from "crossfilter2";
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 import type {DataTableWidget} from "dc";
 import $ from "jquery";
 
 import {DCTableFigure} from "@/modules/figures/cmk_dc_table";
-import * as cmk_figures from "@/modules/figures/cmk_figures";
+import {FigureBase} from "@/modules/figures/cmk_figures";
 import type {FigureData} from "@/modules/figures/figure_types";
 
-import * as ntop_utils from "./ntop_utils";
-import {add_classes_to_trs, add_columns_classes_to_nodes} from "./ntop_utils";
+import {
+    add_classes_to_trs,
+    add_columns_classes_to_nodes,
+    ifid_dep,
+} from "./ntop_utils";
 
 interface FilterChoices {
     applications: any[];
@@ -60,7 +64,7 @@ interface FlowDashletData extends FigureData {
     filter_choices: FlowDashletDataChoice[];
 }
 
-export class FlowsDashlet extends cmk_figures.FigureBase<FlowDashletData> {
+export class FlowsDashlet extends FigureBase<FlowDashletData> {
     _default_params_dict;
     _dimension!: Dimension<any, any>;
     _filter_choices!: FilterChoices | FlowDashletDataChoice[];
@@ -88,7 +92,7 @@ export class FlowsDashlet extends cmk_figures.FigureBase<FlowDashletData> {
         };
         this._setup_dc_table(this._div_selection);
         this._setup_data_update();
-        this._div_selection.classed(ntop_utils.ifid_dep, true);
+        this._div_selection.classed(ifid_dep, true);
     }
 
     getEmptyData() {

@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
 interface FigureTooltipElementSize {

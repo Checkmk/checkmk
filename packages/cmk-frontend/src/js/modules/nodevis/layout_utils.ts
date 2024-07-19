@@ -4,12 +4,13 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
 import type {ForceOptions} from "./force_utils";
 import {ForceConfig} from "./force_utils";
 import type {AbstractNodeVisConstructor, OverlayElement} from "./layer_utils";
-import * as texts from "./texts";
+import {get} from "./texts";
 import type {
     Coords,
     d3SelectionDiv,
@@ -766,7 +767,7 @@ export function render_style_options(
                 .attr("type", "button")
                 .classed("button", true)
                 .classed("reset_options", true)
-                .attr("value", texts.get("reset"))
+                .attr("value", get("reset"))
                 .on("click", reset_default_options_callback)
         );
 }

@@ -7,6 +7,7 @@
 import "core-js/stable";
 import "./modules/figures/cmk_figures_plugins";
 
+/* eslint-disable import/no-namespace -- Needed for exports */
 import crossfilter from "crossfilter2";
 import * as d3 from "d3";
 import * as d3Sankey from "d3-sankey";
@@ -43,7 +44,7 @@ import * as ntop_top_talkers from "./modules/ntop/ntop_top_talkers";
 import * as ntop_utils from "./modules/ntop/ntop_utils";
 import * as number_format from "./modules/number_format";
 import * as page_menu from "./modules/page_menu";
-import * as password_meter from "./modules/password_meter";
+import {initPasswordStrength} from "./modules/password_meter";
 import * as popup_menu from "./modules/popup_menu";
 import * as prediction from "./modules/prediction";
 import * as profile_replication from "./modules/profile_replication";
@@ -175,4 +176,4 @@ export const cmk_export = {
     },
 };
 
-password_meter.initPasswordStrength();
+initPasswordStrength();

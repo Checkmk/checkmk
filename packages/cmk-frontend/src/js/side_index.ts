@@ -8,6 +8,7 @@ import "./modules/forms";
 
 import $ from "jquery";
 
+/* eslint-disable import/no-namespace -- Needed for exports */
 import * as ajax from "./modules/ajax";
 import * as foldable_container from "./modules/foldable_container";
 import * as keyboard_shortcuts from "./modules/keyboard_shortcuts";

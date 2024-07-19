@@ -6,7 +6,7 @@
 
 import $ from "jquery";
 
-import * as utils from "./utils";
+import {add_class, copy_to_clipboard, has_class, remove_class} from "./utils";
 
 // ----------------------------------------------------------------------------
 // General functions for WATO
@@ -201,7 +201,7 @@ function get_effective_tags() {
             let add_tag_id;
             if (row.tagName == "TR") {
                 const legend_cell = row.cells[0];
-                if (!utils.has_class(legend_cell, "legend")) {
+                if (!has_class(legend_cell, "legend")) {
                     continue;
                 }
                 const content_cell = row.cells[1];
@@ -266,13 +266,13 @@ export function randomize_secret(id: string, message: string) {
     const secret = window.crypto.randomUUID();
     const oInput = document.getElementById(id) as HTMLInputElement;
     oInput.value = secret;
-    utils.copy_to_clipboard(secret, message);
+    copy_to_clipboard(secret, message);
 }
 
 export function toggle_container(id: string) {
     const obj = document.getElementById(id);
-    if (utils.has_class(obj, "hidden")) utils.remove_class(obj, "hidden");
-    else utils.add_class(obj, "hidden");
+    if (has_class(obj, "hidden")) remove_class(obj, "hidden");
+    else add_class(obj, "hidden");
 }
 
 // ----------------------------------------------------------------------------
@@ -313,9 +313,9 @@ export function toggle_folder(
     }
 
     if (on) {
-        utils.add_class(obj, "open");
+        add_class(obj, "open");
     } else {
-        utils.remove_class(obj, "open");
+        remove_class(obj, "open");
 
         // Hide the eventual open move dialog
         const move_dialog = document.getElementById("move_dialog_" + id);
@@ -344,10 +344,10 @@ export function toggle_test_notification_visibility(
         target
     )[0] as HTMLInputElement;
     if (source_element && target_element) {
-        if (utils.has_class(target_element, "active")) {
-            utils.remove_class(target_element, "active");
+        if (has_class(target_element, "active")) {
+            remove_class(target_element, "active");
         }
-        utils.add_class(source_element, "active");
+        add_class(source_element, "active");
     }
     toggle_test_notification_options(hide_options);
     toggle_test_notification_submit(hide_options);
@@ -375,13 +375,13 @@ function toggle_test_notification_options(hide_options: boolean) {
         }
 
         if (hide_options) {
-            utils.add_class(service_choice_tr, "hidden");
-            utils.add_class(service_states_tr, "hidden");
-            utils.remove_class(host_states_tr, "hidden");
+            add_class(service_choice_tr, "hidden");
+            add_class(service_states_tr, "hidden");
+            remove_class(host_states_tr, "hidden");
         } else {
-            utils.remove_class(service_choice_tr, "hidden");
-            utils.remove_class(service_states_tr, "hidden");
-            utils.add_class(host_states_tr, "hidden");
+            remove_class(service_choice_tr, "hidden");
+            remove_class(service_states_tr, "hidden");
+            add_class(host_states_tr, "hidden");
         }
     }
 }

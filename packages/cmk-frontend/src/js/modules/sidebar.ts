@@ -6,10 +6,22 @@
 
 import Swal from "sweetalert2";
 
-import * as ajax from "./ajax";
-import * as quicksearch from "./quicksearch";
+import {call_ajax} from "./ajax";
+import {close_popup} from "./quicksearch";
 import type {CMKAjaxReponse} from "./types";
-import * as utils from "./utils";
+import {
+    add_class,
+    add_simplebar_scrollbar,
+    change_class,
+    execute_javascript_by_object,
+    get_button,
+    has_class,
+    is_window_active,
+    prevent_default_events,
+    reload_whole_page,
+    remove_class,
+    update_contents,
+} from "./utils";
 
 let g_content_loc: null | string = null;
 let g_scrollbar: SimpleBar | null | undefined = null;
@@ -34,7 +46,7 @@ export function initialize_sidebar(
 
     execute_sidebar_scheduler();
 
-    g_scrollbar = utils.add_simplebar_scrollbar("side_content");
+    g_scrollbar = add_simplebar_scrollbar("side_content");
     g_scrollbar?.getScrollElement().addEventListener(
         "scroll",
         function () {
@@ -76,8 +88,7 @@ export function register_edge_listeners(obj: Window | null) {
 }
 
 function on_mouse_leave() {
-    if (typeof quicksearch.close_popup != "undefined")
-        quicksearch.close_popup();
+    if (typeof close_popup != "undefined") close_popup();
     snapinTerminateDrag();
     return false;
 }
@@ -93,7 +104,7 @@ let g_snapin_scroll_top = 0;
 
 export function snapin_start_drag(event: MouseEvent) {
     const target = event.target;
-    const button = utils.get_button(event);
+    const button = get_button(event);
 
     // Skip calls when already dragging or other button than left mouse
     if (
@@ -115,7 +126,7 @@ export function snapin_start_drag(event: MouseEvent) {
     g_snapin_scroll_top = document.getElementById("side_content")!.scrollTop;
 
     // Disable the default events for all the different browsers
-    return utils.prevent_default_events(event);
+    return prevent_default_events(event);
 }
 
 function snapinDrag(event: MouseEvent) {
@@ -125,7 +136,7 @@ function snapinDrag(event: MouseEvent) {
     // It can move e.g. if the scroll wheel is wheeled during dragging...
 
     // Drag the snapin
-    utils.add_class(g_snapin_dragging, "dragging");
+    add_class(g_snapin_dragging, "dragging");
     let newTop = event.clientY - g_snapin_offset[0] - g_snapin_scroll_top;
     newTop += document.getElementById("side_content")!.scrollTop;
     g_snapin_dragging.style.top = newTop + "px";
@@ -164,7 +175,7 @@ function snapinDrop(event: MouseEvent, targetpos: HTMLElement): boolean | void {
     if (g_snapin_dragging === false) return true;
 
     // Reset properties
-    utils.remove_class(g_snapin_dragging, "dragging");
+    remove_class(g_snapin_dragging, "dragging");
     g_snapin_dragging.style.top = "";
     g_snapin_dragging.style.left = "";
 
@@ -174,7 +185,7 @@ function snapinDrop(event: MouseEvent, targetpos: HTMLElement): boolean | void {
         g_snapin_start_pos[0] == event.clientY &&
         g_snapin_start_pos[1] == event.clientX
     ) {
-        return utils.prevent_default_events(event);
+        return prevent_default_events(event);
     }
 
     const par = g_snapin_dragging.parentNode;
@@ -187,14 +198,14 @@ function snapinDrop(event: MouseEvent, targetpos: HTMLElement): boolean | void {
     let before = "";
     if (targetpos != null)
         before = "&before=" + targetpos.id.replace("snapin_container_", "");
-    ajax.call_ajax("sidebar_move_snapin.py?name=" + thisId + before);
+    call_ajax("sidebar_move_snapin.py?name=" + thisId + before);
 }
 
 function snapinTerminateDrag(): true | void {
     if (g_snapin_dragging == false) return true;
     removeSnapinDragIndicator();
     // Reset properties
-    utils.remove_class(g_snapin_dragging, "dragging");
+    remove_class(g_snapin_dragging, "dragging");
     g_snapin_dragging.style.top = "";
     g_snapin_dragging.style.left = "";
     g_snapin_dragging = false;
@@ -363,26 +374,26 @@ export function scroll_window(speed: number) {
 
 export function toggle_sidebar() {
     const sidebar = document.getElementById("check_mk_sidebar");
-    if (utils.has_class(sidebar, "folded")) unfold_sidebar();
+    if (has_class(sidebar, "folded")) unfold_sidebar();
     else fold_sidebar();
 }
 
 export function fold_sidebar() {
     const sidebar = document.getElementById("check_mk_sidebar");
-    utils.add_class(sidebar, "folded");
+    add_class(sidebar, "folded");
     const button = document.getElementById("side_fold");
-    utils.add_class(button, "folded");
+    add_class(button, "folded");
 
-    ajax.call_ajax("sidebar_fold.py?fold=yes", {method: "POST"});
+    call_ajax("sidebar_fold.py?fold=yes", {method: "POST"});
 }
 
 function unfold_sidebar() {
     const sidebar = document.getElementById("check_mk_sidebar");
-    utils.remove_class(sidebar, "folded");
+    remove_class(sidebar, "folded");
     const button = document.getElementById("side_fold");
-    utils.remove_class(button, "folded");
+    remove_class(button, "folded");
 
-    ajax.call_ajax("sidebar_fold.py?fold=no", {method: "POST"});
+    call_ajax("sidebar_fold.py?fold=no", {method: "POST"});
 }
 
 //
@@ -401,7 +412,7 @@ let sidebar_restart_time: number | null = null;
 let sidebar_update_interval: number | null = null;
 
 export function add_snapin(name: string) {
-    ajax.call_ajax("sidebar_ajax_add_snapin.py?name=" + name, {
+    call_ajax("sidebar_ajax_add_snapin.py?name=" + name, {
         method: "POST",
         response_handler: function (_data: any, response: string) {
             const data = JSON.parse(response);
@@ -445,7 +456,7 @@ export function add_snapin(name: string) {
                     // The object specific JS must be called after the object was inserted.
                     // Otherwise JS code that works on DOM objects (e.g. the quicksearch snapin
                     // registry) cannot find these objects.
-                    utils.execute_javascript_by_object(tmp);
+                    execute_javascript_by_object(tmp);
                 }
             }
 
@@ -469,7 +480,7 @@ export function remove_sidebar_snapin(oLink: HTMLButtonElement, url: string) {
         .parentNode as HTMLElement;
     const id = container.id.replace("snapin_container_", "");
 
-    ajax.call_ajax(url, {
+    call_ajax(url, {
         handler_data: "snapin_" + id,
         response_handler: function (id: string) {
             remove_snapin(id);
@@ -540,32 +551,32 @@ export function toggle_sidebar_snapin(
     const closed = oContent!.style.display == "none";
     if (closed) {
         oContent!.style.display = "block";
-        utils.change_class(oHead!, "closed", "open");
-        utils.change_class(oImg!, "closed", "open");
+        change_class(oHead!, "closed", "open");
+        change_class(oImg!, "closed", "open");
     } else {
         oContent!.style.display = "none";
-        utils.change_class(oHead!, "open", "closed");
-        utils.change_class(oImg!, "open", "closed");
+        change_class(oHead!, "open", "closed");
+        change_class(oImg!, "open", "closed");
     }
     /* make this persistent -> save */
-    ajax.call_ajax(url + (closed ? "open" : "closed"), {method: "POST"});
+    call_ajax(url + (closed ? "open" : "closed"), {method: "POST"});
 }
 
 // TODO this is managed code, should be moved to separate package
 export function switch_customer(customer_id: string, switch_state: string) {
-    ajax.call_ajax(
+    call_ajax(
         "switch_customer.py?_customer_switch=" +
             customer_id +
             ":" +
             switch_state,
-        {response_handler: utils.reload_whole_page, handler_data: null}
+        {response_handler: reload_whole_page, handler_data: null}
     );
 }
 
 export function switch_site(url: string) {
-    ajax.call_ajax(url, {
+    call_ajax(url, {
         method: "POST",
-        response_handler: utils.reload_whole_page,
+        response_handler: reload_whole_page,
         handler_data: null,
     });
 }
@@ -578,11 +589,11 @@ function bulk_update_contents(ids: string[], codes: string) {
             // an empty code here when nagios has not been restarted
             // since sidebar rendering or last update, skip it
             if (codes[i] !== "") {
-                utils.update_contents(ids[i], codes[i]);
+                update_contents(ids[i], codes[i]);
                 sidebar_restart_time = Math.floor(new Date().getTime() / 1000);
             }
         } else {
-            utils.update_contents(ids[i], codes[i]);
+            update_contents(ids[i], codes[i]);
         }
     }
 }
@@ -594,7 +605,7 @@ let g_sidebar_full_reload = false;
 export function refresh_single_snapin(name: string) {
     const url = "sidebar_snapin.py?names=" + name;
     const ids = ["snapin_" + name];
-    ajax.call_ajax(url, {
+    call_ajax(url, {
         response_handler: bulk_update_contents,
         handler_data: ids,
     });
@@ -618,7 +629,7 @@ export function execute_sidebar_scheduler() {
 
     // Stop reload of the snapins in case the browser window / tab is not visible
     // for the user. Retry after short time.
-    if (!utils.is_window_active()) {
+    if (!is_window_active()) {
         g_sidebar_scheduler_timer = window.setTimeout(function () {
             execute_sidebar_scheduler();
         }, 250);
@@ -637,8 +648,8 @@ export function execute_sidebar_scheduler() {
             url = refresh_snapins[i][1];
 
             if (g_seconds_to_update && g_seconds_to_update <= 0) {
-                ajax.call_ajax(url, {
-                    response_handler: utils.update_contents,
+                call_ajax(url, {
+                    response_handler: update_contents,
                     handler_data: "snapin_" + name,
                 });
             }
@@ -671,7 +682,7 @@ export function execute_sidebar_scheduler() {
             ids.push("snapin_" + to_be_updated[i]);
         }
 
-        ajax.call_ajax(url, {
+        call_ajax(url, {
             response_handler: bulk_update_contents,
             handler_data: ids,
         });
@@ -867,7 +878,7 @@ export function wato_tree_topic_changed(topic_field: HTMLSelectElement) {
     }
 
     // Then send the info to python code via ajax call for persistance
-    ajax.call_ajax("ajax_set_foldertree.py", {
+    call_ajax("ajax_set_foldertree.py", {
         method: "POST",
         post_data: "topic=" + encodeURIComponent(topic) + "&target=",
     });
@@ -878,7 +889,7 @@ export function wato_tree_target_changed(target_field: HTMLSelectElement) {
     const target = target_field.value;
 
     // Send the info to python code via ajax call for persistance
-    ajax.call_ajax("ajax_set_foldertree.py", {
+    call_ajax("ajax_set_foldertree.py", {
         method: "POST",
         post_data:
             "topic=" +
@@ -897,7 +908,7 @@ export function set_snapin_site(
     ident: string,
     select_field: HTMLSelectElement
 ) {
-    ajax.call_ajax(
+    call_ajax(
         "sidebar_ajax_set_snapin_site.py?ident=" +
             encodeURIComponent(ident) +
             "&site=" +
@@ -911,7 +922,7 @@ export function set_snapin_site(
             },
         }
     );
-    return utils.prevent_default_events(event);
+    return prevent_default_events(event);
 }
 
 /************************************************
@@ -923,7 +934,7 @@ export function fetch_nagvis_snapin_contents() {
 
     // Stop reload of the snapin content in case the browser window / tab is
     // not visible for the user. Retry after short time.
-    if (!utils.is_window_active()) {
+    if (!is_window_active()) {
         setTimeout(function () {
             fetch_nagvis_snapin_contents();
         }, 250);
@@ -934,7 +945,7 @@ export function fetch_nagvis_snapin_contents() {
     // be done in the user context.
     const nagvis_url =
         "../nagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps";
-    ajax.call_ajax(nagvis_url, {
+    call_ajax(nagvis_url, {
         add_ajax_id: false,
         response_handler: function (
             _unused_handler_data: any,
@@ -942,7 +953,7 @@ export function fetch_nagvis_snapin_contents() {
         ) {
             // Then hand over the data to the python code which is responsible
             // to render the data.
-            ajax.call_ajax("ajax_nagvis_maps_snapin.py", {
+            call_ajax("ajax_nagvis_maps_snapin.py", {
                 method: "POST",
                 add_ajax_id: false,
                 post_data: "request=" + encodeURIComponent(ajax_response),
@@ -950,7 +961,7 @@ export function fetch_nagvis_snapin_contents() {
                     _unused_handler_data: any,
                     snapin_content_response: string
                 ) {
-                    utils.update_contents(
+                    update_contents(
                         "snapin_nagvis_maps",
                         snapin_content_response
                     );
@@ -965,7 +976,7 @@ export function fetch_nagvis_snapin_contents() {
             const msg = document.createElement("div");
             msg.classList.add("message", "error");
             msg.innerHTML = "Failed to update NagVis maps: " + status_code;
-            utils.update_contents("snapin_nagvis_maps", msg.outerHTML);
+            update_contents("snapin_nagvis_maps", msg.outerHTML);
 
             setTimeout(function () {
                 fetch_nagvis_snapin_contents();
@@ -982,9 +993,9 @@ export function fetch_nagvis_snapin_contents() {
 export function add_bookmark() {
     const url = parent.frames[0].location;
     const title = parent.frames[0].document.title;
-    ajax.call_ajax("add_bookmark.py", {
+    call_ajax("add_bookmark.py", {
         add_ajax_id: false,
-        response_handler: utils.update_contents,
+        response_handler: update_contents,
         handler_data: "snapin_bookmarks",
         method: "POST",
         post_data:
@@ -1023,7 +1034,7 @@ export function speedometer_show_speed(
         "&program_start=" +
         program_start;
 
-    ajax.call_ajax(url, {
+    call_ajax(url, {
         response_handler: function (
             handler_data: Speedometer,
             response_body: string
@@ -1221,7 +1232,7 @@ function remove_mega_menu_hints() {
 
 function update_messages() {
     // retrieve new messages
-    ajax.call_ajax("ajax_sidebar_get_messages.py", {
+    call_ajax("ajax_sidebar_get_messages.py", {
         response_handler: handle_update_messages,
     });
 }
@@ -1246,7 +1257,7 @@ function mark_message_read(
     msg_text: string,
     msg_count: number
 ) {
-    ajax.call_ajax("sidebar_message_read.py?id=" + msg_id);
+    call_ajax("sidebar_message_read.py?id=" + msg_id);
 
     // Update the button state
     update_message_trigger(msg_text, msg_count);
@@ -1270,7 +1281,7 @@ function handle_update_unack_incomp_werks(_data: any, response_text: string) {
 
 function update_unack_incomp_werks() {
     // retrieve number of unacknowledged incompatible werks
-    ajax.call_ajax("ajax_sidebar_get_unack_incomp_werks.py", {
+    call_ajax("ajax_sidebar_get_unack_incomp_werks.py", {
         response_handler: handle_update_unack_incomp_werks,
     });
 }
@@ -1324,12 +1335,12 @@ function create_initial_ids(menu: string, what: string, start_url: string) {
 // for quick access options in user menu
 
 export function toggle_user_attribute(mode: string) {
-    ajax.call_ajax(mode, {
+    call_ajax(mode, {
         method: "POST",
         response_handler: function (_handler_data: any, ajax_response: string) {
             const data = JSON.parse(ajax_response);
             if (data.result_code == 0) {
-                utils.reload_whole_page();
+                reload_whole_page();
             }
         },
     });

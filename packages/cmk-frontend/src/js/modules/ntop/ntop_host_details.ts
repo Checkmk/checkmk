@@ -6,20 +6,22 @@
 
 /*eslint no-undef: "off"*/
 import crossfilter from "crossfilter2";
+/* eslint-disable import/no-namespace -- External packages with namespace */
 import * as d3 from "d3";
 import * as dc from "dc";
 
+/* eslint-enable import/no-namespace */
 import {DCTableFigure} from "@/modules/figures/cmk_dc_table";
 import type {FigureBase} from "@/modules/figures/cmk_figures";
 import {figure_registry} from "@/modules/figures/cmk_figures";
 import {TableFigure} from "@/modules/figures/cmk_table";
-import * as cmk_tabs from "@/modules/figures/cmk_tabs";
+import {Tab, TabsBar} from "@/modules/figures/cmk_tabs";
 import type {FigureData} from "@/modules/figures/figure_types";
 import {MultiDataFetcher} from "@/modules/figures/multi_data_fetcher";
 
 import type {ABCAlertsTab, Alert} from "./ntop_alerts";
-import * as ntop_alerts from "./ntop_alerts";
-import * as ntop_flows from "./ntop_flows";
+import {EngagedAlertsTab, FlowAlertsTab, PastAlertsTab} from "./ntop_alerts";
+import {FlowsDashlet} from "./ntop_flows";
 import type {
     ApplicationTabData,
     HostTabData,
@@ -29,10 +31,14 @@ import type {
     TopPeerProtocol,
     TrafficTabData,
 } from "./ntop_types";
-import * as ntop_utils from "./ntop_utils";
-import {add_classes_to_trs, add_columns_classes_to_nodes} from "./ntop_utils";
+import {
+    add_classes_to_trs,
+    add_columns_classes_to_nodes,
+    bytes_to_volume,
+    ifid_dep,
+} from "./ntop_utils";
 
-function _add_item_link(tab_instance: cmk_tabs.Tab) {
+function _add_item_link(tab_instance: Tab) {
     // Create link to ntop and hide it until we have a valid link from the backend
     tab_instance._link_item = tab_instance._tab_selection
         .append("div")
@@ -44,17 +50,17 @@ function _add_item_link(tab_instance: cmk_tabs.Tab) {
     tab_instance._link_item.text("View data in ntopng");
 }
 
-function update_item_link(tab_instance: cmk_tabs.Tab, link: string) {
+function update_item_link(tab_instance: Tab, link: string) {
     tab_instance._link_item.style("display", null);
     tab_instance._link_item.attr("href", link);
 }
 
-export class HostTabs extends cmk_tabs.TabsBar {
+export class HostTabs extends TabsBar {
     current_ntophost!: string;
 
     override _get_tab_entries(): (
         | (new (tabs_bar: HostTabs) => NtopTab)
-        | (new (tabs_bar: cmk_tabs.TabsBar) => cmk_tabs.Tab)
+        | (new (tabs_bar: TabsBar) => Tab)
     )[] {
         return [
             HostTab,
@@ -71,14 +77,14 @@ export class HostTabs extends cmk_tabs.TabsBar {
     }
 
     override initialize(tab: string, ifid: string, vlanid: string) {
-        cmk_tabs.TabsBar.prototype.initialize.call(this);
+        TabsBar.prototype.initialize.call(this);
         ["engaged_alerts_tab", "past_alerts_tab", "flow_alerts_tab"].forEach(
             tab_id =>
                 ((
                     this.get_tab_by_id(tab_id) as ABCAlertsTab
                 )._alerts_page.current_ntophost = this.current_ntophost)
         );
-        d3.selectAll("." + ntop_utils.ifid_dep)
+        d3.selectAll("." + ifid_dep)
             .data()
             // @ts-ignore
             .forEach(o => o.set_ids(ifid, vlanid));
@@ -98,7 +104,7 @@ export class HostTabs extends cmk_tabs.TabsBar {
     }
 }
 
-abstract class NtopTab extends cmk_tabs.Tab<HostTabs> {
+abstract class NtopTab extends Tab<HostTabs> {
     _multi_data_fetcher: MultiDataFetcher;
     _figures: Record<string, FigureBase<FigureData>>;
     _dc_figures: Record<string, any>;
@@ -111,10 +117,7 @@ abstract class NtopTab extends cmk_tabs.Tab<HostTabs> {
         this._multi_data_fetcher = new MultiDataFetcher();
         this._figures = {}; // figures from cmk
         this._dc_figures = {}; // figures from dc_library
-        this._tab_selection.classed(
-            "ntop ntop_host " + ntop_utils.ifid_dep,
-            true
-        );
+        this._tab_selection.classed("ntop ntop_host " + ifid_dep, true);
         //@ts-ignore
         this._ifid = tabs_bar.current_ifid;
         _add_item_link(this);
@@ -461,14 +464,14 @@ class PeersTab extends NtopTab {
             .group(this._traffic_per_host);
         // Tooltip
         this._host_chart.title(function (d) {
-            return "Host " + d.key + ": " + ntop_utils.bytes_to_volume(d.value);
+            return "Host " + d.key + ": " + bytes_to_volume(d.value);
         });
 
         this._host_chart
             .xAxis()
             .tickFormat(function (v) {
                 if (v < 1024) return v.toFixed(2);
-                else return ntop_utils.bytes_to_volume(v);
+                else return bytes_to_volume(v);
             })
             .ticks(5);
 
@@ -681,7 +684,7 @@ class ApplicationsTab extends NtopTab {
 }
 
 class NtophostFlowsTab extends NtopTab {
-    _flows_dashlet!: ntop_flows.FlowsDashlet;
+    _flows_dashlet!: FlowsDashlet;
 
     tab_id() {
         return "flows_tab";
@@ -694,18 +697,18 @@ class NtophostFlowsTab extends NtopTab {
     override initialize() {
         const div_id = "ntop_host_flows";
         this._tab_selection.append("div").attr("id", div_id);
-        this._flows_dashlet = new ntop_flows.FlowsDashlet("#" + div_id);
+        this._flows_dashlet = new FlowsDashlet("#" + div_id);
         this._flows_dashlet._default_params_dict =
             this._tabs_bar.get_current_ntophost_uri_dict();
         this._flows_dashlet.initialize();
         // The FlowsTab has the FlowsDashlet embedded which must also runs standalone.
         // Therefore the ifid will be injected there and we need to remove the class
         // (derived from NtopTab) here.
-        this._tab_selection.classed(ntop_utils.ifid_dep, false);
+        this._tab_selection.classed(ifid_dep, false);
     }
 }
 
-class NtophostPastAlertsTab extends ntop_alerts.PastAlertsTab {
+class NtophostPastAlertsTab extends PastAlertsTab {
     override tab_id() {
         return "past_alerts_tab";
     }
@@ -715,12 +718,12 @@ class NtophostPastAlertsTab extends ntop_alerts.PastAlertsTab {
     }
 
     override initialize() {
-        ntop_alerts.PastAlertsTab.prototype.initialize.call(this);
+        PastAlertsTab.prototype.initialize.call(this);
         _initialize_alerts_tab(this);
     }
 }
 
-class NtophostEngagedAlertsTab extends ntop_alerts.EngagedAlertsTab {
+class NtophostEngagedAlertsTab extends EngagedAlertsTab {
     override tab_id() {
         return "engaged_alerts_tab";
     }
@@ -729,7 +732,7 @@ class NtophostEngagedAlertsTab extends ntop_alerts.EngagedAlertsTab {
     }
 
     override initialize() {
-        ntop_alerts.EngagedAlertsTab.prototype.initialize.call(this);
+        EngagedAlertsTab.prototype.initialize.call(this);
         _initialize_alerts_tab(this);
         this._alerts_page._filter_entity = entity_val => {
             return this._filter_entity(entity_val, this);
@@ -748,7 +751,7 @@ class NtophostEngagedAlertsTab extends ntop_alerts.EngagedAlertsTab {
     }
 }
 
-class NtophostFlowAlertsTab extends ntop_alerts.FlowAlertsTab {
+class NtophostFlowAlertsTab extends FlowAlertsTab {
     override tab_id() {
         return "flow_alerts_tab";
     }
@@ -758,7 +761,7 @@ class NtophostFlowAlertsTab extends ntop_alerts.FlowAlertsTab {
     }
 
     override initialize() {
-        ntop_alerts.FlowAlertsTab.prototype.initialize.call(this);
+        FlowAlertsTab.prototype.initialize.call(this);
         _initialize_alerts_tab(this);
     }
 }

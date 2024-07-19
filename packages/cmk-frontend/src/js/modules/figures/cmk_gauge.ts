@@ -5,9 +5,10 @@
  */
 
 import type {Dimension} from "crossfilter2";
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
-import * as cmk_figures from "@/modules/figures/cmk_figures";
+import {FigureBase} from "@/modules/figures/cmk_figures";
 import {
     add_scheduler_debugging,
     adjust_domain,
@@ -36,7 +37,7 @@ import type {
 // var d3 = d3; /* eslint-disable-line no-undef */
 // var crossfilter = crossfilter; /* eslint-disable-line no-undef */
 
-export class GaugeFigure extends cmk_figures.FigureBase<
+export class GaugeFigure extends FigureBase<
     SingleMetricData,
     GaugeDashletConfig
 > {
@@ -75,7 +76,7 @@ export class GaugeFigure extends cmk_figures.FigureBase<
             this.margin.top = 10;
         }
 
-        cmk_figures.FigureBase.prototype.resize.call(this);
+        FigureBase.prototype.resize.call(this);
         this.svg!.attr("width", this.figure_size.width).attr(
             "height",
             this.figure_size.height

@@ -5,7 +5,7 @@
  */
 
 import type {TextFigureData} from "@/modules/figures/cmk_figures";
-import * as cmk_figures from "@/modules/figures/cmk_figures";
+import {TextFigure} from "@/modules/figures/cmk_figures";
 import {
     background_status_component,
     getIn,
@@ -34,7 +34,7 @@ interface StateFigureData
     data: StateFigureDataData[];
 }
 
-export class StateFigure extends cmk_figures.TextFigure<StateFigureData> {
+export class StateFigure extends TextFigure<StateFigureData> {
     getEmptyData() {
         return {
             data: [],

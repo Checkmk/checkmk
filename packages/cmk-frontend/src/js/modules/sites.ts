@@ -6,7 +6,7 @@
 
 import $ from "jquery";
 
-import * as ajax from "./ajax";
+import {call_ajax} from "./ajax";
 
 interface AjaxJsonResponse<Result = any> {
     result_code: number;
@@ -20,7 +20,7 @@ interface SiteState {
 }
 
 export function fetch_site_status() {
-    ajax.call_ajax("wato_ajax_fetch_site_status.py", {
+    call_ajax("wato_ajax_fetch_site_status.py", {
         response_handler: function (_handler_data: any, response_json: string) {
             const response: AjaxJsonResponse<Record<string, SiteState>> =
                 JSON.parse(response_json);

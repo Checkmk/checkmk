@@ -5,17 +5,18 @@
  */
 
 import type {Crossfilter, Dimension} from "crossfilter2";
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 import type {DataTableWidget} from "dc";
-import * as dc from "dc";
+import {dataTable} from "dc";
 
-import * as cmk_figures from "@/modules/figures/cmk_figures";
+import {DCFigureBase, FigureBase} from "@/modules/figures/cmk_figures";
 import type {FigureData} from "@/modules/figures/figure_types";
 
 // Basic dc table with pagination
 export class DCTableFigure<
     DCTableFigureData extends FigureData = FigureData
-> extends cmk_figures.DCFigureBase<DCTableFigureData> {
+> extends DCFigureBase<DCTableFigureData> {
     _offset: number;
     _pages: number;
     _dimension: Dimension<any, any> | null;
@@ -46,7 +47,7 @@ export class DCTableFigure<
     }
 
     override initialize(with_debugging?: boolean) {
-        cmk_figures.FigureBase.prototype.initialize.call(this, with_debugging);
+        FigureBase.prototype.initialize.call(this, with_debugging);
         this._setup_paging();
         this._setup_chart();
     }
@@ -56,7 +57,7 @@ export class DCTableFigure<
             this.set_paging_maximum(data.length);
         }
         data = data?.data !== undefined ? data.data : data;
-        cmk_figures.DCFigureBase.prototype.update_data.call(this, data);
+        DCFigureBase.prototype.update_data.call(this, data);
         this._crossfilter.remove(() => true);
         this._crossfilter.add(data);
     }
@@ -124,7 +125,7 @@ export class DCTableFigure<
             .attr("id", "dc_table_figure")
             .classed("table", true);
         // @ts-ignore
-        this._chart = dc.dataTable(table_selection, this._graph_group);
+        this._chart = dataTable(table_selection, this._graph_group);
         this._chart
             .dimension(this._dimension)
             .size(Infinity)

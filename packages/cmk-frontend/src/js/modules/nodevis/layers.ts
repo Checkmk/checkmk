@@ -7,6 +7,7 @@
 import "./node_types";
 import "./link_types";
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
 import type {LayerSelections} from "./layer_utils";
@@ -16,7 +17,7 @@ import {compute_link_id, link_type_class_registry} from "./link_utils";
 import type {AbstractGUINode} from "./node_utils";
 import {node_type_class_registry} from "./node_utils";
 import type {TranslationKey} from "./texts";
-import * as texts from "./texts";
+import {get} from "./texts";
 import type {
     ContextMenuElement,
     Coords,
@@ -318,7 +319,7 @@ export class LayeredNodesLayer extends FixLayer {
         const elements: ContextMenuElement[] = [];
         data.forEach(([ident, is_active]) => {
             elements.push({
-                text: texts.get("show") + " " + texts.get(ident).toLowerCase(),
+                text: get("show") + " " + get(ident).toLowerCase(),
                 on: (_event, d) => {
                     nodes_class_list.toggle("hide_" + d.data);
                 },

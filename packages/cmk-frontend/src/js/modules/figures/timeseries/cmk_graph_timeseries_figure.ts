@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import {max, mean, min, select} from "d3";
 
-import * as cmk_figures from "@/modules/figures/cmk_figures";
+import {figure_registry} from "@/modules/figures/cmk_figures";
 import type {
     ElementSize,
     SubplotDataData,
@@ -67,7 +67,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
             const stack_tag = "stack_" + curve_tag;
             const use_stack =
                 // @ts-ignore
-                curve.type == "area" && d3.max(curve.points, d => d[0]) > 0;
+                curve.type == "area" && max(curve.points, d => d[0]) > 0;
             curve.points.forEach(
                 (
                     point: [TimeSeriesValue, TimeSeriesValue] | TimeSeriesValue,
@@ -128,8 +128,8 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
         });
 
         // Levels
-        const start = d3.min(data, d => d.timestamp);
-        const end = d3.max(data, d => d.timestamp);
+        const start = min(data, d => d.timestamp);
+        const end = max(data, d => d.timestamp);
         graph_data.graph.horizontal_rules.forEach(
             (rule: HorizontalRule, idx: number) => {
                 const rule_tag = "level_" + idx;
@@ -249,7 +249,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
             .append("td")
             .classed("name small", true)
             .each((d, idx, nodes) => {
-                const td = d3.select(nodes[idx]);
+                const td = select(nodes[idx]);
                 td.classed("name", true);
                 td.append("div")
                     .classed("color", true)
@@ -278,7 +278,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
                 d.data.data.length == 0
                     ? "NaN"
                     : // @ts-ignore
-                      d3.mean(d.data.data, d => d.value).toFixed(2)
+                      mean(d.data.data, d => d.value).toFixed(2)
             );
         rows.selectAll<HTMLTableCellElement, unknown>("td.last")
             .data<any>(d => [d])
@@ -305,8 +305,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
                     .append("tr")
                     .classed("level scalar", true)
                     .each((_d, idx, nodes) => {
-                        if (idx == 0)
-                            d3.select(nodes[idx]).classed("first", true);
+                        if (idx == 0) select(nodes[idx]).classed("first", true);
                     })
             );
         rows.selectAll<HTMLTableCellElement, SubPlot>("td.name")
@@ -316,7 +315,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
             .append("td")
             .classed("name", true)
             .each((d, idx, nodes) => {
-                const td = d3.select(nodes[idx]);
+                const td = select(nodes[idx]);
                 td.classed("name", true);
                 td.append("div")
                     .classed("color", true)
@@ -394,4 +393,4 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
     }
 }
 
-cmk_figures.figure_registry.register(CmkGraphTimeseriesFigure);
+figure_registry.register(CmkGraphTimeseriesFigure);

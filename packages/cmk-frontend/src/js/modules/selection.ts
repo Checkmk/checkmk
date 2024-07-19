@@ -4,8 +4,16 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import type {FunctionSpec} from "./utils";
+import {
+    add_class,
+    get_row_info,
+    has_row_info,
+    querySelectorAllByClassName,
+    remove_class,
+    update_row_info,
+} from "./utils";
 
 interface SelectionProperties {
     page_id: null | string;
@@ -39,7 +47,7 @@ export function get_selection_id() {
 export function init_rowselect(properties: SelectionProperties) {
     selection_properties = properties;
 
-    const tables = utils.querySelectorAllByClassName("data");
+    const tables = querySelectorAllByClassName("data");
     for (let i = 0; i < tables.length; i++)
         if (tables[i].tagName === "TABLE") table_init_rowselect(tables[i]);
 }
@@ -189,8 +197,8 @@ function find_checkbox(oTd: HTMLElement): null | HTMLInputElement {
 }
 
 function highlight_elem(elem: HTMLElement, on: boolean) {
-    if (on) utils.add_class(elem, "checkbox_hover");
-    else utils.remove_class(elem, "checkbox_hover");
+    if (on) add_class(elem, "checkbox_hover");
+    else remove_class(elem, "checkbox_hover");
 }
 
 function toggle_row(e: Event, elem: HTMLElement) {
@@ -238,9 +246,9 @@ function toggle_row(e: Event, elem: HTMLElement) {
 function set_rowselection(
     action: string,
     rows: string[],
-    post_selection_functions: utils.FunctionSpec[] = []
+    post_selection_functions: FunctionSpec[] = []
 ) {
-    ajax.call_ajax("ajax_set_rowselection.py", {
+    call_ajax("ajax_set_rowselection.py", {
         method: "POST",
         post_data:
             "id=" +
@@ -261,10 +269,10 @@ function set_rowselection(
 
 // Update the header information (how many rows selected)
 function update_row_selection_information() {
-    if (!utils.has_row_info()) return; // Nothing to update
+    if (!has_row_info()) return; // Nothing to update
 
     const count = selection_properties.selected_rows.length;
-    let current_text = utils.get_row_info();
+    let current_text = get_row_info();
 
     // First remove the text added by previous calls to this functions
     if (current_text.indexOf("/") != -1) {
@@ -272,7 +280,7 @@ function update_row_selection_information() {
         current_text = parts[1];
     }
 
-    utils.update_row_info(count + "/" + current_text);
+    update_row_info(count + "/" + current_text);
 }
 
 // Is used to select/deselect all rows in the current view. This can optionally
@@ -414,7 +422,7 @@ export function execute_bulk_action_for_single_host(
             : (elem.closest("td")! as HTMLTableCellElement);
     const checkbox: HTMLInputElement = find_checkbox(td)!;
 
-    const post_selection_fct: utils.FunctionSpec = {
+    const post_selection_fct: FunctionSpec = {
         function: action_fct,
         arguments: action_args,
     };

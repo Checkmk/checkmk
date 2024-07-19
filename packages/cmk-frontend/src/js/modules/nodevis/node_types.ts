@@ -4,10 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import {html} from "d3";
 
 import {AbstractGUINode, node_type_class_registry} from "./node_utils";
-import * as texts from "./texts";
+import {get} from "./texts";
 import type {
     ContextMenuElement,
     d3SelectionG,
@@ -120,7 +120,7 @@ export class TopologyNode extends AbstractGUINode {
                     .attr("x", -8)
                     .attr("y", 0)
                     .append("title")
-                    .text(texts.get("can_grow_here"))
+                    .text(get("can_grow_here"))
             );
 
         // Growth forbidden
@@ -140,7 +140,7 @@ export class TopologyNode extends AbstractGUINode {
                     .attr("x", -28)
                     .attr("y", 0)
                     .append("title")
-                    .text(texts.get("growth_stops_here"))
+                    .text(get("growth_stops_here"))
             );
 
         // Growth continue
@@ -160,7 +160,7 @@ export class TopologyNode extends AbstractGUINode {
                     .attr("x", -28)
                     .attr("y", 0)
                     .append("title")
-                    .text(texts.get("growth_continues_here"))
+                    .text(get("growth_continues_here"))
             );
     }
 
@@ -170,7 +170,7 @@ export class TopologyNode extends AbstractGUINode {
         const view_url =
             "view.py?view_name=topology_hover_host&display_options=I&host=" +
             encodeURIComponent(this.node.data.type_specific.core.hostname);
-        d3.html(view_url, {credentials: "include"}).then(html =>
+        html(view_url, {credentials: "include"}).then(html =>
             this._got_quickinfo(html)
         );
     }
@@ -192,7 +192,7 @@ export class TopologyNode extends AbstractGUINode {
         if (bound_host) {
             // This node can be used within the Hostname filter
             elements.push({
-                text: texts.get("set_root_node"),
+                text: get("set_root_node"),
                 on: () => {
                     const nodevis_node =
                         this._world.viewport.get_node_by_id(node_id);
@@ -208,8 +208,8 @@ export class TopologyNode extends AbstractGUINode {
         const growth_settings = this.node.data.growth_settings;
         elements.push({
             text: growth_settings.growth_root
-                ? texts.get("remove_root_node")
-                : texts.get("add_root_node"),
+                ? get("remove_root_node")
+                : get("add_root_node"),
             on: () => {
                 const nodevis_node =
                     this._world.viewport.get_node_by_id(node_id);
@@ -222,8 +222,8 @@ export class TopologyNode extends AbstractGUINode {
         // Forbid further growth
         elements.push({
             text: growth_settings.growth_forbidden
-                ? texts.get("allow_hops")
-                : texts.get("forbid_hops"),
+                ? get("allow_hops")
+                : get("forbid_hops"),
             on: () => {
                 const nodevis_node =
                     this._world.viewport.get_node_by_id(node_id);
@@ -237,8 +237,8 @@ export class TopologyNode extends AbstractGUINode {
         if (growth_settings.indicator_growth_possible)
             elements.push({
                 text: growth_settings.growth_continue
-                    ? texts.get("stop_continue_hop")
-                    : texts.get("continue_hop"),
+                    ? get("stop_continue_hop")
+                    : get("continue_hop"),
                 on: () => {
                     const nodevis_node =
                         this._world.viewport.get_node_by_id(node_id);
@@ -412,7 +412,7 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
                 "view.py?view_name=bi_map_hover_host&display_options=I&host=" +
                 encodeURIComponent(core_info.hostname);
 
-        d3.html(view_url, {credentials: "include"}).then(html =>
+        html(view_url, {credentials: "include"}).then(html =>
             this._got_quickinfo(html)
         );
     }

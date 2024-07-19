@@ -4,8 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
-import * as d3_flextree from "d3-flextree";
+import {flextree} from "d3-flextree";
 
 import type {OverlayElement} from "./layer_utils";
 import type {
@@ -268,7 +269,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         const sin_x = Math.sin(rad);
 
         // @ts-ignore
-        d3_flextree.flextree().nodeSize(element => {
+        flextree().nodeSize(element => {
             const node = element as NodevisNode;
             const node_style: null | AbstractLayoutStyle = node.data.use_style;
             if (node_style && node != this.style_root_node) {

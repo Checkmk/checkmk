@@ -5,11 +5,13 @@
  */
 
 /* eslint-disable indent */
+
+/* eslint-disable-next-line import/no-namespace -- Disable rule for d3 */
 import * as d3 from "d3";
 import type {DataTableWidget} from "dc";
 import $ from "jquery";
 
-import * as cmk_table from "@/modules/figures/cmk_table";
+import {TableFigure} from "@/modules/figures/cmk_table";
 
 import type {NtopColumn} from "./ntop_flows";
 
@@ -17,7 +19,7 @@ import type {NtopColumn} from "./ntop_flows";
 const NTOPNG_MIN_VISUAL_VALUE = 0.005;
 export const ifid_dep = "ifid_dependent";
 
-export class interface_table extends cmk_table.TableFigure {
+export class interface_table extends TableFigure {
     _host_address!: string;
     _vlanid!: string;
     _ifid!: string;

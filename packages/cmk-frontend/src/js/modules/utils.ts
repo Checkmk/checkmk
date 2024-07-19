@@ -7,8 +7,8 @@
 import SimpleBar from "simplebar";
 import Swal from "sweetalert2";
 
-import * as ajax from "./ajax";
-import * as selection from "./selection";
+import {call_ajax} from "./ajax";
+import {get_selection_id, is_selection_enabled} from "./selection";
 
 export type Nullable<T> = null | T;
 let g_content_scrollbar: SimpleBar | null | undefined = null;
@@ -469,7 +469,7 @@ export function reload_whole_page(url: string | null = null) {
 }
 
 export function delete_user_message(msg_id: string, btn: HTMLButtonElement) {
-    ajax.call_ajax("ajax_delete_user_message.py", {
+    call_ajax("ajax_delete_user_message.py", {
         method: "POST",
         post_data: "id=" + msg_id,
     });
@@ -677,10 +677,9 @@ function do_reload(url: string) {
         if (window.location.href.indexOf("dashboard_dashlet.py") != -1)
             params["_reload"] = "1";
 
-        if (selection.is_selection_enabled())
-            params["selection"] = selection.get_selection_id();
+        if (is_selection_enabled()) params["selection"] = get_selection_id();
 
-        ajax.call_ajax(makeuri(params), {
+        call_ajax(makeuri(params), {
             response_handler: handle_content_reload,
             error_handler: handle_content_reload_error,
             method: "GET",
@@ -781,7 +780,7 @@ export function toggle_more(
         state = "on";
     }
 
-    ajax.call_ajax(
+    call_ajax(
         "tree_openclose.py?tree=more_buttons" +
             "&name=" +
             encodeURIComponent(toggle_id) +

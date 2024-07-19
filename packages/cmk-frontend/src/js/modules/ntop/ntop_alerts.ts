@@ -5,21 +5,30 @@
  */
 
 import crossfilter from "crossfilter2";
+/* eslint-disable import/no-namespace -- External packages */
 import * as d3 from "d3";
 import * as dc from "dc";
+/* eslint-enable import/no-namespace */
 import $ from "jquery";
 
 import {DCTableFigure} from "@/modules/figures/cmk_dc_table";
-import * as cmk_figures from "@/modules/figures/cmk_figures";
-import * as cmk_tabs from "@/modules/figures/cmk_tabs";
+import {FigureBase} from "@/modules/figures/cmk_figures";
+import {Tab, TabsBar} from "@/modules/figures/cmk_tabs";
 import type {FigureData} from "@/modules/figures/figure_types";
-import * as number_format from "@/modules/number_format";
+import {
+    fmt_number_with_precision,
+    SIUnitPrefixes,
+} from "@/modules/number_format";
 
 import type {FlowDashletDataChoice, NtopColumn} from "./ntop_flows";
-import * as ntop_utils from "./ntop_utils";
-import {add_classes_to_trs, add_columns_classes_to_nodes} from "./ntop_utils";
+import {
+    add_classes_to_trs,
+    add_columns_classes_to_nodes,
+    ifid_dep,
+    seconds_to_time,
+} from "./ntop_utils";
 
-export class NtopAlertsTabBar extends cmk_tabs.TabsBar {
+export class NtopAlertsTabBar extends TabsBar {
     constructor(div_selector: string) {
         super(div_selector);
     }
@@ -33,9 +42,9 @@ export class NtopAlertsTabBar extends cmk_tabs.TabsBar {
     // be necessary to create a consistent signature or find another solution
     // @ts-ignore
     initialize(ifid: string) {
-        cmk_tabs.TabsBar.prototype.initialize.call(this);
+        TabsBar.prototype.initialize.call(this);
         this._activate_tab(this.get_tab_by_id("engaged_alerts_tab"));
-        d3.selectAll<any, ABCAlertsPage>("." + ntop_utils.ifid_dep)
+        d3.selectAll<any, ABCAlertsPage>("." + ifid_dep)
             .data()
             .forEach(o => o.set_ids(ifid));
     }
@@ -57,7 +66,7 @@ interface ABCAlertsPageData extends FigureData {
 }
 
 // Base class for all alert tables
-abstract class ABCAlertsPage extends cmk_figures.FigureBase<ABCAlertsPageData> {
+abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     _filter_choices: ABCAlertsFilteredChoices[];
     _crossfilter_time!: crossfilter.Crossfilter<any>;
     _date_dimension!: crossfilter.Dimension<any, any>;
@@ -151,10 +160,7 @@ abstract class ABCAlertsPage extends cmk_figures.FigureBase<ABCAlertsPageData> {
         this._vlanid = null;
         this._fetch_filters = {};
 
-        this._div_selection = this._div_selection.classed(
-            ntop_utils.ifid_dep,
-            true
-        );
+        this._div_selection = this._div_selection.classed(ifid_dep, true);
         this._div_selection.datum(this);
     }
 
@@ -379,11 +385,7 @@ abstract class ABCAlertsPage extends cmk_figures.FigureBase<ABCAlertsPageData> {
             .yAxis()
             .ticks(5)
             .tickFormat(d => {
-                return number_format.fmt_number_with_precision(
-                    d,
-                    number_format.SIUnitPrefixes,
-                    0
-                );
+                return fmt_number_with_precision(d, SIUnitPrefixes, 0);
             });
 
         date_chart.on("filtered", (date_chart, _filter) => {
@@ -529,11 +531,7 @@ abstract class ABCAlertsPage extends cmk_figures.FigureBase<ABCAlertsPageData> {
             .yAxis()
             .ticks(5)
             .tickFormat(d => {
-                return number_format.fmt_number_with_precision(
-                    d,
-                    number_format.SIUnitPrefixes,
-                    0
-                );
+                return fmt_number_with_precision(d, SIUnitPrefixes, 0);
             });
         hour_chart.render();
     }
@@ -604,7 +602,7 @@ abstract class ABCAlertsPage extends cmk_figures.FigureBase<ABCAlertsPageData> {
     }
 
     override update_data(data: ABCAlertsPageData) {
-        cmk_figures.FigureBase.prototype.update_data.call(this, data);
+        FigureBase.prototype.update_data.call(this, data);
         const time: {date: Date; count: number}[] = [];
         data.time_series.forEach(entry => {
             time.push({
@@ -632,10 +630,10 @@ abstract class ABCAlertsPage extends cmk_figures.FigureBase<ABCAlertsPageData> {
 // Base class for all alert tabs
 export abstract class ABCAlertsTab<
     Page extends ABCAlertsPage = ABCAlertsPage
-> extends cmk_tabs.Tab {
+> extends Tab {
     _page_class: null | (new (div_selector: string) => Page);
     _alerts_page!: Page;
-    constructor(tabs_bar: cmk_tabs.TabsBar) {
+    constructor(tabs_bar: TabsBar) {
         super(tabs_bar);
         this._page_class = null;
         this._tab_selection.classed("ntop_alerts", true);
@@ -667,7 +665,7 @@ export abstract class ABCAlertsTab<
 //   |                          |___/       |___/                         |
 //   +--------------------------------------------------------------------+
 export class EngagedAlertsTab extends ABCAlertsTab<EngagedAlertsPage> {
-    constructor(tabs_bar: cmk_tabs.TabsBar) {
+    constructor(tabs_bar: TabsBar) {
         super(tabs_bar);
         this._page_class = EngagedAlertsPage;
     }
@@ -754,7 +752,7 @@ class EngagedAlertsPage extends ABCAlertsPage {
             {
                 label: "Duration",
                 format: (d: Alert) => {
-                    return ntop_utils.seconds_to_time(d.duration);
+                    return seconds_to_time(d.duration);
                 },
                 classes: ["duration", "number"],
             },
@@ -802,7 +800,7 @@ class EngagedAlertsPage extends ABCAlertsPage {
 //   |                                                                    |
 //   +--------------------------------------------------------------------+
 export class PastAlertsTab extends ABCAlertsTab {
-    constructor(tabs_bar: cmk_tabs.TabsBar) {
+    constructor(tabs_bar: TabsBar) {
         super(tabs_bar);
         this._page_class = PastAlertsPage;
     }
@@ -844,7 +842,7 @@ class PastAlertsPage extends ABCAlertsPage {
             {
                 label: "Duration",
                 format: (d: Alert) => {
-                    return ntop_utils.seconds_to_time(d.duration);
+                    return seconds_to_time(d.duration);
                 },
                 classes: ["duration", "number"],
             },
@@ -895,7 +893,7 @@ class PastAlertsPage extends ABCAlertsPage {
 //   +--------------------------------------------------------------------+
 
 export class FlowAlertsTab extends ABCAlertsTab {
-    constructor(tabs_bar: cmk_tabs.TabsBar) {
+    constructor(tabs_bar: TabsBar) {
         super(tabs_bar);
         this._page_class = FlowAlertsPage;
     }

@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import type * as crossfilter from "crossfilter2";
+import type {Dimension} from "crossfilter2";
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
 import {
@@ -42,7 +43,7 @@ import {SubPlotFactory} from "./sub_plot_factory";
 export class SubPlot<PD extends SubPlotPlotDefinition = SubPlotPlotDefinition> {
     definition: PD | null;
     _renderer: TimeseriesFigure | null;
-    _dimension: crossfilter.Dimension<any, any> | null;
+    _dimension: Dimension<any, any> | null;
     transformed_data: TransformedData[];
     stack_values: null | number[];
     main_g: d3.Selection<SVGGElement, unknown, d3.BaseType, unknown> | null;
@@ -93,7 +94,7 @@ export class SubPlot<PD extends SubPlotPlotDefinition = SubPlotPlotDefinition> {
         return 1;
     }
 
-    dimension(dimension: crossfilter.Dimension<any, any>) {
+    dimension(dimension: Dimension<any, any>) {
         if (!arguments.length) {
             return this._dimension;
         }

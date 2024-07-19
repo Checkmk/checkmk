@@ -5,7 +5,7 @@
  */
 
 import type {TextFigureData} from "@/modules/figures/cmk_figures";
-import * as cmk_figures from "@/modules/figures/cmk_figures";
+import {TextFigure} from "@/modules/figures/cmk_figures";
 import {
     metric_value_component,
     metric_value_component_options_big_centered_text,
@@ -25,7 +25,7 @@ interface HostStateSummaryData extends TextFigureData<StateSummaryElement> {
     data: StateSummaryElement;
 }
 
-export class HostStateSummary extends cmk_figures.TextFigure<HostStateSummaryData> {
+export class HostStateSummary extends TextFigure<HostStateSummaryData> {
     getEmptyData() {
         return {
             title: "",

@@ -6,19 +6,32 @@
 
 import "select2";
 
-import * as d3 from "d3";
+import {select} from "d3";
 import $ from "jquery";
 import {set} from "lodash";
 import type {QueryOptions} from "select2";
 
-import * as ajax from "./ajax";
+import {call_ajax} from "./ajax";
 //TODO: this causes an error because allowJS is set to false in tsconfig
 // colorpicker should be used as a package instead of copied file
 //@ts-ignore
-import * as colorpicker from "./colorpicker";
-import * as forms from "./forms";
-import * as popup_menu from "./popup_menu";
-import * as utils from "./utils";
+import {ColorPicker} from "./colorpicker";
+import {
+    enable_dynamic_form_elements,
+    enable_select2_dropdowns,
+    format_select2_item,
+} from "./forms";
+import {close_popup} from "./popup_menu";
+import type {Nullable} from "./utils";
+import {
+    add_class,
+    add_simplebar_scrollbar,
+    execute_javascript_by_object,
+    has_class,
+    prevent_default_events,
+    querySelectorID,
+    remove_class,
+} from "./utils";
 
 //#   +--------------------------------------------------------------------+
 //#   | Functions needed by HTML code from ValueSpec (valuespec.py)        |
@@ -301,7 +314,7 @@ function list_of_strings_add_event_handlers(
         list_of_strings_extend(last_input, split_on_paste, split_separators);
 
         // Stop original data actually being pasted
-        return utils.prevent_default_events(event);
+        return prevent_default_events(event);
     };
 
     if (input.tagName == "INPUT") {
@@ -394,7 +407,7 @@ function list_of_strings_add_new_field(
             '"' + new_name + '"'
         );
         // Do not clone placeholder help texts
-        d3.select(new_div).select("input").attr("placeholder", null);
+        select(new_div).select("input").attr("placeholder", null);
         // IE7 does not have quotes in innerHTML, trying to workaround this here.
         new_div.innerHTML = new_div.innerHTML.replace(
             "=" + old_name + " ",
@@ -412,7 +425,7 @@ function list_of_strings_add_new_field(
         delete new_select.dataset.select2Id;
         new_div.appendChild(new_select);
     }
-    forms.enable_dynamic_form_elements(new_div);
+    enable_dynamic_form_elements(new_div);
     container.appendChild(new_div);
 
     return new_div.getElementsByTagName(tagtype)[0] as
@@ -479,7 +492,7 @@ function show_cascading_sub_valuespec(
         "request=" +
         encodeURIComponent(JSON.stringify(parameters["request_vars"]));
 
-    ajax.call_ajax(parameters["page_name"] + ".py", {
+    call_ajax(parameters["page_name"] + ".py", {
         method: "POST",
         post_data: post_data,
         response_handler: function (
@@ -499,8 +512,8 @@ function show_cascading_sub_valuespec(
             )!;
             container.innerHTML = response.result.html_code;
 
-            utils.execute_javascript_by_object(container);
-            forms.enable_dynamic_form_elements(container);
+            execute_javascript_by_object(container);
+            enable_dynamic_form_elements(container);
         },
         handler_data: {
             varprefix: varprefix,
@@ -545,8 +558,8 @@ export function listof_add(
     }
 
     container!.appendChild(new_child);
-    utils.execute_javascript_by_object(new_child);
-    forms.enable_dynamic_form_elements(new_child);
+    execute_javascript_by_object(new_child);
+    enable_dynamic_form_elements(new_child);
 
     listof_update_indices(varprefix);
 }
@@ -848,10 +861,10 @@ export function duallist_enlarge(field_suffix: string, varprefix: string) {
     const other_field = document.getElementById(other_id);
     if (!other_field) return;
 
-    utils.remove_class(other_field, "large");
-    utils.add_class(other_field, "small");
-    utils.remove_class(field, "small");
-    utils.add_class(field, "large");
+    remove_class(other_field, "large");
+    add_class(other_field, "small");
+    remove_class(field, "small");
+    add_class(field, "large");
 }
 
 export function duallist_switch(
@@ -971,7 +984,7 @@ export function iconselector_select(
     const img = document.getElementById(varprefix + "_img") as HTMLImageElement;
     img.src = src_img.src;
 
-    popup_menu.close_popup();
+    close_popup();
 }
 
 export function iconselector_toggle(varprefix: string, category_name: string) {
@@ -980,13 +993,13 @@ export function iconselector_toggle(varprefix: string, category_name: string) {
     let i;
     for (i = 0; i < nav_links.length; i++) {
         if (nav_links[i].id == varprefix + "_" + category_name + "_nav")
-            utils.add_class(
-                nav_links[i].parentNode as utils.Nullable<HTMLElement>,
+            add_class(
+                nav_links[i].parentNode as Nullable<HTMLElement>,
                 "active"
             );
         else
-            utils.remove_class(
-                nav_links[i].parentNode as utils.Nullable<HTMLElement>,
+            remove_class(
+                nav_links[i].parentNode as Nullable<HTMLElement>,
                 "active"
             );
     }
@@ -1004,9 +1017,8 @@ export function iconselector_toggle(varprefix: string, category_name: string) {
 
 export function iconselector_toggle_names(_event: Event, varprefix: string) {
     const icons = document.getElementById(varprefix + "_icons");
-    if (utils.has_class(icons, "show_names"))
-        utils.remove_class(icons, "show_names");
-    else utils.add_class(icons, "show_names");
+    if (has_class(icons, "show_names")) remove_class(icons, "show_names");
+    else add_class(icons, "show_names");
 }
 
 export function listofmultiple_add(
@@ -1021,7 +1033,7 @@ export function listofmultiple_add(
     if (trigger) {
         // trigger given: Special case for ViewFilterList style choice rendering
         ident = trigger.id.replace(varprefix + "_add_", "");
-        utils.add_class(trigger, "disabled");
+        add_class(trigger, "disabled");
     } else {
         const choice = document.getElementById(
             varprefix + "_choice"
@@ -1050,7 +1062,7 @@ export function listofmultiple_add(
 
     const post_data = "request=" + encodeURIComponent(JSON.stringify(request));
 
-    ajax.call_ajax(choice_page_name + ".py", {
+    call_ajax(choice_page_name + ".py", {
         method: "POST",
         post_data: post_data,
         handler_data: {
@@ -1093,8 +1105,8 @@ export function listofmultiple_add(
             }
 
             tbody.insertBefore(new_row, tbody.firstChild);
-            forms.enable_dynamic_form_elements(new_row);
-            utils.execute_javascript_by_object(new_row);
+            enable_dynamic_form_elements(new_row);
+            execute_javascript_by_object(new_row);
 
             // Add it to the list of active elements
             const active = document.getElementById(
@@ -1143,7 +1155,7 @@ export function listofmultiple_del(varprefix: string, ident: string) {
         choice = document.getElementById(
             varprefix + "_add_" + ident
         ) as HTMLSelectElement;
-        utils.remove_class(choice, "disabled");
+        remove_class(choice, "disabled");
     }
 
     // Remove it from the list of active elements
@@ -1227,7 +1239,7 @@ function listofmultiple_disable_selected_options(varprefix: string) {
             choice = document.getElementById(
                 varprefix + "_add_" + active_choices[i]
             );
-            utils.add_class(choice, "disabled");
+            add_class(choice, "disabled");
         }
     }
 }
@@ -1329,8 +1341,8 @@ function select2_vs_autocomplete(
                     allowClear: true,
                     placeholder: placeholder_title,
                     ajax: select2_ajax_vs_autocomplete(elem, autocompleter),
-                    templateResult: forms.format_select2_item,
-                    templateSelection: forms.format_select2_item,
+                    templateResult: format_select2_item,
+                    templateSelection: format_select2_item,
                 })
                 .on("select2:open", () => {
                     if (
@@ -1389,14 +1401,14 @@ export function initialize_autocompleters(
 const vs_color_pickers: Record<string, any> = {};
 
 export function add_color_picker(varprefix: string, value: string) {
-    vs_color_pickers[varprefix] = colorpicker.ColorPicker(
+    vs_color_pickers[varprefix] = ColorPicker(
         document.getElementById(varprefix + "_picker"),
         function (hex: string) {
             update_color_picker(varprefix, hex, false);
         }
     );
 
-    utils.querySelectorID<HTMLInputElement>(varprefix + "_input")!.oninput =
+    querySelectorID<HTMLInputElement>(varprefix + "_input")!.oninput =
         function () {
             //@ts-ignore
             update_color_picker(varprefix, this["value"], true);
@@ -1412,9 +1424,9 @@ function update_color_picker(
 ) {
     if (!/^#[0-9A-F]{6}$/i.test(hex)) return; // skip invalid/unhandled colors
 
-    utils.querySelectorID<HTMLInputElement>(varprefix + "_input")!.value = hex;
-    utils.querySelectorID<HTMLInputElement>(varprefix + "_value")!.value = hex;
-    utils.querySelectorID(varprefix + "_preview")!.style.backgroundColor = hex;
+    querySelectorID<HTMLInputElement>(varprefix + "_input")!.value = hex;
+    querySelectorID<HTMLInputElement>(varprefix + "_value")!.value = hex;
+    querySelectorID(varprefix + "_preview")!.style.backgroundColor = hex;
 
     //@ts-ignore
     if (update_picker) vs_color_pickers[varprefix].setHex(hex);
@@ -1433,7 +1445,7 @@ export function visual_filter_list_reset(
     };
     const post_data = "request=" + encodeURIComponent(JSON.stringify(request));
 
-    ajax.call_ajax(reset_ajax_page + ".py", {
+    call_ajax(reset_ajax_page + ".py", {
         method: "POST",
         post_data: post_data,
         handler_data: {
@@ -1454,9 +1466,9 @@ export function visual_filter_list_reset(
                 )[0] as HTMLElement,
                 filters_html
             );
-            utils.add_simplebar_scrollbar(varprefix + "_popup_filter_list");
+            add_simplebar_scrollbar(varprefix + "_popup_filter_list");
             listofmultiple_disable_selected_options(varprefix);
-            forms.enable_dynamic_form_elements();
+            enable_dynamic_form_elements();
         },
     });
 
@@ -1491,7 +1503,7 @@ export function update_unit_selector(selectbox: string, metric_prefix: string) {
     ) => {
         const post_data =
             "request=" + encodeURIComponent(JSON.stringify({metric: metric}));
-        ajax.call_ajax("ajax_vs_unit_resolver.py", {
+        call_ajax("ajax_vs_unit_resolver.py", {
             method: "POST",
             post_data: post_data,
             response_handler: (_indata: any, response: string) => {
@@ -1525,7 +1537,7 @@ export function fetch_ca_from_server(varprefix: string) {
         `input[name='${varprefix + "_port"}']`
     )!.value;
 
-    ajax.call_ajax("ajax_fetch_ca.py", {
+    call_ajax("ajax_fetch_ca.py", {
         method: "POST",
         post_data:
             "address=" +
@@ -1583,7 +1595,7 @@ export function single_label_on_change(select_elem: HTMLSelectElement) {
         new_row.id.replace("vs_entry", "vs") + "_bool"
     ) as HTMLSelectElement;
     new_bool_elem.value = last_bool_elem.value;
-    forms.enable_select2_dropdowns(new_row as HTMLElement);
+    enable_select2_dropdowns(new_row as HTMLElement);
 
     // Automatically open (and focus) the newly added select2 element
     const new_vs_select_id = new_bool_elem.id.replace(/_bool$/, "_vs");
@@ -1599,9 +1611,9 @@ export function toggle_label_row_opacity(
     if (tbody.lastChild !== tr) return;
 
     if (is_active) {
-        utils.add_class(tr, "active");
+        add_class(tr, "active");
     } else {
-        utils.remove_class(tr, "active");
+        remove_class(tr, "active");
     }
 }
 
@@ -1674,7 +1686,7 @@ export function label_group_delete(
     }
 
     listof_delete(varprefix, index);
-    forms.enable_dynamic_form_elements(tbody);
+    enable_dynamic_form_elements(tbody);
 }
 
 export function init_on_change_validation(
@@ -1692,7 +1704,7 @@ export function init_on_change_validation(
         };
         const post_data =
             "request=" + encodeURIComponent(JSON.stringify(request));
-        ajax.call_ajax("ajax_validate_filter.py", {
+        call_ajax("ajax_validate_filter.py", {
             method: "POST",
             post_data: post_data,
             handler_data: {select: select},

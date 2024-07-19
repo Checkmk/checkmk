@@ -4,10 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
 import type {ForceOptions, SimulationForce} from "./force_utils";
-import * as texts from "./texts";
+import {get} from "./texts";
 import type {
     ContextMenuElement,
     CoreInfo,
@@ -279,7 +280,7 @@ export class AbstractGUINode implements TypeWithName {
 
         const [hostname, service] = this._get_hostname_and_service();
         elements.push({
-            text: texts.get("host_details"),
+            text: get("host_details"),
             href:
                 "view.py?host=" +
                 encodeURIComponent(hostname) +
@@ -288,7 +289,7 @@ export class AbstractGUINode implements TypeWithName {
         });
         if (service && service != "") {
             elements.push({
-                text: texts.get("service_details"),
+                text: get("service_details"),
                 href:
                     "view.py?host=" +
                     encodeURIComponent(hostname) +
@@ -511,7 +512,7 @@ export class AbstractGUINode implements TypeWithName {
             .attr("xlink:href", d => d)
             .attr("width", 24)
             .attr("height", 24);
-        icon_object.append("title").text(texts.get("icon_in_monitoring"));
+        icon_object.append("title").text(get("icon_in_monitoring"));
     }
 
     _get_icon_url(): string | null {

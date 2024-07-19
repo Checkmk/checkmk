@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import {select} from "d3";
 
 import type {metricsEntry} from "./tracking_database";
 import {metricsTable, onError, openDatabase} from "./tracking_database";
@@ -78,7 +78,7 @@ function timeSince(timestamp: number): string {
 }
 
 export async function render_stats_table(dom_element: HTMLElement) {
-    const node = d3.select(dom_element);
+    const node = select(dom_element);
     const columnsNames = [
         "metric",
         "min",

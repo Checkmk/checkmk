@@ -4,12 +4,18 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
-import * as ajax from "./ajax";
+import {call_ajax} from "./ajax";
 import type {CMKAjaxReponse} from "./types";
-import * as utils from "./utils";
-import * as valuespecs from "./valuespecs";
+import {
+    change_class,
+    execute_javascript_by_object,
+    has_class,
+    toggle_folding,
+} from "./utils";
+import {list_of_strings_extend} from "./valuespecs";
 
 export function toggle_subtree(oImg: HTMLElement, lazy: boolean) {
     if (oImg.tagName == "SPAN") {
@@ -22,26 +28,26 @@ export function toggle_subtree(oImg: HTMLElement, lazy: boolean) {
     let url = "bi_save_treestate.py?path=" + encodeURIComponent(oSubtree.id);
     let do_open;
 
-    if (utils.has_class(oImg, "closed")) {
-        utils.change_class(oSubtree, "closed", "open");
-        utils.toggle_folding(oImg, true);
+    if (has_class(oImg, "closed")) {
+        change_class(oSubtree, "closed", "open");
+        toggle_folding(oImg, true);
 
         url += "&state=open";
         do_open = true;
     } else {
-        utils.change_class(oSubtree, "open", "closed");
-        utils.toggle_folding(oImg, false);
+        change_class(oSubtree, "open", "closed");
+        toggle_folding(oImg, false);
 
         url += "&state=closed";
         do_open = false;
     }
 
     if (lazy && do_open)
-        ajax.call_ajax(url, {
+        call_ajax(url, {
             response_handler: bi_update_tree,
             handler_data: oImg,
         });
-    else ajax.call_ajax(url);
+    else call_ajax(url);
 }
 
 function bi_update_tree(container: HTMLElement) {
@@ -51,13 +57,10 @@ function bi_update_tree(container: HTMLElement) {
 
     // First find enclosding <div class=bi_tree_container>
     let bi_container: null | HTMLElement = container;
-    while (
-        bi_container &&
-        !utils.has_class(bi_container, "bi_tree_container")
-    ) {
+    while (bi_container && !has_class(bi_container, "bi_tree_container")) {
         bi_container = bi_container.parentNode as HTMLElement | null;
     }
-    ajax.call_ajax("bi_render_tree.py", {
+    call_ajax("bi_render_tree.py", {
         method: "POST",
         post_data: bi_container!.id,
         response_handler: bi_update_tree_response,
@@ -67,32 +70,32 @@ function bi_update_tree(container: HTMLElement) {
 
 function bi_update_tree_response(bi_container: HTMLElement, code: string) {
     bi_container.innerHTML = code;
-    utils.execute_javascript_by_object(bi_container);
+    execute_javascript_by_object(bi_container);
 }
 
 export function toggle_box(container: HTMLElement, lazy: boolean) {
     let url = "bi_save_treestate.py?path=" + encodeURIComponent(container.id);
     let do_open;
 
-    if (utils.has_class(container, "open")) {
+    if (has_class(container, "open")) {
         if (lazy) return; // do not close in lazy mode
-        utils.change_class(container, "open", "closed");
+        change_class(container, "open", "closed");
         url += "&state=closed";
         do_open = false;
     } else {
-        utils.change_class(container, "closed", "open");
+        change_class(container, "closed", "open");
         url += "&state=open";
         do_open = true;
     }
 
     // TODO: Make asynchronous
     if (lazy && do_open)
-        ajax.call_ajax(url, {
+        call_ajax(url, {
             response_handler: bi_update_tree,
             handler_data: container,
         });
     else {
-        ajax.call_ajax(url);
+        call_ajax(url);
         // find child nodes that belong to this node and
         // control visibility of those. Note: the BI child nodes
         // are *no* child nodes in HTML but siblings!
@@ -146,7 +149,7 @@ export function toggle_assumption(
     }
     url += "&state=" + current;
     img.src = path_parts.join("/") + "/icon_assume_" + current + ".png";
-    ajax.call_ajax(url);
+    call_ajax(url);
 }
 
 export function update_argument_hints() {
@@ -174,11 +177,7 @@ export function update_argument_hints() {
             .selectAll<HTMLInputElement, unknown>("input.text")
             .nodes();
         while (required_inputs >= newNodes.length) {
-            valuespecs.list_of_strings_extend(
-                newNodes[newNodes.length - 1],
-                false,
-                ""
-            );
+            list_of_strings_extend(newNodes[newNodes.length - 1], false, "");
             newNodes = rule_body
                 .selectAll<HTMLDivElement, unknown>("div.listofstrings")
                 .selectAll<HTMLInputElement, unknown>("input.text")

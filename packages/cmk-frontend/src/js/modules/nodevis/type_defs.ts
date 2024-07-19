@@ -5,6 +5,7 @@
  */
 
 import type {HierarchyNode} from "d3";
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
 import type {DatasourceManager} from "./datasources";

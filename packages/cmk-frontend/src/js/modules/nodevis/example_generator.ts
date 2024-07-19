@@ -8,7 +8,7 @@
 // It uses way too much fake objects to render some simple styles
 // Fortunately it has no effect on the actual NodeVisualization and is just used within the BI configuration GUI
 
-import * as d3 from "d3";
+import {hierarchy as d3_hierarchy, select} from "d3";
 
 import {LayoutManagerLayer} from "./layout";
 import {
@@ -68,7 +68,7 @@ export class LayoutStyleExampleGenerator {
 
     constructor(varprefix: string) {
         this._varprefix = varprefix;
-        this._example_generator_div = d3.select("#" + this._varprefix);
+        this._example_generator_div = select("#" + this._varprefix);
         const options = this._example_generator_div
             .append("div")
             .style("float", "left");
@@ -473,7 +473,7 @@ export class LayoutStyleExampleGenerator {
 
         _add_hierarchy_children(hierarchy_raw, cancel_delta, 1);
 
-        const hierarchy = d3.hierarchy<NodeData>(hierarchy_raw) as NodevisNode;
+        const hierarchy = d3_hierarchy<NodeData>(hierarchy_raw) as NodevisNode;
         hierarchy.descendants().forEach(node => {
             node.x = 50;
             node.y = 50;

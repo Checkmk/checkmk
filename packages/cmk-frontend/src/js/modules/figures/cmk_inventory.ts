@@ -5,7 +5,7 @@
  */
 
 import type {TextFigureData} from "@/modules/figures/cmk_figures";
-import * as cmk_figures from "@/modules/figures/cmk_figures";
+import {TextFigure} from "@/modules/figures/cmk_figures";
 import {clamp} from "@/modules/figures/cmk_figures_utils";
 
 interface InventoryFigureDataData {
@@ -23,7 +23,7 @@ interface InventoryFigureData<D = any, P = any> extends TextFigureData<D, P> {
     data: D[];
 }
 
-export class InventoryFigure extends cmk_figures.TextFigure<
+export class InventoryFigure extends TextFigure<
     InventoryFigureData<
         InventoryFigureDataData,
         InventoryFigureDataPlotDefinition

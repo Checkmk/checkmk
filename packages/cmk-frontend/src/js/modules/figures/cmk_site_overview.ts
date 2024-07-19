@@ -4,8 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
-import * as d3Hexbin from "d3-hexbin";
+import {hexbin as d3Hexbin_hexbin} from "d3-hexbin";
 
 import {FigureTooltip} from "@/modules/figures/cmk_figure_tooltip";
 import {FigureBase} from "@/modules/figures/cmk_figures";
@@ -17,7 +18,7 @@ import type {
     IconElement,
     SiteElement,
 } from "@/modules/figures/figure_types";
-import * as utils from "@/modules/utils";
+import {makeuri, makeuri_contextless} from "@/modules/utils";
 
 export interface HostGeometry {
     radius: number;
@@ -361,7 +362,7 @@ export class SiteOverview extends FigureBase<SiteData> {
     }
 
     _compute_host_elements(geometry: HostGeometry, elements: HostElement[]) {
-        const hexbin = d3Hexbin.hexbin();
+        const hexbin = d3Hexbin_hexbin();
         elements.forEach((d, idx) => {
             // Compute coordinates
             let x = ((idx % geometry.num_columns) + 0.5) * geometry.box_width;
@@ -657,7 +658,7 @@ export class SiteOverview extends FigureBase<SiteData> {
             if (element.type == "host_element") {
                 location.href = element.link;
             } else if (element.type != "icon_element") {
-                location.href = utils.makeuri(element.url_add_vars);
+                location.href = makeuri(element.url_add_vars);
             }
         };
 
@@ -686,7 +687,7 @@ export class SiteOverview extends FigureBase<SiteData> {
         }
 
         // Now render all hexagons
-        const hexbin = d3Hexbin.hexbin();
+        const hexbin = d3Hexbin_hexbin();
         hexagon_boxes.each((element, idx, nodes) => {
             const hexagon_box = d3.select(nodes[idx]);
 
@@ -892,10 +893,7 @@ export class SiteOverview extends FigureBase<SiteData> {
         }))(host);
 
         d3.json(
-            utils.makeuri_contextless(
-                post_data,
-                "ajax_host_overview_tooltip.py"
-            ),
+            makeuri_contextless(post_data, "ajax_host_overview_tooltip.py"),
             {
                 credentials: "include",
                 method: "POST",

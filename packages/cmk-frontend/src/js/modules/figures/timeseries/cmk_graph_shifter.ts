@@ -4,9 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
-import * as cmk_figures from "@/modules/figures/cmk_figures";
+import {figure_registry} from "@/modules/figures/cmk_figures";
 import type {ElementSize, FigureData} from "@/modules/figures/figure_types";
 
 import type {Shift} from "../cmk_enterprise_figure_types";
@@ -214,4 +215,4 @@ export class CmkGraphShifter extends CmkGraphTimeseriesFigure {
     }
 }
 
-cmk_figures.figure_registry.register(CmkGraphShifter);
+figure_registry.register(CmkGraphShifter);

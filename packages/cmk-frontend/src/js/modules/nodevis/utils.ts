@@ -4,11 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/* eslint-disable-next-line import/no-namespace -- External package */
 import * as d3 from "d3";
 
 import type {AbstractNodeVisConstructor} from "./layer_utils";
 import type {StyleMatcherConditions} from "./layout_utils";
-import * as texts from "./texts";
+import {get} from "./texts";
 import type {
     BoundingRect,
     Coords,
@@ -317,8 +318,8 @@ export class LiveSearch {
         this._root_node
             .select<HTMLInputElement>("input#_reset")
             .style("display", "none");
-        this._search_button.property("value", texts.get("live_search"));
-        this._search_button.attr("title", texts.get("live_search_help"));
+        this._search_button.property("value", get("live_search"));
+        this._search_button.attr("title", get("live_search_help"));
         this._search_button.style("pointer-events", "hover");
         this._initialize_last_body();
         // @ts-ignore

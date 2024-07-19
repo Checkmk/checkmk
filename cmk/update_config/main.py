@@ -59,7 +59,8 @@ def main(
 
     logger = _setup_logging(arguments)
 
-    ensure_site_is_stopped_callback(logger)
+    if not arguments.site_may_run:
+        ensure_site_is_stopped_callback(logger)
 
     logger.info(
         "%sATTENTION%s\n  Some steps may take a long time depending "
@@ -139,6 +140,11 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
         "--dry-run",
         action="store_true",
         help="Executes `Verifying Checkmk configuration` only.",
+    )
+    p.add_argument(
+        "--site-may-run",
+        action="store_true",
+        help="Execute the command even if the site is running.",
     )
     return p.parse_args(args)
 

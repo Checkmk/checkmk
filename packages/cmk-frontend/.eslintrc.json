@@ -4,10 +4,21 @@
         "browser": true,
         "commonjs": true
     },
-    "extends": ["eslint:recommended", "plugin:compat/recommended", "prettier", "plugin:@typescript-eslint/recommended"],
+    "extends": [
+        "eslint:recommended",
+        "plugin:compat/recommended",
+        "plugin:import/recommended",
+        "prettier",
+        "plugin:@typescript-eslint/recommended"
+    ],
     "parserOptions": {
         "ecmaVersion": 6,
         "sourceType": "module"
+    },
+    "settings": {
+        "import/resolver": {
+            "typescript": {}
+        }
     },
     "plugins": [
         "compat",

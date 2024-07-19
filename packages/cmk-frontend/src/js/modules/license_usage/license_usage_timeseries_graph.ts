@@ -4,8 +4,22 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {ScaleTime, Selection} from "d3";
+import {
+    ascending,
+    axisBottom,
+    axisLeft,
+    curveStepAfter,
+    format,
+    line,
+    max,
+    min,
+    pointer as d3_pointer,
+    scaleLinear,
+    scaleTime,
+    select,
+    timeMonth,
+} from "d3";
 
 // From cmk/utils/licensing/export.py:
 
@@ -73,10 +87,10 @@ function compute_x_domain(
         ];
     }
     if (raw_daily_services.length > 0) {
-        const min_daily_service = d3.min(raw_daily_services, function (d) {
+        const min_daily_service = min(raw_daily_services, function (d) {
             return d.sample_time;
         });
-        const max_daily_service = d3.max(raw_daily_services, function (d) {
+        const max_daily_service = max(raw_daily_services, function (d) {
             return d.sample_time;
         });
         if (
@@ -109,7 +123,7 @@ function compute_y_domain_max(
         );
     }
     if (y_domain_max_values.length > 0) {
-        const y_domain_max = d3.max(y_domain_max_values);
+        const y_domain_max = max(y_domain_max_values);
         if (y_domain_max) {
             let factor;
             if (y_domain_max > 10000) {
@@ -137,7 +151,7 @@ function compute_daily_services(
     const daily_services: MonthlyServiceAverage[] = [];
     raw_daily_services
         .sort(function (a, b) {
-            return d3.ascending(a.sample_time, b.sample_time);
+            return ascending(a.sample_time, b.sample_time);
         })
         .forEach(function (d) {
             daily_services.push({
@@ -167,7 +181,7 @@ function compute_monthly_service_averages(
                 raw_monthly_service_averages.length - 1
             ];
         monthly_service_averages.push({
-            sample_date: d3.timeMonth.offset(
+            sample_date: timeMonth.offset(
                 ts_to_date(last_sample.sample_time),
                 1
             ),
@@ -252,11 +266,11 @@ function compute_bar_data(
 //  Jan         Feb         Mar         Apr
 
 function get_bar_size(
-    x_range: d3.ScaleTime<number, number, any>,
+    x_range: ScaleTime<number, number, any>,
     bar_data_extended: BarDataExtended
 ) {
     return (
-        (x_range(d3.timeMonth.offset(bar_data_extended.sample_date, 1)) -
+        (x_range(timeMonth.offset(bar_data_extended.sample_date, 1)) -
             x_range(bar_data_extended.sample_date)) /
         bar_data_extended.num_bars
     );
@@ -290,7 +304,7 @@ function get_tooltip_num_service_info(
             sample_date.getMonth() === the_month &&
             sample_date.getDate() === the_day
         ) {
-            num_services_info = d3.format("~s")(
+            num_services_info = format("~s")(
                 Math.trunc(daily_service.num_services)
             );
             break;
@@ -307,9 +321,9 @@ function get_tooltip_average_info(
     let average_info = "-";
     for (let i = 0; i < monthly_service_averages.length; i++) {
         const average = monthly_service_averages[i],
-            offset = d3.timeMonth.offset(average.sample_date, 1);
+            offset = timeMonth.offset(average.sample_date, 1);
         if (average.sample_date <= x_coord_date && x_coord_date < offset) {
-            average_info = d3.format("~s")(Math.trunc(average.num_services));
+            average_info = format("~s")(Math.trunc(average.num_services));
             break;
         }
     }
@@ -331,7 +345,7 @@ function get_tooltip_limit_info(
         return subscription_sizing_title + ": -";
     }
     let limit_info =
-        d3.format("~s")(Math.trunc(subscription_limit)) + " " + tooltip_title;
+        format("~s")(Math.trunc(subscription_limit)) + " " + tooltip_title;
     if (subscription_start && subscription_end) {
         const x_coord_time = x_coord_date.getTime() / 1000;
         if (
@@ -345,7 +359,7 @@ function get_tooltip_limit_info(
 }
 
 function add_legend_row(
-    table: d3.Selection<HTMLTableElement, unknown, HTMLElement, unknown>,
+    table: Selection<HTMLTableElement, unknown, HTMLElement, unknown>,
     data: LegendRowData
 ) {
     const row = table.append("tr");
@@ -450,19 +464,14 @@ function render_usage_graph(
     const inner_width = width - margin.left - margin.right;
     const inner_height = height - margin.top - margin.bottom;
 
-    const x_range = d3.scaleTime().domain(x_domain).range([0, inner_width]);
-    const y_range = d3
-        .scaleLinear()
+    const x_range = scaleTime().domain(x_domain).range([0, inner_width]);
+    const y_range = scaleLinear()
         .domain([0, y_domain_max])
         .range([inner_height, 0]);
-    const x_axis = d3.axisBottom(x_range).ticks(10);
-    const y_axis_left = d3
-        .axisLeft(y_range)
-        .tickFormat(d3.format("~s"))
-        .ticks(10);
+    const x_axis = axisBottom(x_range).ticks(10);
+    const y_axis_left = axisLeft(y_range).tickFormat(format("~s")).ticks(10);
 
-    const line_daily_services = d3
-        .line<MonthlyServiceAverage>()
+    const line_daily_services = line<MonthlyServiceAverage>()
         .x(function (d) {
             return x_range(d.sample_date);
         })
@@ -470,9 +479,8 @@ function render_usage_graph(
             return y_range(d.num_services);
         });
 
-    const line_monthly_average_services = d3
-        .line<MonthlyServiceAverage>()
-        .curve(d3.curveStepAfter)
+    const line_monthly_average_services = line<MonthlyServiceAverage>()
+        .curve(curveStepAfter)
         .x(function (d) {
             return x_range(d.sample_date);
         })
@@ -480,8 +488,7 @@ function render_usage_graph(
             return y_range(d.num_services);
         });
 
-    const container = d3
-        .select("#detailed_timeline")
+    const container = select("#detailed_timeline")
         .append("div")
         .attr("class", "graph");
     const svg = container
@@ -616,8 +623,7 @@ function render_usage_graph(
             });
     }
 
-    const tooltip = d3
-        .select("body")
+    const tooltip = select("body")
         .append("div")
         .attr("class", "tooltip license_usage");
     const pointer_events = svg
@@ -643,7 +649,7 @@ function render_usage_graph(
             v_line.classed("on", true);
         })
         .on("pointermove", function () {
-            const pointer = d3.pointer(event);
+            const pointer = d3_pointer(event);
             v_line.classed("on", true).attr("d", function () {
                 let d = "M" + pointer[0] + "," + inner_height;
                 d += " " + pointer[0] + "," + 0;

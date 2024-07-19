@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {D3DragEvent, DragBehavior, Selection} from "d3";
+import {drag, select} from "d3";
 
 import {LayoutAggregations} from "./aggregations";
 import type {AbstractNodeVisConstructor, LayerSelections} from "./layer_utils";
@@ -241,7 +241,7 @@ export class LayoutManagerLayer extends FixLayer {
         options: StyleOptionValues,
         options_changed_callback: (changed_options: StyleOptionValues) => void,
         reset_default_options_callback: (
-            event: d3.D3DragEvent<any, any, any>
+            event: D3DragEvent<any, any, any>
         ) => void
     ) {
         this._toolbar.layout_style_configuration.show_configuration(
@@ -550,7 +550,7 @@ export class LayoutStyleConfiguration {
         options: StyleOptionValues,
         options_changed_callback: (changed_options: StyleOptionValues) => void,
         reset_default_options_callback: (
-            event: d3.D3DragEvent<any, any, any>
+            event: D3DragEvent<any, any, any>
         ) => void
     ) {
         if (style_option_spec.length == 0) {
@@ -858,7 +858,7 @@ export class LayoutingToolbar {
     }
 
     _update_position() {
-        if (d3.select("div#popup_filters").classed("active")) {
+        if (select("div#popup_filters").classed("active")) {
             this._toolbar_selection
                 .transition()
                 .duration(DefaultTransition.duration())
@@ -885,9 +885,9 @@ export class LayoutingToolbar {
 
     _add_search_filter_mutation_observer() {
         if (this._filter_mutation_observer != null) return;
-        const filter_node = d3
-            .select("div#popup_filters")
-            .node() as HTMLDivElement;
+        const filter_node = select(
+            "div#popup_filters"
+        ).node() as HTMLDivElement;
         if (filter_node == null) return;
 
         this._filter_mutation_observer = new MutationObserver(() => {
@@ -906,8 +906,8 @@ export class LayoutingToolbar {
 class LayoutingMouseEventsOverlay {
     _world: NodevisWorld;
     _layout_manager: LayoutManagerLayer;
-    drag: d3.DragBehavior<any, any, any>;
-    _dragged_node: d3.Selection<any, any, any, any> | null = null;
+    drag: DragBehavior<any, any, any>;
+    _dragged_node: Selection<any, any, any, any> | null = null;
     _drag_start_x = 0;
     _drag_start_y = 0;
     _dragging_class = LayoutStyleHierarchy; // convert into this class while dragging
@@ -915,8 +915,7 @@ class LayoutingMouseEventsOverlay {
     constructor(world: NodevisWorld, layout_manager: LayoutManagerLayer) {
         this._world = world;
         this._layout_manager = layout_manager;
-        this.drag = d3
-            .drag<SVGElement, string>()
+        this.drag = drag<SVGElement, string>()
             .on("start.drag", event => this._dragstarted(event))
             .on("drag.drag", event => this._dragging(event))
             .on("end.drag", event => this._dragended(event));
@@ -930,7 +929,7 @@ class LayoutingMouseEventsOverlay {
             .call(this.drag);
     }
 
-    _get_scaled_event_coords(event: d3.D3DragEvent<any, any, any>): {
+    _get_scaled_event_coords(event: D3DragEvent<any, any, any>): {
         x: number;
         y: number;
     } {
@@ -940,10 +939,10 @@ class LayoutingMouseEventsOverlay {
         };
     }
 
-    _dragstarted(event: d3.D3DragEvent<any, any, any>) {
+    _dragstarted(event: D3DragEvent<any, any, any>) {
         if (!this._layout_manager.is_node_drag_allowed()) return;
         event.sourceEvent.stopPropagation();
-        this._dragged_node = d3.select(event.sourceEvent.target);
+        this._dragged_node = select(event.sourceEvent.target);
 
         const nodevis_node = this._world.viewport.get_node_by_id(
             this._dragged_node.datum()
@@ -983,7 +982,7 @@ class LayoutingMouseEventsOverlay {
         force.fy = y;
     }
 
-    _dragging(event: d3.D3DragEvent<any, any, any>) {
+    _dragging(event: D3DragEvent<any, any, any>) {
         if (
             this._dragged_node == null ||
             !this._layout_manager.is_node_drag_allowed()
@@ -1036,7 +1035,7 @@ class LayoutingMouseEventsOverlay {
         this._world.viewport.update_gui_of_layers();
     }
 
-    _dragended(_event: d3.D3DragEvent<any, any, any>) {
+    _dragended(_event: D3DragEvent<any, any, any>) {
         this._layout_manager.dragging = false;
         if (
             this._dragged_node == null ||
@@ -1411,7 +1410,7 @@ class LayoutApplier {
                 const new_style = this.layout_style_factory.instantiate_style(
                     d.style,
                     d.node,
-                    d3.select(nodes[idx])
+                    select(nodes[idx])
                 );
                 this._layout_manager.add_active_style(new_style);
             })

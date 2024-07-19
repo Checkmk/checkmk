@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {BaseType, Selection} from "d3";
+import {pointer, select} from "d3";
 
 interface FigureTooltipElementSize {
     width: null | number;
@@ -15,17 +15,12 @@ interface FigureTooltipElementSize {
 // Class which handles the display of a tooltip
 // It generates basic tooltips and handles its correct positioning
 export class FigureTooltip {
-    _tooltip: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>;
+    _tooltip: Selection<HTMLDivElement, unknown, BaseType, unknown>;
     figure_size: FigureTooltipElementSize;
     plot_size: FigureTooltipElementSize;
 
     constructor(
-        tooltip_selection: d3.Selection<
-            HTMLDivElement,
-            unknown,
-            d3.BaseType,
-            unknown
-        >
+        tooltip_selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
     ) {
         this._tooltip = tooltip_selection;
         this._tooltip
@@ -52,7 +47,7 @@ export class FigureTooltip {
             height: this._tooltip.node()!.offsetHeight,
         };
 
-        const [x, y] = d3.pointer(
+        const [x, y] = pointer(
             event,
             (event.target as HTMLDivElement).closest("svg")
         );
@@ -78,7 +73,7 @@ export class FigureTooltip {
     }
 
     add_support(node: SVGGElement) {
-        const element = d3.select(node);
+        const element = select(node);
         element
             .on("mouseover", event => this._mouseover(event))
             .on("mouseleave", event => this._mouseleave(event))
@@ -86,7 +81,7 @@ export class FigureTooltip {
     }
 
     activate() {
-        d3.select(this._tooltip.node()!.closest("div.dashlet")).style(
+        select(this._tooltip.node()!.closest("div.dashlet")).style(
             "z-index",
             "99"
         );
@@ -94,7 +89,7 @@ export class FigureTooltip {
     }
 
     deactivate() {
-        d3.select(this._tooltip.node()!.closest("div.dashlet")).style(
+        select(this._tooltip.node()!.closest("div.dashlet")).style(
             "z-index",
             ""
         );
@@ -106,14 +101,14 @@ export class FigureTooltip {
     }
 
     _mouseover(event: MouseEvent) {
-        const node_data = d3.select(event.target as HTMLDivElement).datum();
+        const node_data = select(event.target as HTMLDivElement).datum();
         // @ts-ignore
         if (node_data == undefined || node_data.tooltip == undefined) return;
         this.activate();
     }
 
     _mousemove(event: MouseEvent) {
-        const node_data = d3.select(event.target as HTMLDivElement).datum();
+        const node_data = select(event.target as HTMLDivElement).datum();
         // @ts-ignore
         if (node_data == undefined || node_data.tooltip == undefined) return;
         // @ts-ignore

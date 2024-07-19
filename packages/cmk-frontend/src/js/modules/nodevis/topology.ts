@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {Selection} from "d3";
+import {html, select} from "d3";
 
 import type {ForceOptions, SimulationForce} from "./force_utils";
 import {ForceConfig} from "./force_utils";
@@ -186,7 +186,7 @@ function render_toggle_panel(
                 .append("div")
                 .classed("nodevis toggle_switch_container", true)
                 .on("click", (event, d) => {
-                    const node = d3.select(event.target);
+                    const node = select(event.target);
                     const new_value = !node.classed("on");
                     node.classed("on", new_value);
                     d[2](new_value);
@@ -203,9 +203,7 @@ function render_toggle_panel(
         .text(d => d[1])
         .style("pointer-events", "all")
         .on("click", (event, d) => {
-            const node = d3.select(
-                event.target.parentNode.firstChild.firstChild
-            );
+            const node = select(event.target.parentNode.firstChild.firstChild);
             const new_value = !node.classed("on");
             node.classed("on", new_value);
             d[2](new_value);
@@ -236,7 +234,7 @@ export class LayoutTopology {
     }
 
     _render_save_delete_layout(
-        into_selection: d3.Selection<HTMLDivElement, null, any, unknown>
+        into_selection: Selection<HTMLDivElement, null, any, unknown>
     ): void {
         const buttons: [string, string, string, () => void][] = [
             [
@@ -468,7 +466,7 @@ class TopologyService extends TopologyCoreEntity {
             encodeURIComponent(service) +
             "&datasource=" +
             encodeURIComponent(this._world.datasource);
-        d3.html(view_url, {credentials: "include"}).then(html =>
+        html(view_url, {credentials: "include"}).then(html =>
             this._got_quickinfo(html)
         );
     }
@@ -605,7 +603,7 @@ class NetworkLink extends AbstractLink {
         traversed_ids.add(this.id());
 
         this.selection().each((_d, idx, nodes) => {
-            const line = d3.select(nodes[idx]);
+            const line = select(nodes[idx]);
             if (line.classed("halo_line")) return;
             line.classed("highlight", true);
         });
@@ -687,7 +685,7 @@ class NetworkLink extends AbstractLink {
     override render_into(selection: d3SelectionG) {
         super.render_into(selection, true);
         this.selection().each((_d, idx, nodes) => {
-            const line = d3.select(nodes[idx]);
+            const line = select(nodes[idx]);
             if (!line.classed("halo_line")) return;
             line.style("stroke-dasharray", "none");
             line.on("mouseover", event => {

@@ -4,20 +4,20 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {Selection} from "d3";
+import {select} from "d3";
 
 export class TabsBar {
     _div_selector: string;
-    _div_selection: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
+    _div_selection: Selection<HTMLDivElement, unknown, HTMLElement, any>;
     _tabs_by_id: Record<string, Tab>;
     _tabs_list: Tab[];
-    _nav!: d3.Selection<HTMLElement, unknown, HTMLElement, any>;
-    main_content!: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
-    _ul!: d3.Selection<HTMLUListElement, unknown, HTMLElement, any>;
+    _nav!: Selection<HTMLElement, unknown, HTMLElement, any>;
+    main_content!: Selection<HTMLDivElement, unknown, HTMLElement, any>;
+    _ul!: Selection<HTMLUListElement, unknown, HTMLElement, any>;
     constructor(div_selector: string) {
         this._div_selector = div_selector;
-        this._div_selection = d3.select<HTMLDivElement, unknown>(
+        this._div_selection = select<HTMLDivElement, unknown>(
             this._div_selector
         );
         this._div_selection.classed("cmk_tab", true);
@@ -42,7 +42,7 @@ export class TabsBar {
             .enter()
             .append("li")
             .each((d, idx, nodes) => {
-                d3.select(nodes[idx]).classed(d.tab_id(), true);
+                select(nodes[idx]).classed(d.tab_id(), true);
             })
             .on("click", event => this._tab_clicked(event))
             .append("a")
@@ -73,7 +73,7 @@ export class TabsBar {
     }
 
     _tab_clicked(event: MouseEvent) {
-        const target = d3.select<HTMLElement, Tab>(event.target as HTMLElement);
+        const target = select<HTMLElement, Tab>(event.target as HTMLElement);
         const tab = target.datum();
         this._activate_tab(tab);
     }
@@ -103,8 +103,8 @@ export class TabsBar {
 
 export abstract class Tab<T extends TabsBar = TabsBar> {
     _tabs_bar: T;
-    _tab_selection: d3.Selection<HTMLDivElement, any, HTMLElement, any>;
-    _link_item!: d3.Selection<HTMLAnchorElement, any, HTMLElement, any>;
+    _tab_selection: Selection<HTMLDivElement, any, HTMLElement, any>;
+    _link_item!: Selection<HTMLAnchorElement, any, HTMLElement, any>;
     protected constructor(tabs_bar: T) {
         this._tabs_bar = tabs_bar;
         this._tab_selection = tabs_bar.main_content

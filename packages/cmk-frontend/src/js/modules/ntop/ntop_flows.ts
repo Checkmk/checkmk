@@ -6,8 +6,8 @@
 
 import type {Dimension} from "crossfilter2";
 import crossfilter from "crossfilter2";
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {BaseType, Selection} from "d3";
+import {select as d3select} from "d3";
 import type {DataTableWidget} from "dc";
 import $ from "jquery";
 
@@ -106,7 +106,7 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
     }
 
     _setup_dc_table(
-        selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>
+        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
     ) {
         const div_id = "flows_dashlet";
         selection.append("div").attr("id", div_id);
@@ -278,7 +278,7 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
         this._div_selection
             .selectAll<HTMLSelectElement, FlowsDashlet>("select.filter")
             .each((_d, idx, nodes) => {
-                const select = d3.select<HTMLSelectElement, FlowsDashlet>(
+                const select = d3select<HTMLSelectElement, FlowsDashlet>(
                     nodes[idx]
                 );
                 const key = select.datum().url_param;

@@ -6,8 +6,8 @@
 
 import type {Crossfilter} from "crossfilter2";
 import crossfilter from "crossfilter2";
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {BaseType, Selection} from "d3";
+import {json, select} from "d3";
 
 import type {CMKAjaxReponse} from "../types";
 import {get_computed_style} from "../utils";
@@ -37,9 +37,9 @@ export abstract class FigureBase<
     DashletSpec extends FigureBaseDashletSpec = FigureBaseDashletSpec
 > {
     _div_selector: string;
-    _div_selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>;
-    svg: d3.Selection<SVGSVGElement, unknown, d3.BaseType, unknown> | null;
-    plot: d3.Selection<SVGGElement, unknown, any, any>;
+    _div_selection: Selection<HTMLDivElement, unknown, BaseType, unknown>;
+    svg: Selection<SVGSVGElement, unknown, BaseType, unknown> | null;
+    plot: Selection<SVGGElement, unknown, any, any>;
     _fixed_size: ElementSize | null;
     margin: ElementMargin;
     _fetch_start: number;
@@ -68,7 +68,7 @@ export abstract class FigureBase<
 
     constructor(div_selector: string, fixed_size: ElementSize | null = null) {
         this._div_selector = div_selector; // The main container
-        this._div_selection = d3.select(this._div_selector); // The d3-seletion of the main container
+        this._div_selection = select(this._div_selector); // The d3-seletion of the main container
 
         this.svg = null; // The svg representing the figure
         // @ts-ignore
@@ -185,7 +185,7 @@ export abstract class FigureBase<
         if (!post_settings.url) return;
 
         this._fetch_start = Math.floor(new Date().getTime() / 1000);
-        d3.json(encodeURI(post_settings.url), {
+        json(encodeURI(post_settings.url), {
             credentials: "include",
             method: "POST",
             body: post_settings.body,
@@ -319,7 +319,7 @@ export abstract class FigureBase<
 
         let title_padding_left = 0;
         const title_padding_left_raw = get_computed_style(
-            d3.select("div.dashlet div.title").node() as HTMLElement,
+            select("div.dashlet div.title").node() as HTMLElement,
             "padding-left"
         );
         if (title_padding_left_raw) {

@@ -5,8 +5,8 @@
  */
 
 import type {Dimension} from "crossfilter2";
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {ScaleBand, ScaleLinear, Selection} from "d3";
+import {axisRight, axisTop, max, scaleBand, scaleLinear} from "d3";
 import range from "lodash.range";
 
 import {FigureBase} from "@/modules/figures/cmk_figures";
@@ -28,9 +28,9 @@ export class BarplotFigure extends FigureBase<
     _time_dimension: Dimension<any, any>;
     _tag_dimension: Dimension<any, string>;
     _plot_definitions: SingleMetricDataPlotDefinitions[];
-    bars!: d3.Selection<SVGGElement, unknown, any, any>;
-    scale_x!: d3.ScaleLinear<number, number, never>;
-    scale_y!: d3.ScaleBand<string>;
+    bars!: Selection<SVGGElement, unknown, any, any>;
+    scale_x!: ScaleLinear<number, number, never>;
+    scale_y!: ScaleBand<string>;
 
     override ident() {
         return "barplot";
@@ -56,18 +56,18 @@ export class BarplotFigure extends FigureBase<
         this.bars = this.plot.append("g").classed("bars", true);
 
         // X axis
-        this.scale_x = d3.scaleLinear();
+        this.scale_x = scaleLinear();
         this.plot
             .append("g")
             .classed("x_axis", true)
-            .call(d3.axisTop(this.scale_x));
+            .call(axisTop(this.scale_x));
 
         // Y axis
-        this.scale_y = d3.scaleBand().padding(0.2);
+        this.scale_y = scaleBand().padding(0.2);
         this.plot
             .append("g")
             .classed("y_axis", true)
-            .call(d3.axisRight(this.scale_y));
+            .call(axisRight(this.scale_y));
     }
 
     override render() {
@@ -148,7 +148,7 @@ export class BarplotFigure extends FigureBase<
     render_axis(): Domain {
         const value_labels = this._plot_definitions.map(d => d.label);
         this.scale_y.domain(value_labels);
-        const axis_labels = d3.axisRight(this.scale_y);
+        const axis_labels = axisRight(this.scale_y);
         // 12 is UX font-height, omit labels when not enough space
         if (value_labels.length >= this.plot_size.height / 12)
             axis_labels.tickFormat((_x, _y) => "");
@@ -171,7 +171,7 @@ export class BarplotFigure extends FigureBase<
         const tickcount = Math.max(2, Math.ceil(this.plot_size.width / 85));
 
         // @ts-ignore
-        let x_domain: [number, number] = [0, d3.max(points, d => d.value)];
+        let x_domain: [number, number] = [0, max(points, d => d.value)];
         if (Array.isArray(display_range) && display_range[0] === "fixed")
             x_domain = display_range[1][1];
 

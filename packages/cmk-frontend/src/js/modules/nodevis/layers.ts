@@ -7,8 +7,8 @@
 import "./node_types";
 import "./link_types";
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {Selection} from "d3";
+import {select} from "d3";
 
 import type {LayerSelections} from "./layer_utils";
 import {FixLayer, layer_class_registry, ToggleableLayer} from "./layer_utils";
@@ -179,7 +179,7 @@ export class LayeredNodesLayer extends FixLayer {
                 exit =>
                     exit.each((node_id, idx, node_list) => {
                         this._add_node_vanish_animation(
-                            d3.select(node_list[idx]),
+                            select(node_list[idx]),
                             node_id,
                             old_node_instances
                         );
@@ -187,13 +187,13 @@ export class LayeredNodesLayer extends FixLayer {
             )
             .each((node_id, idx, node_list) => {
                 this.node_instances[node_id].render_into(
-                    d3.select(node_list[idx])
+                    select(node_list[idx])
                 );
             });
     }
 
     _add_node_vanish_animation(
-        node: d3.Selection<SVGGElement, unknown, null, undefined>,
+        node: Selection<SVGGElement, unknown, null, undefined>,
         node_id: string,
         old_node_instances: Record<string, AbstractGUINode>
     ) {
@@ -253,7 +253,7 @@ export class LayeredNodesLayer extends FixLayer {
             .join("g")
             .classed("link_element", true)
             .each((link_id, idx, nodes) => {
-                this.link_instances[link_id].render_into(d3.select(nodes[idx]));
+                this.link_instances[link_id].render_into(select(nodes[idx]));
             });
     }
 
@@ -299,7 +299,7 @@ export class LayeredNodesLayer extends FixLayer {
     }
 
     _add_toggle_options_to_context_menu(
-        content_ul: d3.Selection<HTMLUListElement, null, any, unknown>
+        content_ul: Selection<HTMLUListElement, null, any, unknown>
     ) {
         const nodes_class_list = this._svg_selection.node()!.classList;
         const hide_host_labels = nodes_class_list.contains("hide_host_labels");
@@ -383,7 +383,7 @@ export class LayeredNodesLayer extends FixLayer {
     }
 
     _add_elements_to_context_menu(
-        content: d3.Selection<HTMLUListElement, any, any, undefined>,
+        content: Selection<HTMLUListElement, any, any, undefined>,
         element_source: string,
         elements: ContextMenuElement[],
         level = 0
@@ -411,7 +411,7 @@ export class LayeredNodesLayer extends FixLayer {
         // Add optional href
         links.each((d, idx, nodes) => {
             if (d.href) {
-                d3.select(nodes[idx])
+                select(nodes[idx])
                     .attr("href", d.href)
                     .on("click", () => this.hide_context_menu());
             }
@@ -419,7 +419,7 @@ export class LayeredNodesLayer extends FixLayer {
 
         // Add optional img
         links.each(function (d) {
-            const img = d3.select(this).append("img").classed("icon", true);
+            const img = select(this).append("img").classed("icon", true);
             if (d.tick) {
                 // Simple tick
                 img.classed("tick", true);
@@ -432,7 +432,7 @@ export class LayeredNodesLayer extends FixLayer {
         // Add text
         links.each(function (d) {
             if (d.text)
-                d3.select(this)
+                select(this)
                     .append("div")
                     .style("display", "inline-block")
                     .text(d.text);
@@ -441,7 +441,7 @@ export class LayeredNodesLayer extends FixLayer {
         // Add optional click handler
         links.each((d, idx, nodes) => {
             if (d.on) {
-                d3.select(nodes[idx]).on("click", event => {
+                select(nodes[idx]).on("click", event => {
                     if (d.on) d.on(event, d);
                     this.hide_context_menu();
                 });
@@ -455,9 +455,9 @@ export class LayeredNodesLayer extends FixLayer {
                 const scoped_element_source = d.element_source
                     ? d.element_source
                     : element_source;
-                const node = d3.select(nodes[idx]);
+                const node = select(nodes[idx]);
                 node.classed("nested", true);
-                d3.select(node.node()!.parentElement)
+                select(node.node()!.parentElement)
                     .selectAll<HTMLSpanElement, null>("span.triangle")
                     .data([null])
                     .enter()

@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {BaseType, Selection} from "d3";
+import {select} from "d3";
 
 import type {ForceOptions, SimulationForce} from "./force_utils";
 import {get} from "./texts";
@@ -39,12 +39,7 @@ export class AbstractGUINode implements TypeWithName {
 
     // DOM references
     _selection: d3SelectionG | null;
-    _text_selection: d3.Selection<
-        SVGTextElement,
-        string,
-        SVGGElement,
-        any
-    > | null;
+    _text_selection: Selection<SVGTextElement, string, SVGGElement, any> | null;
     _quickinfo_selection: d3SelectionDiv | null;
 
     constructor(world: NodevisWorld, node: NodevisNode) {
@@ -75,7 +70,7 @@ export class AbstractGUINode implements TypeWithName {
         return this._selection;
     }
 
-    text_selection(): d3.Selection<SVGTextElement, string, SVGGElement, any> {
+    text_selection(): Selection<SVGTextElement, string, SVGGElement, any> {
         if (this._text_selection == null)
             throw Error("Missing text selection for node " + this.id());
         return this._text_selection;
@@ -215,7 +210,7 @@ export class AbstractGUINode implements TypeWithName {
             this.add_optional_transition(this.text_selection()).call(
                 //@ts-ignore
                 (
-                    selection: d3.Selection<
+                    selection: Selection<
                         SVGTextElement,
                         string,
                         SVGGElement,
@@ -227,7 +222,7 @@ export class AbstractGUINode implements TypeWithName {
     }
 
     _default_text_positioning(
-        selection: d3.Selection<SVGTextElement, string, SVGGElement, any>,
+        selection: Selection<SVGTextElement, string, SVGGElement, any>,
         radius: number
     ) {
         selection.attr(
@@ -490,7 +485,7 @@ export class AbstractGUINode implements TypeWithName {
                 enter
                     .append("a")
                     .each((_data, idx, nodes) => {
-                        const a = d3.select(nodes[idx]);
+                        const a = select(nodes[idx]);
                         const details_url = this._get_details_url();
                         if (details_url != "")
                             a.attr("xlink:href", details_url);
@@ -580,8 +575,8 @@ export class AbstractGUINode implements TypeWithName {
             .style("top", coords.y + "px");
     }
 
-    add_optional_transition<GType extends d3.BaseType, Data>(
-        selection: d3.Selection<GType, Data, SVGGElement, any>,
+    add_optional_transition<GType extends BaseType, Data>(
+        selection: Selection<GType, Data, SVGGElement, any>,
         enforce_transition = false
     ) {
         // TODO: remove

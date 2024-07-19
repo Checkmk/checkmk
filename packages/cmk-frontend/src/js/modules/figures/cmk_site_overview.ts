@@ -4,8 +4,23 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {
+    BaseType,
+    D3ZoomEvent,
+    Quadtree,
+    Selection,
+    ZoomTransform,
+} from "d3";
+import {
+    group,
+    json,
+    pointer,
+    quadtree,
+    scaleLinear,
+    select,
+    zoom,
+    zoomIdentity,
+} from "d3";
 import {hexbin as d3Hexbin_hexbin} from "d3-hexbin";
 
 import {FigureTooltip} from "@/modules/figures/cmk_figure_tooltip";
@@ -73,11 +88,11 @@ type HexagonContent<
 export class SiteOverview extends FigureBase<SiteData> {
     _max_box_width: Record<"default" | "large", number>;
     _test_filter: boolean;
-    canvas!: d3.Selection<HTMLCanvasElement, null, HTMLDivElement, any>;
-    _quadtree!: d3.Quadtree<HostElement>;
+    canvas!: Selection<HTMLCanvasElement, null, HTMLDivElement, any>;
+    _quadtree!: Quadtree<HostElement>;
     _zoomable_modes!: string[];
-    _last_zoom!: d3.ZoomTransform;
-    _tooltip!: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>;
+    _last_zoom!: ZoomTransform;
+    _tooltip!: Selection<HTMLDivElement, unknown, BaseType, unknown>;
     tooltip_generator!: FigureTooltip;
     _fetching_host_tooltip!: boolean;
     _last_hovered_host!: null | HostElement;
@@ -129,8 +144,7 @@ export class SiteOverview extends FigureBase<SiteData> {
             .style("right", this.margin.right + "px");
 
         // Quadtree is used in canvas mode to find elements within given position
-        this._quadtree = d3
-            .quadtree<HostElement>()
+        this._quadtree = quadtree<HostElement>()
             .x(d => d.x)
             .y(d => d.y);
 
@@ -152,7 +166,7 @@ export class SiteOverview extends FigureBase<SiteData> {
             .classed("plot", true);
 
         this._zoomable_modes = [];
-        this._last_zoom = d3.zoomIdentity;
+        this._last_zoom = zoomIdentity;
 
         this._tooltip = this._div_selection
             .append("div")
@@ -178,7 +192,7 @@ export class SiteOverview extends FigureBase<SiteData> {
             .attr("type", "text")
             .classed("msg_filter", true)
             .on("input", event => {
-                const target = d3.select(event.target);
+                const target = select(event.target);
                 const filter = target.property("value");
                 hostname_filter.filter(d => {
                     //@ts-ignore
@@ -226,8 +240,7 @@ export class SiteOverview extends FigureBase<SiteData> {
             .attr("height", this.plot_size.height);
 
         this.svg!.call(
-            d3
-                .zoom<SVGSVGElement, unknown>()
+            zoom<SVGSVGElement, unknown>()
                 .extent([
                     [0, 0],
                     [this.plot_size.width, this.plot_size.height],
@@ -237,7 +250,7 @@ export class SiteOverview extends FigureBase<SiteData> {
                     [0, 0],
                     [this.plot_size.width, this.plot_size.height],
                 ])
-                .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
+                .on("zoom", (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
                     const zoom_enabled =
                         this._zoomable_modes.indexOf(this._data.render_mode) !=
                         -1;
@@ -246,7 +259,7 @@ export class SiteOverview extends FigureBase<SiteData> {
 
                     this._last_zoom = zoom_enabled
                         ? event.transform
-                        : d3.zoomIdentity;
+                        : zoomIdentity;
                     // @ts-ignore
                     this.plot.attr("transform", this._last_zoom);
                     this._render_hexagon_content(this._hexagon_content!);
@@ -425,8 +438,7 @@ export class SiteOverview extends FigureBase<SiteData> {
             } else if (
                 this._data.render_mode == SiteOverviewRenderMode.Alerts
             ) {
-                const colors = d3
-                    .scaleLinear()
+                const colors = scaleLinear()
                     .domain([0, this._data.upper_bound])
                     // @ts-ignore
                     .range(["#b1d2e880", "#08377580"]);
@@ -511,12 +523,14 @@ export class SiteOverview extends FigureBase<SiteData> {
         hexagon_content: HexagonContent<HostGeometry, HostElement>
     ) {
         const elements = hexagon_content.elements;
-        const host_classes_iterable = d3
-            .group(elements, (d: HostElement) => d.host_css_class)
-            .keys();
-        const service_classes_iterable = d3
-            .group(elements, (d: HostElement) => d.service_css_class)
-            .keys();
+        const host_classes_iterable = group(
+            elements,
+            (d: HostElement) => d.host_css_class
+        ).keys();
+        const service_classes_iterable = group(
+            elements,
+            (d: HostElement) => d.service_css_class
+        ).keys();
 
         // Obtain all needed fill colors (per state) by creating a respectively classed DOM element
         const fill_map: Record<string, string> = {};
@@ -542,8 +556,7 @@ export class SiteOverview extends FigureBase<SiteData> {
         ctx.scale(this._last_zoom.k, this._last_zoom.k);
 
         // Quadtree: Used for coordinate lookup
-        this._quadtree = d3
-            .quadtree<HostElement>()
+        this._quadtree = quadtree<HostElement>()
             .x(d => d.x)
             .y(d => d.y);
 
@@ -568,7 +581,7 @@ export class SiteOverview extends FigureBase<SiteData> {
 
     _update_quadtree_svg(event: Event) {
         if (this._quadtree.size() == 0) return;
-        const [x, y] = d3.pointer(
+        const [x, y] = pointer(
             event,
             (event.target as HTMLElement).closest("svg")
         );
@@ -646,8 +659,8 @@ export class SiteOverview extends FigureBase<SiteData> {
     }
 
     _render_site_hexagons(
-        element_boxes: d3.Selection<
-            d3.BaseType | SVGGElement,
+        element_boxes: Selection<
+            BaseType | SVGGElement,
             any,
             SVGGElement,
             unknown
@@ -689,7 +702,7 @@ export class SiteOverview extends FigureBase<SiteData> {
         // Now render all hexagons
         const hexbin = d3Hexbin_hexbin();
         hexagon_boxes.each((element, idx, nodes) => {
-            const hexagon_box = d3.select(nodes[idx]);
+            const hexagon_box = select(nodes[idx]);
 
             if (element.type == "icon_element") {
                 // Special handling for IconElement (displaying down / disabled sites)
@@ -767,7 +780,7 @@ export class SiteOverview extends FigureBase<SiteData> {
             .style("font-size", geometry.label_height + "px")
             .each(function (title: string) {
                 // Limit label lengths to not be wider than the hexagons
-                const label = d3.select(this);
+                const label = select(this);
                 let text_len = label.node()!.getComputedTextLength();
                 while (text_len > geometry.box_width && title.length > 0) {
                     title = title.slice(0, -1);
@@ -892,16 +905,13 @@ export class SiteOverview extends FigureBase<SiteData> {
             num_problems,
         }))(host);
 
-        d3.json(
-            makeuri_contextless(post_data, "ajax_host_overview_tooltip.py"),
-            {
-                credentials: "include",
-                method: "POST",
-                headers: {
-                    "Content-type": "application/x-www-form-urlencoded",
-                },
-            }
-        )
+        json(makeuri_contextless(post_data, "ajax_host_overview_tooltip.py"), {
+            credentials: "include",
+            method: "POST",
+            headers: {
+                "Content-type": "application/x-www-form-urlencoded",
+            },
+        })
             .then(json_data => {
                 if (host == this._last_hovered_host) {
                     // @ts-ignore

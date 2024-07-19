@@ -5,8 +5,17 @@
  */
 
 import type {Dimension} from "crossfilter2";
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {BaseType, Quadtree, Selection} from "d3";
+import {
+    area,
+    color as d3_Color,
+    curveLinear,
+    line,
+    max,
+    min,
+    quadtree,
+    select,
+} from "d3";
 
 import {
     adjust_domain,
@@ -46,8 +55,8 @@ export class SubPlot<PD extends SubPlotPlotDefinition = SubPlotPlotDefinition> {
     _dimension: Dimension<any, any> | null;
     transformed_data: TransformedData[];
     stack_values: null | number[];
-    main_g: d3.Selection<SVGGElement, unknown, d3.BaseType, unknown> | null;
-    svg: d3.Selection<SVGSVGElement, unknown, d3.BaseType, unknown> | null;
+    main_g: Selection<SVGGElement, unknown, BaseType, unknown> | null;
+    svg: Selection<SVGSVGElement, unknown, BaseType, unknown> | null;
     marked_for_removal: boolean | undefined;
 
     constructor(definition: PD | null) {
@@ -85,7 +94,7 @@ export class SubPlot<PD extends SubPlotPlotDefinition = SubPlotPlotDefinition> {
     }
 
     get_color() {
-        if (this.definition!.color) return d3.color(this.definition!.color);
+        if (this.definition!.color) return d3_Color(this.definition!.color);
         return;
     }
 
@@ -109,12 +118,12 @@ export class SubPlot<PD extends SubPlotPlotDefinition = SubPlotPlotDefinition> {
         return {
             x: [
                 // @ts-ignore
-                d3.min(this.transformed_data, d => d.date),
+                min(this.transformed_data, d => d.date),
                 // @ts-ignore
-                d3.max(this.transformed_data, d => d.date),
+                max(this.transformed_data, d => d.date),
             ],
             // @ts-ignore
-            y: [0, d3.max(this.transformed_data, d => d.value)],
+            y: [0, max(this.transformed_data, d => d.value)],
         };
     }
 
@@ -132,9 +141,9 @@ export class SubPlot<PD extends SubPlotPlotDefinition = SubPlotPlotDefinition> {
                 : "value";
         return {
             // @ts-ignore
-            x: [d3.min(data, d => d.date), d3.max(data, d => d.date)],
+            x: [min(data, d => d.date), max(data, d => d.date)],
             // @ts-ignore
-            y: [0, d3.max(data, d => d[value_accessor])],
+            y: [0, max(data, d => d[value_accessor])],
             data: data,
         };
     }
@@ -189,7 +198,7 @@ export class SubPlot<PD extends SubPlotPlotDefinition = SubPlotPlotDefinition> {
         }
 
         // TODO: Refactor, introduces dashlet dependency
-        const dashlet = d3.select(
+        const dashlet = select(
             other_renderer._div_selection.node()!.closest(".dashlet")
         );
         if (!dashlet.empty())
@@ -252,9 +261,8 @@ export class SubPlot<PD extends SubPlotPlotDefinition = SubPlotPlotDefinition> {
 
 function line_draw_fn(subplot: SubplotSubs) {
     return (
-        d3
-            .line()
-            .curve(d3.curveLinear)
+        line()
+            .curve(curveLinear)
             // @ts-ignore
             .x(d => subplot._renderer.scale_x(d.date))
             // @ts-ignore
@@ -266,9 +274,8 @@ function area_draw_fn(subplot: SubplotSubs) {
     const shift_y = subplot.get_coord_shifts()[1];
     const base = subplot._renderer!.scale_y(shift_y);
     return (
-        d3
-            .area()
-            .curve(d3.curveLinear)
+        area()
+            .curve(curveLinear)
             // @ts-ignore
             .x(d => subplot._renderer.scale_x(d.date))
             // @ts-ignore
@@ -341,7 +348,7 @@ export class LinePlot extends SubPlot<LinePlotPlotDefinition> {
         const classes = (this.definition!.css_classes || []).concat("line");
         return color != undefined
             ? color
-            : d3.color(this._get_css("stroke", "path", classes));
+            : d3_Color(this._get_css("stroke", "path", classes));
     }
 }
 
@@ -375,7 +382,7 @@ export class AreaPlot extends SubPlot<AreaPlotPlotDefinition> {
         const classes = (this.definition!.css_classes || []).concat("area");
         return color != undefined
             ? color
-            : d3.color(this._get_css("fill", "path", classes));
+            : d3_Color(this._get_css("fill", "path", classes));
     }
 
     override get_opacity() {
@@ -389,12 +396,7 @@ export class AreaPlot extends SubPlot<AreaPlotPlotDefinition> {
 
 // Renders multiple bars, each based on date->end_date
 export class BarPlot extends SubPlot<BarPlotPlotDefinition> {
-    _bars!: d3.Selection<
-        SVGRectElement,
-        TransformedData,
-        SVGSVGElement,
-        unknown
-    >;
+    _bars!: Selection<SVGRectElement, TransformedData, SVGSVGElement, unknown>;
 
     override ident() {
         return "bar";
@@ -461,7 +463,7 @@ export class BarPlot extends SubPlot<BarPlotPlotDefinition> {
         const classes = (this.definition!.css_classes || []).concat("bar");
         return color != undefined
             ? color
-            : d3.color(this._get_css("fill", "rect", classes));
+            : d3_Color(this._get_css("fill", "rect", classes));
     }
 }
 
@@ -528,17 +530,17 @@ export class SingleValuePlot extends SubPlot<SingleValuePlotDefinition> {
     }
 
     override get_color() {
-        return d3.color("white");
+        return d3_Color("white");
     }
 }
 
 // Provides quadtree to find points on canvas
 export class ScatterPlot extends SubPlot<ScatterPlotPlotDefinition> {
-    quadtree: null | d3.Quadtree<TransformedData>;
-    canvas: null | d3.Selection<
+    quadtree: null | Quadtree<TransformedData>;
+    canvas: null | Selection<
         HTMLCanvasElement,
         {width: number; height: number},
-        d3.BaseType,
+        BaseType,
         null
     >;
     _last_canvas_size!: {width: number; height: number};
@@ -590,8 +592,7 @@ export class ScatterPlot extends SubPlot<ScatterPlotPlotDefinition> {
             point.scaled_y = scale_y(point.value);
         });
 
-        this.quadtree = d3
-            .quadtree<TransformedData>()
+        this.quadtree = quadtree<TransformedData>()
             .x(d => d.scaled_x)
             .y(d => d.scaled_y)
             .addAll(this.transformed_data);
@@ -642,7 +643,7 @@ export class ScatterPlot extends SubPlot<ScatterPlotPlotDefinition> {
         const color = SubPlot.prototype.get_color.call(this);
         return color != undefined
             ? color
-            : d3.color(this._get_css("fill", "circle", ["scatterdot"]));
+            : d3_Color(this._get_css("fill", "circle", ["scatterdot"]));
     }
 }
 

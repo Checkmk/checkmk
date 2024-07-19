@@ -5,8 +5,8 @@
  */
 
 import type {Crossfilter, Dimension} from "crossfilter2";
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {BaseType, Selection} from "d3";
+import {descending} from "d3";
 import type {DataTableWidget} from "dc";
 import {dataTable} from "dc";
 
@@ -21,8 +21,8 @@ export class DCTableFigure<
     _pages: number;
     _dimension: Dimension<any, any> | null;
     _columns: null | any[];
-    _paging: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown> | null;
-    _div_options: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>;
+    _paging: Selection<HTMLDivElement, unknown, BaseType, unknown> | null;
+    _div_options: Selection<HTMLDivElement, unknown, BaseType, unknown>;
     _chart!: DataTableWidget;
     _sort_by!: (d: any) => any;
     _use_dynamic_paging: boolean;
@@ -134,7 +134,7 @@ export class DCTableFigure<
             .columns(this.columns())
             // @ts-ignore
             .sortBy(this.sort_by())
-            .order(d3.descending)
+            .order(descending)
             .on("preRender", () => this._update_offset())
             .on("preRedraw", () => this._update_offset())
             .on("pretransition", () => this._display());

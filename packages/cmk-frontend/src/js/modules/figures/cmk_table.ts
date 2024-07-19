@@ -7,8 +7,8 @@
 /* eslint-disable indent */
 
 import crossfilter from "crossfilter2";
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {BaseType, Selection} from "d3";
+import {select} from "d3";
 import type {PieChart} from "dc";
 import {pieChart} from "dc";
 
@@ -82,7 +82,7 @@ export interface TableFigureData<Config = PieChartData | NtopTalkerData>
 }
 
 export class TableFigure extends FigureBase<TableFigureData> {
-    _table!: d3.Selection<HTMLTableElement, unknown, d3.BaseType, unknown>;
+    _table!: Selection<HTMLTableElement, unknown, BaseType, unknown>;
 
     override ident() {
         return "table";
@@ -136,7 +136,7 @@ export class TableFigure extends FigureBase<TableFigureData> {
             .attr("colspan", d => d.colspan || null)
             .attr("rowspan", d => d.rowspan || null)
             .each(function (d) {
-                const cell = d3.select(this);
+                const cell = select(this);
                 if (d.text != null) cell.text(d.text);
                 if (d.html != null) cell.html(d.html);
             });
@@ -154,7 +154,7 @@ class HTMLTableCellElement extends HTMLElement {
 }
 
 function _update_figures_in_selection(
-    selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>
+    selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
 ) {
     selection
         .selectAll<HTMLTableCellElement, Cell>(".figure_cell")
@@ -184,7 +184,7 @@ function _update_figures_in_selection(
 }
 
 function _update_dc_graphs_in_selection(
-    selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>,
+    selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
     graph_group: string | null
 ) {
     selection
@@ -195,7 +195,7 @@ function _update_dc_graphs_in_selection(
                 // new format, not to be handled by this legacy block
                 return;
 
-            const node = d3.select(nodes[idx]);
+            const node = select(nodes[idx]);
             const svg = node.select("svg");
 
             if (svg.empty()) {
@@ -252,9 +252,9 @@ function _pie_chart_custom_renderlet(chart: PieChart, d: Cell<PieChartData>) {
     if (chart.svg().select(".empty-chart").empty()) return;
 
     // TODO: WIP
-    const labels_data: d3.Selection<d3.BaseType, any, d3.BaseType, any>[] = [];
+    const labels_data: Selection<BaseType, any, BaseType, any>[] = [];
     chart.selectAll("text.pie-label").each((_d, idx, nodes) => {
-        labels_data.push(d3.select(nodes[idx]));
+        labels_data.push(select(nodes[idx]));
     });
 
     let labels_key = chart

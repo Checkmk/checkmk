@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {BaseType, D3DragEvent, DragBehavior, Selection} from "d3";
+import {arc as d3arc, cluster, drag, pointer, polygonHull} from "d3";
 import {flextree} from "d3-flextree";
 
 import type {OverlayElement} from "./layer_utils";
@@ -158,16 +158,15 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
     }
 
     get_drag_callback(
-        drag_function: (event: d3.D3DragEvent<any, any, any>) => void
-    ): d3.DragBehavior<any, any, any> {
-        return d3
-            .drag()
+        drag_function: (event: D3DragEvent<any, any, any>) => void
+    ): DragBehavior<any, any, any> {
+        return drag()
             .on("start.drag", event => this._drag_start(event))
             .on("drag.drag", event => this._drag_drag(event, drag_function))
             .on("end.drag", () => this._drag_end());
     }
 
-    _drag_start(event: d3.D3DragEvent<any, any, any>): void {
+    _drag_start(event: D3DragEvent<any, any, any>): void {
         this.drag_start_info.start_coords = [event.x, event.y];
         this.drag_start_info.delta = {x: 0, y: 0};
         this.drag_start_info.options = JSON.parse(
@@ -178,8 +177,8 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
     }
 
     _drag_drag(
-        event: d3.D3DragEvent<any, any, any>,
-        drag_function: (event: d3.D3DragEvent<any, any, any>) => void
+        event: D3DragEvent<any, any, any>,
+        drag_function: (event: D3DragEvent<any, any, any>) => void
     ): void {
         this.drag_start_info.delta.x += event.dx;
         this.drag_start_info.delta.y += event.dy;
@@ -442,7 +441,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 type: "scale",
                 image: "themes/facelift/images/icon_resize.png",
                 call: this.get_drag_callback(
-                    (event: d3.D3DragEvent<any, any, any>) =>
+                    (event: D3DragEvent<any, any, any>) =>
                         this.resize_layer_drag(event)
                 ),
             },
@@ -462,7 +461,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 
     get_text_positioning(
         rad: number
-    ): (x: d3.Selection<d3.BaseType, unknown, d3.BaseType, unknown>) => any {
+    ): (x: Selection<BaseType, unknown, BaseType, unknown>) => any {
         rad = rad / 2;
         if (rad > (3 / 4) * Math.PI) rad = rad - Math.PI;
 
@@ -494,10 +493,10 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         };
     }
 
-    resize_layer_drag(event: d3.D3DragEvent<any, any, any>): void {
+    resize_layer_drag(event: D3DragEvent<any, any, any>): void {
         const rotation_rad =
             ((this.style_config.options.rotation as number) / 180) * Math.PI;
-        const coords = d3.pointer(event);
+        const coords = pointer(event);
         const offset_y = this.drag_start_info.start_coords[0] - coords[0];
         const offset_x = this.drag_start_info.start_coords[1] - coords[1];
 
@@ -630,14 +629,10 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
             (this.style_config.options.radius as number) *
             (this.max_depth - this.style_root_node.depth + 1);
         const rad = (this.get_rotation() / 180) * Math.PI;
-        const tree = d3
-            .cluster()
-            .size([
-                ((this.style_config.options.degree as number) / 360) *
-                    2 *
-                    Math.PI,
-                radius,
-            ]);
+        const tree = cluster().size([
+            ((this.style_config.options.degree as number) / 360) * 2 * Math.PI,
+            radius,
+        ]);
 
         this._style_root_node_offsets = [];
         this._text_rotations = [];
@@ -775,8 +770,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         );
         const end_angle = (degree / 180) * Math.PI;
 
-        const arc = d3
-            .arc()
+        const arc = d3arc()
             .innerRadius(25)
             .outerRadius(
                 (this.style_config.options.radius as number) *
@@ -1070,7 +1064,7 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
             .selectAll<SVGPathElement, [number, number][]>(
                 "path.children_boundary"
             )
-            .data([d3.polygonHull(hull_vertices)]);
+            .data([polygonHull(hull_vertices)]);
         hull = hull
             .enter()
             .append("path")

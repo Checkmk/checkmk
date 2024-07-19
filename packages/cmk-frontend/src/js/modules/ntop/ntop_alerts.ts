@@ -5,10 +5,18 @@
  */
 
 import crossfilter from "crossfilter2";
-/* eslint-disable import/no-namespace -- External packages */
-import * as d3 from "d3";
-import * as dc from "dc";
-/* eslint-enable import/no-namespace */
+import type {BaseType, Selection} from "d3";
+import {
+    scaleLinear,
+    scaleTime,
+    select,
+    selectAll,
+    timeDay,
+    timeDays,
+    timeFormat,
+} from "d3";
+import type {DataTableWidget} from "dc";
+import {barChart, redrawAll} from "dc";
 import $ from "jquery";
 
 import {DCTableFigure} from "@/modules/figures/cmk_dc_table";
@@ -44,7 +52,7 @@ export class NtopAlertsTabBar extends TabsBar {
     initialize(ifid: string) {
         TabsBar.prototype.initialize.call(this);
         this._activate_tab(this.get_tab_by_id("engaged_alerts_tab"));
-        d3.selectAll<any, ABCAlertsPage>("." + ifid_dep)
+        selectAll<any, ABCAlertsPage>("." + ifid_dep)
             .data()
             .forEach(o => o.set_ids(ifid));
     }
@@ -223,7 +231,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     }
 
     _setup_time_based_filters(
-        selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>
+        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
     ) {
         // These parameters -may- include activated filters
         this._filtered_date = null;
@@ -251,7 +259,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     }
 
     _setup_fetch_filters(
-        selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>
+        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
     ) {
         const dropdowns = selection
             .selectAll("div.dropdown")
@@ -293,9 +301,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     _fetch_filters_changed(event: Event) {
         if (event.target == null) return;
         const selectTarget = event.target as HTMLSelectElement;
-        const target = d3.select<HTMLSelectElement, ABCAlertsPage>(
-            selectTarget
-        );
+        const target = select<HTMLSelectElement, ABCAlertsPage>(selectTarget);
         this._fetch_filters = {};
         //@ts-ignore
         if (selectTarget.value != -1)
@@ -314,12 +320,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     }
 
     _setup_date_filter(
-        selection: d3.Selection<
-            HTMLTableCellElement,
-            unknown,
-            d3.BaseType,
-            unknown
-        >
+        selection: Selection<HTMLTableCellElement, unknown, BaseType, unknown>
     ) {
         const div_id = this.page_id() + "_date_filter";
         selection
@@ -329,10 +330,10 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             .style("display", "inline");
         const date_group = this._date_dimension
             .group(d => {
-                return d3.timeDay.floor(d);
+                return timeDay.floor(d);
             })
             .reduceSum(d => d.count);
-        const date_chart = dc.barChart("#" + div_id, this.page_id());
+        const date_chart = barChart("#" + div_id, this.page_id());
         const now = new Date();
         const chart_x_domain = [
             new Date((now.getTime() / 1000 - 31 * 86400) * 1000),
@@ -344,9 +345,9 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             .dimension(this._date_dimension)
             .group(date_group)
             .margins({left: 30, top: 5, right: 20, bottom: 20})
-            .x(d3.scaleTime().domain(chart_x_domain))
+            .x(scaleTime().domain(chart_x_domain))
             // @ts-ignore
-            .xUnits(d3.timeDays)
+            .xUnits(timeDays)
             // @ts-ignore
             .colors(() => {
                 return "#767d84c2";
@@ -396,10 +397,10 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             .ticks(5)
             .tickFormat(d => {
                 if (d.getMonth() === 0 && d.getDate() === 1)
-                    return d3.timeFormat("%Y")(d);
+                    return timeFormat("%Y")(d);
                 else if (d.getHours() === 0 && d.getMinutes() === 0)
-                    return d3.timeFormat("%m-%d")(d);
-                return d3.timeFormat("%H:%M")(d);
+                    return timeFormat("%m-%d")(d);
+                return timeFormat("%H:%M")(d);
             });
         date_chart.render();
     }
@@ -487,12 +488,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     }
 
     _setup_hour_filter(
-        selection: d3.Selection<
-            HTMLTableCellElement,
-            unknown,
-            d3.BaseType,
-            unknown
-        >
+        selection: Selection<HTMLTableCellElement, unknown, BaseType, unknown>
     ) {
         const div_id = this.page_id() + "_time_filter";
         selection
@@ -505,8 +501,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
                 return Math.floor(d);
             })
             .reduceSum(d => d.count);
-        const hour_chart = dc
-            .barChart("#" + div_id, this.page_id())
+        const hour_chart = barChart("#" + div_id, this.page_id())
             .width(500)
             .height(120)
             .centerBar(true)
@@ -514,8 +509,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             .group(hour_group)
             .margins({left: 30, top: 5, right: 20, bottom: 20})
             .x(
-                d3
-                    .scaleLinear()
+                scaleLinear()
                     .domain([0, 24])
                     .rangeRound([0, 10 * 24])
             )
@@ -540,7 +534,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     _setup_details_table(_selector: string) {}
 
     _setup_description_filter(
-        selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>
+        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
     ) {
         selection.append("label").text("Filter details by description");
         const msg_dimension = this._table_details
@@ -552,7 +546,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             .attr("type", "text")
             .classed("msg_filter", true)
             .on("input", (event: Event) => {
-                const target = d3.select(event.target as HTMLInputElement);
+                const target = select(event.target as HTMLInputElement);
                 const filter = target.property("value");
                 msg_dimension.filter(d => {
                     //@ts-ignore
@@ -563,23 +557,23 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     }
 
     _setup_status_text(
-        selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>
+        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
     ) {
         selection.classed("status", true).append("label");
     }
 
-    _update_css_classes(chart: dc.DataTableWidget) {
+    _update_css_classes(chart: DataTableWidget) {
         add_classes_to_trs(chart);
     }
 
-    _update_cells(chart: dc.DataTableWidget) {
+    _update_cells(chart: DataTableWidget) {
         this._update_severity(chart);
         // TODO: deactivated for now
         // make sure to reactivate if this feature gets implemented properly
         //this._update_actions(chart);
     }
 
-    _update_severity(chart: dc.DataTableWidget) {
+    _update_severity(chart: DataTableWidget) {
         add_columns_classes_to_nodes(chart, this._get_columns());
 
         const state_mapping = new Map<string, string>([
@@ -594,7 +588,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
         ]);
         // Add state class to severity
         chart.selectAll("td.severity").each((d, idx, nodes) => {
-            const label = d3.select(nodes[idx]).select("label");
+            const label = select(nodes[idx]).select("label");
             label.classed("badge", true);
             const state = state_mapping.get(d.severity.toLowerCase());
             if (state) label.classed(state, true);
@@ -621,7 +615,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     }
 
     override update_gui() {
-        dc.redrawAll(this.page_id());
+        redrawAll(this.page_id());
     }
 
     abstract _get_columns(): NtopColumn[];

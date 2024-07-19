@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {BaseType, Selection} from "d3";
+import {select} from "d3";
 
 import {figure_registry} from "@/modules/figures/cmk_figures";
 import type {ElementSize, FigureData} from "@/modules/figures/figure_types";
@@ -16,12 +16,7 @@ import type {SubPlot} from "./sub_plot";
 
 //TODO: delete this class if there is no need for it
 export class CmkGraphShifter extends CmkGraphTimeseriesFigure {
-    _cutter_div: null | d3.Selection<
-        HTMLDivElement,
-        null,
-        d3.BaseType,
-        unknown
-    >;
+    _cutter_div: null | Selection<HTMLDivElement, null, BaseType, unknown>;
     _shifts: Shift[];
 
     override ident() {
@@ -94,7 +89,7 @@ export class CmkGraphShifter extends CmkGraphTimeseriesFigure {
             .text("Shift data")
             // @ts-ignore
             .on("click", (_event, _d, idx: number, nodes) => {
-                const node = d3.select(nodes[idx]);
+                const node = select(nodes[idx]);
                 const active = !node.classed("active");
                 node.classed("active", active);
                 this._cutter_div!.select("div.options")

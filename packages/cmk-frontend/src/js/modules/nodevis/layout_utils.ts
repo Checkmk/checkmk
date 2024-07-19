@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {BaseType, D3DragEvent, Selection} from "d3";
+import {polygonHull, select} from "d3";
 
 import type {ForceOptions} from "./force_utils";
 import {ForceConfig} from "./force_utils";
@@ -518,10 +518,10 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
                 .style("position", "absolute")
                 .style("pointer-events", "all")
                 .each((d, idx, nodes) => {
-                    if (d.call) d3.select(nodes[idx]).call(d.call);
+                    if (d.call) select(nodes[idx]).call(d.call);
                 })
                 .each((d, idx, nodes) => {
-                    if (d.onclick) d3.select(nodes[idx]).on("click", d.onclick);
+                    if (d.onclick) select(nodes[idx]).on("click", d.onclick);
                 })
                 .style("top", coords.y - 62 + "px")
                 .style("left", coords.x + idx_num * (30 + 12) + "px")
@@ -568,7 +568,7 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
         });
         let hull = into_selection
             .selectAll<SVGPathElement, unknown>("path.style_overlay")
-            .data([d3.polygonHull(hull_vertices)]);
+            .data([polygonHull(hull_vertices)]);
         hull = hull
             .enter()
             .append("path")
@@ -585,13 +585,8 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
         ).style("opacity", null);
     }
 
-    add_optional_transition<GType extends d3.BaseType, Data>(
-        selection_with_node_data: d3.Selection<
-            GType,
-            Data,
-            d3.BaseType,
-            unknown
-        >
+    add_optional_transition<GType extends BaseType, Data>(
+        selection_with_node_data: Selection<GType, Data, BaseType, unknown>
     ) {
         if (this._world.viewport.get_layout_manager().skip_optional_transitions)
             return selection_with_node_data;
@@ -629,7 +624,7 @@ export class LayoutStyleFactory {
         node: NodevisNode,
         selection:
             | d3SelectionDiv
-            | d3.Selection<SVGGElement, unknown, null, undefined>
+            | Selection<SVGGElement, unknown, null, undefined>
     ) {
         return new (layout_style_class_registry.get_class(style_config.type))(
             this._world,
@@ -728,7 +723,7 @@ export function render_style_options(
     style_option_values: StyleOptionValues,
     options_changed_callback: (styleOptionValues: StyleOptionValues) => void,
     reset_default_options_callback: (
-        event: d3.D3DragEvent<any, any, any>
+        event: D3DragEvent<any, any, any>
     ) => void = _event => {
         return;
     }
@@ -773,7 +768,7 @@ export function render_style_options(
 }
 
 function _render_range_options(
-    table: d3.Selection<HTMLTableElement, string, any, unknown>,
+    table: Selection<HTMLTableElement, string, any, unknown>,
     style_option_specs: StyleOptionSpec[],
     style_option_values: StyleOptionValues,
     option_changed_callback: (option_id: string, new_value: number) => void
@@ -793,7 +788,7 @@ function _render_range_options(
         const current_value =
             style_option_values[style_option.id] || style_option.values.default;
         render_input_range(
-            d3.select(nodes[idx]),
+            select(nodes[idx]),
             new InputRangeOptions(
                 style_option.id,
                 style_option.text,
@@ -809,7 +804,7 @@ function _render_range_options(
 }
 
 function _render_checkbox_options(
-    table: d3.Selection<HTMLTableElement, string, any, unknown>,
+    table: Selection<HTMLTableElement, string, any, unknown>,
     style_option_specs: StyleOptionSpec[],
     style_option_values: StyleOptionValues,
     option_changed_callback: (option_id: string, new_value: boolean) => void
@@ -850,7 +845,7 @@ function _render_checkbox_options(
                 .append("div")
                 .classed("nodevis toggle_switch_container", true)
                 .on("click", (event, d) => {
-                    const node = d3.select(event.target);
+                    const node = select(event.target);
                     const new_value = node.classed("on") == true ? "off" : "on";
                     node.classed("on off", false);
                     node.classed(new_value, true);

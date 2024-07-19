@@ -5,8 +5,8 @@
  */
 
 import type {Dimension} from "crossfilter2";
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {ScaleLinear} from "d3";
+import {arc, histogram, max, range, scaleLinear} from "d3";
 
 import {FigureBase} from "@/modules/figures/cmk_figures";
 import {
@@ -129,8 +129,7 @@ export class GaugeFigure extends FigureBase<
             .join(enter => enter.append("path").classed("gauge_span", true))
             .attr(
                 "d",
-                d3
-                    .arc<null>()
+                arc<null>()
                     .innerRadius(this._radius * 0.75)
                     .outerRadius(this._radius * 0.85)
                     .startAngle(-limit)
@@ -198,7 +197,7 @@ export class GaugeFigure extends FigureBase<
 
         if (domain[0] === domain[1]) return;
         const limit = (7 * Math.PI) / 12;
-        const scale_x = d3.scaleLinear().domain(domain).range([-limit, limit]);
+        const scale_x = scaleLinear().domain(domain).range([-limit, limit]);
         // this.metric_thresholds_stripe(plot, domain, scale_x);
         // gauge bar
         const last_value = data[data.length - 1];
@@ -266,7 +265,7 @@ export class GaugeFigure extends FigureBase<
     metric_thresholds_stripe(
         plot: SingleMetricDataPlotDefinitions,
         domain: Domain,
-        scale_x: d3.ScaleLinear<number, number>
+        scale_x: ScaleLinear<number, number>
     ) {
         this.plot
             .selectAll<SVGPathElement, Levels>("path.level")
@@ -275,8 +274,7 @@ export class GaugeFigure extends FigureBase<
             .attr("class", d => "level " + d.style)
             .attr(
                 "d",
-                d3
-                    .arc<Levels>()
+                arc<Levels>()
                     .innerRadius(this._radius * 0.71)
                     .outerRadius(this._radius * 0.73)
                     .startAngle(d => scale_x(d.from))
@@ -289,21 +287,19 @@ export class GaugeFigure extends FigureBase<
     }
     _render_histogram(domain: Domain, data: any[]) {
         const num_bins = 40;
-        const x = d3.scaleLinear().domain([0, num_bins]).range(domain);
-        const bins = d3
-            .histogram()
+        const x = scaleLinear().domain([0, num_bins]).range(domain);
+        const bins = histogram()
             // @ts-ignore
             .value(d => d.value)
-            .thresholds(d3.range(num_bins).map(x))
+            .thresholds(range(num_bins).map(x))
             // @ts-ignore
             .domain(x.range())(data);
 
         const record_count = data.length;
         const innerRadius = this._radius * 0.87;
-        const bin_scale = d3
-            .scaleLinear()
+        const bin_scale = scaleLinear()
             // @ts-ignore
-            .domain([0, d3.max(bins, d => d.length)])
+            .domain([0, max(bins, d => d.length)])
             .range([innerRadius, this._radius]);
         const limit = (7 * Math.PI) / 12;
         const angle_between_bins = (2 * limit) / bins.length;
@@ -316,8 +312,7 @@ export class GaugeFigure extends FigureBase<
             .attr(
                 "d",
                 // @ts-ignore
-                d3
-                    .arc()
+                arc()
                     .innerRadius(innerRadius)
                     .outerRadius(
                         // @ts-ignore

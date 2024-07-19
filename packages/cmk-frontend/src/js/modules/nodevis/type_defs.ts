@@ -4,9 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import type {HierarchyNode} from "d3";
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {HierarchyNode, Selection} from "d3";
+import {hierarchy as d3hierarchy} from "d3";
 
 import type {DatasourceManager} from "./datasources";
 import type {ForceOptions} from "./force_utils";
@@ -16,11 +15,11 @@ import type {
 } from "./layout_utils";
 import type {Viewport} from "./viewport";
 
-export type d3Selection = d3.Selection<any, unknown, any, unknown>;
+export type d3Selection = Selection<any, unknown, any, unknown>;
 
-export type d3SelectionDiv = d3.Selection<HTMLDivElement, null, any, unknown>;
-export type d3SelectionSvg = d3.Selection<SVGSVGElement, null, any, any>;
-export type d3SelectionG = d3.Selection<SVGGElement, null, any, any>;
+export type d3SelectionDiv = Selection<HTMLDivElement, null, any, unknown>;
+export type d3SelectionSvg = Selection<SVGSVGElement, null, any, any>;
+export type d3SelectionG = Selection<SVGGElement, null, any, any>;
 
 export type DatasourceType = "bi_aggregations" | "topology";
 export class NodevisWorld {
@@ -366,7 +365,7 @@ export class NodeConfig {
     _create_hierarchy(
         serialized_node_config: SerializedNodeConfig
     ): NodeVisHierarchyNode<NodeData> {
-        const hierarchy = d3.hierarchy<NodeData>(
+        const hierarchy = d3hierarchy<NodeData>(
             serialized_node_config.hierarchy
         ) as NodeVisHierarchyNode<NodeData>;
         // Initialize default info of each node

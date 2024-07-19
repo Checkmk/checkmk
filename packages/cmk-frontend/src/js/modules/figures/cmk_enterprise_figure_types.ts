@@ -4,8 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import type * as d3 from "d3";
+import type {HSLColor, RGBColor} from "d3";
 
 import type {FigureData} from "@/modules/figures/figure_types";
 
@@ -91,9 +90,9 @@ export interface LinePlotPlotDefinition extends SubPlotPlotDefinition {
 }
 
 export interface DrawSubplotStyles {
-    fill: d3.RGBColor | d3.HSLColor | null | string;
+    fill: RGBColor | HSLColor | null | string;
     opacity?: string | number;
-    stroke?: d3.RGBColor | d3.HSLColor | null;
+    stroke?: RGBColor | HSLColor | null;
     "stroke-width"?: number;
 }
 

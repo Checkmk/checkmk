@@ -7,8 +7,8 @@
 // eslint-disable-next-line no-duplicate-imports -- Explicitly imported for side-effects
 import "./layout";
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {D3ZoomEvent, ScaleLinear, Selection, ZoomBehavior} from "d3";
+import {scaleLinear, zoom, zoomIdentity} from "d3";
 
 import {ForceSimulation} from "./force_simulation";
 import type {ForceConfig} from "./force_utils";
@@ -46,17 +46,17 @@ export class Viewport {
     _div_selection: d3SelectionDiv;
     _div_content_selection: d3SelectionDiv;
     _svg_content_selection: d3SelectionSvg;
-    _zoom_behaviour: d3.ZoomBehavior<any, any>;
-    last_zoom = d3.zoomIdentity;
-    scale_x: d3.ScaleLinear<number, number>;
-    scale_y: d3.ScaleLinear<number, number>;
+    _zoom_behaviour: ZoomBehavior<any, any>;
+    last_zoom = zoomIdentity;
+    scale_x: ScaleLinear<number, number>;
+    scale_y: ScaleLinear<number, number>;
     always_update_layout = false;
     _node_config: NodeConfig;
     _margin = {top: 10, right: 10, bottom: 10, left: 10};
     _overlays_configs: OverlaysConfig;
     // Infos usable by layers
     _div_layers_selection: d3SelectionDiv;
-    _status_table: d3.Selection<HTMLTableElement, null, any, unknown>;
+    _status_table: Selection<HTMLTableElement, null, any, unknown>;
     _feeding_data = false;
     _show_debug_messages = true;
 
@@ -126,7 +126,7 @@ export class Viewport {
 
         this._svg_layers_selection = this._svg_content_selection.append("g");
         this._svg_layers_selection.attr("id", "svg_layers");
-        this._zoom_behaviour = d3.zoom();
+        this._zoom_behaviour = zoom();
         this._zoom_behaviour
             .scaleExtent([0.2, 10])
             .on("zoom", event => this.zoomed(event))
@@ -163,8 +163,8 @@ export class Viewport {
             .style("table-layout", "fixed");
 
         // Initialize viewport size and scales before loading the layers
-        this.scale_x = d3.scaleLinear();
-        this.scale_y = d3.scaleLinear();
+        this.scale_x = scaleLinear();
+        this.scale_y = scaleLinear();
 
         this._node_config = NodeConfig.prototype.create_empty_config();
     }
@@ -460,7 +460,7 @@ export class Viewport {
         }
     }
 
-    zoomed(event: d3.D3ZoomEvent<any, any>) {
+    zoomed(event: D3ZoomEvent<any, any>) {
         this.last_zoom = event.transform;
         this.scale_x.range([0, this.width * event.transform.k]);
         this.scale_y.range([0, this.height * event.transform.k]);
@@ -516,12 +516,10 @@ export class Viewport {
         this.width = rectangle.width - this._margin.left - this._margin.right;
         this.height = rectangle.height - this._margin.top - this._margin.bottom;
 
-        this.scale_x = d3
-            .scaleLinear()
+        this.scale_x = scaleLinear()
             .domain([0, this.width])
             .range([0, this.width]);
-        this.scale_y = d3
-            .scaleLinear()
+        this.scale_y = scaleLinear()
             .domain([0, this.height])
             .range([0, this.height]);
 
@@ -543,7 +541,7 @@ export class Viewport {
         DefaultTransition.add_transition(this._svg_content_selection).call(
             this._zoom_behaviour.transform,
             () => {
-                return d3.zoomIdentity
+                return zoomIdentity
                     .translate(this.width / 2, this.height / 2)
                     .scale(use_scale)
                     .translate(x, y);
@@ -555,7 +553,7 @@ export class Viewport {
         this._svg_content_selection
             .transition()
             .duration(DefaultTransition.duration())
-            .call(this._zoom_behaviour.transform, d3.zoomIdentity);
+            .call(this._zoom_behaviour.transform, zoomIdentity);
     }
 
     zoom_fit() {
@@ -584,7 +582,7 @@ export class Viewport {
 
     set_zoom(to_percent: number) {
         const new_scale = to_percent / 100;
-        const new_zoom = d3.zoomIdentity
+        const new_zoom = zoomIdentity
             .translate(
                 (-this.width / 2) * new_scale + this.width / 2,
                 (-this.height / 2) * new_scale + this.height / 2
@@ -599,7 +597,7 @@ export class Viewport {
     change_zoom(by_percent: number) {
         const new_scale =
             Math.floor((this.last_zoom.k * 100 + by_percent) / 10) / 10;
-        const new_zoom = d3.zoomIdentity
+        const new_zoom = zoomIdentity
             .translate(
                 (-this.width / 2) * new_scale + this.width / 2,
                 (-this.height / 2) * new_scale + this.height / 2

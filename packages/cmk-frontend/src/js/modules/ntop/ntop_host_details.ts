@@ -6,11 +6,11 @@
 
 /*eslint no-undef: "off"*/
 import crossfilter from "crossfilter2";
-/* eslint-disable import/no-namespace -- External packages with namespace */
-import * as d3 from "d3";
-import * as dc from "dc";
+import type {Selection} from "d3";
+import {ascending, select, selectAll} from "d3";
+import type {DataTableWidget, PieChart, RowChart} from "dc";
+import {pieChart, redrawAll, renderAll, rowChart} from "dc";
 
-/* eslint-enable import/no-namespace */
 import {DCTableFigure} from "@/modules/figures/cmk_dc_table";
 import type {FigureBase} from "@/modules/figures/cmk_figures";
 import {figure_registry} from "@/modules/figures/cmk_figures";
@@ -84,7 +84,7 @@ export class HostTabs extends TabsBar {
                     this.get_tab_by_id(tab_id) as ABCAlertsTab
                 )._alerts_page.current_ntophost = this.current_ntophost)
         );
-        d3.selectAll("." + ifid_dep)
+        selectAll("." + ifid_dep)
             .data()
             // @ts-ignore
             .forEach(o => o.set_ids(ifid, vlanid));
@@ -274,7 +274,7 @@ class TrafficTab extends NtopTab {
         this._table_stats.process_data(data["table_breakdown"]);
 
         //_update_dc_graphs_in_selection(this._table_figures._div_selection, this.tab_id());
-        dc.redrawAll(this.tab_id());
+        redrawAll(this.tab_id());
 
         update_item_link(this, data["ntop_link"]);
     }
@@ -314,7 +314,7 @@ class PacketsTab extends NtopTab {
         if (data == undefined) return;
         this._figures["table_packets"].process_data(data["table_packets"]);
 
-        dc.redrawAll(this.tab_id());
+        redrawAll(this.tab_id());
         update_item_link(this, data["ntop_link"]);
     }
 }
@@ -352,7 +352,7 @@ class PortsTab extends NtopTab {
 
     override _update_data(data: PortsTabData) {
         this._table_ports.process_data(data["table_ports"]);
-        dc.redrawAll(this.tab_id());
+        redrawAll(this.tab_id());
         update_item_link(this, data["ntop_link"]);
     }
 }
@@ -361,14 +361,14 @@ class PeersTab extends NtopTab {
     _filter_dimensions: Record<any, any>;
     _filters: Record<any, any>;
     _crossfilter!: crossfilter.Crossfilter<any>;
-    _host_chart!: dc.RowChart;
+    _host_chart!: RowChart;
     _name_dimension!: crossfilter.Dimension<any, any>;
     _traffic_per_host!: crossfilter.Group<
         any,
         crossfilter.NaturallyOrderedValue,
         unknown
     >;
-    _pie_chart!: dc.PieChart;
+    _pie_chart!: PieChart;
     _pie_dimension!: crossfilter.Dimension<any, any>;
     _pie_group!: crossfilter.Group<any, any, any>;
     _table_stats!: DCTableFigure;
@@ -447,7 +447,7 @@ class PeersTab extends NtopTab {
         this._crossfilter = crossfilter();
 
         // Host chart
-        this._host_chart = dc.rowChart("#peers_bar", this.tab_id());
+        this._host_chart = rowChart("#peers_bar", this.tab_id());
         this._name_dimension = this._crossfilter.dimension(function (d) {
             return d.name;
         });
@@ -476,7 +476,7 @@ class PeersTab extends NtopTab {
             .ticks(5);
 
         // Protocol chart
-        this._pie_chart = dc.pieChart("#peers_pie", this.tab_id());
+        this._pie_chart = pieChart("#peers_pie", this.tab_id());
         this._pie_dimension = this._crossfilter.dimension(d => d.l7proto);
         this._pie_group = this._pie_dimension.group().reduceSum(d => d.traffic);
         this._pie_chart
@@ -492,7 +492,7 @@ class PeersTab extends NtopTab {
 
         // Table
         const name_dimension = this._crossfilter.dimension(d => d.name);
-        dc.renderAll(this.tab_id());
+        renderAll(this.tab_id());
 
         // Table
         const div_id = "peers_table";
@@ -508,7 +508,7 @@ class PeersTab extends NtopTab {
         this._table_stats
             .get_dc_chart()
             .on("renderlet", chart => this._update_css_classes(chart));
-        this._table_stats.get_dc_chart().order(d3.ascending);
+        this._table_stats.get_dc_chart().order(ascending);
     }
 
     override _update_data(data?: PeersTabData) {
@@ -519,13 +519,13 @@ class PeersTab extends NtopTab {
         if (data_stats == []) return;
         this._crossfilter.remove(() => true);
         this._crossfilter.add(data_stats);
-        dc.redrawAll(this.tab_id());
+        redrawAll(this.tab_id());
         this._table_stats.remove_loading_image();
 
         update_item_link(this, data["ntop_link"]);
     }
 
-    _update_css_classes(chart: dc.DataTableWidget) {
+    _update_css_classes(chart: DataTableWidget) {
         add_classes_to_trs(chart);
         add_columns_classes_to_nodes(chart, this._get_columns());
     }
@@ -564,10 +564,10 @@ class PeersTab extends NtopTab {
 
 class ApplicationsTab extends NtopTab {
     _table!: TableFigure;
-    _nav!: d3.Selection<HTMLElement, any, HTMLElement, any>;
-    _li!: d3.Selection<HTMLLIElement, any, HTMLElement, any>;
-    _subtab_applications!: d3.Selection<HTMLDivElement, any, HTMLElement, any>;
-    _subtab_categories!: d3.Selection<HTMLDivElement, any, HTMLElement, any>;
+    _nav!: Selection<HTMLElement, any, HTMLElement, any>;
+    _li!: Selection<HTMLLIElement, any, HTMLElement, any>;
+    _subtab_applications!: Selection<HTMLDivElement, any, HTMLElement, any>;
+    _subtab_categories!: Selection<HTMLDivElement, any, HTMLElement, any>;
     _table_applications!: TableFigure;
     _table_categories!: TableFigure;
 
@@ -657,7 +657,7 @@ class ApplicationsTab extends NtopTab {
         this._tab_selection
             .selectAll("div.subtab")
             .style("display", (_d, idx, nodes) => {
-                const div = d3.select(nodes[idx]);
+                const div = select(nodes[idx]);
                 if (div.attr("id") == activate_id_str) return null;
                 else return "none";
             });
@@ -668,7 +668,7 @@ class ApplicationsTab extends NtopTab {
         this._table.process_data(data["table_apps_overview"]);
         this._table_applications.process_data(data["table_apps_applications"]);
         this._table_categories.process_data(data["table_apps_categories"]);
-        dc.redrawAll(this.tab_id());
+        redrawAll(this.tab_id());
 
         update_item_link(this, data["ntop_link"]);
     }

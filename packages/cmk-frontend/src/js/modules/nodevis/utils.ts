@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {BaseType, Selection} from "d3";
+import {select} from "d3";
 
 import type {AbstractNodeVisConstructor} from "./layer_utils";
 import type {StyleMatcherConditions} from "./layout_utils";
@@ -33,8 +33,8 @@ export class DefaultTransition {
         return 500;
     }
 
-    static add_transition<GType extends d3.BaseType, Data>(
-        selection: d3.Selection<GType, Data, d3.BaseType, unknown>
+    static add_transition<GType extends BaseType, Data>(
+        selection: Selection<GType, Data, BaseType, unknown>
     ) {
         return selection.transition().duration(DefaultTransition.duration());
     }
@@ -216,7 +216,7 @@ export class SearchFilters {
     _root_node: d3SelectionDiv;
     constructor(root_node_selector: string | null = null) {
         if (root_node_selector == null) root_node_selector = "#form_filter";
-        this._root_node = d3.select(root_node_selector);
+        this._root_node = select(root_node_selector);
     }
 
     add_hosts_to_host_regex(add_hosts: Set<string>) {
@@ -292,7 +292,7 @@ export class SearchFilters {
 
 export class LiveSearch {
     _root_node: d3SelectionDiv;
-    _search_button: d3.Selection<HTMLInputElement, null, any, unknown>;
+    _search_button: Selection<HTMLInputElement, null, any, unknown>;
     _update_handler: () => void;
     _last_body = "";
     _sent_last_body = "";
@@ -305,7 +305,7 @@ export class LiveSearch {
     _original_submit_handler: string;
     constructor(root_node_selector: string, update_handler: () => void) {
         // root_node_selector should point to a <form> tag
-        this._root_node = d3.select(root_node_selector);
+        this._root_node = select(root_node_selector);
         this._search_button =
             this._root_node.select<HTMLInputElement>("input#_apply");
         this._update_handler = update_handler;
@@ -641,7 +641,7 @@ export function add_basic_quickinfo(
     rows.append("td")
         .text(d => d.value)
         .each((d, idx, tds) => {
-            const td = d3.select(tds[idx]);
+            const td = select(tds[idx]);
             if (d.css_styles)
                 for (const [key, value] of Object.entries(d.css_styles)) {
                     td.style(key, value);
@@ -659,9 +659,7 @@ export function show_tooltip(
     let info = "";
     if (tooltip.html) info = tooltip.html;
     if (tooltip.quickinfo) {
-        const div = d3.select<HTMLDivElement, null>(
-            document.createElement("div")
-        );
+        const div = select<HTMLDivElement, null>(document.createElement("div"));
         add_basic_quickinfo(div, tooltip.quickinfo);
         info += div.html();
     }

@@ -6,8 +6,8 @@
 
 /* eslint-disable indent */
 
-/* eslint-disable-next-line import/no-namespace -- Disable rule for d3 */
-import * as d3 from "d3";
+import type {Selection} from "d3";
+import {select as d3select, selectAll} from "d3";
 import type {DataTableWidget} from "dc";
 import $ from "jquery";
 
@@ -44,11 +44,11 @@ export class interface_table extends TableFigure {
             minimumResultsForSearch: 5,
         });
         select2.on("select2:select", event => {
-            this._change_post_url(d3.select(event.target));
+            this._change_post_url(d3select(event.target));
             this.scheduler.force_update();
         });
     }
-    _change_post_url(select: d3.Selection<Element, unknown, null, unknown>) {
+    _change_post_url(select: Selection<Element, unknown, null, unknown>) {
         const name = select.property("name");
         const id = select.property("value");
         switch (name) {
@@ -71,7 +71,7 @@ export class interface_table extends TableFigure {
                 this._ifid +
                 host_body
         );
-        d3.selectAll("." + ifid_dep)
+        selectAll("." + ifid_dep)
             .data()
             // @ts-ignore
             .forEach(o => o.set_ids(this._ifid, this._vlanid));
@@ -156,7 +156,7 @@ export function add_columns_classes_to_nodes(
         .each((_d, idx, nodes) => {
             const classes = columns[idx].classes;
             if (!classes) return;
-            const node = d3.select(nodes[idx]);
+            const node = d3select(nodes[idx]);
             classes.forEach(classname => {
                 node.classed(classname, true);
             });

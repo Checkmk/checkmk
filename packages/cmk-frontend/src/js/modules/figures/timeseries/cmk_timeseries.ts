@@ -5,8 +5,26 @@
  */
 
 import type {Dimension} from "crossfilter2";
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {
+    BaseType,
+    ScaleLinear,
+    ScaleTime,
+    Selection,
+    ZoomBehavior,
+    ZoomTransform,
+} from "d3";
+import {
+    axisBottom,
+    axisLeft,
+    max,
+    min,
+    scaleLinear,
+    scaleTime,
+    select,
+    timeFormat,
+    zoom,
+    zoomIdentity,
+} from "d3";
 import range from "lodash.range";
 
 import {FigureTooltip} from "@/modules/figures/cmk_figure_tooltip";
@@ -49,22 +67,22 @@ export class TimeseriesFigure<
 > extends FigureBase<TimeseriesFigureData, _DashletSpec> {
     _subplots: SubPlot[];
     _subplots_by_id: Record<string, SubPlot>;
-    g!: d3.Selection<SVGGElement, unknown, d3.BaseType, unknown>;
-    _tooltip!: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>;
+    g!: Selection<SVGGElement, unknown, BaseType, unknown>;
+    _tooltip!: Selection<HTMLDivElement, unknown, BaseType, unknown>;
     _legend_dimension: Dimension<any, string>;
     tooltip_generator!: FigureTooltip;
-    scale_x!: d3.ScaleTime<number, number>;
-    orig_scale_x!: d3.ScaleTime<number, number>;
-    scale_y!: d3.ScaleLinear<number, number>;
-    orig_scale_y!: d3.ScaleLinear<number, number>;
+    scale_x!: ScaleTime<number, number>;
+    orig_scale_x!: ScaleTime<number, number>;
+    scale_y!: ScaleLinear<number, number>;
+    orig_scale_y!: ScaleLinear<number, number>;
     lock_zoom_x!: boolean;
     lock_zoom_y!: boolean;
     lock_zoom_x_scale!: boolean;
-    _legend!: d3.Selection<HTMLDivElement, SubPlot, d3.BaseType, unknown>;
+    _legend!: Selection<HTMLDivElement, SubPlot, BaseType, unknown>;
     _title!: string;
     _zoom_active!: boolean;
-    _zoom!: d3.ZoomBehavior<SVGSVGElement, unknown>;
-    _current_zoom!: d3.ZoomTransform;
+    _zoom!: ZoomBehavior<SVGSVGElement, unknown>;
+    _current_zoom!: ZoomTransform;
     _title_url!: string;
     _x_domain!: number[];
     _y_domain!: number[];
@@ -133,10 +151,10 @@ export class TimeseriesFigure<
         //    });
 
         // All subplots share the same scale
-        this.scale_x = d3.scaleTime();
-        this.orig_scale_x = d3.scaleTime();
-        this.scale_y = d3.scaleLinear();
-        this.orig_scale_y = d3.scaleLinear();
+        this.scale_x = scaleTime();
+        this.orig_scale_x = scaleTime();
+        this.scale_y = scaleLinear();
+        this.orig_scale_y = scaleLinear();
         this._setup_legend();
         this.resize();
         this._setup_zoom();
@@ -222,10 +240,9 @@ export class TimeseriesFigure<
         return 0;
     }
     _setup_zoom() {
-        this._current_zoom = d3.zoomIdentity;
+        this._current_zoom = zoomIdentity;
         this._zoom_active = false;
-        this._zoom = d3
-            .zoom<SVGSVGElement, unknown>()
+        this._zoom = zoom<SVGSVGElement, unknown>()
             .scaleExtent([0.01, 100])
             .on("zoom", event => {
                 const last_y = this._current_zoom.y;
@@ -320,8 +337,8 @@ export class TimeseriesFigure<
             time_range = [now, now];
         }
 
-        const domain_min = d3.min(all_domains, d => d.x[0]);
-        const domain_max = d3.max(all_domains, d => d.x[1]);
+        const domain_min = min(all_domains, d => d.x[0]);
+        const domain_max = max(all_domains, d => d.x[1]);
         this._x_domain = [
             // @ts-ignore
             domain_min < time_range[0] ? domain_min : time_range[0],
@@ -331,10 +348,7 @@ export class TimeseriesFigure<
 
         const y_tick_count = Math.max(2, Math.ceil(this.plot_size.height / 50));
         const [min_val, max_val, step] = partitionableDomain(
-            [
-                d3.min(all_domains, d => d.y[0])!,
-                d3.max(all_domains, d => d.y[1])!,
-            ],
+            [min(all_domains, d => d.y[0])!, max(all_domains, d => d.y[1])!],
             y_tick_count,
             domainIntervals(
                 getIn(
@@ -448,7 +462,7 @@ export class TimeseriesFigure<
         new_items.style("pointer-events", "all");
         new_items.append("label").text(d => d.definition!.label);
         new_items.on("click", event => {
-            const item = d3.select(event.currentTarget);
+            const item = select(event.currentTarget);
             item.classed("disabled", !item.classed("disabled"));
             // @ts-ignore
             item.style(
@@ -561,19 +575,18 @@ export class TimeseriesFigure<
 
         const x_tick_count = Math.min(Math.ceil(this.plot_size.width / 65), 6);
         this.transition(x).call(
-            d3
-                .axisBottom(this.scale_x)
+            axisBottom(this.scale_x)
                 .tickFormat(d => {
                     // @ts-ignore
                     if (d.getMonth() === 0 && d.getDate() === 1)
                         // @ts-ignore
-                        return d3.timeFormat("%Y")(d);
+                        return timeFormat("%Y")(d);
                     // @ts-ignore
                     else if (d.getHours() === 0 && d.getMinutes() === 0)
                         // @ts-ignore
-                        return d3.timeFormat("%m-%d")(d);
+                        return timeFormat("%m-%d")(d);
                     // @ts-ignore
-                    return d3.timeFormat("%H:%M")(d);
+                    return timeFormat("%H:%M")(d);
                 })
                 .ticks(x_tick_count)
         );
@@ -588,8 +601,7 @@ export class TimeseriesFigure<
 
         const render_function = this.get_scale_render_function();
         this.transition(y).call(
-            d3
-                .axisLeft(this.scale_y)
+            axisLeft(this.scale_y)
                 .tickFormat(d => render_function(d).replace(/\.0+\b/, ""))
                 .ticks(this._y_ticks())
         );
@@ -608,8 +620,7 @@ export class TimeseriesFigure<
     render_grid() {
         // Grid
         const height = this.plot_size.height;
-        d3
-            .axisBottom(this.scale_x)
+        axisBottom(this.scale_x)
             .ticks(5)
             .tickSize(-height)
             // @ts-ignore
@@ -624,8 +635,7 @@ export class TimeseriesFigure<
 
         const width = this.plot_size.width;
 
-        d3
-            .axisLeft(this.scale_y)
+        axisLeft(this.scale_y)
             .tickSize(-width)
             .ticks(this._y_ticks() * 2)
             // @ts-ignore
@@ -638,7 +648,7 @@ export class TimeseriesFigure<
         );
     }
 
-    //typing this argument as d3.selection causes a
+    //typing this argument as selection causes a
     // lot of typing errors which I couldn't solve until now
     transition(selection: any) {
         if (this._zoom_active) {

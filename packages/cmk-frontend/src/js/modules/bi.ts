@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/* eslint-disable-next-line import/no-namespace -- External package */
-import * as d3 from "d3";
+import type {BaseType, EnterElement, Selection} from "d3";
+import {json, select, selectAll} from "d3";
 
 import {call_ajax} from "./ajax";
 import type {CMKAjaxReponse} from "./types";
@@ -153,10 +153,10 @@ export function toggle_assumption(
 }
 
 export function update_argument_hints() {
-    d3.selectAll<HTMLSelectElement, unknown>(
+    selectAll<HTMLSelectElement, unknown>(
         "select[onchange='cmk.bi.update_argument_hints();']"
     ).each((_d, idx, nodes) => {
-        const node = d3.select(nodes[idx]);
+        const node = select(nodes[idx]);
         const rule_arguments =
             //@ts-ignore
             window["bi_rule_argument_lookup"][node.property("value")];
@@ -191,21 +191,21 @@ export function update_argument_hints() {
         input_nodes.attr("placeholder", "");
         input_nodes.each((_d, idx, nodes) => {
             if (idx >= rule_arguments.length) return;
-            const argument_input = d3.select(nodes[idx]);
+            const argument_input = select(nodes[idx]);
             argument_input.attr("placeholder", rule_arguments[idx]);
         });
     });
 }
 
 export abstract class BIPreview {
-    _root_node: d3.Selection<HTMLFormElement, unknown, HTMLElement, any>;
+    _root_node: Selection<HTMLFormElement, unknown, HTMLElement, any>;
     _preview_active: boolean;
     _varprefix: string;
     _last_body: string;
     _update_interval: number;
     _update_active: boolean;
     constructor(root_node: string, varprefix: string) {
-        this._root_node = d3.select<HTMLFormElement, unknown>(root_node);
+        this._root_node = select<HTMLFormElement, unknown>(root_node);
         this._preview_active = false;
         this._varprefix = varprefix;
         this._last_body = "";
@@ -236,7 +236,7 @@ export abstract class BIPreview {
 
         if (this._update_active) return;
 
-        d3.json<CMKAjaxReponse<any>>(this._get_update_url(), {
+        json<CMKAjaxReponse<any>>(this._get_update_url(), {
             credentials: "include",
             method: "POST",
             body: body,
@@ -249,10 +249,10 @@ export abstract class BIPreview {
     }
 
     _create_node_preview_div(
-        selection: d3.Selection<
-            d3.EnterElement,
+        selection: Selection<
+            EnterElement,
             Record<string, any>[],
-            d3.BaseType,
+            BaseType,
             Record<string, any>[]
         >
     ) {
@@ -262,7 +262,7 @@ export abstract class BIPreview {
     _update_preview_of_node(
         data_rows: any[],
         title: string,
-        node_preview_div: d3.Selection<
+        node_preview_div: Selection<
             HTMLDivElement,
             unknown,
             HTMLElement | null,
@@ -344,9 +344,9 @@ export class BIRulePreview extends BIPreview {
     _span_arguments: any = null;
     _check_update() {
         if (this._span_title == null)
-            this._span_title = d3.selectAll("span.title");
+            this._span_title = selectAll("span.title");
         if (this._span_arguments == null)
-            this._span_arguments = d3.selectAll("span.arguments");
+            this._span_arguments = selectAll("span.arguments");
 
         if (this._preview_active) {
             this._span_title.style("display", null);
@@ -387,9 +387,9 @@ export class BIRulePreview extends BIPreview {
         json_data: CMKAjaxReponse<BIRulePreviewJsonData>
     ) {
         this._update_simulated_parameters(json_data.result.params);
-        const nodes = d3
-            .selectAll("#rule_p_nodes_container > tr")
-            .data(json_data.result.data);
+        const nodes = selectAll("#rule_p_nodes_container > tr").data(
+            json_data.result.data
+        );
 
         nodes
             .select(".vlof_content")
@@ -404,7 +404,7 @@ export class BIRulePreview extends BIPreview {
                 this._update_preview_of_node(
                     d,
                     json_data.result.title,
-                    d3.select(nodes[idx])
+                    select(nodes[idx])
                 );
             });
         BIPreview.prototype._update_previews.call(this, json_data);
@@ -442,7 +442,7 @@ export class BIRulePreview extends BIPreview {
             .classed("button", true)
             .on("click", () => {
                 this._preview_active = !this._preview_active;
-                d3.selectAll("div.node_preview").style(
+                selectAll("div.node_preview").style(
                     "display",
                     this._preview_active ? "block" : "none"
                 );
@@ -471,7 +471,7 @@ export class BIAggregationPreview extends BIPreview {
     }
 
     _get_preview_div(
-        selection: d3.Selection<d3.BaseType, unknown, HTMLElement, any>
+        selection: Selection<BaseType, unknown, HTMLElement, any>
     ) {
         let node_preview_div =
             selection.select<HTMLDivElement>("div.node_preview");
@@ -487,7 +487,7 @@ export class BIAggregationPreview extends BIPreview {
         json_data: CMKAjaxReponse<BIAggregationPreviewJsonData>
     ) {
         const node_preview_div = this._get_preview_div(
-            d3.select("div#aggr_d_node")
+            select("div#aggr_d_node")
         );
         this._update_preview_of_node(
             json_data.result.data[0],
@@ -508,7 +508,7 @@ export class BIAggregationPreview extends BIPreview {
             .attr("value", "Toggle Search Preview")
             .on("click", () => {
                 this._preview_active = !this._preview_active;
-                d3.selectAll("div.node_preview").style(
+                selectAll("div.node_preview").style(
                     "display",
                     this._preview_active ? "block" : "none"
                 );

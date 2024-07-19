@@ -258,7 +258,6 @@ CEE_UNUSED_PACKAGES = [
     "docutils",
     "grpcio",
     "gunicorn",
-    "idna",
     "importlib_metadata",
     "jmespath",
     "more-itertools",

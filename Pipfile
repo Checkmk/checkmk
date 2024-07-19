@@ -180,6 +180,7 @@ cmk-rulesets = {editable = true, path = "./packages/cmk-rulesets"}
 cmk-server-side-calls = {editable = true, path = "./packages/cmk-server-side-calls"}
 cmk-werks = {editable = true, path = "./packages/cmk-werks"}
 cmk-livestatus-client = {editable = true, path = "./packages/cmk-livestatus-client"}
+cmk-trace = {editable = true, path = "./packages/cmk-trace"}
 pysmb = "==1.2.9.1"  # used by SMB share special agent
 google-cloud-monitoring = "*"  # used by the gcp special agent
 google-cloud-asset = "*"  # used by the gcp special agent

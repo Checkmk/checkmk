@@ -355,6 +355,7 @@ test-cycles:
 		    packages/cmk-agent-receiver/cmk/agent_receiver \
 		    packages/cmk-graphing/cmk/graphing \
 		    packages/cmk-werks/cmk/werks \
+		    packages/cmk-werks/cmk/trace \
 		--project-path $$(realpath -L ..) \
 		--strategy johnson \
 		--verbose

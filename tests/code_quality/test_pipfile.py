@@ -59,6 +59,7 @@ BUILD_DIRS = {
     repo_path() / "packages/cmk-rulesets/build",
     repo_path() / "packages/cmk-mkp-tool/build",
     repo_path() / "packages/cmk-werks/build",
+    repo_path() / "packages/cmk-trace/build",
     repo_path() / "packages/cmk-livestatus-client/build",
     repo_path() / "packages/livestatus/build",
     repo_path() / "packages/neb/build",

@@ -13,7 +13,7 @@ else
 endif
 
 $(LIVESTATUS_INSTALL): $(LIVESTATUS_BUILD)
-	install -m 644 $(BAZEL_BIN)/$(LIVESTATUS_PACKAGE)/liblivestatus.so $(DESTDIR)$(OMD_ROOT)/lib/liblivestatus.so.0.1
+	install -m 644 $(BAZEL_BIN)/$(LIVESTATUS_PACKAGE)/liblivestatus_shared.so $(DESTDIR)$(OMD_ROOT)/lib/liblivestatus.so.0.1
 	ln -sf liblivestatus.so.0.1 $(DESTDIR)$(OMD_ROOT)/lib/liblivestatus.so.0
 	ln -sf liblivestatus.so.0 $(DESTDIR)$(OMD_ROOT)/lib/liblivestatus.so
 	$(TOUCH) $@

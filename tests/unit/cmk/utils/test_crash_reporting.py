@@ -16,7 +16,7 @@ from typing import Any
 
 import pytest
 
-from cmk.utils.crash_reporting import (
+from cmk.ccc.crash_reporting import (
     _format_var_for_export,
     ABCCrashReport,
     CrashInfo,

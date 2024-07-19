@@ -17,9 +17,6 @@ from typing import Final, TypedDict
 import livestatus
 from livestatus import SiteId
 
-import cmk.utils.crash_reporting
-from cmk.utils.crash_reporting import CrashInfo
-
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import (
     Breadcrumb,
@@ -54,7 +51,9 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, urlencod
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, EmailAddress, TextInput
 
+import cmk.ccc.crash_reporting
 import cmk.ccc.version as cmk_version
+from cmk.ccc.crash_reporting import CrashInfo
 
 from .helpers import local_files_involved_in_crash
 from .views import CrashReportsRowTable

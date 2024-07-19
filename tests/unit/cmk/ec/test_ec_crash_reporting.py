@@ -5,9 +5,9 @@
 
 from pathlib import Path
 
-from cmk.utils.crash_reporting import crash_report_registry
-
 from cmk.ec.crash_reporting import CrashReportStore, ECCrashReport
+
+from cmk.ccc.crash_reporting import crash_report_registry
 
 
 def test_ec_crash_report_registry() -> None:

@@ -29,7 +29,6 @@ if not os.environ.get("OMD_SITE"):
 import cmk.utils.caching
 import cmk.utils.log
 import cmk.utils.paths
-from cmk.utils.crash_reporting import ABCCrashReport, crash_report_registry, CrashReportStore
 from cmk.utils.log import console
 
 import cmk.base.check_api as check_api
@@ -40,6 +39,7 @@ from cmk.base.modes import modes
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
+from cmk.ccc.crash_reporting import ABCCrashReport, crash_report_registry, CrashReportStore
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
 
 cmk.utils.log.setup_console_logging()

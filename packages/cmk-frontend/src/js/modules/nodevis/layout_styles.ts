@@ -7,17 +7,19 @@
 import * as d3 from "d3";
 import * as d3_flextree from "d3-flextree";
 
-import {OverlayElement} from "./layer_utils";
-import {
-    AbstractLayoutStyle,
-    compute_node_position,
-    compute_node_positions_from_list_of_nodes,
-    layout_style_class_registry,
+import type {OverlayElement} from "./layer_utils";
+import type {
     NodeForce,
     StyleOptionSpec,
     StyleOptionSpecCheckbox,
 } from "./layout_utils";
 import {
+    AbstractLayoutStyle,
+    compute_node_position,
+    compute_node_positions_from_list_of_nodes,
+    layout_style_class_registry,
+} from "./layout_utils";
+import type {
     Coords,
     d3SelectionSvg,
     NodevisNode,

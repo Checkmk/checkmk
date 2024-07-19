@@ -19,19 +19,18 @@ import {layout_style_class_registry} from "./layout_utils";
 import {link_type_class_registry} from "./link_utils";
 import {get_custom_node_settings, node_type_class_registry} from "./node_utils";
 import {SearchNodes} from "./search";
+import type {TranslationKey} from "./texts";
 import * as texts from "./texts";
-import {TranslationKey} from "./texts";
 import {TopologyForceConfig} from "./topology";
-import {
+import type {
     BackendResponse,
     d3SelectionDiv,
     DatasourceType,
-    NodevisWorld,
     OverlayConfig,
-    OverlaysConfig,
     TopologyBackendResponse,
     TopologyFrontendConfig,
 } from "./type_defs";
+import {NodevisWorld, OverlaysConfig} from "./type_defs";
 import {LiveSearch, render_input_range, SearchFilters} from "./utils";
 import {Viewport} from "./viewport";
 

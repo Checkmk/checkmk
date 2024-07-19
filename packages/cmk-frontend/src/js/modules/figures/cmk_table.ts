@@ -8,11 +8,11 @@
 
 import crossfilter from "crossfilter2";
 import * as d3 from "d3";
+import type {PieChart} from "dc";
 import * as dc from "dc";
-import {PieChart} from "dc";
 
 import * as cmk_figures from "./cmk_figures";
-import {FigureData} from "./figure_types";
+import type {FigureData} from "./figure_types";
 
 export interface Cell<Config = PieChartData | NtopTalkerData> {
     id?: string;

@@ -12,10 +12,10 @@ import $ from "jquery";
 import {DCTableFigure} from "@/modules/figures/cmk_dc_table";
 import * as cmk_figures from "@/modules/figures/cmk_figures";
 import * as cmk_tabs from "@/modules/figures/cmk_tabs";
-import {FigureData} from "@/modules/figures/figure_types";
+import type {FigureData} from "@/modules/figures/figure_types";
 import * as number_format from "@/modules/number_format";
 
-import {FlowDashletDataChoice, NtopColumn} from "./ntop_flows";
+import type {FlowDashletDataChoice, NtopColumn} from "./ntop_flows";
 import * as ntop_utils from "./ntop_utils";
 import {add_classes_to_trs, add_columns_classes_to_nodes} from "./ntop_utils";
 

@@ -57,7 +57,7 @@ import * as sites from "./modules/sites";
 import * as sla from "./modules/sla";
 import {render_stats_table} from "./modules/tracking_display";
 import * as transfer from "./modules/transfer";
-import {RequireConfirmation} from "./modules/types";
+import type {RequireConfirmation} from "./modules/types";
 import * as utils from "./modules/utils";
 import * as valuespecs from "./modules/valuespecs";
 import * as views from "./modules/views";

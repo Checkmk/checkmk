@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {TableFigureData} from "@/modules/figures/cmk_table";
+import type {TableFigureData} from "@/modules/figures/cmk_table";
 
 //cmk/gui/cee/ntop/type_check.py:109
 export interface TopPeerProtocol {

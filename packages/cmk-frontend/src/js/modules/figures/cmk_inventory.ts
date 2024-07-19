@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+import type {TextFigureData} from "@/modules/figures/cmk_figures";
 import * as cmk_figures from "@/modules/figures/cmk_figures";
-import {TextFigureData} from "@/modules/figures/cmk_figures";
 import {clamp} from "@/modules/figures/cmk_figures_utils";
 
 interface InventoryFigureDataData {

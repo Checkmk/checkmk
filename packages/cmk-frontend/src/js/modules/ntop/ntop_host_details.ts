@@ -10,16 +10,17 @@ import * as d3 from "d3";
 import * as dc from "dc";
 
 import {DCTableFigure} from "@/modules/figures/cmk_dc_table";
-import {figure_registry, FigureBase} from "@/modules/figures/cmk_figures";
+import type {FigureBase} from "@/modules/figures/cmk_figures";
+import {figure_registry} from "@/modules/figures/cmk_figures";
 import {TableFigure} from "@/modules/figures/cmk_table";
 import * as cmk_tabs from "@/modules/figures/cmk_tabs";
-import {FigureData} from "@/modules/figures/figure_types";
+import type {FigureData} from "@/modules/figures/figure_types";
 import {MultiDataFetcher} from "@/modules/figures/multi_data_fetcher";
 
+import type {ABCAlertsTab, Alert} from "./ntop_alerts";
 import * as ntop_alerts from "./ntop_alerts";
-import {ABCAlertsTab, Alert} from "./ntop_alerts";
 import * as ntop_flows from "./ntop_flows";
-import {
+import type {
     ApplicationTabData,
     HostTabData,
     PacketsTabData,

@@ -9,21 +9,15 @@ import "./link_types";
 
 import * as d3 from "d3";
 
-import {
-    FixLayer,
-    layer_class_registry,
-    LayerSelections,
-    ToggleableLayer,
-} from "./layer_utils";
-import {
-    AbstractLink,
-    compute_link_id,
-    link_type_class_registry,
-} from "./link_utils";
-import {AbstractGUINode, node_type_class_registry} from "./node_utils";
+import type {LayerSelections} from "./layer_utils";
+import {FixLayer, layer_class_registry, ToggleableLayer} from "./layer_utils";
+import type {AbstractLink} from "./link_utils";
+import {compute_link_id, link_type_class_registry} from "./link_utils";
+import type {AbstractGUINode} from "./node_utils";
+import {node_type_class_registry} from "./node_utils";
+import type {TranslationKey} from "./texts";
 import * as texts from "./texts";
-import {TranslationKey} from "./texts";
-import {
+import type {
     ContextMenuElement,
     Coords,
     d3SelectionDiv,

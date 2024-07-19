@@ -4,13 +4,13 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {Dimension} from "crossfilter2";
+import type {Dimension} from "crossfilter2";
 import * as d3 from "d3";
 import range from "lodash.range";
 
 import * as cmk_figures from "@/modules/figures/cmk_figures";
 import {getIn, make_levels} from "@/modules/figures/cmk_figures_utils";
-import {
+import type {
     BarplotDashletConfig,
     Domain,
     SingleMetricData,

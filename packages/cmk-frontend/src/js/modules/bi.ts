@@ -7,7 +7,7 @@
 import * as d3 from "d3";
 
 import * as ajax from "./ajax";
-import {CMKAjaxReponse} from "./types";
+import type {CMKAjaxReponse} from "./types";
 import * as utils from "./utils";
 import * as valuespecs from "./valuespecs";
 

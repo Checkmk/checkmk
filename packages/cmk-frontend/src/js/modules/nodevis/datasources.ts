@@ -22,10 +22,10 @@
 
 import * as d3 from "d3";
 
-import {CMKAjaxReponse} from "../types";
+import type {CMKAjaxReponse} from "../types";
 import * as utils from "../utils";
-import {SerializedNodevisLayout} from "./layout_utils";
-import {
+import type {SerializedNodevisLayout} from "./layout_utils";
+import type {
     DatasourceCallback,
     SerializedNodeConfig,
     TopologyFrontendConfig,

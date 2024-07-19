@@ -7,12 +7,13 @@
 import "select2";
 import "element-closest-polyfill";
 
-import Tagify, {EditTagsRuntimeSettings} from "@yaireo/tagify";
+import type {EditTagsRuntimeSettings} from "@yaireo/tagify";
+import Tagify from "@yaireo/tagify";
 import $ from "jquery";
 import Swal from "sweetalert2";
 
 import * as ajax from "./ajax";
-import {CMKAjaxReponse, RequireConfirmation} from "./types";
+import type {CMKAjaxReponse, RequireConfirmation} from "./types";
 import * as utils from "./utils";
 import {
     initialize_autocompleters,

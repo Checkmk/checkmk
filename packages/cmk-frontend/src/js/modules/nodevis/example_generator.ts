@@ -16,15 +16,14 @@ import {
     LayoutStyleHierarchy,
     LayoutStyleRadial,
 } from "./layout_styles";
-import {
+import type {
     AbstractLayoutStyle,
-    compute_node_position,
-    render_style_options,
     StyleConfig,
     StyleOptionSpec,
     StyleOptionValues,
 } from "./layout_utils";
-import {
+import {compute_node_position, render_style_options} from "./layout_utils";
+import type {
     d3SelectionDiv,
     d3SelectionG,
     d3SelectionSvg,

@@ -6,12 +6,12 @@
 
 /* eslint-disable indent */
 import * as d3 from "d3";
-import {DataTableWidget} from "dc";
+import type {DataTableWidget} from "dc";
 import $ from "jquery";
 
 import * as cmk_table from "@/modules/figures/cmk_table";
 
-import {NtopColumn} from "./ntop_flows";
+import type {NtopColumn} from "./ntop_flows";
 
 // TODO: Use library functions from number_format.js
 const NTOPNG_MIN_VISUAL_VALUE = 0.005;

@@ -8,19 +8,15 @@ import * as d3 from "d3";
 
 import {AbstractGUINode, node_type_class_registry} from "./node_utils";
 import * as texts from "./texts";
-import {
+import type {
     ContextMenuElement,
     d3SelectionG,
     NodevisNode,
     NodevisWorld,
     QuickinfoEntry,
 } from "./type_defs";
-import {
-    bound_monitoring_host,
-    SearchFilters,
-    show_tooltip,
-    TypeWithName,
-} from "./utils";
+import type {TypeWithName} from "./utils";
+import {bound_monitoring_host, SearchFilters, show_tooltip} from "./utils";
 
 export class TopologyNode extends AbstractGUINode {
     constructor(world: NodevisWorld, node: NodevisNode) {

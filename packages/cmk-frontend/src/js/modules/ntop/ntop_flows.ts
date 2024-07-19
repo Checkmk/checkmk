@@ -4,14 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import crossfilter, {Dimension} from "crossfilter2";
+import type {Dimension} from "crossfilter2";
+import crossfilter from "crossfilter2";
 import * as d3 from "d3";
-import {DataTableWidget} from "dc";
+import type {DataTableWidget} from "dc";
 import $ from "jquery";
 
 import {DCTableFigure} from "@/modules/figures/cmk_dc_table";
 import * as cmk_figures from "@/modules/figures/cmk_figures";
-import {FigureData} from "@/modules/figures/figure_types";
+import type {FigureData} from "@/modules/figures/figure_types";
 
 import * as ntop_utils from "./ntop_utils";
 import {add_classes_to_trs, add_columns_classes_to_nodes} from "./ntop_utils";

@@ -6,25 +6,26 @@
 
 import * as d3 from "d3";
 
-import {ForceConfig, ForceOptions} from "./force_utils";
-import {AbstractNodeVisConstructor, OverlayElement} from "./layer_utils";
+import type {ForceOptions} from "./force_utils";
+import {ForceConfig} from "./force_utils";
+import type {AbstractNodeVisConstructor, OverlayElement} from "./layer_utils";
 import * as texts from "./texts";
-import {
+import type {
     Coords,
     d3SelectionDiv,
-    InputRangeOptions,
     NodevisNode,
     NodevisWorld,
     Rectangle,
     XYCoords,
 } from "./type_defs";
+import {InputRangeOptions} from "./type_defs";
+import type {TypeWithName} from "./utils";
 import {
     AbstractClassRegistry,
     DefaultTransition,
     get_bounding_rect,
     log,
     render_input_range,
-    TypeWithName,
 } from "./utils";
 
 export type LineStyle = "straight" | "elbow" | "round";

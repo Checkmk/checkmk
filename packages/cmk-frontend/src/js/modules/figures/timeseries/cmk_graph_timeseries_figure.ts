@@ -7,18 +7,21 @@
 import * as d3 from "d3";
 
 import * as cmk_figures from "@/modules/figures/cmk_figures";
-import {ElementSize, SubplotDataData} from "@/modules/figures/figure_types";
-import {
+import type {
+    ElementSize,
+    SubplotDataData,
+} from "@/modules/figures/figure_types";
+import type {
     AjaxGraph,
     HorizontalRule,
     LayoutedCurve,
     TimeSeriesValue,
 } from "@/modules/graphs";
-import {CMKAjaxReponse} from "@/modules/types";
+import type {CMKAjaxReponse} from "@/modules/types";
 
-import {SubPlotPlotDefinition} from "../cmk_enterprise_figure_types";
+import type {SubPlotPlotDefinition} from "../cmk_enterprise_figure_types";
 import {TimeseriesFigure} from "./cmk_timeseries";
-import {SubPlot} from "./sub_plot";
+import type {SubPlot} from "./sub_plot";
 
 //TODO: delete this class if there is no need for it
 export class CmkGraphTimeseriesFigure extends TimeseriesFigure {

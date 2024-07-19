@@ -14,7 +14,7 @@
 // - update_if_older_than (seconds)
 import * as d3 from "d3";
 
-import {CMKAjaxReponse} from "../types";
+import type {CMKAjaxReponse} from "../types";
 import * as utils from "../utils";
 
 export class Scheduler {

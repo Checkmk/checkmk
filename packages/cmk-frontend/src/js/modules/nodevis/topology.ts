@@ -6,24 +6,22 @@
 
 import * as d3 from "d3";
 
-import {ForceConfig, ForceOptions, SimulationForce} from "./force_utils";
-import {
-    DynamicToggleableLayer,
-    layer_class_registry,
-    LayerSelections,
-} from "./layer_utils";
-import {StyleOptionSpecRange} from "./layout_utils";
+import type {ForceOptions, SimulationForce} from "./force_utils";
+import {ForceConfig} from "./force_utils";
+import type {LayerSelections} from "./layer_utils";
+import {DynamicToggleableLayer, layer_class_registry} from "./layer_utils";
+import type {StyleOptionSpecRange} from "./layout_utils";
 import {AbstractLink, link_type_class_registry} from "./link_utils";
 import {TopologyNode} from "./node_types";
+import type {AbstractGUINode} from "./node_utils";
 import {
-    AbstractGUINode,
     get_core_info,
     get_custom_node_settings,
     node_type_class_registry,
 } from "./node_utils";
+import type {TranslationKey} from "./texts";
 import * as texts from "./texts";
-import {TranslationKey} from "./texts";
-import {
+import type {
     ContextMenuElement,
     d3SelectionDiv,
     d3SelectionG,
@@ -38,7 +36,7 @@ import {
     render_save_delete,
     show_tooltip,
 } from "./utils";
-import {Viewport} from "./viewport";
+import type {Viewport} from "./viewport";
 
 interface TopologyForceOptions extends ForceOptions {
     charge_host: number;

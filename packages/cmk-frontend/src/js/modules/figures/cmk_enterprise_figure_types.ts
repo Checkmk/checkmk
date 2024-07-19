@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import type * as d3 from "d3";
 
-import {FigureData} from "@/modules/figures/figure_types";
+import type {FigureData} from "@/modules/figures/figure_types";
 
 export interface TimeseriesFigureDataPlotDefinition {
     id: string;

@@ -7,7 +7,7 @@
 import * as d3 from "d3";
 
 import * as cmk_figures from "@/modules/figures/cmk_figures";
-import {
+import type {
     ElementSize,
     SingleGraphDashletConfig,
 } from "@/modules/figures/figure_types";

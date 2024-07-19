@@ -4,12 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
-import { BaseType } from "d3";
+import type * as d3 from "d3";
 import * as d3Hexbin from "d3-hexbin";
 
 import * as cmk_figures from "./cmk_figures";
-import { FigureData } from "./figure_types";
+import type {FigureData} from "./figure_types";
 
 interface FigurePart {
     count: number;
@@ -33,8 +32,8 @@ interface HexConfig {
 }
 
 export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
-    _table_div!: d3.Selection<HTMLDivElement, any, BaseType, any>;
-    _hexagon_box!: d3.Selection<SVGGElement, unknown, BaseType, unknown>;
+    _table_div!: d3.Selection<HTMLDivElement, any, d3.BaseType, any>;
+    _hexagon_box!: d3.Selection<SVGGElement, unknown, d3.BaseType, unknown>;
     _max_radius!: number;
     _title!: string;
     _title_url!: string;
@@ -132,7 +131,8 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
             .attr("class", d => "hexagon " + d.css_class);
 
         // render table
-        const total_parts = parts.length > 0 ? parts.concat(this._data.total) : [];
+        const total_parts =
+            parts.length > 0 ? parts.concat(this._data.total) : [];
         const table = this._table_div
             .selectAll("table")
             .data([total_parts])
@@ -143,17 +143,20 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
             .join("tr");
 
         const a = rows.selectAll("td a").data(d => [
-            { // count
+            {
+                // count
                 text: d.count,
                 url: d.url,
                 css_class: "count " + d.css_class,
             },
-            { // state color
+            {
+                // state color
                 text: "",
                 url: d.url,
                 css_class: "box " + d.css_class,
             },
-            { // text (state title)
+            {
+                // text (state title)
                 text: d.title,
                 url: d.url,
                 css_class: "text",

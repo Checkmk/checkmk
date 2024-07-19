@@ -9,7 +9,7 @@ import "select2";
 import * as d3 from "d3";
 import $ from "jquery";
 import {set} from "lodash";
-import {QueryOptions} from "select2";
+import type {QueryOptions} from "select2";
 
 import * as ajax from "./ajax";
 //TODO: this causes an error because allowJS is set to false in tsconfig

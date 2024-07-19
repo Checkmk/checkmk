@@ -4,17 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+import type {Simulation} from "d3";
 import * as d3 from "d3";
-import {Simulation} from "d3";
 
-import {ForceConfig, ForceOptions, SimulationForce} from "./force_utils";
-import {
-    compute_node_positions_from_list_of_nodes,
-    StyleOptionValues,
-} from "./layout_utils";
+import type {ForceConfig, ForceOptions, SimulationForce} from "./force_utils";
+import type {StyleOptionValues} from "./layout_utils";
+import {compute_node_positions_from_list_of_nodes} from "./layout_utils";
 import {compute_link_id} from "./link_utils";
-import {NodevisLink, NodevisNode} from "./type_defs";
-import {Viewport} from "./viewport";
+import type {NodevisLink, NodevisNode} from "./type_defs";
+import type {Viewport} from "./viewport";
 
 export class ForceSimulation {
     _simulation: Simulation<NodevisNode, NodevisLink>;

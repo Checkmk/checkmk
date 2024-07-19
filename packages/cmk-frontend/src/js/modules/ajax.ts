@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {PartialK} from "./types";
+import type {PartialK} from "./types";
 
 declare global {
     let global_csrf_token: string;

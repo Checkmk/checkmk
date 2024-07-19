@@ -7,12 +7,12 @@
 import * as d3 from "d3";
 
 import * as texts from "./texts";
-import {
+import type {
     d3SelectionDiv,
     NodevisWorld,
     SearchResultEntry,
-    SearchResults,
 } from "./type_defs";
+import {SearchResults} from "./type_defs";
 import {DefaultTransition} from "./utils";
 
 export class SearchNodes {

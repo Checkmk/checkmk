@@ -7,32 +7,30 @@
 import * as d3 from "d3";
 
 import {LayoutAggregations} from "./aggregations";
-import {
-    AbstractNodeVisConstructor,
-    FixLayer,
-    layer_class_registry,
-    LayerSelections,
-} from "./layer_utils";
-import {LayeredNodesLayer} from "./layers";
+import type {AbstractNodeVisConstructor, LayerSelections} from "./layer_utils";
+import {FixLayer, layer_class_registry} from "./layer_utils";
+import type {LayeredNodesLayer} from "./layers";
 import {LayoutStyleFixed, LayoutStyleHierarchy} from "./layout_styles";
-import {
+import type {
     AbstractLayoutStyle,
-    compute_node_position,
-    compute_style_id,
-    layout_style_class_registry,
-    LayoutStyleFactory,
     LineStyle,
     NodePositioning,
-    NodeVisualizationLayout,
-    render_style_options,
     SerializedNodevisLayout,
     StyleConfig,
     StyleOptionSpec,
     StyleOptionValues,
 } from "./layout_utils";
+import {
+    compute_node_position,
+    compute_style_id,
+    layout_style_class_registry,
+    LayoutStyleFactory,
+    NodeVisualizationLayout,
+    render_style_options,
+} from "./layout_utils";
 import * as texts from "./texts";
 import {LayoutTopology} from "./topology";
-import {
+import type {
     ContextMenuElement,
     Coords,
     d3SelectionDiv,
@@ -49,7 +47,7 @@ import {
     RadioGroupOption,
     render_radio_group,
 } from "./utils";
-import {Viewport} from "./viewport";
+import type {Viewport} from "./viewport";
 
 //#.
 //#   .-Layout Manager-----------------------------------------------------.

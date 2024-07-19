@@ -6,8 +6,8 @@
 
 import * as d3 from "d3";
 
-import {FigureBase} from "./cmk_figures";
-import {
+import type {FigureBase} from "./cmk_figures";
+import type {
     Bounds,
     Domain,
     ElementSize,
@@ -15,7 +15,7 @@ import {
     Levels,
     TransformedData,
 } from "./figure_types";
-import {Scheduler} from "./multi_data_fetcher";
+import type {Scheduler} from "./multi_data_fetcher";
 
 /**
  * Draw an individual shape

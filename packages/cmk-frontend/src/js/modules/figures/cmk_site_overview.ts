@@ -9,7 +9,7 @@ import * as d3Hexbin from "d3-hexbin";
 
 import {FigureTooltip} from "@/modules/figures/cmk_figure_tooltip";
 import {FigureBase} from "@/modules/figures/cmk_figures";
-import {
+import type {
     ABCElement,
     ElementSize,
     FigureData,

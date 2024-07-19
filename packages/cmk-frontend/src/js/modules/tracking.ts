@@ -4,16 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+import type {metricsEntry, repeatUrlsEntry} from "./tracking_database";
 import {
     addRecord,
     getRecord,
-    metricsEntry,
     metricsTable,
     onError,
     onSuccess,
     openDatabase,
     putRecord,
-    repeatUrlsEntry,
     repeatUrlsTable,
 } from "./tracking_database";
 

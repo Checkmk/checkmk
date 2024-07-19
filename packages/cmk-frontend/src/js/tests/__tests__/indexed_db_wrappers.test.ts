@@ -17,11 +17,11 @@ import {
 } from "@jest/globals";
 
 import {activate_tracking} from "@/modules/tracking";
+import type {repeatUrlsEntry} from "@/modules/tracking_database";
 import {
     getRecord,
     openDatabase,
     putRecord,
-    repeatUrlsEntry,
     repeatUrlsTable,
 } from "@/modules/tracking_database";
 

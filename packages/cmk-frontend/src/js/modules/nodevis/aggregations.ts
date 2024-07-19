@@ -6,9 +6,12 @@
 
 import * as ajax from "../ajax";
 import {ForceConfig} from "./force_utils";
-import {SerializedNodevisLayout, StyleOptionSpecRange} from "./layout_utils";
+import type {
+    SerializedNodevisLayout,
+    StyleOptionSpecRange,
+} from "./layout_utils";
 import * as texts from "./texts";
-import {d3SelectionDiv, NodevisWorld} from "./type_defs";
+import type {d3SelectionDiv, NodevisWorld} from "./type_defs";
 import {render_save_delete} from "./utils";
 
 export class LayoutAggregations {

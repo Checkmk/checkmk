@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {SubPlot} from "./sub_plot";
+import type {SubPlot} from "./sub_plot";
 
 export type SubplotConstructor = new (plotDefinition: any) => SubPlot;
 

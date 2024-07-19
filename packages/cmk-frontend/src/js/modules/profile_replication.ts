@@ -5,7 +5,7 @@
  */
 
 import * as ajax from "./ajax";
-import {CMKAjaxReponse} from "./types";
+import type {CMKAjaxReponse} from "./types";
 import * as utils from "./utils";
 
 type ReplicationImage =

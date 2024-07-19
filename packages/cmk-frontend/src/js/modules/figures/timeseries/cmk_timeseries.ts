@@ -4,33 +4,33 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+import type {Dimension} from "crossfilter2";
 import * as crossfilter from "crossfilter2";
-import {Dimension} from "crossfilter2";
 import * as d3 from "d3";
 import range from "lodash.range";
 
 import {FigureTooltip} from "@/modules/figures/cmk_figure_tooltip";
 import * as cmk_figures from "@/modules/figures/cmk_figures";
 import {getIn} from "@/modules/figures/cmk_figures_utils";
-import {
+import type {
     ElementSize,
     FigureBaseDashletSpec,
 } from "@/modules/figures/figure_types";
 import {domainIntervals, partitionableDomain} from "@/modules/number_format";
 
-import {
+import type {
     Domain,
     SubPlotPlotDefinition,
     TimeseriesFigureData,
 } from "../cmk_enterprise_figure_types";
-import {
+import type {
     AreaPlot,
     BarPlot,
     LinePlot,
     ScatterPlot,
     SubPlot,
-    subplot_factory,
 } from "./sub_plot";
+import {subplot_factory} from "./sub_plot";
 
 // Used for rapid protoyping, bypassing webpack
 //var cmk_figures = cmk.figures; /*eslint-disable-line no-undef*/

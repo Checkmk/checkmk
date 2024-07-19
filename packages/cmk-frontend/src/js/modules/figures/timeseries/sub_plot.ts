@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as crossfilter from "crossfilter2";
+import type * as crossfilter from "crossfilter2";
 import * as d3 from "d3";
 
 import {
@@ -18,9 +18,12 @@ import {
     state_component,
     svc_status_css,
 } from "@/modules/figures/cmk_figures_utils";
-import {SubplotDataData, TransformedData} from "@/modules/figures/figure_types";
+import type {
+    SubplotDataData,
+    TransformedData,
+} from "@/modules/figures/figure_types";
 
-import {
+import type {
     AreaPlotPlotDefinition,
     BarPlotPlotDefinition,
     Domain,
@@ -31,7 +34,7 @@ import {
     SubPlotPlotDefinition,
     TimeseriesFigureDataData,
 } from "../cmk_enterprise_figure_types";
-import {SubplotSubs, TimeseriesFigure} from "./cmk_timeseries";
+import type {SubplotSubs, TimeseriesFigure} from "./cmk_timeseries";
 import {SubPlotFactory} from "./sub_plot_factory";
 
 // Base class for all SubPlots

@@ -4,13 +4,13 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {Crossfilter, Dimension} from "crossfilter2";
+import type {Crossfilter, Dimension} from "crossfilter2";
 import * as d3 from "d3";
+import type {DataTableWidget} from "dc";
 import * as dc from "dc";
-import {DataTableWidget} from "dc";
 
 import * as cmk_figures from "@/modules/figures/cmk_figures";
-import {FigureData} from "@/modules/figures/figure_types";
+import type {FigureData} from "@/modules/figures/figure_types";
 
 // Basic dc table with pagination
 export class DCTableFigure<

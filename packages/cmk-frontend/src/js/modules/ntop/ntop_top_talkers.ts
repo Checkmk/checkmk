@@ -6,7 +6,7 @@
 
 import * as d3 from "d3";
 
-import {
+import type {
     NtopTalkerData,
     NtopTalkerDataPlotDefinition,
     TableFigureData,

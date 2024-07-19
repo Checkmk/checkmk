@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {Dimension} from "crossfilter2";
+import type {Dimension} from "crossfilter2";
 import * as d3 from "d3";
 
 import * as cmk_figures from "@/modules/figures/cmk_figures";
@@ -22,7 +22,7 @@ import {
     state_component,
     svc_status_css,
 } from "@/modules/figures/cmk_figures_utils";
-import {
+import type {
     Domain,
     GaugeDashletConfig,
     Levels,

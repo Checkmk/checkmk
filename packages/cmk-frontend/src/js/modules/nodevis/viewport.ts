@@ -4,38 +4,40 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+// eslint-disable-next-line no-duplicate-imports -- Explicitly imported for side-effects
 import "./layout";
 
 import * as d3 from "d3";
 
 import {ForceSimulation} from "./force_simulation";
-import {ForceConfig} from "./force_utils";
-import {
+import type {ForceConfig} from "./force_utils";
+import type {
     AbstractLayer,
     AbstractNodeVisConstructor,
+    LayerSelections,
+} from "./layer_utils";
+import {
     DynamicToggleableLayer,
     FixLayer,
     layer_class_registry,
-    LayerSelections,
     ToggleableLayer,
 } from "./layer_utils";
 import {LayeredNodesLayer} from "./layers";
-import {LayoutManagerLayer} from "./layout";
-import {
+import type {LayoutManagerLayer} from "./layout";
+import type {
     BackendResponse,
     Coords,
     d3SelectionDiv,
     d3SelectionG,
     d3SelectionSvg,
-    NodeConfig,
     NodevisLink,
     NodevisNode,
     NodevisWorld,
     OverlayConfig,
-    OverlaysConfig,
     Rectangle,
     RectangleWithCoords,
 } from "./type_defs";
+import {NodeConfig, OverlaysConfig} from "./type_defs";
 import {DefaultTransition, get_bounding_rect} from "./utils";
 
 export class Viewport {

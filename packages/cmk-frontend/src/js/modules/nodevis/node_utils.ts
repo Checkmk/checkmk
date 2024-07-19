@@ -6,9 +6,9 @@
 
 import * as d3 from "d3";
 
-import {ForceOptions, SimulationForce} from "./force_utils";
+import type {ForceOptions, SimulationForce} from "./force_utils";
 import * as texts from "./texts";
-import {
+import type {
     ContextMenuElement,
     CoreInfo,
     d3SelectionDiv,
@@ -17,11 +17,11 @@ import {
     NodevisWorld,
     QuickinfoEntry,
 } from "./type_defs";
+import type {TypeWithName} from "./utils";
 import {
     AbstractClassRegistry,
     add_basic_quickinfo,
     DefaultTransition,
-    TypeWithName,
 } from "./utils";
 
 export class AbstractGUINode implements TypeWithName {

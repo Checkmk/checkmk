@@ -6,10 +6,10 @@
 
 import * as d3 from "d3";
 
-import {AbstractNodeVisConstructor} from "./layer_utils";
-import {StyleMatcherConditions} from "./layout_utils";
+import type {AbstractNodeVisConstructor} from "./layer_utils";
+import type {StyleMatcherConditions} from "./layout_utils";
 import * as texts from "./texts";
-import {
+import type {
     BoundingRect,
     Coords,
     d3Selection,
@@ -20,7 +20,7 @@ import {
     Quickinfo,
     Tooltip,
 } from "./type_defs";
-import {Viewport} from "./viewport";
+import type {Viewport} from "./viewport";
 
 // TODO: remove or fix logging
 export function log(level: number, ...args: any[]) {

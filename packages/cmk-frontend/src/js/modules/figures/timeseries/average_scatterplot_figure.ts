@@ -8,13 +8,13 @@ import * as d3 from "d3";
 
 import * as cmk_figures from "@/modules/figures/cmk_figures";
 import {getIn, plot_render_function} from "@/modules/figures/cmk_figures_utils";
-import {
+import type {
     AverageScatterplotDashletConfig,
     TransformedData,
 } from "@/modules/figures/figure_types";
 
 import {TimeseriesFigure} from "./cmk_timeseries";
-import {ScatterPlot} from "./sub_plot";
+import type {ScatterPlot} from "./sub_plot";
 
 // A generic average scatterplot chart with median/mean lines and scatterpoints for each instance
 // Requirements:

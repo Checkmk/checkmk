@@ -4,17 +4,18 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import crossfilter, {Crossfilter} from "crossfilter2";
+import type {Crossfilter} from "crossfilter2";
+import crossfilter from "crossfilter2";
 import * as d3 from "d3";
 
-import {CMKAjaxReponse} from "../types";
+import type {CMKAjaxReponse} from "../types";
 import * as utils from "../utils";
 import {
     add_scheduler_debugging,
     plot_render_function,
     svg_text_overflow_ellipsis,
 } from "./cmk_figures_utils";
-import {
+import type {
     ElementMargin,
     ElementSize,
     FigureBaseDashletSpec,

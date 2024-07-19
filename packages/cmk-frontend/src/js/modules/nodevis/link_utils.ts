@@ -4,17 +4,18 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {BaseType, Transition} from "d3";
+import type {BaseType, Transition} from "d3";
 
-import {ForceOptions, SimulationForce} from "./force_utils";
-import {LineConfig} from "./layout_utils";
-import {
+import type {ForceOptions, SimulationForce} from "./force_utils";
+import type {LineConfig} from "./layout_utils";
+import type {
     d3SelectionG,
     NodevisLink,
     NodevisNode,
     NodevisWorld,
 } from "./type_defs";
-import {AbstractClassRegistry, DefaultTransition, TypeWithName} from "./utils";
+import type {TypeWithName} from "./utils";
+import {AbstractClassRegistry, DefaultTransition} from "./utils";
 
 export function compute_link_id(link_data: NodevisLink): string {
     return link_data.source.data.id + "#@#" + link_data.target.data.id;

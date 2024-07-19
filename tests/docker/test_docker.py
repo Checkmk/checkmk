@@ -345,12 +345,15 @@ def test_container_agent(checkmk: docker.models.containers.Container) -> None:
 def test_update(client: docker.DockerClient, version: CMKVersion) -> None:
     container_name = "%s-monitoring" % version.branch
 
-    assert isinstance(
+    update_compatibility = (
         versions_compatible(
             Version.from_str(old_version.version), Version.from_str(version.version)
         ),
-        VersionsCompatible,
     )
+    assert isinstance(
+        update_compatibility,
+        VersionsCompatible,
+    ), f"Version {old_version} and {version} are incompatible, reason: {update_compatibility}"
 
     # 1. create container with old version and add a file to mark the pre-update state
     with start_checkmk(

@@ -8,16 +8,6 @@ NEB_COPTS = [
     "-O3",
 ]
 
-filegroup(
-    name = "all_hdrs",
-    srcs = glob(
-        ["include/neb/*.h"],
-    ) + glob(
-        # patched nagios headers
-        ["third_party/include/nagios/*.h"],
-    ),
-)
-
 # Keep code using VERSION apart to minimize cache invalidation.
 cc_library(
     name = "neb_version",

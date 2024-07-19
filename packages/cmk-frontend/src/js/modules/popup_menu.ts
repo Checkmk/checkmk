@@ -77,6 +77,7 @@ class PopUp {
 
     open() {
         if (this.onopen) {
+            /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
             eval(this.onopen);
         }
     }
@@ -94,6 +95,7 @@ class PopUp {
         }
 
         if (this.onclose) {
+            /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
             eval(this.onclose);
         }
 
@@ -363,6 +365,7 @@ function handle_render_popup_contents(
     response_text: string
 ) {
     if (data.content) {
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         data.content.innerHTML = response_text;
         const menu = data.content.closest("div#popup_menu") as HTMLElement;
         fix_popup_menu_position(data.event, menu);

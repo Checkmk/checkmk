@@ -51,6 +51,7 @@ function update_timer(seconds_left: number) {
         // update the pause counter
         const counter = document.getElementById("reload_pause_counter");
         if (counter) {
+            /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             counter.innerHTML = seconds_left.toString();
         }
 
@@ -67,6 +68,7 @@ function draw_overlay(seconds: number) {
         const existingCounter = document.getElementById(
             "reload_pause_counter"
         )!;
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         existingCounter.innerHTML = seconds.toString();
         return;
     }

@@ -242,6 +242,7 @@ export function update_site_activation_state(site_state: Record<string, any>) {
         "site_" + site_state["_site_id"] + "_status"
     );
     if (!msg) throw new Error("msg shouldn't be null!");
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     msg.innerHTML = site_state["_status_text"];
 
     if (site_state["_phase"] == "done") {
@@ -271,6 +272,7 @@ export function update_site_activation_state(site_state: Record<string, any>) {
                 "</div>";
         }
 
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         details.innerHTML = detail_content;
     }
 

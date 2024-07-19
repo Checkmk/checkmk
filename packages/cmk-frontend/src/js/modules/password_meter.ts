@@ -93,8 +93,10 @@ export async function initPasswordStrength() {
                 const score_string = meter.attributes.getNamedItem(
                     "data-password_strength_" + score.toString()
                 )!.value;
+                /* eslint-disable no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 passwordText.innerHTML = score_string;
                 meter.innerHTML = score_string;
+                /* eslint-enable no-unsanitized/property */
             });
         }
     });

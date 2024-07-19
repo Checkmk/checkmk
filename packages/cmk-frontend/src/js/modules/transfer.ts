@@ -73,6 +73,7 @@ function handle_report_response(
         const id = response_body.split(" ")[1];
         const success_container = document.getElementById("success_msg")!;
         success_container.style.display = "block";
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         success_container.innerHTML = success_container.innerHTML.replace(
             /###ID###/,
             id
@@ -80,6 +81,7 @@ function handle_report_response(
     } else {
         const fail_container = document.getElementById("fail_msg")!;
         fail_container.style.display = "block";
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         fail_container.children[0].innerHTML += " (" + response_body + ").";
     }
 }

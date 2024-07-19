@@ -43,6 +43,7 @@ function handle_job_detail_response(
         : false;
 
     const container = document.getElementById("job_details");
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container!.innerHTML = response_body;
 
     if (!had_message) {
@@ -88,6 +89,7 @@ function handle_job_detail_error(
     txt += "<br><br>HTTP status code: " + status_code;
     if (error_msg) txt += ", Error: " + error_msg;
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     msg.innerHTML = txt;
 
     refresh_job_details(

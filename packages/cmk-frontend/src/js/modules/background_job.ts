@@ -37,6 +37,7 @@ function update(_handler_data: any, response: BackGroundJobStart) {
 
     const container = document.getElementById("status_container")!;
     container.style.display = "block";
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container.innerHTML = response.status_container_content;
     execute_javascript_by_object(container);
 

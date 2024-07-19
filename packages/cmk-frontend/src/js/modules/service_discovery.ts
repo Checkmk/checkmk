@@ -212,6 +212,7 @@ function update(
 
     // Update the page menu
     const page_menu_bar = document.getElementById("page_menu_bar")!;
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     page_menu_bar.outerHTML = response.page_menu;
     execute_javascript_by_object(page_menu_bar);
 
@@ -222,17 +223,20 @@ function update(
 
     // Update datasources
     const ds_container = document.getElementById("datasources_container")!;
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     ds_container.innerHTML = response.datasources;
 
     // Update fix all button
     const fixall_container = document.getElementById("fixall_container")!;
     fixall_container.style.display = response.fixall ? "block" : "none";
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     fixall_container.innerHTML = response.fixall;
     execute_javascript_by_object(fixall_container);
 
     // Update the content table
     const container = document.getElementById("service_container")!;
     container.style.display = "block";
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container.innerHTML = response.body;
     execute_javascript_by_object(container);
 
@@ -373,6 +377,7 @@ function handle_execute_active_check(oDiv: HTMLElement, response_json: string) {
         output = response.result.output;
     }
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     oDiv.innerHTML = output;
 
     // Change name and class of status columns
@@ -386,6 +391,7 @@ function handle_execute_active_check(oDiv: HTMLElement, response_json: string) {
 
     const span = document.createElement("span");
     add_class(span, "state_rounded_fill");
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     span.innerHTML = statename;
     oTdState.replaceChild(span, oTdState.firstChild!);
 }

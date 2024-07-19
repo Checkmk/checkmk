@@ -108,9 +108,11 @@ class Search {
         } = JSON.parse(ajax_response);
         if (response.result_code !== 0) {
             // TODO: Decide what to display in case of non-zero result code
+            /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             handler_data.obj.innerHTML =
                 "Ajax Call returned non-zero result code.";
         } else {
+            /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             handler_data.obj.innerHTML = response.result;
             resize_mega_menu_popup(handler_data.menu_popup);
         }

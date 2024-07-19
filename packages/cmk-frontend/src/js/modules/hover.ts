@@ -49,6 +49,7 @@ export function update_content(code: string, event_: MouseEvent) {
         return;
     }
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     g_hover_menu.innerHTML = code;
     execute_javascript_by_object(g_hover_menu);
     update_position(event_);

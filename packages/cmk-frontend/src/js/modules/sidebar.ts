@@ -368,6 +368,7 @@ export function scroll_window(speed: number) {
 
     if (g_scrolling) {
         c!.scrollTop += speed;
+        /* eslint-disable-next-line no-implied-eval -- Highlight existing violations CMK-17846 */
         setTimeout("cmk.sidebar.scroll_window(" + speed + ")", 10);
     }
 }
@@ -446,6 +447,7 @@ export function add_snapin(name: string) {
             const sidebar_content = g_scrollbar?.getContentElement();
             if (sidebar_content) {
                 const tmp_container = document.createElement("div");
+                /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 tmp_container.innerHTML = result.content;
 
                 const add_button = sidebar_content.lastChild as HTMLElement;
@@ -582,6 +584,7 @@ export function switch_site(url: string) {
 }
 
 function bulk_update_contents(ids: string[], codes: string) {
+    /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
     codes = eval(codes);
     for (let i = 0; i < ids.length; i++) {
         if (restart_snapins.indexOf(ids[i].replace("snapin_", "")) !== -1) {
@@ -975,6 +978,7 @@ export function fetch_nagvis_snapin_contents() {
         error_handler: function (_unused: any, status_code: number) {
             const msg = document.createElement("div");
             msg.classList.add("message", "error");
+            /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             msg.innerHTML = "Failed to update NagVis maps: " + status_code;
             update_contents("snapin_nagvis_maps", msg.outerHTML);
 

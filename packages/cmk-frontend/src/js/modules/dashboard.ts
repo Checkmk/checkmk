@@ -118,6 +118,7 @@ export function set_dashboard_properties(properties: DashboardPropertiesAPI) {
 
     const tmp_refresh_dashlets = refresh_dashlets.map<
         [number, number, string | (() => void)]
+        /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
     >(elem => [elem[0], elem[1], eval(elem[2])]);
 
     const tmp_on_resize_dashlets: Record<
@@ -125,6 +126,7 @@ export function set_dashboard_properties(properties: DashboardPropertiesAPI) {
         string | undefined | (() => void)
     > = {};
     for (const key in on_resize_dashlets) {
+        /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
         tmp_on_resize_dashlets[key] = eval(on_resize_dashlets[key]!);
     }
 
@@ -671,15 +673,18 @@ function render_sizer(
 
     if (size == dashboard_properties.MAX) {
         sizer.className += " max";
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         sizer.innerHTML = "max " + orientation;
         sizer.title = "Use maximum available space in this direction";
     } else if (size == dashboard_properties.GROW) {
         sizer.className += " grow";
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         sizer.innerHTML = "auto " + orientation;
         sizer.title = "Grow in this direction";
     } else {
         sizer.className += " abs";
         sizer.title = "Fixed size (drag border for resize)";
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         sizer.innerHTML = "manual " + orientation;
         render_resize_controls(centered_controls.parentNode as HTMLElement, i);
     }

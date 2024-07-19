@@ -36,11 +36,13 @@ export function fetch_site_status() {
                 const livestatus_container = document.getElementById(
                     "livestatus_status_" + site_id
                 )!;
+                /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 livestatus_container.innerHTML = site_status.livestatus;
 
                 const replication_container = document.getElementById(
                     "replication_status_" + site_id
                 )!;
+                /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 replication_container.innerHTML = site_status.replication;
             }
         },
@@ -65,6 +67,7 @@ export function fetch_site_status() {
 
 function show_error(msg: string) {
     const o = document.getElementById("message_container");
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     o!.innerHTML = "<div class=error>" + msg + "</div>";
 
     // Remove all loading icons

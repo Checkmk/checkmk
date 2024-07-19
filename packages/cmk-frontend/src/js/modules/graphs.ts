@@ -261,6 +261,7 @@ export function create_graph(
     // create container div that contains the graph.
     const container_div = document.createElement("div");
     container_div.setAttribute("id", graph_id);
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container_div.innerHTML = html_code;
     if (graph_render_config.show_time_range_previews)
         container_div.className = "graph_container timeranges";
@@ -414,6 +415,7 @@ function handle_load_graph_content(
     // Then get the just loaded graph objects from the temporary div and
     // add replace the placeholder with it.
     const tmp_div = document.createElement("div");
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     tmp_div.innerHTML = response.result;
 
     script_object.parentNode!.replaceChild(
@@ -448,8 +450,10 @@ function update_graph_load_container(
     title: string,
     content_html: string
 ) {
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     (<HTMLElement>container.getElementsByClassName("title")[0]).innerText =
         title;
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container.getElementsByClassName("content")[0].innerHTML = content_html;
 }
 
@@ -1048,6 +1052,7 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
         css_text += "}\n";
     }
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     style.innerHTML = css_text;
     graph_div.appendChild(style);
 }
@@ -1434,6 +1439,7 @@ function global_graph_mouse_up(event: Event) {
 
 function handle_graph_clicked(graph: GraphArtwork) {
     if (graph.render_config.onclick) {
+        /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
         eval(graph.render_config.onclick);
     }
 }
@@ -2035,6 +2041,7 @@ function handle_graph_update(
     if (g_resizing_graph && g_resizing_graph.graph.id == graph.id)
         g_resizing_graph.graph = graph;
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     graph_container.innerHTML = response["html"];
 
     render_graph_and_subgraphs(graph);

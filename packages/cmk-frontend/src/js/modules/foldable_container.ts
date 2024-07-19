@@ -42,6 +42,7 @@ function toggle_tree_state(
                     handler_data: {container: HTMLElement},
                     response_body: string
                 ) {
+                    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                     handler_data.container.innerHTML = response_body;
                 },
                 handler_data: {

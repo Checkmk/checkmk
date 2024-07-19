@@ -244,6 +244,7 @@ function enable_label_input_fields(
             const msg = document.createElement("div");
             msg.classList.add("message", "error", "label_error");
 
+            /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             msg.innerHTML = message;
             element.parentNode!.insertBefore(msg, element.nextSibling);
         });

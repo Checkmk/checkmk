@@ -69,6 +69,7 @@ function bi_update_tree(container: HTMLElement) {
 }
 
 function bi_update_tree_response(bi_container: HTMLElement, code: string) {
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     bi_container.innerHTML = code;
     execute_javascript_by_object(bi_container);
 }

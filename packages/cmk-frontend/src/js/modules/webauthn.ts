@@ -173,6 +173,7 @@ function show_message(text: string, cls: string) {
     remove_class(msg, "success");
     add_class(msg, cls);
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     msg.innerHTML = text;
 }
 

@@ -39,6 +39,7 @@ export function prevent_default_events(event: Event) {
 export function update_contents(id: string, code: string) {
     const obj = document.getElementById(id);
     if (obj) {
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         obj.innerHTML = code;
         execute_javascript_by_object(obj);
     }
@@ -56,6 +57,7 @@ export function execute_javascript_by_object(obj: HTMLElement) {
         } else {
             try {
                 current_script = aScripts[i];
+                /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
                 eval(aScripts[i].text);
                 current_script = null;
             } catch (e) {
@@ -263,6 +265,7 @@ export function update_header_timer() {
     let min: string = t.getMinutes().toString();
     if (parseInt(min) < 10) min = "0" + min;
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container.innerHTML = hours + ":" + min;
 
     const date = document.getElementById("headerdate");
@@ -272,6 +275,7 @@ export function update_header_timer() {
     const month = ("0" + (t.getMonth() + 1)).slice(-2);
     const year = t.getFullYear().toString();
     const date_format = date.getAttribute("format");
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     date.innerHTML = date_format!
         .replace(/yyyy/, year)
         .replace(/mm/, month)
@@ -289,6 +293,7 @@ export function get_row_info() {
 export function update_row_info(text: string) {
     const container = document.getElementById("row_info");
     if (container) {
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         container.innerHTML = text;
     }
 }
@@ -309,6 +314,7 @@ export function set_inpage_search_result_info(text: string) {
 
         // No results before
         if (!old_count) {
+            /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             result_with_row_info.innerHTML = text;
             return;
         }
@@ -317,6 +323,7 @@ export function set_inpage_search_result_info(text: string) {
         if (!new_count) return;
 
         // Results before and after
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         result_with_row_info.innerHTML =
             new_text + ": " + (Number(old_count) + Number(new_count));
 
@@ -330,6 +337,7 @@ export function set_inpage_search_result_info(text: string) {
     if (row_info_div || page_menu_popups_div) {
         const result_div: HTMLElement = document.createElement("div");
         result_div.id = "inpage_search_result_info";
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         result_div.innerHTML = text;
         if (row_info_div) {
             result_div.className = "result_with_row_info";
@@ -690,6 +698,7 @@ function do_reload(url: string) {
 function handle_content_reload(_unused: any, code: string) {
     g_reload_error = false;
     const o = document.getElementById("data_container")!;
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     o.innerHTML = code;
     execute_javascript_by_object(o);
 
@@ -705,6 +714,7 @@ function handle_content_reload_error(
 ) {
     if (!g_reload_error) {
         const o = document.getElementById("data_container")!;
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         o.innerHTML =
             "<div class=error>Update failed (" +
             status_code +
@@ -860,8 +870,10 @@ export function update_pending_changes(
             text_container.getElementsByClassName("changes_number")[0];
         const changes_str_span =
             text_container.getElementsByClassName("changes_str")[0];
+        /* eslint-disable no-unsanitized/property -- Highlight existing violations CMK-17846 */
         changes_number_span.innerHTML = changes_number;
         changes_str_span.innerHTML = changes_str;
+        /* eslint-enable no-unsanitized/property */
     }
 
     // Update changes icon

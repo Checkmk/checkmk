@@ -105,6 +105,7 @@ export function show_error(text: string) {
     add_class(msg, "error");
     remove_class(msg, "success");
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     msg.innerHTML = text;
 }
 
@@ -121,6 +122,7 @@ export function show_info(text: string) {
     add_class(msg, "success");
     remove_class(msg, "error");
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     msg.innerHTML = text;
 }
 

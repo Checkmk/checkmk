@@ -402,6 +402,7 @@ function list_of_strings_add_new_field(
     const tagtype = input.tagName == "INPUT" ? "input" : "select";
     const new_div = document.createElement("DIV");
     if (input.tagName == "INPUT") {
+        /* eslint-disable no-unsanitized/property -- Highlight existing violations CMK-17846 */
         new_div.innerHTML = div.innerHTML.replace(
             '"' + old_name + '"',
             '"' + new_name + '"'
@@ -417,6 +418,7 @@ function list_of_strings_add_new_field(
             "=" + old_name + ">",
             "=" + new_name + ">"
         );
+        /* eslint-enable no-unsanitized/property -- Highlight existing violations CMK-17846 */
     } else {
         // shallow because select2 ands dynamically some spans with form_elements
         const new_select = input.cloneNode() as HTMLInputElement;
@@ -510,6 +512,7 @@ function show_cascading_sub_valuespec(
             const container = document.getElementById(
                 handler_data.varprefix + "_sub"
             )!;
+            /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             container.innerHTML = response.result.html_code;
 
             execute_javascript_by_object(container);
@@ -547,10 +550,12 @@ export function listof_add(
     let new_child: HTMLElement;
     const tmp_container = document.createElement("div");
     if (style == "floating") {
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         tmp_container.innerHTML = html_code;
         new_child = tmp_container.children[0] as HTMLElement;
     } else {
         // Hack for IE. innerHTML does not work correctly directly on tbody/tr
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         tmp_container.innerHTML =
             "<table><tbody>" + html_code + "</tbody></tr>";
         new_child = tmp_container.children[0].children[0]
@@ -1094,6 +1099,7 @@ export function listofmultiple_add(
             }
 
             const tmp_container = document.createElement("tbody");
+            /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             tmp_container.innerHTML = response.result.html_code;
             const new_row = tmp_container.childNodes[0] as HTMLElement;
             if (new_row.tagName != "TR") {
@@ -1480,6 +1486,7 @@ export function visual_filter_list_reset(
 }
 
 function set_inner_html_and_execute_scripts(elm: HTMLElement, html: string) {
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     elm.innerHTML = html;
 
     for (const original_script of elm.getElementsByTagName("script")) {
@@ -1492,6 +1499,7 @@ function set_inner_html_and_execute_scripts(elm: HTMLElement, html: string) {
             new_script.setAttribute(attr.name, attr.value);
         }
 
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         new_script.innerHTML = original_script.innerHTML;
         original_script.parentNode!.replaceChild(new_script, original_script);
     }
@@ -1554,9 +1562,11 @@ export function fetch_ca_from_server(varprefix: string) {
                 `textarea[name='${varprefix}']`
             )!;
             if (response.result_code !== 0) {
+                /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 status.innerText = response.result;
                 content.value = "";
             } else {
+                /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 status.innerHTML = response.result.summary;
                 content.value = response.result.cert_pem;
             }
@@ -1658,6 +1668,7 @@ export function label_group_delete(
                             options[i].value
                         )
                     ) {
+                        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                         options[i].innerHTML =
                             first_elem_choices[options[i].value];
                     } else {
@@ -1728,6 +1739,7 @@ export function init_on_change_validation(
                 if (error_html) {
                     const error_div = document.createElement("div");
                     parent.insertBefore(error_div, select);
+                    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                     error_div.outerHTML = resp.result.error_html;
                 }
             },

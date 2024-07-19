@@ -201,6 +201,7 @@ function handle_search_response(oField: HTMLInputElement, code: string) {
             oField.parentNode!.appendChild(oContainer);
         }
 
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         oContainer.innerHTML = code;
     } else {
         close_popup();

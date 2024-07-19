@@ -7,7 +7,7 @@ import argparse
 import json
 from pathlib import Path
 from pprint import pprint as pp
-from typing import Iterator, NamedTuple
+from typing import Iterator, NamedTuple, Self
 
 
 class Summary(NamedTuple):
@@ -19,19 +19,23 @@ class Summary(NamedTuple):
     numberRemotableTargets: int
 
 
-# no one needs pydantics BaseModel for the price of a complete venv
-class ExecutionMetrics:
-    def __init__(self, **kwargs) -> None:
-        setattr(self, "targetLabel", "")
-        setattr(self, "cacheHit", bool)
-        setattr(self, "cacheable", bool)
-        setattr(self, "remotable", bool)
+# This class is implemented with plain Python to not require creating a venv,
+# which at this point with our amount of dependencies takes a few minutes to
+# create.
+class ExecutionMetrics(NamedTuple):
+    targetLabel: str
+    cacheHit: bool
+    cacheable: bool
+    remotable: bool
 
-        for key, value in kwargs.items():
-            if key in ("targetLabel"):
-                setattr(self, key, str(value))
-            elif key in ("cacheHit", "cacheable", "remotable"):
-                setattr(self, key, bool(value))
+    @classmethod
+    def from_dict(cls, dictionary: dict) -> Self:
+        return cls(
+            str(dictionary.get("targetLabel", "")),
+            bool(dictionary.get("cacheHit", False)),
+            bool(dictionary.get("cacheable", False)),
+            bool(dictionary.get("remotable", False)),
+        )
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -78,7 +82,7 @@ def parse_execution_logs(log_files: list[Path]) -> Iterator[ExecutionMetrics]:
         while len(d):
             (parsed_data, offset) = decoder.raw_decode(d)
             d = d[offset:]
-            yield ExecutionMetrics(**parsed_data)
+            yield ExecutionMetrics.from_dict(parsed_data)
 
 
 def build_summary(parsed_logs: list[ExecutionMetrics]) -> Summary:

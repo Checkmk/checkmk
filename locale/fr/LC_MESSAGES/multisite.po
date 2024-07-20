@@ -587,6 +587,10 @@ msgstr "%s a été supprimé."
 msgid "%s instances"
 msgstr "%s instances"
 
+#, fuzzy, python-format
+msgid "%s is locked by Quick setup."
+msgstr "Installation rapide"
+
 #, python-format
 msgid "%s is not a valid UNIX timestamp"
 msgstr "%s n'est pas un timestamp UNIX valide"
@@ -901,9 +905,6 @@ msgstr "(inconnu : %d)"
 
 msgid "(unset)"
 msgstr "(non défini)"
-
-msgid "(unused)"
-msgstr "(inutilisé)"
 
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ""
@@ -2568,10 +2569,18 @@ msgstr "Clé API du magasin de mots de passe"
 msgid "API key header"
 msgstr "Clé API"
 
+#, fuzzy
+msgid "API or Personal access token"
+msgstr "Token d'accès à l'API"
+
 msgid "API server connection"
 msgstr "Connexion au serveur API"
 
 msgid "API token"
+msgstr "Jeton API"
+
+#, fuzzy
+msgid "API/PAT token"
 msgstr "Jeton API"
 
 msgid "APPEND"
@@ -3526,6 +3535,10 @@ msgstr "Tessons actifs"
 
 msgid "Active shards in percent"
 msgstr "Shards actifs en pourcentage"
+
+#, fuzzy
+msgid "Active since"
+msgstr "Nœud actif"
 
 #, fuzzy
 msgid "Active spot fleet requests"
@@ -6531,6 +6544,10 @@ msgstr "Filtres appliqués :"
 msgid "Apply"
 msgstr "Appliquer"
 
+#, fuzzy
+msgid "Apply Latency"
+msgstr "Latence"
+
 msgid "Apply OMD config changes"
 msgstr "Appliquer les changements de configuration de l'OMD"
 
@@ -6814,6 +6831,11 @@ msgstr "Attribuer une définition de SLA au service"
 msgid "Assign SLA to service"
 msgstr "Attribuer un SLA au service"
 
+msgid ""
+"Assign created issues to defined user. This is the username of the user (not "
+"Email)."
+msgstr ""
+
 #, fuzzy
 msgid "Assign plan/test result to piggyback host"
 msgstr "Traduction du nom d'hôte pour les hôtes en ferroutage"
@@ -6848,6 +6870,9 @@ msgstr "Attribuer à l'hôte demandeur"
 
 msgid "Assign via regular expressions"
 msgstr "Attribution via des expressions régulières"
+
+msgid "Assignee"
+msgstr ""
 
 msgid "Assignment of hosts to contact groups"
 msgstr "Affectation des hôtes aux groupes de contacts"
@@ -9910,6 +9935,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"By disabling this option, piggyback data won't be distributed to or received "
+"from other sites.Piggyback data received by a host from this site can still "
+"be used."
+msgstr ""
+
+msgid ""
 "By enabling this option notifications will be bulked only if the specified "
 "time period is active. When the time period ends a bulk containing all "
 "notifications that appeared during that time will be sent. If bulking should "
@@ -10238,6 +10269,10 @@ msgstr "Réservation de l'unité centrale"
 msgid "CPU Time"
 msgstr "Temps CPU"
 
+#, fuzzy
+msgid "CPU Time Upper Levels"
+msgstr "Définir les niveaux supérieurs"
+
 msgid "CPU Utilization"
 msgstr "Utilisation du CPU"
 
@@ -10260,9 +10295,6 @@ msgstr "Crédits de l'unité centrale"
 
 msgid "CPU entitlement"
 msgstr "Droit à l'UC"
-
-msgid "CPU idle time"
-msgstr "Temps d'inactivité du CPU"
 
 msgid "CPU in percent"
 msgstr "CPU en pourcentage"
@@ -10336,24 +10368,6 @@ msgstr "Temps CPU dans l'espace système"
 
 msgid "CPU time in user space"
 msgstr "Temps CPU dans l'espace utilisateur"
-
-msgid "CPU time spent for executing guest operating systems"
-msgstr "Temps CPU consacré à l'exécution des systèmes d'exploitation invités"
-
-msgid "CPU time spent in kernel space"
-msgstr "Temps CPU passé dans l'espace du noyau"
-
-msgid "CPU time spent in user space"
-msgstr "Temps CPU passé dans l'espace utilisateur"
-
-msgid "CPU time spent in user space for niced processes"
-msgstr "Temps CPU passé dans l'espace utilisateur pour les processus facturés"
-
-msgid "CPU time spent waiting for I/O"
-msgstr "Temps CPU passé à attendre les E/S"
-
-msgid "CPU time stolen by other operating systems"
-msgstr "Temps CPU volé par d'autres systèmes d'exploitation"
 
 msgid "CPU total in ms"
 msgstr "Total du CPU en ms"
@@ -11027,6 +11041,10 @@ msgid ""
 msgstr ""
 "Le site central est en version >= 2.2 alors que le site distant est en "
 "version plus ancienne, veuillez d'abord mettre à jour les sites distants"
+
+#, fuzzy
+msgid "Ceph (Linux)"
+msgstr "SUSEConnect (Linux)"
 
 msgid "Ceph MGRs"
 msgstr "MGRs Ceph"
@@ -12666,6 +12684,10 @@ msgstr "Le client se connecte pour la bande 2,4 Ghz"
 msgid "Client connects for 5 Ghz band"
 msgstr "Le client se connecte pour la bande 5 Ghz"
 
+#, fuzzy
+msgid "Client name"
+msgstr "Nom de la ville"
+
 msgid "Client requests received"
 msgstr "Demandes des clients reçues"
 
@@ -13203,6 +13225,10 @@ msgstr "Commentaires de l'hôte"
 
 msgid "Comments of service"
 msgstr "Commentaires sur le service"
+
+#, fuzzy
+msgid "Commit Latency"
+msgstr "Latence d'écriture"
 
 #, fuzzy
 msgid "Commit charge"
@@ -13855,9 +13881,6 @@ msgstr "Configurez le mode cible du système."
 msgid "Configure the target state of the remote support tunnel."
 msgstr "Configurez le mode cible du système."
 
-msgid "Configure the user name here."
-msgstr "Configurez le nom de l'utilisateur ici."
-
 msgid ""
 "Configure the user or group to receive the notifications by providing the "
 "user or group key here. The key can be obtained from the Pushover website."
@@ -13865,6 +13888,10 @@ msgstr ""
 "Configurez l'utilisateur ou le groupe qui recevra les notifications en "
 "fournissant la clé de l'utilisateur ou du groupe ici. La clé peut être "
 "obtenue sur le site web de Pushover."
+
+#, fuzzy
+msgid "Configure the username here."
+msgstr "Configurez le nom de l'utilisateur ici."
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -14025,9 +14052,6 @@ msgstr "Délai de connexion au socket d'état de l'Event Console"
 
 msgid "Connect to"
 msgstr "Connectez-vous à"
-
-msgid "Connect to ACME SBC"
-msgstr "Connexion à ACME SBC"
 
 msgid ""
 "Connect to an MQTT broker to get statistics out of your instance. The "
@@ -17083,6 +17107,11 @@ msgstr ""
 "distribution CloudFront - dans le cas où vous sélectionnez la deuxième "
 "option, vous devrez créer le(s) hôte(s) piggyback"
 
+#, fuzzy
+msgid ""
+"Define the lower levels for the time, the systemd service is active since."
+msgstr "Définir des niveaux inférieurs pour le nombre de conteneurs terminés"
+
 msgid ""
 "Define the maximum session duration. If reached, the user has to re-"
 "authenticate."
@@ -17092,6 +17121,19 @@ msgid ""
 "Define the periodicity in which the repetition of the measured data is "
 "expected (monthly, weekly, daily or hourly)"
 msgstr ""
+
+#, fuzzy
+msgid "Define the upper levels for memory usage."
+msgstr "Niveaux supérieurs de la mémoire utilisée"
+
+#, fuzzy
+msgid "Define the upper levels for the consumed CPU time."
+msgstr "Définir des niveaux supérieurs pour le nombre total de conteneurs"
+
+#, fuzzy
+msgid ""
+"Define the upper levels for the time, the systemd service is active since."
+msgstr "Définir des niveaux supérieurs pour le décalage horaire"
 
 msgid "Define upper levels for number of running containers"
 msgstr ""
@@ -17131,9 +17173,10 @@ msgstr ""
 "Définit les informations à interroger. Vous pouvez choisir entre le cluster, "
 "les nœuds, les vhosts et les files d'attente."
 
+#, fuzzy
 msgid ""
 "Defines what information to query. You can choose between the instance "
-"state, job states, node states and the job queue."
+"state, job states, node states, the job queue and system metrics."
 msgstr ""
 "Définit les informations à interroger. Vous pouvez choisir entre l'état de "
 "l'instance, les états des travaux, les états des nœuds et la file d'attente "
@@ -17149,6 +17192,10 @@ msgstr ""
 "travaux Splunk, affichés dans le menu des travaux au sein de Splunk. Vous "
 "pouvez également interroger la santé des composants et les alertes "
 "déclenchées."
+
+#, fuzzy
+msgid "Degraded Objects"
+msgstr "Hôtes dégradés"
 
 msgid "Degraded hosts"
 msgstr "Hôtes dégradés"
@@ -17906,6 +17953,10 @@ msgstr "Déploiement du plugin pour Windows broadcom bonding"
 #, fuzzy
 msgid "Deploy plug-in that updates agent automatically"
 msgstr "Déployer un plugin qui met à jour l'agent automatiquement"
+
+#, fuzzy
+msgid "Deploy plugin for Ceph"
+msgstr "Déployer le plugin pour DAG"
 
 #, fuzzy
 msgid "Deploy powershell plug-in - recommended for Win2k8 upwards"
@@ -19184,6 +19235,10 @@ msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "Surveillance distribuée à l'aide de plusieurs sites Checkmk"
 
 #, fuzzy
+msgid "Distributed piggyback"
+msgstr "Surveillance distribuée"
+
+#, fuzzy
 msgid "Do HW/SW Inventory"
 msgstr "Inventaire HW/SW"
 
@@ -19882,6 +19937,10 @@ msgid "Don't remove matching vanished services"
 msgstr "Ne pas supprimer les services disparus correspondants"
 
 #, fuzzy
+msgid "Don't send any traces"
+msgstr "Ne pas montrer d'en-tête"
+
+#, fuzzy
 msgid "Don't show"
 msgstr "Ne pas montrer Résumé"
 
@@ -20292,6 +20351,10 @@ msgstr "Configuration dynamique"
 
 #, fuzzy
 msgid "Dynamic configuration activate changes timeout"
+msgstr "Journalisation de la configuration dynamique"
+
+#, fuzzy
+msgid "Dynamic configuration bulk discovery timeout"
 msgstr "Journalisation de la configuration dynamique"
 
 msgid "Dynamic configuration logging"
@@ -21247,6 +21310,9 @@ msgstr "Activer le contrôleur"
 msgid "Enable debug mode"
 msgstr "Activer le mode débogage"
 
+msgid "Enable distributed piggyback"
+msgstr ""
+
 msgid ""
 "Enable encryption of the backed up files. The tar archives created by the "
 "backup are encrypted using the specified key during backup. You will need "
@@ -21329,6 +21395,10 @@ msgstr "Activer le profilage par demande"
 
 msgid "Enable profiling for all requests"
 msgstr "Activer le profilage pour toutes les demandes"
+
+#, fuzzy
+msgid "Enable receiving traces"
+msgstr "Activer les contrôles actifs"
 
 msgid "Enable regular service discovery checks (deprecated)"
 msgstr "Activer les contrôles réguliers de découverte des services (obsolète)"
@@ -21679,6 +21749,12 @@ msgid "Enter layout mode"
 msgstr "Entrer dans le mode de mise en page"
 
 msgid "Enter performance data to show in notifications etc. ..."
+msgstr ""
+
+#, python-format
+msgid ""
+"Enter the %s to connect Checkmk to self-hosted Jira or enter the %s to "
+"connect to Jira Cloud."
 msgstr ""
 
 msgid ""
@@ -22777,8 +22853,16 @@ msgstr "Conditions explicites"
 msgid "Explicit email addresses"
 msgstr "Adresses électroniques explicites"
 
+#, fuzzy
+msgid "Explicit host matching"
+msgstr "Cartographie explicite de %s"
+
 msgid "Explicit hosts"
 msgstr "Hôtes explicites"
+
+#, fuzzy
+msgid "Explicit item matching"
+msgstr "Correspondance explicite"
 
 msgid "Explicit labels"
 msgstr "Étiquettes explicites"
@@ -25719,9 +25803,6 @@ msgstr "Groupes pour les attributs personnalisés des utilisateurs"
 msgid "Groups to synchronize"
 msgstr "Groupes à synchroniser"
 
-msgid "Growing"
-msgstr "Culture"
-
 msgid "Growth"
 msgstr "Croissance"
 
@@ -25939,6 +26020,10 @@ msgstr "Équilibreurs de charge"
 
 msgid "HTTP, TCP, Email, ..."
 msgstr "HTTP, TCP, Email, ..."
+
+#, fuzzy
+msgid "HTTP: Active Requests"
+msgstr "Requêtes DHCP reçues"
 
 msgid "HTTPS"
 msgstr "HTTPS"
@@ -26845,13 +26930,6 @@ msgstr ""
 "Ici, vous pouvez sélectionner les métriques qui doivent être envoyées à "
 "InfluxDB. Vous devez sélectionner au moins une entrée. Sinon, Checkmk "
 "n'enverra rien à InfluxDB."
-
-msgid ""
-"Here you can set a custom label for new issues. If not set, 'monitoring' "
-"will be used."
-msgstr ""
-"Vous pouvez définir ici une étiquette personnalisée pour les nouveaux "
-"problèmes. S'il n'est pas défini, \"monitoring\" sera utilisé."
 
 msgid "Here you can set a manual address if the server differs from the host"
 msgstr ""
@@ -28780,9 +28858,6 @@ msgstr "Élément de recherche de l'hôte"
 
 msgid "Host management"
 msgstr "Gestion des hôtes"
-
-msgid "Host match list"
-msgstr "Liste de correspondance des hôtes"
 
 msgid "Host memory usage"
 msgstr "Utilisation de la mémoire de l'hôte"
@@ -30834,6 +30909,12 @@ msgid ""
 msgstr ""
 "Si vous exécutez la console d'événements en tant que non-root (comme dans un "
 "site OMD), veuillez choisir un numéro de port supérieur à 1024."
+
+#, python-format
+msgid ""
+"If you are still using %s, we recommend switching to an PAT/API token, as "
+"the password authentication is deprecated."
+msgstr ""
 
 msgid ""
 "If you are using rule based notifications with and <i>Bulk Notifications</i> "
@@ -33159,6 +33240,10 @@ msgstr "Intervalle de vérification des mises à jour :"
 msgid "Interval for collecting data"
 msgstr "Intervalle de collecte des données"
 
+#, fuzzy
+msgid "Interval for collecting data from Ceph"
+msgstr "Intervalle de collecte des données"
+
 msgid "Interval for update check"
 msgstr "Intervalle pour la vérification de la mise à jour"
 
@@ -33846,9 +33931,6 @@ msgstr "Poste (utilisé dans la description du service)"
 msgid "Item appearance"
 msgstr "Apparence de l'article"
 
-msgid "Item match list"
-msgstr "Liste de correspondance des articles"
-
 msgid "Item memory"
 msgstr "Mémoire d'objet"
 
@@ -33896,8 +33978,140 @@ msgstr "Taille du tas de la JVM"
 msgid "JVM memory levels"
 msgstr "Niveaux de mémoire de la JVM"
 
+msgid "JVM memory pool G1 Eden Space: available by OS"
+msgstr ""
+
+msgid "JVM memory pool G1 Eden Space: initially requested"
+msgstr ""
+
+#, fuzzy
+msgid "JVM memory pool G1 Eden Space: usage"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+#, fuzzy
+msgid "JVM memory pool G1 Eden Space: used"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+msgid "JVM memory pool G1 Eden Space: used after GC"
+msgstr ""
+
+#, fuzzy
+msgid "JVM memory pool G1 Old Gen: available by OS"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+msgid "JVM memory pool G1 Old Gen: initially requested"
+msgstr ""
+
+#, fuzzy
+msgid "JVM memory pool G1 Old Gen: max. allowed"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+#, fuzzy
+msgid "JVM memory pool G1 Old Gen: usage"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+#, fuzzy
+msgid "JVM memory pool G1 Old Gen: used"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+#, fuzzy
+msgid "JVM memory pool G1 Old Gen: used after GC"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+msgid "JVM memory pool G1 Survivor Space: available by OS"
+msgstr ""
+
+msgid "JVM memory pool G1 Survivor Space: initially requested"
+msgstr ""
+
+#, fuzzy
+msgid "JVM memory pool G1 Survivor Space: usage"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+#, fuzzy
+msgid "JVM memory pool G1 Survivor Space: used"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+msgid "JVM memory pool G1 Survivor Space: used after GC"
+msgstr ""
+
+msgid "JVM memory pool Metaspace: available by OS"
+msgstr ""
+
+msgid "JVM memory pool Metaspace: initially requested"
+msgstr ""
+
+#, fuzzy
+msgid "JVM memory pool Metaspace: max. allowed"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+#, fuzzy
+msgid "JVM memory pool Metaspace: usage"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+#, fuzzy
+msgid "JVM memory pool Metaspace: used"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
 msgid "JVM memory pool levels"
 msgstr "Niveaux du pool de mémoire de la JVM"
+
+msgid "JVM memory total: available by OS"
+msgstr ""
+
+#, fuzzy
+msgid "JVM memory total: initially requested"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+#, fuzzy
+msgid "JVM memory total: max. allowed"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+#, fuzzy
+msgid "JVM memory total: used"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+#, fuzzy
+msgid "JVM memory: heap"
+msgstr "Niveaux de mémoire de la JVM"
+
+msgid "JVM memory: heap: available by OS"
+msgstr ""
+
+msgid "JVM memory: heap: initially requested"
+msgstr ""
+
+msgid "JVM memory: heap: max. allowed"
+msgstr ""
+
+#, fuzzy
+msgid "JVM memory: heap: usage"
+msgstr "Utilisation de la mémoire de la VM ESX"
+
+#, fuzzy
+msgid "JVM memory: heap: used"
+msgstr "Niveaux de mémoire de la JVM"
+
+#, fuzzy
+msgid "JVM memory: non-heap"
+msgstr "Niveaux de mémoire de la JVM"
+
+msgid "JVM memory: non-heap: available by OS"
+msgstr ""
+
+msgid "JVM memory: non-heap: initially requested"
+msgstr ""
+
+msgid "JVM memory: non-heap: max. allowed"
+msgstr ""
+
+#, fuzzy
+msgid "JVM memory: non-heap: usage"
+msgstr "Utilisation de la mémoire de la VM ESX"
+
+#, fuzzy
+msgid "JVM memory: non-heap: used"
+msgstr "Niveaux de mémoire de la JVM"
 
 msgid "JVM request count"
 msgstr "Nombre de requêtes JVM"
@@ -33913,6 +34127,10 @@ msgstr "threads de la JVM"
 
 msgid "JVM tomcat threadpool levels"
 msgstr "Niveaux de threadpool de JVM tomcat"
+
+#, fuzzy
+msgid "JVM total memory"
+msgstr "Mémoire totale ORACLE"
 
 msgid "JVM uptime (since last reboot)"
 msgstr "Temps de fonctionnement de la JVM (depuis le dernier redémarrage)"
@@ -33937,11 +34155,29 @@ msgstr "Instance Jenkins à interroger."
 msgid "Jenkins jobs"
 msgstr "Emplois à Jenkins"
 
+msgid "Jenkins memory pool G1 Eden Space"
+msgstr ""
+
+#, fuzzy
+msgid "Jenkins memory pool G1 Old Gen"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
+msgid "Jenkins memory pool G1 Survivor Space"
+msgstr ""
+
+#, fuzzy
+msgid "Jenkins memory pool Metaspace"
+msgstr "Niveaux du pool de mémoire de la JVM"
+
 msgid "Jenkins nodes"
 msgstr "Nœuds Jenkins"
 
 msgid "Jenkins queue"
 msgstr "File d'attente Jenkins"
+
+#, fuzzy
+msgid "Jenkins system metrics"
+msgstr "Paramètres du système Oracle"
 
 #, fuzzy
 msgid "Jira URL"
@@ -35951,6 +36187,9 @@ msgstr "Liste des fichiers non emballés"
 msgid "Listen for incoming messages via"
 msgstr "Écouter les messages entrants via"
 
+msgid "Listen for spans on this local IP address"
+msgstr ""
+
 msgid "Listener"
 msgstr "Auditeur"
 
@@ -36930,6 +37169,10 @@ msgstr ""
 
 msgid "Lower levels for the number of registered desktops"
 msgstr "Niveaux inférieurs pour le nombre de postes de travail enregistrés"
+
+#, fuzzy
+msgid "Lower levels for the time the service is active"
+msgstr "Fixer des niveaux pour le nombre de services"
 
 msgid "Lower levels for total error rate"
 msgstr "Niveaux inférieurs pour le taux d'erreur total"
@@ -38665,6 +38908,10 @@ msgstr "Taille de la mémoire (95e percentile)"
 msgid "Memory Size (99th percentile)"
 msgstr "Taille de la mémoire (99e percentile)"
 
+#, fuzzy
+msgid "Memory Upper Levels"
+msgstr "Niveaux supérieurs d'utilisation de la mémoire"
+
 msgid "Memory Utilization"
 msgstr "Utilisation de la mémoire"
 
@@ -38998,6 +39245,10 @@ msgstr "Métrique non trouvé"
 msgid "Metrics"
 msgstr "Métriques"
 
+#, fuzzy
+msgid "Metrics Group"
+msgstr "Métriques"
+
 msgid "Metrics graph of a single service"
 msgstr "Graphique des métriques d'un seul service"
 
@@ -39232,6 +39483,10 @@ msgstr "Criticité de l'état du témoin en miroir"
 
 msgid "Miscellaneous"
 msgstr "Divers"
+
+#, fuzzy
+msgid "Misplaced Objects"
+msgstr "Objets gérés"
 
 msgid "Misscheduled duration (DaemonSet only)"
 msgstr "Durée non planifiée (DaemonSet uniquement)"
@@ -42415,6 +42670,10 @@ msgstr "Nombre de fils"
 msgid "Number of PING probes"
 msgstr "Nombre de sondes PING"
 
+#, fuzzy
+msgid "Number of Placement Groups"
+msgstr "Nombre de groupes de règles"
+
 msgid "Number of Resources"
 msgstr "Nombre de ressources"
 
@@ -42931,6 +43190,10 @@ msgstr "Nombre de tâches bloquées"
 msgid "Number of tables"
 msgstr "Nombre de tables"
 
+#, fuzzy
+msgid "Number of tasks"
+msgstr "Nombre de tables"
+
 msgid "Number of the Rack"
 msgstr "Numéro de la baie"
 
@@ -43230,11 +43493,19 @@ msgstr ""
 "OS, Version et édition de Checkmk, Temps, Core, Version et chemins de "
 "Python, Architecture"
 
+#, fuzzy
+msgid "OSD Latency"
+msgstr "Latence du disque"
+
 msgid "OSDs epoch levels and average"
 msgstr "Niveaux d'époques et moyenne des OSD"
 
 msgid "OSN Laser attenuation"
 msgstr "OSN Atténuation du laser"
+
+#, fuzzy
+msgid "OTLP endpoint"
+msgstr "Point d'accès"
 
 #, fuzzy
 msgid "OVS bonding interface status"
@@ -45348,6 +45619,10 @@ msgstr ""
 "Remplacer l'état de vérification basé sur le résultat de la dernière "
 "construction"
 
+#, fuzzy
+msgid "Override current plan settings"
+msgstr "Unité d'annulation du capteur"
+
 msgid "Override unit of sensor"
 msgstr "Unité d'annulation du capteur"
 
@@ -45431,6 +45706,202 @@ msgstr "Services PEND du groupe d'accueil"
 #, fuzzy
 msgid "PENDING services of host"
 msgstr "EN ATTENTE Services de l'hôte"
+
+#, fuzzy
+msgid "PGs Activating + Undersized"
+msgstr "Activation nécessaire"
+
+msgid "PGs Activating + Undersized + Degradedpgstate"
+msgstr ""
+
+msgid "PGs Active + Clean"
+msgstr ""
+
+#, fuzzy
+msgid "PGs Active + Clean + Inconsistent"
+msgstr "Primaire - Inconsistant"
+
+msgid "PGs Active + Clean + Remapped"
+msgstr ""
+
+msgid "PGs Active + Clean + Scrubbing"
+msgstr ""
+
+msgid "PGs Active + Clean + Scrubbing + Deep"
+msgstr ""
+
+msgid "PGs Active + Clean + Scrubbing + Deep + Repair"
+msgstr ""
+
+msgid "PGs Active + Clean + Scrubbing + Deep + Snaptrim + Wait"
+msgstr ""
+
+msgid "PGs Active + Clean + Snaptrim"
+msgstr ""
+
+msgid "PGs Active + Clean + Snaptrim + Wait"
+msgstr ""
+
+msgid "PGs Active + Clean + Wait"
+msgstr ""
+
+msgid "PGs Active + Degraded"
+msgstr ""
+
+msgid "PGs Active + Recovering"
+msgstr ""
+
+msgid "PGs Active + Recovering + Degraded"
+msgstr ""
+
+msgid "PGs Active + Recovering + Degraded + Inconsistent"
+msgstr ""
+
+msgid "PGs Active + Recovering + Degraded + Remapped"
+msgstr ""
+
+msgid "PGs Active + Recovering + Remapped"
+msgstr ""
+
+msgid "PGs Active + Recovering + Undersized"
+msgstr ""
+
+msgid "PGs Active + Recovering + Undersized + Degraded + Remapped"
+msgstr ""
+
+msgid "PGs Active + Recovering + Undersized + Remapped"
+msgstr ""
+
+msgid "PGs Active + Recovery + Wait"
+msgstr ""
+
+msgid "PGs Active + Recovery + Wait + Degraded"
+msgstr ""
+
+msgid "PGs Active + Recovery + Wait + Degraded + Inconsistent"
+msgstr ""
+
+msgid "PGs Active + Recovery + Wait + Degraded + Remapped"
+msgstr ""
+
+msgid "PGs Active + Recovery + Wait + Remapped"
+msgstr ""
+
+msgid "PGs Active + Recovery + Wait + Undersized + Degraded"
+msgstr ""
+
+msgid "PGs Active + Recovery + Wait + Undersized + Degraded + Remapped"
+msgstr ""
+
+msgid "PGs Active + Recovery + Wait + Undersized + Remapped"
+msgstr ""
+
+msgid "PGs Active + Remapped"
+msgstr ""
+
+msgid "PGs Active + Remapped + Backfill + Toofull"
+msgstr ""
+
+msgid "PGs Active + Remapped + Backfill + Wait"
+msgstr ""
+
+msgid "PGs Active + Remapped + Backfill + Wait + Backfill + Toofull"
+msgstr ""
+
+msgid "PGs Active + Remapped + Backfilling"
+msgstr ""
+
+msgid "PGs Active + Remapped + Inconsistent + Backfill + Toofull"
+msgstr ""
+
+msgid "PGs Active + Remapped + Inconsistent + Backfill + Wait"
+msgstr ""
+
+msgid "PGs Active + Remapped + Inconsistent + Backfilling"
+msgstr ""
+
+msgid "PGs Active + Undersized"
+msgstr ""
+
+msgid "PGs Active + Undersized + Degraded"
+msgstr ""
+
+msgid "PGs Active + Undersized + Degraded + Inconsistent"
+msgstr ""
+
+msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Toofull"
+msgstr ""
+
+msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
+msgstr ""
+
+msgid "PGs Active + Undersized + Degraded + Remapped + Backfilling"
+msgstr ""
+
+msgid ""
+"PGs Active + Undersized + Degraded + Remapped + Inconsistent + Backfill + "
+"Toofull"
+msgstr ""
+
+msgid ""
+"PGs Active + Undersized + Degraded + Remapped + Inconsistent + Backfill + "
+"Wait"
+msgstr ""
+
+msgid ""
+"PGs Active + Undersized + Degraded + Remapped + Inconsistent + Backfilling"
+msgstr ""
+
+msgid "PGs Active + Undersized + Remapped"
+msgstr ""
+
+msgid "PGs Active + Undersized + Remapped + Backfill + Toofull"
+msgstr ""
+
+msgid "PGs Active + Undersized + Remapped + Backfill + Wait"
+msgstr ""
+
+msgid "PGs Active + Undersized + Remapped + Backfilling"
+msgstr ""
+
+#, fuzzy
+msgid "PGs Down"
+msgstr "Host Down"
+
+#, fuzzy
+msgid "PGs Incomplete"
+msgstr "complet"
+
+msgid "PGs Peering"
+msgstr ""
+
+msgid "PGs Remapped + Peering"
+msgstr ""
+
+msgid "PGs Stale + Active + Clean"
+msgstr ""
+
+msgid "PGs Stale + Active + Undersized + Degraded"
+msgstr ""
+
+msgid "PGs Stale + Undersized + Degraded + Peered"
+msgstr ""
+
+msgid "PGs Stale + Undersized + Peered"
+msgstr ""
+
+msgid "PGs Stale+active + Undersized"
+msgstr ""
+
+msgid "PGs Undersized + Degraded + Peered"
+msgstr ""
+
+msgid "PGs Undersized + Peered"
+msgstr ""
+
+#, fuzzy
+msgid "PGs Unknown"
+msgstr "Inconnu"
 
 msgid "PID"
 msgstr "PID"
@@ -46005,6 +46476,10 @@ msgid "Path to a CA certificate"
 msgstr "Chemin d'accès à un certificat CA"
 
 msgid "Path to categories"
+msgstr "Chemin vers les catégories"
+
+#, fuzzy
+msgid "Path to ceph.conf"
 msgstr "Chemin vers les catégories"
 
 msgid "Path to nvidia-smi.exe"
@@ -46876,6 +47351,10 @@ msgstr ""
 msgid "Placement"
 msgstr "Placement"
 
+#, fuzzy
+msgid "Placement Groups"
+msgstr "Placement"
+
 msgid "Plain Email"
 msgstr "Courriel en clair"
 
@@ -47092,6 +47571,10 @@ msgstr "Veuillez entrer un numéro valide"
 msgid "Please enter a valid time of day range"
 msgstr "Veuillez entrer une plage horaire valide"
 
+#, fuzzy
+msgid "Please enter an absolute path."
+msgstr "Veuillez spécifier un nom de chemin absolu"
+
 #, python-format
 msgid "Please enter an alias name or description for the site %s."
 msgstr "Veuillez entrer un nom d'alias ou une description pour le site %s."
@@ -47099,7 +47582,8 @@ msgstr "Veuillez entrer un nom d'alias ou une description pour le site %s."
 msgid "Please enter an automation secret of at least 10 characters."
 msgstr "Veuillez saisir un secret d'automatisation d'au moins 10 caractères."
 
-msgid "Please enter the Multisite URL of the slave site."
+#, fuzzy
+msgid "Please enter the Multisite URL of the remote site."
 msgstr "Veuillez saisir l'URL multisite du site esclave."
 
 #, fuzzy
@@ -49430,6 +49914,10 @@ msgstr "Erreurs de réception"
 msgid "Receive fallback notifications"
 msgstr "Recevoir des notifications de repli"
 
+#, fuzzy
+msgid "Receive traces"
+msgstr "Trames reçues"
+
 msgid "Received"
 msgstr "Reçu"
 
@@ -49463,6 +49951,10 @@ msgstr ""
 
 msgid "Received messages"
 msgstr "Messages reçus"
+
+#, fuzzy
+msgid "Receiving traces is disabled"
+msgstr "Le site est désactivé"
 
 msgid "Recent event history"
 msgstr "Historique des événements récents"
@@ -49516,6 +50008,10 @@ msgid "Record additional performance data"
 msgstr "Enregistrer des données supplémentaires sur les performances"
 
 msgid "Recover"
+msgstr "Récupérer"
+
+#, fuzzy
+msgid "Recovering"
 msgstr "Récupérer"
 
 msgid "Recovery Services Vault"
@@ -53252,6 +53748,17 @@ msgstr "Sélectionner des fichiers individuels dans la liste"
 msgid "Select view"
 msgstr "Sélectionner la vue"
 
+msgid ""
+"Select where to send OpenTelemetry traces of Checkmk services to. The most "
+"basic approach is to send traces to the site's local Jaeger instance. To be "
+"able to do so, you additionally have to configure the global setting "
+"\"Support > Receive traces\". In case you want to do tracing in distributed "
+"setups, you need to configure that option in the central site only and set "
+"this option to \"Send traces to the central sites Jaeger instance\". "
+"Alternatively you can send the traces to another OpenTelemetry collector via "
+"OTLP."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Select which Azure services to monitor.\n"
@@ -53414,6 +53921,16 @@ msgstr "Envoi à tous les contacts des hôtes/services sélectionnés (diffusion
 
 msgid "Send to remote Event Console via syslog"
 msgstr "Envoi à la console d'événements distante via syslog"
+
+msgid "Send traces from Checkmk"
+msgstr ""
+
+msgid "Send traces to another OpenTelemetry collector"
+msgstr ""
+
+#, fuzzy
+msgid "Send traces to site local Jaeger instance"
+msgstr "Ouvrez l'interface utilisateur web locale de ce site"
 
 msgid "Send user message"
 msgstr "Envoyer un message à l'utilisateur"
@@ -54118,6 +54635,14 @@ msgstr "Définir l'adresse IPv4"
 
 msgid "Set Setup to read only mode for other users"
 msgstr "Setup en mode lecture seule pour les autres utilisateurs"
+
+#, fuzzy, python-format
+msgid ""
+"Set a custom label for new issues. If not set, 'monitoring' will be used."
+"<br><br>%s"
+msgstr ""
+"Vous pouvez définir ici une étiquette personnalisée pour les nouveaux "
+"problèmes. S'il n'est pas défini, \"monitoring\" sera utilisé."
 
 msgid "Set absolute levels"
 msgstr "Définir des niveaux absolus"
@@ -55386,12 +55911,6 @@ msgstr ""
 
 msgid "Shrink too long texts"
 msgstr "Des textes trop longs à rétrécir"
-
-msgid "Shrinkage"
-msgstr "Rétrécissement"
-
-msgid "Shrinking"
-msgstr "Réduit"
 
 msgid "Shutting down"
 msgstr "Mise hors service"
@@ -58960,6 +59479,10 @@ msgstr "Sync-Plugin : Rôles"
 msgid "Synced created hosts with sites: %s"
 msgstr "Synchronisation des hôtes créés avec les sites : %s"
 
+#, fuzzy
+msgid "Synchronicity / caching"
+msgstr "Synchronisation"
+
 msgid "Synchronization job acknowledged"
 msgstr "Travail de synchronisation reconnu"
 
@@ -59117,6 +59640,9 @@ msgstr "Utilisation de la mémoire du système"
 
 msgid "System messages"
 msgstr "Messages du système"
+
+msgid "System metrics (requires 'Metrics' plugin in Jenkins)"
+msgstr ""
 
 msgid "System name"
 msgstr "Nom du système"
@@ -63321,26 +63847,28 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text to match. "
-"Note that as an alternative, you may also use the rule Host name translation "
-"for Incoming Messages in the Global Settings of the EC to accomplish your "
-"task."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field to match. Note that as an alternative, you may also use the rule Host "
+"name translation for Incoming Messages in the Global Settings of the EC to "
+"accomplish your task."
 msgstr ""
 "Le caractère générique <tt>\\0</tt> sera remplacé par le texte original à "
 "faire correspondre. Notez qu'à titre d'alternative, vous pouvez également "
 "utiliser la règle Traduction du nom d'hôte pour les messages entrants dans "
 "les paramètres globaux de l'EC pour accomplir votre tâche."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end."
 msgstr ""
 "L'espace réservé <tt>\\0</tt> sera remplacé par le texte original. Cela vous "
 "permet d'ajouter de nouvelles informations au début ou à la fin."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end. "
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end. "
 msgstr ""
 "L'espace réservé <tt>\\0</tt> sera remplacé par le texte original. Cela vous "
 "permet d'ajouter de nouvelles informations au début ou à la fin. "
@@ -64017,13 +64545,6 @@ msgstr ""
 
 msgid "The source host"
 msgstr "L'hôte source"
-
-msgid ""
-"The specified choice is no longer available. Please use another, like "
-"'header' instead."
-msgstr ""
-"Le choix spécifié n'est plus disponible. Veuillez en utiliser un autre, "
-"comme 'header' ; à la place."
 
 msgid ""
 "The staleness value of a host / service is calculated by measuring the "
@@ -66453,6 +66974,14 @@ msgstr ""
 "des hôtes et des services. Cela accélère considérablement les requêtes de "
 "disponibilité pour les grandes installations."
 
+msgid ""
+"This option enables receiving OpenTelemetry traces in a Jaeger instance "
+"running in the Checkmk site. This instance is run for diagnostic purposes of "
+"Checkmk and currently not intended to be used for external use cases.In "
+"addition to this option, you need to configure the global setting \"Support "
+"> Send traces from Checkmk\"."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "This option enables the Event Console - The event processing and "
@@ -68704,6 +69233,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"This setting decides when the bulk discovery operation will be timed out. "
+"Default is 2 minutes"
+msgstr ""
+
+msgid ""
 "This setting decides which types of messages to log into the daemon log of "
 "the Checkmk Micro Core. The object history (service alerts, events, etc.) is "
 "<b>not</b> affected by this setting."
@@ -69253,6 +69787,11 @@ msgstr ""
 "Cela permet de déployer l'agent plugin <tt>nvidia_smi</tt> utilisé pour "
 "surveiller les GPU Nvidia."
 
+msgid ""
+"This will deploy the agent plugin <tt>ceph</tt> for monitoring the status of "
+"Ceph. This plugin will be run asynchronously in the background."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "This will deploy the two agent plug-ins <tt>plesk_backup</tt> and "
@@ -69339,6 +69878,40 @@ msgstr "Threadpool"
 
 msgid "Threads"
 msgstr "Les fils"
+
+#, fuzzy
+msgid "Threads: active"
+msgstr "Utilisation du fil"
+
+#, fuzzy
+msgid "Threads: blocked"
+msgstr "Serrures partagées"
+
+#, fuzzy
+msgid "Threads: daemon"
+msgstr "Utilisation du fil"
+
+msgid "Threads: deadlocked"
+msgstr ""
+
+msgid "Threads: terminated"
+msgstr ""
+
+#, fuzzy
+msgid "Threads: timed waiting"
+msgstr "Tâche max en attente"
+
+#, fuzzy
+msgid "Threads: total"
+msgstr "Les fils"
+
+#, fuzzy
+msgid "Threads: unstarted"
+msgstr "Utilisation du fil"
+
+#, fuzzy
+msgid "Threads: waiting"
+msgstr "Tâche max en attente"
 
 msgid "Threshold for slow views"
 msgstr "Seuil pour les vues lentes"
@@ -70305,9 +70878,6 @@ msgstr "Total de la RAM utilisable"
 
 msgid "Total RAM + Swap installed"
 msgstr "Total RAM + Swap installé"
-
-msgid "Total RAM installed"
-msgstr "Total de la RAM installée"
 
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
 msgstr ""
@@ -74112,6 +74682,10 @@ msgstr "Niveau supérieur pour le taux d'exécution du GC"
 msgid "Upper level for blocked tasks"
 msgstr "Niveau supérieur pour les tâches bloquées"
 
+#, fuzzy
+msgid "Upper level for deadlocked threads"
+msgstr "Niveau supérieur pour les tâches bloquées"
+
 msgid "Upper level for delivered message rate"
 msgstr "Niveau supérieur pour le taux de messages délivrés"
 
@@ -74123,6 +74697,10 @@ msgid "Upper level for file descriptor open attempts rate"
 msgstr ""
 "Niveau supérieur pour le taux de tentatives d'ouverture de descripteurs de "
 "fichiers"
+
+#, fuzzy
+msgid "Upper level for memory used by JVM"
+msgstr "Niveaux supérieurs de la mémoire utilisée"
 
 msgid "Upper level for message rate"
 msgstr "Niveau supérieur pour le taux de messages"
@@ -74596,6 +75174,10 @@ msgstr "Niveaux supérieurs pour le nombre de sessions"
 msgid "Upper levels for the number of table extents"
 msgstr "Niveaux supérieurs pour le nombre d'extents de table"
 
+#, fuzzy
+msgid "Upper levels for the time the service is active"
+msgstr "Niveaux supérieurs pour la taille de la licence"
+
 msgid "Upper levels for the vault size"
 msgstr "Niveaux supérieurs pour la taille de la chambre forte"
 
@@ -75044,6 +75626,10 @@ msgstr "Utiliser les données d'OpenShift"
 msgid "Use default layout"
 msgstr "Utiliser la mise en page par défaut"
 
+#, fuzzy
+msgid "Use default managed plan settings"
+msgstr "Définir les valeurs par défaut pour toutes les sections"
+
 msgid "Use default port"
 msgstr "Utiliser le port par défaut"
 
@@ -75394,6 +75980,19 @@ msgstr ""
 
 msgid "Use this custom start URL"
 msgstr "Utilisez cette URL de démarrage personnalisée"
+
+msgid ""
+"Use this field to search for rules which have their explicit host condition "
+"set up in such a way that it matches the given host (either by being unset "
+"or set)."
+msgstr ""
+
+msgid ""
+"Use this field to search for rules which have their item condition set up in "
+"such a way that it matches the given item (either by being unset or set). "
+"The item condition name depends on the rule, the item is always part of the "
+"service name."
+msgstr ""
 
 msgid ""
 "Use this field to search the description, comment, host and service "
@@ -75863,9 +76462,6 @@ msgstr "ID utilisateur pour la connexion web"
 
 msgid "User ID for web login (if login required)"
 msgstr "ID utilisateur pour la connexion web (si la connexion est requise)"
-
-msgid "User Name"
-msgstr "Nom de l'utilisateur"
 
 #, fuzzy
 msgid "User agent"
@@ -81133,6 +81729,14 @@ msgstr ""
 "Vous ne pouvez pas effectuer ce renommage car les noms d'hôtes suivants "
 "entreraient en collision :"
 
+#, fuzzy
+msgid ""
+"You cannot do this renaming since the following hosts are locked by Quick "
+"setup:"
+msgstr ""
+"Vous ne pouvez pas effectuer ce renommage car les noms d'hôtes suivants "
+"entreraient en collision :"
+
 msgid "You cannot have more than one timing setting per notification method."
 msgstr ""
 "Vous ne pouvez pas avoir plus d'un paramètre de synchronisation par méthode "
@@ -81159,6 +81763,10 @@ msgid ""
 "You cannot rename a host while you have pending changes on the site the host "
 "is monitored on (%s)."
 msgstr ""
+
+#, fuzzy, python-format
+msgid "You cannot rename host \"%s\", because it is managed by Quick setup."
+msgstr "Vous ne pouvez pas supprimer les rôles qui sont encore utilisés (%s) !"
 
 msgid "You cannot save this rule."
 msgstr "Vous ne pouvez pas sauvegarder cette règle."
@@ -81689,11 +82297,6 @@ msgstr ""
 
 msgid "You need to provide a valid key id."
 msgstr "Vous devez fournir un identifiant de clé valide."
-
-msgid "You need to provide a valid password to be able to send notifications."
-msgstr ""
-"Vous devez fournir un mot de passe valide pour pouvoir envoyer des "
-"notifications."
 
 msgid "You need to provide an ID"
 msgstr "Vous devez fournir une pièce d'identité"
@@ -84173,6 +84776,69 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
+#~ msgid "(unused)"
+#~ msgstr "(inutilisé)"
+
+#~ msgid "Host match list"
+#~ msgstr "Liste de correspondance des hôtes"
+
+#~ msgid "Item match list"
+#~ msgstr "Liste de correspondance des articles"
+
+#~ msgid "CPU idle time"
+#~ msgstr "Temps d'inactivité du CPU"
+
+#~ msgid "CPU time spent for executing guest operating systems"
+#~ msgstr ""
+#~ "Temps CPU consacré à l'exécution des systèmes d'exploitation invités"
+
+#~ msgid "CPU time spent in kernel space"
+#~ msgstr "Temps CPU passé dans l'espace du noyau"
+
+#~ msgid "CPU time spent in user space"
+#~ msgstr "Temps CPU passé dans l'espace utilisateur"
+
+#~ msgid "CPU time spent in user space for niced processes"
+#~ msgstr ""
+#~ "Temps CPU passé dans l'espace utilisateur pour les processus facturés"
+
+#~ msgid "CPU time spent waiting for I/O"
+#~ msgstr "Temps CPU passé à attendre les E/S"
+
+#~ msgid "CPU time stolen by other operating systems"
+#~ msgstr "Temps CPU volé par d'autres systèmes d'exploitation"
+
+#~ msgid "Growing"
+#~ msgstr "Culture"
+
+#~ msgid "Shrinkage"
+#~ msgstr "Rétrécissement"
+
+#~ msgid "Shrinking"
+#~ msgstr "Réduit"
+
+#~ msgid "Total RAM installed"
+#~ msgstr "Total de la RAM installée"
+
+#~ msgid "Connect to ACME SBC"
+#~ msgstr "Connexion à ACME SBC"
+
+#~ msgid ""
+#~ "The specified choice is no longer available. Please use another, like "
+#~ "'header' instead."
+#~ msgstr ""
+#~ "Le choix spécifié n'est plus disponible. Veuillez en utiliser un autre, "
+#~ "comme 'header' ; à la place."
+
+#~ msgid "User Name"
+#~ msgstr "Nom de l'utilisateur"
+
+#~ msgid ""
+#~ "You need to provide a valid password to be able to send notifications."
+#~ msgstr ""
+#~ "Vous devez fournir un mot de passe valide pour pouvoir envoyer des "
+#~ "notifications."
+
 #~ msgid ""
 #~ "By default, all resources associated to the configured tenant ID will be "
 #~ "monitored."
@@ -84406,9 +85072,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 #, fuzzy
 #~ msgid "Report an issue here."
 #~ msgstr "Rapport sur le calendrier"
-
-#~ msgid "Set upper levels for the time difference"
-#~ msgstr "Définir des niveaux supérieurs pour le décalage horaire"
 
 #~ msgid "This rule allows you to override netapp warnings"
 #~ msgstr "Cette règle vous permet d'ignorer les avertissements de Netapp"

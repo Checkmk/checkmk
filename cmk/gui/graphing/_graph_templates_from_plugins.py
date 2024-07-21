@@ -301,19 +301,17 @@ class GraphTemplate:
         )
 
     @classmethod
-    def from_template(cls, ident: str, template: RawGraphTemplate) -> Self:
+    def from_raw(cls, ident: str, raw: RawGraphTemplate) -> Self:
         return cls(
             id=ident,
-            title=str(template.get("title", "")),
-            scalars=[_parse_raw_scalar_definition(r) for r in template.get("scalars", [])],
-            conflicting_metrics=template.get("conflicting_metrics", []),
-            optional_metrics=template.get("optional_metrics", []),
-            consolidation_function=template.get("consolidation_function"),
-            range=(
-                _parse_raw_graph_range(raw_range) if (raw_range := template.get("range")) else None
-            ),
-            omit_zero_metrics=template.get("omit_zero_metrics", False),
-            metrics=[_parse_raw_metric_definition(r) for r in template["metrics"]],
+            title=str(raw.get("title", "")),
+            scalars=[_parse_raw_scalar_definition(r) for r in raw.get("scalars", [])],
+            conflicting_metrics=raw.get("conflicting_metrics", []),
+            optional_metrics=raw.get("optional_metrics", []),
+            consolidation_function=raw.get("consolidation_function"),
+            range=(_parse_raw_graph_range(raw_range) if (raw_range := raw.get("range")) else None),
+            omit_zero_metrics=raw.get("omit_zero_metrics", False),
+            metrics=[_parse_raw_metric_definition(r) for r in raw["metrics"]],
         )
 
     @classmethod
@@ -417,7 +415,7 @@ def _graph_templates_from_plugins() -> dict[str, GraphTemplate]:
             graph_templates[graph.name] = GraphTemplate.from_bidirectional(graph)
     for template_id, template in graph_info.items():
         if template_id not in graph_templates:
-            graph_templates[template_id] = GraphTemplate.from_template(template_id, template)
+            graph_templates[template_id] = GraphTemplate.from_raw(template_id, template)
     return graph_templates
 
 

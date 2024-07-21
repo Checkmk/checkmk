@@ -1233,7 +1233,7 @@ def test_automatic_dict_append() -> None:
 
 
 @pytest.mark.parametrize(
-    "graph_template_registation, expected_graph_template",
+    "raw, expected_graph_template",
     [
         pytest.param(
             utils.RawGraphTemplate(
@@ -1344,13 +1344,11 @@ def test_automatic_dict_append() -> None:
         ),
     ],
 )
-def test_graph_template_from_template(
-    graph_template_registation: utils.RawGraphTemplate,
+def test_graph_template_from_raw(
+    raw: utils.RawGraphTemplate,
     expected_graph_template: GraphTemplate,
 ) -> None:
-    assert (
-        GraphTemplate.from_template("ident", graph_template_registation) == expected_graph_template
-    )
+    assert GraphTemplate.from_raw("ident", raw) == expected_graph_template
 
 
 COLOR = metrics.Color.BLUE

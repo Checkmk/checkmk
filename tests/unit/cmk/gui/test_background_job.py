@@ -8,8 +8,14 @@ import multiprocessing
 import sys
 import threading
 import time
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
+from functools import partial
+from multiprocessing.synchronize import Event
+from pathlib import Path
 
 import pytest
+from opentelemetry import trace as otel_trace
 
 from tests.testlib.utils import wait_until
 
@@ -30,6 +36,17 @@ from cmk.gui.background_job import (
 )
 
 import cmk.ccc.version as cmk_version
+from cmk.trace import (
+    BatchSpanProcessor,
+    get_tracer,
+    init_tracing,
+    ReadableSpan,
+    SpanExporter,
+    SpanExportResult,
+    TracerProvider,
+)
+
+tracer = get_tracer()
 
 
 def test_registered_background_jobs() -> None:
@@ -379,3 +396,116 @@ def test_wait_for_background_jobs_while_one_running_but_finishes(
     logs = [rec.message for rec in caplog.records]
     assert "Waiting for dummy_job to finish..." in logs
     assert "WARNING: Did not finish within 2 seconds" not in logs
+
+
+@contextmanager
+def _reset_global_fixture_provider() -> Iterator[None]:
+    # pylint: disable=protected-access
+    provider_orig = otel_trace._TRACER_PROVIDER
+    try:
+        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False
+        otel_trace._TRACER_PROVIDER = None
+        yield
+    finally:
+        otel_trace._TRACER_PROVIDER_SET_ONCE._done = True
+        otel_trace._TRACER_PROVIDER = provider_orig
+
+
+@pytest.mark.skip(reason="Takes too long: see CMK-18161")
+@pytest.mark.usefixtures("patch_omd_site", "allow_background_jobs")
+def test_tracing_with_background_job(tmp_path: Path) -> None:
+    exporter = InMemorySpanExporter()
+
+    job = DummyBackgroundJob()
+    span_name_path = Path(job.get_work_dir()) / "span_names"
+
+    with _reset_global_fixture_provider():
+        provider = init_tracing("test", "background-job")
+        provider.add_span_processor(BatchSpanProcessor(exporter))
+
+        with tracer.start_as_current_span("test_tracing_with_background_job"):
+            status = job.get_status()
+            assert status.state == JobStatusStates.INITIALIZED
+
+            job.start(
+                partial(job_callback, job.finish_hello_event),
+                InitialStatusArgs(
+                    title=job.gui_title(),
+                    deletable=False,
+                    stoppable=True,
+                    user=None,
+                ),
+                init_span_processor_callback=partial(init_span_processor_callback, span_name_path),
+            )
+            wait_until(job.is_active, timeout=20, interval=0.1)
+            assert job.is_active()
+
+            job.finish_hello_event.set()
+            try:
+                wait_until(
+                    lambda: job.get_status().state
+                    not in [JobStatusStates.INITIALIZED, JobStatusStates.RUNNING],
+                    timeout=20,
+                    interval=0.1,
+                )
+            except TimeoutError:
+                print(job.get_status())
+                raise
+
+            status = job.get_status()
+            output = "\n".join(status.loginfo["JobProgressUpdate"])
+            assert status.state == JobStatusStates.FINISHED, output
+
+            provider.force_flush()
+
+    # Check spans produced in the parent process
+    span_names = [span.name for span in exporter.spans]
+    assert "start_background_job[dummy_job]" in span_names
+
+    # Check spans produced in the background job
+    job_span_names = span_name_path.open().readlines()
+    assert "job_callback\n" in job_span_names
+    assert "run_process[dummy_job]\n" in job_span_names
+
+
+def init_span_processor_callback(
+    span_name_path: Path, provider: TracerProvider, exporter: SpanExporter | None
+) -> None:
+    provider.add_span_processor(BatchSpanProcessor(JobSpanExporter(span_name_path)))
+
+
+@tracer.start_as_current_span("job_callback")
+def job_callback(finish_hello_event: Event, job_interface: BackgroundProcessInterface) -> None:
+    sys.stdout.write("Hi :-)\n")
+    sys.stdout.flush()
+    finish_hello_event.wait()
+
+
+class InMemorySpanExporter(SpanExporter):
+    """Collects spans in memory and provides for inspection"""
+
+    def __init__(self) -> None:
+        self.spans: list[ReadableSpan] = []
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        self.spans += spans
+        return SpanExportResult.SUCCESS
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
+
+
+class JobSpanExporter(SpanExporter):
+    """Collects span names in the background job directory"""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        for span in spans:
+            with self.path.open("a+") as f:
+                f.write(str(span.name) + "\n")
+        return SpanExportResult.SUCCESS
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True

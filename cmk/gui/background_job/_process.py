@@ -24,8 +24,8 @@ from typing import ContextManager
 
 from setproctitle import setthreadtitle
 
+from cmk.utils import paths
 from cmk.utils.log import VERBOSE
-from cmk.utils.paths import configuration_lockfile
 from cmk.utils.user import UserId
 
 from cmk.gui import log
@@ -37,54 +37,90 @@ from cmk.gui.utils import get_failed_plugins
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKTerminate
+from cmk.ccc.site import get_omd_config, omd_site
+from cmk.trace import (
+    exporter_from_config,
+    get_tracer,
+    get_tracer_provider,
+    init_tracing,
+    INVALID_SPAN,
+    set_span_in_context,
+    trace_send_config,
+    TracerProvider,
+)
 
 from ._app import BackgroundJobFlaskApp
 from ._defines import BackgroundJobDefines
 from ._interface import BackgroundProcessInterface, JobParameters
 from ._status import JobStatusStates
-from ._store import JobStatusStore
+from ._store import JobStatusSpecUpdate, JobStatusStore
+
+tracer = get_tracer()
 
 
 def run_process(job_parameters: JobParameters) -> None:
-    work_dir, job_id, target, lock_wato, is_stoppable, override_job_log_level = job_parameters
+    (
+        work_dir,
+        job_id,
+        target,
+        lock_wato,
+        is_stoppable,
+        override_job_log_level,
+        init_span_processor_callback,
+        origin_span,
+    ) = job_parameters
 
     logger = log.logger.getChild("background-job")
     jobstatus_store = JobStatusStore(work_dir)
     _detach_from_parent()
 
+    final_status_update: JobStatusSpecUpdate = {}
     try:
         job_status = jobstatus_store.read()
+        init_span_processor_callback(
+            init_tracing(omd_site(), "gui"),
+            exporter_from_config(trace_send_config(get_omd_config(paths.omd_root))),
+        )
         _initialize_environment(
             logger, job_id, Path(work_dir), lock_wato, is_stoppable, override_job_log_level
         )
-        logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
-        jobstatus_store.update({"pid": os.getpid(), "state": JobStatusStates.RUNNING})
 
-        _execute_function(
-            logger,
-            target,
-            BackgroundProcessInterface(
-                work_dir, job_id, logger, gui_job_context_manager(job_status.user)
-            ),
-        )
+        with tracer.start_as_current_span(
+            f"run_process[{job_id}]",
+            context=set_span_in_context(INVALID_SPAN),
+            attributes={
+                "cmk.job_id": job_id,
+                "cmk.target": str(target),
+            },
+            links=[origin_span],
+        ):
+            logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
+            jobstatus_store.update({"pid": os.getpid(), "state": JobStatusStates.RUNNING})
 
-        # Final status update
-        job_status = jobstatus_store.read()
+            _execute_function(
+                logger,
+                target,
+                BackgroundProcessInterface(
+                    work_dir, job_id, logger, gui_job_context_manager(job_status.user)
+                ),
+            )
 
-        if job_status.loginfo["JobException"]:
-            final_state = JobStatusStates.EXCEPTION
-        else:
-            final_state = JobStatusStates.FINISHED
+            # Final status update
+            job_status = jobstatus_store.read()
 
-        jobstatus_store.update(
-            {
+            if job_status.loginfo["JobException"]:
+                final_state = JobStatusStates.EXCEPTION
+            else:
+                final_state = JobStatusStates.FINISHED
+
+            final_status_update = {
                 "state": final_state,
                 "duration": time.time() - job_status.started,
             }
-        )
+
     except MKTerminate:
         logger.warning("Job was stopped")
-        jobstatus_store.update({"state": JobStatusStates.STOPPED})
+        final_status_update = {"state": JobStatusStates.STOPPED}
     except Exception:
         crash = create_gui_crash_report()
         logger.error(
@@ -92,7 +128,17 @@ def run_process(job_parameters: JobParameters) -> None:
             crash.ident_to_text(),
             exc_info=True,
         )
-        jobstatus_store.update({"state": JobStatusStates.EXCEPTION})
+        final_status_update = {"state": JobStatusStates.EXCEPTION}
+    finally:
+        # We want to be sure that all spans we created so far are flushed before the background
+        # jobs goes into it's final state. There may spans come later. These are handled by an
+        # atexit handler, which is registered by opentelemetry, during the finalization of the
+        # interpreter, but we want to have all finished spans collected before we set the
+        # background job to finished.
+        if isinstance(provider := get_tracer_provider(), TracerProvider):
+            provider.force_flush()
+
+        jobstatus_store.update(final_status_update)
 
 
 def gui_job_context_manager(user: str | None) -> Callable[[], ContextManager[None]]:
@@ -218,4 +264,4 @@ def _enable_logging_to_stdout() -> None:
 def _lock_configuration(lock_wato: bool) -> None:
     if lock_wato:
         store.release_all_locks()
-        store.lock_exclusive(configuration_lockfile)
+        store.lock_exclusive(paths.configuration_lockfile)

@@ -13,13 +13,23 @@ from typing import Callable, TextIO
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk import trace as sdk_trace
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
-from opentelemetry.trace.span import INVALID_SPAN
+from opentelemetry.sdk.trace import export
 
 # Re-export 3rd party names to avoid direct dependencies in the code
 SpanKind = trace.SpanKind
+Link = trace.Link
+get_tracer_provider = trace.get_tracer_provider
+set_span_in_context = trace.set_span_in_context
+Status = trace.Status
+StatusCode = trace.StatusCode
+INVALID_SPAN = trace.INVALID_SPAN
+BatchSpanProcessor = export.BatchSpanProcessor
+SpanExporter = export.SpanExporter
+SpanExportResult = export.SpanExportResult
+ReadableSpan = sdk_trace.ReadableSpan
+TracerProvider = sdk_trace.TracerProvider
 
 
 @dataclass(frozen=True)

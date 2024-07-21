@@ -11,6 +11,8 @@ from typing import Callable, ContextManager, NamedTuple
 
 from cmk.utils import render
 
+from cmk.trace import Link, SpanExporter, TracerProvider
+
 from ._defines import BackgroundJobDefines
 
 
@@ -75,3 +77,5 @@ class JobParameters(NamedTuple):
     lock_wato: bool
     is_stoppable: bool
     override_job_log_level: int | None
+    init_span_processor_callback: Callable[[TracerProvider, SpanExporter | None], None]
+    origin_span: Link

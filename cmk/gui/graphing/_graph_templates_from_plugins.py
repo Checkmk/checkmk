@@ -261,7 +261,7 @@ def _parse_minimal_range(
 @dataclass(frozen=True)
 class GraphTemplate:
     id: str
-    title: str | None
+    title: str
     scalars: Sequence[ScalarDefinition]
     conflicting_metrics: Sequence[str]
     optional_metrics: Sequence[str]
@@ -276,7 +276,7 @@ class GraphTemplate:
             name = name[7:]
         return cls(
             id=f"METRIC_{name}",
-            title=None,
+            title="",
             metrics=[
                 MetricDefinition(
                     expression=Metric(name),
@@ -304,7 +304,7 @@ class GraphTemplate:
     def from_template(cls, ident: str, template: RawGraphTemplate) -> Self:
         return cls(
             id=ident,
-            title=str(template["title"]) if "title" in template else None,
+            title=str(template.get("title", "")),
             scalars=[_parse_raw_scalar_definition(r) for r in template.get("scalars", [])],
             conflicting_metrics=template.get("conflicting_metrics", []),
             optional_metrics=template.get("optional_metrics", []),

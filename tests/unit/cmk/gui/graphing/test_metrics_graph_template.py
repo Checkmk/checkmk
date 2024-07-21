@@ -112,7 +112,7 @@ def test_rpn_stack(expression: str, result: MetricOperation) -> None:
 def test_create_graph_recipe_from_template() -> None:
     graph_template = GraphTemplate(
         id="my_id",
-        title=None,
+        title="",
         metrics=[
             MetricDefinition(
                 expression=Metric("fs_used"),

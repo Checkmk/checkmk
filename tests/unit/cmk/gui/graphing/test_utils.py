@@ -626,7 +626,7 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                 ),
                 GraphTemplate(
                     id="METRIC_foo",
-                    title=None,
+                    title="",
                     scalars=[
                         ScalarDefinition(
                             expression=WarningOf(
@@ -657,7 +657,7 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                 ),
                 GraphTemplate(
                     id="METRIC_predict_foo",
-                    title=None,
+                    title="",
                     scalars=[
                         ScalarDefinition(
                             expression=WarningOf(
@@ -688,7 +688,7 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                 ),
                 GraphTemplate(
                     id="METRIC_predict_lower_foo",
-                    title=None,
+                    title="",
                     scalars=[
                         ScalarDefinition(
                             expression=WarningOf(
@@ -1242,7 +1242,7 @@ def test_automatic_dict_append() -> None:
             ),
             GraphTemplate(
                 id="ident",
-                title=None,
+                title="",
                 scalars=[
                     ScalarDefinition(
                         expression=Metric("metric"),
@@ -1273,7 +1273,7 @@ def test_automatic_dict_append() -> None:
             ),
             GraphTemplate(
                 id="ident",
-                title=None,
+                title="",
                 scalars=[
                     ScalarDefinition(
                         expression=Metric("metric"),
@@ -1303,7 +1303,7 @@ def test_automatic_dict_append() -> None:
             ),
             GraphTemplate(
                 id="ident",
-                title=None,
+                title="",
                 scalars=[],
                 conflicting_metrics=[],
                 optional_metrics=[],
@@ -1325,7 +1325,7 @@ def test_automatic_dict_append() -> None:
             ),
             GraphTemplate(
                 id="ident",
-                title=None,
+                title="",
                 scalars=[],
                 conflicting_metrics=[],
                 optional_metrics=[],

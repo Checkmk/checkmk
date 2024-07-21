@@ -277,21 +277,10 @@ class GraphTemplate:
         return cls(
             id=f"METRIC_{name}",
             title="",
-            metrics=[
-                MetricDefinition(
-                    expression=Metric(name),
-                    line_type="area",
-                ),
-            ],
+            metrics=[MetricDefinition(expression=Metric(name), line_type="area")],
             scalars=[
-                ScalarDefinition(
-                    expression=WarningOf(Metric(name)),
-                    title=str(_("Warning")),
-                ),
-                ScalarDefinition(
-                    expression=CriticalOf(Metric(name)),
-                    title=str(_("Critical")),
-                ),
+                ScalarDefinition(expression=WarningOf(Metric(name)), title=str(_("Warning"))),
+                ScalarDefinition(expression=CriticalOf(Metric(name)), title=str(_("Critical"))),
             ],
             conflicting_metrics=[],
             optional_metrics=[],

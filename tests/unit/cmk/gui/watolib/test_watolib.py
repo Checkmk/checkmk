@@ -316,6 +316,7 @@ def test_registered_configvar_groups() -> None:
         "User management",
         "Support",
         "Developer Tools",
+        "Distributed piggyback",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
@@ -327,7 +328,6 @@ def test_registered_configvar_groups() -> None:
             "Reporting",
             "Monitoring core",
             "Ntopng (chargeable add-on)",
-            "Distributed piggyback",
         ]
 
     registered = sorted(config_variable_group_registry.keys())

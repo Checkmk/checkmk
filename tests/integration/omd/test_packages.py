@@ -156,9 +156,8 @@ MONITORING_PLUGINS = (
     ),
     MonitoringPlugin(
         "check_bi_aggr",
-        stream="stderr",
         cmd_line_option="-h",
-        expected="USAGE: check_bi_aggr",
+        expected="usage: check_bi_aggr",
     ),
 )
 

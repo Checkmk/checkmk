@@ -276,6 +276,7 @@ std::vector<Command> NebCore::commands() const {
 
 std::vector<std::unique_ptr<const IComment>> NebCore::comments_unlocked(
     const IHost &hst) const {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
     const auto &h = static_cast<const NebHost &>(hst).handle();
     std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
@@ -294,6 +295,7 @@ std::vector<std::unique_ptr<const IComment>> NebCore::comments(
 
 std::vector<std::unique_ptr<const IComment>> NebCore::comments_unlocked(
     const IService &svc) const {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
     const auto &s = static_cast<const NebService &>(svc).handle();
     std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
@@ -321,6 +323,7 @@ bool NebCore::all_of_comments(
 
 std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes_unlocked(
     const IHost &hst) const {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
     const auto &h = static_cast<const NebHost &>(hst).handle();
     std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
@@ -339,6 +342,7 @@ std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes(
 
 std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes_unlocked(
     const IService &svc) const {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
     const auto &s = static_cast<const NebService &>(svc).handle();
     std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
@@ -400,6 +404,7 @@ bool NebCore::all_of_service_groups(
 }
 
 bool NebCore::mkeventdEnabled() const {
+    // NOLINTNEXTLINE(concurrency-mt-unsafe)
     if (const char *config_mkeventd = getenv("CONFIG_MKEVENTD")) {
         return config_mkeventd == std::string("on");
     }
@@ -547,6 +552,7 @@ std::string b16decode(const std::string &hex) {
     std::string result;
     result.reserve(len / 2);
     for (size_t i = 0; i < len; i += 2) {
+        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
         result.push_back(strtol(hex.substr(i, 2).c_str(), nullptr, 16));
     }
     return result;

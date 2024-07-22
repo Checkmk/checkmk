@@ -4,7 +4,7 @@
 // source code package.
 
 // Needed for S_ISSOCK
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+// NOLINTNEXTLINE(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp,cppcoreguidelines-macro-usage)
 #define _XOPEN_SOURCE 500
 
 #include <pthread.h>
@@ -62,93 +62,64 @@ using namespace std::chrono_literals;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 size_t g_livestatus_threads = 10;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_queued_connections = 0;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::atomic_int32_t g_livestatus_active_connections{0};
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 TimeperiodsCache *g_timeperiods_cache = nullptr;
 /* simple statistics data for TableStatus */
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_hosts;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_services;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 bool g_any_event_handler_enabled;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 double g_average_active_latency;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-Average g_avg_livestatus_usage;
+Average g_avg_livestatus_usage;  // NOLINT(cert-err58-cpp)
 
 namespace {
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-std::chrono::milliseconds fl_idle_timeout = 5min;
+std::chrono::milliseconds fl_idle_timeout = 5min;  // NOLINT(cert-err58-cpp)
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-std::chrono::milliseconds fl_query_timeout = 10s;
+std::chrono::milliseconds fl_query_timeout = 10s;  // NOLINT(cert-err58-cpp)
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 size_t fl_thread_stack_size = size_t{1024} * 1024;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 void *fl_nagios_handle;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int fl_unix_socket = -1;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int fl_max_fd_ever = 0;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NagiosPathConfig fl_paths;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-std::string fl_edition{"free"};
+std::string fl_edition{"free"};  // NOLINT(cert-err58-cpp)
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 bool fl_should_terminate;
 
 struct ThreadInfo {
-    pthread_t id;
+    pthread_t id{};
     std::string name;
 };
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::vector<ThreadInfo> fl_thread_info;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 thread_local ThreadInfo *tl_info;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NagiosLimits fl_limits;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int fl_thread_running = 0;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NagiosAuthorization fl_authorization;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Encoding fl_data_encoding{Encoding::utf8};
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Logger *fl_logger_nagios = nullptr;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 LogLevel fl_livestatus_log_level = LogLevel::notice;
 using ClientQueue_t = Queue<int>;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 ClientQueue_t *fl_client_queue = nullptr;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::map<unsigned long, std::unique_ptr<Downtime>> fl_downtimes;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::map<unsigned long, std::unique_ptr<Comment>> fl_comments;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NebCore *fl_core = nullptr;
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 void update_status() {
     bool any_event_handler_enabled{false};
@@ -184,7 +155,7 @@ void update_status() {
     g_average_active_latency = active_latency / std::max(num_active_checks, 1);
     g_avg_livestatus_usage.update(
         static_cast<double>(g_livestatus_active_connections) /
-        g_livestatus_threads);
+        static_cast<double>(g_livestatus_threads));
 }
 
 bool shouldTerminate() { return fl_should_terminate; }
@@ -198,7 +169,7 @@ void livestatus_cleanup_after_fork() {
     // more trouble than it tries to avoid. It might lead to a deadlock
     // with Nagios' fork()-mechanism...
     // store_deinit();
-    struct stat st;
+    struct stat st {};
 
     // We need to close our server and client sockets. Otherwise
     // our connections are inherited to host and service checks.
@@ -450,7 +421,7 @@ void terminate_threads() {
 }
 
 void open_unix_socket() {
-    struct stat st;
+    struct stat st {};
     if (stat(fl_paths.livestatus_socket.c_str(), &st) == 0) {
         if (::unlink(fl_paths.livestatus_socket.c_str()) == 0) {
             Debug(fl_logger_nagios)
@@ -724,6 +695,7 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
                     fl_paths.state_file_created_file, now);
                 auto is_licensed =
                     mk::is_licensed(fl_paths.licensed_state_file);
+                // NOLINTBEGIN(cppcoreguidelines-owning-memory)
                 fl_core =
                     new NebCore(fl_downtimes, fl_comments, fl_paths, fl_limits,
                                 fl_authorization, fl_data_encoding, fl_edition,
@@ -737,9 +709,10 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
                                      num_services);
                 fl_client_queue = new ClientQueue_t{};
                 g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
+                // NOLINTEND(cppcoreguidelines-owning-memory)
             } catch (const std::exception &e) {
                 std::cerr << e.what() << "\n";
-                exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE);  // NOLINT(concurrency-mt-unsafe)
             }
             break;
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
@@ -868,7 +841,7 @@ void deregister_callbacks() {
 
 std::filesystem::path check_path(const std::string &name,
                                  std::string_view path) {
-    struct stat st;
+    struct stat st {};
     if (stat(std::string{path}.c_str(), &st) != 0) {
         Error(fl_logger_nagios) << name << " '" << path << "' not existing!";
         return {};  // disable
@@ -889,6 +862,7 @@ T parse_number(std::string_view str) {
     return ec != std::errc{} || ptr != str.end() ? T{} : value;
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void livestatus_parse_argument(Logger *logger, std::string_view param_name,
                                std::string_view param_value) {
     Warning(logger) << "name=[" << param_name << "], value=[" << param_value
@@ -919,7 +893,8 @@ void livestatus_parse_argument(Logger *logger, std::string_view param_name,
         fl_limits._max_response_size = parse_number<size_t>(param_value);
         Notice(logger) << "setting maximum response size to "
                        << fl_limits._max_response_size << " bytes ("
-                       << (fl_limits._max_response_size / (1024.0 * 1024.0))
+                       << (static_cast<double>(fl_limits._max_response_size) /
+                           (1024.0 * 1024.0))
                        << " MB)";
     } else if (param_name == "num_client_threads"sv) {
         const int c = parse_number<int>(param_value);
@@ -1100,7 +1075,7 @@ void omd_advertize(Logger *logger) {
                    << __TIMESTAMP__ << " with " << BUILD_CXX << ", using "
                    << RegExp::engine() << " regex engine";
     Notice(logger) << "please visit us at https://checkmk.com/";
-    if (char *omd_site = getenv("OMD_SITE")) {
+    if (char *omd_site = getenv("OMD_SITE")) {  // NOLINT(concurrency-mt-unsafe)
         Informational(logger)
             << "running on Checkmk site " << omd_site << ", cool.";
     } else {
@@ -1141,7 +1116,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
         register_callbacks();
     } catch (const std::exception &e) {
         std::cerr << e.what() << "\n";
-        exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);  // NOLINT(concurrency-mt-unsafe)
     }
 
     /* Unfortunately, we cannot start our socket thread right now.
@@ -1164,6 +1139,7 @@ extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
     close_unix_socket();
     deregister_callbacks();
 
+    // NOLINTBEGIN(cppcoreguidelines-owning-memory)
     delete g_timeperiods_cache;
     g_timeperiods_cache = nullptr;
 
@@ -1172,6 +1148,7 @@ extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
 
     delete fl_core;
     fl_core = nullptr;
+    // NOLINTEND(cppcoreguidelines-owning-memory)
 
     return 0;
 }

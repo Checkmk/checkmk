@@ -42,8 +42,10 @@ public:
                    : contact_.service_notification_period;
     }
     [[nodiscard]] std::string address(int32_t index) const override {
+        // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
         return contact_.address[index] == nullptr ? ""
                                                   : contact_.address[index];
+        // NOLINTEND(cppcoreguidelines-pro-bounds-constant-array-index)
     }
     [[nodiscard]] bool canSubmitCommands() const override {
         return contact_.can_submit_commands != 0;

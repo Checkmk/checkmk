@@ -20,7 +20,10 @@ public:
                        ? nullptr
                        : std::make_unique<NebService>(*comment_._service)} {}
 
-    [[nodiscard]] int32_t id() const override { return comment_._id; }
+    [[nodiscard]] int32_t id() const override {
+        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+        return comment_._id;
+    }
 
     [[nodiscard]] std::string author() const override {
         return comment_._author;

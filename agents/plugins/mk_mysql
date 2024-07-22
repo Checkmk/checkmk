@@ -30,11 +30,13 @@ do_query() {
     mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
         -e "show global status ; show global variables ;"
 
-    echo "<<<mysql_capacity>>>"
-    echo "$INSTANCE_HEADER"
-    mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
-        -e "SELECT table_schema, sum(data_length + index_length), sum(data_free)
-            FROM information_schema.TABLES GROUP BY table_schema"
+    if [ ! -f "${MK_CONFDIR}/mysql.local.disable_capacity_checks" ]; then
+        echo "<<<mysql_capacity>>>"
+        echo "$INSTANCE_HEADER"
+        mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
+            -e "SELECT table_schema, sum(data_length + index_length), sum(data_free)
+                FROM information_schema.TABLES GROUP BY table_schema"
+    fi
 
     echo "<<<mysql_slave>>>"
     echo "$INSTANCE_HEADER"

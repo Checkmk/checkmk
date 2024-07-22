@@ -66,17 +66,17 @@ HACK_CHECKS = {
     "elasticsearch_query": False,
     "form_submit": False,  # has no secret
     "ftp": False,  # has no secret
-    "http": True,
+    "http": True,  # monitoring-plugins
     "httpv2": False,  # yay!
     "icmp": False,  # has no secret
-    "ldap": True,
+    "ldap": True,  # monitoring-plugins
     "mail_loop": True,  # TODO
     "mailboxes": True,  # TODO
     "mail": True,  # TODO
     "mkevents": False,  # has no secret
     "notify_count": False,  # has no secret
     "sftp": True,  # TODO
-    "smtp": True,
+    "smtp": True,  # monitoring-plugins
     "sql": False,
     "ssh": False,  # has no secret
     "tcp": False,  # has no secret

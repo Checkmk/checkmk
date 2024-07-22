@@ -1116,7 +1116,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
         register_callbacks();
     } catch (const std::exception &e) {
         std::cerr << e.what() << "\n";
-        exit(EXIT_FAILURE);  // NOLINT(concurrency-mt-unsafe)
+        ::exit(EXIT_FAILURE);  // NOLINT(concurrency-mt-unsafe)
     }
 
     /* Unfortunately, we cannot start our socket thread right now.

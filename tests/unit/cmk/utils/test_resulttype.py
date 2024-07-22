@@ -260,3 +260,21 @@ class TestError:
 
     def test_fold(self, result: Result[object, int]) -> None:
         assert result.fold(ok=lambda ok_: "ok", error=lambda err_: "error") == "error"
+
+
+def test_match_ok() -> None:
+    ok: Result[int, str] = OK(1)
+    match ok:
+        case OK(v):
+            assert v == 1
+        case _:
+            assert False
+
+
+def test_match_error():
+    err: Result[int, str] = Error("a")
+    match err:
+        case Error(v):
+            assert v == "a"
+        case _:
+            assert False

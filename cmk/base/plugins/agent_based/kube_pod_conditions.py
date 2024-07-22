@@ -51,10 +51,12 @@ def _check_condition(
             yield Result(state=State.OK, summary=condition_short_description(name, cond.status))
             return
         summary_prefix = condition_detailed_description(name, cond.status, cond.reason, cond.detail)
+        for result in check_levels(
+            time_diff, levels_upper=levels_upper, render_func=render.timespan
+        ):
+            yield Result(state=result.state, summary=f"{summary_prefix} for {result.summary}")
     else:
-        summary_prefix = condition_short_description(name, False)
-    for result in check_levels(time_diff, levels_upper=levels_upper, render_func=render.timespan):
-        yield Result(state=result.state, summary=f"{summary_prefix} for {result.summary}")
+        yield Result(state=State.OK, summary=condition_short_description(name, False))
 
 
 def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:

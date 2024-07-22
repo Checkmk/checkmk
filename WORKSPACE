@@ -431,3 +431,9 @@ jaeger(
     sha256 = JAEGER_SHA256,
     version_str = JAEGER_VERSION,
 )
+
+git_repository(
+    name = "bazel_clang_tidy",
+    commit = "43bef6852a433f3b2a6b001daecc8bc91d791b92",
+    remote = "https://github.com/erenon/bazel_clang_tidy.git",
+)

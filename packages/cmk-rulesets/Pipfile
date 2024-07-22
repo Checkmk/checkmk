@@ -7,7 +7,7 @@ name = "pypi"
 bandit = "*"
 black = "*"
 isort = "*"
-mypy = "*"
+mypy = "==1.10.0"  # CMK-18398
 pylint = "*"
 pytest = "*"
 # LSP server stuff for IDEs

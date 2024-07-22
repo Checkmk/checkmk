@@ -115,6 +115,7 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
                 _get_stage_components_from_widget(widget)
                 for widget in first_stage.configure_components
             ],
+            button_txt=first_stage.button_txt,
         ),
     )
 
@@ -147,6 +148,7 @@ def validate_current_stage(
             stage_id=current_stage_id,
             errors=errors,
             components=[],
+            button_txt=None,
         )
     return None
 
@@ -162,7 +164,7 @@ def retrieve_next_stage(
         next_stage = quick_setup.get_stage_with_id(StageId(current_stage.stage_id + 1))
     except InvalidStageException:
         # TODO: What should we return in this case?
-        return Stage(stage_id=StageId(-1), components=[])
+        return Stage(stage_id=StageId(-1), components=[], button_txt=None)
 
     return Stage(
         stage_id=next_stage.stage_id,
@@ -174,6 +176,7 @@ def retrieve_next_stage(
             for recap_callable in current_stage.recap
             for r in recap_callable([stage.form_data for stage in incoming_stages])
         ],
+        button_txt=next_stage.button_txt,
     )
 
 

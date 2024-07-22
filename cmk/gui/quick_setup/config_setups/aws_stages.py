@@ -73,6 +73,7 @@ def prepare_aws(stage_id: StageId) -> QuickSetupStage:
         ],
         validators=[form_spec_validate],
         recap=[form_spec_recap],
+        button_txt="Configure host and region",
     )
 
 
@@ -114,6 +115,7 @@ def configure_host_and_region(stage_id: StageId) -> QuickSetupStage:
         ],
         validators=[form_spec_validate],
         recap=[form_spec_recap],
+        button_txt="Configure services to monitor",
     )
 
 
@@ -164,6 +166,7 @@ def configure_services_to_monitor(stage_id: StageId) -> QuickSetupStage:
         ],
         validators=[form_spec_validate],
         recap=[form_spec_recap],
+        button_txt="Review and run service discovery",
     )
 
 
@@ -175,6 +178,7 @@ def review_and_run_service_discovery(stage_id: StageId) -> QuickSetupStage:
         configure_components=[],
         validators=[],
         recap=[],
+        button_txt="Run & preview service discovery",
     )
 
 

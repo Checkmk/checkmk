@@ -55,6 +55,7 @@ class Errors:
 class Stage:
     stage_id: StageId
     components: Sequence[dict]
+    button_txt: str | None
     errors: Errors | None = None
     stage_recap: Sequence[Widget] = field(default_factory=list)
 
@@ -66,6 +67,7 @@ class QuickSetupStage:
     configure_components: Sequence[Widget]
     validators: Iterable[CallableValidator]
     recap: Iterable[Callable[[Sequence[FormData]], Sequence[Widget]]]
+    button_txt: str
     sub_title: str | None = None
 
     def stage_overview(self) -> StageOverview:

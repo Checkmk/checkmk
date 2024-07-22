@@ -56,6 +56,11 @@ class QuickSetupStageResponse(BaseSchema):
         example=[],
         description="A collection of widget summaries",
     )
+    button_txt = fields.String(
+        example="Next",
+        description="The text of the button",
+        allow_none=True,
+    )
 
 
 class QuickSetupOverviewResponse(BaseSchema):

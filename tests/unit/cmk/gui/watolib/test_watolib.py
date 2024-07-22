@@ -144,6 +144,7 @@ def test_registered_configvars() -> None:
         "page_heading",
         "pagetitle_date_format",
         "password_policy",
+        "piggyback_hub_enabled",
         "piggyback_max_cachefile_age",
         "profile",
         "quicksearch_dropdown_limit",
@@ -285,7 +286,6 @@ def test_registered_configvars() -> None:
             "reporting_view_limit",
             "site_liveproxyd",
             "ntop_connection",
-            "piggyback_hub_enabled",
         ]
 
     registered = sorted(config_variable_registry.keys())

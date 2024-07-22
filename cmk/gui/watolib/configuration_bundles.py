@@ -30,17 +30,32 @@ from cmk.gui.watolib.utils import multisite_dir
 
 _T = TypeVar("_T")
 BundleId = NewType("BundleId", str)
-IDENT_FINDER = Callable[[GlobalIdent | None], BundleId | None]
-ENTITIES = Literal["host", "rule", "password", "dcd"]
-ALL_ENTITIES: set[ENTITIES] = set(get_args(ENTITIES))
-BUNDLE_DOMAINS: Mapping[RuleGroupType, set[ENTITIES]] = {
-    RuleGroupType.SPECIAL_AGENTS: {"host", "rule", "password", "dcd"}
+IdentFinder = Callable[[GlobalIdent | None], BundleId | None]
+Entity = Literal["host", "rule", "password", "dcd"]
+Permission = Literal["hosts", "rulesets", "passwords", "dcd_connections"]
+
+
+@dataclass(frozen=True)
+class DomainDefinition:
+    entity: Entity
+    permission: Permission
+
+
+ALL_ENTITIES: set[Entity] = set(get_args(Entity))
+BUNDLE_DOMAINS: Mapping[RuleGroupType, set[DomainDefinition]] = {
+    RuleGroupType.SPECIAL_AGENTS: {
+        DomainDefinition(entity="host", permission="hosts"),
+        DomainDefinition(entity="rule", permission="rulesets"),
+        DomainDefinition(entity="password", permission="passwords"),
+        DomainDefinition(entity="dcd", permission="dcd_connections"),
+    }
 }
 
 
-def _get_affected_entities(bundle_group: str) -> set[ENTITIES]:
+def _get_affected_entities(bundle_group: str) -> set[Entity]:
     rule_group_type = RuleGroupType(bundle_group.split(":", maxsplit=1)[0])
-    return BUNDLE_DOMAINS.get(rule_group_type, ALL_ENTITIES)
+    bundle_domain = BUNDLE_DOMAINS.get(rule_group_type, None)
+    return set(domain.entity for domain in bundle_domain) if bundle_domain else ALL_ENTITIES
 
 
 @dataclass
@@ -98,14 +113,14 @@ def _collect_many(values: Iterable[tuple[BundleId, _T]]) -> Mapping[BundleId, Se
     return mapping
 
 
-def collect_hosts(finder: IDENT_FINDER, hosts: Iterable[Host]) -> Iterable[tuple[BundleId, Host]]:
+def collect_hosts(finder: IdentFinder, hosts: Iterable[Host]) -> Iterable[tuple[BundleId, Host]]:
     for host in hosts:
         if bundle_id := finder(host.locked_by()):
             yield bundle_id, host
 
 
 def collect_passwords(
-    finder: IDENT_FINDER, passwords: Mapping[str, Password]
+    finder: IdentFinder, passwords: Mapping[str, Password]
 ) -> Iterable[tuple[BundleId, tuple[str, Password]]]:
     for password_id, password in passwords.items():
         if bundle_id := finder(password.get("locked_by")):
@@ -113,14 +128,14 @@ def collect_passwords(
 
 
 def collect_rules(
-    finder: IDENT_FINDER, rules: Iterable[tuple[Folder, int, Rule]]
+    finder: IdentFinder, rules: Iterable[tuple[Folder, int, Rule]]
 ) -> Iterable[tuple[BundleId, Rule]]:
     for _folder, _idx, rule in rules:
         if bundle_id := finder(rule.locked_by):
             yield bundle_id, rule
 
 
-def prepare_bundle_id_finder(bundle_program_id: str, bundle_ids: set[BundleId]) -> IDENT_FINDER:
+def prepare_bundle_id_finder(bundle_program_id: str, bundle_ids: set[BundleId]) -> IdentFinder:
     def find_matching_bundle_id(
         ident: GlobalIdent | None,
     ) -> BundleId | None:

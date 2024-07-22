@@ -26,6 +26,8 @@ struct LogDef {
     LogEntryKind log_type;
     std::vector<LogEntryParam> params;
 };
+
+// NOLINTNEXTLINE(cert-err58-cpp)
 const std::vector<LogDef> log_definitions{
     LogDef{"INITIAL HOST STATE",
            LogEntry::Class::state,
@@ -202,6 +204,7 @@ static constexpr size_t timestamp_prefix_length = 13;
 
 // TODO(sp) Fix classifyLogMessage() below to always set all fields and remove
 // this set-me-to-zero-to-be-sure-block.
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 LogEntry::LogEntry(size_t lineno, std::string line)
     : lineno_(lineno), message_(std::move(line)), state_(0), attempt_(0) {
     size_t pos = message_.find(':');
@@ -467,6 +470,7 @@ std::string to_exit_code(int state) {
 }
 }  // namespace
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 std::string LogEntry::state_info() const {
     switch (kind_) {
         case LogEntryKind::state_host_initial:

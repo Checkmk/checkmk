@@ -19,6 +19,7 @@ using namespace std::string_view_literals;
 namespace column::attribute_list {
 
 // see MODATTR_FOO in nagios/common.h
+// NOLINTNEXTLINE(cert-err58-cpp)
 const std::map<std::string_view, unsigned long> known_attributes = {
     {"notifications_enabled"sv, 0},    {"active_checks_enabled"sv, 1},
     {"passive_checks_enabled"sv, 2},   {"event_handler_enabled"sv, 3},

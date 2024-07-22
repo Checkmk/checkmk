@@ -152,6 +152,7 @@ struct Data {
 // and that have a different syntax then we have in our metrics system.
 // >= --> GE. Or should we also go with GE instead of >=?
 // Look at http://oss.oetiker.ch/rrdtool/doc/rrdgraph_rpn.en.html for details!
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     const std::string &host_name, const std::string &service_description,
     std::chrono::seconds timezone_offset) const {
@@ -372,7 +373,9 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
         // Data rows represent past values, thus loop starts with step shift.
         // Interval is right closed, thus iterate until end inclusive.
         rrd_value_t *ptr = rrd_data;
+        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
         for (time_t ti = start + step; ti <= end; ti += step) {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             data.values.push_back(*ptr++);
         }
     }

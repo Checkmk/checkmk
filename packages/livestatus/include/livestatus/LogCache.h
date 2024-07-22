@@ -35,7 +35,7 @@ private:
 
 class LogFilter {
 public:
-    size_t max_lines_per_log_file;
+    size_t max_lines_per_log_file{};
     std::bitset<32> log_entry_classes;
     std::chrono::system_clock::time_point since;
     std::chrono::system_clock::time_point until;
@@ -68,7 +68,7 @@ public:
     // Call the given function with a locked and updated LogCache, keeping the
     // lock and the update function local.
     template <typename F>
-    inline auto apply(F f) {
+    auto apply(F f) {
         const std::lock_guard<std::mutex> lg{lock_};
         update();
         return f(LogFiles{log_files_}, num_cached_log_messages_);

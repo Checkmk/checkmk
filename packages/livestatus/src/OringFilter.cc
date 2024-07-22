@@ -105,6 +105,7 @@ std::optional<std::bitset<32>> OringFilter::valueSetLeastUpperBoundFor(
 }
 
 std::unique_ptr<Filter> OringFilter::copy() const {
+    // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
     return make(kind(), disjuncts());
 }
 

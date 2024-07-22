@@ -27,6 +27,7 @@ enum class state : std::uint8_t {
     error
 };
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 PerformanceData::PerformanceData(
     const std::string &perf_data,
     const std::string &default_check_command_name) {

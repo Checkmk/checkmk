@@ -56,6 +56,7 @@ bool eval(int32_t x, RelationalOperator op, int32_t y) {
 bool TimeFilter::accepts(Row row, const User & /*user*/,
                          std::chrono::seconds timezone_offset) const {
     return eval(
+        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
         std::chrono::system_clock::to_time_t(_getValue(row, timezone_offset)),
         oper(), _ref_value);
 }
@@ -67,6 +68,7 @@ std::optional<int32_t> TimeFilter::greatestLowerBoundFor(
         return {};  // wrong column
     }
     int32_t ref_value =
+        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
         _ref_value - mk::ticks<std::chrono::seconds>(timezone_offset);
     switch (oper()) {
         case RelationalOperator::equal:
@@ -95,6 +97,7 @@ std::optional<int32_t> TimeFilter::leastUpperBoundFor(
         return {};  // wrong column
     }
     int32_t ref_value =
+        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
         _ref_value - mk::ticks<std::chrono::seconds>(timezone_offset);
     switch (oper()) {
         case RelationalOperator::equal:
@@ -124,9 +127,10 @@ std::optional<std::bitset<32>> TimeFilter::valueSetLeastUpperBoundFor(
     }
     std::bitset<32> result;
     for (int32_t bit = 0; bit < 32; ++bit) {
-        result[bit] =
-            eval(bit, oper(),
-                 _ref_value - mk::ticks<std::chrono::seconds>(timezone_offset));
+        result[bit] = eval(
+            bit, oper(),
+            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+            _ref_value - mk::ticks<std::chrono::seconds>(timezone_offset));
     }
     return {result};
 }

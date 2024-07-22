@@ -21,6 +21,7 @@ bool operator<(const Metric::MangledName &x, const Metric::MangledName &y) {
 }
 
 namespace {
+// NOLINTBEGIN(cert-err58-cpp)
 const std::filesystem::path basepath{std::filesystem::temp_directory_path() /
                                      "metric_tests"};
 const std::string ext = ".xml";
@@ -34,6 +35,7 @@ const std::string desc_other = "Service Description Other";
 const Metric::Names metrics_other = {Metric::MangledName{"jkl 4"},
                                      Metric::MangledName{"mno 5"},
                                      Metric::MangledName{"pqr 6"}};
+// NOLINTEND(cert-err58-cpp)
 }  // namespace
 
 class MetricFixture : public ::testing::Test {

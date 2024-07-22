@@ -73,6 +73,7 @@ InputBuffer::InputBuffer(int fd, std::function<bool()> should_terminate,
     , _logger(logger) {}
 
 // read in data enough for one complete request (and maybe more).
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 InputBuffer::Result InputBuffer::readRequest() {
     // Remember when we started waiting for a request. This is needed for the
     // idle_timeout. A connection may not be idle longer than that value.

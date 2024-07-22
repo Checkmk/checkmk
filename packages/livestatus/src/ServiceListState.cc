@@ -30,6 +30,7 @@ int32_t ServiceListState::operator()(const IServiceGroup &group,
     return result;
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void ServiceListState::update(const IService &svc, const User &user,
                               int32_t &result) const {
     if (!user.is_authorized_for_service(svc)) {

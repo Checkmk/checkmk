@@ -17,6 +17,7 @@
 using namespace std::string_view_literals;
 
 namespace {
+// NOLINTNEXTLINE(cert-err58-cpp)
 const std::unordered_map<std::string_view, RelationalOperator> fl_from_string =
     {{"="sv, RelationalOperator::equal},
      {"!="sv, RelationalOperator::not_equal},

@@ -22,6 +22,7 @@ int32_t HostListState::operator()(const IHostGroup &group,
     return result;
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void HostListState::update(const IHost &hst, const User &user,
                            int32_t &result) const {
     if (!user.is_authorized_for_host(hst)) {

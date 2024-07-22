@@ -58,6 +58,7 @@ void checkNoArguments(std::string_view str) {
 }
 }  // namespace
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 ParsedQuery::ParsedQuery(
     const std::vector<std::string> &lines,
     const std::function<std::vector<std::shared_ptr<Column>>()> &all_columns,
@@ -301,6 +302,7 @@ private:
     double sum_{0};
 };
 
+// NOLINTNEXTLINE(cert-err58-cpp)
 const std::map<std::string_view, AggregationFactory> stats_ops{
     {"sum"sv, []() { return std::make_unique<SumAggregation>(); }},
     {"min"sv, []() { return std::make_unique<MinAggregation>(); }},
@@ -389,6 +391,7 @@ void ParsedQuery::parseSeparatorsLine(std::string_view line) {
 }
 
 namespace {
+// NOLINTNEXTLINE(cert-err58-cpp)
 const std::map<std::string_view, OutputFormat> formats{
     {"CSV"sv, OutputFormat::csv},
     {"csv"sv, OutputFormat::broken_csv},

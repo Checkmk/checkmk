@@ -53,6 +53,7 @@ void Logfile::load(const LogFilter &log_filter) {
     // are missing.
     // TODO(sp) Check return values of fclose, fgetpos, fsetpos, fseek.
     if (_watch) {
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         FILE *file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
             const generic_error ge("cannot open logfile " + _path.string());
@@ -79,12 +80,14 @@ void Logfile::load(const LogFilter &log_filter) {
             _logclasses_read |= missing_types;
             (void)fgetpos(file, &_read_pos);  // remember current end of file
         }
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         (void)fclose(file);
     } else {
         if (missing_types == 0) {
             return;
         }
 
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         FILE *file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
             const generic_error ge("cannot open logfile " + _path.string());
@@ -95,6 +98,7 @@ void Logfile::load(const LogFilter &log_filter) {
         _lineno = 0;
         loadRange(log_filter, file, missing_types);
         _logclasses_read |= missing_types;
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         (void)fclose(file);
     }
 }

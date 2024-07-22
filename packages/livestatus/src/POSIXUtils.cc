@@ -207,6 +207,7 @@ ssize_t writeWithTimeoutWhile(int fd, std::string_view buffer,
             return -1;
         }
     }
+    // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
     return size;
 }
 

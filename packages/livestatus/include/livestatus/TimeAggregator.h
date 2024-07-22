@@ -24,8 +24,8 @@ public:
 
     void consume(Row row, const User & /*user*/,
                  std::chrono::seconds timezone_offset) override {
-        _aggregation->update(std::chrono::system_clock::to_time_t(
-            _getValue(row, timezone_offset)));
+        _aggregation->update(double(std::chrono::system_clock::to_time_t(
+            _getValue(row, timezone_offset))));
     }
 
     void output(RowRenderer &r) const override {

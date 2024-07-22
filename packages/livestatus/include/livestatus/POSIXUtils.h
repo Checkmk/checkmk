@@ -60,7 +60,7 @@ public:
     }
 
 private:
-    sem_t _semaphore;
+    sem_t _semaphore{};
 };
 
 // a POSIX-only variant of boost::interprocess::file_lock

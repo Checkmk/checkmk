@@ -15,7 +15,7 @@ namespace a = column::attribute_list;
 
 class AttributeBitTestFixture : public ::testing::TestWithParam<unsigned long> {
 protected:
-    unsigned long mask;
+    unsigned long mask{};
 };
 
 TEST_P(AttributeBitTestFixture, IdentityNumeric) {

@@ -41,7 +41,7 @@ using row_type = HostServiceState;
 using namespace std::chrono_literals;
 
 TableStateHistory::TableStateHistory(ICore *mc, LogCache *log_cache)
-    : log_cache_{log_cache} {
+    : log_cache_{log_cache}, abort_query_{false} {
     addColumns(this, *mc, "", ColumnOffsets{});
 }
 
@@ -287,6 +287,7 @@ void TableStateHistory::answerQuery(Query &query, const User &user,
         });
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                             const ICore &core,
                                             const LogFiles &log_files) {
@@ -455,6 +456,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 if (it_hst == state_info.end()) {
                     // Create state object that we also need for filtering right
                     // now
+                    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
                     state = new HostServiceState();
                     state->_is_host = entry->service_description().empty();
                     state->_host = entry_host;
@@ -469,7 +471,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                         if (!object_filter->accepts(Row{state}, user,
                                                     query.timezoneOffset())) {
                             object_blacklist.insert(key);
-                            delete state;
+                            delete state;  // NOLINT(cppcoreguidelines-owning-memory)
                             continue;
                         }
                     }
@@ -631,10 +633,11 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 
     for (auto &[key, hst] : state_info) {
-        delete hst;
+        delete hst;  // NOLINT(cppcoreguidelines-owning-memory)
     }
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
     Query &query, const User &user, const ICore &core,
     std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,

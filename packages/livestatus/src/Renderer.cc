@@ -121,7 +121,9 @@ void Renderer::outputUnicodeString(const char *start, const char *end,
     _os << R"(")";  // "
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void Renderer::outputUTF8(const char *start, const char *end) {
+    // NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     for (const char *p = start; p != end; ++p) {
         const unsigned char ch0 = *p;
         if ((ch0 & 0x80) == 0x00) {
@@ -215,6 +217,7 @@ void Renderer::outputMixed(const char *start, const char *end) {
                 return truncatedUTF8();
             }
             const unsigned char ch1 = *++p;
+            // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }

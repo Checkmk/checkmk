@@ -29,7 +29,7 @@ from cmk.gui.watolib.configuration_bundles import (
     CreatePassword,
     CreateRule,
     delete_config_bundle,
-    identify_bundle_references,
+    identify_single_bundle_references,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.passwords import load_passwords
@@ -51,10 +51,7 @@ def _make_bundle(
 def test_create_config_bundle_empty() -> None:
     bundle_id, bundle = _make_bundle()
     create_config_bundle(bundle_id, bundle, CreateBundleEntities())
-    all_references = identify_bundle_references(bundle["group"], {bundle_id})
-
-    assert len(all_references) == 1
-    references = all_references[bundle_id]
+    references = identify_single_bundle_references(bundle_id, bundle["group"])
 
     assert references.hosts is None
     assert references.rules is None
@@ -118,14 +115,14 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str) -> None:
     ]
     before_create_host_count = len(Host.all())
     create_config_bundle(bundle_id, bundle, CreateBundleEntities(hosts=hosts))
-    references = identify_bundle_references(bundle["group"], {bundle_id})[bundle_id]
+    references = identify_single_bundle_references(bundle_id, bundle["group"])
 
     assert references.hosts is not None
     assert len(references.hosts) == 2
     assert len(Host.all()) - before_create_host_count == 2
 
     delete_config_bundle(bundle_id)
-    references_after_delete = identify_bundle_references(bundle["group"], {bundle_id})[bundle_id]
+    references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
     assert references_after_delete.hosts is None
     assert len(Host.all()) == before_create_host_count, "Expected created hosts to be deleted"
 
@@ -149,14 +146,14 @@ def test_create_and_delete_config_bundle_passwords() -> None:
     ]
     before_create_password_count = len(load_passwords())
     create_config_bundle(bundle_id, bundle, CreateBundleEntities(passwords=passwords))
-    references = identify_bundle_references(bundle["group"], {bundle_id})[bundle_id]
+    references = identify_single_bundle_references(bundle_id, bundle["group"])
 
     assert references.passwords is not None
     assert len(references.passwords) == 2
     assert len(load_passwords()) - before_create_password_count == 2
 
     delete_config_bundle(bundle_id)
-    references_after_delete = identify_bundle_references(bundle["group"], {bundle_id})[bundle_id]
+    references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
     assert references_after_delete.passwords is None
     assert (
         len(load_passwords()) == before_create_password_count
@@ -197,14 +194,14 @@ def test_create_and_delete_config_bundle_rules(other_folder: str) -> None:
 
     before_create_rules_count = _len_rules()
     create_config_bundle(bundle_id, bundle, CreateBundleEntities(rules=rules))
-    references = identify_bundle_references(bundle["group"], {bundle_id})[bundle_id]
+    references = identify_single_bundle_references(bundle_id, bundle["group"])
 
     assert references.rules is not None
     assert len(references.rules) == 2
     assert _len_rules() - before_create_rules_count == 2
 
     delete_config_bundle(bundle_id)
-    references_after_delete = identify_bundle_references(bundle["group"], {bundle_id})[bundle_id]
+    references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
 
     assert references_after_delete.rules is None
     assert _len_rules() == before_create_rules_count, "Expected created rules to be deleted"

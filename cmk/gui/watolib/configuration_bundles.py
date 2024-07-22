@@ -165,6 +165,25 @@ def identify_bundle_references(
     }
 
 
+def identify_single_bundle_references(
+    bundle_id: BundleId, bundle_group: str | None = None
+) -> BundleReferences:
+    """Get references for a single bundle.
+    If the bundle group is unknown, the bundle will be loaded first."""
+    group = bundle_group or read_config_bundle(bundle_id)["group"]
+    references = identify_bundle_references(group, {bundle_id})
+    return references[bundle_id]
+
+
+def read_config_bundle(bundle_id: BundleId) -> "ConfigBundle":
+    store = ConfigBundleStore()
+    all_bundles = store.load_for_reading()
+    if bundle_id in all_bundles:
+        return all_bundles[bundle_id]
+
+    raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
+
+
 def create_config_bundle(
     bundle_id: BundleId, bundle: "ConfigBundle", entities: CreateBundleEntities
 ) -> None:

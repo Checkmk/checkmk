@@ -13,9 +13,9 @@ from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import omd_root
-from cmk.utils.piggyback_config import Config as PiggybackConfig
 
 from cmk.piggyback import get_piggyback_raw_data, PiggybackMessage
+from cmk.piggyback.config import Config as PiggybackConfig
 
 from ._abstract import Fetcher, Mode
 

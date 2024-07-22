@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from . import config
 from ._storage import (
     cleanup_piggyback_files,
     get_piggyback_raw_data,
@@ -15,6 +16,7 @@ from ._storage import (
 )
 
 __all__ = [
+    "config",
     "cleanup_piggyback_files",
     "get_piggybacked_host_with_sources",
     "get_piggyback_raw_data",

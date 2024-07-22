@@ -44,7 +44,6 @@ import cmk.utils.check_utils
 import cmk.utils.cleanup
 import cmk.utils.config_path
 import cmk.utils.paths
-import cmk.utils.piggyback_config
 import cmk.utils.tags
 import cmk.utils.translations
 from cmk.utils import config_warnings, ip_lookup, password_store, tty
@@ -3224,7 +3223,7 @@ class ConfigCache:
         # Can we somehow instanciate the hypothetical fetcher here, and just let it fetch?
         time_settings: list[tuple[str | None, str, int]] = self._piggybacked_host_files(host_name)
         time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
-        piggy_config = cmk.utils.piggyback_config.Config(host_name, time_settings)
+        piggy_config = piggyback.config.Config(host_name, time_settings)
 
         now = time.time()
 

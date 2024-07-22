@@ -13,6 +13,7 @@ _HostCondition = str | None
 _KeyName = str  # 'max_cache_age', 'validity_period', 'validity_state'
 _Value = int
 
+
 PiggybackTimeSettings = Sequence[tuple[_HostCondition, _KeyName, _Value]]
 
 

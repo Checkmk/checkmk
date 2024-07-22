@@ -13,8 +13,6 @@ from typing import Protocol
 
 import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.piggyback_config import Config as PiggybackConfig
-from cmk.utils.piggyback_config import PiggybackTimeSettings
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checkresults import ActiveCheckResult
@@ -30,6 +28,8 @@ from cmk.ccc.exceptions import (
     MKTimeout,
 )
 from cmk.piggyback import PiggybackMetaData
+from cmk.piggyback.config import Config as PiggybackConfig
+from cmk.piggyback.config import PiggybackTimeSettings
 
 __all__ = ["summarize", "SummarizerFunction", "SummaryConfig"]
 

@@ -28,7 +28,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--config",
-        type=str,
+        required=True,
         help="The configuration is passed as repr object. This option will change in the future.",
     )
 

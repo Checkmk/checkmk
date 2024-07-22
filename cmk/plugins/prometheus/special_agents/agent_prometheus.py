@@ -37,39 +37,13 @@ def parse_arguments(argv):
         "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="""Verbose mode (for even more output use -vvv)""",
-    )
-    parser.add_argument(
-        "--timeout",
-        default=10,
-        type=int,
-        help="""Timeout for individual processes in seconds (default 10)""",
-    )
-    parser.add_argument(
         "--config",
-        type=str,
+        required=True,
         help="The configuration is passed as repr object. This option will change in the future.",
     )
 
     args = parser.parse_args(argv)
     return args
-
-
-def setup_logging(verbosity):
-    if verbosity >= 3:
-        lvl = logging.DEBUG
-    elif verbosity == 2:
-        lvl = logging.INFO
-    elif verbosity == 1:
-        lvl = logging.WARN
-    else:
-        logging.disable(logging.CRITICAL)
-        lvl = logging.CRITICAL
-    logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
 
 
 def parse_pod_name(labels: dict[str, str], prepend_namespace: bool = False) -> str:

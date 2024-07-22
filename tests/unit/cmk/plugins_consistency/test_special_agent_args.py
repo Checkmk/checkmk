@@ -19,6 +19,7 @@ from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
+from cmk.plugins.prometheus.special_agents import agent_prometheus
 from cmk.special_agents import (
     agent_activemq,
     agent_allnet_ip_sensoric,
@@ -98,6 +99,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "ucs_bladecenter": None,
     "vnx_quotas": None,
     "zerto": None,
+    "prometheus": agent_prometheus,
 }
 
 UNMIGRATED = {
@@ -125,11 +127,12 @@ UNMIGRATED = {
     "storeonce4x",
     "ucs_bladecenter",
     "vnx_quotas",
+    "prometheus",
 }
 
 
 REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
-    "alertmanager": [],
+    "alertmanager": ["--config", "{}"],
     "allnet_ip_sensoric": ["HOSTNAME"],
     "aws": [
         "--access-key-id",
@@ -181,7 +184,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "--kubernetes-cluster-hostname",
         "host",
     ],
-    "prometheus": [],
+    "prometheus": ["--config", "{}"],
     "rabbitmq": [
         "-P",
         "PROTOCOL",

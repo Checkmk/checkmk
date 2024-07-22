@@ -16,7 +16,14 @@ from typing import Any, NotRequired, TypedDict
 
 import requests
 
-from cmk.plugins.lib.prometheus import extract_connection_args, generate_api_session
+from cmk.utils.password_store import replace_passwords
+
+from cmk.plugins.lib.prometheus import (
+    add_authentication_args,
+    authentication_from_args,
+    extract_connection_args,
+    generate_api_session,
+)
 from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.v0_unstable.request_helper import ApiSession
 
@@ -31,7 +38,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         required=True,
         help="The configuration is passed as repr object. This option will change in the future.",
     )
-
+    add_authentication_args(parser)
     args = parser.parse_args(argv)
     return args
 
@@ -128,12 +135,18 @@ def parse_rule_data(group_data: list[dict[str, Any]], ignore_alerts: IgnoreAlert
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    replace_passwords()
     if argv is None:
         argv = sys.argv[1:]
     args = parse_arguments(argv)
     try:
         config = ast.literal_eval(args.config)
-        session = generate_api_session(extract_connection_args(config))
+        session = generate_api_session(
+            extract_connection_args(
+                config,
+                authentication_from_args(args),
+            )
+        )
         api_client = AlertmanagerAPI(session)
         alertmanager_rules_section(api_client, config)
     except Exception as e:

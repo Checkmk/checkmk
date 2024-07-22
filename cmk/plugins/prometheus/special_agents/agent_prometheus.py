@@ -17,12 +17,12 @@ from typing import Any
 
 import requests
 
-from cmk.plugins.lib.node_exporter import (  # pylint: disable=cmk-module-layer-violation
-    NodeExporter,
-    PromQLMetric,
-    SectionStr,
-)
-from cmk.plugins.lib.prometheus import (  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.password_store import replace_passwords
+
+from cmk.plugins.lib.node_exporter import NodeExporter, PromQLMetric, SectionStr
+from cmk.plugins.lib.prometheus import (
+    add_authentication_args,
+    authentication_from_args,
     extract_connection_args,
     generate_api_session,
 )
@@ -41,7 +41,7 @@ def parse_arguments(argv):
         required=True,
         help="The configuration is passed as repr object. This option will change in the future.",
     )
-
+    add_authentication_args(parser)
     args = parser.parse_args(argv)
     return args
 
@@ -893,13 +893,19 @@ class ApiError(Exception):
 
 
 def main(argv=None):
+    replace_passwords()
     if argv is None:
         argv = sys.argv[1:]
     args = parse_arguments(argv)
     try:
         config = ast.literal_eval(args.config)
         config_args = _extract_config_args(config)
-        session = generate_api_session(extract_connection_args(config))
+        session = generate_api_session(
+            extract_connection_args(
+                config,
+                authentication_from_args(args),
+            )
+        )
         exporter_options = config_args["exporter_options"]
         # default cases always must be there
         api_client = PrometheusAPI(session)

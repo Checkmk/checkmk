@@ -48,9 +48,13 @@ from cmk.base.legacy_checks.agent_alertmanager import agent_alertmanager_argumen
             [
                 "--config",
                 "{'hostname': 'my-host', 'connection': 'my-server', 'verify-cert': True, "
-                "'auth_basic': ('auth_login', {'username': 'user', 'password': "
-                "('password', 'password')}), 'protocol': 'http', 'ignore_alerts': "
-                "{'ignore_alert_rules': ['a', 'b'], 'ignore_alert_groups': ['c']}}",
+                "'protocol': 'http', 'ignore_alerts': {'ignore_alert_rules': ['a', 'b'], "
+                "'ignore_alert_groups': ['c']}}",
+                "auth_login",
+                "--username",
+                "user",
+                "--password-reference",
+                "password",
             ],
             id="with login credentials",
         ),
@@ -70,9 +74,11 @@ from cmk.base.legacy_checks.agent_alertmanager import agent_alertmanager_argumen
             [
                 "--config",
                 "{'hostname': '', 'connection': 'my-server', 'verify-cert': True, "
-                "'auth_basic': ('auth_token', {'token': ('password', 'token')}), "
                 "'protocol': 'https', 'ignore_alerts': {'ignore_na': True, "
                 "'ignore_alert_rules': ['a', 'b'], 'ignore_alert_groups': []}}",
+                "auth_token",
+                "--token",
+                "token",
             ],
             id="with token",
         ),

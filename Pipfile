@@ -129,7 +129,7 @@ jinja2 = "==3.1.3"  # needed by flask
 more-itertools = "==9.1.0"  # needed by connexion through zipp, pytest
 zipp = "==3.15.0"  # needed by importlib-metadata
 pyrsistent = "==0.19.3"  # needed by jsonschema
-werkzeug = "==3.0.1"  # direct dependency and needed by flask
+werkzeug = "==3.0.3"  # direct dependency and needed by flask
 flask = "==3.0.2"  # direct dependency
 pytz = "==2023.3"  # direct dependency
 openapi-spec-validator = "==0.7.1"  # direct dependency

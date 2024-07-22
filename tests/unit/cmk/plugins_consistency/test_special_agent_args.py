@@ -4,14 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from argparse import Namespace
+from collections.abc import Mapping
 from types import ModuleType
-from typing import Final, Mapping
+from typing import Final
 
 import pytest
 
 from tests.testlib.repo import repo_path
 
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
+from cmk.plugins.prometheus.special_agents import agent_prometheus
 from cmk.special_agents import (
     agent_activemq,
     agent_alertmanager,
@@ -36,7 +38,6 @@ from cmk.special_agents import (
     agent_mqtt,
     agent_netapp,
     agent_netapp_ontap,
-    agent_prometheus,
     agent_proxmox_ve,
     agent_pure_storage_fa,
     agent_rabbitmq,
@@ -166,7 +167,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "--kubernetes-cluster-hostname",
         "host",
     ],
-    "prometheus": [],
+    "prometheus": ["--config", "{}"],
     "rabbitmq": [
         "-P",
         "PROTOCOL",

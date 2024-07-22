@@ -18,15 +18,18 @@ from typing import Any
 
 import requests
 
-from cmk.special_agents.utils.node_exporter import (
+from cmk.plugins.lib.prometheus import (
+    add_authentication_args,
+    authentication_from_args,
+    extract_connection_args,
+    generate_api_session,
+)
+from cmk.special_agents.utils.node_exporter import (  # pylint: disable=cmk-module-layer-violation
     NodeExporter,
     PromQLMetric,
     SectionStr,
 )
-from cmk.special_agents.utils.prometheus import (
-    extract_connection_args,
-    generate_api_session,
-)
+from cmk.special_agents.v0_unstable.request_helper import ApiSession
 
 LOGGER = logging.getLogger()  # root logger for now
 
@@ -51,25 +54,12 @@ def parse_arguments(argv):
     )
     parser.add_argument(
         "--config",
-        type=str,
+        required=True,
         help="The configuration is passed as repr object. This option will change in the future.",
     )
-
+    add_authentication_args(parser)
     args = parser.parse_args(argv)
     return args
-
-
-def setup_logging(verbosity):
-    if verbosity >= 3:
-        lvl = logging.DEBUG
-    elif verbosity == 2:
-        lvl = logging.INFO
-    elif verbosity == 1:
-        lvl = logging.WARN
-    else:
-        logging.disable(logging.CRITICAL)
-        lvl = logging.CRITICAL
-    logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
 
 
 def parse_pod_name(labels: dict[str, str], prepend_namespace: bool = False) -> str:
@@ -403,8 +393,8 @@ class PromQLResult:
         self.labels = raw_response["metric"]
         self.internal_values = raw_response["value"]
 
-    def label_value(self, key: str, default=None) -> str:  # type: ignore[no-untyped-def]
-        return self.labels.get(key, default)
+    def label_value(self, key: str) -> str:
+        return self.labels.get(key)
 
     def value(self, default_value: float | int | None = None, as_string: bool = False) -> float:
         try:
@@ -566,7 +556,7 @@ class PrometheusAPI:
     Realizes communication with the Prometheus API
     """
 
-    def __init__(self, session) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, session: ApiSession) -> None:
         self.session = session
 
     def perform_specified_promql_queries(
@@ -675,11 +665,10 @@ class Section:
         for key, value in check_data.items():
             if key not in self._content:
                 self._content[key] = value
+            elif isinstance(value, dict):
+                self._content[key].update(value)
             else:
-                if isinstance(value, dict):
-                    self._content[key].update(value)
-                else:
-                    raise ValueError("Key %s is already present and cannot be merged" % key)
+                raise ValueError("Key %s is already present and cannot be merged" % key)
 
     def output(self) -> str:
         return json.dumps(self._content)
@@ -741,7 +730,7 @@ class ApiData:
     Server & the Prometheus Exporters
     """
 
-    def __init__(self, api_client, exporter_options) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, api_client: "PrometheusAPI", exporter_options: dict) -> None:
         self.api_client = api_client
         self.prometheus_server = PrometheusServer(api_client)
         if "cadvisor" in exporter_options:
@@ -750,7 +739,10 @@ class ApiData:
         if "node_exporter" in exporter_options:
 
             def get_promql(promql_expression: str) -> list[PromQLMetric]:
-                return api_client.perform_multi_result_promql(promql_expression).promql_metrics
+                result = api_client.perform_multi_result_promql(promql_expression)
+                if result is None:
+                    raise ApiError("Missing PromQL result for %s" % promql_expression)
+                return result.promql_metrics
 
             self.node_exporter = NodeExporter(get_promql)
 
@@ -787,7 +779,7 @@ class ApiData:
             "diskio": self.cadvisor_exporter.diskstat_summary,
             "cpu": self.cadvisor_exporter.cpu_summary,
             "df": self.cadvisor_exporter.df_summary,
-            "if": self.cadvisor_exporter.if_summary,
+            "interfaces": self.cadvisor_exporter.if_summary,
             "memory_pod": self.cadvisor_exporter.memory_pod_summary,
             "memory_container": self.cadvisor_exporter.memory_container_summary,
         }
@@ -814,10 +806,10 @@ class ApiData:
                 cadvisor_summaries["df"],
                 grouping_option[cadvisor_grouping],
             )
-        if "if" in entities:
+        if "interfaces" in entities:
             yield from self._output_cadvisor_summary(
                 "cadvisor_if",
-                cadvisor_summaries["if"],
+                cadvisor_summaries["interfaces"],
                 grouping_option[cadvisor_grouping],
             )
 
@@ -947,7 +939,12 @@ def main(argv=None):
     try:
         config = ast.literal_eval(args.config)
         config_args = _extract_config_args(config)
-        session = generate_api_session(extract_connection_args(config))
+        session = generate_api_session(
+            extract_connection_args(
+                config,
+                authentication_from_args(args),
+            )
+        )
         exporter_options = config_args["exporter_options"]
         # default cases always must be there
         api_client = PrometheusAPI(session)

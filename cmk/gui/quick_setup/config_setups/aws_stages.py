@@ -20,7 +20,7 @@ from cmk.utils.quick_setup.widgets import (
     Text,
 )
 
-from cmk.gui.quick_setup.to_frontend import form_spec_recap, form_spec_validate
+from cmk.gui.quick_setup.to_frontend import form_spec_recaps, form_spec_validate
 
 from cmk.ccc.i18n import _
 from cmk.plugins.aws import ruleset_helper  # pylint: disable=cmk-module-layer-violation
@@ -72,7 +72,7 @@ def prepare_aws(stage_id: StageId) -> QuickSetupStage:
             ),
         ],
         validators=[form_spec_validate],
-        recap=[form_spec_recap],
+        recap=[form_spec_recaps],
         button_txt="Configure host and region",
     )
 
@@ -114,7 +114,7 @@ def configure_host_and_region(stage_id: StageId) -> QuickSetupStage:
             ),
         ],
         validators=[form_spec_validate],
-        recap=[form_spec_recap],
+        recap=[form_spec_recaps],
         button_txt="Configure services to monitor",
     )
 
@@ -165,7 +165,7 @@ def configure_services_to_monitor(stage_id: StageId) -> QuickSetupStage:
             ),
         ],
         validators=[form_spec_validate],
-        recap=[form_spec_recap],
+        recap=[form_spec_recaps],
         button_txt="Review and run service discovery",
     )
 

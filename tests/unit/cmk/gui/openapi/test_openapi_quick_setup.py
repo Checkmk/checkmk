@@ -20,7 +20,7 @@ from cmk.utils.quick_setup.definitions import (
 )
 from cmk.utils.quick_setup.widgets import FormSpecId, FormSpecWrapper
 
-from cmk.gui.quick_setup.to_frontend import form_spec_recap, form_spec_validate
+from cmk.gui.quick_setup.to_frontend import form_spec_recaps, form_spec_validate
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
@@ -103,7 +103,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
                     ),
                 ],
                 validators=[form_spec_validate],
-                recap=[form_spec_recap],
+                recap=[form_spec_recaps],
                 button_txt="Next",
             ),
             QuickSetupStage(
@@ -119,7 +119,10 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="quick_setup_test",
         stages=[
-            {"stage_id": 1, "form_data": {"wrapper_id": {}}},
+            {
+                "stage_id": 1,
+                "form_data": {"wrapper_id": {"account_name": "test_account_name"}},
+            },
         ],
     )
     assert resp.json["stage_id"] == 2

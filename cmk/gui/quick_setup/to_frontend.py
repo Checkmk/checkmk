@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, MutableSequence, Sequence
 from dataclasses import asdict
 from typing import cast, Mapping
 
@@ -16,6 +16,7 @@ from cmk.utils.quick_setup.definitions import (
     QuickSetup,
     QuickSetupOverview,
     QuickSetupSaveRedirect,
+    QuickSetupStage,
     Stage,
     StageId,
     ValidationErrorMap,
@@ -96,10 +97,10 @@ def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpe
             yield component
 
 
-def _build_expected_formspec_map(quick_setup: QuickSetup) -> Mapping[FormSpecId, FormSpec]:
+def build_expected_formspec_map(stages: Sequence[QuickSetupStage]) -> Mapping[FormSpecId, FormSpec]:
     return {
         widget.id: cast(FormSpec, widget.form_spec)
-        for stage in quick_setup.stages
+        for stage in stages
         for widget in _flatten_formspec_wrappers(stage.configure_components)
     }
 
@@ -120,8 +121,26 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
     )
 
 
-def form_spec_recap(stages_form_data: Sequence[FormData]) -> Sequence[Widget]:
-    return [FormSpecRecap(id=form_spec_id) for form_spec_id in stages_form_data[-1]]
+def form_spec_recaps(
+    stages_form_data: Sequence[FormData],
+    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
+) -> Sequence[Widget]:
+
+    recap: MutableSequence[Widget] = []
+    for formspec_id, form_data in stages_form_data[-1].items():
+        if formspec_id not in expected_formspecs_map:
+            continue
+
+        form_spec = expected_formspecs_map[formspec_id]
+        result = serialize_data_for_frontend(
+            form_spec=form_spec,
+            field_id=formspec_id,
+            origin=DataOrigin.FRONTEND,
+            do_validate=False,
+            value=form_data,
+        )
+        recap.append(FormSpecRecap(id=formspec_id, form_spec=result))
+    return recap
 
 
 def validate_current_stage(
@@ -135,7 +154,7 @@ def validate_current_stage(
     for validator in current_stage.validators:
         errors_formspec, errors_stage = validator(
             [stage.form_data for stage in incoming_stages],
-            _build_expected_formspec_map(quick_setup),
+            build_expected_formspec_map(quick_setup.stages),
         )
         for form_spec_id, fs_errors in errors_formspec.items():
             errors.formspec_errors.setdefault(form_spec_id, [])
@@ -174,7 +193,10 @@ def retrieve_next_stage(
         stage_recap=[
             r
             for recap_callable in current_stage.recap
-            for r in recap_callable([stage.form_data for stage in incoming_stages])
+            for r in recap_callable(
+                [stage.form_data for stage in incoming_stages],
+                build_expected_formspec_map(quick_setup.stages),
+            )
         ],
         button_txt=next_stage.button_txt,
     )

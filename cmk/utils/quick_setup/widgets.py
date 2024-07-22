@@ -38,13 +38,14 @@ class ListOfWidgets(Widget):
 class FormSpecWrapper(Widget):
     id: FormSpecId
     widget_type: str = field(default="form_spec", init=False)
-    form_spec: object | None = None
+    form_spec: object
 
 
 @dataclass
 class FormSpecRecap(Widget):
     id: FormSpecId
     widget_type: str = field(default="form_spec_recap", init=False)
+    form_spec: object
 
 
 @dataclass

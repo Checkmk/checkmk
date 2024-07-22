@@ -36,6 +36,10 @@ CallableValidator = Callable[
     [Sequence[FormData], Mapping[FormSpecId, FormSpec]],
     tuple[ValidationErrorMap, GeneralStageErrors],
 ]
+CallableRecap = Callable[
+    [Sequence[FormData], Mapping[FormSpecId, FormSpec]],
+    Sequence[Widget],
+]
 
 
 @dataclass
@@ -66,7 +70,7 @@ class QuickSetupStage:
     title: str
     configure_components: Sequence[Widget]
     validators: Iterable[CallableValidator]
-    recap: Iterable[Callable[[Sequence[FormData]], Sequence[Widget]]]
+    recap: Iterable[CallableRecap]
     button_txt: str
     sub_title: str | None = None
 

@@ -20,6 +20,18 @@ cc_library(
     ],
 )
 
+# Our generated & patched headers for Nagios 3 & 4
+cc_library(
+    name = "neb_nagios_headers",
+    hdrs = glob(
+        [
+            "third_party/include/nagios/*.h",
+            "third_party/include/nagios4/*.h",
+        ],
+    ),
+    tags = ["no-clang-tidy"],
+)
+
 cc_library(
     name = "neb_base",
     srcs = [
@@ -30,10 +42,7 @@ cc_library(
         "src/NebService.cc",
         "src/TimeperiodsCache.cc",
         "src/module.cc",
-    ] + glob(
-        # patched nagios headers
-        ["third_party/include/nagios/*.h"],
-    ),
+    ],
     hdrs = [
         "include/neb/Comment.h",
         "include/neb/Downtime.h",
@@ -56,6 +65,7 @@ cc_library(
     copts = NEB_COPTS,
     includes = ["include"],
     deps = [
+        ":neb_nagios_headers",
         "//packages/livestatus",
     ],
 )
@@ -65,6 +75,7 @@ cc_library(
     includes = ["include"],
     deps = [
         ":neb_base",
+        ":neb_nagios_headers",
         ":neb_version",
         "//packages/livestatus",
     ],

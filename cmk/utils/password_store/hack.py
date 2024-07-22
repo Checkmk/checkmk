@@ -48,6 +48,8 @@ HACK_AGENTS = {
     "siemens_plc": False,  # needs no secret
     "acme_sbc": False,  # needs no secret
     "activemq": True,
+    "alertmanager": False,
+    "prometheus": False,
 }
 
 

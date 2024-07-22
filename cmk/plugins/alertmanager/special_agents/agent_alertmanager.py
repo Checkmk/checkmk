@@ -16,8 +16,6 @@ from typing import Any, NotRequired, TypedDict
 
 import requests
 
-from cmk.utils.password_store import replace_passwords
-
 from cmk.plugins.lib.prometheus import (
     add_authentication_args,
     authentication_from_args,
@@ -135,7 +133,6 @@ def parse_rule_data(group_data: list[dict[str, Any]], ignore_alerts: IgnoreAlert
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    replace_passwords()
     if argv is None:
         argv = sys.argv[1:]
     args = parse_arguments(argv)

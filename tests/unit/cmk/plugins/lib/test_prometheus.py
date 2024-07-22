@@ -44,7 +44,7 @@ from cmk.plugins.lib.prometheus import extract_connection_args, LoginAuth, Token
         pytest.param(
             {
                 "connection": "my-host.com",
-                "verify-cert": True,
+                "verify_cert": True,
                 "protocol": "https",
             },
             TokenAuth("token"),

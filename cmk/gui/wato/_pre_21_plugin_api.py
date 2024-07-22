@@ -6,7 +6,6 @@
 import cmk.utils.paths
 
 import cmk.gui.plugins.wato as api_module  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.plugins.wato.special_agents.common  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.plugins.wato.utils as wato_utils  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.valuespec
 import cmk.gui.view_utils
@@ -279,6 +278,4 @@ def register() -> None:  # pylint: disable=too-many-branches
         ("RulespecGroupActiveChecks", RulespecGroupActiveChecks),
         ("MigrateToIndividualOrStoredPassword", MigrateToIndividualOrStoredPassword),
     ):
-        datasource_programs.__dict__[name] = cmk.gui.plugins.wato.special_agents.common.__dict__[
-            name
-        ] = value
+        datasource_programs.__dict__[name] = value

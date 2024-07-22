@@ -8,7 +8,10 @@ Common functions used in Prometheus related Special agents
 
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Required, TypedDict
+
+from cmk.utils.password_store import lookup
 
 from cmk.special_agents.v0_unstable.request_helper import (
     ApiSession,
@@ -76,12 +79,25 @@ def authentication_from_args(args: Namespace) -> LoginAuth | TokenAuth | None:
         case "auth_login":
             return LoginAuth(
                 username=args.username,
-                password=args.password_reference or args.password,
+                password=(
+                    _lookup_from_password_store(args.password_reference)
+                    if args.password_reference
+                    else args.password
+                ),
             )
         case "auth_token":
-            return TokenAuth(args.token_reference or args.token)
+            return TokenAuth(
+                _lookup_from_password_store(args.token_reference)
+                if args.token_reference
+                else args.token
+            )
         case _:
             return None
+
+
+def _lookup_from_password_store(raw_reference: str) -> str:
+    pw_id, pw_file = raw_reference.split(":", 1)
+    return lookup(Path(pw_file), pw_id)
 
 
 class ConnectionConfig(TypedDict):
@@ -102,7 +118,7 @@ def extract_connection_args(
     authentication: LoginAuth | TokenAuth | None,
 ) -> dict[str, object]:
     connection_args = {
-        "verify-cert": config.get("verify-cert", False),
+        "verify-cert": config.get("verify_cert", False),
         "api_url": _get_api_url(config),
     }
     match authentication:

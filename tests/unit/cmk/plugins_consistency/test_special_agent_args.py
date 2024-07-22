@@ -103,7 +103,6 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
 }
 
 UNMIGRATED = {
-    "alertmanager",
     "allnet_ip_sensoric",
     "appdynamics",
     "ddn_s2a",
@@ -127,7 +126,6 @@ UNMIGRATED = {
     "storeonce4x",
     "ucs_bladecenter",
     "vnx_quotas",
-    "prometheus",
 }
 
 

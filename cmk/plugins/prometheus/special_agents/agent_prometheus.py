@@ -17,8 +17,6 @@ from typing import Any
 
 import requests
 
-from cmk.utils.password_store import replace_passwords
-
 from cmk.plugins.lib.node_exporter import NodeExporter, PromQLMetric, SectionStr
 from cmk.plugins.lib.prometheus import (
     add_authentication_args,
@@ -756,7 +754,7 @@ class ApiData:
             "diskio": self.cadvisor_exporter.diskstat_summary,
             "cpu": self.cadvisor_exporter.cpu_summary,
             "df": self.cadvisor_exporter.df_summary,
-            "if": self.cadvisor_exporter.if_summary,
+            "interfaces": self.cadvisor_exporter.if_summary,
             "memory_pod": self.cadvisor_exporter.memory_pod_summary,
             "memory_container": self.cadvisor_exporter.memory_container_summary,
         }
@@ -779,9 +777,9 @@ class ApiData:
             yield from self._output_cadvisor_summary(
                 "cadvisor_df", cadvisor_summaries["df"], grouping_option[cadvisor_grouping]
             )
-        if "if" in entities:
+        if "interfaces" in entities:
             yield from self._output_cadvisor_summary(
-                "cadvisor_if", cadvisor_summaries["if"], grouping_option[cadvisor_grouping]
+                "cadvisor_if", cadvisor_summaries["interfaces"], grouping_option[cadvisor_grouping]
             )
 
         if "memory" in entities:
@@ -893,7 +891,6 @@ class ApiError(Exception):
 
 
 def main(argv=None):
-    replace_passwords()
     if argv is None:
         argv = sys.argv[1:]
     args = parse_arguments(argv)

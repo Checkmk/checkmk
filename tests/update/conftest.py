@@ -257,10 +257,10 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     LOGGER.info("Setting up test-site (interactive-mode=%s) ...", interactive_mode)
     test_site = _create_site(base_version, interactive=interactive_mode)
 
+    inject_dumps(test_site, DUMPS_DIR)
+
     disable_rules_injection = request.config.getoption(name="--disable-rules-injection")
     if not version_from_env().is_saas_edition():
-        # 'datasource_programs' rule is not supported in the SaaS edition
-        inject_dumps(test_site, DUMPS_DIR)
         if not disable_rules_injection:
             inject_rules(test_site)
     licensing_dir = Path(os.environ.get("OMD_ROOT", "")) / "var/check_mk/licensing"

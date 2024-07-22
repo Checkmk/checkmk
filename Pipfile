@@ -18,7 +18,7 @@ checkmk-dev-tools = "==0.1.57"  # provides tooling for build artifacts
 compiledb = "==0.10.1"  # used by the Livestatus/CMC Makefiles for building compile_command.json
 devpi-client = "==7.0.2" # Managing the devpi server
 dill = "==0.3.8"
-docker = "==7.0.0"  # used by test_docker test and mk_docker agent plugin
+docker = "==7.1.0"  # used by test_docker test and mk_docker agent plugin
 dockerpty = "==0.4.1"  # used by dockerized tests for opening debug shells
 fakeredis = {version = "*", extras = ["lua"]}  # used for testing code which uses Redis (lua is needed for faking features like "lock")
 fastapi = "==0.103.2"  # needed to run fake idp for cse tests

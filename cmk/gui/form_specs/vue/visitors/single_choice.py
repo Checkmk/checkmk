@@ -2,7 +2,6 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Callable, Sequence
 
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
@@ -16,6 +15,7 @@ from cmk.gui.form_specs.vue.type_defs import (
 from cmk.gui.form_specs.vue.utils import (
     compute_input_hint,
     compute_validation_errors,
+    compute_validators,
     create_validation_error,
     get_prefill_default,
     get_title_and_help,
@@ -34,11 +34,6 @@ class SingleChoiceVisitor(FormSpecVisitor):
     def __init__(self, form_spec: SingleChoice, options: VisitorOptions) -> None:
         self.form_spec = form_spec
         self.options = options
-
-    def _validators(self) -> Sequence[Callable[[str], object]]:
-        # TODO: add special __post_init__ / ignored_elements / invalid element
-        #      validators for this form spec
-        return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     def _parse_value(self, raw_value: object) -> str | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
@@ -72,7 +67,7 @@ class SingleChoiceVisitor(FormSpecVisitor):
                 help=help_text,
                 elements=elements,
                 label=localize(self.form_spec.label),
-                validators=build_vue_validators(self._validators()),
+                validators=build_vue_validators(compute_validators(self.form_spec)),
                 frozen=self.form_spec.frozen and isinstance(raw_value, str),
                 input_hint=compute_input_hint(self.form_spec.prefill),
             ),
@@ -84,7 +79,7 @@ class SingleChoiceVisitor(FormSpecVisitor):
     ) -> list[VueComponents.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, Title("Invalid choice"))
-        return compute_validation_errors(self._validators(), parsed_value)
+        return compute_validation_errors(compute_validators(self.form_spec), parsed_value)
 
     def _to_disk(self, raw_value: object, parsed_value: str | EmptyValue) -> str:
         if isinstance(parsed_value, EmptyValue):

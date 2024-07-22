@@ -2,7 +2,6 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Callable, Sequence
 
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
@@ -16,6 +15,7 @@ from cmk.gui.form_specs.vue.type_defs import (
 )
 from cmk.gui.form_specs.vue.utils import (
     compute_validation_errors,
+    compute_validators,
     create_validation_error,
     get_title_and_help,
     get_visitor,
@@ -32,9 +32,6 @@ class ListVisitor(FormSpecVisitor):
     def __init__(self, form_spec: List, options: VisitorOptions) -> None:
         self.form_spec = form_spec
         self.options = options
-
-    def _validators(self) -> Sequence[Callable[[list], object]]:
-        return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     def _parse_value(self, raw_value: object) -> list | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
@@ -90,7 +87,9 @@ class ListVisitor(FormSpecVisitor):
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, Title("Invalid data for list"))
 
-        element_validations = [*compute_validation_errors(self._validators(), parsed_value)]
+        element_validations = [
+            *compute_validation_errors(compute_validators(self.form_spec), parsed_value)
+        ]
         element_visitor = get_visitor(self.form_spec.element_template, self.options)
 
         for idx, entry in enumerate(parsed_value):

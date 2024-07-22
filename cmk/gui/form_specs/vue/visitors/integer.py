@@ -11,6 +11,7 @@ from cmk.gui.form_specs.vue.type_defs import DefaultValue, EMPTY_VALUE, EmptyVal
 from cmk.gui.form_specs.vue.utils import (
     compute_input_hint,
     compute_validation_errors,
+    compute_validators,
     create_validation_error,
     get_prefill_default,
     get_title_and_help,
@@ -43,9 +44,7 @@ class IntegerVisitor(FormSpecVisitor):
         return raw_value
 
     def _validators(self) -> Sequence[Callable[[int], object]]:
-        return [IsInteger()] + (
-            list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
-        )
+        return [IsInteger()] + compute_validators(self.form_spec)
 
     def _to_vue(
         self, raw_value: object, parsed_value: int | EmptyValue

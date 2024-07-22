@@ -17,6 +17,7 @@ from cmk.gui.form_specs.vue.type_defs import (
 from cmk.gui.form_specs.vue.utils import (
     compute_input_hint,
     compute_validation_errors,
+    compute_validators,
     create_validation_error,
     get_prefill_default,
     get_title_and_help,
@@ -48,9 +49,7 @@ class FloatVisitor(FormSpecVisitor):
         return float(raw_value)
 
     def _validators(self) -> Sequence[Callable[[float], object]]:
-        return [IsFloat()] + (
-            list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
-        )
+        return [IsFloat()] + compute_validators(self.form_spec)
 
     def _to_vue(
         self, raw_value: object, parsed_value: float | EmptyValue

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import ast
-from typing import Callable, Mapping, Sequence
+from typing import Mapping
 
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
@@ -18,6 +18,7 @@ from cmk.gui.form_specs.vue.type_defs import (
 )
 from cmk.gui.form_specs.vue.utils import (
     compute_validation_errors,
+    compute_validators,
     create_validation_error,
     get_title_and_help,
     get_visitor,
@@ -32,9 +33,6 @@ class DictionaryVisitor(FormSpecVisitor):
     def __init__(self, form_spec: Dictionary, options: VisitorOptions) -> None:
         self.form_spec = form_spec
         self.options = options
-
-    def _validators(self) -> Sequence[Callable[[Mapping[str, object]], object]]:
-        return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     def _compute_default_values(self) -> dict:
         return {key: DEFAULT_VALUE for key, el in self.form_spec.elements.items() if el.required}
@@ -115,17 +113,16 @@ class DictionaryVisitor(FormSpecVisitor):
             vue_values,
         )
 
-    def _validate_elements(self, parsed_value: dict) -> list[VueComponents.ValidationMessage]:
-        return compute_validation_errors(self._validators(), parsed_value)
-
     def _validate(
         self, raw_value: object, parsed_value: dict | EmptyValue
     ) -> list[VueComponents.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, "Expected a valid value, got EmptyValue")
 
-        # TODO: parse_result may include default values, e.g. {"ce": default_value}
-        element_validations = [*self._validate_elements(parsed_value)]
+        # NOTE: the parsed_value may include keys with default values, e.g. {"ce": default_value}
+        element_validations = [
+            *compute_validation_errors(compute_validators(self.form_spec), parsed_value)
+        ]
         for key_name, dict_element in self.form_spec.elements.items():
             if key_name not in parsed_value:
                 continue

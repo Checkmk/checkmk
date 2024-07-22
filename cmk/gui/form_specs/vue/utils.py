@@ -102,6 +102,10 @@ def compute_validation_errors(
     ]
 
 
+def compute_validators(form_spec: FormSpec[ModelT]) -> list[Callable[[ModelT], object]]:
+    return list(form_spec.custom_validate) if form_spec.custom_validate else []
+
+
 def migrate_value(form_spec: FormSpec, options: VisitorOptions, value: Any) -> Any:
     if (
         not isinstance(value, FormSpecDefaultValue)

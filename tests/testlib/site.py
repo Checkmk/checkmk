@@ -691,7 +691,7 @@ class Site:
             user=AUTOMATION_USER, password=self.get_automation_secret()
         )
         # set the sites timezone according to TZ
-        self.set_timezone(os.getenv("TZ", ""))
+        self.set_timezone(os.getenv("TZ", "UTC"))
 
     def _ensure_sample_config_is_present(self) -> None:
         if missing_files := self._missing_but_required_wato_files():

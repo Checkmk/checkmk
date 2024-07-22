@@ -93,7 +93,7 @@ def pytest_configure(config):
         "EDITION": "cee",
         "VERSION": "daily",
         "DISTRO": "",
-        "TZ": "",
+        "TZ": "UTC",
         "REUSE": "0",
         "CLEANUP": "1",
     }

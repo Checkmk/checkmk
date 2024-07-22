@@ -6,6 +6,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import (
+    Any,
     Callable,
     get_args,
     Iterable,
@@ -58,12 +59,21 @@ def _get_affected_entities(bundle_group: str) -> set[Entity]:
     return set(domain.entity for domain in bundle_domain) if bundle_domain else ALL_ENTITIES
 
 
+# TODO: deduplicate with cmk/gui/cee/dcd/_store.py
+DCDConnectionSpec = dict[str, Any]
+DCDConnectionDict = dict[str, DCDConnectionSpec]
+
+
+class DCDConnectionHook:
+    load_dcd_connections: Callable[[], DCDConnectionDict] = lambda: {}
+
+
 @dataclass
 class BundleReferences:
-    # TODO: introduce dcd
     hosts: Sequence[Host] | None = None
     passwords: Sequence[tuple[str, Password]] | None = None  # PasswordId, Password
     rules: Sequence[Rule] | None = None
+    dcd_connections: Sequence[tuple[str, DCDConnectionSpec]] | None = None
 
 
 def identify_bundle_references(
@@ -92,11 +102,21 @@ def identify_bundle_references(
         if "host" in affected_entities
         else {}
     )
+    bundle_dcd_connections = (
+        _collect_many(
+            _collect_dcd_connections(
+                finder=bundle_id_finder, dcd_connections=DCDConnectionHook.load_dcd_connections()
+            )
+        )
+        if "dcd" in affected_entities
+        else {}
+    )
     return {
         bundle_id: BundleReferences(
             hosts=bundle_hosts.get(bundle_id),
             passwords=bundle_password_ids.get(bundle_id),
             rules=bundle_rule_ids.get(bundle_id),
+            dcd_connections=bundle_dcd_connections.get(bundle_id),
         )
         for bundle_id in bundle_ids
     }
@@ -133,6 +153,14 @@ def collect_rules(
     for _folder, _idx, rule in rules:
         if bundle_id := finder(rule.locked_by):
             yield bundle_id, rule
+
+
+def _collect_dcd_connections(
+    finder: IdentFinder, dcd_connections: DCDConnectionDict
+) -> Iterable[tuple[BundleId, tuple[str, DCDConnectionSpec]]]:
+    for connection_id, connection in dcd_connections.items():
+        if bundle_id := finder(connection.get("locked_by")):
+            yield bundle_id, (connection_id, connection)
 
 
 def prepare_bundle_id_finder(bundle_program_id: str, bundle_ids: set[BundleId]) -> IdentFinder:

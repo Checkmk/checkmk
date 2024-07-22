@@ -58,25 +58,19 @@ cc_library(
     includes = ["include"],
     deps = [
         ":neb_nagios_headers",
-        "//packages/livestatus",
-    ],
-)
-
-cc_library(
-    name = "neb",
-    includes = ["include"],
-    deps = [
-        ":neb_base",
-        ":neb_nagios_headers",
-        ":neb_version",
-        "//packages/livestatus",
+        "//packages/livestatus:livestatus_headers",
+        "@asio",
     ],
 )
 
 cc_shared_library(
     name = "neb_shared",
+    dynamic_deps = ["//packages/livestatus:livestatus_shared"],
     visibility = ["//visibility:public"],
-    deps = [":neb"],
+    deps = [
+        ":neb_base",
+        ":neb_version",
+    ],
 )
 
 cc_library(
@@ -87,8 +81,9 @@ cc_library(
     ],
     hdrs = ["test/test_utilities.h"],
     deps = [
-        ":neb",
-        "//packages/livestatus",
+        ":neb_base",
+        ":neb_version",
+        "//packages/livestatus:livestatus_base",
     ],
 )
 
@@ -96,8 +91,10 @@ cc_library(
     name = "dummy_nagios",
     testonly = 1,
     srcs = ["test/DummyNagios.cc"],
-    hdrs = ["test/DummyNagios.cc"],
-    deps = [":neb"],
+    deps = [
+        ":neb_base",
+        ":neb_version",
+    ],
 )
 
 cc_test(
@@ -110,7 +107,6 @@ cc_test(
     ],
     deps = [
         ":dummy_nagios",
-        ":neb",
         ":test_utilities",
         "@gtest//:gtest_main",
     ],

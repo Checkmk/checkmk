@@ -29,7 +29,7 @@ from cmk.ccc.exceptions import (
     MKSNMPError,
     MKTimeout,
 )
-from cmk.piggyback import PiggybackFileInfo
+from cmk.piggyback import PiggybackMetaData
 
 __all__ = ["summarize", "SummarizerFunction", "SummaryConfig"]
 
@@ -118,7 +118,7 @@ def summarize_piggyback(
     config = PiggybackConfig(hostname, time_settings)
     now = int(time.time()) if now is None else now
     if meta_infos := [
-        PiggybackFileInfo.deserialize(raw_file_info)
+        PiggybackMetaData.deserialize(raw_file_info)
         for (raw_file_info,) in host_sections.sections.get(summary_section, [])
     ]:
         return [_summarize_single_piggyback_source(info, config, now) for info in meta_infos]
@@ -129,7 +129,7 @@ def summarize_piggyback(
 
 
 def _summarize_single_piggyback_source(
-    meta: PiggybackFileInfo, config: PiggybackConfig, now: float
+    meta: PiggybackMetaData, config: PiggybackConfig, now: float
 ) -> ActiveCheckResult:
 
     if (age := now - meta.last_update) > (allowed := config.max_cache_age(meta.source)):

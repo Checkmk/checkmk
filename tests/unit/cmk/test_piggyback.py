@@ -23,7 +23,7 @@ _PAYLOAD = (
 _REF_TIME = 1640000000.0
 
 
-def _get_only_raw_data_element(host_name: HostAddress) -> piggyback.PiggybackRawDataInfo:
+def _get_only_raw_data_element(host_name: HostAddress) -> piggyback.PiggybackMessage:
     first, *other = piggyback.get_piggyback_raw_data(host_name, cmk.utils.paths.omd_root)
     assert not other
     return first
@@ -43,8 +43,8 @@ def test_store_piggyback_raw_data_simple() -> None:
 
     stored = _get_only_raw_data_element(_TEST_HOST_NAME)
 
-    assert stored.info.source == HostAddress("source")
-    assert stored.info.last_update == _REF_TIME
+    assert stored.meta.source == HostAddress("source")
+    assert stored.meta.last_update == _REF_TIME
     assert stored.raw_data == b"line1\nline2\n"
 
 
@@ -59,7 +59,7 @@ def test_get_piggyback_raw_data_not_updated() -> None:
         cmk.utils.paths.omd_root,
     )
 
-    info = _get_only_raw_data_element(_TEST_HOST_NAME).info
+    info = _get_only_raw_data_element(_TEST_HOST_NAME).meta
 
     assert info.source == HostAddress("source1")
     assert info.last_contact == _REF_TIME + 10
@@ -74,7 +74,7 @@ def test_get_piggyback_raw_data_not_sending() -> None:
         HostAddress("source1"), {}, _REF_TIME, cmk.utils.paths.omd_root
     )
 
-    info = _get_only_raw_data_element(_TEST_HOST_NAME).info
+    info = _get_only_raw_data_element(_TEST_HOST_NAME).meta
 
     assert info.source == "source1"
     assert info.last_contact is None
@@ -111,7 +111,7 @@ def test_store_piggyback_raw_data_second_source() -> None:
     )
 
     raw_data_map = {
-        rd.info.source: rd.info
+        rd.meta.source: rd.meta
         for rd in piggyback.get_piggyback_raw_data(_TEST_HOST_NAME, cmk.utils.paths.omd_root)
     }
     assert len(raw_data_map) == 2
@@ -152,13 +152,13 @@ def test_get_source_and_piggyback_hosts() -> None:
     pprint.pprint(piggybacked)  # pytest won't show it :-(
     assert piggybacked == {
         HostAddress("test-host"): [
-            piggyback.PiggybackFileInfo(
+            piggyback.PiggybackMetaData(
                 source=HostAddress("source1"),
                 piggybacked=HostAddress("test-host"),
                 last_update=int(_REF_TIME - 10),
                 last_contact=int(_REF_TIME),
             ),
-            piggyback.PiggybackFileInfo(
+            piggyback.PiggybackMetaData(
                 source=HostAddress("source2"),
                 piggybacked=HostAddress("test-host"),
                 last_update=int(_REF_TIME),
@@ -166,13 +166,13 @@ def test_get_source_and_piggyback_hosts() -> None:
             ),
         ],
         HostAddress("test-host2"): [
-            piggyback.PiggybackFileInfo(
+            piggyback.PiggybackMetaData(
                 source=HostAddress("source1"),
                 piggybacked=HostAddress("test-host2"),
                 last_update=int(_REF_TIME),
                 last_contact=int(_REF_TIME),
             ),
-            piggyback.PiggybackFileInfo(
+            piggyback.PiggybackMetaData(
                 source=HostAddress("source2"),
                 piggybacked=HostAddress("test-host2"),
                 last_update=int(_REF_TIME),

@@ -15,7 +15,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.paths import omd_root
 from cmk.utils.piggyback_config import Config as PiggybackConfig
 
-from cmk.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo
+from cmk.piggyback import get_piggyback_raw_data, PiggybackMessage
 
 from ._abstract import Fetcher, Mode
 
@@ -34,7 +34,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         self.config: Final = PiggybackConfig(hostname, time_settings)
         self.time_settings: Final = time_settings
         self._logger: Final = logging.getLogger("cmk.helper.piggyback")
-        self._sources: list[PiggybackRawDataInfo] = []
+        self._sources: list[PiggybackMessage] = []
 
     def __repr__(self) -> str:
         return (
@@ -82,7 +82,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
     def _get_main_section(self) -> bytearray | bytes:
         raw_data = bytearray()
         for src in self._sources:
-            if (time.time() - src.info.last_update) <= self.config.max_cache_age(src.info.source):
+            if (time.time() - src.meta.last_update) <= self.config.max_cache_age(src.meta.source):
                 # !! Important for Check_MK and Check_MK Discovery service !!
                 #   - sources contains ALL file infos and is not filtered
                 #     in cmk/base/piggyback.py as in previous versions
@@ -102,7 +102,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         """
         if not self._sources:
             return b""
-        return f"<<<piggyback_source_summary:sep(0)>>>\n{'\n'.join(s.info.serialize() for s in self._sources)}\n".encode(
+        return f"<<<piggyback_source_summary:sep(0)>>>\n{'\n'.join(s.meta.serialize() for s in self._sources)}\n".encode(
             "utf-8"
         )
 
@@ -112,9 +112,9 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         if not self._sources:
             return b""
 
-        labels = {"cmk/piggyback_source_%s" % src.info.source: "yes" for src in self._sources}
+        labels = {"cmk/piggyback_source_%s" % src.meta.source: "yes" for src in self._sources}
         return ("<<<labels:sep(0)>>>\n%s\n" % json.dumps(labels)).encode("utf-8")
 
     @staticmethod
-    def _raw_data(hostname: HostAddress) -> Sequence[PiggybackRawDataInfo]:
+    def _raw_data(hostname: HostAddress) -> Sequence[PiggybackMessage]:
         return get_piggyback_raw_data(hostname, omd_root)

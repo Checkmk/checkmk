@@ -13,9 +13,8 @@ import tempfile
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import NamedTuple, Self
+from typing import Self
 
-from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from ._paths import payload_dir, source_status_dir
@@ -24,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class PiggybackFileInfo:
+class PiggybackMetaData:
     source: HostName
     piggybacked: HostName
     last_update: int
@@ -44,9 +43,10 @@ class PiggybackFileInfo:
         )
 
 
-class PiggybackRawDataInfo(NamedTuple):
-    info: PiggybackFileInfo
-    raw_data: AgentRawData
+@dataclass(frozen=True)
+class PiggybackMessage:
+    meta: PiggybackMetaData
+    raw_data: bytes
 
 
 # ***** Terminology *****
@@ -69,37 +69,33 @@ class PiggybackRawDataInfo(NamedTuple):
 
 def get_piggyback_raw_data(
     piggybacked_hostname: HostAddress, omd_root: Path
-) -> Sequence[PiggybackRawDataInfo]:
-    """Returns the usable piggyback data for the given host
-
-    A list of two element tuples where the first element is
-    the source host name and the second element is the raw
-    piggyback data (byte string)
-    """
-    piggyback_file_infos = _get_payload_meta_data(piggybacked_hostname, omd_root)
-    logger.debug("%s piggyback files for '%s'.", len(piggyback_file_infos), piggybacked_hostname)
+) -> Sequence[PiggybackMessage]:
+    """Returns piggyback messages for the given host"""
+    piggyback_meta_data = _get_payload_meta_data(piggybacked_hostname, omd_root)
+    logger.debug("%s piggyback files for '%s'.", len(piggyback_meta_data), piggybacked_hostname)
 
     piggyback_data = []
-    for file_info in piggyback_file_infos:
-        content_path = _get_piggybacked_file_path(file_info.source, file_info.piggybacked, omd_root)
+    for meta_data in piggyback_meta_data:
+        content_path = _get_piggybacked_file_path(meta_data.source, meta_data.piggybacked, omd_root)
         try:
             # Raw data is always stored as bytes. Later the content is
             # converted to unicode in abstact.py:_parse_info which respects
             # 'encoding' in section options.
-            content = content_path.read_bytes()
+            raw_data = content_path.read_bytes()
 
         except FileNotFoundError:
             # race condition: file was removed between listing and reading
             continue
 
         logger.debug("Read piggyback file '%s'", content_path)
-        piggyback_data.append(PiggybackRawDataInfo(info=file_info, raw_data=AgentRawData(content)))
+        piggyback_data.append(PiggybackMessage(meta_data, raw_data))
+
     return piggyback_data
 
 
 def get_piggybacked_host_with_sources(
     omd_root: Path,
-) -> Mapping[HostAddress, Sequence[PiggybackFileInfo]]:
+) -> Mapping[HostAddress, Sequence[PiggybackMetaData]]:
     """Generates all piggyback pig/piggybacked host pairs"""
     return {
         piggybacked_host: _get_payload_meta_data(piggybacked_host, omd_root)
@@ -188,7 +184,7 @@ def _write_file_with_mtime(
 
 def _get_payload_meta_data(
     piggybacked_hostname: HostName, omd_root: Path
-) -> Sequence[PiggybackFileInfo]:
+) -> Sequence[PiggybackMetaData]:
     """Gather a list of piggyback files to read for further processing.
 
     Please note that there may be multiple parallel calls executing
@@ -205,7 +201,7 @@ def _get_payload_meta_data(
             continue
 
         meta_data.append(
-            PiggybackFileInfo(
+            PiggybackMetaData(
                 source=source,
                 piggybacked=piggybacked_hostname,
                 last_update=mtime,

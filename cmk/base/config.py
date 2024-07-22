@@ -3228,8 +3228,8 @@ class ConfigCache:
 
         now = time.time()
 
-        def _is_usable(data: piggyback.PiggybackRawDataInfo) -> bool:
-            return (now - data.info.last_update) <= piggy_config.max_cache_age(data.info.source)
+        def _is_usable(data: piggyback.PiggybackMessage) -> bool:
+            return (now - data.meta.last_update) <= piggy_config.max_cache_age(data.meta.source)
 
         return any(
             map(_is_usable, piggyback.get_piggyback_raw_data(host_name, cmk.utils.paths.omd_root))

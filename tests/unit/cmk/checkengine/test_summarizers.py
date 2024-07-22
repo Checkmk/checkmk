@@ -17,7 +17,7 @@ from cmk.checkengine.parser import HostSections
 from cmk.checkengine.summarize import summarize_failure, summarize_piggyback, summarize_success
 
 from cmk.ccc.exceptions import MKAgentError, MKTimeout
-from cmk.piggyback import PiggybackFileInfo
+from cmk.piggyback import PiggybackMetaData
 
 
 class TestAgentSummarizer:
@@ -75,7 +75,7 @@ class TestPiggybackSummarizer:
                 {
                     SectionName("piggyback_source_summary"): [
                         [
-                            PiggybackFileInfo(
+                            PiggybackMetaData(
                                 source=HostAddress("source"),
                                 piggybacked=HostName("hostname"),
                                 last_update=now - 20,
@@ -102,7 +102,7 @@ class TestPiggybackSummarizer:
                 {
                     SectionName("piggyback_source_summary"): [
                         [
-                            PiggybackFileInfo(
+                            PiggybackMetaData(
                                 source=HostAddress("source"),
                                 piggybacked=HostName("hostname"),
                                 last_update=now - 2,
@@ -129,7 +129,7 @@ class TestPiggybackSummarizer:
                 {
                     SectionName("piggyback_source_summary"): [
                         [
-                            PiggybackFileInfo(
+                            PiggybackMetaData(
                                 source=HostAddress("source"),
                                 piggybacked=HostName("hostname"),
                                 last_update=now - 2,

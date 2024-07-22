@@ -10,11 +10,10 @@ from wsgiref.types import WSGIApplication
 import flask
 import werkzeug
 from flask import Blueprint, current_app, redirect, Response
-from flask.blueprints import BlueprintSetupState
 from werkzeug.exceptions import BadRequest
 from werkzeug.security import safe_join
 
-from cmk.gui import hooks, main_modules, sites
+from cmk.gui import hooks, sites
 from cmk.gui.http import request
 from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.wsgi.applications import CheckmkApp
@@ -36,12 +35,6 @@ checkmk = Blueprint(
 @checkmk.before_app_request
 def before_app_request() -> None:
     set_global_vars()
-
-
-@checkmk.record_once
-def first_request(state: BlueprintSetupState) -> None:
-    # Will be called once on setup-time.
-    main_modules.load_plugins()
 
 
 @checkmk.before_request

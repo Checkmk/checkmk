@@ -8,12 +8,11 @@ import functools
 from wsgiref.types import WSGIApplication
 
 from flask import Blueprint, current_app, make_response, Response, send_from_directory
-from flask.blueprints import BlueprintSetupState
 
 from cmk.utils import paths
 from cmk.utils.paths import omd_root
 
-from cmk.gui import hooks, main_modules, sites
+from cmk.gui import hooks, sites
 from cmk.gui.wsgi.applications import CheckmkRESTAPI
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.gui.wsgi.middleware import OverrideRequestMethod
@@ -35,12 +34,6 @@ def app_instance(debug: bool) -> CheckmkRESTAPI:
     app = CheckmkRESTAPI(debug=debug)
     app.wsgi_app = OverrideRequestMethod(app.wsgi_app)  # type: ignore[method-assign]
     return app
-
-
-@rest_api.record_once
-def rest_api_first_request(state: BlueprintSetupState) -> None:
-    # Will be called once on setup-time.
-    main_modules.load_plugins()
 
 
 @rest_api.before_request

@@ -567,7 +567,6 @@ def _active_check_preview_rows(
     )
     active_check_config = server_side_calls.ActiveCheck(
         load_active_checks()[1],
-        config.active_check_info,
         host_name,
         config.get_ssc_host_config(
             host_name,
@@ -582,7 +581,6 @@ def _active_check_preview_rows(
         host_attrs,
         config.http_proxies,
         make_final_service_name,
-        config.use_new_descriptions_for,
         cmk.utils.password_store.load(password_store_file),
         password_store_file,
     )
@@ -1523,7 +1521,6 @@ class AutomationAnalyseServices(Automation):
         )
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
-            config.active_check_info,
             host_name,
             config.get_ssc_host_config(
                 host_name,
@@ -1538,7 +1535,6 @@ class AutomationAnalyseServices(Automation):
             host_attrs,
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
-            config.use_new_descriptions_for,
             cmk.utils.password_store.load(password_store_file),
             password_store_file,
         )
@@ -2593,7 +2589,6 @@ class AutomationActiveCheck(Automation):
         )
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
-            config.active_check_info,
             host_name,
             config.get_ssc_host_config(
                 host_name,
@@ -2608,7 +2603,6 @@ class AutomationActiveCheck(Automation):
             host_attrs,
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
-            config.use_new_descriptions_for,
             cmk.utils.password_store.load(password_store_file),
             password_store_file,
         )

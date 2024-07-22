@@ -483,7 +483,6 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
     )
     active_check_config = server_side_calls.ActiveCheck(
         server_side_calls.load_active_checks()[1],
-        config.active_check_info,
         hostname,
         config.get_ssc_host_config(
             hostname,
@@ -498,7 +497,6 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         host_attrs,
         config.http_proxies,
         lambda x: config.get_final_service_description(x, translations),
-        config.use_new_descriptions_for,
         stored_passwords,
         password_store.core_password_store_path(LATEST_CONFIG),
         escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),

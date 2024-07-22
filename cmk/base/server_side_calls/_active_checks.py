@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Container, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
 
 import cmk.utils.paths
 from cmk.utils import config_warnings, password_store
@@ -21,55 +20,7 @@ from cmk.server_side_calls_backend.config_processing import (
     ProxyConfig,
 )
 
-from ._commons import commandline_arguments, replace_macros, replace_passwords
-
-
-class InvalidPluginInfoError(Exception):
-    pass
-
-
-@dataclass(frozen=True)
-class HostAddressConfiguration:
-    hostname: str
-    host_address: str
-    alias: str
-    ipv4address: str | None
-    ipv6address: str | None
-    indexed_ipv4addresses: dict[str, str]
-    indexed_ipv6addresses: dict[str, str]
-
-
-@dataclass(frozen=True)
-class PluginInfo:
-    command_line: str
-    argument_function: Callable[[object], Sequence[str]] | None = None
-    service_description: Callable[[object], str] | None = None
-    service_generator: (
-        Callable[[HostAddressConfiguration, object], Iterator[tuple[str, str]]] | None
-    ) = None
-
-
-def _get_host_address_config(
-    host_name: str, host_attrs: Mapping[str, str]
-) -> HostAddressConfiguration:
-    def _get_indexed_addresses(
-        host_attrs: Mapping[str, str], address_family: Literal["4", "6"]
-    ) -> Iterator[tuple[str, str]]:
-        for name, address in host_attrs.items():
-            address_template = f"_ADDRESSES_{address_family}_"
-            if address_template in name:
-                index = name.removeprefix(address_template)
-                yield f"$_HOSTADDRESSES_{address_family}_{index}$", address
-
-    return HostAddressConfiguration(
-        hostname=host_name,
-        host_address=host_attrs["address"],
-        alias=host_attrs["alias"],
-        ipv4address=host_attrs.get("_ADDRESS_4"),
-        ipv6address=host_attrs.get("_ADDRESS_6"),
-        indexed_ipv4addresses=dict(_get_indexed_addresses(host_attrs, "4")),
-        indexed_ipv6addresses=dict(_get_indexed_addresses(host_attrs, "6")),
-    )
+from ._commons import replace_passwords
 
 
 # This class can probably be consolidated to have fewer fields.
@@ -105,20 +56,17 @@ class ActiveCheck:
     def __init__(
         self,
         plugins: Mapping[PluginLocation, ActiveCheckConfig],
-        legacy_plugins: Mapping[str, Mapping[str, Any]],
         host_name: HostName,
         host_config: HostConfig,
         host_attrs: Mapping[str, str],
         http_proxies: Mapping[str, Mapping[str, str]],
         service_name_finalizer: Callable[[ServiceName], ServiceName],
-        use_new_descriptions_for: Container[str],
         stored_passwords: Mapping[str, str],
         password_store_file: Path,
         escape_func: Callable[[str], str] = lambda a: a.replace("!", "\\!"),
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
-        self._legacy_plugins = legacy_plugins
         self.host_name = host_name
         self.host_config = host_config
         self.host_alias = host_attrs["alias"]
@@ -128,7 +76,6 @@ class ActiveCheck:
         self.stored_passwords = stored_passwords or {}
         self.password_store_file = password_store_file
         self.escape_func = escape_func
-        self._use_new_descriptions_for = use_new_descriptions_for
 
     def get_active_service_data(
         self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object] | object]]]
@@ -143,11 +90,6 @@ class ActiveCheck:
 
             try:
                 yield from self._get_service_data(plugin_name, service_iterator)
-            except InvalidPluginInfoError:
-                config_warnings.warn(
-                    f"Invalid configuration (active check: {plugin_name}) on host {self.host_name}: "
-                    f"active check plug-in is missing an argument function or a service name"
-                )
             except Exception as e:
                 if cmk.ccc.debug.enabled():
                     raise
@@ -160,15 +102,6 @@ class ActiveCheck:
         plugin_name: str,
         plugin_params: Sequence[Mapping[str, object] | object],
     ) -> Iterator[tuple[str, str, str, object]] | None:
-        if (plugin_info_dict := self._legacy_plugins.get(plugin_name)) is not None:
-            plugin_info = PluginInfo(
-                command_line=plugin_info_dict["command_line"],
-                argument_function=plugin_info_dict.get("argument_function"),
-                service_description=plugin_info_dict.get("service_description"),
-                service_generator=plugin_info_dict.get("service_generator"),
-            )
-            return self._iterate_legacy_services(plugin_name, plugin_info, plugin_params)
-
         plugin_params = _ensure_mapping_str_object(plugin_params)
         if (active_check := self._plugins.get(plugin_name)) is not None:
             return self._iterate_services(active_check, plugin_params)
@@ -196,18 +129,6 @@ class ActiveCheck:
                 )
                 command_line = f"check_{active_check.name} {arguments}"
                 yield service.service_description, arguments, command_line, conf_dict
-
-    def _iterate_legacy_services(
-        self,
-        plugin_name: str,
-        plugin_info: PluginInfo,
-        plugin_params: Sequence[object],
-    ) -> Iterator[tuple[str, str, str, object]]:
-        for params in plugin_params:
-            for desc, args in self._iter_active_check_services(plugin_name, plugin_info, params):
-                args_without_macros = replace_macros(args, self.host_config.macros)
-                command_line = plugin_info.command_line.replace("$ARG1$", args_without_macros)
-                yield desc, args_without_macros, command_line, params
 
     def _get_service_data(
         self,
@@ -264,49 +185,6 @@ class ActiveCheck:
         )
         return command, detected_executable, " ".join((detected_executable, *args))
 
-    def _active_check_service_description(
-        self,
-        plugin_info: PluginInfo,
-        params: object,
-    ) -> ServiceName:
-        if not plugin_info.service_description:
-            raise InvalidPluginInfoError
-
-        description = (
-            plugin_info.service_description(params)
-            .replace("$HOSTNAME$", self.host_name)
-            .replace("$HOSTALIAS$", self.host_alias)
-        )
-
-        return self._service_name_finalizer(description)
-
-    def _iter_active_check_services(
-        self,
-        plugin_name: str,
-        plugin_info: PluginInfo,
-        params: object,
-    ) -> Iterator[tuple[str, str]]:
-        if plugin_info.service_generator:
-            host_config = _get_host_address_config(self.host_name, self.host_attrs)
-
-            for desc, args in plugin_info.service_generator(host_config, params):
-                yield str(desc), str(args)
-            return
-
-        description = self._active_check_service_description(plugin_info, params)
-
-        if not plugin_info.argument_function:
-            raise InvalidPluginInfoError
-
-        arguments = commandline_arguments(
-            self.host_name,
-            description,
-            plugin_info.argument_function(params),
-            self.stored_passwords,
-            self.password_store_file,
-        )
-        yield description, arguments
-
     def get_active_service_descriptions(
         self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object] | object]]]
     ) -> Iterator[ActiveServiceDescription]:
@@ -320,12 +198,6 @@ class ActiveCheck:
 
             try:
                 yield from service_iterator
-            except InvalidPluginInfoError:
-                config_warnings.warn(
-                    f"Invalid configuration (active check: {plugin_name}) on host {self.host_name}: "
-                    f"active check plug-in is missing an argument function or a service name"
-                )
-                continue
             except Exception as e:
                 if cmk.ccc.debug.enabled():
                     raise
@@ -338,39 +210,11 @@ class ActiveCheck:
         plugin_name: str,
         plugin_params: Sequence[Mapping[str, object] | object],
     ) -> Iterator[ActiveServiceDescription] | None:
-        if (plugin_info_dict := self._legacy_plugins.get(plugin_name)) is not None:
-            plugin_info = PluginInfo(
-                command_line=plugin_info_dict["command_line"],
-                argument_function=plugin_info_dict.get("argument_function"),
-                service_description=plugin_info_dict.get("service_description"),
-                service_generator=plugin_info_dict.get("service_generator"),
-            )
-            return self._iterate_legacy_service_descriptions(
-                plugin_name, plugin_info, plugin_params
-            )
-
         plugin_params = _ensure_mapping_str_object(plugin_params)
         if (active_check := self._plugins.get(plugin_name)) is not None:
             return self._iterate_service_descriptions(active_check, plugin_params)
 
         return None
-
-    def _iterate_legacy_service_descriptions(
-        self,
-        plugin_name: str,
-        plugin_info: PluginInfo,
-        plugin_params: Sequence[Mapping[str, object] | object],
-    ) -> Iterator[ActiveServiceDescription]:
-        for params in plugin_params:
-            if plugin_info.service_generator:
-                host_config = _get_host_address_config(self.host_name, self.host_attrs)
-
-                for description, _ in plugin_info.service_generator(host_config, params):
-                    yield ActiveServiceDescription(plugin_name, str(description), params)
-                return
-
-            description = self._active_check_service_description(plugin_info, params)
-            yield ActiveServiceDescription(plugin_name, str(description), params)
 
     def _iterate_service_descriptions(
         self, active_check: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]

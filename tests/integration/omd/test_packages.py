@@ -90,9 +90,8 @@ MONITORING_PLUGINS = (
     MonitoringPlugin("check_mysql_query"),
     MonitoringPlugin(
         "check_sftp",
-        stream="stderr",
         cmd_line_option="-h",
-        expected="USAGE: check_sftp",
+        expected="usage: check_sftp",
     ),
     MonitoringPlugin(
         "check_mail",

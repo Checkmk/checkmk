@@ -2,141 +2,89 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""check_sftp - Monitor SFTP servers"""
 
-import getopt
+import argparse
 import os
 import sys
 import time
-from typing import NamedTuple, NoReturn
+from collections.abc import Sequence
+from typing import NamedTuple
 
 import paramiko
+from pydantic import BaseModel
 
 from cmk.utils.password_store import replace_passwords
 
 _LOCAL_DIR = "var/check_mk/active_checks/check_sftp"
 
 
-def usage() -> NoReturn:
-    sys.stderr.write(
-        f"""USAGE: check_sftp OPTIONS
-
-OPTIONS:
-  --host HOST                SFTP server address
-  --user USER                Username for sftp login
-  --secret SECRET            Secret/Password for sftp login
-  --port PORT                Alternative port number (default is 22)
-  --get-remote FILE          Path on the remote to the file that should be pulled from server (relative to the remote home)
-  --get-local DIRECTORY      Path where the pulled file should be stored (relative to '{_LOCAL_DIR}' in the site's directory)
-  --put-local FILE           Path to the file to push to server (relative to '{_LOCAL_DIR}' in the site's directory). If the file does not exist, it will be created with a test message.
-  --put-remote DIRECTORY     Path on the remote where the pushed file should be stored (relative to the remote home)
-  --get-timestamp PATH       Path to the file on the remote server for which the timestamp should be checked
-  --timeout SECONDS          Set timeout for connection (default is 10 seconds)
-  --look-for-keys            Search for discoverable keys in the user's "~/.ssh" directory
-  -v, --verbose              Output some more detailed information
-  -h, --help                 Show this help message and exit
-"""
-    )
-    sys.exit(1)
-
-
 class SecurityError(ValueError):
     """Raised when a security issue is detected, such as attempted path traversal."""
 
 
-class Args(NamedTuple):
-    host: None | str
+class Args(BaseModel):
+    host: str
     user: None | str
-    pass_: None | str
+    secret: None | str
     port: int
     get_remote: None | str
     get_local: None | str
     put_local: None | str
     put_remote: None | str
-    timestamp: None | str
+    get_timestamp: None | str
     timeout: float
-    verbose: bool
+    debug: bool
     look_for_keys: bool
 
 
-def parse_arguments(sys_args: list[str]) -> Args:  # pylint: disable=too-many-branches
-    opt_host = None
-    opt_user = None
-    opt_pass = None
-    opt_port = 22
-    opt_get_remote = None
-    opt_get_local = None
-    opt_put_local = None
-    opt_put_remote = None
-    opt_timestamp = None
-    opt_timeout = 10.0
-    opt_verbose = False
-    opt_look_for_keys = False
+def parse_arguments(sys_args: Sequence[str]) -> Args:
 
-    short_options = "hv"
-    long_options = [
-        "host=",
-        "user=",
-        "secret=",
-        "port=",
-        "get-remote=",
-        "get-local=",
-        "put-local=",
-        "put-remote=",
-        "get-timestamp=",
-        "verbose",
-        "help",
-        "timeout=",
-        "look-for-keys",
-    ]
+    parser = argparse.ArgumentParser(prog=__doc__)
 
-    try:
-        opts, _args = getopt.getopt(sys_args, short_options, long_options)
-    except getopt.GetoptError as err:
-        sys.stderr.write("%s\n" % err)
-        sys.exit(1)
-
-    for opt, arg in opts:
-        if opt in ["-h", "--help"]:
-            usage()
-        elif opt in ["--host"]:
-            opt_host = arg
-        elif opt in ["--user"]:
-            opt_user = arg
-        elif opt in ["--secret"]:
-            opt_pass = arg
-        elif opt in ["--port"]:
-            opt_port = int(arg)
-        elif opt in ["--timeout"]:
-            opt_timeout = float(arg)
-        elif opt in ["--put-local"]:
-            opt_put_local = arg
-        elif opt in ["--put-remote"]:
-            opt_put_remote = arg
-        elif opt in ["--get-local"]:
-            opt_get_local = arg
-        elif opt in ["--get-remote"]:
-            opt_get_remote = arg
-        elif opt in ["--get-timestamp"]:
-            opt_timestamp = arg
-        elif opt in ["--look-for-keys"]:
-            opt_look_for_keys = True
-        elif opt in ["-v", "--verbose"]:
-            opt_verbose = True
-
-    return Args(
-        opt_host,
-        opt_user,
-        opt_pass,
-        opt_port,
-        opt_get_remote,
-        opt_get_local,
-        opt_put_local,
-        opt_put_remote,
-        opt_timestamp,
-        opt_timeout,
-        opt_verbose,
-        opt_look_for_keys,
+    parser.add_argument("--host", default="localhost", help="SFTP server address")
+    parser.add_argument("--user", default=None, help="Username for sftp login")
+    parser.add_argument("--secret", default=None, help="Secret/Password for sftp login")
+    parser.add_argument("--port", type=int, default=22, help="Alternative port number")
+    parser.add_argument(
+        "--get-remote",
+        metavar="FILE",
+        default=None,
+        help="Path on the remote to the file that should be pulled from server (relative to the remote home)",
     )
+    parser.add_argument(
+        "--get-local",
+        metavar="DIRECTORY",
+        default=None,
+        help=f"Path where the pulled file should be stored (relative to '{_LOCAL_DIR}' in the site's directory)",
+    )
+    parser.add_argument(
+        "--put-local",
+        metavar="FILE",
+        default=None,
+        help=f"Path to the file to push to server (relative to '{_LOCAL_DIR}' in the site's directory). If the file does not exist, it will be created with a test message.",
+    )
+    parser.add_argument(
+        "--put-remote",
+        metavar="DIRECTORY",
+        default=None,
+        help="Path on the remote where the pushed file should be stored (relative to the remote home)",
+    )
+    parser.add_argument(
+        "--get-timestamp",
+        metavar="PATH",
+        default=None,
+        help="Path to the file on the remote server for which the timestamp should be checked",
+    )
+    parser.add_argument("--timeout", type=float, default=10.0, help="Set timeout for connection")
+    parser.add_argument(
+        "--look-for-keys",
+        action="store_true",
+        help="Search for discoverable keys in the user's '~/.ssh' directory",
+    )
+    parser.add_argument("--debug", action="store_true", help="Raise python exceptions.")
+
+    return Args.model_validate(vars(parser.parse_args(sys_args)))
 
 
 def output_check_result(s: str) -> None:
@@ -157,13 +105,13 @@ class CheckSftp:
 
     def __init__(self, client: paramiko.SSHClient, omd_root: str, args: Args):
         self.omd_root = omd_root
-        self.host: str = args.host or "localhost"
+        self.host: str = args.host
         self.user: str | None = args.user
-        self.pass_: str | None = args.pass_
+        self.pass_: str | None = args.secret
         self.port: int = args.port
         self.timeout: float = args.timeout
         self.look_for_keys: bool = args.look_for_keys
-        self.verbose: bool = args.verbose
+        self.debug: bool = args.debug
 
         self.connection = self.connect(client)
 
@@ -187,7 +135,9 @@ class CheckSftp:
         )
 
         self.timestamp_path: None | str = (
-            os.path.normpath(f"{remote_workdir}/{args.timestamp}") if args.timestamp else None
+            os.path.normpath(f"{remote_workdir}/{args.get_timestamp}")
+            if args.get_timestamp
+            else None
         )
 
     @staticmethod
@@ -279,7 +229,7 @@ class CheckSftp:
                 self.check_file_upload()
                 messages.append("Successfully put file to SFTP server")
             except Exception:
-                if self.verbose:
+                if self.debug:
                     raise
                 status = max(status, 2)
                 messages.append("Could not put file to SFTP server! (!!)")
@@ -289,7 +239,7 @@ class CheckSftp:
                 self.check_file_download()
                 messages.append("Successfully got file from SFTP server")
             except Exception:
-                if self.verbose:
+                if self.debug:
                     raise
                 status = max(status, 2)
                 messages.append("Could not get file from SFTP server! (!!)")
@@ -303,7 +253,7 @@ class CheckSftp:
                     )
                 )
             except Exception:
-                if self.verbose:
+                if self.debug:
                     raise
                 status = max(status, 2)
                 messages.append("Could not get timestamp of file! (!!)")
@@ -325,12 +275,12 @@ def main() -> int:
     try:
         check = CheckSftp(paramiko.SSHClient(), omd_root, args)
     except SecurityError as e:
-        if args.verbose:
+        if args.debug:
             raise
         output_check_result(f"Security issue detected: {e}")
         return 2
     except Exception:
-        if args.verbose:
+        if args.debug:
             raise
         output_check_result("Connection failed!")
         return 2

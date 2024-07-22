@@ -29,7 +29,7 @@ class SFTPParameters(BaseModel, frozen=True):
 
 
 def _make_option(name: str, value: str | int | None) -> tuple[str, ...]:
-    return () if value is None else (f"--{name}={value}",)
+    return () if value is None else (f"--{name}", str(value))
 
 
 def _commands_check_sftp(
@@ -38,19 +38,22 @@ def _commands_check_sftp(
     yield ActiveCheckCommand(
         service_description=params.description or f"SFTP {params.host}",
         command_arguments=(
-            f"--host={params.host}",
-            f"--user={params.user}",
-            params.secret.unsafe("--secret=%s"),
+            "--host",
+            params.host,
+            "--user",
+            params.user,
+            "--secret",
+            params.secret.unsafe(),
             *_make_option("port", params.port),
             *_make_option("timeout", params.timeout),
             *_make_option("get-timestamp", params.timestamp),
             *(
-                (f"--put-local={params.put.local}", f"--put-remote={params.put.remote}")
+                ("--put-local", params.put.local, "--put-remote", params.put.remote)
                 if params.put
                 else ()
             ),
             *(
-                (f"--get-local={params.get.local}", f"--get-remote={params.get.remote}")
+                ("--get-local", params.get.local, "--get-remote", params.get.remote)
                 if params.get
                 else ()
             ),

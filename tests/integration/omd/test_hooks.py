@@ -32,6 +32,7 @@ def test_hooks(site: Site) -> None:
         "TMPFS",
         "TRACE_SEND",
         "TRACE_SEND_TARGET",
+        "RABBITMQ_PORT",
     ]
 
     if not site.version.is_raw_edition():
@@ -44,7 +45,6 @@ def test_hooks(site: Site) -> None:
             "TRACE_RECEIVE",
             "TRACE_RECEIVE_ADDRESS",
             "TRACE_RECEIVE_PORT",
-            "RABBITMQ_PORT",
             "TRACE_JAEGER_UI_PORT",
             "TRACE_JAEGER_ADMIN_PORT",
         ]

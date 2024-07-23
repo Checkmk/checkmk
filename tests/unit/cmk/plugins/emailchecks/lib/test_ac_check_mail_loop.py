@@ -5,22 +5,15 @@
 
 from collections.abc import Sequence
 
-# pylint: disable=protected-access
-from types import ModuleType
-
 import pytest
 
-from tests.unit.import_module_hack import import_module_hack
+from cmk.plugins.emailchecks.lib import check_mail_loop
+from cmk.plugins.emailchecks.lib.utils import _active_check_main_core
 
-from cmk.utils.mailbox import _active_check_main_core
-
-
-@pytest.fixture(name="check_mail_loop", scope="module")
-def fixture_check_mail_loop() -> ModuleType:
-    return import_module_hack("active_checks/check_mail_loop")
+# pylint: disable=protected-access
 
 
-def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop: ModuleType) -> None:
+def test_ac_check_mail_main_loop_failed_to_send_mail() -> None:
     state, info, perf = _active_check_main_core(
         check_mail_loop.create_argument_parser(),
         check_mail_loop.check_mail_roundtrip,
@@ -166,7 +159,6 @@ def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop: ModuleType
     ],
 )
 def test_ac_check_mail_loop(
-    check_mail_loop: ModuleType,
     warning: object,
     critical: int,
     expected_mails: dict[str, object],
@@ -174,7 +166,7 @@ def test_ac_check_mail_loop(
     expected_result: tuple[int, str, Sequence[object]],
 ) -> None:
     state, info, perf = check_mail_loop.check_mails(
-        warning, critical, expected_mails.copy(), fetched_mails.copy()
+        warning, critical, expected_mails.copy(), fetched_mails.copy()  # type: ignore[arg-type]  # FIXME
     )
     e_state, e_info, e_perf = expected_result
     assert state == e_state
@@ -192,11 +184,10 @@ def test_ac_check_mail_loop(
         "RE: Wg: re: subject",
     ],
 )
-def test_regex_pattern(check_mail_loop: ModuleType, subject: str) -> None:
-    assert check_mail_loop.subject_regex(subject).match(f"{subject} 123 45").groups() == (
-        "123",
-        "45",
-    )
+def test_regex_pattern(subject: str) -> None:
+    match = check_mail_loop.subject_regex(subject).match(f"{subject} 123 45")
+    assert match and match.groups() == ("123", "45")
 
 
-_ = __name__ == "__main__" and pytest.main(["-svv", "-T=unit", __file__])
+if __name__ == "__main__":
+    pytest.main(["-svv", "-T=unit", __file__])

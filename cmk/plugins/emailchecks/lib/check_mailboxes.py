@@ -11,7 +11,8 @@ import time
 from getpass import getpass
 
 import cmk.utils.render
-from cmk.utils.mailbox import active_check_main, Args, CheckResult, Mailbox
+
+from cmk.plugins.emailchecks.lib.utils import active_check_main, Args, CheckResult, Mailbox
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
@@ -165,6 +166,6 @@ def check_mailboxes(args: Args) -> CheckResult:
         return 0, "all mailboxes fine", None
 
 
-if __name__ == "__main__":
+def main() -> None:
     logging.getLogger().name = "check_mailboxes"
     active_check_main(create_argument_parser(), check_mailboxes)

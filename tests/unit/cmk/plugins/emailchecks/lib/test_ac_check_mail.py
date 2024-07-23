@@ -10,21 +10,14 @@ from collections.abc import Sequence
 from email import message_from_string
 from email.message import Message as POPIMAPMessage
 from pathlib import Path
-from types import ModuleType
 from typing import NamedTuple
 from unittest import mock
 
 import pytest
 from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
-from tests.unit.import_module_hack import import_module_hack
-
-from cmk.utils.mailbox import _active_check_main_core, MailMessages
-
-
-@pytest.fixture(name="check_mail", scope="module")
-def fixture_check_mail() -> ModuleType:
-    return import_module_hack("active_checks/check_mail")
+from cmk.plugins.emailchecks.lib import check_mail
+from cmk.plugins.emailchecks.lib.utils import _active_check_main_core, MailMessages
 
 
 def create_test_email(subject: str) -> POPIMAPMessage:
@@ -45,12 +38,10 @@ class FakeArgs(NamedTuple):
     connect_timeout: int
 
 
-def test_forward_to_ec_creates_spool_file_in_correct_folder(
-    check_mail: ModuleType, tmp_path: Path
-) -> None:
+def test_forward_to_ec_creates_spool_file_in_correct_folder(tmp_path: Path) -> None:
     with mock.patch.dict("os.environ", {"OMD_ROOT": str(tmp_path)}, clear=True):
         result = check_mail.forward_to_ec(
-            FakeArgs(
+            FakeArgs(  # type: ignore[arg-type] # FIXME
                 forward_method="spool:",
                 forward_host="ut_host",
                 connect_timeout=1,
@@ -70,7 +61,7 @@ def test_forward_to_ec_creates_spool_file_in_correct_folder(
         )
 
 
-def test_ac_check_mail_main_failed_connect(check_mail: ModuleType) -> None:
+def test_ac_check_mail_main_failed_connect() -> None:
     state, info, perf = _active_check_main_core(
         check_mail.create_argument_parser(),
         check_mail.check_mail,
@@ -137,7 +128,6 @@ def test_ac_check_mail_main_failed_connect(check_mail: ModuleType) -> None:
     ],
 )
 def test_ac_check_mail_prepare_messages_for_ec(
-    check_mail: ModuleType,
     mails: MailMessages,
     expected_messages: Sequence[tuple[str, str]],
     protocol: str,
@@ -155,4 +145,5 @@ def test_ac_check_mail_prepare_messages_for_ec(
         assert message.endswith(expected_message)
 
 
-_ = __name__ == "__main__" and pytest.main(["-svv", "-T=unit", __file__])
+if __name__ == "__main__":
+    pytest.main(["-svv", "-T=unit", __file__])

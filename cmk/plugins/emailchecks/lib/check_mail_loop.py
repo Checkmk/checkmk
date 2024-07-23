@@ -17,7 +17,14 @@ from pathlib import Path
 
 from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
-from cmk.utils.mailbox import active_check_main, Args, CheckResult, Mailbox, MailID, Message
+from cmk.plugins.emailchecks.lib.utils import (
+    active_check_main,
+    Args,
+    CheckResult,
+    Mailbox,
+    MailID,
+    Message,
+)
 
 # "<sent-timestamp>-<key>" -> (sent-timestamp, key)
 MailDict = MutableMapping[str, MailID]
@@ -381,6 +388,6 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
     return state, output, perfdata
 
 
-if __name__ == "__main__":
+def main() -> None:
     logging.getLogger().name = "check_mail_loop"
     active_check_main(create_argument_parser(), check_mail_roundtrip)

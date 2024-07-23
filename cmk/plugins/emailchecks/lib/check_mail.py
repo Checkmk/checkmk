@@ -18,7 +18,7 @@ from pathlib import Path
 
 from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
-from cmk.utils.mailbox import (
+from cmk.plugins.emailchecks.lib.utils import (
     active_check_main,
     Args,
     CheckResult,
@@ -272,6 +272,6 @@ def check_mail(args: Args) -> CheckResult:
     return 0, "Successfully logged in to mailbox", None
 
 
-if __name__ == "__main__":
+def main() -> None:
     logging.getLogger().name = "check_mail"
     active_check_main(create_argument_parser(), check_mail)

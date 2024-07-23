@@ -8,7 +8,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.utils.mailbox import parse_arguments
+from cmk.plugins.emailchecks.lib.utils import parse_arguments
 
 Args = argparse.Namespace
 

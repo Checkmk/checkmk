@@ -6,21 +6,13 @@
 import argparse
 from argparse import Namespace
 from collections.abc import Sequence
-from types import ModuleType
 
 import pytest
 
-from tests.unit.import_module_hack import import_module_hack
+from cmk.plugins.emailchecks.lib import check_mailboxes
 
 
-@pytest.fixture(name="check_mailboxes", scope="module")
-def fixture_check_mail() -> ModuleType:
-    return import_module_hack("active_checks/check_mailboxes")
-
-
-def test_parse_arguments_empty_mailbox_arg(
-    capsys: pytest.CaptureFixture[str], check_mailboxes: ModuleType
-) -> None:
+def test_parse_arguments_empty_mailbox_arg(capsys: pytest.CaptureFixture[str]) -> None:
     parser = argparse.ArgumentParser(description="parser")
     argv = [
         "--warn-age-oldest",
@@ -97,9 +89,7 @@ def test_parse_arguments_empty_mailbox_arg(
         ),
     ],
 )
-def test_parse_arguments(
-    argv: Sequence[str], expected_result: Namespace, check_mailboxes: ModuleType
-) -> None:
+def test_parse_arguments(argv: Sequence[str], expected_result: Namespace) -> None:
     parser = argparse.ArgumentParser(description="parser")
     parser = check_mailboxes.create_argument_parser()
     result = parser.parse_args(argv)

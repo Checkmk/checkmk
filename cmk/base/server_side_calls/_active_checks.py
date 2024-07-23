@@ -83,10 +83,11 @@ class ActiveCheck:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
         for plugin_name, plugin_params in active_checks_rules:
-            service_iterator = self._get_service_iterator(plugin_name, plugin_params)
-
-            if not service_iterator:
+            plugin_params = _ensure_mapping_str_object(plugin_params)
+            if (active_check := self._plugins.get(plugin_name)) is None:
                 continue
+
+            service_iterator = self._iterate_services(active_check, plugin_params)
 
             try:
                 yield from self._get_service_data(plugin_name, service_iterator)
@@ -96,17 +97,6 @@ class ActiveCheck:
                 config_warnings.warn(
                     f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
                 )
-
-    def _get_service_iterator(
-        self,
-        plugin_name: str,
-        plugin_params: Sequence[Mapping[str, object] | object],
-    ) -> Iterator[tuple[str, str, str, object]] | None:
-        plugin_params = _ensure_mapping_str_object(plugin_params)
-        if (active_check := self._plugins.get(plugin_name)) is not None:
-            return self._iterate_services(active_check, plugin_params)
-
-        return None
 
     def _iterate_services(
         self, active_check: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
@@ -191,38 +181,22 @@ class ActiveCheck:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
         for plugin_name, plugin_params in active_checks_rules:
-            service_iterator = self._get_service_description_iterator(plugin_name, plugin_params)
-
-            if not service_iterator:
+            plugin_params = _ensure_mapping_str_object(plugin_params)
+            if (active_check := self._plugins.get(plugin_name)) is None:
                 continue
 
             try:
-                yield from service_iterator
+                for desc, _args, _command_line, params in self._iterate_services(
+                    active_check, plugin_params
+                ):
+                    yield ActiveServiceDescription(active_check.name, desc, params)
+
             except Exception as e:
                 if cmk.ccc.debug.enabled():
                     raise
                 config_warnings.warn(
                     f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
                 )
-
-    def _get_service_description_iterator(
-        self,
-        plugin_name: str,
-        plugin_params: Sequence[Mapping[str, object] | object],
-    ) -> Iterator[ActiveServiceDescription] | None:
-        plugin_params = _ensure_mapping_str_object(plugin_params)
-        if (active_check := self._plugins.get(plugin_name)) is not None:
-            return self._iterate_service_descriptions(active_check, plugin_params)
-
-        return None
-
-    def _iterate_service_descriptions(
-        self, active_check: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
-    ) -> Iterator[ActiveServiceDescription]:
-        for desc, _args, _command_line, params in self._iterate_services(
-            active_check, plugin_params
-        ):
-            yield ActiveServiceDescription(active_check.name, desc, params)
 
 
 def _autodetect_plugin(command: str, module_name: str | None) -> str:

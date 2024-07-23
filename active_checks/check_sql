@@ -12,7 +12,7 @@
 # https://help.sap.com/docs/SAP_SQL_Anywhere/a3e900ad39b94d689987e838835f39fe/8157f2236ce21014a9f387041b1c1047.html?locale=en-US&version=17.0
 # as well as the sqlanydb Python DB driver for SqlAnywhere:
 # https://pypi.org/project/sqlanydb/
-"""Check_MK SQL Test"""
+"""Checkmk SQL Database Request Check"""
 import argparse
 import logging
 import os
@@ -157,7 +157,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         required=True,
         help="""Username for database access""",
     )
-    group = parser.add_mutually_exclusive_group()
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--password-reference",
         help="Password store reference of the password for the database access.",
@@ -165,7 +165,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     group.add_argument(
         "-p",
         "--password",
-        required=True,
         help="""Password for database access""",
     )
     parser.add_argument(

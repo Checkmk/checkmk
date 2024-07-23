@@ -12,7 +12,7 @@ from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-i
 factory_settings["azure_agent_info_levels"] = {
     "warning_levels": (1, 10),
     "exception_levels": (1, 1),
-    "remaining_reads_levels_lower": (6000, 3000),
+    "remaining_reads_levels_lower": (125, 50),
     "remaining_reads_unknown_state": 1,
 }
 

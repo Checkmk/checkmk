@@ -1,0 +1,12 @@
+Title: Microsoft Azure: Agent Info - adjust default levels for remaining reads
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1721745177
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+Since Microsoft is changing the way the API requests are rate limited,
+the previous default levels for the remaining API reads where way to
+high.

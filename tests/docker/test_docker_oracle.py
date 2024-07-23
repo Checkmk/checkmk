@@ -37,13 +37,13 @@ logger = logging.getLogger()
 
 
 class OracleDatabase:
-
     def __init__(
         self,
         docker_client: docker.client.DockerClient,
         checkmk: docker.models.containers.Container,
+        *,  # enforce named arguments
+        temp_dir: Path,
         name: str = "oracle",
-        temp_dir: Path = Path("/tmp"),
     ):
         self.docker_client = docker_client
         self.checkmk = checkmk

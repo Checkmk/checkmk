@@ -368,9 +368,9 @@ httplib(
 
 http_archive(
     name = "gtest",
-    sha256 = "e300fcb4dc76f5b06af5f6fff41baac070a49b46ec641e96ee99e15f1292393a",
-    strip_prefix = "googletest-71140c3ca7a87bb1b5b9c9f1500fea8858cce344",
-    url = "https://github.com/google/googletest/archive/71140c3ca7a87bb1b5b9c9f1500fea8858cce344.tar.gz",
+    sha256 = "4911bfedea2a94cbf50ea328b2e9b3bcb0bd03cdc28c3492cc810f77e44b2746",
+    strip_prefix = "googletest-57e107a10ea4ff5d8d31df9e4833f80b414b0dd2",
+    url = "https://github.com/google/googletest/archive/57e107a10ea4ff5d8d31df9e4833f80b414b0dd2.tar.gz",
 )
 
 http_archive(

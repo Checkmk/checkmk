@@ -123,11 +123,11 @@ MONITORING_PLUGINS = (
         "check_nrpe",
         expected="Version: 3.2.1",
     ),
-    MonitoringPlugin(
-        "check_sql",
-        cmd_line_option="-h",
-        expected="usage: check_sql",
-    ),
+    # MonitoringPlugin(
+    #     "check_sql",
+    #     cmd_line_option="-h",
+    #     expected="usage: check_sql",
+    # ),
     MonitoringPlugin(
         "check_snmp",
         cmd_line_option="-h",

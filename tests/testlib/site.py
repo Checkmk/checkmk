@@ -25,7 +25,6 @@ import pytest
 import pytest_check  # type: ignore[import-untyped]
 
 from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
-    cse_create_onboarding_dummies,
     cse_openid_oauth_provider,
 )
 from tests.testlib.openapi_session import CMKOpenApiSession
@@ -1378,9 +1377,6 @@ class SiteFactory:
             return site
 
         site.start()
-
-        if self.version.is_saas_edition():
-            cse_create_onboarding_dummies(site.root)
 
         if prepare_for_tests:
             with (

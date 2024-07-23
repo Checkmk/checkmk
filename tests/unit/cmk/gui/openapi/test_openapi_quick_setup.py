@@ -189,8 +189,8 @@ def test_failing_validate(clients: ClientRegistry) -> None:
             "wrapper_id": [
                 {
                     "location": ["account_name"],
-                    "message": "Expected a <class 'str'>, got <class 'int'>",
-                    "invalid_value": "5",
+                    "message": "Invalid string",
+                    "invalid_value": 5,
                 },
                 {
                     "location": [],

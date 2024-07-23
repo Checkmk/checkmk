@@ -5,7 +5,6 @@
         "packages/neb/",
         "packages/livestatus/",
         "third_party/asio/",
-        "third_party/googletest/",
         "third_party/re2/"
     ]
 }

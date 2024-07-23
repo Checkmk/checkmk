@@ -102,9 +102,6 @@ VARIABLES:
     - NAME: CHANGED_ASIO_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^third_party/asio' || true"
 
-    - NAME: CHANGED_GOOGLETEST_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^third_party/googletest' || true"
-
     - NAME: CHANGED_RE2_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^third_party/re2' || true"
 
@@ -389,7 +386,7 @@ STAGES:
     # files. The ordering is a bit ad hoc, perhaps we should keep the list of
     # steps here in dependency order.
     - NAME: "Package livestatus"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_RE2_FILES
       DIR: "packages/livestatus"
       COMMAND: >
           ../../scripts/run-in-docker.sh "./run --all" &> ${RESULTS}/livestatus.txt
@@ -398,7 +395,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
 
     - NAME: "Package cmc"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_RE2_FILES
       DIR: "packages/cmc"
       COMMAND: >
           ../../scripts/run-in-docker.sh "./run --all" &> ${RESULTS}/cmc.txt
@@ -493,7 +490,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/mk-sql.txt"
 
     - NAME: "Package neb"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_RE2_FILES
       DIR: "packages/neb"
       COMMAND: >
           ../../scripts/run-in-docker.sh "./run --all" &> ${RESULTS}/neb.txt

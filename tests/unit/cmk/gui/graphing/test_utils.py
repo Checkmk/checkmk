@@ -301,7 +301,10 @@ def test__normalize_perf_data(
     ],
 )
 def test_get_graph_templates_1(
-    metric_names: Sequence[str], check_command: str, graph_ids: Sequence[str]
+    metric_names: Sequence[str],
+    check_command: str,
+    graph_ids: Sequence[str],
+    request_context: None,
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
@@ -325,6 +328,7 @@ def test_get_graph_templates_2(
     warn_crit_min_max: tuple[int, int, int, int],
     check_command: str,
     graph_ids: Sequence[str],
+    request_context: None,
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", *warn_crit_min_max) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
@@ -732,6 +736,7 @@ def test_get_graph_templates_with_predictive_metrics(
     predict_lower_metric_names: Sequence[str],
     check_command: str,
     graph_templates: Sequence[GraphTemplate],
+    request_context: None,
 ) -> None:
     perfdata: Perfdata = (
         [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
@@ -1080,7 +1085,11 @@ def test_get_graph_templates_with_predictive_metrics(
         ),
     ],
 )
-def test_conflicting_metrics(metric_names: Sequence[str], graph_ids: Sequence[str]) -> None:
+def test_conflicting_metrics(
+    metric_names: Sequence[str],
+    graph_ids: Sequence[str],
+    request_context: None,
+) -> None:
     # Hard to find all avail metric names of a check plug-in.
     # We test conflicting metrics as following:
     # 1. write test for expected metric names of a graph template if it has "conflicting_metrics"

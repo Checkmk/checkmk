@@ -197,7 +197,7 @@ def test_horizontal_rules_from_thresholds(
     )
 
 
-def test_duplicate_graph_templates() -> None:
+def test_duplicate_graph_templates(request_context: None) -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
     for id_, template in _graph_templates_from_plugins():
         parsed = _parse_graph_template(id_, template)
@@ -216,7 +216,7 @@ def test_duplicate_graph_templates() -> None:
     }
 
 
-def test_graph_template_with_layered_areas() -> None:
+def test_graph_template_with_layered_areas(request_context: None) -> None:
     # area, area, ... -> two layers
     # area, stack, ... -> one layer
     # stack, stack, ... -> one layer

@@ -19,8 +19,8 @@ from cmk.gui.graphing._loader import (
     _TemperatureUnitConverter,
     load_graphing_plugins,
 )
-from cmk.gui.graphing._unit_info import unit_info, UnitInfo
-from cmk.gui.graphing._utils import graph_info, metric_info
+from cmk.gui.graphing._unit_info import UnitInfo
+from cmk.gui.graphing._utils import AutomaticDict, graph_info, metric_info
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -36,40 +36,15 @@ def test_load_graphing_plugins() -> None:
 
 
 def test_metric_duplicates() -> None:
-    assert metric_info == {
-        "temp": {
-            "title": "Temperature",
-            "unit": "c",
-            "color": "16/a",
-        }
-    }
-    assert "c" in list(unit_info.keys())
-    metric_names = {
-        p.name for p in load_graphing_plugins().plugins.values() if isinstance(p, metrics.Metric)
-    }
-    assert not set(metric_info).intersection(metric_names)
+    assert not metric_info
 
 
 def test_perfometers() -> None:
-    assert perfometer_info == [
-        {"type": "logarithmic", "metric": "temp", "half_value": 40.0, "exponent": 1.2}
-    ]
+    assert not perfometer_info
 
 
 def test_graph_duplicates() -> None:
-    assert graph_info == {
-        "temperature": {
-            "title": "Temperature",
-            "metrics": [("temp", "area")],
-            "scalars": ["temp:warn", "temp:crit"],
-        }
-    }
-    graph_names = {
-        p.name
-        for p in load_graphing_plugins().plugins.values()
-        if isinstance(p, (graphs.Graph, graphs.Bidirectional))
-    }
-    assert not set(graph_info).intersection(graph_names)
+    assert graph_info == AutomaticDict()
 
 
 def test_translations_to_be_standalone() -> None:

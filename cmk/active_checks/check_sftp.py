@@ -9,12 +9,13 @@ import os
 import sys
 import time
 from collections.abc import Sequence
+from pathlib import Path
 from typing import NamedTuple
 
 import paramiko
 from pydantic import BaseModel
 
-from cmk.utils.password_store import replace_passwords
+from cmk.utils import password_store
 
 _LOCAL_DIR = "var/check_mk/active_checks/check_sftp"
 
@@ -27,6 +28,7 @@ class Args(BaseModel):
     host: str
     user: None | str
     secret: None | str
+    secret_reference: None | str
     port: int
     get_remote: None | str
     get_local: None | str
@@ -37,6 +39,14 @@ class Args(BaseModel):
     debug: bool
     look_for_keys: bool
 
+    def resolve_secret(self) -> None | str:
+        if self.secret is not None:
+            return self.secret
+        if self.secret_reference is not None:
+            secret_id, file = self.secret_reference.split(":", 1)
+            return password_store.lookup(Path(file), secret_id)
+        return None
+
 
 def parse_arguments(sys_args: Sequence[str]) -> Args:
 
@@ -44,7 +54,15 @@ def parse_arguments(sys_args: Sequence[str]) -> Args:
 
     parser.add_argument("--host", default="localhost", help="SFTP server address")
     parser.add_argument("--user", default=None, help="Username for sftp login")
-    parser.add_argument("--secret", default=None, help="Secret/Password for sftp login")
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--secret", default=None, help="Secret for sftp login")
+    group.add_argument(
+        "--secret-reference",
+        default=None,
+        help="Password store reference to a secret for sftp login",
+    )
+
     parser.add_argument("--port", type=int, default=22, help="Alternative port number")
     parser.add_argument(
         "--get-remote",
@@ -107,7 +125,7 @@ class CheckSftp:
         self.omd_root = omd_root
         self.host: str = args.host
         self.user: str | None = args.user
-        self.pass_: str | None = args.secret
+        self.pass_: str | None = args.resolve_secret()
         self.port: int = args.port
         self.timeout: float = args.timeout
         self.look_for_keys: bool = args.look_for_keys
@@ -269,7 +287,6 @@ def main() -> int:
         sys.stderr.write("This check must be executed from within a site\n")
         sys.exit(1)
 
-    replace_passwords()
     args = parse_arguments(sys.argv[1:])
 
     try:

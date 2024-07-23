@@ -1,6 +1,5 @@
 workspace(name = "omd_packages")
 
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 load("//omd/packages/toolchain:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
@@ -367,11 +366,11 @@ httplib(
     version = "0.13.3",
 )
 
-load("//omd/packages/googletest:gtest_http.bzl", "googletest")
-
-googletest(
-    # Googletest doesn't provide releases anymore, it uses a "Abseil Live at Head philosophy" nowadays.
-    commit = "71140c3ca7a87bb1b5b9c9f1500fea8858cce344",
+http_archive(
+    name = "gtest",
+    sha256 = "e300fcb4dc76f5b06af5f6fff41baac070a49b46ec641e96ee99e15f1292393a",
+    strip_prefix = "googletest-71140c3ca7a87bb1b5b9c9f1500fea8858cce344",
+    url = "https://github.com/google/googletest/archive/71140c3ca7a87bb1b5b9c9f1500fea8858cce344.tar.gz",
 )
 
 http_archive(
@@ -407,10 +406,11 @@ load("@rules_proto//proto:toolchains.bzl", "rules_proto_toolchains")
 
 rules_proto_toolchains()
 
-git_repository(
+http_archive(
     name = "com_google_protobuf",
-    commit = "3d9f7c430a5ae1385512908801492d4421c3cdb7",  # v27.1
-    remote = "https://github.com/protocolbuffers/protobuf.git",
+    sha256 = "76637ddb08533dc6bffbd382e2614b119b8f84d16a025f7516cf2f833d103c12",
+    strip_prefix = "protobuf-3d9f7c430a5ae1385512908801492d4421c3cdb7",
+    url = "https://github.com/protocolbuffers/protobuf/archive/3d9f7c430a5ae1385512908801492d4421c3cdb7.tar.gz",
 )
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
@@ -432,8 +432,9 @@ jaeger(
     version_str = JAEGER_VERSION,
 )
 
-git_repository(
+http_archive(
     name = "bazel_clang_tidy",
-    commit = "43bef6852a433f3b2a6b001daecc8bc91d791b92",
-    remote = "https://github.com/erenon/bazel_clang_tidy.git",
+    sha256 = "3f31e513bba1cba41ace515c3a0474b7793abc6f10ed5f6e08fa6e6b6d2411b0",
+    strip_prefix = "bazel_clang_tidy-bff5c59c843221b05ef0e37cef089ecc9d24e7da",
+    url = "https://github.com/dayfoo/bazel_clang_tidy/archive/bff5c59c843221b05ef0e37cef089ecc9d24e7da.tar.gz",
 )

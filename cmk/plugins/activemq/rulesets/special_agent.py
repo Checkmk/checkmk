@@ -46,6 +46,7 @@ def _parameter_form() -> Dictionary:
                         SingleChoiceElement("http", Title("HTTP")),
                         SingleChoiceElement("https", Title("HTTPS")),
                     ],
+                    prefill=DefaultValue("http"),
                 ),
             ),
             "use_piggyback": DictElement(

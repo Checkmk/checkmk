@@ -139,6 +139,7 @@ def _value_configuration_fields() -> dict[str, DictElement]:
             required=True,
             parameter_form=CascadingSingleChoice(
                 title=Title("The Area"),
+                prefill=DefaultValue("db"),
                 elements=[
                     CascadingSingleChoiceElement(
                         name="db",
@@ -192,6 +193,7 @@ def _value_configuration_fields() -> dict[str, DictElement]:
             required=True,
             parameter_form=CascadingSingleChoice(
                 title=Title("Datatype"),
+                prefill=DefaultValue("dint"),
                 elements=[
                     CascadingSingleChoiceElement(
                         name="dint",
@@ -233,6 +235,7 @@ def _value_configuration_fields() -> dict[str, DictElement]:
             required=True,
             parameter_form=SingleChoice(
                 title=Title("Type of the value"),
+                prefill=DefaultValue("unclassified"),
                 elements=[
                     SingleChoiceElement(
                         name="unclassified",

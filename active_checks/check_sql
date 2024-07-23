@@ -53,9 +53,8 @@ def sql_cmd_piece(values: str) -> str:
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     """Parse commandline arguments (incl password store and logging set up)"""
-    this = str(os.path.basename(argv[0]))
     help_fmt = argparse.RawDescriptionHelpFormatter
-    parser = argparse.ArgumentParser(prog=this, description=__doc__, formatter_class=help_fmt)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=help_fmt)
     # flags
     parser.add_argument(
         "-v",
@@ -157,7 +156,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         required=True,
         help="""Username for database access""",
     )
-    group = parser.add_mutually_exclusive_group(required=True)
+    group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "--password-reference",
         help="Password store reference of the password for the database access.",

@@ -5,6 +5,7 @@
 
 import os
 import subprocess
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -20,13 +21,27 @@ StreamType = Literal["stderr", "stdout"]
 class MonitoringPlugin:
     binary_name: str
     path: str = "lib/nagios/plugins"
-    stream: StreamType = "stdout"
     cmd_line_option: str = "-V"
     expected: str = "v2.3.3"
 
 
-# Not all plugins have the same cmd_line options nor using the same stream...
-MONITORING_PLUGINS = (
+@dataclass(frozen=True)
+class CheckmkActiveCheck:
+    binary_name: str
+    path: str = "lib/nagios/plugins"
+
+    @property
+    def cmd_line_option(self) -> str:
+        return "-h"
+
+    @property
+    def expected(self) -> str:
+        return f"usage: {self.binary_name} "
+
+
+Plugin = MonitoringPlugin | CheckmkActiveCheck
+
+MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("check_apt"),
     MonitoringPlugin("check_breeze"),
     MonitoringPlugin("check_by_ssh"),
@@ -88,31 +103,11 @@ MONITORING_PLUGINS = (
     MonitoringPlugin("urlize"),
     MonitoringPlugin("check_mysql"),
     MonitoringPlugin("check_mysql_query"),
-    MonitoringPlugin(
-        "check_sftp",
-        cmd_line_option="-h",
-        expected="usage: check_sftp",
-    ),
-    MonitoringPlugin(
-        "check_mail",
-        cmd_line_option="-h",
-        expected="usage: check_mail",
-    ),
-    MonitoringPlugin(
-        "check_mailboxes",
-        cmd_line_option="-h",
-        expected="usage: check_mailboxes",
-    ),
-    MonitoringPlugin(
-        "check_mail_loop",
-        cmd_line_option="-h",
-        expected="usage: check_mail_loop",
-    ),
-    MonitoringPlugin(
-        "check_form_submit",
-        cmd_line_option="-h",
-        expected="usage: check_form_submit",
-    ),
+    CheckmkActiveCheck("check_sftp"),
+    CheckmkActiveCheck("check_mail"),
+    CheckmkActiveCheck("check_mailboxes"),
+    CheckmkActiveCheck("check_mail_loop"),
+    CheckmkActiveCheck("check_form_submit"),
     MonitoringPlugin(
         "check_mkevents",
         cmd_line_option="",
@@ -122,73 +117,35 @@ MONITORING_PLUGINS = (
         "check_nrpe",
         expected="Version: 3.2.1",
     ),
-    # MonitoringPlugin(
-    #     "check_sql",
-    #     cmd_line_option="-h",
-    #     expected="usage: check_sql",
-    # ),
-    MonitoringPlugin(
-        "check_snmp",
-        cmd_line_option="-h",
-    ),
-    MonitoringPlugin(
-        "check_notify_count",
-        stream="stderr",
-        cmd_line_option="-h",
-        expected="USAGE: check_notify_count",
-    ),
-    MonitoringPlugin(
-        "check_traceroute",
-        cmd_line_option="-h",
-        expected="check_traceroute",
-    ),
-    MonitoringPlugin(
+    CheckmkActiveCheck("check_sql"),
+    MonitoringPlugin("check_snmp"),
+    CheckmkActiveCheck("check_notify_count"),
+    CheckmkActiveCheck("check_traceroute"),
+    CheckmkActiveCheck(
         "check_disk_smb",
         path="lib/check_mk/plugins/smb/libexec",
-        cmd_line_option="-h",
-        expected="usage: check_disk_smb",
     ),
-    MonitoringPlugin(
-        "check_uniserv",
-        cmd_line_option="-h",
-        expected="Usage: check_uniserv",
-    ),
-    MonitoringPlugin(
-        "check_bi_aggr",
-        cmd_line_option="-h",
-        expected="usage: check_bi_aggr",
-    ),
+    CheckmkActiveCheck("check_uniserv"),
+    CheckmkActiveCheck("check_bi_aggr"),
 )
 
 
 @pytest.mark.parametrize(
-    "cmd_line,stream_type,expected",
-    (
-        pytest.param(
-            [os.path.join(p.path, p.binary_name), p.cmd_line_option],
-            p.stream,
-            p.expected,
-            id=f"{p.binary_name}",
-        )
-        for p in MONITORING_PLUGINS
-    ),
+    "plugin",
+    (pytest.param(p, id=f"{p.binary_name}") for p in MONITORING_PLUGINS),
 )
-def test_monitoring_plugins_can_be_executed(
-    cmd_line: list[str],
-    expected: str,
-    stream_type: StreamType,
-    site: Site,
-) -> None:
-    abort_if_not_containerized("check_mysql" in cmd_line[0])
+def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
+    abort_if_not_containerized(
+        plugin.binary_name == "check_mysql"
+    )  # What? Why? Is printing the version dangerous?
 
-    cmd_line[0] = f"{site.root}/{cmd_line[0]}"
+    cmd_line = [os.path.join(site.root, plugin.path, plugin.binary_name), plugin.cmd_line_option]
 
     p = site.execute(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert p.stdout and p.stderr  # for mypy
 
-    stream = {"stdout": p.stdout, "stderr": p.stderr}[stream_type]
-
-    actual = stream.read() if stream else ""
-    assert expected in actual
+    assert plugin.expected in p.stdout.read()
+    assert not p.stderr.read()
 
 
 def test_heirloommailx(site: Site) -> None:

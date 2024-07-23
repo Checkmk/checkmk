@@ -378,12 +378,15 @@ def _oracle(
     checkmk: docker.models.containers.Container,
     tmp_path_session: Path,
 ) -> Iterator[OracleDatabase]:
-    yield OracleDatabase(
+    with OracleDatabase(
         client,
         checkmk,
         name="oracle",
         temp_dir=tmp_path_session,
-    )
+    ) as oracle_db:
+        # Make use of the contextmanager logic to make sure that a teardown of
+        # the database happens after the tests end.
+        yield oracle_db
 
 
 @skip_if_not_enterprise_edition

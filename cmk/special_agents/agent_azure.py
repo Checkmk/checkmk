@@ -377,21 +377,12 @@ class ApiErrorAuthorizationRequestDenied(ApiError):
     pass
 
 
-class ApiErrorFactory:
-    _ERROR_CLASS_BY_CODE: dict[str, type[ApiError]] = {
-        "Authorization_RequestDenied": ApiErrorAuthorizationRequestDenied
-    }
-
-    # Setting the type of `error_data` to Any because it is data fetched remotely and we want to
-    # handle any type of data in this method
-    @staticmethod
-    def error_from_data(error_data: Any) -> ApiError:
-        try:
-            error_code = error_data["code"]
-            error_cls = ApiErrorFactory._ERROR_CLASS_BY_CODE.get(error_code, ApiError)
-            return error_cls(error_data.get("message", error_data))
-        except Exception:
-            return ApiError(error_data)
+def _make_exception(error_data: object) -> ApiError:
+    match error_data:
+        case {"code": "Authorization_RequestDenied", **rest}:
+            return ApiErrorAuthorizationRequestDenied(**rest.get("message", error_data))
+        case other:
+            return ApiError(other)
 
 
 class _AuthorityURLs(NamedTuple):
@@ -591,7 +582,7 @@ class BaseApiClient(abc.ABC):
             return json_data[key]
         except KeyError:
             error = json_data.get("error", json_data)
-            raise ApiErrorFactory.error_from_data(error)
+            raise _make_exception(error)
 
 
 class GraphApiClient(BaseApiClient):

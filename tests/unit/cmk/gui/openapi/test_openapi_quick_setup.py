@@ -5,6 +5,8 @@
 
 from collections.abc import Mapping, Sequence
 
+import pytest
+
 from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils.quick_setup.definitions import (
@@ -16,21 +18,18 @@ from cmk.utils.quick_setup.definitions import (
     QuickSetupStage,
     QuickSetupValidationError,
     StageId,
+    UniqueBundleIDStr,
+    UniqueFormSpecIDStr,
     ValidationErrorMap,
 )
-from cmk.utils.quick_setup.widgets import FormSpecId, FormSpecWrapper
+from cmk.utils.quick_setup.widgets import FormSpecId
 
-from cmk.gui.quick_setup.to_frontend import form_spec_recaps, form_spec_validate
+from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
+from cmk.gui.quick_setup.to_frontend import form_spec_recaps, form_spec_validate, validate_unique_id
+from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import (
-    DictElement,
-    Dictionary,
-    FieldSize,
-    FormSpec,
-    String,
-    validators,
-)
+from cmk.rulesets.v1.form_specs import FormSpec
 
 
 def register_quick_setup(setup_stages: Sequence[QuickSetupStage] | None = None) -> None:
@@ -51,21 +50,7 @@ def test_quick_setup_get(clients: ClientRegistry) -> None:
                 stage_id=StageId(1),
                 title="stage1",
                 configure_components=[
-                    FormSpecWrapper(
-                        id=FormSpecId("wrapper_id"),
-                        form_spec=Dictionary(
-                            elements={
-                                "account_name": DictElement(
-                                    parameter_form=String(
-                                        title=Title("test account name"),
-                                        field_size=FieldSize.MEDIUM,
-                                        custom_validate=(validators.LengthInRange(min_value=1),),
-                                    ),
-                                    required=True,
-                                )
-                            }
-                        ),
-                    ),
+                    unique_id_formspec_wrapper(Title("account name")),
                 ],
                 validators=[form_spec_validate],
                 recap=[],
@@ -86,21 +71,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
                 stage_id=StageId(1),
                 title="stage1",
                 configure_components=[
-                    FormSpecWrapper(
-                        id=FormSpecId("wrapper_id"),
-                        form_spec=Dictionary(
-                            elements={
-                                "account_name": DictElement(
-                                    parameter_form=String(
-                                        title=Title("test account name"),
-                                        field_size=FieldSize.MEDIUM,
-                                        custom_validate=(validators.LengthInRange(min_value=1),),
-                                    ),
-                                    required=True,
-                                )
-                            }
-                        ),
-                    ),
+                    unique_id_formspec_wrapper(Title("account name")),
                 ],
                 validators=[form_spec_validate],
                 recap=[form_spec_recaps],
@@ -121,7 +92,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
         stages=[
             {
                 "stage_id": 1,
-                "form_data": {"wrapper_id": {"account_name": "test_account_name"}},
+                "form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "test_account_name"}},
             },
         ],
     )
@@ -151,23 +122,9 @@ def test_failing_validate(clients: ClientRegistry) -> None:
         setup_stages=[
             QuickSetupStage(
                 stage_id=StageId(1),
-                title="stage2",
+                title="stage1",
                 configure_components=[
-                    FormSpecWrapper(
-                        id=FormSpecId("wrapper_id"),
-                        form_spec=Dictionary(
-                            elements={
-                                "account_name": DictElement(
-                                    parameter_form=String(
-                                        title=Title("test account name"),
-                                        field_size=FieldSize.MEDIUM,
-                                        custom_validate=(validators.LengthInRange(min_value=1),),
-                                    ),
-                                    required=True,
-                                )
-                            }
-                        ),
-                    ),
+                    unique_id_formspec_wrapper(Title("account name")),
                 ],
                 validators=[form_spec_validate, _form_spec_extra_validate],
                 recap=[],
@@ -180,7 +137,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
         stages=[
             {
                 "stage_id": 1,
-                "form_data": {"wrapper_id": {"account_name": 5}},
+                "form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: 5}},
             },
         ],
         expect_ok=False,
@@ -189,9 +146,9 @@ def test_failing_validate(clients: ClientRegistry) -> None:
     assert resp.json["stage_id"] == 1
     assert resp.json["errors"] == {
         "formspec_errors": {
-            "wrapper_id": [
+            "formspec_unique_id": [
                 {
-                    "location": ["account_name"],
+                    "location": [UniqueBundleIDStr],
                     "message": "Invalid string",
                     "invalid_value": 5,
                 },
@@ -208,10 +165,57 @@ def test_failing_validate(clients: ClientRegistry) -> None:
 
 
 def test_quick_setup_save(clients: ClientRegistry) -> None:
-    register_quick_setup()
+    register_quick_setup(
+        setup_stages=[
+            QuickSetupStage(
+                stage_id=StageId(1),
+                title="stage1",
+                configure_components=[
+                    unique_id_formspec_wrapper(Title("account name")),
+                ],
+                validators=[],
+                recap=[],
+                button_txt="Next",
+            ),
+        ],
+    )
     resp = clients.QuickSetup.complete_quick_setup(
         quick_setup_id="quick_setup_test",
         payload={"stages": []},
     )
     resp.assert_status_code(201)
     assert resp.json == {"redirect_url": "http://save/url"}
+
+
+def test_unique_id_must_be_unique(
+    clients: ClientRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(ConfigBundleStore, "load_for_reading", lambda _: {"I should be unique": {}})
+
+    register_quick_setup(
+        setup_stages=[
+            QuickSetupStage(
+                stage_id=StageId(1),
+                title="stage1",
+                configure_components=[
+                    unique_id_formspec_wrapper(Title("account name")),
+                ],
+                validators=[validate_unique_id],
+                recap=[form_spec_recaps],
+                button_txt="Next",
+            ),
+        ],
+    )
+    resp = clients.QuickSetup.send_stage_retrieve_next(
+        quick_setup_id="quick_setup_test",
+        stages=[
+            {
+                "stage_id": 1,
+                "form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "I should be unique"}},
+            },
+        ],
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert len(resp.json["errors"]["stage_errors"]) == 1

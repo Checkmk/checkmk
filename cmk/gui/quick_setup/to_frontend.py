@@ -5,7 +5,7 @@
 
 from collections.abc import Iterator, MutableSequence, Sequence
 from dataclasses import asdict
-from typing import cast, Mapping
+from typing import Any, cast, Mapping
 
 from cmk.utils.quick_setup.definitions import (
     Errors,
@@ -19,6 +19,7 @@ from cmk.utils.quick_setup.definitions import (
     QuickSetupStage,
     Stage,
     StageId,
+    UniqueBundleIDStr,
     ValidationErrorMap,
 )
 from cmk.utils.quick_setup.widgets import (
@@ -32,6 +33,7 @@ from cmk.utils.quick_setup.widgets import (
 
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
 from cmk.gui.form_specs.vue.type_defs import DataOrigin
+from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
@@ -103,6 +105,37 @@ def build_expected_formspec_map(stages: Sequence[QuickSetupStage]) -> Mapping[Fo
         for stage in stages
         for widget in _flatten_formspec_wrappers(stage.configure_components)
     }
+
+
+def _find_unique_id(form_data: Any, target_key: str) -> None | str:
+    if isinstance(form_data, dict):
+        for key, value in form_data.items():
+            if key == target_key:
+                return value
+            result = _find_unique_id(value, target_key)
+            if result is not None:
+                return result
+        return None
+    if isinstance(form_data, list):
+        for item in form_data:
+            result = _find_unique_id(item, target_key)
+            if result is not None:
+                return result
+    return None
+
+
+def validate_unique_id(
+    stages_form_data: Sequence[FormData],
+    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
+) -> tuple[ValidationErrorMap, GeneralStageErrors]:
+    bundle_id = _find_unique_id(stages_form_data[-1], UniqueBundleIDStr)
+    if bundle_id is None:
+        return {}, [f"Expected the key '{UniqueBundleIDStr}' in the form data"]
+
+    if bundle_id in ConfigBundleStore().load_for_reading():
+        return {}, [f'Configuration bundle "{bundle_id}" already exists.']
+
+    return {}, []
 
 
 def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:

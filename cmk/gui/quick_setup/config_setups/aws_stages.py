@@ -20,7 +20,8 @@ from cmk.utils.quick_setup.widgets import (
     Text,
 )
 
-from cmk.gui.quick_setup.to_frontend import form_spec_recaps, form_spec_validate
+from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
+from cmk.gui.quick_setup.to_frontend import form_spec_recaps, form_spec_validate, validate_unique_id
 
 from cmk.ccc.i18n import _
 from cmk.plugins.aws import ruleset_helper  # pylint: disable=cmk-module-layer-violation
@@ -51,27 +52,15 @@ def prepare_aws(stage_id: StageId) -> QuickSetupStage:
                 ],
                 list_type="ordered",
             ),
-            FormSpecWrapper(
-                id=FormSpecId("aws_account_name"),
-                form_spec=Dictionary(
-                    elements={
-                        "account_name": DictElement(
-                            parameter_form=String(
-                                title=Title("AWS account name"),
-                                field_size=FieldSize.MEDIUM,
-                                custom_validate=(validators.LengthInRange(min_value=1),),
-                            ),
-                            required=True,
-                        )
-                    }
-                ),
+            unique_id_formspec_wrapper(
+                title=Title("AWS account name"), prefill_template="aws_config"
             ),
             FormSpecWrapper(
                 id=FormSpecId("credentials"),
                 form_spec=Dictionary(elements=aws.quick_setup_stage_1()),
             ),
         ],
-        validators=[form_spec_validate],
+        validators=[form_spec_validate, validate_unique_id],
         recap=[form_spec_recaps],
         button_txt="Configure host and region",
     )

@@ -7,9 +7,6 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal, Self
 
-from cmk.gui.i18n import _
-from cmk.gui.utils.speaklater import LazyString
-
 from cmk.graphing.v1 import metrics, perfometers
 
 from ._parser import parse_color, parse_or_add_unit
@@ -141,7 +138,6 @@ def perfometer_matches(
 
 @dataclass(frozen=True)
 class EvaluatedQuantity:
-    title: LazyString | str
     unit: UnitInfo
     color: str
     value: int | float
@@ -166,14 +162,12 @@ def evaluate_quantity(
         case str():
             metric = translated_metrics[quantity]
             return EvaluatedQuantity(
-                metric["title"],
                 metric["unit"],
                 metric["color"],
                 translated_metrics[quantity]["value"],
             )
         case metrics.Constant():
             return EvaluatedQuantity(
-                str(quantity.title),
                 parse_or_add_unit(quantity.unit),
                 parse_color(quantity.color),
                 quantity.value,
@@ -181,7 +175,6 @@ def evaluate_quantity(
         case metrics.WarningOf():
             metric = translated_metrics[quantity.metric_name]
             return EvaluatedQuantity(
-                _("Warning of ") + metric["title"],
                 metric["unit"],
                 "#ffff00",
                 metric["scalar"]["warn"],
@@ -189,7 +182,6 @@ def evaluate_quantity(
         case metrics.CriticalOf():
             metric = translated_metrics[quantity.metric_name]
             return EvaluatedQuantity(
-                _("Critical of ") + metric["title"],
                 metric["unit"],
                 "#ff0000",
                 metric["scalar"]["crit"],
@@ -197,7 +189,6 @@ def evaluate_quantity(
         case metrics.MinimumOf():
             metric = translated_metrics[quantity.metric_name]
             return EvaluatedQuantity(
-                _("Minimum of ") + metric["title"],
                 metric["unit"],
                 parse_color(quantity.color),
                 metric["scalar"]["min"],
@@ -205,7 +196,6 @@ def evaluate_quantity(
         case metrics.MaximumOf():
             metric = translated_metrics[quantity.metric_name]
             return EvaluatedQuantity(
-                _("Maximum of ") + metric["title"],
                 metric["unit"],
                 parse_color(quantity.color),
                 metric["scalar"]["max"],
@@ -213,7 +203,6 @@ def evaluate_quantity(
         case metrics.Sum():
             evaluated_first_summand = evaluate_quantity(quantity.summands[0], translated_metrics)
             return EvaluatedQuantity(
-                str(quantity.title),
                 evaluated_first_summand.unit,
                 parse_color(quantity.color),
                 (
@@ -229,7 +218,6 @@ def evaluate_quantity(
             for f in quantity.factors:
                 product *= evaluate_quantity(f, translated_metrics).value
             return EvaluatedQuantity(
-                str(quantity.title),
                 parse_or_add_unit(quantity.unit),
                 parse_color(quantity.color),
                 product,
@@ -238,14 +226,12 @@ def evaluate_quantity(
             evaluated_minuend = evaluate_quantity(quantity.minuend, translated_metrics)
             evaluated_subtrahend = evaluate_quantity(quantity.subtrahend, translated_metrics)
             return EvaluatedQuantity(
-                str(quantity.title),
                 evaluated_minuend.unit,
                 parse_color(quantity.color),
                 evaluated_minuend.value - evaluated_subtrahend.value,
             )
         case metrics.Fraction():
             return EvaluatedQuantity(
-                str(quantity.title),
                 parse_or_add_unit(quantity.unit),
                 parse_color(quantity.color),
                 (

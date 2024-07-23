@@ -8356,6 +8356,10 @@ msgstr "Grundlegende Eigenschaften"
 msgid "Basic settings"
 msgstr "Grundeinstellungen"
 
+#, fuzzy
+msgid "BasicAuth settings"
+msgstr "Grundeinstellungen"
+
 msgid "BasicAuth settings (optional)"
 msgstr "BasicAuth Einstellungen (optional)"
 
@@ -31879,6 +31883,10 @@ msgstr "Ungültiger Check-Parameter"
 msgid "Invalid check type"
 msgstr "Ungültiger Check-Typ"
 
+#, fuzzy
+msgid "Invalid choice"
+msgstr "Ungültiges Thema"
+
 msgid "Invalid code provided"
 msgstr "Ungültiger Code angegeben"
 
@@ -31901,6 +31909,10 @@ msgid ""
 msgstr ""
 "Ungültiges benutzerdefiniertes Feld. Es sind nur die Zeichen a-z, A-Z, 0-9, "
 "_ und - erlaubt."
+
+#, fuzzy
+msgid "Invalid data for list"
+msgstr "Ungültige Datenquelle: %s"
 
 #, python-format
 msgid "Invalid data source: %s"
@@ -31943,6 +31955,10 @@ msgstr "Ungültiger Dateiname"
 #, python-format
 msgid "Invalid fixel element type '%s'"
 msgstr "Es gibt kein Seitenelement vom Typ '%s'"
+
+#, fuzzy
+msgid "Invalid float number"
+msgstr "Ungültiger Dateiname"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -31990,6 +32006,10 @@ msgstr "Ungültiger Schlüssel"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "Ungültiger Schlüssel: %s"
+
+#, fuzzy
+msgid "Invalid integer number"
+msgstr "Ungültiger Dateiname"
 
 msgid "Invalid login credentials."
 msgstr "Login-Daten sind ungültig."
@@ -32063,6 +32083,10 @@ msgstr ""
 msgid "Invalid rule <tt>%s</tt>"
 msgstr "Ungültige Regel <tt>%s</tt>"
 
+#, fuzzy
+msgid "Invalid selection"
+msgstr "Ungültige Aktion"
+
 #, python-format
 msgid "Invalid sidebar element %s"
 msgstr "Ungültiges Seitenleistenelement: %s"
@@ -32092,6 +32116,10 @@ msgstr "Ungültige Sicherung (zu klein)"
 
 msgid "Invalid start time given"
 msgstr "Ungülitge Startzeit"
+
+#, fuzzy
+msgid "Invalid string"
+msgstr "Ungültige Aktion"
 
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
@@ -32142,6 +32170,10 @@ msgid "Invalid user input"
 msgstr "Ungültige Benutzereingabe"
 
 msgid "Invalid value for ack parameter."
+msgstr "Ungültiger Wert für ACK Parameter."
+
+#, fuzzy
+msgid "Invalid value for valuespec"
 msgstr "Ungültiger Wert für ACK Parameter."
 
 #, python-format
@@ -61126,6 +61158,11 @@ msgstr ""
 "Der Name ist der individuelle Teil der verwendeten Service-Beschreibung. "
 "Wählen Sie einen für Menschen lesbaren und eindeutigen Titel, damit Sie "
 "Ihren Service später in Checkmk finden können."
+
+msgid ""
+"The name of a KPI can be read off the service name. It is the part after "
+"`RMK`."
+msgstr ""
 
 msgid "The name of the Data Proxy"
 msgstr "Der Name des Datenproxies"

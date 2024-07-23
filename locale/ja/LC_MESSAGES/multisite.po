@@ -8304,6 +8304,10 @@ msgstr "基本的なプロパティ"
 msgid "Basic settings"
 msgstr "基本設定"
 
+#, fuzzy
+msgid "BasicAuth settings"
+msgstr "基本設定"
+
 msgid "BasicAuth settings (optional)"
 msgstr "BasicAuth設定(オプション)"
 
@@ -32225,6 +32229,10 @@ msgstr "チェックパラメータが無効です"
 msgid "Invalid check type"
 msgstr "チェックタイプが無効です"
 
+#, fuzzy
+msgid "Invalid choice"
+msgstr "無効なトピック"
+
 msgid "Invalid code provided"
 msgstr "不正なコード"
 
@@ -32246,6 +32254,10 @@ msgstr "無効な資格情報"
 msgid ""
 "Invalid custum field. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr "タグIDが無効です。文字a-z, A-Z, 0-9, _ および - のみが許可されます。"
+
+#, fuzzy
+msgid "Invalid data for list"
+msgstr "無効なデータソース: %s"
 
 #, python-format
 msgid "Invalid data source: %s"
@@ -32290,6 +32302,10 @@ msgstr "無効なファイル名"
 msgid "Invalid fixel element type '%s'"
 msgstr "無効なfixel要素タイプ '%s'"
 
+#, fuzzy
+msgid "Invalid float number"
+msgstr "無効なファイル名"
+
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
@@ -32333,6 +32349,10 @@ msgstr "無効なID"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "無効なID: %s"
+
+#, fuzzy
+msgid "Invalid integer number"
+msgstr "無効なファイル名"
 
 msgid "Invalid login credentials."
 msgstr "ログイン資格情報が無効です。"
@@ -32405,6 +32425,10 @@ msgstr "無効なロールID文字 a-z AZ 0-9 _ および - のみが許可さ�
 msgid "Invalid rule <tt>%s</tt>"
 msgstr "無効なルール <tt>%s</tt>"
 
+#, fuzzy
+msgid "Invalid selection"
+msgstr "無効なアクション"
+
 #, python-format
 msgid "Invalid sidebar element %s"
 msgstr "無効なサイドバー要素%s"
@@ -32434,6 +32458,10 @@ msgstr "スナップショットが無効です(小さすぎます)"
 
 msgid "Invalid start time given"
 msgstr "無効な開始時刻が指定されました"
+
+#, fuzzy
+msgid "Invalid string"
+msgstr "無効なアクション"
 
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr "タグIDが無効です。文字a-z, A-Z, 0-9, _ および - のみが許可されます。"
@@ -32481,6 +32509,10 @@ msgid "Invalid user input"
 msgstr "無効なユーザー入力"
 
 msgid "Invalid value for ack parameter."
+msgstr "ackパラメーターの値が無効です。"
+
+#, fuzzy
+msgid "Invalid value for valuespec"
 msgstr "ackパラメーターの値が無効です。"
 
 #, python-format
@@ -61319,6 +61351,11 @@ msgstr ""
 msgid ""
 "The name is the individual part of the used service name. Choose a human "
 "readable and unique title to be able to find your service later in Checkmk."
+msgstr ""
+
+msgid ""
+"The name of a KPI can be read off the service name. It is the part after "
+"`RMK`."
 msgstr ""
 
 msgid "The name of the Data Proxy"

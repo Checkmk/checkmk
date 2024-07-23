@@ -18,6 +18,9 @@ from cmk.gui import utils
 from cmk.gui.log import logger
 
 import cmk.ccc.version as cmk_version
+from cmk import trace
+
+tracer = trace.get_tracer()
 
 
 @contextmanager
@@ -68,6 +71,7 @@ def _imports() -> Iterator[str]:
             yield val.__name__
 
 
+@tracer.start_as_current_span("main_modules.load_plugins")
 def load_plugins() -> None:
     """Loads and initializes main modules and plug-ins into the application
     Only built-in main modules are already imported."""

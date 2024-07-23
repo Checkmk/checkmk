@@ -26,6 +26,7 @@ from cmk.gui.plugins.config.base import CREConfig  # pylint: disable=cmk-module-
 from cmk.gui.type_defs import Key, RoleName
 
 import cmk.ccc.version as cmk_version
+from cmk import trace
 from cmk.ccc.site import omd_site, url_prefix
 
 if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
@@ -47,6 +48,8 @@ else:
     class CMEConfig:  # type: ignore[no-redef]
         pass
 
+
+tracer = trace.get_tracer()
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -127,6 +130,7 @@ def _determine_pysaml2_log_level(log_levels: Mapping[str, int]) -> Mapping[str, 
             return {"saml2": 50}
 
 
+@tracer.start_as_current_span("config.initialize")
 def initialize() -> None:
     load_config()
     log_levels = {

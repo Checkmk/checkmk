@@ -24,6 +24,7 @@ from cmk.ccc import store
 
 ResponseTypes = flask.Response | werkzeug.Response
 
+
 checkmk = Blueprint(
     "checkmk",
     __name__,

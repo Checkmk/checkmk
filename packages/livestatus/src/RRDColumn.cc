@@ -381,10 +381,14 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     }
 
     // rrd_xport uses malloc, so we *have* to use free.
+    // NOLINTBEGIN(cppcoreguidelines-no-malloc,cppcoreguidelines-owning-memory)
     for (unsigned long j = 0; j < col_cnt; j++) {
-        free(legend_v[j]);  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        ::free(legend_v[j]);
     }
-    free(legend_v);  // NOLINT
-    free(rrd_data);  // NOLINT
+    // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
+    ::free(legend_v);
+    ::free(rrd_data);
+    // NOLINTEND(cppcoreguidelines-no-malloc,cppcoreguidelines-owning-memory)
     return data.as_vector(timezone_offset);
 }

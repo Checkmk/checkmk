@@ -31,10 +31,10 @@ TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
     // Make sure that the ICore abstraction is not accessed during the
     // construction of Store. This is a bit fragile, but it is needed to tie the
     // knot between NebCore and Store.
-    ASSERT_EXIT(  // NOLINT
+    ASSERT_EXIT(
         {
             Store(nullptr);
-            exit(0);
+            ::exit(0);  // NOLINT(concurrency-mt-unsafe)
         },
         ::testing::ExitedWithCode(0), "");
 }

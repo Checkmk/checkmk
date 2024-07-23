@@ -29,4 +29,8 @@ Checks: >
   -readability-magic-numbers,
 
 WarningsAsErrors: '*'
+
+CheckOptions:
+  bugprone-signed-char-misuse.CharTypdefsToIgnore: 'int8_t'
+  cert-str34-c.CharTypdefsToIgnore: 'int8_t'
 ...

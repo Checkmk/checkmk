@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { validate_value, type ValidationMessages } from '@/utils'
 import { FormValidation } from '@/components/cmk-form/'
 import * as FormSpec from '@/vue_formspec_components'
+import { useValidation } from '../utils/validation'
 
 const props = defineProps<{
   spec: FormSpec.String
@@ -10,21 +11,10 @@ const props = defineProps<{
 }>()
 
 const data = defineModel('data', { type: String, required: true })
-const validation = ref<ValidationMessages>([])
-
-watch(
-  () => props.backendValidation,
-  (new_validation: ValidationMessages) => {
-    new_validation.forEach((message) => {
-      data.value = message.invalid_value as string
-    })
-    validation.value = new_validation
-  },
-  { immediate: true }
-)
+const validation = useValidation<string>(data, () => props.backendValidation)
 
 const emit = defineEmits<{
-  (e: 'update:data', value: number | string): void
+  (e: 'update:data', value: string): void
 }>()
 
 const value = computed({

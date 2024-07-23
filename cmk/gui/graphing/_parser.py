@@ -533,6 +533,62 @@ def _vs_type(unit: metrics.Unit) -> type[Age] | type[Float] | type[Integer] | ty
     return Float
 
 
+def _make_unit_info(
+    *,
+    unit_id: str,
+    notation: (
+        metrics.DecimalNotation
+        | metrics.SINotation
+        | metrics.IECNotation
+        | metrics.StandardScientificNotation
+        | metrics.EngineeringScientificNotation
+        | metrics.TimeNotation
+    ),
+    symbol: str,
+    precision: metrics.AutoPrecision | metrics.StrictPrecision,
+    value_spec_type: type[Age] | type[Float] | type[Integer] | type[Percentage],
+) -> UnitInfo:
+    formatter: NotationFormatter
+    match notation:
+        case metrics.DecimalNotation():
+            formatter = DecimalFormatter(symbol, precision)
+            js_formatter = "DecimalFormatter"
+        case metrics.SINotation():
+            formatter = SIFormatter(symbol, precision)
+            js_formatter = "SIFormatter"
+        case metrics.IECNotation():
+            formatter = IECFormatter(symbol, precision)
+            js_formatter = "IECFormatter"
+        case metrics.StandardScientificNotation():
+            formatter = StandardScientificFormatter(symbol, precision)
+            js_formatter = "StandardScientificFormatter"
+        case metrics.EngineeringScientificNotation():
+            formatter = EngineeringScientificFormatter(symbol, precision)
+            js_formatter = "EngineeringScientificFormatter"
+        case metrics.TimeNotation():
+            formatter = TimeFormatter(symbol, precision)
+            js_formatter = "TimeFormatter"
+
+    match precision:
+        case metrics.AutoPrecision():
+            precision_title = f"auto precision {precision.digits}"
+        case metrics.StrictPrecision():
+            precision_title = f"strict precision {precision.digits}"
+
+    return UnitInfo(
+        id=unit_id,
+        title=" ".join([symbol or "no symbol", f"({formatter.ident()}, {precision_title})"]),
+        symbol=symbol,
+        render=formatter.render,
+        js_render=f"""v => new cmk.number_format.{js_formatter}(
+    "{symbol}",
+    new cmk.number_format.{precision.__class__.__name__}({precision.digits}),
+).render(v)""",
+        formatter_ident=formatter.ident(),
+        valuespec=value_spec_type,
+    )
+
+
 def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
     if (
         unit_id := (
@@ -541,49 +597,13 @@ def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
         )
     ) in units_from_api:
         return units_from_api[unit_id]
-
-    formatter: NotationFormatter
-    match unit.notation:
-        case metrics.DecimalNotation():
-            formatter = DecimalFormatter(unit.notation.symbol, unit.precision)
-            js_formatter = "DecimalFormatter"
-        case metrics.SINotation():
-            formatter = SIFormatter(unit.notation.symbol, unit.precision)
-            js_formatter = "SIFormatter"
-        case metrics.IECNotation():
-            formatter = IECFormatter(unit.notation.symbol, unit.precision)
-            js_formatter = "IECFormatter"
-        case metrics.StandardScientificNotation():
-            formatter = StandardScientificFormatter(unit.notation.symbol, unit.precision)
-            js_formatter = "StandardScientificFormatter"
-        case metrics.EngineeringScientificNotation():
-            formatter = EngineeringScientificFormatter(unit.notation.symbol, unit.precision)
-            js_formatter = "EngineeringScientificFormatter"
-        case metrics.TimeNotation():
-            formatter = TimeFormatter(unit.notation.symbol, unit.precision)
-            js_formatter = "TimeFormatter"
-
-    match unit.precision:
-        case metrics.AutoPrecision():
-            precision_title = f"auto precision {unit.precision.digits}"
-        case metrics.StrictPrecision():
-            precision_title = f"strict precision {unit.precision.digits}"
-    title_parts = [
-        unit.notation.symbol or "no symbol",
-        f"({formatter.ident()}, {precision_title})",
-    ]
     return units_from_api.register(
-        UnitInfo(
-            id=unit_id,
-            title=" ".join(title_parts),
+        _make_unit_info(
+            unit_id=unit_id,
+            notation=unit.notation,
             symbol=unit.notation.symbol,
-            render=formatter.render,
-            js_render=f"""v => new cmk.number_format.{js_formatter}(
-    "{unit.notation.symbol}",
-    new cmk.number_format.{unit.precision.__class__.__name__}({unit.precision.digits}),
-).render(v)""",
-            formatter_ident=formatter.ident(),
-            valuespec=_vs_type(unit),
+            precision=unit.precision,
+            value_spec_type=_vs_type(unit),
         )
     )
 

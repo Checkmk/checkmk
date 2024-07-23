@@ -10,10 +10,10 @@ import CmkFormCascadingSingleChoice from '@/components/cmk-form/container/CmkFor
 import CmkFormList from '@/components/cmk-form/container/CmkFormList.vue'
 import CmkFormLegacyValueSpec from '@/components/cmk-form/element/CmkFormLegacyValueSpec.vue'
 import type { IComponent } from '@/types'
-import { ref } from 'vue'
 
 const props = defineProps<{
   spec: FormSpec
+  backendValidation: ValidationMessages
 }>()
 
 const data = defineModel<unknown>('data', { required: true })
@@ -33,16 +33,13 @@ const components: Record<string, unknown> = {
 function getComponent(): IComponent {
   return components[props.spec.type] as IComponent
 }
-const component_ref = ref<IComponent>()
-function setValidation(validation: ValidationMessages) {
-  component_ref.value!.setValidation(validation)
-}
-
-defineExpose({
-  setValidation
-})
 </script>
 
 <template>
-  <component :is="getComponent()" ref="component_ref" v-model:data="data" :spec="spec" />
+  <component
+    :is="getComponent()"
+    v-model:data="data"
+    :backend-validation="backendValidation"
+    :spec="spec"
+  />
 </template>

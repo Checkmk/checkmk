@@ -1,9 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import CmkFormInteger from '@/components/cmk-form/element/CmkFormInteger.vue'
 import * as FormSpec from '@/vue_formspec_components'
-import { type ValidationMessages } from '@/utils'
 import { renderFormWithData } from '../cmk-form-helper'
-import { mount } from '@vue/test-utils'
 
 const validators: FormSpec.Validators[] = [
   {
@@ -28,7 +26,8 @@ test('CmkFormInteger renders value', () => {
   render(CmkFormInteger, {
     props: {
       spec,
-      data: 42
+      data: 42,
+      backendValidation: []
     }
   })
 
@@ -40,7 +39,8 @@ test('CmkFormInteger renders value', () => {
 test('CmkFormInteger updates data', async () => {
   const { getCurrentData: currentData } = renderFormWithData({
     spec,
-    data: 42
+    data: 42,
+    backendValidation: []
   })
 
   const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
@@ -53,7 +53,8 @@ test('CmkFormInteger checks validators', async () => {
   render(CmkFormInteger, {
     props: {
       spec,
-      data: 42
+      data: 42,
+      backendValidation: []
     }
   })
 
@@ -64,21 +65,19 @@ test('CmkFormInteger checks validators', async () => {
 })
 
 test('CmkFormInteger renders backend validation messages', async () => {
-  const wrapper = mount(CmkFormInteger, {
+  render(CmkFormInteger, {
     props: {
       spec,
-      data: 42
+      data: 42,
+      backendValidation: [
+        {
+          location: [],
+          message: 'Backend error message',
+          invalid_value: ''
+        }
+      ]
     }
   })
 
-  const validation_messages = [
-    {
-      location: [],
-      message: 'Backend error message',
-      invalid_value: ''
-    }
-  ] as ValidationMessages
-  wrapper.vm.setValidation(validation_messages)
-  await wrapper.vm.$nextTick()
-  expect(wrapper.get('li').text()).toBe('Backend error message')
+  await screen.findByText('Backend error message')
 })

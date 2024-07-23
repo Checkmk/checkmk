@@ -1,64 +1,69 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref, watch } from 'vue'
 import { validate_value, type ValidationMessages } from '@/utils'
 import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
 import type { List } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
-import type { IComponent } from '@/types'
 
 const props = defineProps<{
   spec: List
+  backendValidation: ValidationMessages
 }>()
 
-const data = defineModel<unknown[]>('data', { required: true })
-const local_validation = ref<ValidationMessages | null>(null)
+const backendData = defineModel<unknown[]>('data', { required: true })
 
-type DataWithID = {
-  value: unknown
-  key: string
+type ElementIndex = number
+const data = ref<Record<ElementIndex, unknown>>({})
+const validation = ref<ValidationMessages>([])
+const elementValidation = ref<Record<ElementIndex, ValidationMessages>>({})
+const frontendOrder = ref<ElementIndex[]>([])
+const newElementIndex = ref<ElementIndex>(0)
+
+function initialize(newBackendData: unknown[]) {
+  data.value = {}
+  validation.value.splice(0)
+  elementValidation.value = {}
+  frontendOrder.value.splice(0)
+  newBackendData.forEach((value, i) => {
+    data.value[i] = value
+    elementValidation.value[i] = []
+    frontendOrder.value.push(i)
+  })
+  newElementIndex.value = newBackendData.length
 }
 
-const data_with_id = ref<DataWithID[]>([])
+watch(
+  [backendData, () => props.backendValidation],
+  ([newBackendData, newBackendValidation]) => {
+    initialize(newBackendData)
+    setValidation(newBackendValidation)
+  },
+  { immediate: true }
+)
 
-onMounted(() => {
-  data.value.forEach((element) => {
-    data_with_id.value.push({
-      value: element,
-      key: crypto.randomUUID()
-    })
-  })
-})
-
-const validation = ref<ValidationMessages>([])
-
-function setValidation(new_validation: ValidationMessages) {
-  const all_element_messages: Record<number, ValidationMessages> = {}
-  new_validation.forEach((msg) => {
+function setValidation(newBackendValidation: ValidationMessages) {
+  newBackendValidation.forEach((msg) => {
     if (msg.location.length === 0) {
+      validation.value.push(msg)
       return
     }
-    const element_index = parseInt(msg.location[0]!)
-    const element_messages = all_element_messages[element_index] || []
-    element_messages.push({
+    const backendIndex = parseInt(msg.location[0]!)
+    const elementMessages = elementValidation.value[backendIndex]
+    if (elementMessages === undefined) {
+      throw new Error(`Index ${backendIndex} out of bounds`)
+    }
+    elementMessages.push({
       location: msg.location.slice(1),
       message: msg.message,
       invalid_value: msg.invalid_value
     })
-    all_element_messages[element_index] = element_messages
-  })
-
-  data_with_id.value.forEach((element, index) => {
-    const element_messages = all_element_messages[index] || []
-    const element_component = list_elements.value[element.key]
-    if (element_component) {
-      element_component.setValidation(element_messages)
+    if (data.value[backendIndex] === undefined) {
+      throw new Error(`Index ${backendIndex} not found in data`)
     }
+    data.value[backendIndex] = msg.invalid_value
+    elementValidation.value[backendIndex] = elementMessages
   })
 }
-
-defineExpose({
-  setValidation
-})
 
 let table_ref = ref<HTMLTableElement | null>(null)
 const class_listof_element = 'listof_element'
@@ -103,53 +108,49 @@ function dragging(event: DragEvent) {
   if (dragged_index === target_index || target_index === -1) {
     return
   }
-  const moved_entry = data_with_id.value.splice(dragged_index, 1)[0]!
-  data_with_id.value.splice(target_index, 0, moved_entry)
+  const moved_entry = frontendOrder.value.splice(dragged_index, 1)[0]!
+  frontendOrder.value.splice(target_index, 0, moved_entry)
   sendDataUpstream()
 }
 
 function validateList() {
-  validate_value(data.value, props.spec.validators!).forEach((error) => {
-    local_validation.value = [{ message: error, location: [], invalid_value: data.value }]
+  validation.value.splice(0)
+  validate_value(backendData.value, props.spec.validators!).forEach((error) => {
+    validation.value.push({ message: error, location: [], invalid_value: backendData.value })
   })
 }
 
-function removeElement(index: number) {
-  data_with_id.value.splice(index, 1)
+function removeElement(index: ElementIndex) {
+  frontendOrder.value.splice(frontendOrder.value.indexOf(index), 1)
   sendDataUpstream()
   validateList()
 }
 
 function addElement() {
-  data_with_id.value.push({
-    value: props.spec.element_default_value,
-    key: crypto.randomUUID()
-  })
+  data.value[newElementIndex.value] = props.spec.element_default_value
+  elementValidation.value[newElementIndex.value] = []
+  frontendOrder.value.push(newElementIndex.value)
+  newElementIndex.value += 1
   sendDataUpstream()
   validateList()
 }
 
-function updateElementData(new_value: unknown, key: string) {
-  data_with_id.value.forEach((element) => {
-    if (element.key === key) {
-      element.value = new_value
-    }
-  })
+function updateElementData(new_value: unknown, index: ElementIndex) {
+  data.value[index] = new_value
   sendDataUpstream()
 }
+
 function sendDataUpstream() {
-  data.value.splice(0)
-  data_with_id.value.forEach((element) => {
-    data.value.push(element.value)
+  backendData.value.splice(0)
+  frontendOrder.value.forEach((index: ElementIndex) => {
+    backendData.value.push(data.value[index])
   })
 }
-
-const list_elements = ref<Record<string, IComponent>>({})
 </script>
 
 <template>
   <table ref="table_ref" class="valuespec_listof">
-    <template v-for="(element, index) in data_with_id" :key="element.key">
+    <template v-for="backendIndex in frontendOrder" :key="backendIndex">
       <tr :class="class_listof_element">
         <td :class="class_vlof_buttons">
           <a
@@ -163,20 +164,16 @@ const list_elements = ref<Record<string, IComponent>>({})
             <img
               class="icon iconbutton"
               src="themes/modern-dark/images/icon_close.svg"
-              @click.prevent="removeElement(index)"
+              @click.prevent="removeElement(backendIndex)"
             />
           </a>
         </td>
         <td class="vlof_content">
           <CmkFormDispatcher
-            :ref="
-              (el) => {
-                list_elements[element.key] = el as unknown as IComponent
-              }
-            "
-            v-model:data="element.value"
+            v-model:data="data[backendIndex]"
             :spec="spec.element_template"
-            @update:data="(new_value) => updateElementData(new_value, element.key)"
+            :backend-validation="elementValidation[backendIndex]!"
+            @update:data="(new_value: unknown) => updateElementData(new_value, backendIndex)"
           ></CmkFormDispatcher>
         </td>
       </tr>

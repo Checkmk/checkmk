@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { onBeforeMount, ref } from 'vue'
+import { onBeforeMount, ref, watch } from 'vue'
 import CmkFormDispatcher from '../CmkFormDispatcher.vue'
 import { type ValidationMessages } from '@/utils'
 import type { Dictionary, DictionaryElement } from '@/vue_formspec_components'
-import type { IComponent } from '@/types'
 
 interface ElementFromProps {
   dict_config: DictionaryElement
@@ -11,10 +10,12 @@ interface ElementFromProps {
 }
 const props = defineProps<{
   spec: Dictionary
+  backendValidation: ValidationMessages
 }>()
 
 const data = defineModel('data', { type: Object, required: true })
 const default_values: Record<string, unknown> = {}
+const childValidation = ref<Record<string, ValidationMessages>>({})
 
 onBeforeMount(() => {
   props.spec.elements.forEach((element: DictionaryElement) => {
@@ -26,39 +27,36 @@ onBeforeMount(() => {
       data.value[key] = value
     }
   }
+  setValidation(props.backendValidation)
 })
 
-function setValidation(validation: ValidationMessages) {
-  const child_messages: Record<string, ValidationMessages> = {}
-  validation.forEach((msg) => {
+watch(() => props.backendValidation, setValidation)
+
+function setValidation(new_validation: ValidationMessages) {
+  childValidation.value = props.spec.elements.reduce(
+    (elements, el) => {
+      elements[el.ident] = []
+      return elements
+    },
+    {} as Record<string, ValidationMessages>
+  )
+  new_validation.forEach((msg) => {
     if (msg.location.length === 0) {
       return
     }
     const msg_element_ident = msg.location[0]!
-    const element_messages = child_messages[msg_element_ident] || []
+    const element_messages = childValidation.value[msg_element_ident]
+    if (element_messages === undefined) {
+      throw new Error(`Index ${msg_element_ident} not found in dictionary`)
+    }
     element_messages.push({
       location: msg.location.slice(1),
       message: msg.message,
       invalid_value: msg.invalid_value
     })
-    child_messages[msg_element_ident] = element_messages
-  })
-
-  props.spec.elements.forEach((element: DictionaryElement) => {
-    const ident = element.ident
-    if (!(ident in data.value) && !element.required) {
-      return
-    }
-    const element_component = element_components.value[ident]
-    if (element_component) {
-      element_component.setValidation(child_messages[ident] || [])
-    }
+    childValidation.value[msg_element_ident] = element_messages
   })
 }
-
-defineExpose({
-  setValidation
-})
 
 // TODO: computed
 function get_elements_from_props(): ElementFromProps[] {
@@ -83,7 +81,6 @@ function toggle_element(event: MouseEvent, key: string) {
     data.value[key] = default_values[key]
   }
 }
-const element_components = ref<Record<string, IComponent>>({})
 </script>
 
 <template>
@@ -109,13 +106,9 @@ const element_components = ref<Record<string, IComponent>>({})
           <div class="dictelement indent">
             <CmkFormDispatcher
               v-if="dict_element.is_active"
-              :ref="
-                (el) => {
-                  element_components[dict_element.dict_config.ident] = el as unknown as IComponent
-                }
-              "
               v-model:data="data[dict_element.dict_config.ident]"
               :spec="dict_element.dict_config.parameter_form"
+              :backend-validation="childValidation[dict_element.dict_config.ident]!"
             />
           </div>
         </td>

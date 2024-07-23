@@ -1,26 +1,27 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { is_float, validate_value, type ValidationMessages } from '@/utils'
 import { FormValidation } from '@/components/cmk-form/'
 import type { Float } from '@/vue_formspec_components'
 
 const props = defineProps<{
   spec: Float
+  backendValidation: ValidationMessages
 }>()
 
 const data = defineModel<number | string>('data', { required: true })
 const validation = ref<ValidationMessages>([])
 
-function setValidation(new_validation: ValidationMessages) {
-  new_validation.forEach((message) => {
-    data.value = message.invalid_value as string
-  })
-  validation.value = new_validation
-}
-
-defineExpose({
-  setValidation
-})
+watch(
+  () => props.backendValidation,
+  (new_validation: ValidationMessages) => {
+    new_validation.forEach((message) => {
+      data.value = message.invalid_value as string
+    })
+    validation.value = new_validation
+  },
+  { immediate: true }
+)
 
 const emit = defineEmits<{
   (e: 'update:data', value: number | string): void

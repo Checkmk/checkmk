@@ -16,7 +16,7 @@ watch(internal.value, (newValue) => {
   <table class="nform">
     <tr>
       <td>
-        <CmkFormDispatcher v-model:data="internal" :spec="schema" :validation="[]" />
+        <CmkFormDispatcher v-model:data="internal" :spec="schema" :backend-validation="[]" />
       </td>
     </tr>
   </table>

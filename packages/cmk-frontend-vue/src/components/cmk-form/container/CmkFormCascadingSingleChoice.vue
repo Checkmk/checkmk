@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeMount, onUpdated, type PropType, ref } from 'vue'
+import { computed, onBeforeMount, onUpdated, type PropType, ref, watch } from 'vue'
 import { validate_value, type ValidationMessages } from '@/utils'
 import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
 import type {
@@ -8,44 +8,39 @@ import type {
   FormSpec
 } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
-import type { IComponent } from '@/types'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
+  backendValidation: ValidationMessages
 }>()
 
 const validation = ref<ValidationMessages>([])
-function setValidation(new_validation: ValidationMessages) {
-  if (active_component.value === undefined) {
-    throw new Error('active_component is undefined')
-  }
+const elementValidation = ref<ValidationMessages>([])
 
-  validation.value = []
-  const element_messages: ValidationMessages = []
-  new_validation.forEach((msg) => {
-    if (msg.location.length === 0) {
-      validation.value.push(msg)
-      return
-    }
-    element_messages.push({
-      location: msg.location.slice(1),
-      message: msg.message,
-      invalid_value: msg.invalid_value
+watch(
+  () => props.backendValidation,
+  (new_validation: ValidationMessages) => {
+    validation.value = []
+    elementValidation.value = []
+    new_validation.forEach((msg) => {
+      if (msg.location.length === 0) {
+        validation.value.push(msg)
+        return
+      }
+      elementValidation.value.push({
+        location: msg.location.slice(1),
+        message: msg.message,
+        invalid_value: msg.invalid_value
+      })
     })
-  })
-  active_component.value.setValidation(element_messages)
-}
-
-defineExpose({
-  setValidation
-})
+  },
+  { immediate: true }
+)
 
 const data = defineModel('data', {
   type: Object as PropType<[string, unknown]>,
   required: true
 })
-
-const local_validation = ref<ValidationMessages | null>(null)
 
 const emit = defineEmits<{
   (e: 'update:data', value: [string, unknown]): void
@@ -74,10 +69,10 @@ const value = computed({
     return data.value[0] as string
   },
   set(value: string) {
-    local_validation.value = []
+    validation.value = []
     const new_value: [string, unknown] = [value, current_values[value]]
     validate_value(value, props.spec.validators!).forEach((error) => {
-      local_validation.value = [{ message: error, location: [''], invalid_value: value }]
+      validation.value = [{ message: error, location: [''], invalid_value: value }]
     })
     emit('update:data', new_value)
   }
@@ -97,7 +92,6 @@ const active_element = computed((): ActiveElement => {
     validation: []
   }
 })
-const active_component = ref<IComponent>()
 </script>
 
 <template>
@@ -110,9 +104,9 @@ const active_component = ref<IComponent>()
     </select>
   </div>
   <CmkFormDispatcher
-    ref="active_component"
     v-model:data="data[1]"
     :spec="active_element.spec"
+    :backend-validation="elementValidation"
   ></CmkFormDispatcher>
   <FormValidation :validation="validation"></FormValidation>
 </template>

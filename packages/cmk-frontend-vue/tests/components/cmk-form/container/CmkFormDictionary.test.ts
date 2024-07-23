@@ -1,9 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import CmkFormDictionary from '@/components/cmk-form/container/CmkFormDictionary.vue'
 import * as FormSpec from '@/vue_formspec_components'
-import { type ValidationMessages } from '@/utils'
 import { renderFormWithData } from '../cmk-form-helper'
-import { mount } from '@vue/test-utils'
 
 const stringValidators: FormSpec.Validators[] = [
   {
@@ -40,7 +38,8 @@ const spec: FormSpec.Dictionary = {
 test('CmkFormDictionary empty on non-required elements results in empty form data', () => {
   const { getCurrentData } = renderFormWithData({
     spec,
-    data: {}
+    data: {},
+    backendValidation: []
   })
 
   const checkbox = screen.getByRole<HTMLInputElement>('checkbox', { name: 'barTitle' })
@@ -52,7 +51,8 @@ test('CmkFormDictionary empty on non-required elements results in empty form dat
 test('CmkFormDictionary displays dictelement data', async () => {
   const { getCurrentData } = renderFormWithData({
     spec,
-    data: { bar: 'some_value' }
+    data: { bar: 'some_value' },
+    backendValidation: []
   })
 
   const checkbox = screen.getByRole<HTMLInputElement>('checkbox', { name: 'barTitle' })
@@ -68,7 +68,8 @@ test('CmkFormDictionary checking non-required element fills default', async () =
   render(CmkFormDictionary, {
     props: {
       spec,
-      data: {}
+      data: {},
+      backendValidation: []
     }
   })
 
@@ -83,7 +84,8 @@ test('CmkFormDictionary enable element, check frontend validators', async () => 
   render(CmkFormDictionary, {
     props: {
       spec,
-      data: {}
+      data: {},
+      backendValidation: []
     }
   })
 
@@ -96,20 +98,35 @@ test('CmkFormDictionary enable element, check frontend validators', async () => 
   screen.getByText('String length must be between 1 and 20')
 })
 
-test('CmkFormDictionary enable element, render backend validation message', async () => {
-  const wrapper = mount(CmkFormDictionary, {
+test('CmkFormDictionary render backend validation message', async () => {
+  render(CmkFormDictionary, {
     props: {
       spec,
-      data: {}
+      data: { bar: 'some_value' },
+      backendValidation: [
+        { location: ['bar'], message: 'Backend error message', invalid_value: 'other_value' }
+      ]
     }
   })
-  const checkbox = wrapper.get('input[type="checkbox"]')
-  await checkbox.trigger('click')
 
-  const validation_messages = [
-    { location: ['bar'], message: 'Backend error message', invalid_value: '' }
-  ] as ValidationMessages
-  wrapper.vm.setValidation(validation_messages)
-  await wrapper.vm.$nextTick()
-  expect(wrapper.get('li').text()).toBe('Backend error message')
+  await screen.findByDisplayValue('other_value')
+
+  screen.getByText('Backend error message')
+})
+
+test('CmkFormDictionary enable element, render backend validation message', async () => {
+  render(CmkFormDictionary, {
+    props: {
+      spec,
+      data: {},
+      backendValidation: [
+        { location: ['bar'], message: 'Backend error message', invalid_value: '' }
+      ]
+    }
+  })
+
+  const checkbox = screen.getByRole('checkbox', { name: 'barTitle' })
+  await fireEvent.click(checkbox)
+
+  await screen.findByText('Backend error message')
 })

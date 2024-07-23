@@ -1,9 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import * as FormSpec from '@/vue_formspec_components'
 import CmkFormCascadingSingleChoice from '@/components/cmk-form/container/CmkFormCascadingSingleChoice.vue'
-import type { ValidationMessages } from '@/utils'
 import { renderFormWithData } from '../cmk-form-helper'
-import { mount } from '@vue/test-utils'
 
 const stringValidators: FormSpec.Validators[] = [
   {
@@ -57,7 +55,8 @@ const spec: FormSpec.CascadingSingleChoice = {
 test('CmkFormCascadingSingleChoice displays data', () => {
   const { getCurrentData } = renderFormWithData({
     spec,
-    data: ['stringChoice', 'some_value']
+    data: ['stringChoice', 'some_value'],
+    backendValidation: []
   })
 
   const selectElement = screen.getByRole<HTMLInputElement>('combobox', { name: /fooLabel/i })
@@ -74,7 +73,8 @@ test('CmkFormCascadingSingleChoice displays data', () => {
 test('CmkFormDictionary updates data', async () => {
   const { getCurrentData } = renderFormWithData({
     spec,
-    data: ['stringChoice', 'some_value']
+    data: ['stringChoice', 'some_value'],
+    backendValidation: []
   })
 
   const stringElement = screen.getByRole<HTMLInputElement>('textbox', {
@@ -88,7 +88,8 @@ test('CmkFormDictionary updates data', async () => {
 test('CmkFormCascadingSingleChoice sets default on switch', async () => {
   const { getCurrentData } = renderFormWithData({
     spec,
-    data: ['stringChoice', 'some_value']
+    data: ['stringChoice', 'some_value'],
+    backendValidation: []
   })
 
   const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
@@ -106,7 +107,8 @@ test('CmkFormCascadingSingleChoice checks validators', async () => {
   render(CmkFormCascadingSingleChoice, {
     props: {
       spec,
-      data: ['stringChoice', 'some_value']
+      data: ['stringChoice', 'some_value'],
+      backendValidation: []
     }
   })
 
@@ -119,21 +121,19 @@ test('CmkFormCascadingSingleChoice checks validators', async () => {
 })
 
 test('CmkFormCascadingSingleChoice renders backend validation messages', async () => {
-  const wrapper = mount(CmkFormCascadingSingleChoice, {
+  render(CmkFormCascadingSingleChoice, {
     props: {
       spec,
-      data: ['stringChoice', 'some_value']
+      data: ['stringChoice', 'some_value'],
+      backendValidation: [
+        {
+          location: [],
+          message: 'Backend error message',
+          invalid_value: ''
+        }
+      ]
     }
   })
 
-  const validation_messages = [
-    {
-      location: [],
-      message: 'Backend error message',
-      invalid_value: ''
-    }
-  ] as ValidationMessages
-  wrapper.vm.setValidation(validation_messages)
-  await wrapper.vm.$nextTick()
-  expect(wrapper.get('li').text()).toBe('Backend error message')
+  await screen.findByText('Backend error message')
 })

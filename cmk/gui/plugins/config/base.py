@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal, TypedDict
 
-from livestatus import SiteConfigurations
+from livestatus import BrokerConnections, SiteConfigurations
 
 from cmk.ccc.version import edition, Edition
 
@@ -95,6 +95,7 @@ class CREConfig:
 
     # define default values for all settings
     sites: SiteConfigurations = field(default_factory=lambda: SiteConfigurations({}))
+    broker_connections: BrokerConnections = field(default_factory=lambda: BrokerConnections({}))
     debug: bool = False
     screenshotmode: bool = False
     profile: bool | str = False

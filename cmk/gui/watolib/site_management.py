@@ -588,6 +588,30 @@ class SitesApiMgr:
         self.site_mgmt.save_sites(self.all_sites)
 
 
+def add_changes_after_editing_broker_connection(
+    *,
+    connection_id: str,
+    is_new_broker_connection: bool,
+    sites: list[SiteId],
+) -> LogMessage:
+    change_message = (
+        _("Created new peer-to-peer broker connection id %s") % connection_id
+        if is_new_broker_connection
+        else _("Modified peer-to-peer broker connection id %s") % connection_id
+    )
+
+    add_change(
+        "edit-sites",
+        change_message,
+        need_sync=True,
+        need_restart=True,
+        sites=[omd_site()] + sites,
+        domains=[ConfigDomainGUI],
+    )
+
+    return change_message
+
+
 def add_changes_after_editing_site_connection(
     *,
     site_id: SiteId,

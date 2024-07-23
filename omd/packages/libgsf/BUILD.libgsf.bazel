@@ -11,6 +11,13 @@ filegroup(
 configure_make(
     name = "libgsf",
     args = ["-j4"],
+    env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
+    },
     lib_source = ":all_srcs",
     out_binaries = [
         "gsf",

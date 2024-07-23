@@ -25,7 +25,7 @@ configure_make(
         "--disable-snmptrapd-subagent",
         "--with-defaults",
         "--disable-scripts",
-        '--with-mibdirs="\\\\$$\\$$HOME/local/share/snmp/mibs:\\\\$$\\$$HOME/share/snmp/mibs:/usr/share/snmp/mibs"',
+        r'--with-mibdirs="\\$$\\HOME/local/share/snmp/mibs:\\$$\\HOME/share/snmp/mibs:/usr/share/snmp/mibs"',
     ],
     copts = [
         "-I$BUILD_TMPDIR/include",
@@ -34,6 +34,11 @@ configure_make(
         "-Wl,--rpath,$ORIGIN_VAR/../lib",
     ],
     env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
         "RANLIB": "ranlib",
         "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
@@ -41,7 +46,6 @@ configure_make(
         "PYTHON_MODULES_TAR": "$(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar)",
         "PERL_DIR": "$$(dirname $(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar))/perl-modules",
         "PYTHONPATH": "$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/python3-modules/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
-        "HOME": "/home/\\$$\\$${USER}/",
     },
     lib_source = ":all_srcs",
     out_binaries = [

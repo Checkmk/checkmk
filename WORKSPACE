@@ -10,13 +10,13 @@ fork_cc_toolchain_config(
 
 register_toolchains("//omd/packages/toolchain:linux_gcc13")
 
-RULES_FOREIGN_CC_VERSION = "0.9.0"
+RULES_FOREIGN_CC_VERSION = "0.11.1"
 
 http_archive(
     name = "rules_foreign_cc",
     patch_args = ["-p1"],
     patches = ["//omd/packages/foreign_cc:symlink.patch"],
-    sha256 = "2a4d07cd64b0719b39a7c12218a3e507672b82a97b98c6a89d38565894cf7c51",
+    sha256 = "4b33d62cf109bcccf286b30ed7121129cc34cf4f4ed9d8a11f38d9108f40ba74",
     strip_prefix = "rules_foreign_cc-" + RULES_FOREIGN_CC_VERSION,
     urls = [
         "https://github.com/bazelbuild/rules_foreign_cc/archive/refs/tags/" + RULES_FOREIGN_CC_VERSION + ".tar.gz",

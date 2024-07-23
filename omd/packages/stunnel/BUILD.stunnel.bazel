@@ -12,13 +12,18 @@ configure_make(
     name = "stunnel",
     args = ["-j4"],
     configure_options = [
-        "--with-ssl=$EXT_BUILD_DEPS/openssl",
-        "--with-bashcompdir=$INSTALLDIR/share",
+        "--with-ssl=$$EXT_BUILD_DEPS/openssl",
+        "--with-bashcompdir=$$INSTALLDIR/share",
     ],
     copts = [
         "-Wl,--rpath,$ORIGIN_VAR/../lib",
     ],
     env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
     },
     lib_source = ":all_srcs",

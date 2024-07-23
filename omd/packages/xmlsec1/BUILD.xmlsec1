@@ -13,7 +13,7 @@ configure_make(
     configure_command="configure",
     configure_in_place=True,
     configure_options = [
-        "--with-openssl=$EXT_BUILD_DEPS/openssl",
+        "--with-openssl=$$EXT_BUILD_DEPS/openssl",
         "--disable-mans",
         "--disable-docs",
     ],
@@ -32,7 +32,14 @@ configure_make(
     # for those the flags definded with `copts` will be appended rather than
     # prepended, resulting in wrong RPATH components in front of `$ORIGIN/../lib`
     # For that reason we need to manually set RPATH outside Bazel (during `make`)
-    env={"ORIGIN_VAR": "\\\\$$\\$$ORIGIN"},
+    env={
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
+        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
+    },
     copts=["-Wl,--rpath,$ORIGIN_VAR/../lib"],
     deps=["@openssl"],
     out_binaries=["xmlsec1"],

@@ -1340,10 +1340,10 @@ class EnableDeprecatedAutomationuserAuthentication(ConfigVariable):
         return Checkbox(
             title=_("Automation user authentication via HTTP parameters"),
             help=_(
-                "In previous Checkmk versions it was possible to use an automation user to display "
-                "specific pages within Checkmk. To authenticate these requests it was possible to "
+                "In previous Checkmk versions, it was possible to use an automation user to display "
+                "specific pages within Checkmk. To authenticate these requests, it was possible to "
                 "add the _username and _secret parameters to the parameters (e.g. append them to the "
-                "URL). GET parameters are usually logged by proxies and webservers and are not "
+                "URL). GET parameters are usually logged by proxies and web servers and are not "
                 "deemed secure for secrets. See Werk #16223 for more information."
             ),
             default_value=True,

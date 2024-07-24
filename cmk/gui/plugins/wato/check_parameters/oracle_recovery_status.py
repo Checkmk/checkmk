@@ -30,8 +30,8 @@ def _parameter_valuespec_oracle_recovery_status():
                 Tuple(
                     title=_("Levels for user managed backup files"),
                     help=_(
-                        "Important! This check is only for monitoring of datafiles "
-                        "who were left in backup mode. "
+                        "Important! This check is only for monitoring datafiles "
+                        "which were left in backup mode. "
                         "(alter database datafile ... begin backup;)"
                     ),
                     elements=[

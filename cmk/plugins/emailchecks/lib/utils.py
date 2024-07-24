@@ -33,9 +33,10 @@ import time
 import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
+from dataclasses import dataclass
 from datetime import datetime
 from email.message import Message as POPIMAPMessage
-from typing import Any, Literal
+from typing import Any, assert_never, Literal
 
 import urllib3
 
@@ -77,10 +78,84 @@ EWSMailMessages = Mapping[MailIndex, EWSMessage]
 MailID = tuple[int, int]
 
 
+@dataclass
+class BasicAuth:
+    username: str
+    password: str
+
+
+@dataclass
+class OAuth2:
+    client_id: str
+    client_secret: str
+    tenant_id: str
+
+
+MailboxAuth = BasicAuth | OAuth2
+
+
 class EWS:
-    def __init__(self, account: Account) -> None:
-        self._account = account
+
+    def __init__(
+        self,
+        primary_smtp_address: str,
+        server: str,
+        auth: MailboxAuth,
+        no_cert_check: bool,
+        timeout: int | None,
+    ) -> None:
+        self._account = self._make_account(
+            primary_smtp_address, server, auth, no_cert_check, timeout
+        )
         self._selected_folder = self._account.inbox
+
+    @staticmethod
+    def _make_account(
+        primary_smtp_address: str,
+        server: str,
+        auth: MailboxAuth,
+        no_cert_check: bool,
+        timeout: int | None,
+    ) -> Account:
+        # https://ecederstrand.github.io/exchangelib/#oauth-on-office-365
+        match auth:
+            case OAuth2(client_id, client_secret, tenant_id):
+                account = Account(
+                    primary_smtp_address=primary_smtp_address,
+                    autodiscover=False,
+                    access_type=IMPERSONATION,
+                    config=Configuration(
+                        server=server,
+                        credentials=OAuth2Credentials(
+                            client_id=client_id,
+                            client_secret=client_secret,
+                            tenant_id=tenant_id,
+                            identity=Identity(smtp_address=primary_smtp_address),
+                        ),
+                        auth_type=OAUTH2,
+                    ),
+                    default_timezone=EWSTimeZone("Europe/Berlin"),
+                )
+            case BasicAuth(username, password):
+                account = Account(
+                    primary_smtp_address=primary_smtp_address,
+                    autodiscover=False,
+                    access_type=DELEGATE,
+                    config=Configuration(
+                        server=server,
+                        credentials=Credentials(username, password),
+                    ),
+                    default_timezone=EWSTimeZone("Europe/Berlin"),
+                )
+
+            case other:
+                assert_never(other)
+
+        if no_cert_check:
+            account.protocol.HTTP_ADAPTER_CLS = ews_protocol.NoVerifyHTTPAdapter
+        account.protocol.TIMEOUT = timeout
+
+        return account
 
     def folders(self) -> Iterable[str]:
         logging.debug("Account::msg_folder_root.tree():\n%s", self._account.msg_folder_root.tree())
@@ -381,53 +456,26 @@ class Mailbox:
         args = vars(self._args)  # Namespace to dict
 
         primary_smtp_address = args.get(ctype + "_email_address") or args.get(ctype + "_username")
-
-        # https://ecederstrand.github.io/exchangelib/#oauth-on-office-365
-
-        self._connection = (
-            (
-                EWS(
-                    Account(
-                        primary_smtp_address=primary_smtp_address,
-                        autodiscover=False,
-                        access_type=IMPERSONATION,
-                        config=Configuration(
-                            server=args.get(ctype + "_server"),
-                            credentials=OAuth2Credentials(
-                                client_id=args.get(ctype + "_client_id"),
-                                client_secret=args.get(ctype + "_client_secret"),
-                                tenant_id=args.get(ctype + "_tenant_id"),
-                                identity=Identity(smtp_address=primary_smtp_address),
-                            ),
-                            auth_type=OAUTH2,
-                        ),
-                        default_timezone=EWSTimeZone("Europe/Berlin"),
-                    )
-                )
+        server = args.get(ctype + "_server")
+        auth: MailboxAuth = (
+            OAuth2(
+                client_id=args.get(ctype + "_client_id"),  # type: ignore[arg-type]
+                client_secret=args.get(ctype + "_client_secret"),  # type: ignore[arg-type]
+                tenant_id=args.get(ctype + "_tenant_id"),  # type: ignore[arg-type]
             )
             if args.get(ctype + "_client_id")
-            else (
-                EWS(
-                    Account(
-                        primary_smtp_address=primary_smtp_address,
-                        autodiscover=False,
-                        access_type=DELEGATE,
-                        config=Configuration(
-                            server=args.get(ctype + "_server"),
-                            credentials=Credentials(
-                                args.get(ctype + "_username"),
-                                args.get(ctype + "_password"),
-                            ),
-                        ),
-                        default_timezone=EWSTimeZone("Europe/Berlin"),
-                    )
-                )
+            else BasicAuth(
+                username=args.get(ctype + "_username"),  # type: ignore[arg-type]
+                password=args.get(ctype + "_password"),  # type: ignore[arg-type]
             )
         )
-
-        if args.get(ctype + "_no_cert_check"):
-            self._connection._account.protocol.HTTP_ADAPTER_CLS = ews_protocol.NoVerifyHTTPAdapter
-        self._connection._account.protocol.TIMEOUT = args.get("connect_timeout")
+        self._connection = EWS(
+            primary_smtp_address=primary_smtp_address,  # type: ignore[arg-type]
+            server=server,  # type: ignore[arg-type]
+            auth=auth,
+            no_cert_check=bool(args.get(ctype + "_no_cert_check")),
+            timeout=args.get("connect_timeout"),
+        )
 
     def protocol(self) -> Literal["POP3", "IMAP", "EWS"]:
         if isinstance(self._connection, (poplib.POP3, poplib.POP3_SSL)):

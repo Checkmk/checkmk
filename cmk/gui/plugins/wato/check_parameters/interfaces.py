@@ -939,7 +939,7 @@ def _parameter_valuespec_if() -> Dictionary:
                     help=_(
                         "By activating this item, the sum of incoming and outgoing traffic will "
                         "be monitored via a seperate metric. Setting levels on the used total bandwidth "
-                        "is optional. If you do set levels you might also consider using averaging."
+                        "is optional. If you set levels you might also consider using averaging."
                     ),
                     elements=[
                         (

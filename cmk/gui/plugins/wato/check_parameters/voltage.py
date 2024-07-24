@@ -30,7 +30,7 @@ def _parameter_valuespec_voltage():
             (
                 "levels_lower",
                 Tuple(
-                    title=_("Lower levels for Voltage"),
+                    title=_("Lower levels for voltage"),
                     elements=[
                         Float(title=_("Warning below"), default_value=10.00, unit="V"),
                         Float(title=_("Critical below"), default_value=9.00, unit="V"),

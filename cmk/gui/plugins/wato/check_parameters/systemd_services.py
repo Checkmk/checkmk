@@ -276,7 +276,7 @@ def _parameter_valuespec_systemd_units() -> Dictionary:
             (
                 "memory",
                 Tuple(
-                    title=_("Memory Upper Levels"),
+                    title=_("Memory upper levels"),
                     help=_("Define the upper levels for memory usage."),
                     elements=[
                         Filesize(title=_("Warning at")),
@@ -287,7 +287,7 @@ def _parameter_valuespec_systemd_units() -> Dictionary:
             (
                 "cpu_time",
                 Tuple(
-                    title=_("CPU Time Upper Levels"),
+                    title=_("CPU Time upper levels"),
                     help=_("Define the upper levels for the consumed CPU time."),
                     elements=[
                         TimeSpan(title=_("Warning at"), display=MIN_SEC_MS),

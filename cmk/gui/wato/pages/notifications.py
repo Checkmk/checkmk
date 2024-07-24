@@ -375,7 +375,7 @@ class ABCNotificationsMode(ABCEventsMode):
                 else:
                     html.icon("checkmark", _("Create a notification"))
 
-                table.cell(_("Plug-in"), notify_plugin or _("Plain Email"), css=["narrow nowrap"])
+                table.cell(_("Plug-in"), notify_plugin or _("Plain email"), css=["narrow nowrap"])
 
                 table.cell(_("Bulk"), css=["narrow"])
                 if "bulk" in rule or "bulk_period" in rule:

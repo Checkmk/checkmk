@@ -83,6 +83,7 @@ cc_library(
 
 cc_shared_library(
     name = "neb_shared",
+    visibility = ["//visibility:public"],
     deps = [":neb"],
 )
 

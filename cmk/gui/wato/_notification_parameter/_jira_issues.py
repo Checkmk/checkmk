@@ -67,7 +67,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                                                 "username",
                                                 TextInput(
                                                     title=_("Username"),
-                                                    help=_("Configure the username here."),
+                                                    help=_("Configure the user name here."),
                                                     size=40,
                                                     allow_empty=False,
                                                 ),

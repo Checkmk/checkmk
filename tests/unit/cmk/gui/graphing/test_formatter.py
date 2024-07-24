@@ -8,8 +8,7 @@ from typing import Literal
 
 import pytest
 
-from cmk.gui.graphing._loader import register_unit
-from cmk.gui.graphing._parser import (
+from cmk.gui.graphing._formatter import (
     _stringify_small_decimal_number,
     DecimalFormatter,
     EngineeringScientificFormatter,
@@ -19,6 +18,7 @@ from cmk.gui.graphing._parser import (
     StandardScientificFormatter,
     TimeFormatter,
 )
+from cmk.gui.graphing._loader import register_unit
 
 from cmk.graphing.v1 import metrics
 

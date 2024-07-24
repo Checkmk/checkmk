@@ -27,6 +27,15 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 from cmk.graphing.v1.metrics import AutoPrecision
 
 from ._color import fade_color, parse_color, render_color
+from ._formatter import (
+    DecimalFormatter,
+    EngineeringScientificFormatter,
+    IECFormatter,
+    Label,
+    SIFormatter,
+    StandardScientificFormatter,
+    TimeFormatter,
+)
 from ._graph_specification import (
     FixedVerticalRange,
     GraphDataRange,
@@ -36,15 +45,6 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._loader import get_unit_info
-from ._parser import (
-    DecimalFormatter,
-    EngineeringScientificFormatter,
-    IECFormatter,
-    Label,
-    SIFormatter,
-    StandardScientificFormatter,
-    TimeFormatter,
-)
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point
 from ._type_defs import LineType, RRDData

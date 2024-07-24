@@ -19,6 +19,7 @@ from cmk.ccc import plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics, perfometers
 
+from ._color import parse_color_from_api
 from ._expression import (
     Constant,
     has_required_metrics_or_scalars,
@@ -26,7 +27,6 @@ from ._expression import (
     parse_expression,
 )
 from ._loader import perfometers_from_api, register_unit
-from ._parser import parse_color
 from ._type_defs import TranslatedMetric
 from ._unit_info import unit_info, UnitInfo
 
@@ -186,7 +186,7 @@ def _evaluate_quantity(
         case metrics.Constant():
             return _EvaluatedQuantity(
                 register_unit(quantity.unit),
-                parse_color(quantity.color),
+                parse_color_from_api(quantity.color),
                 quantity.value,
             )
         case metrics.WarningOf():
@@ -207,21 +207,21 @@ def _evaluate_quantity(
             metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
                 metric["unit"],
-                parse_color(quantity.color),
+                parse_color_from_api(quantity.color),
                 metric["scalar"]["min"],
             )
         case metrics.MaximumOf():
             metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
                 metric["unit"],
-                parse_color(quantity.color),
+                parse_color_from_api(quantity.color),
                 metric["scalar"]["max"],
             )
         case metrics.Sum():
             evaluated_first_summand = _evaluate_quantity(quantity.summands[0], translated_metrics)
             return _EvaluatedQuantity(
                 evaluated_first_summand.unit,
-                parse_color(quantity.color),
+                parse_color_from_api(quantity.color),
                 (
                     evaluated_first_summand.value
                     + sum(
@@ -236,7 +236,7 @@ def _evaluate_quantity(
                 product *= _evaluate_quantity(f, translated_metrics).value
             return _EvaluatedQuantity(
                 register_unit(quantity.unit),
-                parse_color(quantity.color),
+                parse_color_from_api(quantity.color),
                 product,
             )
         case metrics.Difference():
@@ -244,13 +244,13 @@ def _evaluate_quantity(
             evaluated_subtrahend = _evaluate_quantity(quantity.subtrahend, translated_metrics)
             return _EvaluatedQuantity(
                 evaluated_minuend.unit,
-                parse_color(quantity.color),
+                parse_color_from_api(quantity.color),
                 evaluated_minuend.value - evaluated_subtrahend.value,
             )
         case metrics.Fraction():
             return _EvaluatedQuantity(
                 register_unit(quantity.unit),
-                parse_color(quantity.color),
+                parse_color_from_api(quantity.color),
                 (
                     _evaluate_quantity(quantity.dividend, translated_metrics).value
                     / _evaluate_quantity(quantity.divisor, translated_metrics).value

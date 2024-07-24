@@ -6,6 +6,7 @@
 import colorsys
 import random
 from collections import Counter
+from dataclasses import dataclass
 from typing import Literal
 
 from cmk.gui.ctx_stack import g
@@ -15,6 +16,7 @@ from cmk.gui.type_defs import RGBColor
 from cmk.gui.utils.html import HTML
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.graphing.v1 import metrics
 
 # Colors:
 #
@@ -326,3 +328,93 @@ def get_gray_tone(color_counter: Counter[Literal["metric", "predictive"]]) -> st
     color_counter.update({"predictive": 1})
     value = ((color_counter["predictive"] * 15) % 136) + 60
     return _rgb_color_to_hex_color(value, value, value)
+
+
+@dataclass(frozen=True)
+class RGB:
+    red: int
+    green: int
+    blue: int
+
+
+def color_to_rgb(color: metrics.Color) -> RGB:
+    match color:
+        case metrics.Color.LIGHT_RED:
+            return RGB(255, 112, 112)
+        case metrics.Color.RED:
+            return RGB(255, 41, 41)
+        case metrics.Color.DARK_RED:
+            return RGB(164, 0, 0)
+
+        case metrics.Color.LIGHT_ORANGE:
+            return RGB(255, 150, 100)
+        case metrics.Color.ORANGE:
+            return RGB(255, 110, 33)
+        case metrics.Color.DARK_ORANGE:
+            return RGB(180, 70, 10)
+
+        case metrics.Color.LIGHT_YELLOW:
+            return RGB(255, 255, 120)
+        case metrics.Color.YELLOW:
+            return RGB(245, 245, 50)
+        case metrics.Color.DARK_YELLOW:
+            return RGB(170, 170, 0)
+
+        case metrics.Color.LIGHT_GREEN:
+            return RGB(165, 255, 85)
+        case metrics.Color.GREEN:
+            return RGB(55, 250, 55)
+        case metrics.Color.DARK_GREEN:
+            return RGB(40, 140, 15)
+
+        case metrics.Color.LIGHT_BLUE:
+            return RGB(135, 206, 250)
+        case metrics.Color.BLUE:
+            return RGB(30, 144, 255)
+        case metrics.Color.DARK_BLUE:
+            return RGB(30, 30, 200)
+
+        case metrics.Color.LIGHT_CYAN:
+            return RGB(150, 255, 255)
+        case metrics.Color.CYAN:
+            return RGB(30, 230, 230)
+        case metrics.Color.DARK_CYAN:
+            return RGB(20, 135, 140)
+
+        case metrics.Color.LIGHT_PURPLE:
+            return RGB(220, 160, 255)
+        case metrics.Color.PURPLE:
+            return RGB(180, 65, 240)
+        case metrics.Color.DARK_PURPLE:
+            return RGB(120, 20, 160)
+
+        case metrics.Color.LIGHT_PINK:
+            return RGB(255, 160, 240)
+        case metrics.Color.PINK:
+            return RGB(255, 100, 255)
+        case metrics.Color.DARK_PINK:
+            return RGB(210, 20, 190)
+
+        case metrics.Color.LIGHT_BROWN:
+            return RGB(230, 180, 140)
+        case metrics.Color.BROWN:
+            return RGB(191, 133, 72)
+        case metrics.Color.DARK_BROWN:
+            return RGB(124, 62, 4)
+
+        case metrics.Color.LIGHT_GRAY:
+            return RGB(200, 200, 200)
+        case metrics.Color.GRAY:
+            return RGB(164, 164, 164)
+        case metrics.Color.DARK_GRAY:
+            return RGB(121, 121, 121)
+
+        case metrics.Color.BLACK:
+            return RGB(0, 0, 0)
+        case metrics.Color.WHITE:
+            return RGB(255, 255, 255)
+
+
+def parse_color_from_api(color: metrics.Color) -> str:
+    rgb = color_to_rgb(color)
+    return f"#{rgb.red:02x}{rgb.green:02x}{rgb.blue:02x}"

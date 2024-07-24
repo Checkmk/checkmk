@@ -14,7 +14,7 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes, graphs, metrics, perfometers, translations
 
-from ._parser import (
+from ._formatter import (
     DecimalFormatter,
     EngineeringScientificFormatter,
     IECFormatter,

@@ -53,7 +53,7 @@ class NotificationParameterMail(NotificationParameter):
                         choices=[
                             ("omdsite", _("Site ID")),
                             ("hosttags", _("Tags of the host")),
-                            ("address", _("IP address of Host")),
+                            ("address", _("IP address of host")),
                             ("abstime", _("Absolute time of alert")),
                             ("reltime", _("Relative time of alert")),
                             ("longoutput", _("Additional plug-in output")),

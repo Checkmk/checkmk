@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Age, Float, Integer, Percentage
 from cmk.graphing.v1 import metrics
 
 from ._loader import units_from_api
-from ._type_defs import UnitInfo
+from ._unit_info import UnitInfo
 
 _MAX_DIGITS: Final = 5
 

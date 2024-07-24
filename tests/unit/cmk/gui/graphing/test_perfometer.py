@@ -24,7 +24,8 @@ from cmk.gui.graphing._perfometer import (
     MetricRendererStack,
     parse_perfometer,
 )
-from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric, UnitInfo
+from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
+from cmk.gui.graphing._unit_info import UnitInfo
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics, perfometers

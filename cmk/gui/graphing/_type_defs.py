@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, NotRequired, TypedDict
+from typing import Literal, TypedDict
 
 from livestatus import SiteId
 
@@ -13,7 +13,8 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.time_series import TimeSeries
-from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
+
+from ._unit_info import UnitInfo
 
 GraphConsoldiationFunction = Literal["max", "min", "average"]
 GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
@@ -32,26 +33,6 @@ class RRDDataKey:
 
 
 RRDData = Mapping[RRDDataKey, TimeSeries]
-
-
-class UnitInfo(TypedDict):
-    title: str
-    symbol: str
-    render: Callable[[float], str]
-    js_render: str
-    id: NotRequired[str]
-    stepping: NotRequired[str]
-    color: NotRequired[str]
-    graph_unit: NotRequired[Callable[[list[float]], tuple[str, list[str]]]]
-    description: NotRequired[str]
-    valuespec: NotRequired[
-        type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage]
-    ]
-    conversion: NotRequired[Callable[[float], float]]
-    perfometer_render: NotRequired[Callable[[float], str]]
-    formatter_ident: NotRequired[
-        Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]
-    ]
 
 
 class ScalarBounds(TypedDict, total=False):

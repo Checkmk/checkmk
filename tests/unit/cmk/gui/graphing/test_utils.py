@@ -39,7 +39,7 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     MinimalGraphTemplateRange,
     ScalarDefinition,
 )
-from cmk.gui.graphing._type_defs import UnitInfo
+from cmk.gui.graphing._unit_info import UnitInfo
 from cmk.gui.graphing._utils import (
     _NormalizedPerfData,
     AutomaticDict,

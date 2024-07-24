@@ -47,7 +47,8 @@ from ._parser import (
 )
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point
-from ._type_defs import LineType, RRDData, UnitInfo
+from ._type_defs import LineType, RRDData
+from ._unit_info import UnitInfo
 from ._utils import Curve, SizeEx
 
 Seconds = int

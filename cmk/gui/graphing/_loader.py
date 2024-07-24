@@ -14,8 +14,7 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes, graphs, metrics, perfometers, translations
 
-from ._type_defs import UnitInfo
-from ._unit_info import unit_info
+from ._unit_info import unit_info, UnitInfo
 
 
 def load_graphing_plugins() -> (

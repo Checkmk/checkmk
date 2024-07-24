@@ -13,7 +13,8 @@ from cmk.gui.utils.speaklater import LazyString
 from cmk.graphing.v1 import metrics, perfometers
 
 from ._parser import parse_color, parse_or_add_unit
-from ._type_defs import TranslatedMetric, UnitInfo
+from ._type_defs import TranslatedMetric
+from ._unit_info import UnitInfo
 
 
 @dataclass(frozen=True)

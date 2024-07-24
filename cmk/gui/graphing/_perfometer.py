@@ -27,8 +27,8 @@ from ._expression import (
     parse_expression,
 )
 from ._loader import perfometers_from_api
-from ._type_defs import TranslatedMetric, UnitInfo
-from ._unit_info import unit_info
+from ._type_defs import TranslatedMetric
+from ._unit_info import unit_info, UnitInfo
 
 
 class _LinearPerfometerSpec(TypedDict):

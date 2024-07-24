@@ -4,9 +4,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterator
-from typing import Final
+from typing import Final, Literal, NotRequired, TypedDict
 
-from ._type_defs import UnitInfo
+from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
+
+
+class UnitInfo(TypedDict):
+    title: str
+    symbol: str
+    render: Callable[[float], str]
+    js_render: str
+    id: NotRequired[str]
+    stepping: NotRequired[str]
+    color: NotRequired[str]
+    graph_unit: NotRequired[Callable[[list[float]], tuple[str, list[str]]]]
+    description: NotRequired[str]
+    valuespec: NotRequired[
+        type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage]
+    ]
+    conversion: NotRequired[Callable[[float], float]]
+    perfometer_render: NotRequired[Callable[[float], str]]
+    formatter_ident: NotRequired[
+        Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]
+    ]
 
 
 class UnitRegistry:

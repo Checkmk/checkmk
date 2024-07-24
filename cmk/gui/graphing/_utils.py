@@ -32,14 +32,8 @@ from cmk.graphing.v1 import graphs, metrics, perfometers, translations
 from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
 from ._loader import graphs_from_api, perfometers_from_api
 from ._parser import parse_color, parse_or_add_unit
-from ._type_defs import (
-    GraphConsoldiationFunction,
-    LineType,
-    ScalarBounds,
-    TranslatedMetric,
-    UnitInfo,
-)
-from ._unit_info import unit_info
+from ._type_defs import GraphConsoldiationFunction, LineType, ScalarBounds, TranslatedMetric
+from ._unit_info import unit_info, UnitInfo
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):

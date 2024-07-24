@@ -102,7 +102,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                             "api_key",
                             Transform(
                                 valuespec=IndividualOrStoredPassword(
-                                    title=_("API Key"),
+                                    title=_("API key"),
                                     allow_empty=False,
                                 ),
                                 back=migrate_password_back,

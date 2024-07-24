@@ -65,7 +65,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         "api_key",
         type=str,
         metavar="KEY",
-        help="Datatog API Key",
+        help="Datatog API key",
     )
     parser.add_argument(
         "app_key",

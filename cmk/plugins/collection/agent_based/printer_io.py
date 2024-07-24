@@ -7,8 +7,8 @@ import enum
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -256,7 +256,7 @@ check_plugin_printer_input = CheckPlugin(
     discovery_function=discovery_printer_io,
     check_function=check_printer_input,
     check_ruleset_name="printer_input",
-    check_default_parameters={"capacity_levels": (0.0, 0.0)},
+    check_default_parameters={"capacity_levels": ("fixed", (0.0, 0.0))},
 )
 
 
@@ -270,5 +270,5 @@ check_plugin_printer_output = CheckPlugin(
     discovery_function=discovery_printer_io,
     check_function=check_printer_output,
     check_ruleset_name="printer_output",
-    check_default_parameters={"capacity_levels": (100.0, 100.0)},
+    check_default_parameters={"capacity_levels": ("fixed", (100.0, 100.0))},
 )

@@ -22,7 +22,7 @@ from cmk.plugins.collection.agent_based.printer_io import (
         (
             "MP TRAY",
             {
-                "capacity_levels": (0.0, 0.0),
+                "capacity_levels": ("fixed", (0.0, 0.0)),
             },
             [[["1.1", "MP TRAY", "MP TRAY", "0", "0", "0", "0"]]],
             [
@@ -34,7 +34,7 @@ from cmk.plugins.collection.agent_based.printer_io import (
         (
             "MP TRAY",
             {
-                "capacity_levels": (0.0, 0.0),
+                "capacity_levels": ("fixed", (0.0, 0.0)),
             },
             [[["1.1", "MP TRAY", "MP TRAY", "0", "0", "0", "-1"]]],
             [
@@ -46,7 +46,7 @@ from cmk.plugins.collection.agent_based.printer_io import (
         (
             "MP TRAY",
             {
-                "capacity_levels": (0.0, 0.0),
+                "capacity_levels": ("fixed", (0.0, 0.0)),
             },
             [[["1.1", "MP TRAY", "MP TRAY", "96", "0", "0", "0"]]],
             [
@@ -60,7 +60,7 @@ from cmk.plugins.collection.agent_based.printer_io import (
         (
             "MP TRAY",
             {
-                "capacity_levels": (0.0, 0.0),
+                "capacity_levels": ("fixed", (0.0, 0.0)),
             },
             [[["1.1", "MP TRAY", "MP TRAY", "10", "0", "0", "0"]]],
             [
@@ -72,7 +72,7 @@ from cmk.plugins.collection.agent_based.printer_io import (
         (
             "MP TRAY",
             {
-                "capacity_levels": (0.0, 0.0),
+                "capacity_levels": ("fixed", (0.0, 0.0)),
             },
             [[["1.1", "MP TRAY", "MP TRAY", "18", "0", "0", "0"]]],
             [
@@ -84,7 +84,7 @@ from cmk.plugins.collection.agent_based.printer_io import (
         (
             "MP TRAY",
             {
-                "capacity_levels": (0.0, 0.0),
+                "capacity_levels": ("fixed", (0.0, 0.0)),
             },
             [[["1.1", "MP TRAY", "MP TRAY", "0", "8", "-2", "11"]]],
             [
@@ -97,7 +97,7 @@ from cmk.plugins.collection.agent_based.printer_io import (
         (
             "MP TRAY",
             {
-                "capacity_levels": (0.0, 0.0),
+                "capacity_levels": ("fixed", (0.0, 0.0)),
             },
             [[["1.1", "MP TRAY", "MP TRAY", "0", "", "-2", "11"]]],
             [
@@ -110,7 +110,7 @@ from cmk.plugins.collection.agent_based.printer_io import (
         (
             "MP TRAY",
             {
-                "capacity_levels": (0.0, 0.0),
+                "capacity_levels": ("fixed", (0.0, 0.0)),
             },
             [[["1.1", "MP TRAY", "MP TRAY", "0", "18", "15", "-3"]]],
             [
@@ -124,7 +124,7 @@ from cmk.plugins.collection.agent_based.printer_io import (
         (
             "MP TRAY",
             {
-                "capacity_levels": (0.0, 0.0),
+                "capacity_levels": ("fixed", (0.0, 0.0)),
             },
             [[["1.1", "MP TRAY", "MP TRAY", "0", "8", "15", "11"]]],
             [
@@ -138,7 +138,7 @@ from cmk.plugins.collection.agent_based.printer_io import (
         (
             "1",
             {
-                "capacity_levels": (80, 20),
+                "capacity_levels": ("fixed", (80, 20)),
             },
             [[["1.1", "", "", "0", "8", "15", "11"]]],
             [
@@ -153,7 +153,7 @@ from cmk.plugins.collection.agent_based.printer_io import (
         (
             "15",
             {
-                "capacity_levels": (80, 20),
+                "capacity_levels": ("fixed", (80, 20)),
             },
             [[["1.1", "", "", "0", "8", "15", "11"]]],
             [],
@@ -184,7 +184,7 @@ def test_check_printer_input_capacity_not_reported_if_unit_is_unkown_if_capacity
     capacity_unit, capacity_max
 ):
     string_table = [[["1.42", "", "", "0", capacity_unit, capacity_max, "11"]]]
-    params = {"capacity_levels": (80, 20)}
+    params = {"capacity_levels": ("fixed", (80, 20))}
     item = "42"
     data = parse_printer_io(string_table)
     result = check_printer_input(item, params, data)
@@ -200,7 +200,7 @@ def test_check_printer_input_capacity_not_reported_if_unit_is_unkown(
     capacity_unit,
 ):
     string_table = [[["1.42", "", "", "0", capacity_unit, "42", "11"]]]
-    params = {"capacity_levels": (80, 20)}
+    params = {"capacity_levels": ("fixed", (80, 20))}
     item = "42"
     data = parse_printer_io(string_table)
     result = check_printer_input(item, params, data)
@@ -218,7 +218,7 @@ def test_check_printer_input_capacity_not_reported_if_unit_is_unkown(
         (
             "MP TRAY",
             {
-                "capacity_levels": (0.0, 0.0),
+                "capacity_levels": ("fixed", (0.0, 0.0)),
             },
             [[["1.1", "MP TRAY", "MP TRAY", "0", "18", "15", "-3"]]],
             [
@@ -232,7 +232,7 @@ def test_check_printer_input_capacity_not_reported_if_unit_is_unkown(
         (
             "1",
             {
-                "capacity_levels": (70, 80),
+                "capacity_levels": ("fixed", (70, 80)),
             },
             [[["1.1", "", "", "0", "8", "15", "11"]]],
             [

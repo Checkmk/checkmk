@@ -1,0 +1,10 @@
+Title: Generic Printer: IO Unit State - Allow to not impose any levels
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1721816015
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+The plugins "<em>Generic Printer: Input Unit State</em>" and "<em>Generic Printer: Output Unit State</em>" did not allow to configure no levels, but to always be ok.

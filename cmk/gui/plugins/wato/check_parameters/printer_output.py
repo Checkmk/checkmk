@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersPrinters,
 )
-from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput
 
 
 def _parameter_valuespec_printer_output():
@@ -17,12 +18,11 @@ def _parameter_valuespec_printer_output():
         elements=[
             (
                 "capacity_levels",
-                Tuple(
+                SimpleLevels(
                     title=_("Capacity filled"),
-                    elements=[
-                        Percentage(title=_("Warning at"), default_value=0.0),
-                        Percentage(title=_("Critical at"), default_value=0.0),
-                    ],
+                    spec=Percentage,
+                    default_value=(100.0, 100.0),
+                    direction="upper",
                 ),
             ),
         ],

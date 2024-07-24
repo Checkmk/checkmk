@@ -44,7 +44,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         "-p", "--port", default=443, type=int, help="Use alternative port (default: 443)"
     )
     parser.add_argument(
-        "--path", default="", help="Add (sub) path to the URI, ie. <proto>://<host>:<port>/<path>"
+        "--path", default="", help="Add (sub) path to the URI, i.e. <proto>://<host>:<port>/<path>"
     )
     parser.add_argument(
         "-m",

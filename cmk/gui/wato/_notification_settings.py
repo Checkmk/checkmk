@@ -79,7 +79,7 @@ class ConfigVariableNotificationFallbackFormat(ConfigVariable):
             choices=[
                 (
                     "asciimail",
-                    _("ASCII Email"),
+                    _("ASCII email"),
                     notification_parameter_registry["asciimail"]().spec,
                 ),
                 (

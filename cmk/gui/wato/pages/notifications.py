@@ -1403,7 +1403,7 @@ class ModeNotifications(ABCNotificationsMode):
         return Checkbox(
             title=_("Dispatch notification"),
             label=_(
-                "Send out HTML/ASCII Email notification according "
+                "Send out HTML/ASCII email notification according "
                 "to notification rules (uncheck to avoid spam)"
             ),
             default_value=False,
@@ -2221,7 +2221,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 raise MKUserError(
                     varprefix + "_p_notify_plugin",
                     _(
-                        "Legacy ASCII Emails do not support bulking. You can either disable notification "
+                        "Legacy ASCII emails do not support bulking. You can either disable notification "
                         "bulking or choose another notification plug-in which allows bulking."
                     ),
                 )

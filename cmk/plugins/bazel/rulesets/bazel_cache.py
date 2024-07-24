@@ -36,7 +36,7 @@ def _formspec_bazel_cache() -> Dictionary:
             ),
             "password": DictElement(
                 parameter_form=Password(
-                    title=Title("Bazel Cache Password"),
+                    title=Title("Bazel Cache password"),
                     help_text=Help("The password used to connect to the Bazel Cache"),
                     migrate=migrate_to_password,
                 ),

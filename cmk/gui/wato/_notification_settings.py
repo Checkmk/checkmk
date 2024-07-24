@@ -84,7 +84,7 @@ class ConfigVariableNotificationFallbackFormat(ConfigVariable):
                 ),
                 (
                     "mail",
-                    _("HTML Email"),
+                    _("HTML email"),
                     notification_parameter_registry["mail"]().spec,
                 ),
             ],

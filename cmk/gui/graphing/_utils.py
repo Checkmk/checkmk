@@ -30,8 +30,8 @@ from cmk.discover_plugins import DiscoveredPlugins
 from cmk.graphing.v1 import graphs, metrics, perfometers, translations
 
 from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
-from ._loader import graphs_from_api, perfometers_from_api
-from ._parser import parse_color, parse_or_add_unit
+from ._loader import graphs_from_api, perfometers_from_api, register_unit
+from ._parser import parse_color
 from ._type_defs import GraphConsoldiationFunction, LineType, ScalarBounds, TranslatedMetric
 from ._unit_info import unit_info, UnitInfo
 
@@ -226,7 +226,7 @@ def add_graphing_plugins(
                 MetricInfoExtended(
                     name=plugin.name,
                     title=plugin.title.localize(translate_to_current_language),
-                    unit=parse_or_add_unit(plugin.unit),
+                    unit=register_unit(plugin.unit),
                     color=parse_color(plugin.color),
                 )
             )

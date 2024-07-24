@@ -9,7 +9,8 @@ from typing import Literal, Self
 
 from cmk.graphing.v1 import metrics, perfometers
 
-from ._parser import parse_color, parse_or_add_unit
+from ._loader import register_unit
+from ._parser import parse_color
 from ._type_defs import TranslatedMetric
 from ._unit_info import UnitInfo
 
@@ -168,7 +169,7 @@ def evaluate_quantity(
             )
         case metrics.Constant():
             return EvaluatedQuantity(
-                parse_or_add_unit(quantity.unit),
+                register_unit(quantity.unit),
                 parse_color(quantity.color),
                 quantity.value,
             )
@@ -218,7 +219,7 @@ def evaluate_quantity(
             for f in quantity.factors:
                 product *= evaluate_quantity(f, translated_metrics).value
             return EvaluatedQuantity(
-                parse_or_add_unit(quantity.unit),
+                register_unit(quantity.unit),
                 parse_color(quantity.color),
                 product,
             )
@@ -232,7 +233,7 @@ def evaluate_quantity(
             )
         case metrics.Fraction():
             return EvaluatedQuantity(
-                parse_or_add_unit(quantity.unit),
+                register_unit(quantity.unit),
                 parse_color(quantity.color),
                 (
                     evaluate_quantity(quantity.dividend, translated_metrics).value

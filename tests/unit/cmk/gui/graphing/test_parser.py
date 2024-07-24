@@ -8,13 +8,13 @@ from typing import Literal
 
 import pytest
 
+from cmk.gui.graphing._loader import register_unit
 from cmk.gui.graphing._parser import (
     _stringify_small_decimal_number,
     DecimalFormatter,
     EngineeringScientificFormatter,
     IECFormatter,
     Label,
-    parse_or_add_unit,
     SIFormatter,
     StandardScientificFormatter,
     TimeFormatter,
@@ -138,11 +138,11 @@ from cmk.graphing.v1 import metrics
         ),
     ],
 )
-def test_parse_or_add_unit(
+def test_register_unit(
     precision: metrics.AutoPrecision | metrics.StrictPrecision, value: int | float, expected: str
 ) -> None:
     unit = metrics.Unit(metrics.DecimalNotation("unit"), precision)
-    assert parse_or_add_unit(unit)["render"](value) == expected
+    assert register_unit(unit)["render"](value) == expected
 
 
 @pytest.mark.parametrize(
@@ -288,7 +288,7 @@ def test_render_unit_notation(
     expected: str,
 ) -> None:
     unit = metrics.Unit(notation, metrics.StrictPrecision(2))
-    assert parse_or_add_unit(unit)["render"](value) == expected
+    assert register_unit(unit)["render"](value) == expected
 
 
 @pytest.mark.parametrize(
@@ -399,7 +399,7 @@ def test_render_unit_notation(
     ],
 )
 def test_js_render_unit_notation(unit: metrics.Unit, expected: str) -> None:
-    assert parse_or_add_unit(unit)["js_render"] == expected
+    assert register_unit(unit)["js_render"] == expected
 
 
 @pytest.mark.parametrize(

@@ -3939,7 +3939,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                     (
                         "connect_timeout",
                         Integer(
-                            title=_("Connect Timeout"),
+                            title=_("Connect timeout"),
                             help=_("TCP connect timeout for connecting to the master"),
                             label=_("Try bringing up TCP connection for"),
                             unit=_("sec"),

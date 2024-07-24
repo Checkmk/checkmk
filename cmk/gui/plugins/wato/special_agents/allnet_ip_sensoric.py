@@ -24,7 +24,7 @@ def _valuespec_special_agents_allnet_ip_sensoric():
             (
                 "timeout",
                 Integer(
-                    title=_("Connect Timeout"),
+                    title=_("Connect timeout"),
                     help=_(
                         "The network timeout in seconds when communicating via HTTP. "
                         "The default is 10 seconds."

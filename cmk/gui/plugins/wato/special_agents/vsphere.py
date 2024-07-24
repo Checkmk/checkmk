@@ -68,7 +68,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
             (
                 "timeout",
                 Integer(
-                    title=_("Connect Timeout"),
+                    title=_("Connect timeout"),
                     help=_(
                         "The network timeout in seconds when communicating with vSphere or "
                         "to the Checkmk Agent. The default is 60 seconds. Please note that this "

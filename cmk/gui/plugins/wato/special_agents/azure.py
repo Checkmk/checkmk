@@ -57,7 +57,7 @@ CCE_AZURE_SERVICES: Final = [
 
 
 def get_azure_services() -> list[tuple[str, str]]:
-    if edition() in (Edition.CME, Edition.CCE):
+    if edition() in (Edition.CME, Edition.CCE, Edition.CSE):
         return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
 
     return RAW_AZURE_SERVICES
@@ -103,7 +103,11 @@ def _special_agents_azure_azure_tag_based_config():
                     orientation="horizontal",
                     choices=[
                         ("exists", _("exists")),
-                        ("value", _("is"), TextInput(title=_("Tag value"), allow_empty=False)),
+                        (
+                            "value",
+                            _("is"),
+                            TextInput(title=_("Tag value"), allow_empty=False),
+                        ),
                     ],
                 ),
             ],
@@ -219,7 +223,10 @@ def _valuespec_special_agents_azure():
                         % ("12000", "200"),
                         elements=[
                             ("explicit", _special_agents_azure_azure_explicit_config()),
-                            ("tag_based", _special_agents_azure_azure_tag_based_config()),
+                            (
+                                "tag_based",
+                                _special_agents_azure_azure_tag_based_config(),
+                            ),
                         ],
                     ),
                 ),
@@ -291,7 +298,13 @@ def _valuespec_special_agents_azure():
                     ),
                 ),
             ],
-            optional_keys=["subscription", "proxy", "import_tags", "piggyback_vms", "sequential"],
+            optional_keys=[
+                "subscription",
+                "proxy",
+                "import_tags",
+                "piggyback_vms",
+                "sequential",
+            ],
             default_keys=["import_tags"],
         ),
         migrate=_migrate_azure_rule_vs,

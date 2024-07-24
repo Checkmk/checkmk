@@ -38,7 +38,7 @@ CCE_GCP_SERVICES: Final = [
 
 
 def get_gcp_services() -> Sequence[MultipleChoiceElement]:
-    if edition() in (Edition.CME, Edition.CCE):
+    if edition() in (Edition.CME, Edition.CCE, Edition.CSE):
         return RAW_GCP_SERVICES + CCE_GCP_SERVICES
 
     return RAW_GCP_SERVICES
@@ -64,7 +64,8 @@ def _parameter_form_special_agents_gcp() -> Dictionary:
         elements={
             "project": DictElement(
                 parameter_form=String(
-                    title=Title("Project ID"), custom_validate=(LengthInRange(min_value=1),)
+                    title=Title("Project ID"),
+                    custom_validate=(LengthInRange(min_value=1),),
                 ),
                 required=True,
             ),
@@ -105,7 +106,8 @@ def _parameter_form_special_agents_gcp() -> Dictionary:
                                 title=Title("Piggyback services to monitor"),
                                 elements=[
                                     MultipleChoiceElement(
-                                        name="gce", title=Title("Google Compute Engine (GCE)")
+                                        name="gce",
+                                        title=Title("Google Compute Engine (GCE)"),
                                     )
                                 ],
                                 prefill=DefaultValue(["gce"]),

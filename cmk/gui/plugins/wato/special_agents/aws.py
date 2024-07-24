@@ -71,7 +71,10 @@ def _vs_element_aws_service_selection():
                 "The overall tags will be ignored for these services."
             ),
             choices=[
-                ("all", _("Gather all service instances and restrict by overall AWS tags")),
+                (
+                    "all",
+                    _("Gather all service instances and restrict by overall AWS tags"),
+                ),
                 (
                     "tags",
                     _("Use explicit AWS service tags and overrule overall AWS tags"),
@@ -431,7 +434,9 @@ class AWSSpecialAgentValuespecBuilder:
 
 
 def _valuespec_special_agents_aws() -> Migrate:
-    valuespec_builder = AWSSpecialAgentValuespecBuilder(edition() in (Edition.CME, Edition.CCE))
+    valuespec_builder = AWSSpecialAgentValuespecBuilder(
+        edition() in (Edition.CME, Edition.CCE, Edition.CSE)
+    )
     global_services = valuespec_builder.get_global_services()
     regional_services = valuespec_builder.get_regional_services()
     regional_services_default_keys = [service[0] for service in regional_services]
@@ -460,7 +465,10 @@ def _valuespec_special_agents_aws() -> Migrate:
                     Dictionary(
                         title=_("Proxy server details"),
                         elements=[
-                            ("proxy_host", TextInput(title=_("Proxy host"), allow_empty=False)),
+                            (
+                                "proxy_host",
+                                TextInput(title=_("Proxy host"), allow_empty=False),
+                            ),
                             ("proxy_port", NetworkPort(title=_("Port"))),
                             (
                                 "proxy_user",

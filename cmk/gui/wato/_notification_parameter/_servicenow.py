@@ -518,7 +518,7 @@ $LONGSERVICEOUTPUT$
                         size=40,
                         regex="^[-a-z0-9A-Z_]*$",
                         regex_error=_(
-                            "Invalid custum field. Only the characters a-z, A-Z, "
+                            "Invalid custom field. Only the characters a-z, A-Z, "
                             "0-9, _ and - are allowed."
                         ),
                         allow_empty=False,

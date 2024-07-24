@@ -23,15 +23,15 @@ def _valuespec_mssql_transactionlogs_discovery():
             (
                 "summarize_datafiles",
                 Checkbox(
-                    title=_("Display only a summary of all Datafiles"),
-                    label=_("Summarize Datafiles"),
+                    title=_("Display only a summary of all datafiles"),
+                    label=_("Summarize datafiles"),
                 ),
             ),
             (
                 "summarize_transactionlogs",
                 Checkbox(
-                    title=_("Display only a summary of all Transactionlogs"),
-                    label=_("Summarize Transactionlogs"),
+                    title=_("Display only a summary of all transactionlogs"),
+                    label=_("Summarize transactionlogs"),
                 ),
             ),
         ],

@@ -35,7 +35,7 @@ def _formspec_jenkins() -> Dictionary:
                         "host name here, eg. my_jenkins.com."
                     ),
                     custom_validate=[
-                        LengthInRange(min_value=1, max_value=32),
+                        LengthInRange(min_value=1),
                     ],
                     macro_support=True,
                 ),
@@ -48,9 +48,7 @@ def _formspec_jenkins() -> Dictionary:
                         "The username that should be used for accessing the "
                         "jenkins API. Has to have read permissions at least."
                     ),
-                    custom_validate=[
-                        LengthInRange(min_value=1, max_value=32),
-                    ],
+                    custom_validate=[LengthInRange(min_value=1)],
                 ),
                 required=True,
             ),
@@ -58,9 +56,7 @@ def _formspec_jenkins() -> Dictionary:
                 parameter_form=Password(
                     help_text=Help("The password or API key of the user."),
                     title=Title("Password of the user"),
-                    custom_validate=[
-                        LengthInRange(min_value=1),
-                    ],
+                    custom_validate=[LengthInRange(min_value=1)],
                     migrate=migrate_to_password,
                 ),
                 required=True,

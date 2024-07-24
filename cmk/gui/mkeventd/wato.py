@@ -3952,8 +3952,8 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                         Integer(
                             title=_("Automatic takeover"),
                             help=_(
-                                "If you enable this option then the slave will automatically "
-                                "takeover and enable event processing if the master is for "
+                                "If you enable this option then the remote site will automatically "
+                                "takeover and enable event processing if the central site is for "
                                 "the configured number of seconds unreachable."
                             ),
                             label=_("Takeover after a master downtime of"),

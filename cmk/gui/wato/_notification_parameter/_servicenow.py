@@ -36,7 +36,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                     HTTPUrl(
                         title=_("ServiceNow URL"),
                         help=_(
-                            "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
+                            "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
                         ),
                         allow_empty=False,
                     ),

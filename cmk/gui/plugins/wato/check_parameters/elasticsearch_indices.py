@@ -30,7 +30,7 @@ def _parameter_valuespec_elasticsearch_indices_discovery() -> Dictionary:
                         "Configure the grouping of indices. Elasticsearch can for example be "
                         "configured to automatically add a timestamp to index names, see "
                         '<a href=%s target="_blank">the documentation</a>. Via this grouping '
-                        "option, Checkmk can eg. be configured to accumulate all indices which "
+                        "option, Checkmk can e.g. be configured to accumulate all indices which "
                         "only differ in the trailing timestamp into a single service."
                     )
                     % '"https://www.elastic.co/guide/en/elasticsearch/reference/current/date-index-name-processor.html"',

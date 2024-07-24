@@ -30,7 +30,7 @@ def _valuespec_special_agents_graylog():
                     help=_(
                         "Use this option to set which instance should be "
                         "checked by the special agent. Please add the "
-                        "host name here, eg. my_graylog.com."
+                        "host name here, e.g. my_graylog.com."
                     ),
                     size=32,
                     allow_empty=False,

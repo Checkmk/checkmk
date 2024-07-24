@@ -46,7 +46,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
                     "webhook_url",
                     FixedValue(
                         value="https://events.pagerduty.com/v2/enqueue",
-                        title=_("API Endpoint from PagerDuty V2"),
+                        title=_("API endpoint from PagerDuty V2"),
                     ),
                 ),
                 (

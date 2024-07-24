@@ -121,6 +121,21 @@ class BundleReferences:
     dcd_connections: Sequence[tuple[str, DCDConnectionSpec]] | None = None
 
 
+def identify_bundle_group_type(bundle_group: str) -> RuleGroupType:
+    if bundle_group.startswith(RuleGroupType.SPECIAL_AGENTS.value):
+        return RuleGroupType.SPECIAL_AGENTS
+    raise ValueError(f"Unknown bundle group: {bundle_group}")
+
+
+def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
+    host_conditions = bundle.hosts is not None and len(bundle.hosts) == 1
+    rule_conditions = bundle.rules is not None and len(bundle.rules) == 1
+    password_conditions = bundle.passwords is not None and len(bundle.passwords) == 1
+    if not host_conditions or not rule_conditions or not password_conditions:
+        return False
+    return True
+
+
 def identify_bundle_references(
     bundle_group: str, bundle_ids: set[BundleId], *, rulespecs_hint: set[str] | None = None
 ) -> Mapping[BundleId, BundleReferences]:
@@ -422,7 +437,7 @@ class ConfigBundle(TypedDict):
     comment: str
 
     # Bundle specific properties
-    group: str
+    group: str  # e.g. rulespec_name    # special_agent:aws
     program_id: Literal["quick_setup"]
     customer: NotRequired[str]  # CME specific
 
@@ -434,6 +449,15 @@ class ConfigBundleStore(WatoSingleConfigFile[dict[BundleId, ConfigBundle]]):
             config_variable="configuration_bundles",
             spec_class=dict[BundleId, ConfigBundle],
         )
+
+
+def load_group_bundles(bundle_group: str) -> Mapping[BundleId, ConfigBundle]:
+    all_bundles = ConfigBundleStore().load_for_reading()
+    return {
+        bundle_id: bundle
+        for bundle_id, bundle in all_bundles.items()
+        if bundle["group"] == bundle_group
+    }
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

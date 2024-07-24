@@ -558,10 +558,10 @@ class SetFolderPathList(SetFolderPathAbstract, list):
         super().append(new_host)
 
 
+# TODO: This whole class must die!
 class SetFolderPathDict(SetFolderPathAbstract, dict):
     # TODO: How to annotate this?
     def update(self, new_hosts):
-        # not-yet-a-type
         self._set_folder_paths(new_hosts)
         return super().update(new_hosts)
 

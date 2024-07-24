@@ -148,6 +148,8 @@ class ContactGroupMapping(TypedDict):
     contact_group_ids: Sequence[str]
 
 
+# TODO: This type is horrible, one can't even dispatch to the right alternative at runtime without
+# looking at the *values*. This must be done differently, so dispatching can be done on the *types*
 ContactGroupMappingSpec = (
     str | tuple[str, dict[str, str]] | tuple[str, dict[str, str | Sequence[ContactGroupMapping]]]
 )

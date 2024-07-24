@@ -202,7 +202,6 @@ def test_check(
     string_table: StringTable,
     expected: Sequence[CheckResult],
 ) -> None:
-    assert (
-        list(lnx_quota.check(item=item, params=params, section=lnx_quota.parse(string_table)))
-        == expected
-    )
+    assert list(
+        lnx_quota.check(item=item, params=params, section=lnx_quota.parse(string_table))
+    ) == list(expected)

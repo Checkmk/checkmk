@@ -138,6 +138,7 @@ def check_supermicro_sensors(item, _no_params, info):
                 perfvar = "temp"
             elif sensor_type == Type.Voltage:
                 if unit == "mV":
+                    # TODO: Could warn_upper and crit_upper be None here?
                     reading, warn_upper, crit_upper = (
                         x / 1000.0 for x in (reading, warn_upper, crit_upper)
                     )

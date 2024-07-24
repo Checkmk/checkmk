@@ -333,8 +333,8 @@ def _excludes_by_regexes(
 
     excludes = []
     for address in addresses:
-        for p in patterns:
-            if p.match(address):
+        for p2 in patterns:
+            if p2.match(address):
                 excludes.append(address)
                 break  # one match is enough, exclude this.
 

@@ -187,8 +187,9 @@ def test_check_ibm_svc_systemstats_diskio(
     item: str,
     expected_result: Sequence[CheckResult],
 ) -> None:
-    result = list(check_ibm_svc_systemstats_diskio(item=item, section=section))
-    assert result == expected_result
+    assert list(check_ibm_svc_systemstats_diskio(item=item, section=section)) == list(
+        expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -217,8 +218,7 @@ def test_check_ibm_svc_systemstats_iops(
     item: str,
     expected_result: Sequence[CheckResult],
 ) -> None:
-    result = list(check_ibm_svc_systemstats_iops(item=item, section=section))
-    assert result == expected_result
+    assert list(check_ibm_svc_systemstats_iops(item=item, section=section)) == list(expected_result)
 
 
 @pytest.mark.parametrize(
@@ -266,8 +266,9 @@ def test_check_ibm_svc_systemstats_disk_latency(
     params: Mapping[str, Any],
     expected_result: Sequence[CheckResult],
 ) -> None:
-    result = list(check_ibm_svc_systemstats_disk_latency(item=item, params=params, section=section))
-    assert result == expected_result
+    assert list(
+        check_ibm_svc_systemstats_disk_latency(item=item, params=params, section=section)
+    ) == list(expected_result)
 
 
 @pytest.mark.parametrize(
@@ -333,8 +334,9 @@ def test_check_ibm_svc_systemstats_cpu(
     params: Mapping[str, Any],
     expected_result: Sequence[CheckResult],
 ) -> None:
-    result = list(check_ibm_svc_systemstats_cpu(params=params, section=section))
-    assert result == expected_result
+    assert list(check_ibm_svc_systemstats_cpu(params=params, section=section)) == list(
+        expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -395,5 +397,4 @@ def test_check_ibm_svc_systemstats_cache(
     section: IBMSystemStats,
     expected_result: Sequence[CheckResult],
 ) -> None:
-    result = list(check_ibm_svc_systemstats_cache(section=section))
-    assert result == expected_result
+    assert list(check_ibm_svc_systemstats_cache(section=section)) == list(expected_result)

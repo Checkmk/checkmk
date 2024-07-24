@@ -375,7 +375,7 @@ class MainModuleNetworkingServices(ABCMainModule):
     @property
     def description(self) -> str:
         return _(
-            "Configure monitoring of networking services using classical nagios plug-ins"
+            "Configure monitoring of networking services using classical Nagios plug-ins"
             " (so called active checks)"
         )
 

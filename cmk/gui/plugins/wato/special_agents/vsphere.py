@@ -104,8 +104,8 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
                     false_label=_("monitor"),
                     help=_(
                         "Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
-                        "virtual machines in case the default vm is unable to start. This option tells the "
-                        "vsphere agent to exclude placeholder vms in its output."
+                        "virtual machines in case the default VM is unable to start. This option tells the "
+                        "vsphere agent to exclude placeholder VMs in its output."
                     ),
                 ),
             ),

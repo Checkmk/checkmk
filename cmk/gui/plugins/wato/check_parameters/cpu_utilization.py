@@ -48,7 +48,7 @@ def cpu_util_elements():
                     "A single thread fully utilizing a single core (potentially due to a bug) "
                     "may go unnoticed when only monitoring the total utilization of the CPU. "
                     "With this configuration, Checkmk will alert if a single core is "
-                    "exceeding a utilization threshold over an extended period of time."
+                    "exceeding a utilization threshold over an extended period of time. "
                     "This is currently only supported on linux and windows agents "
                     "as well as devices monitored through the host-resource mib"
                 ),

@@ -353,7 +353,7 @@ class LDAPConnectionValuespec(Dictionary):
                         (
                             "failover_servers",
                             ListOfStrings(
-                                title=_("Failover Servers"),
+                                title=_("Failover servers"),
                                 help=_(
                                     "When the connection to the first server fails with connect specific errors "
                                     "like timeouts or some other network related problems, the connect mechanism "

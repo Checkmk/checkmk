@@ -1286,7 +1286,7 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
                     "If this option is enabled, the GUI reads the configured HTTP header "
                     "variable from the incoming HTTP request and simply takes the string "
                     "in this variable as name of the authenticated user. "
-                    "Be warned: Only allow access from trusted ip addresses "
+                    "Be warned: Only allow access from trusted IP addresses "
                     "(Apache <tt>Allow from</tt>), like proxy "
                     "servers, to this webpage. A user with access to this page could simply fake "
                     "the authentication information. This option can be useful to "

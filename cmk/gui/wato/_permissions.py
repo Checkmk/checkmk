@@ -407,7 +407,7 @@ def register(
             title=_l("Rulesets"),
             description=_l(
                 "Access to the module for managing Checkmk rules. Please note that a user can only "
-                "manage rules in folders he has permissions to. "
+                "manage rules in folders he has permissions to."
             ),
             defaults=["admin", "user"],
         )

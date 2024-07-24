@@ -236,10 +236,10 @@ class Log:
         self.state = state
         if self.fd == 1:
             self.orig = sys.stdout
-            sys.stdout = self  # type: ignore[assignment]
+            sys.stdout = self
         else:
             self.orig = sys.stderr
-            sys.stderr = self  # type: ignore[assignment]
+            sys.stderr = self
 
         self.color_replace = re.compile("\033\\[\\d{1,2}m", re.UNICODE)
 

@@ -59,7 +59,7 @@ class MetricOperation(BaseModel, ABC, frozen=True):
     # mypy does not support other decorators on top of @property:
     # https://github.com/python/mypy/issues/14461
     # https://docs.pydantic.dev/2.0/usage/computed_fields (mypy warning)
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     @final
     def ident(self) -> str:
@@ -202,7 +202,7 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     # mypy does not support other decorators on top of @property:
     # https://github.com/python/mypy/issues/14461
     # https://docs.pydantic.dev/2.0/usage/computed_fields (mypy warning)
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     @final
     def graph_type(self) -> str:

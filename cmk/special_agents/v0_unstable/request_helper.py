@@ -163,7 +163,7 @@ class ApiSession(Session):
         self._base_url = base_url if base_url else ""
         self.ssl_verify = ssl_verify if ssl_verify else False
 
-    def request(self, method, url, **kwargs):  # pylint: disable=arguments-differ
+    def request(self, method, url, **kwargs):  # type: ignore[override] # pylint: disable=arguments-differ
         url = urljoin(self._base_url, url)
         return super().request(method, url, verify=self.ssl_verify, **kwargs)
 

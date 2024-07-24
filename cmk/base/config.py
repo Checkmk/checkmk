@@ -561,7 +561,7 @@ class SetFolderPathList(SetFolderPathAbstract, list):
 # TODO: This whole class must die!
 class SetFolderPathDict(SetFolderPathAbstract, dict):
     # TODO: How to annotate this?
-    def update(self, new_hosts):
+    def update(self, new_hosts):  # type: ignore[override]
         self._set_folder_paths(new_hosts)
         return super().update(new_hosts)
 

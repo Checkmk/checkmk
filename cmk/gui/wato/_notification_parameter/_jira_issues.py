@@ -193,8 +193,8 @@ class NotificationParameterJiraIssues(NotificationParameter):
                             allow_empty=False,
                             help=_(
                                 "Assign created issues to "
-                                "defined user. This is the username "
-                                "of the user (not Email)."
+                                "defined user. This is the user name "
+                                "of the user (not email)."
                             ),
                         ),
                     ),

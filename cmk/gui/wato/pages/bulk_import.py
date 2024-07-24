@@ -454,7 +454,7 @@ class ModeBulkImport(WatoMode):
                         elements=[],
                         allowed_extensions=[".csv"],
                         mime_types=["text/csv"],
-                        title=_("Import Hosts"),
+                        title=_("Import hosts"),
                         file_title=_("CSV File"),
                     ),
                 ),
@@ -466,7 +466,7 @@ class ModeBulkImport(WatoMode):
                 ),
             ],
             render="form",
-            title=_("Import Hosts"),
+            title=_("Import hosts"),
             optional_keys=[],
         )
 

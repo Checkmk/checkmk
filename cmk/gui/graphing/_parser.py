@@ -523,12 +523,23 @@ class TimeFormatter(NotationFormatter):
         return _BASIC_DECIMAL_ATOMS[:6]
 
 
-def _vs_type(unit: metrics.Unit) -> type[Age] | type[Float] | type[Integer] | type[Percentage]:
-    if isinstance(unit.notation, metrics.TimeNotation):
+def _vs_type(
+    notation: (
+        metrics.DecimalNotation
+        | metrics.SINotation
+        | metrics.IECNotation
+        | metrics.StandardScientificNotation
+        | metrics.EngineeringScientificNotation
+        | metrics.TimeNotation
+    ),
+    symbol: str,
+    precision_digits: int,
+) -> type[Age] | type[Float] | type[Integer] | type[Percentage]:
+    if isinstance(notation, metrics.TimeNotation):
         return Age
-    if unit.notation.symbol.startswith("%"):
+    if symbol.startswith("%"):
         return Percentage
-    if unit.precision.digits == 0:
+    if precision_digits == 0:
         return Integer
     return Float
 
@@ -546,7 +557,6 @@ def _make_unit_info(
     ),
     symbol: str,
     precision: metrics.AutoPrecision | metrics.StrictPrecision,
-    value_spec_type: type[Age] | type[Float] | type[Integer] | type[Percentage],
 ) -> UnitInfo:
     formatter: NotationFormatter
     match notation:
@@ -585,7 +595,7 @@ def _make_unit_info(
     new cmk.number_format.{precision.__class__.__name__}({precision.digits}),
 ).render(v)""",
         formatter_ident=formatter.ident(),
-        valuespec=value_spec_type,
+        valuespec=_vs_type(notation, symbol, precision.digits),
     )
 
 
@@ -603,7 +613,6 @@ def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
             notation=unit.notation,
             symbol=unit.notation.symbol,
             precision=unit.precision,
-            value_spec_type=_vs_type(unit),
         )
     )
 

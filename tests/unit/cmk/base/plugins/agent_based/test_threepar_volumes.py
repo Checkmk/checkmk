@@ -24,6 +24,11 @@ STRING_TABLE = [
         '{"total": 19,"members": [{"id": 0,"name": "admin","provisioningType": 1,"state":1,"userSpace": {"reservedMiB": 10240,"rawReservedMiB": 30720,"usedMiB": 0,"freeMiB": 10240},"sizeMiB": 10240,"wwn":"60002AC0000000000000003F000292E7","policies": {"system": false},"capacityEfficiency": {"compaction": 19.54,"deduplication": 1.65,"compression": 2.06}}]}'
     ]
 ]
+STRING_TABLE_WITHOUT_USER_SPACE = [
+    [
+        '{"total": 149,"members": [{"id": 0,"name": "admin","deduplicationState": 3,"compressionState": 4,"provisioningType": 1,"copyType": 1,"baseId": 0,"readOnly": false,"state": 1,"failedStates": [],"degradedStates": [],"additionalStates": [],"totalReservedMiB": 10240,"totalUsedMiB": 10240,"sizeMiB": 10240,"wwn": "60002AC000000000000000000002ACF2","nguid": "60002AC0000000000002AC000002ACF2","creationTimeSec": 1702991221,"creationTime8601": "2023-12-19T13:07:01+00:00","usrSpcAllocWarningPct": 0,"usrSpcAllocLimitPct": 0,"policies": {"staleSS": true,"oneHost": false,"zeroDetect": false,"system": true,"caching":true},"userCPG": "SSD_r6","uuid": "360d0cc3-8afe-40e5-8ed4-fdf42fbb27d7","udid": 0,"rcopyStatus": 1,"links": [{"href": "https://172.25.0.201/api/v1/volumes/admin", "rel": "self"},{"href":"https://172.25.0.201/api/v1/volumespacedistribution/admin","rel": "volumeSpaceDistribution"}]}]}'
+    ]
+]
 
 
 @pytest.mark.parametrize(
@@ -83,6 +88,29 @@ def test_discover_3par_volumes(
                 Metric("fs_provisioning", 32212254720.0),
             ],
             id="Everything is OK.",
+        ),
+        pytest.param(
+            STRING_TABLE_WITHOUT_USER_SPACE,
+            "admin",
+            FILESYSTEM_DEFAULT_PARAMS,
+            [
+                Metric("fs_used", 10240.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.0)),
+                Metric("fs_free", 0.0, boundaries=(0.0, None)),
+                Metric("fs_used_percent", 100.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="Used: 100.00% - 10.0 GiB of 10.0 GiB (warn/crit at 80.00%/90.00% used)",
+                ),
+                Metric("fs_size", 10240.0, boundaries=(0.0, None)),
+                Metric("growth", 0.5917133490073674),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +606 KiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
+                Metric("trend", 0.5917133490073674, boundaries=(0.0, 426.6666666666667)),
+                Result(state=State.OK, summary="Time left until disk full: 0 seconds"),
+                Result(state=State.OK, summary="Type: FULL, WWN: 60002AC000000000000000000002ACF2"),
+                Metric("fs_provisioning", 10737418240.0),
+            ],
+            id="StringTable without userSpace key.",
         ),
         pytest.param(
             [

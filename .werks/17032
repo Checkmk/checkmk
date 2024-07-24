@@ -1,0 +1,11 @@
+Title: threepar_volumes: Fix parsing error
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1721814938
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+For some 3PAR versions, Checkmk reported a parsing error for the plugin threepar_volumes.
+This is now fixed.

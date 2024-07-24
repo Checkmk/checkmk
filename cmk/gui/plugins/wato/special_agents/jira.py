@@ -100,7 +100,7 @@ def _valuespec_special_agents_jira():
                     help=_(
                         "Use this option to set which instance should be "
                         "checked by the special agent. Please add the "
-                        "host name here, eg. my_jira.com. If not set, the "
+                        "host name here, e.g. my_jira.com. If not set, the "
                         "assigned host is used as instance."
                     ),
                     size=32,

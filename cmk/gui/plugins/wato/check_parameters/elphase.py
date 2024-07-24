@@ -108,7 +108,7 @@ def _parameter_valuespec_el_inphase():
                     valuespec=Tuple(elements=[TextInput(size=10), MonitoringState()]),
                     title=_("Map device state"),
                     help=_(
-                        "Here you can enter either device state number (eg. from SNMP devices) "
+                        "Here you can enter either device state number (e.g. from SNMP devices) "
                         "or exact device state name and the related monitoring state."
                     ),
                 ),
@@ -162,7 +162,7 @@ def _parameter_valuespec_ups_outphase() -> Dictionary:
                     valuespec=Tuple(elements=[TextInput(size=10), MonitoringState()]),
                     title=_("Map device state"),
                     help=_(
-                        "Here you can enter either device state number (eg. from SNMP devices) "
+                        "Here you can enter either device state number (e.g. from SNMP devices) "
                         "or exact device state name and the related monitoring state."
                     ),
                 ),

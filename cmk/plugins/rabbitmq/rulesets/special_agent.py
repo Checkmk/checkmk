@@ -37,7 +37,7 @@ def _form_spec_special_agents_rabbitmq():
                     help_text=Help(
                         "Use this option to set which instance should be "
                         "checked by the special agent. Please add the "
-                        "host name here, eg. my_rabbitmq.com. If not set, the "
+                        "host name here, e.g. my_rabbitmq.com. If not set, the "
                         "assigned host is used as instance."
                     ),
                     macro_support=True,

@@ -39,7 +39,7 @@ class NotificationParameterSMSviaIP(NotificationParameter):
                     HTTPUrl(
                         title=_("Modem URL"),
                         help=_(
-                            "Configure your modem URL here (eg. https://mymodem.mydomain.example)."
+                            "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
                         ),
                         allow_empty=False,
                     ),

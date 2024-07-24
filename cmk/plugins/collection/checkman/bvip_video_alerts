@@ -4,7 +4,7 @@ catalog: hw/environment/bosch
 license: GPLv2
 distribution: check_mk
 description:
- If the Camera (or the Camera Stack) reports on error related to the video processing (eg.
+ If the Camera (or the Camera Stack) reports on error related to the video processing (e.g.
  no picture from the lense), it will be reported.
 
 item:

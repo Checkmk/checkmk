@@ -64,14 +64,18 @@ def parse_threepar_volumes(string_table: StringTable) -> ThreeParVolumeSection:
         capacity_efficiency = volume.get(
             "capacityEfficiency"
         )  # Sometimes this section is not available
-
         threepar_volumes.setdefault(
             volume.get("name"),
             ThreePortVolume(
                 name=volume.get("name"),
                 is_system_volume=volume["policies"]["system"],
                 total_capacity=total_capacity,
-                free_capacity=total_capacity - volume["userSpace"]["usedMiB"],
+                free_capacity=total_capacity
+                - (
+                    volume["userSpace"]["usedMiB"]
+                    if volume.get("userSpace")
+                    else volume["totalUsedMiB"]
+                ),
                 deduplication=(
                     capacity_efficiency.get(
                         "deduplication"
@@ -82,7 +86,14 @@ def parse_threepar_volumes(string_table: StringTable) -> ThreeParVolumeSection:
                 compaction=(
                     capacity_efficiency.get("compaction") if capacity_efficiency else None
                 ),  # Will only be created if the capacityEfficiency section is available
-                provisioning=float(volume["userSpace"]["rawReservedMiB"] * 1024**2),
+                provisioning=float(
+                    (
+                        volume["userSpace"]["rawReservedMiB"]
+                        if volume.get("userSpace")
+                        else volume.get("totalReservedMiB", 0)
+                    )
+                    * 1024**2
+                ),
                 provisioning_type=PROVISIONING_MAP[volume["provisioningType"]],
                 state=STATES.get(volume["state"], State.UNKNOWN),
                 wwn=volume["wwn"],

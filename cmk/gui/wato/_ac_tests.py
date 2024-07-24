@@ -626,7 +626,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
             "By default, for security reasons, the GUI does not interpret any HTML "
             "code received from external sources, like service output or log messages. "
             "But there are specific reasons to deactivate this security feature. E.g. when "
-            "you want to display the HTML output produced by a specific check plug-in."
+            "you want to display the HTML output produced by a specific check plug-in. "
             "Disabling the escaping also allows the plug-in to execute not only HTML, but "
             "also Javascript code in the context of your browser. This makes it possible to "
             "execute arbitrary Javascript, even for injection attacks.<br>"

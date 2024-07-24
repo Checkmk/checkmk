@@ -2012,16 +2012,13 @@ class StatusServer(ECServerThread):
     def open_tcp_socket(self) -> None:
         if self._config["remote_status"] is not None:
             try:
-                self._tcp_port, self._tcp_allow_commands = self._config["remote_status"][:2]
+                self._tcp_port, self._tcp_allow_commands, networks = self._config["remote_status"]
                 try:
-                    ip_strings = self._config["remote_status"][2]
-                    if ip_strings is not None:
-                        self._tcp_access_list = [ipaddress.ip_network(x) for x in ip_strings]
-                    else:
-                        self._logger.info("No tcp access list in config. Using an empty list")
-                        self._tcp_access_list = []
-                except Exception:
-                    self._logger.info("No tcp access list in config. Using an empty list")
+                    self._tcp_access_list = (
+                        None if networks is None else [ipaddress.ip_network(n) for n in networks]
+                    )
+                except ValueError as e:
+                    self._logger.warning(f"{e}, disabling all TCP access")
                     self._tcp_access_list = []
                 try:
                     self._logger.info("Trying to use ipv6 for TCP socket port")
@@ -2114,7 +2111,9 @@ class StatusServer(ECServerThread):
                             self._logger.info(
                                 "Handle status connection from %s:%d", addr_info[0], addr_info[1]
                             )
-                        if allowed_ip(ipaddress.ip_address(addr_info[0]), self._tcp_access_list):
+                        if self._tcp_access_list is not None and not allowed_ip(
+                            ipaddress.ip_address(addr_info[0]), self._tcp_access_list
+                        ):
                             client_socket.close()
                             client_socket = None
                             self._logger.info(

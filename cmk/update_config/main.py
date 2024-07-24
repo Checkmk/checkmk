@@ -219,6 +219,8 @@ def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
     total = len(pre_update_actions)
     logger.info("Verifying Checkmk configuration...")
 
+    main_modules.load_plugins()
+
     # Note: Redis has to be disabled first, the other contexts depend on it
     with disable_redis(), gui_context():
         _initialize_base_environment()

@@ -42,7 +42,7 @@ def _valuespec_special_agents_hivemanager_ng():
             (
                 "api_token",
                 TextInput(
-                    title=_("API Access Token"),
+                    title=_("API access token"),
                     size=64,
                     allow_empty=False,
                 ),

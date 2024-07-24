@@ -100,7 +100,7 @@ def backup_managed(site_dir: Path, old_skel: Path, new_skel: Path, backup_dir: P
         if relpath != ".":
             store(site_dir, Path(relpath), backup_dir)
     for relpath in walk_managed(site_dir, old_skel):
-        if relpath != "." and not (new_skel / relpath).exists():  # Already backed-up
+        if relpath != "." and not os.path.lexists(new_skel / relpath):  # Already backed-up
             store(site_dir, Path(relpath), backup_dir)
 
 

@@ -180,6 +180,19 @@ class BackgroundProcess(multiprocessing.Process):
 
     def _open_stdout_and_stderr(self) -> None:
         """Create a temporary file and use it as stdout / stderr buffer"""
+        # Some background jobs (e.g. discover_registered_hosts) start other background jobs (e.g.
+        # activate_changes). In that case, sys.stdout and sys.stderr hold references to file
+        # descriptors set in the parent background job, although these descriptors are already
+        # closed via daemon.closefrom(0) in self._detach_from_parent. While setting the new
+        # TextIOWrapper, the file descriptors are apparently closed again, although they can already
+        # be in use by something else.
+        # We explicitly close stdout/sterr here to avoid "Bad file descriptor" errors afterwards.
+        try:
+            sys.stdout.close()
+            sys.stderr.close()
+        except (OSError, IOError, RuntimeError):
+            pass
+
         # - We can not use io.BytesIO() or similar because we need real file descriptors
         #   to be able to catch the (debug) output of libraries like libldap or subproccesses
         # - Use buffering=0 to make the non flushed output directly visible in

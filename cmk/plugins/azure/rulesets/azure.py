@@ -58,7 +58,7 @@ CCE_AZURE_SERVICES: Final = [
 
 
 def get_azure_services() -> Sequence[tuple[str, Title]]:
-    if edition(paths.omd_root) in (Edition.CME, Edition.CCE):
+    if edition(paths.omd_root) in (Edition.CME, Edition.CCE, Edition.CSE):
         return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
     return RAW_AZURE_SERVICES
 

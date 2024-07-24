@@ -39,7 +39,7 @@ CCE_GCP_SERVICES: Final = [
 
 
 def get_gcp_services() -> Sequence[MultipleChoiceElement]:
-    if edition(paths.omd_root) in (Edition.CME, Edition.CCE):
+    if edition(paths.omd_root) in (Edition.CME, Edition.CCE, Edition.CSE):
         return RAW_GCP_SERVICES + CCE_GCP_SERVICES
 
     return RAW_GCP_SERVICES

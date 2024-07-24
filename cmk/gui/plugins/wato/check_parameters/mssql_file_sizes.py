@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Alternative, Dictionary, Filesize, Percentage, Tup
 
 def _parameter_valuespec_mssql_file_sizes():
     return Dictionary(
-        title=_("File Size Levels"),
+        title=_("File size levels"),
         elements=[
             (
                 "data_files",

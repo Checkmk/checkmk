@@ -4750,7 +4750,7 @@ class PainterLogCommand(Painter):
         return "log_command"
 
     def title(self, cell: Cell) -> str:
-        return _("Log: command/plugin")
+        return _("Log: command/plug-in")
 
     def short_title(self, cell: Cell) -> str:
         return _("Command")

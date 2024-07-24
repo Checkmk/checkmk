@@ -18,7 +18,16 @@ pytestmark = pytest.mark.checks
     [
         pytest.param(
             {"username": "", "password": ("password", "")},
-            ["--server", "address", "--username", "", "--password", ""],
+            [
+                "--server",
+                "address",
+                "--username",
+                "",
+                "--password",
+                "",
+                "--cert-server-name",
+                "host",
+            ],
             id="explicit password and no port",
         ),
         pytest.param(
@@ -32,6 +41,8 @@ pytestmark = pytest.mark.checks
                 "password",
                 "--port",
                 "9440",
+                "--cert-server-name",
+                "host",
             ],
             id="explicit password and port",
         ),

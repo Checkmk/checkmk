@@ -11,6 +11,7 @@ from collections.abc import Generator, Sequence
 from typing import Any
 
 import requests
+from requests.adapters import HTTPAdapter
 
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
@@ -18,6 +19,51 @@ from cmk.special_agents.utils.argument_parsing import Args, create_default_argum
 SectionLine = tuple[Any, ...]
 
 LOGGING = logging.getLogger("agent_prism")
+
+
+class HostNameValidationAdapter(HTTPAdapter):
+    def __init__(self, host_name: str) -> None:
+        super().__init__()
+        self._reference_host_name = host_name
+
+    def cert_verify(self, conn, url, verify, cert):
+        conn.assert_hostname = self._reference_host_name
+        return super().cert_verify(conn, url, verify, cert)
+
+
+class SessionManager:
+    def __init__(
+        self,
+        username: str,
+        password: str,
+        timeout: int,
+        cert_check: bool,
+        check_hostname: str | None,
+        base_url: str,
+    ) -> None:
+        self._session = requests.Session()
+        auth_encoded = base64.b64encode(f"{username}:{password}".encode()).decode()
+        self._session.headers.update({"Authorization": f"Basic {auth_encoded}"})
+        self._verify = cert_check
+        self._timeout = timeout
+        if cert_check and check_hostname:
+            self._session.mount(base_url, HostNameValidationAdapter(check_hostname))
+
+    def get(self, url: str, params: dict[str, str] | None = None) -> Any:
+        try:
+            resp = self._session.get(url, params=params, verify=self._verify, timeout=self._timeout)
+        except requests.exceptions.ConnectionError as e:
+            LOGGING.error("Connection failed: %s", e)
+            raise e
+
+        try:
+            resp.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            LOGGING.error("HTTP error: %s", e)
+            raise e
+
+        return resp.json()
+
 
 # TODO: get rid of all this..
 # >>>>
@@ -53,17 +99,23 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser.add_argument(
         "--password", type=str, required=True, metavar="PASSWORD", help="password for that account"
     )
-    parser.add_argument(
+
+    cert_args = parser.add_mutually_exclusive_group()
+    cert_args.add_argument(
         "--no-cert-check", action="store_true", help="Do not verify TLS certificate"
+    )
+    cert_args.add_argument(
+        "--cert-server-name",
+        help="Expect this as the servers name in the ssl certificate. Overrides '--no-cert-check'.",
     )
 
     return parser.parse_args(argv)
 
 
 # TODO: get rid of CSV and write JSON
-def output_containers(session: requests.Session, url: str, timeout: int) -> None:
+def output_containers(session_manager: SessionManager, url: str) -> None:
     LOGGING.debug("do request..")
-    obj = session.get(url + "/containers", timeout=timeout).json()
+    obj = session_manager.get(url + "/containers")
     LOGGING.debug("got %d containers", len(obj["entities"]))
 
     write_title("containers")
@@ -79,17 +131,14 @@ def output_containers(session: requests.Session, url: str, timeout: int) -> None
         )
 
 
-def output_alerts(
-    session: requests.Session, url: str, timeout: int
-) -> Generator[SectionLine, None, None]:
+def output_alerts(session_manager: SessionManager, url: str) -> Generator[SectionLine, None, None]:
     needed_context_keys = {"vm_type"}
 
     LOGGING.debug("do request..")
-    obj = session.get(
+    obj = session_manager.get(
         url + "/alerts",
         params={"resolved": "false", "acknowledged": "false"},
-        timeout=timeout,
-    ).json()
+    )
     LOGGING.debug("got %d alerts", len(obj["entities"]))
 
     yield ("timestamp", "severity", "message", "context")
@@ -119,9 +168,9 @@ def output_alerts(
 
 
 # TODO: get rid of CSV and write JSON
-def output_cluster(session: requests.Session, url: str, timeout: int) -> None:
+def output_cluster(session_manager: SessionManager, url: str) -> None:
     LOGGING.debug("do request..")
-    obj = session.get(url + "/cluster", timeout=timeout).json()
+    obj = session_manager.get(url + "/cluster")
     LOGGING.debug("got %d keys", len(obj.keys()))
 
     write_title("info")
@@ -131,9 +180,9 @@ def output_cluster(session: requests.Session, url: str, timeout: int) -> None:
 
 
 # TODO: get rid of CSV and write JSON
-def output_storage_pools(session: requests.Session, url: str, timeout: int) -> None:
+def output_storage_pools(session_manager: SessionManager, url: str) -> None:
     LOGGING.debug("do request..")
-    obj = session.get(url + "/storage_pools", timeout=timeout).json()
+    obj = session_manager.get(url + "/storage_pools")
     LOGGING.debug("got %d entities", len(obj["entities"]))
 
     write_title("storage_pools")
@@ -155,30 +204,29 @@ def agent_prism_main(args: Args) -> int:
     storage_pools"""
     LOGGING.info("setup HTTPS connection..")
 
-    base_url_v1 = f"https://{args.server}:{args.port}/PrismGateway/services/rest/v1"
-    session = requests.session()
-    session.headers.update(
-        {
-            "Authorization": "Basic "
-            + base64.b64encode(f"{args.username}:{args.password}".encode()).decode()
-        }
+    base_url = f"https://{args.server}:{args.port}"
+    session_manager = SessionManager(
+        username=args.username,
+        password=args.password,
+        timeout=args.timeout,
+        cert_check=not args.no_cert_check,
+        check_hostname=args.cert_server_name,
+        base_url=base_url,
     )
-    session.verify = (
-        False if args.no_cert_check else True  # pylint: disable=simplifiable-if-expression
-    )
+    base_url_v1 = f"{base_url}/PrismGateway/services/rest/v1"
 
     LOGGING.info("fetch and write container info..")
-    output_containers(session, base_url_v1, timeout=args.timeout)
+    output_containers(session_manager, base_url_v1)
 
     LOGGING.info("fetch and write alerts..")
     with SectionWriter("prism_alerts") as writer:
-        writer.append_json(output_alerts(session, base_url_v1, timeout=args.timeout))
+        writer.append_json(output_alerts(session_manager, base_url_v1))
 
     LOGGING.info("fetch and write cluster info..")
-    output_cluster(session, base_url_v1, timeout=args.timeout)
+    output_cluster(session_manager, base_url_v1)
 
     LOGGING.info("fetch and write storage_pools..")
-    output_storage_pools(session, base_url_v1, timeout=args.timeout)
+    output_storage_pools(session_manager, base_url_v1)
 
     LOGGING.info("all done. bye.")
 

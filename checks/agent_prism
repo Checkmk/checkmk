@@ -21,6 +21,8 @@ def agent_prism_arguments(
 
     if params.get("no_cert_check"):
         args.append("--no-cert-check")
+    else:
+        args.extend(["--cert-server-name", hostname])
     return args
 
 

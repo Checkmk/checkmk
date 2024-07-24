@@ -1,0 +1,18 @@
+Title: agent_prism: fix SSL certificate verification
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1721809455
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+This werk impacts those who monitor Nutanix Prism Clusters.
+
+The agent was not correctly connecting to the Nutanix Prism endpoint
+because it used the IP address of the endpoint instead of its hostname,
+which prevented certificate verification.
+
+Now, the agent validates the certificate by comparing the name in the certificate
+with the hostname known to Checkmk.
+Alternatively, it correctly avoids certificate verification if the relevant flag is active.

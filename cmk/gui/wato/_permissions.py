@@ -511,7 +511,7 @@ def register(
             name="snapshots",
             title=_l("Manage snapshots"),
             description=_l(
-                "Access to the module <i>Snaphsots</i>. Please note: a user with "
+                "Access to the module <i>Snapshots</i>. Please note: a user with "
                 "write access to this module "
                 "can make arbitrary changes to the configuration by restoring uploaded snapshots."
             ),

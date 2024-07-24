@@ -33,7 +33,7 @@ class NotificationParameterPushover(NotificationParameter):
                 (
                     "api_key",
                     TextInput(
-                        title=_("API Key"),
+                        title=_("API key"),
                         help=_(
                             "You need to provide a valid API key to be able to send push notifications "
                             'using Pushover. Register and login to <a href="https://www.pushover.net" '

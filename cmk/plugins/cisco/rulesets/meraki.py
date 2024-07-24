@@ -39,7 +39,7 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
         title=Title("Cisco Meraki"),
         elements={
             "api_key": DictElement(
-                parameter_form=Password(title=Title("API Key"), migrate=migrate_to_password),
+                parameter_form=Password(title=Title("API key"), migrate=migrate_to_password),
                 required=True,
             ),
             "proxy": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy)),

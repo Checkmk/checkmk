@@ -43,7 +43,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                         (
                             "api_key",
                             MigrateToIndividualOrStoredPassword(
-                                title=_("API Key"),
+                                title=_("API key"),
                                 allow_empty=False,
                             ),
                         ),

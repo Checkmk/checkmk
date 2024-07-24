@@ -12,10 +12,17 @@ import pytest
 
 from cmk.utils.paths import omd_root
 
+from cmk.gui.config import active_config
 from cmk.gui.graphing import perfometer_info
-from cmk.gui.graphing._loader import load_graphing_plugins
-from cmk.gui.graphing._unit_info import unit_info
+from cmk.gui.graphing._loader import (
+    _compute_unit_info,
+    _TemperatureUnitConverter,
+    load_graphing_plugins,
+)
+from cmk.gui.graphing._unit_info import unit_info, UnitInfo
 from cmk.gui.graphing._utils import graph_info, metric_info
+from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from cmk.ccc.version import Edition, edition
 from cmk.discover_plugins import PluginLocation
@@ -357,3 +364,90 @@ _ALLOWED_BUNDLE_VIOLATIONS = (
         "cmk.plugins.robotmk.graphing.cee",
     }
 )
+
+
+@pytest.mark.parametrize(
+    "unit_info_, unit, expected_value",
+    [
+        pytest.param(
+            UnitInfo(
+                id="DecimalNotation_foo_AutoPrecision_2",
+                title="Title",
+                symbol="foo",
+                render=lambda v: f"{v} foo",
+                js_render="v => v",
+                conversion=lambda v: v,
+            ),
+            TemperatureUnit.CELSIUS,
+            "123.456 foo",
+            id="no-converter",
+        ),
+        pytest.param(
+            UnitInfo(
+                id="DecimalNotation_°C_AutoPrecision_2",
+                title="Title",
+                symbol="°C",
+                render=lambda v: f"{v} °C",
+                js_render="v => v",
+                conversion=lambda v: v,
+            ),
+            TemperatureUnit.CELSIUS,
+            "123.456 °C",
+            id="temp-celsius-celius",
+        ),
+        pytest.param(
+            UnitInfo(
+                id="DecimalNotation_°C_AutoPrecision_2",
+                title="Title",
+                symbol="°C",
+                render=lambda v: f"{v} °C",
+                js_render="v => v",
+                conversion=lambda v: v,
+            ),
+            TemperatureUnit.FAHRENHEIT,
+            "254.22 °F",
+            id="temp-celsius-fahrenheit",
+        ),
+        pytest.param(
+            UnitInfo(
+                id="DecimalNotation_°F_AutoPrecision_2",
+                title="Title",
+                symbol="°F",
+                render=lambda v: f"{v} °F",
+                js_render="v => v",
+                conversion=lambda v: v,
+            ),
+            TemperatureUnit.CELSIUS,
+            "50.81 °C",
+            id="temp-fahrenheit-celius",
+        ),
+        pytest.param(
+            UnitInfo(
+                id="DecimalNotation_°F_AutoPrecision_2",
+                title="Title",
+                symbol="°F",
+                render=lambda v: f"{v} °F",
+                js_render="v => v",
+                conversion=lambda v: v,
+            ),
+            TemperatureUnit.FAHRENHEIT,
+            "123.456 °F",
+            id="temp-fahrenheit-fahrenheit",
+        ),
+    ],
+)
+def test__compute_unit_info(
+    unit_info_: UnitInfo,
+    unit: TemperatureUnit,
+    expected_value: str,
+    request_context: None,
+) -> None:
+    active_config.default_temperature_unit = unit.value
+    unit_info_ = _compute_unit_info(
+        unit_info_.id,
+        unit_info_,
+        active_config,
+        LoggedInUser(None),
+        [_TemperatureUnitConverter],
+    )
+    assert unit_info_.render(unit_info_.conversion(123.456)) == expected_value

@@ -35,6 +35,7 @@ from ._color import (
     parse_color_into_hexrgb,
 )
 from ._loader import (
+    get_unit_info,
     graphs_from_api,
     MetricInfoExtended,
     metrics_from_api,
@@ -533,7 +534,7 @@ def _get_extended_metric_info(
             return MetricInfoExtended(
                 name=metric_name,
                 title=_("Prediction of ") + mfa.title + _(" (lower levels)"),
-                unit=mfa.unit,
+                unit=get_unit_info(mfa.unit.id),
                 color=get_gray_tone(color_counter),
             )
 
@@ -549,7 +550,7 @@ def _get_extended_metric_info(
             return MetricInfoExtended(
                 name=metric_name,
                 title=_("Prediction of ") + mfa.title + _(" (upper levels)"),
-                unit=mfa.unit,
+                unit=get_unit_info(mfa.unit.id),
                 color=get_gray_tone(color_counter),
             )
 
@@ -560,7 +561,13 @@ def _get_extended_metric_info(
             color=get_gray_tone(color_counter),
         )
     elif metric_name in metrics_from_api:
-        return metrics_from_api[metric_name]
+        mfa = metrics_from_api[metric_name]
+        return MetricInfoExtended(
+            name=metric_name,
+            title=mfa.title,
+            unit=get_unit_info(mfa.unit.id),
+            color=mfa.color,
+        )
     else:
         mi = _get_legacy_metric_info(metric_name, color_counter)
 

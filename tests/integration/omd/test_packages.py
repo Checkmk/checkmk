@@ -145,7 +145,12 @@ def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
     assert p.stdout and p.stderr  # for mypy
 
     assert plugin.expected in p.stdout.read()
-    assert not p.stderr.read()
+
+    if plugin.binary_name == "check_sftp":
+        # remove this once `paramiko` is fixed.
+        assert "CryptographyDeprecationWarning" in p.stderr.read()
+    else:
+        assert not p.stderr.read()
 
 
 def test_heirloommailx(site: Site) -> None:

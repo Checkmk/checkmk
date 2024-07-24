@@ -65,6 +65,6 @@ rulespec_registry.register(
         check_group_name="hostsystem_sensors",
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_parameter_valuespec_hostsystem_sensors,
-        title=lambda: _("Hostsystem sensor alerts"),
+        title=lambda: _("Host system sensor alerts"),
     )
 )

@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 def _item_spec_mssql_mirroring():
     return TextInput(
-        title=_("Database Name"),
+        title=_("Database name"),
         help=_(
             "You can set explicit databases to which you want to apply "
             "criticalities of the mirroring state."

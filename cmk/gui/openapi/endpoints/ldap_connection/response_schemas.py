@@ -417,7 +417,7 @@ class LDAPContactGroupMembership(LDAPCheckbox):
     handle_nested = fields.Boolean(
         description="When enabled, this plug-in will not only handle direct group memberships, "
         "instead it will also dig into nested groups and treat the members of those groups as "
-        "contact group members as well. Please mind that this feature might increase the "
+        "contact group members as well. Please bear in mind that this feature might increase the "
         "execution time of your LDAP sync.",
     )
     sync_from_other_connections = fields.List(
@@ -496,7 +496,7 @@ class LDAPGroupsToAttributes(LDAPCheckbox):
     handle_nested = fields.Boolean(
         description="Once you enable this option, this plug-in will not only handle direct group "
         "memberships, instead it will also dig into nested groups and treat the members of those "
-        "groups as contact group members as well. Please mind that this feature might increase the "
+        "groups as contact group members as well. Please bear in mind that this feature might increase the "
         "execution time of your LDAP sync. (Active Directory only at the moment)",
     )
     sync_from_other_connections = fields.List(

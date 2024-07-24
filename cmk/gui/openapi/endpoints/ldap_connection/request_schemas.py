@@ -523,7 +523,7 @@ class LDAPSyncPluginNestedOtherConnectionsRequest(LDAPCheckboxEnabledRequest):
     handle_nested = fields.Boolean(
         description="Once you enable this option, this plug-in will not only handle direct group"
         " memberships, instead it will also dig into nested groups and treat the members of those"
-        " groups as contact group members as well. Please mind that this feature might increase "
+        " groups as contact group members as well. Please bear in mind that this feature might increase "
         "the execution time of your LDAP sync.",
         example=True,
         load_default=False,

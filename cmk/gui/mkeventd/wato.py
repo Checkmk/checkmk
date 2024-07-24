@@ -4204,7 +4204,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                 and _("New Action")
                 or (value["id"] + " - " + value["title"]),
             ),
-            title=_("Actions (Emails & Scripts)"),
+            title=_("Actions (emails & scripts)"),
             help=_(
                 "Configure that possible actions that can be performed when a "
                 "rule triggers and also manually by a user."

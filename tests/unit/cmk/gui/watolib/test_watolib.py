@@ -264,6 +264,7 @@ def test_registered_configvars() -> None:
             "dcd_log_levels",
             "dcd_site_update_interval",
             "dcd_web_api_connection",
+            "default_dynamic_visual_permission",
             "liveproxyd_default_connection_params",
             "liveproxyd_log_levels",
             "notification_spooler_config",

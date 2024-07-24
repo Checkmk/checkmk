@@ -391,6 +391,7 @@ class CREConfig:
     default_user_profile: UserSpec = field(default_factory=make_default_user_profile)
     log_logon_failures: bool = True
     lock_on_logon_failures: int | None = 10
+    default_dynamic_visual_permission: Literal["yes", "no"] = "yes"
     session_mgmt: dict[str, Any] = field(
         default_factory=lambda: {
             "max_duration": {"enforce_reauth": 86400, "enforce_reauth_warning_threshold": 900},

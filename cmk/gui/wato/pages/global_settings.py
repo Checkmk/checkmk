@@ -376,6 +376,12 @@ class ABCEditGlobalSettingMode(WatoMode):
             sites=self._affected_sites(),
             domains=[self._config_variable.domain()],
             need_restart=self._config_variable.need_restart(),
+            need_apache_reload=self._config_variable.need_apache_reload(),
+            domain_settings={
+                self._config_variable.domain().ident(): {
+                    "need_apache_reload": self._config_variable.need_apache_reload()
+                }
+            },
         )
 
         return redirect(self._back_url())
@@ -542,6 +548,12 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             msg,
             domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
+            need_apache_reload=config_variable.need_apache_reload(),
+            domain_settings={
+                config_variable.domain().ident(): {
+                    "need_apache_reload": config_variable.need_apache_reload()
+                }
+            },
         )
 
         if action == "_reset":

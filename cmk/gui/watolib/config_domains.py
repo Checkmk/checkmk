@@ -174,10 +174,30 @@ class ConfigDomainGUI(ABCConfigDomain):
                 ),
             )
 
+        if settings and settings.get("need_apache_reload", False):
+            completed_process = subprocess.run(
+                ["omd", "reload", "apache"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                close_fds=True,
+                encoding="utf-8",
+                check=False,
+            )
+
+            if completed_process.returncode:
+                warnings.append(completed_process.stdout)
+
         return warnings
 
     def default_globals(self) -> Mapping[str, Any]:
         return get_default_config()
+
+    @classmethod
+    def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:
+        return DomainRequest(
+            cls.ident(), {k: v for setting in settings for k, v in setting.items()}
+        )
 
 
 # TODO: This has been moved directly into watolib because it was not easily possible

@@ -189,6 +189,7 @@ def register(
     config_variable_registry.register(ConfigVariableWATOHideFoldersWithoutReadPermissions)
     config_variable_registry.register(ConfigVariableWATOIconCategories)
     config_variable_group_registry.register(ConfigVariableGroupUserManagement)
+    config_variable_registry.register(ConfigVariableDefaultDynamicVisualsPermission)
     config_variable_registry.register(ConfigVariableLogLogonFailures)
     config_variable_registry.register(ConfigVariableLockOnLogonFailures)
     config_variable_registry.register(ConfigVariablePasswordPolicy)
@@ -2470,6 +2471,37 @@ class ConfigVariableGroupUserManagement(ConfigVariableGroup):
 
     def sort_index(self) -> int:
         return 40
+
+
+class ConfigVariableDefaultDynamicVisualsPermission(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserManagement
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "default_dynamic_visual_permission"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Default dynamic visuals permission"),
+            help=_(
+                "Default permission for dynamic visuals (dashboards, views, etc.). If set to 'yes' "
+                "all roles (including built-in roles) will have the permission to view dynamic "
+                "visuals by default. If set to 'no' only the admin role can view dynamic visuals "
+                "by default. "
+                "Note: Applying this setting will cause a reload of apache."
+            ),
+            choices=[
+                ("yes", _("yes")),
+                ("no", _("no")),
+            ],
+        )
+
+    def need_apache_reload(self) -> bool:
+        # Reload of apache required because dynamic visual permissions are registered during startup
+        return True
 
 
 class ConfigVariableLogLogonFailures(ConfigVariable):

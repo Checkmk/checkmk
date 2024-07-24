@@ -301,6 +301,10 @@ class ConfigVariable:
         """Whether or not a change to this setting enforces a "restart" during activate changes instead of just a synchronization"""
         return None
 
+    def need_apache_reload(self) -> bool:
+        """Whether a change to this setting enforces an apache reload, this currently only works when using the ConfigDomainGUI"""
+        return False
+
     # TODO: Investigate: Which use cases do we have here? Can this be dropped?
     def allow_reset(self) -> bool:
         """Whether or not the user is allowed to change this setting to factory settings"""

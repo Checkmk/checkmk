@@ -39,6 +39,7 @@ def add_change(
     add_user: bool = True,
     need_sync: bool | None = None,
     need_restart: bool | None = None,
+    need_apache_reload: bool | None = None,
     domains: Sequence[type[ABCConfigDomain]] | None = None,
     sites: Sequence[SiteId] | None = None,
     domain_settings: DomainSettings | None = None,
@@ -66,6 +67,7 @@ def add_change(
         add_user,
         need_sync,
         need_restart,
+        need_apache_reload,
         domains,
         sites,
         domain_settings,
@@ -94,6 +96,7 @@ class ActivateChangesWriter:
         add_user: bool,
         need_sync: bool | None,
         need_restart: bool | None,
+        need_apache_reload: bool | None,
         domains: Sequence[type[ABCConfigDomain]] | None,
         sites: Iterable[SiteId] | None,
         domain_settings: DomainSettings | None,
@@ -123,6 +126,7 @@ class ActivateChangesWriter:
                 add_user,
                 need_sync,
                 need_restart,
+                need_apache_reload,
                 domains,
                 domain_settings,
                 prevent_discard_changes,
@@ -142,6 +146,7 @@ class ActivateChangesWriter:
         add_user: bool,
         need_sync: bool | None,
         need_restart: bool | None,
+        need_apache_reload: bool | None,
         domains: Sequence[type[ABCConfigDomain]],
         domain_settings: DomainSettings | None,
         prevent_discard_changes: bool,
@@ -174,7 +179,9 @@ class ActivateChangesWriter:
                 "domain_settings": domain_settings or {},
                 "prevent_discard_changes": prevent_discard_changes,
                 "diff_text": diff_text,
-                "has_been_activated": site_is_local(site_id) and need_restart is False,
+                "has_been_activated": site_is_local(site_id)
+                and need_restart is False
+                and need_apache_reload is False,
             }
         )
 

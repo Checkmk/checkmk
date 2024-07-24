@@ -5,7 +5,7 @@
 
 import os
 import pickle
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast, Final, Generic, get_args, TypeVar
@@ -26,7 +26,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.permissions import declare_permission, permission_registry
-from cmk.gui.type_defs import PermissionName, Visual, VisualName, VisualTypeName
+from cmk.gui.type_defs import PermissionName, RoleName, Visual, VisualName, VisualTypeName
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.speaklater import LazyString
 
@@ -376,6 +376,12 @@ def _get_local_path(visual_type: VisualTypeName) -> Path:
     raise MKUserError(None, _("This package type is not supported."))
 
 
+def _get_dynamic_visual_default_permissions() -> Sequence[RoleName]:
+    if active_config.default_dynamic_visual_permission == "yes":
+        return default_authorized_builtin_role_ids
+    return ["admin"]
+
+
 def declare_visual_permission(what: VisualTypeName, name: str, visual: TVisual) -> None:
     permname = PermissionName(f"{what[:-1]}.{name}")
     if published_to_user(visual) and permname not in permission_registry:
@@ -383,7 +389,7 @@ def declare_visual_permission(what: VisualTypeName, name: str, visual: TVisual) 
             permname,
             f"{visual['title']} ({visual['name']})",
             visual["description"],
-            default_authorized_builtin_role_ids,
+            _get_dynamic_visual_default_permissions(),
         )
 
 
@@ -394,7 +400,7 @@ def declare_packaged_visual_permission(what: VisualTypeName, name: str, visual: 
             permname,
             f"{visual['title']} ({visual['name']}, {_('packaged)')}",
             visual["description"],
-            default_authorized_builtin_role_ids,
+            _get_dynamic_visual_default_permissions(),
         )
 
 

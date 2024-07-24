@@ -250,6 +250,7 @@ def test_registered_configvars() -> None:
             "cmc_timeperiod_horizon",
             "dcd_log_levels",
             "dcd_web_api_connection",
+            "default_dynamic_visual_permission",
             "liveproxyd_default_connection_params",
             "liveproxyd_log_levels",
             "notification_spooler_config",

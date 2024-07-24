@@ -151,6 +151,7 @@ def test_default_config_from_plugins() -> None:
         "enable_community_translations",
         "default_temperature_unit",
         "experimental_features",
+        "default_dynamic_visual_permission",
     ]
 
     # The below lines are confusing and incorrect. The reason we need them is

@@ -64,6 +64,27 @@ HOST_CONFIG = HostConfig(
             ],
             id="password from store and port",
         ),
+        pytest.param(
+            {
+                "username": "userid",
+                "password": Secret(42),
+                "no_cert_check": False,
+                "timeout": 300.0,
+            },
+            [
+                "--server",
+                "address",
+                "--username",
+                "userid",
+                "--password",
+                Secret(42).unsafe(),
+                "--cert-server-name",
+                "host name",
+                "--timeout",
+                "300",
+            ],
+            id="timeout",
+        ),
     ],
 )
 def test_prism_argument_parsing(params: Mapping[str, object], expected_args: Sequence[str]) -> None:

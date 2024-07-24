@@ -8,10 +8,13 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
+    InputHint,
     Integer,
     migrate_to_password,
     Password,
     String,
+    TimeMagnitude,
+    TimeSpan,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
@@ -53,6 +56,13 @@ def _form_spec() -> Dictionary:
                     prefill=DefaultValue(False),
                 ),
                 required=True,
+            ),
+            "timeout": DictElement(
+                parameter_form=TimeSpan(
+                    title=Title("Connection timeout"),
+                    displayed_magnitudes=(TimeMagnitude.SECOND,),
+                    prefill=InputHint(10.0),
+                ),
             ),
         },
     )

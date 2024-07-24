@@ -582,7 +582,9 @@ def cleanup_hosts(site: Site, host_names: list[str]) -> None:
 
 
 def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
-    return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != source_host]
+    if config.piggyback:
+        return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != source_host]
+    return []
 
 
 def _wait_for_piggyback_hosts(

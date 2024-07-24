@@ -242,14 +242,14 @@ class TestMetricometerRendererLegacyLinear:
         perfometer_render: Callable[[float], str] | None,
         expected_result: str,
     ) -> None:
-        unit_info: UnitInfo = {
-            "title": "My unit",
-            "symbol": "U",
-            "render": str,
-            "js_render": "v => cmk.number_format.drop_dotzero(v) + ' U'",
-            "id": "u",
-            "description": "My unit",
-        }
+        unit_info = UnitInfo(
+            id="u",
+            title="My unit",
+            symbol="U",
+            render=str,
+            js_render="v => cmk.number_format.drop_dotzero(v) + ' U'",
+            description="My unit",
+        )
         if perfometer_render:
             unit_info["perfometer_render"] = perfometer_render
         assert self._renderer(unit_info).get_label() == expected_result
@@ -343,14 +343,14 @@ class TestMetricometerRendererLegacyLogarithmic:
         perfometer_render: Callable[[float], str] | None,
         expected_result: str,
     ) -> None:
-        unit_info: UnitInfo = {
-            "title": "My unit",
-            "symbol": "U",
-            "render": str,
-            "js_render": "v => cmk.number_format.drop_dotzero(v) + ' U'",
-            "id": "u",
-            "description": "My unit",
-        }
+        unit_info = UnitInfo(
+            id="u",
+            title="My unit",
+            symbol="U",
+            render=str,
+            js_render="v => cmk.number_format.drop_dotzero(v) + ' U'",
+            description="My unit",
+        )
         if perfometer_render:
             unit_info["perfometer_render"] = perfometer_render
         assert self._renderer(unit_info).get_label() == expected_result
@@ -662,12 +662,13 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                 "scale": [1.0],
                 "auto_graph": True,
                 "title": "Metric name 1",
-                "unit": {
-                    "title": "Title",
-                    "symbol": "",
-                    "render": lambda v: f"{v}",
-                    "js_render": "v => v",
-                },
+                "unit": UnitInfo(
+                    id="id",
+                    title="Title",
+                    symbol="",
+                    render=lambda v: f"{v}",
+                    js_render="v => v",
+                ),
                 "color": "#111111",
             },
             "metric-name2": {
@@ -677,12 +678,13 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                 "scale": [1.0],
                 "auto_graph": True,
                 "title": "Metric name 2",
-                "unit": {
-                    "title": "Title",
-                    "symbol": "",
-                    "render": lambda v: f"{v}",
-                    "js_render": "v => v",
-                },
+                "unit": UnitInfo(
+                    id="id",
+                    title="Title",
+                    symbol="",
+                    render=lambda v: f"{v}",
+                    js_render="v => v",
+                ),
                 "color": "#222222",
             },
         },
@@ -704,6 +706,7 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     auto_graph=True,
                     title="Metric name",
                     unit=UnitInfo(
+                        id="id",
                         title="Title",
                         symbol="",
                         render=lambda v: f"{v}",
@@ -727,6 +730,7 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     auto_graph=True,
                     title="Metric name 1",
                     unit=UnitInfo(
+                        id="id",
                         title="Title",
                         symbol="",
                         render=lambda v: f"{v}",
@@ -742,6 +746,7 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     auto_graph=True,
                     title="Metric name 2",
                     unit=UnitInfo(
+                        id="id",
                         title="Title",
                         symbol="",
                         render=lambda v: f"{v}",

@@ -9,6 +9,7 @@ import pytest
 
 from cmk.gui.graphing._evaluate import evaluate_quantity, perfometer_matches
 from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
+from cmk.gui.graphing._unit_info import UnitInfo
 
 from cmk.graphing.v1 import metrics, perfometers, Title
 
@@ -69,12 +70,13 @@ def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric
         "scale": [1.0],
         "auto_graph": False,
         "title": "Title 1",
-        "unit": {
-            "title": "Title 2",
-            "symbol": "",
-            "render": lambda v: f"{v}",
-            "js_render": "v => v",
-        },
+        "unit": UnitInfo(
+            id="id",
+            title="Title",
+            symbol="",
+            render=lambda v: f"{v}",
+            js_render="v => v",
+        ),
         "color": "#123456",
     }
 

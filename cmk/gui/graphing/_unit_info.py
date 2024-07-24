@@ -9,7 +9,7 @@ from typing import Final, Literal, NotRequired, TypedDict
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
 
-class UnitInfo(TypedDict):
+class UnitInfoWithOrWithoutID(TypedDict):
     title: str
     symbol: str
     render: Callable[[float], str]
@@ -29,17 +29,40 @@ class UnitInfo(TypedDict):
     ]
 
 
+class UnitInfo(TypedDict):
+    id: str
+    title: str
+    symbol: str
+    render: Callable[[float], str]
+    js_render: str
+    stepping: NotRequired[str]
+    color: NotRequired[str]
+    graph_unit: NotRequired[Callable[[list[float]], tuple[str, list[str]]]]
+    description: NotRequired[str]
+    valuespec: NotRequired[
+        type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage]
+    ]
+    conversion: NotRequired[Callable[[float], float]]
+    perfometer_render: NotRequired[Callable[[float], str]]
+    formatter_ident: NotRequired[
+        Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]
+    ]
+
+
 class UnitRegistry:
     def __init__(self) -> None:
-        self.units: Final[dict[str, UnitInfo | Callable[[], UnitInfo]]] = {}
+        self.units: Final[
+            dict[str, UnitInfoWithOrWithoutID | Callable[[], UnitInfoWithOrWithoutID]]
+        ] = {}
 
     def __getitem__(self, unit_id: str) -> UnitInfo:
         item = unit() if callable(unit := self.units[unit_id]) else unit
-        item["id"] = unit_id
         item.setdefault("description", item["title"])
-        return item
+        return UnitInfo(id=unit_id, **item)
 
-    def __setitem__(self, unit_id: str, unit: UnitInfo | Callable[[], UnitInfo]) -> None:
+    def __setitem__(
+        self, unit_id: str, unit: UnitInfoWithOrWithoutID | Callable[[], UnitInfoWithOrWithoutID]
+    ) -> None:
         self.units[unit_id] = unit
 
     def keys(self) -> Iterator[str]:

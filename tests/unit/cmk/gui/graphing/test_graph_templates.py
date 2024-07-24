@@ -32,6 +32,7 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     GraphTemplate,
     ScalarDefinition,
 )
+from cmk.gui.graphing._unit_info import UnitInfo
 from cmk.gui.graphing._utils import translate_metrics
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
@@ -312,12 +313,13 @@ def test__to_metric_operation(
                     "scale": list(scales),
                     "auto_graph": False,
                     "title": "Title",
-                    "unit": {
-                        "title": "Unit Title",
-                        "symbol": "",
-                        "render": lambda v: f"{v}",
-                        "js_render": "js-render",
-                    },
+                    "unit": UnitInfo(
+                        id="id",
+                        title="Title",
+                        symbol="",
+                        render=lambda v: f"{v}",
+                        js_render="v => v",
+                    ),
                     "color": "#111111",
                 },
             },

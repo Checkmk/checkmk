@@ -252,7 +252,7 @@ rulespec_registry.register(
 
 def _item_spec_azure_databases():
     return TextInput(
-        title=_("Database Name"),
+        title=_("Database name"),
         help=_("Specify database names that the rule should apply to"),
     )
 

@@ -119,7 +119,7 @@ def _parameter_form_special_agents_cisco_prime() -> Dictionary:
             ),
             "timeout": DictElement(
                 parameter_form=Integer(
-                    title=Title("Connect Timeout"),
+                    title=Title("Connect timeout"),
                     help_text=Help("The network timeout in seconds"),
                     prefill=DefaultValue(60),
                     custom_validate=(NumberInRange(min_value=1),),

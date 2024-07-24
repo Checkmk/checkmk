@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
 
 def _item_spec_msexch_copyqueue():
     return TextInput(
-        title=_("Database Name"),
+        title=_("Database name"),
         help=_("The database name on the Mailbox Server."),
     )
 

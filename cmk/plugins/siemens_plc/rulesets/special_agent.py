@@ -111,7 +111,7 @@ def _parameter_form() -> Dictionary:
             ),
             "timeout": DictElement(
                 parameter_form=Integer(
-                    title=Title("Connect Timeout"),
+                    title=Title("Connect timeout"),
                     help_text=Help(
                         "The connect timeout in seconds when establishing a connection "
                         "with the PLC."

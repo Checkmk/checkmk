@@ -593,8 +593,8 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                     title=_("Attribute sync plug-ins"),
                     help=_(
                         "It is possible to fetch several attributes of users, like Email or full names, "
-                        "from the LDAP directory. This is done by plug-ins which can individually enabled "
-                        "or disabled. When enabling a plug-in, it is used upon the next synchonisation of "
+                        "from the LDAP directory. This is done by plug-ins which can be individually enabled "
+                        "or disabled. When enabling a plug-in, it is used upon the next synchronization of "
                         "user accounts for gathering their attributes. The user options which get imported "
                         "into Checkmk from LDAP will be locked in Setup."
                     ),

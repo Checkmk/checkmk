@@ -101,7 +101,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                                             (
                                                 "token",
                                                 IndividualOrStoredPassword(
-                                                    title=_("API or Personal access token"),
+                                                    title=_("API or personal access token"),
                                                     allow_empty=False,
                                                     help=_(
                                                         "Enter the %s to "

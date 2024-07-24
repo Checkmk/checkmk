@@ -85,9 +85,13 @@ def _get_import_names_from_dist_name(dist_name: str) -> List[str]:
 def _get_import_names_from_pipfile() -> List[str]:
     # TODO: There are packages which are currently missing the top_level.txt, so we're hardcoding the import names
     static_import_names = ["typing_extensions"]
+    static_import_renamings = {"more-itertools": "more_itertools"}
     parsed_pipfile = Pipfile.load(filename=repo_path() + "/Pipfile")
     import_names = []
     for dist_name in parsed_pipfile.data["default"].keys():
+        if dist_name in static_import_renamings:
+            import_names.append(static_import_renamings[dist_name])
+            continue
         if dist_name not in static_import_names:
             import_names.extend(_get_import_names_from_dist_name(dist_name))
     assert import_names

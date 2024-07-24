@@ -20,7 +20,7 @@ def _parameter_valuespec_apc_ats_output():
             (
                 "output_voltage_max",
                 Tuple(
-                    title=_("Maximum levels for Voltage"),
+                    title=_("Maximum levels for voltage"),
                     elements=[
                         Integer(title=_("Warning at"), unit="Volt"),
                         Integer(title=_("Critical at"), unit="Volt"),

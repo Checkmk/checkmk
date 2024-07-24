@@ -4090,7 +4090,7 @@ class ConfigVariableEventConsoleSqliteFreelistSize(ConfigVariable):
             title=_("Event Console History Fragmentation Limit Size"),
             help=_(
                 "Event Console History can become fragmented over time. So if the total"
-                "size of deleted entries reaches this number the Event Console History will be cleaned up. "
+                "size of deleted entries reaches this number the Event Console History will be cleaned up."
             ),
             minvalue=1 * 1024 * 1024,
             maxvalue=100 * 1024 * 1024,

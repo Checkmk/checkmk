@@ -41,7 +41,7 @@ def _valuespec_special_agents_emcvnx() -> Dictionary:
                         "These need to be created manually before using. Therefor run as "
                         "instance user (if using OMD) or Nagios user (if not using OMD) "
                         "a command like "
-                        "<tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> "
+                        "<tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER</tt>. "
                         "This creates <tt>SecuredCLISecurityFile.xml</tt> and "
                         "<tt>SecuredCLIXMLEncrypted.key</tt> in the home directory of the user "
                         "and these files are used then."

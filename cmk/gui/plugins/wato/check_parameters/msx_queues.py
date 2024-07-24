@@ -78,8 +78,8 @@ def _parameter_valuespec_msx_queues() -> Dictionary:
                 Tuple(
                     title=_("Maximum number of emails in queue"),
                     elements=[
-                        Integer(title=_("Warning at"), unit=_("E-Mails")),
-                        Integer(title=_("Critical at"), unit=_("E-Mails")),
+                        Integer(title=_("Warning at"), unit=_("Emails")),
+                        Integer(title=_("Critical at"), unit=_("Emails")),
                     ],
                 ),
             ),

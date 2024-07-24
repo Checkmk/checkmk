@@ -316,7 +316,7 @@ class PageCrash(ABCCrashReportPage):
                 (
                     "mail",
                     EmailAddress(
-                        title=_("Email Address"),
+                        title=_("Email address"),
                         allow_empty=False,
                     ),
                 ),

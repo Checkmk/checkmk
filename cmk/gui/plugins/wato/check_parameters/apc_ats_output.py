@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Tuple
 
 def _parameter_valuespec_apc_ats_output():
     return Dictionary(
-        title=_("Levels for ATS Output parameters"),
+        title=_("Levels for ATS output parameters"),
         optional_keys=True,
         elements=[
             (

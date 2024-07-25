@@ -62,9 +62,13 @@ function setValidation(new_validation: ValidationMessages) {
 function get_elements_from_props(): ElementFromProps[] {
   const elements: ElementFromProps[] = []
   props.spec.elements.forEach((element: DictionaryElement) => {
+    let is_active = element.ident in data.value ? true : element.required
+    if (is_active && data.value[element.ident] === undefined) {
+      data.value[element.ident] = default_values[element.ident]
+    }
     elements.push({
       dict_config: element,
-      is_active: element.ident in data.value ? true : element.required
+      is_active: is_active
     })
   })
   return elements

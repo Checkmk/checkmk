@@ -33,7 +33,6 @@ const value = computed({
 
 <template>
   <div>
-    <pre>taada</pre>
     <label v-if="$props.spec.label" :for="$componentId">{{ spec.label }}</label>
     <select :id="$componentId" v-model="value" :disabled="spec.frozen">
       <option v-for="element in spec.elements" :key="element.name" :value="element.name">

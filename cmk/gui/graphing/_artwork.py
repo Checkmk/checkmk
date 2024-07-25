@@ -576,7 +576,7 @@ def _compute_labels_from_api(
                     for l in formatter.render_y_labels(
                         min_y=0,
                         max_y=abs_min_y,
-                        mean_num_labels=min_mean_num_labels,
+                        mean_num_labels=abs(min_mean_num_labels),
                     )
                 ]
                 + [Label(0, "0")]
@@ -584,7 +584,7 @@ def _compute_labels_from_api(
                     formatter.render_y_labels(
                         min_y=0,
                         max_y=abs_max_y,
-                        mean_num_labels=max_mean_num_labels,
+                        mean_num_labels=abs(max_mean_num_labels),
                     )
                 )
             )

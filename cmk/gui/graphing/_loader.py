@@ -5,7 +5,6 @@
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import TypedDict
 
 from cmk.utils.metrics import MetricName
 
@@ -205,23 +204,19 @@ def registered_units() -> Sequence[RegisteredUnit]:
     )
 
 
-class _MetricInfoExtendedMandatory(TypedDict):
+@dataclass(frozen=True)
+class MetricInfoExtended:
     name: MetricName
     title: str | LazyString
     unit: UnitInfo
     color: str
-
-
-class MetricInfoExtended(_MetricInfoExtendedMandatory, total=False):
-    # this is identical to MetricInfo except unit, but one can not override the
-    # type of a field so we have to copy everything from MetricInfo
-    help: str | LazyString
-    render: Callable[[float | int], str]
+    help: str | LazyString | None = None
+    render: Callable[[float | int], str] | None = None
 
 
 class MetricsFromAPI(Registry[MetricInfoExtended]):
     def plugin_name(self, instance: MetricInfoExtended) -> str:
-        return instance["name"]
+        return instance.name
 
 
 metrics_from_api = MetricsFromAPI()

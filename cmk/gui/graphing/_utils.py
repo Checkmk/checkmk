@@ -137,7 +137,7 @@ metric_info: dict[MetricName, MetricInfo] = {}
 
 def registered_metrics() -> Iterator[tuple[str, str]]:
     for metric_id, mie in metrics_from_api.items():
-        yield metric_id, str(mie["title"])
+        yield metric_id, str(mie.title)
     for metric_id, mi in metric_info.items():
         yield metric_id, str(mi["title"])
 
@@ -538,8 +538,8 @@ def _get_extended_metric_info(
             mfa = metrics_from_api[lookup_metric_name]
             return MetricInfoExtended(
                 name=metric_name,
-                title=_("Prediction of ") + mfa["title"] + _(" (lower levels)"),
-                unit=mfa["unit"],
+                title=_("Prediction of ") + mfa.title + _(" (lower levels)"),
+                unit=mfa.unit,
                 color=get_gray_tone(color_counter),
             )
 
@@ -554,8 +554,8 @@ def _get_extended_metric_info(
             mfa = metrics_from_api[lookup_metric_name]
             return MetricInfoExtended(
                 name=metric_name,
-                title=_("Prediction of ") + mfa["title"] + _(" (upper levels)"),
-                unit=mfa["unit"],
+                title=_("Prediction of ") + mfa.title + _(" (upper levels)"),
+                unit=mfa.unit,
                 color=get_gray_tone(color_counter),
             )
 
@@ -570,18 +570,14 @@ def _get_extended_metric_info(
     else:
         mi = _get_legacy_metric_info(metric_name, color_counter)
 
-    mie = MetricInfoExtended(
+    return MetricInfoExtended(
         name=metric_name,
         title=mi["title"],
         unit=unit_info[mi["unit"]],
         color=parse_color_into_hexrgb(mi["color"]),
+        help=mi.get("help"),
+        render=mi.get("render"),
     )
-    if "help" in mi:
-        mie["help"] = mi["help"]
-    if "render" in mi:
-        mie["render"] = mi["render"]
-
-    return mie
 
 
 def get_extended_metric_info(metric_name: str) -> MetricInfoExtended:
@@ -616,7 +612,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
     for entry in perf_data:
         metric_name, normalized = _normalize_perf_data(entry, check_command)
         mi = _get_extended_metric_info(metric_name, color_counter)
-        unit_conversion = mi["unit"].conversion
+        unit_conversion = mi.unit.conversion
 
         # https://github.com/python/mypy/issues/6462
         # new_entry = normalized
@@ -626,9 +622,9 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
             scalar=_translated_metric_scalar(unit_conversion, normalized["scalar"]),
             scale=normalized["scale"],
             auto_graph=normalized["auto_graph"],
-            title=str(mi["title"]),
-            unit=mi["unit"],
-            color=mi["color"],
+            title=str(mi.title),
+            unit=mi.unit,
+            color=mi.color,
         )
 
         if metric_name in translated_metrics:
@@ -734,7 +730,7 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
 
 
 def metric_title(metric_name: MetricName) -> str:
-    return str(get_extended_metric_info(metric_name)["title"])
+    return str(get_extended_metric_info(metric_name).title)
 
 
 # .

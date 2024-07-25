@@ -5421,7 +5421,7 @@ class AbstractColumnSpecificMetric(Painter):
             if not parameters:
                 # Used in Edit-View
                 return _("Show single metric")
-            return str(get_extended_metric_info(parameters["metric"])["title"])
+            return str(get_extended_metric_info(parameters["metric"]).title)
         except KeyError:
             return _("Metric not found")
 

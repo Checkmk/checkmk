@@ -301,10 +301,5 @@ def translate_and_merge_rrd_columns(
     return TimeSeries(
         single_value_series,
         time_window=relevant_ts[0].twindow,
-        conversion=_retrieve_unit_conversion_function(target_metric),
+        conversion=get_extended_metric_info(metric_name).unit.conversion,
     )
-
-
-def _retrieve_unit_conversion_function(metric_name: MetricName) -> Callable[[float], float]:
-    mie = get_extended_metric_info(metric_name)
-    return mie["unit"].conversion

@@ -165,7 +165,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Metric(quantity),
                 line_type=line_type,
-                title=str(get_extended_metric_info(quantity)["title"]),
+                title=str(get_extended_metric_info(quantity).title),
             )
         case metrics.Constant():
             return MetricDefinition(
@@ -182,14 +182,14 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=WarningOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=_("Warning of %s") % metric_["title"],
+                title=_("Warning of %s") % metric_.title,
             )
         case metrics.CriticalOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=CriticalOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=_("Critical of %s") % metric_["title"],
+                title=_("Critical of %s") % metric_.title,
             )
         case metrics.MinimumOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
@@ -199,7 +199,7 @@ def _parse_quantity(
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=str(metric_.title),
             )
         case metrics.MaximumOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
@@ -209,7 +209,7 @@ def _parse_quantity(
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=str(metric_.title),
             )
         case metrics.Sum():
             return MetricDefinition(

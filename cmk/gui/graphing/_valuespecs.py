@@ -297,7 +297,7 @@ class ValuesWithUnits(CascadingDropdown):
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys
         if metric_name:
-            required_unit = get_extended_metric_info(metric_name)["unit"].id
+            required_unit = get_extended_metric_info(metric_name).unit.id
         else:
             required_unit = ""
 
@@ -377,7 +377,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 def _metric_choices(check_command: str, perfvars: tuple[MetricName_, ...]) -> Iterator[Choice]:
     for perfvar in perfvars:
         metric_name = perfvar_translation(perfvar, check_command)["name"]
-        yield metric_name, str(get_extended_metric_info(metric_name)["title"])
+        yield metric_name, str(get_extended_metric_info(metric_name).title)
 
 
 def metrics_of_query(

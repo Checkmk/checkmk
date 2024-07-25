@@ -35,7 +35,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from datetime import datetime
 from email.message import Message as POPIMAPMessage
-from typing import Any, assert_never, Literal
+from typing import Any, assert_never
 
 import urllib3
 
@@ -444,23 +444,14 @@ class Mailbox:
             timeout=self.timeout,
         )
 
-    def protocol(self) -> Literal["POP3", "IMAP", "EWS"]:
-        if isinstance(self._connection, (poplib.POP3, poplib.POP3_SSL)):
-            return "POP3"
-        if isinstance(self._connection, (imaplib.IMAP4, imaplib.IMAP4_SSL)):
-            return "IMAP"
-        if isinstance(self._connection, EWS):
-            return "EWS"
-        raise AssertionError("connection must be POP3[_SSL], IMAP4[_SSL] or EWS")
-
     def folders(self) -> Iterable[str]:
         """Returns names of available mailbox folders"""
         assert self._connection
-        if self.protocol() == "IMAP":
+        if self.config.protocol == "IMAP":
             return extract_folder_names(
                 e for e in verified_result(self._connection.list()) if isinstance(e, bytes)
             )
-        if self.protocol() == "EWS":
+        if self.config.protocol == "EWS":
             assert isinstance(self._connection, EWS)
             return self._connection.folders()
         raise AssertionError("connection must be IMAP4[_SSL] or EWS")
@@ -512,7 +503,7 @@ class Mailbox:
 
         logging.debug("pattern used to receive mails: %s", pattern)
         try:
-            protocol = self.protocol()
+            protocol = self.config.protocol
             if protocol == "POP3":
                 return {
                     num: msg
@@ -539,13 +530,13 @@ class Mailbox:
         """Select folder @folder_name and return the number of mails contained"""
         assert self._connection
         try:
-            if self.protocol() == "IMAP":
+            if self.config.protocol == "IMAP":
                 encoded_number = verified_result(
                     self._connection.select(_mutf_7_encode(f'"{folder_name}"'))
                 )[0]
                 assert isinstance(encoded_number, bytes)
                 return int(encoded_number.decode())
-            if self.protocol() == "EWS":
+            if self.config.protocol == "EWS":
                 assert isinstance(self._connection, EWS)
                 return self._connection.select_folder(folder_name)
             raise AssertionError("connection must be IMAP4[_SSL] or EWS")
@@ -582,7 +573,7 @@ class Mailbox:
             assert time_tuple is not None
             return int(time.mktime(time_tuple))
 
-        if self.protocol() == "EWS":
+        if self.config.protocol == "EWS":
             assert isinstance(self._connection, EWS)
             return self._connection.mail_ids_by_date(before=before, after=after)
 
@@ -629,7 +620,7 @@ class Mailbox:
         assert self._connection is not None
         logging.debug("delete mails %s", mails)
         try:
-            protocol = self.protocol()
+            protocol = self.config.protocol
             if protocol == "POP3":
                 for mail_index in mails:
                     verified_result(self._connection.dele(mail_index + 1))
@@ -649,7 +640,7 @@ class Mailbox:
         if not mails:
             logging.debug("copy mails: no mails given")
             return
-        protocol = self.protocol()
+        protocol = self.config.protocol
         assert self._connection and protocol in {"IMAP", "EWS"}
         # The user wants the message to be moved to the folder
         # refered by the string stored in "cleanup_messages"
@@ -673,13 +664,13 @@ class Mailbox:
     def _close_mailbox(self) -> None:
         if not self._connection:
             return
-        if self.protocol() == "POP3":
+        if self.config.protocol == "POP3":
             verified_result(self._connection.quit())
-        elif self.protocol() == "IMAP":
+        elif self.config.protocol == "IMAP":
             with suppress(imaplib.IMAP4_SSL.error, imaplib.IMAP4.error):
                 verified_result(self._connection.close())
             verified_result(self._connection.logout())
-        elif self.protocol() == "EWS":
+        elif self.config.protocol == "EWS":
             self._connection.close()
 
     def _send_mail_smtp(self, args: Args, now: int, key: int) -> tuple[str, MailID]:

@@ -38,10 +38,12 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     serialize_data_for_frontend,
     validate_value_from_frontend,
 )
+from cmk.gui.form_specs.vue.registries import form_spec_registry
 from cmk.gui.form_specs.vue.type_defs import DataOrigin
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
+from cmk.gui.watolib.passwords import load_passwords
 
-from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.rulesets.v1.form_specs import FormSpec, Password
 
 
 def _get_stage_components_from_widget(widget: Widget) -> dict:
@@ -98,6 +100,51 @@ def _form_spec_parse(
         form_spec_id: parse_value_from_frontend(expected_formspecs_map[form_spec_id], form_data)
         for current_stage_form_data in all_stages_form_data
         for form_spec_id, form_data in current_stage_form_data.items()
+    }
+
+
+def _collect_params_from_form_data(
+    all_stages_form_data: ParsedFormData, rulespec_name: str
+) -> Mapping[str, object]:
+    _parameter_form = form_spec_registry[rulespec_name.split(":")[1]].rule_spec.parameter_form
+    parameter_form = _parameter_form() if callable(_parameter_form) else _parameter_form
+    if parameter_form is None:
+        return {}
+    possible_expected_keys = parameter_form.elements.keys()
+
+    return {
+        form_spec_id: form_spec_value
+        for form_data in all_stages_form_data.values()
+        if isinstance(form_data, dict)
+        for form_spec_id, form_spec_value in form_data.items()
+        if form_spec_id in possible_expected_keys
+    }
+
+
+def _collect_passwords_from_form_data(
+    all_stages_form_data: ParsedFormData, rulespec_name: str
+) -> Mapping[str, str]:
+    _parameter_form = form_spec_registry[rulespec_name.split(":")[1]].rule_spec.parameter_form
+    parameter_form = _parameter_form() if callable(_parameter_form) else _parameter_form
+    if parameter_form is None:
+        return {}
+    possible_expected_password_keys = [
+        key
+        for key in parameter_form.elements.keys()
+        if isinstance(parameter_form.elements[key].parameter_form, Password)
+    ]
+
+    return {
+        form_spec_value[2][0]: (
+            form_spec_value[2][1]
+            if form_spec_value[1] == "explicit_password"
+            else load_passwords()[form_spec_value[2][1]]
+        )
+        for form_data in all_stages_form_data.values()
+        if isinstance(form_data, dict)
+        for form_spec_id, form_spec_value in form_data.items()
+        if form_spec_id in possible_expected_password_keys
+        if form_spec_value[0] == "cmk_postprocessed"
     }
 
 

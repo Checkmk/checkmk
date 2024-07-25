@@ -130,3 +130,28 @@ test('CmkFormDictionary enable element, render backend validation message', asyn
 
   await screen.findByText('Backend error message')
 })
+
+test('CmkFormDictionary appends default of required element if missing in data', async () => {
+  const { getCurrentData } = renderFormWithData({
+    spec: {
+      type: 'dictionary',
+      title: 'fooTitle',
+      help: 'fooHelp',
+      validators: [],
+      elements: [
+        {
+          ident: 'bar',
+          required: true,
+          default_value: 'baz',
+          parameter_form: stringFormSpec
+        }
+      ]
+    } as FormSpec.Dictionary,
+    data: {},
+    backendValidation: []
+  })
+
+  await screen.findByDisplayValue('baz')
+
+  expect(getCurrentData()).toBe('{"bar":"baz"}')
+})

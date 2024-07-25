@@ -1341,7 +1341,7 @@ def permission_action(
         return "default"
 
     # Permissions have changed in all places, but file type not
-    if old_type == new_type and user_perm != old_perm and old_perm != new_perm:
+    if old_type == new_type and old_perm not in {user_perm, new_perm}:
         if user_confirms(
             site,
             conflict_mode,

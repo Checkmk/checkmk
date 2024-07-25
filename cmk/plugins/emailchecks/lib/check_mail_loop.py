@@ -231,20 +231,19 @@ def check_mails(  # pylint: disable=too-many-branches
             del expected_mails[ident]  # remove message from expect list
             # FIXME: Also remove older mails which have not yet been seen?
 
-        else:
+        elif now - send_ts >= critical:
             # drop expecting messages when older than critical threshold,
             # but keep waiting for other mails which have not yet reached it
-            if now - send_ts >= critical:
-                logging.warning(
-                    "found mail with critical roundtrip time: %r (%dsec)",
-                    ident,
-                    now - send_ts,
-                )
-                del expected_mails[ident]
-                num_lost += 1
-                state = 2
-            else:
-                num_pending += 1
+            logging.warning(
+                "found mail with critical roundtrip time: %r (%dsec)",
+                ident,
+                now - send_ts,
+            )
+            del expected_mails[ident]
+            num_lost += 1
+            state = 2
+        else:
+            num_pending += 1
 
     if durations:
         average = sum(durations) / len(durations)

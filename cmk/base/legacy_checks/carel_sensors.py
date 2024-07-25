@@ -58,7 +58,7 @@ def carel_sensors_parse(string_table):
     parsed = {}
     for oidend, value in string_table:
         sensor_name = oid_parse.get(oidend)
-        if sensor_name is not None and value is not None and value != "0" and value != "-9999":
+        if sensor_name is not None and value not in {None, "0", "-9999"}:
             parsed[sensor_name] = float(value) / 10
 
     return parsed

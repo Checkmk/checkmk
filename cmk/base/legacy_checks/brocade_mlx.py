@@ -208,10 +208,8 @@ def inventory_brocade_mlx_module_cpu(info):
     for module_id, module_descr, module_state, _mem_total, _mem_avail in info[0]:
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
-        if (
-            module_state != "0"
-            and module_state != "11"
-            and (module_descr.startswith("NI-MLX") or module_descr.startswith("BR-MLX"))
+        if module_state not in {"0", "11"} and (
+            module_descr.startswith("NI-MLX") or module_descr.startswith("BR-MLX")
         ):
             yield brocade_mlx_combine_item(module_id, module_descr), {}
 

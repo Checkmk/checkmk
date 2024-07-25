@@ -31,11 +31,9 @@ def test_plugin_parameters_are_dict() -> None:
     findings = set()
     for element in rulespec_registry.values():
         if not (
-            element.group == RulespecGroupCheckParametersDiscovery
-            or element.group == RulespecGroupInventory
+            element.group in {RulespecGroupCheckParametersDiscovery, RulespecGroupInventory}
             or isinstance(
-                element,
-                (CheckParameterRulespecWithItem, CheckParameterRulespecWithoutItem),
+                element, (CheckParameterRulespecWithItem, CheckParameterRulespecWithoutItem)
             )
         ):
             continue

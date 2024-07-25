@@ -272,11 +272,8 @@ def packagenames_to_libnames(
                 reader = csv.reader(record_file, delimiter=",", quotechar='"')
                 for file_path_str, _file_hash, _file_size in reader:
                     first_part = Path(file_path_str).parts[0]
-                    if (
-                        first_part == "/"
-                        or first_part.endswith(".dist-info")
-                        or first_part == ".."
-                        or first_part == "__pycache__"
+                    if first_part in {"/", "..", "__pycache__"} or first_part.endswith(
+                        ".dist-info"
                     ):
                         continue
                     if first_part.endswith(".py"):

@@ -6503,11 +6503,7 @@ class AWSSections(abc.ABC):
         return host_labels
 
     def _is_piggyback_host_result(self, section_result: AWSSectionResult) -> bool:
-        return (
-            section_result.piggyback_hostname is not None
-            and section_result.piggyback_hostname != ""
-            and section_result.piggyback_hostname != self._hostname
-        )
+        return section_result.piggyback_hostname not in {None, "", self._hostname}
 
     def _collect_piggyback_host_labels(
         self, results: Results, static_labels: Mapping[str, str]

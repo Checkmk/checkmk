@@ -57,7 +57,7 @@ def load_graphing_plugins() -> (
 
 class UnitsFromAPI(Registry[UnitInfo]):
     def plugin_name(self, instance: UnitInfo) -> str:
-        return instance["id"]
+        return instance.id
 
 
 _units_from_api = UnitsFromAPI()
@@ -179,20 +179,20 @@ def registered_units() -> Sequence[RegisteredUnit]:
         [
             RegisteredUnit(
                 name,
-                info["symbol"],
-                info["title"],
-                info.get("description", ""),
-                info.get("valuespec", Float),
+                info.symbol,
+                info.title,
+                info.description or info.title,
+                info.valuespec or Float,
             )
             for (name, info) in unit_info.items()
         ]
         + [
             RegisteredUnit(
                 name,
-                info["symbol"],
-                info["title"],
-                "",
-                info.get("valuespec", Float),
+                info.symbol,
+                info.title,
+                info.description or info.title,
+                info.valuespec or Float,
             )
             for (name, info) in _units_from_api.items()
         ],

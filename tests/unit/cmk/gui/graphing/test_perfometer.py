@@ -249,9 +249,8 @@ class TestMetricometerRendererLegacyLinear:
             render=str,
             js_render="v => cmk.number_format.drop_dotzero(v) + ' U'",
             description="My unit",
+            perfometer_render=perfometer_render,
         )
-        if perfometer_render:
-            unit_info["perfometer_render"] = perfometer_render
         assert self._renderer(unit_info).get_label() == expected_result
 
 
@@ -310,15 +309,15 @@ class TestMetricometerRendererLegacyLogarithmic:
     ) -> None:
         assert np.allclose(
             self._renderer(
-                {
-                    "title": "My unit",
-                    "symbol": "U",
-                    "render": str,
-                    "js_render": "v => cmk.number_format.drop_dotzero(v) + ' U'",
-                    "id": "u",
-                    "description": "My unit",
-                    "perfometer_render": lambda _v: "testing",
-                }
+                UnitInfo(
+                    id="u",
+                    title="My unit",
+                    symbol="U",
+                    render=str,
+                    js_render="v => cmk.number_format.drop_dotzero(v) + ' U'",
+                    description="My unit",
+                    perfometer_render=lambda _v: "testing",
+                )
             ).estimate_parameters_for_converted_units(conversion),
             expected_result,
         )
@@ -350,9 +349,8 @@ class TestMetricometerRendererLegacyLogarithmic:
             render=str,
             js_render="v => cmk.number_format.drop_dotzero(v) + ' U'",
             description="My unit",
+            perfometer_render=perfometer_render,
         )
-        if perfometer_render:
-            unit_info["perfometer_render"] = perfometer_render
         assert self._renderer(unit_info).get_label() == expected_result
 
 

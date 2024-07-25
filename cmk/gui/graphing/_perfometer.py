@@ -455,7 +455,7 @@ class MetricometerRenderer(abc.ABC):
 
     @staticmethod
     def _render_value(unit: UnitInfo, value: float) -> str:
-        return unit.get("perfometer_render", unit["render"])(value)
+        return (unit.perfometer_render or unit.render)(value)
 
 
 class MetricometerRendererRegistry(plugin_registry.Registry[type[MetricometerRenderer]]):
@@ -771,7 +771,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
 
     def get_label(self) -> str:
         first_segment = _evaluate_quantity(self.perfometer.segments[0], self.translated_metrics)
-        return first_segment.unit["render"](
+        return first_segment.unit.render(
             first_segment.value
             + sum(
                 _evaluate_quantity(s, self.translated_metrics).value
@@ -951,10 +951,7 @@ class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
             self.get_stack_from_values(
                 result.value,
                 *self.estimate_parameters_for_converted_units(
-                    result.unit_info.get(
-                        "conversion",
-                        lambda v: v,
-                    )
+                    result.unit_info.conversion or (lambda v: v)
                 ),
                 result.color,
             )
@@ -1073,7 +1070,7 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
         unit_info_ = unit_info[self._label_unit_name] if self._label_unit_name else result.unit_info
 
         if isinstance(self._label_expression, Constant):
-            value = unit_info_.get("conversion", lambda v: v)(self._label_expression.value)
+            value = (unit_info_.conversion or (lambda v: v))(self._label_expression.value)
         else:
             value = result.value
 
@@ -1081,7 +1078,7 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
 
     def _evaluate_total(self) -> float:
         if isinstance(self._total, Constant):
-            return self._unit().get("conversion", lambda v: v)(self._total.value)
+            return (self._unit().conversion or (lambda v: v))(self._total.value)
         return self._total.evaluate(self._translated_metrics).value
 
     def _unit(self) -> UnitInfo:

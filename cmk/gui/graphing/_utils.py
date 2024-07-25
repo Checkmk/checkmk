@@ -633,7 +633,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
     for entry in perf_data:
         metric_name, normalized = _normalize_perf_data(entry, check_command)
         mi = _get_extended_metric_info(metric_name, color_counter)
-        unit_conversion = mi["unit"].get("conversion", lambda v: v)
+        unit_conversion = mi["unit"].conversion or (lambda v: v)
 
         # https://github.com/python/mypy/issues/6462
         # new_entry = normalized

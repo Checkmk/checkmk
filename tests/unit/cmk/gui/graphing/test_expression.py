@@ -367,7 +367,7 @@ def test_parse_and_evaluate_2(
     assert metric_expression == expected_metric_expression
     result = metric_expression.evaluate(translated_metrics)
     assert result.value == value
-    assert result.unit_info["id"] == unit_name
+    assert result.unit_info.id == unit_name
     assert result.color == color
 
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 from typing import Final, Literal, NotRequired, TypedDict
 
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
@@ -29,24 +30,26 @@ class UnitInfoWithOrWithoutID(TypedDict):
     ]
 
 
-class UnitInfo(TypedDict):
+@dataclass(frozen=True)
+class UnitInfo:
     id: str
     title: str
     symbol: str
     render: Callable[[float], str]
     js_render: str
-    stepping: NotRequired[str]
-    color: NotRequired[str]
-    graph_unit: NotRequired[Callable[[list[float]], tuple[str, list[str]]]]
-    description: NotRequired[str]
-    valuespec: NotRequired[
-        type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage]
-    ]
-    conversion: NotRequired[Callable[[float], float]]
-    perfometer_render: NotRequired[Callable[[float], str]]
-    formatter_ident: NotRequired[
+    stepping: str | None = None
+    color: str | None = None
+    graph_unit: Callable[[list[float]], tuple[str, list[str]]] | None = None
+    description: str | None = None
+    valuespec: (
+        type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage] | None
+    ) = None
+    conversion: Callable[[float], float] | None = None
+    perfometer_render: Callable[[float], str] | None = None
+    formatter_ident: (
         Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]
-    ]
+        | None
+    ) = None
 
 
 class UnitRegistry:
@@ -58,7 +61,21 @@ class UnitRegistry:
     def __getitem__(self, unit_id: str) -> UnitInfo:
         item = unit() if callable(unit := self.units[unit_id]) else unit
         item.setdefault("description", item["title"])
-        return UnitInfo(id=unit_id, **item)
+        return UnitInfo(
+            id=unit_id,
+            title=item["title"],
+            symbol=item["symbol"],
+            render=item["render"],
+            js_render=item["js_render"],
+            stepping=item.get("stepping"),
+            color=item.get("color"),
+            graph_unit=item.get("graph_unit"),
+            description=item.get("description", item["title"]),
+            valuespec=item.get("valuespec"),
+            conversion=item.get("conversion"),
+            perfometer_render=item.get("perfometer_render"),
+            formatter_ident=item.get("formatter_ident"),
+        )
 
     def __setitem__(
         self, unit_id: str, unit: UnitInfoWithOrWithoutID | Callable[[], UnitInfoWithOrWithoutID]

@@ -17,12 +17,12 @@ from cmk.gui.graphing._unit_info import unit_info
 
 
 def test_temperature_unit_default(request_context: None) -> None:
-    assert unit_info["c"]["title"] == "Degree Celsius"
+    assert unit_info["c"].title == "Degree Celsius"
 
 
 def test_temperature_unit_global_setting(request_context: None) -> None:
     active_config.default_temperature_unit = "fahrenheit"
-    assert unit_info["c"]["title"] == "Degree Fahrenheit"
+    assert unit_info["c"].title == "Degree Fahrenheit"
 
 
 @pytest.mark.parametrize(
@@ -53,4 +53,4 @@ def test_temperature_unit_user_celsius(
         ),
         run_as_user(UserId("harald")),
     ):
-        assert unit_info["c"]["title"] == expected_temperature_unit_title
+        assert unit_info["c"].title == expected_temperature_unit_title

@@ -607,7 +607,7 @@ class Mailbox:
     """
 
     def __init__(self, config: TRXConfig, timeout: int, ctype: Scope) -> None:
-        self._connection: Any = None  # FIXME (fix coming up!)
+        self._connection: MailboxConnection | None = None
         self.config = config
         self.timeout = timeout
         self._ctype = str(ctype)  # this is pointless and will go.
@@ -628,16 +628,11 @@ class Mailbox:
 
     def connect(self) -> None:
         assert self._connection is None
-        if self._ctype == "fetch":
-            self._connection = self._connect_fetcher()
-        else:
-            self._connection = self._connect_sender()
+        self._connection = self._connect()
 
-    def _connect_fetcher(
+    def _connect(
         self,
-    ) -> POP3Connection | IMAPConnection | EWS:
-        assert self._connection is None
-
+    ) -> MailboxConnection:
         try:
             match self.config.protocol:
                 case "POP3":
@@ -661,17 +656,14 @@ class Mailbox:
                     i_conn.connect(self.config.auth)
                     return i_conn
                 case "EWS":
-                    return self._connect_ews()
-                case other:
-                    raise NotImplementedError(f"Fetching mails is not implemented for {other!r}")
-        except Exception as exc:
-            raise ConnectError(f"Failed to connect to fetching server {self.config.server}: {exc}")
+                    return EWS(
+                        primary_smtp_address=self.config.address,
+                        server=self.config.server,
+                        auth=self.config.auth,
+                        no_cert_check=self.config.disable_cert_validation,
+                        timeout=self.timeout,
+                    )
 
-    def _connect_sender(self) -> EWS | SMTPConnection:
-        try:
-            match self.config.protocol:
-                case "EWS":
-                    return self._connect_ews()
                 case "SMTP":
                     return SMTPConnection(
                         server=self.config.server,
@@ -681,18 +673,9 @@ class Mailbox:
                         auth=self.config.auth if isinstance(self.config.auth, BasicAuth) else None,
                     )
                 case other:
-                    raise NotImplementedError(f"Sending mails is not implemented for {other!r}")
+                    raise NotImplementedError(other)
         except Exception as exc:
-            raise ConnectError(f"Failed to connect to sending server {self.config.server}: {exc}")
-
-    def _connect_ews(self) -> EWS:
-        return EWS(
-            primary_smtp_address=self.config.address,
-            server=self.config.server,
-            auth=self.config.auth,
-            no_cert_check=self.config.disable_cert_validation,
-            timeout=self.timeout,
-        )
+            raise ConnectError(f"Failed to connect to server {self.config.server}: {exc}")
 
     def folders(self) -> Iterable[str]:
         """Returns names of available mailbox folders"""

@@ -22041,8 +22041,16 @@ msgstr "Conditions explicites"
 msgid "Explicit email addresses"
 msgstr "Adresses électroniques explicites"
 
+#, fuzzy
+msgid "Explicit host matching"
+msgstr "Cartographie explicite de %s"
+
 msgid "Explicit hosts"
 msgstr "Hôtes explicites"
+
+#, fuzzy
+msgid "Explicit item matching"
+msgstr "Correspondance explicite"
 
 msgid "Explicit labels"
 msgstr "Étiquettes explicites"
@@ -26912,9 +26920,6 @@ msgstr "Élément de recherche de l'hôte"
 
 msgid "Host management"
 msgstr "Gestion des hôtes"
-
-msgid "Host match list"
-msgstr "Liste de correspondance des hôtes"
 
 msgid "Host memory usage"
 msgstr "Utilisation de la mémoire de l'hôte"
@@ -31855,9 +31860,6 @@ msgstr "Poste (utilisé dans la description du service)"
 
 msgid "Item appearance"
 msgstr "Apparence de l'article"
-
-msgid "Item match list"
-msgstr "Liste de correspondance des articles"
 
 msgid "Item memory"
 msgstr "Mémoire d'objet"
@@ -60095,26 +60097,28 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text to match. "
-"Note that as an alternative, you may also use the rule Host name translation "
-"for Incoming Messages in the Global Settings of the EC to accomplish your "
-"task."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field to match. Note that as an alternative, you may also use the rule Host "
+"name translation for Incoming Messages in the Global Settings of the EC to "
+"accomplish your task."
 msgstr ""
 "Le caractère générique <tt>\\0</tt> sera remplacé par le texte original à "
 "faire correspondre. Notez qu'à titre d'alternative, vous pouvez également "
 "utiliser la règle Traduction du nom d'hôte pour les messages entrants dans "
 "les paramètres globaux de l'EC pour accomplir votre tâche."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end."
 msgstr ""
 "L'espace réservé <tt>\\0</tt> sera remplacé par le texte original. Cela vous "
 "permet d'ajouter de nouvelles informations au début ou à la fin."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end. "
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end. "
 msgstr ""
 "L'espace réservé <tt>\\0</tt> sera remplacé par le texte original. Cela vous "
 "permet d'ajouter de nouvelles informations au début ou à la fin. "
@@ -72126,6 +72130,19 @@ msgid "Use this custom start URL"
 msgstr "Utilisez cette URL de démarrage personnalisée"
 
 msgid ""
+"Use this field to search for rules which have their explicit host condition "
+"set up in such a way that it matches the given host (either by being unset "
+"or set)."
+msgstr ""
+
+msgid ""
+"Use this field to search for rules which have their item condition set up in "
+"such a way that it matches the given item (either by being unset or set). "
+"The item condition name depends on the rule, the item is always part of the "
+"service name."
+msgstr ""
+
+msgid ""
 "Use this field to search the description, comment, host and service "
 "conditions including the text representation of the configured values."
 msgstr ""
@@ -80358,6 +80375,12 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "Host match list"
+#~ msgstr "Liste de correspondance des hôtes"
+
+#~ msgid "Item match list"
+#~ msgstr "Liste de correspondance des articles"
 
 #~ msgid "This URL can also be collected from the Password Store from Checkmk."
 #~ msgstr ""

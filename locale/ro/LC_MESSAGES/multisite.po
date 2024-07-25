@@ -21866,8 +21866,16 @@ msgstr "Condiții explicite"
 msgid "Explicit email addresses"
 msgstr "Adrese de e-mail explicite"
 
+#, fuzzy
+msgid "Explicit host matching"
+msgstr "Explicit %s mapping"
+
 msgid "Explicit hosts"
 msgstr "Gazde explicite"
+
+#, fuzzy
+msgid "Explicit item matching"
+msgstr "Potrivire explicită"
 
 msgid "Explicit labels"
 msgstr "Etichete explicite"
@@ -26660,9 +26668,6 @@ msgstr "Element de căutare a gazdei"
 
 msgid "Host management"
 msgstr "Gestionarea gazdei"
-
-msgid "Host match list"
-msgstr "Lista de corespondență a gazdelor"
 
 msgid "Host memory usage"
 msgstr "Utilizarea memoriei gazdă"
@@ -31601,9 +31606,6 @@ msgstr "Articol (utilizat în descrierea serviciului)"
 
 msgid "Item appearance"
 msgstr "Aspectul articolului"
-
-msgid "Item match list"
-msgstr "Lista de corespondență a elementelor"
 
 msgid "Item memory"
 msgstr "Memorie a articolului"
@@ -59608,26 +59610,28 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text to match. "
-"Note that as an alternative, you may also use the rule Host name translation "
-"for Incoming Messages in the Global Settings of the EC to accomplish your "
-"task."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field to match. Note that as an alternative, you may also use the rule Host "
+"name translation for Incoming Messages in the Global Settings of the EC to "
+"accomplish your task."
 msgstr ""
 "Marca de poziție <tt>\\0</tt> va fi înlocuită cu textul original pentru a se "
 "potrivi. Rețineți că, ca o alternativă, puteți utiliza și regula Traducerea "
 "numelui de gazdă pentru mesajele primite din Setări globale ale CE pentru a "
 "vă îndeplini sarcina."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end."
 msgstr ""
 "Marca de poziție <tt>\\0</tt> va fi înlocuită cu textul original. Acest "
 "lucru vă permite să adăugați informații noi în față sau la sfârșit."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end. "
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end. "
 msgstr ""
 "Marca de poziție <tt>\\0</tt> va fi înlocuită cu textul original. Acest "
 "lucru vă permite să adăugați informații noi în față sau la sfârșit. "
@@ -71512,6 +71516,19 @@ msgid "Use this custom start URL"
 msgstr "Utilizați acest URL de pornire personalizat"
 
 msgid ""
+"Use this field to search for rules which have their explicit host condition "
+"set up in such a way that it matches the given host (either by being unset "
+"or set)."
+msgstr ""
+
+msgid ""
+"Use this field to search for rules which have their item condition set up in "
+"such a way that it matches the given item (either by being unset or set). "
+"The item condition name depends on the rule, the item is always part of the "
+"service name."
+msgstr ""
+
+msgid ""
 "Use this field to search the description, comment, host and service "
 "conditions including the text representation of the configured values."
 msgstr ""
@@ -79632,6 +79649,12 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Host match list"
+#~ msgstr "Lista de corespondență a gazdelor"
+
+#~ msgid "Item match list"
+#~ msgstr "Lista de corespondență a elementelor"
 
 #~ msgid "This URL can also be collected from the Password Store from Checkmk."
 #~ msgstr ""

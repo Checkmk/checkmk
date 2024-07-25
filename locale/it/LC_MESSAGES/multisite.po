@@ -21630,8 +21630,16 @@ msgstr "Condizioni esplicite"
 msgid "Explicit email addresses"
 msgstr "Indirizzi e-mail espliciti"
 
+#, fuzzy
+msgid "Explicit host matching"
+msgstr "Mappatura esplicita %s"
+
 msgid "Explicit hosts"
 msgstr "Ospiti espliciti"
+
+#, fuzzy
+msgid "Explicit item matching"
+msgstr "Corrispondenza esplicita"
 
 msgid "Explicit labels"
 msgstr "Etichette esplicite"
@@ -26398,9 +26406,6 @@ msgstr "Elemento di ricerca dell'host"
 
 msgid "Host management"
 msgstr "Gestione degli host"
-
-msgid "Host match list"
-msgstr "Elenco degli abbinamenti dell'host"
 
 msgid "Host memory usage"
 msgstr "Utilizzo della memoria dell'host"
@@ -31245,9 +31250,6 @@ msgstr "Voce (usata nella descrizione del servizio)"
 
 msgid "Item appearance"
 msgstr "Aspetto dell'oggetto"
-
-msgid "Item match list"
-msgstr "Lista di corrispondenza degli articoli"
 
 msgid "Item memory"
 msgstr "Memoria dell'oggetto"
@@ -58912,26 +58914,28 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text to match. "
-"Note that as an alternative, you may also use the rule Host name translation "
-"for Incoming Messages in the Global Settings of the EC to accomplish your "
-"task."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field to match. Note that as an alternative, you may also use the rule Host "
+"name translation for Incoming Messages in the Global Settings of the EC to "
+"accomplish your task."
 msgstr ""
 "Il segnaposto <tt>\\0</tt> sarà sostituito dal testo originale da abbinare. "
 "Nota che, in alternativa, puoi anche usare la regola Traduzione del nome "
 "dell'host per i messaggi in entrata nelle impostazioni globali del CE per "
 "realizzare il tuo compito."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end."
 msgstr ""
 "Il segnaposto <tt>0</tt> sarà sostituito dal testo originale. Questo ti "
 "permette di aggiungere nuove informazioni davanti o alla fine."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end. "
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end. "
 msgstr ""
 "Il segnaposto <tt>0</tt> sarà sostituito dal testo originale. Questo ti "
 "permette di aggiungere nuove informazioni davanti o alla fine. "
@@ -70675,6 +70679,19 @@ msgid "Use this custom start URL"
 msgstr "Usa questo URL iniziale personalizzato"
 
 msgid ""
+"Use this field to search for rules which have their explicit host condition "
+"set up in such a way that it matches the given host (either by being unset "
+"or set)."
+msgstr ""
+
+msgid ""
+"Use this field to search for rules which have their item condition set up in "
+"such a way that it matches the given item (either by being unset or set). "
+"The item condition name depends on the rule, the item is always part of the "
+"service name."
+msgstr ""
+
+msgid ""
 "Use this field to search the description, comment, host and service "
 "conditions including the text representation of the configured values."
 msgstr ""
@@ -78715,6 +78732,12 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Host match list"
+#~ msgstr "Elenco degli abbinamenti dell'host"
+
+#~ msgid "Item match list"
+#~ msgstr "Lista di corrispondenza degli articoli"
 
 #~ msgid "This URL can also be collected from the Password Store from Checkmk."
 #~ msgstr "Questo URL può essere raccolto anche dal Password Store di Checkmk."

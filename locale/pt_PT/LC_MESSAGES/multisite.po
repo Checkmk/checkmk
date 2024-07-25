@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-24 23:12+0000\n"
+"PO-Revision-Date: 2024-07-25 09:57+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -21823,8 +21823,16 @@ msgstr "Condições explícitas"
 msgid "Explicit email addresses"
 msgstr "Endereços de e-mail explícitos"
 
+#, fuzzy
+msgid "Explicit host matching"
+msgstr "Mapeamento explícito de %s"
+
 msgid "Explicit hosts"
 msgstr "Anfitriões explícitos"
+
+#, fuzzy
+msgid "Explicit item matching"
+msgstr "Partida explícita"
 
 msgid "Explicit labels"
 msgstr "Etiquetas explícitas"
@@ -26645,9 +26653,6 @@ msgstr "Elemento de pesquisa do anfitrião"
 
 msgid "Host management"
 msgstr "Gestão do anfitrião"
-
-msgid "Host match list"
-msgstr "Lista de jogos do anfitrião"
 
 msgid "Host memory usage"
 msgstr "Utilização da memória do anfitrião"
@@ -31524,9 +31529,6 @@ msgstr "Item (utilizado na descrição do serviço)"
 
 msgid "Item appearance"
 msgstr "Aparência do item"
-
-msgid "Item match list"
-msgstr "Lista de correspondência de itens"
 
 msgid "Item memory"
 msgstr "Memória de itens"
@@ -59446,26 +59448,28 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text to match. "
-"Note that as an alternative, you may also use the rule Host name translation "
-"for Incoming Messages in the Global Settings of the EC to accomplish your "
-"task."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field to match. Note that as an alternative, you may also use the rule Host "
+"name translation for Incoming Messages in the Global Settings of the EC to "
+"accomplish your task."
 msgstr ""
 "O espaço reservado <tt>\\0</tt> será substituído pelo texto original a "
 "condizer. Note que, como alternativa, você também pode usar a regra de "
 "tradução de Hostname para Mensagens Recebidas nas Configurações Globais do "
 "CE para realizar a sua tarefa."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end."
 msgstr ""
 "O espaço reservado <tt>\\0</tt> será substituído pelo texto original. Isto "
 "permite adicionar novas informações na frente ou no final."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end. "
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end. "
 msgstr ""
 "O espaço reservado <tt>\\0</tt> será substituído pelo texto original. Isto "
 "permite adicionar novas informações na frente ou no final. "
@@ -71316,6 +71320,19 @@ msgid "Use this custom start URL"
 msgstr "Use esta URL de início personalizada"
 
 msgid ""
+"Use this field to search for rules which have their explicit host condition "
+"set up in such a way that it matches the given host (either by being unset "
+"or set)."
+msgstr ""
+
+msgid ""
+"Use this field to search for rules which have their item condition set up in "
+"such a way that it matches the given item (either by being unset or set). "
+"The item condition name depends on the rule, the item is always part of the "
+"service name."
+msgstr ""
+
+msgid ""
 "Use this field to search the description, comment, host and service "
 "conditions including the text representation of the configured values."
 msgstr ""
@@ -78055,7 +78072,7 @@ msgid "host names"
 msgstr "Nome do fantasma"
 
 msgid "host tags"
-msgstr "placas de acolhimento"
+msgstr "etiquetas de host"
 
 msgid "hosts"
 msgstr "hospedeiros"
@@ -79388,6 +79405,12 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "Host match list"
+#~ msgstr "Lista de jogos do anfitrião"
+
+#~ msgid "Item match list"
+#~ msgstr "Lista de correspondência de itens"
 
 #~ msgid "This URL can also be collected from the Password Store from Checkmk."
 #~ msgstr ""

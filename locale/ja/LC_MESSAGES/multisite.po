@@ -21195,8 +21195,16 @@ msgstr "明示的な条件"
 msgid "Explicit email addresses"
 msgstr "明示的なメールアドレス"
 
+#, fuzzy
+msgid "Explicit host matching"
+msgstr "明示的な%sマッピング"
+
 msgid "Explicit hosts"
 msgstr "明示的なホスト"
+
+#, fuzzy
+msgid "Explicit item matching"
+msgstr "明示的な一致"
 
 msgid "Explicit labels"
 msgstr "明示的なラベル"
@@ -25932,9 +25940,6 @@ msgstr "ホストルックアップエレメント"
 
 msgid "Host management"
 msgstr "ホスト管理"
-
-msgid "Host match list"
-msgstr "ホストマッチリスト"
 
 msgid "Host memory usage"
 msgstr "ホストのメモリ使用量"
@@ -30704,9 +30709,6 @@ msgstr "アイテム(サービスの説明で使用)"
 
 msgid "Item appearance"
 msgstr "アイテム外観"
-
-msgid "Item match list"
-msgstr "アイテムマッチリスト"
 
 msgid "Item memory"
 msgstr "アイテムメモリ"
@@ -58129,26 +58131,29 @@ msgstr ""
 "パフォーマンスグラフには、常に占有メモリが表示されます。これは、空きメモリレ"
 "ベルと占有メモリレベルの両方に設定できる実際のチェックレベルとは無関係です。"
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text to match. "
-"Note that as an alternative, you may also use the rule Host name translation "
-"for Incoming Messages in the Global Settings of the EC to accomplish your "
-"task."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field to match. Note that as an alternative, you may also use the rule Host "
+"name translation for Incoming Messages in the Global Settings of the EC to "
+"accomplish your task."
 msgstr ""
 "プレースホルダー<tt> \\0 </tt>は、一致するように元のテキストに置き換えられま"
 "す。別の方法として、ECのグローバル設定で受信メッセージのホスト名変換ルールを"
 "使用してタスクを実行することもできます。"
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end."
 msgstr ""
 "プレースホルダー<tt>\\0</tt>は元のテキストに置き換えられます。これにより、新"
 "しい情報を前や最後に追加することができます。"
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end. "
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end. "
 msgstr ""
 "プレースホルダー <tt>\\0</tt> は元のテキストに置き換えられます。これにより、"
 "前または最後に新しい情報を追加できます。 "
@@ -69729,6 +69734,19 @@ msgid "Use this custom start URL"
 msgstr "このカスタム開始URLを使用する"
 
 msgid ""
+"Use this field to search for rules which have their explicit host condition "
+"set up in such a way that it matches the given host (either by being unset "
+"or set)."
+msgstr ""
+
+msgid ""
+"Use this field to search for rules which have their item condition set up in "
+"such a way that it matches the given item (either by being unset or set). "
+"The item condition name depends on the rule, the item is always part of the "
+"service name."
+msgstr ""
+
+msgid ""
 "Use this field to search the description, comment, host and service "
 "conditions including the text representation of the configured values."
 msgstr ""
@@ -77617,6 +77635,12 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Host match list"
+#~ msgstr "ホストマッチリスト"
+
+#~ msgid "Item match list"
+#~ msgstr "アイテムマッチリスト"
 
 #~ msgid "This URL can also be collected from the Password Store from Checkmk."
 #~ msgstr "このURLはCheckmkのパスワードストアから収集することも可能です。"

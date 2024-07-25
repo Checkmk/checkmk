@@ -21840,8 +21840,16 @@ msgstr "Expliciete voorwaarden"
 msgid "Explicit email addresses"
 msgstr "Expliciete e-mailadressen"
 
+#, fuzzy
+msgid "Explicit host matching"
+msgstr "Expliciete %s mapping"
+
 msgid "Explicit hosts"
 msgstr "Expliciete gastheren"
+
+#, fuzzy
+msgid "Explicit item matching"
+msgstr "Expliciete overeenkomst"
 
 msgid "Explicit labels"
 msgstr "Expliciete etiketten"
@@ -26653,9 +26661,6 @@ msgstr "Host opzoek element"
 
 msgid "Host management"
 msgstr "Beheer van de gastheer"
-
-msgid "Host match list"
-msgstr "Host wedstrijd lijst"
 
 msgid "Host memory usage"
 msgstr "Host geheugengebruik"
@@ -31542,9 +31547,6 @@ msgstr "Item (gebruikt in de beschrijving van de dienst)"
 
 msgid "Item appearance"
 msgstr "Item verschijning"
-
-msgid "Item match list"
-msgstr "Item overeenstemmingslijst"
 
 msgid "Item memory"
 msgstr "Item geheugen"
@@ -59484,27 +59486,29 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text to match. "
-"Note that as an alternative, you may also use the rule Host name translation "
-"for Incoming Messages in the Global Settings of the EC to accomplish your "
-"task."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field to match. Note that as an alternative, you may also use the rule Host "
+"name translation for Incoming Messages in the Global Settings of the EC to "
+"accomplish your task."
 msgstr ""
 "De plaatsaanduiding <tt>0</tt> wordt vervangen door de oorspronkelijke tekst "
 "die overeenkomt. Merk op dat u als alternatief ook de regel "
 "Hostnaamvertaling voor Inkomende Berichten in de Globale Instellingen van de "
 "EC kunt gebruiken om uw taak te volbrengen."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end."
 msgstr ""
 "De plaatshouder <tt>0</tt> wordt vervangen door de oorspronkelijke tekst. "
 "Dit maakt het mogelijk om nieuwe informatie vooraan of aan het eind toe te "
 "voegen."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end. "
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end. "
 msgstr ""
 "De plaatsaanduiding <tt>0</tt> wordt vervangen door de oorspronkelijke "
 "tekst. Dit maakt het mogelijk om nieuwe informatie vooraan of aan het eind "
@@ -71390,6 +71394,19 @@ msgid "Use this custom start URL"
 msgstr "Gebruik deze aangepaste start URL"
 
 msgid ""
+"Use this field to search for rules which have their explicit host condition "
+"set up in such a way that it matches the given host (either by being unset "
+"or set)."
+msgstr ""
+
+msgid ""
+"Use this field to search for rules which have their item condition set up in "
+"such a way that it matches the given item (either by being unset or set). "
+"The item condition name depends on the rule, the item is always part of the "
+"service name."
+msgstr ""
+
+msgid ""
 "Use this field to search the description, comment, host and service "
 "conditions including the text representation of the configured values."
 msgstr ""
@@ -79509,6 +79526,12 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Host match list"
+#~ msgstr "Host wedstrijd lijst"
+
+#~ msgid "Item match list"
+#~ msgstr "Item overeenstemmingslijst"
 
 #~ msgid "This URL can also be collected from the Password Store from Checkmk."
 #~ msgstr ""

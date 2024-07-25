@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-07-12 09:57+0000\n"
+"PO-Revision-Date: 2024-07-19 05:05+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -6874,7 +6874,7 @@ msgid "Attempt to interpret OEM data"
 msgstr "Versuch der Interpretation von OEM-Daten"
 
 msgid "Atto Fibrebridge FC port"
-msgstr "Atto Fibrebridge FC port"
+msgstr "Atto Fibrebridge FC Port"
 
 msgid "Attribute"
 msgstr "Attribut"
@@ -7552,10 +7552,10 @@ msgid "Azure Application Gateway"
 msgstr "Azure Application Gateway"
 
 msgid "Azure Blob Storage"
-msgstr "Azure Blob Storage"
+msgstr "Azure Blob Speicher"
 
 msgid "Azure DB Storage"
-msgstr "Azure DB Storage"
+msgstr "Azure DB Speicher"
 
 msgid "Azure Databases"
 msgstr "Azure Datenbanken"
@@ -13990,6 +13990,10 @@ msgid ""
 "a channel in MS Teams and use the generated webook URL.<br><br>This URL can "
 "also be collected from the Password Store from Checkmk."
 msgstr ""
+"Erstellen Sie einen Arbeitsablauf 'Sende einen Beitrag an einen Kanal, wenn "
+"eine Webhook-Anfrage empfangen wird' für einen Kanal in MS Teams und "
+"verwenden Sie die generierte Webook-URL.<br><br>Diese URL kann auch aus dem "
+"Passwortspeicher von Checkmk bezogen werden."
 
 msgid "Create additional service for IO stats bytes"
 msgstr "Zusätzlichen Service für IO Stats Bytes erstellen"
@@ -15400,13 +15404,11 @@ msgstr "Datenbank diff Backup"
 msgid "Database files are restored"
 msgstr "Datenbankdateien sind wiederhergestellt"
 
-#, fuzzy
 msgid "Database for MySQL flexible server"
-msgstr "Datenbank für MySQL"
+msgstr "Datenbank für flexiblen MySQL Server"
 
-#, fuzzy
 msgid "Database for MySQL single server"
-msgstr "Datenbank für MySQL"
+msgstr "Datenbank für einzelnen MySQL Server"
 
 msgid "Database for PostgreSQL"
 msgstr "Datenbank für PostgreSQL"
@@ -21364,8 +21366,16 @@ msgstr "Explizite Bedingungen"
 msgid "Explicit email addresses"
 msgstr "Explizite E-Mail-Adressen"
 
+#, fuzzy
+msgid "Explicit host matching"
+msgstr "Explizite %s Zuordnung"
+
 msgid "Explicit hosts"
 msgstr "Explizite Hosts"
+
+#, fuzzy
+msgid "Explicit item matching"
+msgstr "Genaue Übereinstimmung"
 
 msgid "Explicit labels"
 msgstr "Explizite Labels"
@@ -26080,9 +26090,6 @@ msgstr "Suchelement für den Host"
 
 msgid "Host management"
 msgstr "Host-Verwaltung"
-
-msgid "Host match list"
-msgstr "Liste der Host-Bedingungen"
 
 msgid "Host memory usage"
 msgstr "Host-Speicherauslastung"
@@ -30887,9 +30894,6 @@ msgstr "Item (wird in der Service-Beschreibung verwendet)"
 msgid "Item appearance"
 msgstr "Aussehen des Eintrags"
 
-msgid "Item match list"
-msgstr "Liste der Item-Übereinstimmungen"
-
 msgid "Item memory"
 msgstr "Item-Speicher"
 
@@ -30956,7 +30960,7 @@ msgid "JVM tomcat threadpool levels"
 msgstr "JVM Tomcat Threadpool-Level"
 
 msgid "JVM uptime (since last reboot)"
-msgstr "JVM Uptime"
+msgstr "JVM-Laufzeit (seit letztem Reboot)"
 
 msgid "January"
 msgstr "Januar"
@@ -35094,7 +35098,7 @@ msgid "Maximum allowed age"
 msgstr "Höchstes erlaubtes Alter"
 
 msgid "Maximum allowed uptime"
-msgstr "Maximal erlaubte Uptime"
+msgstr "Maximal erlaubte Laufzeit"
 
 msgid "Maximum allowed users"
 msgstr "Maximum erlaubter Benutzer"
@@ -36025,7 +36029,7 @@ msgid "Minimum required Checkmk version"
 msgstr "Minimal benötigte Checkmk-Version"
 
 msgid "Minimum required uptime"
-msgstr "Minimal erforderliche Uptime"
+msgstr "Minimal erforderliche Laufzeit"
 
 msgid "Minimum single-request consumption"
 msgstr "Minimaler Verbrauch einzelner Anfragen"
@@ -44740,7 +44744,7 @@ msgid "RabbitMQ nodes sockets"
 msgstr "RabbitMQ Knoten Anschlüsse"
 
 msgid "RabbitMQ nodes uptime"
-msgstr "RabbitMQ Knoten Verfügbarkeit"
+msgstr "RabbitMQ-Knoten Laufzeit"
 
 msgid "RabbitMQ queues"
 msgstr "RabbitMQ Warteschlangen"
@@ -52284,12 +52288,11 @@ msgstr ""
 "Geben Sie den Monitoring-Zustand an, wenn der Bonding-Modus nicht wie "
 "erwartet funktioniert."
 
-#, fuzzy
 msgid ""
 "Specify the name of a store (This is either a mailbox or public folder)."
 msgstr ""
-"Gegen Sie den Namen des Stores an (Das ist entweder eine Mailbox oder ein "
-"öffentlicher Ordner)"
+"Gegen Sie den Namen eines Stores an (Das ist entweder eine Mailbox oder ein "
+"öffentlicher Ordner)."
 
 msgid "Specify the name of the ASM Disk Group "
 msgstr "Geben Sie den Namen der ASM-Diskgruppe an "
@@ -58497,27 +58500,30 @@ msgstr ""
 "unabhängig von den tatsächlichen Check-Levels, die sowohl für freie als auch "
 "für belegte Speicherwerte eingestellt werden können."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text to match. "
-"Note that as an alternative, you may also use the rule Host name translation "
-"for Incoming Messages in the Global Settings of the EC to accomplish your "
-"task."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field to match. Note that as an alternative, you may also use the rule Host "
+"name translation for Incoming Messages in the Global Settings of the EC to "
+"accomplish your task."
 msgstr ""
 "Der Platzhalter <tt>\\0</tt> wird durch den ursprünglich zutreffenden Text "
 "ersetzt. Bemerkung: Alternativ können Sie auch die Regel \"Übersetzung von "
 "Host-Namen für eingehende Meldungen in den globalen Einstellungen der EC\" "
 "verwenden."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end."
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end."
 msgstr ""
 "Der Platzhalter <tt>\\0</tt> wird durch den Original-Text ersetzt. Damit "
 "können Sie am Anfang oder am Ende Ergänzungen hinzufügen."
 
+#, fuzzy
 msgid ""
-"The placeholder <tt>\\0</tt> will be replaced by the original text. This "
-"allows you to add new information in front or at the end. "
+"The placeholder <tt>\\0</tt> will be replaced by the original text of this "
+"field. This allows you to add new information in front or at the end. "
 msgstr ""
 "Der Platzhalter <tt>\\0</tt> wird durch den ursprünglichen Text ersetzt. "
 "Damit können Sie am Anfang oder am Ende Ergänzungen hinzufügen. "
@@ -67733,7 +67739,7 @@ msgid "UPS selftest"
 msgstr "UPS Selbsttest"
 
 msgid "UPTIME"
-msgstr "UPTIME"
+msgstr "Laufzeit"
 
 msgid "URI (page name)"
 msgstr "URI (Seitenname)"
@@ -69279,13 +69285,13 @@ msgid "Upper warning level"
 msgstr "Obere Warnschwelle"
 
 msgid "Uptime"
-msgstr "Betriebszeit"
+msgstr "Laufzeit"
 
 msgid "Uptime since last reboot"
-msgstr "Uptime (Zeit seit dem letzten Reboot)"
+msgstr "Laufzeit seit dem letzten Reboot"
 
 msgid "Uptime since last reboot of devices with modules"
-msgstr "Betriebszeit seit dem letzten Neustart von Geräten mit Modulen"
+msgstr "Laufzeit seit dem letzten Reboot von Geräten mit Modulen"
 
 msgid "Upturn toner levels"
 msgstr "Tonerschwellen umdrehen"
@@ -69886,6 +69892,19 @@ msgstr ""
 
 msgid "Use this custom start URL"
 msgstr "Individuelle Start-URL benutzen"
+
+msgid ""
+"Use this field to search for rules which have their explicit host condition "
+"set up in such a way that it matches the given host (either by being unset "
+"or set)."
+msgstr ""
+
+msgid ""
+"Use this field to search for rules which have their item condition set up in "
+"such a way that it matches the given item (either by being unset or set). "
+"The item condition name depends on the rule, the item is always part of the "
+"service name."
+msgstr ""
 
 msgid ""
 "Use this field to search the description, comment, host and service "
@@ -77976,6 +77995,12 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Host match list"
+#~ msgstr "Liste der Host-Bedingungen"
+
+#~ msgid "Item match list"
+#~ msgstr "Liste der Item-Übereinstimmungen"
 
 #~ msgid "This URL can also be collected from the Password Store from Checkmk."
 #~ msgstr ""

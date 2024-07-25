@@ -50,6 +50,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, MegaMenu, PermissionName
+from cmk.gui.user_async_replication import user_profile_async_replication_dialog
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -89,7 +90,6 @@ from cmk.gui.valuespec import (
     UUID,
 )
 from cmk.gui.wato.pages.events import ABCEventsMode
-from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.watolib.check_mk_automations import (

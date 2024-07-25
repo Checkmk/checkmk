@@ -38,7 +38,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.visuals.info import visual_info_registry
 
 from .dashlet import Dashlet, dashlet_registry, DashletConfig, DashletId
-from .store import get_permitted_dashboards, save_all_dashboards
+from .store import get_permitted_dashboards, save_and_replicate_all_dashboards
 from .title_macros import title_help_text_for_macros
 from .type_defs import DashboardConfig
 
@@ -203,7 +203,7 @@ class EditDashletPage(Page):
                 else:
                     self._dashboard["dashlets"][self._ident] = new_dashlet_spec
 
-                save_all_dashboards()
+                save_and_replicate_all_dashboards()
                 html.footer()
                 raise HTTPRedirect(request.get_url_input("next", request.get_url_input("back")))
 

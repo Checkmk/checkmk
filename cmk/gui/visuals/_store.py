@@ -271,6 +271,16 @@ def load_visuals_of_a_user(
     return user_visuals
 
 
+def load_raw_visuals_of_a_user(
+    what: VisualTypeName,
+    user_id: UserId,
+) -> dict[str, dict[str, Any]]:
+    path = cmk.utils.paths.profile_dir / user_id / f"user_{what}.mk"
+    return store.try_load_file_from_pickle_cache(
+        path, default={}, temp_dir=cmk.utils.paths.tmp_dir, root_dir=cmk.utils.paths.omd_root
+    )
+
+
 def _get_packaged_visuals(
     visual_type: VisualTypeName,
     internal_to_runtime_transformer: Callable[[dict[str, Any]], TVisual],

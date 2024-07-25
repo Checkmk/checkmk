@@ -20,13 +20,14 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
+from cmk.gui.logged_in import save_user_file
 from cmk.gui.site_config import (
     get_login_slave_sites,
     get_site_config,
     is_replication_enabled,
     is_wato_slave_site,
 )
-from cmk.gui.type_defs import UserSpec
+from cmk.gui.type_defs import UserSpec, VisualTypeName
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -175,10 +176,12 @@ def handle_ldap_sync_finished(logger, profiles_to_synchronize, changes):
 
 
 def push_user_profiles_to_site_transitional_wrapper(
-    site: SiteConfiguration, user_profiles: Mapping[UserId, UserSpec]
+    site: SiteConfiguration,
+    user_profiles: Mapping[UserId, UserSpec],
+    visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None = None,
 ) -> Literal[True] | str:
     try:
-        return push_user_profiles_to_site(site, user_profiles)
+        return push_user_profiles_to_site(site, user_profiles, visuals)
     except MKAutomationException as e:
         if "Invalid automation command: push-profiles" in "%s" % e:
             failed_info = []
@@ -229,7 +232,9 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
 
 
 def push_user_profiles_to_site(
-    site: SiteConfiguration, user_profiles: Mapping[UserId, UserSpec]
+    site: SiteConfiguration,
+    user_profiles: Mapping[UserId, UserSpec],
+    visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None = None,
 ) -> Literal[True]:
     def _serialize(user_profiles: Mapping[UserId, UserSpec]) -> Mapping[UserId, UserSpec]:
         """Do not synchronize user session information"""
@@ -239,13 +244,17 @@ def push_user_profiles_to_site(
         }
 
     do_remote_automation(
-        site, "push-profiles", [("profiles", repr(_serialize(user_profiles)))], timeout=60
+        site,
+        "push-profiles",
+        [("profiles", repr(_serialize(user_profiles))), ("visuals", repr(visuals))],
+        timeout=60,
     )
     return True
 
 
 class PushUserProfilesRequest(NamedTuple):
     user_profiles: Mapping[UserId, UserSpec]
+    user_visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None
 
 
 class PushUserProfilesToSite(AutomationCommand):
@@ -254,11 +263,13 @@ class PushUserProfilesToSite(AutomationCommand):
 
     def get_request(self):
         return PushUserProfilesRequest(
-            ast.literal_eval(request.get_str_input_mandatory("profiles"))
+            ast.literal_eval(request.get_str_input_mandatory("profiles")),
+            ast.literal_eval(request.get_str_input_mandatory("visuals", None)),
         )
 
     def execute(self, api_request: PushUserProfilesRequest) -> Literal[True]:
         user_profiles = api_request.user_profiles
+        visuals_by_user = api_request.user_visuals
 
         if not user_profiles:
             raise MKGeneralException(_("Invalid call: No profiles set."))
@@ -267,4 +278,11 @@ class PushUserProfilesToSite(AutomationCommand):
         for user_id, profile in user_profiles.items():
             users[user_id] = profile
         userdb.save_users(users, datetime.now())
+
+        if visuals_by_user:
+            for user_id, visuals_by_type in visuals_by_user.items():
+                for what, visuals in visuals_by_type.items():
+                    if visuals:
+                        save_user_file(f"user_{what}", visuals, user_id)
+
         return True

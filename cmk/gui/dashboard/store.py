@@ -15,6 +15,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.views.store import internal_view_to_runtime_view
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -75,8 +76,11 @@ def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> D
     }
 
 
-def save_all_dashboards() -> None:
+def save_and_replicate_all_dashboards() -> None:
     visuals.save("dashboards", get_all_dashboards())
+    user_profile_async_replication_page(
+        back_url=request.get_url_input("back", "edit_dashboards.py")
+    )
 
 
 def get_all_dashboards() -> dict[tuple[UserId, DashboardName], DashboardConfig]:
@@ -114,7 +118,7 @@ def load_dashboard_with_cloning(
 
         all_dashboards[(active_user, name)] = board
         permitted_dashboards[name] = board
-        save_all_dashboards()
+        save_and_replicate_all_dashboards()
 
     return board
 
@@ -134,4 +138,4 @@ def get_dashlet(board: DashboardName, ident: DashletId) -> DashletConfig:
 def add_dashlet(dashlet_spec: DashletConfig, dashboard: DashboardConfig) -> None:
     dashboard["dashlets"].append(dashlet_spec)
     dashboard["mtime"] = int(time.time())
-    save_all_dashboards()
+    save_and_replicate_all_dashboards()

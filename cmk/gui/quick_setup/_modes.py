@@ -25,7 +25,7 @@ class MainModuleQuickSetupAWS(ABCMainModule):
 
     @property
     def icon(self) -> Icon:
-        return ""  # TODO: AWS icon must be specified
+        return "quick_setup_aws"
 
     @property
     def permission(self) -> None | str:

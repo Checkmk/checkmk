@@ -25,7 +25,7 @@ def register(main_module_topic_registry: MainModuleTopicRegistry) -> None:
 MainModuleTopicQuickSetup = MainModuleTopic(
     name="quick_setups",
     title=_l("Quick Setup"),
-    icon_name="",  # TODO: Add icon,
+    icon_name="topic_quick_setups",
     sort_index=1,
 )
 

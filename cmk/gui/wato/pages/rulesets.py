@@ -2134,6 +2134,9 @@ class ABCEditRuleMode(WatoMode):
         if is_locked_by_quick_setup(self._rule.locked_by):
             quick_setup_locked_warning(self._rule.locked_by, "rule")
 
+    def _should_valdiate_on_render(self) -> bool:
+        return self._do_validate_on_render or not isinstance(self, ModeNewRule)
+
     def _page_form(self) -> None:
         self._page_form_quick_setup_warning()
 
@@ -2164,7 +2167,7 @@ class ABCEditRuleMode(WatoMode):
                         self._vue_field_id(),
                         value,
                         origin,
-                        self._do_validate_on_render,
+                        self._should_valdiate_on_render(),
                     )
                 case ExperimentalRenderMode.BACKEND_AND_FRONTEND:
                     forms.section("Current setting as VUE")
@@ -2175,7 +2178,7 @@ class ABCEditRuleMode(WatoMode):
                         self._vue_field_id(),
                         value,
                         origin,
-                        self._do_validate_on_render,
+                        self._should_valdiate_on_render(),
                     )
                     forms.section("Backend rendered (read only)")
                     valuespec.validate_datatype(self._rule.value, "ve")

@@ -336,27 +336,33 @@ def extract_folder_names(folder_list: Iterable[bytes]) -> Iterable[str]:
     ]
 
 
-def verified_result(data: tuple[bytes | str, list[bytes | str]] | bytes) -> list[bytes | str]:
+def verified_result(data: object) -> list[bytes | str]:  # Sequence[bytes] | Sequence[str] ?
     """Return the payload part of the (badly typed) result of IMAP/POP functions or eventually
     raise an exception if the result is not "OK"
     """
+
+    def _parse_element(raw: object) -> bytes | str:
+        if isinstance(raw, (str, bytes)):
+            return raw
+        raise TypeError(raw)
+
     if isinstance(data, tuple):
         if isinstance(data[0], str):
-            assert isinstance(data[1], list)
             if data[0] not in {"OK", "BYE"}:
                 raise RuntimeError(f"Server responded {data[0]!r}, {data[1]!r}")
-            return data[1]
+            assert isinstance(data[1], list)
+            return [_parse_element(e) for e in data[1]]
         if isinstance(data[0], bytes):
             if not data[0].startswith(b"+OK"):
                 raise RuntimeError(f"Server responded {data[0]!r}, {data[1]!r}")
             assert isinstance(data[1], list)
-            return data[1]
+            return [_parse_element(e) for e in data[1]]
         raise AssertionError()
     if isinstance(data, bytes):
         if not data.startswith(b"+OK"):
             raise RuntimeError("Server responded %r" % data)
         return []
-    raise AssertionError()
+    raise TypeError(data)
 
 
 class Mailbox:

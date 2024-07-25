@@ -146,7 +146,7 @@ run_clang_format() {
 }
 
 run_build() {
-    bazel build //packages/unixcat
+    bazel build //packages/unixcat:all
 }
 
 calculate_files_to_use() {

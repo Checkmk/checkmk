@@ -146,7 +146,7 @@ run_clang_format() {
 }
 
 run_build() {
-    bazel build //packages/neb
+    bazel build //packages/neb:all
 }
 
 calculate_files_to_use() {

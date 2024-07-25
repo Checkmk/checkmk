@@ -146,7 +146,7 @@ run_clang_format() {
 }
 
 run_build() {
-    bazel build //packages/livestatus
+    bazel build //packages/livestatus:all
 }
 
 calculate_files_to_use() {

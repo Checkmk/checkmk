@@ -16,7 +16,7 @@ import yaml
 
 from tests.testlib.repo import repo_path
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import edition_from_env, parse_raw_edition, restart_httpd, run
+from tests.testlib.utils import edition_from_env, parse_raw_edition, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 from cmk.utils.licensing.helper import get_licensed_state_file_path
@@ -154,7 +154,7 @@ def _get_site_factory(version: CMKVersion) -> SiteFactory:
     )
 
 
-def _create_site(base_version: CMKVersion, interactive: bool) -> Site:
+def _create_site(base_version: CMKVersion) -> Site:
     site_name = "central"
     site_factory = _get_site_factory(base_version)
     site = site_factory.get_existing_site(site_name)
@@ -169,38 +169,16 @@ def _create_site(base_version: CMKVersion, interactive: bool) -> Site:
     assert not site.exists(), "Trying to install existing site!"
     LOGGER.info("Creating new site")
 
-    if interactive:
-        if not os.getenv("CI", "").strip().lower() == "true":
-            print(
-                "\033[91m"
-                "#######################################################################\n"
-                "# This will trigger a SUDO prompt if run with a regular user account! #\n"
-                "# NOTE: Using interactive password authentication will NOT work here! #\n"
-                "#######################################################################"
-                "\033[0m"
+    try:
+        site = site_factory.get_site(site_name, auto_restart_httpd=True)
+    except Exception as e:
+        if f"Version {base_version.version} could not be installed" in str(e):
+            pytest.skip(
+                f"Base-version {base_version.version} not available in "
+                f'{os.environ.get("DISTRO")}'
             )
-        try:
-            site = site_factory.interactive_create(site.id, timeout=60)
-            restart_httpd()
-        except Exception as e:
-            if f"Version {base_version.version} could not be installed" in str(e):
-                pytest.skip(
-                    f"Base-version {base_version.version} not available in "
-                    f'{os.environ.get("DISTRO")}'
-                )
-            else:
-                raise
-    else:
-        try:
-            site = site_factory.get_site(site_name, auto_restart_httpd=True)
-        except Exception as e:
-            if f"Version {base_version.version} could not be installed" in str(e):
-                pytest.skip(
-                    f"Base-version {base_version.version} not available in "
-                    f'{os.environ.get("DISTRO")}'
-                )
-            else:
-                raise
+        else:
+            raise
 
     return site
 
@@ -208,6 +186,7 @@ def _create_site(base_version: CMKVersion, interactive: bool) -> Site:
 def update_site(base_site: Site, target_version: CMKVersion, interactive: bool) -> Site:
     site_factory = _get_site_factory(target_version)
     min_version = get_min_version(base_site.version.edition)
+    LOGGER.info("Updating test-site (interactive-mode=%s) ...", interactive)
     if interactive:
         target_site = site_factory.interactive_update(
             base_site,
@@ -254,8 +233,8 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     interactive_mode = interactive_mode and not request.config.getoption(
         name="--disable-interactive-mode"
     )
-    LOGGER.info("Setting up test-site (interactive-mode=%s) ...", interactive_mode)
-    test_site = _create_site(base_version, interactive=interactive_mode)
+    LOGGER.info("Setting up test-site ...")
+    test_site = _create_site(base_version)
 
     inject_dumps(test_site, DUMPS_DIR)
 

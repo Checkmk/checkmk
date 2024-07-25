@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.gui.graphing._evaluate import evaluate_quantity, perfometer_matches
+from cmk.gui.graphing._perfometer import _evaluate_quantity, _perfometer_matches
 from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
 from cmk.gui.graphing._unit_info import UnitInfo
 
@@ -248,12 +248,12 @@ def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric
         ),
     ],
 )
-def test_perfometer_matches(
+def test__perfometer_matches(
     perfometer: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked,
     translated_metrics: Mapping[str, TranslatedMetric],
     result: bool,
 ) -> None:
-    assert perfometer_matches(perfometer, translated_metrics) is result
+    assert _perfometer_matches(perfometer, translated_metrics) is result
 
 
 @pytest.mark.parametrize(
@@ -580,7 +580,7 @@ def test_perfometer_matches(
         ),
     ],
 )
-def test_evaluate_quantity(
+def test__evaluate_quantity(
     quantity: (
         str
         | metrics.Constant
@@ -596,4 +596,4 @@ def test_evaluate_quantity(
     translated_metrics: Mapping[str, TranslatedMetric],
     result: float,
 ) -> None:
-    assert evaluate_quantity(quantity, translated_metrics).value == result
+    assert _evaluate_quantity(quantity, translated_metrics).value == result

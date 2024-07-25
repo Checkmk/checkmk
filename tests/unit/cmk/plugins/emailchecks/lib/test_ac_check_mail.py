@@ -82,9 +82,9 @@ def test_ac_check_mail_main_failed_connect() -> None:
 
 
 @pytest.mark.parametrize(
-    "mails, expected_messages, protocol",
+    "mails, expected_messages",
     [
-        ({}, [], "POP3"),
+        ({}, []),
         (
             {
                 "1": create_test_email("Foobar"),
@@ -92,7 +92,6 @@ def test_ac_check_mail_main_failed_connect() -> None:
             [
                 ("<21>", "None Foobar: Foobar | The email content\x00is very important!\x00"),
             ],
-            "IMAP",
         ),
         (
             {
@@ -103,7 +102,6 @@ def test_ac_check_mail_main_failed_connect() -> None:
                 ("<21>", "None Foo: Foo | The email content\x00is very important!\x00"),
                 ("<21>", "None Bar: Bar | The email content\x00is very important!\x00"),
             ],
-            "IMAP",
         ),
         (
             {
@@ -112,7 +110,6 @@ def test_ac_check_mail_main_failed_connect() -> None:
             [
                 ("<21>", "None Foobar: Foobar | The email content\x00is very important!\x00"),
             ],
-            "EWS",
         ),
         (
             {
@@ -123,14 +120,12 @@ def test_ac_check_mail_main_failed_connect() -> None:
                 ("<21>", "None Foo: Foo | The email content\x00is very important!\x00"),
                 ("<21>", "None Bar: Bar | The email content\x00is very important!\x00"),
             ],
-            "EWS",
         ),
     ],
 )
 def test_ac_check_mail_prepare_messages_for_ec(
     mails: MailMessages,
     expected_messages: Sequence[tuple[str, str]],
-    protocol: str,
 ) -> None:
     args = Args(
         body_limit=1000,
@@ -139,7 +134,8 @@ def test_ac_check_mail_prepare_messages_for_ec(
         fetch_server=None,
         forward_facility=2,
     )
-    messages = check_mail.prepare_messages_for_ec(args, mails, protocol)
+    messages = check_mail.prepare_messages_for_ec(args, mails)
+    assert len(messages) == len(expected_messages)
     for message, (expected_priority, expected_message) in zip(messages, expected_messages):
         assert message.startswith(expected_priority)
         assert message.endswith(expected_message)

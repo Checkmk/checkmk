@@ -15,6 +15,7 @@ import socket
 import time
 from email.message import Message as POPIMAPMessage
 from pathlib import Path
+from typing import assert_never
 
 from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
@@ -129,7 +130,7 @@ def _get_imap_or_pop_log_line(msg: POPIMAPMessage, body_limit: int) -> str:
     return subject + " | " + payload[:body_limit]
 
 
-def prepare_messages_for_ec(args: Args, mails: MailMessages, protocol: str) -> list[str]:
+def prepare_messages_for_ec(args: Args, mails: MailMessages) -> list[str]:
     # create syslog message from each mail
     # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasdad as
     # <facility+priority> timestamp hostname application: message
@@ -138,18 +139,21 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages, protocol: str) -> l
     priority = 5  # OK
 
     for _index, msg in sorted(mails.items()):
-        if protocol == "EWS":
-            assert isinstance(msg, EWSMessage)
+        if isinstance(msg, EWSMessage):
             subject = msg.subject
             log_line = (
                 subject
                 + " | "
                 + (msg.text_body[: args.body_limit] if msg.text_body else "No mail body found.")
             )
-        else:
+
+        elif isinstance(msg, POPIMAPMessage):
             # An 'assert isinstance(msg, email.message.Message)' doesn't do the job here for mypy
             subject = msg.get("Subject", "None")  # type: ignore[attr-defined]
             log_line = _get_imap_or_pop_log_line(msg, args.body_limit)
+
+        else:
+            assert_never(msg)
 
         log_line = log_line.replace("\r\n", "\0")
         log_line = log_line.replace("\n", "\0")
@@ -261,7 +265,7 @@ def check_mail(args: Args) -> CheckResult:
             return 0, "Successfully logged in to mailbox", None
 
         fetched_mails: MailMessages = mailbox.fetch_mails(args.match_subject)
-        ec_messages = prepare_messages_for_ec(args, fetched_mails, mailbox.protocol())
+        ec_messages = prepare_messages_for_ec(args, fetched_mails)
         result = forward_to_ec(args, ec_messages)
 
         # (Copy and) Delete the forwarded mails if configured

@@ -14,6 +14,7 @@ from collections.abc import Mapping, MutableMapping
 from contextlib import ExitStack, suppress
 from email.message import Message as POPIMAPMessage
 from pathlib import Path
+from typing import assert_never
 
 from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
@@ -179,23 +180,22 @@ def save_expected_mails(expected_mails: MailDict, status_path: str) -> None:
         file.write("\n")
 
 
-def subject_and_received_timestamp_from_msg(msg: Message, protocol: str) -> tuple[str, None | int]:
-    if protocol in {"POP3", "IMAP"}:
-        assert isinstance(msg, POPIMAPMessage)
+def subject_and_received_timestamp_from_msg(msg: Message) -> tuple[str, None | int]:
+    # using pattern matching here results in an mypy error that I don't understand
+    if isinstance(msg, POPIMAPMessage):
         if "Received" in msg:
             parsed = email.utils.parsedate_tz(msg["Received"].split(";")[-1])
             rx_ts = email.utils.mktime_tz(parsed) if parsed else None
             return msg.get("Subject", ""), rx_ts
         return msg.get("Subject", ""), None
 
-    if protocol == "EWS":
-        assert isinstance(msg, EWSMessage)
+    if isinstance(msg, EWSMessage):
         try:
             return msg.subject, int(msg.datetime_received.timestamp())
         except Exception:
             return msg.subject, None
 
-    raise NotImplementedError(f"Fetching mails is not implemented for {protocol}")
+    return assert_never(msg)
 
 
 def check_mails(  # pylint: disable=too-many-branches
@@ -335,9 +335,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
             f"{tx_timestamp}-{key}": (index, rx_timestamp or now, subject, raw_message)
             # we don't filter for subject here...
             for index, raw_message in mailbox.fetch_mails().items()
-            for subject, rx_timestamp in (
-                subject_and_received_timestamp_from_msg(raw_message, mailbox.protocol()),
-            )
+            for subject, rx_timestamp in (subject_and_received_timestamp_from_msg(raw_message),)
             # .. because we need the groups
             if (match := filter_subject(subject, re_subject))
             for tx_timestamp, key in (match.groups(),)

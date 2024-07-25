@@ -126,7 +126,7 @@ jinja2 = "*"  # needed by flask
 more-itertools = "==10.2.0"  # needed by connexion through zipp, pytest
 zipp = "==3.18.1"  # needed by importlib-metadata
 pyrsistent = "==0.19.3"  # needed by jsonschema
-werkzeug = "==3.0.2"  # direct dependency and needed by flask
+werkzeug = "*"  # direct dependency and needed by flask
 flask = "==3.0.3"  # direct dependency
 openapi-spec-validator = "==0.7.1"  # direct dependency
 psutil = "==5.9.8"  # needed for omdlib

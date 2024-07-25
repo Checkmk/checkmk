@@ -18,7 +18,7 @@ watch(
     const validations: ValidationMessages = []
     new_validation.forEach((message) => {
       validations.push({
-        location: [''],
+        location: [],
         message: message.message,
         invalid_value: message.invalid_value
       })

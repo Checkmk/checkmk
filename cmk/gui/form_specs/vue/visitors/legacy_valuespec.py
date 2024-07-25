@@ -133,7 +133,7 @@ class LegacyValuespecVisitor(FormSpecVisitor):
             except MKUserError as e:
                 return [
                     VueComponents.ValidationMessage(
-                        location=[e.varname or ""], message=str(e), invalid_value=value
+                        location=[e.varname or ""], message=str(e), invalid_value=None
                     )
                 ]
             finally:

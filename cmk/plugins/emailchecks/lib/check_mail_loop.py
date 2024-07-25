@@ -277,7 +277,9 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         logging.debug("relevant messages: %r", relevant_mail_loop_messages)
 
         # send a 'sensor-email' with a timestamp we expect to receive next time
-        new_mail = send_mailbox.send_mail(args)
+        new_mail = send_mailbox.send_mail(
+            args.subject, mail_from=args.mail_from, mail_to=args.mail_to
+        )
         logging.debug("sent new mail: %r", new_mail)
 
         expected_mails.update((new_mail,))

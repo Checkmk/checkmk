@@ -60,7 +60,8 @@ DomainType = Literal[
     "aux_tag",
     "autocomplete",
     "quick_setup",
-]  # fmt: off
+    "managed_robots",
+]
 
 
 CmkEndpointName = Literal[

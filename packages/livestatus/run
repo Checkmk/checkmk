@@ -161,9 +161,7 @@ run_unit_tests() {
     if test -z ${VALGRIND+x} && command -v valgrind >/dev/null; then
         VALGRIND="valgrind --quiet --num-callers=30 --error-exitcode=42"
     fi
-    (
-        GTEST_OUTPUT=xml ${VALGRIND} bazel test --test_output=all //packages/livestatus:all
-    )
+    bazel test ${VALGRIND:+--run_under="${VALGRIND}"} //packages/livestatus:all
 }
 
 run_check_format() {

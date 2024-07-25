@@ -42,7 +42,8 @@ class ScalarBounds(TypedDict, total=False):
     max: float
 
 
-class TranslatedMetric(TypedDict):
+@dataclass(frozen=True)
+class TranslatedMetric:
     orig_name: Sequence[str]
     value: float
     scalar: ScalarBounds

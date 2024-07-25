@@ -40,6 +40,7 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     ScalarDefinition,
 )
 from cmk.gui.graphing._loader import MetricInfoExtended, metrics_from_api
+from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._unit_info import UnitInfo
 from cmk.gui.graphing._utils import (
     _NormalizedPerfData,
@@ -408,14 +409,14 @@ def test__compute_predictive_metrics(
         list(
             _compute_predictive_metrics(
                 {
-                    "metric_name": {
-                        "orig_name": ["metric_name"],
-                        "value": 0.0,
-                        "scalar": {},
-                        "scale": [1.0],
-                        "auto_graph": True,
-                        "title": "",
-                        "unit": UnitInfo(
+                    "metric_name": TranslatedMetric(
+                        orig_name=["metric_name"],
+                        value=0.0,
+                        scalar={},
+                        scale=[1.0],
+                        auto_graph=True,
+                        title="",
+                        unit=UnitInfo(
                             id="id",
                             title="Title",
                             symbol="",
@@ -423,16 +424,16 @@ def test__compute_predictive_metrics(
                             js_render="v => v",
                             conversion=lambda v: v,
                         ),
-                        "color": "#0080c0",
-                    },
-                    "predict_metric_name": {
-                        "orig_name": ["predict_metric_name"],
-                        "value": 0.0,
-                        "scalar": {},
-                        "scale": [1.0],
-                        "auto_graph": True,
-                        "title": "",
-                        "unit": UnitInfo(
+                        color="#0080c0",
+                    ),
+                    "predict_metric_name": TranslatedMetric(
+                        orig_name=["predict_metric_name"],
+                        value=0.0,
+                        scalar={},
+                        scale=[1.0],
+                        auto_graph=True,
+                        title="",
+                        unit=UnitInfo(
                             id="id",
                             title="Title",
                             symbol="",
@@ -440,16 +441,16 @@ def test__compute_predictive_metrics(
                             js_render="v => v",
                             conversion=lambda v: v,
                         ),
-                        "color": "#0080c0",
-                    },
-                    "predict_lower_metric_name": {
-                        "orig_name": ["predict_lower_metric_name"],
-                        "value": 0.0,
-                        "scalar": {},
-                        "scale": [1.0],
-                        "auto_graph": True,
-                        "title": "",
-                        "unit": UnitInfo(
+                        color="#0080c0",
+                    ),
+                    "predict_lower_metric_name": TranslatedMetric(
+                        orig_name=["predict_lower_metric_name"],
+                        value=0.0,
+                        scalar={},
+                        scale=[1.0],
+                        auto_graph=True,
+                        title="",
+                        unit=UnitInfo(
                             id="id",
                             title="Title",
                             symbol="",
@@ -457,8 +458,8 @@ def test__compute_predictive_metrics(
                             js_render="v => v",
                             conversion=lambda v: v,
                         ),
-                        "color": "#0080c0",
-                    },
+                        color="#0080c0",
+                    ),
                 },
                 metric_definitions,
             )
@@ -512,12 +513,9 @@ def test_translate_metrics_with_predictive_metrics(
         PerfDataTuple(predictive_metric_name, metric_name, 0, "", None, None, None, None),
     ]
     translated_metrics = utils.translate_metrics(perfdata, "my-check-plugin")
-    assert translated_metrics[predictive_metric_name]["title"] == expected_title
-    assert (
-        translated_metrics[metric_name]["unit"]
-        == translated_metrics[predictive_metric_name]["unit"]
-    )
-    assert translated_metrics[predictive_metric_name]["color"] == expected_color
+    assert translated_metrics[predictive_metric_name].title == expected_title
+    assert translated_metrics[predictive_metric_name].unit == translated_metrics[metric_name].unit
+    assert translated_metrics[predictive_metric_name].color == expected_color
 
 
 def test_translate_metrics_with_multiple_predictive_metrics() -> None:
@@ -531,8 +529,8 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
         ),
     ]
     translated_metrics = utils.translate_metrics(perfdata, "my-check-plugin")
-    assert translated_metrics["predict_messages_outbound"]["color"] == "#4b4b4b"
-    assert translated_metrics["predict_lower_messages_outbound"]["color"] == "#5a5a5a"
+    assert translated_metrics["predict_messages_outbound"].color == "#4b4b4b"
+    assert translated_metrics["predict_lower_messages_outbound"].color == "#5a5a5a"
 
 
 @pytest.mark.parametrize(
@@ -1120,8 +1118,8 @@ def test_translate_metrics(
         [PerfDataTuple("temp", "temp", 59.05, "", 85.05, 85.05, None, None)],
         "check_mk-lnx_thermal",
     )["temp"]
-    assert translated_metric["value"] == expected_value
-    assert translated_metric["scalar"] == expected_scalars
+    assert translated_metric.value == expected_value
+    assert translated_metric.scalar == expected_scalars
 
 
 @pytest.mark.parametrize(

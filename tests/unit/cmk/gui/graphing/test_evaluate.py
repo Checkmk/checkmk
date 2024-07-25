@@ -63,14 +63,14 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
 
 
 def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric:
-    return {
-        "orig_name": [name],
-        "value": 10.0,
-        "scalar": scalar,
-        "scale": [1.0],
-        "auto_graph": False,
-        "title": "Title 1",
-        "unit": UnitInfo(
+    return TranslatedMetric(
+        orig_name=[name],
+        value=10.0,
+        scalar=scalar,
+        scale=[1.0],
+        auto_graph=False,
+        title="Title 1",
+        unit=UnitInfo(
             id="id",
             title="Title",
             symbol="",
@@ -78,8 +78,8 @@ def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric
             js_render="v => v",
             conversion=lambda v: v,
         ),
-        "color": "#123456",
-    }
+        color="#123456",
+    )
 
 
 @pytest.mark.parametrize(
@@ -263,14 +263,14 @@ def test__perfometer_matches(
         pytest.param(
             "name",
             {
-                "name": {
-                    "orig_name": ["name"],
-                    "value": 10.0,
-                    "scalar": {},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                "name": TranslatedMetric(
+                    orig_name=["name"],
+                    value=10.0,
+                    scalar={},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -278,8 +278,8 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                }
+                    color="#123456",
+                ),
             },
             10.0,
             id="metric-name",
@@ -292,14 +292,14 @@ def test__perfometer_matches(
                 5.0,
             ),
             {
-                "name": {
-                    "orig_name": ["name"],
-                    "value": 10.0,
-                    "scalar": {},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                "name": TranslatedMetric(
+                    orig_name=["name"],
+                    value=10.0,
+                    scalar={},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -307,8 +307,8 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                }
+                    color="#123456",
+                ),
             },
             5.0,
             id="metrics.Constant",
@@ -316,14 +316,14 @@ def test__perfometer_matches(
         pytest.param(
             metrics.WarningOf("name"),
             {
-                "name": {
-                    "orig_name": ["name"],
-                    "value": 10.0,
-                    "scalar": {"warn": 5.0},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                "name": TranslatedMetric(
+                    orig_name=["name"],
+                    value=10.0,
+                    scalar={"warn": 5.0},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -331,8 +331,8 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                }
+                    color="#123456",
+                ),
             },
             5.0,
             id="metrics.WarningOf",
@@ -340,14 +340,14 @@ def test__perfometer_matches(
         pytest.param(
             metrics.CriticalOf("name"),
             {
-                "name": {
-                    "orig_name": ["name"],
-                    "value": 10.0,
-                    "scalar": {"crit": 5.0},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                "name": TranslatedMetric(
+                    orig_name=["name"],
+                    value=10.0,
+                    scalar={"crit": 5.0},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -355,8 +355,8 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                }
+                    color="#123456",
+                ),
             },
             5.0,
             id="metrics.CriticalOf",
@@ -364,14 +364,14 @@ def test__perfometer_matches(
         pytest.param(
             metrics.MinimumOf("name", metrics.Color.BLUE),
             {
-                "name": {
-                    "orig_name": ["name"],
-                    "value": 10.0,
-                    "scalar": {"min": 5.0},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                "name": TranslatedMetric(
+                    orig_name=["name"],
+                    value=10.0,
+                    scalar={"min": 5.0},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -379,8 +379,8 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                }
+                    color="#123456",
+                ),
             },
             5.0,
             id="metrics.MinimumOf",
@@ -388,14 +388,14 @@ def test__perfometer_matches(
         pytest.param(
             metrics.MaximumOf("name", metrics.Color.BLUE),
             {
-                "name": {
-                    "orig_name": ["name"],
-                    "value": 10.0,
-                    "scalar": {"max": 5.0},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                "name": TranslatedMetric(
+                    orig_name=["name"],
+                    value=10.0,
+                    scalar={"max": 5.0},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -403,8 +403,8 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                }
+                    color="#123456",
+                ),
             },
             5.0,
             id="metrics.MaximumOf",
@@ -416,14 +416,14 @@ def test__perfometer_matches(
                 ["name1", "name2"],
             ),
             {
-                "name1": {
-                    "orig_name": ["name1"],
-                    "value": 10.0,
-                    "scalar": {},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                "name1": TranslatedMetric(
+                    orig_name=["name1"],
+                    value=10.0,
+                    scalar={},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -431,16 +431,16 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                },
-                "name2": {
-                    "orig_name": ["name2"],
-                    "value": 5.0,
-                    "scalar": {},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                    color="#123456",
+                ),
+                "name2": TranslatedMetric(
+                    orig_name=["name2"],
+                    value=5.0,
+                    scalar={},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -448,8 +448,8 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                },
+                    color="#123456",
+                ),
             },
             15.0,
             id="metrics.Sum",
@@ -462,14 +462,14 @@ def test__perfometer_matches(
                 ["name1", "name2"],
             ),
             {
-                "name1": {
-                    "orig_name": ["name1"],
-                    "value": 10.0,
-                    "scalar": {},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                "name1": TranslatedMetric(
+                    orig_name=["name1"],
+                    value=10.0,
+                    scalar={},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -477,16 +477,16 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                },
-                "name2": {
-                    "orig_name": ["name2"],
-                    "value": 5.0,
-                    "scalar": {},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                    color="#123456",
+                ),
+                "name2": TranslatedMetric(
+                    orig_name=["name2"],
+                    value=5.0,
+                    scalar={},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -494,8 +494,8 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                },
+                    color="#123456",
+                ),
             },
             50.0,
             id="metrics.Product",
@@ -508,14 +508,14 @@ def test__perfometer_matches(
                 subtrahend="name2",
             ),
             {
-                "name1": {
-                    "orig_name": ["name1"],
-                    "value": 10.0,
-                    "scalar": {},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                "name1": TranslatedMetric(
+                    orig_name=["name1"],
+                    value=10.0,
+                    scalar={},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -523,16 +523,16 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                },
-                "name2": {
-                    "orig_name": ["name2"],
-                    "value": 3.0,
-                    "scalar": {},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                    color="#123456",
+                ),
+                "name2": TranslatedMetric(
+                    orig_name=["name2"],
+                    value=3.0,
+                    scalar={},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -540,8 +540,8 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                },
+                    color="#123456",
+                ),
             },
             7.0,
             id="metrics.Fraction",
@@ -555,14 +555,14 @@ def test__perfometer_matches(
                 divisor="name2",
             ),
             {
-                "name1": {
-                    "orig_name": ["name1"],
-                    "value": 10.0,
-                    "scalar": {},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                "name1": TranslatedMetric(
+                    orig_name=["name1"],
+                    value=10.0,
+                    scalar={},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -570,16 +570,16 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                },
-                "name2": {
-                    "orig_name": ["name2"],
-                    "value": 5.0,
-                    "scalar": {},
-                    "scale": [1.0],
-                    "auto_graph": False,
-                    "title": "Title 1",
-                    "unit": UnitInfo(
+                    color="#123456",
+                ),
+                "name2": TranslatedMetric(
+                    orig_name=["name2"],
+                    value=5.0,
+                    scalar={},
+                    scale=[1.0],
+                    auto_graph=False,
+                    title="Title 1",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -587,8 +587,8 @@ def test__perfometer_matches(
                         js_render="v => v",
                         conversion=lambda v: v,
                     ),
-                    "color": "#123456",
-                },
+                    color="#123456",
+                ),
             },
             2.0,
             id="metrics.Fraction",

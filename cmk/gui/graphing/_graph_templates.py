@@ -305,8 +305,8 @@ def _to_metric_operation(
                 scale=scale,
             )
             for orig_name, scale in zip(
-                translated_metrics[expression.name]["orig_name"],
-                translated_metrics[expression.name]["scale"],
+                translated_metrics[expression.name].orig_name,
+                translated_metrics[expression.name].scale,
             )
         ]
         if len(metrics) > 1:

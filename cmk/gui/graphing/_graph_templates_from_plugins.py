@@ -87,7 +87,7 @@ class MetricDefinition:
     def compute_title(self, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
         if self.title:
             return self.title
-        return translated_metrics[next(self.expression.metrics()).name]["title"]
+        return translated_metrics[next(self.expression.metrics()).name].title
 
     def compute_unit_color(
         self,
@@ -541,8 +541,8 @@ def _get_implicit_graph_templates(
     translated_metrics: Mapping[str, TranslatedMetric],
     already_graphed_metrics: Container[str],
 ) -> Iterable[GraphTemplate]:
-    for metric_name, metric_entry in sorted(translated_metrics.items()):
-        if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
+    for metric_name, translated_metric in sorted(translated_metrics.items()):
+        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
             yield GraphTemplate.from_name(metric_name)
 
 

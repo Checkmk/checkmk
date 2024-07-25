@@ -599,7 +599,9 @@ def _translated_metric_scalar(
     return scalar
 
 
-def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, TranslatedMetric]:
+def translate_metrics(
+    perf_data: Perfdata, check_command: str, explicit_color: str = ""
+) -> Mapping[str, TranslatedMetric]:
     """Convert Ascii-based performance data as output from a check plug-in
     into floating point numbers, do scaling if necessary.
 
@@ -611,33 +613,26 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
     color_counter: Counter[Literal["metric", "predictive"]] = Counter()
     for entry in perf_data:
         metric_name, normalized = _normalize_perf_data(entry, check_command)
+        if metric_name in translated_metrics:
+            translated_metric = translated_metrics[metric_name]
+            orig_name = list(translated_metric.orig_name) + list(normalized["orig_name"])
+            scale = list(translated_metric.scale) + list(normalized["scale"])
+        else:
+            orig_name = normalized["orig_name"]
+            scale = normalized["scale"]
+
         mi = _get_extended_metric_info(metric_name, color_counter)
         unit_conversion = mi.unit.conversion
-
-        # https://github.com/python/mypy/issues/6462
-        # new_entry = normalized
-        new_entry = TranslatedMetric(
-            orig_name=normalized["orig_name"],
+        translated_metrics[metric_name] = TranslatedMetric(
+            orig_name=orig_name,
             value=unit_conversion(normalized["value"]),
             scalar=_translated_metric_scalar(unit_conversion, normalized["scalar"]),
-            scale=normalized["scale"],
+            scale=scale,
             auto_graph=normalized["auto_graph"],
             title=str(mi.title),
             unit=mi.unit,
-            color=mi.color,
+            color=explicit_color or mi.color,
         )
-
-        if metric_name in translated_metrics:
-            translated_metrics[metric_name]["orig_name"] = [
-                *translated_metrics[metric_name]["orig_name"],
-                *new_entry["orig_name"],
-            ]
-            translated_metrics[metric_name]["scale"] = [
-                *translated_metrics[metric_name]["scale"],
-                *new_entry["scale"],
-            ]
-        else:
-            translated_metrics[metric_name] = new_entry
 
     return translated_metrics
 
@@ -663,6 +658,7 @@ def available_metrics_translated(
     perf_data_string: str,
     rrd_metrics: list[MetricName],
     check_command: str,
+    explicit_color: str = "",
 ) -> Mapping[str, TranslatedMetric]:
     # If we have no RRD files then we cannot paint any graph :-(
     if not rrd_metrics:
@@ -687,15 +683,19 @@ def available_metrics_translated(
             if p.metric_name not in current_variables:
                 perf_data.append(p)
 
-    return translate_metrics(perf_data, check_command)
+    return translate_metrics(perf_data, check_command, explicit_color)
 
 
-def translated_metrics_from_row(row: Row) -> Mapping[str, TranslatedMetric]:
+def translated_metrics_from_row(
+    row: Row, explicit_color: str = ""
+) -> Mapping[str, TranslatedMetric]:
     what = "service" if "service_check_command" in row else "host"
     perf_data_string = row[what + "_perf_data"]
     rrd_metrics = row[what + "_metrics"]
     check_command = row[what + "_check_command"]
-    return available_metrics_translated(perf_data_string, rrd_metrics, check_command)
+    return available_metrics_translated(
+        perf_data_string, rrd_metrics, check_command, explicit_color
+    )
 
 
 # .

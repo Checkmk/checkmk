@@ -264,14 +264,12 @@ def test_metric_unit_color(
     )
     translated_metric = translated_metrics.get(expression)
     assert translated_metric is not None
-    unit = translated_metric.get("unit")
-    assert unit is not None
     metric_definition = MetricDefinition(
         expression=parse_expression(expression, translated_metrics),
         line_type="line",
     )
     assert metric_definition.compute_unit_color(translated_metrics, ["test"]) == MetricUnitColor(
-        unit=unit.id,
+        unit=translated_metric.unit.id,
         color=result_color,
     )
 

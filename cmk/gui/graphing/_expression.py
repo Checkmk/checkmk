@@ -107,12 +107,12 @@ class Metric(MetricExpression):
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
-            translated_metrics[self.name]["value"],
+            translated_metrics[self.name].value,
             _make_unit_info(
                 self.explicit_unit_name,
-                translated_metrics[self.name]["unit"],
+                translated_metrics[self.name].unit,
             ),
-            self.explicit_color or translated_metrics[self.name]["color"],
+            self.explicit_color or translated_metrics[self.name].color,
         )
 
     def metrics(self) -> Iterator[Metric]:
@@ -135,7 +135,7 @@ class WarningOf(MetricExpression):
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
-            translated_metrics[self.metric.name]["scalar"]["warn"],
+            translated_metrics[self.metric.name].scalar["warn"],
             _make_unit_info(
                 self.explicit_unit_name,
                 self.metric.evaluate(translated_metrics).unit_info,
@@ -163,7 +163,7 @@ class CriticalOf(MetricExpression):
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
-            translated_metrics[self.metric.name]["scalar"]["crit"],
+            translated_metrics[self.metric.name].scalar["crit"],
             _make_unit_info(
                 self.explicit_unit_name,
                 self.metric.evaluate(translated_metrics).unit_info,
@@ -191,7 +191,7 @@ class MinimumOf(MetricExpression):
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
-            translated_metrics[self.metric.name]["scalar"]["min"],
+            translated_metrics[self.metric.name].scalar["min"],
             _make_unit_info(
                 self.explicit_unit_name,
                 self.metric.evaluate(translated_metrics).unit_info,
@@ -219,7 +219,7 @@ class MaximumOf(MetricExpression):
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
-            translated_metrics[self.metric.name]["scalar"]["max"],
+            translated_metrics[self.metric.name].scalar["max"],
             _make_unit_info(
                 self.explicit_unit_name,
                 self.metric.evaluate(translated_metrics).unit_info,
@@ -975,6 +975,6 @@ def has_required_metrics_or_scalars(
             # meet at MetricExpression. But MetricExpression has no "name" attribute. This should
             # be done differently either by introduing another class (the common superclass of those
             # types) or by a protocol.
-            if scalar.name not in translated_metrics[scalar.metric.name]["scalar"]:  # type: ignore[operator]
+            if scalar.name not in translated_metrics[scalar.metric.name].scalar:  # type: ignore[operator]
                 return False
     return True

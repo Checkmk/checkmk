@@ -226,6 +226,19 @@ class EWS:
             for item in self._selected_folder.filter(datetime_received__range=(dt_start, dt_end))
         ]
 
+    def send_mail(
+        self, subject: str, mail_from: str, mail_to: str, now: int, key: int
+    ) -> tuple[str, MailID]:
+        """Send an email with provided content using EWS and provided oauth"""
+        m = EWSMessage(
+            account=self._account,
+            subject=f"{subject} {now} {key}",
+            author=mail_from,
+            to_recipients=[mail_to],
+        )
+        m.send()
+        return f"{now}-{key}", (now, key)
+
     def close(self) -> None:
         self._account.protocol.close()
 
@@ -704,17 +717,6 @@ class Mailbox:
             connection.quit()
             return "%d-%d" % (now, key), (now, key)
 
-    def _send_mail_ews(self, args: Args, now: int, key: int) -> tuple[str, MailID]:
-        """Send an email with provided content using EWS and provided oauth"""
-        m = EWSMessage(
-            account=self._connection._account,
-            subject="%s %d %d" % (args.subject, now, key),
-            author=args.mail_from,
-            to_recipients=[args.mail_to],
-        )
-        m.send()
-        return "%d-%d" % (now, key), (now, key)
-
     def send_mail(self, args: Args) -> tuple[str, MailID]:
         """Send an email with provided content using either SMTP or EWS and provided credentials/oauth.
         This function just manages exceptions for _send_mail_smtp() or _send_mail_ews()"""
@@ -724,8 +726,10 @@ class Mailbox:
         try:
             if args.send_protocol == "SMTP":
                 return self._send_mail_smtp(args, now, key)
-            if args.send_protocol == "EWS":
-                return self._send_mail_ews(args, now, key)
+            if isinstance(self._connection, EWS):
+                return self._connection.send_mail(
+                    str(args.subject), str(args.mail_from), str(args.mail_to), now, key
+                )
             raise NotImplementedError(f"Sending mails is not implemented for {args.send_protocol}")
         except smtplib.SMTPAuthenticationError as exc:
             if exc.smtp_code == 530:

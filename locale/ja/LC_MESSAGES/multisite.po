@@ -2221,13 +2221,14 @@ msgstr ""
 msgid "A single host related aggregation"
 msgstr "単一のホスト関連の集約"
 
+#, fuzzy
 msgid ""
 "A single thread fully utilizing a single core (potentially due to a bug) may "
 "go unnoticed when only monitoring the total utilization of the CPU. With "
 "this configuration, Checkmk will alert if a single core is exceeding a "
-"utilization threshold over an extended period of time.This is currently only "
-"supported on linux and windows agents as well as devices monitored through "
-"the host-resource mib"
+"utilization threshold over an extended period of time. This is currently "
+"only supported on linux and windows agents as well as devices monitored "
+"through the host-resource mib"
 msgstr ""
 "CPU総使用率のみを監視している場合、単一コアを完全に利用している単一スレッド"
 "(バグが原因の可能性があります)が発見できない可能性があります。この構成で、"
@@ -2395,21 +2396,20 @@ msgstr "APC Inrowシステムイベント"
 msgid "APC Symmetra Checks"
 msgstr "APC Symmetraチェック"
 
-msgid "API Access Token"
-msgstr "APIアクセストークン"
-
-msgid "API Endpoint from PagerDuty V2"
-msgstr "PagerDuty V2のAPIエンドポイント"
-
-msgid "API Key"
-msgstr "APIキー"
-
 msgid ""
 "API Key to use. Depending on your opsgenie subscription you can use global "
 "or team integration api keys."
 msgstr ""
 "使用するAPIキー。opsgenieサブスクリプションに応じて、グローバルまたはチーム統"
 "合APIキーを使用できます。"
+
+#, fuzzy
+msgid "API access token"
+msgstr "APIアクセストークン"
+
+#, fuzzy
+msgid "API endpoint from PagerDuty V2"
+msgstr "PagerDuty V2のAPIエンドポイント"
 
 msgid "API health"
 msgstr "APIの状態"
@@ -2433,7 +2433,7 @@ msgid "API key header"
 msgstr "APIキーヘッダー"
 
 #, fuzzy
-msgid "API or Personal access token"
+msgid "API or personal access token"
 msgstr "APIアクセストークン"
 
 msgid "API server connection"
@@ -2455,7 +2455,8 @@ msgstr "APTアップデート"
 msgid "APT normal and security updates (Linux)"
 msgstr "APTの通常のアップデートとセキュリティアップデート(Linux)"
 
-msgid "ASCII Email"
+#, fuzzy
+msgid "ASCII email"
 msgstr "ASCIIメール"
 
 msgid "ASM - Disk groups"
@@ -2904,8 +2905,9 @@ msgstr ""
 "持つユーザーは、アップロードされたスナップショットをリストアすることで、設定"
 "に任意の変更を加えることができます。"
 
+#, fuzzy
 msgid ""
-"Access to the module <i>Snaphsots</i>. Please note: a user with write access "
+"Access to the module <i>Snapshots</i>. Please note: a user with write access "
 "to this module can make arbitrary changes to the configuration by restoring "
 "uploaded snapshots."
 msgstr ""
@@ -2919,9 +2921,10 @@ msgstr "モジュール<i>タイムピリオド</i>へのアクセス"
 msgid "Access to the module for analyzing and validating logfile patterns."
 msgstr "ログファイルのパターンを分析・検証するモジュールへのアクセス。"
 
+#, fuzzy
 msgid ""
 "Access to the module for managing Checkmk rules. Please note that a user can "
-"only manage rules in folders he has permissions to. "
+"only manage rules in folders he has permissions to."
 msgstr ""
 "Checkmkルールを管理するモジュールへのアクセス。ユーザーが管理できるのは、自分"
 "がアクセス権を持つフォルダ内のルールのみであることに注意してください。 "
@@ -3063,7 +3066,8 @@ msgstr "エラー時のアクション"
 msgid "Actions"
 msgstr "アクション"
 
-msgid "Actions (Emails & Scripts)"
+#, fuzzy
+msgid "Actions (emails & scripts)"
 msgstr "アクション(メールとスクリプト)"
 
 msgid "Actions to automatically perform when an event is being cancelled."
@@ -3408,7 +3412,7 @@ msgstr "フォルダの追加と削除"
 msgid "Add & remove hosts"
 msgstr "ホストの追加と削除"
 
-msgid "Add (sub) path to the URI, ie. [proto]://[host]:[port]/[path]."
+msgid "Add (sub) path to the URI, i.e. [proto]://[host]:[port]/[path]."
 msgstr ""
 
 msgid "Add Aggregation"
@@ -3620,10 +3624,11 @@ msgstr "グループを追加"
 msgid "Add group or user"
 msgstr "グループまたはユーザーを追加"
 
+#, fuzzy
 msgid ""
 "Add here only groups and users which do not have administrator rights but, "
 "for some reason, must have write access to the Oracle binaries. For example, "
-"it may be a dedicated installer account in a domain.The values are case "
+"it may be a dedicated installer account in a domain. The values are case "
 "insensitive."
 msgstr ""
 "管理者権限は持たないが、何らかの理由でOracleバイナリへの書き込み権限が必要な"
@@ -4942,9 +4947,6 @@ msgstr "アラート統計:警告の数"
 msgid "Alerted"
 msgstr "警告"
 
-msgid "Alertmanager"
-msgstr "アラートマネージャ"
-
 msgid "Alertmanager discovery"
 msgstr "アラートマネージャ検出"
 
@@ -5508,9 +5510,10 @@ msgid "Allows a user to create or modify entries in the report scheduler."
 msgstr ""
 "ユーザーがレポートスケジューラのエントリを作成、変更することを許可する。"
 
+#, fuzzy
 msgid ""
 "Allows a user to modify scheduled reports of other users and also to specify "
-"arbitrary Email addresses as report destination."
+"arbitrary email addresses as report destination."
 msgstr ""
 "ユーザが他のユーザのスケジュールされたレポートを変更したり、レポートの宛先と"
 "して任意の電子メールアドレスを指定することを許可する。"
@@ -5893,7 +5896,8 @@ msgstr ""
 "tt>で始まる)、絶対ローカルURL(<tt>/</tt>で始まる)、または相対URL(<tt> "
 "check_mk/に相対的)のいずれかを使用できます。 </tt>)。"
 
-msgid "An optional alias name for your mysql socket"
+#, fuzzy
+msgid "An optional alias name for your MySQL socket"
 msgstr "mysqlソケットのオプションのエイリアス名"
 
 msgid "Analyse availability of this aggregation"
@@ -6463,8 +6467,8 @@ msgid "Assign SLA to service"
 msgstr "SLAをサービスに割り当てる"
 
 msgid ""
-"Assign created issues to defined user. This is the username of the user (not "
-"Email)."
+"Assign created issues to defined user. This is the user name of the user "
+"(not email)."
 msgstr ""
 
 msgid "Assign plan/test result to piggyback host"
@@ -8253,7 +8257,8 @@ msgstr "ベースOID"
 msgid "Base URL (OMD Site)"
 msgstr "ベースURL(OMDサイト)"
 
-msgid "Base URL for docker API engine"
+#, fuzzy
+msgid "Base URL for Docker API engine"
 msgstr "Docker APIエンジンのベースURL"
 
 msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
@@ -8332,14 +8337,15 @@ msgstr "バッテリー温度"
 msgid "Battery time remaining"
 msgstr "バッテリー残量"
 
-msgid "Bazel Cache Password"
-msgstr "Bazel キャッシュパスワード"
-
 msgid "Bazel Cache Port"
 msgstr "Bazel キャッシュポート"
 
 msgid "Bazel Cache User"
 msgstr "Bazel キャッシュユーザー"
+
+#, fuzzy
+msgid "Bazel Cache password"
+msgstr "Bazel キャッシュパスワード"
 
 msgid "Bazel Remote Cache"
 msgstr "Bazelリモートキャッシュ"
@@ -8910,10 +8916,11 @@ msgstr ""
 "い場合にルールパックをスキップするために使用できます。注:反転したルールが一致"
 "する場合、一致グループは存在できません。"
 
+#, fuzzy
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
 "monitored via a seperate metric. Setting levels on the used total bandwidth "
-"is optional. If you do set levels you might also consider using averaging."
+"is optional. If you set levels you might also consider using averaging."
 msgstr ""
 "このアイテムをアクティブにすると、着信トラフィックと発信トラフィックの合計が"
 "個別のメトリックを介して監視されます。使用される合計帯域幅のレベルの設定はオ"
@@ -9079,10 +9086,11 @@ msgstr ""
 "使用できます。これを他のユーザーグループと共有して、ルールで事前定義された条"
 "件を使用できるようにすることができます。"
 
+#, fuzzy
 msgid ""
 "By default the agent updater communicates with the Agent Bakery of the "
 "central site to update the agent. If you want to make the agent updater "
-"fetch its agent from it's remote site, you need to configure this option to "
+"fetch its agent from its remote site, you need to configure this option to "
 "make it possible for the remote site to communicate with the central site on "
 "behalf of the agent updater."
 msgstr ""
@@ -9331,11 +9339,12 @@ msgstr ""
 "のみこのオプションを無効にしてください。いくつかのインジェクション攻撃への道"
 "を開く可能性があるということにご留意ください。"
 
+#, fuzzy
 msgid ""
 "By default, for security reasons, the GUI does not interpret any HTML code "
 "received from external sources, like service output or log messages. But "
 "there are specific reasons to deactivate this security feature. E.g. when "
-"you want to display the HTML output produced by a specific check plug-in."
+"you want to display the HTML output produced by a specific check plug-in. "
 "Disabling the escaping also allows the plug-in to execute not only HTML, but "
 "also Javascript code in the context of your browser. This makes it possible "
 "to execute arbitrary Javascript, even for injection attacks.<br>For this "
@@ -9770,7 +9779,7 @@ msgid "CPU Time"
 msgstr "CPU時間"
 
 #, fuzzy
-msgid "CPU Time Upper Levels"
+msgid "CPU Time upper levels"
 msgstr "上位レベルを設定する"
 
 msgid "CPU Utilization"
@@ -13022,7 +13031,7 @@ msgstr "コンテナの下位レベル"
 
 #, fuzzy
 msgid ""
-"Configure monitoring of networking services using classical nagios plug-ins "
+"Configure monitoring of networking services using classical Nagios plug-ins "
 "(so called active checks)"
 msgstr ""
 "従来のnagiosプラグイン(いわゆるアクティブチェック)を使用してネットワークサー"
@@ -13074,13 +13083,13 @@ msgstr ""
 "プロキシサーバー経由で接続するかどうかをエージェントアップデーターに設定しま"
 "す。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
 "agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
 "a>. <b>Note</b>: New hosts created via this channel are marked by the host "
 "label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
-"to configure a host lifecycle management via the <a href=\"%s\">automatic "
+"to configure a host life cycle management via the <a href=\"%s\">automatic "
 "removal of hosts</a>."
 msgstr ""
 "エージェントコントローラから送信された要求に基づいて、新しいホストを自動的に"
@@ -13095,7 +13104,7 @@ msgstr "監視対象ホストの自動削除を設定します。"
 
 #, fuzzy
 msgid ""
-"Configure the base URL for the monitoring web-GUI here. Include the site "
+"Configure the base URL for the monitoring web GUI here. Include the site "
 "name. Used for link to Checkmk out of Jira."
 msgstr ""
 "モニタリング Web-GUI のベース URL をここで設定します。サイト名を含めてくださ"
@@ -13170,12 +13179,12 @@ msgstr ""
 "ント ('check-mk-agent@...') によって作成されたいくつかの systemd ユニットは決"
 "して発見されません。これらは頻繁に現れたり消えたりします。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the grouping of indices. Elasticsearch can for example be "
 "configured to automatically add a timestamp to index names, see <a href=%s "
 "target=\"_blank\">the documentation</a>. Via this grouping option, Checkmk "
-"can eg. be configured to accumulate all indices which only differ in the "
+"can e.g. be configured to accumulate all indices which only differ in the "
 "trailing timestamp into a single service."
 msgstr ""
 "インデックスのグループ化設定。Elasticsearch は、例えばインデックス名に自動的"
@@ -13226,6 +13235,10 @@ msgstr "保護ドメイン同期状態のターゲット状態を構成します
 msgid "Configure the target state of the remote support tunnel."
 msgstr "リモートサポートトンネルのターゲット状態を設定します。"
 
+#, fuzzy
+msgid "Configure the user name here."
+msgstr "ここでユーザー名を構成します。"
+
 msgid ""
 "Configure the user or group to receive the notifications by providing the "
 "user or group key here. The key can be obtained from the Pushover website."
@@ -13235,8 +13248,17 @@ msgstr ""
 "す。"
 
 #, fuzzy
-msgid "Configure the username here."
-msgstr "ここでユーザー名を構成します。"
+msgid ""
+"Configure this to have the notification plug-in connect directly to the SMTP "
+"server. This has the advantage of providing better error messages in case of "
+"an error, but it does require more configuration and is strictly "
+"synchronous. So we advice use only on enterprise installations using the "
+"notification spooler."
+msgstr ""
+"通知プラグインが直接smtpサーバーに接続するように設定します。エラーの際により"
+"良いエラーメッセージを提供するという利点があります。しかし、より多くの設定が"
+"必要であり、厳密な同期であるため、通知スプーラを使用する商用版のインストール"
+"時のみ使用することをお勧めします。"
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -13247,10 +13269,12 @@ msgstr "クラスタのノード数に応じて、クラスタに適用する閾
 msgid "Configure upper levels"
 msgstr "コンテナの上位レベル"
 
-msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
+#, fuzzy
+msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr "ここでServiceNow URLを構成します(例 https://myservicenow.com)。"
 
-msgid "Configure your modem URL here (eg. https://mymodem.mydomain.example)."
+#, fuzzy
+msgid "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
 msgstr "ここでモデムのURLを設定します(例 https://mymodem.mydomain.example)。"
 
 #, python-format
@@ -13313,19 +13337,6 @@ msgid ""
 msgstr ""
 "利用可能なCPUの数(%d)よりも多くのチェッカーを設定すると、IOバインドされないた"
 "め有害な影響があります。"
-
-#, fuzzy
-msgid ""
-"Configuring this to have the notification plug-in connect directly to the "
-"SMTP server. This has the advantage of providing better error messages in "
-"case of an error but it does require more configuration and is strictly "
-"synchronous so we advice use only on enterprise installations using the "
-"notification spooler."
-msgstr ""
-"通知プラグインが直接smtpサーバーに接続するように設定します。エラーの際により"
-"良いエラーメッセージを提供するという利点があります。しかし、より多くの設定が"
-"必要であり、厳密な同期であるため、通知スプーラを使用する商用版のインストール"
-"時のみ使用することをお勧めします。"
 
 msgid "Confirm"
 msgstr "確認"
@@ -14827,9 +14838,6 @@ msgstr "少なくともクリティカルレベルです"
 #, fuzzy
 msgid "Critical level is at most"
 msgstr "少なくともクリティカルレベルです"
-
-msgid "Critical of "
-msgstr "クリティカル "
 
 #, fuzzy, python-format
 msgid "Critical of %s"
@@ -25856,8 +25864,9 @@ msgstr ""
 "ルダ(<tt>~</tt>)を入力すると、正規表現を使用することもできます。その正規表現"
 "は、問題のホスト名の<i>先頭</i>に一致しなければなりません。"
 
+#, fuzzy
 msgid ""
-"Here you can enter either device state number (eg. from SNMP devices) or "
+"Here you can enter either device state number (e.g. from SNMP devices) or "
 "exact device state name and the related monitoring state."
 msgstr ""
 "ここでは、デバイス状態番号(SNMPデバイスなど)または正確なデバイス状態名と関連"
@@ -26060,11 +26069,11 @@ msgstr ""
 "ある)場合に設定するアラートタイプを設定できます。アクセスポイントは、AP名また"
 "はAPモデルで指定できます"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Here you can simulate an incoming agent request and check out which rules "
 "are matching.<br>An agent request contains several labels as key-value "
-"pairs, eg. %s."
+"pairs, e.g. %s."
 msgstr ""
 "ここでは、受信したエージェントリクエストをシミュレートし、どのルールがマッチ"
 "するかをチェックすることができます。<br>エージェントリクエストは、キーと値の"
@@ -31102,11 +31111,12 @@ msgstr ""
 "成されます。接続詞内で構成されたすべてのレベルに達すると、関連する状態が報告"
 "されます。"
 
+#, fuzzy
 msgid ""
 "In order to compute a unique host name you can use the agent labels (all or "
 "a subset of them) from above. A label has to be marked with a  <tt>$</tt> at "
-"the beginning and the end, eg. <tt>$LABEL$</tt>. During rule evaluation the "
-"label will replaced by its value.<br>You can also add fixed strings, eg. "
+"the beginning and the end, e.g. <tt>$LABEL$</tt>. During rule evaluation the "
+"label will replaced by its value.<br>You can also add fixed strings, e.g. "
 "<tt>lnx-$LABEL$</tt>."
 msgstr ""
 "一意のホスト名を計算するために、上記のエージェントラベル(すべてまたはその一"
@@ -33856,7 +33866,7 @@ msgstr "左"
 
 #, fuzzy
 msgid ""
-"Legacy ASCII Emails do not support bulking. You can either disable "
+"Legacy ASCII emails do not support bulking. You can either disable "
 "notification bulking or choose another notification plug-in which allows "
 "bulking."
 msgstr ""
@@ -37427,9 +37437,6 @@ msgstr "サービス停止の最大数"
 msgid "Maximum number of threads"
 msgstr "スレッドの最大数"
 
-msgid "Maximum of "
-msgstr "最大 "
-
 msgid "Maximum parallel connections"
 msgstr "最大並列接続"
 
@@ -37684,10 +37691,6 @@ msgstr "メモリサイズ(95パーセンタイル)"
 msgid "Memory Size (99th percentile)"
 msgstr "メモリサイズ(99パーセンタイル)"
 
-#, fuzzy
-msgid "Memory Upper Levels"
-msgstr "メモリ使用長の上位レベル"
-
 msgid "Memory Utilization"
 msgstr "メモリ使用率"
 
@@ -37778,6 +37781,10 @@ msgstr "パーセントで表すメモリサイズ"
 
 msgid "Memory that cannot be swapped out"
 msgstr "スワップアウトできないメモリ"
+
+#, fuzzy
+msgid "Memory upper levels"
+msgstr "メモリ使用長の上位レベル"
 
 msgid "Memory usage"
 msgstr "メモリ使用量"
@@ -38170,9 +38177,6 @@ msgstr "Readyコントロールプレーンノードの最小数"
 
 msgid "Minimum number of ready worker nodes"
 msgstr "Readyワーカーノードの最小数"
-
-msgid "Minimum of "
-msgstr "最小 "
 
 msgid "Minimum password length"
 msgstr "パスワードの最小長"
@@ -47382,6 +47386,10 @@ msgstr "プロメテウス"
 msgid "Prometheus API endpoint"
 msgstr "Prometheus APIエンドポイント"
 
+#, fuzzy
+msgid "Prometheus Alertmanager"
+msgstr "アラートマネージャ"
+
 msgid ""
 "Prometheus Scrape Targets (include Prometheus Exporters) to fetch "
 "information from"
@@ -52359,7 +52367,7 @@ msgstr "リモートイベントコンソールに通知を送信する"
 
 #, fuzzy
 msgid ""
-"Send out HTML/ASCII Email notification according to notification rules "
+"Send out HTML/ASCII email notification according to notification rules "
 "(uncheck to avoid spam)"
 msgstr "通知は、通知ルールに従って送信されます"
 
@@ -54970,8 +54978,9 @@ msgstr ""
 "一部のGUI拡張機能を読み込めませんでした。これは、互換性のない拡張パッケージが"
 "原因である可能性があります。"
 
+#, fuzzy
 msgid ""
-"Some Printers (eg. Konica for Drum Cartdiges) returning the available fuel "
+"Some Printers (e.g. Konica for Drum Cartdiges) returning the available fuel "
 "instead of what is left. In this case it's possible to upturn the levels to "
 "handle this behavior"
 msgstr ""
@@ -73213,8 +73222,8 @@ msgstr "新しいサービスの説明を使用する"
 
 #, fuzzy
 msgid ""
-"Use a alternative field as host name in case of SSL Certificate Problems "
-"(eg. the Hostalias )"
+"Use a alternative field as host name in case of SSL Certificate Problems (e."
+"g. the Hostalias )"
 msgstr ""
 "SSL証明書に問題がある場合は、ホスト名として代替フィールドを使用します(例: "
 "Hostalias)"
@@ -73728,7 +73737,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_graylog.com."
+"agent. Please add the host name here, e.g. my_graylog.com."
 msgstr ""
 "このオプションを使用して、スペシャルエージェントによりチェックされるべきイン"
 "スタンスを設定します。ここにホスト名を追加してください(例:my_graylog.com)。"
@@ -73736,7 +73745,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_jenkins.com."
+"agent. Please add the host name here, e.g. my_jenkins.com."
 msgstr ""
 "このオプションを使用して、特別なエージェントがチェックするインスタンスを設定"
 "します。ここにホスト名を追加してください。例 my_jenkins.com。"
@@ -73744,7 +73753,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_jira.com. If not set, the "
+"agent. Please add the host name here, e.g. my_jira.com. If not set, the "
 "assigned host is used as instance."
 msgstr ""
 "このオプションを使用して、特別なエージェントがチェックするインスタンスを設定"
@@ -73754,7 +73763,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_rabbitmq.com. If not set, the "
+"agent. Please add the host name here, e.g. my_rabbitmq.com. If not set, the "
 "assigned host is used as instance."
 msgstr ""
 "このオプションを使用して、特別なエージェントがチェックするインスタンスを設定"
@@ -75240,6 +75249,10 @@ msgstr "検証失敗: %s"
 msgid "Verify Certificates"
 msgstr "証明書の検証"
 
+#, fuzzy
+msgid "Verify SSL certificate (not verifying is insecure)"
+msgstr "証明書エラーを無視する(安全でない)"
+
 msgid "Verify certificates"
 msgstr "証明書を確認する"
 
@@ -75955,9 +75968,6 @@ msgstr "Stratumの警告レベル"
 
 msgid "Warning levels for Time Offset"
 msgstr "タイムオフセットの警告レベル"
-
-msgid "Warning of "
-msgstr "警告 "
 
 #, fuzzy, python-format
 msgid "Warning of %s"
@@ -82066,6 +82076,21 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "API Key"
+#~ msgstr "APIキー"
+
+#~ msgid "Critical of "
+#~ msgstr "クリティカル "
+
+#~ msgid "Maximum of "
+#~ msgstr "最大 "
+
+#~ msgid "Minimum of "
+#~ msgstr "最小 "
+
+#~ msgid "Warning of "
+#~ msgstr "警告 "
 
 #~ msgid "(unused)"
 #~ msgstr "(未使用)"

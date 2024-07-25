@@ -2292,13 +2292,14 @@ msgstr ""
 msgid "A single host related aggregation"
 msgstr "Una singola aggregazione legata all'host"
 
+#, fuzzy
 msgid ""
 "A single thread fully utilizing a single core (potentially due to a bug) may "
 "go unnoticed when only monitoring the total utilization of the CPU. With "
 "this configuration, Checkmk will alert if a single core is exceeding a "
-"utilization threshold over an extended period of time.This is currently only "
-"supported on linux and windows agents as well as devices monitored through "
-"the host-resource mib"
+"utilization threshold over an extended period of time. This is currently "
+"only supported on linux and windows agents as well as devices monitored "
+"through the host-resource mib"
 msgstr ""
 "Un singolo thread che utilizza completamente un singolo core (potenzialmente "
 "a causa di un bug) può passare inosservato quando si monitora solo "
@@ -2480,21 +2481,20 @@ msgstr "Eventi del sistema APC Inrow"
 msgid "APC Symmetra Checks"
 msgstr "Controlli APC Symmetra"
 
-msgid "API Access Token"
-msgstr "Token di accesso API"
-
-msgid "API Endpoint from PagerDuty V2"
-msgstr "Endpoint API di PagerDuty V2"
-
-msgid "API Key"
-msgstr "Chiave API"
-
 msgid ""
 "API Key to use. Depending on your opsgenie subscription you can use global "
 "or team integration api keys."
 msgstr ""
 "Chiave API da utilizzare. A seconda del tuo abbonamento opsgenie è possibile "
 "utilizzare chiavi API di integrazione globale o di squadra."
+
+#, fuzzy
+msgid "API access token"
+msgstr "Token di accesso API"
+
+#, fuzzy
+msgid "API endpoint from PagerDuty V2"
+msgstr "Endpoint API di PagerDuty V2"
 
 msgid "API health"
 msgstr "Salute API"
@@ -2518,7 +2518,7 @@ msgid "API key header"
 msgstr "Intestazione della chiave API"
 
 #, fuzzy
-msgid "API or Personal access token"
+msgid "API or personal access token"
 msgstr "Token di accesso API"
 
 msgid "API server connection"
@@ -2540,7 +2540,8 @@ msgstr "Aggiornamenti APT"
 msgid "APT normal and security updates (Linux)"
 msgstr "APT normale e aggiornamenti di sicurezza (Linux)"
 
-msgid "ASCII Email"
+#, fuzzy
+msgid "ASCII email"
 msgstr "Email ASCII"
 
 #, fuzzy
@@ -2995,8 +2996,9 @@ msgstr ""
 "scrittura a questo modulo può apportare modifiche arbitrarie alla "
 "configurazione ripristinando le istantanee caricate."
 
+#, fuzzy
 msgid ""
-"Access to the module <i>Snaphsots</i>. Please note: a user with write access "
+"Access to the module <i>Snapshots</i>. Please note: a user with write access "
 "to this module can make arbitrary changes to the configuration by restoring "
 "uploaded snapshots."
 msgstr ""
@@ -3011,9 +3013,10 @@ msgid "Access to the module for analyzing and validating logfile patterns."
 msgstr ""
 "Accesso al modulo per l'analisi e la convalida dei modelli di file di log."
 
+#, fuzzy
 msgid ""
 "Access to the module for managing Checkmk rules. Please note that a user can "
-"only manage rules in folders he has permissions to. "
+"only manage rules in folders he has permissions to."
 msgstr ""
 "Accesso al modulo per la gestione delle regole di Checkmk. Si noti che un "
 "utente può gestire le regole solo nelle cartelle per le quali ha i permessi. "
@@ -3165,7 +3168,8 @@ msgstr "Azione in caso di errore"
 msgid "Actions"
 msgstr "Azioni"
 
-msgid "Actions (Emails & Scripts)"
+#, fuzzy
+msgid "Actions (emails & scripts)"
 msgstr "Azioni (e-mail e script)"
 
 msgid "Actions to automatically perform when an event is being cancelled."
@@ -3519,7 +3523,7 @@ msgstr "Aggiungere e rimuovere cartelle"
 msgid "Add & remove hosts"
 msgstr "Aggiungere e rimuovere gli host"
 
-msgid "Add (sub) path to the URI, ie. [proto]://[host]:[port]/[path]."
+msgid "Add (sub) path to the URI, i.e. [proto]://[host]:[port]/[path]."
 msgstr ""
 
 msgid "Add Aggregation"
@@ -3737,7 +3741,7 @@ msgstr "Aggiungi gruppo"
 msgid ""
 "Add here only groups and users which do not have administrator rights but, "
 "for some reason, must have write access to the Oracle binaries. For example, "
-"it may be a dedicated installer account in a domain.The values are case "
+"it may be a dedicated installer account in a domain. The values are case "
 "insensitive."
 msgstr ""
 
@@ -5133,9 +5137,6 @@ msgstr "Statistiche degli avvisi: Numero di avvisi"
 msgid "Alerted"
 msgstr "Allertato"
 
-msgid "Alertmanager"
-msgstr "Alertmanager"
-
 msgid "Alertmanager discovery"
 msgstr "Scoperta di Alertmanager"
 
@@ -5730,9 +5731,10 @@ msgstr ""
 "Consente all'utente di creare o modificare voci nel pianificatore di "
 "rapporti."
 
+#, fuzzy
 msgid ""
 "Allows a user to modify scheduled reports of other users and also to specify "
-"arbitrary Email addresses as report destination."
+"arbitrary email addresses as report destination."
 msgstr ""
 "Consente a un utente di modificare i rapporti programmati di altri utenti e "
 "di specificare indirizzi e-mail arbitrari come destinazione dei rapporti."
@@ -6135,7 +6137,8 @@ msgstr ""
 "tt>), URL locali assoluti (che iniziano con <tt>/</tt>) o URL relativi (che "
 "sono relativi a <tt>check_mk/</tt>)."
 
-msgid "An optional alias name for your mysql socket"
+#, fuzzy
+msgid "An optional alias name for your MySQL socket"
 msgstr "Un nome alias opzionale per il socket mysql"
 
 msgid "Analyse availability of this aggregation"
@@ -6715,8 +6718,8 @@ msgid "Assign SLA to service"
 msgstr "Assegnare SLA al servizio"
 
 msgid ""
-"Assign created issues to defined user. This is the username of the user (not "
-"Email)."
+"Assign created issues to defined user. This is the user name of the user "
+"(not email)."
 msgstr ""
 
 #, fuzzy
@@ -8541,7 +8544,8 @@ msgstr "OID di base"
 msgid "Base URL (OMD Site)"
 msgstr "URL di base (sito OMD)"
 
-msgid "Base URL for docker API engine"
+#, fuzzy
+msgid "Base URL for Docker API engine"
 msgstr "URL di base per il motore docker API"
 
 #, fuzzy
@@ -8624,16 +8628,16 @@ msgid "Battery time remaining"
 msgstr "Tempo rimanente della batteria"
 
 #, fuzzy
-msgid "Bazel Cache Password"
-msgstr "Password del database"
-
-#, fuzzy
 msgid "Bazel Cache Port"
 msgstr "Porta backend"
 
 #, fuzzy
 msgid "Bazel Cache User"
 msgstr "Età massima della cache"
+
+#, fuzzy
+msgid "Bazel Cache password"
+msgstr "Password del database"
 
 msgid "Bazel Remote Cache"
 msgstr ""
@@ -9232,10 +9236,11 @@ msgstr ""
 "messaggio non contiene <tt>ORA-</tt>. Nota: quando una regola invertita "
 "corrisponde non ci possono mai essere gruppi di corrispondenza."
 
+#, fuzzy
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
 "monitored via a seperate metric. Setting levels on the used total bandwidth "
-"is optional. If you do set levels you might also consider using averaging."
+"is optional. If you set levels you might also consider using averaging."
 msgstr ""
 "Attivando questa voce, la somma del traffico in entrata e in uscita sarà "
 "monitorata tramite una metrica separata. L'impostazione dei livelli sulla "
@@ -9417,7 +9422,7 @@ msgstr ""
 msgid ""
 "By default the agent updater communicates with the Agent Bakery of the "
 "central site to update the agent. If you want to make the agent updater "
-"fetch its agent from it's remote site, you need to configure this option to "
+"fetch its agent from its remote site, you need to configure this option to "
 "make it possible for the remote site to communicate with the central site on "
 "behalf of the agent updater."
 msgstr ""
@@ -9657,7 +9662,7 @@ msgid ""
 "By default, for security reasons, the GUI does not interpret any HTML code "
 "received from external sources, like service output or log messages. But "
 "there are specific reasons to deactivate this security feature. E.g. when "
-"you want to display the HTML output produced by a specific check plug-in."
+"you want to display the HTML output produced by a specific check plug-in. "
 "Disabling the escaping also allows the plug-in to execute not only HTML, but "
 "also Javascript code in the context of your browser. This makes it possible "
 "to execute arbitrary Javascript, even for injection attacks.<br>For this "
@@ -10101,7 +10106,7 @@ msgid "CPU Time"
 msgstr "Tempo di CPU"
 
 #, fuzzy
-msgid "CPU Time Upper Levels"
+msgid "CPU Time upper levels"
 msgstr "Impostare i livelli superiori"
 
 msgid "CPU Utilization"
@@ -13419,7 +13424,7 @@ msgstr "Configurare i livelli inferiori"
 
 #, fuzzy
 msgid ""
-"Configure monitoring of networking services using classical nagios plug-ins "
+"Configure monitoring of networking services using classical Nagios plug-ins "
 "(so called active checks)"
 msgstr ""
 "Configurare il monitoraggio dei servizi di rete utilizzando i classici "
@@ -13472,13 +13477,13 @@ msgstr ""
 "Configurare il programma di aggiornamento dell'agente se connettersi tramite "
 "un server proxy."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
 "agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
 "a>. <b>Note</b>: New hosts created via this channel are marked by the host "
 "label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
-"to configure a host lifecycle management via the <a href=\"%s\">automatic "
+"to configure a host life cycle management via the <a href=\"%s\">automatic "
 "removal of hosts</a>."
 msgstr ""
 "Configurare la creazione automatica di nuovi host in base alle richieste "
@@ -13494,7 +13499,7 @@ msgstr "Configurare la rimozione automatica degli host monitorati."
 
 #, fuzzy
 msgid ""
-"Configure the base URL for the monitoring web-GUI here. Include the site "
+"Configure the base URL for the monitoring web GUI here. Include the site "
 "name. Used for link to Checkmk out of Jira."
 msgstr ""
 "Configurare qui l'URL di base per la Web-GUI di monitoraggio. Includere il "
@@ -13575,12 +13580,12 @@ msgstr ""
 "agent@...') non verranno mai scoperte. Esse appaiono e scompaiono "
 "frequentemente."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the grouping of indices. Elasticsearch can for example be "
 "configured to automatically add a timestamp to index names, see <a href=%s "
 "target=\"_blank\">the documentation</a>. Via this grouping option, Checkmk "
-"can eg. be configured to accumulate all indices which only differ in the "
+"can e.g. be configured to accumulate all indices which only differ in the "
 "trailing timestamp into a single service."
 msgstr ""
 "Configurare il raggruppamento degli indici. Elasticsearch può essere "
@@ -13638,6 +13643,10 @@ msgstr ""
 msgid "Configure the target state of the remote support tunnel."
 msgstr "Configurare lo stato di destinazione del tunnel di supporto remoto."
 
+#, fuzzy
+msgid "Configure the user name here."
+msgstr "Configura qui il nome dell'utente."
+
 msgid ""
 "Configure the user or group to receive the notifications by providing the "
 "user or group key here. The key can be obtained from the Pushover website."
@@ -13647,8 +13656,18 @@ msgstr ""
 "di Pushover."
 
 #, fuzzy
-msgid "Configure the username here."
-msgstr "Configura qui il nome dell'utente."
+msgid ""
+"Configure this to have the notification plug-in connect directly to the SMTP "
+"server. This has the advantage of providing better error messages in case of "
+"an error, but it does require more configuration and is strictly "
+"synchronous. So we advice use only on enterprise installations using the "
+"notification spooler."
+msgstr ""
+"Configurare questo per far sì che il plugin di notifica si connetta "
+"direttamente al server smtp. Questo ha il vantaggio di fornire migliori "
+"messaggi di errore in caso di errore, ma richiede più configurazione ed è "
+"strettamente sincrono, quindi si consiglia l'uso solo su installazioni "
+"aziendali che utilizzano lo spooler di notifica."
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -13659,12 +13678,14 @@ msgstr ""
 msgid "Configure upper levels"
 msgstr "Configurare i livelli superiori"
 
-msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
+#, fuzzy
+msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr ""
 "Configurate il vostro URL di ServiceNow qui (ad esempio, https://"
 "myservicenow.com)."
 
-msgid "Configure your modem URL here (eg. https://mymodem.mydomain.example)."
+#, fuzzy
+msgid "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
 msgstr ""
 "Configurare qui l'URL del modem (ad esempio, https://mymodem.mydomain."
 "example)."
@@ -13731,20 +13752,6 @@ msgid ""
 msgstr ""
 "Configurare più pedine rispetto al numero di CPU disponibili (%d) ha un "
 "effetto dannoso, poiché non sono IO bound."
-
-#, fuzzy
-msgid ""
-"Configuring this to have the notification plug-in connect directly to the "
-"SMTP server. This has the advantage of providing better error messages in "
-"case of an error but it does require more configuration and is strictly "
-"synchronous so we advice use only on enterprise installations using the "
-"notification spooler."
-msgstr ""
-"Configurare questo per far sì che il plugin di notifica si connetta "
-"direttamente al server smtp. Questo ha il vantaggio di fornire migliori "
-"messaggi di errore in caso di errore, ma richiede più configurazione ed è "
-"strettamente sincrono, quindi si consiglia l'uso solo su installazioni "
-"aziendali che utilizzano lo spooler di notifica."
 
 msgid "Confirm"
 msgstr "Confermare"
@@ -15256,9 +15263,6 @@ msgstr "Il livello critico è almeno"
 
 msgid "Critical level is at most"
 msgstr "Il livello critico è al massimo"
-
-msgid "Critical of "
-msgstr "Critica di "
 
 #, fuzzy, python-format
 msgid "Critical of %s"
@@ -26313,8 +26317,9 @@ msgstr ""
 "carattere. Questa espressione regolare deve corrispondere all'<i>inizio</i> "
 "dei nomi degli host in questione."
 
+#, fuzzy
 msgid ""
-"Here you can enter either device state number (eg. from SNMP devices) or "
+"Here you can enter either device state number (e.g. from SNMP devices) or "
 "exact device state name and the related monitoring state."
 msgstr ""
 "Qui è possibile inserire sia il numero di stato del dispositivo (ad esempio "
@@ -26525,11 +26530,11 @@ msgstr ""
 "access point è assente (potrebbe essere spento). Il punto d'accesso può "
 "essere specificato dal nome dell'AP o dal modello dell'AP"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Here you can simulate an incoming agent request and check out which rules "
 "are matching.<br>An agent request contains several labels as key-value "
-"pairs, eg. %s."
+"pairs, e.g. %s."
 msgstr ""
 "Qui è possibile simulare una richiesta di agente in arrivo e verificare "
 "quali regole corrispondono.<br>Una richiesta di agente contiene diverse "
@@ -31642,11 +31647,12 @@ msgstr ""
 "inferiori. Se tutti i livelli configurati all'interno di una congiunzione "
 "sono raggiunti, allora viene riportato lo stato relativo."
 
+#, fuzzy
 msgid ""
 "In order to compute a unique host name you can use the agent labels (all or "
 "a subset of them) from above. A label has to be marked with a  <tt>$</tt> at "
-"the beginning and the end, eg. <tt>$LABEL$</tt>. During rule evaluation the "
-"label will replaced by its value.<br>You can also add fixed strings, eg. "
+"the beginning and the end, e.g. <tt>$LABEL$</tt>. During rule evaluation the "
+"label will replaced by its value.<br>You can also add fixed strings, e.g. "
 "<tt>lnx-$LABEL$</tt>."
 msgstr ""
 "Per calcolare un nome host univoco si possono usare le etichette degli "
@@ -34397,7 +34403,7 @@ msgstr "Sinistra"
 
 #, fuzzy
 msgid ""
-"Legacy ASCII Emails do not support bulking. You can either disable "
+"Legacy ASCII emails do not support bulking. You can either disable "
 "notification bulking or choose another notification plug-in which allows "
 "bulking."
 msgstr ""
@@ -37989,9 +37995,6 @@ msgstr "Numero massimo di interruzioni del servizio"
 msgid "Maximum number of threads"
 msgstr "Numero massimo di thread"
 
-msgid "Maximum of "
-msgstr "Massimo di "
-
 msgid "Maximum parallel connections"
 msgstr "Massimo di connessioni parallele"
 
@@ -38246,10 +38249,6 @@ msgstr "Dimensione della memoria (95° percentile)"
 msgid "Memory Size (99th percentile)"
 msgstr "Dimensione della memoria (99° percentile)"
 
-#, fuzzy
-msgid "Memory Upper Levels"
-msgstr "Livelli superiori di utilizzo della memoria"
-
 msgid "Memory Utilization"
 msgstr "Utilizzo della memoria"
 
@@ -38340,6 +38339,10 @@ msgstr "Dimensione della memoria in percentuale"
 
 msgid "Memory that cannot be swapped out"
 msgstr "Memoria che non può essere scambiata"
+
+#, fuzzy
+msgid "Memory upper levels"
+msgstr "Livelli superiori di utilizzo della memoria"
 
 msgid "Memory usage"
 msgstr "Uso della memoria"
@@ -38739,9 +38742,6 @@ msgstr "Numero minimo di nodi del piano di controllo pronti"
 
 msgid "Minimum number of ready worker nodes"
 msgstr "Numero minimo di nodi worker pronti"
-
-msgid "Minimum of "
-msgstr "Minimo di "
 
 msgid "Minimum password length"
 msgstr "Lunghezza minima della password"
@@ -47996,6 +47996,10 @@ msgstr "Prometeo"
 msgid "Prometheus API endpoint"
 msgstr "Endpoint API di Prometheus"
 
+#, fuzzy
+msgid "Prometheus Alertmanager"
+msgstr "Alertmanager"
+
 msgid ""
 "Prometheus Scrape Targets (include Prometheus Exporters) to fetch "
 "information from"
@@ -52949,7 +52953,7 @@ msgstr "Inviare notifiche alla console degli eventi remota"
 
 #, fuzzy
 msgid ""
-"Send out HTML/ASCII Email notification according to notification rules "
+"Send out HTML/ASCII email notification according to notification rules "
 "(uncheck to avoid spam)"
 msgstr ""
 "Inviare le notifiche secondo le regole di notifica (deselezionare per "
@@ -55584,8 +55588,9 @@ msgstr ""
 "Alcune estensioni della GUI non possono essere caricate. Questo può essere "
 "causato da alcuni pacchetti di estensioni incompatibili."
 
+#, fuzzy
 msgid ""
-"Some Printers (eg. Konica for Drum Cartdiges) returning the available fuel "
+"Some Printers (e.g. Konica for Drum Cartdiges) returning the available fuel "
 "instead of what is left. In this case it's possible to upturn the levels to "
 "handle this behavior"
 msgstr ""
@@ -74167,8 +74172,8 @@ msgstr "Utilizzare le nuove descrizioni dei servizi"
 
 #, fuzzy
 msgid ""
-"Use a alternative field as host name in case of SSL Certificate Problems "
-"(eg. the Hostalias )"
+"Use a alternative field as host name in case of SSL Certificate Problems (e."
+"g. the Hostalias )"
 msgstr ""
 "Utilizzare un campo alternativo come Hostname in caso di problemi con il "
 "certificato SSL (ad esempio l'Hostalias)"
@@ -74702,7 +74707,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_graylog.com."
+"agent. Please add the host name here, e.g. my_graylog.com."
 msgstr ""
 "Usa questa opzione per impostare quale istanza dovrebbe essere controllata "
 "dall'agente speciale. Aggiungi qui l'hostname, ad esempio my_graylog.com."
@@ -74710,7 +74715,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_jenkins.com."
+"agent. Please add the host name here, e.g. my_jenkins.com."
 msgstr ""
 "Usa questa opzione per impostare quale istanza dovrebbe essere controllata "
 "dall'agente speciale. Aggiungi qui il nome dell'host, ad esempio mio_jenkins."
@@ -74719,7 +74724,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_jira.com. If not set, the "
+"agent. Please add the host name here, e.g. my_jira.com. If not set, the "
 "assigned host is used as instance."
 msgstr ""
 "Usa questa opzione per impostare quale istanza dovrebbe essere controllata "
@@ -74729,7 +74734,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_rabbitmq.com. If not set, the "
+"agent. Please add the host name here, e.g. my_rabbitmq.com. If not set, the "
 "assigned host is used as instance."
 msgstr ""
 "Usa questa opzione per impostare quale istanza dovrebbe essere controllata "
@@ -76234,6 +76239,10 @@ msgstr "Verifica fallita: %s"
 msgid "Verify Certificates"
 msgstr "Verifica dei certificati"
 
+#, fuzzy
+msgid "Verify SSL certificate (not verifying is insecure)"
+msgstr "Ignorare gli errori del certificato (non sicuro)"
+
 msgid "Verify certificates"
 msgstr "Verifica dei certificati"
 
@@ -76947,9 +76956,6 @@ msgstr "Livelli di avvertimento per Stratum"
 
 msgid "Warning levels for Time Offset"
 msgstr "Livelli di avvertimento per Time Offset"
-
-msgid "Warning of "
-msgstr "Avviso di "
 
 #, fuzzy, python-format
 msgid "Warning of %s"
@@ -83180,6 +83186,21 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "API Key"
+#~ msgstr "Chiave API"
+
+#~ msgid "Critical of "
+#~ msgstr "Critica di "
+
+#~ msgid "Maximum of "
+#~ msgstr "Massimo di "
+
+#~ msgid "Minimum of "
+#~ msgstr "Minimo di "
+
+#~ msgid "Warning of "
+#~ msgstr "Avviso di "
 
 #~ msgid "(unused)"
 #~ msgstr "(inutilizzato)"

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeMount, ref, watch } from 'vue'
 import CmkFormDispatcher from '../CmkFormDispatcher.vue'
-import { type ValidationMessages } from '@/utils'
+import { group_dictionary_validations, type ValidationMessages } from '@/utils'
 import type { Dictionary, DictionaryElement } from '@/vue_formspec_components'
 
 interface ElementFromProps {
@@ -15,7 +15,7 @@ const props = defineProps<{
 
 const data = defineModel('data', { type: Object, required: true })
 const default_values: Record<string, unknown> = {}
-const childValidation = ref<Record<string, ValidationMessages>>({})
+const elementValidation = ref<Record<string, ValidationMessages>>({})
 
 onBeforeMount(() => {
   props.spec.elements.forEach((element: DictionaryElement) => {
@@ -33,29 +33,8 @@ onBeforeMount(() => {
 watch(() => props.backendValidation, setValidation)
 
 function setValidation(new_validation: ValidationMessages) {
-  childValidation.value = props.spec.elements.reduce(
-    (elements, el) => {
-      elements[el.ident] = []
-      return elements
-    },
-    {} as Record<string, ValidationMessages>
-  )
-  new_validation.forEach((msg) => {
-    if (msg.location.length === 0) {
-      return
-    }
-    const msg_element_ident = msg.location[0]!
-    const element_messages = childValidation.value[msg_element_ident]
-    if (element_messages === undefined) {
-      throw new Error(`Index ${msg_element_ident} not found in dictionary`)
-    }
-    element_messages.push({
-      location: msg.location.slice(1),
-      message: msg.message,
-      invalid_value: msg.invalid_value
-    })
-    childValidation.value[msg_element_ident] = element_messages
-  })
+  const [, element_validation] = group_dictionary_validations(props.spec.elements, new_validation)
+  elementValidation.value = element_validation
 }
 
 // TODO: computed
@@ -112,7 +91,7 @@ function toggle_element(event: MouseEvent, key: string) {
               v-if="dict_element.is_active"
               v-model:data="data[dict_element.dict_config.ident]"
               :spec="dict_element.dict_config.parameter_form"
-              :backend-validation="childValidation[dict_element.dict_config.ident]!"
+              :backend-validation="elementValidation[dict_element.dict_config.ident]!"
             />
           </div>
         </td>

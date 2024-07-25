@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { validate_value, type ValidationMessages } from '@/utils'
+import { group_list_validations, validate_value, type ValidationMessages } from '@/utils'
 import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
 import type { List } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
@@ -42,27 +42,12 @@ watch(
 )
 
 function setValidation(newBackendValidation: ValidationMessages) {
-  newBackendValidation.forEach((msg) => {
-    if (msg.location.length === 0) {
-      validation.value.push(msg)
-      return
-    }
-    const backendIndex = parseInt(msg.location[0]!)
-    const elementMessages = elementValidation.value[backendIndex]
-    if (elementMessages === undefined) {
-      throw new Error(`Index ${backendIndex} out of bounds`)
-    }
-    elementMessages.push({
-      location: msg.location.slice(1),
-      message: msg.message,
-      invalid_value: msg.invalid_value
-    })
-    if (data.value[backendIndex] === undefined) {
-      throw new Error(`Index ${backendIndex} not found in data`)
-    }
-    data.value[backendIndex] = msg.invalid_value
-    elementValidation.value[backendIndex] = elementMessages
-  })
+  const [list_validations, element_validations] = group_list_validations(
+    newBackendValidation,
+    backendData.value.length
+  )
+  validation.value = list_validations
+  elementValidation.value = element_validations
 }
 
 let table_ref = ref<HTMLTableElement | null>(null)

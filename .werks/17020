@@ -1,0 +1,12 @@
+Title: dcd: increase bulk discovery timeout from 60 to 120 seconds
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1721889484
+Edition: cee
+Level: 1
+Version: 2.2.0p32
+
+In some cases where a large number of hosts were being discovered,
+we would run into a timeout whilst waiting for bulk discovery to
+finish. We have increased this timeout from 60 to 120 seconds.

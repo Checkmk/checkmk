@@ -104,9 +104,18 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("check_mysql"),
     MonitoringPlugin("check_mysql_query"),
     CheckmkActiveCheck("check_sftp"),
-    CheckmkActiveCheck("check_mail"),
-    CheckmkActiveCheck("check_mailboxes"),
-    CheckmkActiveCheck("check_mail_loop"),
+    CheckmkActiveCheck(
+        "check_mail",
+        path="lib/check_mk/plugins/emailchecks/libexec",
+    ),
+    CheckmkActiveCheck(
+        "check_mailboxes",
+        path="lib/check_mk/plugins/emailchecks/libexec",
+    ),
+    CheckmkActiveCheck(
+        "check_mail_loop",
+        path="lib/check_mk/plugins/emailchecks/libexec",
+    ),
     CheckmkActiveCheck("check_form_submit"),
     MonitoringPlugin(
         "check_mkevents",

@@ -5,23 +5,22 @@
 
 from collections.abc import Sequence
 
-from cmk.utils.quick_setup.definitions import (
+from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
+from cmk.gui.quick_setup.to_frontend import recaps_form_spec, validate_unique_id
+from cmk.gui.quick_setup.v0_unstable.definitions import (
     IncomingStage,
     QuickSetup,
     QuickSetupId,
     QuickSetupStage,
     StageId,
 )
-from cmk.utils.quick_setup.widgets import (
+from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,
     FormSpecWrapper,
     ListOfWidgets,
     Text,
 )
-
-from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
-from cmk.gui.quick_setup.to_frontend import recaps_form_spec, validate_unique_id
 
 from cmk.ccc.i18n import _
 from cmk.plugins.aws import ruleset_helper  # pylint: disable=cmk-module-layer-violation

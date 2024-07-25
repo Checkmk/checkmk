@@ -12,7 +12,6 @@ from livestatus import MultiSiteConnection
 
 from cmk.utils import paths
 from cmk.utils.licensing.registry import register_cre_licensing_handler
-from cmk.utils.quick_setup.definitions import quick_setup_registry
 
 import cmk.gui.help
 from cmk.gui import (
@@ -65,6 +64,7 @@ from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.quick_setup import registration as quick_setup_registration
+from cmk.gui.quick_setup.v0_unstable.definitions import quick_setup_registry
 from cmk.gui.sidebar import snapin_registry
 from cmk.gui.userdb import register_config_file as user_connections_config
 from cmk.gui.userdb import register_userroles_config_file as register_userroles

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.quick_setup.definitions import QuickSetupRegistry
+from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupRegistry
 
 from .aws_stages import quick_setup_aws
 

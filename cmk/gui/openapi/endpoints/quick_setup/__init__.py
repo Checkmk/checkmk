@@ -14,13 +14,6 @@ from dataclasses import asdict
 from typing import Any
 
 from cmk.utils.encoding import json_encode
-from cmk.utils.quick_setup.definitions import (
-    IncomingStage,
-    quick_setup_registry,
-    QuickSetupOverview,
-    QuickSetupSaveRedirect,
-    Stage,
-)
 
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import Endpoint
@@ -35,6 +28,13 @@ from cmk.gui.quick_setup.to_frontend import (
     quick_setup_overview,
     retrieve_next_stage,
     validate_current_stage,
+)
+from cmk.gui.quick_setup.v0_unstable.definitions import (
+    IncomingStage,
+    quick_setup_registry,
+    QuickSetupOverview,
+    QuickSetupSaveRedirect,
+    Stage,
 )
 
 from cmk import fields

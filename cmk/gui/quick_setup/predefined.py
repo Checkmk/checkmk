@@ -2,10 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.utils.quick_setup.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
-from cmk.utils.quick_setup.widgets import FormSpecId, FormSpecWrapper
-
 from cmk.gui.default_name import unique_default_name_suggestion
+from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
+from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
 from cmk.rulesets.v1 import Title

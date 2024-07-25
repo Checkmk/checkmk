@@ -9,7 +9,9 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-from cmk.utils.quick_setup.definitions import (
+from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
+from cmk.gui.quick_setup.to_frontend import recaps_form_spec, validate_unique_id
+from cmk.gui.quick_setup.v0_unstable.definitions import (
     GeneralStageErrors,
     ParsedFormData,
     quick_setup_registry,
@@ -22,10 +24,7 @@ from cmk.utils.quick_setup.definitions import (
     UniqueFormSpecIDStr,
     ValidationErrorMap,
 )
-from cmk.utils.quick_setup.widgets import FormSpecId
-
-from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
-from cmk.gui.quick_setup.to_frontend import recaps_form_spec, validate_unique_id
+from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
 from cmk.rulesets.v1 import Title

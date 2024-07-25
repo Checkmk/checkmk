@@ -4,15 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.quick_setup.definitions import ParsedFormData
-from cmk.utils.quick_setup.widgets import FormSpecId
-
 from cmk.base.server_side_calls import load_special_agents
 
 from cmk.gui.quick_setup.to_frontend import (
     _collect_params_from_form_data,
     _collect_passwords_from_form_data,
 )
+from cmk.gui.quick_setup.v0_unstable.definitions import ParsedFormData
+from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 
 ALL_FORM_SPEC_DATA: ParsedFormData = {
     FormSpecId("formspec_unique_id"): {

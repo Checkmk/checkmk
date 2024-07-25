@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 
-from cmk.utils.quick_setup.definitions import ParsedFormData, QuickSetupStage, StageId
-from cmk.utils.quick_setup.widgets import FormSpecId, FormSpecRecap, FormSpecWrapper
-
 from cmk.gui.quick_setup.to_frontend import build_expected_formspec_map, recaps_form_spec
+from cmk.gui.quick_setup.v0_unstable.definitions import ParsedFormData, QuickSetupStage, StageId
+from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecRecap, FormSpecWrapper
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String, validators

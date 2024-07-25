@@ -8,7 +8,7 @@ from collections.abc import Iterable, Iterator, MutableMapping, MutableSequence,
 from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping, NewType
 
-from cmk.utils.quick_setup.widgets import (
+from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,
     FormSpecWrapper,

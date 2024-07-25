@@ -7,7 +7,14 @@ from collections.abc import Iterator, Sequence
 from dataclasses import asdict
 from typing import Any, cast, Mapping
 
-from cmk.utils.quick_setup.definitions import (
+from cmk.gui.form_specs.vue.form_spec_visitor import (
+    parse_value_from_frontend,
+    serialize_data_for_frontend,
+    validate_value_from_frontend,
+)
+from cmk.gui.form_specs.vue.registries import form_spec_registry
+from cmk.gui.form_specs.vue.type_defs import DataOrigin
+from cmk.gui.quick_setup.v0_unstable.definitions import (
     Errors,
     GeneralStageErrors,
     IncomingStage,
@@ -24,7 +31,7 @@ from cmk.utils.quick_setup.definitions import (
     UniqueBundleIDStr,
     ValidationErrorMap,
 )
-from cmk.utils.quick_setup.widgets import (
+from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,
     FormSpecRecap,
@@ -32,14 +39,6 @@ from cmk.utils.quick_setup.widgets import (
     ListOfWidgets,
     Widget,
 )
-
-from cmk.gui.form_specs.vue.form_spec_visitor import (
-    parse_value_from_frontend,
-    serialize_data_for_frontend,
-    validate_value_from_frontend,
-)
-from cmk.gui.form_specs.vue.registries import form_spec_registry
-from cmk.gui.form_specs.vue.type_defs import DataOrigin
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 from cmk.gui.watolib.passwords import load_passwords
 

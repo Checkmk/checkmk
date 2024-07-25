@@ -454,7 +454,7 @@ def fetch_fans(connection: HostConnection) -> Iterable[models.ShelfFanModel]:
         "id",
         "fans.id",
         "fans.state",
-        "fans.rpm",
+        # "fans.rpm",        # Can be missing, currently unused
         # "fans.installed",  # ! NOT WORKING
     )
 
@@ -470,7 +470,6 @@ def fetch_fans(connection: HostConnection) -> Iterable[models.ShelfFanModel]:
                 list_id=list_id,
                 id=fan["id"],
                 state=fan["state"],
-                rpm=fan["rpm"],
             )
 
 

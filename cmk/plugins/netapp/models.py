@@ -484,8 +484,6 @@ class ShelfFanModel(ShelfObjectModel):
     ============
     """
 
-    rpm: int
-
 
 class ShelfTemperatureModel(ShelfObjectModel):
     """

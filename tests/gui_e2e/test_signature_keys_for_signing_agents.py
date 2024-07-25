@@ -182,6 +182,7 @@ def with_key_fixture(
     delete_key(dashboard_page, key_name)
 
 
+@pytest.mark.xfail(reason="Currently does not return an error message, see CMK-18451.", strict=True)
 def test_download_key(dashboard_page: Dashboard, with_key: str) -> None:
     """Test downloading a key.
 

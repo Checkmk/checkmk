@@ -27,8 +27,6 @@ def fetching_options_to_args(
         f"--fetch-server={fetch_server}",
     ]
 
-    # NOTE: this argument will be turned into `--fetch-disable-tls` when
-    # refactoring all mailbox based active checks
     if not fetch_params.connection.disable_tls:
         args.append("--fetch-tls")
 

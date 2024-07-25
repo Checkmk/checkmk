@@ -473,7 +473,7 @@ class Mailbox:
             primary_smtp_address=primary_smtp_address,  # type: ignore[arg-type]
             server=server,  # type: ignore[arg-type]
             auth=auth,
-            no_cert_check=bool(args.get(ctype + "_no_cert_check")),
+            no_cert_check=bool(args.get(ctype + "_disable_cert_validation")),
             timeout=args.get("connect_timeout"),
         )
 
@@ -864,12 +864,10 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
     )
     parser.add_argument(
         "--fetch-tls",
-        "--fetch-ssl",
         action="store_true",
         help="Use TLS/SSL for fetching the mailbox (disabled by default)",
     )
     parser.add_argument(
-        "--fetch-no-cert-check",
         "--fetch-disable-cert-validation",
         action="store_true",
         help="Don't enforce SSL/TLS certificate validation",

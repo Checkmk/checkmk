@@ -69,7 +69,6 @@ def create_argument_parser() -> argparse.ArgumentParser:
 
     # SEND (EWS only)
     parser.add_argument(
-        "--send-no-cert-check",
         "--send-disable-cert-validation",
         action="store_true",
         help="Don't enforce SSL/TLS certificate validation",
@@ -276,7 +275,7 @@ def _fetch_config_equals_send_config(args: Args) -> bool:
             "server",
             "tls",
             "port",
-            "no_cert_check",
+            "disable_cert_validation",
             "username",
             "password",
             "client_id",

@@ -12,7 +12,7 @@ import re
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from dataclasses import asdict
 from enum import auto, Enum
-from typing import Any, cast, Literal, overload, TypedDict
+from typing import Any, cast, Final, Literal, overload, TypedDict
 
 from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
@@ -1791,8 +1791,10 @@ def render_hidden_if_locked(vs: ValueSpec, varprefix: str, value: object, locked
 
 
 class ABCEditRuleMode(WatoMode):
-    def __init__(self, varname: str = "varname"):
-        self._varname = varname
+    VAR_RULE_SPEC_NAME: Final = "varname"
+    VAR_RULE_ID: Final = "rule_id"
+
+    def __init__(self):
         self._do_validate_on_render = False
         super().__init__()
 
@@ -1810,12 +1812,14 @@ class ABCEditRuleMode(WatoMode):
         return ModeEditRuleset
 
     def _from_vars(self) -> None:
-        self._name = request.get_ascii_input_mandatory(self._varname)
+        self._name = request.get_ascii_input_mandatory(self.VAR_RULE_SPEC_NAME)
 
         try:
             self._rulespec = rulespec_registry[self._name]
         except KeyError:
-            raise MKUserError(self._varname, _('The ruleset "%s" does not exist.') % self._name)
+            raise MKUserError(
+                self.VAR_RULE_SPEC_NAME, _('The ruleset "%s" does not exist.') % self._name
+            )
 
         self._back_mode = request.get_ascii_input_mandatory("back_mode", "edit_ruleset")
 
@@ -1838,7 +1842,7 @@ class ABCEditRuleMode(WatoMode):
         if rule_folder:
             self._folder = folder_tree().folder(rule_folder)
         else:
-            rule_id = request.get_ascii_input_mandatory("rule_id")
+            rule_id = request.get_ascii_input_mandatory(self.VAR_RULE_ID)
 
             collection = SingleRulesetRecursively.load_single_ruleset_recursively(self._name)
             ruleset = collection.get(self._name)
@@ -1846,17 +1850,19 @@ class ABCEditRuleMode(WatoMode):
                 self._folder = ruleset.get_rule_by_id(rule_id).folder
             except KeyError:
                 raise MKUserError(
-                    "rule_id", _("You are trying to edit a rule which does not exist anymore.")
+                    self.VAR_RULE_ID,
+                    _("You are trying to edit a rule which does not exist anymore."),
                 )
 
     def _set_rule(self) -> None:
-        if request.has_var("rule_id"):
+        if request.has_var(self.VAR_RULE_ID):
             try:
-                rule_id = request.get_ascii_input_mandatory("rule_id")
+                rule_id = request.get_ascii_input_mandatory(self.VAR_RULE_ID)
                 self._rule = self._ruleset.get_rule_by_id(rule_id)
             except (KeyError, TypeError, ValueError, IndexError):
                 raise MKUserError(
-                    "rule_id", _("You are trying to edit a rule which does not exist anymore.")
+                    self.VAR_RULE_ID,
+                    _("You are trying to edit a rule which does not exist anymore."),
                 )
         else:
             raise NotImplementedError()
@@ -1924,7 +1930,7 @@ class ABCEditRuleMode(WatoMode):
         if self._back_mode == "edit_ruleset":
             var_list: HTTPVariables = [
                 ("mode", "edit_ruleset"),
-                (self._varname, self._name),
+                (self.VAR_RULE_SPEC_NAME, self._name),
                 ("host", request.get_ascii_input_mandatory("host", "")),
             ]
             if request.has_var("item"):
@@ -2952,6 +2958,11 @@ class ModeEditRule(ABCEditRuleMode):
     @classmethod
     def name(cls) -> str:
         return "edit_rule"
+
+    @classmethod
+    def set_vars(cls, rule_spec_name: str, rule_id: str) -> None:
+        request.set_var(cls.VAR_RULE_ID, rule_id)
+        request.set_var(cls.VAR_RULE_SPEC_NAME, rule_spec_name)
 
     def _save_rule(self) -> None:
         # Just editing without moving to other folder

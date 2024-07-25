@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from typing import TypedDict
+
+from cmk.utils.metrics import MetricName
 
 from cmk.gui.log import logger
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
 import cmk.ccc.debug
@@ -199,6 +203,28 @@ def registered_units() -> Sequence[RegisteredUnit]:
         ],
         key=lambda x: x.title,
     )
+
+
+class _MetricInfoExtendedMandatory(TypedDict):
+    name: MetricName
+    title: str | LazyString
+    unit: UnitInfo
+    color: str
+
+
+class MetricInfoExtended(_MetricInfoExtendedMandatory, total=False):
+    # this is identical to MetricInfo except unit, but one can not override the
+    # type of a field so we have to copy everything from MetricInfo
+    help: str | LazyString
+    render: Callable[[float | int], str]
+
+
+class MetricsFromAPI(Registry[MetricInfoExtended]):
+    def plugin_name(self, instance: MetricInfoExtended) -> str:
+        return instance["name"]
+
+
+metrics_from_api = MetricsFromAPI()
 
 
 class PerfometersFromAPI(

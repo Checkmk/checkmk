@@ -25,7 +25,6 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 from cmk.gui.utils.speaklater import LazyString
 
-from cmk.ccc.plugin_registry import Registry
 from cmk.discover_plugins import DiscoveredPlugins
 from cmk.graphing.v1 import graphs, metrics, perfometers, translations
 
@@ -35,9 +34,15 @@ from ._color import (
     parse_color_from_api,
     parse_color_into_hexrgb,
 )
-from ._loader import graphs_from_api, perfometers_from_api, register_unit
+from ._loader import (
+    graphs_from_api,
+    MetricInfoExtended,
+    metrics_from_api,
+    perfometers_from_api,
+    register_unit,
+)
 from ._type_defs import GraphConsoldiationFunction, LineType, ScalarBounds, TranslatedMetric
-from ._unit_info import unit_info, UnitInfo
+from ._unit_info import unit_info
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):
@@ -88,20 +93,6 @@ class MetricInfo(_MetricInfoMandatory, total=False):
     render: Callable[[float | int], str]
 
 
-class _MetricInfoExtendedMandatory(TypedDict):
-    name: MetricName
-    title: str | LazyString
-    unit: UnitInfo
-    color: str
-
-
-class MetricInfoExtended(_MetricInfoExtendedMandatory, total=False):
-    # this is identical to MetricInfo except unit, but one can not override the
-    # type of a field so we have to copy everything from MetricInfo
-    help: str | LazyString
-    render: Callable[[float | int], str]
-
-
 class _NormalizedPerfData(TypedDict):
     orig_name: list[str]
     value: float
@@ -142,14 +133,6 @@ class AutomaticDict(OrderedDict[str, RawGraphTemplate]):
 
 
 metric_info: dict[MetricName, MetricInfo] = {}
-
-
-class MetricsFromAPI(Registry[MetricInfoExtended]):
-    def plugin_name(self, instance: MetricInfoExtended) -> str:
-        return instance["name"]
-
-
-metrics_from_api = MetricsFromAPI()
 
 
 def registered_metrics() -> Iterator[tuple[str, str]]:

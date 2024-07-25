@@ -39,12 +39,11 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     MinimalGraphTemplateRange,
     ScalarDefinition,
 )
+from cmk.gui.graphing._loader import MetricInfoExtended, metrics_from_api
 from cmk.gui.graphing._unit_info import UnitInfo
 from cmk.gui.graphing._utils import (
     _NormalizedPerfData,
     AutomaticDict,
-    MetricInfoExtended,
-    metrics_from_api,
     RawGraphTemplate,
     TranslationInfo,
 )

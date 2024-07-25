@@ -10,8 +10,8 @@ import logging
 import os
 import re
 import time
-from collections.abc import Mapping, MutableMapping
-from contextlib import ExitStack, suppress
+from collections.abc import MutableMapping
+from contextlib import suppress
 from email.message import Message as POPIMAPMessage
 from pathlib import Path
 from typing import assert_never
@@ -19,14 +19,12 @@ from typing import assert_never
 from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
 from cmk.plugins.emailchecks.lib.ac_args import add_trx_arguments, parse_trx_arguments, Scope
-from cmk.plugins.emailchecks.lib.utils import (
-    active_check_main,
-    Args,
-    CheckResult,
-    Mailbox,
+from cmk.plugins.emailchecks.lib.connections import (
     MailID,
-    Message,
+    make_fetch_connection,
+    make_send_connection,
 )
+from cmk.plugins.emailchecks.lib.utils import active_check_main, Args, CheckResult, Mailbox
 
 # "<sent-timestamp>-<key>" -> (sent-timestamp, key)
 MailDict = MutableMapping[str, MailID]
@@ -123,7 +121,9 @@ def save_expected_mails(expected_mails: MailDict, status_path: str) -> None:
         file.write("\n")
 
 
-def subject_and_received_timestamp_from_msg(msg: Message) -> tuple[str, None | int]:
+def subject_and_received_timestamp_from_msg(
+    msg: POPIMAPMessage | EWSMessage,
+) -> tuple[str, None | int]:
     # using pattern matching here results in an mypy error that I don't understand
     if isinstance(msg, POPIMAPMessage):
         if "Received" in msg:
@@ -218,6 +218,7 @@ def subject_regex(subject: str) -> re.Pattern:
 def check_mail_roundtrip(args: Args) -> CheckResult:
     fetch = parse_trx_arguments(args, Scope.FETCH)
     send = parse_trx_arguments(args, Scope.SEND)
+    timeout = int(args.connect_timeout)
 
     # TODO: maybe we should use cmk.utils.paths.tmp_dir?
     status_file_components = ("check_mail_loop", args.status_suffix, "status")
@@ -233,19 +234,8 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
     # Match subjects of type "[re/was:] Check_MK-Mail-Loop <timestamp> <index>"
     re_subject = subject_regex(args.subject)
 
-    with ExitStack() as context:
-        mailbox = context.enter_context(Mailbox(fetch, args.connect_timeout, Scope.FETCH))
-        mailbox.connect()
-
-        # re-use already connected Mailbox instance if credentials are the same
-        if fetch == send:
-            send_mailbox = mailbox
-        else:
-            send_mailbox = context.enter_context(Mailbox(send, args.connect_timeout, Scope.SEND))
-            # note: only for EWS connect() has an effect. IMAP will connect
-            # when sending email.
-            send_mailbox.connect()
-
+    with make_fetch_connection(fetch, timeout) as connection:
+        mailbox = Mailbox(connection)
         now = int(time.time())
 
         def filter_subject(subject: None | str, re_pattern: re.Pattern[str]) -> None | re.Match:
@@ -257,7 +247,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         # create a collection of all mails with their relevant details filtered
         # by subject
         # str -> (index, rx-timestamp, subject, raw_message)
-        message_details: Mapping[str, tuple[int, int, str, Message]] = {
+        message_details = {
             f"{tx_timestamp}-{key}": (index, rx_timestamp or now, subject, raw_message)
             # we don't filter for subject here...
             for index, raw_message in mailbox.fetch_mails().items()
@@ -277,9 +267,15 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         logging.debug("relevant messages: %r", relevant_mail_loop_messages)
 
         # send a 'sensor-email' with a timestamp we expect to receive next time
-        new_mail = send_mailbox.send_mail(
-            args.subject, mail_from=args.mail_from, mail_to=args.mail_to
-        )
+        if fetch == send:
+            new_mail = mailbox.send_mail(
+                args.subject, mail_from=args.mail_from, mail_to=args.mail_to
+            )
+        else:
+            with make_send_connection(send, timeout) as send_connection:
+                new_mail = Mailbox(send_connection).send_mail(
+                    args.subject, mail_from=args.mail_from, mail_to=args.mail_to
+                )
         logging.debug("sent new mail: %r", new_mail)
 
         expected_mails.update((new_mail,))

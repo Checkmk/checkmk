@@ -20,14 +20,17 @@ from typing import assert_never
 from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
 from cmk.plugins.emailchecks.lib.ac_args import parse_trx_arguments, Scope
+from cmk.plugins.emailchecks.lib.connections import (
+    ConnectError,
+    MailMessages,
+    make_fetch_connection,
+)
 from cmk.plugins.emailchecks.lib.utils import (
     active_check_main,
     Args,
     CheckResult,
-    ConnectError,
     ForwardToECError,
     Mailbox,
-    MailMessages,
 )
 
 
@@ -149,8 +152,7 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> list[str]:
             )
 
         elif isinstance(msg, POPIMAPMessage):
-            # An 'assert isinstance(msg, email.message.Message)' doesn't do the job here for mypy
-            subject = msg.get("Subject", "None")  # type: ignore[attr-defined]
+            subject = msg.get("Subject", "None")
             log_line = _get_imap_or_pop_log_line(msg, args.body_limit)
 
         else:
@@ -256,26 +258,28 @@ def check_mail(args: Args) -> CheckResult:
     If desired mails can also be fetched and forwarded to the event console (EC)
     """
     fetch = parse_trx_arguments(args, Scope.FETCH)
-    with Mailbox(fetch, args.connect_timeout, Scope.FETCH) as mailbox:
-        try:
-            mailbox.connect()
-        except ConnectError as exc:
-            # Handle this distinct error directly since it's the thing this check is all about
-            return 2, str(exc), None
+    timeout = int(args.connect_timeout)
+    try:
+        with make_fetch_connection(fetch, timeout) as connection:
+            mailbox = Mailbox(connection)
 
-        if not args.forward_ec:
-            return 0, "Successfully logged in to mailbox", None
+            if not args.forward_ec:
+                return 0, "Successfully logged in to mailbox", None
 
-        fetched_mails: MailMessages = mailbox.fetch_mails(args.match_subject)
-        ec_messages = prepare_messages_for_ec(args, fetched_mails)
-        result = forward_to_ec(args, ec_messages)
+            fetched_mails: MailMessages = mailbox.fetch_mails(args.match_subject)
+            ec_messages = prepare_messages_for_ec(args, fetched_mails)
+            result = forward_to_ec(args, ec_messages)
 
-        # (Copy and) Delete the forwarded mails if configured
-        if args.cleanup:
-            if args.cleanup != "delete":
-                mailbox.copy_mails(fetched_mails, folder=args.cleanup)
-            mailbox.delete_mails(fetched_mails)
-        return result
+            # (Copy and) Delete the forwarded mails if configured
+            if args.cleanup:
+                if args.cleanup != "delete":
+                    mailbox.copy_mails(fetched_mails, folder=args.cleanup)
+                mailbox.delete_mails(fetched_mails)
+            return result
+
+    except ConnectError as exc:
+        # Handle this distinct error directly since it's the thing this check is all about
+        return 2, str(exc), None
 
 
 def main() -> None:

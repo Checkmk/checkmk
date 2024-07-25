@@ -17,7 +17,8 @@ import pytest
 from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
 from cmk.plugins.emailchecks.lib import check_mail
-from cmk.plugins.emailchecks.lib.utils import _active_check_main_core, MailMessages
+from cmk.plugins.emailchecks.lib.connections import MailMessages
+from cmk.plugins.emailchecks.lib.utils import _active_check_main_core
 
 
 def create_test_email(subject: str) -> POPIMAPMessage:

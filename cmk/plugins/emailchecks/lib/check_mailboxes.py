@@ -12,6 +12,7 @@ import time
 import cmk.utils.render
 
 from cmk.plugins.emailchecks.lib.ac_args import parse_trx_arguments, Scope
+from cmk.plugins.emailchecks.lib.connections import make_fetch_connection
 from cmk.plugins.emailchecks.lib.utils import active_check_main, Args, CheckResult, Mailbox
 
 
@@ -69,6 +70,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
 
 def check_mailboxes(args: Args) -> CheckResult:
     fetch = parse_trx_arguments(args, Scope.FETCH)
+    timeout = int(args.connect_timeout)
 
     if fetch.protocol == "POP3":
         raise RuntimeError("check_mailboxes does not operate on POP servers, sorry.")
@@ -77,14 +79,14 @@ def check_mailboxes(args: Args) -> CheckResult:
     if type(args.crit_age_oldest) is not type(args.warn_age_oldest):
         raise RuntimeError("--warn-age-oldest and --crit-age-oldest must be provided together")
 
-    socket.setdefaulttimeout(args.connect_timeout)
+    socket.setdefaulttimeout(timeout)
     status_icon = {0: "", 1: "(!) ", 2: "(!!) "}
     messages = []
     now = time.time()
 
-    with Mailbox(fetch, args.connect_timeout, Scope.FETCH) as mailbox:
-        logging.info("connect..")
-        mailbox.connect()
+    with make_fetch_connection(fetch, timeout) as connection:
+        logging.info("connected..")
+        mailbox = Mailbox(connection)
 
         logging.info("connected, fetch mailbox folders..")
         available_mailboxes = list(mailbox.folders())

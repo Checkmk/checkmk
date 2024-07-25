@@ -82,6 +82,12 @@ configure_make(
     ],
     postfix_script = """
         chmod u+w -R ${INSTALLDIR}/../
+        patchelf --set-rpath "\\$ORIGIN/../lib" \
+                ${INSTALLDIR}/bin/rrdcached \
+                ${INSTALLDIR}/bin/rrdcreate \
+                ${INSTALLDIR}/bin/rrdinfo \
+                ${INSTALLDIR}/bin/rrdtool \
+                ${INSTALLDIR}/bin/rrdupdate
         tar -C ${INSTALLDIR}/../ \
             --exclude="rrdtool/home" \
             --exclude="rrdtool/usr" \

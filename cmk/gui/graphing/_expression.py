@@ -295,10 +295,7 @@ class Product(MetricExpression):
         if len(self.factors) == 0:
             return MetricExpressionResult(
                 1.0,
-                _make_unit_info(
-                    self.explicit_unit_name,
-                    unit_info[""],
-                ),
+                _make_unit_info(self.explicit_unit_name, unit_info[""]),
                 self.explicit_color or "#000000",
             )
 

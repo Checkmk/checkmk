@@ -37,6 +37,7 @@ class UnitInfo:
     symbol: str
     render: Callable[[float], str]
     js_render: str
+    conversion: Callable[[float], float]
     stepping: str | None = None
     color: str | None = None
     graph_unit: Callable[[list[float]], tuple[str, list[str]]] | None = None
@@ -44,7 +45,6 @@ class UnitInfo:
     valuespec: (
         type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage] | None
     ) = None
-    conversion: Callable[[float], float] | None = None
     perfometer_render: Callable[[float], str] | None = None
     formatter_ident: (
         Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]
@@ -72,7 +72,7 @@ class UnitRegistry:
             graph_unit=item.get("graph_unit"),
             description=item.get("description", item["title"]),
             valuespec=item.get("valuespec"),
-            conversion=item.get("conversion"),
+            conversion=item.get("conversion", lambda v: v),
             perfometer_render=item.get("perfometer_render"),
             formatter_ident=item.get("formatter_ident"),
         )

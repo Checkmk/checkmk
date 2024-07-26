@@ -134,6 +134,7 @@ def _make_unit_info(
     "{symbol}",
     new cmk.number_format.{precision.__class__.__name__}({precision.digits}),
 ).render(v)""",
+        conversion=lambda v: v,
         formatter_ident=formatter.ident(),
         valuespec=_vs_type(notation, symbol, precision.digits),
     )

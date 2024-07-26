@@ -950,9 +950,7 @@ class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
         return [
             self.get_stack_from_values(
                 result.value,
-                *self.estimate_parameters_for_converted_units(
-                    result.unit_info.conversion or (lambda v: v)
-                ),
+                *self.estimate_parameters_for_converted_units(result.unit_info.conversion),
                 result.color,
             )
         ]
@@ -1070,7 +1068,7 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
         unit_info_ = unit_info[self._label_unit_name] if self._label_unit_name else result.unit_info
 
         if isinstance(self._label_expression, Constant):
-            value = (unit_info_.conversion or (lambda v: v))(self._label_expression.value)
+            value = unit_info_.conversion(self._label_expression.value)
         else:
             value = result.value
 
@@ -1078,7 +1076,7 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
 
     def _evaluate_total(self) -> float:
         if isinstance(self._total, Constant):
-            return (self._unit().conversion or (lambda v: v))(self._total.value)
+            return self._unit().conversion(self._total.value)
         return self._total.evaluate(self._translated_metrics).value
 
     def _unit(self) -> UnitInfo:

@@ -165,7 +165,7 @@ def test__replace_expressions_missing_scalars() -> None:
             [
                 HorizontalRule(7.0, "7.00", "#ffd000", "Warning"),
                 HorizontalRule(10.0, "10 W", "#ff3232", "Critical power"),
-                HorizontalRule(-2.0, "-2 ", "#ffd000", "Warning output"),
+                HorizontalRule(-2.0, "-2.00", "#ffd000", "Warning output"),
             ],
             id="Thresholds present",
         ),
@@ -319,6 +319,7 @@ def test__to_metric_operation(
                         symbol="",
                         render=lambda v: f"{v}",
                         js_render="v => v",
+                        conversion=lambda v: v,
                     ),
                     "color": "#111111",
                 },

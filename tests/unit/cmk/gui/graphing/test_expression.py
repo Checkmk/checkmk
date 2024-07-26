@@ -18,7 +18,6 @@ from cmk.gui.graphing._expression import (
     MaximumOf,
     Metric,
     MetricExpression,
-    MetricExpressionResult,
     MinimumOf,
     parse_conditional_expression,
     parse_expression,
@@ -329,9 +328,23 @@ def test_parse_and_evaluate_1(
     translated_metrics = translate_metrics(perf_data, check_command)
     metric_expression = parse_expression(raw_expression, translated_metrics)
     assert metric_expression == expected_metric_expression
-    assert metric_expression.evaluate(translated_metrics) == MetricExpressionResult(
-        value, unit_info[unit_name], color
-    )
+    evaluated = metric_expression.evaluate(translated_metrics)
+    assert evaluated.value == value
+    assert evaluated.color == color
+    unit_info_ = unit_info[unit_name]
+    assert evaluated.unit_info.id == unit_info_.id
+    assert evaluated.unit_info.title == unit_info_.title
+    assert evaluated.unit_info.symbol == unit_info_.symbol
+    assert evaluated.unit_info.render == unit_info_.render
+    assert evaluated.unit_info.js_render == unit_info_.js_render
+    assert evaluated.unit_info.stepping == unit_info_.stepping
+    assert evaluated.unit_info.color == unit_info_.color
+    assert evaluated.unit_info.graph_unit == unit_info_.graph_unit
+    assert evaluated.unit_info.description == unit_info_.description
+    assert evaluated.unit_info.valuespec == unit_info_.valuespec
+    assert evaluated.unit_info.perfometer_render == unit_info_.perfometer_render
+    assert evaluated.unit_info.formatter_ident == unit_info_.formatter_ident
+    assert evaluated.unit_info.conversion(123.456) == 123.456
 
 
 @pytest.mark.parametrize(

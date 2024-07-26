@@ -43,7 +43,7 @@ def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
 ) -> RRDData:
-    unit_conversion = get_unit_info(graph_recipe.unit).conversion or (lambda v: v)
+    unit_conversion = get_unit_info(graph_recipe.unit).conversion
     by_service = _group_needed_rrd_data_by_service(
         key
         for metric in graph_recipe.metrics
@@ -307,4 +307,4 @@ def translate_and_merge_rrd_columns(
 
 def _retrieve_unit_conversion_function(metric_name: MetricName) -> Callable[[float], float]:
     mie = get_extended_metric_info(metric_name)
-    return mie["unit"].conversion or (lambda v: v)
+    return mie["unit"].conversion

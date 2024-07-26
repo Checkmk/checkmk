@@ -206,10 +206,25 @@ hp_proliant_fans_locale = {
 }
 
 
+DISCLAIMER = (
+    "HPE started to report the speed in percent without updating the MIB.\n"
+    "This means that for a reported speed of 'other', 'normal' or 'high', "
+    "there is the chance that the speed is actually 1, 2 or 3 percent respectively.\n"
+    "This has no influence on the service state."
+)
+
+
 def inventory_hp_proliant_fans(info):
     for line in [l for l in info if l[2] == "3"]:
         label = hp_proliant_fans_locale.get(int(line[1]), "other")
         yield sanitize_item(f"{line[0]} ({label})"), {}
+
+
+def _make_speed_label(speed: str) -> str:
+    try:
+        return "Speed is %s" % hp_proliant_speed_map[int(speed)]
+    except KeyError:
+        return "Speed is %s%%" % speed
 
 
 def check_hp_proliant_fans(item, params, info):
@@ -231,8 +246,8 @@ def check_hp_proliant_fans(item, params, info):
 
             return (
                 status,
-                'FAN Sensor %s "%s", Speed is %s, State is %s%s'
-                % (index, label, hp_proliant_speed_map[int(speed)], snmp_status, detailOutput),
+                'FAN Sensor %s "%s", %s, State is %s%s\n%s'
+                % (index, label, _make_speed_label(speed), snmp_status, detailOutput, DISCLAIMER),
                 perfdata,
             )
     return (3, "item not found in snmp data")

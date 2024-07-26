@@ -29,11 +29,23 @@ discovery = {
 
 checks = {
     "": [
-        ("1 (system)", {}, [(0, 'FAN Sensor 1 "system", Speed is normal, State is ok', [])]),
-        ("2 (system)", {}, [(0, 'FAN Sensor 2 "system", Speed is normal, State is ok', [])]),
-        ("3 (system)", {}, [(0, 'FAN Sensor 3 "system", Speed is normal, State is ok', [])]),
-        ("4 (system)", {}, [(0, 'FAN Sensor 4 "system", Speed is normal, State is ok', [])]),
-        ("5 (system)", {}, [(0, 'FAN Sensor 5 "system", Speed is normal, State is ok', [])]),
-        ("6 (system)", {}, [(0, 'FAN Sensor 6 "system", Speed is normal, State is ok', [])]),
+        (
+            "1 (system)",
+            {},
+            [
+                (
+                    0,
+                    (
+                        'FAN Sensor 1 "system", Speed is normal, State is ok\n'
+                        "HPE started to report the speed in percent without updating the MIB.\n"
+                        "This means that for a reported speed of 'other', 'normal' or 'high', "
+                        "there is the chance that the speed is actually 1, 2 or 3 percent respectively.\n"
+                        "This has no influence on the service state."
+
+                    ),
+                    [],
+                ),
+            ],
+        ),
     ]
 }

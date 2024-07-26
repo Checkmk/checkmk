@@ -1,0 +1,11 @@
+Title: HPE Proliant Servers: FANs: Adapt to changes in iLO firmware
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1721985407
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+This fixes a crash caused by the firmware sending percentage values
+instead of the predefined states 'other', 'normal' or 'high'.

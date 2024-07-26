@@ -226,6 +226,7 @@ def test_print_man_page_nowiki_content() -> None:
     assert "License:" in content
 
 
+@pytest.mark.usefixtures("capsys")
 def test_print_man_page() -> None:
     rendered = man_pages.ConsoleManPageRenderer(_IF64_MAN_PAGE).render_page()
     assert rendered.startswith(" if64    ")

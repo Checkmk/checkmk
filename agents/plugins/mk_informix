@@ -90,7 +90,7 @@ do_check() {
 sql() {
     sqltxt="$1"
     export DBDELIMITER="|"
-    echo "$sqltxt" | dbaccess sysmaster
+    echo "$sqltxt" | $EXECUTION_MODE "$INFORMIXDIR/bin/dbaccess sysmaster"
 }
 
 set_excludes() {
@@ -294,7 +294,7 @@ for IDSENV in $(
         # try to set them via 'onstat -g env' otherwise
         # DB HAS TO BE RUNNING
         if [ -z "$INFORMIXSQLHOSTS" ] || [ -z "$ONCONFIG" ]; then
-            onstat -g env | grep -E -e '^INFORMIXSQLHOSTS' \
+            $EXECUTION_MODE "$INFORMIXDIR/bin/onstat -g env" | grep -E -e '^INFORMIXSQLHOSTS' \
                 -e '^ONCONFIG' |
                 sed -e 's/[         ][      ]*/=/'
         fi

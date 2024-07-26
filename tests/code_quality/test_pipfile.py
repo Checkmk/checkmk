@@ -341,9 +341,6 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 CEE_UNUSED_PACKAGES = [
     "cython",
-    "grpcio",
-    "jmespath",
-    "multidict",
     "pbr",
     "ply",
     "psycopg2-binary",
@@ -357,8 +354,6 @@ CEE_UNUSED_PACKAGES = [
     "snmpsim-lextudio",
     "tenacity",
     "websocket-client",
-    "wrapt",
-    "yarl",
 ]
 
 

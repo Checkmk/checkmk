@@ -52,9 +52,9 @@ class QuickSetupStageResponse(BaseSchema):
         allow_none=True,
     )
     stage_recap = fields.List(
-        fields.String,
+        fields.Dict,
         example=[],
-        description="A collection of widget summaries",
+        description="A collection of widget recaps",
     )
     button_txt = fields.String(
         example="Next",

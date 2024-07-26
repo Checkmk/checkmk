@@ -26,8 +26,11 @@ def _render_description(description: str | cmk.utils.werks.werk.NoWiki) -> str:
     return description
 
 
-CVSS_REGEX = re.compile(
+CVSS_REGEX_V31 = re.compile(
     r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]"
+)
+CVSS_REGEX_V40 = re.compile(
+    r"CVSS:4.0/AV:[NALP]/AC:[LH]/AT:[NP]/PR:[NLH]/UI:[NPA]/VC:[NLH]/VI:[NLH]/VA:[NLH]/SC:[NLH]/SI:[NLH]/SA:[NLH]"
 )
 
 
@@ -153,8 +156,10 @@ def test_secwerk_has_cvss(precompiled_werks: None) -> None:
             continue
         if werk.class_.value != "security":
             continue
+        rendered = _render_description(werk.description)
         assert (
-            CVSS_REGEX.search(_render_description(werk.description)) is not None
+            CVSS_REGEX_V31.search(rendered) is not None
+            or CVSS_REGEX_V40.search(rendered) is not None
         ), f"Werk {werk_id} is missing a CVSS:\n{werk.description}"
 
 

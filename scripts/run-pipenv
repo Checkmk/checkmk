@@ -9,11 +9,6 @@ set -e -o pipefail
 
 REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
 
-# make sure we don't use "$HOME/.cache" accidentally (expands to /.cache, if HOME is not set)
-# TODO: This could potentially be removed as $HOME is now always set in the docker images
-: "${PIPENV_CACHE_DIR:="${REPO_PATH}/.cache"}"
-export PIPENV_CACHE_DIR
-
 # Avoid a loop when building the virtual environment itself.
 if [ -z "$SKIP_MAKEFILE_CALL" ]; then
     make --silent -C "$REPO_PATH" .venv 1>&2

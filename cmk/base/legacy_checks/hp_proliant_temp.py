@@ -5,12 +5,14 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.hp_proliant import hp_proliant_status2nagios_map
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.hp_proliant import DETECT
+from cmk.plugins.lib.hp_proliant import DETECT, STATUS_MAP
+
+hp_proliant_status2nagios_map = {k: int(v) for k, v in STATUS_MAP.items()}
+
 
 hp_proliant_locale = {
     1: "other",

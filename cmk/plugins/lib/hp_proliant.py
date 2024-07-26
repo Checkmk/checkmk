@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Final
 
-from cmk.agent_based.v2 import any_of, contains
+from cmk.agent_based.v2 import any_of, contains, State
 
 MAP_TYPES_MEMORY: Final = {
     "1": "other",
@@ -34,3 +34,24 @@ DETECT = any_of(
     contains(PRODUCT_NAME_OID, "storeeasy"),
     contains(PRODUCT_NAME_OID, "synergy"),
 )
+
+
+STATUS_MAP = {
+    "unknown": State.UNKNOWN,
+    "other": State.UNKNOWN,
+    "ok": State.OK,
+    "degraded": State.CRIT,
+    "failed": State.CRIT,
+    "disabled": State.WARN,
+}
+
+
+def sanitize_item(item: str) -> str:
+    r"""Sanitize null byte in item
+
+    We observed some devices to send "\x00" (null-byte) as their name.
+    Not all components delt well with it, so we replace it here
+    with r"\x00" (literal backslash-x-zero-zero).
+    As of Checkmk 2.3, this should in fact no longer be necessary.
+    """
+    return item.replace("\x00", r"\x00")

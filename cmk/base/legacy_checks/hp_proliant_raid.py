@@ -7,11 +7,10 @@
 import typing
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.hp_proliant import sanitize_item
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import render, SNMPTree
-from cmk.plugins.lib.hp_proliant import DETECT
+from cmk.plugins.lib.hp_proliant import DETECT, sanitize_item
 
 
 class HpProRaid(typing.NamedTuple):

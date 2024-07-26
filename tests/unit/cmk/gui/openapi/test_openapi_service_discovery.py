@@ -1203,6 +1203,7 @@ def test_openapi_discover_single_service(
     mock_set_autochecks.assert_not_called()
 
 
+@pytest.mark.usefixtures("inline_background_jobs")
 def test_openapi_bulk_discovery_with_default_options(base: str, clients: ClientRegistry) -> None:
     # create some sample hosts
     clients.HostConfig.bulk_create(

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from pytest_mock import MockerFixture
 
 from tests.testlib.rest_api_client import ClientRegistry
 
@@ -39,6 +40,7 @@ def test_activate_changes_unknown_site(clients: ClientRegistry, is_licensed: boo
     assert "Unknown site" in repr(resp.json), resp.json
 
 
+@pytest.mark.usefixtures("allow_background_jobs")
 def test_activate_changes(
     clients: ClientRegistry,
     is_licensed: bool,
@@ -107,22 +109,40 @@ def test_list_activate_changes_no_if_match_header(clients: ClientRegistry) -> No
 
 
 def test_list_activate_changes_star_etag(
+    mocker: MockerFixture,
     clients: ClientRegistry,
     is_licensed: bool,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     clients.HostConfig.create(host_name="foobar", folder="/")
 
+    activation_start = mocker.patch(
+        "cmk.gui.watolib.activate_changes.ActivateChangesManager._start_activation"
+    )
+    cleanup_start = mocker.patch(
+        "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job"
+    )
     with mock_livestatus(expect_status_query=True):
         clients.ActivateChanges.activate_changes(etag="star")
+    activation_start.assert_called_once()
+    cleanup_start.assert_called_once()
 
 
 def test_list_activate_changes_valid_etag(
+    mocker: MockerFixture,
     clients: ClientRegistry,
     is_licensed: bool,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     clients.HostConfig.create(host_name="foobar", folder="/")
 
+    activation_start = mocker.patch(
+        "cmk.gui.watolib.activate_changes.ActivateChangesManager._start_activation"
+    )
+    cleanup_start = mocker.patch(
+        "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job"
+    )
     with mock_livestatus(expect_status_query=True):
         clients.ActivateChanges.activate_changes(etag="valid_etag")
+    activation_start.assert_called_once()
+    cleanup_start.assert_called_once()

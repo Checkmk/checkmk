@@ -608,6 +608,7 @@ def test_openapi_host_collection_effective_attributes(clients: ClientRegistry) -
         assert host["extensions"]["effective_attributes"] is None
 
 
+@pytest.mark.usefixtures("inline_background_jobs")
 def test_openapi_host_rename(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
@@ -1328,6 +1329,7 @@ def test_openapi_host_config_effective_attributes_includes_custom_attributes_reg
     assert resp.json["extensions"]["effective_attributes"]["foo"] == "blub"
 
 
+@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_host_config_effective_attributes_includes_tags_regression(
     clients: ClientRegistry,
 ) -> None:

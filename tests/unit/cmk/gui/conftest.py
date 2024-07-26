@@ -289,6 +289,12 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("cmk.utils.daemon.closefrom")
 
 
+@pytest.fixture()
+def allow_background_jobs() -> None:
+    """Prevents the fail_on_unannotated_background_job_start fixture from raising an error"""
+    return None
+
+
 @pytest.fixture(name="suppress_bake_agents_in_background")
 def fixture_suppress_bake_agents_in_background(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(

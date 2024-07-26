@@ -356,7 +356,7 @@ class TestPermissionHandler:
 
 
 class TestIndexSearcher:
-    @pytest.mark.usefixtures("with_admin_login")
+    @pytest.mark.usefixtures("with_admin_login", "inline_background_jobs")
     def test_search_no_index(self, clean_redis_client: "Redis[str]") -> None:
         with pytest.raises(IndexNotFoundException):
             list(IndexSearcher(clean_redis_client, PermissionsHandler()).search("change_dep"))

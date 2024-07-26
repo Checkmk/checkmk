@@ -68,6 +68,8 @@ def test_ac_check_mail_main_failed_connect() -> None:
         [
             "--fetch-server",
             "foo",
+            "--fetch-protocol",
+            "IMAP",
             "--fetch-username",
             "bar",
             "--fetch-password",

@@ -33,7 +33,6 @@ import time
 import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
-from dataclasses import dataclass
 from datetime import datetime
 from email.message import Message as POPIMAPMessage
 from typing import Any, assert_never, Literal
@@ -62,6 +61,15 @@ from exchangelib import protocol as ews_protocol
 
 import cmk.utils.password_store
 
+from cmk.plugins.emailchecks.lib.ac_args import (
+    add_trx_arguments,
+    BasicAuth,
+    MailboxAuth,
+    OAuth2,
+    Scope,
+    TRXConfig,
+)
+
 Args = argparse.Namespace
 Status = int
 PerfData = Any
@@ -76,22 +84,6 @@ POPIMAPMailMessages = Mapping[MailIndex, POPIMAPMessage]
 EWSMailMessages = Mapping[MailIndex, EWSMessage]
 
 MailID = tuple[int, int]
-
-
-@dataclass
-class BasicAuth:
-    username: str
-    password: str
-
-
-@dataclass
-class OAuth2:
-    client_id: str
-    client_secret: str
-    tenant_id: str
-
-
-MailboxAuth = BasicAuth | OAuth2
 
 
 class EWS:
@@ -364,10 +356,19 @@ class Mailbox:
             https://techcommunity.microsoft.com/t5/exchange-team-blog/improving-security-together/ba-p/805892
     """
 
-    def __init__(self, args: Args, connection_type: Literal["fetch", "send"] = "fetch") -> None:
-        self._connection: Any = None  # TODO: Typing is quite broken below...
-        self._args = args
-        self._connection_type = connection_type
+    def __init__(self, config: TRXConfig, timeout: int, ctype: Scope) -> None:
+        self._connection: Any = None  # FIXME (fix coming up!)
+        self.config = config
+        self.timeout = timeout
+        self._ctype = str(ctype)  # this is pointless and will go.
+
+        logging.debug(
+            "connecting to: %r %r %r %r",
+            config.protocol,
+            config.server,
+            config.port,
+            config.tls,
+        )
 
     def __enter__(self) -> "Mailbox":
         return self
@@ -376,105 +377,71 @@ class Mailbox:
         self._close_mailbox()
 
     def connect(self) -> None:
-        if self._connection_type == "fetch":
+        if self._ctype == "fetch":
             self._connect_fetcher()
         else:
             self._connect_sender()
 
     def _connect_fetcher(self) -> None:
         def _connect_pop3() -> None:
-            connection = (poplib.POP3_SSL if self._args.fetch_tls else poplib.POP3)(
-                self._args.fetch_server,
-                self._args.fetch_port,
-                timeout=self._args.connect_timeout,
+            connection = (poplib.POP3_SSL if self.config.tls else poplib.POP3)(
+                self.config.server,
+                self.config.port,
+                timeout=self.timeout,
             )
-            verified_result(connection.user(self._args.fetch_username))
-            verified_result(connection.pass_(self._args.fetch_password))
+            assert isinstance(self.config.auth, BasicAuth)
+            verified_result(connection.user(self.config.auth.username))
+            verified_result(connection.pass_(self.config.auth.password))
             self._connection = connection
 
         def _connect_imap() -> None:
-            connection = (imaplib.IMAP4_SSL if self._args.fetch_tls else imaplib.IMAP4)(
-                self._args.fetch_server,
-                self._args.fetch_port,
-                timeout=self._args.connect_timeout,
+            connection = (imaplib.IMAP4_SSL if self.config.tls else imaplib.IMAP4)(
+                self.config.server,
+                self.config.port,
+                timeout=self.timeout,
             )
-            verified_result(connection.login(self._args.fetch_username, self._args.fetch_password))
+            assert isinstance(self.config.auth, BasicAuth)
+            verified_result(connection.login(self.config.auth.username, self.config.auth.password))
             verified_result(connection.select("INBOX", readonly=False))
             self._connection = connection
 
         assert self._connection is None
 
-        logging.debug(
-            "_connect_fetcher: %r %r %r %r",
-            self._args.fetch_protocol,
-            self._args.fetch_server,
-            self._args.fetch_port,
-            self._args.fetch_tls,
-        )
-
         try:
-            if self._args.fetch_protocol == "POP3":
+            if self.config.protocol == "POP3":
                 _connect_pop3()
-            elif self._args.fetch_protocol == "IMAP":
+            elif self.config.protocol == "IMAP":
                 _connect_imap()
-            elif self._args.fetch_protocol == "EWS":
+            elif self.config.protocol == "EWS":
                 self._connect_ews()
             else:
                 raise NotImplementedError(
-                    f"Fetching mails is not implemented for {self._args.fetch_protocol}"
+                    f"Fetching mails is not implemented for {self.config.protocol}"
                 )
         except Exception as exc:
-            raise ConnectError(
-                f"Failed to connect to fetching server {self._args.fetch_server}: {exc}"
-            )
+            raise ConnectError(f"Failed to connect to fetching server {self.config.server}: {exc}")
 
     def _connect_sender(self) -> None:
         assert self._connection is None
-        logging.debug(
-            "_connect_sender: %r %r %r %r",
-            self._args.send_protocol,
-            self._args.send_server,
-            self._args.send_port,
-            self._args.send_tls,
-        )
         try:
-            if self._args.send_protocol == "EWS":
+            if self.config.protocol == "EWS":
                 self._connect_ews()
-            elif self._args.send_protocol == "SMTP":
+            elif self.config.protocol == "SMTP":
                 pass
             else:
                 raise NotImplementedError(
-                    f"Sending mails is not implemented for {self._args.fetch_protocol}"
+                    f"Sending mails is not implemented for {self.config.protocol}"
                 )
         except Exception as exc:
-            raise ConnectError(
-                f"Failed to connect to sending server {self._args.send_server}: {exc}"
-            )
+            raise ConnectError(f"Failed to connect to sending server {self.config.server}: {exc}")
 
     def _connect_ews(self) -> None:
-        ctype: Literal["fetch", "send"] = self._connection_type
-        args = vars(self._args)  # Namespace to dict
-
-        primary_smtp_address = args.get(ctype + "_email_address") or args.get(ctype + "_username")
-        server = args.get(ctype + "_server")
-        auth: MailboxAuth = (
-            OAuth2(
-                client_id=args.get(ctype + "_client_id"),  # type: ignore[arg-type]
-                client_secret=args.get(ctype + "_client_secret"),  # type: ignore[arg-type]
-                tenant_id=args.get(ctype + "_tenant_id"),  # type: ignore[arg-type]
-            )
-            if args.get(ctype + "_client_id")
-            else BasicAuth(
-                username=args.get(ctype + "_username"),  # type: ignore[arg-type]
-                password=args.get(ctype + "_password"),  # type: ignore[arg-type]
-            )
-        )
         self._connection = EWS(
-            primary_smtp_address=primary_smtp_address,  # type: ignore[arg-type]
-            server=server,  # type: ignore[arg-type]
-            auth=auth,
-            no_cert_check=bool(args.get(ctype + "_disable_cert_validation")),
-            timeout=args.get("connect_timeout"),
+            primary_smtp_address=self.config.address,
+            server=self.config.server,
+            auth=self.config.auth,
+            no_cert_check=self.config.disable_cert_validation,
+            timeout=self.timeout,
         )
 
     def protocol(self) -> Literal["POP3", "IMAP", "EWS"]:
@@ -792,7 +759,6 @@ class Mailbox:
 
 
 def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Args:
-    protocols = {"IMAP", "POP3", "EWS"}
     parser.formatter_class = argparse.RawTextHelpFormatter
     parser.add_argument(
         "--debug",
@@ -806,117 +772,16 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         default=10,
         help="Timeout in seconds for network connects (default=10)",
     )
-
-    parser.add_argument(
-        "--fetch-server",
-        required=True,
-        metavar="ADDRESS",
-        help=f"Host address of the {'/'.join(protocols)} server hosting your mailbox",
-    )
-    parser.add_argument(
-        "--fetch-username",
-        required=False,
-        metavar="USER",
-        help=f"Username to use for {'/'.join(protocols)}",
-    )
-    parser.add_argument(
-        "--fetch-email-address",
-        required=False,
-        metavar="EMAIL-ADDRESS",
-        help="Email address (default: same as username, only affects EWS protocol)",
-    )
-    parser.add_argument(
-        "--fetch-password",
-        required=False,
-        metavar="PASSWORD",
-        help="Password to use for {'/'.join(protocols)}",
-    )
-    parser.add_argument(
-        "--fetch-client-id",
-        required=False,
-        metavar="CLIENT_ID",
-        help="OAuth2 ClientID for EWS",
-    )
-    parser.add_argument(
-        "--fetch-client-secret",
-        required=False,
-        metavar="CLIENT_SECRET",
-        help="OAuth2 ClientSecret for EWS",
-    )
-    parser.add_argument(
-        "--fetch-tenant-id",
-        required=False,
-        metavar="TENANT_ID",
-        help="OAuth2 TenantID for EWS",
-    )
-    parser.add_argument(
-        "--fetch-protocol",
-        type=str.upper,
-        choices=protocols,
-        help="Protocol used for fetching mails (default=IMAP)",
-    )
-    parser.add_argument(
-        "--fetch-port",
-        type=int,
-        metavar="PORT",
-        help="{'/'.join(protocols)} port (defaults to 110/995 (TLS) for POP3, to 143/993 (TLS) for "
-        "IMAP and to 80/443 (TLS) for EWS)",
-    )
-    parser.add_argument(
-        "--fetch-tls",
-        action="store_true",
-        help="Use TLS/SSL for fetching the mailbox (disabled by default)",
-    )
-    parser.add_argument(
-        "--fetch-disable-cert-validation",
-        action="store_true",
-        help="Don't enforce SSL/TLS certificate validation",
-    )
+    add_trx_arguments(parser, Scope.FETCH)
 
     parser.add_argument("--verbose", "-v", action="count", default=0)
 
     try:
-        args = parser.parse_args(argv)
+        return parser.parse_args(argv)
     except SystemExit as e:
         # we have no efficient way to control the output on stderr but at least we can return
         # UNKNOWN
         raise SystemExit(3) from e
-
-    if tuple(
-        map(
-            bool,
-            (
-                args.fetch_username,
-                args.fetch_password,
-                args.fetch_client_id,
-                args.fetch_client_secret,
-                args.fetch_tenant_id,
-            ),
-        )
-    ) not in {
-        (True, True, False, False, False),
-        (False, False, True, True, True),
-    }:
-        raise RuntimeError(
-            "Either Username/Passwort or ClientID/ClientSecret/TenantID have to be set"
-        )
-
-    args.fetch_port = args.fetch_port or (
-        (995 if args.fetch_tls else 110)
-        if args.fetch_protocol == "POP3"
-        else (
-            (993 if args.fetch_tls else 143)
-            if args.fetch_protocol == "IMAP"
-            else (443 if args.fetch_tls else 80)
-        )
-    )  # HTTP / REST (e.g. EWS)
-
-    if "send_protocol" in args:  # if sending is configured
-        args.send_port = args.send_port or (
-            25 if args.send_protocol == "SMTP" else (443 if args.send_tls else 80)
-        )
-
-    return args
 
 
 #

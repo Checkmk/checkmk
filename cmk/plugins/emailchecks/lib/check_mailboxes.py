@@ -11,6 +11,7 @@ import time
 
 import cmk.utils.render
 
+from cmk.plugins.emailchecks.lib.ac_args import parse_trx_arguments, Scope
 from cmk.plugins.emailchecks.lib.utils import active_check_main, Args, CheckResult, Mailbox
 
 
@@ -67,7 +68,9 @@ def create_argument_parser() -> argparse.ArgumentParser:
 
 
 def check_mailboxes(args: Args) -> CheckResult:
-    if args.fetch_protocol == "POP3":
+    fetch = parse_trx_arguments(args, Scope.FETCH)
+
+    if fetch.protocol == "POP3":
         raise RuntimeError("check_mailboxes does not operate on POP servers, sorry.")
     if type(args.crit_age_newest) is not type(args.warn_age_newest):
         raise RuntimeError("--warn-age-newest and --crit-age-newest must be provided together")
@@ -79,7 +82,7 @@ def check_mailboxes(args: Args) -> CheckResult:
     messages = []
     now = time.time()
 
-    with Mailbox(args) as mailbox:
+    with Mailbox(fetch, args.connect_timeout, Scope.FETCH) as mailbox:
         logging.info("connect..")
         mailbox.connect()
 

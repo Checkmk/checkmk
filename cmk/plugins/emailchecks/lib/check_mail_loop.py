@@ -18,6 +18,7 @@ from typing import assert_never
 
 from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
+from cmk.plugins.emailchecks.lib.ac_args import add_trx_arguments, parse_trx_arguments, Scope
 from cmk.plugins.emailchecks.lib.utils import (
     active_check_main,
     Args,
@@ -36,64 +37,7 @@ DEPRECATION_AGE = 2 * 3600
 def create_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
 
-    # SEND (both SMTP and EWS)
-    parser.add_argument(
-        "--send-protocol",
-        type=str.upper,
-        choices={"SMTP", "EWS"},
-        help="Protocol used for sending mails (default=SMTP)",
-    )
-    parser.add_argument(
-        "--send-server",
-        type=str,
-        required=True,
-        metavar="ADDRESS",
-        help="Host address of the SMTP/EWS server to send the mail to",
-    )
-    parser.add_argument("--send-tls", action="store_true", help="Use TLS over SMTP/EWS")
-    parser.add_argument(
-        "--send-port",
-        type=int,
-        metavar="PORT",
-        help="SMTP/EWS port (defaults to 25 for SMTP and to 80/443 (TLS) for EWS)",
-    )
-    parser.add_argument(
-        "--send-username",
-        type=str,
-        metavar="USER",
-        help="Username to use for SMTP communictation (leave empty for anonymous SMTP) or EWS connection",
-    )
-    parser.add_argument(
-        "--send-password", type=str, metavar="PASSWORD", help="Password to authenticate SMTP/EWS"
-    )
-
-    # SEND (EWS only)
-    parser.add_argument(
-        "--send-disable-cert-validation",
-        action="store_true",
-        help="Don't enforce SSL/TLS certificate validation",
-    )
-    parser.add_argument(
-        "--send-client-id",
-        metavar="CLIENT_ID",
-        help="OAuth2 ClientID for EWS",
-    )
-    parser.add_argument(
-        "--send-client-secret",
-        metavar="CLIENT_SECRET",
-        help="OAuth2 ClientSecret for EWS",
-    )
-    parser.add_argument(
-        "--send-tenant-id",
-        metavar="TENANT_ID",
-        help="OAuth2 TenantID for EWS",
-    )
-    parser.add_argument(
-        "--send-email-address",
-        required=False,
-        metavar="EMAIL-ADDRESS",
-        help="Email address (default: same as username, only affects EWS protocol)",
-    )
+    add_trx_arguments(parser, Scope.SEND)
 
     parser.add_argument(
         "--mail-from", type=str, required=True, help="Use this mail address as sender address"
@@ -266,32 +210,15 @@ def check_mails(  # pylint: disable=too-many-branches
     return state, ", ".join(output), perfdata
 
 
-def _fetch_config_equals_send_config(args: Args) -> bool:
-    args_dict = vars(args)  # Namespace to dict
-    return all(
-        args_dict.get(f"fetch_{param}") == args_dict.get(f"send_{param}")
-        for param in [
-            "protocol",
-            "server",
-            "tls",
-            "port",
-            "disable_cert_validation",
-            "username",
-            "password",
-            "client_id",
-            "client_secret",
-            "tenant_id",
-            "email_address",
-        ]
-    )
-
-
 def subject_regex(subject: str) -> re.Pattern:
     """Returns regex used for subject matching - extra function for testability"""
     return re.compile(rf"(?i)(?:re: |wg: )?{subject} ([0-9]+) ([0-9]+)")
 
 
 def check_mail_roundtrip(args: Args) -> CheckResult:
+    fetch = parse_trx_arguments(args, Scope.FETCH)
+    send = parse_trx_arguments(args, Scope.SEND)
+
     # TODO: maybe we should use cmk.utils.paths.tmp_dir?
     status_file_components = ("check_mail_loop", args.status_suffix, "status")
     status_path = args.status_dir / ".".join(filter(bool, status_file_components))
@@ -307,14 +234,14 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
     re_subject = subject_regex(args.subject)
 
     with ExitStack() as context:
-        mailbox = context.enter_context(Mailbox(args))
+        mailbox = context.enter_context(Mailbox(fetch, args.connect_timeout, Scope.FETCH))
         mailbox.connect()
 
         # re-use already connected Mailbox instance if credentials are the same
-        if _fetch_config_equals_send_config(args):
+        if fetch == send:
             send_mailbox = mailbox
         else:
-            send_mailbox = context.enter_context(Mailbox(args, "send"))
+            send_mailbox = context.enter_context(Mailbox(send, args.connect_timeout, Scope.SEND))
             # note: only for EWS connect() has an effect. IMAP will connect
             # when sending email.
             send_mailbox.connect()

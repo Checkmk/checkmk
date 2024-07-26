@@ -19,6 +19,7 @@ from typing import assert_never
 
 from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
+from cmk.plugins.emailchecks.lib.ac_args import parse_trx_arguments, Scope
 from cmk.plugins.emailchecks.lib.utils import (
     active_check_main,
     Args,
@@ -254,7 +255,8 @@ def check_mail(args: Args) -> CheckResult:
     """Create a mailbox and try to connect. In case of success our check will happily return OK
     If desired mails can also be fetched and forwarded to the event console (EC)
     """
-    with Mailbox(args) as mailbox:
+    fetch = parse_trx_arguments(args, Scope.FETCH)
+    with Mailbox(fetch, args.connect_timeout, Scope.FETCH) as mailbox:
         try:
             mailbox.connect()
         except ConnectError as exc:

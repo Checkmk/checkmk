@@ -436,5 +436,5 @@ http_archive(
     name = "bazel_clang_tidy",
     sha256 = "3f31e513bba1cba41ace515c3a0474b7793abc6f10ed5f6e08fa6e6b6d2411b0",
     strip_prefix = "bazel_clang_tidy-bff5c59c843221b05ef0e37cef089ecc9d24e7da",
-    url = "https://github.com/dayfoo/bazel_clang_tidy/archive/bff5c59c843221b05ef0e37cef089ecc9d24e7da.tar.gz",
+    url = "https://github.com/erenon/bazel_clang_tidy/archive/bff5c59c843221b05ef0e37cef089ecc9d24e7da.tar.gz",
 )

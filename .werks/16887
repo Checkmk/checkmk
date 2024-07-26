@@ -1,0 +1,14 @@
+Title: mk_job: MK_VARDIR defaults not being set in bakery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1721972847
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+Due to a different way to set in <code>MK_VARDIR</code> in <code>mk_job</code>, default values
+would not be baked into <code>mk_job</code> and derivates.
+This change adds a replacement rule for the way <code>MK_VARDIR</code> gets assigned in
+<code>mk_job</code> and also separates assignment and export in order to avoid known problems
+with Solaris.

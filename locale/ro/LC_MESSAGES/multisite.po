@@ -13371,6 +13371,14 @@ msgstr "Configurație"
 msgid "Configuration Error"
 msgstr "Eroare de configurare"
 
+#, fuzzy
+msgid "Configuration bundle ID"
+msgstr "Fișiere de configurare"
+
+#, fuzzy
+msgid "Configuration bundle properties"
+msgstr "Eroare de configurare"
+
 msgid "Configuration connection"
 msgstr "Conexiune de configurare"
 
@@ -13934,9 +13942,6 @@ msgid ""
 msgstr ""
 "Conectați Checkmk cu LDAP sau Active Directory pentru a crea utilizatori în "
 "Checkmk."
-
-msgid "Connect Timeout"
-msgstr "Timeout de conectare"
 
 msgid "Connect directly (not available in CRE)"
 msgstr "Conectare directă (nu este disponibil în CRE)"
@@ -15296,7 +15301,8 @@ msgstr ""
 "Datele de acreditare nu sunt configurate sau nu sunt valide. Vă rugăm să "
 "revizuiți setările de licență"
 
-msgid "Credentials to access the Database"
+#, fuzzy
+msgid "Credentials to access the database"
 msgstr "Acreditive pentru a accesa baza de date"
 
 msgid "Credits consumed"
@@ -16353,9 +16359,6 @@ msgstr "Baza de date"
 
 msgid "Database Availability Group (DAG) (Windows)"
 msgstr "Grup de disponibilitate a bazelor de date (DAG) (Windows)"
-
-msgid "Database Name"
-msgstr "Numele bazei de date"
 
 msgid "Database SID"
 msgstr "Baza de date SID"
@@ -18863,10 +18866,12 @@ msgstr "Afișați numele"
 msgid "Display node details on"
 msgstr "Afișarea detaliilor nodului pe"
 
-msgid "Display only a summary of all Datafiles"
+#, fuzzy
+msgid "Display only a summary of all datafiles"
 msgstr "Afișați doar un rezumat al tuturor fișierelor de date"
 
-msgid "Display only a summary of all Transactionlogs"
+#, fuzzy
+msgid "Display only a summary of all transactionlogs"
 msgstr "Afișați doar un rezumat al tuturor jurnalelor de tranzacții"
 
 msgid "Display range: Minimum must be strictly less than maximum"
@@ -20079,17 +20084,18 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Due to security reasons the plugin being executed as admin will check "
-"permissions for Oracle executables. If modification of Oracle binaries is "
-"allowed for non-admin users or groups then the plug-in stops processing thus "
-"breaking Oracle monitoring: execution of normal user code at elevated level "
-"means security vulnerability.You may <tt>disable</tt> this option if it is "
-"the only method to continue monitoring the Oracle database. Usually you need "
-"to <tt>disable</tt> the option only in the next case: It's impossible to "
-"correctly adjust permissions for Oracle binaries, mode group with group "
-"Administrator is not applicable and it is not possible to use custom account "
-"to monitor the Oracle database.Even if check is enabled you may allow some "
-"groups and/or users to still have write access to the Oracle binaries."
+"Due to security reasons the plug-in being executed as admin will check "
+"permissions for Oracle executables. If the modification of Oracle binaries "
+"is allowed for non-admin users or groups then the plug-in stops processing "
+"thus breaking Oracle monitoring: execution of normal user code at elevated "
+"level means security vulnerability. You may <tt>disable</tt> this option if "
+"it is the only method to continue monitoring the Oracle database. Usually "
+"you need to <tt>disable</tt> the option only in the following case: It's "
+"impossible to correctly adjust permissions for Oracle binaries, mode group "
+"with group Administrator is not applicable and it is not possible to use "
+"custom account to monitor the Oracle database. Even if the check is enabled "
+"you may allow some groups and/or users to still have write access to the "
+"Oracle binaries."
 msgstr ""
 
 msgid "Dummy"
@@ -20237,12 +20243,6 @@ msgstr "Niveluri dinamice - limita superioară"
 msgid "DynamoDB"
 msgstr "DynamoDB"
 
-msgid "E-Mails"
-msgstr "E-mailuri"
-
-msgid "E-mail address attribute"
-msgstr "Atributul adresei de e-mail"
-
 msgid "E.Type"
 msgstr "E.Tip"
 
@@ -20309,7 +20309,8 @@ msgstr "STABILIT"
 msgid "ESX Datastores (used space and growth)"
 msgstr "ESX Datastores (spațiu utilizat și creștere)"
 
-msgid "ESX Hostsystem Maintenance Mode"
+#, fuzzy
+msgid "ESX Host System Maintenance Mode"
 msgstr "Modul de întreținere a sistemului gazdă ESX"
 
 msgid "ESX Multipath Count"
@@ -20573,6 +20574,10 @@ msgstr "Editați ținta de backup: %s"
 
 msgid "Edit bookmark list"
 msgstr "Editarea listei de marcaje"
+
+#, fuzzy, python-format
+msgid "Edit configuration: %s"
+msgstr "Configurație gazdă"
 
 msgid "Edit connection"
 msgstr "Editați conexiunea"
@@ -21038,24 +21043,30 @@ msgstr "Curbă eliptică"
 msgid "Email"
 msgstr "Email"
 
-msgid "Email Address"
-msgstr "Adresa de e-mail"
-
 msgid "Email address"
 msgstr "Adresa de e-mail"
+
+#, fuzzy
+msgid "Email address attribute"
+msgstr "Atributul adresei de e-mail"
 
 msgid "Email address used for account identification"
 msgstr "Adresa de e-mail utilizată pentru identificarea contului"
 
+#, fuzzy
+msgid "Email addresses to mail PDF reports to"
+msgstr "Adresele de e-mail la care să trimiteți rapoartele PDF"
+
 msgid "Email sent"
 msgstr "Email trimis"
-
-msgid "Email-Addresses to mail PDF reports to"
-msgstr "Adresele de e-mail la care să trimiteți rapoartele PDF"
 
 #, python-format
 msgid "Emailed report to %s."
 msgstr "A trimis raportul prin e-mail la %s."
+
+#, fuzzy
+msgid "Emails"
+msgstr "Email"
 
 #, fuzzy
 msgid "Emails containing Attachment per second"
@@ -21954,7 +21965,7 @@ msgstr ""
 msgid ""
 "Event Console History can become fragmented over time. So if the totalsize "
 "of deleted entries reaches this number the Event Console History will be "
-"cleaned up. "
+"cleaned up."
 msgstr ""
 
 msgid "Event Console alerts"
@@ -23318,9 +23329,6 @@ msgstr "Colectori care eșuează"
 msgid "Failover (only one node should be active)"
 msgstr "Failover (doar un singur nod trebuie să fie activ)"
 
-msgid "Failover Servers"
-msgstr "Serverele Failover"
-
 msgid "Failover State: ACTIVE"
 msgstr "Starea de basculare: ACTIVE"
 
@@ -23341,6 +23349,10 @@ msgstr "Starea de basculare: FAILOVER_PENDING"
 
 msgid "Failover State: NONE"
 msgstr "Starea de basculare: NONE"
+
+#, fuzzy
+msgid "Failover servers"
+msgstr "Serverele Failover"
 
 msgid "Failover states"
 msgstr "Stări de eșec"
@@ -23646,6 +23658,10 @@ msgstr "Dimensiunea fișierului la"
 
 msgid "File size below"
 msgstr "Dimensiunea fișierului de mai jos"
+
+#, fuzzy
+msgid "File size levels"
+msgstr "Niveluri de mărime a fișierelor"
 
 #, python-format
 msgid "File upload test for remote storage failed. Original error message: %s"
@@ -24196,8 +24212,8 @@ msgstr "Pentru dispozitivele care măsoară fumul în procente"
 msgid ""
 "For each folder an automatic network scan can be configured. It will try to "
 "detect new hosts in the configured IP ranges by sending pings to each IP "
-"address to check whether or not a host is using this ip address. Each new "
-"found host will be added to the current folder by it's host name, when "
+"address to check whether or not a host is using this IP address. Each new "
+"found host will be added to the current folder by its host name, when "
 "resolvable via DNS, or by its IP address."
 msgstr ""
 "Pentru fiecare dosar poate fi configurată o scanare automată a rețelei. "
@@ -25690,7 +25706,8 @@ msgstr "HPE StoreOnce prin REST API 4.x"
 msgid "HR: Used memory via SNMP"
 msgstr "HR: Memorie utilizată prin SNMP"
 
-msgid "HTML Email"
+#, fuzzy
+msgid "HTML email"
 msgstr "Email HTML"
 
 msgid "HTML output"
@@ -25826,7 +25843,7 @@ msgid ""
 "HTTPS is the suggested setting here. It requires a valid SSL setup of your "
 "Apache web server on your monitoring server, however. When using HTTP then "
 "confidential data that is contained in the baked agents could be spied out "
-"(such as passwords for plugins)."
+"(such as passwords for plug-ins)."
 msgstr ""
 "Se recomandă să setați HTTPS. Cu toate acestea, este necesară o configurare "
 "SSL validă a serverului web Apache de pe serverul de monitorizare. Atunci "
@@ -26608,8 +26625,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Here you can impose various levels the results reported by the mk_filstats "
-"plug-in. Note that those levels only concern about a single file."
+"Here you can impose various levels on the results reported by the "
+"mk_filstats plug-in. Note that those levels only concern about a single file."
 msgstr ""
 "Aici puteți impune la diferite niveluri rezultatele raportate de plugin-ul "
 "mk_filstats. Rețineți că aceste niveluri se referă doar la un singur fișier."
@@ -26878,7 +26895,8 @@ msgstr ""
 "nivelurile din parametrul <i>Niveluri implicite</i>. Această setare "
 "funcționează numai în configurările NetApp Clustermode."
 
-msgid "Here you can specify the allowed license states for windows."
+#, fuzzy
+msgid "Here you can specify the allowed license states for Windows."
 msgstr "Aici puteți specifica stările de licență permise pentru Windows."
 
 msgid ""
@@ -28875,6 +28893,10 @@ msgstr "Gruparea stării gazdei"
 msgid "Host successfully created"
 msgstr "Gazdă creată cu succes"
 
+#, fuzzy
+msgid "Host system sensor alerts"
+msgstr "Alerte ale senzorilor sistemului gazdă"
+
 msgid "Host tag"
 msgstr "Etichetă gazdă"
 
@@ -29144,9 +29166,6 @@ msgstr "Gazde: %d total (%d a reușit, %d a sărit, %d a eșuat)"
 #, fuzzy
 msgid "Hosts: Host Capacity & Utilization"
 msgstr "Utilizare CPU Nutanix Host"
-
-msgid "Hostsystem sensor alerts"
-msgstr "Alerte ale senzorilor sistemului gazdă"
 
 msgid "Hosttag"
 msgstr "Hosttag"
@@ -29478,16 +29497,16 @@ msgstr "Adresa IP"
 msgid "IP address family"
 msgstr "Familia de adrese IP"
 
-#, fuzzy
-msgid "IP address of Host"
-msgstr "Adresa IP a gazdei"
-
 msgid ""
 "IP address of SMB share host (only necessary if SMB share host is in another "
 "network)"
 msgstr ""
 "Adresa IP a gazdei de partajare SMB (necesară numai dacă gazda de partajare "
 "SMB se află într-o altă rețea)"
+
+#, fuzzy
+msgid "IP address of host"
+msgstr "Adresa IP a gazdei"
 
 #, fuzzy
 msgid "IP address of remote Event Console"
@@ -29501,7 +29520,8 @@ msgstr "Adresa IP a serverului Spectrum care primește capcana SNMP"
 msgid "IP address of tunnel endpoint"
 msgstr "Adresa IP a punctului final al tunelului"
 
-msgid "IP address or FQDN of JVM webserver"
+#, fuzzy
+msgid "IP address or FQDN of JVM web server"
 msgstr "Adresa IP sau FQDN a serverului web JVM"
 
 #, fuzzy
@@ -30227,8 +30247,9 @@ msgstr ""
 "Dacă detectarea automată a vitezei de legătură nu funcționează, puteți seta "
 "viteza de legătură aici."
 
+#, fuzzy
 msgid ""
-"If the flag is set, then the windows agent may use unencrypted communication "
+"If the flag is set, then the Windows agent may use unencrypted communication "
 "between the monitoring site and the host. Enable this flag for compatibility "
 "reasons or if you experience problems with the controller related to TLS or "
 "encryption. But please pay attention, that this enables unencrypted "
@@ -30419,11 +30440,12 @@ msgstr ""
 "despre compilarea agregărilor BI. Acesta include statistici și detalii "
 "pentru fiecare compilare executată."
 
+#, fuzzy
 msgid ""
 "If this option is enabled, the GUI reads the configured HTTP header variable "
 "from the incoming HTTP request and simply takes the string in this variable "
 "as name of the authenticated user. Be warned: Only allow access from trusted "
-"ip addresses (Apache <tt>Allow from</tt>), like proxy servers, to this "
+"IP addresses (Apache <tt>Allow from</tt>), like proxy servers, to this "
 "webpage. A user with access to this page could simply fake the "
 "authentication information. This option can be useful to realize "
 "authentication in reverse proxy environments. As of version 1.6 and on all "
@@ -30869,7 +30891,7 @@ msgid ""
 "to authenticate against the EMC VNX device by Security Files. These need to "
 "be created manually before using. Therefor run as instance user (if using "
 "OMD) or Nagios user (if not using OMD) a command like <tt>naviseccli -"
-"AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> This creates "
+"AddUserSecurity -scope 0 -password PASSWORD -user USER</tt>. This creates "
 "<tt>SecuredCLISecurityFile.xml</tt> and <tt>SecuredCLIXMLEncrypted.key</tt> "
 "in the home directory of the user and these files are used then."
 msgstr ""
@@ -30945,6 +30967,16 @@ msgstr ""
 "evenimente. Vă rugăm să fiți atenți la faptul că acest lucru ar putea duce "
 "la un număr mare de intrări în jurnal. "
 
+#, fuzzy
+msgid ""
+"If you enable this option then the remote site will automatically takeover "
+"and enable event processing if the central site is for the configured number "
+"of seconds unreachable."
+msgstr ""
+"Dacă activați această opțiune, atunci sclavul va prelua automat controlul și "
+"va activa procesarea evenimentelor în cazul în care maestrul este "
+"inaccesibil timp de un număr de secunde configurat."
+
 msgid ""
 "If you enable this option then the slave will automatically fallback from "
 "takeover mode to slavemode if the master is reachable again within the "
@@ -30955,15 +30987,6 @@ msgstr ""
 "preluare în modul sclav dacă maestrul este din nou accesibil în intervalul "
 "de secunde selectat de la precedenta imposibilitate de acces (nu de la "
 "preluare)."
-
-msgid ""
-"If you enable this option then the slave will automatically takeover and "
-"enable event processing if the master is for the configured number of "
-"seconds unreachable."
-msgstr ""
-"Dacă activați această opțiune, atunci sclavul va prelua automat controlul și "
-"va activa procesarea evenimentelor în cazul în care maestrul este "
-"inaccesibil timp de un număr de secunde configurat."
 
 msgid ""
 "If you enable this option, then Checkmk will not directly Python-bytecompile "
@@ -31005,9 +31028,9 @@ msgstr ""
 msgid ""
 "If you enter an item name here, this will be used as part of the service "
 "name after the prefix \"Events \". The prefix plus the configured item must "
-"result in an unique service name per host. If you leave this empty either "
-"the string provided in \"Application\" is used as item or the service gets "
-"no item when the \"Application\" field is also not configured."
+"result in a unique service name per host. If you leave this empty either the "
+"string provided in \"Application\" is used as item or the service gets no "
+"item when the \"Application\" field is also not configured."
 msgstr ""
 "Dacă introduceți aici un nume de articol, acesta va fi utilizat ca parte a "
 "descrierii serviciului după prefixul \"Events \". Prefixul plus elementul "
@@ -31650,14 +31673,15 @@ msgstr "Impact"
 msgid "Import"
 msgstr "Import"
 
-msgid "Import Hosts"
-msgstr "Gazde de import"
-
 msgid "Import all valid annotations"
 msgstr "Importați toate adnotările valide"
 
 msgid "Import all valid tags"
 msgstr "Importați toate etichetele valide"
+
+#, fuzzy
+msgid "Import hosts"
+msgstr "Gazde de import"
 
 msgid "Import hosts via CSV file"
 msgstr "Importați gazde prin intermediul unui fișier CSV"
@@ -31680,7 +31704,7 @@ msgstr "Utilizați numele portului ca nume de serviciu"
 
 #, fuzzy
 msgid ""
-"Important! This check is only for monitoring of datafiles who were left in "
+"Important! This check is only for monitoring datafiles which were left in "
 "backup mode. (alter database datafile ... begin backup;)"
 msgstr ""
 "Important! Aceste verificări sunt destinate numai monitorizării fișierelor "
@@ -32074,12 +32098,12 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"In previous Checkmk versions it was possible to use an automation user to "
-"display specific pages within Checkmk. To authenticate these requests it was "
-"possible to add the _username and _secret parameters to the parameters (e.g. "
-"append them to the URL). GET parameters are usually logged by proxies and "
-"webservers and are not deemed secure for secrets. See Werk #16223 for more "
-"information."
+"In previous Checkmk versions, it was possible to use an automation user to "
+"display specific pages within Checkmk. To authenticate these requests, it "
+"was possible to add the _username and _secret parameters to the parameters "
+"(e.g. append them to the URL). GET parameters are usually logged by proxies "
+"and web servers and are not deemed secure for secrets. See Werk #16223 for "
+"more information."
 msgstr ""
 "În versiunile anterioare ale Checkmk, era posibil să se utilizeze un "
 "utilizator de automatizare pentru a afișa anumite pagini în Checkmk. Pentru "
@@ -33032,8 +33056,8 @@ msgstr "Invalid (Neîncărcat)"
 msgid "Invalid CRCs"
 msgstr "CRC-uri invalide"
 
-#, python-format
-msgid "Invalid CSRF token (%r) for Session (%r)"
+#, fuzzy, python-format
+msgid "Invalid CSRF token (%r) for session (%r)"
 msgstr "Token CSRF invalid (%r) pentru sesiune (%r)"
 
 #, python-format
@@ -33136,7 +33160,7 @@ msgstr "Acreditări invalide"
 
 #, fuzzy
 msgid ""
-"Invalid custum field. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
+"Invalid custom field. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "ID-ul etichetei nu este valid. Sunt permise numai caracterele a-z, A-Z, 0-9, "
 "_ și -."
@@ -33636,10 +33660,10 @@ msgstr ""
 #, fuzzy
 msgid ""
 "It is possible to fetch several attributes of users, like Email or full "
-"names, from the LDAP directory. This is done by plug-ins which can "
+"names, from the LDAP directory. This is done by plug-ins which can be "
 "individually enabled or disabled. When enabling a plug-in, it is used upon "
-"the next synchonisation of user accounts for gathering their attributes. The "
-"user options which get imported into Checkmk from LDAP will be locked in "
+"the next synchronization of user accounts for gathering their attributes. "
+"The user options which get imported into Checkmk from LDAP will be locked in "
 "Setup."
 msgstr ""
 "Este posibil să se extragă mai multe atribute ale utilizatorilor, cum ar fi "
@@ -34556,7 +34580,8 @@ msgstr "Ultima intrare"
 msgid "Last Error"
 msgstr "Ultima eroare"
 
-msgid "Last Known Plugin Output"
+#, fuzzy
+msgid "Last Known Plug-in Output"
 msgstr "Ultima ieșire cunoscută a Plugin-ului"
 
 msgid "Last OK"
@@ -34746,7 +34771,7 @@ msgstr "Opțiuni de aranjare"
 msgid ""
 "Learn how to setup a REST endpoint <a href=\"https://help.victorops.com/"
 "knowledge-base/victorops-restendpoint-integration/\" target=\"_blank\">here</"
-"a><br />This URL can also be collected from the password store from Checkmk."
+"a>.<br />This URL can also be collected from the password store from Checkmk."
 msgstr ""
 "Aflați cum să configurați un punct final REST <a href=\"https://help."
 "victorops.com/knowledge-base/victorops-restendpoint-integration/\" target="
@@ -34882,7 +34907,8 @@ msgstr "Niveluri pentru %s"
 msgid "Levels for %s mail queue"
 msgstr "Niveluri pentru %s coada de corespondență"
 
-msgid "Levels for ATS Output parameters"
+#, fuzzy
+msgid "Levels for ATS output parameters"
 msgstr "Niveluri pentru parametrii de ieșire ATS"
 
 msgid "Levels for CPU utilization"
@@ -35624,7 +35650,8 @@ msgstr ""
 msgid "Limit login to single session at a time"
 msgstr "Limitați autentificarea la o singură sesiune la un moment dat"
 
-msgid "Limit maximum number used cpus"
+#, fuzzy
+msgid "Limit maximum number used CPUs"
 msgstr "Limitarea numărului maxim de cpu-uri utilizate"
 
 msgid "Limit number of processed search results"
@@ -36185,9 +36212,6 @@ msgstr "Răspunsuri HTTP 503 locale"
 msgid "Local IP address"
 msgstr "Adresa IP locală"
 
-msgid "Local Integrated Authentication (Windows)"
-msgstr "Autentificare locală integrată (Windows)"
-
 msgid "Local Only"
 msgstr "Numai local"
 
@@ -36238,6 +36262,10 @@ msgstr "Fișier local"
 
 msgid "Local group name"
 msgstr "Numele grupului local"
+
+#, fuzzy
+msgid "Local integrated authentication (Windows)"
+msgstr "Autentificare locală integrată (Windows)"
 
 msgid "Local path"
 msgstr "Calea locală"
@@ -36465,7 +36493,8 @@ msgstr "Jurnal: Rezumat"
 msgid "Log: command (regex)"
 msgstr "Jurnal: comandă (regex)"
 
-msgid "Log: command/plugin"
+#, fuzzy
+msgid "Log: command/plug-in"
 msgstr "Jurnal: command/plugin"
 
 msgid "Log: comment"
@@ -36856,10 +36885,6 @@ msgid "Lower levels for SMS Success Rate"
 msgstr "Niveluri mai mici pentru rata de succes a SMS-urilor"
 
 #, fuzzy
-msgid "Lower levels for Voltage"
-msgstr "Niveluri inferioare pentru tensiune"
-
-#, fuzzy
 msgid "Lower levels for active connections"
 msgstr "Niveluri pentru conexiuni active"
 
@@ -36925,6 +36950,10 @@ msgstr "Niveluri inferioare pentru rata totală de eroare"
 
 msgid "Lower levels for unallocated space"
 msgstr "Niveluri inferioare pentru spațiul nealocat"
+
+#, fuzzy
+msgid "Lower levels for voltage"
+msgstr "Niveluri inferioare pentru tensiune"
 
 msgid "Lower levels in percentage of limit"
 msgstr "Niveluri inferioare în procente din limită"
@@ -37017,7 +37046,8 @@ msgstr "MIB-uri livrate cu Checkmk"
 msgid "MISSING '%s'"
 msgstr "MISSING '%s'"
 
-msgid "MK Remote Plugin Executor (MRPE)"
+#, fuzzy
+msgid "MK Remote Plug-in Executor (MRPE)"
 msgstr "MK Remote Plugin Executor (MRPE)"
 
 msgid "MKEventd"
@@ -38270,12 +38300,12 @@ msgid "Maximum latency of successful query requests"
 msgstr "Latența maximă a cererilor de interogare reușite"
 
 #, fuzzy
-msgid "Maximum levels for Voltage"
-msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
 msgid "Maximum levels for load in percent"
 msgstr "Nivelurile maxime pentru incarcare in procente"
+
+#, fuzzy
+msgid "Maximum levels for voltage"
+msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Maximum levels if using magic factor"
 msgstr "Niveluri maxime dacă se utilizează factorul magic"
@@ -41297,6 +41327,10 @@ msgid "No discovery information available. Please perform a rescan."
 msgstr ""
 "Nu sunt disponibile informații despre descoperire. Vă rugăm să efectuați o "
 "nouă scanare."
+
+#, python-format
+msgid "No edit configuration bundle implemented for bundle group type '%s'."
+msgstr ""
 
 msgid "No entries"
 msgstr "Nu există intrări"
@@ -58851,10 +58885,12 @@ msgstr "Numele sitului"
 msgid "Sum"
 msgstr "Suma"
 
-msgid "Summarize Datafiles"
+#, fuzzy
+msgid "Summarize datafiles"
 msgstr "Rezumarea fișierelor de date"
 
-msgid "Summarize Transactionlogs"
+#, fuzzy
+msgid "Summarize transactionlogs"
 msgstr "Rezumați jurnalele de tranzacții"
 
 msgid "Summarized data of all protocols"
@@ -61267,6 +61303,13 @@ msgstr "Comentariul care este trimis automat cu un timp de oprire adhoc"
 
 msgid "The complete hardware- and software inventory of a host"
 msgstr "Inventarul complet hardware și software al unei gazde"
+
+#, fuzzy, python-format
+msgid "The configuration \"%s\" does not exist."
+msgstr "Site-ul \"%s\" nu există."
+
+msgid "The configuration bundle does not contain all required objects."
+msgstr ""
 
 msgid "The configuration is currently in read only mode. "
 msgstr "Configurația se află în prezent în modul \"doar pentru citire\". "
@@ -81421,7 +81464,7 @@ msgstr ""
 msgid ""
 "You may enter one or several alternative names that are expected to be in "
 "the certificate. Please note that the check does only accept DNS names and "
-"is case sensitive. So, the alternative names need to be exaclty provided as "
+"is case sensitive. So, the alternative names need to be exactly provided as "
 "defined in the certificate."
 msgstr ""
 
@@ -84099,6 +84142,18 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Connect Timeout"
+#~ msgstr "Timeout de conectare"
+
+#~ msgid "Database Name"
+#~ msgstr "Numele bazei de date"
+
+#~ msgid "E-Mails"
+#~ msgstr "E-mailuri"
+
+#~ msgid "Email Address"
+#~ msgstr "Adresa de e-mail"
 
 #~ msgid "API Key"
 #~ msgstr "Cheie API"

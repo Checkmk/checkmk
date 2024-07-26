@@ -17,8 +17,11 @@ import cmk.utils.werks
 
 import cmk.ccc.version as cmk_version
 
-CVSS_REGEX = re.compile(
+CVSS_REGEX_V31 = re.compile(
     r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]"
+)
+CVSS_REGEX_V40 = re.compile(
+    r"CVSS:4.0/AV:[NALP]/AC:[LH]/AT:[NP]/PR:[NLH]/UI:[NPA]/VC:[NLH]/VI:[NLH]/VA:[NLH]/SC:[NLH]/SI:[NLH]/SA:[NLH]"
 )
 
 
@@ -96,7 +99,8 @@ def test_secwerk_has_cvss(precompiled_werks: None) -> None:
         if werk.class_.value != "security":
             continue
         assert (
-            CVSS_REGEX.search(werk.description) is not None
+            CVSS_REGEX_V31.search(werk.description) is not None
+            or CVSS_REGEX_V40.search(werk.description) is not None
         ), f"Werk {werk_id} is missing a CVSS:\n{werk.description}"
 
 

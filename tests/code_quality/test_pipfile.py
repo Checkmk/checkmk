@@ -285,7 +285,6 @@ CEE_UNUSED_PACKAGES = [
     "websocket_client",
     "wrapt",
     "yarl",
-    "zipp",
 ]
 
 

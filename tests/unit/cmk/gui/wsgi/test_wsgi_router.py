@@ -18,6 +18,8 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.user import UserId
 
+from cmk.gui import cron
+
 from cmk.ccc.site import omd_site
 
 
@@ -161,7 +163,12 @@ def test_openapi_app_exception(
 
 
 def test_cmk_run_cron(wsgi_app: WebTestAppForCMK) -> None:
-    wsgi_app.get("/NO_SITE/check_mk/run_cron.py", status=200)
+    orig_multisite_cronjobs = cron.multisite_cronjobs[:]
+    try:
+        cron.multisite_cronjobs.clear()
+        wsgi_app.get("/NO_SITE/check_mk/run_cron.py", status=200)
+    finally:
+        cron.multisite_cronjobs = orig_multisite_cronjobs
 
 
 def test_cmk_automation(wsgi_app: WebTestAppForCMK) -> None:

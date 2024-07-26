@@ -69,7 +69,7 @@ else
 fi
 
 if [ "${CI}" == "true" ]; then
-    BAZEL_CONFIG_ARGS="--config=ci --config=debug"
+    BAZEL_CONFIG_ARGS="--config=debug"
     echo "Running on a CI machine, using addional args: \"${BAZEL_CONFIG_ARGS}\""
 else
     BAZEL_CONFIG_ARGS=""

@@ -88,10 +88,9 @@ do_check() {
 }
 
 sql() {
-    db="sysmaster"
     sqltxt="$1"
     export DBDELIMITER="|"
-    echo "$sqltxt" | dbaccess ${db}
+    echo "$sqltxt" | dbaccess sysmaster
 }
 
 set_excludes() {

@@ -10,8 +10,8 @@ import pytest
 from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils.quick_setup.definitions import (
-    FormData,
     GeneralStageErrors,
+    ParsedFormData,
     quick_setup_registry,
     QuickSetup,
     QuickSetupId,
@@ -25,7 +25,7 @@ from cmk.utils.quick_setup.definitions import (
 from cmk.utils.quick_setup.widgets import FormSpecId
 
 from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
-from cmk.gui.quick_setup.to_frontend import form_spec_recaps, form_spec_validate, validate_unique_id
+from cmk.gui.quick_setup.to_frontend import form_spec_recaps, validate_unique_id
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
 from cmk.rulesets.v1 import Title
@@ -52,7 +52,7 @@ def test_quick_setup_get(clients: ClientRegistry) -> None:
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
                 ],
-                validators=[form_spec_validate],
+                validators=[],
                 recap=[],
                 button_txt="Next",
             ),
@@ -73,7 +73,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
                 ],
-                validators=[form_spec_validate],
+                validators=[],
                 recap=[form_spec_recaps],
                 button_txt="Next",
             ),
@@ -81,7 +81,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
                 stage_id=StageId(2),
                 title="stage2",
                 configure_components=[],
-                validators=[form_spec_validate],
+                validators=[],
                 recap=[],
                 button_txt="Next",
             ),
@@ -103,7 +103,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
 
 
 def _form_spec_extra_validate(
-    _stages: Sequence[FormData], formspec_map: Mapping[FormSpecId, FormSpec]
+    _stages: ParsedFormData, formspec_map: Mapping[FormSpecId, FormSpec]
 ) -> tuple[ValidationErrorMap, GeneralStageErrors]:
     return {
         FormSpecId(form_spec_id): [
@@ -126,7 +126,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
                 ],
-                validators=[form_spec_validate, _form_spec_extra_validate],
+                validators=[_form_spec_extra_validate],
                 recap=[],
                 button_txt="Next",
             ),
@@ -152,14 +152,9 @@ def test_failing_validate(clients: ClientRegistry) -> None:
                     "message": "Invalid string",
                     "invalid_value": 5,
                 },
-                {
-                    "location": [],
-                    "message": "this is a simulated error",
-                    "invalid_value": "invalid_data",
-                },
             ],
         },
-        "stage_errors": ["this is a general error", "and another one"],
+        "stage_errors": [],
     }
     assert resp.json["button_txt"] is None
 

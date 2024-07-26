@@ -22,7 +22,8 @@ from cmk.rulesets.v1.form_specs import FormSpec
 
 StageId = NewType("StageId", int)
 QuickSetupId = NewType("QuickSetupId", str)
-FormData = NewType("FormData", Mapping[FormSpecId, object])
+RawFormData = NewType("RawFormData", Mapping[FormSpecId, object])
+ParsedFormData = Mapping[FormSpecId, Any]
 
 
 # TODO: This dataclass is already defined in
@@ -39,11 +40,11 @@ class QuickSetupValidationError:
 GeneralStageErrors = MutableSequence[str]
 ValidationErrorMap = MutableMapping[FormSpecId, MutableSequence[QuickSetupValidationError]]
 CallableValidator = Callable[
-    [Sequence[FormData], Mapping[FormSpecId, FormSpec]],
+    [ParsedFormData, Mapping[FormSpecId, FormSpec]],
     tuple[ValidationErrorMap, GeneralStageErrors],
 ]
 CallableRecap = Callable[
-    [Sequence[FormData], Mapping[FormSpecId, FormSpec]],
+    [Sequence[RawFormData], Mapping[FormSpecId, FormSpec]],
     Sequence[Widget],
 ]
 
@@ -98,7 +99,7 @@ class QuickSetupOverview:
 @dataclass
 class IncomingStage:  # Request
     stage_id: StageId
-    form_data: FormData
+    form_data: RawFormData
 
 
 class InvalidStageException(MKGeneralException):

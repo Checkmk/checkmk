@@ -9,14 +9,16 @@ from typing import Any, cast, Mapping
 
 from cmk.utils.quick_setup.definitions import (
     Errors,
-    FormData,
     GeneralStageErrors,
     IncomingStage,
     InvalidStageException,
+    ParsedFormData,
     QuickSetup,
     QuickSetupOverview,
     QuickSetupSaveRedirect,
     QuickSetupStage,
+    QuickSetupValidationError,
+    RawFormData,
     Stage,
     StageId,
     UniqueBundleIDStr,
@@ -31,7 +33,11 @@ from cmk.utils.quick_setup.widgets import (
     Widget,
 )
 
-from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
+from cmk.gui.form_specs.vue.form_spec_visitor import (
+    parse_value_from_frontend,
+    serialize_data_for_frontend,
+    validate_value_from_frontend,
+)
 from cmk.gui.form_specs.vue.type_defs import DataOrigin
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
@@ -61,33 +67,38 @@ def _get_stage_components_from_widget(widget: Widget) -> dict:
     return asdict(widget)
 
 
-def form_spec_validate(
-    all_stages_form_data: Sequence[FormData],
+def _stage_validate_all_form_spec_keys_existing(
+    current_stage_form_data: RawFormData,
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
-) -> tuple[ValidationErrorMap, GeneralStageErrors]:
-    general_errors: GeneralStageErrors = []
-    validation_errors: ValidationErrorMap = {}
-    last_stage = all_stages_form_data[-1]
-    for formspec_id, form_data in last_stage.items():
-        if formspec_id not in expected_formspecs_map:
-            general_errors.append(f"Formspec id '{formspec_id}' not found")
-            continue
+) -> GeneralStageErrors:
+    return [
+        f"Formspec id '{form_spec_id}' not found"
+        for form_spec_id in current_stage_form_data.keys()
+        if form_spec_id not in expected_formspecs_map
+    ]
 
-        try:
-            form_spec = expected_formspecs_map[formspec_id]
-            result = serialize_data_for_frontend(
-                form_spec=form_spec,
-                field_id=formspec_id,
-                origin=DataOrigin.FRONTEND,
-                do_validate=True,
-                value=form_data,
-            )
-            if result.validation:
-                validation_errors[formspec_id] = result.validation
-        except (AssertionError, AttributeError) as exc:
-            general_errors.append(str(exc))
 
-    return validation_errors, general_errors
+def _form_spec_validate(
+    all_stages_form_data: Sequence[RawFormData],
+    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
+) -> ValidationErrorMap:
+    return {
+        form_spec_id: [QuickSetupValidationError(**asdict(error)) for error in errors]
+        for current_stage_form_data in all_stages_form_data
+        for form_spec_id, form_data in current_stage_form_data.items()
+        if (errors := validate_value_from_frontend(expected_formspecs_map[form_spec_id], form_data))
+    }
+
+
+def _form_spec_parse(
+    all_stages_form_data: Sequence[RawFormData],
+    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
+) -> ParsedFormData:
+    return {
+        form_spec_id: parse_value_from_frontend(expected_formspecs_map[form_spec_id], form_data)
+        for current_stage_form_data in all_stages_form_data
+        for form_spec_id, form_data in current_stage_form_data.items()
+    }
 
 
 def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpecWrapper]:
@@ -125,10 +136,10 @@ def _find_unique_id(form_data: Any, target_key: str) -> None | str:
 
 
 def validate_unique_id(
-    stages_form_data: Sequence[FormData],
+    stages_form_data: ParsedFormData,
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
 ) -> tuple[ValidationErrorMap, GeneralStageErrors]:
-    bundle_id = _find_unique_id(stages_form_data[-1], UniqueBundleIDStr)
+    bundle_id = _find_unique_id(stages_form_data, UniqueBundleIDStr)
     if bundle_id is None:
         return {}, [f"Expected the key '{UniqueBundleIDStr}' in the form data"]
 
@@ -155,7 +166,7 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
 
 
 def form_spec_recaps(
-    stages_form_data: Sequence[FormData],
+    stages_form_data: Sequence[RawFormData],
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
 ) -> Sequence[Widget]:
 
@@ -184,10 +195,27 @@ def validate_current_stage(
     current_stage = quick_setup.get_stage_with_id(current_stage_id)
 
     errors = Errors()
+    expected_form_spec_map = build_expected_formspec_map(quick_setup.stages)
+    form_data = [stage.form_data for stage in incoming_stages]
+    errors.stage_errors.extend(
+        _stage_validate_all_form_spec_keys_existing(form_data[-1], expected_form_spec_map)
+    )
+    errors.formspec_errors = _form_spec_validate(form_data, expected_form_spec_map)
+    if errors.formspec_errors or errors.stage_errors:
+        return Stage(
+            stage_id=current_stage_id,
+            errors=errors,
+            components=[],
+            button_txt=None,
+        )
+    combined_parsed_form_data_up_to_current_stage = _form_spec_parse(
+        form_data, expected_form_spec_map
+    )
+
     for validator in current_stage.validators:
         errors_formspec, errors_stage = validator(
-            [stage.form_data for stage in incoming_stages],
-            build_expected_formspec_map(quick_setup.stages),
+            combined_parsed_form_data_up_to_current_stage,
+            expected_form_spec_map,
         )
         for form_spec_id, fs_errors in errors_formspec.items():
             errors.formspec_errors.setdefault(form_spec_id, [])

@@ -6,6 +6,7 @@
 import json
 import pprint
 import traceback
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -123,6 +124,18 @@ def parse_data_from_frontend(form_spec: FormSpec, field_id: str) -> Any:
     value_from_frontend = json.loads(request.get_str_input_mandatory(field_id))
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
     _process_validation_errors(visitor.validate(value_from_frontend))
+    return visitor.to_disk(value_from_frontend)
+
+
+def validate_value_from_frontend(
+    form_spec: FormSpec, value_from_frontend: Any
+) -> Sequence[VueComponents.ValidationMessage]:
+    visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
+    return visitor.validate(value_from_frontend)
+
+
+def parse_value_from_frontend(form_spec: FormSpec, value_from_frontend: Any) -> Any:
+    visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
     return visitor.to_disk(value_from_frontend)
 
 

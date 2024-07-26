@@ -21,7 +21,7 @@ from cmk.utils.quick_setup.widgets import (
 )
 
 from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
-from cmk.gui.quick_setup.to_frontend import form_spec_recaps, form_spec_validate, validate_unique_id
+from cmk.gui.quick_setup.to_frontend import form_spec_recaps, validate_unique_id
 
 from cmk.ccc.i18n import _
 from cmk.plugins.aws import ruleset_helper  # pylint: disable=cmk-module-layer-violation
@@ -60,7 +60,7 @@ def prepare_aws(stage_id: StageId) -> QuickSetupStage:
                 form_spec=Dictionary(elements=aws.quick_setup_stage_1()),
             ),
         ],
-        validators=[form_spec_validate, validate_unique_id],
+        validators=[validate_unique_id],
         recap=[form_spec_recaps],
         button_txt="Configure host and region",
     )
@@ -102,7 +102,7 @@ def configure_host_and_region(stage_id: StageId) -> QuickSetupStage:
                 form_spec=Dictionary(elements=aws.quick_setup_stage_2()),
             ),
         ],
-        validators=[form_spec_validate],
+        validators=[],
         recap=[form_spec_recaps],
         button_txt="Configure services to monitor",
     )
@@ -153,7 +153,7 @@ def configure_services_to_monitor(stage_id: StageId) -> QuickSetupStage:
                 ],
             ),
         ],
-        validators=[form_spec_validate],
+        validators=[],
         recap=[form_spec_recaps],
         button_txt="Review and run service discovery",
     )

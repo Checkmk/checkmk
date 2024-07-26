@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 
-from cmk.utils.quick_setup.definitions import FormData, QuickSetupStage, StageId
+from cmk.utils.quick_setup.definitions import QuickSetupStage, RawFormData, StageId
 from cmk.utils.quick_setup.widgets import FormSpecId, FormSpecRecap, FormSpecWrapper
 
 from cmk.gui.quick_setup.to_frontend import build_expected_formspec_map, form_spec_recaps
@@ -42,8 +42,8 @@ def test_form_spec_recap() -> None:
         ),
     ]
 
-    form_data: Sequence[FormData] = [
-        FormData({FormSpecId("wrapper"): {"test_dict_element": "I am a test string"}}),
+    form_data: Sequence[RawFormData] = [
+        RawFormData({FormSpecId("wrapper"): {"test_dict_element": "I am a test string"}}),
     ]
     recap = form_spec_recaps(form_data, build_expected_formspec_map(setup_stages))
 

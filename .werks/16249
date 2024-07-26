@@ -1,0 +1,16 @@
+Title: mk_informix: Follow up for Werk 16198
+Class: security
+Compatible: compat
+Component: checks
+Date: 1721978318
+Edition: cre
+Level: 1
+Version: 2.1.0p47
+
+<a href="https://checkmk.com/werk/16198">Werk #16198</a> addressed potential priviledge escalation by the agent plugin <code>mk_informix</code>.
+However, a few callsites to the binaries <code>dbaccess</code> and <code>onstat</code> where missing the safe execution.
+Those binaries are now also called in a safe way.
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 5.2 (Medium) with the following CVSS vector: <code>CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:N/VC:L/VI:L/VA:L/SC:H/SI:H/SA:H</code> and assigned CVE <code>CVE-2024-28829</code>.

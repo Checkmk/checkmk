@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-export MK_VARDIR=/var/lib/check_mk_agent
+MK_VARDIR=/var/lib/check_mk_agent
+export MK_VARDIR
 TMPDIR=${TMPDIR:-/tmp}
 
 help() {

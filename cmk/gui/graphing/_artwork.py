@@ -430,7 +430,7 @@ def order_graph_curves_for_legend_and_mouse_hover(
 def _compute_scalars(
     graph_recipe: GraphRecipe, curves: Iterable[Curve], pin_time: int | None
 ) -> None:
-    unit = get_unit_info(graph_recipe.unit)
+    unit_info = get_unit_info(graph_recipe.unit)
 
     for curve in curves:
         rrddata = curve["rrddata"]
@@ -454,29 +454,29 @@ def _compute_scalars(
 
         curve["scalars"] = {}
         for key, value in scalars.items():
-            curve["scalars"][key] = _render_scalar_value(value, unit)
+            curve["scalars"][key] = _render_scalar_value(value, unit_info)
 
 
 def compute_curve_values_at_timestamp(
     curves: Iterable[Curve], unit_id: str, hover_time: int
 ) -> Iterator[CurveValue]:
-    unit = get_unit_info(unit_id)
+    unit_info = get_unit_info(unit_id)
     yield from (
         CurveValue(
             title=curve["title"],
             color=curve["color"],
             rendered_value=_render_scalar_value(
-                _get_value_at_timestamp(hover_time, curve["rrddata"]), unit
+                _get_value_at_timestamp(hover_time, curve["rrddata"]), unit_info
             ),
         )
         for curve in curves
     )
 
 
-def _render_scalar_value(value: float | None, unit: UnitInfo) -> tuple[TimeSeriesValue, str]:
+def _render_scalar_value(value: float | None, unit_info: UnitInfo) -> tuple[TimeSeriesValue, str]:
     if value is None:
         return None, _("n/a")
-    return value, unit.render(value)
+    return value, unit_info.render(value)
 
 
 def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesValue:
@@ -610,7 +610,7 @@ class _VAxisMinMax:
 def _render_legacy_labels(
     height_ex: SizeEx,
     v_axis_min_max: _VAxisMinMax,
-    unit: UnitInfo,
+    unit_info: UnitInfo,
     mirrored: bool,
 ) -> tuple[Sequence[VerticalAxisLabel], int, str | None]:
     # Guestimate a useful number of vertical labels
@@ -626,7 +626,7 @@ def _render_legacy_labels(
     # we choose distances like 10, 20, 50. It can also be "binary", where
     # we have 512, 1024, etc. or "time", where we have seconds, minutes,
     # days
-    stepping = unit.stepping or "decimal"
+    stepping = unit_info.stepping or "decimal"
 
     if stepping == "integer":
         label_distance_at_least = max(label_distance_at_least, 1)  # e.g. for unit type "count"
@@ -685,7 +685,7 @@ def _render_legacy_labels(
     # of units which use a graph global unit
     return _create_vertical_axis_labels(
         v_axis_min_max.label_range,
-        unit,
+        unit_info,
         label_distance,
         sub_distance,
         mirrored,
@@ -706,7 +706,7 @@ def _compute_graph_v_axis(
     layouted_curves: Sequence[LayoutedCurve],
     mirrored: bool,
 ) -> VerticalAxis:
-    unit = get_unit_info(graph_recipe.unit)
+    unit_info = get_unit_info(graph_recipe.unit)
 
     # Calculate the the value range
     # distance   -> amount of values visible in vaxis (max_value - min_value)
@@ -720,9 +720,9 @@ def _compute_graph_v_axis(
         height_ex,
     )
 
-    if formatter_ident := unit.formatter_ident:
+    if formatter_ident := unit_info.formatter_ident:
         labels = _compute_labels_from_api(
-            _make_formatter(formatter_ident, unit.symbol),
+            _make_formatter(formatter_ident, unit_info.symbol),
             height_ex,
             mirrored,
             min_y=v_axis_min_max.label_range[0],
@@ -743,7 +743,7 @@ def _compute_graph_v_axis(
         rendered_labels, max_label_length, graph_unit = _render_legacy_labels(
             height_ex,
             v_axis_min_max,
-            unit,
+            unit_info,
             mirrored,
         )
         label_range = v_axis_min_max.label_range
@@ -871,7 +871,7 @@ def _compute_v_axis_min_max(
 # Create labels for the necessary range
 def _create_vertical_axis_labels(
     label_range: tuple[float, float],
-    unit: UnitInfo,
+    unit_info: UnitInfo,
     label_distance: float,
     sub_distance: float,
     mirrored: bool,
@@ -912,9 +912,9 @@ def _create_vertical_axis_labels(
 
     # Now render the single label values. When the unit has a function to calculate
     # a graph global unit, use it. Otherwise add units to all labels individually.
-    if unit.graph_unit:
-        return _render_labels_with_graph_unit(label_specs, unit.graph_unit)
-    return _render_labels_with_individual_units(label_specs, unit)
+    if unit_info.graph_unit:
+        return _render_labels_with_graph_unit(label_specs, unit_info.graph_unit)
+    return _render_labels_with_individual_units(label_specs, unit_info)
 
 
 def _label_spec(
@@ -935,15 +935,12 @@ def _label_spec(
 
 
 def _render_labels_with_individual_units(
-    label_specs: Sequence[tuple[float, float, int]], unit: UnitInfo
+    label_specs: Sequence[tuple[float, float, int]], unit_info: UnitInfo
 ) -> tuple[list[VerticalAxisLabel], int, None]:
     rendered_labels, max_label_length = render_labels(
         (
             label_spec[0],
-            _render_label_value(
-                label_spec[1],
-                render_func=unit.render,
-            ),
+            _render_label_value(label_spec[1], render_func=unit_info.render),
             label_spec[2],
         )
         for label_spec in label_specs

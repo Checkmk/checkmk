@@ -214,7 +214,7 @@ def add_graphing_plugins(
                 MetricInfoExtended(
                     name=plugin.name,
                     title=plugin.title.localize(translate_to_current_language),
-                    unit=register_unit(plugin.unit),
+                    unit_info=register_unit(plugin.unit),
                     color=parse_color_from_api(plugin.color),
                 )
             )
@@ -534,7 +534,7 @@ def _get_extended_metric_info(
             return MetricInfoExtended(
                 name=metric_name,
                 title=_("Prediction of ") + mfa.title + _(" (lower levels)"),
-                unit=get_unit_info(mfa.unit.id),
+                unit_info=get_unit_info(mfa.unit_info.id),
                 color=get_gray_tone(color_counter),
             )
 
@@ -550,7 +550,7 @@ def _get_extended_metric_info(
             return MetricInfoExtended(
                 name=metric_name,
                 title=_("Prediction of ") + mfa.title + _(" (upper levels)"),
-                unit=get_unit_info(mfa.unit.id),
+                unit_info=get_unit_info(mfa.unit_info.id),
                 color=get_gray_tone(color_counter),
             )
 
@@ -565,7 +565,7 @@ def _get_extended_metric_info(
         return MetricInfoExtended(
             name=metric_name,
             title=mfa.title,
-            unit=get_unit_info(mfa.unit.id),
+            unit_info=get_unit_info(mfa.unit_info.id),
             color=mfa.color,
         )
     else:
@@ -574,7 +574,7 @@ def _get_extended_metric_info(
     return MetricInfoExtended(
         name=metric_name,
         title=mi["title"],
-        unit=unit_info[mi["unit"]],
+        unit_info=unit_info[mi["unit"]],
         color=parse_color_into_hexrgb(mi["color"]),
     )
 
@@ -623,12 +623,12 @@ def translate_metrics(
         mi = _get_extended_metric_info(metric_name, color_counter)
         translated_metrics[metric_name] = TranslatedMetric(
             orig_name=orig_name,
-            value=mi.unit.conversion(normalized["value"]),
-            scalar=_translated_metric_scalar(mi.unit.conversion, normalized["scalar"]),
+            value=mi.unit_info.conversion(normalized["value"]),
+            scalar=_translated_metric_scalar(mi.unit_info.conversion, normalized["scalar"]),
             scale=scale,
             auto_graph=normalized["auto_graph"],
             title=str(mi.title),
-            unit=mi.unit,
+            unit_info=mi.unit_info,
             color=explicit_color or mi.color,
         )
 

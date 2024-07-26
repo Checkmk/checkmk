@@ -110,7 +110,7 @@ class Metric(MetricExpression):
             translated_metrics[self.name].value,
             _make_unit_info(
                 self.explicit_unit_name,
-                translated_metrics[self.name].unit,
+                translated_metrics[self.name].unit_info,
             ),
             self.explicit_color or translated_metrics[self.name].color,
         )

@@ -108,7 +108,7 @@ class MetricDefinition:
                     ", ".join(sorted(translated_metrics.keys())) or "None",
                 )
             )
-        return MetricUnitColor(unit=result.unit_info.id, color=result.color)
+        return MetricUnitColor(result.unit_info.id, result.color)
 
 
 def _parse_raw_metric_definition(

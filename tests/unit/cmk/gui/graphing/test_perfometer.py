@@ -49,7 +49,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -66,7 +66,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -83,7 +83,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -100,7 +100,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -128,7 +128,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -145,7 +145,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -162,7 +162,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -179,7 +179,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -196,7 +196,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -224,7 +224,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -241,7 +241,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -258,7 +258,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -275,7 +275,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -303,7 +303,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -331,7 +331,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -348,7 +348,7 @@ from cmk.graphing.v1 import metrics, perfometers
                     scale=[],
                     auto_graph=False,
                     title="",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -428,7 +428,7 @@ class TestMetricometerRendererLegacyLinear:
                     scale=[1.0],
                     auto_graph=True,
                     title="My metric",
-                    unit=unit_info,
+                    unit_info=unit_info,
                     color="#ffa000",
                 )
             },
@@ -532,7 +532,7 @@ class TestMetricometerRendererLegacyLogarithmic:
                     scale=[1.0],
                     auto_graph=True,
                     title="My metric",
-                    unit=unit_info,
+                    unit_info=unit_info,
                     color="#ffa000",
                 )
             },
@@ -773,7 +773,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scale=[1.0],
                     auto_graph=True,
                     title="Metric name 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -797,7 +797,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scale=[1.0],
                     auto_graph=True,
                     title="Metric name 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -814,7 +814,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scale=[1.0],
                     auto_graph=True,
                     title="Metric name 2",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -838,7 +838,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scale=[1.0],
                     auto_graph=True,
                     title="Metric name 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -855,7 +855,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scale=[1.0],
                     auto_graph=True,
                     title="Metric name 2",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -872,7 +872,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scale=[1.0],
                     auto_graph=True,
                     title="Metric name 3",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -932,7 +932,7 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                 scale=[1.0],
                 auto_graph=True,
                 title="Metric name 1",
-                unit=UnitInfo(
+                unit_info=UnitInfo(
                     id="id",
                     title="Title",
                     symbol="",
@@ -949,7 +949,7 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                 scale=[1.0],
                 auto_graph=True,
                 title="Metric name 2",
-                unit=UnitInfo(
+                unit_info=UnitInfo(
                     id="id",
                     title="Title",
                     symbol="",
@@ -977,7 +977,7 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     scale=[1.0],
                     auto_graph=True,
                     title="Metric name",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -1002,7 +1002,7 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     scale=[1.0],
                     auto_graph=True,
                     title="Metric name 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -1019,7 +1019,7 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     scale=[1.0],
                     auto_graph=True,
                     title="Metric name 2",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",

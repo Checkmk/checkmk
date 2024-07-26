@@ -327,7 +327,7 @@ def registered_units() -> Sequence[RegisteredUnit]:
 class MetricInfoExtended:
     name: MetricName
     title: str | LazyString
-    unit: UnitInfo
+    unit_info: UnitInfo
     color: str
 
 

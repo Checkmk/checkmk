@@ -269,7 +269,7 @@ def test_metric_unit_color(
         line_type="line",
     )
     assert metric_definition.compute_unit_color(translated_metrics, ["test"]) == MetricUnitColor(
-        unit=translated_metric.unit.id,
+        unit=translated_metric.unit_info.id,
         color=result_color,
     )
 

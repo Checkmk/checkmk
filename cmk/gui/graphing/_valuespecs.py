@@ -297,7 +297,7 @@ class ValuesWithUnits(CascadingDropdown):
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys
         if metric_name:
-            required_unit = get_extended_metric_info(metric_name).unit.id
+            required_unit = get_extended_metric_info(metric_name).unit_info.id
         else:
             required_unit = ""
 

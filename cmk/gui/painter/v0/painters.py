@@ -766,7 +766,7 @@ class PainterSvcMetrics(Painter):
             html.open_tr()
             html.td(render_color_icon(translated_metric.color), class_="color")
             html.td(f"{translated_metric.title}{optional_metric_id}:")
-            html.td(translated_metric.unit.render(translated_metric.value), class_="value")
+            html.td(translated_metric.unit_info.render(translated_metric.value), class_="value")
             if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
                 html.td(
                     html.render_popup_trigger(
@@ -5470,7 +5470,7 @@ class AbstractColumnSpecificMetric(Painter):
             return "", ""
 
         translated_metric = translated_metrics[show_metric]
-        return "", translated_metric.unit.render(translated_metric.value)
+        return "", translated_metric.unit_info.render(translated_metric.value)
 
 
 class PainterHostSpecificMetric(AbstractColumnSpecificMetric):

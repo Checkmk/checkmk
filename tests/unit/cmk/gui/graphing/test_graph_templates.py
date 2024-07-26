@@ -314,7 +314,7 @@ def test__to_metric_operation(
                     scale=list(scales),
                     auto_graph=False,
                     title="Title",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",

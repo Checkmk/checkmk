@@ -155,7 +155,7 @@ def _perfometer_matches(
 
 @dataclass(frozen=True)
 class _EvaluatedQuantity:
-    unit: UnitInfo
+    unit_info: UnitInfo
     color: str
     value: int | float
 
@@ -179,7 +179,7 @@ def _evaluate_quantity(
         case str():
             translated_metric = translated_metrics[quantity]
             return _EvaluatedQuantity(
-                translated_metric.unit,
+                translated_metric.unit_info,
                 translated_metric.color,
                 translated_metrics[quantity].value,
             )
@@ -192,35 +192,35 @@ def _evaluate_quantity(
         case metrics.WarningOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
-                translated_metric.unit,
+                translated_metric.unit_info,
                 "#ffff00",
                 translated_metric.scalar["warn"],
             )
         case metrics.CriticalOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
-                translated_metric.unit,
+                translated_metric.unit_info,
                 "#ff0000",
                 translated_metric.scalar["crit"],
             )
         case metrics.MinimumOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
-                translated_metric.unit,
+                translated_metric.unit_info,
                 parse_color_from_api(quantity.color),
                 translated_metric.scalar["min"],
             )
         case metrics.MaximumOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
-                translated_metric.unit,
+                translated_metric.unit_info,
                 parse_color_from_api(quantity.color),
                 translated_metric.scalar["max"],
             )
         case metrics.Sum():
             evaluated_first_summand = _evaluate_quantity(quantity.summands[0], translated_metrics)
             return _EvaluatedQuantity(
-                evaluated_first_summand.unit,
+                evaluated_first_summand.unit_info,
                 parse_color_from_api(quantity.color),
                 (
                     evaluated_first_summand.value
@@ -243,7 +243,7 @@ def _evaluate_quantity(
             evaluated_minuend = _evaluate_quantity(quantity.minuend, translated_metrics)
             evaluated_subtrahend = _evaluate_quantity(quantity.subtrahend, translated_metrics)
             return _EvaluatedQuantity(
-                evaluated_minuend.unit,
+                evaluated_minuend.unit_info,
                 parse_color_from_api(quantity.color),
                 evaluated_minuend.value - evaluated_subtrahend.value,
             )
@@ -454,8 +454,8 @@ class MetricometerRenderer(abc.ABC):
         raise NotImplementedError()
 
     @staticmethod
-    def _render_value(unit: UnitInfo, value: float) -> str:
-        return (unit.perfometer_render or unit.render)(value)
+    def _render_value(unit_info_: UnitInfo, value: float) -> str:
+        return (unit_info_.perfometer_render or unit_info_.render)(value)
 
 
 class MetricometerRendererRegistry(plugin_registry.Registry[type[MetricometerRenderer]]):
@@ -771,7 +771,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
 
     def get_label(self) -> str:
         first_segment = _evaluate_quantity(self.perfometer.segments[0], self.translated_metrics)
-        return first_segment.unit.render(
+        return first_segment.unit_info.render(
             first_segment.value
             + sum(
                 _evaluate_quantity(s, self.translated_metrics).value

@@ -301,5 +301,5 @@ def translate_and_merge_rrd_columns(
     return TimeSeries(
         single_value_series,
         time_window=relevant_ts[0].twindow,
-        conversion=get_extended_metric_info(metric_name).unit.conversion,
+        conversion=get_extended_metric_info(metric_name).unit_info.conversion,
     )

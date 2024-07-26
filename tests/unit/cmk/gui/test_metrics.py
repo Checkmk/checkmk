@@ -21,14 +21,14 @@ def test_add_graphing_plugins() -> None:
     idle_connections = metrics_from_api["idle_connections"]
     assert idle_connections.name == "idle_connections"
     assert idle_connections.title == "Idle connections"
-    assert idle_connections.unit.id == "DecimalNotation__StrictPrecision_2"
+    assert idle_connections.unit_info.id == "DecimalNotation__StrictPrecision_2"
     assert idle_connections.color == "#7814a0"
 
     assert "active_connections" in metrics_from_api
     active_connections = metrics_from_api["active_connections"]
     assert active_connections.name == "active_connections"
     assert active_connections.title == "Active connections"
-    assert active_connections.unit.id == "DecimalNotation__StrictPrecision_2"
+    assert active_connections.unit_info.id == "DecimalNotation__StrictPrecision_2"
     assert active_connections.color == "#b441f0"
 
     assert "check_mk-citrix_serverload" in check_metrics

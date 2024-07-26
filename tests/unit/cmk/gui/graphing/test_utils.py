@@ -420,7 +420,7 @@ def test__compute_predictive_metrics(
                         scale=[1.0],
                         auto_graph=True,
                         title="",
-                        unit=UnitInfo(
+                        unit_info=UnitInfo(
                             id="id",
                             title="Title",
                             symbol="",
@@ -437,7 +437,7 @@ def test__compute_predictive_metrics(
                         scale=[1.0],
                         auto_graph=True,
                         title="",
-                        unit=UnitInfo(
+                        unit_info=UnitInfo(
                             id="id",
                             title="Title",
                             symbol="",
@@ -454,7 +454,7 @@ def test__compute_predictive_metrics(
                         scale=[1.0],
                         auto_graph=True,
                         title="",
-                        unit=UnitInfo(
+                        unit_info=UnitInfo(
                             id="id",
                             title="Title",
                             symbol="",
@@ -518,7 +518,10 @@ def test_translate_metrics_with_predictive_metrics(
     ]
     translated_metrics = utils.translate_metrics(perfdata, "my-check-plugin")
     assert translated_metrics[predictive_metric_name].title == expected_title
-    assert translated_metrics[predictive_metric_name].unit == translated_metrics[metric_name].unit
+    assert (
+        translated_metrics[predictive_metric_name].unit_info
+        == translated_metrics[metric_name].unit_info
+    )
     assert translated_metrics[predictive_metric_name].color == expected_color
 
 
@@ -1699,7 +1702,7 @@ def test_graph_template_from_graph(
             MetricInfoExtended(
                 name=r,
                 title=r,
-                unit=UnitInfo(
+                unit_info=UnitInfo(
                     id="id",
                     title="Title",
                     symbol="",
@@ -1935,7 +1938,7 @@ def test_graph_template_from_bidirectional(
             MetricInfoExtended(
                 name=r,
                 title=r,
-                unit=UnitInfo(
+                unit_info=UnitInfo(
                     id="id",
                     title="Title",
                     symbol="",

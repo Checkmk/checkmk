@@ -70,7 +70,7 @@ def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric
         scale=[1.0],
         auto_graph=False,
         title="Title 1",
-        unit=UnitInfo(
+        unit_info=UnitInfo(
             id="id",
             title="Title",
             symbol="",
@@ -270,7 +270,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -299,7 +299,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -323,7 +323,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -347,7 +347,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -371,7 +371,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -395,7 +395,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -423,7 +423,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -440,7 +440,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -469,7 +469,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -486,7 +486,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -515,7 +515,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -532,7 +532,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -562,7 +562,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
@@ -579,7 +579,7 @@ def test__perfometer_matches(
                     scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
-                    unit=UnitInfo(
+                    unit_info=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",

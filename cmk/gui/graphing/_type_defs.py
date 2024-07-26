@@ -50,5 +50,5 @@ class TranslatedMetric:
     scale: Sequence[float]
     auto_graph: bool
     title: str
-    unit: UnitInfo
+    unit_info: UnitInfo
     color: str

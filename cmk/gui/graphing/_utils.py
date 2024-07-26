@@ -569,8 +569,6 @@ def _get_extended_metric_info(
         title=mi["title"],
         unit=unit_info[mi["unit"]],
         color=parse_color_into_hexrgb(mi["color"]),
-        help=mi.get("help"),
-        render=mi.get("render"),
     )
 
 

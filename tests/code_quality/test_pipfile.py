@@ -342,14 +342,11 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 CEE_UNUSED_PACKAGES = [
     "cython",
     "grpcio",
-    "itsdangerous",
     "jmespath",
-    "more-itertools",
     "multidict",
     "pbr",
     "ply",
     "psycopg2-binary",
-    "pyasn1-modules",
     "pymssql",
     "pymysql",
     "pyrsistent",
@@ -362,7 +359,6 @@ CEE_UNUSED_PACKAGES = [
     "websocket-client",
     "wrapt",
     "yarl",
-    "zipp",
 ]
 
 

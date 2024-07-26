@@ -1,5 +1,5 @@
-# List of Packages that are installed into Intermediate Insall
-# This should be extedned to all packages once there is a target
+# List of Packages that are installed into intermediate install.
+# This should be extended to all packages once there is a target
 # to create dest, since intermediate install can be removed at
 # that point.
 PACKAGES_EXT = [

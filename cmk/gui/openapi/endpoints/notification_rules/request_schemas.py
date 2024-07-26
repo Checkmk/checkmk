@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from collections import Counter
 from typing import Any, get_args
 
 from marshmallow import post_load, pre_load, ValidationError
@@ -156,8 +157,32 @@ class CheckboxMatchHostTags(Checkbox):
             },
             {"tag_type": "aux_tag", "operator": "is_set", "tag_id": "snmp"},
         ],
-        description="A list of tag groups or aux tags with conditions",
+        description="A list of tag groups or aux tags with conditions. Both 'tag_group_id' and 'tag_id' can't be used more than once.",
     )
+
+    @post_load
+    def _post_load(self, data: dict[str, Any], **_kwargs: Any) -> dict[str, Any]:
+        duplicate_tag_group_ids = {
+            tag_id: count
+            for tag_id, count in Counter(
+                [tag["tag_group_id"] for tag in data["value"] if "tag_group_id" in tag]
+            ).items()
+            if count > 1
+        }
+        if duplicate_tag_group_ids:
+            raise ValidationError(
+                f"tag_group_ids are only allowed to be used once. The following appear multiple times: {list(duplicate_tag_group_ids.keys())}"
+            )
+        duplicate_tag_ids = {
+            tag_id: count
+            for tag_id, count in Counter([tag["tag_id"] for tag in data["value"]]).items()
+            if count > 1
+        }
+        if duplicate_tag_ids:
+            raise ValidationError(
+                f"tag_ids are only allowed to be used once. The following appear multiple times: {list(duplicate_tag_ids.keys())}"
+            )
+        return data
 
 
 class CheckboxWithListOfSites(Checkbox):

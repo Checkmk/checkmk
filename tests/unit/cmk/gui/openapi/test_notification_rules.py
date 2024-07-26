@@ -2001,3 +2001,47 @@ def test_match_host_tags(clients: ClientRegistry) -> None:
 
     resp = clients.RuleNotification.create(rule_config=config)
     assert resp.json["extensions"]["rule_config"] == config
+
+
+def test_duplicate_host_tag_group_id(clients: ClientRegistry) -> None:
+    setup_host_tags_on_site(clients)
+    config = notification_rule_request_example()
+    config["conditions"]["match_host_tags"] = {
+        "state": "enabled",
+        "value": [
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "criticality",
+                "operator": "is_not",
+                "tag_id": "prod",
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "criticality",
+                "operator": "is_not",
+                "tag_id": "critical",
+            },
+        ],
+    }
+    clients.RuleNotification.create(rule_config=config, expect_ok=False).assert_status_code(400)
+
+
+def test_duplicate_host_tag_id(clients: ClientRegistry) -> None:
+    setup_host_tags_on_site(clients)
+    config = notification_rule_request_example()
+    config["conditions"]["match_host_tags"] = {
+        "state": "enabled",
+        "value": [
+            {
+                "tag_type": "aux_tag",
+                "tag_id": "aux_tag_id_1",
+                "operator": "is_set",
+            },
+            {
+                "tag_type": "aux_tag",
+                "tag_id": "aux_tag_id_1",
+                "operator": "is_not_set",
+            },
+        ],
+    }
+    clients.RuleNotification.create(rule_config=config, expect_ok=False).assert_status_code(400)

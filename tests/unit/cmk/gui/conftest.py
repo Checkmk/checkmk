@@ -295,6 +295,39 @@ def allow_background_jobs() -> None:
     return None
 
 
+@pytest.fixture(autouse=True)
+def fail_on_unannotated_background_job_start(
+    request: pytest.FixtureRequest, mocker: MagicMock
+) -> None:
+    """Unannotated background job call
+
+    Tests must not execute logic in background job processes, which may continue to run
+    independently of the test case.
+
+    If your test shall execute a background job, the default is to annotate your test with the
+    `inline_background_jobs` fixture above. It makes the background job run synchronously so that
+    the test code waits for the job to complete. In many cases this is the desired behavior and
+    makes it easier to deal with the jobs in the tests.
+
+    However, in some cases you actually want to have a backrgound job being executed as in the
+    production environment. In that case, you need to define a local  klacono-op finamed
+    "inline_background_jobs" to override these global fixtures.xture
+
+    This autoload fixture is here to make you aware of the fact that you are calling a background
+    job and that you have to decide explicitly which behavior you want to have.
+    """
+    if (
+        "inline_background_jobs" in request.fixturenames
+        or "allow_background_jobs" in request.fixturenames
+    ):
+        return
+
+    mocker.patch(
+        "cmk.gui.background_job._base.BackgroundJob.start",
+        side_effect=RuntimeError(fail_on_unannotated_background_job_start.__doc__),
+    )
+
+
 @pytest.fixture(name="suppress_bake_agents_in_background")
 def fixture_suppress_bake_agents_in_background(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(

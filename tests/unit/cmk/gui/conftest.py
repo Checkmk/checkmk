@@ -289,6 +289,14 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("cmk.utils.daemon.closefrom")
 
 
+@pytest.fixture(name="suppress_bake_agents_in_background")
+def fixture_suppress_bake_agents_in_background(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch(
+        "cmk.gui.watolib.bakery.try_bake_agents_for_hosts",
+        side_effect=lambda *args, **kw: None,
+    )
+
+
 @pytest.fixture()
 def with_automation_user(request_context: None, load_config: None) -> Iterator[tuple[UserId, str]]:
     with create_and_destroy_user(automation=True, role="admin") as user:

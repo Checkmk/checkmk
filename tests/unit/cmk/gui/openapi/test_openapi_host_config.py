@@ -12,7 +12,6 @@ from unittest.mock import MagicMock
 
 import pytest
 import time_machine
-from pytest_mock import MockerFixture
 
 from tests.testlib.rest_api_client import ClientRegistry
 
@@ -27,7 +26,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.automations.results import DeleteHostsResult
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.watolib import bakery
 from cmk.gui.watolib.custom_attributes import (
     CustomAttrSpecs,
     CustomHostAttrSpec,
@@ -80,15 +78,6 @@ def test_openapi_cluster_host(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["cluster_nodes"] == ["example.com"]
 
 
-@pytest.fixture(name="try_bake_agents_for_hosts")
-def fixture_try_bake_agents_for_hosts(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch.object(
-        bakery,
-        "try_bake_agents_for_hosts",
-        side_effect=lambda *args, **kw: None,
-    )
-
-
 @pytest.mark.parametrize(
     "bake_agent,called",
     [
@@ -100,15 +89,15 @@ def fixture_try_bake_agents_for_hosts(mocker: MockerFixture) -> MagicMock:
 def test_openapi_add_host_bake_agent_parameter(
     bake_agent: bool | None,
     called: bool,
-    try_bake_agents_for_hosts: MagicMock,
+    suppress_bake_agents_in_background: MagicMock,
     clients: ClientRegistry,
 ) -> None:
     clients.HostConfig.create(host_name="foobar", bake_agent=bake_agent)
 
     if called:
-        try_bake_agents_for_hosts.assert_called_once_with(["foobar"])
+        suppress_bake_agents_in_background.assert_called_once_with(["foobar"])
     else:
-        try_bake_agents_for_hosts.assert_not_called()
+        suppress_bake_agents_in_background.assert_not_called()
 
 
 def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
@@ -201,25 +190,25 @@ def test_openapi_bulk_add_hosts_with_attributes(clients: ClientRegistry) -> None
 def test_openapi_add_cluster_bake_agent_parameter(
     bake_agent: bool,
     called: bool,
-    try_bake_agents_for_hosts: MagicMock,
+    suppress_bake_agents_in_background: MagicMock,
     clients: ClientRegistry,
 ) -> None:
     clients.HostConfig.create(host_name="foobar", bake_agent=bake_agent).assert_status_code(200)
 
     if called:
-        try_bake_agents_for_hosts.assert_called_once_with(["foobar"])
+        suppress_bake_agents_in_background.assert_called_once_with(["foobar"])
     else:
-        try_bake_agents_for_hosts.assert_not_called()
-    try_bake_agents_for_hosts.reset_mock()
+        suppress_bake_agents_in_background.assert_not_called()
+    suppress_bake_agents_in_background.reset_mock()
 
     clients.HostConfig.create_cluster(
         host_name="bazfoo", nodes=["foobar"], bake_agent=bake_agent
     ).assert_status_code(200)
 
     if called:
-        try_bake_agents_for_hosts.assert_called_once_with(["bazfoo"])
+        suppress_bake_agents_in_background.assert_called_once_with(["bazfoo"])
     else:
-        try_bake_agents_for_hosts.assert_not_called()
+        suppress_bake_agents_in_background.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -234,7 +223,7 @@ def test_openapi_bulk_add_hosts_bake_agent_parameter(
     clients: ClientRegistry,
     bake_agent: Literal["0", "1"] | None,
     called: bool,
-    try_bake_agents_for_hosts: MagicMock,
+    suppress_bake_agents_in_background: MagicMock,
 ) -> None:
     resp = clients.HostConfig.bulk_create(
         entries=[
@@ -258,9 +247,9 @@ def test_openapi_bulk_add_hosts_bake_agent_parameter(
     assert len(resp.json["value"]) == 2
 
     if called:
-        try_bake_agents_for_hosts.assert_called_once_with(["foobar", "sample"])
+        suppress_bake_agents_in_background.assert_called_once_with(["foobar", "sample"])
     else:
-        try_bake_agents_for_hosts.assert_not_called()
+        suppress_bake_agents_in_background.assert_not_called()
 
 
 def test_openapi_hosts(

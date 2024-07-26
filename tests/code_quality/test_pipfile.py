@@ -346,14 +346,10 @@ CEE_UNUSED_PACKAGES = [
     "psycopg2-binary",
     "pymssql",
     "pymysql",
-    "pyrsistent",
     "redfish",  # used by optional MKP
     "requests-kerberos",
-    "s3transfer",
     "setuptools-scm",
     "snmpsim-lextudio",
-    "tenacity",
-    "websocket-client",
 ]
 
 

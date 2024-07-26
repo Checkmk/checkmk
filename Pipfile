@@ -88,7 +88,6 @@ types-python-dateutil = "*"  # used for type checking
 types-pyyaml = "*"  # used for type checking
 types-redis = "*"  # used for type checking
 types-requests = "*"  # used for type checking
-types-s3transfer = "*"  # used for type checking
 types-setuptools = "*"  # used for type checking
 types-simplejson = "*"  # used for type checking
 types-six = "*"  # used for type checking
@@ -117,7 +116,6 @@ pyghmi = "==1.5.60"  # needed by base for IPMI
 requests = "<2.32"  # pinned due to docker-py, see https://github.com/docker/docker-py/issues/3256
 requests-kerberos = "==0.14.0"  # needed by check_bi_aggr
 jinja2 = "*"  # needed by flask
-pyrsistent = "==0.19.3"  # needed by jsonschema
 werkzeug = "*"  # direct dependency and needed by flask
 flask = "==3.0.3"  # direct dependency
 openapi-spec-validator = "==0.7.1"  # direct dependency
@@ -135,10 +133,8 @@ reportlab = "==4.1.0"  # needed by GUI (reporting)
 pypdf = "==4.2.0"  # needed by GUI (reporting)
 roman = "==4.0"  # needed by GUI (reporting)
 google-auth = "*"  # needed by kubernetes
-websocket-client = "==1.5.1"  # needed by kubernetes
 kubernetes = "==21.7.0"  # needed by kubernetes
 botocore = "==1.34.15"  # needed by boto3 (aws), keep version in sync with botocore-stubs
-s3transfer = "==0.10.0"  # needed by boto3 (aws)
 boto3 = "==1.34.15"  # needed by boto3 (aws), keep version in sync with boto3-stubs
 python-snap7 = "==1.3"  # needed by Siemens PLC special agent
 pymssql = "==2.2.11"  # needed by check_sql active check
@@ -159,7 +155,6 @@ pyprof2calltree = "==1.4.5"  # used for GUI/API profiling
 pyparsing = "==3.1.2"  # direct dependency
 redis = "==4.5.4"  # needed by GUI (caching)
 fido2 = "*"  # used for GUI 2fa webauthn
-tenacity = "==8.2.3"  # needed by opsgenie-sdk
 opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues
 protobuf = "*"  # For development, Runtime modules are shipped by omd/packages/protobuf
 cmk-agent-based = {editable = true, path = "./packages/cmk-agent-based"}

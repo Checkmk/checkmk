@@ -43,7 +43,7 @@ def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
 ) -> RRDData:
-    unit_conversion = get_unit_info(graph_recipe.unit).conversion
+    conversion = get_unit_info(graph_recipe.unit).conversion
     by_service = _group_needed_rrd_data_by_service(
         key
         for metric in graph_recipe.metrics
@@ -72,7 +72,7 @@ def fetch_rrd_data_for_graph(
                     )
                 ] = TimeSeries(
                     data,
-                    conversion=unit_conversion,
+                    conversion=conversion,
                 )
     _align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
     _chop_last_empty_step(graph_data_range, rrd_data)

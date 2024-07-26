@@ -452,13 +452,7 @@ def lookup_metric_translations_for_check_command(
     return all_translations.get(
         check_command,
         (
-            all_translations.get(
-                check_command.replace(
-                    "check_mk-mgmt_",
-                    "check_mk-",
-                    1,
-                )
-            )
+            all_translations.get(check_command.replace("check_mk-mgmt_", "check_mk-", 1))
             if check_command.startswith("check_mk-mgmt_")
             else None
         ),
@@ -585,17 +579,17 @@ def get_extended_metric_info(metric_name: str) -> MetricInfoExtended:
 
 
 def _translated_metric_scalar(
-    unit_conversion: Callable[[float], float], scalar_bounds: ScalarBounds
+    conversion: Callable[[float], float], scalar_bounds: ScalarBounds
 ) -> ScalarBounds:
     scalar: ScalarBounds = {}
     if (warning := scalar_bounds.get("warn")) is not None:
-        scalar["warn"] = unit_conversion(warning)
+        scalar["warn"] = conversion(warning)
     if (critical := scalar_bounds.get("crit")) is not None:
-        scalar["crit"] = unit_conversion(critical)
+        scalar["crit"] = conversion(critical)
     if (minimum := scalar_bounds.get("min")) is not None:
-        scalar["min"] = unit_conversion(minimum)
+        scalar["min"] = conversion(minimum)
     if (maximum := scalar_bounds.get("max")) is not None:
-        scalar["max"] = unit_conversion(maximum)
+        scalar["max"] = conversion(maximum)
     return scalar
 
 
@@ -622,11 +616,10 @@ def translate_metrics(
             scale = normalized["scale"]
 
         mi = _get_extended_metric_info(metric_name, color_counter)
-        unit_conversion = mi.unit.conversion
         translated_metrics[metric_name] = TranslatedMetric(
             orig_name=orig_name,
-            value=unit_conversion(normalized["value"]),
-            scalar=_translated_metric_scalar(unit_conversion, normalized["scalar"]),
+            value=mi.unit.conversion(normalized["value"]),
+            scalar=_translated_metric_scalar(mi.unit.conversion, normalized["scalar"]),
             scale=scale,
             auto_graph=normalized["auto_graph"],
             title=str(mi.title),

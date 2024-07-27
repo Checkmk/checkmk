@@ -2373,13 +2373,14 @@ msgstr ""
 msgid "A single host related aggregation"
 msgstr "O agregare legată de un singur element"
 
+#, fuzzy
 msgid ""
 "A single thread fully utilizing a single core (potentially due to a bug) may "
 "go unnoticed when only monitoring the total utilization of the CPU. With "
 "this configuration, Checkmk will alert if a single core is exceeding a "
-"utilization threshold over an extended period of time.This is currently only "
-"supported on linux and windows agents as well as devices monitored through "
-"the host-resource mib"
+"utilization threshold over an extended period of time. This is currently "
+"only supported on linux and windows agents as well as devices monitored "
+"through the host-resource mib"
 msgstr ""
 "Un singur fir de execuție care utilizează pe deplin un singur nucleu "
 "(posibil din cauza unei erori) poate trece neobservat atunci când se "
@@ -2569,21 +2570,20 @@ msgstr "Evenimentele sistemului APC Inrow"
 msgid "APC Symmetra Checks"
 msgstr "Verificări APC Symmetra"
 
-msgid "API Access Token"
-msgstr "Token de acces la API"
-
-msgid "API Endpoint from PagerDuty V2"
-msgstr "API Endpoint de la PagerDuty V2"
-
-msgid "API Key"
-msgstr "Cheie API"
-
 msgid ""
 "API Key to use. Depending on your opsgenie subscription you can use global "
 "or team integration api keys."
 msgstr ""
 "Cheia API de utilizat. În funcție de abonamentul dvs. la opsgenie, puteți "
 "utiliza chei API de integrare globală sau de echipă."
+
+#, fuzzy
+msgid "API access token"
+msgstr "Token de acces la API"
+
+#, fuzzy
+msgid "API endpoint from PagerDuty V2"
+msgstr "API Endpoint de la PagerDuty V2"
 
 msgid "API health"
 msgstr "Sănătatea API"
@@ -2624,7 +2624,8 @@ msgstr "Actualizări APT"
 msgid "APT normal and security updates (Linux)"
 msgstr "APT normal și actualizări de securitate (Linux)"
 
-msgid "ASCII Email"
+#, fuzzy
+msgid "ASCII email"
 msgstr "ASCII Email"
 
 #, fuzzy
@@ -3079,8 +3080,9 @@ msgstr ""
 "acces în scris la acest modul poate efectua modificări arbitrare ale "
 "configurației prin restaurarea instantaneelor încărcate."
 
+#, fuzzy
 msgid ""
-"Access to the module <i>Snaphsots</i>. Please note: a user with write access "
+"Access to the module <i>Snapshots</i>. Please note: a user with write access "
 "to this module can make arbitrary changes to the configuration by restoring "
 "uploaded snapshots."
 msgstr ""
@@ -3094,9 +3096,10 @@ msgstr "Accesul la modul <i>Perioade de timp</i>."
 msgid "Access to the module for analyzing and validating logfile patterns."
 msgstr "Acces la modulul de analiză și validare a modelelor de fișiere jurnal."
 
+#, fuzzy
 msgid ""
 "Access to the module for managing Checkmk rules. Please note that a user can "
-"only manage rules in folders he has permissions to. "
+"only manage rules in folders he has permissions to."
 msgstr ""
 "Acces la modulul de gestionare a regulilor Checkmk. Vă rugăm să rețineți că "
 "un utilizator poate gestiona doar regulile din dosarele pentru care are "
@@ -3251,7 +3254,8 @@ msgstr "Acțiune în caz de eroare"
 msgid "Actions"
 msgstr "Acțiuni"
 
-msgid "Actions (Emails & Scripts)"
+#, fuzzy
+msgid "Actions (emails & scripts)"
 msgstr "Acțiuni (e-mailuri & scripturi)"
 
 msgid "Actions to automatically perform when an event is being cancelled."
@@ -3824,7 +3828,7 @@ msgstr "Adăugați un grup"
 msgid ""
 "Add here only groups and users which do not have administrator rights but, "
 "for some reason, must have write access to the Oracle binaries. For example, "
-"it may be a dedicated installer account in a domain.The values are case "
+"it may be a dedicated installer account in a domain. The values are case "
 "insensitive."
 msgstr ""
 
@@ -5825,9 +5829,10 @@ msgstr ""
 "Permite unui utilizator să creeze sau să modifice intrări în programatorul "
 "de rapoarte."
 
+#, fuzzy
 msgid ""
 "Allows a user to modify scheduled reports of other users and also to specify "
-"arbitrary Email addresses as report destination."
+"arbitrary email addresses as report destination."
 msgstr ""
 "Permite unui utilizator să modifice rapoartele programate ale altor "
 "utilizatori și, de asemenea, să specifice adrese de e-mail arbitrare ca "
@@ -6234,7 +6239,8 @@ msgstr ""
 "<tt>http://</tt>), fie URL-uri locale absolute (începând cu <tt>/</tt>), fie "
 "URL-uri relative (care sunt relative la <tt>check_mk/</tt>)."
 
-msgid "An optional alias name for your mysql socket"
+#, fuzzy
+msgid "An optional alias name for your MySQL socket"
 msgstr "Un nume alias opțional pentru socket-ul mysql"
 
 msgid "Analyse availability of this aggregation"
@@ -8088,7 +8094,8 @@ msgstr "OID de bază"
 msgid "Base URL (OMD Site)"
 msgstr "URL de bază (Site OMD)"
 
-msgid "Base URL for docker API engine"
+#, fuzzy
+msgid "Base URL for Docker API engine"
 msgstr "URL de bază pentru motorul API docker"
 
 #, fuzzy
@@ -8167,16 +8174,16 @@ msgid "Battery time remaining"
 msgstr "Timpul rămas al bateriei"
 
 #, fuzzy
-msgid "Bazel Cache Password"
-msgstr "Parola bazei de date"
-
-#, fuzzy
 msgid "Bazel Cache Port"
 msgstr "Port backend"
 
 #, fuzzy
 msgid "Bazel Cache User"
 msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+msgid "Bazel Cache password"
+msgstr "Parola bazei de date"
 
 msgid "Bazel Remote Cache"
 msgstr ""
@@ -8788,10 +8795,11 @@ msgstr ""
 "Atunci când o regulă inversată se potrivește, nu pot exista niciodată "
 "grupuri de potrivire."
 
+#, fuzzy
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
 "monitored via a seperate metric. Setting levels on the used total bandwidth "
-"is optional. If you do set levels you might also consider using averaging."
+"is optional. If you set levels you might also consider using averaging."
 msgstr ""
 "Prin activarea acestui element, suma traficului de intrare și de ieșire va "
 "fi monitorizată printr-o măsurătoare separată. Setarea nivelurilor privind "
@@ -8975,7 +8983,7 @@ msgstr ""
 msgid ""
 "By default the agent updater communicates with the Agent Bakery of the "
 "central site to update the agent. If you want to make the agent updater "
-"fetch its agent from it's remote site, you need to configure this option to "
+"fetch its agent from its remote site, you need to configure this option to "
 "make it possible for the remote site to communicate with the central site on "
 "behalf of the agent updater."
 msgstr ""
@@ -9251,7 +9259,7 @@ msgid ""
 "By default, for security reasons, the GUI does not interpret any HTML code "
 "received from external sources, like service output or log messages. But "
 "there are specific reasons to deactivate this security feature. E.g. when "
-"you want to display the HTML output produced by a specific check plug-in."
+"you want to display the HTML output produced by a specific check plug-in. "
 "Disabling the escaping also allows the plug-in to execute not only HTML, but "
 "also Javascript code in the context of your browser. This makes it possible "
 "to execute arbitrary Javascript, even for injection attacks.<br>For this "
@@ -12916,7 +12924,7 @@ msgstr "Configurați nivelurile inferioare"
 
 #, fuzzy
 msgid ""
-"Configure monitoring of networking services using classical nagios plug-ins "
+"Configure monitoring of networking services using classical Nagios plug-ins "
 "(so called active checks)"
 msgstr ""
 "Configurarea monitorizării serviciilor de rețea folosind plugin-urile "
@@ -12966,13 +12974,13 @@ msgstr ""
 "Configurați actualizatorul agentului dacă se conectează sau nu prin "
 "intermediul unui server proxy."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
 "agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
 "a>. <b>Note</b>: New hosts created via this channel are marked by the host "
 "label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
-"to configure a host lifecycle management via the <a href=\"%s\">automatic "
+"to configure a host life cycle management via the <a href=\"%s\">automatic "
 "removal of hosts</a>."
 msgstr ""
 "Configurați crearea automată de noi gazde pe baza cererilor trimise de "
@@ -13070,12 +13078,12 @@ msgstr ""
 "reguli, unele unități systemd create de agentul Checkmk ('check-mk-"
 "agent@...') nu vor fi descoperite niciodată. Acestea apar și dispar frecvent."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the grouping of indices. Elasticsearch can for example be "
 "configured to automatically add a timestamp to index names, see <a href=%s "
 "target=\"_blank\">the documentation</a>. Via this grouping option, Checkmk "
-"can eg. be configured to accumulate all indices which only differ in the "
+"can e.g. be configured to accumulate all indices which only differ in the "
 "trailing timestamp into a single service."
 msgstr ""
 "Configurați gruparea indicilor. Elasticsearch poate fi, de exemplu, "
@@ -13143,6 +13151,20 @@ msgstr ""
 "furnizând aici cheia de utilizator sau de grup. Cheia poate fi obținută de "
 "pe site-ul Pushover."
 
+#, fuzzy
+msgid ""
+"Configure this to have the notification plug-in connect directly to the SMTP "
+"server. This has the advantage of providing better error messages in case of "
+"an error, but it does require more configuration and is strictly "
+"synchronous. So we advice use only on enterprise installations using the "
+"notification spooler."
+msgstr ""
+"Configurarea acestui lucru pentru ca pluginul de notificare să se conecteze "
+"direct la serverul smtp. Acest lucru are avantajul de a oferi mesaje de "
+"eroare mai bune în caz de eroare, dar necesită mai multă configurare și este "
+"strict sincronă, așa că vă recomandăm să o utilizați numai în cazul "
+"instalațiilor de întreprindere care utilizează spoolerul de notificare."
+
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
 "have."
@@ -13153,11 +13175,13 @@ msgstr ""
 msgid "Configure upper levels"
 msgstr "Configurați nivelurile superioare"
 
-msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
+#, fuzzy
+msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr ""
 "Configurați aici URL-ul ServiceNow (de exemplu, https://myservicenow.com)."
 
-msgid "Configure your modem URL here (eg. https://mymodem.mydomain.example)."
+#, fuzzy
+msgid "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
 msgstr ""
 "Configurați aici URL-ul modemului (de exemplu, https://mymodem.mydomain."
 "example)."
@@ -13223,20 +13247,6 @@ msgstr ""
 "Configurarea mai multor verificatoare decât numărul de unități centrale de "
 "procesare disponibile (%d) are un efect dăunător, deoarece acestea nu sunt "
 "legate de IO."
-
-#, fuzzy
-msgid ""
-"Configuring this to have the notification plug-in connect directly to the "
-"SMTP server. This has the advantage of providing better error messages in "
-"case of an error but it does require more configuration and is strictly "
-"synchronous so we advice use only on enterprise installations using the "
-"notification spooler."
-msgstr ""
-"Configurarea acestui lucru pentru ca pluginul de notificare să se conecteze "
-"direct la serverul smtp. Acest lucru are avantajul de a oferi mesaje de "
-"eroare mai bune în caz de eroare, dar necesită mai multă configurare și este "
-"strict sincronă, așa că vă recomandăm să o utilizați numai în cazul "
-"instalațiilor de întreprindere care utilizează spoolerul de notificare."
 
 msgid "Confirm"
 msgstr "Confirmați"
@@ -25663,8 +25673,9 @@ msgstr ""
 "caracter. Expresia regulată respectivă trebuie să se potrivească cu "
 "<i>începutul</i> numelor de gazdă în cauză."
 
+#, fuzzy
 msgid ""
-"Here you can enter either device state number (eg. from SNMP devices) or "
+"Here you can enter either device state number (e.g. from SNMP devices) or "
 "exact device state name and the related monitoring state."
 msgstr ""
 "Aici puteți introduce fie numărul stării dispozitivului (de exemplu, de la "
@@ -25890,11 +25901,11 @@ msgstr ""
 "dat lipsește (poate fi oprit). Punctul de acces poate fi specificat prin "
 "numele AP sau prin modelul AP."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Here you can simulate an incoming agent request and check out which rules "
 "are matching.<br>An agent request contains several labels as key-value "
-"pairs, eg. %s."
+"pairs, e.g. %s."
 msgstr ""
 "Aici puteți simula o solicitare de agent care intră și puteți verifica ce "
 "reguli se potrivesc.<br>O solicitare de agent conține mai multe etichete ca "
@@ -29928,11 +29939,12 @@ msgstr ""
 "inferioare. Dacă toate nivelurile configurate în cadrul unei conjuncții sunt "
 "atinse, atunci se raportează starea aferentă."
 
+#, fuzzy
 msgid ""
 "In order to compute a unique host name you can use the agent labels (all or "
 "a subset of them) from above. A label has to be marked with a  <tt>$</tt> at "
-"the beginning and the end, eg. <tt>$LABEL$</tt>. During rule evaluation the "
-"label will replaced by its value.<br>You can also add fixed strings, eg. "
+"the beginning and the end, e.g. <tt>$LABEL$</tt>. During rule evaluation the "
+"label will replaced by its value.<br>You can also add fixed strings, e.g. "
 "<tt>lnx-$LABEL$</tt>."
 msgstr ""
 "Pentru a calcula un nume de gazdă unic, puteți utiliza etichetele agentului "
@@ -32489,7 +32501,7 @@ msgstr "Stânga"
 
 #, fuzzy
 msgid ""
-"Legacy ASCII Emails do not support bulking. You can either disable "
+"Legacy ASCII emails do not support bulking. You can either disable "
 "notification bulking or choose another notification plug-in which allows "
 "bulking."
 msgstr ""
@@ -49777,7 +49789,7 @@ msgstr "Trimiteți notificări către consola de evenimente la distanță"
 
 #, fuzzy
 msgid ""
-"Send out HTML/ASCII Email notification according to notification rules "
+"Send out HTML/ASCII email notification according to notification rules "
 "(uncheck to avoid spam)"
 msgstr ""
 "Trimiteți notificări în conformitate cu regulile de notificare (debifați "
@@ -71639,7 +71651,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_graylog.com."
+"agent. Please add the host name here, e.g. my_graylog.com."
 msgstr ""
 "Utilizați această opțiune pentru a seta instanța care trebuie verificată de "
 "către agentul special. Vă rugăm să adăugați aici numele de gazdă, de exemplu "
@@ -71648,7 +71660,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_jenkins.com."
+"agent. Please add the host name here, e.g. my_jenkins.com."
 msgstr ""
 "Utilizați această opțiune pentru a seta instanța care trebuie verificată de "
 "către agentul special. Vă rugăm să adăugați aici numele de gazdă, de exemplu "
@@ -71657,7 +71669,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_jira.com. If not set, the "
+"agent. Please add the host name here, e.g. my_jira.com. If not set, the "
 "assigned host is used as instance."
 msgstr ""
 "Folosiți această opțiune pentru a seta instanța care trebuie verificată de "
@@ -79649,6 +79661,9 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "API Key"
+#~ msgstr "Cheie API"
 
 #~ msgid "Host match list"
 #~ msgstr "Lista de corespondență a gazdelor"

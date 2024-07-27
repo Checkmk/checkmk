@@ -2357,13 +2357,14 @@ msgstr ""
 msgid "A single host related aggregation"
 msgstr "Een enkele host-gerelateerde aggregatie"
 
+#, fuzzy
 msgid ""
 "A single thread fully utilizing a single core (potentially due to a bug) may "
 "go unnoticed when only monitoring the total utilization of the CPU. With "
 "this configuration, Checkmk will alert if a single core is exceeding a "
-"utilization threshold over an extended period of time.This is currently only "
-"supported on linux and windows agents as well as devices monitored through "
-"the host-resource mib"
+"utilization threshold over an extended period of time. This is currently "
+"only supported on linux and windows agents as well as devices monitored "
+"through the host-resource mib"
 msgstr ""
 "Een enkele thread die een enkele core volledig gebruikt (mogelijk door een "
 "bug) kan onopgemerkt blijven wanneer alleen het totale gebruik van de CPU "
@@ -2547,21 +2548,20 @@ msgstr "APC Inrow Systeem Gebeurtenissen"
 msgid "APC Symmetra Checks"
 msgstr "APC Symmetra Controles"
 
-msgid "API Access Token"
-msgstr "API Toegangstoken"
-
-msgid "API Endpoint from PagerDuty V2"
-msgstr "API-eindpunt van PagerDuty V2"
-
-msgid "API Key"
-msgstr "API Sleutel"
-
 msgid ""
 "API Key to use. Depending on your opsgenie subscription you can use global "
 "or team integration api keys."
 msgstr ""
 "API Sleutel te gebruiken. Afhankelijk van uw opsgenie abonnement kunt u "
 "globale of team integratie api sleutels gebruiken."
+
+#, fuzzy
+msgid "API access token"
+msgstr "API Toegangstoken"
+
+#, fuzzy
+msgid "API endpoint from PagerDuty V2"
+msgstr "API-eindpunt van PagerDuty V2"
 
 msgid "API health"
 msgstr "API-gezondheid"
@@ -2604,7 +2604,8 @@ msgstr "APT-updates"
 msgid "APT normal and security updates (Linux)"
 msgstr "APT normaal en beveiligingsupdates (Linux)"
 
-msgid "ASCII Email"
+#, fuzzy
+msgid "ASCII email"
 msgstr "ASCII e-mail"
 
 #, fuzzy
@@ -3065,8 +3066,9 @@ msgstr ""
 "schrijftoegang tot deze module kan willekeurige wijzigingen in de "
 "configuratie aanbrengen door geüploade snapshots terug te zetten."
 
+#, fuzzy
 msgid ""
-"Access to the module <i>Snaphsots</i>. Please note: a user with write access "
+"Access to the module <i>Snapshots</i>. Please note: a user with write access "
 "to this module can make arbitrary changes to the configuration by restoring "
 "uploaded snapshots."
 msgstr ""
@@ -3081,9 +3083,10 @@ msgid "Access to the module for analyzing and validating logfile patterns."
 msgstr ""
 "Toegang tot de module voor het analyseren en valideren van logboekpatronen."
 
+#, fuzzy
 msgid ""
 "Access to the module for managing Checkmk rules. Please note that a user can "
-"only manage rules in folders he has permissions to. "
+"only manage rules in folders he has permissions to."
 msgstr ""
 "Toegang tot de module voor het beheer van Checkmk-regels. Merk op dat een "
 "gebruiker alleen regels kan beheren in mappen waarvoor hij rechten heeft. "
@@ -3239,7 +3242,8 @@ msgstr "Actie bij fout"
 msgid "Actions"
 msgstr "Acties"
 
-msgid "Actions (Emails & Scripts)"
+#, fuzzy
+msgid "Actions (emails & scripts)"
 msgstr "Acties (e-mails & scripts)"
 
 msgid "Actions to automatically perform when an event is being cancelled."
@@ -3816,7 +3820,7 @@ msgstr "Groep toevoegen"
 msgid ""
 "Add here only groups and users which do not have administrator rights but, "
 "for some reason, must have write access to the Oracle binaries. For example, "
-"it may be a dedicated installer account in a domain.The values are case "
+"it may be a dedicated installer account in a domain. The values are case "
 "insensitive."
 msgstr ""
 
@@ -5821,9 +5825,10 @@ msgid "Allows a user to create or modify entries in the report scheduler."
 msgstr ""
 "Hiermee kan een gebruiker items aanmaken of wijzigen in de rapportplanner."
 
+#, fuzzy
 msgid ""
 "Allows a user to modify scheduled reports of other users and also to specify "
-"arbitrary Email addresses as report destination."
+"arbitrary email addresses as report destination."
 msgstr ""
 "Hiermee kan een gebruiker geplande rapporten van andere gebruikers wijzigen "
 "en ook willekeurige e-mailadressen opgeven als rapportbestemming."
@@ -6230,7 +6235,8 @@ msgstr ""
 "tt>), absolute lokale URL's (beginnend met <tt>/</tt>) of relatieve URL's "
 "(die relatief zijn ten opzichte van <tt>check_mk/</tt>) gebruiken."
 
-msgid "An optional alias name for your mysql socket"
+#, fuzzy
+msgid "An optional alias name for your MySQL socket"
 msgstr "Een optionele aliasnaam voor uw mysql socket"
 
 msgid "Analyse availability of this aggregation"
@@ -8099,7 +8105,8 @@ msgstr "Basis OID"
 msgid "Base URL (OMD Site)"
 msgstr "Basis URL (OMD site)"
 
-msgid "Base URL for docker API engine"
+#, fuzzy
+msgid "Base URL for Docker API engine"
 msgstr "Basis URL voor docker API engine"
 
 #, fuzzy
@@ -8179,16 +8186,16 @@ msgid "Battery time remaining"
 msgstr "Resterende batterijtijd"
 
 #, fuzzy
-msgid "Bazel Cache Password"
-msgstr "Database wachtwoord"
-
-#, fuzzy
 msgid "Bazel Cache Port"
 msgstr "Achterpoort"
 
 #, fuzzy
 msgid "Bazel Cache User"
 msgstr "Max Cache Leeftijd"
+
+#, fuzzy
+msgid "Bazel Cache password"
+msgstr "Database wachtwoord"
 
 msgid "Bazel Remote Cache"
 msgstr ""
@@ -8813,10 +8820,11 @@ msgstr ""
 "berichttekst geen <tt>ORA-</tt> bevat. Opmerking: Wanneer een omgekeerde "
 "regel overeenkomt, kunnen er nooit overeenkomende groepen zijn."
 
+#, fuzzy
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
 "monitored via a seperate metric. Setting levels on the used total bandwidth "
-"is optional. If you do set levels you might also consider using averaging."
+"is optional. If you set levels you might also consider using averaging."
 msgstr ""
 "Door dit item te activeren wordt de som van inkomend en uitgaand verkeer "
 "gemonitord via een aparte metric. Het instellen van niveaus op de gebruikte "
@@ -8996,7 +9004,7 @@ msgstr ""
 msgid ""
 "By default the agent updater communicates with the Agent Bakery of the "
 "central site to update the agent. If you want to make the agent updater "
-"fetch its agent from it's remote site, you need to configure this option to "
+"fetch its agent from its remote site, you need to configure this option to "
 "make it possible for the remote site to communicate with the central site on "
 "behalf of the agent updater."
 msgstr ""
@@ -9238,7 +9246,7 @@ msgid ""
 "By default, for security reasons, the GUI does not interpret any HTML code "
 "received from external sources, like service output or log messages. But "
 "there are specific reasons to deactivate this security feature. E.g. when "
-"you want to display the HTML output produced by a specific check plug-in."
+"you want to display the HTML output produced by a specific check plug-in. "
 "Disabling the escaping also allows the plug-in to execute not only HTML, but "
 "also Javascript code in the context of your browser. This makes it possible "
 "to execute arbitrary Javascript, even for injection attacks.<br>For this "
@@ -12911,7 +12919,7 @@ msgstr "Containers lagere niveaus"
 
 #, fuzzy
 msgid ""
-"Configure monitoring of networking services using classical nagios plug-ins "
+"Configure monitoring of networking services using classical Nagios plug-ins "
 "(so called active checks)"
 msgstr ""
 "Configureer monitoring van netwerkdiensten met klassieke nagios plugins "
@@ -12961,13 +12969,13 @@ msgstr ""
 "Configureer de agent updater of hij verbinding moet maken via een proxy "
 "server."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
 "agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
 "a>. <b>Note</b>: New hosts created via this channel are marked by the host "
 "label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
-"to configure a host lifecycle management via the <a href=\"%s\">automatic "
+"to configure a host life cycle management via the <a href=\"%s\">automatic "
 "removal of hosts</a>."
 msgstr ""
 "Configureer het automatisch aanmaken van nieuwe hosts op basis van verzoeken "
@@ -13064,12 +13072,12 @@ msgstr ""
 "sommige systemd units die door de Checkmk agent zijn aangemaakt ('check-mk-"
 "agent@...') nooit ontdekt worden. Ze verschijnen en verdwijnen regelmatig."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the grouping of indices. Elasticsearch can for example be "
 "configured to automatically add a timestamp to index names, see <a href=%s "
 "target=\"_blank\">the documentation</a>. Via this grouping option, Checkmk "
-"can eg. be configured to accumulate all indices which only differ in the "
+"can e.g. be configured to accumulate all indices which only differ in the "
 "trailing timestamp into a single service."
 msgstr ""
 "Configureer de groepering van indices. Elasticsearch kan bijvoorbeeld "
@@ -13137,6 +13145,20 @@ msgstr ""
 "de gebruikers- of groepssleutel op te geven. De sleutel kan worden verkregen "
 "op de Pushover website."
 
+#, fuzzy
+msgid ""
+"Configure this to have the notification plug-in connect directly to the SMTP "
+"server. This has the advantage of providing better error messages in case of "
+"an error, but it does require more configuration and is strictly "
+"synchronous. So we advice use only on enterprise installations using the "
+"notification spooler."
+msgstr ""
+"Configureer dit om de meldingsplugin direct verbinding te laten maken met de "
+"smtp server. Dit heeft het voordeel dat het betere foutmeldingen geeft in "
+"geval van een fout, maar het vereist meer configuratie en is strikt "
+"synchroon, dus we adviseren het alleen te gebruiken op bedrijfsinstallaties "
+"die de notificatie spooler gebruiken."
+
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
 "have."
@@ -13148,10 +13170,12 @@ msgstr ""
 msgid "Configure upper levels"
 msgstr "Containers bovenste niveaus"
 
-msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
+#, fuzzy
+msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr "Configureer hier uw ServiceNow URL (bijv. https://myservicenow.com)."
 
-msgid "Configure your modem URL here (eg. https://mymodem.mydomain.example)."
+#, fuzzy
+msgid "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
 msgstr ""
 "Configureer hier de URL van uw modem (bijv. https://mymodem.mydomain."
 "example)."
@@ -13214,20 +13238,6 @@ msgid ""
 msgstr ""
 "Het instellen van meer checkers dan het aantal beschikbare CPU's (%d) heeft "
 "een nadelig effect, omdat ze niet IO gebonden zijn."
-
-#, fuzzy
-msgid ""
-"Configuring this to have the notification plug-in connect directly to the "
-"SMTP server. This has the advantage of providing better error messages in "
-"case of an error but it does require more configuration and is strictly "
-"synchronous so we advice use only on enterprise installations using the "
-"notification spooler."
-msgstr ""
-"Configureer dit om de meldingsplugin direct verbinding te laten maken met de "
-"smtp server. Dit heeft het voordeel dat het betere foutmeldingen geeft in "
-"geval van een fout, maar het vereist meer configuratie en is strikt "
-"synchroon, dus we adviseren het alleen te gebruiken op bedrijfsinstallaties "
-"die de notificatie spooler gebruiken."
 
 msgid "Confirm"
 msgstr "Bevestig"
@@ -25653,8 +25663,9 @@ msgstr ""
 "Die reguliere expressie moet overeenkomen met het <i>begin</i> van de "
 "hostnamen in kwestie."
 
+#, fuzzy
 msgid ""
-"Here you can enter either device state number (eg. from SNMP devices) or "
+"Here you can enter either device state number (e.g. from SNMP devices) or "
 "exact device state name and the related monitoring state."
 msgstr ""
 "Hier kunt u ofwel het nummer van de apparaattoestand (bijv. van SNMP-"
@@ -25879,11 +25890,11 @@ msgstr ""
 "opgegeven toegangspunt ontbreekt (misschien uitgeschakeld is). Het "
 "toegangspunt kan worden gespecificeerd met de AP naam of het AP model"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Here you can simulate an incoming agent request and check out which rules "
 "are matching.<br>An agent request contains several labels as key-value "
-"pairs, eg. %s."
+"pairs, e.g. %s."
 msgstr ""
 "Hier kan je een inkomend agent verzoek simuleren en nagaan welke regels "
 "overeenstemmen.<br>Een agent verzoek bevat verschillende labels als sleutel-"
@@ -29887,11 +29898,12 @@ msgstr ""
 "niveaus. Als alle geconfigureerde niveaus binnen een combinatie worden "
 "bereikt, dan wordt de gerelateerde toestand gerapporteerd."
 
+#, fuzzy
 msgid ""
 "In order to compute a unique host name you can use the agent labels (all or "
 "a subset of them) from above. A label has to be marked with a  <tt>$</tt> at "
-"the beginning and the end, eg. <tt>$LABEL$</tt>. During rule evaluation the "
-"label will replaced by its value.<br>You can also add fixed strings, eg. "
+"the beginning and the end, e.g. <tt>$LABEL$</tt>. During rule evaluation the "
+"label will replaced by its value.<br>You can also add fixed strings, e.g. "
 "<tt>lnx-$LABEL$</tt>."
 msgstr ""
 "Om een unieke hostnaam te berekenen kunt u de agentlabels (alle of een "
@@ -32433,7 +32445,7 @@ msgstr "Links"
 
 #, fuzzy
 msgid ""
-"Legacy ASCII Emails do not support bulking. You can either disable "
+"Legacy ASCII emails do not support bulking. You can either disable "
 "notification bulking or choose another notification plug-in which allows "
 "bulking."
 msgstr ""
@@ -49726,7 +49738,7 @@ msgstr "Meldingen verzenden naar externe gebeurtenissenconsole"
 
 #, fuzzy
 msgid ""
-"Send out HTML/ASCII Email notification according to notification rules "
+"Send out HTML/ASCII email notification according to notification rules "
 "(uncheck to avoid spam)"
 msgstr "Sorteervolgorde voor bulkmeldingen"
 
@@ -71516,7 +71528,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_graylog.com."
+"agent. Please add the host name here, e.g. my_graylog.com."
 msgstr ""
 "Gebruik deze optie om in te stellen welke instantie moet worden "
 "gecontroleerd door de special agent. Voeg hier de hostnaam toe, bijv. "
@@ -71525,7 +71537,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_jenkins.com."
+"agent. Please add the host name here, e.g. my_jenkins.com."
 msgstr ""
 "Gebruik deze optie om in te stellen welke instantie moet worden "
 "gecontroleerd door de special agent. Voeg hier de hostnaam toe, bijv. "
@@ -71534,7 +71546,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the host name here, eg. my_jira.com. If not set, the "
+"agent. Please add the host name here, e.g. my_jira.com. If not set, the "
 "assigned host is used as instance."
 msgstr ""
 "Gebruik deze optie om in te stellen welke instantie door de special agent "
@@ -79526,6 +79538,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "API Key"
+#~ msgstr "API Sleutel"
 
 #~ msgid "Host match list"
 #~ msgstr "Host wedstrijd lijst"

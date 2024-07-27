@@ -43386,8 +43386,8 @@ msgstr ""
 msgid ""
 "Once you enable this option, this plug-in will not only handle direct group "
 "memberships, instead it will also dig into nested groups and treat the "
-"members of those groups as contact group members as well. Please mind that "
-"this feature might increase the execution time of your LDAP sync."
+"members of those groups as contact group members as well. Please bear in "
+"mind that this feature might increase the execution time of your LDAP sync."
 msgstr ""
 "Zodra je deze optie inschakelt, zal deze plugin niet alleen directe "
 "groepslidmaatschappen afhandelen, maar ook in geneste groepen graven en de "
@@ -43514,7 +43514,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Only apply the rule if the notification originates from certain types of "
-"check plug-ins. Note: Host notifications never match this rule if this "
+"check plug-ins. Note: Host notifications never match this rule, if this "
 "option is being used."
 msgstr ""
 "Pas de regel alleen toe als de melding afkomstig is van bepaalde soorten "
@@ -45023,16 +45023,17 @@ msgid ""
 "license expires."
 msgstr "Sorry, u mag geen wijzigingen van andere gebruikers activeren."
 
+#, fuzzy
 msgid ""
 "Our system will recognize breaks in the trend and set them automatically,\n"
 "but as a user your are required to select how flexible the trend is when it\n"
-"is adjusted to the data.  This options change between more global to\n"
+"is adjusted to the data.  This options vary from more global to\n"
 "local smooth models.\n"
 "\n"
-"The model is extrapolated to make the forecast using an extension of the\n"
+"The model is extrapolated to make the forecast use an extension of the\n"
 "last trend. However, in addition to that, our system will use the\n"
-"information about the changes in trend over the analyzed history to\n"
-"simulate future rate changes. In the aim of emulating changes from the\n"
+"information about the changes in trend based on the analyzed history to\n"
+"simulate future rate changes. In the aim of emulating changes in the\n"
 "past, future changes are randomly sampled so that their average frequency\n"
 "matches that of the history.\n"
 "\n"
@@ -46995,10 +46996,11 @@ msgstr "Ping timeout"
 msgid "Placeholder VMs"
 msgstr "Plaatsvervangende VM's"
 
+#, fuzzy
 msgid ""
 "Placeholder VMs are created by the Site Recovery Manager(SRM) and act as "
-"backup virtual machines in case the default vm is unable to start. This "
-"option tells the vsphere agent to exclude placeholder vms in its output."
+"backup virtual machines in case the default VM is unable to start. This "
+"option tells the vsphere agent to exclude placeholder VMs in its output."
 msgstr ""
 "Placeholder VM's worden aangemaakt door de Site Recovery Manager (SRM) en "
 "fungeren als backup virtuele machines voor het geval de standaard vm niet "
@@ -47012,7 +47014,8 @@ msgstr "Plaatsing"
 msgid "Placement Groups"
 msgstr "Plaatsing"
 
-msgid "Plain Email"
+#, fuzzy
+msgid "Plain email"
 msgstr "Gewone e-mail"
 
 msgid "Plain text (Unencrypted)"
@@ -47329,10 +47332,10 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
-"underscores. If you are unsure about the correct spelling of the name then "
+"underscores. If you are unsure about the correct spelling of the name, then "
 "please look at the output of the agent (cmk -d HOSTNAME). The service names "
 "are in the first column of the section &lt;&lt;&lt;services&gt;&gt;&gt;. "
-"Please do not mix up the service name with the display name of the service."
+"Please do not mix up the service name with the display name of the service. "
 "The latter one is just being displayed as a further information."
 msgstr ""
 "Merk op dat de agent spaties in de servicenamen vervangt door underscores. "
@@ -50675,6 +50678,10 @@ msgstr "Verslag"
 
 msgid "Report Properties"
 msgstr "Verslag Eigenschappen"
+
+#, fuzzy
+msgid "Report an issue here. "
+msgstr "Rapport aan schema"
 
 #, fuzzy
 msgid ""
@@ -73629,7 +73636,8 @@ msgstr ""
 msgid "Unit"
 msgstr "Eenheid"
 
-msgid "Unit Name"
+#, fuzzy
+msgid "Unit name"
 msgstr "Naam eenheid"
 
 #, fuzzy
@@ -84333,10 +84341,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, fuzzy, python-format
 #~ msgid "No such tree below %r"
 #~ msgstr "Licentiegebruik"
-
-#, fuzzy
-#~ msgid "Report an issue here."
-#~ msgstr "Rapport aan schema"
 
 #~ msgid "This rule allows you to override netapp warnings"
 #~ msgstr "Deze regel staat je toe om netapp waarschuwingen op te heffen"

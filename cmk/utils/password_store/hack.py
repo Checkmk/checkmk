@@ -50,6 +50,7 @@ HACK_AGENTS = {
     "activemq": True,
     "alertmanager": False,
     "prometheus": False,
+    "allnet_ip_sensoric": False,  # needs no secret
 }
 
 

@@ -153,7 +153,7 @@ class EWS(_Connection):
             parent_folder = new_folder
         return new_folder
 
-    def mail_ids_by_date(
+    def mails_by_date(
         self,
         *,
         before: float | None = None,
@@ -433,7 +433,7 @@ class IMAP(_Connection):
         assert time_tuple is not None
         return int(time.mktime(time_tuple))
 
-    def mail_ids_by_date(
+    def mails_by_date(
         self,
         *,
         before: float | None = None,

@@ -12,8 +12,8 @@ import time
 import cmk.utils.render
 
 from cmk.plugins.emailchecks.lib.ac_args import parse_trx_arguments, Scope
-from cmk.plugins.emailchecks.lib.connections import make_fetch_connection
-from cmk.plugins.emailchecks.lib.utils import active_check_main, Args, CheckResult, Mailbox
+from cmk.plugins.emailchecks.lib.connections import make_fetch_connection, POP3
+from cmk.plugins.emailchecks.lib.utils import active_check_main, Args, CheckResult
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
@@ -84,9 +84,9 @@ def check_mailboxes(args: Args) -> CheckResult:
     messages = []
     now = time.time()
 
-    with make_fetch_connection(fetch, timeout) as connection:
+    with make_fetch_connection(fetch, timeout) as mailbox:
         logging.info("connected..")
-        mailbox = Mailbox(connection)
+        assert not isinstance(mailbox, POP3)
 
         logging.info("connected, fetch mailbox folders..")
         available_mailboxes = list(mailbox.folders())

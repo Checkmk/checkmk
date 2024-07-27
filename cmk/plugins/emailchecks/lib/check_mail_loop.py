@@ -8,6 +8,7 @@ import argparse
 import email.utils
 import logging
 import os
+import random
 import re
 import time
 from collections.abc import MutableMapping
@@ -20,9 +21,11 @@ from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
 from cmk.plugins.emailchecks.lib.ac_args import add_trx_arguments, parse_trx_arguments, Scope
 from cmk.plugins.emailchecks.lib.connections import (
+    EWS,
     MailID,
     make_fetch_connection,
     make_send_connection,
+    SMTP,
 )
 from cmk.plugins.emailchecks.lib.utils import active_check_main, Args, CheckResult, Mailbox
 
@@ -267,14 +270,23 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         logging.debug("relevant messages: %r", relevant_mail_loop_messages)
 
         # send a 'sensor-email' with a timestamp we expect to receive next time
-        if fetch == send:
-            new_mail = mailbox.send_mail(
-                args.subject, mail_from=args.mail_from, mail_to=args.mail_to
+        if fetch == send and isinstance(connection, (SMTP, EWS)):
+            new_mail = connection.send_mail(
+                args.subject,
+                mail_from=args.mail_from,
+                mail_to=args.mail_to,
+                now=now,
+                key=random.randint(1, 1000),
             )
         else:
             with make_send_connection(send, timeout) as send_connection:
-                new_mail = Mailbox(send_connection).send_mail(
-                    args.subject, mail_from=args.mail_from, mail_to=args.mail_to
+                new_mail = send_connection.send_mail(
+                    args.subject,
+                    mail_from=args.mail_from,
+                    mail_to=args.mail_to,
+                    now=now,
+                    # I am not sure what this is about. I suspect we're trying to generate a unique key? Poormans UUID?
+                    key=random.randint(1, 1000),
                 )
         logging.debug("sent new mail: %r", new_mail)
 

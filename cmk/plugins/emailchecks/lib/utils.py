@@ -19,13 +19,11 @@ Current responsibilities include:
 import argparse
 import imaplib
 import logging
-import random
 import re
 import sys
-import time
 import warnings
-from collections.abc import Callable, Iterable, Sequence
-from typing import Any, assert_never
+from collections.abc import Callable, Sequence
+from typing import Any
 
 import urllib3
 
@@ -59,14 +57,6 @@ class Mailbox:
     ) -> None:
         self._connection = connection
 
-    def folders(self) -> Iterable[str]:
-        """Returns names of available mailbox folders"""
-        match self._connection:
-            case connections.IMAP() | connections.EWS() as c:
-                return c.folders()
-            case _:
-                raise AssertionError("connection must be IMAP4[_SSL] or EWS")
-
     def fetch_mails(self, subject_pattern: str = "") -> connections.MailMessages:
         """Return mails contained in the currently selected folder matching @subject_pattern"""
         pattern = re.compile(subject_pattern) if subject_pattern else None
@@ -89,40 +79,6 @@ class Mailbox:
 
         except Exception as exc:
             raise FetchMailsError("Failed to check for mails: %r" % exc) from exc
-
-    def select_folder(self, folder_name: str) -> int:
-        """Select folder @folder_name and return the number of mails contained"""
-        try:
-            match self._connection:
-                case connections.IMAP() | connections.EWS() as c:
-                    return c.select_folder(folder_name)
-                case _:
-                    raise AssertionError("connection must be IMAP4[_SSL] or EWS")
-
-        except Exception as exc:
-            raise FetchMailsError(f"Could not select folder {folder_name!r}: {exc}")
-
-    def mails_by_date(
-        self,
-        *,
-        before: float | None = None,
-        after: float | None = None,
-    ) -> Iterable[float]:
-        """Retrieve mail timestamps from currently selected mailbox folder
-        before: if set, mails before that timestamp (rounded down to days)
-                are returned
-        """
-        assert bool(before) != bool(after)
-
-        match self._connection:
-            case connections.IMAP() | connections.EWS() as c:
-                return c.mail_ids_by_date(before=before, after=after)
-            case connections.POP3() | connections.SMTP():
-                # resulted in attribute error for poplib.POP3
-                raise NotImplementedError("POP3 does not support fetching mails by date")
-
-            case other:
-                assert_never(other)
 
     def delete_mails(self, mails: connections.MailMessages) -> None:
         """Delete mails specified by @mails. Please note that for POP/IMAP we delete mails by
@@ -158,22 +114,6 @@ class Mailbox:
                     raise NotImplementedError(f"Copying mails is not implemented for {other!r}")
         except Exception as exc:
             raise CleanupMailboxError("Failed to copy mail: %r" % exc) from exc
-
-    def send_mail(
-        self, subject: str, *, mail_from: str, mail_to: str
-    ) -> tuple[str, connections.MailID]:
-        """Send an email with provided content using either SMTP or EWS and provided credentials/oauth.
-        This function just manages exceptions for _send_mail_smtp() or _send_mail_ews()"""
-        now = int(time.time())
-        key = random.randint(1, 1000)
-
-        match self._connection:
-            case connections.SMTP() | connections.EWS() as c:
-                return c.send_mail(subject, mail_from, mail_to, now, key)
-
-        raise connections.SendMailError(
-            f"Sending mails is not implemented for {self._connection!r}"
-        )
 
 
 def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Args:

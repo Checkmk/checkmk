@@ -68,8 +68,9 @@ def check_mail_loop_arguments(  # pylint: disable=too-many-branches
             args.append("--send-tls")
 
         if auth := send_params.auth:
-            args.append(f"--send-username={auth.username}")
-            args.append(auth.password.unsafe(template="--send-password=%s"))
+            args.extend(
+                ["--send-username", auth.username, "--send-password-reference", auth.password]
+            )
 
     elif send_protocol == "EWS":
         assert isinstance(send_params, CommonParameters)
@@ -82,14 +83,19 @@ def check_mail_loop_arguments(  # pylint: disable=too-many-branches
         _auth_type, ews_auth = send_params.auth
         if isinstance(ews_auth, BasicAuthParameters):
             args += [
-                f"--send-username={ews_auth.username}",
-                ews_auth.password.unsafe(template="--send-password=%s"),
+                "--send-username",
+                ews_auth.username,
+                "--send-password-reference",
+                ews_auth.password,
             ]
         else:
             args += [
-                f"--send-client-id={ews_auth.client_id}",
-                ews_auth.client_secret.unsafe(template="--send-client-secret=%s"),
-                f"--send-tenant-id={ews_auth.tenant_id}",
+                "--send-client-id",
+                ews_auth.client_id,
+                "--send-client-secret-reference",
+                ews_auth.client_secret,
+                "--send-tenant-id",
+                ews_auth.tenant_id,
             ]
 
         args.append(f"--send-email-address={send_params.email_address}")

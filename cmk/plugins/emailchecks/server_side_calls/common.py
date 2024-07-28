@@ -38,18 +38,17 @@ def fetching_options_to_args(
 
     if isinstance(auth := fetch_params.auth[1], BasicAuthParameters):
         args += [
-            f"--fetch-username={auth.username}",
-            auth.password.unsafe(
-                template="--fetch-password=%s"  # TODO: support password store natively
-            ),
+            "--fetch-username",
+            auth.username,
+            "--fetch-password-reference",
+            auth.password,
         ]
 
     else:
         args += [
             f"--fetch-client-id={auth.client_id}",
-            auth.client_secret.unsafe(
-                template="--fetch-client-secret=%s"  # TODO: support password store natively
-            ),
+            "--fetch-client-secret-reference",
+            auth.client_secret,
             f"--fetch-tenant-id={auth.tenant_id}",
         ]
 

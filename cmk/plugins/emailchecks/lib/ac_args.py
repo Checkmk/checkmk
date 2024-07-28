@@ -7,7 +7,10 @@ import argparse
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import Path
 from typing import assert_never, Literal
+
+from cmk.utils import password_store
 
 
 @dataclass
@@ -73,11 +76,18 @@ def add_trx_arguments(parser: argparse.ArgumentParser, scope: Scope) -> None:
         metavar="USER",
         help=f"Username to use for {'/'.join(protocols)}",
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         f"--{scope}-password",
         required=False,
         metavar="PASSWORD",
         help=f"Password to use for {'/'.join(protocols)}",
+    )
+    group.add_argument(
+        f"--{scope}-password-reference",
+        required=False,
+        metavar="PASSWORD-ID",
+        help=f"Password store reference of password to use for {'/'.join(protocols)}",
     )
     parser.add_argument(
         f"--{scope}-client-id",
@@ -85,11 +95,18 @@ def add_trx_arguments(parser: argparse.ArgumentParser, scope: Scope) -> None:
         metavar="CLIENT_ID",
         help="OAuth2 ClientID for EWS",
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         f"--{scope}-client-secret",
         required=False,
         metavar="CLIENT_SECRET",
-        help="OAuth2 ClientSecret for EWS",
+        help="OAuth2 client secret for EWS",
+    )
+    group.add_argument(
+        f"--{scope}-client-secret-reference",
+        required=False,
+        metavar="CLIENT_SECRET_ID",
+        help="Password store reference for OAuth2 client secret for EWS",
     )
     parser.add_argument(
         f"--{scope}-tenant-id",
@@ -129,23 +146,38 @@ def _parse_auth(raw: Mapping[str, object]) -> BasicAuth | OAuth2:
         case {
             "username": None,
             "password": None,
+            "password_reference": None,
             "client_id": str(client_id),
-            "client_secret": str(client_secret),
+            "client_secret": str() | None as client_secret,
+            "client_secret_reference": str() | None as client_secret_refernce,
             "tenant_id": str(tenant_id),
         }:
-            return OAuth2(client_id, client_secret, tenant_id)
+            return OAuth2(
+                client_id, _parse_secret(client_secret, client_secret_refernce), tenant_id
+            )
         case {
             "username": str(username),
-            "password": str(password),
+            "password": str() | None as password,
+            "password_reference": str() | None as password_reference,
             "client_id": None,
             "client_secret": None,
+            "client_secret_reference": None,
             "tenant_id": None,
         }:
-            return BasicAuth(username, password)
+            return BasicAuth(username, _parse_secret(password, password_reference))
         case _:
             raise RuntimeError(
                 "Either Username/Passwort or ClientID/ClientSecret/TenantID have to be set"
             )
+
+
+def _parse_secret(secret: str | None, reference: str | None) -> str:
+    if secret is not None:
+        return secret
+    if reference is None:
+        raise ValueError("Either secret or secret reference must be set")
+    secret_id, file = reference.split(":", 1)
+    return password_store.lookup(Path(file), secret_id)
 
 
 def _parse_port(raw: Mapping[str, object]) -> int:

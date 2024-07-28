@@ -27,7 +27,7 @@ from cmk.plugins.emailchecks.lib.connections import (
     make_send_connection,
     SMTP,
 )
-from cmk.plugins.emailchecks.lib.utils import active_check_main, Args, CheckResult, Mailbox
+from cmk.plugins.emailchecks.lib.utils import active_check_main, Args, CheckResult, fetch_mails
 
 # "<sent-timestamp>-<key>" -> (sent-timestamp, key)
 MailDict = MutableMapping[str, MailID]
@@ -238,7 +238,6 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
     re_subject = subject_regex(args.subject)
 
     with make_fetch_connection(fetch, timeout) as connection:
-        mailbox = Mailbox(connection)
         now = int(time.time())
 
         def filter_subject(subject: None | str, re_pattern: re.Pattern[str]) -> None | re.Match:
@@ -253,7 +252,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         message_details = {
             f"{tx_timestamp}-{key}": (index, rx_timestamp or now, subject, raw_message)
             # we don't filter for subject here...
-            for index, raw_message in mailbox.fetch_mails().items()
+            for index, raw_message in fetch_mails(connection).items()
             for subject, rx_timestamp in (subject_and_received_timestamp_from_msg(raw_message),)
             # .. because we need the groups
             if (match := filter_subject(subject, re_subject))
@@ -314,7 +313,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
             # Do not delete all messages in the inbox. Only the ones which were
             # processed before! In the meantime new ones might have come in.
             logging.debug("delete messages...")
-            mailbox.delete_mails(deletion_candidates)
+            connection.delete(deletion_candidates)
         else:
             logging.debug("deletion not active (--delete-messages not provided)")
 

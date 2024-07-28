@@ -21,7 +21,10 @@ from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
 from cmk.plugins.emailchecks.lib.ac_args import parse_trx_arguments, Scope
 from cmk.plugins.emailchecks.lib.connections import (
+    CleanupMailboxError,
     ConnectError,
+    EWS,
+    IMAP,
     MailMessages,
     make_fetch_connection,
 )
@@ -29,8 +32,8 @@ from cmk.plugins.emailchecks.lib.utils import (
     active_check_main,
     Args,
     CheckResult,
+    fetch_mails,
     ForwardToECError,
-    Mailbox,
 )
 
 
@@ -261,20 +264,22 @@ def check_mail(args: Args) -> CheckResult:
     timeout = int(args.connect_timeout)
     try:
         with make_fetch_connection(fetch, timeout) as connection:
-            mailbox = Mailbox(connection)
-
             if not args.forward_ec:
                 return 0, "Successfully logged in to mailbox", None
 
-            fetched_mails: MailMessages = mailbox.fetch_mails(args.match_subject)
+            fetched_mails: MailMessages = fetch_mails(connection, args.match_subject)
             ec_messages = prepare_messages_for_ec(args, fetched_mails)
             result = forward_to_ec(args, ec_messages)
 
             # (Copy and) Delete the forwarded mails if configured
             if args.cleanup:
                 if args.cleanup != "delete":
-                    mailbox.copy_mails(fetched_mails, folder=args.cleanup)
-                mailbox.delete_mails(fetched_mails)
+                    if not isinstance(connection, (IMAP, EWS)):
+                        raise CleanupMailboxError(
+                            f"Copying mails is not implemented for {type(connection)!r}"
+                        )
+                    connection.copy(fetched_mails, folder=args.cleanup.strip("/"))
+                connection.delete(fetched_mails)
             return result
 
     except ConnectError as exc:

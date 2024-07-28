@@ -42,78 +42,28 @@ class FetchMailsError(Exception):
     pass
 
 
-class CleanupMailboxError(Exception):
-    pass
-
-
 class ForwardToECError(Exception):
     pass
 
 
-class Mailbox:
+def fetch_mails(
+    connection: connections.POP3 | connections.IMAP | connections.EWS,
+    subject_pattern: str = "",
+) -> connections.MailMessages:
+    """Return mails contained in the currently selected folder matching @subject_pattern"""
+    pattern = re.compile(subject_pattern) if subject_pattern else None
 
-    def __init__(
-        self, connection: connections.EWS | connections.IMAP | connections.POP3 | connections.SMTP
-    ) -> None:
-        self._connection = connection
+    def matches(subject: None | str) -> bool:
+        if pattern and not pattern.match(subject or ""):
+            logging.debug("filter mail with non-matching subject %r", subject)
+            return False
+        return True
 
-    def fetch_mails(self, subject_pattern: str = "") -> connections.MailMessages:
-        """Return mails contained in the currently selected folder matching @subject_pattern"""
-        pattern = re.compile(subject_pattern) if subject_pattern else None
-
-        def matches(subject: None | str) -> bool:
-            if pattern and not pattern.match(subject or ""):
-                logging.debug("filter mail with non-matching subject %r", subject)
-                return False
-            return True
-
-        logging.debug("pattern used to receive mails: %s", pattern)
-        try:
-            match self._connection:
-                case connections.POP3() | connections.IMAP() | connections.EWS() as c:
-                    return c.fetch_mails(matches)
-                case other:
-                    raise NotImplementedError(
-                        f"Fetching mails is not implemented for {type(other)}"
-                    )
-
-        except Exception as exc:
-            raise FetchMailsError("Failed to check for mails: %r" % exc) from exc
-
-    def delete_mails(self, mails: connections.MailMessages) -> None:
-        """Delete mails specified by @mails. Please note that for POP/IMAP we delete mails by
-        index (mail.keys()) while with EWS we delete sets of EWSMessage (mail.values())"""
-        if not mails:
-            logging.debug("delete mails: no mails given")
-            return
-
-        logging.debug("delete mails %s", mails)
-        try:
-            match self._connection:
-                case connections.SMTP():
-                    raise NotImplementedError("Deleting mails is not implemented for SMTP")
-                case connection:
-                    connection.delete(mails)
-
-        except Exception as exc:
-            raise CleanupMailboxError("Failed to delete mail: %r" % exc) from exc
-
-    def copy_mails(self, mails: connections.MailMessages, folder: str) -> None:
-        if not mails:
-            logging.debug("copy mails: no mails given")
-            return
-        # The user wants the message to be moved to the folder
-        # refered by the string stored in "cleanup_messages"
-        folder = folder.strip("/")
-
-        try:
-            match self._connection:
-                case connections.IMAP() | connections.EWS() as c:
-                    c.copy(mails, folder)
-                case other:
-                    raise NotImplementedError(f"Copying mails is not implemented for {other!r}")
-        except Exception as exc:
-            raise CleanupMailboxError("Failed to copy mail: %r" % exc) from exc
+    logging.debug("pattern used to receive mails: %s", pattern)
+    try:
+        return connection.fetch_mails(matches)
+    except Exception as exc:
+        raise FetchMailsError("Failed to check for mails: %r" % exc) from exc
 
 
 def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Args:
@@ -189,7 +139,7 @@ def _active_check_main_core(
         if args.debug:
             raise
         return 3, str(e), None
-    except CleanupMailboxError as e:
+    except connections.CleanupMailboxError as e:
         if args.debug:
             raise
         return 2, str(e), None

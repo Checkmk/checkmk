@@ -60,6 +60,10 @@ class SendMailError(Exception):
     pass
 
 
+class CleanupMailboxError(Exception):
+    pass
+
+
 class _Connection(abc.ABC):
 
     @final
@@ -205,7 +209,10 @@ class EWS(_Connection):
         }
 
     def delete(self, mails: MailMessages) -> None:
-        self._account.bulk_delete(mails.values(), delete_type="SoftDelete")
+        try:
+            self._account.bulk_delete(mails.values(), delete_type="SoftDelete")
+        except Exception as exc:
+            raise CleanupMailboxError("Failed to delete mail: %r" % exc) from exc
 
     def copy(self, mails: MailMessages, folder: str) -> None:
         folder_obj = self.add_folder(folder)
@@ -351,8 +358,11 @@ class POP3(_Connection):
         return {num: msg for num, msg in raw.items() if subject_filter(msg.get("Subject"))}
 
     def delete(self, mails: MailMessages) -> None:
-        for mail_index in mails:
-            verified_result(self._pop3.dele(mail_index + 1))
+        try:
+            for mail_index in mails:
+                verified_result(self._pop3.dele(mail_index + 1))
+        except Exception as exc:
+            raise CleanupMailboxError("Failed to delete mail: %r" % exc) from exc
 
 
 class IMAP(_Connection):
@@ -479,9 +489,12 @@ class IMAP(_Connection):
         )  # caused by verified_result() typing horror
 
     def delete(self, mails: MailMessages) -> None:
-        for mail_index in mails:
-            verified_result(self._imap.store(mail_index, "+FLAGS", "\\Deleted"))  # type: ignore[arg-type]  # FIXME
-        self._imap.expunge()
+        try:
+            for mail_index in mails:
+                verified_result(self._imap.store(mail_index, "+FLAGS", "\\Deleted"))  # type: ignore[arg-type]  # FIXME
+            self._imap.expunge()
+        except Exception as exc:
+            raise CleanupMailboxError("Failed to delete mail: %r" % exc) from exc
 
     def copy(self, mails: MailMessages, folder: str) -> None:
         target = ""

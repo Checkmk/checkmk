@@ -257,19 +257,19 @@ def check_mail(args: Args) -> CheckResult:
             # Handle this distinct error directly since it's the thing this check is all about
             return 2, str(exc), None
 
-        if args.forward_ec:
-            fetched_mails: MailMessages = mailbox.fetch_mails(args.match_subject)
-            ec_messages = prepare_messages_for_ec(args, fetched_mails, mailbox.protocol())
-            result = forward_to_ec(args, ec_messages)
+        if not args.forward_ec:
+            return 0, "Successfully logged in to mailbox", None
 
-            # (Copy and) Delete the forwarded mails if configured
-            if args.cleanup:
-                if args.cleanup != "delete":
-                    mailbox.copy_mails(fetched_mails, folder=args.cleanup)
-                mailbox.delete_mails(fetched_mails)
-            return result
+        fetched_mails: MailMessages = mailbox.fetch_mails(args.match_subject)
+        ec_messages = prepare_messages_for_ec(args, fetched_mails, mailbox.protocol())
+        result = forward_to_ec(args, ec_messages)
 
-    return 0, "Successfully logged in to mailbox", None
+        # (Copy and) Delete the forwarded mails if configured
+        if args.cleanup:
+            if args.cleanup != "delete":
+                mailbox.copy_mails(fetched_mails, folder=args.cleanup)
+            mailbox.delete_mails(fetched_mails)
+        return result
 
 
 def main() -> None:

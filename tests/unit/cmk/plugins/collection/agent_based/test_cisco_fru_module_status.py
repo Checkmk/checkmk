@@ -3,19 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.agent_based.v2 import CheckPlugin, Result, Service, State
+from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.collection.agent_based import cisco_fru_module_status
-
-
-@pytest.fixture(name="check_plugin")
-def fixture_check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("cisco_fru_module_status")]
 
 
 def test_parse() -> None:
@@ -70,9 +60,9 @@ def test_parse_invalid_phyiscal_class() -> None:
     )
 
 
-def test_discover(check_plugin: CheckPlugin) -> None:
+def test_discover() -> None:
     assert list(
-        check_plugin.discovery_function(
+        cisco_fru_module_status.inventory_cisco_fru_module_status(
             {
                 "32": cisco_fru_module_status.Module(state="2", name="Fabric card module"),
             }
@@ -82,11 +72,10 @@ def test_discover(check_plugin: CheckPlugin) -> None:
     ]
 
 
-def test_check(check_plugin: CheckPlugin) -> None:
+def test_check() -> None:
     assert list(
-        check_plugin.check_function(
+        cisco_fru_module_status.check_cisco_fru_module_status(
             item="32",
-            params={},
             section={
                 "32": cisco_fru_module_status.Module(state="2", name="Fabric card module"),
             },

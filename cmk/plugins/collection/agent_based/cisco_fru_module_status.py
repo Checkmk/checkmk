@@ -3,15 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import dataclasses
 from collections.abc import Mapping, Sequence
 
 from cmk.agent_based.v2 import (
     all_of,
+    CheckPlugin,
+    CheckResult,
     contains,
+    DiscoveryResult,
     exists,
     OIDCached,
     OIDEnd,
+    Result,
+    Service,
     SNMPSection,
     SNMPTree,
     State,
@@ -120,7 +126,6 @@ def parse(string_table: Sequence[StringTable]) -> Section:
     for oid, hardware_type, hardware_name in string_table[0]:
         if PhysicalClasses.parse_cisco(hardware_type) is PhysicalClasses.module:
             collected_entities.setdefault(oid, hardware_name)
-
     return {
         oid: Module(
             state=module_state,
@@ -155,4 +160,26 @@ snmp_section_cisco_fru_module_status = SNMPSection(
             ],
         ),
     ],
+)
+
+
+def inventory_cisco_fru_module_status(section: Section) -> DiscoveryResult:
+    for module_index in section:
+        yield Service(item=module_index)
+
+
+def check_cisco_fru_module_status(item: str, section: Section) -> CheckResult:
+    if (module := section.get(item)) is None:
+        return
+    yield Result(
+        state=module.monitoring_state,
+        summary=f"{f'[{module.name}] ' if module.name else ''}Operational status: {module.human_readable_state}",
+    )
+
+
+check_plugin_cisco_fru_module_status = CheckPlugin(
+    name="cisco_fru_module_status",
+    service_name="FRU Module Status %s",
+    discovery_function=inventory_cisco_fru_module_status,
+    check_function=check_cisco_fru_module_status,
 )

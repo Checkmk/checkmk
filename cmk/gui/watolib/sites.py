@@ -27,7 +27,12 @@ from cmk.gui.config import (
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
+from cmk.gui.site_config import (
+    has_wato_slave_sites,
+    is_replication_enabled,
+    is_wato_slave_site,
+    site_is_local,
+)
 from cmk.gui.userdb import connection_choices
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
@@ -314,7 +319,7 @@ class SiteManagement:
             if not status_host_name:
                 raise MKUserError("sh_host", _("Please specify the name of the status host."))
 
-        if site_configuration.get("replication"):
+        if is_replication_enabled(site_configuration):
             multisiteurl = site_configuration.get("multisiteurl")
             if not site_configuration.get("multisiteurl"):
                 raise MKUserError(
@@ -794,7 +799,7 @@ def _update_distributed_wato_file(sites):
     # site configuration.
     distributed = False
     for siteid, site in sites.items():
-        if site.get("replication"):
+        if is_replication_enabled(site):
             distributed = True
         if site_is_local(active_config, siteid):
             create_distributed_wato_files(
@@ -830,7 +835,7 @@ def site_globals_editable(site_id: SiteId, site: SiteConfiguration) -> bool:
     if not has_wato_slave_sites():
         return False
 
-    return bool(site["replication"]) or site_is_local(active_config, site_id)
+    return is_replication_enabled(site) or site_is_local(active_config, site_id)
 
 
 def _delete_distributed_wato_file():

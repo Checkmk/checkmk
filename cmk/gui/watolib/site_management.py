@@ -31,7 +31,7 @@ from cmk.utils.user import UserId
 from cmk.gui.config import active_config, prepare_raw_site_config
 from cmk.gui.customer import customer_api
 from cmk.gui.i18n import _
-from cmk.gui.site_config import site_is_local
+from cmk.gui.site_config import is_replication_enabled, site_is_local
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.automations import do_site_login
@@ -460,7 +460,7 @@ class ConfigurationConnection:
         cls, site_id: SiteId, internal_config: SiteConfiguration
     ) -> ConfigurationConnection:
         return cls(
-            enable_replication=bool(internal_config["replication"]),
+            enable_replication=is_replication_enabled(internal_config),
             url_of_remote_site=internal_config["multisiteurl"],
             disable_remote_configuration=internal_config["disable_wato"],
             ignore_tls_errors=internal_config["insecure"],

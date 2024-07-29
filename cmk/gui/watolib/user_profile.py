@@ -19,7 +19,12 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
-from cmk.gui.site_config import get_login_slave_sites, get_site_config, is_wato_slave_site
+from cmk.gui.site_config import (
+    get_login_slave_sites,
+    get_site_config,
+    is_replication_enabled,
+    is_wato_slave_site,
+)
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -134,7 +139,7 @@ def _sychronize_profile_worker(
     site: SiteConfiguration,
     profiles_to_synchronize: dict[UserId, Any],
 ) -> SynchronizationResult:
-    if not site.get("replication"):
+    if not is_replication_enabled(site):
         return SynchronizationResult(site_id, disabled=True)
 
     if site.get("disabled"):

@@ -51,7 +51,13 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
+from cmk.gui.site_config import (
+    get_replication_site_id,
+    has_wato_slave_sites,
+    is_replication_enabled,
+    is_wato_slave_site,
+    site_is_local,
+)
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -262,7 +268,7 @@ class ModeEditSite(WatoMode):
         msg = add_changes_after_editing_site_connection(
             site_id=self._site_id,
             is_new_connection=self._new,
-            replication_enabled=bool(site_spec["replication"]),
+            replication_enabled=is_replication_enabled(site_spec),
         )
 
         flash(msg)
@@ -858,7 +864,7 @@ class ModeDistributedMonitoring(WatoMode):
         self, table: Table, site_id: SiteId, site: SiteConfiguration
     ) -> None:
         table.cell(_("Configuration connection"))
-        if not site["replication"]:
+        if not is_replication_enabled(site):
             html.write_text_permissive(_("Not enabled"))
             return
 
@@ -876,7 +882,7 @@ class ModeDistributedMonitoring(WatoMode):
     ) -> None:
         table.cell("")
 
-        if site["replication"]:
+        if is_replication_enabled(site):
             if site.get("secret"):
                 logout_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "sites"), ("_logout", site_id)]),
@@ -891,7 +897,7 @@ class ModeDistributedMonitoring(WatoMode):
                 html.icon_button(login_url, _("Login"), "authok")
 
         html.open_div(id_="replication_status_%s" % site_id, class_="connection_status")
-        if site.get("replication"):
+        if is_replication_enabled(site):
             # The status is fetched asynchronously for all sites. Show a temporary loading icon.
             html.icon(
                 "reload",
@@ -910,7 +916,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         site_states = {}
 
         sites = list(SiteManagementFactory().factory().load_sites().items())
-        replication_sites = [e for e in sites if e[1]["replication"]]
+        replication_sites = [e for e in sites if is_replication_enabled(e[1])]
         replication_status = ReplicationStatusFetcher().fetch(replication_sites)
 
         for site_id, site in sites:
@@ -937,7 +943,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         - Not logged in
         - And of course: Everything is fine
         """
-        if not site["replication"]:
+        if not is_replication_enabled(site):
             return ""
 
         status = replication_status[site_id]
@@ -1218,7 +1224,9 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
                 )
                 return
 
-            if not self._site["replication"] and not site_is_local(active_config, self._site_id):
+            if not is_replication_enabled(self._site) and not site_is_local(
+                active_config, self._site_id
+            ):
                 html.show_error(
                     _(
                         "This site is not the central site nor a replication "
@@ -1524,5 +1532,5 @@ def sort_sites(sites: SiteConfigurations) -> list[tuple[SiteId, SiteConfiguratio
     """Sort given sites argument by local, followed by remote sites"""
     return sorted(
         sites.items(),
-        key=lambda sid_s: (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]),
+        key=lambda sid_s: (get_replication_site_id(sid_s[1]), sid_s[1].get("alias", ""), sid_s[0]),
     )

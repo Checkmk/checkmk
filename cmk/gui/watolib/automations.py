@@ -49,7 +49,7 @@ from cmk.gui.http import request, Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import get_site_config
+from cmk.gui.site_config import get_site_config, is_replication_enabled
 from cmk.gui.utils import escaping
 from cmk.gui.utils.compatibility import (
     EditionsIncompatible,
@@ -208,7 +208,7 @@ def check_mk_remote_automation_serialized(
             _('Cannot connect to site "%s": The site is not logged in') % site.get("alias", site_id)
         )
 
-    if not site.get("replication"):
+    if not is_replication_enabled(site):
         raise MKGeneralException(
             _('Cannot connect to site "%s": The replication is disabled')
             % site.get("alias", site_id)

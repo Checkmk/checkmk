@@ -25,7 +25,6 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 from cmk.gui.utils.speaklater import LazyString
 
-from cmk.ccc.plugin_registry import Registry
 from cmk.discover_plugins import DiscoveredPlugins
 from cmk.graphing.v1 import graphs, metrics, perfometers, translations
 
@@ -35,9 +34,15 @@ from ._color import (
     parse_color_from_api,
     parse_color_into_hexrgb,
 )
-from ._loader import graphs_from_api, perfometers_from_api, register_unit
+from ._loader import (
+    graphs_from_api,
+    MetricInfoExtended,
+    metrics_from_api,
+    perfometers_from_api,
+    register_unit,
+)
 from ._type_defs import GraphConsoldiationFunction, LineType, ScalarBounds, TranslatedMetric
-from ._unit_info import unit_info, UnitInfo
+from ._unit_info import unit_info
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):
@@ -88,20 +93,6 @@ class MetricInfo(_MetricInfoMandatory, total=False):
     render: Callable[[float | int], str]
 
 
-class _MetricInfoExtendedMandatory(TypedDict):
-    name: MetricName
-    title: str | LazyString
-    unit: UnitInfo
-    color: str
-
-
-class MetricInfoExtended(_MetricInfoExtendedMandatory, total=False):
-    # this is identical to MetricInfo except unit, but one can not override the
-    # type of a field so we have to copy everything from MetricInfo
-    help: str | LazyString
-    render: Callable[[float | int], str]
-
-
 class _NormalizedPerfData(TypedDict):
     orig_name: list[str]
     value: float
@@ -144,17 +135,9 @@ class AutomaticDict(OrderedDict[str, RawGraphTemplate]):
 metric_info: dict[MetricName, MetricInfo] = {}
 
 
-class MetricsFromAPI(Registry[MetricInfoExtended]):
-    def plugin_name(self, instance: MetricInfoExtended) -> str:
-        return instance["name"]
-
-
-metrics_from_api = MetricsFromAPI()
-
-
 def registered_metrics() -> Iterator[tuple[str, str]]:
     for metric_id, mie in metrics_from_api.items():
-        yield metric_id, str(mie["title"])
+        yield metric_id, str(mie.title)
     for metric_id, mi in metric_info.items():
         yield metric_id, str(mi["title"])
 
@@ -469,13 +452,7 @@ def lookup_metric_translations_for_check_command(
     return all_translations.get(
         check_command,
         (
-            all_translations.get(
-                check_command.replace(
-                    "check_mk-mgmt_",
-                    "check_mk-",
-                    1,
-                )
-            )
+            all_translations.get(check_command.replace("check_mk-mgmt_", "check_mk-", 1))
             if check_command.startswith("check_mk-mgmt_")
             else None
         ),
@@ -555,8 +532,8 @@ def _get_extended_metric_info(
             mfa = metrics_from_api[lookup_metric_name]
             return MetricInfoExtended(
                 name=metric_name,
-                title=_("Prediction of ") + mfa["title"] + _(" (lower levels)"),
-                unit=mfa["unit"],
+                title=_("Prediction of ") + mfa.title + _(" (lower levels)"),
+                unit=mfa.unit,
                 color=get_gray_tone(color_counter),
             )
 
@@ -571,8 +548,8 @@ def _get_extended_metric_info(
             mfa = metrics_from_api[lookup_metric_name]
             return MetricInfoExtended(
                 name=metric_name,
-                title=_("Prediction of ") + mfa["title"] + _(" (upper levels)"),
-                unit=mfa["unit"],
+                title=_("Prediction of ") + mfa.title + _(" (upper levels)"),
+                unit=mfa.unit,
                 color=get_gray_tone(color_counter),
             )
 
@@ -587,18 +564,12 @@ def _get_extended_metric_info(
     else:
         mi = _get_legacy_metric_info(metric_name, color_counter)
 
-    mie = MetricInfoExtended(
+    return MetricInfoExtended(
         name=metric_name,
         title=mi["title"],
         unit=unit_info[mi["unit"]],
         color=parse_color_into_hexrgb(mi["color"]),
     )
-    if "help" in mi:
-        mie["help"] = mi["help"]
-    if "render" in mi:
-        mie["render"] = mi["render"]
-
-    return mie
 
 
 def get_extended_metric_info(metric_name: str) -> MetricInfoExtended:
@@ -606,21 +577,23 @@ def get_extended_metric_info(metric_name: str) -> MetricInfoExtended:
 
 
 def _translated_metric_scalar(
-    unit_conversion: Callable[[float], float], scalar_bounds: ScalarBounds
+    conversion: Callable[[float], float], scalar_bounds: ScalarBounds
 ) -> ScalarBounds:
     scalar: ScalarBounds = {}
     if (warning := scalar_bounds.get("warn")) is not None:
-        scalar["warn"] = unit_conversion(warning)
+        scalar["warn"] = conversion(warning)
     if (critical := scalar_bounds.get("crit")) is not None:
-        scalar["crit"] = unit_conversion(critical)
+        scalar["crit"] = conversion(critical)
     if (minimum := scalar_bounds.get("min")) is not None:
-        scalar["min"] = unit_conversion(minimum)
+        scalar["min"] = conversion(minimum)
     if (maximum := scalar_bounds.get("max")) is not None:
-        scalar["max"] = unit_conversion(maximum)
+        scalar["max"] = conversion(maximum)
     return scalar
 
 
-def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, TranslatedMetric]:
+def translate_metrics(
+    perf_data: Perfdata, check_command: str, explicit_color: str = ""
+) -> Mapping[str, TranslatedMetric]:
     """Convert Ascii-based performance data as output from a check plug-in
     into floating point numbers, do scaling if necessary.
 
@@ -632,33 +605,25 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
     color_counter: Counter[Literal["metric", "predictive"]] = Counter()
     for entry in perf_data:
         metric_name, normalized = _normalize_perf_data(entry, check_command)
-        mi = _get_extended_metric_info(metric_name, color_counter)
-        unit_conversion = mi["unit"].get("conversion", lambda v: v)
-
-        # https://github.com/python/mypy/issues/6462
-        # new_entry = normalized
-        new_entry = TranslatedMetric(
-            orig_name=normalized["orig_name"],
-            value=unit_conversion(normalized["value"]),
-            scalar=_translated_metric_scalar(unit_conversion, normalized["scalar"]),
-            scale=normalized["scale"],
-            auto_graph=normalized["auto_graph"],
-            title=str(mi["title"]),
-            unit=mi["unit"],
-            color=mi["color"],
-        )
-
         if metric_name in translated_metrics:
-            translated_metrics[metric_name]["orig_name"] = [
-                *translated_metrics[metric_name]["orig_name"],
-                *new_entry["orig_name"],
-            ]
-            translated_metrics[metric_name]["scale"] = [
-                *translated_metrics[metric_name]["scale"],
-                *new_entry["scale"],
-            ]
+            translated_metric = translated_metrics[metric_name]
+            orig_name = list(translated_metric.orig_name) + list(normalized["orig_name"])
+            scale = list(translated_metric.scale) + list(normalized["scale"])
         else:
-            translated_metrics[metric_name] = new_entry
+            orig_name = normalized["orig_name"]
+            scale = normalized["scale"]
+
+        mi = _get_extended_metric_info(metric_name, color_counter)
+        translated_metrics[metric_name] = TranslatedMetric(
+            orig_name=orig_name,
+            value=mi.unit.conversion(normalized["value"]),
+            scalar=_translated_metric_scalar(mi.unit.conversion, normalized["scalar"]),
+            scale=scale,
+            auto_graph=normalized["auto_graph"],
+            title=str(mi.title),
+            unit=mi.unit,
+            color=explicit_color or mi.color,
+        )
 
     return translated_metrics
 
@@ -684,6 +649,7 @@ def available_metrics_translated(
     perf_data_string: str,
     rrd_metrics: list[MetricName],
     check_command: str,
+    explicit_color: str = "",
 ) -> Mapping[str, TranslatedMetric]:
     # If we have no RRD files then we cannot paint any graph :-(
     if not rrd_metrics:
@@ -708,15 +674,19 @@ def available_metrics_translated(
             if p.metric_name not in current_variables:
                 perf_data.append(p)
 
-    return translate_metrics(perf_data, check_command)
+    return translate_metrics(perf_data, check_command, explicit_color)
 
 
-def translated_metrics_from_row(row: Row) -> Mapping[str, TranslatedMetric]:
+def translated_metrics_from_row(
+    row: Row, explicit_color: str = ""
+) -> Mapping[str, TranslatedMetric]:
     what = "service" if "service_check_command" in row else "host"
     perf_data_string = row[what + "_perf_data"]
     rrd_metrics = row[what + "_metrics"]
     check_command = row[what + "_check_command"]
-    return available_metrics_translated(perf_data_string, rrd_metrics, check_command)
+    return available_metrics_translated(
+        perf_data_string, rrd_metrics, check_command, explicit_color
+    )
 
 
 # .
@@ -751,7 +721,7 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
 
 
 def metric_title(metric_name: MetricName) -> str:
-    return str(get_extended_metric_info(metric_name)["title"])
+    return str(get_extended_metric_info(metric_name).title)
 
 
 # .

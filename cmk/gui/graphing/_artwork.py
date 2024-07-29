@@ -476,7 +476,7 @@ def compute_curve_values_at_timestamp(
 def _render_scalar_value(value: float | None, unit: UnitInfo) -> tuple[TimeSeriesValue, str]:
     if value is None:
         return None, _("n/a")
-    return value, unit["render"](value)
+    return value, unit.render(value)
 
 
 def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesValue:
@@ -626,7 +626,7 @@ def _render_legacy_labels(
     # we choose distances like 10, 20, 50. It can also be "binary", where
     # we have 512, 1024, etc. or "time", where we have seconds, minutes,
     # days
-    stepping = unit.get("stepping", "decimal")
+    stepping = unit.stepping or "decimal"
 
     if stepping == "integer":
         label_distance_at_least = max(label_distance_at_least, 1)  # e.g. for unit type "count"
@@ -720,9 +720,9 @@ def _compute_graph_v_axis(
         height_ex,
     )
 
-    if formatter_ident := unit.get("formatter_ident"):
+    if formatter_ident := unit.formatter_ident:
         labels = _compute_labels_from_api(
-            _make_formatter(formatter_ident, unit["symbol"]),
+            _make_formatter(formatter_ident, unit.symbol),
             height_ex,
             mirrored,
             min_y=v_axis_min_max.label_range[0],
@@ -912,9 +912,9 @@ def _create_vertical_axis_labels(
 
     # Now render the single label values. When the unit has a function to calculate
     # a graph global unit, use it. Otherwise add units to all labels individually.
-    if "graph_unit" not in unit:
-        return _render_labels_with_individual_units(label_specs, unit)
-    return _render_labels_with_graph_unit(label_specs, unit)
+    if unit.graph_unit:
+        return _render_labels_with_graph_unit(label_specs, unit.graph_unit)
+    return _render_labels_with_individual_units(label_specs, unit)
 
 
 def _label_spec(
@@ -942,7 +942,7 @@ def _render_labels_with_individual_units(
             label_spec[0],
             _render_label_value(
                 label_spec[1],
-                render_func=unit["render"],
+                render_func=unit.render,
             ),
             label_spec[2],
         )
@@ -952,9 +952,10 @@ def _render_labels_with_individual_units(
 
 
 def _render_labels_with_graph_unit(
-    label_specs: Sequence[tuple[float, float, int]], unit: UnitInfo
+    label_specs: Sequence[tuple[float, float, int]],
+    graph_unit_func: Callable[[list[float]], tuple[str, list[str]]],
 ) -> tuple[list[VerticalAxisLabel], int, str]:
-    graph_unit, scaled_labels = unit["graph_unit"]([l[1] for l in label_specs if l[1] != 0])
+    graph_unit, scaled_labels = graph_unit_func([l[1] for l in label_specs if l[1] != 0])
 
     rendered_labels, max_label_length = render_labels(
         (

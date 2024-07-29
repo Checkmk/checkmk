@@ -32,6 +32,7 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     GraphTemplate,
     ScalarDefinition,
 )
+from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._unit_info import UnitInfo
 from cmk.gui.graphing._utils import translate_metrics
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
@@ -165,7 +166,7 @@ def test__replace_expressions_missing_scalars() -> None:
             [
                 HorizontalRule(7.0, "7.00", "#ffd000", "Warning"),
                 HorizontalRule(10.0, "10 W", "#ff3232", "Critical power"),
-                HorizontalRule(-2.0, "-2 ", "#ffd000", "Warning output"),
+                HorizontalRule(-2.0, "-2.00", "#ffd000", "Warning output"),
             ],
             id="Thresholds present",
         ),
@@ -306,22 +307,23 @@ def test__to_metric_operation(
         gt._to_metric_operation(
             Metric("metric-name"),
             {
-                "metric-name": {
-                    "orig_name": list(orig_names),
-                    "value": 23.5,
-                    "scalar": {},
-                    "scale": list(scales),
-                    "auto_graph": False,
-                    "title": "Title",
-                    "unit": UnitInfo(
+                "metric-name": TranslatedMetric(
+                    orig_name=list(orig_names),
+                    value=23.5,
+                    scalar={},
+                    scale=list(scales),
+                    auto_graph=False,
+                    title="Title",
+                    unit=UnitInfo(
                         id="id",
                         title="Title",
                         symbol="",
                         render=lambda v: f"{v}",
                         js_render="v => v",
+                        conversion=lambda v: v,
                     ),
-                    "color": "#111111",
-                },
+                    color="#111111",
+                ),
             },
             {
                 "site": "Site-ID",

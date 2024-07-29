@@ -70,11 +70,7 @@ def notify_error(error) {
 
         if (isFirstFailure && !isChangeValidation && !isTriggerJob && !isTesting) {
             /// include me for now to give me the chance to debug
-            def notify_emails = [
-                "timotheus.bachinger@checkmk.com",
-                "frans.fuerst@checkmk.com",
-                "jonas.scharpf@checkmk.com",
-            ];
+            def notify_emails = TEAM_CI_MAIL;
             currentBuild.changeSets.each { changeSet ->
                 def culprits_emails = changeSet.items.collect { e -> e.authorEmail };
                 print(

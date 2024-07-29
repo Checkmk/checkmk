@@ -142,7 +142,7 @@ def test_register_unit(
     precision: metrics.AutoPrecision | metrics.StrictPrecision, value: int | float, expected: str
 ) -> None:
     unit = metrics.Unit(metrics.DecimalNotation("unit"), precision)
-    assert register_unit(unit)["render"](value) == expected
+    assert register_unit(unit).render(value) == expected
 
 
 @pytest.mark.parametrize(
@@ -288,7 +288,7 @@ def test_render_unit_notation(
     expected: str,
 ) -> None:
     unit = metrics.Unit(notation, metrics.StrictPrecision(2))
-    assert register_unit(unit)["render"](value) == expected
+    assert register_unit(unit).render(value) == expected
 
 
 @pytest.mark.parametrize(
@@ -399,7 +399,7 @@ def test_render_unit_notation(
     ],
 )
 def test_js_render_unit_notation(unit: metrics.Unit, expected: str) -> None:
-    assert register_unit(unit)["js_render"] == expected
+    assert register_unit(unit).js_render == expected
 
 
 @pytest.mark.parametrize(

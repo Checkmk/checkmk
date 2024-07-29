@@ -6,7 +6,10 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+from cmk.utils.metrics import MetricName
+
 from cmk.gui.log import logger
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
 import cmk.ccc.debug
@@ -57,7 +60,7 @@ def load_graphing_plugins() -> (
 
 class UnitsFromAPI(Registry[UnitInfo]):
     def plugin_name(self, instance: UnitInfo) -> str:
-        return instance["id"]
+        return instance.id
 
 
 _units_from_api = UnitsFromAPI()
@@ -134,6 +137,7 @@ def _make_unit_info(
     "{symbol}",
     new cmk.number_format.{precision.__class__.__name__}({precision.digits}),
 ).render(v)""",
+        conversion=lambda v: v,
         formatter_ident=formatter.ident(),
         valuespec=_vs_type(notation, symbol, precision.digits),
     )
@@ -179,25 +183,41 @@ def registered_units() -> Sequence[RegisteredUnit]:
         [
             RegisteredUnit(
                 name,
-                info["symbol"],
-                info["title"],
-                info.get("description", ""),
-                info.get("valuespec", Float),
+                info.symbol,
+                info.title,
+                info.description or info.title,
+                info.valuespec or Float,
             )
             for (name, info) in unit_info.items()
         ]
         + [
             RegisteredUnit(
                 name,
-                info["symbol"],
-                info["title"],
-                "",
-                info.get("valuespec", Float),
+                info.symbol,
+                info.title,
+                info.description or info.title,
+                info.valuespec or Float,
             )
             for (name, info) in _units_from_api.items()
         ],
         key=lambda x: x.title,
     )
+
+
+@dataclass(frozen=True)
+class MetricInfoExtended:
+    name: MetricName
+    title: str | LazyString
+    unit: UnitInfo
+    color: str
+
+
+class MetricsFromAPI(Registry[MetricInfoExtended]):
+    def plugin_name(self, instance: MetricInfoExtended) -> str:
+        return instance.name
+
+
+metrics_from_api = MetricsFromAPI()
 
 
 class PerfometersFromAPI(

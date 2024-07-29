@@ -168,7 +168,7 @@ def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedM
             )
         except (ValueError, KeyError):
             return text.split("-")[0].strip()
-        return reg.sub(result.unit_info["render"](result.value).strip(), text)
+        return reg.sub(result.unit_info.render(result.value).strip(), text)
 
     return text
 
@@ -184,7 +184,7 @@ def _horizontal_rules_from_thresholds(
                 horizontal_rules.append(
                     HorizontalRule(
                         result.value,
-                        result.unit_info["render"](result.value),
+                        result.unit_info.render(result.value),
                         result.color,
                         entry.title,
                     )
@@ -305,8 +305,8 @@ def _to_metric_operation(
                 scale=scale,
             )
             for orig_name, scale in zip(
-                translated_metrics[expression.name]["orig_name"],
-                translated_metrics[expression.name]["scale"],
+                translated_metrics[expression.name].orig_name,
+                translated_metrics[expression.name].scale,
             )
         ]
         if len(metrics) > 1:

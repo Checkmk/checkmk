@@ -43,10 +43,7 @@ def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
 ) -> RRDData:
-    unit_conversion = get_unit_info(graph_recipe.unit).get(
-        "conversion",
-        lambda v: v,
-    )
+    conversion = get_unit_info(graph_recipe.unit).conversion
     by_service = _group_needed_rrd_data_by_service(
         key
         for metric in graph_recipe.metrics
@@ -75,7 +72,7 @@ def fetch_rrd_data_for_graph(
                     )
                 ] = TimeSeries(
                     data,
-                    conversion=unit_conversion,
+                    conversion=conversion,
                 )
     _align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
     _chop_last_empty_step(graph_data_range, rrd_data)
@@ -304,10 +301,5 @@ def translate_and_merge_rrd_columns(
     return TimeSeries(
         single_value_series,
         time_window=relevant_ts[0].twindow,
-        conversion=_retrieve_unit_conversion_function(target_metric),
+        conversion=get_extended_metric_info(metric_name).unit.conversion,
     )
-
-
-def _retrieve_unit_conversion_function(metric_name: MetricName) -> Callable[[float], float]:
-    mie = get_extended_metric_info(metric_name)
-    return mie["unit"].get("conversion", lambda v: v)

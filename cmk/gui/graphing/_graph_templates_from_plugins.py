@@ -87,7 +87,7 @@ class MetricDefinition:
     def compute_title(self, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
         if self.title:
             return self.title
-        return translated_metrics[next(self.expression.metrics()).name]["title"]
+        return translated_metrics[next(self.expression.metrics()).name].title
 
     def compute_unit_color(
         self,
@@ -108,7 +108,7 @@ class MetricDefinition:
                     ", ".join(sorted(translated_metrics.keys())) or "None",
                 )
             )
-        return MetricUnitColor(unit=result.unit_info["id"], color=result.color)
+        return MetricUnitColor(unit=result.unit_info.id, color=result.color)
 
 
 def _parse_raw_metric_definition(
@@ -165,13 +165,13 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Metric(quantity),
                 line_type=line_type,
-                title=str(get_extended_metric_info(quantity)["title"]),
+                title=str(get_extended_metric_info(quantity).title),
             )
         case metrics.Constant():
             return MetricDefinition(
                 expression=Constant(
                     quantity.value,
-                    explicit_unit_name=register_unit(quantity.unit)["id"],
+                    explicit_unit_name=register_unit(quantity.unit).id,
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
@@ -182,14 +182,14 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=WarningOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=_("Warning of %s") % metric_["title"],
+                title=_("Warning of %s") % metric_.title,
             )
         case metrics.CriticalOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=CriticalOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=_("Critical of %s") % metric_["title"],
+                title=_("Critical of %s") % metric_.title,
             )
         case metrics.MinimumOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
@@ -199,7 +199,7 @@ def _parse_quantity(
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=str(metric_.title),
             )
         case metrics.MaximumOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
@@ -209,7 +209,7 @@ def _parse_quantity(
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=str(metric_.title),
             )
         case metrics.Sum():
             return MetricDefinition(
@@ -224,7 +224,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Product(
                     [_parse_quantity(f, line_type).expression for f in quantity.factors],
-                    explicit_unit_name=register_unit(quantity.unit)["id"],
+                    explicit_unit_name=register_unit(quantity.unit).id,
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
@@ -245,7 +245,7 @@ def _parse_quantity(
                 expression=Fraction(
                     dividend=_parse_quantity(quantity.dividend, line_type).expression,
                     divisor=_parse_quantity(quantity.divisor, line_type).expression,
-                    explicit_unit_name=register_unit(quantity.unit)["id"],
+                    explicit_unit_name=register_unit(quantity.unit).id,
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
@@ -541,8 +541,8 @@ def _get_implicit_graph_templates(
     translated_metrics: Mapping[str, TranslatedMetric],
     already_graphed_metrics: Container[str],
 ) -> Iterable[GraphTemplate]:
-    for metric_name, metric_entry in sorted(translated_metrics.items()):
-        if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
+    for metric_name, translated_metric in sorted(translated_metrics.items()):
+        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
             yield GraphTemplate.from_name(metric_name)
 
 

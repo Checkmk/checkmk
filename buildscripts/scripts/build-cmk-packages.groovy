@@ -405,6 +405,9 @@ def try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix) {
             --distro "${distro}"
         """);
             stash(name: "${bazel_log_prefix}${distro}", includes: "${bazel_log_prefix}*")
+
+            // remove large execution log summary file to save some space, approx 1.6GB per workspace
+            sh("rm -rf ${distro_dir}/${bazel_log_prefix}*.json");
         }
     } catch (Exception e) {
         print("Failed to parse bazel execution logs: ${e}");

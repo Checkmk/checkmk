@@ -4,6 +4,8 @@ import { ref, onMounted, onBeforeUpdate, onUpdated } from 'vue'
 import crossfilter from 'crossfilter2'
 import * as d3 from 'd3'
 
+/* eslint-disable @typescript-eslint/naming-convention */
+
 const props = defineProps<{
   tableSpec: VueTableSpec
 }>()

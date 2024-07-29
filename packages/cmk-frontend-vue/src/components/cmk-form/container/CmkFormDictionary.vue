@@ -2,7 +2,7 @@
 import { onBeforeMount, ref, watch } from 'vue'
 import CmkFormDispatcher from '../CmkFormDispatcher.vue'
 import type { Dictionary, DictionaryElement } from '@/vue_formspec_components'
-import { group_dictionary_validations, type ValidationMessages } from '@/lib/validation'
+import { groupDictionaryValidations, type ValidationMessages } from '@/lib/validation'
 
 interface ElementFromProps {
   dict_config: DictionaryElement
@@ -14,13 +14,13 @@ const props = defineProps<{
 }>()
 
 const data = defineModel('data', { type: Object, required: true })
-const default_values: Record<string, unknown> = {}
+const defaultValues: Record<string, unknown> = {}
 const elementValidation = ref<Record<string, ValidationMessages>>({})
 
 onBeforeMount(() => {
   props.spec.elements.forEach((element: DictionaryElement) => {
     const key = element.ident
-    default_values[key] = element.default_value
+    defaultValues[key] = element.default_value
   })
   if (props.spec.additional_static_elements) {
     for (const [key, value] of Object.entries(props.spec.additional_static_elements)) {
@@ -33,21 +33,21 @@ onBeforeMount(() => {
 watch(() => props.backendValidation, setValidation)
 
 function setValidation(new_validation: ValidationMessages) {
-  const [, element_validation] = group_dictionary_validations(props.spec.elements, new_validation)
-  elementValidation.value = element_validation
+  const [, _elementValidation] = groupDictionaryValidations(props.spec.elements, new_validation)
+  elementValidation.value = _elementValidation
 }
 
 // TODO: computed
 function get_elements_from_props(): ElementFromProps[] {
   const elements: ElementFromProps[] = []
   props.spec.elements.forEach((element: DictionaryElement) => {
-    let is_active = element.ident in data.value ? true : element.required
-    if (is_active && data.value[element.ident] === undefined) {
-      data.value[element.ident] = default_values[element.ident]
+    let isActive = element.ident in data.value ? true : element.required
+    if (isActive && data.value[element.ident] === undefined) {
+      data.value[element.ident] = defaultValues[element.ident]
     }
     elements.push({
       dict_config: element,
-      is_active: is_active
+      is_active: isActive
     })
   })
   return elements
@@ -61,7 +61,7 @@ function toggle_element(event: MouseEvent, key: string) {
   if (key in data.value) {
     delete data.value[key]
   } else {
-    data.value[key] = default_values[key]
+    data.value[key] = defaultValues[key]
   }
 }
 </script>

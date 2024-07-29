@@ -3,7 +3,7 @@ import { ref, watch } from 'vue'
 import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
 import type { List } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
-import { group_list_validations, validate_value, type ValidationMessages } from '@/lib/validation'
+import { groupListValidations, validateValue, type ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{
   spec: List
@@ -42,18 +42,18 @@ watch(
 )
 
 function setValidation(newBackendValidation: ValidationMessages) {
-  const [list_validations, element_validations] = group_list_validations(
+  const [_listValidations, _elementValidations] = groupListValidations(
     newBackendValidation,
     backendData.value.length
   )
-  validation.value = list_validations
-  elementValidation.value = element_validations
+  validation.value = _listValidations
+  elementValidation.value = _elementValidations
 }
 
-let table_ref = ref<HTMLTableElement | null>(null)
-const class_listof_element = 'listof_element'
-const class_element_dragger = 'element_dragger'
-const class_vlof_buttons = 'vlof_buttons'
+let tableRef = ref<HTMLTableElement | null>(null)
+const CLASS_LISTOF_ELEMENT = 'listof_element'
+const CLASS_ELEMENT_DRAGGER = 'element_dragger'
+const CLASS_VLOF_BUTTONS = 'vlof_buttons'
 
 function dragStart(event: DragEvent) {
   ;(event.target! as HTMLTableCellElement).closest('tr')!.classList.add('dragging')
@@ -64,43 +64,43 @@ function dragEnd(event: DragEvent) {
 }
 
 function dragging(event: DragEvent) {
-  if (table_ref.value == null || event.clientY == 0) {
+  if (tableRef.value == null || event.clientY == 0) {
     return
   }
-  const table_children = [...table_ref.value!.children]
-  const dragged_row = (event.target! as HTMLImageElement).closest('tr')!
-  const dragged_index = table_children.indexOf(dragged_row)
+  const tableChildren = [...tableRef.value!.children]
+  const draggedRow = (event.target! as HTMLImageElement).closest('tr')!
+  const draggedIndex = tableChildren.indexOf(draggedRow)
 
-  const y_coords = event.clientY
-  function sibling_middle_point(sibling: Element) {
-    let sibling_rect = sibling.getBoundingClientRect()
-    return sibling_rect.top + sibling_rect.height / 2
+  const yCoords = event.clientY
+  function siblingMiddlePoint(sibling: Element) {
+    const siblingRect = sibling.getBoundingClientRect()
+    return siblingRect.top + siblingRect.height / 2
   }
 
-  let target_index = -1
-  let previous: null | undefined | Element = dragged_row.previousElementSibling
-  while (previous && y_coords < sibling_middle_point(previous)) {
-    target_index = table_children.indexOf(previous)
-    previous = table_ref.value!.children[target_index - 1]
+  let targetIndex = -1
+  let previous: null | undefined | Element = draggedRow.previousElementSibling
+  while (previous && yCoords < siblingMiddlePoint(previous)) {
+    targetIndex = tableChildren.indexOf(previous)
+    previous = tableRef.value!.children[targetIndex - 1]
   }
 
-  let next: null | undefined | Element = dragged_row.nextElementSibling
-  while (next && y_coords > sibling_middle_point(next)) {
-    target_index = table_children.indexOf(next)
-    next = table_ref.value!.children[target_index + 1]
+  let next: null | undefined | Element = draggedRow.nextElementSibling
+  while (next && yCoords > siblingMiddlePoint(next)) {
+    targetIndex = tableChildren.indexOf(next)
+    next = tableRef.value!.children[targetIndex + 1]
   }
 
-  if (dragged_index === target_index || target_index === -1) {
+  if (draggedIndex === targetIndex || targetIndex === -1) {
     return
   }
-  const moved_entry = frontendOrder.value.splice(dragged_index, 1)[0]!
-  frontendOrder.value.splice(target_index, 0, moved_entry)
+  const movedEntry = frontendOrder.value.splice(draggedIndex, 1)[0]!
+  frontendOrder.value.splice(targetIndex, 0, movedEntry)
   sendDataUpstream()
 }
 
 function validateList() {
   validation.value.splice(0)
-  validate_value(backendData.value, props.spec.validators!).forEach((error) => {
+  validateValue(backendData.value, props.spec.validators!).forEach((error) => {
     validation.value.push({ message: error, location: [], invalid_value: backendData.value })
   })
 }
@@ -134,16 +134,16 @@ function sendDataUpstream() {
 </script>
 
 <template>
-  <table ref="table_ref" class="valuespec_listof">
+  <table ref="tableRef" class="valuespec_listof">
     <template v-for="backendIndex in frontendOrder" :key="backendIndex">
-      <tr :class="class_listof_element">
-        <td :class="class_vlof_buttons">
+      <tr :class="CLASS_LISTOF_ELEMENT">
+        <td :class="CLASS_VLOF_BUTTONS">
           <a
             v-if="props.spec.editable_order"
             @dragstart="dragStart"
             @drag="dragging"
             @dragend="dragEnd"
-            ><img src="themes/modern-dark/images/icon_drag.svg" :class="class_element_dragger" />
+            ><img src="themes/modern-dark/images/icon_drag.svg" :class="CLASS_ELEMENT_DRAGGER" />
           </a>
           <a title="Delete this entry">
             <img

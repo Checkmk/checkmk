@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/vue'
-import * as FormSpec from '@/vue_formspec_components'
+import type * as FormSpec from '@/vue_formspec_components'
 import CmkFormReadonly from '@/components/cmk-form/CmkFormReadonly.vue'
 
 function get_spec(spec_type: 'integer' | 'float'): FormSpec.Integer | FormSpec.Float {

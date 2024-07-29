@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import CmkFormSingleChoice from '@/components/cmk-form/element/CmkFormSingleChoice.vue'
-import * as FormSpec from '@/vue_formspec_components'
+import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
 const spec: FormSpec.SingleChoice = {

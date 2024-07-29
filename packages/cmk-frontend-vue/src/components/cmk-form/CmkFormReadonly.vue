@@ -6,11 +6,12 @@ import type {
   List,
   SingleChoice,
   CascadingSingleChoice,
-  LegacyValuespec
+  LegacyValuespec,
+  ValidationMessage
 } from '@/vue_formspec_components'
 import {
-  group_dictionary_validations,
-  group_list_validations,
+  groupDictionaryValidations,
+  groupListValidations,
   type ValidationMessages
 } from '@/lib/validation'
 
@@ -20,7 +21,7 @@ const props = defineProps<{
 }>()
 
 const data = defineModel<unknown>('data', { required: true })
-const error_background_color = 'rgb(252, 85, 85)'
+const ERROR_BACKGROUND_COLOR = 'rgb(252, 85, 85)'
 
 const rendered = ref<VNode | null>(null)
 watch(
@@ -69,33 +70,30 @@ function render_dict(
   value: Record<string, unknown>,
   backendValidation: ValidationMessages
 ): VNode {
-  const dict_elements: VNode[] = []
+  const dictElements: VNode[] = []
   // Note: Dictionary validations are not shown
-  const [, element_validations] = group_dictionary_validations(
-    form_spec.elements,
-    backendValidation
-  )
+  const [, elementValidations] = groupDictionaryValidations(form_spec.elements, backendValidation)
   form_spec.elements.map((element) => {
     if (value[element.ident] == undefined) {
       return
     }
 
-    const element_form = render_form(
+    const elementForm = render_form(
       element.parameter_form,
       value[element.ident],
-      element_validations[element.ident] || []
+      elementValidations[element.ident] || []
     )
-    if (element_form === null) {
+    if (elementForm === null) {
       return
     }
-    dict_elements.push(
+    dictElements.push(
       h('tr', [
         h('td', `${element.parameter_form.title}: `),
-        h('td', { style: 'align: left' }, [element_form])
+        h('td', { style: 'align: left' }, [elementForm])
       ])
     )
   })
-  return h('table', dict_elements)
+  return h('table', dictElements)
 }
 
 function compute_used_value(
@@ -113,11 +111,11 @@ function render_simple_value(
   value: string,
   backendValidation: ValidationMessages = []
 ): VNode {
-  let [used_value, is_error, error_message] = compute_used_value(value, backendValidation)
+  let [usedValue, isError, errorMessage] = compute_used_value(value, backendValidation)
   return h(
     'div',
-    is_error ? { style: error_background_color } : {},
-    is_error ? [`${used_value} - ${error_message}`] : [used_value]
+    isError ? { style: ERROR_BACKGROUND_COLOR } : {},
+    isError ? [`${usedValue} - ${errorMessage}`] : [usedValue]
   )
 }
 
@@ -133,17 +131,17 @@ function render_single_choice(
   }
 
   // Value not found in valid values. Try to show error
-  let [used_value, is_error, error_message] = compute_used_value(value, backendValidation)
-  if (is_error) {
-    return h('div', { style: `background: ${error_background_color}` }, [
-      `${used_value} - ${error_message}`
+  let [usedValue, isError, errorMessage] = compute_used_value(value, backendValidation)
+  if (isError) {
+    return h('div', { style: `background: ${ERROR_BACKGROUND_COLOR}` }, [
+      `${usedValue} - ${errorMessage}`
     ])
   }
 
   // In case no validation message is present, we still want to show raw_value
   // (This should not happen in production, but is useful for debugging)
-  return h('div', { style: `background: ${error_background_color}` }, [
-    `${used_value} - Invalid value`
+  return h('div', { style: `background: ${ERROR_BACKGROUND_COLOR}` }, [
+    `${usedValue} - Invalid value`
   ])
 }
 
@@ -152,30 +150,30 @@ function render_list(
   value: unknown[],
   backendValidation: ValidationMessages
 ): VNode | null {
-  const [list_validations, element_validations] = group_list_validations(
+  const [listValidations, elementValidations] = groupListValidations(
     backendValidation,
     value.length
   )
   if (!value) {
     return null
   }
-  const list_results = [h('label', [form_spec.element_template.title])]
-  list_validations.forEach((validation) => {
-    list_results.push(h('label', [validation.message]))
+  const listResults = [h('label', [form_spec.element_template.title])]
+  listValidations.forEach((validation: ValidationMessage) => {
+    listResults.push(h('label', [validation.message]))
   })
 
   for (let i = 0; i < value.length; i++) {
-    list_results.push(
+    listResults.push(
       h('li', [
         render_form(
           form_spec.element_template,
           value[i],
-          element_validations[i] ? element_validations[i] : []
+          elementValidations[i] ? elementValidations[i] : []
         )
       ])
     )
   }
-  return h('ul', { style: 'display: contents' }, list_results)
+  return h('ul', { style: 'display: contents' }, listResults)
 }
 
 function render_cascading_single_choice(

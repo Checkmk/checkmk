@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import CmkFormList from '@/components/cmk-form/container/CmkFormList.vue'
-import * as FormSpec from '@/vue_formspec_components'
+import type * as FormSpec from '@/vue_formspec_components'
 
 const stringValidators: FormSpec.Validators[] = [
   {

@@ -13,37 +13,35 @@ const props = defineProps<{
 }>()
 
 onMounted(() => {
-  active_mode.value = props.renderMode
+  activeMode.value = props.renderMode
 })
 
 const data = defineModel<unknown>('data', { required: true })
-const value_as_json = computed(() => {
+const valueAsJSON = computed(() => {
   return JSON.stringify(data.value)
 })
 
-const active_mode = ref<string>('readonly')
+const activeMode = ref<string>('readonly')
 
 // Debug utiltilies
-const show_toggle_mode = false
+const showToggleMode = false
 function toggleActiveMode() {
-  if (active_mode.value === 'edit') {
-    active_mode.value = 'readonly'
-  } else if (active_mode.value === 'readonly') {
-    active_mode.value = 'both'
-  } else if (active_mode.value === 'both') {
-    active_mode.value = 'edit'
+  if (activeMode.value === 'edit') {
+    activeMode.value = 'readonly'
+  } else if (activeMode.value === 'readonly') {
+    activeMode.value = 'both'
+  } else if (activeMode.value === 'both') {
+    activeMode.value = 'edit'
   }
 }
 </script>
 
 <template>
-  <input
-    v-if="show_toggle_mode"
-    type="button"
-    value="TOGGLE MODE"
-    @click="toggleActiveMode"
-  /><label v-if="show_toggle_mode">{{ active_mode }}</label>
-  <div v-if="active_mode === 'readonly' || active_mode === 'both'">
+  <input v-if="showToggleMode" type="button" value="TOGGLE MODE" @click="toggleActiveMode" /><label
+    v-if="showToggleMode"
+    >{{ activeMode }}</label
+  >
+  <div v-if="activeMode === 'readonly' || activeMode === 'both'">
     <CmkFormReadonly
       v-model:data="data"
       :backend-validation="backendValidation"
@@ -51,7 +49,7 @@ function toggleActiveMode() {
     ></CmkFormReadonly>
   </div>
 
-  <div v-if="active_mode === 'edit' || active_mode === 'both'">
+  <div v-if="activeMode === 'edit' || activeMode === 'both'">
     <table class="nform">
       <tr>
         <td>
@@ -64,7 +62,7 @@ function toggleActiveMode() {
         </td>
       </tr>
       <!-- This input field contains the computed json value which is sent when the form is submitted -->
-      <input v-model="value_as_json" :name="id" type="hidden" />
+      <input v-model="valueAsJSON" :name="id" type="hidden" />
     </table>
     <pre>{{ data }}</pre>
   </div>

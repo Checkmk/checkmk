@@ -24,11 +24,11 @@ function setup_vue() {
       return
     }
 
-    const vue_app_data = dataset['cmk_vue_app']
-    if (vue_app_data == undefined) {
+    const vueAppData = dataset['cmk_vue_app']
+    if (vueAppData == undefined) {
       return
     }
-    const vueApp = JSON.parse(vue_app_data)
+    const vueApp = JSON.parse(vueAppData)
 
     if (vueApp.app_name == 'form_spec') {
       const app = createApp(CmkRuleset, {
@@ -71,4 +71,5 @@ addEventListener('load', () => {
   setup_vue()
 })
 
+/* eslint-disable-next-line @typescript-eslint/naming-convention */
 export const cmk_export = {}

@@ -12,16 +12,16 @@ const props = defineProps<{
   renderMode: 'edit' | 'readonly' | 'both'
 }>()
 
-const data_ref = ref()
+const dataRef = ref()
 onBeforeMount(() => {
-  data_ref.value = props.data
+  dataRef.value = props.data
 })
 </script>
 
 <template>
   <CmkForm
     :id="id"
-    v-model:data="data_ref"
+    v-model:data="dataRef"
     :backend-validation="validation"
     :spec="spec"
     :render-mode="renderMode"

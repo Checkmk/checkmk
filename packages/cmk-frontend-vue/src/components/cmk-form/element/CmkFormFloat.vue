@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { FormValidation } from '@/components/cmk-form/'
 import type { Float } from '@/vue_formspec_components'
 import { useValidation } from '../utils/validation'
-import { is_float, validate_value, type ValidationMessages } from '@/lib/validation'
+import { isFloat, validateValue, type ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{
   spec: Float
@@ -23,16 +23,16 @@ const value = computed({
   },
   set(value: unknown) {
     validation.value = []
-    let emitted_value: string | number
-    if (is_float(value as string)) {
-      emitted_value = parseFloat(value as string)
+    let emittedValue: string | number
+    if (isFloat(value as string)) {
+      emittedValue = parseFloat(value as string)
     } else {
-      emitted_value = value as string
+      emittedValue = value as string
     }
-    validate_value(emitted_value, props.spec.validators!).forEach((error) => {
-      validation.value = [{ message: error, location: [], invalid_value: emitted_value }]
+    validateValue(emittedValue, props.spec.validators!).forEach((error) => {
+      validation.value = [{ message: error, location: [], invalid_value: emittedValue }]
     })
-    emit('update:data', emitted_value)
+    emit('update:data', emittedValue)
   }
 })
 

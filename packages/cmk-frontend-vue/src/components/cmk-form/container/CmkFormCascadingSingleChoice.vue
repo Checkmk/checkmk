@@ -7,7 +7,7 @@ import type {
   FormSpec
 } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
-import { validate_value, type ValidationMessages } from '@/lib/validation'
+import { validateValue, type ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
@@ -46,21 +46,21 @@ const emit = defineEmits<{
   (e: 'update:data', value: [string, unknown]): void
 }>()
 
-const current_values: Record<string, unknown> = {}
+const currentValues: Record<string, unknown> = {}
 onBeforeMount(() => {
   props.spec.elements.forEach((element: CascadingSingleChoiceElement) => {
     const key = element.name
     if (data.value[0] === key) {
-      current_values[key] = data.value[1]
+      currentValues[key] = data.value[1]
     } else {
-      current_values[key] = element.default_value
+      currentValues[key] = element.default_value
     }
   })
 })
 
 onUpdated(() => {
-  if (data.value[0] in current_values) {
-    current_values[data.value[0]] = data.value[1]
+  if (data.value[0] in currentValues) {
+    currentValues[data.value[0]] = data.value[1]
   }
 })
 
@@ -70,11 +70,11 @@ const value = computed({
   },
   set(value: string) {
     validation.value = []
-    const new_value: [string, unknown] = [value, current_values[value]]
-    validate_value(value, props.spec.validators!).forEach((error) => {
+    const newValue: [string, unknown] = [value, currentValues[value]]
+    validateValue(value, props.spec.validators!).forEach((error) => {
       validation.value = [{ message: error, location: [''], invalid_value: value }]
     })
-    emit('update:data', new_value)
+    emit('update:data', newValue)
   }
 })
 
@@ -83,7 +83,7 @@ interface ActiveElement {
   validation: ValidationMessages
 }
 
-const active_element = computed((): ActiveElement | null => {
+const activeElement = computed((): ActiveElement | null => {
   const element = props.spec.elements.find(
     (element: CascadingSingleChoiceElement) => element.name === data.value[0]
   )
@@ -100,7 +100,7 @@ const active_element = computed((): ActiveElement | null => {
 <template>
   <div>
     <select :id="$componentId" v-model="value">
-      <option v-if="active_element == null" disabled selected hidden value="">
+      <option v-if="activeElement == null" disabled selected hidden value="">
         {{ props.spec.input_hint }}
       </option>
       <option v-for="element in spec.elements" :key="element.name" :value="element.name">
@@ -109,10 +109,10 @@ const active_element = computed((): ActiveElement | null => {
       <label v-if="$props.spec.label" :for="$componentId">{{ props.spec.label }}</label>
     </select>
   </div>
-  <template v-if="active_element != null">
+  <template v-if="activeElement != null">
     <CmkFormDispatcher
       v-model:data="data[1]"
-      :spec="active_element.spec"
+      :spec="activeElement.spec"
       :backend-validation="elementValidation"
     ></CmkFormDispatcher>
     <FormValidation :validation="validation"></FormValidation>

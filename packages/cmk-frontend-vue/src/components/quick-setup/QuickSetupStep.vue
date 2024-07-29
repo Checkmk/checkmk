@@ -44,7 +44,7 @@ const isLast = props.index == props.steps - 1
 //Here we will store the user input. The key is the form's id.
 let userInput: StepData = props?.data || {}
 
-const update_data = (id: string, value: object) => {
+const updateData = (id: string, value: object) => {
   userInput[id] = value
   emit('update', props.index, userInput)
 }
@@ -75,7 +75,7 @@ const update_data = (id: string, value: object) => {
             <CompositeWidget
               v-if="props.stage"
               :components="props.stage.components"
-              @update="update_data"
+              @update="updateData"
             />
           </div>
 

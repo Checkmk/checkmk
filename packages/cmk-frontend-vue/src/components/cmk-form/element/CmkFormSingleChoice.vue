@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { FormValidation } from '@/components/cmk-form/'
 import type { SingleChoice } from '@/vue_formspec_components'
 import { useValidation } from '../utils/validation'
-import { validate_value, type ValidationMessages } from '@/lib/validation'
+import { validateValue, type ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{
   spec: SingleChoice
@@ -23,7 +23,7 @@ const value = computed({
   },
   set(value: string) {
     validation.value = []
-    validate_value(value, props.spec.validators!).forEach((error) => {
+    validateValue(value, props.spec.validators!).forEach((error) => {
       validation.value = [{ message: error, location: [], invalid_value: value }]
     })
     emit('update:data', value)

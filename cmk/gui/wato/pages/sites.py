@@ -84,6 +84,7 @@ from cmk.gui.valuespec import (
     ID,
     Integer,
     MonitoredHostname,
+    NetworkPort,
     TextInput,
     Tuple,
 )
@@ -472,6 +473,10 @@ class ModeEditSite(WatoMode):
                 ),
             ),
             (
+                "message_broker_port",
+                NetworkPort(title=_("Message broker port"), default_value=5672),
+            ),
+            (
                 "multisiteurl",
                 HTTPUrl(
                     title=_("URL of remote site"),
@@ -791,6 +796,7 @@ class ModeDistributedMonitoring(WatoMode):
                 self._show_status_connection_status(table, site_id, site)
                 self._show_config_connection_config(table, site_id, site)
                 self._show_config_connection_status(table, site_id, site)
+                self._show_message_broker_connection(table, site_id, site)
 
         html.javascript("cmk.sites.fetch_site_status();")
 
@@ -906,6 +912,16 @@ class ModeDistributedMonitoring(WatoMode):
             )
         html.close_div()
 
+    def _show_message_broker_connection(
+        self, table: Table, site_id: SiteId, site: SiteConfiguration
+    ) -> None:
+        table.cell("Message broker connection")
+        html.open_div(id_=f"message_broker_status_{site_id}", class_="connection_status")
+        if is_replication_enabled(site):
+            # TODO CMK-18495
+            pass
+        html.close_div()
+
 
 class PageAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
@@ -926,6 +942,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
                 "replication": self._render_configuration_connection_status(
                     site_id, site, replication_status
                 ),
+                "message_broker": self._render_message_broker_status(site_id, site),
             }
         return site_states
 
@@ -980,6 +997,10 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         return html.render_icon(icon, title=message) + HTMLWriter.render_span(
             message, style="vertical-align:middle"
         )
+
+    def _render_message_broker_status(self, site_id: SiteId, site: SiteConfiguration) -> str | HTML:
+        # TODO CMK-18495
+        return ""
 
 
 class PingResult(NamedTuple):

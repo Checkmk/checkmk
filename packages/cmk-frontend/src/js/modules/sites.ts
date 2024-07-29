@@ -17,6 +17,7 @@ interface AjaxJsonResponse<Result = any> {
 interface SiteState {
     livestatus: string;
     replication: string;
+    message_broker: string;
 }
 
 export function fetch_site_status() {
@@ -44,6 +45,12 @@ export function fetch_site_status() {
                 )!;
                 /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 replication_container.innerHTML = site_status.replication;
+
+                const message_broker_container = document.getElementById(
+                    "message_broker_status_" + site_id
+                )!;
+                /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
+                message_broker_container.innerHTML = site_status.message_broker;
             }
         },
         error_handler: function (

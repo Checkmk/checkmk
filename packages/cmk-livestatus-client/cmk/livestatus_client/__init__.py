@@ -95,6 +95,7 @@ class SiteConfiguration(TypedDict, total=False):
     replicate_ec: bool
     replicate_mkps: bool
     replication: str | None
+    message_broker_port: int
     secret: str
     status_host: tuple[SiteId, str] | None
     timeout: int

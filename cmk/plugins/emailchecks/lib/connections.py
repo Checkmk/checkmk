@@ -546,13 +546,18 @@ def _mutf_7_encode(string: str) -> bytes:
     return b"".join(res)
 
 
-def verified_result(data: object) -> list[bytes | str]:  # Sequence[bytes] | Sequence[str] ?
+def verified_result(data: object) -> Sequence[bytes] | Sequence[str]:
     """Return the payload part of the (badly typed) result of IMAP/POP functions or eventually
     raise an exception if the result is not "OK"
     """
 
-    def _parse_element(raw: object) -> bytes | str:
-        if isinstance(raw, (str, bytes)):
+    def _parse_bytes(raw: object) -> bytes:
+        if isinstance(raw, bytes):
+            return raw
+        raise TypeError(raw)
+
+    def _parse_str(raw: object) -> str:
+        if isinstance(raw, str):
             return raw
         raise TypeError(raw)
 
@@ -561,12 +566,12 @@ def verified_result(data: object) -> list[bytes | str]:  # Sequence[bytes] | Seq
             if data[0] not in {"OK", "BYE"}:
                 raise RuntimeError(f"Server responded {data[0]!r}, {data[1]!r}")
             assert isinstance(data[1], list)
-            return [_parse_element(e) for e in data[1]]
+            return [_parse_str(e) for e in data[1]]
         if isinstance(data[0], bytes):
             if not data[0].startswith(b"+OK"):
                 raise RuntimeError(f"Server responded {data[0]!r}, {data[1]!r}")
             assert isinstance(data[1], list)
-            return [_parse_element(e) for e in data[1]]
+            return [_parse_bytes(e) for e in data[1]]
         raise AssertionError()
     if isinstance(data, bytes):
         if not data.startswith(b"+OK"):

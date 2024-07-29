@@ -285,11 +285,6 @@ for IDSENV in $(
 ); do
     (
         set_env "$IDSENV"
-        # FIXME: This is supressed, so we can enable the shellcheck.
-        # I think the shellchecker is right here: INFORMIXDIR will not
-        # be available in the for-loops body.
-        # shellcheck disable=SC2031
-        PATH="$PATH:$INFORMIXDIR/bin"
 
         # try to set them via 'onstat -g env' otherwise
         # DB HAS TO BE RUNNING

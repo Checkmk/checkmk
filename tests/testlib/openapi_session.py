@@ -512,11 +512,27 @@ class CMKOpenApiSession(requests.Session):
         job_status_response: dict = response.json()
         return job_status_response
 
+    def get_discovery_status(self, hostname: str) -> str:
+        job_status_response = self.get_discovery_job_status(hostname)
+        status: str = job_status_response["extensions"]["state"]
+        return status
+
+    def get_discovery_job_status(self, hostname: str) -> dict:
+        response = self.get(f"/objects/service_discovery_run/{hostname}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        job_status_response: dict = response.json()
+        return job_status_response
+
     def discover_services_and_wait_for_completion(
         self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
     ) -> None:
         with self._wait_for_completion(timeout, "get"):
             self.discover_services(hostname, mode)
+            discovery_status = self.get_discovery_status(hostname)
+            assert (
+                discovery_status == "finished"
+            ), f"Unexpected service discovery status: {discovery_status}"
 
     @contextmanager
     def _wait_for_completion(

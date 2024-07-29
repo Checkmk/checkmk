@@ -96,6 +96,7 @@ uvicorn = "*"
 webtest = "*"  # used by WSGI based tests
 
 [packages]
+setuptools = "<72"  # pinned due to docker-py, see https://github.com/docker/docker-py/issues/3256
 setuptools-scm = "==4.1.2"  # needed by various setup.py
 six = "==1.16.0"  # direct dependency + needed by python-dateutil, vcrpy, python-active-directory
 python-dateutil = "~=2.9.0"  # direct dependency

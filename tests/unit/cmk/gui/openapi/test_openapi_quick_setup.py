@@ -25,7 +25,7 @@ from cmk.utils.quick_setup.definitions import (
 from cmk.utils.quick_setup.widgets import FormSpecId
 
 from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
-from cmk.gui.quick_setup.to_frontend import form_spec_recaps, validate_unique_id
+from cmk.gui.quick_setup.to_frontend import recaps_form_spec, validate_unique_id
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
 from cmk.rulesets.v1 import Title
@@ -74,7 +74,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
                     unique_id_formspec_wrapper(Title("account name")),
                 ],
                 validators=[],
-                recap=[form_spec_recaps],
+                recap=[recaps_form_spec],
                 button_txt="Next",
             ),
             QuickSetupStage(
@@ -197,7 +197,7 @@ def test_unique_id_must_be_unique(
                     unique_id_formspec_wrapper(Title("account name")),
                 ],
                 validators=[validate_unique_id],
-                recap=[form_spec_recaps],
+                recap=[recaps_form_spec],
                 button_txt="Next",
             ),
         ],

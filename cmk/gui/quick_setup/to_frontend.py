@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, MutableSequence, Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import asdict
 from typing import Any, cast, Mapping
 
@@ -165,26 +165,24 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
     )
 
 
-def form_spec_recaps(
-    stages_form_data: Sequence[RawFormData],
+def recaps_form_spec(
+    stages_form_data: ParsedFormData,
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
 ) -> Sequence[Widget]:
-
-    recap: MutableSequence[Widget] = []
-    for formspec_id, form_data in stages_form_data[-1].items():
-        if formspec_id not in expected_formspecs_map:
-            continue
-
-        form_spec = expected_formspecs_map[formspec_id]
-        result = serialize_data_for_frontend(
-            form_spec=form_spec,
-            field_id=formspec_id,
-            origin=DataOrigin.FRONTEND,
-            do_validate=False,
-            value=form_data,
+    return [
+        FormSpecRecap(
+            id=form_spec_id,
+            form_spec=serialize_data_for_frontend(
+                form_spec=expected_formspecs_map[form_spec_id],
+                field_id=form_spec_id,
+                origin=DataOrigin.FRONTEND,
+                do_validate=False,
+                value=form_data,
+            ),
         )
-        recap.append(FormSpecRecap(id=formspec_id, form_spec=result))
-    return recap
+        for form_spec_id, form_data in stages_form_data.items()
+        if form_spec_id in expected_formspecs_map
+    ]
 
 
 def validate_current_stage(
@@ -240,6 +238,11 @@ def retrieve_next_stage(
     current_stage_id = incoming_stages[-1].stage_id
     current_stage = quick_setup.get_stage_with_id(current_stage_id)
 
+    expected_form_spec_map = build_expected_formspec_map(quick_setup.stages)
+    combined_parsed_form_data_up_to_current_stage = _form_spec_parse(
+        [incoming_stages[-1].form_data], expected_form_spec_map
+    )
+
     try:
         next_stage = quick_setup.get_stage_with_id(StageId(current_stage.stage_id + 1))
     except InvalidStageException:
@@ -255,8 +258,8 @@ def retrieve_next_stage(
             r
             for recap_callable in current_stage.recap
             for r in recap_callable(
-                [stage.form_data for stage in incoming_stages],
-                build_expected_formspec_map(quick_setup.stages),
+                combined_parsed_form_data_up_to_current_stage,
+                expected_form_spec_map,
             )
         ],
         button_txt=next_stage.button_txt,

@@ -352,6 +352,7 @@ CEE_UNUSED_PACKAGES = [
     "websocket-client",
     "wrapt",
     "yarl",
+    "setuptools",  # works around https://github.com/kevin1024/vcrpy/issues/85
 ]
 
 

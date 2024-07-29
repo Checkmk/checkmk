@@ -25,8 +25,9 @@ from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import LoggedInSuperUser, user
-from cmk.gui.pages import Page
+from cmk.gui.logged_in import user
+from cmk.gui.pages import Page, PageResult
+from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import SizePT
 
 from ._artwork import compute_graph_artwork, compute_graph_artwork_curves, GraphArtwork
@@ -53,72 +54,79 @@ from ._utils import get_graph_data_from_livestatus
 class AjaxGraphImagesForNotifications(Page):
     @classmethod
     def ident(cls) -> str:
-        return "ajax_graph_images"
+        return "noauth:ajax_graph_images"
 
-    def page(self) -> None:
-        if not isinstance(user, LoggedInSuperUser):
-            # This page used to be noauth but restricted to local ips.
-            # Now we use the SiteInternalSecret for this.
-            raise MKUnauthenticatedException(_("You are not allowed to access this page."))
-
-        try:
-            host_name = request.get_validated_type_input_mandatory(HostName, "host")
-
-            service_description = request.get_str_input_mandatory("service", "_HOST_")
-
-            site = request.var("site")
-            # FIXME: We should really enforce site here. But it seems that the notification context
-            # has no idea about the site of the host. This could be optimized later.
-            # if not site:
-            #    raise MKGeneralException("Missing mandatory \"site\" parameter")
-            try:
-                row = get_graph_data_from_livestatus(site, host_name, service_description)
-            except livestatus.MKLivestatusNotFoundError:
-                if active_config.debug:
-                    raise
-                raise Exception(
-                    _("Cannot render graph: host %s, service %s not found.")
-                    % (host_name, service_description)
-                ) from None
-
-            site = row["site"]
-
-            # Always use 25h graph in notifications
-            end_time = int(time.time())
-            start_time = end_time - (25 * 3600)
-
-            graph_render_config = GraphRenderConfigImage.from_user_context_and_options(
-                user,
-                **graph_image_render_options(),
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        """Registered as `noauth:ajax_graph_images`."""
+        if request.remote_ip not in ["127.0.0.1", "::1"]:
+            raise MKUnauthenticatedException(
+                _("You are not allowed to access this page (%s).") % request.remote_ip
             )
 
-            graph_data_range = graph_image_data_range(graph_render_config, start_time, end_time)
-            graph_recipes = TemplateGraphSpecification(
-                site=livestatus.SiteId(site) if site else None,
-                host_name=host_name,
-                service_description=service_description,
-                graph_index=None,  # all graphs
-                destination=GraphDestinations.notification,
-            ).recipes()
-            num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
+        with SuperUserContext():
+            _answer_graph_image_request()
+        return None
 
-            graphs = []
-            for graph_recipe in graph_recipes[:num_graphs]:
-                graph_artwork = compute_graph_artwork(
-                    graph_recipe,
-                    graph_data_range,
-                    graph_render_config.size,
-                )
-                graph_png = render_graph_image(graph_artwork, graph_render_config)
 
-                graphs.append(base64.b64encode(graph_png).decode("ascii"))
+def _answer_graph_image_request() -> None:
+    try:
+        host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
-            response.set_data(json.dumps(graphs))
+        service_description = request.get_str_input_mandatory("service", "_HOST_")
 
-        except Exception as e:
-            logger.error("Call to ajax_graph_images.py failed: %s\n%s", e, traceback.format_exc())
+        site = request.var("site")
+        # FIXME: We should really enforce site here. But it seems that the notification context
+        # has no idea about the site of the host. This could be optimized later.
+        # if not site:
+        #    raise MKGeneralException("Missing mandatory \"site\" parameter")
+        try:
+            row = get_graph_data_from_livestatus(site, host_name, service_description)
+        except livestatus.MKLivestatusNotFoundError:
             if active_config.debug:
                 raise
+            raise Exception(
+                _("Cannot render graph: host %s, service %s not found.")
+                % (host_name, service_description)
+            ) from None
+
+        site = row["site"]
+
+        # Always use 25h graph in notifications
+        end_time = int(time.time())
+        start_time = end_time - (25 * 3600)
+
+        graph_render_config = GraphRenderConfigImage.from_user_context_and_options(
+            user,
+            **graph_image_render_options(),
+        )
+
+        graph_data_range = graph_image_data_range(graph_render_config, start_time, end_time)
+        graph_recipes = TemplateGraphSpecification(
+            site=livestatus.SiteId(site) if site else None,
+            host_name=host_name,
+            service_description=service_description,
+            graph_index=None,  # all graphs
+            destination=GraphDestinations.notification,
+        ).recipes()
+        num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
+
+        graphs = []
+        for graph_recipe in graph_recipes[:num_graphs]:
+            graph_artwork = compute_graph_artwork(
+                graph_recipe,
+                graph_data_range,
+                graph_render_config.size,
+            )
+            graph_png = render_graph_image(graph_artwork, graph_render_config)
+
+            graphs.append(base64.b64encode(graph_png).decode("ascii"))
+
+        response.set_data(json.dumps(graphs))
+
+    except Exception as e:
+        logger.error("Call to ajax_graph_images.py failed: %s\n%s", e, traceback.format_exc())
+        if active_config.debug:
+            raise
 
 
 def graph_image_data_range(

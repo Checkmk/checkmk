@@ -342,12 +342,3 @@ def test_local_secret_permissions(site: Site) -> None:
     )
     assert response.status_code == 200
     assert isinstance(response.json()["lifetime_in_months"], int)
-
-    response = session.get(
-        f"/{site.id}/check_mk/ajax_graph_images.py",
-        headers={
-            "Authorization": f"InternalToken {b64_token}",
-        },
-    )
-    assert response.status_code == 200
-    assert response.text == "[]"

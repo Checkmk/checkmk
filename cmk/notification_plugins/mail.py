@@ -24,7 +24,6 @@ from typing import Literal, NamedTuple, NoReturn
 
 import requests
 
-from cmk.utils.crypto.secrets import SiteInternalSecret
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.paths import omd_root
 
@@ -710,7 +709,6 @@ def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
             "service": svc_desc,
             "num_graphs": context["PARAMETER_GRAPHS_PER_NOTIFICATION"],
         },
-        headers={"Authorization": f"InternalToken {SiteInternalSecret().secret.b64_str}"},
     ).prepare()
 
     timeout = 10

@@ -1100,14 +1100,19 @@ class ModeEditUser(WatoMode):
             elif "customer" in user_attrs:
                 del user_attrs["customer"]
 
-        vs_sites = self._vs_sites()
-        authorized_sites = vs_sites.from_html_vars("authorized_sites")
-        vs_sites.validate_value(authorized_sites, "authorized_sites")
+        if not self._is_locked("authorized_sites"):
+            # when the authorized_sites attribute is locked, the information is rendered on the page
+            # without setting its corresponding html var. On save, the value is therefore unavailable
+            # to be verified, and we can leave its existing value untouched. The length of this
+            # comment shows that the code is flawed.
+            vs_sites = self._vs_sites()
+            authorized_sites = vs_sites.from_html_vars("authorized_sites")
+            vs_sites.validate_value(authorized_sites, "authorized_sites")
 
-        if authorized_sites is not None:
-            user_attrs["authorized_sites"] = authorized_sites
-        elif "authorized_sites" in user_attrs:
-            del user_attrs["authorized_sites"]
+            if authorized_sites is not None:
+                user_attrs["authorized_sites"] = authorized_sites
+            elif "authorized_sites" in user_attrs:
+                del user_attrs["authorized_sites"]
 
         # ntopng
         if is_ntop_available():

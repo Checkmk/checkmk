@@ -25,6 +25,7 @@ import pytest
 import pytest_check  # type: ignore[import-untyped]
 
 from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
+    create_cse_initial_config,
     cse_openid_oauth_provider,
 )
 from tests.testlib.openapi_session import CMKOpenApiSession
@@ -1368,6 +1369,11 @@ class SiteFactory:
     ) -> Site:
         site = self._site_obj(name)
 
+        if self.version.is_saas_edition():
+            # We need to create some CSE config files before starting the site, exactly as it
+            # happens on the SaaS environment, where k8s takes care of creating the config files
+            # before the site is created.
+            create_cse_initial_config()
         site.create()
 
         if init_livestatus:

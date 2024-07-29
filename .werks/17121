@@ -1,0 +1,11 @@
+Title: users: allow user edit saving when 'authorized_sites' attribute is locked
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1722254929
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+Prior to this werk, an error occurred when attempting to save the user edit
+page if the 'authorized_sites' attribute was locked. This werk resolves the issue.

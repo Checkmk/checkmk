@@ -327,7 +327,7 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
         QueryRenderer q{*renderer, EmitBeginEnd::off};
         renderColumns(row, q);
     }
-    RowFragment row_fragment{os.str()};
+    const RowFragment row_fragment{os.str()};
     auto it = stats_groups_.find(row_fragment);
     if (it == stats_groups_.end()) {
         std::vector<std::unique_ptr<Aggregator>> aggregators;

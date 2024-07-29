@@ -4,12 +4,12 @@ import CmkFormFloat from '@/components/cmk-form/element/CmkFormFloat.vue'
 import CmkFormString from './element/CmkFormString.vue'
 import CmkFormSingleChoice from './element/CmkFormSingleChoice.vue'
 import CmkFormDictionary from './container/CmkFormDictionary.vue'
-import type { ValidationMessages } from '@/utils'
 import type { FormSpec } from '@/vue_formspec_components'
 import CmkFormCascadingSingleChoice from '@/components/cmk-form/container/CmkFormCascadingSingleChoice.vue'
 import CmkFormList from '@/components/cmk-form/container/CmkFormList.vue'
 import CmkFormLegacyValueSpec from '@/components/cmk-form/element/CmkFormLegacyValueSpec.vue'
 import type { IComponent } from '@/types'
+import type { ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{
   spec: FormSpec

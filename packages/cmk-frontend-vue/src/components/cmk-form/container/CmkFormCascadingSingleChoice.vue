@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onBeforeMount, onUpdated, type PropType, ref, watch } from 'vue'
-import { validate_value, type ValidationMessages } from '@/utils'
 import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
 import type {
   CascadingSingleChoice,
@@ -8,6 +7,7 @@ import type {
   FormSpec
 } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
+import { validate_value, type ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{
   spec: CascadingSingleChoice

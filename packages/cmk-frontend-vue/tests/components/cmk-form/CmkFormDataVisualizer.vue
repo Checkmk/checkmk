@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
-import type { ValidationMessages } from '@/utils'
 import type { FormSpec } from '@/vue_formspec_components'
+import type { ValidationMessages } from '@/lib/validation'
 
 defineProps<{
   spec: FormSpec

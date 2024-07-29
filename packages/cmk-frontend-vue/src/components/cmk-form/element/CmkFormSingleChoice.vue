@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { validate_value, type ValidationMessages } from '@/utils'
 import { FormValidation } from '@/components/cmk-form/'
 import type { SingleChoice } from '@/vue_formspec_components'
 import { useValidation } from '../utils/validation'
+import { validate_value, type ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{
   spec: SingleChoice

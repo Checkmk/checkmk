@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onBeforeMount, ref, watch } from 'vue'
 import CmkFormDispatcher from '../CmkFormDispatcher.vue'
-import { group_dictionary_validations, type ValidationMessages } from '@/utils'
 import type { Dictionary, DictionaryElement } from '@/vue_formspec_components'
+import { group_dictionary_validations, type ValidationMessages } from '@/lib/validation'
 
 interface ElementFromProps {
   dict_config: DictionaryElement

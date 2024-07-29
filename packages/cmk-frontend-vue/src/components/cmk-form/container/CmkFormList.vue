@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { group_list_validations, validate_value, type ValidationMessages } from '@/utils'
 import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
 import type { List } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
+import { group_list_validations, validate_value, type ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{
   spec: List

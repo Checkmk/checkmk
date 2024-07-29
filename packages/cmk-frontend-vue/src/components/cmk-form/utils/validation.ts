@@ -1,5 +1,5 @@
-import type { ValidationMessages } from '@/utils'
 import { ref, watch, type Ref } from 'vue'
+import type { ValidationMessages } from '@/lib/validation'
 
 /**
  * Hook to handle validation messages and update date if invalid value is provided

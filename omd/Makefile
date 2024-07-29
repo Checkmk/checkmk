@@ -65,7 +65,8 @@ PACKAGES := \
     robotmk \
     xmlsec1 \
     redfish_mkp \
-    jaeger
+    jaeger \
+    rabbitmq
 
 ifeq ($(EDITION),enterprise)
 PACKAGES += enterprise

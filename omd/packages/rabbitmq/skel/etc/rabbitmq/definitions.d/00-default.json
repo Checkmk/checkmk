@@ -1,16 +1,17 @@
 {
   "users": [
     {
-      "name": "###SITE###"
+      "name": "###SITE###",
+      "tags": []
     }
   ],
   "permissions": [
     {
       "user": "###SITE###",
       "vhost": "/",
-      "configure": "^cmk\.app\..*",
-      "write": "^cmk\..*",
-      "read": "^cmk\.(local|intersite)\..*"
+      "configure": "^cmk\\.app\\..*",
+      "write": "^cmk\\..*",
+      "read": "^cmk\\.(local|intersite)\\..*"
     }
   ],
   "policies": [],

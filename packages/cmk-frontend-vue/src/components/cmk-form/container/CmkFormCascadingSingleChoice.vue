@@ -83,10 +83,13 @@ interface ActiveElement {
   validation: ValidationMessages
 }
 
-const active_element = computed((): ActiveElement => {
+const active_element = computed((): ActiveElement | null => {
   const element = props.spec.elements.find(
     (element: CascadingSingleChoiceElement) => element.name === data.value[0]
   )
+  if (element === undefined) {
+    return null
+  }
   return {
     spec: element!.parameter_form,
     validation: []
@@ -97,16 +100,21 @@ const active_element = computed((): ActiveElement => {
 <template>
   <div>
     <select :id="$componentId" v-model="value">
+      <option v-if="active_element == null" disabled selected hidden value="">
+        {{ props.spec.input_hint }}
+      </option>
       <option v-for="element in spec.elements" :key="element.name" :value="element.name">
         {{ element.title }}
       </option>
       <label v-if="$props.spec.label" :for="$componentId">{{ props.spec.label }}</label>
     </select>
   </div>
-  <CmkFormDispatcher
-    v-model:data="data[1]"
-    :spec="active_element.spec"
-    :backend-validation="elementValidation"
-  ></CmkFormDispatcher>
-  <FormValidation :validation="validation"></FormValidation>
+  <template v-if="active_element != null">
+    <CmkFormDispatcher
+      v-model:data="data[1]"
+      :spec="active_element.spec"
+      :backend-validation="elementValidation"
+    ></CmkFormDispatcher>
+    <FormValidation :validation="validation"></FormValidation>
+  </template>
 </template>

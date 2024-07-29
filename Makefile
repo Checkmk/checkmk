@@ -284,7 +284,7 @@ Pipfile.lock:
 				echo "pipenv lock"; \
 				exit 1; \
 			fi; \
-			( SKIP_MAKEFILE_CALL=1 PIP_CONSTRAINT=temporary_pipenv_constraints.txt $(PIPENV) lock -v --python $(PYTHON_MAJOR_DOT_MINOR) ) || ( $(RM) -r .venv ; exit 1 ) \
+			( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) || ( $(RM) -r .venv ; exit 1 ) \
 		fi \
 	) $(LOCK_FD)>$(LOCK_PATH); \
 

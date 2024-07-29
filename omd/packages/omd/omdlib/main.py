@@ -124,7 +124,14 @@ from omdlib.version_info import VersionInfo
 
 import cmk.utils.log
 from cmk.utils import tty
-from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
+from cmk.utils.certs import (
+    cert_dir,
+    CN_TEMPLATE,
+    root_cert_path,
+    RootCA,
+    save_single_cert,
+    save_single_key,
+)
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.password_hashing import hash_password
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
@@ -133,6 +140,7 @@ from cmk.utils.paths import mkbackup_lock_dir
 from cmk.utils.resulttype import Error, OK, Result
 from cmk.utils.werks.acknowledgement import unacknowledged_incompatible_werks
 
+from cmk import messaging
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import Version, versions_compatible, VersionsIncompatible
 
@@ -1451,6 +1459,21 @@ def initialize_agent_ca(site: SiteContext) -> None:
     RootCA.load_or_create(root_cert_path(ca_path), f"Site '{site.name}' agent signing CA")
 
 
+def initialize_message_broker_ca(site: SiteContext, site_key_size: int = 4096) -> None:
+    """Initialize the CA and create the certificate for use with the message broker.
+    These might be replaced by the config sync later.
+    """
+    omd_root = Path(site.dir)
+    cert, key = RootCA.load_or_create(
+        messaging.cacert_file(omd_root),
+        CN_TEMPLATE.format(site.name),
+    ).issue_new_certificate(
+        common_name=site.name,  # used for user identification
+    )
+    save_single_cert(messaging.cert_file(omd_root), cert)
+    save_single_key(messaging.key_file(omd_root), key)
+
+
 def config_change(
     version_info: VersionInfo, site: SiteContext, config_hooks: ConfigHooks
 ) -> list[str]:
@@ -2278,6 +2301,7 @@ def finalize_site_as_user(
     _update_cmk_core_config(site)
     initialize_site_ca(site)
     initialize_agent_ca(site)
+    initialize_message_broker_ca(site)
     save_site_conf(site)
 
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:

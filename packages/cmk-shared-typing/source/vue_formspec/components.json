@@ -89,7 +89,10 @@
                     "const": "legacy_valuespec",
                     "default": "legacy_valuespec"
                 },
-                "html": {
+                "input_html": {
+                    "type": "string"
+                },
+                "readonly_html": {
                     "type": "string"
                 },
                 "varprefix": {

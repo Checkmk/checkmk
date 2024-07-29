@@ -8,7 +8,7 @@ import pprint
 import traceback
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
-from typing import Any
+from typing import Any, Literal
 
 import cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components as VueComponents
 from cmk.gui.exceptions import MKUserError
@@ -19,7 +19,7 @@ from cmk.gui.form_specs.vue.form_spec_recomposers.percentage import (
 from cmk.gui.form_specs.vue.form_spec_recomposers.unknown_form_spec import (
     recompose as recompose_unknown_form_spec,
 )
-from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, VisitorOptions
+from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, RenderMode, VisitorOptions
 from cmk.gui.form_specs.vue.utils import (
     get_visitor,
     register_form_spec_recomposer,
@@ -58,6 +58,7 @@ class VueAppConfig:
     spec: VueComponents.FormSpec
     data: Any
     validation: Any
+    render_mode: Literal["edit", "readonly", "both"]
 
 
 def register_form_specs():
@@ -102,12 +103,17 @@ def get_vue_value(field_id: str, fallback_value: Any) -> Any:
 
 
 def render_form_spec(
-    form_spec: FormSpec, field_id: str, value: Any, origin: DataOrigin, do_validate: bool
+    form_spec: FormSpec,
+    field_id: str,
+    value: Any,
+    origin: DataOrigin,
+    do_validate: bool,
+    display_mode: RenderMode = RenderMode.EDIT,
 ) -> None:
     """Renders the valuespec via vue within a div"""
     try:
         vue_app_config = serialize_data_for_frontend(
-            form_spec, field_id, origin, do_validate, value
+            form_spec, field_id, origin, do_validate, value, display_mode
         )
         logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
         logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
@@ -145,6 +151,7 @@ def serialize_data_for_frontend(
     origin: DataOrigin,
     do_validate: bool,
     value: Any = DEFAULT_VALUE,
+    render_mode: RenderMode = RenderMode.EDIT,
 ) -> VueAppConfig:
     """Serializes backend value to vue app compatible config."""
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=origin))
@@ -160,4 +167,5 @@ def serialize_data_for_frontend(
         spec=vue_component,
         data=vue_value,
         validation=validation,
+        render_mode=render_mode.value,
     )

@@ -155,3 +155,18 @@ test('CmkFormDictionary appends default of required element if missing in data',
 
   expect(getCurrentData()).toBe('{"bar":"baz"}')
 })
+
+test('CmkFormDictionary checks frontend validators on existing element', async () => {
+  render(CmkFormDictionary, {
+    props: {
+      spec,
+      data: { bar: 'some_value' },
+      backendValidation: []
+    }
+  })
+
+  const element = await screen.getByRole('textbox', { name: 'barTitle' })
+  await fireEvent.update(element, '')
+
+  screen.getByText('String length must be between 1 and 20')
+})

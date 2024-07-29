@@ -49,7 +49,8 @@ export type List = FormSpec & {
 };
 export type LegacyValuespec = FormSpec & {
   type: "legacy_valuespec";
-  html: string;
+  input_html?: string;
+  readonly_html?: string;
   varprefix: string;
 };
 export type SingleChoice = FormSpec & {

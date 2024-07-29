@@ -85,3 +85,18 @@ test('CmkFormList local child validation overwrites backend validation', async (
   screen.getByText('String length must be between 1 and 20')
   expect(screen.queryByText('Backend error message')).toBeNull()
 })
+
+test('CmkFormList shows frontend validation on existing element', async () => {
+  render(CmkFormList, {
+    props: {
+      spec,
+      data: ['some_value'],
+      backendValidation: []
+    }
+  })
+
+  const textbox = await screen.findByRole<HTMLInputElement>('textbox', { name: 'barTitle' })
+  await fireEvent.update(textbox, '')
+
+  screen.getByText('String length must be between 1 and 20')
+})

@@ -45,7 +45,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
 from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
 from cmk.gui.form_specs.vue.registries import form_spec_registry
-from cmk.gui.form_specs.vue.type_defs import DataOrigin
+from cmk.gui.form_specs.vue.type_defs import DataOrigin, RenderMode
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
@@ -1418,21 +1418,45 @@ class ModeEditRuleset(WatoMode):
 
         # Value
         table.cell(_("Value"), css=["value"])
-        try:
-            value_html = self._valuespec.value_to_html(value)
-        except Exception as e:
-            try:
-                reason = str(e)
-                self._valuespec.validate_datatype(value, "")
-            except Exception as e2:
-                reason = str(e2)
 
-            value_html = (
-                html.render_icon("alert")
-                + HTML.with_escaping(_("The value of this rule is not valid. "))
-                + escape_to_html_permissive(reason)
+        def _show_rule_backend():
+            try:
+                value_html = self._valuespec.value_to_html(value)
+            except Exception as e:
+                try:
+                    reason = str(e)
+                    self._valuespec.validate_datatype(value, "")
+                except Exception as e2:
+                    reason = str(e2)
+
+                value_html = (
+                    html.render_icon("alert")
+                    + HTML.with_escaping(_("The value of this rule is not valid. "))
+                    + escape_to_html_permissive(reason)
+                )
+            html.write_text_permissive(value_html)
+
+        def _show_rule_frontend(form_spec: FormSpec) -> None:
+            render_form_spec(
+                form_spec,
+                rule.id,
+                value,
+                DataOrigin.DISK,
+                True,
+                display_mode=RenderMode.READONLY,
             )
-        html.write_text_permissive(value_html)
+
+        render_mode, form_spec = _get_render_mode(self._rulespec.name, self._rulespec.valuespec)
+        match render_mode:
+            case ExperimentalRenderMode.BACKEND:
+                _show_rule_backend()
+            case ExperimentalRenderMode.FRONTEND:
+                assert form_spec is not None
+                _show_rule_frontend(form_spec)
+            case ExperimentalRenderMode.FRONTEND | ExperimentalRenderMode.BACKEND_AND_FRONTEND:
+                assert form_spec is not None
+                _show_rule_frontend(form_spec)
+                _show_rule_backend()
 
         # Comment
         table.cell(_("Description"), css=["description"])
@@ -1790,6 +1814,22 @@ def render_hidden_if_locked(vs: ValueSpec, varprefix: str, value: object, locked
         html.close_div()
 
 
+def _get_render_mode(
+    name: str,
+    valuespec: ValueSpec,
+) -> tuple[ExperimentalRenderMode, FormSpec | None]:
+    # NOTE: This code is still experimental
+    configured_mode = get_render_mode()
+    if configured_mode == ExperimentalRenderMode.BACKEND:
+        return configured_mode, None
+
+    if (form_spec := form_spec_registry.get(name.split(":")[-1])) is not None:
+        assert form_spec.rule_spec.parameter_form is not None
+        return configured_mode, form_spec.rule_spec.parameter_form()
+
+    return configured_mode, LegacyValueSpec(valuespec=valuespec)
+
+
 class ABCEditRuleMode(WatoMode):
     VAR_RULE_SPEC_NAME: Final = "varname"
     VAR_RULE_ID: Final = "rule_id"
@@ -2022,7 +2062,9 @@ class ABCEditRuleMode(WatoMode):
         self._rule.update_conditions(rule_conditions)
 
         # VALUE
-        render_mode, registered_form_spec = self._get_render_mode()
+        render_mode, registered_form_spec = _get_render_mode(
+            self._ruleset.name, self._ruleset.rulespec.valuespec
+        )
         self._do_validate_on_render = True
         match render_mode:
             case ExperimentalRenderMode.FRONTEND | ExperimentalRenderMode.BACKEND_AND_FRONTEND:
@@ -2041,20 +2083,6 @@ class ABCEditRuleMode(WatoMode):
 
         self._rule.value = value
         return None
-
-    def _get_render_mode(
-        self,
-    ) -> tuple[ExperimentalRenderMode, FormSpec | None]:
-        # NOTE: This code is still experimental
-        configured_mode = get_render_mode()
-        if configured_mode == ExperimentalRenderMode.BACKEND:
-            return configured_mode, None
-
-        if (form_spec := form_spec_registry.get(self._ruleset.name.split(":")[-1])) is not None:
-            assert form_spec.rule_spec.parameter_form is not None
-            return configured_mode, form_spec.rule_spec.parameter_form()
-
-        return configured_mode, LegacyValueSpec(valuespec=self._ruleset.rulespec.valuespec)
 
     def _get_condition_type_from_vars(self) -> str | None:
         condition_type = self._vs_condition_type().from_html_vars("condition_type")
@@ -2156,7 +2184,9 @@ class ABCEditRuleMode(WatoMode):
         html.prevent_password_auto_completion()
         try:
             # Experimental rendering: Only render form_spec if they are in the form_spec_registry
-            render_mode, registered_form_spec = self._get_render_mode()
+            render_mode, registered_form_spec = _get_render_mode(
+                self._ruleset.name, self._ruleset.rulespec.valuespec
+            )
             match render_mode:
                 case ExperimentalRenderMode.BACKEND:
                     valuespec.validate_datatype(self._rule.value, "ve")

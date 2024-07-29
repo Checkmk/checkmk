@@ -59,7 +59,7 @@ const emit = defineEmits<{
     ref="legacy_dom"
     style="background: #595959"
     class="legacy_valuespec"
-    v-html="spec.html"
+    v-html="spec.input_html"
   ></form>
   <!--eslint-enable-->
   <FormValidation :validation="validation"></FormValidation>

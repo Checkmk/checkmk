@@ -37,7 +37,8 @@ function setup_vue() {
         // eslint has a false positive: assuming `data` is part of a vue component
         // eslint-disable-next-line vue/no-deprecated-data-object-declaration, vue/no-shared-component-data
         data: vueApp.data,
-        validation: vueApp.validation
+        validation: vueApp.validation,
+        renderMode: vueApp.render_mode
       })
       // Assign a unique id to each component, useful for label for=..
       // until https://github.com/vuejs/rfcs/discussions/557 is resolved

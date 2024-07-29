@@ -9,6 +9,7 @@ const props = defineProps<{
   spec: FormSpec
   data: unknown
   validation: ValidationMessages
+  renderMode: 'edit' | 'readonly' | 'both'
 }>()
 
 const data_ref = ref()
@@ -18,5 +19,11 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <CmkForm :id="id" v-model:data="data_ref" :backend-validation="validation" :spec="spec" />
+  <CmkForm
+    :id="id"
+    v-model:data="data_ref"
+    :backend-validation="validation"
+    :spec="spec"
+    :render-mode="renderMode"
+  />
 </template>

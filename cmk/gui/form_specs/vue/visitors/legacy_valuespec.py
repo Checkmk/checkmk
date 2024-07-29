@@ -51,6 +51,14 @@ class LegacyValuespecVisitor(FormSpecVisitor):
         for url_key, url_value in value.get("input_context", {}).items():
             request.set_var(url_key, url_value)
 
+    def _create_input_and_readonly_html(self, varprefix: str, value: Any) -> tuple[str, str]:
+        with output_funnel.plugged():
+            self.form_spec.valuespec.render_input(varprefix, value)
+            input_html = output_funnel.drain()
+
+        readonly_html = self.form_spec.valuespec.value_to_html(value)
+        return input_html, str(readonly_html)
+
     def _to_vue(
         self, raw_value: object, parsed_value: object | EmptyValue
     ) -> tuple[VueComponents.LegacyValuespec, Value]:
@@ -74,39 +82,39 @@ class LegacyValuespecVisitor(FormSpecVisitor):
                     value_to_render = self.form_spec.valuespec.from_html_vars(varprefix)
                 except MKUserError as e:
                     user_errors.add(e)
-                    with output_funnel.plugged():
-                        # Keep in mind that this default value is not used, but replaced by the
-                        # previously set request vars. For more (horrible) insights see the
-                        # valuespec ListOf:render_input
-                        self.form_spec.valuespec.render_input(
-                            varprefix, self.form_spec.valuespec.default_value()
-                        )
-                        return (
-                            VueComponents.LegacyValuespec(
-                                title=title,
-                                help=help_text,
-                                html=output_funnel.drain(),
-                                varprefix=varprefix,
-                            ),
-                            None,
-                        )
+                    # Keep in mind that this default value is not used, but replaced by the
+                    # previously set request vars. For more (horrible) insights see the
+                    # valuespec ListOf:render_input
+                    input_html, readonly_html = self._create_input_and_readonly_html(
+                        varprefix, self.form_spec.valuespec.default_value()
+                    )
+                    return (
+                        VueComponents.LegacyValuespec(
+                            title=title,
+                            help=help_text,
+                            input_html=input_html,
+                            readonly_html=readonly_html,
+                            varprefix=varprefix,
+                        ),
+                        None,
+                    )
         else:
             value_to_render = parsed_value
 
         varprefix = f"legacy_varprefix_{uuid.uuid4()}" if varprefix is None else varprefix
 
         # Renders data from disk or data which was successfully parsed from frontend
-        with output_funnel.plugged():
-            self.form_spec.valuespec.render_input(varprefix, value_to_render)
-            return (
-                VueComponents.LegacyValuespec(
-                    title=title,
-                    help=help_text,
-                    html=output_funnel.drain(),
-                    varprefix=varprefix,
-                ),
-                value_to_render,  # Note: this value is not used in the frontend
-            )
+        input_html, readonly_html = self._create_input_and_readonly_html(varprefix, value_to_render)
+        return (
+            VueComponents.LegacyValuespec(
+                title=title,
+                help=help_text,
+                input_html=input_html,
+                readonly_html=readonly_html,
+                varprefix=varprefix,
+            ),
+            value_to_render,  # Note: this value is not used in the frontend
+        )
 
     def _validate(
         self, raw_value: object, parsed_value: object | EmptyValue

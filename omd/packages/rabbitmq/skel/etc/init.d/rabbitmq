@@ -59,6 +59,12 @@ exit_failure() {
 case "$1" in
 
     start-blocking)
+        # this is just a temporary no-op:
+        trap 'rm --force "${PIDFILE}"' EXIT
+        flock "${PIDFILE}" --command "echo $$ >'${PIDFILE}'; while true; do sleep 1000; done"
+        # to test with systems rabbitmq: comment out the above two lines, and uncomment the following line
+        # EXECUTE=/usr/lib/rabbitmq/bin/rabbitmq-server
+
         RABBITMQ_ENABLED_PLUGINS_FILE="${RABBITMQ_ENABLED_PLUGINS_FILE}" \
             RABBITMQ_CONFIG_FILES="${RABBITMQ_CONFIG_FILES}" \
             RABBITMQ_LOG_BASE="${RABBITMQ_LOG_BASE}" \

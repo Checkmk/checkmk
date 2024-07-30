@@ -1818,6 +1818,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
+    validate: ValueSpecValidateFunc[str] | None = None,
 ) -> Url:
     """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
     return Url(
@@ -1831,6 +1832,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
         title=title,
         help=help,
         default_value=default_value,
+        validate=validate,
     )
 
 

@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from urllib3.util import parse_url
+
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, DropdownChoice, FixedValue, HTTPUrl
 from cmk.gui.wato import HTTPProxyReference
@@ -10,6 +13,16 @@ from cmk.gui.watolib.password_store import passwordstore_choices
 
 from ._base import NotificationParameter
 from ._helpers import get_url_prefix_specs, local_site_url
+
+
+def _validate_slack_uses_https(url: str, html_prefix: str) -> None:
+    parsed = parse_url(url)
+    if (
+        isinstance(parsed.host, str)
+        and parsed.host.endswith("slack.com")
+        and parsed.scheme != "https"
+    ):
+        raise MKUserError(html_prefix, _("Slack Webhooks must use HTTPS."))
 
 
 class NotificationParameterSlack(NotificationParameter):
@@ -26,7 +39,7 @@ class NotificationParameterSlack(NotificationParameter):
                 (
                     "webhook_url",
                     CascadingDropdown(
-                        title=_("Webhook-URL"),
+                        title=_("Webhook URL"),
                         help=_(
                             "Webhook URL. Setup Slack Webhook "
                             '<a href="https://my.slack.com/services/new/incoming-webhook/" target="_blank">here</a>'
@@ -38,7 +51,11 @@ class NotificationParameterSlack(NotificationParameter):
                             (
                                 "webhook_url",
                                 _("Webhook URL"),
-                                HTTPUrl(size=80, allow_empty=False),
+                                HTTPUrl(
+                                    size=80,
+                                    allow_empty=False,
+                                    validate=_validate_slack_uses_https,
+                                ),
                             ),
                             (
                                 "store",

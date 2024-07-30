@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Set
 from dataclasses import dataclass, field
 from typing import Any, cast, Literal
 
@@ -617,6 +617,7 @@ def add_changes_after_editing_site_connection(
     site_id: SiteId,
     is_new_connection: bool,
     replication_enabled: bool,
+    connected_sites: Set[SiteId] | None = None,
 ) -> LogMessage:
     change_message = (
         _("Created new connection to site %s") % site_id
@@ -626,10 +627,11 @@ def add_changes_after_editing_site_connection(
 
     # Don't know exactly what have been changed, so better issue a change
     # affecting all domains
+    sites_to_update = list(connected_sites | {site_id}) if connected_sites else [site_id]
     add_change(
         "edit-sites",
         change_message,
-        sites=[site_id],
+        sites=sites_to_update,
         domains=ABCConfigDomain.enabled_domains(),
     )
 

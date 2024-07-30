@@ -182,6 +182,7 @@ class ModeEditSite(WatoMode):
         _clone_id_return = request.get_ascii_input("clone")
         self._clone_id = None if _clone_id_return is None else SiteId(_clone_id_return)
         self._new = self._site_id is None
+        self._connected_sites: set[SiteId] = set()
 
         if is_free() and (self._new or self._site_id != omd_site()):
             raise MKUserError(None, get_free_message())
@@ -250,27 +251,39 @@ class ModeEditSite(WatoMode):
             )
         return menu
 
-    def action(self) -> ActionResult:
-        if not transactions.check_transaction():
-            return redirect(mode_url("sites"))
+    def _add_connected_sites_to_update(self) -> None:
+        # add connected sites to the sites to be updated
+        connections = BrokerConnectionsConfigFile().load_for_reading()
+        for connection in connections.values():
+            if connection.connecter.site_id == self._site_id:
+                self._connected_sites.add(SiteId(connection.connectee.site_id))
+            elif connection.connectee.site_id == self._site_id:
+                self._connected_sites.add(SiteId(connection.connecter.site_id))
 
+    def _site_from_valuespec(self) -> SiteConfiguration:
         vs = self._valuespec()
         raw_site_spec = vs.from_html_vars("site")
         vs.validate_value(raw_site_spec, "site")
-        # As long as we can't parse the data, we need to cast here. We assume that validate_value
-        # validates the data structure good enough.
-        site_spec = cast(SiteConfiguration, raw_site_spec)
 
+        site_spec = cast(SiteConfiguration, raw_site_spec)
         # Extract the ID. It is not persisted in the site value
         if self._new:
             self._site_id = site_spec["id"]
         del site_spec["id"]
-        assert self._site_id is not None
+
+        return site_spec
+
+    def save_site_changes(self, site_spec: SiteConfiguration) -> ActionResult:
+        if not transactions.check_transaction():
+            return redirect(mode_url("sites"))
 
         configured_sites = self._site_mgmt.load_sites()
 
         # Take over all unknown elements from existing site specs, like for
         # example, the replication secret
+        if self._site_id is None:
+            raise MKUserError(None, _("Site ID must be set"))
+
         for key, value in configured_sites.get(self._site_id, {}).items():
             # We need to review whether or not we still want to allow setting arbritrary keys
             site_spec.setdefault(key, value)  # type: ignore[misc]
@@ -278,16 +291,28 @@ class ModeEditSite(WatoMode):
         self._site_mgmt.validate_configuration(self._site_id, site_spec, configured_sites)
 
         self._site = configured_sites[self._site_id] = site_spec
+        self._add_connected_sites_to_update()
         self._site_mgmt.save_sites(configured_sites)
 
         msg = add_changes_after_editing_site_connection(
             site_id=self._site_id,
             is_new_connection=self._new,
             replication_enabled=is_replication_enabled(site_spec),
+            connected_sites=self._connected_sites,
         )
 
         flash(msg)
         return redirect(mode_url("sites"))
+
+    def _update_related_sites(self, site_spec: SiteConfiguration) -> None:
+        if self._new:
+            # update all replicated sites
+            self._connected_sites = self._connected_sites | set(wato_slave_sites().keys())
+
+    def action(self) -> ActionResult:
+        site_spec = self._site_from_valuespec()
+        self._update_related_sites(site_spec)
+        return self.save_site_changes(site_spec)
 
     def page(self) -> None:
         with html.form_context("site"):

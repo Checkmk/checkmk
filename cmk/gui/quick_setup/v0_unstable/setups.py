@@ -19,7 +19,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import QuickSetupId, StageId
 from cmk.gui.quick_setup.v0_unstable.widgets import Widget
 
 
-@dataclass
+@dataclass(frozen=True)
 class QuickSetupStage:
     stage_id: StageId
     title: str
@@ -37,7 +37,7 @@ class QuickSetupStage:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class QuickSetup:
     title: str
     id: QuickSetupId

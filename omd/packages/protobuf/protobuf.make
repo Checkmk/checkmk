@@ -3,7 +3,7 @@ PROTOBUF := protobuf
 PROTOBUF_VERS := 3.20.1
 PROTOBUF_DIR := $(PROTOBUF)-$(PROTOBUF_VERS)
 # Increase this to enforce a recreation of the build cache
-PROTOBUF_BUILD_ID := 6
+PROTOBUF_BUILD_ID := 7
 # The cached package contains the python major/minor version, so include this in the cache name in order to trigger
 # a rebuild on a python version change.
 PROTOBUF_BUILD_ID := $(PROTOBUF_BUILD_ID)-python$(PYTHON_MAJOR_DOT_MINOR)
@@ -127,6 +127,9 @@ $(PROTOBUF_INTERMEDIATE_INSTALL_PYTHON): $(PROTOBUF_BUILD_PYTHON) $(INTERMEDIATE
 	    --cpp_implementation \
 	    --root=$(PROTOBUF_INSTALL_DIR_PYTHON) \
 	    --prefix=''
+	# Quick hack to unblock CMK-18157
+	patchelf --set-rpath "\$$ORIGIN/../../../../.." \
+	    $(PROTOBUF_INSTALL_DIR_PYTHON)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages/google/protobuf/pyext/_message.cpython-$(PYTHON_MAJOR_MINOR)-x86_64-linux-gnu.so
 	$(TOUCH) $@
 
 $(PROTOBUF_INSTALL): $(PROTOBUF_INSTALL_LIBRARY) $(PROTOBUF_INSTALL_PYTHON)

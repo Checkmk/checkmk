@@ -213,7 +213,7 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
 
 
 def recaps_form_spec(
-    stages_form_data: ParsedFormData,
+    stages_form_data: Sequence[ParsedFormData],
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
 ) -> Sequence[Widget]:
     return [
@@ -227,7 +227,7 @@ def recaps_form_spec(
                 value=form_data,
             ),
         )
-        for form_spec_id, form_data in stages_form_data.items()
+        for form_spec_id, form_data in stages_form_data[-1].items()
         if form_spec_id in expected_formspecs_map
     ]
 
@@ -286,9 +286,9 @@ def retrieve_next_stage(
     current_stage = quick_setup.get_stage_with_id(current_stage_id)
 
     expected_form_spec_map = build_expected_formspec_map(quick_setup.stages)
-    combined_parsed_form_data_up_to_current_stage = _form_spec_parse(
-        [incoming_stages[-1].form_data], expected_form_spec_map
-    )
+    combined_parsed_form_data_by_stage = [
+        _form_spec_parse([stage.form_data], expected_form_spec_map) for stage in incoming_stages
+    ]
 
     try:
         next_stage = quick_setup.get_stage_with_id(StageId(current_stage.stage_id + 1))
@@ -305,7 +305,7 @@ def retrieve_next_stage(
             r
             for recap_callable in current_stage.recap
             for r in recap_callable(
-                combined_parsed_form_data_up_to_current_stage,
+                combined_parsed_form_data_by_stage,
                 expected_form_spec_map,
             )
         ],

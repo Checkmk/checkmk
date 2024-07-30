@@ -44,7 +44,7 @@ CallableValidator = Callable[
     tuple[ValidationErrorMap, GeneralStageErrors],
 ]
 CallableRecap = Callable[
-    [ParsedFormData, Mapping[FormSpecId, FormSpec]],
+    [Sequence[ParsedFormData], Mapping[FormSpecId, FormSpec]],
     Sequence[Widget],
 ]
 

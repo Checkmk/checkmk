@@ -14,6 +14,7 @@ from typing import Final, Generic, Protocol, Self, TypeVar
 import pika
 import pika.adapters.blocking_connection
 import pika.channel
+from pika.exceptions import AMQPConnectionError
 from pydantic import BaseModel
 
 from ._config import get_local_port, make_connection_params
@@ -267,5 +268,5 @@ def check_remote_connection(
     try:
         with pika.BlockingConnection(make_connection_params(omd_root, server, port)):
             return ConnectionOK()
-    except (RuntimeError, socket.gaierror, ssl.SSLError) as exc:
+    except (RuntimeError, socket.gaierror, ssl.SSLError, AMQPConnectionError) as exc:
         return ConnectionFailed(str(exc))

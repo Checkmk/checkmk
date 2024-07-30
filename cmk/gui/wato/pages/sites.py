@@ -12,7 +12,8 @@ import time
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
 from multiprocessing import JoinableQueue, Process
-from typing import Any, cast, NamedTuple, overload
+from typing import Any, assert_never, cast, NamedTuple, overload
+from urllib.parse import urlparse
 
 from livestatus import (
     NetworkSocketDetails,
@@ -26,6 +27,7 @@ import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import is_free
+from cmk.utils.paths import omd_root
 from cmk.utils.user import UserId
 
 import cmk.gui.sites
@@ -119,8 +121,9 @@ from cmk.gui.watolib.sites import (
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.ccc.site import omd_site
+from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
@@ -918,8 +921,12 @@ class ModeDistributedMonitoring(WatoMode):
         table.cell("Message broker connection")
         html.open_div(id_=f"message_broker_status_{site_id}", class_="connection_status")
         if is_replication_enabled(site):
-            # TODO CMK-18495
-            pass
+            # The status is fetched asynchronously for all sites. Show a temporary loading icon.
+            html.icon(
+                "reload",
+                _("Fetching message broker status"),
+                class_=["reloading", "replication_status_loading"],
+            )
         html.close_div()
 
 
@@ -999,8 +1006,37 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         )
 
     def _render_message_broker_status(self, site_id: SiteId, site: SiteConfiguration) -> str | HTML:
-        # TODO CMK-18495
-        return ""
+        if not is_replication_enabled(site):
+            return ""
+
+        icon, message = self._get_connection_status_icon_message(site)
+        return html.render_icon(icon, title=message) + HTMLWriter.render_span(
+            message, style="vertical-align:middle"
+        )
+
+    def _get_connection_status_icon_message(self, site: SiteConfiguration) -> tuple[str, str]:
+        if (remote_host := urlparse(site["multisiteurl"]).hostname) is None:
+            return "cross", "Offline: No valid multisite URL configured"
+
+        try:
+            connection_status = check_remote_connection(
+                omd_root, remote_host, site.get("message_broker_port", 5672)
+            )
+        except (MKTerminate, MKTimeout):
+            raise
+        except Exception as e:
+            connection_status = ConnectionFailed(str(e))
+
+        match connection_status:
+            case ConnectionOK():
+                icon = "checkmark"
+                message = "Online"
+            case ConnectionFailed(error):
+                icon = "cross"
+                message = f"Offline: {error}"
+            case _:
+                assert_never(_)
+        return icon, message
 
 
 class PingResult(NamedTuple):

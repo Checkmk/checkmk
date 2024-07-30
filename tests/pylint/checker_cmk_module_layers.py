@@ -250,6 +250,7 @@ def _allow_for_gui(
             ),
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
+            _in_component(imported=imported, component=Component("cmk.messaging")),
             _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
         )
     )

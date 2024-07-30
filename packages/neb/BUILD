@@ -1,5 +1,4 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
-load("//omd/packages/rules:version.bzl", "mangle_version")
 
 CMK_VERSION = "2.4.0b1"
 
@@ -9,9 +8,7 @@ cc_library(
     srcs = ["src/CmkVersion.cc"],
     hdrs = ["include/neb/CmkVersion.h"],
     includes = ["include"],
-    local_defines = [
-        r'VERSION=\"' + mangle_version(CMK_VERSION) + r'\"',
-    ],
+    local_defines = [r'VERSION=\"' + CMK_VERSION + r'\"'],
 )
 
 # Our generated & patched headers for Nagios 3 & 4

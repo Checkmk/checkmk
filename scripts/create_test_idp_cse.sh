@@ -25,7 +25,7 @@ CMK_URL=${2:-http://localhost:5000}
 sudo mkdir -p /etc/cse
 "$(dirname "$0")/create_cognito_config_cse.sh" "${URL}" "${CMK_URL}" | sudo tee /etc/cse/cognito-cmk.json >/dev/null
 
-CSE_UAP_URL=https://admin-panel.saas-prod.cloudsandbox.check-mk.net/
+CSE_UAP_URL=https://admin-panel.saas-prod.cloudsandbox.checkmk.cloud/
 json_string=$(jq --null-input \
     --arg uap_url "$CSE_UAP_URL" \
     --arg bug_tracker_url "${CSE_UAP_URL}bug-report" \

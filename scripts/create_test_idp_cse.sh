@@ -28,8 +28,7 @@ sudo mkdir -p /etc/cse
 CSE_UAP_URL=https://admin-panel.saas-prod.cloudsandbox.check-mk.net/
 json_string=$(jq --null-input \
     --arg uap_url "$CSE_UAP_URL" \
-    --arg bug_tracker_url "${CSE_UAP_URL}bug-report" \
-    '{"uap_url": $uap_url, "bug_tracker_url": $bug_tracker_url}')
+    '{"uap_url": $uap_url}')
 
 echo "$json_string" | jq "." | sudo tee /etc/cse/admin_panel_url.json >/dev/null
 

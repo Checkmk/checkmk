@@ -180,7 +180,8 @@ def special_agent_discovery_preview(
         _automation_serialized(
             "special-agent-discovery-preview",
             siteid=site_id,
-            indata=special_agent_preview_input.serialize(
+            args=None,
+            stdin_data=special_agent_preview_input.serialize(
                 cmk_version.Version.from_str(cmk_version.__version__)
             ),
         ),
@@ -402,7 +403,8 @@ def diag_special_agent(
         _automation_serialized(
             "diag-special-agent",
             siteid=site_id,
-            indata=diag_special_agent_input.serialize(
+            args=None,
+            stdin_data=diag_special_agent_input.serialize(
                 cmk_version.Version.from_str(cmk_version.__version__)
             ),
         ),

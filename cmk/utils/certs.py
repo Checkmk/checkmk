@@ -129,11 +129,43 @@ def _save_cert_chain(
     certificate_chain: Iterable[Certificate],
     key: PrivateKey,
 ) -> None:
-    path_pem.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
+    _prepare_certfile_path(path_pem)
     with path_pem.open(mode="wb") as f:
         f.write(key.dump_pem(password=None).bytes)
         for cert in certificate_chain:
             f.write(cert.dump_pem().bytes)
+    _set_certfile_permissions(path_pem)
+
+
+def save_single_cert(
+    path_pem: Path,
+    cert: Certificate,
+) -> None:
+    _prepare_certfile_path(path_pem)
+    with path_pem.open(mode="wb") as f:
+        f.write(cert.dump_pem().bytes)
+    _set_certfile_permissions(path_pem)
+
+
+def save_single_key(
+    path_pem: Path,
+    key: PrivateKey,
+) -> None:
+    _prepare_certfile_path(path_pem)
+    with path_pem.open(mode="wb") as f:
+        f.write(key.dump_pem(password=None).bytes)
+    _set_certfile_permissions(path_pem)
+
+
+def _prepare_certfile_path(
+    path_pem: Path,
+) -> None:
+    path_pem.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
+
+
+def _set_certfile_permissions(
+    path_pem: Path,
+) -> None:
     path_pem.chmod(mode=0o660)
 
 

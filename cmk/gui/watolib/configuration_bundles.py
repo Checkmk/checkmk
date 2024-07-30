@@ -239,6 +239,8 @@ def delete_config_bundle(bundle_id: BundleId) -> None:
     if references.dcd_connections:
         _delete_dcd_connections(references.dcd_connections)
 
+    store.save(all_bundles)
+
 
 def _collect_many(values: Iterable[tuple[BundleId, _T]]) -> Mapping[BundleId, Sequence[_T]]:
     mapping: dict[BundleId, list[_T]] = {}

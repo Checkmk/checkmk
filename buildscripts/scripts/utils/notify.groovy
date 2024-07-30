@@ -70,7 +70,9 @@ def notify_error(error) {
 
         if (isFirstFailure && !isChangeValidation && !isTriggerJob && !isTesting) {
             /// include me for now to give me the chance to debug
-            def notify_emails = TEAM_CI_MAIL;
+            def notify_emails = [];
+            // ugly workaround, split() only + unique() does not work
+            notify_emails.addAll(TEAM_CI_MAIL.replaceAll(',', ' ').split(' ').grep());
             currentBuild.changeSets.each { changeSet ->
                 def culprits_emails = changeSet.items.collect { e -> e.authorEmail };
                 print(

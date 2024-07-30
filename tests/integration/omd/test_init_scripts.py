@@ -7,32 +7,32 @@ from tests.testlib.site import Site
 
 
 def test_init_scripts(site: Site) -> None:
-    scripts = [
+    scripts = {
+        "agent-receiver",
         "apache",
+        "background-jobs",
         "core",
         "crontab",
+        "jaeger",
         "mkeventd",
         "nagios",
         "npcd",
-        "pnp_gearman_worker",
-        "rrdcached",
-        "xinetd",
-        "jaeger",
-        "stunnel",
-        "redis",
-        "agent-receiver",
         "piggyback-hub",
-        "background-jobs",
-    ]
+        "pnp_gearman_worker",
+        "redis",
+        "rrdcached",
+        "stunnel",
+        "xinetd",
+    }
 
     if not site.version.is_raw_edition():
-        scripts += [
+        scripts |= {
             "cmc",
             "dcd",
             "liveproxyd",
             "mknotifyd",
-        ]
+        }
 
-    installed_scripts = site.listdir("etc/init.d")
+    installed_scripts = set(site.listdir("etc/init.d"))
 
-    assert sorted(scripts) == sorted(installed_scripts)
+    assert scripts == installed_scripts

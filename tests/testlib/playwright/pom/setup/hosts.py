@@ -36,9 +36,7 @@ class SetupHost(CmkPage):
         This method is used within `CmkPage.__init__`.
         """
         logger.info("Navigate to 'Setup hosts' page")
-        # navigate to "setup -> Hosts"
         self.main_menu.setup_menu("Hosts").click()
-        # wait for page to load
         _url_pattern: str = quote_plus("wato.py?mode=folder")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self._validate_page()
@@ -56,17 +54,71 @@ class SetupHost(CmkPage):
     def add_folder(self) -> Locator:
         return self.get_link("Add folder")
 
-    def create_host(self, host: HostDetails) -> None:
-        """On `setup -> Hosts` page, create a new host and activate changes."""
-        logger.info("Creating a host: %s", host.name)
-        self.add_host.click()
+
+class AddHost(CmkPage):
+    """Represents page `setup -> Hosts -> Add host`."""
+
+    page_title: str = "Add host"
+
+    dropdown_buttons: list[str] = [
+        "Host",
+        "Display",
+        "Help",
+    ]
+
+    suggestions: list[str] = [
+        r"Save & run service discovery",
+        r"Save & view folder",
+        r"Save & run connection tests",
+    ]
+
+    properties: list[str] = [
+        r"Basic settings",
+        r"Network address",
+        r"Monitoring agents",
+        r"Custom attributes",
+        r"Management board",
+    ]
+
+    def navigate(self) -> None:
+        """Instructions to navigate to `Setup -> Hosts -> Add host` page."""
+        setup_host_page = SetupHost(self.page)
+        logger.info("Navigate to '%s' page", self.page_title)
+        setup_host_page.add_host.click()
         self.page.wait_for_url(
             url=re.compile(quote_plus("wato.py?folder=&mode=newhost")), wait_until="load"
         )
+        self._validate_page()
+
+    @property
+    def host_name_text_field(self) -> Locator:
+        return self.main_area.get_input("host")
+
+    @property
+    def ipv4_address_checkbox(self) -> Locator:
+        return self.main_area.get_attribute_label("ipaddress")
+
+    @property
+    def ipv4_address_text_field(self) -> Locator:
+        return self.main_area.get_input("ipaddress")
+
+    def _validate_page(self) -> None:
+        logger.info("Validate that current page is '%s' page", self.page_title)
+        self.main_area.check_page_title(self.page_title)
+        expect(self.main_area.get_suggestion(self.suggestions[0])).to_be_visible()
+        expect(self.host_name_text_field).to_be_visible()
+
+    def create_host(self, host: HostDetails) -> None:
+        """On `Setup -> Hosts -> Add host` page, create a new host and activate changes.
+
+        Note: only host name and ip address are filled in this method. If needed the method can
+        be extended to fill other parameters of the host.
+        """
         logger.info("Fill in host details")
-        self.main_area.get_input("host").fill(host.name)
-        self.main_area.get_attribute_label("ipaddress").click()
-        self.main_area.get_input("ipaddress").fill(host.ip)
+        self.host_name_text_field.fill(host.name)
+        self.ipv4_address_checkbox.click()
+        self.ipv4_address_text_field.fill(host.ip)
+
         logger.info("Save new host")
         self.main_area.get_suggestion("Save & view folder").click()
         try:
@@ -130,11 +182,11 @@ class HostProperties(CmkPage):
 
         This method is used within `CmkPage.__init__`.
         """
-        setup_host_page = SetupHost(self.page)
         if not self._exists:
-            setup_host_page.create_host(self.details)
+            add_host_page = AddHost(self.page)
+            add_host_page.create_host(self.details)
             self._exists = True
-            setup_host_page.navigate()
+        setup_host_page = SetupHost(self.page)
         logger.info("Navigate to 'Host properties' page")
         setup_host_page.get_link(self.details.name).click()
         _url_pattern = quote_plus(f"wato.py?folder=&host={self.details.name}&mode=edit_host")
@@ -152,7 +204,7 @@ class HostProperties(CmkPage):
         """On `setup -> Hosts -> Properties`, delete host and activate changes."""
         logger.info("Delete host: %s", self.details.name)
         self.main_area.dropdown_button("Host").click()
-        self.get_link("Delete").click()
+        self.main_area.dropdown_menu_item("menu_host", "Delete").click()
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
         self.page.wait_for_url(
             url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"

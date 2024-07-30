@@ -31,7 +31,6 @@ from cmk.gui.wsgi.type_defs import WSGIResponse
 
 import cmk.ccc.store
 import cmk.ccc.version as cmk_version
-from cmk import trace
 from cmk.ccc.site import url_prefix
 
 # TODO
@@ -66,9 +65,6 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
                 return response
 
             user_id = session.user.ident
-
-            trace.get_current_span().set_attribute("cmk.auth.user_id", str(user_id))
-
             two_factor_ok = requested_file_name(request) in (
                 "user_login_two_factor",
                 "user_webauthn_login_begin",

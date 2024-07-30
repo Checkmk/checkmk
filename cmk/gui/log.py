@@ -9,8 +9,6 @@ from pathlib import Path
 import cmk.utils.log
 import cmk.utils.paths
 
-from cmk import trace
-
 logger = getLogger("cmk.web")
 
 
@@ -20,7 +18,6 @@ def init_logging() -> None:
     root = getLogger()
     del root.handlers[:]  # Remove all previously existing handlers
     root.addHandler(handler)
-    trace.init_logging()
 
 
 def set_log_levels(log_levels: dict[str, int]) -> None:

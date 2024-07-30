@@ -48,9 +48,9 @@ def test_wsgi_app(request_context: None) -> None:
     def start_response(status, response_headers, exc_info=None):
         pass
 
-    assert wsgi_app.wsgi.config_loader.mode == "default"
+    assert wsgi_app.config_loader.mode == "default"
     wsgi_app(env, start_response)
-    assert wsgi_app.wsgi.config_loader.mode == "imported"
+    assert wsgi_app.config_loader.mode == "imported"
 
 
 def _import_file(file_name: str) -> types.ModuleType:

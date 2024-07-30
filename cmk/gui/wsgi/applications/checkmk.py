@@ -47,10 +47,7 @@ from cmk.gui.wsgi.applications.utils import (
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
 import cmk.ccc.store
-from cmk import trace
 from cmk.ccc.exceptions import MKException
-
-tracer = trace.get_tracer()
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
@@ -164,7 +161,6 @@ def get_mime_type_from_output_format(output_format: str) -> str:
 class CheckmkApp(AbstractWSGIApp):
     """The Checkmk GUI WSGI entry point"""
 
-    @tracer.start_as_current_span("CheckmkApp.wsgi_app")
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         """Is called by the WSGI server to serve the current page"""
         with cmk.ccc.store.cleanup_locks(), sites.cleanup_connections():

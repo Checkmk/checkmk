@@ -9,6 +9,8 @@ import warnings
 
 import werkzeug
 from flask import Flask, redirect
+from opentelemetry.instrumentation.redis import RedisInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from werkzeug.debug import DebuggedApplication
 from werkzeug.exceptions import BadRequest
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -50,6 +52,8 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     # Until this can work, we need to do it at runtime in `FileBasedSession`.
     # app.config["PERMANENT_SESSION_LIFETIME"] = active_config.session_mgmt["user_idle_timeout"]
 
+    _instrument()
+
     # NOTE: some schemas are generically generated. On default, for duplicate schema names, we
     # get name+increment which we have deemed fine. We can therefore suppress those warnings.
     # https://github.com/marshmallow-code/apispec/issues/444
@@ -89,6 +93,11 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
         return redirect(dest)
 
     return app
+
+
+def _instrument() -> None:
+    RequestsInstrumentor().instrument()
+    RedisInstrumentor().instrument()
 
 
 __all__ = ["make_wsgi_app", "CheckmkFlaskApp"]

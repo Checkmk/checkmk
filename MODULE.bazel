@@ -7,3 +7,27 @@ git_override(
     commit = "1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93",
     remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
 )
+
+bazel_dep(name = "rules_python", version = "0.34.0")
+
+# TODO: how to sync this with the PYTHON_VERSION in package_versions.bzl?
+VERSION = "3.12.3"
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    # We can specify the exact version.
+    python_version = VERSION,
+)
+
+bazel_dep(name = "aspect_rules_py", version = "0.7.4")
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "cmk_agent_based",
+    python_version = "3.12.3",
+    requirements_by_platform = {
+        "//packages/cmk-agent-based:requirements_lock.txt": "linux_*,osx_*",
+    },
+)
+use_repo(pip, "cmk_agent_based")

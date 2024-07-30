@@ -23,22 +23,22 @@ do_query() {
     # Check if mysqld is running and root password setup
     echo "<<<mysql_ping>>>"
     echo "$INSTANCE_HEADER"
-    mysqladmin --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} ping 2>&1 || return
+    $mysqladmin --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} ping 2>&1 || return
 
     echo "<<<mysql>>>"
     echo "$INSTANCE_HEADER"
-    mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
+    $mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
         -e "show global status ; show global variables ;"
 
     echo "<<<mysql_capacity>>>"
     echo "$INSTANCE_HEADER"
-    mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
+    $mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
         -e "SELECT table_schema, sum(data_length + index_length), sum(data_free)
             FROM information_schema.TABLES GROUP BY table_schema"
 
     echo "<<<mysql_slave>>>"
     echo "$INSTANCE_HEADER"
-    mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s \
+    $mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s \
         -e "show slave status\G"
 
 }
@@ -51,7 +51,20 @@ if [ ! -f "${MK_CONFDIR}/mysql.local.cfg" ]; then
 EOF
 fi
 
-if type mysqladmin >/dev/null; then
+# Add support for monitoring mariadb
+if type mariadb-admin >/dev/null; then
+    mysqladmin="mariadb-admin"
+elif type mysqladmin >/dev/null; then
+    mysqladmin="mysqladmin"
+fi
+
+if type mariadb >/dev/null; then
+    mysql="mariadb"
+elif type mysql >/dev/null; then
+    mysql="mysql"
+fi
+
+if [ -n "$mysqladmin" ]; then
     mysql_socket_string=$(grep -F -h socket "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
     alias_string=$(grep -F -h alias "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*aliases=\([^ ]*\).*/\1/p')
 

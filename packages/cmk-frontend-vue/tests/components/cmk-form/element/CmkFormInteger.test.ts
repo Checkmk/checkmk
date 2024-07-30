@@ -72,11 +72,13 @@ test('CmkFormInteger renders backend validation messages', async () => {
         {
           location: [],
           message: 'Backend error message',
-          invalid_value: ''
+          invalid_value: 12
         }
       ]
     }
   })
 
   await screen.findByText('Backend error message')
+  const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
+  expect(element.value).toBe('12')
 })

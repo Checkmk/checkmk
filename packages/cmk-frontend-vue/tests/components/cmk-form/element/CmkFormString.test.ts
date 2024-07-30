@@ -71,11 +71,13 @@ test('CmkFormString renders backend validation messages', async () => {
         {
           location: [],
           message: 'Backend error message',
-          invalid_value: ''
+          invalid_value: 'some_invalid_value'
         }
       ]
     }
   })
 
   await screen.findByText('Backend error message')
+  const element = screen.getByRole<HTMLInputElement>('textbox')
+  expect(element.value).toBe('some_invalid_value')
 })

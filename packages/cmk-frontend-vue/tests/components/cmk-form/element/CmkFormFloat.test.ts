@@ -69,9 +69,11 @@ test('CmkFormFloat renders backend validation messages', async () => {
     props: {
       spec,
       data: 42.0,
-      backendValidation: [{ location: [], message: 'Backend error message', invalid_value: '' }]
+      backendValidation: [{ location: [], message: 'Backend error message', invalid_value: 12.5 }]
     }
   })
 
   await screen.findByText('Backend error message')
+  const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
+  expect(element.value).toBe('12.5')
 })

@@ -1,4 +1,4 @@
-import { ref, watch, type Ref, computed, type WritableComputedRef } from 'vue'
+import { ref, watch, type Ref, computed, type WritableComputedRef, onMounted } from 'vue'
 import { validateValue, type ValidationMessages } from '@/lib/validation'
 import type { Validator } from '@/vue_formspec_components'
 
@@ -12,16 +12,16 @@ export function useValidation<Type>(
 ): [Ref<ValidationMessages>, WritableComputedRef<Type | string>] {
   const validation = ref<ValidationMessages>([])
 
-  watch(
-    getBackendValidation,
-    (newValidation: ValidationMessages) => {
-      newValidation.forEach((message) => {
-        data.value = message.invalid_value as string
-      })
-      validation.value = newValidation
-    },
-    { immediate: true }
-  )
+  const updateValidation = (newValidation: ValidationMessages) => {
+    validation.value = newValidation
+    newValidation.forEach((message) => {
+      data.value = message.invalid_value as string
+    })
+  }
+
+  onMounted(() => updateValidation(getBackendValidation()))
+
+  watch(getBackendValidation, updateValidation)
 
   const value = computed<Type | string>({
     get() {

@@ -5,7 +5,7 @@ Component: multisite
 Date: 1700147621
 Edition: cre
 Level: 1
-Version: 2.1.0p38
+Version: 2.1.0p37
 
 The mouse interaction (zooming, scrolling etc.) for graphs in dashboards only worked sporadically
 and at seemingly random points.

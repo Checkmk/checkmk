@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ..v0_unstable._registry import QuickSetupRegistry
-from .aws_stages import quick_setup_aws
+from __future__ import annotations
 
+from typing import NewType
 
-def register(registry: QuickSetupRegistry) -> None:
-    registry.register(quick_setup_aws)
+StageId = NewType("StageId", int)
+QuickSetupId = NewType("QuickSetupId", str)

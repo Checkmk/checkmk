@@ -7,13 +7,9 @@ from collections.abc import Sequence
 
 from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
 from cmk.gui.quick_setup.to_frontend import recaps_form_spec, validate_unique_id
-from cmk.gui.quick_setup.v0_unstable.definitions import (
-    IncomingStage,
-    QuickSetup,
-    QuickSetupId,
-    QuickSetupStage,
-    StageId,
-)
+from cmk.gui.quick_setup.v0_unstable.definitions import IncomingStage
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.type_defs import QuickSetupId, StageId
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,

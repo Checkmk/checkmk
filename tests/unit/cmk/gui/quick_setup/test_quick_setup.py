@@ -5,7 +5,9 @@
 from collections.abc import Sequence
 
 from cmk.gui.quick_setup.to_frontend import build_expected_formspec_map, recaps_form_spec
-from cmk.gui.quick_setup.v0_unstable.definitions import ParsedFormData, QuickSetupStage, StageId
+from cmk.gui.quick_setup.v0_unstable.definitions import ParsedFormData
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.type_defs import StageId
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecRecap, FormSpecWrapper
 
 from cmk.rulesets.v1 import Title

@@ -29,9 +29,9 @@ from cmk.gui.quick_setup.to_frontend import (
     retrieve_next_stage,
     validate_current_stage,
 )
+from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     IncomingStage,
-    quick_setup_registry,
     QuickSetupOverview,
     QuickSetupSaveRedirect,
     Stage,

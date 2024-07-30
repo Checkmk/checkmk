@@ -11,19 +11,17 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
 from cmk.gui.quick_setup.to_frontend import recaps_form_spec, validate_unique_id
+from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     GeneralStageErrors,
     ParsedFormData,
-    quick_setup_registry,
-    QuickSetup,
-    QuickSetupId,
-    QuickSetupStage,
     QuickSetupValidationError,
-    StageId,
     UniqueBundleIDStr,
     UniqueFormSpecIDStr,
     ValidationErrorMap,
 )
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.type_defs import QuickSetupId, StageId
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 

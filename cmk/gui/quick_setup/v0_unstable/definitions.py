@@ -4,24 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, MutableMapping, MutableSequence, Sequence
+from collections.abc import MutableMapping, MutableSequence, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping, NewType
 
-from cmk.gui.quick_setup.v0_unstable.widgets import (
-    Collapsible,
-    FormSpecId,
-    FormSpecWrapper,
-    ListOfWidgets,
-    Widget,
-)
+from cmk.gui.quick_setup.v0_unstable.type_defs import QuickSetupId, StageId
+from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.plugin_registry import Registry
 from cmk.rulesets.v1.form_specs import FormSpec
 
-StageId = NewType("StageId", int)
-QuickSetupId = NewType("QuickSetupId", str)
 RawFormData = NewType("RawFormData", Mapping[FormSpecId, object])
 ParsedFormData = Mapping[FormSpecId, Any]
 
@@ -72,24 +64,6 @@ class Stage:
 
 
 @dataclass
-class QuickSetupStage:
-    stage_id: StageId
-    title: str
-    configure_components: Sequence[Widget]
-    validators: Iterable[CallableValidator]
-    recap: Iterable[CallableRecap]
-    button_txt: str
-    sub_title: str | None = None
-
-    def stage_overview(self) -> StageOverview:
-        return StageOverview(
-            stage_id=self.stage_id,
-            title=self.title,
-            sub_title=self.sub_title,
-        )
-
-
-@dataclass
 class QuickSetupOverview:
     quick_setup_id: QuickSetupId
     overviews: list[StageOverview]
@@ -111,57 +85,9 @@ class QuickSetupSaveRedirect:
     redirect_url: str | None = None
 
 
-@dataclass
-class QuickSetup:
-    title: str
-    id: QuickSetupId
-    stages: Sequence[QuickSetupStage]
-    save_action: Callable[[Sequence[IncomingStage]], str] | None = None
-
-    def get_stage_with_id(self, stage_id: StageId) -> QuickSetupStage:
-        for stage in self.stages:
-            if stage.stage_id == stage_id:
-                return stage
-        raise InvalidStageException(f"The stage id '{stage_id}' does not exist.")
-
-
 class QuickSetupNotFoundException(MKGeneralException):
     pass
 
 
 UniqueFormSpecIDStr = "formspec_unique_id"
 UniqueBundleIDStr = "bundle_id"
-
-
-class MissingRequiredFormSpecError(MKGeneralException):
-    def __init__(self):
-        super().__init__(f"Required formspec wrapper with id '{UniqueFormSpecIDStr}' is missing.")
-
-
-def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpecWrapper]:
-    for component in components:
-        if isinstance(component, (ListOfWidgets, Collapsible)):
-            yield from iter(_flatten_formspec_wrappers(component.items))
-
-        if isinstance(component, FormSpecWrapper):
-            yield component
-
-
-class QuickSetupRegistry(Registry[QuickSetup]):
-    def plugin_name(self, instance: QuickSetup) -> str:
-        return str(instance.id)
-
-    def _check_for_required_formspec(self, instance: QuickSetup) -> None:
-        if UniqueFormSpecIDStr not in [
-            wrapper.id
-            for stage in instance.stages
-            for wrapper in _flatten_formspec_wrappers(stage.configure_components)
-        ]:
-            raise MissingRequiredFormSpecError()
-
-    def register(self, instance: QuickSetup) -> QuickSetup:
-        self._check_for_required_formspec(instance)
-        return super().register(instance)
-
-
-quick_setup_registry = QuickSetupRegistry()

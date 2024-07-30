@@ -20,17 +20,16 @@ from cmk.gui.quick_setup.v0_unstable.definitions import (
     IncomingStage,
     InvalidStageException,
     ParsedFormData,
-    QuickSetup,
     QuickSetupOverview,
     QuickSetupSaveRedirect,
-    QuickSetupStage,
     QuickSetupValidationError,
     RawFormData,
     Stage,
-    StageId,
     UniqueBundleIDStr,
     ValidationErrorMap,
 )
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.type_defs import StageId
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,

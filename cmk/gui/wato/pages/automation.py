@@ -37,9 +37,12 @@ from cmk.gui.watolib.automations import (
 )
 
 import cmk.ccc.version as cmk_version
+from cmk import trace
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
+
+tracer = trace.get_tracer()
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -60,6 +63,7 @@ class PageAutomationLogin(AjaxPage):
     def handle_page(self) -> None:
         self._handle_exc(self.page)
 
+    @tracer.start_as_current_span("PageAutomationLogin.page")
     def page(self) -> PageResult:  # pylint: disable=useless-return
         if not user.may("wato.automation"):
             raise MKAuthException(_("This account has no permission for automation."))
@@ -125,6 +129,7 @@ class PageAutomation(AjaxPage):
         with SuperUserContext():
             self._handle_exc(self.page)
 
+    @tracer.start_as_current_span("PageAutomation.page")
     def page(self) -> PageResult:  # pylint: disable=useless-return
         # To prevent mixups in written files we use the same lock here as for
         # the normal Setup page processing. This might not be needed for some
@@ -143,18 +148,19 @@ class PageAutomation(AjaxPage):
         return None
 
     def _execute_automation(self):
-        # TODO: Refactor these two calls to also use the automation_command_registry
-        if self._command == "checkmk-automation":
-            self._execute_cmk_automation()
-            return
-        if self._command == "push-profile":
-            self._execute_push_profile()
-            return
-        try:
-            automation_command = automation_command_registry[self._command]
-        except KeyError:
-            raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
-        self._execute_automation_command(automation_command)
+        with tracer.start_as_current_span(f"_execute_automation[{self._command}]"):
+            # TODO: Refactor these two calls to also use the automation_command_registry
+            if self._command == "checkmk-automation":
+                self._execute_cmk_automation()
+                return
+            if self._command == "push-profile":
+                self._execute_push_profile()
+                return
+            try:
+                automation_command = automation_command_registry[self._command]
+            except KeyError:
+                raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
+            self._execute_automation_command(automation_command)
 
     @staticmethod
     def _format_cmk_automation_result(

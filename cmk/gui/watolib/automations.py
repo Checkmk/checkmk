@@ -64,10 +64,12 @@ from cmk.gui.watolib.automation_types import PhaseOneResult
 from cmk.gui.watolib.utils import mk_repr
 
 import cmk.ccc.version as cmk_version
+from cmk import trace
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 auto_logger = logger.getChild("automations")
+tracer = trace.get_tracer()
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.
@@ -91,79 +93,85 @@ def check_mk_local_automation_serialized(
     stdin_data: str | None = None,
     timeout: int | None = None,
 ) -> tuple[Sequence[str], SerializedResult]:
-    if args is None:
-        args = []
-    new_args = list(args)
+    with tracer.start_as_current_span(
+        f"local_automation[{command}]",
+        attributes={"cmk.automation.args": repr(args)},
+    ) as span:
+        if args is None:
+            args = []
+        new_args = list(args)
 
-    if stdin_data is None:
-        stdin_data = repr(indata)
+        if stdin_data is None:
+            stdin_data = repr(indata)
 
-    if timeout:
-        new_args = ["--timeout", "%d" % timeout] + new_args
+        if timeout:
+            new_args = ["--timeout", "%d" % timeout] + new_args
 
-    cmd = ["check_mk"]
+        cmd = ["check_mk"]
 
-    if auto_logger.isEnabledFor(logging.DEBUG):
-        cmd.append("-vv")
-    elif auto_logger.isEnabledFor(VERBOSE):
-        cmd.append("-v")
+        if auto_logger.isEnabledFor(logging.DEBUG):
+            cmd.append("-vv")
+        elif auto_logger.isEnabledFor(VERBOSE):
+            cmd.append("-v")
 
-    cmd += ["--automation", command] + new_args
+        cmd += ["--automation", command] + new_args
 
-    if command in ["restart", "reload"]:
-        call_hook_pre_activate_changes()
+        if command in ["restart", "reload"]:
+            call_hook_pre_activate_changes()
 
-    # This debug output makes problems when doing bulk inventory, because
-    # it garbles the non-HTML response output
-    # if config.debug:
-    #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
-    auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
-    auto_logger.info("STDIN: %r" % stdin_data)
+        # This debug output makes problems when doing bulk inventory, because
+        # it garbles the non-HTML response output
+        # if config.debug:
+        #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
+        auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
+        span.set_attribute("cmk.automation.command", subprocess.list2cmdline(cmd))
+        auto_logger.info("STDIN: %r" % stdin_data)
 
-    try:
-        completed_process = subprocess.run(
-            cmd,
-            capture_output=True,
-            close_fds=True,
-            encoding="utf-8",
-            input=stdin_data,
-            check=False,
-        )
-    except Exception as e:
-        raise local_automation_failure(command=command, cmdline=cmd, exc=e)
-
-    auto_logger.info("FINISHED: %d" % completed_process.returncode)
-    auto_logger.debug("OUTPUT: %r" % completed_process.stdout)
-
-    if completed_process.stderr:
-        auto_logger.warning(
-            "'%s' returned '%s'"
-            % (
-                " ".join(cmd),
-                completed_process.stderr,
+        try:
+            completed_process = subprocess.run(
+                cmd,
+                capture_output=True,
+                close_fds=True,
+                encoding="utf-8",
+                input=stdin_data,
+                check=False,
             )
-        )
-    if completed_process.returncode:
-        auto_logger.error(
-            "Error running %r (exit code %d)"
-            % (
-                subprocess.list2cmdline(cmd),
-                completed_process.returncode,
+        except Exception as e:
+            raise local_automation_failure(command=command, cmdline=cmd, exc=e)
+
+        span.set_attribute("cmk.automation.exit_code", completed_process.returncode)
+        auto_logger.info("FINISHED: %d" % completed_process.returncode)
+        auto_logger.debug("OUTPUT: %r" % completed_process.stdout)
+
+        if completed_process.stderr:
+            auto_logger.warning(
+                "'%s' returned '%s'"
+                % (
+                    " ".join(cmd),
+                    completed_process.stderr,
+                )
             )
-        )
-        raise local_automation_failure(
-            command=command,
-            cmdline=cmd,
-            code=completed_process.returncode,
-            out=completed_process.stdout,
-            err=completed_process.stderr,
-        )
+        if completed_process.returncode:
+            auto_logger.error(
+                "Error running %r (exit code %d)"
+                % (
+                    subprocess.list2cmdline(cmd),
+                    completed_process.returncode,
+                )
+            )
+            raise local_automation_failure(
+                command=command,
+                cmdline=cmd,
+                code=completed_process.returncode,
+                out=completed_process.stdout,
+                err=completed_process.stderr,
+            )
 
-    # On successful "restart" command execute the activate changes hook
-    if command in ["restart", "reload"]:
-        call_hook_activate_changes()
+        # On successful "restart" command execute the activate changes hook
+        if command in ["restart", "reload"]:
+            call_hook_activate_changes()
 
-    return cmd, SerializedResult(completed_process.stdout)
+        return cmd, SerializedResult(completed_process.stdout)
 
 
 def local_automation_failure(
@@ -202,41 +210,49 @@ def check_mk_remote_automation_serialized(
     sync: Callable[[SiteId], None],
     non_blocking_http: bool = False,
 ) -> SerializedResult:
-    site = get_site_config(active_config, site_id)
-    if "secret" not in site:
-        raise MKGeneralException(
-            _('Cannot connect to site "%s": The site is not logged in') % site.get("alias", site_id)
-        )
+    with tracer.start_as_current_span(
+        f"remote_automation[{command}]",
+        attributes={
+            "cmk.automation.target_site_id": str(site_id),
+            "cmk.automation.args": repr(args),
+        },
+    ):
+        site = get_site_config(active_config, site_id)
+        if "secret" not in site:
+            raise MKGeneralException(
+                _('Cannot connect to site "%s": The site is not logged in')
+                % site.get("alias", site_id)
+            )
 
-    if not is_replication_enabled(site):
-        raise MKGeneralException(
-            _('Cannot connect to site "%s": The replication is disabled')
-            % site.get("alias", site_id)
-        )
+        if not is_replication_enabled(site):
+            raise MKGeneralException(
+                _('Cannot connect to site "%s": The replication is disabled')
+                % site.get("alias", site_id)
+            )
 
-    sync(site_id)
+        sync(site_id)
 
-    if non_blocking_http:
-        # This will start a background job process on the remote site to execute the automation
-        # asynchronously. It then polls the remote site, waiting for completion of the job.
-        return _do_check_mk_remote_automation_in_background_job_serialized(
-            site_id, CheckmkAutomationRequest(command, args, indata, stdin_data, timeout)
-        )
+        if non_blocking_http:
+            # This will start a background job process on the remote site to execute the automation
+            # asynchronously. It then polls the remote site, waiting for completion of the job.
+            return _do_check_mk_remote_automation_in_background_job_serialized(
+                site_id, CheckmkAutomationRequest(command, args, indata, stdin_data, timeout)
+            )
 
-    # Synchronous execution of the actual remote command in a single blocking HTTP request
-    return SerializedResult(
-        _do_remote_automation_serialized(
-            site=get_site_config(active_config, site_id),
-            command="checkmk-automation",
-            vars_=[
-                ("automation", command),  # The Checkmk automation command
-                ("arguments", mk_repr(args).decode("ascii")),  # The arguments for the command
-                ("indata", mk_repr(indata).decode("ascii")),  # The input data
-                ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
-                ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
-            ],
+        # Synchronous execution of the actual remote command in a single blocking HTTP request
+        return SerializedResult(
+            _do_remote_automation_serialized(
+                site=get_site_config(active_config, site_id),
+                command="checkmk-automation",
+                vars_=[
+                    ("automation", command),  # The Checkmk automation command
+                    ("arguments", mk_repr(args).decode("ascii")),  # The arguments for the command
+                    ("indata", mk_repr(indata).decode("ascii")),  # The input data
+                    ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
+                    ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
+                ],
+            )
         )
-    )
 
 
 # This hook is executed when one applies the pending configuration changes

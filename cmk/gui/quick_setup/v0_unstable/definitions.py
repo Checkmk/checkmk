@@ -31,10 +31,7 @@ class QuickSetupValidationError:
 
 GeneralStageErrors = MutableSequence[str]
 ValidationErrorMap = MutableMapping[FormSpecId, MutableSequence[QuickSetupValidationError]]
-CallableValidator = Callable[
-    [ParsedFormData, Mapping[FormSpecId, FormSpec]],
-    tuple[ValidationErrorMap, GeneralStageErrors],
-]
+CallableValidator = Callable[[ParsedFormData, Mapping[FormSpecId, FormSpec]], GeneralStageErrors]
 CallableRecap = Callable[
     [Sequence[ParsedFormData], Mapping[FormSpecId, FormSpec]],
     Sequence[Widget],

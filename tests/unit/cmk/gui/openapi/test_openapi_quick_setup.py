@@ -15,10 +15,8 @@ from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     GeneralStageErrors,
     ParsedFormData,
-    QuickSetupValidationError,
     UniqueBundleIDStr,
     UniqueFormSpecIDStr,
-    ValidationErrorMap,
 )
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import QuickSetupId, StageId
@@ -101,17 +99,8 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
 
 def _form_spec_extra_validate(
     _stages: ParsedFormData, formspec_map: Mapping[FormSpecId, FormSpec]
-) -> tuple[ValidationErrorMap, GeneralStageErrors]:
-    return {
-        FormSpecId(form_spec_id): [
-            QuickSetupValidationError(
-                location=[],
-                message="this is a simulated error",
-                invalid_value="invalid_data",
-            ),
-        ]
-        for form_spec_id, _ in formspec_map.items()
-    }, ["this is a general error", "and another one"]
+) -> GeneralStageErrors:
+    return ["this is a general error", "and another one"]
 
 
 def test_failing_validate(clients: ClientRegistry) -> None:

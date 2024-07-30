@@ -183,15 +183,15 @@ def _find_unique_id(form_data: Any, target_key: str) -> None | str:
 def validate_unique_id(
     stages_form_data: ParsedFormData,
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
-) -> tuple[ValidationErrorMap, GeneralStageErrors]:
+) -> GeneralStageErrors:
     bundle_id = _find_unique_id(stages_form_data, UniqueBundleIDStr)
     if bundle_id is None:
-        return {}, [f"Expected the key '{UniqueBundleIDStr}' in the form data"]
+        return [f"Expected the key '{UniqueBundleIDStr}' in the form data"]
 
     if bundle_id in ConfigBundleStore().load_for_reading():
-        return {}, [f'Configuration bundle "{bundle_id}" already exists.']
+        return [f'Configuration bundle "{bundle_id}" already exists.']
 
-    return {}, []
+    return []
 
 
 def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
@@ -256,14 +256,10 @@ def validate_current_stage(
     )
 
     for validator in current_stage.validators:
-        errors_formspec, errors_stage = validator(
+        errors_stage = validator(
             combined_parsed_form_data_up_to_current_stage,
             expected_form_spec_map,
         )
-        for form_spec_id, fs_errors in errors_formspec.items():
-            errors.formspec_errors.setdefault(form_spec_id, [])
-            errors.formspec_errors[form_spec_id].extend(fs_errors)
-
         errors.stage_errors.extend(errors_stage)
 
     if errors.formspec_errors or errors.stage_errors:

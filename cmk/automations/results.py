@@ -619,6 +619,22 @@ class DiagSpecialAgentResult(ABCAutomationResult):
     def automation_call() -> str:
         return "diag-special-agent"
 
+    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+        return SerializedResult(
+            json.dumps(
+                {
+                    "results": [asdict(r) for r in self.results],
+                }
+            )
+        )
+
+    @classmethod
+    def deserialize(cls, serialized_result: SerializedResult) -> DiagSpecialAgentResult:
+        raw = json.loads(serialized_result)
+        return cls(
+            results=[SpecialAgentResult(**r) for r in raw["results"]],
+        )
+
 
 result_type_registry.register(DiagSpecialAgentResult)
 

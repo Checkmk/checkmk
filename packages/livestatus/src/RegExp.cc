@@ -9,10 +9,10 @@
 // -----------------------------------------------------------------------------
 // RE2 implementation
 // -----------------------------------------------------------------------------
-#include <re2/re2.h>
-#include <re2/stringpiece.h>
-
 #include <stdexcept>
+
+#include "re2/re2.h"
+#include "re2/stringpiece.h"
 
 class RegExp::Impl {
 public:

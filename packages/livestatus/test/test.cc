@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
-#include <re2/re2.h>
-#include <re2/stringpiece.h>
 
 #include <iostream>
 #include <string>
 
 #include "livestatus/Logger.h"
 #include "livestatus/POSIXUtils.h"
+#include "re2/re2.h"
+#include "re2/stringpiece.h"
 
 bool check_livestatus_available() {
     setThreadName("main");

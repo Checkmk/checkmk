@@ -28,10 +28,7 @@ cc_library(
         ],
     ),
     hdrs = glob(["include/livestatus/*.h"]),
-    copts = [
-        "-Iexternal/re2",
-        "-O3",
-    ],
+    copts = ["-O3"],
     includes = ["include"],
     local_defines = [
         "HAVE_RE2",
@@ -57,9 +54,6 @@ cc_test(
     name = "test",
     size = "small",
     srcs = glob(["test/*.cc"]),
-    copts = [
-        "-Iexternal/re2",
-    ],
     deps = [
         ":livestatus",
         "@gtest//:gtest_main",

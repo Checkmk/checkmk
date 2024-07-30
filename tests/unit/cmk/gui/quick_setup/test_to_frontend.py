@@ -10,7 +10,7 @@ from cmk.gui.quick_setup.to_frontend import (
     _collect_params_from_form_data,
     _collect_passwords_from_form_data,
 )
-from cmk.gui.quick_setup.v0_unstable.definitions import ParsedFormData
+from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 
 ALL_FORM_SPEC_DATA: ParsedFormData = {

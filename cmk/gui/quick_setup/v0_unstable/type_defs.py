@@ -5,7 +5,12 @@
 
 from __future__ import annotations
 
-from typing import NewType
+from typing import Any, Mapping, MutableSequence, NewType
+
+from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 
 StageId = NewType("StageId", int)
 QuickSetupId = NewType("QuickSetupId", str)
+RawFormData = NewType("RawFormData", Mapping[FormSpecId, object])
+ParsedFormData = Mapping[FormSpecId, Any]
+GeneralStageErrors = MutableSequence[str]

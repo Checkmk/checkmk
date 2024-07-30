@@ -26,16 +26,13 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.to_frontend import (
     complete_quick_setup,
     quick_setup_overview,
+    QuickSetupOverview,
     retrieve_next_stage,
+    Stage,
     validate_current_stage,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
-from cmk.gui.quick_setup.v0_unstable.definitions import (
-    IncomingStage,
-    QuickSetupOverview,
-    QuickSetupSaveRedirect,
-    Stage,
-)
+from cmk.gui.quick_setup.v0_unstable.definitions import IncomingStage, QuickSetupSaveRedirect
 
 from cmk import fields
 

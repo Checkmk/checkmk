@@ -6,17 +6,24 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Iterable, Sequence
+from typing import Callable, Iterable, Mapping, Sequence
 
-from cmk.gui.quick_setup.v0_unstable.definitions import (
-    CallableRecap,
-    CallableValidator,
-    IncomingStage,
-    InvalidStageException,
-    StageOverview,
+from cmk.gui.quick_setup.v0_unstable.definitions import IncomingStage
+from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    GeneralStageErrors,
+    ParsedFormData,
+    QuickSetupId,
+    StageId,
 )
-from cmk.gui.quick_setup.v0_unstable.type_defs import QuickSetupId, StageId
-from cmk.gui.quick_setup.v0_unstable.widgets import Widget
+from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
+
+from cmk.rulesets.v1.form_specs import FormSpec
+
+CallableValidator = Callable[[ParsedFormData, Mapping[FormSpecId, FormSpec]], GeneralStageErrors]
+CallableRecap = Callable[
+    [Sequence[ParsedFormData], Mapping[FormSpecId, FormSpec]],
+    Sequence[Widget],
+]
 
 
 @dataclass(frozen=True)
@@ -29,13 +36,6 @@ class QuickSetupStage:
     button_txt: str
     sub_title: str | None = None
 
-    def stage_overview(self) -> StageOverview:
-        return StageOverview(
-            stage_id=self.stage_id,
-            title=self.title,
-            sub_title=self.sub_title,
-        )
-
 
 @dataclass(frozen=True)
 class QuickSetup:
@@ -43,9 +43,3 @@ class QuickSetup:
     id: QuickSetupId
     stages: Sequence[QuickSetupStage]
     save_action: Callable[[Sequence[IncomingStage]], str] | None = None
-
-    def get_stage_with_id(self, stage_id: StageId) -> QuickSetupStage:
-        for stage in self.stages:
-            if stage.stage_id == stage_id:
-                return stage
-        raise InvalidStageException(f"The stage id '{stage_id}' does not exist.")

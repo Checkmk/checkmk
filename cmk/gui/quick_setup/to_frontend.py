@@ -2,10 +2,11 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
-from dataclasses import asdict
-from typing import Any, cast, Mapping
+from collections.abc import Iterator
+from dataclasses import asdict, dataclass, field
+from typing import Any, cast, Mapping, MutableMapping, MutableSequence, Sequence
 
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     parse_value_from_frontend,
@@ -15,21 +16,18 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
 from cmk.gui.form_specs.vue.registries import form_spec_registry
 from cmk.gui.form_specs.vue.type_defs import DataOrigin
 from cmk.gui.quick_setup.v0_unstable.definitions import (
-    Errors,
-    GeneralStageErrors,
     IncomingStage,
-    InvalidStageException,
-    ParsedFormData,
-    QuickSetupOverview,
     QuickSetupSaveRedirect,
-    QuickSetupValidationError,
-    RawFormData,
-    Stage,
     UniqueBundleIDStr,
-    ValidationErrorMap,
 )
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
-from cmk.gui.quick_setup.v0_unstable.type_defs import StageId
+from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    GeneralStageErrors,
+    ParsedFormData,
+    QuickSetupId,
+    RawFormData,
+    StageId,
+)
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,
@@ -41,7 +39,55 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 from cmk.gui.watolib.passwords import load_passwords
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import FormSpec, Password
+
+
+class InvalidStageException(MKGeneralException):
+    pass
+
+
+# TODO: This dataclass is already defined in
+# cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components
+# but can't be imported here. Once we move this module, we can remove this
+# and use the one from the other module.
+@dataclass
+class QuickSetupValidationError:
+    message: str
+    invalid_value: Any
+    location: Sequence[str] = field(default_factory=list)
+
+
+ValidationErrorMap = MutableMapping[FormSpecId, MutableSequence[QuickSetupValidationError]]
+
+
+@dataclass
+class StageOverview:
+    stage_id: StageId
+    title: str
+    sub_title: str | None
+
+
+@dataclass
+class Errors:
+    formspec_errors: ValidationErrorMap = field(default_factory=dict)
+    stage_errors: GeneralStageErrors = field(default_factory=list)
+
+
+@dataclass
+class Stage:
+    stage_id: StageId
+    components: Sequence[dict]
+    button_txt: str | None
+    errors: Errors | None = None
+    stage_recap: Sequence[Widget] = field(default_factory=list)
+
+
+@dataclass
+class QuickSetupOverview:
+    quick_setup_id: QuickSetupId
+    overviews: list[StageOverview]
+    stage: Stage
 
 
 def _get_stage_components_from_widget(widget: Widget) -> dict:
@@ -195,10 +241,17 @@ def validate_unique_id(
 
 
 def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
-    first_stage = quick_setup.get_stage_with_id(StageId(1))
+    first_stage = _get_stage_with_id(quick_setup, StageId(1))
     return QuickSetupOverview(
         quick_setup_id=quick_setup.id,
-        overviews=[stage.stage_overview() for stage in quick_setup.stages],
+        overviews=[
+            StageOverview(
+                stage_id=stage.stage_id,
+                title=stage.title,
+                sub_title=stage.sub_title,
+            )
+            for stage in quick_setup.stages
+        ],
         stage=Stage(
             stage_id=first_stage.stage_id,
             components=[
@@ -235,7 +288,7 @@ def validate_current_stage(
     incoming_stages: Sequence[IncomingStage],
 ) -> Stage | None:
     current_stage_id = incoming_stages[-1].stage_id
-    current_stage = quick_setup.get_stage_with_id(current_stage_id)
+    current_stage = _get_stage_with_id(quick_setup, current_stage_id)
 
     errors = Errors()
     expected_form_spec_map = build_expected_formspec_map(quick_setup.stages)
@@ -277,7 +330,7 @@ def retrieve_next_stage(
     incoming_stages: Sequence[IncomingStage],
 ) -> Stage:
     current_stage_id = incoming_stages[-1].stage_id
-    current_stage = quick_setup.get_stage_with_id(current_stage_id)
+    current_stage = _get_stage_with_id(quick_setup, current_stage_id)
 
     expected_form_spec_map = build_expected_formspec_map(quick_setup.stages)
     combined_parsed_form_data_by_stage = [
@@ -285,7 +338,7 @@ def retrieve_next_stage(
     ]
 
     try:
-        next_stage = quick_setup.get_stage_with_id(StageId(current_stage.stage_id + 1))
+        next_stage = _get_stage_with_id(quick_setup, StageId(current_stage.stage_id + 1))
     except InvalidStageException:
         # TODO: What should we return in this case?
         return Stage(stage_id=StageId(-1), components=[], button_txt=None)
@@ -314,3 +367,10 @@ def complete_quick_setup(
     if quick_setup.save_action is None:
         return QuickSetupSaveRedirect(redirect_url=None)
     return QuickSetupSaveRedirect(redirect_url=quick_setup.save_action(stages))
+
+
+def _get_stage_with_id(quick_setup: QuickSetup, stage_id: StageId) -> QuickSetupStage:
+    for stage in quick_setup.stages:
+        if stage.stage_id == stage_id:
+            return stage
+    raise InvalidStageException(f"The stage id '{stage_id}' does not exist.")

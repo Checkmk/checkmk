@@ -14028,7 +14028,8 @@ msgid ""
 msgstr ""
 "認証情報が設定されていないか、無効です。ライセンス設定を確認してください"
 
-msgid "Credentials to access the Database"
+#, fuzzy
+msgid "Credentials to access the database"
 msgstr "データベースにアクセスするための認証情報"
 
 msgid "Credits consumed"
@@ -15099,9 +15100,6 @@ msgstr "データベース"
 
 msgid "Database Availability Group (DAG) (Windows)"
 msgstr "データベース可用性グループ(DAG)(Windows)"
-
-msgid "Database Name"
-msgstr "データベース名"
 
 msgid "Database SID"
 msgstr "データベースSID"
@@ -17541,10 +17539,12 @@ msgstr "表示名"
 msgid "Display node details on"
 msgstr "にノードの詳細を表示する"
 
-msgid "Display only a summary of all Datafiles"
+#, fuzzy
+msgid "Display only a summary of all datafiles"
 msgstr "すべてのデータファイルの要約のみを表示する"
 
-msgid "Display only a summary of all Transactionlogs"
+#, fuzzy
+msgid "Display only a summary of all transactionlogs"
 msgstr "すべてのトランザクションログの要約のみを表示します"
 
 msgid "Display range: Minimum must be strictly less than maximum"
@@ -18711,18 +18711,20 @@ msgstr ""
 "クスが含まれており、このトップリストは不正確または不完全である可能性がありま"
 "す。"
 
+#, fuzzy
 msgid ""
-"Due to security reasons the plugin being executed as admin will check "
-"permissions for Oracle executables. If modification of Oracle binaries is "
-"allowed for non-admin users or groups then the plug-in stops processing thus "
-"breaking Oracle monitoring: execution of normal user code at elevated level "
-"means security vulnerability.You may <tt>disable</tt> this option if it is "
-"the only method to continue monitoring the Oracle database. Usually you need "
-"to <tt>disable</tt> the option only in the next case: It's impossible to "
-"correctly adjust permissions for Oracle binaries, mode group with group "
-"Administrator is not applicable and it is not possible to use custom account "
-"to monitor the Oracle database.Even if check is enabled you may allow some "
-"groups and/or users to still have write access to the Oracle binaries."
+"Due to security reasons the plug-in being executed as admin will check "
+"permissions for Oracle executables. If the modification of Oracle binaries "
+"is allowed for non-admin users or groups then the plug-in stops processing "
+"thus breaking Oracle monitoring: execution of normal user code at elevated "
+"level means security vulnerability. You may <tt>disable</tt> this option if "
+"it is the only method to continue monitoring the Oracle database. Usually "
+"you need to <tt>disable</tt> the option only in the following case: It's "
+"impossible to correctly adjust permissions for Oracle binaries, mode group "
+"with group Administrator is not applicable and it is not possible to use "
+"custom account to monitor the Oracle database. Even if the check is enabled "
+"you may allow some groups and/or users to still have write access to the "
+"Oracle binaries."
 msgstr ""
 "セキュリティ上の理由から、管理者として実行されるプラグインはOracle実行可能"
 "ファイルのパーミッションをチェックします。管理者でないユーザーやグループに対"
@@ -18866,12 +18868,6 @@ msgstr "動的レベル - 上限"
 msgid "DynamoDB"
 msgstr "DynamoDB"
 
-msgid "E-Mails"
-msgstr "Eメール"
-
-msgid "E-mail address attribute"
-msgstr "Eメールアドレス属性"
-
 msgid "E.Type"
 msgstr "E.Type"
 
@@ -18937,7 +18933,8 @@ msgstr "ESTABLISHED"
 msgid "ESX Datastores (used space and growth)"
 msgstr "ESXデータストア(使用済みスペースと拡張)"
 
-msgid "ESX Hostsystem Maintenance Mode"
+#, fuzzy
+msgid "ESX Host System Maintenance Mode"
 msgstr "ESXホストシステムメンテナンスモード"
 
 msgid "ESX Multipath Count"
@@ -19656,24 +19653,30 @@ msgstr "電流"
 msgid "Email"
 msgstr "Eメール"
 
-msgid "Email Address"
-msgstr "電子メールアドレス"
-
 msgid "Email address"
 msgstr "Eメールアドレス"
+
+#, fuzzy
+msgid "Email address attribute"
+msgstr "Eメールアドレス属性"
 
 msgid "Email address used for account identification"
 msgstr "アカウントの識別に使用されるEメールアドレス"
 
+#, fuzzy
+msgid "Email addresses to mail PDF reports to"
+msgstr "電子メールアドレスからPDFレポートをメール"
+
 msgid "Email sent"
 msgstr "送信済みメール"
-
-msgid "Email-Addresses to mail PDF reports to"
-msgstr "電子メールアドレスからPDFレポートをメール"
 
 #, python-format
 msgid "Emailed report to %s."
 msgstr "レポートを %sに電子メールで送信しました。"
+
+#, fuzzy
+msgid "Emails"
+msgstr "Eメール"
 
 #, fuzzy, python-format
 msgid "Emails containing %s per second"
@@ -21764,9 +21767,6 @@ msgstr "失敗したコレクター"
 msgid "Failover (only one node should be active)"
 msgstr "フェイルオーバー（1ノードのみアクティブにすること）"
 
-msgid "Failover Servers"
-msgstr "フェイルオーバーサーバー"
-
 msgid "Failover State: ACTIVE"
 msgstr "フェイルオーバー状態:アクティブ"
 
@@ -21787,6 +21787,10 @@ msgstr "フェイルオーバー状態: FAILOVER_PENDING"
 
 msgid "Failover State: NONE"
 msgstr "フェイルオーバー状態:なし"
+
+#, fuzzy
+msgid "Failover servers"
+msgstr "フェイルオーバーサーバー"
 
 msgid "Failover states"
 msgstr "フェイルオーバー状態"
@@ -22089,6 +22093,10 @@ msgstr "ファイルサイズ"
 
 msgid "File size below"
 msgstr "以下のファイルサイズ"
+
+#, fuzzy
+msgid "File size levels"
+msgstr "ファイルサイズレベル"
 
 #, python-format
 msgid "File upload test for remote storage failed. Original error message: %s"
@@ -22637,8 +22645,8 @@ msgstr "スモークをパーセントで測定するデバイスの場合"
 msgid ""
 "For each folder an automatic network scan can be configured. It will try to "
 "detect new hosts in the configured IP ranges by sending pings to each IP "
-"address to check whether or not a host is using this ip address. Each new "
-"found host will be added to the current folder by it's host name, when "
+"address to check whether or not a host is using this IP address. Each new "
+"found host will be added to the current folder by its host name, when "
 "resolvable via DNS, or by its IP address."
 msgstr ""
 "フォルダごとに、自動ネットワークスキャンを構成できます。各IPアドレスにpingを"
@@ -24099,7 +24107,8 @@ msgstr "REST API 4.xを介したHPE StoreOnce"
 msgid "HR: Used memory via SNMP"
 msgstr "HR: SNMP経由で使用されたメモリ"
 
-msgid "HTML Email"
+#, fuzzy
+msgid "HTML email"
 msgstr "HTML Eメール"
 
 msgid "HTML output"
@@ -24246,7 +24255,7 @@ msgid ""
 "HTTPS is the suggested setting here. It requires a valid SSL setup of your "
 "Apache web server on your monitoring server, however. When using HTTP then "
 "confidential data that is contained in the baked agents could be spied out "
-"(such as passwords for plugins)."
+"(such as passwords for plug-ins)."
 msgstr ""
 "ここでは、HTTPSの設定を推奨します。ただし、監視サーバ上の Apache ウェブサーバ"
 "に有効な SSL 設定が必要です。HTTP を使用する場合、ベイクドエージェントに含ま"
@@ -24993,8 +25002,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Here you can impose various levels the results reported by the mk_filstats "
-"plug-in. Note that those levels only concern about a single file."
+"Here you can impose various levels on the results reported by the "
+"mk_filstats plug-in. Note that those levels only concern about a single file."
 msgstr ""
 "ここでは、mk_filstatsプラグインによって報告された結果をさまざまなレベルに課す"
 "ことができます。これらのレベルは、単一のファイルにのみ関係することに注意して"
@@ -25265,7 +25274,8 @@ msgstr ""
 "シーのレベルを指定することができます。この設定は、NetApp Clustermodeセット"
 "アップでのみ機能します。"
 
-msgid "Here you can specify the allowed license states for windows."
+#, fuzzy
+msgid "Here you can specify the allowed license states for Windows."
 msgstr "ここで、Windowsに許可されるライセンス状態を指定できます。"
 
 msgid ""
@@ -26204,6 +26214,10 @@ msgstr "ホストステータスのグループ化"
 msgid "Host successfully created"
 msgstr "ホスト作成に成功しました"
 
+#, fuzzy
+msgid "Host system sensor alerts"
+msgstr "ホストシステムセンサーアラート"
+
 msgid "Host tag"
 msgstr "ホストタグ"
 
@@ -26463,9 +26477,6 @@ msgstr "ホスト:合計%d(%d成功、%dスキップ、%d失敗)"
 #, fuzzy
 msgid "Hosts: Host Capacity & Utilization"
 msgstr "NutanixホストのCPU使用率"
-
-msgid "Hostsystem sensor alerts"
-msgstr "ホストシステムセンサーアラート"
 
 msgid "Hosttag"
 msgstr "ホストタグ"
@@ -26792,15 +26803,15 @@ msgstr "IPアドレス"
 msgid "IP address family"
 msgstr "IPアドレスファミリ"
 
-#, fuzzy
-msgid "IP address of Host"
-msgstr "ホストのIPアドレス"
-
 msgid ""
 "IP address of SMB share host (only necessary if SMB share host is in another "
 "network)"
 msgstr ""
 "SMB共有ホストのIPアドレス (SMB共有ホストが別のネットワークにある場合のみ必要)"
+
+#, fuzzy
+msgid "IP address of host"
+msgstr "ホストのIPアドレス"
 
 #, fuzzy
 msgid "IP address of remote Event Console"
@@ -26814,7 +26825,8 @@ msgstr "SNMPトラップを受信するSpectrumサーバーのIPアドレス"
 msgid "IP address of tunnel endpoint"
 msgstr "トンネルエンドポイントのIPアドレス"
 
-msgid "IP address or FQDN of JVM webserver"
+#, fuzzy
+msgid "IP address or FQDN of JVM web server"
 msgstr "JVM WebサーバーのIPアドレスまたはFQDN"
 
 #, fuzzy
@@ -27454,8 +27466,9 @@ msgid ""
 msgstr ""
 "リンク速度の自動検出が機能しない場合は、ここでリンク速度を設定できます。"
 
+#, fuzzy
 msgid ""
-"If the flag is set, then the windows agent may use unencrypted communication "
+"If the flag is set, then the Windows agent may use unencrypted communication "
 "between the monitoring site and the host. Enable this flag for compatibility "
 "reasons or if you experience problems with the controller related to TLS or "
 "encryption. But please pay attention, that this enables unencrypted "
@@ -27639,11 +27652,12 @@ msgstr ""
 "このオプションを有効にすると、Checkmk BI は BI 集約のコンパイルに関する詳細な"
 "ログを作成します。これには、実行された各集約の統計と詳細が含まれます。"
 
+#, fuzzy
 msgid ""
 "If this option is enabled, the GUI reads the configured HTTP header variable "
 "from the incoming HTTP request and simply takes the string in this variable "
 "as name of the authenticated user. Be warned: Only allow access from trusted "
-"ip addresses (Apache <tt>Allow from</tt>), like proxy servers, to this "
+"IP addresses (Apache <tt>Allow from</tt>), like proxy servers, to this "
 "webpage. A user with access to this page could simply fake the "
 "authentication information. This option can be useful to realize "
 "authentication in reverse proxy environments. As of version 1.6 and on all "
@@ -28108,6 +28122,15 @@ msgstr ""
 "ルのログファイルに書き込まれます。これにより、多数のログエントリが発生する可"
 "能性があることに注意してください。 "
 
+#, fuzzy
+msgid ""
+"If you enable this option then the remote site will automatically takeover "
+"and enable event processing if the central site is for the configured number "
+"of seconds unreachable."
+msgstr ""
+"このオプションを有効にすると、マスターが設定された秒数の間到達不能である場"
+"合、スレーブは自動的に引き継ぎ、イベント処理を有効にします。"
+
 msgid ""
 "If you enable this option then the slave will automatically fallback from "
 "takeover mode to slavemode if the master is reachable again within the "
@@ -28117,14 +28140,6 @@ msgstr ""
 "このオプションを有効にすると、前回の到達不能から(テイクオーバー以降ではなく)"
 "選択した秒数以内にマスターが再び到達可能になると、スレーブはテイクオーバー"
 "モードからスレーブモードに自動的にフォールバックします"
-
-msgid ""
-"If you enable this option then the slave will automatically takeover and "
-"enable event processing if the master is for the configured number of "
-"seconds unreachable."
-msgstr ""
-"このオプションを有効にすると、マスターが設定された秒数の間到達不能である場"
-"合、スレーブは自動的に引き継ぎ、イベント処理を有効にします。"
 
 msgid ""
 "If you enable this option, then Checkmk will not directly Python-bytecompile "
@@ -28160,13 +28175,13 @@ msgstr ""
 "致させる必要があります。完全に一致する必要がある場合は、アンカー <tt>^</tt> "
 "および <tt>$</tt>を使用します。"
 
+#, fuzzy
 msgid ""
 "If you enter an item name here, this will be used as part of the service "
 "description after the prefix \"Events \". The prefix plus the configured "
-"item must result in an unique service description per host. If you leave "
-"this empty either the string provided in \"Application\" is used as item or "
-"the service gets no item when the \"Application\" field is also not "
-"configured."
+"item must result in a unique service description per host. If you leave this "
+"empty either the string provided in \"Application\" is used as item or the "
+"service gets no item when the \"Application\" field is also not configured."
 msgstr ""
 "ここにアイテム名を入力すると、プレフィックス\"イベント\"の後にサービスの説明"
 "の一部として使用されます。プレフィックスと構成済みアイテムは、ホストごとに一"
@@ -28244,12 +28259,13 @@ msgstr ""
 "ているホストに表示されます。この場合、監視対象のすべてのデータベースのSIDは一"
 "意である必要があります。"
 
+#, fuzzy
 msgid ""
 "If you leave user name and password empty, the special agent tries to "
 "authenticate against the EMC VNX device by Security Files. These need to be "
 "created manually before using. Therefor run as instance user (if using OMD) "
 "or Nagios user (if not using OMD) a command like <tt>naviseccli -"
-"AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> This creates "
+"AddUserSecurity -scope 0 -password PASSWORD -user USER</tt>. This creates "
 "<tt>SecuredCLISecurityFile.xml</tt> and <tt>SecuredCLIXMLEncrypted.key</tt> "
 "in the home directory of the user and these files are used then."
 msgstr ""
@@ -28787,15 +28803,16 @@ msgstr "影響"
 msgid "Import"
 msgstr "インポート"
 
-msgid "Import Hosts"
-msgstr "ホストのインポート"
-
 msgid "Import all valid annotations"
 msgstr "有効なアノテーションをすべてインポートする"
 
 #, fuzzy
 msgid "Import all valid tags"
 msgstr "有効なアノテーションをすべてインポートする"
+
+#, fuzzy
+msgid "Import hosts"
+msgstr "ホストのインポート"
 
 msgid "Import hosts via CSV file"
 msgstr "CSVファイルを介してホストをインポートする"
@@ -28812,8 +28829,9 @@ msgstr "iCalendarファイルをインポートしてtime periodを作成しま�
 msgid "Import state from Nagios core"
 msgstr "Nagiosコアから状態をインポートします"
 
+#, fuzzy
 msgid ""
-"Important! This check is only for monitoring of datafiles who were left in "
+"Important! This check is only for monitoring datafiles which were left in "
 "backup mode. (alter database datafile ... begin backup;)"
 msgstr ""
 "重要！このチェックは、バックアップ・モードのままになっているデータファイルの"
@@ -29181,12 +29199,12 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"In previous Checkmk versions it was possible to use an automation user to "
-"display specific pages within Checkmk. To authenticate these requests it was "
-"possible to add the _username and _secret parameters to the parameters (e.g. "
-"append them to the URL). GET parameters are usually logged by proxies and "
-"webservers and are not deemed secure for secrets. See Werk #16223 for more "
-"information."
+"In previous Checkmk versions, it was possible to use an automation user to "
+"display specific pages within Checkmk. To authenticate these requests, it "
+"was possible to add the _username and _secret parameters to the parameters "
+"(e.g. append them to the URL). GET parameters are usually logged by proxies "
+"and web servers and are not deemed secure for secrets. See Werk #16223 for "
+"more information."
 msgstr ""
 "以前のバージョンのCheckmkでは、オートメーションユーザーを使用して、Checkmk内"
 "の特定のページを表示することができました。これらのリクエストを認証するため"
@@ -30104,8 +30122,8 @@ msgstr "無効(ロードされていません)"
 msgid "Invalid CRCs"
 msgstr "無効なCRC"
 
-#, python-format
-msgid "Invalid CSRF token (%r) for Session (%r)"
+#, fuzzy, python-format
+msgid "Invalid CSRF token (%r) for session (%r)"
 msgstr "セッション (%r) の無効な CSRF トークン (%r)"
 
 #, python-format
@@ -30652,10 +30670,10 @@ msgstr ""
 #, fuzzy
 msgid ""
 "It is possible to fetch several attributes of users, like Email or full "
-"names, from the LDAP directory. This is done by plug-ins which can "
+"names, from the LDAP directory. This is done by plug-ins which can be "
 "individually enabled or disabled. When enabling a plug-in, it is used upon "
-"the next synchonisation of user accounts for gathering their attributes. The "
-"user options which get imported into Checkmk from LDAP will be locked in "
+"the next synchronization of user accounts for gathering their attributes. "
+"The user options which get imported into Checkmk from LDAP will be locked in "
 "Setup."
 msgstr ""
 "LDAPディレクトリから、電子メールやフルネームなど、ユーザーのいくつかの属性を"
@@ -31391,7 +31409,8 @@ msgstr "最後のエントリ"
 msgid "Last Error"
 msgstr "最後のエラー"
 
-msgid "Last Known Plugin Output"
+#, fuzzy
+msgid "Last Known Plug-in Output"
 msgstr "最後の既知のプラグイン出力"
 
 msgid "Last OK"
@@ -31586,7 +31605,7 @@ msgstr "レイアウトオプション"
 msgid ""
 "Learn how to setup a REST endpoint <a href=\"https://help.victorops.com/"
 "knowledge-base/victorops-restendpoint-integration/\" target=\"_blank\">here</"
-"a><br />This URL can also be collected from the password store from Checkmk."
+"a>.<br />This URL can also be collected from the password store from Checkmk."
 msgstr ""
 "RESTエンドポイントの設定方法は<a href=\"https://help.victorops.com/knowledge-"
 "base/victorops-restendpoint-integration/\" target=\"_blank\">こちら </a><br /"
@@ -31721,7 +31740,8 @@ msgstr "%s のレベル"
 msgid "Levels for %s mail queue"
 msgstr "%sメールキューのレベル"
 
-msgid "Levels for ATS Output parameters"
+#, fuzzy
+msgid "Levels for ATS output parameters"
 msgstr "ATS出力パラメータのレベル"
 
 msgid "Levels for CPU utilization"
@@ -32453,7 +32473,8 @@ msgstr ""
 msgid "Limit login to single session at a time"
 msgstr "ログインを一度に1つのセッションに制限する"
 
-msgid "Limit maximum number used cpus"
+#, fuzzy
+msgid "Limit maximum number used CPUs"
 msgstr "使用されるCPUの最大数を制限する"
 
 msgid "Limit number of processed search results"
@@ -33002,10 +33023,6 @@ msgstr "ローカルHTTP503応答"
 msgid "Local IP address"
 msgstr "ローカルIPアドレス"
 
-#, fuzzy
-msgid "Local Integrated Authentication (Windows)"
-msgstr "ローカル認証データ"
-
 msgid "Local Only"
 msgstr "ローカルのみ"
 
@@ -33056,6 +33073,10 @@ msgstr "ローカルファイル"
 
 msgid "Local group name"
 msgstr "ローカルグループ名"
+
+#, fuzzy
+msgid "Local integrated authentication (Windows)"
+msgstr "ローカル認証データ"
 
 msgid "Local path"
 msgstr "ローカルパス"
@@ -33284,7 +33305,8 @@ msgstr "ログ:サマリー"
 msgid "Log: command (regex)"
 msgstr "ログ:コメント(正規表現)"
 
-msgid "Log: command/plugin"
+#, fuzzy
+msgid "Log: command/plug-in"
 msgstr "ログ: コマンド/プラグイン"
 
 msgid "Log: comment"
@@ -33679,10 +33701,6 @@ msgstr "SMS Spendingの下位レベル"
 msgid "Lower levels for SMS Success Rate"
 msgstr "SMS成功率の下位レベル"
 
-#, fuzzy
-msgid "Lower levels for Voltage"
-msgstr "電圧の低レベル"
-
 msgid "Lower levels for burst balance"
 msgstr "バーストバランスの下位レベル"
 
@@ -33737,6 +33755,10 @@ msgstr "総エラーレートの下位レベル"
 
 msgid "Lower levels for unallocated space"
 msgstr "未割り当て領域の下位レベル"
+
+#, fuzzy
+msgid "Lower levels for voltage"
+msgstr "電圧の低レベル"
 
 msgid "Lower levels in percentage of limit"
 msgstr "制限のパーセンテージのより下位レベル"
@@ -33810,7 +33832,8 @@ msgstr "Checkmkに同梱されているMIB"
 msgid "MISSING '%s'"
 msgstr "%s' がありません"
 
-msgid "MK Remote Plugin Executor (MRPE)"
+#, fuzzy
+msgid "MK Remote Plug-in Executor (MRPE)"
 msgstr "MKリモートプラグインエグゼキュータ(MRPE)"
 
 msgid "MKEventd"
@@ -35050,12 +35073,12 @@ msgid "Maximum latency of successful query requests"
 msgstr "成功したクエリリクエストの最大レイテンシ"
 
 #, fuzzy
-msgid "Maximum levels for Voltage"
-msgstr "電圧の最大レベル"
-
-#, fuzzy
 msgid "Maximum levels for load in percent"
 msgstr "負荷の最大レベル(パーセント)"
+
+#, fuzzy
+msgid "Maximum levels for voltage"
+msgstr "電圧の最大レベル"
 
 msgid "Maximum levels if using magic factor"
 msgstr "マジックファクターを使用する場合の最大レベル"
@@ -39851,11 +39874,12 @@ msgstr ""
 "れたログファイルパターンをテストすることができます。このダイアログを使用し"
 "て、ログファイルパターンのセット全体を分析およびデバッグすることが可能です。"
 
+#, fuzzy
 msgid ""
 "Once you enable this option, this plugin will not only handle direct group "
 "memberships, instead it will also dig into nested groups and treat the "
-"members of those groups as contact group members as well. Please mind that "
-"this feature might increase the execution time of your LDAP sync."
+"members of those groups as contact group members as well. Please bear in "
+"mind that this feature might increase the execution time of your LDAP sync."
 msgstr ""
 "このオプションを有効にすると、このプラグインは直接のグループメンバーシップを"
 "処理するだけでなく、ネストされたグループを掘り下げ、それらのグループのメン"
@@ -39977,7 +40001,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Only apply the rule if the notification originates from certain types of "
-"check plug-ins. Note: Host notifications never match this rule if this "
+"check plug-ins. Note: Host notifications never match this rule, if this "
 "option is being used."
 msgstr ""
 "通知が特定のタイプのチェックプラグインから発信されている場合にのみ、ルールを"
@@ -40817,16 +40841,17 @@ msgstr ""
 "さもないと、Checkmkライセンスの有効期限が切れた後、「変更を有効にする」ことが"
 "できません。"
 
+#, fuzzy
 msgid ""
 "Our system will recognize breaks in the trend and set them automatically,\n"
 "but as a user your are required to select how flexible the trend is when it\n"
-"is adjusted to the data.  This options change between more global to\n"
+"is adjusted to the data.  This options vary from more global to\n"
 "local smooth models.\n"
 "\n"
-"The model is extrapolated to make the forecast using an extension of the\n"
+"The model is extrapolated to make the forecast use an extension of the\n"
 "last trend. However, in addition to that, our system will use the\n"
-"information about the changes in trend over the analyzed history to\n"
-"simulate future rate changes. In the aim of emulating changes from the\n"
+"information about the changes in trend based on the analyzed history to\n"
+"simulate future rate changes. In the aim of emulating changes in the\n"
 "past, future changes are randomly sampled so that their average frequency\n"
 "matches that of the history.\n"
 "\n"
@@ -42480,10 +42505,11 @@ msgstr "Pingタイムアウト"
 msgid "Placeholder VMs"
 msgstr "プレースホルダーVM"
 
+#, fuzzy
 msgid ""
 "Placeholder VMs are created by the Site Recovery Manager(SRM) and act as "
-"backup virtual machines in case the default vm is unable to start. This "
-"option tells the vsphere agent to exclude placeholder vms in its output."
+"backup virtual machines in case the default VM is unable to start. This "
+"option tells the vsphere agent to exclude placeholder VMs in its output."
 msgstr ""
 "プレースホルダ VM は Site Recovery Manager(SRM) によって作成され、デフォルト "
 "VM が起動できない場合にバックアップ仮想マシンとして機能します。このオプション"
@@ -42492,7 +42518,8 @@ msgstr ""
 msgid "Placement"
 msgstr "配置"
 
-msgid "Plain Email"
+#, fuzzy
+msgid "Plain email"
 msgstr "プレーンメール"
 
 msgid "Plain text (Unencrypted)"
@@ -42802,10 +42829,10 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
-"underscores. If you are unsure about the correct spelling of the name then "
+"underscores. If you are unsure about the correct spelling of the name, then "
 "please look at the output of the agent (cmk -d HOSTNAME). The service names "
 "are in the first column of the section &lt;&lt;&lt;services&gt;&gt;&gt;. "
-"Please do not mix up the service name with the display name of the service."
+"Please do not mix up the service name with the display name of the service. "
 "The latter one is just being displayed as a further information."
 msgstr ""
 "エージェントはサービス名のスペースをアンダースコアに置き換えることに注意して"
@@ -53872,10 +53899,12 @@ msgstr "サイト名"
 msgid "Sum"
 msgstr "和"
 
-msgid "Summarize Datafiles"
+#, fuzzy
+msgid "Summarize datafiles"
 msgstr "データファイルの要約"
 
-msgid "Summarize Transactionlogs"
+#, fuzzy
+msgid "Summarize transactionlogs"
 msgstr "トランザクションログの要約"
 
 msgid "Summarized data of all protocols"
@@ -77652,6 +77681,15 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Database Name"
+#~ msgstr "データベース名"
+
+#~ msgid "E-Mails"
+#~ msgstr "Eメール"
+
+#~ msgid "Email Address"
+#~ msgstr "電子メールアドレス"
 
 #~ msgid "API Key"
 #~ msgstr "APIキー"

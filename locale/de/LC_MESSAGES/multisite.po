@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-07-19 05:05+0000\n"
+"PO-Revision-Date: 2024-07-30 08:43+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -2552,11 +2552,9 @@ msgstr ""
 "Zu verwendender API-Key. Abhängig von Ihrem opsgenie-Abonnement, können Sie "
 "globale oder Team Keys verwenden."
 
-#, fuzzy
 msgid "API access token"
 msgstr "API Zugangstoken"
 
-#, fuzzy
 msgid "API endpoint from PagerDuty V2"
 msgstr "API-Endpunkt von PagerDuty V2"
 
@@ -2599,7 +2597,6 @@ msgstr "APT-Updates"
 msgid "APT normal and security updates (Linux)"
 msgstr "Normale und Sicherheitsupdates für APT (Linux)"
 
-#, fuzzy
 msgid "ASCII email"
 msgstr "ASCII E-Mail"
 
@@ -3050,15 +3047,14 @@ msgstr ""
 "Schreibrechten auf dieses Modul kann Veränderungen an der Konfiguration "
 "durch das Wiederherstellen von Sicherungen vornehmen."
 
-#, fuzzy
 msgid ""
 "Access to the module <i>Snapshots</i>. Please note: a user with write access "
 "to this module can make arbitrary changes to the configuration by restoring "
 "uploaded snapshots."
 msgstr ""
 "Zugriff auf Modul <i>Snapshots</i>. Achtung: Ein Benutzer mit Schreibrechten "
-"auf dieses Modul kann Veränderungen an der Konfiguration durch das "
-"Wiederherstellen von hochgeladenen Snapshots vornehmen."
+"auf dieses Modul kann durch das Wiederherstellen von hochgeladenen Snapshots "
+"beliebige Veränderungen an der Konfiguration vornehmen."
 
 msgid "Access to the module <i>Time periods</i>"
 msgstr "Zugriff auf Modul <i>Zeitperioden</i>"
@@ -3066,13 +3062,13 @@ msgstr "Zugriff auf Modul <i>Zeitperioden</i>"
 msgid "Access to the module for analyzing and validating logfile patterns."
 msgstr "Zugriff auf das Modul um Logdateimuster zu analysieren/auszuwerten."
 
-#, fuzzy
 msgid ""
 "Access to the module for managing Checkmk rules. Please note that a user can "
 "only manage rules in folders he has permissions to."
 msgstr ""
-"Zugriff auf das Modul um Checkmk-Regeln zu verwalten. Achtung: Ein Benutzer "
-"kann nur Regeln in Ordnern verwalten, für die er Zugriffsrechte besitzt. "
+"Zugriff auf das Modul um Checkmk-Regeln zu verwalten. Bitte beachten Sie, "
+"dass ein Benutzer nur Regeln in Ordnern verwalten kann, auf die er "
+"Zugriffsrechte besitzt."
 
 msgid ""
 "Access to the module for managing connections to remote monitoring sites."
@@ -3215,7 +3211,6 @@ msgstr "Aktion bei einem Fehler"
 msgid "Actions"
 msgstr "Aktionen"
 
-#, fuzzy
 msgid "Actions (emails & scripts)"
 msgstr "Aktionen (E-Mails & Skripts)"
 
@@ -3776,7 +3771,6 @@ msgstr "Gruppe hinzufügen"
 msgid "Add group or user"
 msgstr "Gruppe oder Benutzer hinzufügen"
 
-#, fuzzy
 msgid ""
 "Add here only groups and users which do not have administrator rights but, "
 "for some reason, must have write access to the Oracle binaries. For example, "
@@ -5718,14 +5712,12 @@ msgstr ""
 "Erlaubt einem Benutzer das Anlegen und Ändern von Einträgen im "
 "Berichtsplaner."
 
-#, fuzzy
 msgid ""
 "Allows a user to modify scheduled reports of other users and also to specify "
 "arbitrary email addresses as report destination."
 msgstr ""
-"Erlaubt einem Benutzer geplante Berichte von andern Benutzer zu ändern und "
-"darüber hinaus eine beliebige Emailadresse als Ziel für den Bericht "
-"auszuwählen."
+"Erlaubt einem Benutzer geplante Berichte von anderen Benutzern zu ändern und "
+"darüber hinaus beliebige E-Mailadressen als Ziel für den Bericht auszuwählen."
 
 msgid ""
 "Allows the assignment of the Robotmk plan/test services to another host."
@@ -6121,9 +6113,8 @@ msgstr ""
 "tt>), absolute lokale URLs (beginnend mit <tt>/</tt>) oder relative URLs "
 "(die relativ zu <tt>check_mk/</tt> sind) verwenden."
 
-#, fuzzy
 msgid "An optional alias name for your MySQL socket"
-msgstr "Ein optionaler Alias für Ihren mysql Socket"
+msgstr "Ein optionaler Alias-Name für Ihren MySQL-Socket"
 
 msgid "Analyse availability of this aggregation"
 msgstr "Verfügbarkeit dieser Aggregation analysieren"
@@ -7944,9 +7935,8 @@ msgstr "Basis-OID"
 msgid "Base URL (OMD Site)"
 msgstr "Basis-URL (OMD Instanz)"
 
-#, fuzzy
 msgid "Base URL for Docker API engine"
-msgstr "Base URL für die Docker API Engine"
+msgstr "Basis-URL für die Docker API Engine"
 
 msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
 msgstr "Basisverzeichnis für <tt>Plugins</tt> und <tt>lokal</tt>"
@@ -8026,7 +8016,6 @@ msgstr "Bazel Cache-Port"
 msgid "Bazel Cache User"
 msgstr "Bazel Cache Benutzer"
 
-#, fuzzy
 msgid "Bazel Cache password"
 msgstr "Bazel Cache-Passwort"
 
@@ -8632,16 +8621,15 @@ msgstr ""
 "<tt>ORA-</tt> enthält. Bemerkung: Wenn eine invertierte Regel greift, kann "
 "es nie Match-Gruppen geben."
 
-#, fuzzy
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
 "monitored via a seperate metric. Setting levels on the used total bandwidth "
 "is optional. If you set levels you might also consider using averaging."
 msgstr ""
-"Bei Aktivierung dieser Option wird die Summe über den ein- und ausgehenden "
-"Verkehr mittels einer separaten Metrik überwacht. Level für die verbrauchte "
-"Bandbreite sind optional. Wenn Sie Level einrichten dann sollten Sie auch "
-"einen Durchschnittswert verwenden."
+"Bei Aktivierung dieses Items wird die Summe über den ein- und ausgehenden "
+"Verkehr mittels einer separaten Metrik überwacht. Das Festlegen von Leveln "
+"für die verbrauchte Bandbreite ist optional. Wenn Sie Level einrichten dann "
+"sollten Sie auch einen Durchschnittswert verwenden."
 
 msgid ""
 "By activating this option you can set levels on the total CPU utilization "
@@ -12666,7 +12654,6 @@ msgstr "Rauch-Level festlegen"
 msgid "Configure lower levels"
 msgstr "Untergrenzen konfigurieren"
 
-#, fuzzy
 msgid ""
 "Configure monitoring of networking services using classical Nagios plug-ins "
 "(so called active checks)"
@@ -12917,12 +12904,10 @@ msgstr ""
 msgid "Configure upper levels"
 msgstr "Obergrenzen konfigurieren"
 
-#, fuzzy
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr ""
-"Konfigurieren Sie hier die Servicenow URL (bspw. https://myservicenow.com)."
+"Konfigurieren Sie hier Ihre Servicenow URL (bspw. https://myservicenow.com)."
 
-#, fuzzy
 msgid "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
 msgstr ""
 "Konfigurieren Sie hier Ihre Modem-URL (z. B. https://mymodem.mydomain."
@@ -14340,7 +14325,7 @@ msgstr ""
 "Credentials nicht konfiguriert oder ungültig. Bitte überprüfen Sie die "
 "Lizenzeinstellungen"
 
-msgid "Credentials to access the Database"
+msgid "Credentials to access the database"
 msgstr "Zugangsdaten für Datenbankzugriff"
 
 msgid "Credits consumed"
@@ -15395,9 +15380,6 @@ msgstr "Datenbank"
 
 msgid "Database Availability Group (DAG) (Windows)"
 msgstr "Database Availability Group (DAG) (Windows)"
-
-msgid "Database Name"
-msgstr "Datenbankname"
 
 msgid "Database SID"
 msgstr "Datenbank-SID"
@@ -17760,11 +17742,11 @@ msgstr "Anzeigename"
 msgid "Display node details on"
 msgstr "Knoten-Details anzeigen auf"
 
-msgid "Display only a summary of all Datafiles"
-msgstr "Nur eine Zusammenfassung der Datendateien anzeigen"
+msgid "Display only a summary of all datafiles"
+msgstr "Nur eine Zusammenfassung aller Datendateien anzeigen"
 
-msgid "Display only a summary of all Transactionlogs"
-msgstr "Nur eine Zusammenfassung der Transaktionslogs anzeigen"
+msgid "Display only a summary of all transactionlogs"
+msgstr "Nur eine Zusammenfassung aller Transaktionslogs anzeigen"
 
 msgid "Display range: Minimum must be strictly less than maximum"
 msgstr ""
@@ -18856,18 +18838,20 @@ msgstr ""
 "Checkmk enthalten die Ergebnisse widersprüchliche Metriken und diese "
 "Topliste kann falsch oder unvollständig sein."
 
+#, fuzzy
 msgid ""
-"Due to security reasons the plugin being executed as admin will check "
-"permissions for Oracle executables. If modification of Oracle binaries is "
-"allowed for non-admin users or groups then the plug-in stops processing thus "
-"breaking Oracle monitoring: execution of normal user code at elevated level "
-"means security vulnerability.You may <tt>disable</tt> this option if it is "
-"the only method to continue monitoring the Oracle database. Usually you need "
-"to <tt>disable</tt> the option only in the next case: It's impossible to "
-"correctly adjust permissions for Oracle binaries, mode group with group "
-"Administrator is not applicable and it is not possible to use custom account "
-"to monitor the Oracle database.Even if check is enabled you may allow some "
-"groups and/or users to still have write access to the Oracle binaries."
+"Due to security reasons the plug-in being executed as admin will check "
+"permissions for Oracle executables. If the modification of Oracle binaries "
+"is allowed for non-admin users or groups then the plug-in stops processing "
+"thus breaking Oracle monitoring: execution of normal user code at elevated "
+"level means security vulnerability. You may <tt>disable</tt> this option if "
+"it is the only method to continue monitoring the Oracle database. Usually "
+"you need to <tt>disable</tt> the option only in the following case: It's "
+"impossible to correctly adjust permissions for Oracle binaries, mode group "
+"with group Administrator is not applicable and it is not possible to use "
+"custom account to monitor the Oracle database. Even if the check is enabled "
+"you may allow some groups and/or users to still have write access to the "
+"Oracle binaries."
 msgstr ""
 "Aus Sicherheitsgründen wird das Plugin, das als Administrator ausgeführt "
 "wird, die Berechtigungen für ausführbare Oracle-Dateien prüfen. Wenn die "
@@ -19019,12 +19003,6 @@ msgstr "Dynamische Level - obere Grenze"
 msgid "DynamoDB"
 msgstr "DynamoDB"
 
-msgid "E-Mails"
-msgstr "E-Mails"
-
-msgid "E-mail address attribute"
-msgstr "E-Mail-Adresse"
-
 msgid "E.Type"
 msgstr "B.Typ"
 
@@ -19090,7 +19068,7 @@ msgstr "ESTABLISHED"
 msgid "ESX Datastores (used space and growth)"
 msgstr "ESX Datastores (genutzter Speicher & Wachstum)"
 
-msgid "ESX Hostsystem Maintenance Mode"
+msgid "ESX Host System Maintenance Mode"
 msgstr "ESX Host-System Wartungsmodus"
 
 msgid "ESX Multipath Count"
@@ -19304,7 +19282,7 @@ msgid "Edit SLA"
 msgstr "SLA bearbeiten"
 
 msgid "Edit Views"
-msgstr "Ansichten Bearbeiten"
+msgstr "Ansichten bearbeiten"
 
 #, python-format
 msgid "Edit alert handler rule %d"
@@ -19818,24 +19796,27 @@ msgstr "Elliptische Kurve"
 msgid "Email"
 msgstr "E-Mail"
 
-msgid "Email Address"
-msgstr "Emailadresse"
-
 msgid "Email address"
 msgstr "E-Mailadresse"
+
+msgid "Email address attribute"
+msgstr "Attribute der E-Mail-Adresse"
 
 msgid "Email address used for account identification"
 msgstr "E-Mail-Adresse die zur Kontoidentifizierung verwendete wird"
 
+msgid "Email addresses to mail PDF reports to"
+msgstr "Email-Adressen, an welche die PDF-Berichte gemailt werden sollen"
+
 msgid "Email sent"
 msgstr "E-Mail gesendet"
-
-msgid "Email-Addresses to mail PDF reports to"
-msgstr "Email-Adressen, an die der Report gemailt werden soll"
 
 #, python-format
 msgid "Emailed report to %s."
 msgstr "Report an %s gemailt."
+
+msgid "Emails"
+msgstr "E-Mails"
 
 #, python-format
 msgid "Emails containing %s per second"
@@ -21382,16 +21363,14 @@ msgstr "Explizite Bedingungen"
 msgid "Explicit email addresses"
 msgstr "Explizite E-Mail-Adressen"
 
-#, fuzzy
 msgid "Explicit host matching"
-msgstr "Explizite %s Zuordnung"
+msgstr "Explizite Host-Zuordnung"
 
 msgid "Explicit hosts"
 msgstr "Explizite Hosts"
 
-#, fuzzy
 msgid "Explicit item matching"
-msgstr "Genaue Übereinstimmung"
+msgstr "Explizite Item-Zuordnung"
 
 msgid "Explicit labels"
 msgstr "Explizite Labels"
@@ -21928,9 +21907,6 @@ msgstr "Ausgefallene Kollektoren"
 msgid "Failover (only one node should be active)"
 msgstr "Failover (nur ein Knoten sollte aktiv sein)"
 
-msgid "Failover Servers"
-msgstr "Ersatz Server"
-
 msgid "Failover State: ACTIVE"
 msgstr "Failover Status: ACTIVE"
 
@@ -21951,6 +21927,9 @@ msgstr "Failover Status: FAILOVER_PENDING"
 
 msgid "Failover State: NONE"
 msgstr "Failover Status: NONE"
+
+msgid "Failover servers"
+msgstr "Failover-Server"
 
 msgid "Failover states"
 msgstr "Failover States"
@@ -22253,6 +22232,9 @@ msgstr "Dateigröße ist"
 
 msgid "File size below"
 msgstr "Dateigröße weniger als"
+
+msgid "File size levels"
+msgstr "Level für Dateigrößen"
 
 #, python-format
 msgid "File upload test for remote storage failed. Original error message: %s"
@@ -22791,11 +22773,12 @@ msgstr ""
 msgid "For devices that measure smoke in percent"
 msgstr "Für Geräte, die Rauch in Prozent messen"
 
+#, fuzzy
 msgid ""
 "For each folder an automatic network scan can be configured. It will try to "
 "detect new hosts in the configured IP ranges by sending pings to each IP "
-"address to check whether or not a host is using this ip address. Each new "
-"found host will be added to the current folder by it's host name, when "
+"address to check whether or not a host is using this IP address. Each new "
+"found host will be added to the current folder by its host name, when "
 "resolvable via DNS, or by its IP address."
 msgstr ""
 "Für jeden Ordner kann ein automatischer Netzwerk-Scan konfiguriert werden. "
@@ -24256,7 +24239,7 @@ msgstr "HPE StoreOnce via REST API 4.x"
 msgid "HR: Used memory via SNMP"
 msgstr "HR: Belegter Speicher über SNMP"
 
-msgid "HTML Email"
+msgid "HTML email"
 msgstr "HTML E-Mail"
 
 msgid "HTML output"
@@ -24380,11 +24363,12 @@ msgstr "HTTPS"
 msgid "HTTPS Proxy"
 msgstr "HTTPS Proxy"
 
+#, fuzzy
 msgid ""
 "HTTPS is the suggested setting here. It requires a valid SSL setup of your "
 "Apache web server on your monitoring server, however. When using HTTP then "
 "confidential data that is contained in the baked agents could be spied out "
-"(such as passwords for plugins)."
+"(such as passwords for plug-ins)."
 msgstr ""
 "HTTPS ist hier die empfohlene Einstellung. Dies erfordert jedoch eine valide "
 "SSL-Installation des Apache-Webservers auf dem Monitoring-Server. Wenn HTTP "
@@ -25116,13 +25100,13 @@ msgstr ""
 "Stellen Sie dazu dem Ausdruck eine Tilde (<tt>~</tt>) voran. Der reguläre "
 "Ausdruck muss dann auf den <i>Anfang</i> des Host-Namens passen."
 
-#, fuzzy
 msgid ""
 "Here you can enter either device state number (e.g. from SNMP devices) or "
 "exact device state name and the related monitoring state."
 msgstr ""
-"Hier können Sie entweder die Gerätestatusnummer (zB bei SNMP-Geräten) oder "
-"den exakten Gerätestatusnamen und dazugehörigen Monitoring-Zustands eingeben."
+"Hier können Sie entweder die Gerätestatusnummer (z.B. bei SNMP-Geräten) oder "
+"den exakten Gerätestatusnamen und den zugehörigen Monitoring-Zustand "
+"eingeben."
 
 msgid ""
 "Here you can have the changes activated whenever services have been added or "
@@ -25145,9 +25129,10 @@ msgstr ""
 "gemeldet werden). Um die erforderlichen Daten zu erhalten, müssen Sie das "
 "Plugin mk_filestats konfigurieren."
 
+#, fuzzy
 msgid ""
-"Here you can impose various levels the results reported by the mk_filstats "
-"plug-in. Note that those levels only concern about a single file."
+"Here you can impose various levels on the results reported by the "
+"mk_filstats plug-in. Note that those levels only concern about a single file."
 msgstr ""
 "Hier können Sie die vom Plugin mk_filstats gemeldeten Ergebnisse mit "
 "verschiedenen Leveln versehen. Beachten Sie, dass sich diese Level nur auf "
@@ -25427,7 +25412,8 @@ msgstr ""
 "welche die Level des Parameters <i>Standard-Level</i> überschreiben. Diese "
 "Einstellung funktioniert nur im NetApp-Cluster-Modus."
 
-msgid "Here you can specify the allowed license states for windows."
+#, fuzzy
+msgid "Here you can specify the allowed license states for Windows."
 msgstr "Hier können Sie die erlaubten Lizenz Zustände für Windows festlegen."
 
 msgid ""
@@ -26332,6 +26318,9 @@ msgstr "Host-Status-Gruppierung"
 msgid "Host successfully created"
 msgstr "Host erfolgreich erstellt"
 
+msgid "Host system sensor alerts"
+msgstr "Alarme von Host-System-Sensoren"
+
 msgid "Host tag"
 msgstr "Host-Tag"
 
@@ -26583,9 +26572,6 @@ msgstr "Hosts: %d insgesamt ( %d erfolgreich, %d übersprungen, %d gescheitert)"
 
 msgid "Hosts: Host Capacity & Utilization"
 msgstr "Hosts: Host Kapazität & Auslastung"
-
-msgid "Hostsystem sensor alerts"
-msgstr "Alarme von Host-System-Sensoren"
 
 msgid "Hosttag"
 msgstr "Hostmerkmal"
@@ -26900,15 +26886,15 @@ msgstr "IP-Adresse"
 msgid "IP address family"
 msgstr "IP-Adressfamilie"
 
-msgid "IP address of Host"
-msgstr "IP-Adresse des Hosts"
-
 msgid ""
 "IP address of SMB share host (only necessary if SMB share host is in another "
 "network)"
 msgstr ""
 "IP-Adresse des SMB-Share-Hosts (nur erforderlich, wenn sich der SMB-Share-"
 "Host in einem anderen Netzwerk befindet)"
+
+msgid "IP address of host"
+msgstr "IP-Adresse des Hosts"
 
 msgid "IP address of remote Event Console"
 msgstr "IP-Adresse der Remote Event Console"
@@ -26919,7 +26905,7 @@ msgstr "IP-Adresse des Spectrum-Servers, der die SNMP-Traps empfängt"
 msgid "IP address of tunnel endpoint"
 msgstr "IP-Adresse des Tunnelendpunkts"
 
-msgid "IP address or FQDN of JVM webserver"
+msgid "IP address or FQDN of JVM web server"
 msgstr "IP-Adresse oder FQDN des JVM-Webservers"
 
 msgid "IP address or name of tunnel endpoint"
@@ -27573,8 +27559,9 @@ msgstr ""
 "Wenn die automatische Erkennung der Link-Geschwindigkeit nicht funktioniert, "
 "geben Sie hier einen Wert dafür ein."
 
+#, fuzzy
 msgid ""
-"If the flag is set, then the windows agent may use unencrypted communication "
+"If the flag is set, then the Windows agent may use unencrypted communication "
 "between the monitoring site and the host. Enable this flag for compatibility "
 "reasons or if you experience problems with the controller related to TLS or "
 "encryption. But please pay attention, that this enables unencrypted "
@@ -27770,11 +27757,12 @@ msgstr ""
 "Informationen über die Kompilierung von BI-Aggregationen. Dieses enthält "
 "Statistiken und Detailinformationen für jede Kompilierung."
 
+#, fuzzy
 msgid ""
 "If this option is enabled, the GUI reads the configured HTTP header variable "
 "from the incoming HTTP request and simply takes the string in this variable "
 "as name of the authenticated user. Be warned: Only allow access from trusted "
-"ip addresses (Apache <tt>Allow from</tt>), like proxy servers, to this "
+"IP addresses (Apache <tt>Allow from</tt>), like proxy servers, to this "
 "webpage. A user with access to this page could simply fake the "
 "authentication information. This option can be useful to realize "
 "authentication in reverse proxy environments. As of version 1.6 and on all "
@@ -28258,6 +28246,16 @@ msgstr ""
 "der Event Console geschrieben. Bitte beachten: Kann zu einer großen Anzahl "
 "von Logeinträgen führen. "
 
+#, fuzzy
+msgid ""
+"If you enable this option then the remote site will automatically takeover "
+"and enable event processing if the central site is for the configured number "
+"of seconds unreachable."
+msgstr ""
+"Wenn Sie diese Option aktivieren, dann übernimmt die Remote-Instanz "
+"automatisch, wenn die Zentralinstanz eine konfigurierbare Zeit von Sekunden "
+"nicht erreichbar ist."
+
 msgid ""
 "If you enable this option then the slave will automatically fallback from "
 "takeover mode to slavemode if the master is reachable again within the "
@@ -28268,15 +28266,6 @@ msgstr ""
 "vom Übernahme- zurück in den Remote-Modus, wenn die Zentralinstanz innerhalb "
 "der gewählten Anzahl von Sekunden seit der letzten Nichterreichbarkeit "
 "(nicht seit der Übernahme) wieder erreichbar ist"
-
-msgid ""
-"If you enable this option then the slave will automatically takeover and "
-"enable event processing if the master is for the configured number of "
-"seconds unreachable."
-msgstr ""
-"Wenn Sie diese Option aktivieren, dann übernimmt die Remote-Instanz "
-"automatisch, wenn die Zentralinstanz eine konfigurierbare Zeit von Sekunden "
-"nicht erreichbar ist."
 
 msgid ""
 "If you enable this option, then Checkmk will not directly Python-bytecompile "
@@ -28312,13 +28301,13 @@ msgstr ""
 "auf die Anwendung passen. Für vollständige Übereinstimmung benutzen Sie die "
 "Zeichen <tt>^</tt> und <tt>$</tt>."
 
+#, fuzzy
 msgid ""
 "If you enter an item name here, this will be used as part of the service "
 "description after the prefix \"Events \". The prefix plus the configured "
-"item must result in an unique service description per host. If you leave "
-"this empty either the string provided in \"Application\" is used as item or "
-"the service gets no item when the \"Application\" field is also not "
-"configured."
+"item must result in a unique service description per host. If you leave this "
+"empty either the string provided in \"Application\" is used as item or the "
+"service gets no item when the \"Application\" field is also not configured."
 msgstr ""
 "Wenn Sie hier einen Namen eingeben, dann wird dieser an den Präfix \"Events "
 "\" angehängt, um die Service-Beschreibung zu bilden. Der Präfix plus dieser "
@@ -28400,12 +28389,13 @@ msgstr ""
 "angezeigt, auf dem Sie das <tt>mk_oracle</tt>-Plugin laufen lassen. In "
 "diesem Fall müssen die SIDs von allen überwachten Datenbank eindeutig sein."
 
+#, fuzzy
 msgid ""
 "If you leave user name and password empty, the special agent tries to "
 "authenticate against the EMC VNX device by Security Files. These need to be "
 "created manually before using. Therefor run as instance user (if using OMD) "
 "or Nagios user (if not using OMD) a command like <tt>naviseccli -"
-"AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> This creates "
+"AddUserSecurity -scope 0 -password PASSWORD -user USER</tt>. This creates "
 "<tt>SecuredCLISecurityFile.xml</tt> and <tt>SecuredCLIXMLEncrypted.key</tt> "
 "in the home directory of the user and these files are used then."
 msgstr ""
@@ -28955,14 +28945,15 @@ msgstr "Auswirkung"
 msgid "Import"
 msgstr "Importieren"
 
-msgid "Import Hosts"
-msgstr "Hosts importieren"
-
 msgid "Import all valid annotations"
 msgstr "Alle gültigen Annotations importieren"
 
 msgid "Import all valid tags"
 msgstr "Alle gültigen Tags importieren"
+
+#, fuzzy
+msgid "Import hosts"
+msgstr "Hosts importieren"
 
 msgid "Import hosts via CSV file"
 msgstr "Hosts über CSV-Datei importieren"
@@ -28979,8 +28970,9 @@ msgstr "iCalender-Datei importieren, um eine Zeitperiode zu definieren"
 msgid "Import state from Nagios core"
 msgstr "Zustand von Nagios-Kern übernehmen"
 
+#, fuzzy
 msgid ""
-"Important! This check is only for monitoring of datafiles who were left in "
+"Important! This check is only for monitoring datafiles which were left in "
 "backup mode. (alter database datafile ... begin backup;)"
 msgstr ""
 "Wichtig! Dieser Check überwacht nur Datendateien, die im Backup-Modus "
@@ -29359,13 +29351,14 @@ msgstr ""
 "diese Zahl auf 0 setzen, werden die Zeilen aus bis zu einer Logdatei "
 "zeitweise im Speicher gehalten."
 
+#, fuzzy
 msgid ""
-"In previous Checkmk versions it was possible to use an automation user to "
-"display specific pages within Checkmk. To authenticate these requests it was "
-"possible to add the _username and _secret parameters to the parameters (e.g. "
-"append them to the URL). GET parameters are usually logged by proxies and "
-"webservers and are not deemed secure for secrets. See Werk #16223 for more "
-"information."
+"In previous Checkmk versions, it was possible to use an automation user to "
+"display specific pages within Checkmk. To authenticate these requests, it "
+"was possible to add the _username and _secret parameters to the parameters "
+"(e.g. append them to the URL). GET parameters are usually logged by proxies "
+"and web servers and are not deemed secure for secrets. See Werk #16223 for "
+"more information."
 msgstr ""
 "In früheren Checkmk-Versionen war es möglich, einen Automationsbenutzer zu "
 "verwenden, um bestimmte Seiten innerhalb von Checkmk anzuzeigen. Um diese "
@@ -30278,8 +30271,8 @@ msgstr "Ungültig (Nicht geladen)"
 msgid "Invalid CRCs"
 msgstr "Ungültige CRCs"
 
-#, python-format
-msgid "Invalid CSRF token (%r) for Session (%r)"
+#, fuzzy, python-format
+msgid "Invalid CSRF token (%r) for session (%r)"
 msgstr "Ungültiges CSRF-Token (%r) für Sitzung (%r)"
 
 #, python-format
@@ -30835,12 +30828,13 @@ msgstr ""
 "zu informieren, aber die Nachricht zu unterdrücken, nachdem das Ereignis "
 "stattgefunden hat."
 
+#, fuzzy
 msgid ""
 "It is possible to fetch several attributes of users, like Email or full "
-"names, from the LDAP directory. This is done by plug-ins which can "
+"names, from the LDAP directory. This is done by plug-ins which can be "
 "individually enabled or disabled. When enabling a plug-in, it is used upon "
-"the next synchonisation of user accounts for gathering their attributes. The "
-"user options which get imported into Checkmk from LDAP will be locked in "
+"the next synchronization of user accounts for gathering their attributes. "
+"The user options which get imported into Checkmk from LDAP will be locked in "
 "Setup."
 msgstr ""
 "Sie können verschiedene Benutzerattribute, wie E-Mail oder vollständiger "
@@ -31572,7 +31566,8 @@ msgstr "Letzter Eintrag"
 msgid "Last Error"
 msgstr "Letzter Fehler"
 
-msgid "Last Known Plugin Output"
+#, fuzzy
+msgid "Last Known Plug-in Output"
 msgstr "Letzte bekannte Pluginausgabe"
 
 msgid "Last OK"
@@ -31755,10 +31750,11 @@ msgstr "Layout-Konfiguration"
 msgid "Layout options"
 msgstr "Layout Optionen"
 
+#, fuzzy
 msgid ""
 "Learn how to setup a REST endpoint <a href=\"https://help.victorops.com/"
 "knowledge-base/victorops-restendpoint-integration/\" target=\"_blank\">here</"
-"a><br />This URL can also be collected from the password store from Checkmk."
+"a>.<br />This URL can also be collected from the password store from Checkmk."
 msgstr ""
 "Erfahren Sie <a href=\"https://help.victorops.com/knowledge-base/victorops-"
 "restendpoint-integration/\" target=\"_blank\">hier</a><br />, wie Sie einen "
@@ -31892,7 +31888,8 @@ msgstr "Level für %s"
 msgid "Levels for %s mail queue"
 msgstr "Level für %s Mail-Warteschlange"
 
-msgid "Levels for ATS Output parameters"
+#, fuzzy
+msgid "Levels for ATS output parameters"
 msgstr "Level für ATS-Ausgabeparameter"
 
 msgid "Levels for CPU utilization"
@@ -32617,7 +32614,8 @@ msgstr "Zugriff auf lokale Agentendaten auf den Agent Controller einschränken"
 msgid "Limit login to single session at a time"
 msgstr "Login auf eine Sitzung pro Zeit beschränken"
 
-msgid "Limit maximum number used cpus"
+#, fuzzy
+msgid "Limit maximum number used CPUs"
 msgstr "Maximale Anzahl genutzter CPUs begrenzen"
 
 msgid "Limit number of processed search results"
@@ -33166,9 +33164,6 @@ msgstr "Lokale HTTP 503 Antworten"
 msgid "Local IP address"
 msgstr "Lokale IP-Adresse"
 
-msgid "Local Integrated Authentication (Windows)"
-msgstr "Lokal integrierte Authentifizierung (Windows)"
-
 msgid "Local Only"
 msgstr "Nur lokal"
 
@@ -33219,6 +33214,10 @@ msgstr "Lokale Datei"
 
 msgid "Local group name"
 msgstr "Lokaler Gruppenname"
+
+#, fuzzy
+msgid "Local integrated authentication (Windows)"
+msgstr "Lokal integrierte Authentifizierung (Windows)"
 
 msgid "Local path"
 msgstr "Lokaler Pfad"
@@ -33449,7 +33448,8 @@ msgstr "Log: Zusammenfassung"
 msgid "Log: command (regex)"
 msgstr "Log-Datei: Befehl (regex)"
 
-msgid "Log: command/plugin"
+#, fuzzy
+msgid "Log: command/plug-in"
 msgstr "Logdatei: Kommando/Plugin"
 
 msgid "Log: comment"
@@ -33840,9 +33840,6 @@ msgstr "Untergrenzen für SMS-Ausgaben"
 msgid "Lower levels for SMS Success Rate"
 msgstr "Untergrenzen für SMS-Erfolgsrate"
 
-msgid "Lower levels for Voltage"
-msgstr "Untergrenzen für Spannung"
-
 msgid "Lower levels for burst balance"
 msgstr "Untergrenzen für Burst-Balance"
 
@@ -33896,6 +33893,10 @@ msgstr "Untergrenzen für die Gesamtfehlerquote"
 
 msgid "Lower levels for unallocated space"
 msgstr "Untergrenzen für unallozierten Speicher"
+
+#, fuzzy
+msgid "Lower levels for voltage"
+msgstr "Untergrenzen für Spannung"
 
 msgid "Lower levels in percentage of limit"
 msgstr "Untergrenzen in Prozent des Grenzwerts"
@@ -33969,7 +33970,8 @@ msgstr "MIBs, die mit Checkmk ausgeliefert werden"
 msgid "MISSING '%s'"
 msgstr "FEHLT '%s'"
 
-msgid "MK Remote Plugin Executor (MRPE)"
+#, fuzzy
+msgid "MK Remote Plug-in Executor (MRPE)"
 msgstr "MK Remote Plugin Executor (MRPE)"
 
 msgid "MKEventd"
@@ -35196,11 +35198,12 @@ msgstr "Maximale Latenzzeit für erfolgreiche PutItem-Anfragen"
 msgid "Maximum latency of successful query requests"
 msgstr "Maximale Latenzzeit erfolgreicher Query-Anfragen"
 
-msgid "Maximum levels for Voltage"
-msgstr "Obergrenzen für die Spannung"
-
 msgid "Maximum levels for load in percent"
 msgstr "Obergrenzen für die Last in Prozent"
+
+#, fuzzy
+msgid "Maximum levels for voltage"
+msgstr "Obergrenzen für die Spannung"
 
 msgid "Maximum levels if using magic factor"
 msgstr "Maximale Level bei Verwendung von Magic Factor"
@@ -39989,11 +39992,12 @@ msgstr ""
 "<i>Logdatei</i> schränken Sie dabei die zur Anwendung kommenden Muster ein. "
 "Tragen Sie bei den beiden Feldern nichts ein, werden alle Muster verwendet."
 
+#, fuzzy
 msgid ""
 "Once you enable this option, this plugin will not only handle direct group "
 "memberships, instead it will also dig into nested groups and treat the "
-"members of those groups as contact group members as well. Please mind that "
-"this feature might increase the execution time of your LDAP sync."
+"members of those groups as contact group members as well. Please bear in "
+"mind that this feature might increase the execution time of your LDAP sync."
 msgstr ""
 "Sobald Sie diese Option aktiviert haben, wird der LDAP-Konnektor nicht nur "
 "einfache Gruppemitgliedschaften erkennen, sondern auch solche, bei denen "
@@ -40121,7 +40125,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Only apply the rule if the notification originates from certain types of "
-"check plug-ins. Note: Host notifications never match this rule if this "
+"check plug-ins. Note: Host notifications never match this rule, if this "
 "option is being used."
 msgstr ""
 "Wenden Sie die Regel nur an, wenn die Benachrichtigung von bestimmten Arten "
@@ -40938,16 +40942,17 @@ msgstr ""
 "Andernfalls können Sie nach Ablauf Ihrer Checkmk-Lizenz keine \"Änderungen "
 "aktivieren\"."
 
+#, fuzzy
 msgid ""
 "Our system will recognize breaks in the trend and set them automatically,\n"
 "but as a user your are required to select how flexible the trend is when it\n"
-"is adjusted to the data.  This options change between more global to\n"
+"is adjusted to the data.  This options vary from more global to\n"
 "local smooth models.\n"
 "\n"
-"The model is extrapolated to make the forecast using an extension of the\n"
+"The model is extrapolated to make the forecast use an extension of the\n"
 "last trend. However, in addition to that, our system will use the\n"
-"information about the changes in trend over the analyzed history to\n"
-"simulate future rate changes. In the aim of emulating changes from the\n"
+"information about the changes in trend based on the analyzed history to\n"
+"simulate future rate changes. In the aim of emulating changes in the\n"
 "past, future changes are randomly sampled so that their average frequency\n"
 "matches that of the history.\n"
 "\n"
@@ -42611,10 +42616,11 @@ msgstr "Ping Timeout"
 msgid "Placeholder VMs"
 msgstr "Platzhalter-VMs"
 
+#, fuzzy
 msgid ""
 "Placeholder VMs are created by the Site Recovery Manager(SRM) and act as "
-"backup virtual machines in case the default vm is unable to start. This "
-"option tells the vsphere agent to exclude placeholder vms in its output."
+"backup virtual machines in case the default VM is unable to start. This "
+"option tells the vsphere agent to exclude placeholder VMs in its output."
 msgstr ""
 "Platzhalter-VMs werden vom Site Recovery Manager (SRM) erzeugt und fungieren "
 "als Sicherung für Virtuelle Maschinen für den Fall dass eine VM nicht "
@@ -42624,7 +42630,8 @@ msgstr ""
 msgid "Placement"
 msgstr "Platzierung"
 
-msgid "Plain Email"
+#, fuzzy
+msgid "Plain email"
 msgstr "Einfache E-Mail"
 
 msgid "Plain text (Unencrypted)"
@@ -42946,10 +42953,10 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
-"underscores. If you are unsure about the correct spelling of the name then "
+"underscores. If you are unsure about the correct spelling of the name, then "
 "please look at the output of the agent (cmk -d HOSTNAME). The service names "
 "are in the first column of the section &lt;&lt;&lt;services&gt;&gt;&gt;. "
-"Please do not mix up the service name with the display name of the service."
+"Please do not mix up the service name with the display name of the service. "
 "The latter one is just being displayed as a further information."
 msgstr ""
 "Bitte beachten, dass der Agent Leerzeichen in Service-Namen durch <tt>_</tt> "
@@ -54060,10 +54067,12 @@ msgstr "Suite-Name"
 msgid "Sum"
 msgstr "Summe"
 
-msgid "Summarize Datafiles"
+#, fuzzy
+msgid "Summarize datafiles"
 msgstr "Datendateien zusammenfassen"
 
-msgid "Summarize Transactionlogs"
+#, fuzzy
+msgid "Summarize transactionlogs"
 msgstr "Transaktionslog zusammenfassen"
 
 msgid "Summarized data of all protocols"
@@ -78018,6 +78027,15 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Database Name"
+#~ msgstr "Datenbankname"
+
+#~ msgid "E-Mails"
+#~ msgstr "E-Mails"
+
+#~ msgid "Email Address"
+#~ msgstr "Emailadresse"
 
 #~ msgid "API Key"
 #~ msgstr "API-Schlüssel"

@@ -59,7 +59,6 @@ cc_test(
     srcs = glob(["test/*.cc"]),
     copts = [
         "-Iexternal/re2",
-        "-O3",
     ],
     deps = [
         ":livestatus",

@@ -103,7 +103,6 @@ cc_library(
     deps = [":neb"],
 )
 
-# CC=/usr/bin/gcc-13 bazel test --test_output=all //packages/neb:all
 cc_test(
     name = "test",
     size = "small",

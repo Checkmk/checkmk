@@ -56,7 +56,6 @@ cc_shared_library(
 cc_test(
     name = "test",
     size = "small",
-    testonly = 1,
     srcs = glob(["test/*.cc"]),
     copts = [
         "-Iexternal/re2",

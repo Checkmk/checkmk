@@ -114,7 +114,6 @@ cc_library(
 cc_test(
     name = "test",
     size = "small",
-    testonly = 1,
     srcs = [
         "test/test_CrashReport.cc",
         "test/test_DictFilter.cc",

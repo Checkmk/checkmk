@@ -15,7 +15,6 @@ cc_binary(
 cc_test(
     name = "test",
     size = "small",
-    testonly = 1,
     srcs = ["test/test.cc"],
     deps = [":unixcat"],
 )

@@ -3,17 +3,11 @@ load("//omd/packages/rules:version.bzl", "mangle_version")
 
 CMK_VERSION = "2.4.0b1"
 
-NEB_COPTS = [
-    "-Ipackages/neb/third_party/include/",
-    "-O3",
-]
-
 # Keep code using VERSION apart to minimize cache invalidation.
 cc_library(
     name = "neb_version",
     srcs = ["src/CmkVersion.cc"],
     hdrs = ["include/neb/CmkVersion.h"],
-    copts = NEB_COPTS,
     includes = ["include"],
     local_defines = [
         r'VERSION=\"' + mangle_version(CMK_VERSION) + r'\"',
@@ -29,6 +23,7 @@ cc_library(
             "third_party/include/nagios4/*.h",
         ],
     ),
+    includes = ["third_party/include"],
     tags = ["no-clang-tidy"],
 )
 
@@ -62,7 +57,7 @@ cc_library(
         "include/neb/TimeperiodsCache.h",
         "include/neb/nagios.h",
     ],
-    copts = NEB_COPTS,
+    copts = ["-O3"],
     includes = ["include"],
     deps = [
         ":neb_nagios_headers",
@@ -94,7 +89,6 @@ cc_library(
         "test/test_utilities.cc",
     ],
     hdrs = ["test/test_utilities.h"],
-    copts = NEB_COPTS,
     deps = [
         ":neb",
         "//packages/livestatus",
@@ -106,7 +100,6 @@ cc_library(
     testonly = 1,
     srcs = ["test/DummyNagios.cc"],
     hdrs = ["test/DummyNagios.cc"],
-    copts = NEB_COPTS,
     deps = [":neb"],
 )
 
@@ -119,7 +112,6 @@ cc_test(
         "test/test_DictFilter.cc",
         "test/test_MacroExpander.cc",
     ],
-    copts = NEB_COPTS,
     deps = [
         ":dummy_nagios",
         ":neb",

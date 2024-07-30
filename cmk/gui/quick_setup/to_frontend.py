@@ -222,7 +222,7 @@ def recaps_form_spec(
             form_spec=serialize_data_for_frontend(
                 form_spec=expected_formspecs_map[form_spec_id],
                 field_id=form_spec_id,
-                origin=DataOrigin.FRONTEND,
+                origin=DataOrigin.DISK,
                 do_validate=False,
                 value=form_data,
             ),

@@ -8,7 +8,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Iterable, Mapping, Sequence
 
-from cmk.gui.quick_setup.v0_unstable.definitions import IncomingStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -24,6 +23,7 @@ CallableRecap = Callable[
     [Sequence[ParsedFormData], Mapping[FormSpecId, FormSpec]],
     Sequence[Widget],
 ]
+CallableSaveAction = Callable[[ParsedFormData], str]
 
 
 @dataclass(frozen=True)
@@ -43,4 +43,4 @@ class QuickSetup:
     id: QuickSetupId
     stages: Sequence[QuickSetupStage]
     button_complete_label: str
-    save_action: Callable[[Sequence[IncomingStage]], str] | None = None
+    save_action: CallableSaveAction | None = None

@@ -9,14 +9,19 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
 from cmk.gui.quick_setup.to_frontend import (
+    create_and_save_special_agent_bundle,
     recap_service_discovery,
     recaps_form_spec,
     validate_test_connection,
     validate_unique_id,
 )
-from cmk.gui.quick_setup.v0_unstable.definitions import IncomingStage
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
-from cmk.gui.quick_setup.v0_unstable.type_defs import QuickSetupId, ServiceInterest, StageId
+from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    ParsedFormData,
+    QuickSetupId,
+    ServiceInterest,
+    StageId,
+)
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,
@@ -192,9 +197,11 @@ def aws_stages() -> Sequence[QuickSetupStage]:
     ]
 
 
-def save_action(stages: Sequence[IncomingStage]) -> str:
-    # Save the data and return the URL to redirect to
-    return "http://save/url"
+def save_action(all_stages_form_data: ParsedFormData) -> str:
+    return create_and_save_special_agent_bundle(
+        special_agent_name="aws",
+        all_stages_form_data=all_stages_form_data,
+    )
 
 
 quick_setup_aws = QuickSetup(

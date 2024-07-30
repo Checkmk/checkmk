@@ -123,7 +123,7 @@ def complete_quick_setup_action(params: Mapping[str, Any]) -> Response:
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
     return _serve_data(
-        data=complete_quick_setup(quick_setup=quick_setup, stages=body["stages"]),
+        data=complete_quick_setup(quick_setup=quick_setup, incoming_stages=body["stages"]),
         status_code=201,
     )
 

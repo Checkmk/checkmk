@@ -440,7 +440,7 @@ class ConfigBundle(TypedDict):
 
     # Bundle specific properties
     group: str  # e.g. rulespec_name    # special_agent:aws
-    program_id: Literal["quick_setup"]
+    program_id: str  # PROGRAM_ID_QUICK_SETUP
     customer: NotRequired[str]  # CME specific
 
 

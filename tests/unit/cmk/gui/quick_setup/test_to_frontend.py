@@ -53,7 +53,7 @@ ALL_FORM_SPEC_DATA: ParsedFormData = {
             "elasticache": ["all", {"limits": "limits"}],
         },
     },
-    FormSpecId("site"): {"site_selection": {}},
+    FormSpecId("site"): {"site_selection": "my_site"},
     FormSpecId("aws_tags"): {"overall_tags": {}},
 }
 

@@ -1,0 +1,16 @@
+Title: Re-introduce missing requirement documentation for interface check
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1722352726
+Edition: cre
+Level: 1
+Version: 2.1.0p47
+
+During consolidation of various interface checks, necessary
+prerequisites for the Solaris and HP-UX were omitted from the
+documentation.
+
+In this werk, https://checkmk.com/integrations/interfaces is updated
+include the necessary prerequisites to monitor network interfaces on all
+operating systems again.

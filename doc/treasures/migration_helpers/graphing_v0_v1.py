@@ -32,7 +32,7 @@ from typing import Final, Literal, NamedTuple, TextIO
 
 from cmk.utils.metrics import MetricName
 
-from cmk.gui.graphing._parser import color_to_rgb, RGB  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.graphing._color import color_to_rgb, RGB  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.graphing._perfometer import (  # pylint: disable=cmk-module-layer-violation
     _DualPerfometerSpec,
     _LinearPerfometerSpec,
@@ -2389,6 +2389,12 @@ def main() -> None:
         [_obj_repr(unit_parser, o) for o in migrated_objects.graph_templates]
     ):
         print("\n".join(migrated_graph_templates) + "\n")
+    if args.translations and (
+        migrated_translations := sorted(
+            [_obj_repr(unit_parser, t) for t in migrated_objects.translations]
+        )
+    ):
+        print("\n".join(migrated_translations) + "\n")
 
     if migration_errors.metrics_without_def:
         _LOGGER.info(

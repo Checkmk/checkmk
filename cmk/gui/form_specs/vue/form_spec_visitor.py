@@ -23,6 +23,7 @@ from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, RenderMo
 from cmk.gui.form_specs.vue.utils import get_visitor, register_visitor_class
 from cmk.gui.form_specs.vue.visitors.cascading_single_choice import CascadingSingleChoiceVisitor
 from cmk.gui.form_specs.vue.visitors.dictionary import DictionaryVisitor
+from cmk.gui.form_specs.vue.visitors.fixed_value import FixedValueVisitor
 from cmk.gui.form_specs.vue.visitors.float import FloatVisitor
 from cmk.gui.form_specs.vue.visitors.integer import IntegerVisitor
 from cmk.gui.form_specs.vue.visitors.legacy_valuespec import LegacyValuespecVisitor
@@ -37,6 +38,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     Dictionary,
+    FixedValue,
     Float,
     FormSpec,
     Integer,
@@ -67,6 +69,7 @@ def register_form_specs():
     register_visitor_class(CascadingSingleChoice, CascadingSingleChoiceVisitor)
     register_visitor_class(List, ListVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
+    register_visitor_class(FixedValue, FixedValueVisitor)
 
     register_visitor_class(Percentage, FloatVisitor, recompose_percentage)
     register_visitor_class(UnknownFormSpec, LegacyValuespecVisitor, recompose_unknown_form_spec)

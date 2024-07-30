@@ -359,10 +359,35 @@
                 },
                 {
                     "$ref": "#/$defs/cascading_single_choice"
+                },
+                {
+                    "$ref": "#/$defs/fixed_value"
                 }
             ],
             "required": [
                 "type"
+            ]
+        },
+        "fixed_value": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "fixed_value",
+                    "default": "fixed_value"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "value": {}
+            },
+            "required": [
+                "type",
+                "value"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
             ]
         }
     }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { h, ref, type VNode, watch } from 'vue'
 import type {
+  Components,
   Dictionary,
   FormSpec,
   List,
@@ -8,7 +9,7 @@ import type {
   CascadingSingleChoice,
   LegacyValuespec,
   ValidationMessage,
-  Components
+  FixedValue
 } from '@/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -57,7 +58,14 @@ function renderForm(
       )
     case 'legacy_valuespec':
       return renderLegacyValuespec(formSpec as LegacyValuespec, value, backendValidation)
+    case 'fixed_value':
+      return renderFixedValue(formSpec as FixedValue)
   }
+}
+
+function renderFixedValue(formSpec: FixedValue): VNode {
+  const shownValue = formSpec.label ? formSpec.label : formSpec.value
+  return h('div', shownValue as string)
 }
 
 function renderDict(

@@ -2114,7 +2114,8 @@ class AutomationDiagSpecialAgent(Automation):
                         encoding="utf-8",
                         fallback="latin-1",
                     )
-                yield 1, str(fetched.error)
+                else:
+                    yield 1, str(fetched.error)
         finally:
             if password_store_file.exists():
                 password_store_file.unlink()

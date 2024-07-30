@@ -3554,6 +3554,10 @@ msgstr "ホストやサービスへのコメント追加、コメント削除"
 msgid "Add condition"
 msgstr "条件を追加"
 
+#, fuzzy
+msgid "Add configuration"
+msgstr "RRA構成"
+
 msgid "Add connection"
 msgstr "接続を追加"
 
@@ -12950,6 +12954,10 @@ msgstr ""
 "CMC（Checkmk Microcore）のコンフィグレーション、ステータス、ステータス履歴の"
 "データ。ステータスとコンフィグをcmcdumpで出力。"
 
+#, fuzzy
+msgid "Configurations"
+msgstr "コンフィギュレーション"
+
 msgid "Configure"
 msgstr "設定"
 
@@ -14105,6 +14113,13 @@ msgstr ""
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
+msgstr ""
+"DCDをリロードできませんでした: %s 。詳細については、web.logを参照してくださ"
+"い。"
+
+#, fuzzy
+msgid ""
+"Could not reload DCD: It is not running. See web.log for further information."
 msgstr ""
 "DCDをリロードできませんでした: %s 。詳細については、web.logを参照してくださ"
 "い。"
@@ -16585,6 +16600,10 @@ msgstr "バックアップキー #%dを削除"
 msgid "Delete comments"
 msgstr "コメント削除"
 
+#, fuzzy, python-format
+msgid "Delete configuration %s"
+msgstr "デフォルト設定"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "接続 #%dを削除"
@@ -16767,6 +16786,10 @@ msgstr "このバックアップジョブを削除します"
 
 msgid "Delete this backup target"
 msgstr "このバックアップターゲットを削除します"
+
+#, fuzzy
+msgid "Delete this configuration"
+msgstr "この接続を削除します"
 
 msgid "Delete this connection"
 msgstr "この接続を削除します"
@@ -20148,6 +20171,10 @@ msgstr "このバックアップジョブを編集する"
 
 msgid "Edit this backup target"
 msgstr "このバックアップターゲットを編集する"
+
+#, fuzzy
+msgid "Edit this configuration"
+msgstr "ホスト構成"
 
 msgid "Edit this connection"
 msgstr "この接続を編集する"
@@ -40304,6 +40331,10 @@ msgstr "このビューではコマンドは使用できません"
 
 msgid "No conditions"
 msgstr "条件なし"
+
+#, fuzzy
+msgid "No configuration yet"
+msgstr "ホスト構成"
 
 msgid "No configured rules are affected"
 msgstr "構成されたルールは影響を受けません"

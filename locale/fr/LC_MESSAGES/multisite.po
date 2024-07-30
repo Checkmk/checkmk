@@ -3734,6 +3734,10 @@ msgstr ""
 msgid "Add condition"
 msgstr "Ajouter une condition"
 
+#, fuzzy
+msgid "Add configuration"
+msgstr "Configuration de l'ARR"
+
 msgid "Add connection"
 msgstr "Ajouter une connexion"
 
@@ -13581,6 +13585,10 @@ msgstr ""
 "Données de configuration, d'état et d'historique de l'état du CMC (Checkmk "
 "Microcore) ; sortie cmcdump de l'état et de la configuration."
 
+#, fuzzy
+msgid "Configurations"
+msgstr "Configuration"
+
 msgid "Configure"
 msgstr "Configurer"
 
@@ -14798,6 +14806,12 @@ msgstr ""
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
+msgstr ""
+"Impossible de recharger le DCD : %s. Voir web.log pour plus d'informations."
+
+#, fuzzy
+msgid ""
+"Could not reload DCD: It is not running. See web.log for further information."
 msgstr ""
 "Impossible de recharger le DCD : %s. Voir web.log pour plus d'informations."
 
@@ -17337,6 +17351,10 @@ msgstr "Supprimer la clé de sauvegarde #%d"
 msgid "Delete comments"
 msgstr "Commentaire sur l'événement"
 
+#, fuzzy, python-format
+msgid "Delete configuration %s"
+msgstr "Configuration par défaut"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "Supprimer la connexion #%d"
@@ -17520,6 +17538,10 @@ msgstr "Supprimer cette tâche de sauvegarde"
 
 msgid "Delete this backup target"
 msgstr "Supprimer cette cible de sauvegarde"
+
+#, fuzzy
+msgid "Delete this configuration"
+msgstr "Supprimer cette connexion"
 
 msgid "Delete this connection"
 msgstr "Supprimer cette connexion"
@@ -20941,6 +20963,10 @@ msgstr "Modifier cette tâche de sauvegarde"
 
 msgid "Edit this backup target"
 msgstr "Modifier cette cible de sauvegarde"
+
+#, fuzzy
+msgid "Edit this configuration"
+msgstr "Configuration de l'hôte"
 
 msgid "Edit this connection"
 msgstr "Modifier cette connexion"
@@ -41587,6 +41613,10 @@ msgstr "Aucune commande n'est possible dans cette vue"
 
 msgid "No conditions"
 msgstr "Pas de conditions"
+
+#, fuzzy
+msgid "No configuration yet"
+msgstr "Configuration de l'hôte"
 
 msgid "No configured rules are affected"
 msgstr "Aucune règle configurée n'est affectée"

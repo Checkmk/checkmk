@@ -3688,6 +3688,10 @@ msgstr "Adicionar comentários a anfitriões ou serviços e remover comentários
 msgid "Add condition"
 msgstr "Adicionar condição"
 
+#, fuzzy
+msgid "Add configuration"
+msgstr "Configuração RRA"
+
 msgid "Add connection"
 msgstr "Adicionar conexão"
 
@@ -13466,6 +13470,10 @@ msgstr ""
 "Dados de configuração, estado e histórico de estado do CMC (Checkmk "
 "Microcore); saída cmcdump do estado e configuração."
 
+#, fuzzy
+msgid "Configurations"
+msgstr "Configuração"
+
 msgid "Configure"
 msgstr "Configure"
 
@@ -14670,6 +14678,12 @@ msgstr ""
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
+msgstr ""
+"Não foi possível recarregar o DCD: %s. Veja web.log para mais informações."
+
+#, fuzzy
+msgid ""
+"Could not reload DCD: It is not running. See web.log for further information."
 msgstr ""
 "Não foi possível recarregar o DCD: %s. Veja web.log para mais informações."
 
@@ -17178,6 +17192,10 @@ msgstr "Eliminar a tecla de cópia de segurança #%d"
 msgid "Delete comments"
 msgstr "Eliminar comentários"
 
+#, fuzzy, python-format
+msgid "Delete configuration %s"
+msgstr "Configuração predefinida"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "Eliminar ligação #%d"
@@ -17361,6 +17379,10 @@ msgstr "Apagar este trabalho de backup"
 
 msgid "Delete this backup target"
 msgstr "Eliminar este alvo de backup"
+
+#, fuzzy
+msgid "Delete this configuration"
+msgstr "Eliminar esta ligação"
 
 msgid "Delete this connection"
 msgstr "Eliminar esta ligação"
@@ -20746,6 +20768,10 @@ msgstr "Editar este trabalho de backup"
 
 msgid "Edit this backup target"
 msgstr "Editar este alvo de backup"
+
+#, fuzzy
+msgid "Edit this configuration"
+msgstr "Configuração do anfitrião"
 
 msgid "Edit this connection"
 msgstr "Editar esta ligação"
@@ -41205,6 +41231,10 @@ msgstr "Não são possíveis comandos nesta vista"
 
 msgid "No conditions"
 msgstr "Sem condições"
+
+#, fuzzy
+msgid "No configuration yet"
+msgstr "Configuração do anfitrião"
 
 msgid "No configured rules are affected"
 msgstr "Nenhuma regra configurada é afetada"

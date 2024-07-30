@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-07-19 05:00+0000\n"
+"PO-Revision-Date: 2024-07-30 08:44+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -2487,11 +2487,9 @@ msgstr ""
 "Zu verwendender API-Key. Abhängig von Ihrem opsgenie-Abonnement, können Sie "
 "globale oder Team Keys verwenden."
 
-#, fuzzy
 msgid "API access token"
 msgstr "API Zugangstoken"
 
-#, fuzzy
 msgid "API endpoint from PagerDuty V2"
 msgstr "API-Endpunkt von PagerDuty V2"
 
@@ -2516,7 +2514,6 @@ msgstr "API Schlüssel aus dem Passwortspeicher"
 msgid "API key header"
 msgstr "Header des API-Schlüssels"
 
-#, fuzzy
 msgid "API or personal access token"
 msgstr "API oder persönliches Zugangstoken"
 
@@ -2538,7 +2535,6 @@ msgstr "APT-Updates"
 msgid "APT normal and security updates (Linux)"
 msgstr "Normale und Sicherheitsupdates für APT (Linux)"
 
-#, fuzzy
 msgid "ASCII email"
 msgstr "ASCII E-Mail"
 
@@ -2989,15 +2985,14 @@ msgstr ""
 "Schreibrechten auf dieses Modul kann Veränderungen an der Konfiguration "
 "durch das Wiederherstellen von Sicherungen vornehmen."
 
-#, fuzzy
 msgid ""
 "Access to the module <i>Snapshots</i>. Please note: a user with write access "
 "to this module can make arbitrary changes to the configuration by restoring "
 "uploaded snapshots."
 msgstr ""
 "Zugriff auf Modul <i>Snapshots</i>. Achtung: Ein Benutzer mit Schreibrechten "
-"auf dieses Modul kann Veränderungen an der Konfiguration durch das "
-"Wiederherstellen von hochgeladenen Snapshots vornehmen."
+"auf dieses Modul kann durch das Wiederherstellen von hochgeladenen Snapshots "
+"beliebige Veränderungen an der Konfiguration vornehmen."
 
 msgid "Access to the module <i>Time periods</i>"
 msgstr "Zugriff auf Modul <i>Zeitperioden</i>"
@@ -3005,13 +3000,13 @@ msgstr "Zugriff auf Modul <i>Zeitperioden</i>"
 msgid "Access to the module for analyzing and validating logfile patterns."
 msgstr "Zugriff auf das Modul um Logdateimuster zu analysieren/auszuwerten."
 
-#, fuzzy
 msgid ""
 "Access to the module for managing Checkmk rules. Please note that a user can "
 "only manage rules in folders he has permissions to."
 msgstr ""
-"Zugriff auf das Modul um Checkmk-Regeln zu verwalten. Achtung: Ein Benutzer "
-"kann nur Regeln in Ordnern verwalten, für die er Zugriffsrechte besitzt. "
+"Zugriff auf das Modul um Checkmk-Regeln zu verwalten. Bitte beachten Sie, "
+"dass ein Benutzer nur Regeln in Ordnern verwalten kann, auf die er "
+"Zugriffsrechte besitzt."
 
 msgid ""
 "Access to the module for managing connections to remote monitoring sites."
@@ -3154,7 +3149,6 @@ msgstr "Aktion bei einem Fehler"
 msgid "Actions"
 msgstr "Aktionen"
 
-#, fuzzy
 msgid "Actions (emails & scripts)"
 msgstr "Aktionen (E-Mails & Skripts)"
 
@@ -3503,7 +3497,6 @@ msgstr "Ordner ergänzen & löschen"
 msgid "Add & remove hosts"
 msgstr "Hosts ergänzen & löschen"
 
-#, fuzzy
 msgid "Add (sub) path to the URI, i.e. [proto]://[host]:[port]/[path]."
 msgstr "(Sub-)Pfad zur URI hinzufügen, z.B. [proto]://[host]:[port]/[path]."
 
@@ -3649,6 +3642,9 @@ msgstr "Kommentare bei Hosts oder Services hinzufügen bzw. löschen"
 msgid "Add condition"
 msgstr "Bedingung hinzufügen"
 
+msgid "Add configuration"
+msgstr "Konfiguration hinzufügen"
+
 msgid "Add connection"
 msgstr "Verbindung hinzufügen"
 
@@ -3719,7 +3715,6 @@ msgstr "Gruppe hinzufügen"
 msgid "Add group or user"
 msgstr "Gruppe oder Benutzer hinzufügen"
 
-#, fuzzy
 msgid ""
 "Add here only groups and users which do not have administrator rights but, "
 "for some reason, must have write access to the Oracle binaries. For example, "
@@ -5652,14 +5647,12 @@ msgstr ""
 "Erlaubt einem Benutzer das Anlegen und Ändern von Einträgen im "
 "Berichtsplaner."
 
-#, fuzzy
 msgid ""
 "Allows a user to modify scheduled reports of other users and also to specify "
 "arbitrary email addresses as report destination."
 msgstr ""
-"Erlaubt einem Benutzer geplante Berichte von andern Benutzer zu ändern und "
-"darüber hinaus eine beliebige Emailadresse als Ziel für den Bericht "
-"auszuwählen."
+"Erlaubt einem Benutzer geplante Berichte von anderen Benutzern zu ändern und "
+"darüber hinaus beliebige E-Mailadressen als Ziel für den Bericht auszuwählen."
 
 msgid ""
 "Allows the assignment of the Robotmk plan/test services to another host."
@@ -6054,9 +6047,8 @@ msgstr ""
 "tt>), absolute lokale URLs (beginnend mit <tt>/</tt>) oder relative URLs "
 "(die relativ zu <tt>check_mk/</tt> sind) verwenden."
 
-#, fuzzy
 msgid "An optional alias name for your MySQL socket"
-msgstr "Ein optionaler Alias für Ihren mysql Socket"
+msgstr "Ein optionaler Alias-Name für Ihren MySQL-Socket"
 
 msgid "Analyse availability of this aggregation"
 msgstr "Verfügbarkeit dieser Aggregation analysieren"
@@ -8311,9 +8303,8 @@ msgstr "Basis-OID"
 msgid "Base URL (OMD Site)"
 msgstr "Basis-URL (OMD Instanz)"
 
-#, fuzzy
 msgid "Base URL for Docker API engine"
-msgstr "Base URL für die Docker API Engine"
+msgstr "Basis-URL für die Docker API Engine"
 
 msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
 msgstr "Basisverzeichnis für <tt>Plugins</tt> und <tt>lokal</tt>"
@@ -8363,9 +8354,8 @@ msgstr "Grundlegende Eigenschaften"
 msgid "Basic settings"
 msgstr "Grundeinstellungen"
 
-#, fuzzy
 msgid "BasicAuth settings"
-msgstr "Grundeinstellungen"
+msgstr "BasicAuth-Einstellungen"
 
 msgid "BasicAuth settings (optional)"
 msgstr "BasicAuth Einstellungen (optional)"
@@ -8397,7 +8387,6 @@ msgstr "Bazel Cache-Port"
 msgid "Bazel Cache User"
 msgstr "Bazel Cache Benutzer"
 
-#, fuzzy
 msgid "Bazel Cache password"
 msgstr "Bazel Cache-Passwort"
 
@@ -8997,16 +8986,15 @@ msgstr ""
 "<tt>ORA-</tt> enthält. Bemerkung: Wenn eine invertierte Regel greift, kann "
 "es nie Match-Gruppen geben."
 
-#, fuzzy
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
 "monitored via a seperate metric. Setting levels on the used total bandwidth "
 "is optional. If you set levels you might also consider using averaging."
 msgstr ""
-"Bei Aktivierung dieser Option wird die Summe über den ein- und ausgehenden "
-"Verkehr mittels einer separaten Metrik überwacht. Level für die verbrauchte "
-"Bandbreite sind optional. Wenn Sie Level einrichten dann sollten Sie auch "
-"einen Durchschnittswert verwenden."
+"Bei Aktivierung dieses Items wird die Summe über den ein- und ausgehenden "
+"Verkehr mittels einer separaten Metrik überwacht. Das Festlegen von Leveln "
+"für die verbrauchte Bandbreite ist optional. Wenn Sie Level einrichten dann "
+"sollten Sie auch einen Durchschnittswert verwenden."
 
 msgid ""
 "By activating this option you can set levels on the total CPU utilization "
@@ -9876,7 +9864,6 @@ msgstr "CPU-Reservierung"
 msgid "CPU Time"
 msgstr "CPU-Zeit"
 
-#, fuzzy
 msgid "CPU Time upper levels"
 msgstr "Obergrenzen CPU-Zeit"
 
@@ -12957,13 +12944,11 @@ msgstr "Einstellungen"
 msgid "Configuration Error"
 msgstr "Konfigurationsfehler"
 
-#, fuzzy
 msgid "Configuration bundle ID"
-msgstr "Konfigurationsdateien"
+msgstr "Konfigurationsbündel-ID"
 
-#, fuzzy
 msgid "Configuration bundle properties"
-msgstr "Konfigurationsfehler"
+msgstr "Konfigurationsbündel-Eigenschaften"
 
 msgid "Configuration connection"
 msgstr "Konfigurationsverbindung"
@@ -13060,6 +13045,9 @@ msgstr ""
 "Konfiguration, Status und Status-History des CMC (Checkmk Micro Core); "
 "cmcdump-Ausgabe des Status und der Konfiguration."
 
+msgid "Configurations"
+msgstr "Konfigurationen"
+
 msgid "Configure"
 msgstr "Konfiguriere"
 
@@ -13147,7 +13135,6 @@ msgstr "Rauch-Level festlegen"
 msgid "Configure lower levels"
 msgstr "Untergrenzen konfigurieren"
 
-#, fuzzy
 msgid ""
 "Configure monitoring of networking services using classical Nagios plug-ins "
 "(so called active checks)"
@@ -13366,7 +13353,6 @@ msgstr ""
 msgid "Configure the target state of the remote support tunnel."
 msgstr "Konfigurieren Sie den Zielstatus des Remote-Wartungstunnels."
 
-#, fuzzy
 msgid "Configure the user name here."
 msgstr "Konfigurieren Sie hier den Benutzernamen."
 
@@ -13403,12 +13389,10 @@ msgstr ""
 msgid "Configure upper levels"
 msgstr "Obergrenzen konfigurieren"
 
-#, fuzzy
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr ""
-"Konfigurieren Sie hier die Servicenow URL (bspw. https://myservicenow.com)."
+"Konfigurieren Sie hier Ihre Servicenow URL (bspw. https://myservicenow.com)."
 
-#, fuzzy
 msgid "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
 msgstr ""
 "Konfigurieren Sie hier Ihre Modem-URL (z. B. https://mymodem.mydomain."
@@ -14247,6 +14231,12 @@ msgstr ""
 "DCD konnte nicht neu geladen werden: %s. Siehe web.log für weitere "
 "Informationen."
 
+msgid ""
+"Could not reload DCD: It is not running. See web.log for further information."
+msgstr ""
+"DCD konnte nicht neu geladen werden: Er läuft nicht. Siehe web.log für "
+"weitere Informationen."
+
 #, python-format
 msgid ""
 "Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log for "
@@ -14847,7 +14837,6 @@ msgstr ""
 "Credentials nicht konfiguriert oder ungültig. Bitte überprüfen Sie die "
 "Lizenzeinstellungen"
 
-#, fuzzy
 msgid "Credentials to access the database"
 msgstr "Zugangsdaten für Datenbankzugriff"
 
@@ -16686,6 +16675,10 @@ msgid "Delete comments"
 msgstr "Kommentare löschen"
 
 #, python-format
+msgid "Delete configuration %s"
+msgstr "entferne Konfiguration %s"
+
+#, python-format
 msgid "Delete connection #%d"
 msgstr "Verbindung #%d löschen"
 
@@ -16869,6 +16862,9 @@ msgstr "Diesen Sicherungs-Job löschen"
 
 msgid "Delete this backup target"
 msgstr "Dieses Sicherungsziel löschen"
+
+msgid "Delete this configuration"
+msgstr "Diese Konfiguration löschen"
 
 msgid "Delete this connection"
 msgstr "Diese Verbindung löschen"
@@ -18272,13 +18268,11 @@ msgstr "Anzeigename"
 msgid "Display node details on"
 msgstr "Knoten-Details anzeigen auf"
 
-#, fuzzy
 msgid "Display only a summary of all datafiles"
-msgstr "Nur eine Zusammenfassung der Datendateien anzeigen"
+msgstr "Nur eine Zusammenfassung aller Datendateien anzeigen"
 
-#, fuzzy
 msgid "Display only a summary of all transactionlogs"
-msgstr "Nur eine Zusammenfassung der Transaktionslogs anzeigen"
+msgstr "Nur eine Zusammenfassung aller Transaktionslogs anzeigen"
 
 msgid "Display range: Minimum must be strictly less than maximum"
 msgstr ""
@@ -18506,9 +18500,8 @@ msgstr "Konfiguration des verteilten Monitorings"
 msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "Verteiltes Monitoring mit Hilfe mehrerer Checkmk-Instanzen"
 
-#, fuzzy
 msgid "Distributed piggyback"
-msgstr "Verteiltes Monitoring"
+msgstr "Verteiltes Piggyback"
 
 msgid "Do HW/SW Inventory"
 msgstr "HW-/SW-Inventur ausführen"
@@ -19116,9 +19109,8 @@ msgstr "Nicht für andere Benutzer veröffentlichen"
 msgid "Don't remove matching vanished services"
 msgstr "Passende verschwundene Dienste nicht entfernen"
 
-#, fuzzy
 msgid "Don't send any traces"
-msgstr "Keine Header anzeigen"
+msgstr "Keine Spuren senden"
 
 msgid "Don't show"
 msgstr "Nicht anzeigen"
@@ -19630,7 +19622,6 @@ msgstr "ESTABLISHED"
 msgid "ESX Datastores (used space and growth)"
 msgstr "ESX Datastores (genutzter Speicher & Wachstum)"
 
-#, fuzzy
 msgid "ESX Host System Maintenance Mode"
 msgstr "ESX Host-System Wartungsmodus"
 
@@ -19851,7 +19842,7 @@ msgid "Edit SLA"
 msgstr "SLA bearbeiten"
 
 msgid "Edit Views"
-msgstr "Ansichten Bearbeiten"
+msgstr "Ansichten bearbeiten"
 
 #, python-format
 msgid "Edit alert handler rule %d"
@@ -19899,9 +19890,9 @@ msgstr "Sicherungsziel bearbeiten: %s"
 msgid "Edit bookmark list"
 msgstr "Lesezeichenliste editieren"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Edit configuration: %s"
-msgstr "Hostkonfiguration"
+msgstr "Bearbeite Konfiguration: %s"
 
 msgid "Edit connection"
 msgstr "Verbindung bearbeiten"
@@ -20107,6 +20098,9 @@ msgstr "Diesen Sicherungs-Job bearbeiten"
 
 msgid "Edit this backup target"
 msgstr "Diese Sicherungsziel bearbeiten"
+
+msgid "Edit this configuration"
+msgstr "Diese Konfiguration bearbeiten"
 
 msgid "Edit this connection"
 msgstr "Diese Verbindung bearbeiten"
@@ -20372,16 +20366,14 @@ msgstr "E-Mail"
 msgid "Email address"
 msgstr "E-Mailadresse"
 
-#, fuzzy
 msgid "Email address attribute"
-msgstr "E-Mail-Adresse"
+msgstr "Attribute der E-Mail-Adresse"
 
 msgid "Email address used for account identification"
 msgstr "E-Mail-Adresse die zur Kontoidentifizierung verwendete wird"
 
-#, fuzzy
 msgid "Email addresses to mail PDF reports to"
-msgstr "Email-Adressen, an die der Report gemailt werden soll"
+msgstr "Email-Adressen, an welche die PDF-Berichte gemailt werden sollen"
 
 msgid "Email sent"
 msgstr "E-Mail gesendet"
@@ -20390,9 +20382,8 @@ msgstr "E-Mail gesendet"
 msgid "Emailed report to %s."
 msgstr "Report an %s gemailt."
 
-#, fuzzy
 msgid "Emails"
-msgstr "E-Mail"
+msgstr "E-Mails"
 
 msgid "Emails containing Attachment per second"
 msgstr "Emails mit Anhang pro Sekunde"
@@ -20568,9 +20559,8 @@ msgstr "Profiling pro Anfrage aktivieren"
 msgid "Enable profiling for all requests"
 msgstr "Profiling für alle Anfragen aktivieren"
 
-#, fuzzy
 msgid "Enable receiving traces"
-msgstr "Aktive Checks ein"
+msgstr "Empfang von Spuren aktivieren"
 
 msgid "Enable regular service discovery checks (deprecated)"
 msgstr "Regelmäßige Service-Erkennungs-Checks durchführen (veraltet)"
@@ -21277,7 +21267,6 @@ msgstr "Ereignisse der Event Console"
 msgid "Event Console History Fragmentation Limit Size"
 msgstr "Größenbegrenzung für die Fragmentation der Historie der Event Console"
 
-#, fuzzy
 msgid ""
 "Event Console History can become fragmented over time. So if the totalsize "
 "of deleted entries reaches this number the Event Console History will be "
@@ -21285,7 +21274,7 @@ msgid ""
 msgstr ""
 "Die Historie der Event Console kann mit der Zeit fragmentiert werden. Wenn "
 "also die Gesamtgröße der gelöschten Einträge diese Zahl erreicht, wird die "
-"Historie der Event Console bereinigt. "
+"Historie der Event Console bereinigt."
 
 msgid "Event Console alerts"
 msgstr "Alarme der Event Console"
@@ -22001,16 +21990,14 @@ msgstr "Explizite Bedingungen"
 msgid "Explicit email addresses"
 msgstr "Explizite E-Mail-Adressen"
 
-#, fuzzy
 msgid "Explicit host matching"
-msgstr "Explizite %s Zuordnung"
+msgstr "Explizite Host-Zuordnung"
 
 msgid "Explicit hosts"
 msgstr "Explizite Hosts"
 
-#, fuzzy
 msgid "Explicit item matching"
-msgstr "Genaue Übereinstimmung"
+msgstr "Explizite Item-Zuordnung"
 
 msgid "Explicit labels"
 msgstr "Explizite Labels"
@@ -22619,9 +22606,8 @@ msgstr "Failover Status: FAILOVER_PENDING"
 msgid "Failover State: NONE"
 msgstr "Failover Status: NONE"
 
-#, fuzzy
 msgid "Failover servers"
-msgstr "Ersatz Server"
+msgstr "Failover-Server"
 
 msgid "Failover states"
 msgstr "Failover States"
@@ -22925,7 +22911,6 @@ msgstr "Dateigröße ist"
 msgid "File size below"
 msgstr "Dateigröße weniger als"
 
-#, fuzzy
 msgid "File size levels"
 msgstr "Level für Dateigrößen"
 
@@ -24942,7 +24927,6 @@ msgstr "HPE StoreOnce via REST API 4.x"
 msgid "HR: Used memory via SNMP"
 msgstr "HR: Belegter Speicher über SNMP"
 
-#, fuzzy
 msgid "HTML email"
 msgstr "HTML E-Mail"
 
@@ -25808,13 +25792,13 @@ msgstr ""
 "Stellen Sie dazu dem Ausdruck eine Tilde (<tt>~</tt>) voran. Der reguläre "
 "Ausdruck muss dann auf den <i>Anfang</i> des Host-Namens passen."
 
-#, fuzzy
 msgid ""
 "Here you can enter either device state number (e.g. from SNMP devices) or "
 "exact device state name and the related monitoring state."
 msgstr ""
-"Hier können Sie entweder die Gerätestatusnummer (zB bei SNMP-Geräten) oder "
-"den exakten Gerätestatusnamen und dazugehörigen Monitoring-Zustands eingeben."
+"Hier können Sie entweder die Gerätestatusnummer (z.B. bei SNMP-Geräten) oder "
+"den exakten Gerätestatusnamen und den zugehörigen Monitoring-Zustand "
+"eingeben."
 
 msgid ""
 "Here you can have the changes activated whenever services have been added or "
@@ -27797,7 +27781,6 @@ msgstr "Host-Status-Gruppierung"
 msgid "Host successfully created"
 msgstr "Host erfolgreich erstellt"
 
-#, fuzzy
 msgid "Host system sensor alerts"
 msgstr "Alarme von Host-System-Sensoren"
 
@@ -28381,7 +28364,6 @@ msgstr ""
 "IP-Adresse des SMB-Share-Hosts (nur erforderlich, wenn sich der SMB-Share-"
 "Host in einem anderen Netzwerk befindet)"
 
-#, fuzzy
 msgid "IP address of host"
 msgstr "IP-Adresse des Hosts"
 
@@ -28394,7 +28376,6 @@ msgstr "IP-Adresse des Spectrum-Servers, der die SNMP-Traps empfängt"
 msgid "IP address of tunnel endpoint"
 msgstr "IP-Adresse des Tunnelendpunkts"
 
-#, fuzzy
 msgid "IP address or FQDN of JVM web server"
 msgstr "IP-Adresse oder FQDN des JVM-Webservers"
 
@@ -32224,9 +32205,8 @@ msgstr "Ungültige Benutzereingabe"
 msgid "Invalid value for ack parameter."
 msgstr "Ungültiger Wert für ACK Parameter."
 
-#, fuzzy
 msgid "Invalid value for valuespec"
-msgstr "Ungültiger Wert für ACK Parameter."
+msgstr "Ungültiger Wert für valuespec"
 
 #, python-format
 msgid "Invalid value in column %d (%s) of row %d: %s"
@@ -39867,6 +39847,10 @@ msgstr "Befehle in dieser Ansicht nicht möglich"
 
 msgid "No conditions"
 msgstr "Keine Bedingungen"
+
+#, fuzzy
+msgid "No configuration yet"
+msgstr "Hostkonfiguration"
 
 msgid "No configured rules are affected"
 msgstr "Es sind keine konfigurierten Regeln betroffen"
@@ -49238,9 +49222,8 @@ msgstr "Bericht"
 msgid "Report Properties"
 msgstr "Berichteigenschaften"
 
-#, fuzzy
 msgid "Report an issue here. "
-msgstr "Melden Sie hier ein Problem."
+msgstr "Melden Sie hier ein Problem. "
 
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"

@@ -3694,6 +3694,10 @@ msgstr "Commentaar toevoegen aan hosts of diensten, en commentaar verwijderen"
 msgid "Add condition"
 msgstr "Voorwaarde toevoegen"
 
+#, fuzzy
+msgid "Add configuration"
+msgstr "RRA-configuratie"
+
 msgid "Add connection"
 msgstr "Aansluiting toevoegen"
 
@@ -13471,6 +13475,10 @@ msgstr ""
 "Configuratie, status en statusgeschiedenisgegevens van de CMC (Checkmk "
 "Microcore); cmcdump uitvoer van de status en configuratie."
 
+#, fuzzy
+msgid "Configurations"
+msgstr "Configuratie"
+
 msgid "Configure"
 msgstr "Configureer"
 
@@ -14678,6 +14686,11 @@ msgstr ""
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
+msgstr "Kon DCD niet herladen: %s. Zie web.log voor meer informatie."
+
+#, fuzzy
+msgid ""
+"Could not reload DCD: It is not running. See web.log for further information."
 msgstr "Kon DCD niet herladen: %s. Zie web.log voor meer informatie."
 
 #, python-format
@@ -17188,6 +17201,10 @@ msgstr "Delete backup key #%d"
 msgid "Delete comments"
 msgstr "Evenement commentaar"
 
+#, fuzzy, python-format
+msgid "Delete configuration %s"
+msgstr "Standaard configuratie"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "Verbinding verwijderen #%d"
@@ -17371,6 +17388,10 @@ msgstr "Deze back-uptaak verwijderen"
 
 msgid "Delete this backup target"
 msgstr "Dit back-updoel verwijderen"
+
+#, fuzzy
+msgid "Delete this configuration"
+msgstr "Verwijder deze verbinding"
 
 msgid "Delete this connection"
 msgstr "Verwijder deze verbinding"
@@ -20757,6 +20778,10 @@ msgstr "Deze back-uptaak bewerken"
 
 msgid "Edit this backup target"
 msgstr "Bewerk dit back-up doel"
+
+#, fuzzy
+msgid "Edit this configuration"
+msgstr "Host configuratie"
 
 msgid "Edit this connection"
 msgstr "Bewerk deze verbinding"
@@ -41221,6 +41246,10 @@ msgstr "In deze weergave zijn geen commando's mogelijk"
 
 msgid "No conditions"
 msgstr "Geen voorwaarden"
+
+#, fuzzy
+msgid "No configuration yet"
+msgstr "Host configuratie"
 
 msgid "No configured rules are affected"
 msgstr "Geen geconfigureerde regels worden beïnvloed"

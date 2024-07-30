@@ -3717,6 +3717,10 @@ msgstr "Añadir comentarios a hosts o servicios y eliminarlos"
 msgid "Add condition"
 msgstr "Añadir condición"
 
+#, fuzzy
+msgid "Add configuration"
+msgstr "Configuración RRA"
+
 msgid "Add connection"
 msgstr "Añadir conexión"
 
@@ -13576,6 +13580,10 @@ msgstr ""
 "Datos de configuración, estado e historial de estado de la CMC (Checkmk "
 "Microcore); salida cmcdump del estado y config."
 
+#, fuzzy
+msgid "Configurations"
+msgstr "Configuración"
+
 msgid "Configure"
 msgstr "Configurar"
 
@@ -14784,6 +14792,11 @@ msgstr ""
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
+msgstr "No se ha podido recargar el DCD: %s. Ver web.log para más información."
+
+#, fuzzy
+msgid ""
+"Could not reload DCD: It is not running. See web.log for further information."
 msgstr "No se ha podido recargar el DCD: %s. Ver web.log para más información."
 
 #, python-format
@@ -17314,6 +17327,10 @@ msgstr "Borrar clave de seguridad #%d"
 msgid "Delete comments"
 msgstr "Comentario del evento"
 
+#, fuzzy, python-format
+msgid "Delete configuration %s"
+msgstr "Configuración por defecto"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "Borrar conexión #%d"
@@ -17498,6 +17515,10 @@ msgstr "Eliminar este trabajo de copia de seguridad"
 
 msgid "Delete this backup target"
 msgstr "Eliminar este objetivo de copia de seguridad"
+
+#, fuzzy
+msgid "Delete this configuration"
+msgstr "Borrar esta conexión"
 
 msgid "Delete this connection"
 msgstr "Borrar esta conexión"
@@ -20920,6 +20941,10 @@ msgstr "Editar este trabajo de copia de seguridad"
 
 msgid "Edit this backup target"
 msgstr "Editar este objetivo de copia de seguridad"
+
+#, fuzzy
+msgid "Edit this configuration"
+msgstr "Configuración de host"
 
 msgid "Edit this connection"
 msgstr "Editar esta conexión"
@@ -41558,6 +41583,10 @@ msgstr "En esta vista no se pueden realizar comandos"
 
 msgid "No conditions"
 msgstr "Sin condiciones"
+
+#, fuzzy
+msgid "No configuration yet"
+msgstr "Configuración de host"
 
 msgid "No configured rules are affected"
 msgstr "Ninguna regla configurada se ve afectada"

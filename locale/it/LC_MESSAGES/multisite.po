@@ -3667,6 +3667,10 @@ msgstr "Aggiungere commenti agli host o ai servizi e rimuovere i commenti"
 msgid "Add condition"
 msgstr "Aggiungi condizione"
 
+#, fuzzy
+msgid "Add configuration"
+msgstr "Configurazione RRA"
+
 msgid "Add connection"
 msgstr "Aggiungere la connessione"
 
@@ -13339,6 +13343,10 @@ msgstr ""
 "Dati di configurazione, stato e cronologia di stato del CMC (Checkmk "
 "Microcore); output cmcdump dello stato e della configurazione."
 
+#, fuzzy
+msgid "Configurations"
+msgstr "Configurazione"
+
 msgid "Configure"
 msgstr "Configurare"
 
@@ -14530,6 +14538,12 @@ msgstr ""
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
+msgstr ""
+"Impossibile ricaricare il DCD: %s. Vedere web.log per ulteriori informazioni."
+
+#, fuzzy
+msgid ""
+"Could not reload DCD: It is not running. See web.log for further information."
 msgstr ""
 "Impossibile ricaricare il DCD: %s. Vedere web.log per ulteriori informazioni."
 
@@ -17011,6 +17025,10 @@ msgstr "Creare la chiave di backup #%d"
 msgid "Delete comments"
 msgstr "Cancellare i commenti"
 
+#, fuzzy, python-format
+msgid "Delete configuration %s"
+msgstr "Configurazione predefinita"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "Connessione LDAP cancellata #%d"
@@ -17193,6 +17211,10 @@ msgstr "Cancellare questo lavoro di backup"
 
 msgid "Delete this backup target"
 msgstr "Cancellare questa destinazione di backup"
+
+#, fuzzy
+msgid "Delete this configuration"
+msgstr "Cancellare questa connessione"
 
 msgid "Delete this connection"
 msgstr "Cancellare questa connessione"
@@ -20571,6 +20593,10 @@ msgstr "Modifica questo lavoro di backup"
 
 msgid "Edit this backup target"
 msgstr "Modifica questo obiettivo di backup"
+
+#, fuzzy
+msgid "Edit this configuration"
+msgstr "Configurazione dell'host"
 
 msgid "Edit this connection"
 msgstr "Modificare questa connessione"
@@ -40847,6 +40873,10 @@ msgstr "Nessun comando è possibile in questa vista"
 
 msgid "No conditions"
 msgstr "Nessuna condizione"
+
+#, fuzzy
+msgid "No configuration yet"
+msgstr "Configurazione dell'host"
 
 msgid "No configured rules are affected"
 msgstr "Nessuna regola configurata è interessata"

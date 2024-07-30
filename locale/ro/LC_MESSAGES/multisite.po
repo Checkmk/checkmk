@@ -3704,6 +3704,10 @@ msgstr "Adăugați comentarii la gazde sau servicii și eliminați comentarii"
 msgid "Add condition"
 msgstr "Adăugați o condiție"
 
+#, fuzzy
+msgid "Add configuration"
+msgstr "Configurația RRA"
+
 msgid "Add connection"
 msgstr "Adăugați o conexiune"
 
@@ -13479,6 +13483,10 @@ msgstr ""
 "Date de configurare, stare și istoric de stare ale CMC (Checkmk Microcore); "
 "ieșire cmcdump a stării și configurației."
 
+#, fuzzy
+msgid "Configurations"
+msgstr "Configurație"
+
 msgid "Configure"
 msgstr "Configurați"
 
@@ -14678,6 +14686,13 @@ msgstr ""
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
+msgstr ""
+"Nu s-a putut reîncărca DCD: %s. Consultați web.log pentru informații "
+"suplimentare."
+
+#, fuzzy
+msgid ""
+"Could not reload DCD: It is not running. See web.log for further information."
 msgstr ""
 "Nu s-a putut reîncărca DCD: %s. Consultați web.log pentru informații "
 "suplimentare."
@@ -17197,6 +17212,10 @@ msgstr "Ștergerea cheii de rezervă #%d"
 msgid "Delete comments"
 msgstr "Ștergeți comentariile"
 
+#, fuzzy, python-format
+msgid "Delete configuration %s"
+msgstr "Configurație implicită"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "Ștergeți conexiunea #%d"
@@ -17380,6 +17399,10 @@ msgstr "Ștergeți această sarcină de backup"
 
 msgid "Delete this backup target"
 msgstr "Ștergeți această țintă de backup"
+
+#, fuzzy
+msgid "Delete this configuration"
+msgstr "Ștergeți această conexiune"
 
 msgid "Delete this connection"
 msgstr "Ștergeți această conexiune"
@@ -20784,6 +20807,10 @@ msgstr "Editați această sarcină de backup"
 
 msgid "Edit this backup target"
 msgstr "Editați această țintă de backup"
+
+#, fuzzy
+msgid "Edit this configuration"
+msgstr "Configurație gazdă"
 
 msgid "Edit this connection"
 msgstr "Editați această conexiune"
@@ -41271,6 +41298,10 @@ msgstr "Nu sunt posibile comenzi în această vizualizare"
 
 msgid "No conditions"
 msgstr "Fără condiții"
+
+#, fuzzy
+msgid "No configuration yet"
+msgstr "Configurație gazdă"
 
 msgid "No configured rules are affected"
 msgstr "Nu sunt afectate regulile configurate"

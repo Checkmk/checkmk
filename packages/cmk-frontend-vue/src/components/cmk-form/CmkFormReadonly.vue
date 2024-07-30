@@ -9,7 +9,8 @@ import type {
   CascadingSingleChoice,
   LegacyValuespec,
   ValidationMessage,
-  FixedValue
+  FixedValue,
+  BooleanChoice
 } from '@/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -60,7 +61,13 @@ function renderForm(
       return renderLegacyValuespec(formSpec as LegacyValuespec, value, backendValidation)
     case 'fixed_value':
       return renderFixedValue(formSpec as FixedValue)
+    case 'boolean_choice':
+      return renderBooleanChoice(formSpec as BooleanChoice, value as boolean)
   }
+}
+
+function renderBooleanChoice(formSpec: BooleanChoice, value: boolean): VNode {
+  return h('div', value ? formSpec.text_on : formSpec.text_off)
 }
 
 function renderFixedValue(formSpec: FixedValue): VNode {

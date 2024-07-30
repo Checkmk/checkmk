@@ -11,6 +11,7 @@ import CmkFormLegacyValueSpec from '@/components/cmk-form/element/CmkFormLegacyV
 import type { IComponent } from '@/types'
 import type { ValidationMessages } from '@/lib/validation'
 import CmkFormFixedValue from '@/components/cmk-form/element/CmkFormFixedValue.vue'
+import CmkFormBooleanChoice from '@/components/cmk-form/element/CmkFormBooleanChoice.vue'
 
 const props = defineProps<{
   spec: FormSpec
@@ -29,7 +30,8 @@ const components: Record<Components['type'], unknown> = {
   cascading_single_choice: CmkFormCascadingSingleChoice,
   list: CmkFormList,
   legacy_valuespec: CmkFormLegacyValueSpec,
-  fixed_value: CmkFormFixedValue
+  fixed_value: CmkFormFixedValue,
+  boolean_choice: CmkFormBooleanChoice
 }
 
 function getComponent(): IComponent {

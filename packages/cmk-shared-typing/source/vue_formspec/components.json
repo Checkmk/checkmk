@@ -331,6 +331,56 @@
                 }
             ]
         },
+        "fixed_value": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "fixed_value",
+                    "default": "fixed_value"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "value": {}
+            },
+            "required": [
+                "type",
+                "value"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
+        "boolean_choice": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "boolean_choice",
+                    "default": "boolean_choice"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "text_on": {
+                    "type": "string"
+                },
+                "text_off": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type",
+                "text_on",
+                "text_off"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "components": {
             "discriminator": {
                 "propertyName": "type"
@@ -362,33 +412,14 @@
                 },
                 {
                     "$ref": "#/$defs/fixed_value"
+                },
+                {
+                    "$ref": "#/$defs/boolean_choice"
                 }
             ],
             "required": [
                 "type"
             ]
         },
-        "fixed_value": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "const": "fixed_value",
-                    "default": "fixed_value"
-                },
-                "label": {
-                    "type": "string"
-                },
-                "value": {}
-            },
-            "required": [
-                "type",
-                "value"
-            ],
-            "allOf": [
-                {
-                    "$ref": "#/$defs/form_spec"
-                }
-            ]
-        }
     }
 }

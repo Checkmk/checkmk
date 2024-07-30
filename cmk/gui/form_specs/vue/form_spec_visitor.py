@@ -21,6 +21,7 @@ from cmk.gui.form_specs.vue.form_spec_recomposers.unknown_form_spec import (
 )
 from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, RenderMode, VisitorOptions
 from cmk.gui.form_specs.vue.utils import get_visitor, register_visitor_class
+from cmk.gui.form_specs.vue.visitors.boolean_choice import BooleanChoiceVisitor
 from cmk.gui.form_specs.vue.visitors.cascading_single_choice import CascadingSingleChoiceVisitor
 from cmk.gui.form_specs.vue.visitors.dictionary import DictionaryVisitor
 from cmk.gui.form_specs.vue.visitors.fixed_value import FixedValueVisitor
@@ -36,6 +37,7 @@ from cmk.gui.log import logger
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     CascadingSingleChoice,
     Dictionary,
     FixedValue,
@@ -61,6 +63,7 @@ class VueAppConfig:
 
 def register_form_specs():
     # TODO: add test which checks if all available FormSpecs have a visitor
+    # Native rendering
     register_visitor_class(Integer, IntegerVisitor)
     register_visitor_class(Dictionary, DictionaryVisitor)
     register_visitor_class(String, StringVisitor)
@@ -70,7 +73,9 @@ def register_form_specs():
     register_visitor_class(List, ListVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
+    register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
 
+    # Recomposed
     register_visitor_class(Percentage, FloatVisitor, recompose_percentage)
     register_visitor_class(UnknownFormSpec, LegacyValuespecVisitor, recompose_unknown_form_spec)
 

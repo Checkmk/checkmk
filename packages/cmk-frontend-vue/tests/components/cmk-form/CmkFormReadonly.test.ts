@@ -198,3 +198,36 @@ test('CmkFormReadonly renders cascading/integer, 2nd choice', () => {
   // Value of element
   screen.getByText(23)
 })
+
+const booleanChoiceFormSpec: FormSpec.BooleanChoice = {
+  type: 'boolean_choice',
+  title: 'fooTitle',
+  help: 'fooHelp',
+  text_on: 'on',
+  text_off: 'off',
+  validators: []
+}
+
+test('CmkFormReadonly renders boolean: on', () => {
+  render(CmkFormReadonly, {
+    props: {
+      spec: booleanChoiceFormSpec,
+      backendValidation: [],
+      data: true
+    }
+  })
+  // Title of cascading
+  screen.getByText('on')
+})
+
+test('CmkFormReadonly renders boolean: off', () => {
+  render(CmkFormReadonly, {
+    props: {
+      spec: booleanChoiceFormSpec,
+      backendValidation: [],
+      data: false
+    }
+  })
+  // Title of cascading
+  screen.getByText('off')
+})

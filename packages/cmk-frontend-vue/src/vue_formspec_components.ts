@@ -14,7 +14,8 @@ export type Components =
   | LegacyValuespec
   | SingleChoice
   | CascadingSingleChoice
-  | FixedValue;
+  | FixedValue
+  | BooleanChoice;
 export type Integer = FormSpec & {
   type: "integer";
   label?: string;
@@ -73,6 +74,12 @@ export type FixedValue = FormSpec & {
   type: "fixed_value";
   label?: string;
   value: unknown;
+};
+export type BooleanChoice = FormSpec & {
+  type: "boolean_choice";
+  label?: string;
+  text_on: string;
+  text_off: string;
 };
 
 export interface VueFormspecComponents {

@@ -52,6 +52,7 @@ class FormSpecVisitor(abc.ABC, Generic[ModelT]):
     def _to_disk(self, raw_value: object, parsed_value: ModelT) -> DataForDisk: ...
 
 
-form_specs_visitor_registry: dict[type, type[FormSpecVisitor]] = {}
 RecomposerFunction = Callable[[FormSpec], FormSpec]
-form_specs_recomposer_registry: dict[type, RecomposerFunction] = {}
+form_specs_visitor_registry: dict[type, tuple[type[FormSpecVisitor], RecomposerFunction | None]] = (
+    {}
+)

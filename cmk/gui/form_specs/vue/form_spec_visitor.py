@@ -20,11 +20,7 @@ from cmk.gui.form_specs.vue.form_spec_recomposers.unknown_form_spec import (
     recompose as recompose_unknown_form_spec,
 )
 from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, RenderMode, VisitorOptions
-from cmk.gui.form_specs.vue.utils import (
-    get_visitor,
-    register_form_spec_recomposer,
-    register_visitor_class,
-)
+from cmk.gui.form_specs.vue.utils import get_visitor, register_visitor_class
 from cmk.gui.form_specs.vue.visitors.cascading_single_choice import CascadingSingleChoiceVisitor
 from cmk.gui.form_specs.vue.visitors.dictionary import DictionaryVisitor
 from cmk.gui.form_specs.vue.visitors.float import FloatVisitor
@@ -72,8 +68,8 @@ def register_form_specs():
     register_visitor_class(List, ListVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
 
-    register_form_spec_recomposer(Percentage, recompose_percentage)
-    register_form_spec_recomposer(UnknownFormSpec, recompose_unknown_form_spec)
+    register_visitor_class(Percentage, FloatVisitor, recompose_percentage)
+    register_visitor_class(UnknownFormSpec, LegacyValuespecVisitor, recompose_unknown_form_spec)
 
 
 register_form_specs()

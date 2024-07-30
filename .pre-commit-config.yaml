@@ -116,3 +116,16 @@ repos:
             language: script
             types: [file, python]
             verbose: true
+          - id: buildifier_format
+            name: Format bazel files
+            entry: scripts/run-buildifier
+            language: script
+            types: ["bazel", "file", "non-executable", "text"]
+            verbose: true
+          - id: buildifier_lint
+            name: Lint bazel files
+            entry: scripts/run-buildifier
+            args: ["--lint=warn"]
+            language: script
+            types: ["bazel", "file", "non-executable", "text"]
+            verbose: true

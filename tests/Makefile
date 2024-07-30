@@ -31,7 +31,9 @@ SYSTEM_TESTS := \
     test-composition \
     test-update-cee \
     test-update-cce \
-    test-update-cse\
+    test-update-cse \
+    test-update-cross-edition-cce \
+    test-update-cross-edition-cme \
     test-schemathesis-openapi \
     test-plugins \
     test-plugins-piggyback \

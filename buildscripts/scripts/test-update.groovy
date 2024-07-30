@@ -2,12 +2,19 @@
 
 /// file: test-update.groovy
 
-def build_make_target(edition) {
+def build_make_target(edition, cross_edition_target="") {
     def prefix = "test-update-";
     def suffix = "-docker";
     switch(edition) {
         case 'enterprise':
-            return prefix + "cee" + suffix;
+            switch(cross_edition_target) {
+                case 'cce':
+                case 'cme':
+                    // from CEE to CCE or CME
+                    return prefix + "cross-edition-" + cross_edition_target + suffix;
+                default:
+                    return prefix + "cee" + suffix;
+            }
         case 'cloud':
             return prefix + "cce" + suffix;
         case 'saas':
@@ -28,10 +35,12 @@ def main() {
 
     check_environment_variables([
         "EDITION",
+        "CROSS_EDITION_TARGET",
     ]);
 
+    def cross_edition_target = env.CROSS_EDITION_TARGET ?: "";
     def distros = versioning.get_distros(edition: EDITION, use_case: "daily_update_tests", override: OVERRIDE_DISTROS);
-    def make_target = build_make_target(EDITION);
+    def make_target = build_make_target(EDITION, cross_edition_target);
 
     stage("Run `make ${make_target}`") {
         docker.withRegistry(DOCKER_REGISTRY, "nexus") {

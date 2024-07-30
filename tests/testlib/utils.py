@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+import glob
 import logging
 import os
 import re
@@ -390,3 +391,17 @@ def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: floa
         time.sleep(interval)
 
     raise TimeoutError("Timeout waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
+
+
+def parse_files(pathname: Path, pattern: str, ignore_case: bool = True) -> dict[str, list[str]]:
+    """Parse file(s) for a given pattern."""
+    pattern_obj = re.compile(pattern, re.IGNORECASE if ignore_case else 0)
+    LOGGER.info("Parsing logs for '%s'", pattern)
+    match_dict: dict[str, list[str]] = {}
+    for file_path in glob.glob(str(pathname), recursive=True):
+        with open(file_path, "r", encoding="utf-8") as file:
+            for line in file:
+                if pattern_obj.search(line):
+                    LOGGER.info("Match found in %s: %s", file_path, line.strip())
+                    match_dict[file_path] = match_dict.get(file_path, []) + [line]
+    return match_dict

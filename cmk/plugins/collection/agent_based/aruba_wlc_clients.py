@@ -14,7 +14,7 @@ from cmk.plugins.lib.wlc_clients import ClientsTotal, WlcClientsSection
 def parse_aruba_wlc_clients(string_table: Sequence[StringTable]) -> WlcClientsSection[ClientsTotal]:
     section: WlcClientsSection[ClientsTotal] = WlcClientsSection()
     for oid_fragment, num_clients_str in string_table[0]:
-        ssid_name = bytes(int(x) for x in oid_fragment.split(".")[1:]).decode("ascii")
+        ssid_name = bytes(int(x) for x in oid_fragment.split(".")[1:]).decode("utf8")
         if ssid_name == "":
             continue
         num_clients = int(num_clients_str)

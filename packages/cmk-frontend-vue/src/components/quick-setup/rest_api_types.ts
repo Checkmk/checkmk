@@ -24,24 +24,22 @@ export interface QSInitializationResponse {
 }
 
 /**
- * Overview spec
+ * Overview spec (QuickSetupStageOverviewResponse)
  */
 export interface QSOverviewSpec {
-  stage_id: number
   title: string
   sub_title: string | null
 }
 
 /**
- * Request for stage validation
+ * Request for stage validation (QuickSetupStageRequest)
  */
 interface QSStageRequest {
-  stage_id: number
   form_data: object
 }
 
 /**
- * Request to validate the current stage
+ * Request to validate the current stage (QuickSetupRequest)
  */
 export interface QSValidateStagesRequest {
   quick_setup_id: string
@@ -49,13 +47,12 @@ export interface QSValidateStagesRequest {
 }
 
 /**
- * Response from the API when validating a stage
+ * Response from the API when validating a stage (QuickSetupStageResponse)
  */
 export interface QSStageResponse {
-  stage_id: number
+  stage_recap: ComponentSpec[]
   next_stage_structure: QSStageStructure
   errors: QsStageValidationError | null
-  stage_recap: ComponentSpec[]
 }
 
 /**
@@ -79,7 +76,7 @@ export interface GeneralError extends RestApiError {
 }
 
 /**
- * Request to complete the quick setup
+ * Request to complete the quick setup (QuickSetupFinalSaveRequest)
  */
 export interface QSRequestComplete {
   stages: QSStageRequest[]

@@ -67,7 +67,7 @@ export const validateStage = async (
     const url = VALIDATE_QUICK_SETUP_STAGE_URL
     const payload: QSValidateStagesRequest = {
       quick_setup_id: quickSetupId,
-      stages: formData.map((stage, index) => ({ stage_id: index + 1, form_data: stage }))
+      stages: formData.map((stage) => ({ form_data: stage }))
     }
 
     axios
@@ -88,7 +88,7 @@ export const completeQuickSetup = async (
   return new Promise((resolve, reject) => {
     const url = COMPLETE_QUICK_SETUP_URL.replace('{QUICK_SETUP_ID}', quickSetupId)
     const payload: QSRequestComplete = {
-      stages: formData.map((step, index) => ({ stage_id: index + 1, form_data: step }))
+      stages: formData.map((step) => ({ form_data: step }))
     }
 
     axios

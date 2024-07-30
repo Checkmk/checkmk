@@ -361,17 +361,6 @@ def test_dependencies_are_used() -> None:
 
     unused_dependencies = set(get_unused_dependencies())
 
-    # Not used yet, can be removed soon (CMK-18157)
-    known_unused_packages |= {
-        "opentelemetry-api",
-        "opentelemetry-exporter-otlp",
-        "opentelemetry-instrumentation-redis",
-        "opentelemetry-instrumentation-requests",
-        "opentelemetry-instrumentation-wsgi",
-        "opentelemetry-sdk",
-        "opentelemetry-semantic-conventions",
-    }
-
     assert (
         unused_dependencies >= known_unused_packages
     ), "The exceptionlist is outdated, these are the 'offenders':" + str(

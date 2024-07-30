@@ -28,6 +28,9 @@ from functools import cache
 from io import BytesIO
 from typing import Any, Literal, NamedTuple, NewType, TypedDict
 
+from opentelemetry import trace
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+
 UserId = NewType("UserId", str)
 SiteId = NewType("SiteId", str)
 
@@ -147,6 +150,8 @@ class LivestatusTestingError(RuntimeError):
 #   +----------------------------------------------------------------------+
 #   |  Global variables and Exception classes                              |
 #   '----------------------------------------------------------------------'
+
+tracer = trace.get_tracer("cmk.livestatus_client")
 
 # TODO: This mechanism does not take different connection options into account
 # Keep a global array of persistent connections
@@ -683,8 +688,16 @@ class SingleSiteConnection(Helpers):
         return data.getvalue()
 
     def do_query(self, query: Query, add_headers: str = "") -> LivestatusResponse:
-        with _livestatus_output_format_switcher(query, self):
+        with tracer.start_as_current_span(
+            "do_query",
+            kind=trace.SpanKind.CLIENT,
+            attributes={
+                "cmk.livestatus.target_site_id": str(self.site_name),
+            },
+        ) as span, _livestatus_output_format_switcher(query, self):
             str_query = self.build_query(query, add_headers)
+            span.set_attribute("cmk.livestatus.query", str_query)
+
             self.send_query(str_query)
             try:
                 return self.parse_raw_response(
@@ -865,7 +878,16 @@ class SingleSiteConnection(Helpers):
         command_str = command.rstrip("\n")
         if not command_str.startswith("["):
             command_str = f"[{int(time.time())}] {command_str}"
-        self.send_command(f"COMMAND {command_str}")
+
+        with tracer.start_as_current_span(
+            "send_command",
+            kind=trace.SpanKind.CLIENT,
+            attributes={
+                "cmk.livestatus.command": command,
+                "cmk.livestatus.target_site_id": str(self.site_name),
+            },
+        ):
+            self.send_command(f"COMMAND {command_str}")
 
     def send_command(self, command: str) -> None:
         if self.socket is None:
@@ -1205,70 +1227,92 @@ class MultiSiteConnection(Helpers):
         else:
             connect_to_sites = self.connections
 
-        # First send all queries
-        retrieve_responses = self._send_queries(
-            query,
-            add_headers,
-            connect_to_sites,
-            limit_header="Limit: %d\n" % self.limit if self.limit is not None else "",
-        )
+        with tracer.start_as_current_span(
+            "query_parallel", attributes={"cmk.livestatus.query": str(query)}
+        ):
+            # First send all queries
+            retrieve_responses = self._send_queries(
+                query,
+                add_headers,
+                connect_to_sites,
+                limit_header="Limit: %d\n" % self.limit if self.limit is not None else "",
+            )
 
-        # Then retrieve all raw responses. We will be as slow as the slowest of all connections.
-        site_responses = self._retrieve_responses(query, retrieve_responses, stillalive)
+            # Then retrieve all raw responses. We will be as slow as the slowest of all connections.
+            site_responses = self._retrieve_responses(query, retrieve_responses, stillalive)
 
-        # Convert responses to python format
-        result = self._parse_responses(query, site_responses, stillalive)
+            # Convert responses to python format
+            result = self._parse_responses(query, site_responses, stillalive)
 
         self.connections = stillalive
         return LivestatusResponse(result)
 
     def _send_queries(
         self, query: Query, add_headers: str, connect_to_sites: ConnectedSites, limit_header: str
-    ) -> list[tuple[str, ConnectedSite]]:
-        retrieve_responses: list[tuple[str, ConnectedSite]] = []
+    ) -> list[tuple[str, trace.Span, ConnectedSite]]:
+        retrieve_responses: list[tuple[str, trace.Span, ConnectedSite]] = []
         for connected_site in connect_to_sites:
-            try:
-                str_query = connected_site.connection.build_query(query, add_headers + limit_header)
-                connected_site.connection.send_query(str_query)
-                retrieve_responses.append((str_query, connected_site))
-            except LivestatusTestingError:
-                raise
-            except Exception as e:
-                self.deadsites[connected_site.id] = {
-                    "exception": e,
-                    "site": connected_site.config,
-                }
+            with tracer.start_as_current_span(
+                f"send_query_to_site[{connected_site.id}]",
+                kind=trace.SpanKind.PRODUCER,
+                attributes={
+                    "cmk.livestatus.target_site_id": str(connected_site.id),
+                },
+            ) as span:
+                try:
+                    str_query = connected_site.connection.build_query(
+                        query, add_headers + limit_header
+                    )
+                    span.set_attribute("cmk.livestatus.query", str_query)
+                    connected_site.connection.send_query(str_query)
+                    retrieve_responses.append((str_query, span, connected_site))
+                except LivestatusTestingError:
+                    raise
+                except Exception as e:
+                    self.deadsites[connected_site.id] = {
+                        "exception": e,
+                        "site": connected_site.config,
+                    }
         return retrieve_responses
 
     def _retrieve_responses(
         self,
         query: Query,
-        retrieve_responses: list[tuple[str, ConnectedSite]],
+        retrieve_responses: list[tuple[str, trace.Span, ConnectedSite]],
         stillalive: ConnectedSites,
     ) -> list[tuple[ConnectedSite, bytes]]:
         site_responses: list[tuple[ConnectedSite, bytes]] = []
-        for str_query, connected_site in retrieve_responses:
-            try:
-                site_responses.append(
-                    (
-                        connected_site,
-                        connected_site.connection.receive_raw_response(
-                            str_query, query.suppress_exceptions
-                        ),
+        for str_query, request_span, connected_site in retrieve_responses:
+            with tracer.start_as_current_span(
+                f"receive_from_site[{connected_site.id}]",
+                kind=trace.SpanKind.CONSUMER,
+                links=[trace.Link(request_span.get_span_context())],
+                attributes={
+                    "cmk.livestatus.query": str_query,
+                    "cmk.livestatus.target_site_id": str(connected_site.id),
+                },
+            ):
+                try:
+                    site_responses.append(
+                        (
+                            connected_site,
+                            connected_site.connection.receive_raw_response(
+                                str_query, query.suppress_exceptions
+                            ),
+                        )
                     )
-                )
-            except query.suppress_exceptions:
-                # Mostly handles exception types MKLivestatusTableNotFoundError
-                stillalive.append(connected_site)
-                continue
-            except LivestatusTestingError:
-                raise
-            except Exception as e:
-                connected_site.connection.disconnect()
-                self.deadsites[connected_site.id] = {
-                    "exception": e,
-                    "site": connected_site.config,
-                }
+                except query.suppress_exceptions:
+                    # Mostly handles exception types MKLivestatusTableNotFoundError
+                    stillalive.append(connected_site)
+                    continue
+                except LivestatusTestingError:
+                    raise
+                except Exception as e:
+                    connected_site.connection.disconnect()
+                    self.deadsites[connected_site.id] = {
+                        "exception": e,
+                        "site": connected_site.config,
+                    }
         return site_responses
 
     def _parse_responses(

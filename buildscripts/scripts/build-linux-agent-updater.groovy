@@ -21,11 +21,8 @@ def main() {
     def docker_args = "${mount_reference_repo_dir}";
     def branch_version = versioning.get_branch_version(checkout_dir);
 
-    // FIXME
-    // def branch_name = versioning.safe_branch_name(scm);
-    def branch_name = "2.3.0";
-
-    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, VERSION);
+    def safe_branch_name = versioning.safe_branch_name(scm);
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     /// Get the ID of the docker group from the node(!). This must not be
@@ -38,6 +35,7 @@ def main() {
         |branch_version:........... │${branch_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |cmk_version:.............. │${cmk_version}│
+        |safe_branch_name:......... │${safe_branch_name}│
         |docker_group_id:.......... │${docker_group_id}│
         |docker_registry_no_http:.. │${docker_registry_no_http}│
         |checkout_dir:............. │${checkout_dir}│

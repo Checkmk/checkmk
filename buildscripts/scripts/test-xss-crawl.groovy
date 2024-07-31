@@ -16,9 +16,7 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
-    //def safe_branch_name = versioning.safe_branch_name(scm);  // todo: this returns rubbish if CUSTOM_GIT_REF is set
-    def safe_branch_name = "2.3.0";
-
+    def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version = versioning.get_cmk_version(safe_branch_name, branch_version, "daily");
     def docker_tag = versioning.select_docker_tag(

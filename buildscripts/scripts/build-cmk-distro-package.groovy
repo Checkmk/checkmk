@@ -37,19 +37,17 @@ def main() {
     def distro = params.DISTRO;
     def edition = params.EDITION;
 
-    // FIXME
-    // def branch_name = versioning.safe_branch_name(scm);
-    def branch_name = "2.3.0";
+    def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
 
     // FIXME
-    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, VERSION);
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
 
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     def docker_tag = versioning.select_docker_tag(
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
-        branch_name,                        // 'branch' returns '<BRANCH>-latest'
+        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
     /* groovylint-disable LineLength */
     def container_name = "build-cmk-package-${distro}-${edition}-${cmd_output("git --git-dir=${checkout_dir}/.git log -n 1 --pretty=format:'%h'")}";
@@ -61,7 +59,7 @@ def main() {
         |distro:................... │${distro}│
         |edition:.................. │${edition}│
         |cmk_version:.............. │${cmk_version}│
-        |branch_name:.............. │${branch_name}│
+        |safe_branch_name:......... │${safe_branch_name}│
         |omd_env_vars:............. │${omd_env_vars}│
         |docker_tag:............... │${docker_tag}│
         |docker_args:.............. │${docker_args}│

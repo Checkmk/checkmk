@@ -54,6 +54,7 @@ config_setting(
         "@omd_packages//packages:cmk-agent-receiver",
         "@omd_packages//packages:cmk-graphing",
         "@omd_packages//packages:cmk-livestatus-client",
+        "@omd_packages//packages:cmk-messaging",
         "@omd_packages//packages:cmk-mkp-tool",
         "@omd_packages//packages:cmk-rulesets",
         "@omd_packages//packages:cmk-server-side-calls",
@@ -89,6 +90,7 @@ config_setting(
     ("werks", "$(execpath @omd_packages//packages:cmk-werks)"),
     ("trace", "$(execpath @omd_packages//packages:cmk-trace)"),
     ("agent-based", "$(execpath @omd_packages//packages:cmk-agent-based)"),
+    ("messaging", "$(execpath @omd_packages//packages:cmk-messaging)"),
     ("mkp-tool", "$(execpath @omd_packages//packages:cmk-mkp-tool)"),
     ("livestatus-client", "$(execpath @omd_packages//packages:cmk-livestatus-client)"),
     # TODO: Switch to official release when netapp has fixed their build process
@@ -104,6 +106,7 @@ genrule(
             "agent-based",
             "agent-receiver",
             "graphing",
+            "messaging",
             "mkp-tool",
             "rulesets",
             "server-side-calls",

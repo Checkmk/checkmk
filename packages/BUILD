@@ -2,6 +2,7 @@ exports_files([
     "cmk-agent-based",
     "cmk-agent-receiver",
     "cmk-graphing",
+    "cmk-messaging",
     "cmk-mkp-tool",
     "cmk-rulesets",
     "cmk-server-side-calls",

@@ -53,6 +53,7 @@ BUILD_DIRS = {
     repo_path() / "packages/cmk-graphing/build",
     repo_path() / "packages/cmk-server-side-calls/build",
     repo_path() / "packages/cmk-rulesets/build",
+    repo_path() / "packages/cmk-messaging/build",
     repo_path() / "packages/cmk-mkp-tool/build",
     repo_path() / "packages/cmk-werks/build",
     repo_path() / "packages/cmk-trace/build",

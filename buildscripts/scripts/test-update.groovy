@@ -25,10 +25,6 @@ def build_make_target(edition, cross_edition_target="") {
 }
 
 def main() {
-    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
-    def branch_version = versioning.get_branch_version(checkout_dir);
-
     check_job_parameters([
         ["OVERRIDE_DISTROS"],
     ]);
@@ -38,21 +34,46 @@ def main() {
         "CROSS_EDITION_TARGET",
     ]);
 
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
+
+    def safe_branch_name = versioning.safe_branch_name(scm);
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_version = versioning.get_cmk_version(safe_branch_name, branch_version, "daily");
+
+    def edition = params.EDITION;
+    def distros = versioning.get_distros(edition: edition, use_case: "daily_update_tests", override: OVERRIDE_DISTROS);
+    def docker_tag = versioning.select_docker_tag(
+        "",                // 'build tag'
+        safe_branch_name,  // 'branch' returns '<BRANCH>-latest'
+    );
+
     def cross_edition_target = env.CROSS_EDITION_TARGET ?: "";
-    def distros = versioning.get_distros(edition: EDITION, use_case: "daily_update_tests", override: OVERRIDE_DISTROS);
     def make_target = build_make_target(EDITION, cross_edition_target);
+
+    print(
+        """
+        |===== CONFIGURATION ===============================
+        |distros:.................. │${distros}│
+        |edition:.................. │${edition}│
+        |safe_branch_name:......... │${safe_branch_name}│
+        |docker_tag:............... │${docker_tag}│
+        |checkout_dir:............. │${checkout_dir}│
+        |make_target:.............. |${make_target}|
+        |===================================================
+        """.stripMargin());
 
     stage("Run `make ${make_target}`") {
         docker.withRegistry(DOCKER_REGISTRY, "nexus") {
             testing_helper.run_make_targets(
                 DOCKER_GROUP_ID: get_docker_group_id(),
                 DISTRO_LIST: distros,
-                EDITION: EDITION,
+                EDITION: edition,
                 VERSION: "daily",
-                DOCKER_TAG: "master-latest",
+                DOCKER_TAG: docker_tag,
                 MAKE_TARGET: make_target,
-                BRANCH: "master",
-                cmk_version: versioning.get_cmk_version("master", branch_version, "daily"),
+                BRANCH: safe_branch_name,
+                cmk_version: cmk_version,
             );
         }
     }

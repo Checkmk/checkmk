@@ -24,6 +24,7 @@ def main() {
 
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_version = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
     def docker_tag = versioning.select_docker_tag(
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
@@ -40,7 +41,9 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |distros:............(local)  │${distros}│
+        |distros:............(local)│${distros}│
+        |safe_branch_name:......... │${safe_branch_name}│
+        |docker_tag:............... │${docker_tag}│
         |===================================================
         """.stripMargin());
 
@@ -55,7 +58,7 @@ def main() {
                 DOCKER_TAG: docker_tag,
                 MAKE_TARGET: "test-composition-docker",
                 BRANCH: safe_branch_name,  // FIXME was BRANCH before
-                cmk_version: versioning.get_cmk_version(safe_branch_name, branch_version, VERSION),
+                cmk_version: cmk_version,
             );
         }
     }

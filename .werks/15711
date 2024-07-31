@@ -6,7 +6,7 @@ Date: 1696234096
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0p34
+Version: 2.2.0p11
 
 Gadgets located in the local hierarchy of the site (at local/share/nagvis/htdocs/userfiles/gadgets)
 could not be used and resulted in "Forbidden" errors when trying to open them.

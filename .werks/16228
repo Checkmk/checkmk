@@ -6,7 +6,7 @@ Date: 1699525492
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0p14
+Version: 2.2.0p15
 
 This werk is relevant for you in case you've been using <tt>omd -V {version} update</tt> as site user.
 Due to the update of the Python version from 3.11.2 to 3.11.5 with 2.2.0p13, we needed to introduce a fix in order to avoid the following issue:

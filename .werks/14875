@@ -6,10 +6,9 @@ Date: 1666099210
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.1.0p15
+Version: 2.2.0b1
 
-Previously, shadow hosts custom attributes were ignored during 
+Previously, shadow hosts custom attributes were ignored during
 config generation.
 
 With this release the problem has been eliminated.
-

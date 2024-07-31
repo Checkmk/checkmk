@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0p4
+Version: 2.2.0p8
 
 Prior to this Werk, users with the permissions to (a) use the RestAPI, (b) create passwords in the password store, and (c) create active checks were able to run arbitrary commands on the site.
 
@@ -30,4 +30,3 @@ We have assigned CVE <tt>CVE-2023-31209</tt>.
 
 <b>Changes</b>:
 This Werk adds proper sanitization of the affected parameter on core commands.
-

@@ -67,8 +67,24 @@ def REPO_PATCH_RULES = [\
 ];
 /* groovylint-enable DuplicateListLiteral */
 
+def branch_name_is_branch_version(String git_dir=".") {
+    dir(git_dir) {
+        return cmd_output("make --no-print-directory -f defines.make print-BRANCH_NAME_IS_BRANCH_VERSION") ? true : false;
+    }
+}
+
 def branch_name(scm) {
-    return env.GERRIT_BRANCH ?: scm.branches[0].name;
+    if (params.CUSTOM_GIT_REF) {
+        if (branch_name_is_branch_version("${checkout_dir}")) {
+            // this is only required as "master" is called "stable branch + 0.1.0"
+            // e.g. 2.3.0 (stable) + 0.1.0 = 2.4.0
+            return env.GERRIT_BRANCH ?: get_branch_version()
+        } else {
+            return env.GERRIT_BRANCH ?: "master"
+        }
+    } else {
+        return env.GERRIT_BRANCH ?: scm.branches[0].name;
+    }
 }
 
 def safe_branch_name(scm) {

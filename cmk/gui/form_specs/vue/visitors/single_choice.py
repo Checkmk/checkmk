@@ -25,7 +25,6 @@ from cmk.gui.form_specs.vue.utils import (
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import translate_to_current_language
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import SingleChoice
 
@@ -81,7 +80,5 @@ class SingleChoiceVisitor(FormSpecVisitor):
             return create_validation_error(raw_value, Title("Invalid choice"))
         return compute_validation_errors(compute_validators(self.form_spec), parsed_value)
 
-    def _to_disk(self, raw_value: object, parsed_value: str | EmptyValue) -> str:
-        if isinstance(parsed_value, EmptyValue):
-            raise MKGeneralException("Unable to serialize empty value")
+    def _to_disk(self, raw_value: object, parsed_value: str) -> str:
         return parsed_value

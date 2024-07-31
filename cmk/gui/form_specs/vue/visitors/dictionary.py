@@ -25,7 +25,6 @@ from cmk.gui.form_specs.vue.utils import (
     migrate_value,
 )
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import Dictionary
 
 
@@ -139,9 +138,7 @@ class DictionaryVisitor(FormSpecVisitor):
 
         return element_validations
 
-    def _to_disk(self, raw_value: object, parsed_value: dict | EmptyValue) -> dict:
-        if isinstance(parsed_value, EmptyValue):
-            raise MKGeneralException("Unable to serialize empty value")
+    def _to_disk(self, raw_value: object, parsed_value: dict) -> dict:
         disk_values = {}
         for key_name, dict_element in self.form_spec.elements.items():
             element_visitor = get_visitor(dict_element.parameter_form, self.options)

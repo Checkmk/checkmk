@@ -24,7 +24,6 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Transform
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Title
 
 
@@ -149,10 +148,7 @@ class LegacyValuespecVisitor(FormSpecVisitor):
                 output_funnel.drain()
         return []
 
-    def _to_disk(self, raw_value: object, parsed_value: object | EmptyValue) -> Any:
-        if isinstance(parsed_value, EmptyValue):
-            raise MKGeneralException("Unable to serialize empty value")
-
+    def _to_disk(self, raw_value: object, parsed_value: object) -> Any:
         if isinstance(parsed_value, DefaultValue):
             return self.form_spec.valuespec.default_value()
 

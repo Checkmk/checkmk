@@ -23,7 +23,6 @@ from cmk.gui.form_specs.vue.utils import (
 )
 from cmk.gui.i18n import translate_to_current_language
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import List
 
@@ -103,10 +102,7 @@ class ListVisitor(FormSpecVisitor):
                 )
         return element_validations
 
-    def _to_disk(self, raw_value: object, parsed_value: list | EmptyValue) -> list:
-        if isinstance(parsed_value, EmptyValue):
-            raise MKGeneralException("Unable to serialize empty value")
-
+    def _to_disk(self, raw_value: object, parsed_value: list) -> list:
         disk_values = []
         element_visitor = get_visitor(self.form_spec.element_template, self.options)
         for entry in parsed_value:

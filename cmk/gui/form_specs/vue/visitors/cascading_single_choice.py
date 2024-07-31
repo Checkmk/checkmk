@@ -29,7 +29,6 @@ from cmk.gui.form_specs.vue.utils import (
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import translate_to_current_language
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice
 
@@ -122,9 +121,7 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor):
 
         return element_validations
 
-    def _to_disk(self, raw_value: object, parsed_value: list | EmptyValue) -> tuple[str, Any]:
-        if isinstance(parsed_value, EmptyValue):
-            raise MKGeneralException("Unable to serialize empty value")
+    def _to_disk(self, raw_value: object, parsed_value: list) -> tuple[str, Any]:
         selected_name, selected_value = parsed_value
 
         disk_value: Any = None

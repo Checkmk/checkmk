@@ -24,7 +24,6 @@ from cmk.gui.form_specs.vue.utils import (
 )
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import String
 
@@ -74,7 +73,5 @@ class StringVisitor(FormSpecVisitor):
             )
         return compute_validation_errors(self._validators(), parsed_value)
 
-    def _to_disk(self, raw_value: object, parsed_value: str | EmptyValue) -> str:
-        if isinstance(parsed_value, EmptyValue):
-            raise MKGeneralException("Unable to serialize empty value")
+    def _to_disk(self, raw_value: object, parsed_value: str) -> str:
         return parsed_value

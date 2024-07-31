@@ -54,7 +54,6 @@ config_setting(
         "@omd_packages//packages:cmk-agent-receiver",
         "@omd_packages//packages:cmk-graphing",
         "@omd_packages//packages:cmk-livestatus-client",
-        "@omd_packages//packages:cmk-messaging",
         "@omd_packages//packages:cmk-mkp-tool",
         "@omd_packages//packages:cmk-rulesets",
         "@omd_packages//packages:cmk-server-side-calls",

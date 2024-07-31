@@ -13,10 +13,6 @@ const props = defineProps<{
 const data = defineModel('data', { type: String, required: true })
 const validation = useValidation<string>(data, () => props.backendValidation)
 
-const emit = defineEmits<{
-  (e: 'update:data', value: string): void
-}>()
-
 const value = computed({
   get(): string {
     return data.value
@@ -26,7 +22,7 @@ const value = computed({
     validateValue(value, props.spec.validators!).forEach((error) => {
       validation.value = [{ message: error, location: [], invalid_value: value }]
     })
-    emit('update:data', value)
+    data.value = value
   }
 })
 

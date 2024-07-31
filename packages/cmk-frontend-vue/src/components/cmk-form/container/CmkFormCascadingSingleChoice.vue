@@ -42,10 +42,6 @@ const data = defineModel('data', {
   required: true
 })
 
-const emit = defineEmits<{
-  (e: 'update:data', value: [string, unknown]): void
-}>()
-
 const currentValues: Record<string, unknown> = {}
 onBeforeMount(() => {
   props.spec.elements.forEach((element: CascadingSingleChoiceElement) => {
@@ -74,7 +70,7 @@ const value = computed({
     validateValue(value, props.spec.validators!).forEach((error) => {
       validation.value = [{ message: error, location: [''], invalid_value: value }]
     })
-    emit('update:data', newValue)
+    data.value = newValue
   }
 })
 

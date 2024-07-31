@@ -28,7 +28,7 @@ watch(
   { immediate: true }
 )
 
-defineModel<unknown>('data', { required: true })
+const data = defineModel<unknown>('data', { required: true })
 const legacyDOM = ref<HTMLFormElement>()
 
 onMounted(() => {
@@ -42,15 +42,11 @@ onBeforeUnmount(() => {
 
 function collect_data() {
   let result = Object.fromEntries(new FormData(legacyDOM.value))
-  emit('update:data', {
+  data.value = {
     input_context: result,
     varprefix: props.spec.varprefix
-  })
+  }
 }
-
-const emit = defineEmits<{
-  (e: 'update:data', value: unknown): void
-}>()
 </script>
 
 <template>

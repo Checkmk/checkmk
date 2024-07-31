@@ -32,8 +32,8 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     GraphTemplate,
     ScalarDefinition,
 )
+from cmk.gui.graphing._legacy import UnitInfo
 from cmk.gui.graphing._type_defs import TranslatedMetric
-from cmk.gui.graphing._unit_info import UnitInfo
 from cmk.gui.graphing._utils import translate_metrics
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 

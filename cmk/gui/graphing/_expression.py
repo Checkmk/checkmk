@@ -14,9 +14,9 @@ from typing import Final, Literal
 from cmk.utils.metrics import MetricName
 
 from ._color import mix_colors, parse_color, render_color, scalar_colors
+from ._legacy import unit_info, UnitInfo
 from ._loader import get_unit_info
 from ._type_defs import GraphConsoldiationFunction, TranslatedMetric
-from ._unit_info import unit_info, UnitInfo
 
 # TODO CMK-15246 Checkmk 2.4: Remove legacy objects/RPNs
 

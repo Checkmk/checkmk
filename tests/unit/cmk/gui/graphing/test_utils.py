@@ -39,15 +39,10 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     MinimalGraphTemplateRange,
     ScalarDefinition,
 )
+from cmk.gui.graphing._legacy import AutomaticDict, CheckMetricEntry, RawGraphTemplate, UnitInfo
 from cmk.gui.graphing._loader import MetricInfoExtended, metrics_from_api
 from cmk.gui.graphing._type_defs import TranslatedMetric
-from cmk.gui.graphing._unit_info import UnitInfo
-from cmk.gui.graphing._utils import (
-    _NormalizedPerfData,
-    AutomaticDict,
-    RawGraphTemplate,
-    TranslationInfo,
-)
+from cmk.gui.graphing._utils import _NormalizedPerfData, TranslationInfo
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -202,8 +197,8 @@ def test_perfvar_translation(perf_name: str, check_command: str, result: Transla
     ],
 )
 def test_find_matching_translation(
-    translations: Mapping[MetricName, utils.CheckMetricEntry],
-    expected_result: utils.CheckMetricEntry,
+    translations: Mapping[MetricName, CheckMetricEntry],
+    expected_result: CheckMetricEntry,
 ) -> None:
     assert utils.find_matching_translation(MetricName("my_metric"), translations) == expected_result
 
@@ -1184,9 +1179,9 @@ def test_translate_metrics(
     ],
 )
 def test_lookup_metric_translations_for_check_command(
-    all_translations: Mapping[str, Mapping[MetricName, utils.CheckMetricEntry]],
+    all_translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     check_command: str | None,
-    expected_result: Mapping[MetricName, utils.CheckMetricEntry] | None,
+    expected_result: Mapping[MetricName, CheckMetricEntry] | None,
 ) -> None:
     assert (
         utils.lookup_metric_translations_for_check_command(

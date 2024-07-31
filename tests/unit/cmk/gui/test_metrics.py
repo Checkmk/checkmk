@@ -10,8 +10,9 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     MetricDefinition,
     ScalarDefinition,
 )
+from cmk.gui.graphing._legacy import check_metrics
 from cmk.gui.graphing._loader import load_graphing_plugins, metrics_from_api
-from cmk.gui.graphing._utils import add_graphing_plugins, check_metrics
+from cmk.gui.graphing._utils import add_graphing_plugins
 
 
 def test_add_graphing_plugins() -> None:

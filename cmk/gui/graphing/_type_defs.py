@@ -14,7 +14,7 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.gui.time_series import TimeSeries
 
-from ._unit_info import UnitInfo
+from ._legacy import UnitInfo
 
 GraphConsoldiationFunction = Literal["max", "min", "average"]
 GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]

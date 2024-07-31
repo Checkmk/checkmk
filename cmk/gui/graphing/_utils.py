@@ -7,8 +7,8 @@
 import http
 import re
 import shlex
-from collections import Counter, OrderedDict
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections import Counter
+from collections.abc import Callable, Iterator, Mapping
 from typing import Literal, NewType, NotRequired, TypedDict
 
 from livestatus import livestatus_lql
@@ -23,7 +23,6 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
-from cmk.gui.utils.speaklater import LazyString
 
 from cmk.discover_plugins import DiscoveredPlugins
 from cmk.graphing.v1 import graphs as graphs_api
@@ -37,6 +36,7 @@ from ._color import (
     parse_color_from_api,
     parse_color_into_hexrgb,
 )
+from ._legacy import check_metrics, CheckMetricEntry, metric_info, MetricInfo, unit_info
 from ._loader import (
     get_unit_info,
     graphs_from_api,
@@ -45,8 +45,7 @@ from ._loader import (
     perfometers_from_api,
     register_unit,
 )
-from ._type_defs import GraphConsoldiationFunction, LineType, ScalarBounds, TranslatedMetric
-from ._unit_info import unit_info
+from ._type_defs import LineType, ScalarBounds, TranslatedMetric
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):
@@ -66,37 +65,6 @@ GraphRangeSpec = tuple[int | str, int | str]
 SizeEx = NewType("SizeEx", int)
 
 
-class RawGraphTemplate(TypedDict):
-    metrics: Sequence[
-        tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
-    ]
-    title: NotRequired[str | LazyString]
-    scalars: NotRequired[Sequence[str | tuple[str, str | LazyString]]]
-    conflicting_metrics: NotRequired[Sequence[str]]
-    optional_metrics: NotRequired[Sequence[str]]
-    consolidation_function: NotRequired[GraphConsoldiationFunction]
-    range: NotRequired[tuple[int | str, int | str]]
-    omit_zero_metrics: NotRequired[bool]
-
-
-class CheckMetricEntry(TypedDict, total=False):
-    scale: float
-    name: MetricName
-    auto_graph: bool
-    deprecated: str
-
-
-class _MetricInfoMandatory(TypedDict):
-    title: str | LazyString
-    unit: str
-    color: str
-
-
-class MetricInfo(_MetricInfoMandatory, total=False):
-    help: str | LazyString
-    render: Callable[[float | int], str]
-
-
 class _NormalizedPerfData(TypedDict):
     orig_name: list[str]
     value: float
@@ -111,45 +79,11 @@ class TranslationInfo(TypedDict):
     auto_graph: bool
 
 
-class AutomaticDict(OrderedDict[str, RawGraphTemplate]):
-    """Dictionary class with the ability of appending items like provided
-    by a list."""
-
-    def __init__(self, list_identifier: str | None = None, start_index: int | None = None) -> None:
-        super().__init__(self)
-        self._list_identifier = list_identifier or "item"
-        self._item_index = start_index or 0
-
-    def append(self, item: RawGraphTemplate) -> None:
-        # Avoid duplicate graph definitions in case the metric plug-ins are loaded multiple times.
-        # Otherwise, we get duplicate graphs in the UI.
-        if self._item_already_appended(item):
-            return
-        self["%s_%i" % (self._list_identifier, self._item_index)] = item
-        self._item_index += 1
-
-    def _item_already_appended(self, item: RawGraphTemplate) -> bool:
-        return item in [
-            graph_template
-            for graph_template_id, graph_template in self.items()
-            if graph_template_id.startswith(self._list_identifier)
-        ]
-
-
-metric_info: dict[MetricName, MetricInfo] = {}
-
-
 def registered_metrics() -> Iterator[tuple[str, str]]:
     for metric_id, mie in metrics_from_api.items():
         yield metric_id, str(mie.title)
     for metric_id, mi in metric_info.items():
         yield metric_id, str(mi["title"])
-
-
-check_metrics: dict[str, dict[MetricName, CheckMetricEntry]] = {}
-# _AutomaticDict is used here to provide some list methods.
-# This is needed to maintain backwards-compatibility.
-graph_info = AutomaticDict("manual_graph_template")
 
 
 def _parse_check_command_from_api(

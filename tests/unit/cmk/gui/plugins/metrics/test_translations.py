@@ -5,7 +5,7 @@
 
 from cmk.utils.check_utils import maincheckify
 
-from cmk.gui.graphing._utils import check_metrics
+from cmk.gui.graphing._legacy import check_metrics
 
 
 def test_all_keys_migrated() -> None:

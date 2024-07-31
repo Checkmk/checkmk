@@ -19,12 +19,11 @@ from ._graph_specification import (
     MetricOpRRDSource,
 )
 from ._graph_templates import TemplateGraphSpecification
+from ._legacy import perfometer_info, PerfometerSpec
 from ._perfometer import (
     get_first_matching_perfometer,
     MetricometerRendererLegacyLogarithmic,
     parse_perfometer,
-    perfometer_info,
-    PerfometerSpec,
     renderer_registry,
 )
 from ._settings import ConfigVariableGraphTimeranges

@@ -9,7 +9,7 @@ import abc
 import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal, NotRequired, Self, TypeAlias, TypedDict
+from typing import Literal, Self
 
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.i18n import _
@@ -27,9 +27,19 @@ from ._expression import (
     parse_conditional_expression,
     parse_expression,
 )
+from ._legacy import (
+    DualPerfometerSpec,
+    LegacyPerfometer,
+    LinearPerfometerSpec,
+    LogarithmicPerfometerSpec,
+    perfometer_info,
+    PerfometerSpec,
+    StackedPerfometerSpec,
+    unit_info,
+    UnitInfo,
+)
 from ._loader import perfometers_from_api, register_unit
 from ._type_defs import TranslatedMetric
-from ._unit_info import unit_info, UnitInfo
 
 
 @dataclass(frozen=True)
@@ -276,45 +286,12 @@ def _evaluate_quantity(
             )
 
 
-class _LinearPerfometerSpec(TypedDict):
-    type: Literal["linear"]
-    segments: Sequence[str]
-    total: int | float | str
-    condition: NotRequired[str]
-    label: NotRequired[tuple[str, str] | None]  # (expression, unit)
-
-
-class _LogarithmicPerfometerSpec(TypedDict):
-    type: Literal["logarithmic"]
-    metric: str
-    half_value: int | float
-    exponent: int | float
-
-
-class _DualPerfometerSpec(TypedDict):
-    type: Literal["dual"]
-    perfometers: Sequence[_LinearPerfometerSpec | _LogarithmicPerfometerSpec]
-
-
-class _StackedPerfometerSpec(TypedDict):
-    type: Literal["stacked"]
-    perfometers: Sequence[_LinearPerfometerSpec | _LogarithmicPerfometerSpec]
-
-
-LegacyPerfometer = tuple[str, Any]
-PerfometerSpec: TypeAlias = (
-    _LinearPerfometerSpec
-    | _LogarithmicPerfometerSpec
-    | _DualPerfometerSpec
-    | _StackedPerfometerSpec
-)
-perfometer_info: list[LegacyPerfometer | PerfometerSpec] = []
 MetricRendererStack = Sequence[Sequence[tuple[int | float, str]]]
 
 
 def _parse_sub_perfometer(
     perfometer: LegacyPerfometer | PerfometerSpec,
-) -> _LinearPerfometerSpec | _LogarithmicPerfometerSpec:
+) -> LinearPerfometerSpec | LogarithmicPerfometerSpec:
     parsed = _parse_perfometer(perfometer)
     if parsed["type"] == "linear" or parsed["type"] == "logarithmic":
         return parsed
@@ -342,19 +319,19 @@ def _parse_perfometer(
     # Convert legacy tuple based perfometer
     perfometer_type, perfometer_args = perfometer[0], perfometer[1]
     if perfometer_type == "dual":
-        return _DualPerfometerSpec(
+        return DualPerfometerSpec(
             type="dual",
             perfometers=[_parse_sub_perfometer(p) for p in perfometer_args],
         )
 
     if perfometer_type == "stacked":
-        return _StackedPerfometerSpec(
+        return StackedPerfometerSpec(
             type="stacked",
             perfometers=[_parse_sub_perfometer(p) for p in perfometer_args],
         )
 
     if perfometer_type == "linear" and len(perfometer_args) == 3:
-        return _LinearPerfometerSpec(
+        return LinearPerfometerSpec(
             type="linear",
             segments=perfometer_args[0],
             total=perfometer_args[1],
@@ -950,7 +927,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
 class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
     def __init__(
         self,
-        perfometer: _LogarithmicPerfometerSpec,
+        perfometer: LogarithmicPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
         if "metric" not in perfometer:
@@ -1046,7 +1023,7 @@ class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
 class MetricometerRendererLegacyLinear(MetricometerRenderer):
     def __init__(
         self,
-        perfometer: _LinearPerfometerSpec,
+        perfometer: LinearPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
         self._segments = [parse_expression(s, translated_metrics) for s in perfometer["segments"]]
@@ -1116,7 +1093,7 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
 class MetricometerRendererLegacyStacked(MetricometerRenderer):
     def __init__(
         self,
-        perfometer: _StackedPerfometerSpec,
+        perfometer: StackedPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
         self._perfometers = perfometer["perfometers"]
@@ -1160,7 +1137,7 @@ class MetricometerRendererLegacyStacked(MetricometerRenderer):
 class MetricometerRendererLegacyDual(MetricometerRenderer):
     def __init__(
         self,
-        perfometer: _DualPerfometerSpec,
+        perfometer: DualPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
         self._perfometers = perfometer["perfometers"]

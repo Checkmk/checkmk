@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._utils import check_metrics, CheckMetricEntry, KB, m, MB
+from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
+from cmk.gui.graphing._utils import KB, m, MB
 
 # .
 #   .--Checks--------------------------------------------------------------.

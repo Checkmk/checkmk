@@ -34,7 +34,7 @@ from ._formatter import (
     StandardScientificFormatter,
     TimeFormatter,
 )
-from ._unit_info import unit_info, UnitInfo
+from ._legacy import unit_info, UnitInfo
 
 
 def load_graphing_plugins() -> (

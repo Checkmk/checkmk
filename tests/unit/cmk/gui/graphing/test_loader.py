@@ -14,13 +14,12 @@ from cmk.utils.paths import omd_root
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing import perfometer_info
+from cmk.gui.graphing._legacy import AutomaticDict, graph_info, metric_info, UnitInfo
 from cmk.gui.graphing._loader import (
     _compute_unit_info,
     _TemperatureUnitConverter,
     load_graphing_plugins,
 )
-from cmk.gui.graphing._unit_info import UnitInfo
-from cmk.gui.graphing._utils import AutomaticDict, graph_info, metric_info
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 

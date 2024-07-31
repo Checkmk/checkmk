@@ -14,18 +14,17 @@ from cmk.gui.graphing import (
     PerfometerSpec,
     renderer_registry,
 )
+from cmk.gui.graphing._legacy import LegacyPerfometer, UnitInfo
 from cmk.gui.graphing._perfometer import (
     _make_projection,
     _perfometer_possible,
     _PERFOMETER_PROJECTION_PARAMETERS,
-    LegacyPerfometer,
     MetricometerRendererLegacyLinear,
     MetricometerRendererPerfometer,
     MetricRendererStack,
     parse_perfometer,
 )
 from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
-from cmk.gui.graphing._unit_info import UnitInfo
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_api

@@ -28,9 +28,8 @@ import cmk.gui.pages
 from cmk.gui import utils
 from cmk.gui.config import Config
 from cmk.gui.graphing import _color as graphing_color
-from cmk.gui.graphing import _unit_info as graphing_unit_info
+from cmk.gui.graphing import _legacy as graphing_legacy
 from cmk.gui.graphing import _utils as graphing_utils
-from cmk.gui.graphing import perfometer_info
 from cmk.gui.graphing._graph_render_config import GraphRenderConfig
 from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
 from cmk.gui.graphing._graph_templates_from_plugins import GraphTemplate
@@ -90,9 +89,17 @@ def _register_pre_21_plugin_api() -> None:
 
     for name in (
         "check_metrics",
+        "graph_info",
+        "metric_info",
+        "perfometer_info",
+        "unit_info",
+    ):
+        legacy_api_module.__dict__[name] = graphing_legacy.__dict__[name]
+        legacy_plugin_utils.__dict__[name] = graphing_legacy.__dict__[name]
+
+    for name in (
         "G",
         "GB",
-        "graph_info",
         "K",
         "KB",
         "m",
@@ -100,7 +107,6 @@ def _register_pre_21_plugin_api() -> None:
         "MAX_CORES",
         "MAX_NUMBER_HOPS",
         "MB",
-        "metric_info",
         "P",
         "PB",
         "scale_symbols",
@@ -113,12 +119,6 @@ def _register_pre_21_plugin_api() -> None:
 
     legacy_api_module.__dict__["GraphTemplate"] = GraphTemplate
     legacy_plugin_utils.__dict__["GraphTemplate"] = GraphTemplate
-
-    legacy_api_module.__dict__["perfometer_info"] = perfometer_info
-    legacy_plugin_utils.__dict__["perfometer_info"] = perfometer_info
-
-    legacy_api_module.__dict__["unit_info"] = graphing_unit_info.__dict__["unit_info"]
-    legacy_plugin_utils.__dict__["unit_info"] = graphing_unit_info.__dict__["unit_info"]
 
     for name in (
         "darken_color",
@@ -137,9 +137,9 @@ def _register_pre_21_plugin_api() -> None:
     globals().update(
         {
             "indexed_color": graphing_color.indexed_color,
-            "metric_info": graphing_utils.metric_info,
-            "check_metrics": graphing_utils.check_metrics,
-            "graph_info": graphing_utils.graph_info,
+            "metric_info": graphing_legacy.metric_info,
+            "check_metrics": graphing_legacy.check_metrics,
+            "graph_info": graphing_legacy.graph_info,
             "_": _,
         }
     )

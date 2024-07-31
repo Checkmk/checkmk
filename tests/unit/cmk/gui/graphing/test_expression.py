@@ -26,7 +26,7 @@ from cmk.gui.graphing._expression import (
     Sum,
     WarningOf,
 )
-from cmk.gui.graphing._unit_info import unit_info
+from cmk.gui.graphing._legacy import unit_info
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 

@@ -13,7 +13,7 @@ from tests.unit.cmk.gui.users import create_and_destroy_user
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._unit_info import unit_info
+from cmk.gui.graphing._legacy import unit_info
 
 
 def test_temperature_unit_default(request_context: None) -> None:

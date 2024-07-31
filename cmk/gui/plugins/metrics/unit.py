@@ -8,7 +8,7 @@ from collections.abc import Iterable, Mapping, Sequence
 import cmk.utils.render
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._unit_info import unit_info, UnitInfoWithOrWithoutID
+from cmk.gui.graphing._legacy import unit_info, UnitInfoWithOrWithoutID
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.temperate_unit import TemperatureUnit

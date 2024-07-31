@@ -7,9 +7,9 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.gui.graphing._legacy import UnitInfo
 from cmk.gui.graphing._perfometer import _evaluate_quantity, _perfometer_matches
 from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
-from cmk.gui.graphing._unit_info import UnitInfo
 
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api

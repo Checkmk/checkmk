@@ -22,13 +22,13 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpRRDSource,
 )
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing._legacy import CheckMetricEntry
 from cmk.gui.graphing._rrd_fetch import (
     _reverse_translate_into_all_potentially_relevant_metrics,
     fetch_rrd_data_for_graph,
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._type_defs import RRDDataKey
-from cmk.gui.graphing._utils import CheckMetricEntry
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 

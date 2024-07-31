@@ -11,7 +11,6 @@ from cmk.gui.form_specs.vue.type_defs import (
     EMPTY_VALUE,
     EmptyValue,
     Value,
-    VisitorOptions,
 )
 from cmk.gui.form_specs.vue.utils import (
     compute_validation_errors,
@@ -27,11 +26,7 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import List
 
 
-class ListVisitor(FormSpecVisitor):
-    def __init__(self, form_spec: List, options: VisitorOptions) -> None:
-        self.form_spec = form_spec
-        self.options = options
-
+class ListVisitor(FormSpecVisitor[List, list]):
     def _parse_value(self, raw_value: object) -> list | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):

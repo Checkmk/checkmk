@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
-from typing import Callable, final, Generic
+from typing import Callable, final, Generic, TypeVar
 
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.type_defs import DataForDisk, EmptyValue, Value, VisitorOptions
@@ -15,10 +15,14 @@ from cmk.rulesets.v1.form_specs._base import ModelT
 
 form_spec_registry: dict[str, LoadedRuleSpec] = {}
 
+FormSpecModel = TypeVar("FormSpecModel", bound=FormSpec)
 
-class FormSpecVisitor(abc.ABC, Generic[ModelT]):
-    @abc.abstractmethod
-    def __init__(self, form_spec: FormSpec[ModelT], options: VisitorOptions) -> None: ...
+
+class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ModelT]):
+    @final
+    def __init__(self, form_spec: FormSpecModel, options: VisitorOptions) -> None:
+        self.form_spec = form_spec
+        self.options = options
 
     @abc.abstractmethod
     def _parse_value(self, raw_value: object) -> ModelT | EmptyValue: ...

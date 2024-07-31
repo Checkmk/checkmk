@@ -6,7 +6,7 @@ from typing import Callable, Sequence
 
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
-from cmk.gui.form_specs.vue.type_defs import DEFAULT_VALUE, EmptyValue, Value, VisitorOptions
+from cmk.gui.form_specs.vue.type_defs import DEFAULT_VALUE, EmptyValue, Value
 from cmk.gui.form_specs.vue.utils import (
     compute_validation_errors,
     compute_validators,
@@ -23,11 +23,7 @@ from cmk.rulesets.v1.form_specs import FixedValue
 _FixedValueT = int | float | str | bool | None
 
 
-class FixedValueVisitor(FormSpecVisitor):
-    def __init__(self, form_spec: FixedValue, options: VisitorOptions) -> None:
-        self.form_spec = form_spec
-        self.options = options
-
+class FixedValueVisitor(FormSpecVisitor[FixedValue, _FixedValueT]):
     def _parse_value(self, raw_value: object) -> _FixedValueT | EmptyValue:
         return self.form_spec.value
 

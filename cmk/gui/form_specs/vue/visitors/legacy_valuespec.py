@@ -16,7 +16,6 @@ from cmk.gui.form_specs.vue.type_defs import (
     EMPTY_VALUE,
     EmptyValue,
     Value,
-    VisitorOptions,
 )
 from cmk.gui.form_specs.vue.utils import create_validation_error, get_title_and_help, migrate_value
 from cmk.gui.http import request
@@ -27,17 +26,13 @@ from cmk.gui.valuespec import Transform
 from cmk.rulesets.v1 import Title
 
 
-class LegacyValuespecVisitor(FormSpecVisitor):
+class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
     """Visitor for LegacyValuespecs. Due to the nature of the legacy valuespecs, we can not
     directly convert them to Vue components. Instead, we need to generate the HTML code in the backend
     and pass it to the frontend. The frontend will then render the form as HTML.
     Since rendering/data/validation are mixed up in the old valuespecs, the functions here do not
     have a clear distinction
     """
-
-    def __init__(self, form_spec: LegacyValueSpec, options: VisitorOptions) -> None:
-        self.form_spec = form_spec
-        self.options = options
 
     def _parse_value(self, raw_value: object) -> object | EmptyValue:
         try:

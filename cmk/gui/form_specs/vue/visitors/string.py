@@ -12,7 +12,6 @@ from cmk.gui.form_specs.vue.type_defs import (
     EMPTY_VALUE,
     EmptyValue,
     Value,
-    VisitorOptions,
 )
 from cmk.gui.form_specs.vue.utils import (
     compute_input_hint,
@@ -28,11 +27,7 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import String
 
 
-class StringVisitor(FormSpecVisitor):
-    def __init__(self, form_spec: String, options: VisitorOptions) -> None:
-        self.form_spec = form_spec
-        self.options = options
-
+class StringVisitor(FormSpecVisitor[String, str]):
     def _parse_value(self, raw_value: object) -> str | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):

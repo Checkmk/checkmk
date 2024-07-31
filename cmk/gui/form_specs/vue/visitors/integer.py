@@ -7,7 +7,7 @@ from typing import Callable, Sequence
 from cmk.gui.form_specs.private.validators import IsInteger
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
-from cmk.gui.form_specs.vue.type_defs import DefaultValue, EMPTY_VALUE, EmptyValue, VisitorOptions
+from cmk.gui.form_specs.vue.type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
 from cmk.gui.form_specs.vue.utils import (
     compute_input_hint,
     compute_validation_errors,
@@ -24,11 +24,7 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Integer
 
 
-class IntegerVisitor(FormSpecVisitor):
-    def __init__(self, form_spec: Integer, options: VisitorOptions) -> None:
-        self.form_spec = form_spec
-        self.options = options
-
+class IntegerVisitor(FormSpecVisitor[Integer, int]):
     def _parse_value(self, raw_value: object) -> int | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):

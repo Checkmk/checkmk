@@ -5,13 +5,7 @@
 
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
-from cmk.gui.form_specs.vue.type_defs import (
-    DefaultValue,
-    EMPTY_VALUE,
-    EmptyValue,
-    Value,
-    VisitorOptions,
-)
+from cmk.gui.form_specs.vue.type_defs import DefaultValue, EMPTY_VALUE, EmptyValue, Value
 from cmk.gui.form_specs.vue.utils import (
     compute_input_hint,
     compute_validation_errors,
@@ -29,11 +23,7 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import SingleChoice
 
 
-class SingleChoiceVisitor(FormSpecVisitor):
-    def __init__(self, form_spec: SingleChoice, options: VisitorOptions) -> None:
-        self.form_spec = form_spec
-        self.options = options
-
+class SingleChoiceVisitor(FormSpecVisitor[SingleChoice, str]):
     def _parse_value(self, raw_value: object) -> str | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):

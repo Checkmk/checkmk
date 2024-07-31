@@ -14,7 +14,6 @@ from cmk.gui.form_specs.vue.type_defs import (
     EMPTY_VALUE,
     EmptyValue,
     Value,
-    VisitorOptions,
 )
 from cmk.gui.form_specs.vue.utils import (
     compute_validation_errors,
@@ -28,11 +27,7 @@ from cmk.gui.form_specs.vue.utils import (
 from cmk.rulesets.v1.form_specs import Dictionary
 
 
-class DictionaryVisitor(FormSpecVisitor):
-    def __init__(self, form_spec: Dictionary, options: VisitorOptions) -> None:
-        self.form_spec = form_spec
-        self.options = options
-
+class DictionaryVisitor(FormSpecVisitor[Dictionary, dict]):
     def _compute_default_values(self) -> dict:
         return {key: DEFAULT_VALUE for key, el in self.form_spec.elements.items() if el.required}
 

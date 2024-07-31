@@ -10,7 +10,6 @@ from cmk.gui.form_specs.vue.type_defs import (
     EMPTY_VALUE,
     EmptyValue,
     Value,
-    VisitorOptions,
 )
 from cmk.gui.form_specs.vue.utils import (
     compute_validation_errors,
@@ -27,11 +26,7 @@ from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice
 
 
-class BooleanChoiceVisitor(FormSpecVisitor[bool]):
-    def __init__(self, form_spec: BooleanChoice, options: VisitorOptions) -> None:
-        self.form_spec = form_spec
-        self.options = options
-
+class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, bool]):
     def _parse_value(self, raw_value: object) -> bool | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):

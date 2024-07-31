@@ -52,6 +52,7 @@ from cmk.gui.openapi.marshmallow_converter.internal_to_marshmallow import (
 )
 from cmk.gui.openapi.marshmallow_converter.type_defs import (
     BaseOrOneOfSchemaType,
+    maybe_lazy,
     V_c,
     ValuespecToSchemaMatchDict,
     ValuespecToSchemaMatchEntry,
@@ -59,7 +60,6 @@ from cmk.gui.openapi.marshmallow_converter.type_defs import (
 )
 from cmk.gui.userdb._user_selection import _UserSelection
 from cmk.gui.valuespec.definitions import _CAInput
-from cmk.gui.valuespec.to_formspec import maybe_lazy
 from cmk.gui.wato import DictHostTagCondition, FullPathFolderChoice
 from cmk.gui.wato._group_selection import _GroupSelection
 from cmk.gui.watolib.sites import LivestatusViaTCP

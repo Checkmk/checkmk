@@ -10,6 +10,7 @@ from enum import Enum
 
 from cmk.gui import valuespec
 from cmk.gui.openapi.marshmallow_converter.type_defs import (
+    maybe_lazy,
     V_c,
     ValuespecToValueMatchDict,
     ValuespecToValueMatchEntry,
@@ -17,7 +18,6 @@ from cmk.gui.openapi.marshmallow_converter.type_defs import (
 )
 from cmk.gui.userdb._user_selection import _UserSelection
 from cmk.gui.valuespec.definitions import _CAInput
-from cmk.gui.valuespec.to_formspec import maybe_lazy
 from cmk.gui.wato import FullPathFolderChoice
 from cmk.gui.wato._group_selection import _GroupSelection
 

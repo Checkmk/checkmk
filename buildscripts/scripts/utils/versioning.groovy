@@ -75,7 +75,7 @@ def branch_name_is_branch_version(String git_dir=".") {
 
 def branch_name(scm) {
     if (params.CUSTOM_GIT_REF) {
-        if (branch_name_is_branch_version()) {
+        if (branch_name_is_branch_version("${checkout_dir}")) {
             // this is only required as "master" is called "stable branch + 0.1.0"
             // e.g. 2.3.0 (stable) + 0.1.0 = 2.4.0
             return env.GERRIT_BRANCH ?: get_branch_version()

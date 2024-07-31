@@ -44,10 +44,6 @@ IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 BUILD_DIRS = {
     # This directory needs to be ignored for a few days (until all workspaces were cleared)
     repo_path() / "agent-receiver/build",
-    repo_path() / "bazel-bin",
-    repo_path() / "bazel-check_mk",
-    repo_path() / "bazel-checkout",
-    repo_path() / "bazel-out",
     repo_path() / "external",
     repo_path() / "omd/build",
     repo_path() / "packages/cmc/build",
@@ -148,6 +144,9 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
         if sub_path in BUILD_DIRS:
             # Ignore build directories: those may not be aligned with the actual status in git
             # and for python sources they would enforce testing the same file twice...
+            continue
+        # TODO: We need to find a better way for the bazel-* folders created by bazel
+        if "bazel-" in sub_path.name:
             continue
         if sub_path.name.startswith("."):
             continue

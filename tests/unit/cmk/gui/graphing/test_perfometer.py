@@ -28,7 +28,8 @@ from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
 from cmk.gui.graphing._unit_info import UnitInfo
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.graphing.v1 import metrics, perfometers
+from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import perfometers as perfometers_api
 
 
 @pytest.mark.parametrize(
@@ -375,11 +376,11 @@ def test__perfometer_possible(
     [
         pytest.param(
             {"active_connections": {}},
-            perfometers.Perfometer(
+            perfometers_api.Perfometer(
                 name="active_connections",
-                focus_range=perfometers.FocusRange(
-                    lower=perfometers.Closed(0),
-                    upper=perfometers.Open(90),
+                focus_range=perfometers_api.FocusRange(
+                    lower=perfometers_api.Closed(0),
+                    upper=perfometers_api.Open(90),
                 ),
                 segments=["active_connections"],
             ),
@@ -389,7 +390,9 @@ def test__perfometer_possible(
 )
 def test_get_first_matching_perfometer(
     translated_metrics: Mapping[str, TranslatedMetric],
-    perfometer: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked,
+    perfometer: (
+        perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+    ),
 ) -> None:
     assert get_first_matching_perfometer(translated_metrics) == perfometer
 
@@ -618,24 +621,24 @@ class TestMetricometerRendererLegacyLogarithmic:
     "focus_range",
     [
         pytest.param(
-            perfometers.FocusRange(perfometers.Closed(10), perfometers.Closed(-10)),
+            perfometers_api.FocusRange(perfometers_api.Closed(10), perfometers_api.Closed(-10)),
             id="closed-closed",
         ),
         pytest.param(
-            perfometers.FocusRange(perfometers.Open(10), perfometers.Closed(-10)),
+            perfometers_api.FocusRange(perfometers_api.Open(10), perfometers_api.Closed(-10)),
             id="open-closed",
         ),
         pytest.param(
-            perfometers.FocusRange(perfometers.Closed(10), perfometers.Open(-10)),
+            perfometers_api.FocusRange(perfometers_api.Closed(10), perfometers_api.Open(-10)),
             id="closed-open",
         ),
         pytest.param(
-            perfometers.FocusRange(perfometers.Open(10), perfometers.Open(-10)),
+            perfometers_api.FocusRange(perfometers_api.Open(10), perfometers_api.Open(-10)),
             id="open-open",
         ),
     ],
 )
-def test_perfometer_projection_error(focus_range: perfometers.FocusRange) -> None:
+def test_perfometer_projection_error(focus_range: perfometers_api.FocusRange) -> None:
     with pytest.raises(ValueError):
         _make_projection(focus_range, _PERFOMETER_PROJECTION_PARAMETERS, {})
 
@@ -650,7 +653,7 @@ def test_perfometer_projection_error(focus_range: perfometers.FocusRange) -> Non
 )
 def test_perfometer_projection_closed_closed(value: int | float, result: float) -> None:
     projection = _make_projection(
-        perfometers.FocusRange(perfometers.Closed(-10), perfometers.Closed(20)),
+        perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -668,7 +671,7 @@ def test_perfometer_projection_closed_closed_exceeds(
     value: int | float, result: int | float
 ) -> None:
     projection = _make_projection(
-        perfometers.FocusRange(perfometers.Closed(-10), perfometers.Closed(20)),
+        perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -686,7 +689,7 @@ def test_perfometer_projection_closed_closed_exceeds(
 )
 def test_perfometer_projection_open_closed(value: int | float, result: float) -> None:
     projection = _make_projection(
-        perfometers.FocusRange(perfometers.Open(-10), perfometers.Closed(20)),
+        perfometers_api.FocusRange(perfometers_api.Open(-10), perfometers_api.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -701,7 +704,7 @@ def test_perfometer_projection_open_closed(value: int | float, result: float) ->
 )
 def test_perfometer_projection_open_closed_exceeds(value: int | float, result: int | float) -> None:
     projection = _make_projection(
-        perfometers.FocusRange(perfometers.Open(-10), perfometers.Closed(20)),
+        perfometers_api.FocusRange(perfometers_api.Open(-10), perfometers_api.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -719,7 +722,7 @@ def test_perfometer_projection_open_closed_exceeds(value: int | float, result: i
 )
 def test_perfometer_projection_closed_open(value: int | float, result: float) -> None:
     projection = _make_projection(
-        perfometers.FocusRange(perfometers.Closed(-10), perfometers.Open(20)),
+        perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Open(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -734,7 +737,7 @@ def test_perfometer_projection_closed_open(value: int | float, result: float) ->
 )
 def test_perfometer_projection_closed_open_exceeds(value: int | float, result: int | float) -> None:
     projection = _make_projection(
-        perfometers.FocusRange(perfometers.Closed(-10), perfometers.Open(20)),
+        perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Open(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -753,7 +756,7 @@ def test_perfometer_projection_closed_open_exceeds(value: int | float, result: i
 )
 def test_perfometer_projection_open_open(value: int | float, result: float) -> None:
     projection = _make_projection(
-        perfometers.FocusRange(perfometers.Open(-10), perfometers.Open(20)),
+        perfometers_api.FocusRange(perfometers_api.Open(-10), perfometers_api.Open(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -891,15 +894,15 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
 def test_perfometer_renderer_stack(
     segments: Sequence[
         str
-        | metrics.Constant
-        | metrics.WarningOf
-        | metrics.CriticalOf
-        | metrics.MinimumOf
-        | metrics.MaximumOf
-        | metrics.Sum
-        | metrics.Product
-        | metrics.Difference
-        | metrics.Fraction
+        | metrics_api.Constant
+        | metrics_api.WarningOf
+        | metrics_api.CriticalOf
+        | metrics_api.MinimumOf
+        | metrics_api.MaximumOf
+        | metrics_api.Sum
+        | metrics_api.Product
+        | metrics_api.Difference
+        | metrics_api.Fraction
     ],
     translated_metrics: Mapping[str, TranslatedMetric],
     value_projections: Sequence[tuple[float, str]],
@@ -907,9 +910,11 @@ def test_perfometer_renderer_stack(
     patch_theme: None,
 ) -> None:
     assert MetricometerRendererPerfometer(
-        perfometers.Perfometer(
+        perfometers_api.Perfometer(
             name="name",
-            focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(2500.0)),
+            focus_range=perfometers_api.FocusRange(
+                perfometers_api.Closed(0), perfometers_api.Open(2500.0)
+            ),
             segments=segments,
         ),
         translated_metrics,
@@ -919,9 +924,11 @@ def test_perfometer_renderer_stack(
 
 def test_perfometer_renderer_stack_same_values(request_context: None, patch_theme: None) -> None:
     assert MetricometerRendererPerfometer(
-        perfometers.Perfometer(
+        perfometers_api.Perfometer(
             name="name",
-            focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(2500.0)),
+            focus_range=perfometers_api.FocusRange(
+                perfometers_api.Closed(0), perfometers_api.Open(2500.0)
+            ),
             segments=["metric-name1", "metric-name2"],
         ),
         {
@@ -1039,24 +1046,26 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
 def test_perfometer_renderer_exceeds_limit(
     segments: Sequence[
         str
-        | metrics.Constant
-        | metrics.WarningOf
-        | metrics.CriticalOf
-        | metrics.MinimumOf
-        | metrics.MaximumOf
-        | metrics.Sum
-        | metrics.Product
-        | metrics.Difference
-        | metrics.Fraction
+        | metrics_api.Constant
+        | metrics_api.WarningOf
+        | metrics_api.CriticalOf
+        | metrics_api.MinimumOf
+        | metrics_api.MaximumOf
+        | metrics_api.Sum
+        | metrics_api.Product
+        | metrics_api.Difference
+        | metrics_api.Fraction
     ],
     translated_metrics: Mapping[str, TranslatedMetric],
     stack: Sequence[Sequence[tuple[float, str]]],
     label: str,
 ) -> None:
     metricometer = MetricometerRendererPerfometer(
-        perfometers.Perfometer(
+        perfometers_api.Perfometer(
             name="name",
-            focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100)),
+            focus_range=perfometers_api.FocusRange(
+                perfometers_api.Closed(0), perfometers_api.Closed(100)
+            ),
             segments=segments,
         ),
         translated_metrics,

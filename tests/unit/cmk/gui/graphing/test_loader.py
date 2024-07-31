@@ -26,7 +26,10 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from cmk.ccc.version import Edition, edition
 from cmk.discover_plugins import PluginLocation
-from cmk.graphing.v1 import graphs, metrics, perfometers, translations
+from cmk.graphing.v1 import graphs as graphs_api
+from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import perfometers as perfometers_api
+from cmk.graphing.v1 import translations as translations_api
 
 
 def test_load_graphing_plugins() -> None:
@@ -52,7 +55,7 @@ def test_translations_to_be_standalone() -> None:
     for plugin_location, plugin in load_graphing_plugins().plugins.items():
         counter = by_module.setdefault(plugin_location.module, Counter())
         match plugin:
-            case translations.Translation():
+            case translations_api.Translation():
                 counter.update(["translations"])
             case _:
                 counter.update(["others"])
@@ -72,38 +75,43 @@ def test_translations_to_be_standalone() -> None:
 def _collect_metric_names_from_quantity(
     quantity: (
         str
-        | metrics.Constant
-        | metrics.WarningOf
-        | metrics.CriticalOf
-        | metrics.MinimumOf
-        | metrics.MaximumOf
-        | metrics.Sum
-        | metrics.Product
-        | metrics.Difference
-        | metrics.Fraction
+        | metrics_api.Constant
+        | metrics_api.WarningOf
+        | metrics_api.CriticalOf
+        | metrics_api.MinimumOf
+        | metrics_api.MaximumOf
+        | metrics_api.Sum
+        | metrics_api.Product
+        | metrics_api.Difference
+        | metrics_api.Fraction
     ),
 ) -> Iterator[str]:
     match quantity:
         case str():
             yield quantity
-        case metrics.WarningOf() | metrics.CriticalOf() | metrics.MinimumOf() | metrics.MaximumOf():
+        case (
+            metrics_api.WarningOf()
+            | metrics_api.CriticalOf()
+            | metrics_api.MinimumOf()
+            | metrics_api.MaximumOf()
+        ):
             yield quantity.metric_name
-        case metrics.Sum():
+        case metrics_api.Sum():
             for summand in quantity.summands:
                 yield from _collect_metric_names_from_quantity(summand)
-        case metrics.Product():
+        case metrics_api.Product():
             for factor in quantity.factors:
                 yield from _collect_metric_names_from_quantity(factor)
-        case metrics.Difference():
+        case metrics_api.Difference():
             yield from _collect_metric_names_from_quantity(quantity.minuend)
             yield from _collect_metric_names_from_quantity(quantity.subtrahend)
-        case metrics.Fraction():
+        case metrics_api.Fraction():
             yield from _collect_metric_names_from_quantity(quantity.dividend)
             yield from _collect_metric_names_from_quantity(quantity.divisor)
 
 
 def _collect_metric_names_from_perfometer(
-    perfometer: perfometers.Perfometer,
+    perfometer: perfometers_api.Perfometer,
 ) -> Iterator[str]:
     if not isinstance(perfometer.focus_range.lower.value, (int, float)):
         yield from _collect_metric_names_from_quantity(perfometer.focus_range.lower.value)
@@ -113,7 +121,7 @@ def _collect_metric_names_from_perfometer(
         yield from _collect_metric_names_from_quantity(segment)
 
 
-def _collect_metric_names_from_graph(graph: graphs.Graph) -> Iterator[str]:
+def _collect_metric_names_from_graph(graph: graphs_api.Graph) -> Iterator[str]:
     if graph.minimal_range:
         if not isinstance(graph.minimal_range.lower, (int, float)):
             yield from _collect_metric_names_from_quantity(graph.minimal_range.lower)
@@ -160,43 +168,43 @@ class _MetricNamesInModule:
     def add_from_plugin(
         self,
         plugin: (
-            metrics.Metric
-            | translations.Translation
-            | perfometers.Perfometer
-            | perfometers.Bidirectional
-            | perfometers.Stacked
-            | graphs.Graph
-            | graphs.Bidirectional
+            metrics_api.Metric
+            | perfometers_api.Perfometer
+            | perfometers_api.Bidirectional
+            | perfometers_api.Stacked
+            | graphs_api.Graph
+            | graphs_api.Bidirectional
+            | translations_api.Translation
         ),
     ) -> None:
         match plugin:
-            case metrics.Metric():
+            case metrics_api.Metric():
                 self._from_metrics.add(plugin.name)
-            case perfometers.Perfometer():
+            case perfometers_api.Perfometer():
                 self._from_perfometer_or_graph.setdefault(
                     ("perfometer", plugin.name),
                     set(_collect_metric_names_from_perfometer(plugin)),
                 )
-            case perfometers.Bidirectional():
+            case perfometers_api.Bidirectional():
                 self._from_perfometer_or_graph.setdefault(
                     ("perfometer", plugin.name),
                     set(_collect_metric_names_from_perfometer(plugin.left)).union(
                         _collect_metric_names_from_perfometer(plugin.right)
                     ),
                 )
-            case perfometers.Stacked():
+            case perfometers_api.Stacked():
                 self._from_perfometer_or_graph.setdefault(
                     ("perfometer", plugin.name),
                     set(_collect_metric_names_from_perfometer(plugin.lower)).union(
                         _collect_metric_names_from_perfometer(plugin.upper)
                     ),
                 )
-            case graphs.Graph():
+            case graphs_api.Graph():
                 self._from_perfometer_or_graph.setdefault(
                     ("graph", plugin.name),
                     set(_collect_metric_names_from_graph(plugin)),
                 )
-            case graphs.Bidirectional():
+            case graphs_api.Bidirectional():
                 self._from_perfometer_or_graph.setdefault(
                     ("graph", plugin.name),
                     set(_collect_metric_names_from_graph(plugin.lower)).union(
@@ -278,13 +286,13 @@ def test__MetricNamesInModule_bundles(
 def _metric_names_by_module(
     plugins: Mapping[
         PluginLocation,
-        metrics.Metric
-        | translations.Translation
-        | perfometers.Perfometer
-        | perfometers.Bidirectional
-        | perfometers.Stacked
-        | graphs.Graph
-        | graphs.Bidirectional,
+        metrics_api.Metric
+        | perfometers_api.Perfometer
+        | perfometers_api.Bidirectional
+        | perfometers_api.Stacked
+        | graphs_api.Graph
+        | graphs_api.Bidirectional
+        | translations_api.Translation,
     ]
 ) -> Mapping[str, _MetricNamesInModule]:
     metric_names_by_module: dict[str, _MetricNamesInModule] = {}

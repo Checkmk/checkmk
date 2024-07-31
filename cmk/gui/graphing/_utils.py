@@ -26,7 +26,10 @@ from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 from cmk.gui.utils.speaklater import LazyString
 
 from cmk.discover_plugins import DiscoveredPlugins
-from cmk.graphing.v1 import graphs, metrics, perfometers, translations
+from cmk.graphing.v1 import graphs as graphs_api
+from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import perfometers as perfometers_api
+from cmk.graphing.v1 import translations as translations_api
 
 from ._color import (
     get_gray_tone,
@@ -151,32 +154,32 @@ graph_info = AutomaticDict("manual_graph_template")
 
 def _parse_check_command_from_api(
     check_command: (
-        translations.PassiveCheck
-        | translations.ActiveCheck
-        | translations.HostCheckCommand
-        | translations.NagiosPlugin
+        translations_api.PassiveCheck
+        | translations_api.ActiveCheck
+        | translations_api.HostCheckCommand
+        | translations_api.NagiosPlugin
     ),
 ) -> str:
     match check_command:
-        case translations.PassiveCheck():
+        case translations_api.PassiveCheck():
             return (
                 check_command.name
                 if check_command.name.startswith("check_mk-")
                 else f"check_mk-{check_command.name}"
             )
-        case translations.ActiveCheck():
+        case translations_api.ActiveCheck():
             return (
                 check_command.name
                 if check_command.name.startswith("check_mk_active-")
                 else f"check_mk_active-{check_command.name}"
             )
-        case translations.HostCheckCommand():
+        case translations_api.HostCheckCommand():
             return (
                 check_command.name
                 if check_command.name.startswith("check-mk-")
                 else f"check-mk-{check_command.name}"
             )
-        case translations.NagiosPlugin():
+        case translations_api.NagiosPlugin():
             return (
                 check_command.name
                 if check_command.name.startswith("check_")
@@ -185,31 +188,33 @@ def _parse_check_command_from_api(
 
 
 def _parse_translation(
-    translation: translations.RenameTo | translations.ScaleBy | translations.RenameToAndScaleBy,
+    translation: (
+        translations_api.RenameTo | translations_api.ScaleBy | translations_api.RenameToAndScaleBy
+    ),
 ) -> CheckMetricEntry:
     match translation:
-        case translations.RenameTo():
+        case translations_api.RenameTo():
             return {"name": translation.metric_name}
-        case translations.ScaleBy():
+        case translations_api.ScaleBy():
             return {"scale": translation.factor}
-        case translations.RenameToAndScaleBy():
+        case translations_api.RenameToAndScaleBy():
             return {"name": translation.metric_name, "scale": translation.factor}
 
 
 def add_graphing_plugins(
     plugins: DiscoveredPlugins[
-        metrics.Metric
-        | translations.Translation
-        | perfometers.Perfometer
-        | perfometers.Bidirectional
-        | perfometers.Stacked
-        | graphs.Graph
-        | graphs.Bidirectional
+        metrics_api.Metric
+        | perfometers_api.Perfometer
+        | perfometers_api.Bidirectional
+        | perfometers_api.Stacked
+        | graphs_api.Graph
+        | graphs_api.Bidirectional
+        | translations_api.Translation
     ],
 ) -> None:
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     for plugin in plugins.plugins.values():
-        if isinstance(plugin, metrics.Metric):
+        if isinstance(plugin, metrics_api.Metric):
             metrics_from_api.register(
                 MetricInfoExtended(
                     name=plugin.name,
@@ -219,7 +224,7 @@ def add_graphing_plugins(
                 )
             )
 
-        elif isinstance(plugin, translations.Translation):
+        elif isinstance(plugin, translations_api.Translation):
             for check_command in plugin.check_commands:
                 check_metrics[_parse_check_command_from_api(check_command)] = {
                     MetricName(old_name): _parse_translation(translation)
@@ -227,11 +232,12 @@ def add_graphing_plugins(
                 }
 
         elif isinstance(
-            plugin, (perfometers.Perfometer, perfometers.Bidirectional, perfometers.Stacked)
+            plugin,
+            (perfometers_api.Perfometer, perfometers_api.Bidirectional, perfometers_api.Stacked),
         ):
             perfometers_from_api.register(plugin)
 
-        elif isinstance(plugin, (graphs.Graph, graphs.Bidirectional)):
+        elif isinstance(plugin, (graphs_api.Graph, graphs_api.Bidirectional)):
             graphs_from_api.register(plugin)
 
 
@@ -445,15 +451,15 @@ def perfvar_translation(
 
 
 def lookup_metric_translations_for_check_command(
-    all_translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
+    translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     check_command: str | None,  # None due to CMK-13883
 ) -> Mapping[MetricName, CheckMetricEntry] | None:
     if not check_command:
         return None
-    return all_translations.get(
+    return translations.get(
         check_command,
         (
-            all_translations.get(check_command.replace("check_mk-mgmt_", "check_mk-", 1))
+            translations.get(check_command.replace("check_mk-mgmt_", "check_mk-", 1))
             if check_command.startswith("check_mk-mgmt_")
             else None
         ),

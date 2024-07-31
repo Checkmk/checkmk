@@ -205,13 +205,13 @@ def rrd_columns(
 def _reverse_translate_into_all_potentially_relevant_metrics(
     canonical_name: MetricName,
     current_version: int,
-    all_translations: Iterable[Mapping[MetricName, CheckMetricEntry]],
+    translations: Iterable[Mapping[MetricName, CheckMetricEntry]],
 ) -> set[MetricName]:
     return {
         canonical_name,
         *(
             metric_name
-            for trans in all_translations
+            for trans in translations
             for metric_name, options in trans.items()
             if canonical_name == options.get("name")
             and (

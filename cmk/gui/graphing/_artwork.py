@@ -24,7 +24,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
-from cmk.graphing.v1.metrics import AutoPrecision
+from cmk.graphing.v1 import metrics as metrics_api
 
 from ._color import fade_color, parse_color, render_color
 from ._formatter import (
@@ -513,7 +513,7 @@ def _make_formatter(
     | EngineeringScientificFormatter
     | TimeFormatter
 ):
-    precision = AutoPrecision(2)
+    precision = metrics_api.AutoPrecision(2)
     match formatter_ident:
         case "Decimal":
             return DecimalFormatter(symbol, precision)

@@ -19,7 +19,11 @@ from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 import cmk.ccc.debug
 from cmk.ccc.plugin_registry import Registry
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
-from cmk.graphing.v1 import entry_point_prefixes, graphs, metrics, perfometers, translations
+from cmk.graphing.v1 import entry_point_prefixes
+from cmk.graphing.v1 import graphs as graphs_api
+from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import perfometers as perfometers_api
+from cmk.graphing.v1 import translations as translations_api
 
 from ._formatter import (
     DecimalFormatter,
@@ -35,23 +39,23 @@ from ._unit_info import unit_info, UnitInfo
 
 def load_graphing_plugins() -> (
     DiscoveredPlugins[
-        metrics.Metric
-        | translations.Translation
-        | perfometers.Perfometer
-        | perfometers.Bidirectional
-        | perfometers.Stacked
-        | graphs.Graph
-        | graphs.Bidirectional
+        metrics_api.Metric
+        | perfometers_api.Perfometer
+        | perfometers_api.Bidirectional
+        | perfometers_api.Stacked
+        | graphs_api.Graph
+        | graphs_api.Bidirectional
+        | translations_api.Translation
     ]
 ):
     discovered_plugins: DiscoveredPlugins[
-        metrics.Metric
-        | translations.Translation
-        | perfometers.Perfometer
-        | perfometers.Bidirectional
-        | perfometers.Stacked
-        | graphs.Graph
-        | graphs.Bidirectional
+        metrics_api.Metric
+        | perfometers_api.Perfometer
+        | perfometers_api.Bidirectional
+        | perfometers_api.Stacked
+        | graphs_api.Graph
+        | graphs_api.Bidirectional
+        | translations_api.Translation
     ] = discover_plugins(
         PluginGroup.GRAPHING,
         entry_point_prefixes(),
@@ -72,17 +76,17 @@ _units_from_api = UnitsFromAPI()
 
 def _vs_type(
     notation: (
-        metrics.DecimalNotation
-        | metrics.SINotation
-        | metrics.IECNotation
-        | metrics.StandardScientificNotation
-        | metrics.EngineeringScientificNotation
-        | metrics.TimeNotation
+        metrics_api.DecimalNotation
+        | metrics_api.SINotation
+        | metrics_api.IECNotation
+        | metrics_api.StandardScientificNotation
+        | metrics_api.EngineeringScientificNotation
+        | metrics_api.TimeNotation
     ),
     symbol: str,
     precision_digits: int,
 ) -> type[Age] | type[Float] | type[Integer] | type[Percentage]:
-    if isinstance(notation, metrics.TimeNotation):
+    if isinstance(notation, metrics_api.TimeNotation):
         return Age
     if symbol.startswith("%"):
         return Percentage
@@ -95,42 +99,42 @@ def _make_unit_info(
     *,
     unit_id: str,
     notation: (
-        metrics.DecimalNotation
-        | metrics.SINotation
-        | metrics.IECNotation
-        | metrics.StandardScientificNotation
-        | metrics.EngineeringScientificNotation
-        | metrics.TimeNotation
+        metrics_api.DecimalNotation
+        | metrics_api.SINotation
+        | metrics_api.IECNotation
+        | metrics_api.StandardScientificNotation
+        | metrics_api.EngineeringScientificNotation
+        | metrics_api.TimeNotation
     ),
     symbol: str,
-    precision: metrics.AutoPrecision | metrics.StrictPrecision,
+    precision: metrics_api.AutoPrecision | metrics_api.StrictPrecision,
     conversion: Callable[[float], float],
 ) -> UnitInfo:
     formatter: NotationFormatter
     match notation:
-        case metrics.DecimalNotation():
+        case metrics_api.DecimalNotation():
             formatter = DecimalFormatter(symbol, precision)
             js_formatter = "DecimalFormatter"
-        case metrics.SINotation():
+        case metrics_api.SINotation():
             formatter = SIFormatter(symbol, precision)
             js_formatter = "SIFormatter"
-        case metrics.IECNotation():
+        case metrics_api.IECNotation():
             formatter = IECFormatter(symbol, precision)
             js_formatter = "IECFormatter"
-        case metrics.StandardScientificNotation():
+        case metrics_api.StandardScientificNotation():
             formatter = StandardScientificFormatter(symbol, precision)
             js_formatter = "StandardScientificFormatter"
-        case metrics.EngineeringScientificNotation():
+        case metrics_api.EngineeringScientificNotation():
             formatter = EngineeringScientificFormatter(symbol, precision)
             js_formatter = "EngineeringScientificFormatter"
-        case metrics.TimeNotation():
+        case metrics_api.TimeNotation():
             formatter = TimeFormatter(symbol, precision)
             js_formatter = "TimeFormatter"
 
     match precision:
-        case metrics.AutoPrecision():
+        case metrics_api.AutoPrecision():
             precision_title = f"auto precision {precision.digits}"
-        case metrics.StrictPrecision():
+        case metrics_api.StrictPrecision():
             precision_title = f"strict precision {precision.digits}"
 
     return UnitInfo(
@@ -148,7 +152,7 @@ def _make_unit_info(
     )
 
 
-def register_unit(unit: metrics.Unit) -> UnitInfo:
+def register_unit(unit: metrics_api.Unit) -> UnitInfo:
     if (
         unit_id := (
             f"{unit.notation.__class__.__name__}_{unit.notation.symbol}"
@@ -220,33 +224,33 @@ def _construct_unit_info(unit_id: str, conversion: _Conversion) -> UnitInfo:
     _symbol, precision_name, raw_precision_digits = rest.rsplit("_", 2)
 
     notation: (
-        metrics.DecimalNotation
-        | metrics.SINotation
-        | metrics.IECNotation
-        | metrics.StandardScientificNotation
-        | metrics.EngineeringScientificNotation
-        | metrics.TimeNotation
+        metrics_api.DecimalNotation
+        | metrics_api.SINotation
+        | metrics_api.IECNotation
+        | metrics_api.StandardScientificNotation
+        | metrics_api.EngineeringScientificNotation
+        | metrics_api.TimeNotation
     )
     match notation_name:
         case "DecimalNotation":
-            notation = metrics.DecimalNotation(conversion.target_symbol)
+            notation = metrics_api.DecimalNotation(conversion.target_symbol)
         case "SINotation":
-            notation = metrics.SINotation(conversion.target_symbol)
+            notation = metrics_api.SINotation(conversion.target_symbol)
         case "IECNotation":
-            notation = metrics.IECNotation(conversion.target_symbol)
+            notation = metrics_api.IECNotation(conversion.target_symbol)
         case "StandardScientificNotation":
-            notation = metrics.StandardScientificNotation(conversion.target_symbol)
+            notation = metrics_api.StandardScientificNotation(conversion.target_symbol)
         case "EngineeringScientificNotation":
-            notation = metrics.EngineeringScientificNotation(conversion.target_symbol)
+            notation = metrics_api.EngineeringScientificNotation(conversion.target_symbol)
         case "TimeNotation":
-            notation = metrics.TimeNotation()
+            notation = metrics_api.TimeNotation()
 
-    precision: metrics.AutoPrecision | metrics.StrictPrecision
+    precision: metrics_api.AutoPrecision | metrics_api.StrictPrecision
     match precision_name:
         case "AutoPrecision":
-            precision = metrics.AutoPrecision(int(raw_precision_digits))
+            precision = metrics_api.AutoPrecision(int(raw_precision_digits))
         case "StrictPrecision":
-            precision = metrics.StrictPrecision(int(raw_precision_digits))
+            precision = metrics_api.StrictPrecision(int(raw_precision_digits))
 
     return _make_unit_info(
         unit_id=unit_id,
@@ -340,10 +344,13 @@ metrics_from_api = MetricsFromAPI()
 
 
 class PerfometersFromAPI(
-    Registry[perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked]
+    Registry[perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked]
 ):
     def plugin_name(
-        self, instance: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked
+        self,
+        instance: (
+            perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+        ),
     ) -> str:
         return instance.name
 
@@ -351,8 +358,8 @@ class PerfometersFromAPI(
 perfometers_from_api = PerfometersFromAPI()
 
 
-class GraphsFromAPI(Registry[graphs.Graph | graphs.Bidirectional]):
-    def plugin_name(self, instance: graphs.Graph | graphs.Bidirectional) -> str:
+class GraphsFromAPI(Registry[graphs_api.Graph | graphs_api.Bidirectional]):
+    def plugin_name(self, instance: graphs_api.Graph | graphs_api.Bidirectional) -> str:
         return instance.name
 
 

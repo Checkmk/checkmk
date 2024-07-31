@@ -16,7 +16,7 @@ from cmk.gui.type_defs import RGBColor
 from cmk.gui.utils.html import HTML
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.graphing.v1 import metrics
+from cmk.graphing.v1 import metrics as metrics_api
 
 # Colors:
 #
@@ -337,84 +337,84 @@ class RGB:
     blue: int
 
 
-def color_to_rgb(color: metrics.Color) -> RGB:
+def color_to_rgb(color: metrics_api.Color) -> RGB:
     match color:
-        case metrics.Color.LIGHT_RED:
+        case metrics_api.Color.LIGHT_RED:
             return RGB(255, 112, 112)
-        case metrics.Color.RED:
+        case metrics_api.Color.RED:
             return RGB(255, 41, 41)
-        case metrics.Color.DARK_RED:
+        case metrics_api.Color.DARK_RED:
             return RGB(164, 0, 0)
 
-        case metrics.Color.LIGHT_ORANGE:
+        case metrics_api.Color.LIGHT_ORANGE:
             return RGB(255, 150, 100)
-        case metrics.Color.ORANGE:
+        case metrics_api.Color.ORANGE:
             return RGB(255, 110, 33)
-        case metrics.Color.DARK_ORANGE:
+        case metrics_api.Color.DARK_ORANGE:
             return RGB(180, 70, 10)
 
-        case metrics.Color.LIGHT_YELLOW:
+        case metrics_api.Color.LIGHT_YELLOW:
             return RGB(255, 255, 120)
-        case metrics.Color.YELLOW:
+        case metrics_api.Color.YELLOW:
             return RGB(245, 245, 50)
-        case metrics.Color.DARK_YELLOW:
+        case metrics_api.Color.DARK_YELLOW:
             return RGB(170, 170, 0)
 
-        case metrics.Color.LIGHT_GREEN:
+        case metrics_api.Color.LIGHT_GREEN:
             return RGB(165, 255, 85)
-        case metrics.Color.GREEN:
+        case metrics_api.Color.GREEN:
             return RGB(55, 250, 55)
-        case metrics.Color.DARK_GREEN:
+        case metrics_api.Color.DARK_GREEN:
             return RGB(40, 140, 15)
 
-        case metrics.Color.LIGHT_BLUE:
+        case metrics_api.Color.LIGHT_BLUE:
             return RGB(135, 206, 250)
-        case metrics.Color.BLUE:
+        case metrics_api.Color.BLUE:
             return RGB(30, 144, 255)
-        case metrics.Color.DARK_BLUE:
+        case metrics_api.Color.DARK_BLUE:
             return RGB(30, 30, 200)
 
-        case metrics.Color.LIGHT_CYAN:
+        case metrics_api.Color.LIGHT_CYAN:
             return RGB(150, 255, 255)
-        case metrics.Color.CYAN:
+        case metrics_api.Color.CYAN:
             return RGB(30, 230, 230)
-        case metrics.Color.DARK_CYAN:
+        case metrics_api.Color.DARK_CYAN:
             return RGB(20, 135, 140)
 
-        case metrics.Color.LIGHT_PURPLE:
+        case metrics_api.Color.LIGHT_PURPLE:
             return RGB(220, 160, 255)
-        case metrics.Color.PURPLE:
+        case metrics_api.Color.PURPLE:
             return RGB(180, 65, 240)
-        case metrics.Color.DARK_PURPLE:
+        case metrics_api.Color.DARK_PURPLE:
             return RGB(120, 20, 160)
 
-        case metrics.Color.LIGHT_PINK:
+        case metrics_api.Color.LIGHT_PINK:
             return RGB(255, 160, 240)
-        case metrics.Color.PINK:
+        case metrics_api.Color.PINK:
             return RGB(255, 100, 255)
-        case metrics.Color.DARK_PINK:
+        case metrics_api.Color.DARK_PINK:
             return RGB(210, 20, 190)
 
-        case metrics.Color.LIGHT_BROWN:
+        case metrics_api.Color.LIGHT_BROWN:
             return RGB(230, 180, 140)
-        case metrics.Color.BROWN:
+        case metrics_api.Color.BROWN:
             return RGB(191, 133, 72)
-        case metrics.Color.DARK_BROWN:
+        case metrics_api.Color.DARK_BROWN:
             return RGB(124, 62, 4)
 
-        case metrics.Color.LIGHT_GRAY:
+        case metrics_api.Color.LIGHT_GRAY:
             return RGB(200, 200, 200)
-        case metrics.Color.GRAY:
+        case metrics_api.Color.GRAY:
             return RGB(164, 164, 164)
-        case metrics.Color.DARK_GRAY:
+        case metrics_api.Color.DARK_GRAY:
             return RGB(121, 121, 121)
 
-        case metrics.Color.BLACK:
+        case metrics_api.Color.BLACK:
             return RGB(0, 0, 0)
-        case metrics.Color.WHITE:
+        case metrics_api.Color.WHITE:
             return RGB(255, 255, 255)
 
 
-def parse_color_from_api(color: metrics.Color) -> str:
+def parse_color_from_api(color: metrics_api.Color) -> str:
     rgb = color_to_rgb(color)
     return f"#{rgb.red:02x}{rgb.green:02x}{rgb.blue:02x}"

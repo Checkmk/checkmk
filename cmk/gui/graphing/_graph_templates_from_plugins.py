@@ -11,7 +11,8 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.speaklater import LazyString
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.graphing.v1 import graphs, metrics
+from cmk.graphing.v1 import graphs as graphs_api
+from cmk.graphing.v1 import metrics as metrics_api
 
 from ._color import parse_color_from_api
 from ._expression import (
@@ -36,12 +37,12 @@ from ._utils import get_extended_metric_info, graph_info, RawGraphTemplate
 
 
 def _graph_templates_from_plugins() -> (
-    Iterator[tuple[str, graphs.Graph | graphs.Bidirectional | RawGraphTemplate]]
+    Iterator[tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]]
 ):
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     known_graph_templates: set[str] = set()
     for graph in graphs_from_api.values():
-        if isinstance(graph, (graphs.Graph, graphs.Bidirectional)):
+        if isinstance(graph, (graphs_api.Graph, graphs_api.Bidirectional)):
             known_graph_templates.add(graph.name)
             yield graph.name, graph
     for template_id, template in graph_info.items():
@@ -49,9 +50,9 @@ def _graph_templates_from_plugins() -> (
             yield template_id, template
 
 
-def _parse_title(template: graphs.Graph | graphs.Bidirectional | RawGraphTemplate) -> str:
+def _parse_title(template: graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate) -> str:
     match template:
-        case graphs.Graph() | graphs.Bidirectional():
+        case graphs_api.Graph() | graphs_api.Bidirectional():
             return template.title.localize(translate_to_current_language)
         case _:
             return str(template.get("title", ""))
@@ -148,15 +149,15 @@ def _parse_raw_scalar_definition(
 def _parse_quantity(
     quantity: (
         str
-        | metrics.Constant
-        | metrics.WarningOf
-        | metrics.CriticalOf
-        | metrics.MinimumOf
-        | metrics.MaximumOf
-        | metrics.Sum
-        | metrics.Product
-        | metrics.Difference
-        | metrics.Fraction
+        | metrics_api.Constant
+        | metrics_api.WarningOf
+        | metrics_api.CriticalOf
+        | metrics_api.MinimumOf
+        | metrics_api.MaximumOf
+        | metrics_api.Sum
+        | metrics_api.Product
+        | metrics_api.Difference
+        | metrics_api.Fraction
     ),
     line_type: Literal["line", "-line", "stack", "-stack"],
 ) -> MetricDefinition:
@@ -167,7 +168,7 @@ def _parse_quantity(
                 line_type=line_type,
                 title=str(get_extended_metric_info(quantity).title),
             )
-        case metrics.Constant():
+        case metrics_api.Constant():
             return MetricDefinition(
                 expression=Constant(
                     quantity.value,
@@ -177,21 +178,21 @@ def _parse_quantity(
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
             )
-        case metrics.WarningOf():
+        case metrics_api.WarningOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=WarningOf(Metric(quantity.metric_name)),
                 line_type=line_type,
                 title=_("Warning of %s") % metric_.title,
             )
-        case metrics.CriticalOf():
+        case metrics_api.CriticalOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=CriticalOf(Metric(quantity.metric_name)),
                 line_type=line_type,
                 title=_("Critical of %s") % metric_.title,
             )
-        case metrics.MinimumOf():
+        case metrics_api.MinimumOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=MinimumOf(
@@ -201,7 +202,7 @@ def _parse_quantity(
                 line_type=line_type,
                 title=str(metric_.title),
             )
-        case metrics.MaximumOf():
+        case metrics_api.MaximumOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=MaximumOf(
@@ -211,7 +212,7 @@ def _parse_quantity(
                 line_type=line_type,
                 title=str(metric_.title),
             )
-        case metrics.Sum():
+        case metrics_api.Sum():
             return MetricDefinition(
                 expression=Sum(
                     [_parse_quantity(s, line_type).expression for s in quantity.summands],
@@ -220,7 +221,7 @@ def _parse_quantity(
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
             )
-        case metrics.Product():
+        case metrics_api.Product():
             return MetricDefinition(
                 expression=Product(
                     [_parse_quantity(f, line_type).expression for f in quantity.factors],
@@ -230,7 +231,7 @@ def _parse_quantity(
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
             )
-        case metrics.Difference():
+        case metrics_api.Difference():
             return MetricDefinition(
                 expression=Difference(
                     minuend=_parse_quantity(quantity.minuend, line_type).expression,
@@ -240,7 +241,7 @@ def _parse_quantity(
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
             )
-        case metrics.Fraction():
+        case metrics_api.Fraction():
             return MetricDefinition(
                 expression=Fraction(
                     dividend=_parse_quantity(quantity.dividend, line_type).expression,
@@ -273,7 +274,7 @@ def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> Fixe
 
 
 def _parse_minimal_range(
-    minimal_range: graphs.MinimalRange,
+    minimal_range: graphs_api.MinimalRange,
 ) -> MinimalGraphTemplateRange:
     return MinimalGraphTemplateRange(
         min=(
@@ -335,16 +336,16 @@ class GraphTemplate:
         )
 
     @classmethod
-    def from_graph(cls, id_: str, graph: graphs.Graph) -> Self:
+    def from_graph(cls, id_: str, graph: graphs_api.Graph) -> Self:
         metrics_ = [_parse_quantity(l, "stack") for l in graph.compound_lines]
         scalars: list[ScalarDefinition] = []
         for line in graph.simple_lines:
             match line:
                 case (
-                    metrics.WarningOf()
-                    | metrics.CriticalOf()
-                    | metrics.MinimumOf()
-                    | metrics.MaximumOf()
+                    metrics_api.WarningOf()
+                    | metrics_api.CriticalOf()
+                    | metrics_api.MinimumOf()
+                    | metrics_api.MaximumOf()
                 ):
                     parsed = _parse_quantity(line, "line")
                     scalars.append(ScalarDefinition(parsed.expression, parsed.title))
@@ -365,7 +366,7 @@ class GraphTemplate:
         )
 
     @classmethod
-    def from_bidirectional(cls, id_: str, bidirectional: graphs.Bidirectional) -> Self:
+    def from_bidirectional(cls, id_: str, bidirectional: graphs_api.Bidirectional) -> Self:
         ranges_min = []
         ranges_max = []
         if bidirectional.lower.minimal_range is not None:
@@ -384,10 +385,10 @@ class GraphTemplate:
         for line in bidirectional.lower.simple_lines:
             match line:
                 case (
-                    metrics.WarningOf()
-                    | metrics.CriticalOf()
-                    | metrics.MinimumOf()
-                    | metrics.MaximumOf()
+                    metrics_api.WarningOf()
+                    | metrics_api.CriticalOf()
+                    | metrics_api.MinimumOf()
+                    | metrics_api.MaximumOf()
                 ):
                     parsed = _parse_quantity(line, "-line")
                     scalars.append(ScalarDefinition(parsed.expression, parsed.title))
@@ -396,10 +397,10 @@ class GraphTemplate:
         for line in bidirectional.upper.simple_lines:
             match line:
                 case (
-                    metrics.WarningOf()
-                    | metrics.CriticalOf()
-                    | metrics.MinimumOf()
-                    | metrics.MaximumOf()
+                    metrics_api.WarningOf()
+                    | metrics_api.CriticalOf()
+                    | metrics_api.MinimumOf()
+                    | metrics_api.MaximumOf()
                 ):
                     parsed = _parse_quantity(line, "line")
                     scalars.append(ScalarDefinition(parsed.expression, parsed.title))
@@ -430,12 +431,12 @@ class GraphTemplate:
 
 
 def _parse_graph_template(
-    id_: str, template: graphs.Graph | graphs.Bidirectional | RawGraphTemplate
+    id_: str, template: graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate
 ) -> GraphTemplate:
     match template:
-        case graphs.Graph():
+        case graphs_api.Graph():
             return GraphTemplate.from_graph(id_, template)
-        case graphs.Bidirectional():
+        case graphs_api.Bidirectional():
             return GraphTemplate.from_bidirectional(id_, template)
         case _:
             return GraphTemplate.from_raw(id_, template)
@@ -511,7 +512,9 @@ def applicable_metrics(
 
 
 def _get_explicit_graph_templates(
-    graph_templates: Iterable[tuple[str, graphs.Graph | graphs.Bidirectional | RawGraphTemplate]],
+    graph_templates: Iterable[
+        tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]
+    ],
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterable[GraphTemplate]:
     for id_, template in graph_templates:

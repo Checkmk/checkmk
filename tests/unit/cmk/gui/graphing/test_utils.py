@@ -51,9 +51,11 @@ from cmk.gui.graphing._utils import (
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
-from cmk.graphing.v1 import graphs, metrics, Title
+from cmk.graphing.v1 import graphs as graphs_api
+from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import Title
 
-UNIT = metrics.Unit(metrics.DecimalNotation(""))
+UNIT = metrics_api.Unit(metrics_api.DecimalNotation(""))
 
 
 @pytest.mark.parametrize(
@@ -1367,7 +1369,7 @@ def test_graph_template_from_raw(
     assert GraphTemplate.from_raw("ident", raw) == expected_graph_template
 
 
-COLOR = metrics.Color.BLUE
+COLOR = metrics_api.Color.BLUE
 COLOR_HEX = "#1e90ff"
 
 
@@ -1375,34 +1377,34 @@ COLOR_HEX = "#1e90ff"
     "graph, raw_metric_names, expected_template",
     [
         pytest.param(
-            graphs.Graph(
+            graphs_api.Graph(
                 name="name",
                 title=Title("Title"),
                 compound_lines=[
                     "metric-name-1",
-                    metrics.Constant(Title("Constant"), UNIT, COLOR, 10),
-                    metrics.WarningOf("metric-name-2"),
-                    metrics.CriticalOf("metric-name-3"),
-                    metrics.MinimumOf("metric-name-4", COLOR),
-                    metrics.MaximumOf("metric-name-5", COLOR),
-                    metrics.Sum(
+                    metrics_api.Constant(Title("Constant"), UNIT, COLOR, 10),
+                    metrics_api.WarningOf("metric-name-2"),
+                    metrics_api.CriticalOf("metric-name-3"),
+                    metrics_api.MinimumOf("metric-name-4", COLOR),
+                    metrics_api.MaximumOf("metric-name-5", COLOR),
+                    metrics_api.Sum(
                         Title("Sum"),
                         COLOR,
                         ["metric-name-6"],
                     ),
-                    metrics.Product(
+                    metrics_api.Product(
                         Title("Product"),
                         UNIT,
                         COLOR,
                         ["metric-name-7"],
                     ),
-                    metrics.Difference(
+                    metrics_api.Difference(
                         Title("Difference"),
                         COLOR,
                         minuend="metric-name-7",
                         subtrahend="metric-name-8",
                     ),
-                    metrics.Fraction(
+                    metrics_api.Fraction(
                         Title("Fraction"),
                         UNIT,
                         COLOR,
@@ -1514,34 +1516,34 @@ COLOR_HEX = "#1e90ff"
             id="compound-lines",
         ),
         pytest.param(
-            graphs.Graph(
+            graphs_api.Graph(
                 name="name",
                 title=Title("Title"),
                 simple_lines=[
                     "metric-name-1",
-                    metrics.Constant(Title("Constant"), UNIT, COLOR, 10),
-                    metrics.WarningOf("metric-name-2"),
-                    metrics.CriticalOf("metric-name-3"),
-                    metrics.MinimumOf("metric-name-4", COLOR),
-                    metrics.MaximumOf("metric-name-5", COLOR),
-                    metrics.Sum(
+                    metrics_api.Constant(Title("Constant"), UNIT, COLOR, 10),
+                    metrics_api.WarningOf("metric-name-2"),
+                    metrics_api.CriticalOf("metric-name-3"),
+                    metrics_api.MinimumOf("metric-name-4", COLOR),
+                    metrics_api.MaximumOf("metric-name-5", COLOR),
+                    metrics_api.Sum(
                         Title("Sum"),
                         COLOR,
                         ["metric-name-6"],
                     ),
-                    metrics.Product(
+                    metrics_api.Product(
                         Title("Product"),
                         UNIT,
                         COLOR,
                         ["metric-name-7"],
                     ),
-                    metrics.Difference(
+                    metrics_api.Difference(
                         Title("Difference"),
                         COLOR,
                         minuend="metric-name-7",
                         subtrahend="metric-name-8",
                     ),
-                    metrics.Fraction(
+                    metrics_api.Fraction(
                         Title("Fraction"),
                         UNIT,
                         COLOR,
@@ -1650,10 +1652,10 @@ COLOR_HEX = "#1e90ff"
             id="simple-lines",
         ),
         pytest.param(
-            graphs.Graph(
+            graphs_api.Graph(
                 name="name",
                 title=Title("Title"),
-                minimal_range=graphs.MinimalRange(0, 100.0),
+                minimal_range=graphs_api.MinimalRange(0, 100.0),
                 simple_lines=["metric-name"],
             ),
             ["metric-name"],
@@ -1671,7 +1673,7 @@ COLOR_HEX = "#1e90ff"
             id="explicit-range",
         ),
         pytest.param(
-            graphs.Graph(
+            graphs_api.Graph(
                 name="name",
                 title=Title("Title"),
                 simple_lines=["metric-name"],
@@ -1695,7 +1697,7 @@ COLOR_HEX = "#1e90ff"
     ],
 )
 def test_graph_template_from_graph(
-    graph: graphs.Graph, raw_metric_names: Sequence[str], expected_template: GraphTemplate
+    graph: graphs_api.Graph, raw_metric_names: Sequence[str], expected_template: GraphTemplate
 ) -> None:
     for r in raw_metric_names:
         metrics_from_api.register(
@@ -1720,33 +1722,33 @@ def test_graph_template_from_graph(
     "graph, raw_metric_names, expected_template",
     [
         pytest.param(
-            graphs.Bidirectional(
+            graphs_api.Bidirectional(
                 name="name",
                 title=Title("Title"),
-                lower=graphs.Graph(
+                lower=graphs_api.Graph(
                     name="name-lower",
                     title=Title("Title lower"),
                     compound_lines=["metric-name-l1"],
                     simple_lines=[
                         "metric-name-l2",
-                        metrics.WarningOf("metric-name-l3"),
-                        metrics.CriticalOf("metric-name-l4"),
-                        metrics.MinimumOf("metric-name-l5", COLOR),
-                        metrics.MaximumOf("metric-name-l6", COLOR),
+                        metrics_api.WarningOf("metric-name-l3"),
+                        metrics_api.CriticalOf("metric-name-l4"),
+                        metrics_api.MinimumOf("metric-name-l5", COLOR),
+                        metrics_api.MaximumOf("metric-name-l6", COLOR),
                     ],
                     optional=["metric-name-opt-l"],
                     conflicting=["metric-name-confl-l"],
                 ),
-                upper=graphs.Graph(
+                upper=graphs_api.Graph(
                     name="name-upper",
                     title=Title("Title upper"),
                     compound_lines=["metric-name-u1"],
                     simple_lines=[
                         "metric-name-u2",
-                        metrics.WarningOf("metric-name-u3"),
-                        metrics.CriticalOf("metric-name-u4"),
-                        metrics.MinimumOf("metric-name-u5", COLOR),
-                        metrics.MaximumOf("metric-name-u6", COLOR),
+                        metrics_api.WarningOf("metric-name-u3"),
+                        metrics_api.CriticalOf("metric-name-u4"),
+                        metrics_api.MinimumOf("metric-name-u5", COLOR),
+                        metrics_api.MaximumOf("metric-name-u6", COLOR),
                     ],
                     optional=["metric-name-opt-u"],
                     conflicting=["metric-name-confl-u"],
@@ -1818,19 +1820,19 @@ def test_graph_template_from_graph(
             id="lower-upper",
         ),
         pytest.param(
-            graphs.Bidirectional(
+            graphs_api.Bidirectional(
                 name="name",
                 title=Title("Title"),
-                lower=graphs.Graph(
+                lower=graphs_api.Graph(
                     name="name-lower",
                     title=Title("Title lower"),
-                    minimal_range=graphs.MinimalRange(1, 10),
+                    minimal_range=graphs_api.MinimalRange(1, 10),
                     simple_lines=["metric-name-l"],
                 ),
-                upper=graphs.Graph(
+                upper=graphs_api.Graph(
                     name="name-upper",
                     title=Title("Title upper"),
-                    minimal_range=graphs.MinimalRange(2, 11),
+                    minimal_range=graphs_api.MinimalRange(2, 11),
                     simple_lines=["metric-name-u"],
                 ),
             ),
@@ -1855,16 +1857,16 @@ def test_graph_template_from_graph(
             id="range-both",
         ),
         pytest.param(
-            graphs.Bidirectional(
+            graphs_api.Bidirectional(
                 name="name",
                 title=Title("Title"),
-                lower=graphs.Graph(
+                lower=graphs_api.Graph(
                     name="name-lower",
                     title=Title("Title lower"),
-                    minimal_range=graphs.MinimalRange(1, 10),
+                    minimal_range=graphs_api.MinimalRange(1, 10),
                     simple_lines=["metric-name-l"],
                 ),
-                upper=graphs.Graph(
+                upper=graphs_api.Graph(
                     name="name-upper",
                     title=Title("Title upper"),
                     simple_lines=["metric-name-u"],
@@ -1891,18 +1893,18 @@ def test_graph_template_from_graph(
             id="range-only-lower",
         ),
         pytest.param(
-            graphs.Bidirectional(
+            graphs_api.Bidirectional(
                 name="name",
                 title=Title("Title"),
-                lower=graphs.Graph(
+                lower=graphs_api.Graph(
                     name="name-lower",
                     title=Title("Title lower"),
                     simple_lines=["metric-name-l"],
                 ),
-                upper=graphs.Graph(
+                upper=graphs_api.Graph(
                     name="name-upper",
                     title=Title("Title upper"),
-                    minimal_range=graphs.MinimalRange(2, 11),
+                    minimal_range=graphs_api.MinimalRange(2, 11),
                     simple_lines=["metric-name-u"],
                 ),
             ),
@@ -1929,7 +1931,7 @@ def test_graph_template_from_graph(
     ],
 )
 def test_graph_template_from_bidirectional(
-    graph: graphs.Bidirectional,
+    graph: graphs_api.Bidirectional,
     raw_metric_names: Sequence[str],
     expected_template: GraphTemplate,
 ) -> None:

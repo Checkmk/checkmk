@@ -9,7 +9,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Final, Literal
 
-from cmk.graphing.v1 import metrics
+from cmk.graphing.v1 import metrics as metrics_api
 
 _MAX_DIGITS: Final = 5
 
@@ -44,7 +44,7 @@ class Label:
 @dataclass(frozen=True)
 class NotationFormatter:
     symbol: str
-    precision: metrics.AutoPrecision | metrics.StrictPrecision
+    precision: metrics_api.AutoPrecision | metrics_api.StrictPrecision
     use_max_digits_for_labels: bool = True
 
     @abc.abstractmethod
@@ -75,7 +75,7 @@ class NotationFormatter:
         if value == value_floor:
             return value
         digits = self.precision.digits
-        if isinstance(self.precision, metrics.AutoPrecision):
+        if isinstance(self.precision, metrics_api.AutoPrecision):
             if exponent := abs(math.ceil(math.log10(value - value_floor))):
                 digits = compute_auto_precision_digits(exponent, self.precision.digits)
         return (

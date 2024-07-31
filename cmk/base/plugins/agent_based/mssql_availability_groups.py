@@ -65,7 +65,11 @@ def parse_mssql_availability_groups(string_table: StringTable) -> Section | Erro
     if (error_msg := _match_error_message(string_table)) is not None:
         return error_msg
 
-    return {line[0]: AGAttributes(line[1], SyncState(line[3])) for line in string_table}
+    return {
+        line[0]: AGAttributes(line[1], SyncState(line[3]))
+        for line in string_table
+        if len(line) >= 4
+    }
 
 
 def discover_mssql_availability_groups(section: Section | ErrorMessage) -> DiscoveryResult:

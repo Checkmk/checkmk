@@ -7,7 +7,8 @@ import type {
   SingleChoice,
   CascadingSingleChoice,
   LegacyValuespec,
-  ValidationMessage
+  ValidationMessage,
+  Components
 } from '@/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -37,7 +38,7 @@ function render_form(
   value: unknown,
   backendValidation: ValidationMessages = []
 ): VNode | null {
-  switch (form_spec.type) {
+  switch (form_spec.type as Components['type']) {
     case 'dictionary':
       return render_dict(
         form_spec as Dictionary,
@@ -60,8 +61,6 @@ function render_form(
       )
     case 'legacy_valuespec':
       return render_legacy_valuespec(form_spec as LegacyValuespec, value, backendValidation)
-    default:
-      return null
   }
 }
 

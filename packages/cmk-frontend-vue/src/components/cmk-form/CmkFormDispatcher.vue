@@ -4,7 +4,7 @@ import CmkFormFloat from '@/components/cmk-form/element/CmkFormFloat.vue'
 import CmkFormString from './element/CmkFormString.vue'
 import CmkFormSingleChoice from './element/CmkFormSingleChoice.vue'
 import CmkFormDictionary from './container/CmkFormDictionary.vue'
-import type { FormSpec } from '@/vue_formspec_components'
+import type { FormSpec, Components } from '@/vue_formspec_components'
 import CmkFormCascadingSingleChoice from '@/components/cmk-form/container/CmkFormCascadingSingleChoice.vue'
 import CmkFormList from '@/components/cmk-form/container/CmkFormList.vue'
 import CmkFormLegacyValueSpec from '@/components/cmk-form/element/CmkFormLegacyValueSpec.vue'
@@ -19,7 +19,7 @@ const props = defineProps<{
 const data = defineModel<unknown>('data', { required: true })
 
 // TODO: https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
-const components: Record<string, unknown> = {
+const components: Record<Components['type'], unknown> = {
   integer: CmkFormInteger,
   dictionary: CmkFormDictionary,
   string: CmkFormString,
@@ -31,7 +31,7 @@ const components: Record<string, unknown> = {
 }
 
 function getComponent(): IComponent {
-  return components[props.spec.type] as IComponent
+  return components[props.spec.type as Components['type']] as IComponent
 }
 </script>
 

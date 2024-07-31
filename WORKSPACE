@@ -451,3 +451,13 @@ load("//omd/packages/erlang:erlang_http.bzl", "erlang")
 erlang(
     version_str = ERLANG_VERSION,
 )
+
+http_archive(
+    name = "bazel_iwyu",
+    patches = ["//omd/packages/bazel_iwyu:0001-Make-IWYU-executable-configurable.patch"],
+    sha256 = "058d2ba699c1a6ef15ffb8b6e98f056250bb6080e634037034099d10bff4d19f",
+    strip_prefix = "bazel_iwyu-bb102395e553215abd66603bcdeb6e93c66ca6d7",
+    urls = [
+        "https://github.com/storypku/bazel_iwyu/archive/bb102395e553215abd66603bcdeb6e93c66ca6d7.tar.gz",
+    ],
+)

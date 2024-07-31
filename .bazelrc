@@ -69,3 +69,13 @@ build:clang-tidy --aspects @bazel_clang_tidy//clang_tidy:clang_tidy.bzl%clang_ti
 build:clang-tidy --output_groups=report
 build:clang-tidy --@bazel_clang_tidy//:clang_tidy_executable=//omd/packages/bazel_clang_tidy:clangtidy_bin
 build:clang-tidy --@bazel_clang_tidy//:clang_tidy_config=//omd/packages/bazel_clang_tidy:clang_tidy_config
+
+################################################################################
+# Example: bazel build --config=iwyu //packages/cmc:all
+################################################################################
+
+build:iwyu --aspects @bazel_iwyu//bazel/iwyu:iwyu.bzl%iwyu_aspect
+build:iwyu --output_groups=report
+build:iwyu --@bazel_iwyu//:iwyu_executable=//omd/packages/bazel_iwyu:iwyu_bin
+build:iwyu --@bazel_iwyu//:iwyu_opts="--error"
+build:iwyu --@bazel_iwyu//:iwyu_mappings=//omd/packages/bazel_iwyu:iwyu_mappings

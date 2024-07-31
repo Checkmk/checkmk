@@ -11,6 +11,7 @@ def main() {
         "",                // 'build tag'
         safe_branch_name,  // 'branch'
     )
+    def cmk_version = versioning.get_cmk_version(safe_branch_name, version);
 
     try {
         testing_helper.run_make_targets(
@@ -21,7 +22,7 @@ def main() {
             DOCKER_TAG: docker_tag,
             MAKE_TARGET: "test-xss-crawl-docker",
             BRANCH: safe_branch_name,
-            cmk_version: versioning.get_cmk_version(safe_branch_name, version),
+            cmk_version: cmk_version,
         );
     } finally {
         stage('archive crawler report') {

@@ -7,7 +7,7 @@ import logging
 import pytest
 
 from tests.testlib.site import Site
-from tests.testlib.utils import get_services_with_status, version_spec_from_env
+from tests.testlib.utils import get_services_with_status, parse_files, version_spec_from_env
 from tests.testlib.version import CMKVersion
 
 from cmk.utils.hostaddress import HostName
@@ -86,3 +86,12 @@ def test_update(test_setup: tuple[Site, Edition, bool]) -> None:
     else:
         expected_licensed = True
     assert expected_licensed == is_test_site_licensed(target_site)
+
+    match_dict = parse_files(pathname=test_site.logs_dir / "/*log*", pattern="error")
+    assert not match_dict, f"Error string found in one or more log files: {match_dict}"
+
+    # TODO: Uncomment the following block once the following issues are resolved:
+    #   * CMK-18519
+    #   * CMK-18520
+    # match_dict_subs = parse_files(pathname=test_site.logs_dir + "/**/*log*", pattern="error")
+    # assert not match_dict_subs, f"Error string found in one or more log files: {match_dict}"

@@ -1242,6 +1242,10 @@ class Site:
     def crash_archive_dir(self) -> Path:
         return self.result_dir() / "crashes"
 
+    @property
+    def logs_dir(self) -> Path:
+        return Path(self.root) / "var/log"
+
     def get_automation_secret(self) -> str:
         secret_path = "var/check_mk/web/automation/automation.secret"
         secret = self.read_file(secret_path).strip()

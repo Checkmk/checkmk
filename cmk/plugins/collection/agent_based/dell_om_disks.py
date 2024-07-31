@@ -4,10 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.dell import DETECT_OPENMANAGE
 
 
@@ -24,11 +32,11 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_dell_om_disks(info):
-    return [(f"{x[3]}:{x[4]}:{x[5]}", None) for x in info]
+def inventory_dell_om_disks(section: StringTable) -> DiscoveryResult:
+    yield from [Service(item=f"{x[3]}:{x[4]}:{x[5]}") for x in section]
 
 
-def check_dell_om_disks(item, _no_params, info):
+def check_dell_om_disks(item: str, section: StringTable) -> CheckResult:
     # State definitions. Found in check_openmange from Trond H. Amundsen
     spare_state = {
         1: "VD member",  # disk is a member of a virtual disk
@@ -78,55 +86,64 @@ def check_dell_om_disks(item, _no_params, info):
         40: "Clear",
     }
 
-    for name, dstate, pid, eid, cid, tid, sizeMB, btype, sstate, smart, mt in info:
+    for name, r_dstate, pid, eid, cid, tid, sizeMB, r_btype, r_sstate, r_smart, r_mt in section:
         ditem = f"{eid}:{cid}:{tid}"
         if ditem == item:
-            state = 0
-            dstate = saveint(dstate)
-            btype = saveint(btype)
-            sstate = saveint(sstate)
-            smart = saveint(smart)
-            mt = saveint(mt)
+            state = State.OK
+            dstate = saveint(r_dstate)
+            btype = saveint(r_btype)
+            sstate = saveint(r_sstate)
+            smart = saveint(r_smart)
+            mt = saveint(r_mt)
             size = saveint(sizeMB) * 1024 * 1024
-            msg = [f"{name} ({pid}, {render.bytes(size)})"]
-            label = ""
+            yield Result(state=State.OK, summary=f"{name} ({pid}, {render.bytes(size)})")
+
             if smart == 2:
                 dstate = 34
             if dstate in [40, 35, 34, 26, 7, 4]:
-                state = 1
-                label = "(!)"
+                state = State.WARN
             elif dstate not in [3, 1, 13]:
-                state = 2
-                label = "(!!)"
+                state = State.CRIT
 
             # handle hot spares as OK
             if sstate in [3, 4] and dstate == 1:
-                state = 0
-                label = ""
+                state = State.OK
 
-            msg.append("state {}{}".format(pdisk_state.get(dstate, "ukn (%s)" % dstate), label))
-            msg.append("Bus Type: %s" % bus_type.get(btype, "unk (%s)" % btype))
+            yield Result(
+                state=state, summary="state {}".format(pdisk_state.get(dstate, f"ukn ({dstate})"))
+            )
+            yield Result(
+                state=State.OK, summary="Bus Type: %s" % bus_type.get(btype, f"unk ({btype})")
+            )
 
             if sstate != 5:
-                msg.append("Spare State: %s" % spare_state.get(sstate, "ukn (%s)" % sstate))
+                yield Result(
+                    state=State.OK,
+                    summary="Spare State: %s" % spare_state.get(sstate, "ukn (%s)" % sstate),
+                )
             if mt != 0:
-                msg.append("Media Type: %s" % media_type.get(mt, "ukn (%s)" % mt))
+                yield Result(
+                    state=State.OK, summary="Media Type: %s" % media_type.get(mt, "ukn (%s)" % mt)
+                )
 
-            return state, ", ".join(msg)
-    return 3, "Device not found in SNMP tree"
+            return
 
 
 def parse_dell_om_disks(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["dell_om_disks"] = LegacyCheckDefinition(
-    parse_function=parse_dell_om_disks,
+snmp_section_dell_om_disks = SimpleSNMPSection(
+    name="dell_om_disks",
     detect=DETECT_OPENMANAGE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10893.1.20.130.4.1",
         oids=["2", "4", "6", "9", "10", "15", "11", "21", "22", "31", "35"],
     ),
+    parse_function=parse_dell_om_disks,
+)
+check_plugin_dell_om_disks = CheckPlugin(
+    name="dell_om_disks",
     service_name="Physical Disk %s",
     discovery_function=inventory_dell_om_disks,
     check_function=check_dell_om_disks,

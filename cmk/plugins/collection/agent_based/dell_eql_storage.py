@@ -4,18 +4,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.v2 import (
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.v2 import any_of, contains, render, SNMPTree, startswith, StringTable
+
+def inventory_dell_eql_storage(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        yield Service(item=line[0])
 
 
-def inventory_dell_eql_storage(info):
-    for line in info:
-        yield line[0], {}
-
-
-def check_dell_eql_storage(item, _no_params, info):
+def check_dell_eql_storage(item: str, section: StringTable) -> CheckResult:
     for (
         name,
         desc,
@@ -25,10 +37,10 @@ def check_dell_eql_storage(item, _no_params, info):
         repl_storage,
         snap_storage,
         used_storage,
-    ) in info:
+    ) in section:
         if name == item:
             if desc:
-                yield 0, desc
+                yield Result(state=State.OK, summary=desc)
 
             # Health Status:
             health_states = {
@@ -38,12 +50,12 @@ def check_dell_eql_storage(item, _no_params, info):
                 "3": "Critical",
             }
             if health_state == "1":
-                state = 0
+                state = State.OK
             elif health_state in ["2", "0"]:
-                state = 1
+                state = State.WARN
             else:
-                state = 2
-            yield state, "Health State: %s" % health_states[health_state]
+                state = State.CRIT
+            yield Result(state=state, summary="Health State: %s" % health_states[health_state])
 
             # Raid Status
             raid_states = {
@@ -58,38 +70,39 @@ def check_dell_eql_storage(item, _no_params, info):
             }
 
             if raid_state == "1":
-                state = 0
+                state = State.OK
             elif raid_state in ["3", "4", "7", "8"]:
-                state = 1
+                state = State.WARN
             else:
-                state = 2
-            yield state, "Raid State: %s" % raid_states[raid_state]
+                state = State.CRIT
+            yield Result(state=state, summary="Raid State: %s" % raid_states[raid_state])
 
             # Storage
             total_bytes = int(total_storage) * 1048576
             used_bytes = int(used_storage) * 1048576
             repl_bytes = int(repl_storage) * 1048576
             snap_bytes = int(snap_storage) * 1048576
-            perfdata = [
-                ("fs_used", used_bytes),
-                ("fs_used_percent", used_bytes / total_bytes * 100),
-                ("fs_size", total_bytes),
-                ("fs_free", total_bytes - used_bytes),
-            ]
-            yield 0, "Used: {}/{} (Snapshots: {}, Replication: {})".format(
-                render.disksize(used_bytes),
-                render.disksize(total_bytes),
-                render.disksize(snap_bytes),
-                render.disksize(repl_bytes),
-            ), perfdata
+            yield Metric("fs_used", used_bytes)
+            yield Metric("fs_used_percent", used_bytes / total_bytes * 100)
+            yield Metric("fs_size", total_bytes)
+            yield Metric("fs_free", total_bytes - used_bytes)
+            yield Result(
+                state=State.OK,
+                summary="Used: {}/{} (Snapshots: {}, Replication: {})".format(
+                    render.disksize(used_bytes),
+                    render.disksize(total_bytes),
+                    render.disksize(snap_bytes),
+                    render.disksize(repl_bytes),
+                ),
+            )
 
 
 def parse_dell_eql_storage(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["dell_eql_storage"] = LegacyCheckDefinition(
-    parse_function=parse_dell_eql_storage,
+snmp_section_dell_eql_storage = SimpleSNMPSection(
+    name="dell_eql_storage",
     detect=any_of(
         contains(".1.3.6.1.2.1.1.1.0", "EQL-SUP"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12740.17"),
@@ -107,6 +120,10 @@ check_info["dell_eql_storage"] = LegacyCheckDefinition(
             "10.1.2.1",
         ],
     ),
+    parse_function=parse_dell_eql_storage,
+)
+check_plugin_dell_eql_storage = CheckPlugin(
+    name="dell_eql_storage",
     service_name="Storage %s",
     discovery_function=inventory_dell_eql_storage,
     check_function=check_dell_eql_storage,

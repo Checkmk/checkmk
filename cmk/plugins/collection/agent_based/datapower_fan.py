@@ -6,7 +6,17 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.datapower import DETECT
 
 
@@ -95,4 +105,38 @@ snmp_section_datapower_fan = SimpleSNMPSection(
             "4",  # dpStatusEnvironmentalFanSensorsReadingStatus
         ],
     ),
+)
+
+
+def inventory_datapower_fan(section: Section) -> DiscoveryResult:
+    yield from (Service(item=fan_name) for fan_name in section)
+
+
+_FAN_STATE_TO_MON_STATE = {
+    "1": State.CRIT,
+    "2": State.CRIT,
+    "3": State.WARN,
+    "4": State.OK,
+    "5": State.WARN,
+    "6": State.CRIT,
+    "7": State.CRIT,
+    "8": State.CRIT,
+    "9": State.CRIT,
+    "10": State.WARN,
+}
+
+
+def check_datapower_fan(item: str, section: Section) -> CheckResult:
+    if not (fan := section.get(item)):
+        return
+    yield Result(
+        state=_FAN_STATE_TO_MON_STATE[fan.state], summary=f"{fan.state_txt}, {fan.speed} rpm"
+    )
+
+
+check_plugin_datapower_fan = CheckPlugin(
+    name="datapower_fan",
+    service_name="Fan %s",
+    discovery_function=inventory_datapower_fan,
+    check_function=check_datapower_fan,
 )

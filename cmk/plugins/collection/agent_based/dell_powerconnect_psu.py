@@ -34,10 +34,19 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
 dell_powerconnect_psu_status_map = {
     "1": "normal",
@@ -57,51 +66,52 @@ dell_powerconnect_psu_supply_map = {
 }
 
 dell_powerconnect_psu_status2nagios_map = {
-    "normal": 0,
-    "warning": 1,
-    "critical": 2,
-    "shutdown": 3,
-    "notPresent": 1,
-    "notFunctioning": 2,
+    "normal": State.OK,
+    "warning": State.WARN,
+    "critical": State.CRIT,
+    "shutdown": State.UNKNOWN,
+    "notPresent": State.WARN,
+    "notFunctioning": State.CRIT,
 }
 
 
-def inventory_dell_powerconnect_psu(info):
-    inventory = []
-    if not info or not info[0]:
-        return None
-    hw_ident = info[0][0][0]
-    for _device_id, name, state, _supply in info[1]:
+def inventory_dell_powerconnect_psu(section: Sequence[StringTable]) -> DiscoveryResult:
+    if not section or not section[0]:
+        return
+
+    hw_ident = section[0][0][0]
+    for _device_id, name, state, _supply in section[1]:
         # M6220 are blade switches which report valid values only for the "Main"
         # sensor. The other one is reported as notFunctioning, but this is wrong.
         # Simply ignore the "System" sensor for those devices.
         if dell_powerconnect_psu_status_map[state] != "notPresent" and (
             "M6220" not in hw_ident or name != "System"
         ):
-            inventory.append((name, None))
-    return inventory
+            yield Service(item=name)
 
 
-def check_dell_powerconnect_psu(item, _not_used, info):
-    for _device_id, name, state, supply in info[1]:
+def check_dell_powerconnect_psu(item: str, section: Sequence[StringTable]) -> CheckResult:
+    for _device_id, name, state, supply in section[1]:
         if name == item:
             dell_powerconnect_status = dell_powerconnect_psu_status_map[state]
             status = dell_powerconnect_psu_status2nagios_map[dell_powerconnect_status]
 
-            return status, "Condition is {}, with source {}".format(
-                dell_powerconnect_status,
-                dell_powerconnect_psu_supply_map[supply],
+            yield Result(
+                state=status,
+                summary="Condition is {}, with source {}".format(
+                    dell_powerconnect_status,
+                    dell_powerconnect_psu_supply_map[supply],
+                ),
             )
-
-    return (3, "item not found in snmp data")
+            return
 
 
 def parse_dell_powerconnect_psu(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
     return string_table
 
 
-check_info["dell_powerconnect_psu"] = LegacyCheckDefinition(
-    parse_function=parse_dell_powerconnect_psu,
+snmp_section_dell_powerconnect_psu = SNMPSection(
+    name="dell_powerconnect_psu",
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6027.1.3.22"),
@@ -116,6 +126,10 @@ check_info["dell_powerconnect_psu"] = LegacyCheckDefinition(
             oids=["1", "2", "3", "4"],
         ),
     ],
+    parse_function=parse_dell_powerconnect_psu,
+)
+check_plugin_dell_powerconnect_psu = CheckPlugin(
+    name="dell_powerconnect_psu",
     service_name="Sensor %s",
     discovery_function=inventory_dell_powerconnect_psu,
     check_function=check_dell_powerconnect_psu,

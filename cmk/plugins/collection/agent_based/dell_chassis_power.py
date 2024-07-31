@@ -4,10 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.dell import DETECT_CHASSIS
 
 
@@ -24,23 +32,21 @@ def savefloat(f: str) -> float:
         return 0.0
 
 
-def inventory_dell_chassis_power(info):
-    if info:
-        return [(None, None)]
-    return []
+def inventory_dell_chassis_power(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def check_dell_chassis_power(item, _no_params, info):
-    status, PotentialPower, MaxPowerSpec, power, current = info[0]
+def check_dell_chassis_power(section: StringTable) -> CheckResult:
+    status, PotentialPower, MaxPowerSpec, power, current = section[0]
     state_table = {
-        "1": ("other, ", 1),
-        "2": ("unknown, ", 1),
-        "3": ("", 0),
-        "4": ("nonCritical, ", 1),
-        "5": ("Critical, ", 2),
-        "6": ("NonRecoverable, ", 2),
+        "1": ("other, ", State.WARN),
+        "2": ("unknown, ", State.WARN),
+        "3": ("", State.OK),
+        "4": ("nonCritical, ", State.WARN),
+        "5": ("Critical, ", State.CRIT),
+        "6": ("NonRecoverable, ", State.CRIT),
     }
-    infotext, state = state_table.get(status, ("unknown state, ", 3))
+    infotext, state = state_table.get(status, ("unknown state, ", State.UNKNOWN))
 
     infotext += (
         "Power: {:.1f} W, PotentialPower: {:.1f} W, MaxPower: {:.1f} W, Current: {:.1f} A".format(
@@ -51,22 +57,25 @@ def check_dell_chassis_power(item, _no_params, info):
         )
     )
 
-    perfdata = [("power", power + "Watt", 0, PotentialPower, "", MaxPowerSpec)]
-
-    return state, infotext, perfdata
-
-
-def parse_dell_chassis_power(string_table: StringTable) -> StringTable:
-    return string_table
+    yield Result(state=state, summary=infotext)
+    yield Metric("power", savefloat(power))
 
 
-check_info["dell_chassis_power"] = LegacyCheckDefinition(
-    parse_function=parse_dell_chassis_power,
+def parse_dell_chassis_power(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
+snmp_section_dell_chassis_power = SimpleSNMPSection(
+    name="dell_chassis_power",
     detect=DETECT_CHASSIS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2",
         oids=["3.1.5.0", "4.1.1.2.1", "4.1.1.4.1", "4.1.1.13.1", "4.1.1.14.1"],
     ),
+    parse_function=parse_dell_chassis_power,
+)
+check_plugin_dell_chassis_power = CheckPlugin(
+    name="dell_chassis_power",
     service_name="Chassis Power",
     discovery_function=inventory_dell_chassis_power,
     check_function=check_dell_chassis_power,

@@ -6,10 +6,17 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.dell import DETECT_OPENMANAGE
 
 # example output
@@ -26,34 +33,34 @@ from cmk.plugins.lib.dell import DETECT_OPENMANAGE
 # .1.3.6.1.4.1.674.10892.1.600.12.1.8.1.2 PS2 Status
 
 
-def inventory_dell_om_power(info):
-    for index, _status, _count in info[0]:
-        yield (index, None)
+def inventory_dell_om_power(section: Sequence[StringTable]) -> DiscoveryResult:
+    for index, _status, _count in section[0]:
+        yield Service(item=index)
 
 
-def check_dell_om_power(item, params, info):
+def check_dell_om_power(item: str, section: Sequence[StringTable]) -> CheckResult:
     translate_status = {
-        "1": (3, "other"),
-        "2": (3, "unknown"),
-        "3": (0, "full"),
-        "4": (1, "degraded"),
-        "5": (2, "lost"),
-        "6": (0, "not redundant"),
-        "7": (1, "redundancy offline"),
+        "1": (State.UNKNOWN, "other"),
+        "2": (State.UNKNOWN, "unknown"),
+        "3": (State.OK, "full"),
+        "4": (State.WARN, "degraded"),
+        "5": (State.CRIT, "lost"),
+        "6": (State.OK, "not redundant"),
+        "7": (State.WARN, "redundancy offline"),
     }
 
-    for index, status, _count in info[0]:
+    for index, status, _count in section[0]:
         if index == item:
             state, state_readable = translate_status[status]
-            yield state, "Redundancy status: %s" % state_readable
+            yield Result(state=state, summary="Redundancy status: %s" % state_readable)
 
 
 def parse_dell_om_power(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
     return string_table
 
 
-check_info["dell_om_power"] = LegacyCheckDefinition(
-    parse_function=parse_dell_om_power,
+snmp_section_dell_om_power = SNMPSection(
+    name="dell_om_power",
     detect=DETECT_OPENMANAGE,
     fetch=[
         SNMPTree(
@@ -65,25 +72,29 @@ check_info["dell_om_power"] = LegacyCheckDefinition(
             oids=["2", "5", "7", "8"],
         ),
     ],
+    parse_function=parse_dell_om_power,
+)
+check_plugin_dell_om_power = CheckPlugin(
+    name="dell_om_power",
     service_name="Power Supply Redundancy %s",
     discovery_function=inventory_dell_om_power,
     check_function=check_dell_om_power,
 )
 
 
-def inventory_dell_om_power_unit(info):
-    for line in info[1]:
-        yield (line[0], None)
+def inventory_dell_om_power_unit(section: Sequence[StringTable]) -> DiscoveryResult:
+    for line in section[1]:
+        yield Service(item=line[0])
 
 
-def check_dell_om_power_unit(item, _no_params, info):
+def check_dell_om_power_unit(item: str, section: Sequence[StringTable]) -> CheckResult:
     translate_status = {
-        "1": (3, "OTHER"),
-        "2": (3, "UNKNOWN"),
-        "3": (0, "OK"),
-        "4": (1, "NONCRITICAL"),
-        "5": (2, "CRITICAL"),
-        "6": (2, "NONRECOVERABLE"),
+        "1": (State.UNKNOWN, "OTHER"),
+        "2": (State.UNKNOWN, "UNKNOWN"),
+        "3": (State.OK, "OK"),
+        "4": (State.WARN, "NONCRITICAL"),
+        "5": (State.CRIT, "CRITICAL"),
+        "6": (State.CRIT, "NONRECOVERABLE"),
     }
 
     translate_type = {
@@ -100,18 +111,22 @@ def check_dell_om_power_unit(item, _no_params, info):
         "11": "VRM",
     }
 
-    for index, status, psu_type, location in info[1]:
+    for index, status, psu_type, location in section[1]:
         if index == item:
             state, state_readable = translate_status[status]
             psu_type_readable = translate_type[psu_type]
-            yield state, "Status: {}, Type: {}, Name: {}".format(
-                state_readable,
-                psu_type_readable,
-                location,
+            yield Result(
+                state=state,
+                summary="Status: {}, Type: {}, Name: {}".format(
+                    state_readable,
+                    psu_type_readable,
+                    location,
+                ),
             )
 
 
-check_info["dell_om_power.unit"] = LegacyCheckDefinition(
+check_plugin_dell_om_power_unit = CheckPlugin(
+    name="dell_om_power_unit",
     service_name="Power Supply %s",
     sections=["dell_om_power"],
     discovery_function=inventory_dell_om_power_unit,

@@ -4,20 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.dell import DETECT_CHASSIS
 
 
-def inventory_dell_chassis_status(info):
-    if info:
-        return [(None, None)]
-    return []
+def inventory_dell_chassis_status(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_dell_chassis_status(item, _no_params, info):
+def check_dell_chassis_status(section: StringTable) -> CheckResult:
     whats = [
         "URL",
         "Locaction",
@@ -29,33 +35,37 @@ def check_dell_chassis_status(item, _no_params, info):
     ]
 
     state_table = {
-        "1": ("Other, ", 1),
-        "2": ("Unknown, ", 1),
-        "3": ("OK", 0),
-        "4": ("Non-Critical, ", 1),
-        "5": ("Critical, ", 2),
-        "6": ("Non-Recoverable, ", 2),
+        "1": ("Other, ", State.WARN),
+        "2": ("Unknown, ", State.WARN),
+        "3": ("OK", State.OK),
+        "4": ("Non-Critical, ", State.WARN),
+        "5": ("Critical, ", State.CRIT),
+        "6": ("Non-Recoverable, ", State.CRIT),
     }
 
-    for what, value in zip(whats, info[0]):
+    for what, value in zip(whats, section[0]):
         if what == "Status":
             descr, status = state_table[value]
-            yield status, what + ": " + descr
+            yield Result(state=status, summary=what + ": " + descr)
         else:
-            yield 0, what + ": " + value
+            yield Result(state=State.OK, summary=what + ": " + value)
 
 
 def parse_dell_chassis_status(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["dell_chassis_status"] = LegacyCheckDefinition(
-    parse_function=parse_dell_chassis_status,
+snmp_section_dell_chassis_status = SimpleSNMPSection(
+    name="dell_chassis_status",
     detect=DETECT_CHASSIS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2",
         oids=["1.1.7", "1.1.9", "1.1.10", "1.1.11", "1.1.15", "1.2.1", "2.1"],
     ),
+    parse_function=parse_dell_chassis_status,
+)
+check_plugin_dell_chassis_status = CheckPlugin(
+    name="dell_chassis_status",
     service_name="Chassis Health",
     discovery_function=inventory_dell_chassis_status,
     check_function=check_dell_chassis_status,

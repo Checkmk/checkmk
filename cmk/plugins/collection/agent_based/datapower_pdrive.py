@@ -4,38 +4,55 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.datapower import DETECT
 
 
-def inventory_datapower_pdrive(info):
-    for controller, device, _ldrive, _position, status, _progress, _vendor, _product, _fail in info:
+def inventory_datapower_pdrive(section: StringTable) -> DiscoveryResult:
+    for (
+        controller,
+        device,
+        _ldrive,
+        _position,
+        status,
+        _progress,
+        _vendor,
+        _product,
+        _fail,
+    ) in section:
         if status != "12":
             item = f"{controller}-{device}"
-            yield item, None
+            yield Service(item=item)
 
 
-def check_datapower_pdrive(item, _no_params, info):
+def check_datapower_pdrive(item: str, section: StringTable) -> CheckResult:
     datapower_pdrive_status = {
-        "1": (0, "Unconfigured/Good"),
-        "2": (0, "Unconfigured/Good/Foreign"),
-        "3": (1, "Unconfigured/Bad"),
-        "4": (1, "Unconfigured/Bad/Foreign"),
-        "5": (0, "Hot spare"),
-        "6": (1, "Offline"),
-        "7": (2, "Failed"),
-        "8": (1, "Rebuilding"),
-        "9": (0, "Online"),
-        "10": (1, "Copyback"),
-        "11": (1, "System"),
-        "12": (1, "Undefined"),
+        "1": (State.OK, "Unconfigured/Good"),
+        "2": (State.OK, "Unconfigured/Good/Foreign"),
+        "3": (State.WARN, "Unconfigured/Bad"),
+        "4": (State.WARN, "Unconfigured/Bad/Foreign"),
+        "5": (State.OK, "Hot spare"),
+        "6": (State.WARN, "Offline"),
+        "7": (State.CRIT, "Failed"),
+        "8": (State.WARN, "Rebuilding"),
+        "9": (State.OK, "Online"),
+        "10": (State.WARN, "Copyback"),
+        "11": (State.WARN, "System"),
+        "12": (State.WARN, "Undefined"),
     }
     datapower_pdrive_fail = {
-        "1": (2, "disk reports failure"),
-        "2": (0, "disk reports no failure"),
+        "1": Result(state=State.CRIT, summary="disk reports failure"),
+        "2": Result(state=State.OK, summary="disk reports no failure"),
     }
     datapower_pdrive_position = {
         "1": "HDD 0",
@@ -44,7 +61,7 @@ def check_datapower_pdrive(item, _no_params, info):
         "4": "HDD 3",
         "5": "undefined",
     }
-    for controller, device, ldrive, position, status, progress, vendor, product, fail in info:
+    for controller, device, ldrive, position, status, progress, vendor, product, fail in section:
         if item == f"{controller}-{device}":
             member_of_ldrive = f"{controller}-{ldrive}"
             state, state_txt = datapower_pdrive_status[status]
@@ -61,7 +78,7 @@ def check_datapower_pdrive(item, _no_params, info):
                 vendor,
                 product,
             )
-            yield state, infotext
+            yield Result(state=state, summary=infotext)
 
             if fail:
                 yield datapower_pdrive_fail[fail]
@@ -71,13 +88,17 @@ def parse_datapower_pdrive(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["datapower_pdrive"] = LegacyCheckDefinition(
-    parse_function=parse_datapower_pdrive,
+snmp_section_datapower_pdrive = SimpleSNMPSection(
+    name="datapower_pdrive",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.260.1",
         oids=["1", "2", "4", "6", "7", "8", "14", "15", "18"],
     ),
+    parse_function=parse_datapower_pdrive,
+)
+check_plugin_datapower_pdrive = CheckPlugin(
+    name="datapower_pdrive",
     service_name="Physical Drive %s",
     discovery_function=inventory_datapower_pdrive,
     check_function=check_datapower_pdrive,

@@ -4,18 +4,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.dell import DETECT_OPENMANAGE
 
 
-def inventory_dell_om_processors(info):
-    return [(x[0], None) for x in info if x[1] != "4" and x[0] != ""]
+def inventory_dell_om_processors(section: StringTable) -> DiscoveryResult:
+    yield from [Service(item=x[0]) for x in section if x[1] != "4" and x[0] != ""]
 
 
-def check_dell_om_processors(item, _no_params, info):
+def check_dell_om_processors(item: str, section: StringTable) -> CheckResult:
     # Probetypes found in check_openmanage3.pl
     cpu_states = {
         "1": "Other",  # other than following values
@@ -37,48 +44,56 @@ def check_dell_om_processors(item, _no_params, info):
         "1024": "Throttled",  # Processor Throttled
     }
 
-    for index, status, manuf, status2, reading in info:
+    for index, status, manuf, status2, reading in section:
         if index == item:
-            state = 0
+            state = State.OK
             if not status:
                 status = status2
 
             if status != "3":
-                state = 2
+                state = State.CRIT
             if reading in ["1", "32"]:
-                state = 2
+                state = State.CRIT
 
             if status in cpu_states:
                 cpu_state_readable = cpu_states[status]
             else:
                 cpu_state_readable = "unknown[%s]" % status
-                state = 3
+                state = State.UNKNOWN
 
             if reading in cpu_readings:
                 cpu_reading_readable = cpu_readings[reading]
             else:
                 cpu_reading_readable = "unknown[%s]" % reading
-                state = 3
-            return state, "[{}] CPU status: {}, CPU reading: {}".format(
-                manuf,
-                cpu_state_readable,
-                cpu_reading_readable,
+                state = State.UNKNOWN
+            yield Result(
+                state=state,
+                summary="[{}] CPU status: {}, CPU reading: {}".format(
+                    manuf,
+                    cpu_state_readable,
+                    cpu_reading_readable,
+                ),
             )
+            return
 
-    return 2, "Processor not found"
+    yield Result(state=State.CRIT, summary="Processor not found")
 
 
 def parse_dell_om_processors(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["dell_om_processors"] = LegacyCheckDefinition(
-    parse_function=parse_dell_om_processors,
+snmp_section_dell_om_processors = SimpleSNMPSection(
+    name="dell_om_processors",
     detect=DETECT_OPENMANAGE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.1.1100",
         oids=["30.1.2", "30.1.5", "30.1.8", "30.1.9", "32.1.6"],
     ),
+    parse_function=parse_dell_om_processors,
+)
+check_plugin_dell_om_processors = CheckPlugin(
+    name="dell_om_processors",
     service_name="Processor %s",
     discovery_function=inventory_dell_om_processors,
     check_function=check_dell_om_processors,

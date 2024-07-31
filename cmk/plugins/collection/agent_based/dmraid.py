@@ -14,22 +14,30 @@
 # /dev/sdb: isw, "isw_ebdabbedfh", GROUP, ok, 976773166 sectors, data@ 0 Model: WDC WD5002ABYS-5
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import StringTable
-
-
-def inventory_dmraid_ldisks(info):
-    return [(line[2], None) for line in info if line[0] == "name"]
-
-
-def inventory_dmraid_pdisks(info):
-    return [(line[0].split(":")[0], None) for line in info if line[0].startswith("/dev/sd")]
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
-def check_dmraid_pdisks(item, _no_params, info):
-    for line in info:
+def inventory_dmraid_ldisks(section: StringTable) -> DiscoveryResult:
+    yield from [Service(item=line[2]) for line in section if line[0] == "name"]
+
+
+def inventory_dmraid_pdisks(section: StringTable) -> DiscoveryResult:
+    yield from [
+        Service(item=line[0].split(":")[0]) for line in section if line[0].startswith("/dev/sd")
+    ]
+
+
+def check_dmraid_pdisks(item: str, section: StringTable) -> CheckResult:
+    for line in section:
         if line[0].startswith("/dev/sd"):
             disk = line[0].split(":")[0]
             if disk == item:
@@ -37,43 +45,47 @@ def check_dmraid_pdisks(item, _no_params, info):
                 if status == "ok":
                     pos = line.index("Model:")
                     model = " ".join(line[pos + 1 :])
-                    return (0, "Online (%s)" % model)
-                return (2, "Error on disk!!")
-    return (2, "Missing disk!!")
+                    yield Result(state=State.OK, summary="Online (%s)" % model)
+                    return
+                yield Result(state=State.CRIT, summary="Error on disk!!")
+                return
+    yield Result(state=State.CRIT, summary="Missing disk!!")
+    return
 
 
-def check_dmraid_ldisks(item, _no_params, info):
+def check_dmraid_ldisks(item: str, section: StringTable) -> CheckResult:
     LDISK_FOUND = False
-    for line in info:
+    for line in section:
         if LDISK_FOUND:
             if line[0] == "status":
                 status = line[2]
                 if status == "ok":
-                    return (0, "state is %s" % status)
-                return (2, "%s" % status)
+                    yield Result(state=State.OK, summary="state is %s" % status)
+                    return
+                yield Result(state=State.CRIT, summary="%s" % status)
+                return
         if line[0] == "name" and line[2] == item:
             LDISK_FOUND = True
 
-    return (3, "incomplete data from agent")
+    yield Result(state=State.UNKNOWN, summary="incomplete data from agent")
+    return
 
 
 def parse_dmraid(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["dmraid"] = LegacyCheckDefinition(
-    parse_function=parse_dmraid,
-)
+agent_section_dmraid = AgentSection(name="dmraid", parse_function=parse_dmraid)
 
-
-check_info["dmraid.ldisks"] = LegacyCheckDefinition(
+check_plugin_dmraid_ldisks = CheckPlugin(
+    name="dmraid_ldisks",
     service_name="RAID LDisk %s",
     sections=["dmraid"],
     discovery_function=inventory_dmraid_ldisks,
     check_function=check_dmraid_ldisks,
 )
-
-check_info["dmraid.pdisks"] = LegacyCheckDefinition(
+check_plugin_dmraid_pdisks = CheckPlugin(
+    name="dmraid_pdisks",
     service_name="RAID PDisk %s",
     sections=["dmraid"],
     discovery_function=inventory_dmraid_pdisks,

@@ -4,10 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.dell import DETECT_CHASSIS
 
 
@@ -24,48 +31,51 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_dell_chassis_slots(info):
+def inventory_dell_chassis_slots(section: StringTable) -> DiscoveryResult:
     inventory = []
-    for line in info:
+    for line in section:
         number = line[3]
         if saveint(number) in (1, 2, 3, 4, 5, 6, 7, 8, 9):
             number = "0" + number
         if line[0] != "1" and line[2] != "N/A":
             inventory.append((number, None))
-    return inventory
+    yield from [Service(item=item, parameters=parameters) for (item, parameters) in inventory]
 
 
-def check_dell_chassis_slots(item, _no_params, info):
-    for status, service_tag, name, number in info:
+def check_dell_chassis_slots(item: str, section: StringTable) -> CheckResult:
+    for status, service_tag, name, number in section:
         if saveint(number) in (1, 2, 3, 4, 5, 6, 7, 8, 9):
             number = "0" + number
         if item == number:
             # absent = 1,none = 2,basic = 3,off = 4,
             state_table = {
-                "1": ("absent", 0),
-                "2": ("none", 1),
-                "3": ("basic", 0),
-                "4": ("off", 1),
+                "1": ("absent", State.OK),
+                "2": ("none", State.WARN),
+                "3": ("basic", State.OK),
+                "4": ("off", State.WARN),
             }
-            state_txt, state = state_table.get(status, ("unknown state, ", 3))
+            state_txt, state = state_table.get(status, ("unknown state, ", State.UNKNOWN))
             infotext = f"Status: {state_txt}, Name: {name}, ServiceTag: {service_tag}"
 
-            return state, infotext
-
-    return 3, "unknown slot"
+            yield Result(state=state, summary=infotext)
+            return
 
 
 def parse_dell_chassis_slots(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["dell_chassis_slots"] = LegacyCheckDefinition(
-    parse_function=parse_dell_chassis_slots,
+snmp_section_dell_chassis_slots = SimpleSNMPSection(
+    name="dell_chassis_slots",
     detect=DETECT_CHASSIS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2.5.1.1",
         oids=["2", "3", "4", "5"],
     ),
+    parse_function=parse_dell_chassis_slots,
+)
+check_plugin_dell_chassis_slots = CheckPlugin(
+    name="dell_chassis_slots",
     service_name="Slot %s",
     discovery_function=inventory_dell_chassis_slots,
     check_function=check_dell_chassis_slots,

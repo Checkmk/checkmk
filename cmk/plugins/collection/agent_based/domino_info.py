@@ -3,10 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.domino import DETECT
 
 # Example SNMP walk:
@@ -17,41 +24,45 @@ from cmk.plugins.lib.domino import DETECT
 # .1.3.6.1.4.1.334.72.1.1.6.2.4.0 Release 8.5.3FP5 HF89
 
 
-def inventory_domino_info(info):
-    if info and len(info[0]) != 0:
-        yield None, None
+def inventory_domino_info(section: StringTable) -> DiscoveryResult:
+    if section and len(section[0]) != 0:
+        yield Service()
 
 
-def check_domino_info(_no_item, _no_params, info):
+def check_domino_info(section: StringTable) -> CheckResult:
     translate_status = {
-        "1": (0, "up"),
-        "2": (2, "down"),
-        "3": (2, "not-responding"),
-        "4": (1, "crashed"),
-        "5": (3, "unknown"),
+        "1": (State.OK, "up"),
+        "2": (State.CRIT, "down"),
+        "3": (State.CRIT, "not-responding"),
+        "4": (State.WARN, "crashed"),
+        "5": (State.UNKNOWN, "unknown"),
     }
-    status, domain, name, release = info[0]
+    status, domain, name, release = section[0]
 
     state, state_readable = translate_status[status]
-    yield state, "Server is %s" % state_readable
+    yield Result(state=state, summary="Server is %s" % state_readable)
 
     if len(domain) > 0:
-        yield 0, "Domain: %s" % domain
+        yield Result(state=State.OK, summary="Domain: %s" % domain)
 
-    yield 0, f"Name: {name}, {release}"
+    yield Result(state=State.OK, summary=f"Name: {name}, {release}")
 
 
 def parse_domino_info(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["domino_info"] = LegacyCheckDefinition(
-    parse_function=parse_domino_info,
+snmp_section_domino_info = SimpleSNMPSection(
+    name="domino_info",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.334.72",
         oids=["2.2", "1.1.4.8", "1.1.6.2.1", "1.1.6.2.4"],
     ),
+    parse_function=parse_domino_info,
+)
+check_plugin_domino_info = CheckPlugin(
+    name="domino_info",
     service_name="Domino Info",
     discovery_function=inventory_domino_info,
     check_function=check_domino_info,

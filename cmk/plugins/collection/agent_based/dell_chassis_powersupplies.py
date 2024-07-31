@@ -6,10 +6,19 @@
 
 import re
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    OIDEnd,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.dell import DETECT_CHASSIS
 
 
@@ -26,47 +35,51 @@ def savefloat(f: str) -> float:
         return 0.0
 
 
-def inventory_dell_chassis_powersupplies(info):
+def inventory_dell_chassis_powersupplies(section: StringTable) -> DiscoveryResult:
     inventory = []
-    for line in info:
+    for line in section:
         item = re.sub(r"\.", "-", line[0])
         inventory.append((item, None))
-    return inventory
+    yield from [Service(item=item, parameters=parameters) for (item, parameters) in inventory]
 
 
-def check_dell_chassis_powersupplies(item, _no_params, info):
-    for oid_end, voltage, current, maxpower in info:
+def check_dell_chassis_powersupplies(item: str, section: StringTable) -> CheckResult:
+    for oid_end, voltage, current, maxpower in section:
         if item == re.sub(r"\.", "-", oid_end):
             power = savefloat(voltage) * savefloat(current)
-            state = 0
-            infotext = ""
-            infotext += "current/max Power: {:.2f} / {}, Current: {}, Voltage: {}".format(
+            infotext = "current/max Power: {:.2f} / {}, Current: {}, Voltage: {}".format(
                 power,
                 maxpower,
                 current,
                 voltage,
             )
-            perfdata = [("power", str(power) + "Watt", 0, maxpower, "", maxpower)]
 
             if savefloat(current) == 0:
                 infotext = infotext + " - device in standby"
 
-            return state, infotext, perfdata
+            yield Result(state=State.OK, summary=infotext)
+            yield Metric("power", power)
+            return
 
-    return 3, "unknown power supply"
+    yield Result(state=State.UNKNOWN, summary="unknown power supply")
+    return
 
 
 def parse_dell_chassis_powersupplies(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["dell_chassis_powersupplies"] = LegacyCheckDefinition(
-    parse_function=parse_dell_chassis_powersupplies,
+snmp_section_dell_chassis_powersupplies = SimpleSNMPSection(
+    name="dell_chassis_powersupplies",
     detect=DETECT_CHASSIS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2.4.2.1",
         oids=[OIDEnd(), "5", "6", "7"],
     ),
+    parse_function=parse_dell_chassis_powersupplies,
+)
+check_plugin_dell_chassis_powersupplies = CheckPlugin(
+    name="dell_chassis_powersupplies",
     service_name="Power Supply %s",
     discovery_function=inventory_dell_chassis_powersupplies,
     check_function=check_dell_chassis_powersupplies,

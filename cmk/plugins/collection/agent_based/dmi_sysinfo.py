@@ -7,31 +7,37 @@
 # Check_MK HW/SW Inventory.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.v2 import StringTable
+
+def inventory_dmi_sysinfo(section: StringTable) -> DiscoveryResult:
+    if len(section) > 0 and section[0] == ["System", "Information"]:
+        yield Service()
 
 
-def inventory_dmi_sysinfo(info):
-    if len(info) > 0 and info[0] == ["System", "Information"]:
-        return [(None, None)]
-    return []
-
-
-def check_dmi_sysinfo(item, param, info):
-    if len(info) == 0 or info[0] != ["System", "Information"]:
-        return (3, "Invalid information")
+def check_dmi_sysinfo(section: StringTable) -> CheckResult:
+    if len(section) == 0 or section[0] != ["System", "Information"]:
+        yield Result(state=State.UNKNOWN, summary="Invalid information")
+        return
     data = {}
-    for line in info:
-        line = " ".join(line)
+    for line_ in section:
+        line = " ".join(line_)
         if ":" in line:
             key, value = line.split(":", 1)
             data[key.strip()] = value.strip()
 
-    return (
-        0,
-        "Manufacturer: %s, Product-Name: %s, Version: %s, S/N: %s"
+    yield Result(
+        state=State.OK,
+        summary="Manufacturer: %s, Product-Name: %s, Version: %s, S/N: %s"
         % (
             data.get("Manufacturer", "Unknown"),
             data.get("Product Name", "Unknown"),
@@ -39,14 +45,16 @@ def check_dmi_sysinfo(item, param, info):
             data.get("Serial Number", "Unknown"),
         ),
     )
+    return
 
 
 def parse_dmi_sysinfo(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["dmi_sysinfo"] = LegacyCheckDefinition(
-    parse_function=parse_dmi_sysinfo,
+agent_section_dmi_sysinfo = AgentSection(name="dmi_sysinfo", parse_function=parse_dmi_sysinfo)
+check_plugin_dmi_sysinfo = CheckPlugin(
+    name="dmi_sysinfo",
     service_name="DMI Sysinfo",
     discovery_function=inventory_dmi_sysinfo,
     check_function=check_dmi_sysinfo,

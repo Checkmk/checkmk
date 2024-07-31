@@ -4,10 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
 
 # .1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.2.1 Physical Disk 0:1:0 --> IDRAC-MIB::physicalDiskName.1
@@ -26,39 +34,39 @@ from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
 # .1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.55.2 Disk 1 in Backplane 1 of Integrated RAID Controller 1 --> IDRAC-MIB::physicalDiskDisplayName.2
 
 
-def inventory_dell_idrac_disks(info):
+def inventory_dell_idrac_disks(section: StringTable) -> DiscoveryResult:
     inventory = []
-    for line in info:
+    for line in section:
         inventory.append((line[0], None))
-    return inventory
+    yield from [Service(item=item, parameters=parameters) for (item, parameters) in inventory]
 
 
-def check_dell_idrac_disks(item, _no_params, info):
+def check_dell_idrac_disks(item: str, section: StringTable) -> CheckResult:
     map_states = {
         "disk_states": {
-            "1": (1, "unknown"),
-            "2": (0, "ready"),
-            "3": (0, "online"),
-            "4": (1, "foreign"),
-            "5": (2, "offline"),
-            "6": (2, "blocked"),
-            "7": (2, "failed"),
-            "8": (0, "non-raid"),
-            "9": (0, "removed"),
+            "1": (State.WARN, "unknown"),
+            "2": (State.OK, "ready"),
+            "3": (State.OK, "online"),
+            "4": (State.WARN, "foreign"),
+            "5": (State.CRIT, "offline"),
+            "6": (State.CRIT, "blocked"),
+            "7": (State.CRIT, "failed"),
+            "8": (State.OK, "non-raid"),
+            "9": (State.OK, "removed"),
         },
         "component_states": {
-            "1": (0, "other"),
-            "2": (1, "unknown"),
-            "3": (0, "OK"),
-            "4": (0, "non-critical"),
-            "5": (2, "critical"),
-            "6": (1, "non-recoverable"),
+            "1": (State.OK, "other"),
+            "2": (State.WARN, "unknown"),
+            "3": (State.OK, "OK"),
+            "4": (State.OK, "non-critical"),
+            "5": (State.CRIT, "critical"),
+            "6": (State.WARN, "non-recoverable"),
         },
         "diskpower_states": {
-            "1": (0, "no-operation"),
-            "2": (1, "REBUILDING"),
-            "3": (1, "data-erased"),
-            "4": (1, "COPY-BACK"),
+            "1": (State.OK, "no-operation"),
+            "2": (State.WARN, "REBUILDING"),
+            "3": (State.WARN, "data-erased"),
+            "4": (State.WARN, "COPY-BACK"),
         },
     }
 
@@ -77,11 +85,14 @@ def check_dell_idrac_disks(item, _no_params, info):
         smart_alert,
         diskpower_state,
         display_name,
-    ) in info:
+    ) in section:
         if disk_name == item:
-            yield 0, "[{}] Size: {}".format(
-                display_name,
-                render.disksize(int(capacity_MB) * 1024 * 1024),
+            yield Result(
+                state=State.OK,
+                summary="[{}] Size: {}".format(
+                    display_name,
+                    render.disksize(int(capacity_MB) * 1024 * 1024),
+                ),
             )
 
             for what, what_key, what_text in [
@@ -89,30 +100,34 @@ def check_dell_idrac_disks(item, _no_params, info):
                 (component_state, "component_states", "Component state"),
             ]:
                 state, state_readable = map_states[what_key][what]
-                yield state, f"{what_text}: {state_readable}"
+                yield Result(state=state, summary=f"{what_text}: {state_readable}")
 
             if smart_alert != "0":
-                yield 2, "Smart alert on disk"
+                yield Result(state=State.CRIT, summary="Smart alert on disk")
 
             if spare_state != "1":
-                yield 0, map_spare_state_info[spare_state]
+                yield Result(state=State.OK, summary=map_spare_state_info[spare_state])
 
             if diskpower_state != "1":
                 state, state_readable = map_states["diskpower_states"][diskpower_state]
-                yield state, "%s" % (state_readable)
+                yield Result(state=state, summary="%s" % (state_readable))
 
 
 def parse_dell_idrac_disks(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["dell_idrac_disks"] = LegacyCheckDefinition(
-    parse_function=parse_dell_idrac_disks,
+snmp_section_dell_idrac_disks = SimpleSNMPSection(
+    name="dell_idrac_disks",
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1",
         oids=["2", "4", "11", "22", "24", "31", "50", "55"],
     ),
+    parse_function=parse_dell_idrac_disks,
+)
+check_plugin_dell_idrac_disks = CheckPlugin(
+    name="dell_idrac_disks",
     service_name="Disk %s",
     discovery_function=inventory_dell_idrac_disks,
     check_function=check_dell_idrac_disks,

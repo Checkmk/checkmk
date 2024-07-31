@@ -29,10 +29,19 @@
 # GENERAL MAPS:
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
 dell_powerconnect_fans_status_map = {
     "1": "normal",
@@ -43,34 +52,35 @@ dell_powerconnect_fans_status_map = {
     "6": "notFunctioning",
 }
 dell_powerconnect_fans_status2nagios_map = {
-    "normal": 0,
-    "warning": 1,
-    "critical": 2,
-    "shutdown": 3,
-    "notPresent": 1,
-    "notFunctioning": 2,
+    "normal": State.OK,
+    "warning": State.WARN,
+    "critical": State.CRIT,
+    "shutdown": State.UNKNOWN,
+    "notPresent": State.WARN,
+    "notFunctioning": State.CRIT,
 }
 
 
 # Discovery of all fan related elements
-def inventory_dell_powerconnect_fans(info):
+def inventory_dell_powerconnect_fans(section: StringTable) -> DiscoveryResult:
     inventory = []
-    for _device_id, name, state in info:
+    for _device_id, name, state in section:
         if dell_powerconnect_fans_status_map[state] != "notPresent":
             inventory.append((name, None))
-    return inventory
+    yield from [Service(item=item, parameters=parameters) for (item, parameters) in inventory]
 
 
 # The check for the states and details of each fan
-def check_dell_powerconnect_fans(item, _not_used, info):
-    for _device_id, name, state in info:
+def check_dell_powerconnect_fans(item: str, section: StringTable) -> CheckResult:
+    for _device_id, name, state in section:
         if name == item:
             dell_powerconnect_status = dell_powerconnect_fans_status_map[state]
             status = dell_powerconnect_fans_status2nagios_map[dell_powerconnect_status]
 
-            return (status, f'Condition of FAN "{name}" is {dell_powerconnect_status}')
-
-    return (3, "item not found in snmp data")
+            yield Result(
+                state=status, summary=f'Condition of FAN "{name}" is {dell_powerconnect_status}'
+            )
+            return
 
 
 # Auto-detection of fan related details.
@@ -80,8 +90,8 @@ def parse_dell_powerconnect_fans(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["dell_powerconnect_fans"] = LegacyCheckDefinition(
-    parse_function=parse_dell_powerconnect_fans,
+snmp_section_dell_powerconnect_fans = SimpleSNMPSection(
+    name="dell_powerconnect_fans",
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6027.1.3.22"),
@@ -90,6 +100,10 @@ check_info["dell_powerconnect_fans"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.674.10895.3000.1.2.110.7.1.1",
         oids=["1", "2", "3"],
     ),
+    parse_function=parse_dell_powerconnect_fans,
+)
+check_plugin_dell_powerconnect_fans = CheckPlugin(
+    name="dell_powerconnect_fans",
     service_name="Sensor %s",
     discovery_function=inventory_dell_powerconnect_fans,
     check_function=check_dell_powerconnect_fans,

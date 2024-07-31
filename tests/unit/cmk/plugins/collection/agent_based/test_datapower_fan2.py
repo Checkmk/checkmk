@@ -6,14 +6,12 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-
-from cmk.plugins.collection.agent_based.datapower_fan import Fan
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.collection.agent_based.datapower_fan import (
+    check_datapower_fan,
+    Fan,
+    inventory_datapower_fan,
+)
 
 _SECTION = {
     "Tray 1 Fan 1": Fan(
@@ -39,13 +37,8 @@ _SECTION = {
 }
 
 
-@pytest.fixture(name="datapower_fan_plugin")
-def fixture_datapower_fan_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("datapower_fan")]
-
-
-def test_discover_datapower_fan(datapower_fan_plugin: CheckPlugin) -> None:
-    assert list(datapower_fan_plugin.discovery_function(_SECTION)) == [
+def test_discover_datapower_fan() -> None:
+    assert list(inventory_datapower_fan(_SECTION)) == [
         Service(item="Tray 1 Fan 1"),
         Service(item="Tray 1 Fan 2"),
         Service(item="Tray 1 Fan 3"),
@@ -75,14 +68,7 @@ def test_discover_datapower_fan(datapower_fan_plugin: CheckPlugin) -> None:
     ],
 )
 def test_check_datapower_fan(
-    datapower_fan_plugin: CheckPlugin,
     item: str,
     expected_result: Result,
 ) -> None:
-    assert list(
-        datapower_fan_plugin.check_function(
-            item=item,
-            params={},
-            section=_SECTION,
-        )
-    ) == [expected_result]
+    assert list(check_datapower_fan(item, _SECTION)) == [expected_result]

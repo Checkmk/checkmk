@@ -16,6 +16,9 @@ from cmk.gui.form_specs.private.definitions import LegacyValueSpec, UnknownFormS
 from cmk.gui.form_specs.vue.form_spec_recomposers.percentage import (
     recompose as recompose_percentage,
 )
+from cmk.gui.form_specs.vue.form_spec_recomposers.regular_expression import (
+    recompose as recompose_regular_expression,
+)
 from cmk.gui.form_specs.vue.form_spec_recomposers.unknown_form_spec import (
     recompose as recompose_unknown_form_spec,
 )
@@ -48,6 +51,7 @@ from cmk.rulesets.v1.form_specs import (
     List,
     MultilineText,
     Percentage,
+    RegularExpression,
     SingleChoice,
     String,
 )
@@ -77,6 +81,7 @@ def register_form_specs():
     register_visitor_class(FixedValue, FixedValueVisitor)
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
     register_visitor_class(MultilineText, MultilineTextVisitor)
+    register_visitor_class(RegularExpression, StringVisitor, recompose_regular_expression)
 
     # Recomposed
     register_visitor_class(Percentage, FloatVisitor, recompose_percentage)

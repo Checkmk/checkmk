@@ -14,7 +14,9 @@ from cmk.gui.form_specs.vue.registries import (
 from cmk.gui.form_specs.vue.type_defs import DataOrigin
 from cmk.gui.form_specs.vue.type_defs import DefaultValue as FormSpecDefaultValue
 from cmk.gui.form_specs.vue.type_defs import EMPTY_VALUE, EmptyValue, VisitorOptions
+from cmk.gui.htmllib import html
 from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.utils import escaping
 
 from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import FormSpec
@@ -23,7 +25,10 @@ from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 
 def get_title_and_help(form_spec: FormSpec) -> tuple[str, str]:
-    return localize(form_spec.title), localize(form_spec.help_text)
+    title_text = localize(form_spec.title)
+    translated_help_text = localize(form_spec.help_text)
+    escaped_help_text = escaping.escape_to_html_permissive(translated_help_text, escape_links=False)
+    return title_text, html.HTMLGenerator.resolve_help_text_macros(str(escaped_help_text))
 
 
 class SupportsLocalize(Protocol):

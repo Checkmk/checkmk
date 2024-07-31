@@ -2,11 +2,24 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
-from collections.abc import Iterator
+import re
+from collections.abc import Iterator, Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import asdict, dataclass, field
-from typing import Any, cast, Mapping, MutableMapping, MutableSequence, Sequence
+from functools import partial
+from typing import Any, cast
+
+from livestatus import SiteId
+
+from cmk.utils.hostaddress import HostName
+
+from cmk.automations.results import (
+    DiagSpecialAgentHostConfig,
+    DiagSpecialAgentInput,
+    SpecialAgentDiscoveryPreviewResult,
+)
+
+from cmk.checkengine.discovery import CheckPreviewEntry
 
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     parse_value_from_frontend,
@@ -20,12 +33,18 @@ from cmk.gui.quick_setup.v0_unstable.definitions import (
     QuickSetupSaveRedirect,
     UniqueBundleIDStr,
 )
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    CallableRecap,
+    CallableValidator,
+    QuickSetup,
+    QuickSetupStage,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
     RawFormData,
+    ServiceInterest,
     StageId,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import (
@@ -34,12 +53,15 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecRecap,
     FormSpecWrapper,
     ListOfWidgets,
+    Text,
     Widget,
 )
+from cmk.gui.watolib.check_mk_automations import diag_special_agent, special_agent_discovery_preview
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 from cmk.gui.watolib.passwords import load_passwords
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 from cmk.rulesets.v1.form_specs import FormSpec, Password
 
 
@@ -190,6 +212,121 @@ def _collect_passwords_from_form_data(
         if form_spec_id in possible_expected_password_keys
         if form_spec_value[0] == "cmk_postprocessed"
     }
+
+
+def _form_data_to_diag_special_agent_input(
+    rulespec_name: str,
+    all_stages_form_data: ParsedFormData,
+) -> DiagSpecialAgentInput:
+    host_name = _find_unique_id(all_stages_form_data, "host_name")
+    return DiagSpecialAgentInput(
+        host_config=DiagSpecialAgentHostConfig(
+            host_name=HostName(host_name or ""), host_alias=host_name or ""
+        ),
+        agent_name=rulespec_name.split(":")[1],
+        params=_collect_params_from_form_data(all_stages_form_data, rulespec_name),
+        passwords=_collect_passwords_from_form_data(all_stages_form_data, rulespec_name),
+    )
+
+
+def validate_test_connection(rulespec_name: str) -> CallableValidator:
+    return partial(_validate_test_connection, rulespec_name)
+
+
+def _validate_test_connection(
+    rulespec_name: str,
+    all_stages_form_data: ParsedFormData,
+    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
+) -> GeneralStageErrors:
+    general_errors: GeneralStageErrors = []
+    site_id = _find_unique_id(all_stages_form_data, "site_selection")
+    output = diag_special_agent(
+        SiteId(site_id) if site_id else omd_site(),
+        _form_data_to_diag_special_agent_input(rulespec_name, all_stages_form_data),
+    )
+    for result in output.results:
+        if result.return_code != 0:
+            general_errors.append(result.response)
+    return general_errors
+
+
+def _match_service_interest(
+    check_preview_entry: CheckPreviewEntry, services_of_interest: Sequence[ServiceInterest]
+) -> ServiceInterest | None:
+    for service_of_interest in services_of_interest:
+        # TODO: decide if we want to match on all of services_of_interest (and yield the service
+        #  interests) or just the first one just like now.
+        if re.match(
+            service_of_interest.check_plugin_name_pattern, check_preview_entry.check_plugin_name
+        ):
+            return service_of_interest
+    return None
+
+
+def _check_preview_entry_by_service_interest(
+    services_of_interest: Sequence[ServiceInterest],
+    service_discovery_result: SpecialAgentDiscoveryPreviewResult,
+) -> tuple[Mapping[ServiceInterest, list[CheckPreviewEntry]], list[CheckPreviewEntry]]:
+    check_preview_entry_by_service_interest: Mapping[ServiceInterest, list[CheckPreviewEntry]] = {
+        si: [] for si in services_of_interest
+    }
+    others: list[CheckPreviewEntry] = []
+    for check_preview_entry in service_discovery_result.check_table:
+        if matching_services_interests := _match_service_interest(
+            check_preview_entry, services_of_interest
+        ):
+            check_preview_entry_by_service_interest[matching_services_interests].append(
+                check_preview_entry
+            )
+        else:
+            others.append(check_preview_entry)
+    return check_preview_entry_by_service_interest, others
+
+
+def recap_service_discovery(
+    rulespec_name: str,
+    services_of_interest: Sequence[ServiceInterest],
+) -> CallableRecap:
+    return partial(_recap_service_discovery, rulespec_name, services_of_interest)
+
+
+def _recap_service_discovery(
+    rulespec_name: str,
+    services_of_interest: Sequence[ServiceInterest],
+    all_stages_form_data: Sequence[ParsedFormData],
+    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
+) -> Sequence[Widget]:
+    combined_parsed_form_data = {
+        k: v for form_data in all_stages_form_data for k, v in form_data.items()
+    }
+    site_id = _find_unique_id(all_stages_form_data, "site_selection")
+
+    service_discovery_result = special_agent_discovery_preview(
+        SiteId(site_id) if site_id else omd_site(),
+        _form_data_to_diag_special_agent_input(rulespec_name, combined_parsed_form_data),
+    )
+    check_preview_entry_by_service_interest, others = _check_preview_entry_by_service_interest(
+        services_of_interest, service_discovery_result
+    )
+
+    return [
+        ListOfWidgets(
+            items=[
+                *[
+                    Text(
+                        text=f"{len(check_preview_entries)} {service_interest.label}",
+                    )
+                    for service_interest, check_preview_entries in check_preview_entry_by_service_interest.items()
+                ],
+                *[
+                    Text(
+                        text=f"{len(others)} other services",
+                    )
+                ],
+            ],
+            list_type="check",
+        )
+    ]
 
 
 def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpecWrapper]:

@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Mapping, MutableSequence, NewType
 
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
@@ -14,3 +15,9 @@ QuickSetupId = NewType("QuickSetupId", str)
 RawFormData = NewType("RawFormData", Mapping[FormSpecId, object])
 ParsedFormData = Mapping[FormSpecId, Any]
 GeneralStageErrors = MutableSequence[str]
+
+
+@dataclass(frozen=True)
+class ServiceInterest:
+    check_plugin_name_pattern: str
+    label: str

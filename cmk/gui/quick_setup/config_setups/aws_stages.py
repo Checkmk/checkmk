@@ -5,11 +5,18 @@
 
 from collections.abc import Sequence
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
-from cmk.gui.quick_setup.to_frontend import recaps_form_spec, validate_unique_id
+from cmk.gui.quick_setup.to_frontend import (
+    recap_service_discovery,
+    recaps_form_spec,
+    validate_test_connection,
+    validate_unique_id,
+)
 from cmk.gui.quick_setup.v0_unstable.definitions import IncomingStage
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
-from cmk.gui.quick_setup.v0_unstable.type_defs import QuickSetupId, StageId
+from cmk.gui.quick_setup.v0_unstable.type_defs import QuickSetupId, ServiceInterest, StageId
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,
@@ -148,8 +155,18 @@ def configure_services_to_monitor(stage_id: StageId) -> QuickSetupStage:
                 ],
             ),
         ],
-        validators=[],
-        recap=[recaps_form_spec],
+        validators=[
+            # TODO: move to correct location
+            validate_test_connection(RuleGroup.SpecialAgents("aws")),
+        ],
+        recap=[
+            recaps_form_spec,
+            # TODO: move to correct location and add correct services_of_interest
+            recap_service_discovery(
+                RuleGroup.SpecialAgents("aws"),
+                [ServiceInterest(".*", "services")],
+            ),
+        ],
         button_txt="Review and run service discovery",
     )
 

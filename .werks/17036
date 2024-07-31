@@ -1,0 +1,13 @@
+Title: heartbeat_crm: Handle cases when pacemaker service is not running
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1726522509
+Edition: cre
+Level: 1
+Version: 2.1.0p48
+
+The creation of the agent section depended on the pacemaker service being running. If this was not the case, the section was left empty, causing the services to become stale.
+From now on, if the pacemaker service is not running, the service will go into CRIT state and the summary will indicate that the connection was not possible/refused.
+
+Also, the agent now checks for the existence of 'crm_mon' on the system, as this is a prerequisite for further command execution.

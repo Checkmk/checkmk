@@ -11204,6 +11204,10 @@ msgstr ""
 "ジェントプラグインmk_inventoryをインストールする必要があります)"
 
 #, fuzzy
+msgid "Checkmk Cloud"
+msgstr "Checkmkロゴ"
+
+#, fuzzy
 msgid "Checkmk Cloud (SaaS) Beta"
 msgstr "Checkmkエージェント"
 
@@ -19585,6 +19589,10 @@ msgstr ""
 
 #, python-format
 msgid "During the beta phase, the number of services is limited to %s. "
+msgstr "ベータ・フェーズの間、サービス数は %s に制限されます。 "
+
+#, fuzzy, python-format
+msgid "During the development phase, the number of services is limited to %s."
 msgstr "ベータ・フェーズの間、サービス数は %s に制限されます。 "
 
 msgid "During this time period no monitoring data is available"
@@ -71263,6 +71271,10 @@ msgstr "トレンドパフォーマンスデータ"
 
 msgid "Treshold"
 msgstr "しきい値"
+
+#, fuzzy
+msgid "Trial Phase"
+msgstr "ささいな変更"
 
 msgid "Trial expired"
 msgstr "試用期間満了"

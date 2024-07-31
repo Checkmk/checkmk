@@ -11684,6 +11684,10 @@ msgstr ""
 "plugin Agent mk_inventory precisa ser instalado)"
 
 #, fuzzy
+msgid "Checkmk Cloud"
+msgstr "Logotipo Checkmk"
+
+#, fuzzy
 msgid "Checkmk Cloud (SaaS) Beta"
 msgstr "agente Checkmk"
 
@@ -20180,6 +20184,10 @@ msgstr ""
 
 #, python-format
 msgid "During the beta phase, the number of services is limited to %s. "
+msgstr ""
+
+#, python-format
+msgid "During the development phase, the number of services is limited to %s."
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -72813,6 +72821,10 @@ msgstr "Dados de desempenho de tendências"
 
 msgid "Treshold"
 msgstr "Treshold"
+
+#, fuzzy
+msgid "Trial Phase"
+msgstr "Mudança trivial"
 
 msgid "Trial expired"
 msgstr "O julgamento expirou"

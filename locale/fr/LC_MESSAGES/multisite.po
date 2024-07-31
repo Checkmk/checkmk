@@ -11774,6 +11774,10 @@ msgstr ""
 "MKNotifyd, RRDCached (le plugin d'agent mk_inventory doit être installé)"
 
 #, fuzzy
+msgid "Checkmk Cloud"
+msgstr "Logo Checkmk"
+
+#, fuzzy
 msgid "Checkmk Cloud (SaaS) Beta"
 msgstr "Agent de contrôle"
 
@@ -20371,6 +20375,10 @@ msgstr ""
 
 #, python-format
 msgid "During the beta phase, the number of services is limited to %s. "
+msgstr ""
+
+#, python-format
+msgid "During the development phase, the number of services is limited to %s."
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -73569,6 +73577,10 @@ msgstr "Tendance des données de performance"
 
 msgid "Treshold"
 msgstr "Seuil"
+
+#, fuzzy
+msgid "Trial Phase"
+msgstr "Changement trivial"
 
 msgid "Trial expired"
 msgstr "Essai expiré"

@@ -16,10 +16,6 @@ def build_make_target(edition) {
 }
 
 def main() {
-    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
-    def branch_version = versioning.get_branch_version(checkout_dir);
-
     check_job_parameters([
         ["OVERRIDE_DISTROS"],
     ]);
@@ -28,18 +24,31 @@ def main() {
         "EDITION",
     ]);
 
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
+
+    def safe_branch_name = versioning.safe_branch_name(scm);
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_version = versioning.get_cmk_version(safe_branch_name, branch_version, "daily");
+
+    def edition = params.EDITION;
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_update_tests");
-    def make_target = build_make_target(EDITION);
+    def docker_tag = versioning.select_docker_tag(
+        "",                // 'build tag'
+        safe_branch_name,  // 'branch' returns '<BRANCH>-latest'
+    );
+
+    def make_target = build_make_target(edition);
 
     testing_helper.run_make_targets(
         DOCKER_GROUP_ID: get_docker_group_id(),
         DISTRO_LIST: distros,
-        EDITION: EDITION,
+        EDITION: edition,
         VERSION: "daily",
-        DOCKER_TAG: "2.3.0-latest",
+        DOCKER_TAG: docker_tag,
         MAKE_TARGET: make_target,
-        BRANCH: "2.3.0",
-        cmk_version: versioning.get_cmk_version("2.3.0", branch_version, "daily"),
+        BRANCH: safe_branch_name,
+        cmk_version: cmk_version,
     );
 }
 

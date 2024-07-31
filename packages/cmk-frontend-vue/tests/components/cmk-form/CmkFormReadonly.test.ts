@@ -231,3 +231,21 @@ test('CmkFormReadonly renders boolean: off', () => {
   // Title of cascading
   screen.getByText('off')
 })
+
+const multilineTextFormSpec: FormSpec.MultilineText = {
+  type: 'multiline_text',
+  title: 'fooTitle',
+  help: 'fooHelp',
+  validators: []
+}
+test('CmkFormReadonly renders multiline_text', () => {
+  render(CmkFormReadonly, {
+    props: {
+      spec: multilineTextFormSpec,
+      backendValidation: [],
+      data: 'BLABLA'
+    }
+  })
+  // Title of cascading
+  screen.getByText('BLABLA')
+})

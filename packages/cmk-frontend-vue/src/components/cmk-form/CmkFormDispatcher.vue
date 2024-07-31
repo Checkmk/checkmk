@@ -12,6 +12,7 @@ import type { IComponent } from '@/types'
 import type { ValidationMessages } from '@/lib/validation'
 import CmkFormFixedValue from '@/components/cmk-form/element/CmkFormFixedValue.vue'
 import CmkFormBooleanChoice from '@/components/cmk-form/element/CmkFormBooleanChoice.vue'
+import CmkFormMultilineText from '@/components/cmk-form/element/CmkFormMultilineText.vue'
 
 const props = defineProps<{
   spec: FormSpec
@@ -31,7 +32,8 @@ const components: Record<Components['type'], unknown> = {
   list: CmkFormList,
   legacy_valuespec: CmkFormLegacyValueSpec,
   fixed_value: CmkFormFixedValue,
-  boolean_choice: CmkFormBooleanChoice
+  boolean_choice: CmkFormBooleanChoice,
+  multiline_text: CmkFormMultilineText
 }
 
 function getComponent(): IComponent {

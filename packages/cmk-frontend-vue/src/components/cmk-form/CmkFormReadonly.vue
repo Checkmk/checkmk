@@ -10,7 +10,8 @@ import type {
   LegacyValuespec,
   ValidationMessage,
   FixedValue,
-  BooleanChoice
+  BooleanChoice,
+  MultilineText
 } from '@/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -63,7 +64,20 @@ function renderForm(
       return renderFixedValue(formSpec as FixedValue)
     case 'boolean_choice':
       return renderBooleanChoice(formSpec as BooleanChoice, value as boolean)
+    case 'multiline_text':
+      return renderMultilineText(formSpec as MultilineText, value as string)
   }
+}
+
+function renderMultilineText(formSpec: MultilineText, value: string): VNode {
+  const lines: VNode[] = []
+  value.split('\n').forEach((line) => {
+    lines.push(h('span', { style: 'white-space: pre-wrap' }, line))
+    lines.push(h('br'))
+  })
+
+  const style = formSpec.monospaced ? 'font-family: monospace, sans-serif' : ''
+  return h('div', { style: style }, lines)
 }
 
 function renderBooleanChoice(formSpec: BooleanChoice, value: boolean): VNode {

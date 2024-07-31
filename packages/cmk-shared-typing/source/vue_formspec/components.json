@@ -381,6 +381,35 @@
                 }
             ]
         },
+        "multiline_text": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "multiline_text",
+                    "default": "multiline_text"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "macro_support": {
+                    "type": "boolean"
+                },
+                "monospaced": {
+                    "type": "boolean"
+                },
+                "input_hint": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "components": {
             "discriminator": {
                 "propertyName": "type"
@@ -415,11 +444,14 @@
                 },
                 {
                     "$ref": "#/$defs/boolean_choice"
+                },
+                {
+                    "$ref": "#/$defs/multiline_text"
                 }
             ],
             "required": [
                 "type"
             ]
-        },
+        }
     }
 }

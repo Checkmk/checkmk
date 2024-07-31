@@ -15,7 +15,8 @@ export type Components =
   | SingleChoice
   | CascadingSingleChoice
   | FixedValue
-  | BooleanChoice;
+  | BooleanChoice
+  | MultilineText;
 export type Integer = FormSpec & {
   type: "integer";
   label?: string;
@@ -80,6 +81,13 @@ export type BooleanChoice = FormSpec & {
   label?: string;
   text_on: string;
   text_off: string;
+};
+export type MultilineText = FormSpec & {
+  type: "multiline_text";
+  label?: string;
+  macro_support?: boolean;
+  monospaced?: boolean;
+  input_hint?: string;
 };
 
 export interface VueFormspecComponents {

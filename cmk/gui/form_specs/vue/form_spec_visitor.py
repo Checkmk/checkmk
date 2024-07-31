@@ -29,6 +29,7 @@ from cmk.gui.form_specs.vue.visitors.float import FloatVisitor
 from cmk.gui.form_specs.vue.visitors.integer import IntegerVisitor
 from cmk.gui.form_specs.vue.visitors.legacy_valuespec import LegacyValuespecVisitor
 from cmk.gui.form_specs.vue.visitors.list import ListVisitor
+from cmk.gui.form_specs.vue.visitors.multiline_text import MultilineTextVisitor
 from cmk.gui.form_specs.vue.visitors.single_choice import SingleChoiceVisitor
 from cmk.gui.form_specs.vue.visitors.string import StringVisitor
 from cmk.gui.htmllib.html import html
@@ -45,6 +46,7 @@ from cmk.rulesets.v1.form_specs import (
     FormSpec,
     Integer,
     List,
+    MultilineText,
     Percentage,
     SingleChoice,
     String,
@@ -74,6 +76,7 @@ def register_form_specs():
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
+    register_visitor_class(MultilineText, MultilineTextVisitor)
 
     # Recomposed
     register_visitor_class(Percentage, FloatVisitor, recompose_percentage)

@@ -14,9 +14,9 @@ const validation = ref<ValidationMessages>([])
 
 watch(
   () => props.backendValidation,
-  (new_validation: ValidationMessages) => {
+  (newValidation: ValidationMessages) => {
     const validations: ValidationMessages = []
-    new_validation.forEach((message) => {
+    newValidation.forEach((message) => {
       validations.push({
         location: [],
         message: message.message,
@@ -32,15 +32,15 @@ const data = defineModel<unknown>('data', { required: true })
 const legacyDOM = ref<HTMLFormElement>()
 
 onMounted(() => {
-  select(legacyDOM.value!).selectAll('input,select').on('input.observer', collect_data)
-  collect_data()
+  select(legacyDOM.value!).selectAll('input,select').on('input.observer', collectData)
+  collectData()
 })
 
 onBeforeUnmount(() => {
   select(legacyDOM.value!).selectAll('input').on('input.observer', null)
 })
 
-function collect_data() {
+function collectData() {
   let result = Object.fromEntries(new FormData(legacyDOM.value))
   data.value = {
     input_context: result,

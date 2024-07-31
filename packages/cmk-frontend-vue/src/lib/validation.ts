@@ -50,7 +50,7 @@ export type ValidationMessages = ValidationMessage[]
 
 export function groupDictionaryValidations(
   elements: DictionaryElement[],
-  new_validation: ValidationMessages
+  newValidation: ValidationMessages
 ): [ValidationMessages, Record<string, ValidationMessages>] {
   // Prepare all elements with an empty list of validation messages
   const elementValidations = elements.reduce(
@@ -62,7 +62,7 @@ export function groupDictionaryValidations(
   )
   const dictionaryValidations: ValidationMessages = []
 
-  new_validation.forEach((msg) => {
+  newValidation.forEach((msg) => {
     if (msg.location.length == 0) {
       dictionaryValidations.push(msg)
       return

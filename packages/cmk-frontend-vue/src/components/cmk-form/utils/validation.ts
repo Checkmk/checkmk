@@ -12,11 +12,11 @@ export function useValidation<Type>(
 
   watch(
     getBackendValidation,
-    (new_validation: ValidationMessages) => {
-      new_validation.forEach((message) => {
+    (newValidation: ValidationMessages) => {
+      newValidation.forEach((message) => {
         data.value = message.invalid_value as string
       })
-      validation.value = new_validation
+      validation.value = newValidation
     },
     { immediate: true }
   )

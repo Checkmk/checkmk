@@ -17,7 +17,7 @@ import Table from './views/CmkTable.vue'
 import { mixinUniqueId } from './plugins'
 import QuickSetup from './views/QuickSetup.vue'
 
-function setup_vue() {
+function setupVue() {
   document.querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app]').forEach((div) => {
     const dataset = div.dataset
     if (dataset == undefined) {
@@ -68,7 +68,7 @@ function setup_vue() {
 }
 
 addEventListener('load', () => {
-  setup_vue()
+  setupVue()
 })
 
 /* eslint-disable-next-line @typescript-eslint/naming-convention */

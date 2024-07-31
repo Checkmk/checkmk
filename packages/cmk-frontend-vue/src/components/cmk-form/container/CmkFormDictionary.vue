@@ -32,13 +32,13 @@ onBeforeMount(() => {
 
 watch(() => props.backendValidation, setValidation)
 
-function setValidation(new_validation: ValidationMessages) {
-  const [, _elementValidation] = groupDictionaryValidations(props.spec.elements, new_validation)
+function setValidation(newValidation: ValidationMessages) {
+  const [, _elementValidation] = groupDictionaryValidations(props.spec.elements, newValidation)
   elementValidation.value = _elementValidation
 }
 
 // TODO: computed
-function get_elements_from_props(): ElementFromProps[] {
+function getElementsFromProps(): ElementFromProps[] {
   const elements: ElementFromProps[] = []
   props.spec.elements.forEach((element: DictionaryElement) => {
     let isActive = element.ident in data.value ? true : element.required
@@ -53,7 +53,7 @@ function get_elements_from_props(): ElementFromProps[] {
   return elements
 }
 
-function toggle_element(event: MouseEvent, key: string) {
+function toggleElement(event: MouseEvent, key: string) {
   let target = event.target
   if (!target) {
     return
@@ -69,16 +69,14 @@ function toggle_element(event: MouseEvent, key: string) {
 <template>
   <table class="dictionary">
     <tbody>
-      <tr v-for="dict_element in get_elements_from_props()" :key="dict_element.dict_config.ident">
+      <tr v-for="dict_element in getElementsFromProps()" :key="dict_element.dict_config.ident">
         <td class="dictleft">
           <span class="checkbox">
             <input
               v-if="!dict_element.dict_config.required"
               :id="$componentId + dict_element.dict_config.ident"
               v-model="dict_element.is_active"
-              :onclick="
-                (event: MouseEvent) => toggle_element(event, dict_element.dict_config.ident)
-              "
+              :onclick="(event: MouseEvent) => toggleElement(event, dict_element.dict_config.ident)"
               type="checkbox"
             />
             <label :for="$componentId + dict_element.dict_config.ident">

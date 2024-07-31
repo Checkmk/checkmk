@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import CmkFormReadonly from '@/components/cmk-form/CmkFormReadonly.vue'
 
-function get_spec(spec_type: 'integer' | 'float'): FormSpec.Integer | FormSpec.Float {
+function getSpec(specType: 'integer' | 'float'): FormSpec.Integer | FormSpec.Float {
   return {
-    type: spec_type,
+    type: specType,
     title: 'fooTitle',
     help: 'fooHelp',
     label: 'fooLabel',
@@ -17,7 +17,7 @@ function get_spec(spec_type: 'integer' | 'float'): FormSpec.Integer | FormSpec.F
 test('CmkFormReadonly renders integer', () => {
   render(CmkFormReadonly, {
     props: {
-      spec: get_spec('integer'),
+      spec: getSpec('integer'),
       data: 42,
       backendValidation: []
     }
@@ -28,7 +28,7 @@ test('CmkFormReadonly renders integer', () => {
 test('CmkFormReadonly renders float', () => {
   render(CmkFormReadonly, {
     props: {
-      spec: get_spec('float'),
+      spec: getSpec('float'),
       data: 42.23,
       backendValidation: []
     }
@@ -162,7 +162,7 @@ const cascadingSingleChoiceFormSpec: FormSpec.CascadingSingleChoice = {
       name: 'integerChoice',
       title: 'integerChoiceTitle',
       default_value: 5,
-      parameter_form: get_spec('integer')
+      parameter_form: getSpec('integer')
     }
   ]
 }

@@ -28,56 +28,52 @@ const rendered = ref<VNode | null>(null)
 watch(
   [data],
   () => {
-    rendered.value = render_form(props.spec, data.value, props.backendValidation)
+    rendered.value = renderForm(props.spec, data.value, props.backendValidation)
   },
   { deep: true, immediate: true }
 )
 
-function render_form(
-  form_spec: FormSpec,
+function renderForm(
+  formSpec: FormSpec,
   value: unknown,
   backendValidation: ValidationMessages = []
 ): VNode | null {
-  switch (form_spec.type as Components['type']) {
+  switch (formSpec.type as Components['type']) {
     case 'dictionary':
-      return render_dict(
-        form_spec as Dictionary,
-        value as Record<string, unknown>,
-        backendValidation
-      )
+      return renderDict(formSpec as Dictionary, value as Record<string, unknown>, backendValidation)
     case 'string':
     case 'integer':
     case 'float':
-      return render_simple_value(form_spec, value as string, backendValidation)
+      return renderSimpleValue(formSpec, value as string, backendValidation)
     case 'single_choice':
-      return render_single_choice(form_spec as SingleChoice, value as string, backendValidation)
+      return renderSingleChoice(formSpec as SingleChoice, value as string, backendValidation)
     case 'list':
-      return render_list(form_spec as List, value as unknown[], backendValidation)
+      return renderList(formSpec as List, value as unknown[], backendValidation)
     case 'cascading_single_choice':
-      return render_cascading_single_choice(
-        form_spec as CascadingSingleChoice,
+      return renderCascadingSingleChoice(
+        formSpec as CascadingSingleChoice,
         value as [string, unknown],
         backendValidation
       )
     case 'legacy_valuespec':
-      return render_legacy_valuespec(form_spec as LegacyValuespec, value, backendValidation)
+      return renderLegacyValuespec(formSpec as LegacyValuespec, value, backendValidation)
   }
 }
 
-function render_dict(
-  form_spec: Dictionary,
+function renderDict(
+  formSpec: Dictionary,
   value: Record<string, unknown>,
   backendValidation: ValidationMessages
 ): VNode {
   const dictElements: VNode[] = []
   // Note: Dictionary validations are not shown
-  const [, elementValidations] = groupDictionaryValidations(form_spec.elements, backendValidation)
-  form_spec.elements.map((element) => {
+  const [, elementValidations] = groupDictionaryValidations(formSpec.elements, backendValidation)
+  formSpec.elements.map((element) => {
     if (value[element.ident] == undefined) {
       return
     }
 
-    const elementForm = render_form(
+    const elementForm = renderForm(
       element.parameter_form,
       value[element.ident],
       elementValidations[element.ident] || []
@@ -95,7 +91,7 @@ function render_dict(
   return h('table', dictElements)
 }
 
-function compute_used_value(
+function computeUsedValue(
   value: unknown,
   backendValidation: ValidationMessages = []
 ): [string, boolean, string] {
@@ -105,12 +101,12 @@ function compute_used_value(
   return [value as string, false, '']
 }
 
-function render_simple_value(
-  _form_spec: FormSpec,
+function renderSimpleValue(
+  _formSpec: FormSpec,
   value: string,
   backendValidation: ValidationMessages = []
 ): VNode {
-  let [usedValue, isError, errorMessage] = compute_used_value(value, backendValidation)
+  let [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
   return h(
     'div',
     isError ? { style: ERROR_BACKGROUND_COLOR } : {},
@@ -118,19 +114,19 @@ function render_simple_value(
   )
 }
 
-function render_single_choice(
-  form_spec: SingleChoice,
+function renderSingleChoice(
+  formSpec: SingleChoice,
   value: string,
   backendValidation: ValidationMessages = []
 ): VNode {
-  for (const element of form_spec.elements) {
+  for (const element of formSpec.elements) {
     if (element.name === value) {
       return h('div', [element.title])
     }
   }
 
   // Value not found in valid values. Try to show error
-  let [usedValue, isError, errorMessage] = compute_used_value(value, backendValidation)
+  let [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
   if (isError) {
     return h('div', { style: `background: ${ERROR_BACKGROUND_COLOR}` }, [
       `${usedValue} - ${errorMessage}`
@@ -144,8 +140,8 @@ function render_single_choice(
   ])
 }
 
-function render_list(
-  form_spec: List,
+function renderList(
+  formSpec: List,
   value: unknown[],
   backendValidation: ValidationMessages
 ): VNode | null {
@@ -156,7 +152,7 @@ function render_list(
   if (!value) {
     return null
   }
-  const listResults = [h('label', [form_spec.element_template.title])]
+  const listResults = [h('label', [formSpec.element_template.title])]
   listValidations.forEach((validation: ValidationMessage) => {
     listResults.push(h('label', [validation.message]))
   })
@@ -164,8 +160,8 @@ function render_list(
   for (let i = 0; i < value.length; i++) {
     listResults.push(
       h('li', [
-        render_form(
-          form_spec.element_template,
+        renderForm(
+          formSpec.element_template,
           value[i],
           elementValidations[i] ? elementValidations[i] : []
         )
@@ -175,25 +171,25 @@ function render_list(
   return h('ul', { style: 'display: contents' }, listResults)
 }
 
-function render_cascading_single_choice(
-  form_spec: CascadingSingleChoice,
+function renderCascadingSingleChoice(
+  formSpec: CascadingSingleChoice,
   value: [string, unknown],
   backendValidation: ValidationMessages
 ): VNode | null {
-  for (const element of form_spec.elements) {
+  for (const element of formSpec.elements) {
     if (element.name === value[0]) {
       return h('div', [
-        h('div', form_spec.title),
+        h('div', formSpec.title),
         h('div', element.title),
-        render_form(element.parameter_form, value[1], backendValidation)
+        renderForm(element.parameter_form, value[1], backendValidation)
       ])
     }
   }
   return null
 }
 
-function render_legacy_valuespec(
-  form_spec: LegacyValuespec,
+function renderLegacyValuespec(
+  formSpec: LegacyValuespec,
   _value: unknown,
   backendValidation: ValidationMessages
 ): VNode {
@@ -201,7 +197,7 @@ function render_legacy_valuespec(
     h('div', {
       style: 'background: #595959',
       class: 'legacy_valuespec',
-      innerHTML: form_spec.readonly_html
+      innerHTML: formSpec.readonly_html
     }),
     h('div', { validation: backendValidation })
   ])

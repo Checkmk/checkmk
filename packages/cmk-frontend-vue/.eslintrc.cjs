@@ -26,7 +26,7 @@ module.exports = {
         format: ['camelCase', 'PascalCase']
       },
       {
-        selector: 'variable',
+        selector: 'variableLike',
         format: ['camelCase', 'UPPER_CASE'],
         leadingUnderscore: 'allow'
       },

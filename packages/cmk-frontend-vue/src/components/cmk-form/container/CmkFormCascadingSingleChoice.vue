@@ -19,10 +19,10 @@ const elementValidation = ref<ValidationMessages>([])
 
 watch(
   () => props.backendValidation,
-  (new_validation: ValidationMessages) => {
+  (newValidation: ValidationMessages) => {
     validation.value = []
     elementValidation.value = []
-    new_validation.forEach((msg) => {
+    newValidation.forEach((msg) => {
       if (msg.location.length === 0) {
         validation.value.push(msg)
         return

@@ -120,8 +120,8 @@ function addElement() {
   validateList()
 }
 
-function updateElementData(new_value: unknown, index: ElementIndex) {
-  data.value[index] = new_value
+function updateElementData(newValue: unknown, index: ElementIndex) {
+  data.value[index] = newValue
   sendDataUpstream()
 }
 

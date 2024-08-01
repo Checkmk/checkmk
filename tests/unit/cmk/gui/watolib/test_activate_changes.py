@@ -66,6 +66,12 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ),
         ReplicationPath(
             ty="dir",
+            ident="rabbitmq",
+            site_path="etc/rabbitmq/definitions.d",
+            excludes=["00-default.json", ".*new*"],
+        ),
+        ReplicationPath(
+            ty="dir",
             ident="frozen_aggregations",
             site_path="var/check_mk/frozen_aggregations",
             excludes=[],

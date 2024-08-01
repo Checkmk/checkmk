@@ -170,6 +170,7 @@ def _get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
             "persist": False,
             "replicate_ec": True,
             "multisiteurl": "http://localhost/unit_remote_1/check_mk/",
+            "message_broker_port": 5672,
         }
     if remote_site == SiteId("unit_remote_2"):
         return {
@@ -197,6 +198,7 @@ def _get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
             "persist": False,
             "replicate_ec": True,
             "multisiteurl": "http://localhost/unit_remote_1/check_mk/",
+            "message_broker_port": 5672,
         }
     raise ValueError(remote_site)
 
@@ -216,6 +218,7 @@ def _get_activation_manager(
                     "disabled": False,
                     "insecure": False,
                     "multisiteurl": "",
+                    "message_broker_port": 5672,
                     "persist": False,
                     "replicate_ec": False,
                     "replication": "",
@@ -246,9 +249,11 @@ def _generate_sync_snapshot(
         if edition is cmk_version.Edition.CME
         else "CRESnapshotDataCollector"
     )
+
+    rabbitmq_definitions = activate_changes.get_rabbitmq_definitions()
     assert activation_manager._activation_id is not None
     site_snapshot_settings = activation_manager._get_site_snapshot_settings(
-        activation_manager._activation_id, activation_manager._sites
+        activation_manager._activation_id, activation_manager._sites, rabbitmq_definitions
     )
     snapshot_settings = site_snapshot_settings[remote_site]
 
@@ -319,6 +324,9 @@ def _get_expected_paths(
         "etc/check_mk/piggyback_hub.d",
         "etc/check_mk/piggyback_hub.d/wato",
         "etc/check_mk/piggyback_hub.d/wato/sitespecific.mk",
+        "etc/rabbitmq",
+        "etc/rabbitmq/definitions.d",
+        "etc/rabbitmq/definitions.d/definitions.json",
     ]
 
     if edition is not cmk_version.Edition.CRE:

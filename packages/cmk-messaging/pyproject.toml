@@ -48,7 +48,7 @@ persistent = "no"
 score = "no"
 
 [tool.pylint.messages_control]
-disable = ["missing-function-docstring"]
+disable = ["missing-function-docstring", "missing-class-docstring"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

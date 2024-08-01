@@ -170,6 +170,7 @@ debug:
 # Include rules to make packages
 include \
     packages/openssl/openssl.make \
+    packages/erlang/erlang.make \
     packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
     packages/xinetd/xinetd.make \

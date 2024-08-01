@@ -4347,6 +4347,10 @@ msgstr "Stato dell'amministrazione"
 msgid "Admin states to discover"
 msgstr "Stati Admin da scoprire"
 
+#, fuzzy
+msgid "Administrate managed robots"
+msgstr "Stati amministrativi"
+
 msgid "Administrative port states to discover"
 msgstr "Stati di porto amministrativi da scoprire"
 
@@ -32736,6 +32740,10 @@ msgstr "Intervallo:"
 msgid "Invalid (Not loaded)"
 msgstr "Non valido (non caricato)"
 
+#, fuzzy
+msgid "Invalid BooleanChoice"
+msgstr "Argomento non valido"
+
 msgid "Invalid CRCs"
 msgstr "CRC non valido"
 
@@ -32746,6 +32754,10 @@ msgstr "Token CSRF non valido (%r) per Sessione (%r)"
 #, python-format
 msgid "Invalid DCD command: %r"
 msgstr "Comando DCD non valido: %r"
+
+#, fuzzy
+msgid "Invalid FixedValue"
+msgstr "Identità non valida"
 
 #, python-format
 msgid "Invalid IPv4 address: %s"
@@ -33062,6 +33074,10 @@ msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr "ID tag non valido. Sono ammessi solo i caratteri a-z, A-Z, 0-9, _ e -."
 
 msgid "Invalid test."
+msgstr "Test non valido."
+
+#, fuzzy
+msgid "Invalid text"
 msgstr "Test non valido."
 
 #, python-format
@@ -61322,10 +61338,6 @@ msgstr "I gruppi di contatti consentiti della cartella sono <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "Il seguente %s non è stato trovato: %s"
 
-#, fuzzy, python-format
-msgid "The following characters are forbidden: %s"
-msgstr "Il seguente %s non è stato trovato: %s"
-
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -66207,6 +66219,14 @@ msgid ""
 "(foreign changes)."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"This permission allows users to administrate (add, delete, modify) managed "
+"robots."
+msgstr ""
+"Questa autorizzazione consente agli utenti di migrare altri utenti a "
+"un'altra connessione"
+
 msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr ""
@@ -66219,6 +66239,11 @@ msgid ""
 msgstr ""
 "Questa autorizzazione consente agli utenti di inviare messaggi agli utenti "
 "del sistema di monitoraggio utilizzando l'interfaccia web."
+
+#, fuzzy
+msgid "This permission allows users to view managed robots."
+msgstr ""
+"Questa autorizzazione consente la registrazione di qualsiasi nuovo host."
 
 #, fuzzy
 msgid ""
@@ -76490,6 +76515,10 @@ msgstr "Visualizza il gestore di pacchetti di estensioni"
 msgid "View layout"
 msgstr "Visualizza il layout"
 
+#, fuzzy
+msgid "View managed robots"
+msgstr "Oggetti gestiti"
+
 msgid "View name"
 msgstr "Visualizza il nome"
 
@@ -83279,6 +83308,10 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#, fuzzy, python-format
+#~ msgid "The following characters are forbidden: %s"
+#~ msgstr "Il seguente %s non è stato trovato: %s"
 
 #~ msgid "Connect Timeout"
 #~ msgstr "Timeout di connessione"

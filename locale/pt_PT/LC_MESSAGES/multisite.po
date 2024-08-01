@@ -4376,6 +4376,10 @@ msgstr "Estado do administrador"
 msgid "Admin states to discover"
 msgstr "Estados administrativos a descobrir"
 
+#, fuzzy
+msgid "Administrate managed robots"
+msgstr "Estados administrativos"
+
 msgid "Administrative port states to discover"
 msgstr "Estados administrativos portuários a descobrir"
 
@@ -33007,6 +33011,10 @@ msgstr "Intervalo:"
 msgid "Invalid (Not loaded)"
 msgstr "Inválido (Não carregado)"
 
+#, fuzzy
+msgid "Invalid BooleanChoice"
+msgstr "Tópico inválido"
+
 msgid "Invalid CRCs"
 msgstr "CRCs inválidos"
 
@@ -33017,6 +33025,10 @@ msgstr "Token CSRF inválido (%r) para a sessão (%r)"
 #, python-format
 msgid "Invalid DCD command: %r"
 msgstr "Comando DCD inválido: %r"
+
+#, fuzzy
+msgid "Invalid FixedValue"
+msgstr "Ident inválido"
 
 #, python-format
 msgid "Invalid IPv4 address: %s"
@@ -33340,6 +33352,10 @@ msgstr ""
 "- são permitidos."
 
 msgid "Invalid test."
+msgstr "Teste inválido."
+
+#, fuzzy
+msgid "Invalid text"
 msgstr "Teste inválido."
 
 #, python-format
@@ -61852,10 +61868,6 @@ msgstr "Os grupos de contato permitidos para a pasta são <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "O seguinte %s não pôde ser encontrado: %s"
 
-#, fuzzy, python-format
-msgid "The following characters are forbidden: %s"
-msgstr "O seguinte %s não pôde ser encontrado: %s"
-
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -66739,6 +66751,14 @@ msgstr ""
 "isto só é válido para as alterações pendentes do próprio utilizador e não "
 "para as de outros utilizadores (alterações externas)."
 
+#, fuzzy
+msgid ""
+"This permission allows users to administrate (add, delete, modify) managed "
+"robots."
+msgstr ""
+"Esta permissão permite aos utilizadores migrarem outros utilizadores para "
+"outra ligação"
+
 msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr ""
@@ -66751,6 +66771,10 @@ msgid ""
 msgstr ""
 "Esta permissão permite aos utilizadores enviar mensagens aos utilizadores do "
 "sistema de monitorização utilizando a interface Web."
+
+#, fuzzy
+msgid "This permission allows users to view managed robots."
+msgstr "Esta permissão permite o registo de qualquer novo anfitrião."
 
 #, fuzzy
 msgid ""
@@ -77123,6 +77147,10 @@ msgstr "Ver Gestor de Pacotes de Extensão"
 msgid "View layout"
 msgstr "Ver layout"
 
+#, fuzzy
+msgid "View managed robots"
+msgstr "Objetos Gerenciados"
+
 msgid "View name"
 msgstr "Ver nome"
 
@@ -83944,6 +83972,10 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#, fuzzy, python-format
+#~ msgid "The following characters are forbidden: %s"
+#~ msgstr "O seguinte %s não pôde ser encontrado: %s"
 
 #~ msgid "Connect Timeout"
 #~ msgstr "Tempo limite de ligação"

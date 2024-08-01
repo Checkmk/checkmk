@@ -4384,6 +4384,10 @@ msgstr "Admin staat"
 msgid "Admin states to discover"
 msgstr "Admin staten te ontdekken"
 
+#, fuzzy
+msgid "Administrate managed robots"
+msgstr "Administratieve staten"
+
 msgid "Administrative port states to discover"
 msgstr "Administratieve poort staten te ontdekken"
 
@@ -33020,6 +33024,10 @@ msgstr "Interval:"
 msgid "Invalid (Not loaded)"
 msgstr "Ongeldig (niet geladen)"
 
+#, fuzzy
+msgid "Invalid BooleanChoice"
+msgstr "Ongeldig onderwerp"
+
 msgid "Invalid CRCs"
 msgstr "Ongeldige CRC's"
 
@@ -33030,6 +33038,10 @@ msgstr "Ongeldig CSRF token (%r) voor Sessie (%r)"
 #, python-format
 msgid "Invalid DCD command: %r"
 msgstr "Ongeldig DCD commando: %r"
+
+#, fuzzy
+msgid "Invalid FixedValue"
+msgstr "Ongeldige ident"
 
 #, python-format
 msgid "Invalid IPv4 address: %s"
@@ -33350,6 +33362,10 @@ msgstr ""
 "Ongeldige tag ID. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn toegestaan."
 
 msgid "Invalid test."
+msgstr "Ongeldige test."
+
+#, fuzzy
+msgid "Invalid text"
 msgstr "Ongeldige test."
 
 #, python-format
@@ -61877,10 +61893,6 @@ msgstr "De toegestane contactgroepen van de map zijn <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "De volgende %s kon niet worden gevonden: %s"
 
-#, fuzzy, python-format
-msgid "The following characters are forbidden: %s"
-msgstr "De volgende %s kon niet worden gevonden: %s"
-
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -66799,6 +66811,14 @@ msgid ""
 "(foreign changes)."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"This permission allows users to administrate (add, delete, modify) managed "
+"robots."
+msgstr ""
+"Met deze toestemming kunnen gebruikers andere gebruikers naar een andere "
+"verbinding migreren"
+
 msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr ""
@@ -66811,6 +66831,10 @@ msgid ""
 msgstr ""
 "Met deze toestemming kunnen gebruikers berichten sturen naar de gebruikers "
 "van het monitoringsysteem via de webinterface."
+
+#, fuzzy
+msgid "This permission allows users to view managed robots."
+msgstr "Met deze toestemming kan elke nieuwe host worden geregistreerd."
 
 #, fuzzy
 msgid ""
@@ -77190,6 +77214,10 @@ msgstr "Bekijk uitbreiding pakketbeheer"
 msgid "View layout"
 msgstr "Bekijk lay-out"
 
+#, fuzzy
+msgid "View managed robots"
+msgstr "Beheerde objecten"
+
 msgid "View name"
 msgstr "Naam bekijken"
 
@@ -84059,6 +84087,10 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy, python-format
+#~ msgid "The following characters are forbidden: %s"
+#~ msgstr "De volgende %s kon niet worden gevonden: %s"
 
 #~ msgid "Connect Timeout"
 #~ msgstr "Time-out verbinden"

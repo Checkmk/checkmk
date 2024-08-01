@@ -4217,6 +4217,10 @@ msgstr "管理者"
 msgid "Admin states to discover"
 msgstr "管理者は発見するように述べています"
 
+#, fuzzy
+msgid "Administrate managed robots"
+msgstr "管理状態"
+
 msgid "Administrative port states to discover"
 msgstr "検出する管理ポートの状態"
 
@@ -32218,6 +32222,10 @@ msgstr "間隔:"
 msgid "Invalid (Not loaded)"
 msgstr "無効(ロードされていません)"
 
+#, fuzzy
+msgid "Invalid BooleanChoice"
+msgstr "無効なトピック"
+
 msgid "Invalid CRCs"
 msgstr "無効なCRC"
 
@@ -32228,6 +32236,10 @@ msgstr "セッション (%r) の無効な CSRF トークン (%r)"
 #, python-format
 msgid "Invalid DCD command: %r"
 msgstr "無効なDCDコマンド: %r"
+
+#, fuzzy
+msgid "Invalid FixedValue"
+msgstr "無効なID"
 
 #, python-format
 msgid "Invalid IPv4 address: %s"
@@ -32538,6 +32550,10 @@ msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr "タグIDが無効です。文字a-z, A-Z, 0-9, _ および - のみが許可されます。"
 
 msgid "Invalid test."
+msgstr "無効なテスト。"
+
+#, fuzzy
+msgid "Invalid text"
 msgstr "無効なテスト。"
 
 #, python-format
@@ -60575,10 +60591,6 @@ msgstr "フォルダで許可されている連絡先グループは<b>%s </b>�
 msgid "The following %s could not be found: %s"
 msgstr "次の%sが見つかりませんでした: %s"
 
-#, fuzzy, python-format
-msgid "The following characters are forbidden: %s"
-msgstr "次の%sが見つかりませんでした: %s"
-
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -65320,6 +65332,12 @@ msgstr ""
 "の変更にのみ適用され、他のユーザーの保留中の変更(foreign changes)には適用され"
 "ないことに注意してください。"
 
+#, fuzzy
+msgid ""
+"This permission allows users to administrate (add, delete, modify) managed "
+"robots."
+msgstr "この権限を持つユーザーは他のユーザーを別の接続に移行することができます"
+
 msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr "この権限を持つユーザーは他のユーザーを別の接続に移行することができます"
@@ -65330,6 +65348,10 @@ msgid ""
 msgstr ""
 "この権限により、ユーザーはウェブインターフェイスを使用して、本機 のユーザーに"
 "メッセージを送信することができます。"
+
+#, fuzzy
+msgid "This permission allows users to view managed robots."
+msgstr "この権限は新規ホストの登録を許可します。"
 
 #, fuzzy
 msgid ""
@@ -75500,6 +75522,10 @@ msgstr "拡張パッケージマネージャを見る"
 msgid "View layout"
 msgstr "レイアウトを表示"
 
+#, fuzzy
+msgid "View managed robots"
+msgstr "管理対象オブジェクト"
+
 msgid "View name"
 msgstr "名前を表示"
 
@@ -82172,6 +82198,10 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, fuzzy, python-format
+#~ msgid "The following characters are forbidden: %s"
+#~ msgstr "次の%sが見つかりませんでした: %s"
 
 #~ msgid "Connect Timeout"
 #~ msgstr "接続タイムアウト"

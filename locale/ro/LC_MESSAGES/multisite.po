@@ -4386,6 +4386,10 @@ msgstr "Statul administratorului"
 msgid "Admin states to discover"
 msgstr "Statele administrației de descoperit"
 
+#, fuzzy
+msgid "Administrate managed robots"
+msgstr "Statele administrative"
+
 msgid "Administrative port states to discover"
 msgstr "Stări administrative ale portului pentru a descoperi"
 
@@ -33088,6 +33092,10 @@ msgstr "Interval:"
 msgid "Invalid (Not loaded)"
 msgstr "Invalid (Neîncărcat)"
 
+#, fuzzy
+msgid "Invalid BooleanChoice"
+msgstr "Subiect nevalabil"
+
 msgid "Invalid CRCs"
 msgstr "CRC-uri invalide"
 
@@ -33098,6 +33106,10 @@ msgstr "Token CSRF invalid (%r) pentru sesiune (%r)"
 #, python-format
 msgid "Invalid DCD command: %r"
 msgstr "Comandă DCD invalidă: %r."
+
+#, fuzzy
+msgid "Invalid FixedValue"
+msgstr "Identificator invalid"
 
 #, python-format
 msgid "Invalid IPv4 address: %s"
@@ -33416,6 +33428,10 @@ msgstr ""
 "_ și -."
 
 msgid "Invalid test."
+msgstr "Test nevalabil."
+
+#, fuzzy
+msgid "Invalid text"
 msgstr "Test nevalabil."
 
 #, python-format
@@ -62000,10 +62016,6 @@ msgstr "Grupurile de contacte permise de dosar's sunt <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "Următorul %s nu a putut fi găsit: %s."
 
-#, fuzzy, python-format
-msgid "The following characters are forbidden: %s"
-msgstr "Următorul %s nu a putut fi găsit: %s."
-
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -66968,6 +66980,14 @@ msgstr ""
 "Atenție, acest lucru este valabil numai pentru modificările în așteptare ale "
 "utilizatorului, nu și pentru cele ale altor utilizatori (modificări străine)."
 
+#, fuzzy
+msgid ""
+"This permission allows users to administrate (add, delete, modify) managed "
+"robots."
+msgstr ""
+"Această permisiune permite utilizatorilor să migreze alți utilizatori către "
+"o altă conexiune"
+
 msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr ""
@@ -66980,6 +67000,10 @@ msgid ""
 msgstr ""
 "Această permisiune permite utilizatorilor să trimită mesaje utilizatorilor "
 "sistemului de monitorizare prin intermediul interfeței web."
+
+#, fuzzy
+msgid "This permission allows users to view managed robots."
+msgstr "Această permisiune permite înregistrarea oricărei gazde noi."
 
 #, fuzzy
 msgid ""
@@ -77336,6 +77360,10 @@ msgstr "Vizualizați managerul de pachete de extensii"
 msgid "View layout"
 msgstr "Vizualizați aspectul"
 
+#, fuzzy
+msgid "View managed robots"
+msgstr "Obiecte gestionate"
+
 msgid "View name"
 msgstr "Vezi numele"
 
@@ -84193,6 +84221,10 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#, fuzzy, python-format
+#~ msgid "The following characters are forbidden: %s"
+#~ msgstr "Următorul %s nu a putut fi găsit: %s."
 
 #~ msgid "Connect Timeout"
 #~ msgstr "Timeout de conectare"

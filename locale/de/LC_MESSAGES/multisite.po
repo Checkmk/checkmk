@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-07-31 10:12+0000\n"
+"PO-Revision-Date: 2024-08-01 14:22+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -2311,13 +2311,13 @@ msgid ""
 "only supported on linux and windows agents as well as devices monitored "
 "through the host-resource mib"
 msgstr ""
-"Ein einzelner Thread, der einen einzelnen Kern vollständig auslastet ("
-"möglicherweise aufgrund eines Fehlers), kann unbemerkt bleiben, wenn nur die "
-"Gesamtauslastung der CPU überwacht wird. Mit dieser Konfiguration schlägt "
-"Checkmk Alarm, wenn ein einzelner Kern über einen längeren Zeitraum einen "
-"Auslastungsschwellwert überschreitet. Dies wird derzeit nur von Linux- und "
-"Windows-Agenten sowie von Geräten unterstützt, die über die Host-Ressourcen-"
-"Mib überwacht werden"
+"Ein einzelner Thread, der einen einzelnen Kern vollständig auslastet "
+"(möglicherweise aufgrund eines Fehlers), kann unbemerkt bleiben, wenn nur "
+"die Gesamtauslastung der CPU überwacht wird. Mit dieser Konfiguration "
+"schlägt Checkmk Alarm, wenn ein einzelner Kern über einen längeren Zeitraum "
+"einen Auslastungsschwellwert überschreitet. Dies wird derzeit nur von Linux- "
+"und Windows-Agenten sowie von Geräten unterstützt, die über die Host-"
+"Ressourcen-Mib überwacht werden"
 
 msgid "A stored SNMP walk"
 msgstr "Gespeicherter SNMP-Walk"
@@ -4307,6 +4307,9 @@ msgstr "Admin-Status"
 
 msgid "Admin states to discover"
 msgstr "Admin-Status, die erkannt werden sollen"
+
+msgid "Administrate managed robots"
+msgstr "Administriere verwaltete Roboter"
 
 msgid "Administrative port states to discover"
 msgstr "Administrative Port-Status, die erkannt werden sollen"
@@ -10322,7 +10325,7 @@ msgstr "Kann Prozess nicht löschen. Der Prozess kann nicht gestoppt werden."
 
 msgid "Cannot delete rules that are managed by Quick setup."
 msgstr ""
-"Sie können keine Rollen löschen, die durch \"Quick Setup\" gesteuert werden."
+"Sie können keine Rollen löschen, die durch \"Quick Setup\" verwaltet werden."
 
 #, python-format
 msgid ""
@@ -29298,8 +29301,8 @@ msgstr ""
 "Wenn diese Option aktiviert ist, liest die GUI die konfigurierte HTTP-Header-"
 "Variable aus der eingehenden HTTP-Anfrage aus und verwendet einfach die "
 "Zeichenfolge in dieser Variable als Name des authentifizierten Benutzers. "
-"Achtung: Erlauben Sie nur den Zugriff von vertrauenswürdigen IP-Adressen ("
-"Apache <tt>Allow from</tt>), wie Proxy-Servern, auf diese Webseite. Ein "
+"Achtung: Erlauben Sie nur den Zugriff von vertrauenswürdigen IP-Adressen "
+"(Apache <tt>Allow from</tt>), wie Proxy-Servern, auf diese Webseite. Ein "
 "Benutzer mit Zugriff auf diese Seite könnte die "
 "Authentifizierungsinformationen einfach fälschen. Diese Option kann nützlich "
 "sein, um die Authentifizierung in Reverse-Proxy-Umgebungen zu realisieren. "
@@ -30794,11 +30797,11 @@ msgid ""
 "label will replaced by its value.<br>You can also add fixed strings, e.g. "
 "<tt>lnx-$LABEL$</tt>."
 msgstr ""
-"Um einen eindeutigen Host-Namen zu berechnen, können Sie die Agenten-Label ("
-"alle oder eine Teilmenge davon) von oben verwenden. Ein Label muss am Anfang "
-"und am Ende mit <tt>$</tt> markiert sein, z.B. <tt>$LABEL$</tt>.Bei der "
-"Auswertung der Regel wird das Label durch seinen Wert ersetzt.<br>Sie können "
-"auch feste Zeichenfolgen hinzufügen, z.B. <tt>lnx-$LABEL$</tt>."
+"Um einen eindeutigen Host-Namen zu berechnen, können Sie die Agenten-Label "
+"(alle oder eine Teilmenge davon) von oben verwenden. Ein Label muss am "
+"Anfang und am Ende mit <tt>$</tt> markiert sein, z.B. <tt>$LABEL$</tt>.Bei "
+"der Auswertung der Regel wird das Label durch seinen Wert ersetzt.<br>Sie "
+"können auch feste Zeichenfolgen hinzufügen, z.B. <tt>lnx-$LABEL$</tt>."
 
 msgid ""
 "In order to keep the core simple, Checkmk pre-computes all transitions for "
@@ -31823,6 +31826,9 @@ msgstr "Intervall:"
 msgid "Invalid (Not loaded)"
 msgstr "Ungültig (Nicht geladen)"
 
+msgid "Invalid BooleanChoice"
+msgstr "Ungültige boolesche Auswahl"
+
 msgid "Invalid CRCs"
 msgstr "Ungültige CRCs"
 
@@ -31833,6 +31839,9 @@ msgstr "Ungültiges CSRF-Token (%r) für Sitzung (%r)"
 #, python-format
 msgid "Invalid DCD command: %r"
 msgstr "Ungültiger DCD-Befehl: %r"
+
+msgid "Invalid FixedValue"
+msgstr "Ungültiger fester Wert"
 
 #, python-format
 msgid "Invalid IPv4 address: %s"
@@ -32145,6 +32154,9 @@ msgstr ""
 
 msgid "Invalid test."
 msgstr "Ungültiger Test."
+
+msgid "Invalid text"
+msgstr "Ungültiger Text"
 
 #, python-format
 msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
@@ -33475,10 +33487,10 @@ msgid ""
 "knowledge-base/victorops-restendpoint-integration/\" target=\"_blank\">here</"
 "a>.<br />This URL can also be collected from the password store from Checkmk."
 msgstr ""
-"Erfahren Sie <a href=\"https://help.victorops.com/knowledge-base/"
-"victorops-restendpoint-integration/\" target=\"_blank\">hier</a><br />, wie "
-"Sie einen REST-Endpunkt einrichten. Diese URL kann auch über den "
-"Passwortspeicher von Checkmk abgefragt werden."
+"Erfahren Sie <a href=\"https://help.victorops.com/knowledge-base/victorops-"
+"restendpoint-integration/\" target=\"_blank\">hier</a><br />, wie Sie einen "
+"REST-Endpunkt einrichten. Diese URL kann auch über den Passwortspeicher von "
+"Checkmk abgefragt werden."
 
 msgid "Learning Checkmk"
 msgstr "Checkmk kennenlernen"
@@ -33947,7 +33959,7 @@ msgid "Levels for used/free space"
 msgstr "Level für genutzten/freien Platz"
 
 msgid "Levels for user managed backup files"
-msgstr "Level für Benutzerverwaltete Backupdateien"
+msgstr "Level für benutzerverwaltete Backup-Dateien"
 
 msgid "Levels for wait"
 msgstr "Level für Wartezeiten"
@@ -39283,7 +39295,6 @@ msgstr "Namespaces"
 msgid "Native cluster mode"
 msgstr "Nativer Cluster-Modus"
 
-#, fuzzy
 msgid ""
 "Native: Use the cluster check function implemented by the check plug-in. If "
 "it is available, it is probably the best choice, as it implements logic "
@@ -40279,7 +40290,6 @@ msgstr ""
 "automatisch ungültig und der Benutzer muss sich vom aktuellen oder einem "
 "anderen Gerät aus erneut anmelden."
 
-#, fuzzy
 msgid ""
 "Normally a user login session is valid until the password is changed or the "
 "user is locked. By enabling this option, you can apply a time limit to login "
@@ -40369,7 +40379,6 @@ msgstr ""
 "werden und dann der schlechteste der verbleibenden Knoten den Status "
 "bestimmt. "
 
-#, fuzzy
 msgid ""
 "Normally, the interface checks create a single service for each interface. "
 "By defining interface groups, multiple interfaces can be combined together. "
@@ -40379,7 +40388,7 @@ msgstr ""
 "Normalerweise erzeugen die Schnittstellenprüfungen für jede Schnittstelle "
 "einen einzelnen Service. Durch die Definition von Schnittstellengruppen "
 "können mehrere Schnittstellen miteinander kombiniert werden. Für jede Gruppe "
-"wird ein einzelner Service erstellt. Dieser Service meldet die "
+"wird ein einzelner Service erstellt. Diese Services melden die "
 "Gesamtverkehrsmenge, die über alle Gruppenmitglieder summiert wird."
 
 msgid ""
@@ -41814,7 +41823,7 @@ msgstr "Bei ausgewählten Instanzen"
 msgid "On selected users"
 msgstr "Bei ausgewählten Benutzern"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "On the %s you can configure a push configuration, where the monitored host "
 "is expected to send the data to the monitoring server without being actively "
@@ -41823,16 +41832,12 @@ msgid ""
 "If you are configuring agent only monitoring, you might want to also set the "
 "\"%s\" attribute to \"%s\"."
 msgstr ""
-"Standardmäßig versucht der Server, den überwachten Host zu kontaktieren und "
-"die Daten durch Initialisierung einer TCP-Verbindung abzurufen. Auf der "
-"Seite %s können Sie eine Push-Konfiguration konfigurieren, bei welcher der "
+"Für \"%s\" können Sie eine Push-Konfiguration konfigurieren, bei welcher der "
 "überwachte Host die Daten an den Monitoring-Server senden soll, ohne aktiv "
 "ausgelöst zu werden.\n"
 "\n"
-"Wenn Sie dies konfigurieren, wollen Sie gegebenenfalls auch das Attribut \"%s"
-"\" auf \"%s\" setzen. Ein Host, der von einer Instanz nicht erreicht werden "
-"kann, ist einer der Hauptgründe, warum Sie eine Push-Verbindung einsetzen "
-"wollen werden."
+"Wenn Sie ein reines Agenten-Monitoring konfigurieren, sollten Sie auch das "
+"Attribut \"%s\" auf \"%s\" setzen."
 
 msgid ""
 "On this page you can test the defined logfile patterns against a custom "
@@ -41846,17 +41851,17 @@ msgstr ""
 "<i>Logdatei</i> schränken Sie dabei die zur Anwendung kommenden Muster ein. "
 "Tragen Sie bei den beiden Feldern nichts ein, werden alle Muster verwendet."
 
-#, fuzzy
 msgid ""
 "Once you enable this option, this plug-in will not only handle direct group "
 "memberships, instead it will also dig into nested groups and treat the "
 "members of those groups as contact group members as well. Please bear in "
 "mind that this feature might increase the execution time of your LDAP sync."
 msgstr ""
-"Sobald Sie diese Option aktiviert haben, wird der LDAP-Konnektor nicht nur "
-"einfache Gruppemitgliedschaften erkennen, sondern auch solche, bei denen "
-"Gruppen in Gruppen verschachtelt sind. Bitte beachten Sie, dass dies die "
-"Ausführungszeit der Synchronisation erhöhen kann."
+"Sobald Sie diese Option aktivieren, verarbeitet dieses Plugin nicht nur "
+"direkte Gruppenmitgliedschaften, sondern auch verschachtelte Gruppen und "
+"behandelt die Mitglieder dieser Gruppen ebenfalls als "
+"Kontaktgruppenmitglieder. Bitte beachten Sie, dass diese Funktion die "
+"Ausführungszeit Ihrer LDAP-Synchronisierung erhöhen kann."
 
 msgid ""
 "One Metric History painter time range is set to inherit from report, yet "
@@ -41961,7 +41966,6 @@ msgstr ""
 msgid "Only add matching hosts"
 msgstr "Nur passende Hosts hinzufügen"
 
-#, fuzzy
 msgid ""
 "Only applicable to clustermode installations. The service name of snapvault "
 "services is composed of the destination vserver (SVM) and the destination "
@@ -41970,14 +41974,13 @@ msgid ""
 "to a service name that is not unique, resulting in some services, which are "
 "not shown!"
 msgstr ""
-"Gilt nur für Installationen im Cluster-Modus. Die Dienstbeschreibung von "
-"Snapvault-Diensten setzt sich standardmäßig aus dem Ziel-Vserver (SVM) und "
-"dem Zielvolume zusammen. Aktivieren Sie dieses Kontrollkästchen, wenn Sie "
-"das Zielvolume als eigenständige Dienstbeschreibung verwenden möchten. Bitte "
-"beachten Sie, dass dies zu einer nicht eindeutigen Service-Beschreibung "
-"führen kann, was dazu führt, dass einige Services nicht angezeigt werden!"
+"Gilt nur für Installationen im Cluster-Modus. Der Service-Name von Snapvault-"
+"Diensten setzt sich standardmäßig aus dem Ziel-Vserver (SVM) und dem "
+"Zielvolumen zusammen. Aktivieren Sie diesen Kasten, wenn Sie das Zielvolumen "
+"als eigenständigen Service-Namen verwenden möchten. Bitte beachten Sie, dass "
+"dies zu einem nicht-eindeutigen Service-Namen führen kann, was dazu führt, "
+"dass einige Services nicht angezeigt werden!"
 
-#, fuzzy
 msgid ""
 "Only apply the rule if the notification originates from certain types of "
 "check plug-ins. Note: Host notifications never match this rule, if this "
@@ -42094,12 +42097,12 @@ msgstr ""
 "automatisch Kontakte überwachen lassen. Die Zuordnung von Hosts zu "
 "Kontaktgruppen kann auch über <a href='%s'>Regeln</a> definiert werden."
 
-#, fuzzy
 msgid ""
 "Only monitor following database instances (if detected or manually added)"
-msgstr "Nur folgende SIDs überwachen (falls entdeckt oder manuell hinzugefügt)"
+msgstr ""
+"Nur folgende Datenbank-Instanzen überwachen (falls entdeckt oder manuell "
+"hinzugefügt)"
 
-#, fuzzy
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "Nur nötig, wenn Sie mehrere MySQL-Instanzen auf einem Server haben"
 
@@ -42306,9 +42309,8 @@ msgstr "Betriebszustand"
 msgid "Operational states"
 msgstr "Betriebszustände"
 
-#, fuzzy
 msgid "Operational status"
-msgstr "Betriebszustände"
+msgstr "Betriebszustand"
 
 msgid "Operations"
 msgstr "Operationen"
@@ -42322,45 +42324,35 @@ msgstr "Operationen pro Sekunde"
 msgid "Optical Signal Power"
 msgstr "Optische Signalstärke"
 
-#, fuzzy
 msgid "Optical signal power lane 0"
-msgstr "Optische Signalstärke Lane %d"
+msgstr "Optische Signalstärke Spur 0"
 
-#, fuzzy
 msgid "Optical signal power lane 1"
-msgstr "Optische Signalstärke Lane %d"
+msgstr "Optische Signalstärke Spur 1"
 
-#, fuzzy
 msgid "Optical signal power lane 2"
-msgstr "Optische Signalstärke Lane %d"
+msgstr "Optische Signalstärke Spur 2"
 
-#, fuzzy
 msgid "Optical signal power lane 3"
-msgstr "Optische Signalstärke Lane %d"
+msgstr "Optische Signalstärke Spur 3"
 
-#, fuzzy
 msgid "Optical signal power lane 4"
-msgstr "Optische Signalstärke Lane %d"
+msgstr "Optische Signalstärke Spur 4"
 
-#, fuzzy
 msgid "Optical signal power lane 5"
-msgstr "Optische Signalstärke Lane %d"
+msgstr "Optische Signalstärke Spur 5"
 
-#, fuzzy
 msgid "Optical signal power lane 6"
-msgstr "Optische Signalstärke Lane %d"
+msgstr "Optische Signalstärke Spur 6"
 
-#, fuzzy
 msgid "Optical signal power lane 7"
-msgstr "Optische Signalstärke Lane %d"
+msgstr "Optische Signalstärke Spur 7"
 
-#, fuzzy
 msgid "Optical signal power lane 8"
-msgstr "Optische Signalstärke Lane %d"
+msgstr "Optische Signalstärke Spur 8"
 
-#, fuzzy
 msgid "Optical signal power lane 9"
-msgstr "Optische Signalstärke Lane %d"
+msgstr "Optische Signalstärke Spur 9"
 
 msgid "Optimize rule execution"
 msgstr "Regelausführung optimieren"
@@ -42504,17 +42496,14 @@ msgstr "Benutzerdefinierte Oracle-SQLs"
 msgid "Oracle DB"
 msgstr "Oracle DB"
 
-#, fuzzy
 msgid "Oracle DB CPU time"
-msgstr "Oracle DB"
+msgstr "Oracle DB CPU-Zeit"
 
-#, fuzzy
 msgid "Oracle DB non-idle wait"
-msgstr "Oracle DB Zeitstatistik"
+msgstr "Oracle DB Nicht-Leerlaufzeit"
 
-#, fuzzy
 msgid "Oracle DB time"
-msgstr "Oracle DB"
+msgstr "Oracle DB Zeit"
 
 msgid "Oracle DB time statistics"
 msgstr "Oracle DB Zeitstatistik"
@@ -42522,57 +42511,44 @@ msgstr "Oracle DB Zeitstatistik"
 msgid "Oracle Data-Guard Stats"
 msgstr "Oracle Data-Guard Statistiken"
 
-#, fuzzy
 msgid "Oracle IOSTAT IO"
-msgstr "Oracle IOSTAT IOs"
+msgstr "Oracle IOSTAT E/A"
 
-#, fuzzy
 msgid "Oracle IOSTAT IO reads"
-msgstr "Oracle IOSTAT IOs"
+msgstr "Oracle IOSTAT E/A Lesezugriffe"
 
-#, fuzzy
 msgid "Oracle IOSTAT IO writes"
-msgstr "Oracle IOSTAT IOs"
+msgstr "Oracle IOSTAT E/A Schreibzugriffe"
 
-#, fuzzy
 msgid "Oracle IOSTAT bytes"
 msgstr "Oracle IOSTAT Bytes"
 
-#, fuzzy
 msgid "Oracle IOSTAT read bytes"
-msgstr "Oracle IOSTAT Bytes"
+msgstr "Oracle IOSTAT Lese-Bytes"
 
-#, fuzzy
 msgid "Oracle IOSTAT total IO reads"
-msgstr "Oracle IOSTAT Gesamt-IOs"
+msgstr "Oracle IOSTAT Gesamt-Lese-E/A"
 
-#, fuzzy
 msgid "Oracle IOSTAT total IO writes"
-msgstr "Oracle IOSTAT Gesamt-IOs"
+msgstr "Oracle IOSTAT Gesamt-Schreib-E/A"
 
-#, fuzzy
 msgid "Oracle IOSTAT total IOs"
-msgstr "Oracle IOSTAT Gesamt-IOs"
+msgstr "Oracle IOSTAT Gesamt-E/A"
 
-#, fuzzy
 msgid "Oracle IOSTAT total bytes"
 msgstr "Oracle IOSTAT Gesamt-Bytes"
 
-#, fuzzy
 msgid "Oracle IOSTAT total read bytes"
-msgstr "Oracle IOSTAT Gesamt-Bytes"
+msgstr "Oracle IOSTAT Gesamt-Lese-Bytes"
 
-#, fuzzy
 msgid "Oracle IOSTAT total writes bytes"
-msgstr "Oracle IOSTAT Gesamt-Bytes"
+msgstr "Oracle IOSTAT Gesamt-Schreib-Bytes"
 
-#, fuzzy
 msgid "Oracle IOSTAT write bytes"
-msgstr "Oracle IOSTAT Bytes"
+msgstr "Oracle IOSTAT Schreib-Bytes"
 
-#, fuzzy
 msgid "Oracle Java pool size"
-msgstr "Java-Poolgröße"
+msgstr "Oracle Java-Poolgröße"
 
 msgid "Oracle Locks"
 msgstr "Oracle Locks"
@@ -42586,9 +42562,8 @@ msgstr "Oracle PGA-Info"
 msgid "Oracle PGA memory statistics"
 msgstr "Oracle PGA-Speicher-Statistik"
 
-#, fuzzy
 msgid "Oracle RMAN backups"
-msgstr "Oracle RMAN-Sicherungen"
+msgstr "Oracle RMAN-Backups"
 
 msgid "Oracle SGA info"
 msgstr "Oracle SGA-Info"
@@ -42602,128 +42577,99 @@ msgstr "Oracle-SID der Remote-Datenbank"
 msgid "Oracle Wait Class (FG lines are downside)"
 msgstr "Oracle Warteklasse (FG Zeilen sind von Nachteil)"
 
-#, fuzzy
 msgid "Oracle administrative wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle administrative Warteklasse"
 
-#, fuzzy
 msgid "Oracle administrative wait class (FG)"
-msgstr "Oracle %s wait class (FG)"
+msgstr "Oracle administrative Warteklasse (FG)"
 
-#, fuzzy
 msgid "Oracle application wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle Applikations-Warteklasse"
 
-#, fuzzy
 msgid "Oracle application wait class (FG)"
-msgstr "Oracle %s wait class (FG)"
+msgstr "Oracle Applikations-Warteklasse (FG)"
 
-#, fuzzy
 msgid "Oracle archive log backup large read bytes"
-msgstr "Oracle Summe Large Read in Bytes"
+msgstr "Oracle Archiv-Log Backup Large Read in Bytes"
 
-#, fuzzy
 msgid "Oracle archive log backup large reads"
-msgstr "Oracle Summe Large Reads"
+msgstr "Oracle Archiv-Log Backup Large Reads"
 
-#, fuzzy
 msgid "Oracle archive log backup large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr "Oracle Archiv-Log Backup Large Write in Bytes"
 
-#, fuzzy
 msgid "Oracle archive log backup large writes"
-msgstr "Oracle Summe Large Writes"
+msgstr "Oracle Archiv-Log Backup Large Writes"
 
-#, fuzzy
 msgid "Oracle archive log backup small read bytes"
-msgstr "Oracle Summe Small Read in Bytes"
+msgstr "Oracle Archiv-Log Backup Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle archive log backup small reads"
-msgstr "Oracle Summe Small Reads"
+msgstr "Oracle Archiv-Log Backup Small Reads"
 
-#, fuzzy
 msgid "Oracle archive log backup small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr "Oracle Archiv-Log Backup Small Write in Bytes"
 
-#, fuzzy
 msgid "Oracle archive log backup small writes"
-msgstr "Oracle Summe Small Writes"
+msgstr "Oracle Archiv-Log Backup Small Writes"
 
-#, fuzzy
 msgid "Oracle archive log large read bytes"
-msgstr "Oracle Summe Large Read in Bytes"
+msgstr "Oracle Archiv-Log Large Read in Bytes"
 
-#, fuzzy
 msgid "Oracle archive log large reads"
-msgstr "Oracle Summe Large Reads"
+msgstr "Oracle Archiv-Log Large Reads"
 
-#, fuzzy
 msgid "Oracle archive log large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr "Oracle Archiv-Log Large Write in Bytes"
 
-#, fuzzy
 msgid "Oracle archive log large writes"
-msgstr "Oracle Summe Large Writes"
+msgstr "Oracle Archiv-Log Large Writes"
 
-#, fuzzy
 msgid "Oracle archive log small read bytes"
-msgstr "Oracle Summe Small Read in Bytes"
+msgstr "Oracle Archiv-Log Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle archive log small reads"
-msgstr "Oracle Summe Small Reads"
+msgstr "Oracle Archiv-Log Small Reads"
 
-#, fuzzy
 msgid "Oracle archive log small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr "Oracle Archiv-Log Small Write in Bytes"
 
-#, fuzzy
 msgid "Oracle archive log small writes"
-msgstr "Oracle Summe Small Writes"
+msgstr "Oracle Archiv-Log Small Writes"
 
 #, python-format
 msgid "Oracle binaries permissions check %s"
 msgstr "Berechtigungsprüfung für Oracle-Binärdateien %s"
 
-#, fuzzy
 msgid "Oracle block change"
-msgstr "Änderungsrate"
+msgstr "Oracle Blockänderung"
 
-#, fuzzy
 msgid "Oracle block gets"
-msgstr "Oracle Locks"
+msgstr ""
 
-#, fuzzy
 msgid "Oracle buffer busy wait"
-msgstr "Oracle Bufferpool-Statistik"
+msgstr "Oracle Puffer beschäftigt Wartezeit"
 
-#, fuzzy
 msgid "Oracle buffer cache size"
-msgstr "Größe des Puffercache"
+msgstr "Oracle Puffercachegröße"
 
-#, fuzzy
 msgid "Oracle buffer hit ratio"
-msgstr "Oracle Trefferquote"
+msgstr "Oracle Puffer Trefferquote"
 
 msgid "Oracle buffer pool statistics"
 msgstr "Oracle Bufferpool-Statistik"
 
-#, fuzzy
 msgid "Oracle cluster wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle Cluster Warteklasse"
 
-#, fuzzy
 msgid "Oracle cluster wait class (FG)"
-msgstr "Oracle %s wait class (FG)"
+msgstr "Oracle Cluster Warteklasse (FG)"
 
-#, fuzzy
 msgid "Oracle commit wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle Commit Warteklasse"
 
-#, fuzzy
 msgid "Oracle commit wait class (FG)"
-msgstr "Oracle %s wait class (FG)"
+msgstr "Oracle Commit Warteklasse (FG)"
 
 #, fuzzy
 msgid "Oracle concurrency wait class"
@@ -43340,7 +43286,6 @@ msgstr "Organisation"
 msgid "Organisation ID"
 msgstr "Organisations-ID"
 
-#, fuzzy
 msgid "Organisation name"
 msgstr "Name der Organisation"
 
@@ -43486,7 +43431,6 @@ msgstr ""
 "Andernfalls können Sie nach Ablauf Ihrer Checkmk-Lizenz keine \"Änderungen "
 "aktivieren\"."
 
-#, fuzzy
 msgid ""
 "Our system will recognize breaks in the trend and set them automatically,\n"
 "but as a user your are required to select how flexible the trend is when it\n"
@@ -43550,32 +43494,26 @@ msgstr "Ausfall-Statistik"
 msgid "Outbound messages"
 msgstr "Ausgehende Nachrichten"
 
-#, fuzzy
 msgid "Outbound rule"
 msgstr "Ausgangsregel"
 
-#, fuzzy
 msgid "Outbound rules"
 msgstr "Ausgangsregeln"
 
 msgid "Outcome & Action"
 msgstr "Ergebnis & Aktion"
 
-#, fuzzy
 msgid "Outgoing packets maximum"
 msgstr "Ausgehende Pakete Maximum"
 
-#, fuzzy
 msgid "Outgoing packets minimum"
 msgstr "Ausgehende Pakete Minimum"
 
-#, fuzzy
 msgid "Outgoing traffic maximum"
-msgstr "Ausgehende Bandbreite Maximum"
+msgstr "Ausgehender Verkehr Maximum"
 
-#, fuzzy
 msgid "Outgoing traffic minimum"
-msgstr "Ausgehende Bandbreite Minimum"
+msgstr "Ausgehender Verkehr Minimum"
 
 msgid "Output"
 msgstr "Ausgabe"
@@ -43595,13 +43533,11 @@ msgstr "Output-Bandbreite"
 msgid "Output broadcast packets"
 msgstr "Ausgehende Broadcast-Pakete"
 
-#, fuzzy
 msgid "Output discards"
-msgstr "Output Discards"
+msgstr "Verworfene Ausgaben"
 
-#, fuzzy
 msgid "Output errors"
-msgstr "Output-Fehler"
+msgstr "Ausgabefehler"
 
 #, python-format
 msgid "Output format '%s' not supported"
@@ -43619,9 +43555,8 @@ msgstr "Ausgehende Nicht-Unicast-Oktette"
 msgid "Output non-unicast packets"
 msgstr "Ausgehende Nicht-Unicast-Pakete"
 
-#, fuzzy
 msgid "Output octets"
-msgstr "Ausgende Oktette"
+msgstr "Ausgabe-Oktette"
 
 msgid ""
 "Output of `mkp find --all --json`. See the corresponding commandline help "
@@ -43651,9 +43586,8 @@ msgstr ""
 "Ausgabe von `sestatus`. Weitere Einzelheiten finden Sie in der "
 "entsprechenden Kommandozeilenhilfe."
 
-#, fuzzy
 msgid "Output packets"
-msgstr "Ausgehende Pakete"
+msgstr "Ausgabepakete"
 
 msgid "Output power"
 msgstr "Ausgangsleistung"
@@ -43748,9 +43682,8 @@ msgstr "Check-Status basierend auf dem Jobstatus überschreiben"
 msgid "Override check state based on last build result"
 msgstr "Check-Status basierend auf dem letzten Build-Ergebnis überschreiben"
 
-#, fuzzy
 msgid "Override current plan settings"
-msgstr "Einheit des Sensors überschreiben"
+msgstr "Aktuelle Planeinstellungen überschreiben"
 
 msgid "Override unit of sensor"
 msgstr "Einheit des Sensors überschreiben"
@@ -43831,7 +43764,6 @@ msgstr "PEND"
 msgid "PEND services of host group"
 msgstr "PEND-Services der Host-Gruppe"
 
-#, fuzzy
 msgid "PENDING services of host"
 msgstr "PENDING Services von Host"
 
@@ -44087,9 +44019,8 @@ msgstr "POST"
 msgid "POST / GET Variables"
 msgstr "POST- / GET-Variablen"
 
-#, fuzzy
 msgid "POST requests"
-msgstr "IPv6-Anfragen"
+msgstr "POST-Anfragen"
 
 msgid "PROPFIND"
 msgstr "PROPFIND"
@@ -44100,9 +44031,8 @@ msgstr "PSU"
 msgid "PSU (Chassis/Bay)"
 msgstr "Netzteil (Chassis/Schacht)"
 
-#, fuzzy
 msgid "PSU capacity levels"
-msgstr "Netzteil Kapazitätslevel"
+msgstr "PSU Kapazitätslevel"
 
 msgid "PUBLISH messages received"
 msgstr "Empfangene PUBLISH-Nachrichten"
@@ -44125,9 +44055,8 @@ msgstr "PUBLISH-Nachrichten: Gesendete/empfangene Bytes"
 msgid "PUT"
 msgstr "PUT"
 
-#, fuzzy
 msgid "PUT requests"
-msgstr "IPv6-Anfragen"
+msgstr "PUT-Anfragen"
 
 msgid "Pa"
 msgstr "Pa"
@@ -44238,7 +44167,6 @@ msgstr "Level für Seitenaktivität"
 msgid "Page Life Expectancy"
 msgstr "Lebensdauer der Seite"
 
-#, fuzzy
 msgid "Page activity"
 msgstr "Seitenaktivität"
 
@@ -44248,14 +44176,12 @@ msgstr "Seitenumbruch"
 msgid "Page cache mapped into userspace with huge pages"
 msgstr "Seiten-Cache im Benutzerbereich mit großen Seiten abgebildet"
 
-#, fuzzy
 msgid "Page lookups"
-msgstr "Seitenlookup"
+msgstr "Seitensuchen"
 
 msgid "Page not found"
 msgstr "Seite nicht gefunden"
 
-#, fuzzy
 msgid "Page reads"
 msgstr "Seiten-Lesevorgänge"
 
@@ -44280,7 +44206,6 @@ msgstr "Seitentabellen"
 msgid "Page title"
 msgstr "Seitentitel"
 
-#, fuzzy
 msgid "Page writes"
 msgstr "Seiten-Schreibvorgänge"
 
@@ -44317,9 +44242,8 @@ msgstr "Palo Alto Status"
 msgid "Palo Alto Users"
 msgstr "Palo Alto Benutzer"
 
-#, fuzzy
 msgid "Palo Alto sessions"
-msgstr "Palo Alto Sessions"
+msgstr "Palo Alto Sitzungen"
 
 msgid "Panning"
 msgstr "Schwenken"
@@ -44491,7 +44415,6 @@ msgstr "Partielles Backup"
 msgid "Partial diff backup"
 msgstr "Partielles diff-Backup"
 
-#, fuzzy
 msgid "Partition name"
 msgstr "Partitions-Name"
 
@@ -44590,9 +44513,8 @@ msgstr "CA-Zertifikat hinzufügen"
 msgid "Path to categories"
 msgstr "Pfad zu den Kategorien"
 
-#, fuzzy
 msgid "Path to ceph.conf"
-msgstr "Pfad zu den Kategorien"
+msgstr "Pfad zu ceph.conf"
 
 msgid "Path to nvidia-smi.exe"
 msgstr "Pfad zur nvidia-smi.exe"
@@ -44638,7 +44560,6 @@ msgstr "Muster (Regex)"
 msgid "Pattern analyzer"
 msgstr "Muster Analyse"
 
-#, fuzzy
 msgid "Patterns"
 msgstr "Muster"
 
@@ -44683,11 +44604,9 @@ msgstr "Pe"
 msgid "Peak value of active sessions"
 msgstr "Spitzenwert der aktiven Sitzungen"
 
-#, fuzzy
 msgid "Peer IP address"
 msgstr "IP-Adresse des Peers"
 
-#, fuzzy
 msgid "Peer name"
 msgstr "Name des Peers"
 
@@ -44730,7 +44649,6 @@ msgstr "Ausstehende Service-Erkennung"
 msgid "Pending services"
 msgstr "Services im Status PENDING"
 
-#, fuzzy
 msgid "Pending services of site"
 msgstr "Ausstehende Services einer Instanz"
 
@@ -44850,32 +44768,26 @@ msgstr "Prozentwert - XX.XX %"
 msgid "Percentage - XX.XXX %"
 msgstr "Prozentwert - XX.XXX %"
 
-#, fuzzy
 msgid "Percentage DELETE requests"
-msgstr "Prozentwert %s Anfragen"
+msgstr "Prozentwert DELETE-Anfragen"
 
-#, fuzzy
 msgid "Percentage GET requests"
-msgstr "Prozentwert %s Anfragen"
+msgstr "Prozentwert GET-Anfragen"
 
 msgid "Percentage HEAD requests"
 msgstr "Prozentwert HEAD-Anfragen"
 
-#, fuzzy
 msgid "Percentage LIST requests"
-msgstr "Prozentwert %s Anfragen"
+msgstr "Prozentwert LIST-Anfragen"
 
-#, fuzzy
 msgid "Percentage POST requests"
-msgstr "Prozentwert %s Anfragen"
+msgstr "Prozentwert POST-Anfragen"
 
-#, fuzzy
 msgid "Percentage PUT requests"
-msgstr "Prozentwert %s Anfragen"
+msgstr "Prozentwert PUT-Anfragen"
 
-#, fuzzy
 msgid "Percentage SELECT requests"
-msgstr "Prozentwert %s Anfragen"
+msgstr "Prozentwert SELECT-Anfragen"
 
 msgid "Percentage free"
 msgstr "Prozent frei"
@@ -44965,9 +44877,8 @@ msgstr ""
 msgid "Percentage of queue depth"
 msgstr "Prozentsatz der Warteschlangenlänge"
 
-#, fuzzy
 msgid "Percentage of read I/O operations per latency range"
-msgstr "Prozentsatz der Lese-E/A-Operationen pro Latenzzeitbereich"
+msgstr "Prozentsatz der Lese-E/A-Operationen pro Latenzbereich"
 
 msgid "Percentage of service problems"
 msgstr "Prozentsatz der Serviceprobleme"
@@ -44978,11 +44889,9 @@ msgstr "Prozentsatz vom gesamten RAM"
 msgid "Percentage of total service problems"
 msgstr "Prozentualer Anteil der gesamten Serviceprobleme"
 
-#, fuzzy
 msgid "Percentage of unhealthy access points"
-msgstr "Prozentsatz der Warteschlangenlänge"
+msgstr "Prozentsatz der problematischen Zugangspunkte"
 
-#, fuzzy
 msgid "Percentage of write I/O operations per latency range"
 msgstr "Prozentsatz der Schreib-E/A-Operationen pro Latenzbereich"
 
@@ -45109,16 +45018,14 @@ msgstr "Leistungsdiagramme von Checkmk Server"
 msgid "Performance data"
 msgstr "Leistungsdaten"
 
-#, fuzzy
 msgid "Performance data for latency"
-msgstr "Leistungsdaten für Latenzzeit"
+msgstr "Leistungsdaten für Latenz"
 
 msgid "Performance data for protocols"
 msgstr "Metriken für einzelne Protokolle"
 
-#, fuzzy
 msgid "Performance data for queue length"
-msgstr "Leistungsdaten für Wartenschlangen-Länge"
+msgstr "Leistungsdaten für Wartenschlangenlänge"
 
 msgid ""
 "Performance data related to sizing, e.g. number of helpers, hosts, services"
@@ -60154,10 +60061,6 @@ msgstr "Die erlaubten Kontaktgruppen des Ordners sind: <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "Der folgende %s konnte nicht gefunden werden: %s"
 
-#, python-format
-msgid "The following characters are forbidden: %s"
-msgstr "Die folgenden Zeichen sind verboten: %s"
-
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -65166,6 +65069,14 @@ msgstr ""
 "Sie, dass dies nur für die eigenen ausstehenden Änderungen des Benutzers "
 "gilt, nicht für die anderer Benutzer (fremde Änderungen)."
 
+#, fuzzy
+msgid ""
+"This permission allows users to administrate (add, delete, modify) managed "
+"robots."
+msgstr ""
+"Mit dieser Berechtigung können Benutzer andere Benutzer zu einer anderen "
+"Verbindung migrieren"
+
 msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr ""
@@ -65178,6 +65089,10 @@ msgid ""
 msgstr ""
 "Mit dieser Berechtigung können Benutzer über die Weboberfläche Nachrichten "
 "an die Benutzer des Monitoring-Systems senden."
+
+#, fuzzy
+msgid "This permission allows users to view managed robots."
+msgstr "Diese Berechtigung erlaubt die Registrierung jedes bestehenden Hosts."
 
 msgid ""
 "This permission gives read access to the Checkmk MKP manager. It allows to "
@@ -74995,6 +74910,10 @@ msgstr "Erweiterungspaket-Manager anzeigen"
 msgid "View layout"
 msgstr "Ansicht Layout"
 
+#, fuzzy
+msgid "View managed robots"
+msgstr "Verwalteter Roboter"
+
 msgid "View name"
 msgstr "Name anzeigen"
 
@@ -81843,6 +81762,10 @@ msgstr "{region} ({id_})"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#, python-format
+#~ msgid "The following characters are forbidden: %s"
+#~ msgstr "Die folgenden Zeichen sind verboten: %s"
 
 #~ msgid "Connect Timeout"
 #~ msgstr "Verbindungstimeout"

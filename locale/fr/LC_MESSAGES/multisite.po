@@ -4422,6 +4422,10 @@ msgstr "Etat administratif"
 msgid "Admin states to discover"
 msgstr "Des états administratifs à découvrir"
 
+#, fuzzy
+msgid "Administrate managed robots"
+msgstr "États administratifs"
+
 msgid "Administrative port states to discover"
 msgstr "États du port administratif à découvrir"
 
@@ -33330,6 +33334,10 @@ msgstr "Intervalle :"
 msgid "Invalid (Not loaded)"
 msgstr "Invalide (non chargé)"
 
+#, fuzzy
+msgid "Invalid BooleanChoice"
+msgstr "Sujet non valide"
+
 msgid "Invalid CRCs"
 msgstr "CRC non valides"
 
@@ -33340,6 +33348,10 @@ msgstr "Jeton CSRF invalide (%r) pour la Session (%r)"
 #, python-format
 msgid "Invalid DCD command: %r"
 msgstr "Commande DCD invalide : %r"
+
+#, fuzzy
+msgid "Invalid FixedValue"
+msgstr "Identité non valide"
 
 #, python-format
 msgid "Invalid IPv4 address: %s"
@@ -33665,6 +33677,10 @@ msgstr ""
 "autorisés."
 
 msgid "Invalid test."
+msgstr "Test non valide."
+
+#, fuzzy
+msgid "Invalid text"
 msgstr "Test non valide."
 
 #, python-format
@@ -62471,10 +62487,6 @@ msgstr "Les groupes de contacts autorisés du dossier sont <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "L'élément suivant %s n'a pas pu être trouvé : %s"
 
-#, fuzzy, python-format
-msgid "The following characters are forbidden: %s"
-msgstr "L'élément suivant %s n'a pas pu être trouvé : %s"
-
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -67444,6 +67456,14 @@ msgid ""
 "(foreign changes)."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"This permission allows users to administrate (add, delete, modify) managed "
+"robots."
+msgstr ""
+"Cette autorisation permet aux utilisateurs de migrer d'autres utilisateurs "
+"vers une autre connexion"
+
 msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr ""
@@ -67456,6 +67476,10 @@ msgid ""
 msgstr ""
 "Cette autorisation permet aux utilisateurs d'envoyer des messages aux "
 "utilisateurs du système de surveillance à l'aide de l'interface web."
+
+#, fuzzy
+msgid "This permission allows users to view managed robots."
+msgstr "Cette autorisation permet l'enregistrement de tout nouvel hôte."
 
 #, fuzzy
 msgid ""
@@ -77960,6 +77984,10 @@ msgstr "Voir le gestionnaire de paquets d'extension"
 msgid "View layout"
 msgstr "Voir la présentation"
 
+#, fuzzy
+msgid "View managed robots"
+msgstr "Objets gérés"
+
 msgid "View name"
 msgstr "Voir le nom"
 
@@ -84910,6 +84938,10 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#, fuzzy, python-format
+#~ msgid "The following characters are forbidden: %s"
+#~ msgstr "L'élément suivant %s n'a pas pu être trouvé : %s"
 
 #~ msgid "Connect Timeout"
 #~ msgstr "Délai de connexion"

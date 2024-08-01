@@ -19,8 +19,8 @@ import requests
 from cmk.plugins.lib.prometheus import (
     add_authentication_args,
     authentication_from_args,
-    extract_connection_args,
     generate_api_session,
+    get_api_url,
 )
 from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.v0_unstable.request_helper import ApiSession
@@ -139,10 +139,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         config = ast.literal_eval(args.config)
         session = generate_api_session(
-            extract_connection_args(
-                config,
-                authentication_from_args(args),
-            )
+            get_api_url(config["connection"], config["protocol"]),
+            authentication_from_args(args),
+            config.get("verify_cert", False),
         )
         api_client = AlertmanagerAPI(session)
         alertmanager_rules_section(api_client, config)

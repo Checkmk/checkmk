@@ -9,7 +9,7 @@ Common functions used in Prometheus related Special agents
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Required, TypedDict
+from typing import Literal
 
 from cmk.utils.password_store import lookup
 
@@ -100,40 +100,34 @@ def _lookup_from_password_store(raw_reference: str) -> str:
     return lookup(Path(pw_file), pw_id)
 
 
-class ConnectionConfig(TypedDict):
-    connection: Required[str]
-    protocol: Required[str]
-
-
-def _get_api_url(config: ConnectionConfig) -> str:
+def get_api_url(connection: str, protocol: Literal["http", "https"]) -> str:
     return parse_api_url(
-        server_address=config["connection"],
+        server_address=connection,
         api_path="api/v1/",
-        protocol="http" if config["protocol"] == "http" else "https",
+        protocol=protocol,
     )
 
 
-def extract_connection_args(
-    config: Any,
+def generate_api_session(
+    api_url: str,
     authentication: LoginAuth | TokenAuth | None,
-) -> dict[str, object]:
-    connection_args = {
-        "verify-cert": config.get("verify_cert", False),
-        "api_url": _get_api_url(config),
-    }
+    tls_cert_verification: bool,
+) -> ApiSession:
     match authentication:
         case LoginAuth(username=username, password=password):
-            return connection_args | {"auth": (username, password)}
+            return create_api_connect_session(
+                api_url,
+                auth=(username, password),
+                tls_cert_verification=tls_cert_verification,
+            )
         case TokenAuth(token):
-            return connection_args | {"token": token}
+            return create_api_connect_session(
+                api_url,
+                token=token,
+                tls_cert_verification=tls_cert_verification,
+            )
         case _:
-            return connection_args
-
-
-def generate_api_session(connection_options: dict) -> ApiSession:
-    return create_api_connect_session(
-        connection_options["api_url"],
-        auth=connection_options.get("auth"),
-        token=connection_options.get("token"),
-        tls_cert_verification=connection_options["verify-cert"],
-    )
+            return create_api_connect_session(
+                api_url,
+                tls_cert_verification=tls_cert_verification,
+            )

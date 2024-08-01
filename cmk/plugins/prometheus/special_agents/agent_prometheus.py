@@ -21,8 +21,8 @@ from cmk.plugins.lib.node_exporter import NodeExporter, PromQLMetric, SectionStr
 from cmk.plugins.lib.prometheus import (
     add_authentication_args,
     authentication_from_args,
-    extract_connection_args,
     generate_api_session,
+    get_api_url,
 )
 from cmk.special_agents.v0_unstable.request_helper import ApiSession
 
@@ -898,10 +898,9 @@ def main(argv=None):
         config = ast.literal_eval(args.config)
         config_args = _extract_config_args(config)
         session = generate_api_session(
-            extract_connection_args(
-                config,
-                authentication_from_args(args),
-            )
+            get_api_url(config["connection"], config["protocol"]),
+            authentication_from_args(args),
+            config.get("verify_cert", False),
         )
         exporter_options = config_args["exporter_options"]
         # default cases always must be there

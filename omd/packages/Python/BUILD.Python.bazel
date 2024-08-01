@@ -90,9 +90,9 @@ configure_make(
         sed -i "s|$BUILD_TMPDIR|$omd_prefix|g" $sysconfig_path;
 
         # Fix shebang of scripts
-	cd $bin_dir && \
+        cd $bin_dir && \
         ln -s python{pyMaj} python && \
-	sed -i 's|^#!'$py_install_dir'.*|#!/usr/bin/env python{pyMaj}|' 2to3 2to3-{pyMajMin} idle{pyMajMin} pydoc{pyMajMin};
+        sed -i 's|^#!'$py_install_dir'.*|#!/usr/bin/env python{pyMaj}|' 2to3 2to3-{pyMajMin} idle{pyMajMin} pydoc{pyMajMin};
 
         # Fix pip3 configuration by using own wrapper script
         # * PIP_TARGET currently has an issue when installing non-wheel packages, see https://github.com/pypa/pip/issues/8438
@@ -106,6 +106,15 @@ configure_make(
 
         # Tests are not needed in final package
         rm -rf $INSTALLDIR/lib/python{pyMajMin}/test ; \
+
+        # set RPATH for all ELF binaries we find
+        find $INSTALLDIR -maxdepth 2 -type f -exec file {{}} \\; \
+            | grep ELF | cut -d ':' -f1 \
+            | xargs patchelf --set-rpath "\\$ORIGIN/../lib"
+        find "$INSTALLDIR/lib/python{pyMajMin}/lib-dynload" -name "*.so" -exec file {{}} \\; \
+            | grep ELF | cut -d ':' -f1 \
+            | xargs patchelf --set-rpath "\\$ORIGIN/../.."
+        chmod +x $INSTALLDIR/bin/pip*
 
         mkdir $BUILD_TMPDIR/tar
         cp -R $INSTALLDIR $BUILD_TMPDIR/Python-{pyVers}

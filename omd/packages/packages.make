@@ -43,14 +43,6 @@ $(INTERMEDIATE_INSTALL_BAZEL):
 	#TODO: The following code should be executed by Bazel instead of make
 	# Fix sysconfigdata
 	$(SED) -i "s|/replace-me|$(PACKAGE_PYTHON_DESTDIR)|g" $(PACKAGE_PYTHON_SYSCONFIGDATA)
-	# set RPATH for all ELF binaries we find
-	find "$(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)" -maxdepth 2 -type f -exec file {} \; \
-	    | grep ELF | cut -d ':' -f1 \
-	    | xargs patchelf --set-rpath "\$$ORIGIN/../lib"
-	find "$(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/lib-dynload" -name "*.so" -exec file {} \; \
-	    | grep ELF | cut -d ':' -f1 \
-	    | xargs patchelf --set-rpath "\$$ORIGIN/../.."
-	chmod +x $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)/bin/pip*
 
 	# This will replace forced absolute paths determined at build time by
 	# Bazel/foreign_cc. Note that this step depends on $OMD_ROOT which is different

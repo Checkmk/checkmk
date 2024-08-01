@@ -31,8 +31,8 @@ from ._expression import (
     Sum,
     WarningOf,
 )
+from ._from_api import graphs_from_api, register_unit
 from ._legacy import graph_info, RawGraphTemplate
-from ._loader import graphs_from_api, register_unit
 from ._type_defs import GraphConsoldiationFunction, LineType, TranslatedMetric
 from ._utils import get_extended_metric_info
 

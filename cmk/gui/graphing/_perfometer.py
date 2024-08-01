@@ -26,6 +26,7 @@ from ._expression import (
     parse_conditional_expression,
     parse_expression,
 )
+from ._from_api import make_unit_info, perfometers_from_api
 from ._legacy import (
     DualPerfometerSpec,
     LegacyPerfometer,
@@ -37,7 +38,6 @@ from ._legacy import (
     unit_info,
     UnitInfo,
 )
-from ._loader import make_unit_info, perfometers_from_api
 from ._type_defs import TranslatedMetric
 
 

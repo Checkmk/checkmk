@@ -36,6 +36,7 @@ from ._formatter import (
     StandardScientificFormatter,
     TimeFormatter,
 )
+from ._from_api import get_unit_info
 from ._graph_specification import (
     FixedVerticalRange,
     GraphDataRange,
@@ -45,7 +46,6 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._legacy import UnitInfo
-from ._loader import get_unit_info
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point
 from ._type_defs import LineType, RRDData

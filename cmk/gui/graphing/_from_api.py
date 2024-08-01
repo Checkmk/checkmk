@@ -10,20 +10,15 @@ from typing import Protocol, Self
 from cmk.utils.metrics import MetricName
 
 from cmk.gui.config import active_config, Config
-from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
-import cmk.ccc.debug
 from cmk.ccc.plugin_registry import Registry
-from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
-from cmk.graphing.v1 import entry_point_prefixes
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
-from cmk.graphing.v1 import translations as translations_api
 
 from ._formatter import (
     DecimalFormatter,
@@ -35,35 +30,6 @@ from ._formatter import (
     TimeFormatter,
 )
 from ._legacy import unit_info, UnitInfo
-
-
-def load_graphing_plugins() -> (
-    DiscoveredPlugins[
-        metrics_api.Metric
-        | perfometers_api.Perfometer
-        | perfometers_api.Bidirectional
-        | perfometers_api.Stacked
-        | graphs_api.Graph
-        | graphs_api.Bidirectional
-        | translations_api.Translation
-    ]
-):
-    discovered_plugins: DiscoveredPlugins[
-        metrics_api.Metric
-        | perfometers_api.Perfometer
-        | perfometers_api.Bidirectional
-        | perfometers_api.Stacked
-        | graphs_api.Graph
-        | graphs_api.Bidirectional
-        | translations_api.Translation
-    ] = discover_plugins(
-        PluginGroup.GRAPHING,
-        entry_point_prefixes(),
-        raise_errors=cmk.ccc.debug.enabled(),
-    )
-    for exc in discovered_plugins.errors:
-        logger.error(exc)
-    return discovered_plugins
 
 
 class UnitsFromAPI(Registry[UnitInfo]):

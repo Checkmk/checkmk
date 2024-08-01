@@ -14,13 +14,10 @@ from cmk.utils.paths import omd_root
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing import perfometer_info
+from cmk.gui.graphing._from_api import _compute_unit_info, _TemperatureUnitConverter
 from cmk.gui.graphing._legacy import AutomaticDict, graph_info, metric_info, UnitInfo
-from cmk.gui.graphing._loader import (
-    _compute_unit_info,
-    _TemperatureUnitConverter,
-    load_graphing_plugins,
-)
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.metrics import _load_graphing_plugins
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from cmk.ccc.version import Edition, edition
@@ -32,7 +29,7 @@ from cmk.graphing.v1 import translations as translations_api
 
 
 def test_load_graphing_plugins() -> None:
-    discovered_graphing_plugins = load_graphing_plugins()
+    discovered_graphing_plugins = _load_graphing_plugins()
     assert not discovered_graphing_plugins.errors
     assert discovered_graphing_plugins.plugins
 
@@ -51,7 +48,7 @@ def test_graph_duplicates() -> None:
 
 def test_translations_to_be_standalone() -> None:
     by_module: dict[str, Counter] = {}
-    for plugin_location, plugin in load_graphing_plugins().plugins.items():
+    for plugin_location, plugin in _load_graphing_plugins().plugins.items():
         counter = by_module.setdefault(plugin_location.module, Counter())
         match plugin:
             case translations_api.Translation():
@@ -305,7 +302,9 @@ def _metric_names_by_module(
 def test_bundles() -> None:
     offenders = [
         (module, metric_names)
-        for module, metric_names in _metric_names_by_module(load_graphing_plugins().plugins).items()
+        for module, metric_names in _metric_names_by_module(
+            _load_graphing_plugins().plugins
+        ).items()
         if (bundles := metric_names.bundles)
         and (len(bundles) > 1 or set(metric_names.from_metrics) != set(bundles[0]))
     ]

@@ -21,6 +21,7 @@ from livestatus import SiteId
 import cmk.utils
 import cmk.utils.render
 from cmk.utils.hostaddress import HostName
+from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pages
@@ -28,6 +29,13 @@ from cmk.gui import utils
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _legacy as graphing_legacy
 from cmk.gui.graphing import _utils as graphing_utils
+from cmk.gui.graphing._from_api import (
+    graphs_from_api,
+    MetricInfoExtended,
+    metrics_from_api,
+    perfometers_from_api,
+    register_unit,
+)
 from cmk.gui.graphing._graph_render_config import GraphRenderConfig
 from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
 from cmk.gui.graphing._graph_templates_from_plugins import GraphTemplate
@@ -35,13 +43,19 @@ from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
-from cmk.gui.graphing._loader import load_graphing_plugins
-from cmk.gui.graphing._utils import add_graphing_plugins
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
+from cmk.gui.log import logger
 from cmk.gui.pages import PageResult
 
+import cmk.ccc.debug
 import cmk.ccc.plugin_registry
+from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
+from cmk.graphing.v1 import entry_point_prefixes
+from cmk.graphing.v1 import graphs as graphs_api
+from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import perfometers as perfometers_api
+from cmk.graphing.v1 import translations as translations_api
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -55,11 +69,129 @@ import cmk.ccc.plugin_registry
 #   '----------------------------------------------------------------------'
 
 
+def _load_graphing_plugins() -> (
+    DiscoveredPlugins[
+        metrics_api.Metric
+        | perfometers_api.Perfometer
+        | perfometers_api.Bidirectional
+        | perfometers_api.Stacked
+        | graphs_api.Graph
+        | graphs_api.Bidirectional
+        | translations_api.Translation
+    ]
+):
+    discovered_plugins: DiscoveredPlugins[
+        metrics_api.Metric
+        | perfometers_api.Perfometer
+        | perfometers_api.Bidirectional
+        | perfometers_api.Stacked
+        | graphs_api.Graph
+        | graphs_api.Bidirectional
+        | translations_api.Translation
+    ] = discover_plugins(
+        PluginGroup.GRAPHING,
+        entry_point_prefixes(),
+        raise_errors=cmk.ccc.debug.enabled(),
+    )
+    for exc in discovered_plugins.errors:
+        logger.error(exc)
+    return discovered_plugins
+
+
+def _parse_check_command_from_api(
+    check_command: (
+        translations_api.PassiveCheck
+        | translations_api.ActiveCheck
+        | translations_api.HostCheckCommand
+        | translations_api.NagiosPlugin
+    ),
+) -> str:
+    match check_command:
+        case translations_api.PassiveCheck():
+            return (
+                check_command.name
+                if check_command.name.startswith("check_mk-")
+                else f"check_mk-{check_command.name}"
+            )
+        case translations_api.ActiveCheck():
+            return (
+                check_command.name
+                if check_command.name.startswith("check_mk_active-")
+                else f"check_mk_active-{check_command.name}"
+            )
+        case translations_api.HostCheckCommand():
+            return (
+                check_command.name
+                if check_command.name.startswith("check-mk-")
+                else f"check-mk-{check_command.name}"
+            )
+        case translations_api.NagiosPlugin():
+            return (
+                check_command.name
+                if check_command.name.startswith("check_")
+                else f"check_{check_command.name}"
+            )
+
+
+def _parse_translation(
+    translation: (
+        translations_api.RenameTo | translations_api.ScaleBy | translations_api.RenameToAndScaleBy
+    ),
+) -> graphing_legacy.CheckMetricEntry:
+    match translation:
+        case translations_api.RenameTo():
+            return {"name": translation.metric_name}
+        case translations_api.ScaleBy():
+            return {"scale": translation.factor}
+        case translations_api.RenameToAndScaleBy():
+            return {"name": translation.metric_name, "scale": translation.factor}
+
+
+def _add_graphing_plugins(
+    plugins: DiscoveredPlugins[
+        metrics_api.Metric
+        | perfometers_api.Perfometer
+        | perfometers_api.Bidirectional
+        | perfometers_api.Stacked
+        | graphs_api.Graph
+        | graphs_api.Bidirectional
+        | translations_api.Translation
+    ],
+) -> None:
+    # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
+    for plugin in plugins.plugins.values():
+        if isinstance(plugin, metrics_api.Metric):
+            metrics_from_api.register(
+                MetricInfoExtended(
+                    name=plugin.name,
+                    title=plugin.title.localize(translate_to_current_language),
+                    unit_info=register_unit(plugin.unit),
+                    color=graphing_color.parse_color_from_api(plugin.color),
+                )
+            )
+
+        elif isinstance(plugin, translations_api.Translation):
+            for check_command in plugin.check_commands:
+                graphing_legacy.check_metrics[_parse_check_command_from_api(check_command)] = {
+                    MetricName(old_name): _parse_translation(translation)
+                    for old_name, translation in plugin.translations.items()
+                }
+
+        elif isinstance(
+            plugin,
+            (perfometers_api.Perfometer, perfometers_api.Bidirectional, perfometers_api.Stacked),
+        ):
+            perfometers_from_api.register(plugin)
+
+        elif isinstance(plugin, (graphs_api.Graph, graphs_api.Bidirectional)):
+            graphs_from_api.register(plugin)
+
+
 def load_plugins() -> None:
     """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("metrics", globals())
-    add_graphing_plugins(load_graphing_plugins())
+    _add_graphing_plugins(_load_graphing_plugins())
 
 
 def _register_pre_21_plugin_api() -> None:

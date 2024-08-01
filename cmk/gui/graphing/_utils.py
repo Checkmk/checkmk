@@ -19,32 +19,14 @@ from cmk.utils.metrics import MetricName
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKHTTPException
-from cmk.gui.i18n import _, translate_to_current_language
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 
-from cmk.discover_plugins import DiscoveredPlugins
-from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
-from cmk.graphing.v1 import perfometers as perfometers_api
-from cmk.graphing.v1 import translations as translations_api
-
-from ._color import (
-    get_gray_tone,
-    get_palette_color_by_index,
-    parse_color_from_api,
-    parse_color_into_hexrgb,
-)
+from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
+from ._from_api import get_unit_info, MetricInfoExtended, metrics_from_api
 from ._legacy import check_metrics, CheckMetricEntry, metric_info, MetricInfo, unit_info
-from ._loader import (
-    get_unit_info,
-    graphs_from_api,
-    MetricInfoExtended,
-    metrics_from_api,
-    perfometers_from_api,
-    register_unit,
-)
 from ._type_defs import LineType, ScalarBounds, TranslatedMetric
 
 
@@ -84,95 +66,6 @@ def registered_metrics() -> Iterator[tuple[str, str]]:
         yield metric_id, str(mie.title)
     for metric_id, mi in metric_info.items():
         yield metric_id, str(mi["title"])
-
-
-def _parse_check_command_from_api(
-    check_command: (
-        translations_api.PassiveCheck
-        | translations_api.ActiveCheck
-        | translations_api.HostCheckCommand
-        | translations_api.NagiosPlugin
-    ),
-) -> str:
-    match check_command:
-        case translations_api.PassiveCheck():
-            return (
-                check_command.name
-                if check_command.name.startswith("check_mk-")
-                else f"check_mk-{check_command.name}"
-            )
-        case translations_api.ActiveCheck():
-            return (
-                check_command.name
-                if check_command.name.startswith("check_mk_active-")
-                else f"check_mk_active-{check_command.name}"
-            )
-        case translations_api.HostCheckCommand():
-            return (
-                check_command.name
-                if check_command.name.startswith("check-mk-")
-                else f"check-mk-{check_command.name}"
-            )
-        case translations_api.NagiosPlugin():
-            return (
-                check_command.name
-                if check_command.name.startswith("check_")
-                else f"check_{check_command.name}"
-            )
-
-
-def _parse_translation(
-    translation: (
-        translations_api.RenameTo | translations_api.ScaleBy | translations_api.RenameToAndScaleBy
-    ),
-) -> CheckMetricEntry:
-    match translation:
-        case translations_api.RenameTo():
-            return {"name": translation.metric_name}
-        case translations_api.ScaleBy():
-            return {"scale": translation.factor}
-        case translations_api.RenameToAndScaleBy():
-            return {"name": translation.metric_name, "scale": translation.factor}
-
-
-def add_graphing_plugins(
-    plugins: DiscoveredPlugins[
-        metrics_api.Metric
-        | perfometers_api.Perfometer
-        | perfometers_api.Bidirectional
-        | perfometers_api.Stacked
-        | graphs_api.Graph
-        | graphs_api.Bidirectional
-        | translations_api.Translation
-    ],
-) -> None:
-    # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
-    for plugin in plugins.plugins.values():
-        if isinstance(plugin, metrics_api.Metric):
-            metrics_from_api.register(
-                MetricInfoExtended(
-                    name=plugin.name,
-                    title=plugin.title.localize(translate_to_current_language),
-                    unit_info=register_unit(plugin.unit),
-                    color=parse_color_from_api(plugin.color),
-                )
-            )
-
-        elif isinstance(plugin, translations_api.Translation):
-            for check_command in plugin.check_commands:
-                check_metrics[_parse_check_command_from_api(check_command)] = {
-                    MetricName(old_name): _parse_translation(translation)
-                    for old_name, translation in plugin.translations.items()
-                }
-
-        elif isinstance(
-            plugin,
-            (perfometers_api.Perfometer, perfometers_api.Bidirectional, perfometers_api.Stacked),
-        ):
-            perfometers_from_api.register(plugin)
-
-        elif isinstance(plugin, (graphs_api.Graph, graphs_api.Bidirectional)):
-            graphs_from_api.register(plugin)
 
 
 # .

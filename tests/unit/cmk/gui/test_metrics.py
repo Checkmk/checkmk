@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.graphing._expression import CriticalOf, Metric, WarningOf
+from cmk.gui.graphing._from_api import metrics_from_api
 from cmk.gui.graphing._graph_templates_from_plugins import (
     get_graph_template,
     GraphTemplate,
@@ -11,12 +12,11 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     ScalarDefinition,
 )
 from cmk.gui.graphing._legacy import check_metrics
-from cmk.gui.graphing._loader import load_graphing_plugins, metrics_from_api
-from cmk.gui.graphing._utils import add_graphing_plugins
+from cmk.gui.metrics import _add_graphing_plugins, _load_graphing_plugins
 
 
 def test_add_graphing_plugins() -> None:
-    add_graphing_plugins(load_graphing_plugins())
+    _add_graphing_plugins(_load_graphing_plugins())
 
     assert "idle_connections" in metrics_from_api
     idle_connections = metrics_from_api["idle_connections"]

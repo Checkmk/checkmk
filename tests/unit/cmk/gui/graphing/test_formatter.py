@@ -18,7 +18,7 @@ from cmk.gui.graphing._formatter import (
     StandardScientificFormatter,
     TimeFormatter,
 )
-from cmk.gui.graphing._loader import register_unit
+from cmk.gui.graphing._from_api import register_unit
 
 from cmk.graphing.v1 import metrics as metrics_api
 

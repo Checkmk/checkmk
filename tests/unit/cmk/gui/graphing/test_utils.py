@@ -31,6 +31,7 @@ from cmk.gui.graphing._expression import (
     Sum,
     WarningOf,
 )
+from cmk.gui.graphing._from_api import MetricInfoExtended, metrics_from_api
 from cmk.gui.graphing._graph_templates_from_plugins import (
     _compute_predictive_metrics,
     get_graph_templates,
@@ -40,7 +41,6 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     ScalarDefinition,
 )
 from cmk.gui.graphing._legacy import AutomaticDict, CheckMetricEntry, RawGraphTemplate, UnitInfo
-from cmk.gui.graphing._loader import MetricInfoExtended, metrics_from_api
 from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import _NormalizedPerfData, TranslationInfo
 from cmk.gui.type_defs import Perfdata, PerfDataTuple

@@ -38,8 +38,8 @@ from cmk.gui.valuespec import (
 from cmk.gui.visuals import livestatus_query_bare
 
 from ..config import active_config
+from ._from_api import registered_units
 from ._graph_render_config import GraphRenderConfigBase
-from ._loader import registered_units
 from ._utils import (
     get_extended_metric_info,
     parse_perf_data,

@@ -27,9 +27,9 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import parse_check_mk_version
 
+from ._from_api import get_unit_info
 from ._graph_specification import GraphDataRange, GraphRecipe
 from ._legacy import check_metrics, CheckMetricEntry
-from ._loader import get_unit_info
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction, RRDData, RRDDataKey
 from ._utils import find_matching_translation, get_extended_metric_info

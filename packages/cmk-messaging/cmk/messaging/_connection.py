@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper for pika connection classes"""
+import socket
+import ssl
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
 from typing import Final, Generic, Protocol, Self, TypeVar
@@ -17,6 +20,18 @@ from ._config import get_local_port, make_connection_params
 from ._constants import APP_PREFIX, INTERSITE_EXCHANGE, LOCAL_EXCHANGE
 
 _ModelT = TypeVar("_ModelT", bound=BaseModel)
+
+
+@dataclass(frozen=True)
+class ConnectionOK:
+    """The connection is OK"""
+
+
+@dataclass(frozen=True)
+class ConnectionFailed:
+    """The connection is not OK"""
+
+    message: str
 
 
 class ChannelP(Protocol):
@@ -235,3 +250,22 @@ class Connection:
         traceback: TracebackType | None,
     ) -> None:
         return self._pconnection.__exit__(exc_type, value, traceback)
+
+
+def check_remote_connection(
+    omd_root: Path, server: str, port: int
+) -> ConnectionOK | ConnectionFailed:
+    """
+    Check if a connection to a remote message broker can be established
+
+    Args:
+        omd_root: The OMD root path of the site to connect from
+        server: Hostname or IP Address to connect to
+        port: The message broker port to connect to
+    """
+
+    try:
+        with pika.BlockingConnection(make_connection_params(omd_root, server, port)):
+            return ConnectionOK()
+    except (RuntimeError, socket.gaierror, ssl.SSLError) as exc:
+        return ConnectionFailed(str(exc))

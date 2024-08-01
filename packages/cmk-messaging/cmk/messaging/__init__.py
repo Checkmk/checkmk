@@ -16,7 +16,13 @@ from ._config import (
     multisite_key_file,
     TLS_PATH_CUSTOMERS,
 )
-from ._connection import Channel, Connection
+from ._connection import (
+    Channel,
+    check_remote_connection,
+    Connection,
+    ConnectionFailed,
+    ConnectionOK,
+)
 
 __all__ = [
     "BrokerCertificates",
@@ -31,4 +37,7 @@ __all__ = [
     "multisite_key_file",
     "TLS_PATH_CUSTOMERS",
     "rabbitmq",
+    "check_remote_connection",
+    "ConnectionOK",
+    "ConnectionFailed",
 ]

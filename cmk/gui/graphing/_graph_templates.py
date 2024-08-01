@@ -79,7 +79,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         translated_metrics = translated_metrics_from_row(row)
         return [
             recipe
-            for index, graph_template in matching_graph_templates(
+            for index, graph_template in _matching_graph_templates(
                 graph_id=self.graph_id,
                 graph_index=self.graph_index,
                 translated_metrics=translated_metrics,
@@ -133,7 +133,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
 # everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot easily
 # build a corresponding transform, so even after switching to graph_id everywhere, we will need to
 # keep this functionality here for some time to support already created dashlets, reports etc.
-def matching_graph_templates(
+def _matching_graph_templates(
     *,
     graph_id: str | None,
     graph_index: int | None,

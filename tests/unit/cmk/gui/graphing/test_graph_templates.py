@@ -24,7 +24,7 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpOperator,
     MetricOpRRDSource,
 )
-from cmk.gui.graphing._graph_templates import matching_graph_templates
+from cmk.gui.graphing._graph_templates import _matching_graph_templates
 from cmk.gui.graphing._graph_templates_from_plugins import (
     _graph_templates_from_plugins,
     _parse_graph_template,
@@ -109,7 +109,7 @@ _GRAPH_TEMPLATES = [
         ),
     ],
 )
-def test_matching_graph_templates(
+def test__matching_graph_templates(
     monkeypatch: MonkeyPatch,
     graph_id: str | None,
     graph_index: int | None,
@@ -122,7 +122,7 @@ def test_matching_graph_templates(
     )
     assert (
         list(
-            matching_graph_templates(
+            _matching_graph_templates(
                 graph_id=graph_id,
                 graph_index=graph_index,
                 translated_metrics={},

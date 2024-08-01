@@ -127,7 +127,9 @@ def _commands_function(
                 "--token",
                 token,
             ]
-    if not params.verify_cert:
+    if params.verify_cert:
+        args.extend(["--cert-server-name", host_config.name])
+    else:
         args.append("--disable-cert-verification")
     yield SpecialAgentCommand(command_arguments=args)
 

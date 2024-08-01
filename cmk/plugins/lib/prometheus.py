@@ -16,6 +16,7 @@ from cmk.utils.password_store import lookup
 from cmk.special_agents.v0_unstable.request_helper import (
     ApiSession,
     create_api_connect_session,
+    HostnameValidationAdapter,
     parse_api_url,
 )
 
@@ -111,23 +112,28 @@ def get_api_url(connection: str, protocol: Literal["http", "https"]) -> str:
 def generate_api_session(
     api_url: str,
     authentication: LoginAuth | TokenAuth | None,
-    tls_cert_verification: bool,
+    tls_cert_verification: bool | str,
 ) -> ApiSession:
+    tls_cert_verification_: bool | HostnameValidationAdapter = (
+        tls_cert_verification
+        if isinstance(tls_cert_verification, bool)
+        else HostnameValidationAdapter(tls_cert_verification)
+    )
     match authentication:
         case LoginAuth(username=username, password=password):
             return create_api_connect_session(
                 api_url,
                 auth=(username, password),
-                tls_cert_verification=tls_cert_verification,
+                tls_cert_verification=tls_cert_verification_,
             )
         case TokenAuth(token):
             return create_api_connect_session(
                 api_url,
                 token=token,
-                tls_cert_verification=tls_cert_verification,
+                tls_cert_verification=tls_cert_verification_,
             )
         case _:
             return create_api_connect_session(
                 api_url,
-                tls_cert_verification=tls_cert_verification,
+                tls_cert_verification=tls_cert_verification_,
             )

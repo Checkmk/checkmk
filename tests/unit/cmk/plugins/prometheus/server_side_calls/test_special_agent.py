@@ -71,6 +71,8 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "auth_token",
                     "--token",
                     Secret(0),
+                    "--cert-server-name",
+                    "host",
                 ]
             ),
             id="medium configuration",
@@ -165,6 +167,8 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "user",
                     "--password-reference",
                     Secret(0),
+                    "--cert-server-name",
+                    "host",
                 ]
             ),
             id="full configuration",

@@ -368,15 +368,6 @@ class WebTestAppForCMK(webtest.TestApp):  # type: ignore[misc]
             _reset_cache_for_folders_and_hosts_setup()
         return getattr(self, method.lower())(url, *args, **kw)
 
-    def has_link(self, resp: webtest.TestResponse, rel: str) -> bool:
-        if resp.status_code == 204:
-            return False
-        try:
-            _ = get_link(resp.json, expand_rel(rel))
-            return True
-        except KeyError:
-            return False
-
     def follow_link(
         self,
         resp: webtest.TestResponse,

@@ -9,7 +9,7 @@ import abc
 import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, Self
+from typing import Self
 
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.i18n import _
@@ -123,48 +123,14 @@ class _MetricNamesOrScalars:
         return self._scalars
 
 
-def _scalar_name(
-    scalar: (
-        metrics_api.WarningOf
-        | metrics_api.CriticalOf
-        | metrics_api.MinimumOf
-        | metrics_api.MaximumOf
-    ),
-) -> Literal["warn", "crit", "min", "max"]:
-    match scalar:
-        case metrics_api.WarningOf():
-            return "warn"
-        case metrics_api.CriticalOf():
-            return "crit"
-        case metrics_api.MinimumOf():
-            return "min"
-        case metrics_api.MaximumOf():
-            return "max"
-
-
-def _is_perfometer_applicable(
-    translated_metrics: Mapping[str, TranslatedMetric],
-    metric_names_or_scalars: _MetricNamesOrScalars,
-) -> bool:
-    if not (translated_metrics and metric_names_or_scalars.metric_names):
-        return False
-    for metric_name in metric_names_or_scalars.metric_names:
-        if metric_name not in translated_metrics:
-            return False
-    for scalar in metric_names_or_scalars.scalars:
-        if scalar.metric_name not in translated_metrics:
-            return False
-        if _scalar_name(scalar) not in translated_metrics[scalar.metric_name].scalar:
-            return False
-    return True
-
-
 def _perfometer_matches(
     perfometer: (
         perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
     ),
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> bool:
+    assert translated_metrics
+
     match perfometer:
         case perfometers_api.Perfometer():
             metric_names_or_scalars = _MetricNamesOrScalars.from_perfometers(perfometer)
@@ -178,7 +144,32 @@ def _perfometer_matches(
                 perfometer.lower,
                 perfometer.upper,
             )
-    return _is_perfometer_applicable(translated_metrics, metric_names_or_scalars)
+
+    if not metric_names_or_scalars.metric_names:
+        return False
+
+    for metric_name in metric_names_or_scalars.metric_names:
+        if metric_name not in translated_metrics:
+            return False
+
+    for scalar in metric_names_or_scalars.scalars:
+        if scalar.metric_name not in translated_metrics:
+            return False
+
+        match scalar:
+            case metrics_api.WarningOf():
+                scalar_name = "warn"
+            case metrics_api.CriticalOf():
+                scalar_name = "crit"
+            case metrics_api.MinimumOf():
+                scalar_name = "min"
+            case metrics_api.MaximumOf():
+                scalar_name = "max"
+
+        if scalar_name not in translated_metrics[scalar.metric_name].scalar:
+            return False
+
+    return True
 
 
 @dataclass(frozen=True)
@@ -383,8 +374,7 @@ def _perfometer_has_required_metrics_or_scalars(
 def _perfometer_possible(
     perfometer: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> bool:
-    if not translated_metrics:
-        return False
+    assert translated_metrics
 
     if not _perfometer_has_required_metrics_or_scalars(perfometer, translated_metrics):
         return False
@@ -410,6 +400,9 @@ def get_first_matching_perfometer(
     | PerfometerSpec
     | None
 ):
+    if not translated_metrics:
+        return None
+
     for perfometer in perfometers_from_api.values():
         if _perfometer_matches(perfometer, translated_metrics):
             return perfometer

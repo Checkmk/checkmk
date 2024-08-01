@@ -84,6 +84,11 @@ def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric
     )
 
 
+def test__perfometer_matches_no_translated_metrics() -> None:
+    with pytest.raises(AssertionError):
+        assert _perfometer_matches(_make_perfometer("name", 0), {})
+
+
 @pytest.mark.parametrize(
     "perfometer, translated_metrics, result",
     [
@@ -110,12 +115,6 @@ def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric
             },
             True,
             id="perfometer-matches",
-        ),
-        pytest.param(
-            _make_perfometer("name", 0),
-            {},
-            False,
-            id="perfometer-does-not-matches-no-translated-metrics",
         ),
         pytest.param(
             _make_perfometer("name", 0),

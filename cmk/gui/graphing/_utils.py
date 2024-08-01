@@ -320,35 +320,6 @@ def parse_perf_data(
     return perf_data, check_command
 
 
-def parse_perf_data_from_performance_data_livestatus_column(
-    perf_data_mapping: Mapping[str, float], check_command: str | None = None
-) -> tuple[Perfdata, str]:
-    """Convert new_perf_data into perf_data"""
-    # Strip away arguments like in "check_http!-H checkmk.com"
-    if check_command is None:
-        check_command = ""
-    elif hasattr(check_command, "split"):
-        check_command = check_command.split("!")[0]
-
-    check_command = check_command.replace(".", "_")  # see function maincheckify
-
-    perf_data: Perfdata = [
-        PerfDataTuple(
-            varname,
-            _compute_lookup_metric_name(varname),
-            value,
-            "",
-            None,
-            None,
-            None,
-            None,
-        )
-        for varname, value in perf_data_mapping.items()
-    ]
-
-    return perf_data, check_command
-
-
 def _float_or_int(val: str | None) -> int | float | None:
     """ "45.0" -> 45.0, "45" -> 45"""
     if val is None:
@@ -575,23 +546,6 @@ def translate_metrics(
     return translated_metrics
 
 
-def _perf_data_string_from_metric_names(metric_names: list[MetricName]) -> str:
-    parts = []
-    for var_name in metric_names:
-        # Metrics with "," in their name are not allowed. They lead to problems with the RPN processing
-        # of the metric system. They are used as separators for the single parts of the expression and
-        # since the var_names are used as part of the expressions, they should better not be processed
-        # even when reported by the core.
-        if "," in var_name:
-            continue
-
-        if " " in var_name:
-            parts.append('"%s"=1' % var_name)
-        else:
-            parts.append("%s=1" % var_name)
-    return " ".join(parts)
-
-
 def available_metrics_translated(
     perf_data_string: str,
     rrd_metrics: list[MetricName],
@@ -605,9 +559,18 @@ def available_metrics_translated(
     perf_data, check_command = parse_perf_data(
         perf_data_string, check_command, config=active_config
     )
-    rrd_perf_data_string = _perf_data_string_from_metric_names(rrd_metrics)
     rrd_perf_data, check_command = parse_perf_data(
-        rrd_perf_data_string, check_command, config=active_config
+        " ".join(
+            f'"{m}"=1' if " " in m else f"{m}=1"
+            for m in rrd_metrics
+            # Metrics with "," in their name are not allowed. They lead to problems with the RPN processing
+            # of the metric system. They are used as separators for the single parts of the expression and
+            # since the var_names are used as part of the expressions, they should better not be processed
+            # even when reported by the core.
+            if "," not in m
+        ),
+        check_command,
+        config=active_config,
     )
     if not rrd_perf_data + perf_data:
         return {}

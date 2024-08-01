@@ -44,7 +44,7 @@
                     "type": "string"
                 },
                 "input_hint": {
-                    "type": "string"
+                    "type": ["string", "integer"]
                 }
             },
             "required": [
@@ -70,7 +70,7 @@
                     "type": "string"
                 },
                 "input_hint": {
-                    "type": "string"
+                    "type": ["string", "number"]
                 }
             },
             "required": [

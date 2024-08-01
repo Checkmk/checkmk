@@ -8,7 +8,7 @@ import pprint
 import traceback
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
-from typing import Any, Literal
+from typing import Any, Literal, TypeVar
 
 import cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components as VueComponents
 from cmk.gui.exceptions import MKUserError
@@ -55,6 +55,8 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoice,
     String,
 )
+
+T = TypeVar("T")
 
 
 @dataclass(kw_only=True)
@@ -115,7 +117,7 @@ def get_vue_value(field_id: str, fallback_value: Any) -> Any:
 
 
 def render_form_spec(
-    form_spec: FormSpec,
+    form_spec: FormSpec[T],
     field_id: str,
     value: Any,
     origin: DataOrigin,
@@ -135,7 +137,7 @@ def render_form_spec(
         logger.warning("".join(traceback.format_exception(e)))
 
 
-def parse_data_from_frontend(form_spec: FormSpec, field_id: str) -> Any:
+def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> Any:
     """Computes/validates the value from a vue formular field"""
     if not request.has_var(field_id):
         raise MKGeneralException("Formular data is missing in request")
@@ -146,19 +148,19 @@ def parse_data_from_frontend(form_spec: FormSpec, field_id: str) -> Any:
 
 
 def validate_value_from_frontend(
-    form_spec: FormSpec, value_from_frontend: Any
+    form_spec: FormSpec[T], value_from_frontend: Any
 ) -> Sequence[VueComponents.ValidationMessage]:
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
     return visitor.validate(value_from_frontend)
 
 
-def parse_value_from_frontend(form_spec: FormSpec, value_from_frontend: Any) -> Any:
+def parse_value_from_frontend(form_spec: FormSpec[T], value_from_frontend: Any) -> Any:
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
     return visitor.to_disk(value_from_frontend)
 
 
 def serialize_data_for_frontend(
-    form_spec: FormSpec,
+    form_spec: FormSpec[T],
     field_id: str,
     origin: DataOrigin,
     do_validate: bool,

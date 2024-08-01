@@ -24,7 +24,7 @@ from cmk.rulesets.v1.form_specs._base import DefaultValue, InputHint, ModelT
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 
-def get_title_and_help(form_spec: FormSpec) -> tuple[str, str]:
+def get_title_and_help(form_spec: FormSpec[ModelT]) -> tuple[str, str]:
     title_text = localize(form_spec.title)
     translated_help_text = localize(form_spec.help_text)
     escaped_help_text = escaping.escape_to_html_permissive(translated_help_text, escape_links=False)
@@ -39,7 +39,9 @@ def localize(localizable: Optional[SupportsLocalize]) -> str:
     return "" if localizable is None else localizable.localize(translate_to_current_language)
 
 
-def get_visitor(form_spec: FormSpec, options: VisitorOptions) -> FormSpecVisitor:
+def get_visitor(
+    form_spec: FormSpec[ModelT], options: VisitorOptions
+) -> FormSpecVisitor[FormSpec[ModelT], ModelT]:
     if registered_form_spec := form_specs_visitor_registry.get(form_spec.__class__):
         visitor, recomposer_function = registered_form_spec
         if recomposer_function is not None:
@@ -70,8 +72,8 @@ def optional_validation(
 
 
 def register_visitor_class(
-    form_spec_class: type[FormSpec],
-    visitor_class: type[FormSpecVisitor],
+    form_spec_class: type[FormSpec[ModelT]],
+    visitor_class: type[FormSpecVisitor[Any, ModelT]],
     recomposer: RecomposerFunction | None = None,
 ) -> None:
     form_specs_visitor_registry[form_spec_class] = (visitor_class, recomposer)
@@ -102,7 +104,7 @@ def compute_validators(form_spec: FormSpec[ModelT]) -> list[Callable[[ModelT], o
     return list(form_spec.custom_validate) if form_spec.custom_validate else []
 
 
-def migrate_value(form_spec: FormSpec, options: VisitorOptions, value: Any) -> Any:
+def migrate_value(form_spec: FormSpec[ModelT], options: VisitorOptions, value: Any) -> Any:
     if (
         not isinstance(value, FormSpecDefaultValue)
         and options.data_origin == DataOrigin.DISK
@@ -115,13 +117,13 @@ def migrate_value(form_spec: FormSpec, options: VisitorOptions, value: Any) -> A
 _PrefillTypes = DefaultValue[ModelT] | InputHint[ModelT] | InputHint[Title]
 
 
-def get_prefill_default(prefill: _PrefillTypes) -> ModelT | EmptyValue:
+def get_prefill_default(prefill: _PrefillTypes[ModelT]) -> ModelT | EmptyValue:
     if not isinstance(prefill, DefaultValue):
         return EMPTY_VALUE
     return prefill.value
 
 
-def compute_input_hint(prefill: _PrefillTypes) -> ModelT | None | str:
+def compute_input_hint(prefill: _PrefillTypes[ModelT]) -> ModelT | None | str:
     if not isinstance(prefill, InputHint):
         return None
 

@@ -27,32 +27,33 @@ from cmk.gui.form_specs.vue.utils import (
 from cmk.rulesets.v1.form_specs import Dictionary
 
 
-class DictionaryVisitor(FormSpecVisitor[Dictionary, dict]):
-    def _compute_default_values(self) -> dict:
+class DictionaryVisitor(FormSpecVisitor[Dictionary, Mapping[str, object]]):
+    def _compute_default_values(self) -> Mapping[str, object]:
         return {key: DEFAULT_VALUE for key, el in self.form_spec.elements.items() if el.required}
 
     def _get_static_elements(self) -> set[str]:
         return set(self.form_spec.ignored_elements or ())
 
-    def _compute_static_elements(self, parsed_value: dict) -> dict[str, str]:
+    def _compute_static_elements(self, parsed_value: Mapping[str, object]) -> dict[str, str]:
         return {x: repr(y) for x, y in parsed_value.items() if x in self._get_static_elements()}
 
-    def _resolve_static_elements(self, raw_value: Mapping) -> dict:
+    def _resolve_static_elements(self, raw_value: Mapping[str, object]) -> dict[str, object]:
         # Create a shallow copy, we might modify some of the keys in the raw_value
         value = dict(raw_value)
         if self.options.data_origin == DataOrigin.FRONTEND:
             for ignored_key in self._get_static_elements():
                 if ignored_value := value.get(ignored_key):
+                    assert isinstance(ignored_value, str)
                     value[ignored_key] = ast.literal_eval(ignored_value)
         return value
 
-    def _has_invalid_keys(self, value: dict) -> bool:
+    def _has_invalid_keys(self, value: dict[str, object]) -> bool:
         valid_keys = self.form_spec.elements.keys()
         if value.keys() - valid_keys - self._get_static_elements():
             return True
         return False
 
-    def _parse_value(self, raw_value: object) -> dict | EmptyValue:
+    def _parse_value(self, raw_value: object) -> dict[str, object] | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         raw_value = (
             self._compute_default_values() if isinstance(raw_value, DefaultValue) else raw_value
@@ -69,7 +70,7 @@ class DictionaryVisitor(FormSpecVisitor[Dictionary, dict]):
             return EMPTY_VALUE
 
     def _to_vue(
-        self, raw_value: object, parsed_value: dict | EmptyValue
+        self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
     ) -> tuple[VueComponents.Dictionary, Value]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, EmptyValue):
@@ -108,7 +109,7 @@ class DictionaryVisitor(FormSpecVisitor[Dictionary, dict]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: dict | EmptyValue
+        self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
     ) -> list[VueComponents.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, "Expected a valid value, got EmptyValue")
@@ -133,7 +134,7 @@ class DictionaryVisitor(FormSpecVisitor[Dictionary, dict]):
 
         return element_validations
 
-    def _to_disk(self, raw_value: object, parsed_value: dict) -> dict:
+    def _to_disk(self, raw_value: object, parsed_value: Mapping[str, object]) -> dict[str, object]:
         disk_values = {}
         for key_name, dict_element in self.form_spec.elements.items():
             element_visitor = get_visitor(dict_element.parameter_form, self.options)

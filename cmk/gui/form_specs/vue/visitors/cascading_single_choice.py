@@ -32,8 +32,8 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice
 
 
-class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, list]):
-    def _parse_value(self, raw_value: object) -> list | EmptyValue:
+class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[str, object]]):
+    def _parse_value(self, raw_value: object) -> tuple[str, object] | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
             if isinstance(
@@ -42,19 +42,19 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, list])
                 return prefill_default
             # The default value for a cascading_single_choice element only
             # contains the name of the selected element, not the value.
-            return [prefill_default, DEFAULT_VALUE]
-        if isinstance(raw_value, tuple):
-            raw_value = list(raw_value)
-        if not isinstance(raw_value, list) or len(raw_value) != 2:
+            return (prefill_default, DEFAULT_VALUE)
+        if not isinstance(raw_value, (list, tuple)) or len(raw_value) != 2:
             return EMPTY_VALUE
-        return raw_value
+        assert isinstance(raw_value[0], str)
+        assert len(raw_value) == 2
+        return tuple(raw_value)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: list | EmptyValue
+        self, raw_value: object, parsed_value: tuple[str, object] | EmptyValue
     ) -> tuple[VueComponents.CascadingSingleChoice, Value]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, EmptyValue):
-            parsed_value = ["", None]
+            parsed_value = ("", None)
 
         selected_name, selected_value = parsed_value
         vue_elements = []
@@ -88,7 +88,7 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, list])
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: list | EmptyValue
+        self, raw_value: object, parsed_value: tuple[str, object] | EmptyValue
     ) -> list[VueComponents.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, Title("Invalid selection"))
@@ -116,7 +116,7 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, list])
 
         return element_validations
 
-    def _to_disk(self, raw_value: object, parsed_value: list) -> tuple[str, Any]:
+    def _to_disk(self, raw_value: object, parsed_value: tuple[str, object]) -> tuple[str, object]:
         selected_name, selected_value = parsed_value
 
         disk_value: Any = None

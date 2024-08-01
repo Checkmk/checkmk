@@ -21,14 +21,14 @@ export type Integer = FormSpec & {
   type: "integer";
   label?: string;
   unit?: string;
-  input_hint?: string;
+  input_hint?: string | number;
 };
 export type Validators = IsInteger | IsFloat | NumberInRange | LengthInRange;
 export type Float = FormSpec & {
   type: "float";
   label?: string;
   unit?: string;
-  input_hint?: string;
+  input_hint?: string | number;
 };
 export type String = FormSpec & {
   type: "string";

@@ -27,7 +27,7 @@ def create_vue_cell(content=None, html_content=None):
 
 
 class VueRow(TypedDict):
-    columns: list
+    columns: list[str]
     attributes: dict[str, Any]
     css: list[str]
 
@@ -95,7 +95,7 @@ def create_href(link, alias):
 
 class VueList(TypedDict):
     type: str
-    elements: list
+    elements: list[str]
 
 
 def create_list(elements):
@@ -198,7 +198,7 @@ class IconSettings:
     classes: list[str]
 
 
-def detect_icon_settings(icon: str | dict, title: str = "") -> IconSettings:
+def detect_icon_settings(icon: str | dict[str, str], title: str = "") -> IconSettings:
     classes = []
     icon_name = icon["icon"] if isinstance(icon, dict) else icon
     if icon_name is None:

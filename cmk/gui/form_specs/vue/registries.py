@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
-from typing import Callable, final, Generic, TypeVar
+from typing import Any, Callable, final, Generic, TypeVar
 
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.type_defs import DataForDisk, EmptyValue, Value, VisitorOptions
@@ -15,7 +15,7 @@ from cmk.rulesets.v1.form_specs._base import ModelT
 
 form_spec_registry: dict[str, LoadedRuleSpec] = {}
 
-FormSpecModel = TypeVar("FormSpecModel", bound=FormSpec)
+FormSpecModel = TypeVar("FormSpecModel", bound=FormSpec[Any])
 
 
 class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ModelT]):
@@ -56,7 +56,10 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ModelT]):
     def _to_disk(self, raw_value: object, parsed_value: ModelT) -> DataForDisk: ...
 
 
-RecomposerFunction = Callable[[FormSpec], FormSpec]
-form_specs_visitor_registry: dict[type, tuple[type[FormSpecVisitor], RecomposerFunction | None]] = (
-    {}
-)
+# TODO: why is the registry dict defined here, but the function to put and get from that dict in utils?
+# maybe we could bundle this into visitors?
+
+RecomposerFunction = Callable[[FormSpec[Any]], FormSpec[Any]]
+form_specs_visitor_registry: dict[
+    type[FormSpec[Any]], tuple[type[FormSpecVisitor[FormSpec[Any], Any]], RecomposerFunction | None]
+] = {}

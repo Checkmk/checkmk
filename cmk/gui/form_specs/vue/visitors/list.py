@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Generic, Sequence, TypeVar
+
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
 from cmk.gui.form_specs.vue.type_defs import (
@@ -25,9 +27,11 @@ from cmk.gui.i18n import translate_to_current_language
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import List
 
+T = TypeVar("T")
 
-class ListVisitor(FormSpecVisitor[List, list]):
-    def _parse_value(self, raw_value: object) -> list | EmptyValue:
+
+class ListVisitor(Generic[T], FormSpecVisitor[List[T], Sequence[T]]):
+    def _parse_value(self, raw_value: object) -> list[T] | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
             raw_value = []
@@ -37,7 +41,7 @@ class ListVisitor(FormSpecVisitor[List, list]):
         return raw_value
 
     def _to_vue(
-        self, raw_value: object, parsed_value: list | EmptyValue
+        self, raw_value: object, parsed_value: Sequence[T] | EmptyValue
     ) -> tuple[VueComponents.List, Value]:
         if isinstance(parsed_value, EmptyValue):
             # TODO: fallback to default message
@@ -76,7 +80,7 @@ class ListVisitor(FormSpecVisitor[List, list]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: list | EmptyValue
+        self, raw_value: object, parsed_value: Sequence[T] | EmptyValue
     ) -> list[VueComponents.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, Title("Invalid data for list"))
@@ -97,7 +101,7 @@ class ListVisitor(FormSpecVisitor[List, list]):
                 )
         return element_validations
 
-    def _to_disk(self, raw_value: object, parsed_value: list) -> list:
+    def _to_disk(self, raw_value: object, parsed_value: Sequence[T]) -> list[T]:
         disk_values = []
         element_visitor = get_visitor(self.form_spec.element_template, self.options)
         for entry in parsed_value:

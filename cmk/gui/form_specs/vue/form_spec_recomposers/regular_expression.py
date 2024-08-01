@@ -7,7 +7,7 @@ from cmk.rulesets.v1 import Help
 from cmk.rulesets.v1.form_specs import FormSpec, MatchingScope, RegularExpression, String
 
 
-def recompose(form_spec: FormSpec) -> String:
+def recompose(form_spec: FormSpec[str]) -> String:
     if not isinstance(form_spec, RegularExpression):
         raise MKGeneralException(
             f"Cannot decompose form spec. Expected a Percentage form spec, got {type(form_spec)}"

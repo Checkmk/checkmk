@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Callable, Sequence
+from typing import Callable, Sequence, TypeVar
 
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
@@ -20,18 +20,18 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import FixedValue
 
-_FixedValueT = int | float | str | bool | None
+T = TypeVar("T", int, float, str, bool, None)
 
 
-class FixedValueVisitor(FormSpecVisitor[FixedValue, _FixedValueT]):
-    def _parse_value(self, raw_value: object) -> _FixedValueT | EmptyValue:
+class FixedValueVisitor(FormSpecVisitor[FixedValue[T], T]):
+    def _parse_value(self, raw_value: object) -> T | EmptyValue:
         return self.form_spec.value
 
-    def _validators(self) -> Sequence[Callable[[_FixedValueT], object]]:
+    def _validators(self) -> Sequence[Callable[[T], object]]:
         return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _FixedValueT | EmptyValue
+        self, raw_value: object, parsed_value: T | EmptyValue
     ) -> tuple[VueComponents.FixedValue, Value]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
@@ -46,7 +46,7 @@ class FixedValueVisitor(FormSpecVisitor[FixedValue, _FixedValueT]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: _FixedValueT | EmptyValue
+        self, raw_value: object, parsed_value: T | EmptyValue
     ) -> list[VueComponents.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             # Note: this code should be unreachable, because the parse function always returns a valid value
@@ -55,7 +55,7 @@ class FixedValueVisitor(FormSpecVisitor[FixedValue, _FixedValueT]):
             )
         return compute_validation_errors(compute_validators(self.form_spec), raw_value)
 
-    def _to_disk(self, raw_value: object, parsed_value: _FixedValueT | EmptyValue) -> _FixedValueT:
+    def _to_disk(self, raw_value: object, parsed_value: T | EmptyValue) -> T:
         if isinstance(parsed_value, EmptyValue):
             raise MKGeneralException("Unable to serialize empty value")
         return parsed_value

@@ -33,7 +33,8 @@ const value = computed({
 })
 
 const placeholder = computed(() => {
-  return props.spec.input_hint || ''
+  const hint = props.spec.input_hint
+  return hint ? '' : `${hint}`
 })
 </script>
 

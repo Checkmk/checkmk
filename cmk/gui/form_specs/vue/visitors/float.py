@@ -44,6 +44,7 @@ class FloatVisitor(FormSpecVisitor[Float, float]):
         self, raw_value: object, parsed_value: float | EmptyValue
     ) -> tuple[VueComponents.Float, float | str]:
         title, help_text = get_title_and_help(self.form_spec)
+        input_hint = compute_input_hint(self.form_spec.prefill)
         return (
             VueComponents.Float(
                 title=title,
@@ -51,7 +52,7 @@ class FloatVisitor(FormSpecVisitor[Float, float]):
                 unit=self.form_spec.unit_symbol,
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(self._validators()),
-                input_hint=compute_input_hint(self.form_spec.prefill),
+                input_hint=input_hint,
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

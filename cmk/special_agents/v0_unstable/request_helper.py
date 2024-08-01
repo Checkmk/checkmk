@@ -7,7 +7,6 @@
 import abc
 import base64
 import json
-import os
 import ssl
 from functools import reduce
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
@@ -24,10 +23,6 @@ class TokenDict(TypedDict):
     refresh_token: str
     expires_in: float
     expires_in_abs: str | None
-
-
-def get_requests_ca() -> str | None:
-    return os.environ.get("REQUESTS_CA_BUNDLE")
 
 
 def to_token_dict(data: Any) -> TokenDict:
@@ -126,8 +121,7 @@ def create_api_connect_session(
             url address to the server api
 
         no_cert_check:
-            option if ssl certificate should be verified. session.verify = False cannot be
-            used at this point due to a bug in requests.session
+            option if ssl certificate should be verified
 
         auth:
             authentication option (either username & password or OAuth1 object)
@@ -135,11 +129,7 @@ def create_api_connect_session(
         token:
             token for Bearer token request
     """
-    ssl_verify = None
-    if not no_cert_check:
-        ssl_verify = get_requests_ca()
-
-    session = ApiSession(api_url, ssl_verify)
+    session = ApiSession(api_url, not no_cert_check)
 
     if auth:
         session.auth = auth
@@ -158,14 +148,14 @@ class ApiSession(Session):
 
     """
 
-    def __init__(self, base_url: str | None = None, ssl_verify: str | bool | None = None):
+    def __init__(self, base_url: str | None = None, ssl_verify: bool = True):
         super().__init__()
         self._base_url = base_url if base_url else ""
-        self.ssl_verify = ssl_verify if ssl_verify else False
+        self.verify = ssl_verify
 
     def request(self, method, url, **kwargs):  # type: ignore[override] # pylint: disable=arguments-differ
         url = urljoin(self._base_url, url)
-        return super().request(method, url, verify=self.ssl_verify, **kwargs)
+        return super().request(method, url, **kwargs)
 
 
 def parse_api_url(

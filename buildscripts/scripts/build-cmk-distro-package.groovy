@@ -68,7 +68,7 @@ def main() {
         |omd_env_vars:............. │${omd_env_vars}│
         |docker_tag:............... │${docker_tag}│
         |checkout_dir:............. │${checkout_dir}│
-        |container_name:........... │${checkout_dir}│
+        |container_name:........... │${container_name}│
         |triggerd_by:.............. |${triggerd_by}|
         |===================================================
         """.stripMargin());

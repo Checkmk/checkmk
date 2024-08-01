@@ -17,13 +17,13 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
-    def branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
 
     print(
         """
         |===== CONFIGURATION ===============================
-        |branch_name:....................(local)  │${branch_name}│
+        |safe_branch_name:...............(local)  │${safe_branch_name}│
         |branch_version:.................(local)  │${branch_version}│
         |===================================================
         """.stripMargin());
@@ -69,7 +69,7 @@ def main() {
                         );
                         print(THIS_DOCKER_ARGS);
 
-                        docker.build("test-install-development:${branch_name}-latest", THIS_DOCKER_ARGS);
+                        docker.build("test-install-development:${safe_branch_name}-latest", THIS_DOCKER_ARGS);
                     }
                 }];
             }

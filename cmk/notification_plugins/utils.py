@@ -430,3 +430,29 @@ def quote_message(message: str, max_length: int | None = None) -> str:
     if max_length:
         return "'" + message.replace("'", "'\"'\"'")[: max_length - 2] + "'"
     return "'" + message.replace("'", "'\"'\"'") + "'"
+
+
+def pretty_notification_type(notification_type: str) -> str:
+    if notification_type == "DOWNTIMESTART":
+        return "Downtime Start"
+    if notification_type == "DOWNTIMEEND":
+        return "Downtime End"
+    if notification_type == "DOWNTIMECANCELLED":
+        return "Downtime Cancelled"
+    if notification_type == "FLAPPINGSTART":
+        return "Flapping Start"
+    if notification_type == "FLAPPINGSTOP":
+        return "Flapping Stop"
+    if notification_type == "FLAPPINGDISABLED":
+        return "Flapping Disabled"
+    if notification_type.startswith("ALERTHANDLER"):
+        if suffix := notification_type[12:].lstrip().title():
+            return f"Alert Handler {suffix}"
+        return "Alert Handler"
+    return notification_type.title()
+
+
+def pretty_state(state: str) -> str:
+    if state == "OK":
+        return state
+    return state.title()

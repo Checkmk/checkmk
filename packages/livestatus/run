@@ -182,8 +182,7 @@ run_iwyu() {
 }
 
 run_clang_tidy() {
-    bazel clean --expunge
-    bazel build --subcommands --config clang-tidy //packages/livestatus:all
+    bazel build --config clang-tidy //packages/livestatus:all
 }
 
 run_format() {

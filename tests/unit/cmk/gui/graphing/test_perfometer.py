@@ -8,18 +8,14 @@ from collections.abc import Callable, Mapping, Sequence
 import numpy as np
 import pytest
 
-from cmk.gui.graphing import (
-    get_first_matching_perfometer,
-    MetricometerRendererLegacyLogarithmic,
-    PerfometerSpec,
-    renderer_registry,
-)
+from cmk.gui.graphing import get_first_matching_perfometer, PerfometerSpec
 from cmk.gui.graphing._legacy import LegacyPerfometer, UnitInfo
 from cmk.gui.graphing._perfometer import (
     _make_projection,
     _perfometer_possible,
     _PERFOMETER_PROJECTION_PARAMETERS,
     MetricometerRendererLegacyLinear,
+    MetricometerRendererLegacyLogarithmic,
     MetricometerRendererPerfometer,
     MetricRendererStack,
     parse_perfometer,
@@ -392,23 +388,10 @@ def test_get_first_matching_perfometer(
     perfometer: (
         perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
     ),
+    request_context: None,
 ) -> None:
-    assert get_first_matching_perfometer(translated_metrics) == perfometer
-
-
-def test_registered_renderers() -> None:
-    registered_plugins = sorted(renderer_registry.keys())
-    assert registered_plugins == sorted(
-        [
-            "perfometer",
-            "bidirectional",
-            "stacked",
-            "legacy_dual",
-            "legacy_linear",
-            "legacy_logarithmic",
-            "legacy_stacked",
-        ]
-    )
+    assert (first_renderer := get_first_matching_perfometer(translated_metrics)) is not None
+    assert first_renderer.perfometer == perfometer
 
 
 class TestMetricometerRendererLegacyLinear:

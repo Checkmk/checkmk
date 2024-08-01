@@ -15,7 +15,6 @@ from cmk.gui.exceptions import MKInternalError
 from cmk.gui.i18n import _
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from cmk.ccc import plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
@@ -391,107 +390,6 @@ def _perfometer_possible(
     return True
 
 
-def get_first_matching_perfometer(
-    translated_metrics: Mapping[str, TranslatedMetric]
-) -> (
-    perfometers_api.Perfometer
-    | perfometers_api.Bidirectional
-    | perfometers_api.Stacked
-    | PerfometerSpec
-    | None
-):
-    if not translated_metrics:
-        return None
-
-    for perfometer in perfometers_from_api.values():
-        if _perfometer_matches(perfometer, translated_metrics):
-            return perfometer
-
-    # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
-    for legacy_perfometer in perfometer_info:
-        parsed = parse_perfometer(legacy_perfometer)
-        if _perfometer_possible(parsed, translated_metrics):
-            return parsed
-    return None
-
-
-class MetricometerRenderer(abc.ABC):
-    """Abstract base class for all metricometer renderers"""
-
-    @classmethod
-    def type_name(cls) -> str:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_stack(self) -> MetricRendererStack:
-        """Return a list of perfometer elements
-
-        Each element is represented by a 2 element tuple where the first element is
-        the width in px and the second element the hex color code of this element.
-        """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_label(self) -> str:
-        """Returns the label to be shown on top of the rendered stack
-
-        When the perfometer type definition has a "label" element, this will be used.
-        """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_sort_value(self) -> float:
-        """Returns the number to sort this perfometer with compared to the other
-        performeters in the current performeter sort group"""
-        raise NotImplementedError()
-
-    @staticmethod
-    def _render_value(unit_info_: UnitInfo, value: float) -> str:
-        return (unit_info_.perfometer_render or unit_info_.render)(value)
-
-
-class MetricometerRendererRegistry(plugin_registry.Registry[type[MetricometerRenderer]]):
-    def plugin_name(self, instance):
-        return instance.type_name()
-
-    def get_renderer(
-        self,
-        perfometer: (
-            perfometers_api.Perfometer
-            | perfometers_api.Bidirectional
-            | perfometers_api.Stacked
-            | PerfometerSpec
-        ),
-        translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricometerRenderer:
-        if isinstance(perfometer, perfometers_api.Perfometer):
-            return MetricometerRendererPerfometer(
-                perfometer,
-                translated_metrics,
-                get_themed_perfometer_bg_color(),
-            )
-        if isinstance(perfometer, perfometers_api.Bidirectional):
-            return MetricometerRendererBidirectional(
-                perfometer,
-                translated_metrics,
-                get_themed_perfometer_bg_color(),
-            )
-        if isinstance(perfometer, perfometers_api.Stacked):
-            return MetricometerRendererStacked(perfometer, translated_metrics)
-        if perfometer["type"] == "logarithmic":
-            return MetricometerRendererLegacyLogarithmic(perfometer, translated_metrics)
-        if perfometer["type"] == "linear":
-            return MetricometerRendererLegacyLinear(perfometer, translated_metrics)
-        if perfometer["type"] == "dual":
-            return MetricometerRendererLegacyDual(perfometer, translated_metrics)
-        if perfometer["type"] == "stacked":
-            return MetricometerRendererLegacyStacked(perfometer, translated_metrics)
-        raise ValueError(perfometer["type"])
-
-
-renderer_registry = MetricometerRendererRegistry()
-
-
 @dataclass(frozen=True)
 class _Linear:
     slope: float
@@ -730,6 +628,41 @@ def _project_segments(
     return projections
 
 
+class MetricometerRenderer(abc.ABC):
+    """Abstract base class for all metricometer renderers"""
+
+    @classmethod
+    def type_name(cls) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_stack(self) -> MetricRendererStack:
+        """Return a list of perfometer elements
+
+        Each element is represented by a 2 element tuple where the first element is
+        the width in px and the second element the hex color code of this element.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_label(self) -> str:
+        """Returns the label to be shown on top of the rendered stack
+
+        When the perfometer type definition has a "label" element, this will be used.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_sort_value(self) -> float:
+        """Returns the number to sort this perfometer with compared to the other
+        performeters in the current performeter sort group"""
+        raise NotImplementedError()
+
+    @staticmethod
+    def _render_value(unit_info_: UnitInfo, value: float) -> str:
+        return (unit_info_.perfometer_render or unit_info_.render)(value)
+
+
 class MetricometerRendererPerfometer(MetricometerRenderer):
     def __init__(
         self,
@@ -737,6 +670,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
         translated_metrics: Mapping[str, TranslatedMetric],
         themed_perfometer_bg_color: str,
     ) -> None:
+        # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
         self.perfometer = perfometer
         self.translated_metrics = translated_metrics
         self.themed_perfometer_bg_color = themed_perfometer_bg_color
@@ -784,6 +718,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
         translated_metrics: Mapping[str, TranslatedMetric],
         themed_perfometer_bg_color: str,
     ) -> None:
+        # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
         self.perfometer = perfometer
         self.translated_metrics = translated_metrics
         self.themed_perfometer_bg_color = themed_perfometer_bg_color
@@ -834,16 +769,10 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
     def get_label(self) -> str:
         labels = []
 
-        if left_label := renderer_registry.get_renderer(
-            self.perfometer.left,
-            self.translated_metrics,
-        ).get_label():
+        if left_label := _get_renderer(self.perfometer.left, self.translated_metrics).get_label():
             labels.append(left_label)
 
-        if right_label := renderer_registry.get_renderer(
-            self.perfometer.right,
-            self.translated_metrics,
-        ).get_label():
+        if right_label := _get_renderer(self.perfometer.right, self.translated_metrics).get_label():
             labels.append(right_label)
 
         return " / ".join(labels)
@@ -851,14 +780,8 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
     def get_sort_value(self) -> float:
         return max(
             [
-                renderer_registry.get_renderer(
-                    self.perfometer.left,
-                    self.translated_metrics,
-                ).get_sort_value(),
-                renderer_registry.get_renderer(
-                    self.perfometer.right,
-                    self.translated_metrics,
-                ).get_sort_value(),
+                _get_renderer(self.perfometer.left, self.translated_metrics).get_sort_value(),
+                _get_renderer(self.perfometer.right, self.translated_metrics).get_sort_value(),
             ]
         )
 
@@ -869,6 +792,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
         perfometer: perfometers_api.Stacked,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
+        # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
         self.perfometer = perfometer
         self.translated_metrics = translated_metrics
 
@@ -879,15 +803,13 @@ class MetricometerRendererStacked(MetricometerRenderer):
     def get_stack(self) -> MetricRendererStack:
         projections: list[Sequence[tuple[float, str]]] = []
 
-        if lower_projections := renderer_registry.get_renderer(
-            self.perfometer.lower,
-            self.translated_metrics,
+        if lower_projections := _get_renderer(
+            self.perfometer.lower, self.translated_metrics
         ).get_stack():
             projections.append(lower_projections[0])
 
-        if upper_projections := renderer_registry.get_renderer(
-            self.perfometer.upper,
-            self.translated_metrics,
+        if upper_projections := _get_renderer(
+            self.perfometer.upper, self.translated_metrics
         ).get_stack():
             projections.append(upper_projections[0])
 
@@ -896,25 +818,16 @@ class MetricometerRendererStacked(MetricometerRenderer):
     def get_label(self) -> str:
         labels = []
 
-        if lower_label := renderer_registry.get_renderer(
-            self.perfometer.lower,
-            self.translated_metrics,
-        ).get_label():
+        if lower_label := _get_renderer(self.perfometer.lower, self.translated_metrics).get_label():
             labels.append(lower_label)
 
-        if upper_label := renderer_registry.get_renderer(
-            self.perfometer.upper,
-            self.translated_metrics,
-        ).get_label():
+        if upper_label := _get_renderer(self.perfometer.upper, self.translated_metrics).get_label():
             labels.append(upper_label)
 
         return " / ".join(labels)
 
     def get_sort_value(self) -> float:
-        return renderer_registry.get_renderer(
-            self.perfometer.upper,
-            self.translated_metrics,
-        ).get_sort_value()
+        return _get_renderer(self.perfometer.upper, self.translated_metrics).get_sort_value()
 
 
 class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
@@ -928,6 +841,8 @@ class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
                 _('Missing key "metric" in logarithmic perfometer: %r') % perfometer
             )
 
+        # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
+        self.perfometer = perfometer
         self._metric = parse_expression(perfometer["metric"], translated_metrics)
         self._half_value = perfometer["half_value"]
         self._exponent = perfometer["exponent"]
@@ -1019,6 +934,8 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
         perfometer: LinearPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
+        # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
+        self.perfometer = perfometer
         self._segments = [parse_expression(s, translated_metrics) for s in perfometer["segments"]]
         self._total = parse_expression(perfometer["total"], translated_metrics)
         if (label := perfometer.get("label")) is None:
@@ -1089,6 +1006,8 @@ class MetricometerRendererLegacyStacked(MetricometerRenderer):
         perfometer: StackedPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
+        # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
+        self.perfometer = perfometer
         self._perfometers = perfometer["perfometers"]
         self._translated_metrics = translated_metrics
 
@@ -1099,7 +1018,7 @@ class MetricometerRendererLegacyStacked(MetricometerRenderer):
     def get_stack(self) -> MetricRendererStack:
         stack = []
         for sub_perfometer in self._perfometers:
-            renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
+            renderer = _get_legacy_renderer(sub_perfometer, self._translated_metrics)
 
             sub_stack = renderer.get_stack()
             stack.append(sub_stack[0])
@@ -1109,7 +1028,7 @@ class MetricometerRendererLegacyStacked(MetricometerRenderer):
     def get_label(self) -> str:
         sub_labels = []
         for sub_perfometer in self._perfometers:
-            renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
+            renderer = _get_legacy_renderer(sub_perfometer, self._translated_metrics)
 
             sub_label = renderer.get_label()
             if sub_label:
@@ -1123,7 +1042,7 @@ class MetricometerRendererLegacyStacked(MetricometerRenderer):
     def get_sort_value(self) -> float:
         """Use the number of the first stack element."""
         sub_perfometer = self._perfometers[0]
-        renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
+        renderer = _get_legacy_renderer(sub_perfometer, self._translated_metrics)
         return renderer.get_sort_value()
 
 
@@ -1133,6 +1052,8 @@ class MetricometerRendererLegacyDual(MetricometerRenderer):
         perfometer: DualPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
+        # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
+        self.perfometer = perfometer
         self._perfometers = perfometer["perfometers"]
         self._translated_metrics = translated_metrics
 
@@ -1143,7 +1064,7 @@ class MetricometerRendererLegacyDual(MetricometerRenderer):
     def get_stack(self) -> MetricRendererStack:
         content: list[tuple[int | float, str]] = []
         for nr, sub_perfometer in enumerate(self._perfometers):
-            renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
+            renderer = _get_legacy_renderer(sub_perfometer, self._translated_metrics)
 
             sub_stack = renderer.get_stack()
             if len(sub_stack) != 1:
@@ -1161,7 +1082,7 @@ class MetricometerRendererLegacyDual(MetricometerRenderer):
     def get_label(self) -> str:
         sub_labels = []
         for sub_perfometer in self._perfometers:
-            renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
+            renderer = _get_legacy_renderer(sub_perfometer, self._translated_metrics)
 
             sub_label = renderer.get_label()
             if sub_label:
@@ -1180,18 +1101,80 @@ class MetricometerRendererLegacyDual(MetricometerRenderer):
         """
         sub_sort_values = []
         for sub_perfometer in self._perfometers:
-            renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
+            renderer = _get_legacy_renderer(sub_perfometer, self._translated_metrics)
             sub_sort_values.append(renderer.get_sort_value())
 
         return max(*sub_sort_values)
 
 
-def register() -> None:
-    renderer_registry.register(MetricometerRendererPerfometer)
-    renderer_registry.register(MetricometerRendererBidirectional)
-    renderer_registry.register(MetricometerRendererStacked)
-    # Legacy
-    renderer_registry.register(MetricometerRendererLegacyLogarithmic)
-    renderer_registry.register(MetricometerRendererLegacyLinear)
-    renderer_registry.register(MetricometerRendererLegacyStacked)
-    renderer_registry.register(MetricometerRendererLegacyDual)
+def _get_renderer(
+    perfometer: (
+        perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+    ),
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> (
+    MetricometerRendererPerfometer | MetricometerRendererBidirectional | MetricometerRendererStacked
+):
+    match perfometer:
+        case perfometers_api.Perfometer():
+            return MetricometerRendererPerfometer(
+                perfometer,
+                translated_metrics,
+                get_themed_perfometer_bg_color(),
+            )
+        case perfometers_api.Bidirectional():
+            return MetricometerRendererBidirectional(
+                perfometer,
+                translated_metrics,
+                get_themed_perfometer_bg_color(),
+            )
+        case perfometers_api.Stacked():
+            return MetricometerRendererStacked(perfometer, translated_metrics)
+
+
+def _get_legacy_renderer(
+    perfometer: PerfometerSpec,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> (
+    MetricometerRendererLegacyLogarithmic
+    | MetricometerRendererLegacyLinear
+    | MetricometerRendererLegacyStacked
+    | MetricometerRendererLegacyDual
+):
+    if perfometer["type"] == "logarithmic":
+        return MetricometerRendererLegacyLogarithmic(perfometer, translated_metrics)
+    if perfometer["type"] == "linear":
+        return MetricometerRendererLegacyLinear(perfometer, translated_metrics)
+    if perfometer["type"] == "dual":
+        return MetricometerRendererLegacyDual(perfometer, translated_metrics)
+    if perfometer["type"] == "stacked":
+        return MetricometerRendererLegacyStacked(perfometer, translated_metrics)
+    raise ValueError(perfometer["type"])
+
+
+def get_first_matching_perfometer(
+    translated_metrics: Mapping[str, TranslatedMetric]
+) -> (
+    MetricometerRendererPerfometer
+    | MetricometerRendererBidirectional
+    | MetricometerRendererStacked
+    | MetricometerRendererLegacyLogarithmic
+    | MetricometerRendererLegacyLinear
+    | MetricometerRendererLegacyStacked
+    | MetricometerRendererLegacyDual
+    | None
+):
+    if not translated_metrics:
+        return None
+
+    for perfometer in perfometers_from_api.values():
+        if _perfometer_matches(perfometer, translated_metrics):
+            return _get_renderer(perfometer, translated_metrics)
+
+    # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
+    for legacy_perfometer in perfometer_info:
+        parsed = parse_perfometer(legacy_perfometer)
+        if _perfometer_possible(parsed, translated_metrics):
+            return _get_legacy_renderer(parsed, translated_metrics)
+
+    return None

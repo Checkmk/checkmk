@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.gui.graphing import get_first_matching_perfometer, renderer_registry
+from cmk.gui.graphing import get_first_matching_perfometer
 from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -57,11 +57,8 @@ class Perfometer:
         return None, None
 
     def _render_metrics_perfometer(self) -> tuple[str | None, HTML | None]:
-        perfometer_definition = get_first_matching_perfometer(self._translated_metrics)
-        if not perfometer_definition:
+        if not (renderer := get_first_matching_perfometer(self._translated_metrics)):
             return None, None
-
-        renderer = renderer_registry.get_renderer(perfometer_definition, self._translated_metrics)
         return renderer.get_label(), _render_metricometer(renderer.get_stack())
 
     def sort_value(self) -> tuple[int | None, float | None]:
@@ -74,21 +71,16 @@ class Perfometer:
         return self._get_metrics_sort_group(), self._get_metrics_sort_value()
 
     def _get_metrics_sort_group(self) -> int | None:
-        perfometer_definition = get_first_matching_perfometer(self._translated_metrics)
-        if not perfometer_definition:
+        if not (renderer := get_first_matching_perfometer(self._translated_metrics)):
             return None
-
         # The perfometer definitions had no ID until implementation of this sorting. We need to
         # care about this here. Since it is only for grouping perfometers of the same type, we
         # can use the id() of the perfometer_definition here.
-        return id(perfometer_definition)
+        return id(renderer.perfometer)
 
     def _get_metrics_sort_value(self) -> float | None:
-        perfometer_definition = get_first_matching_perfometer(self._translated_metrics)
-        if not perfometer_definition:
+        if not (renderer := get_first_matching_perfometer(self._translated_metrics)):
             return None
-
-        renderer = renderer_registry.get_renderer(perfometer_definition, self._translated_metrics)
         return renderer.get_sort_value()
 
 

@@ -1,7 +1,7 @@
 [project]
 name = "cmk-messaging"
 version = "0.1.0"
-dependencies = ["pika", "types-pika-ts"]
+dependencies = ["pika", "types-pika-ts", "pydantic"]
 
 [build-system]
 requires = ["setuptools"]

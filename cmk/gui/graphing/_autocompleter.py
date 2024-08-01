@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
-from itertools import chain
 
-from cmk.gui.type_defs import Choices, Row
+from cmk.gui.type_defs import Choices
 from cmk.gui.visuals import livestatus_query_bare
 
 from ._graph_templates_from_plugins import get_graph_template_choices, get_graph_templates
@@ -39,18 +38,15 @@ def graph_templates_autocompleter(value: str, params: dict) -> Choices:
     if not params.get("context") and params.get("show_independent_of_context") is True:
         choices: Iterable[tuple[str, str]] = get_graph_template_choices()
     else:
-        columns = [
-            "service_check_command",
-            "service_perf_data",
-            "service_metrics",
-        ]
-
-        choices = set(
-            chain.from_iterable(
-                _graph_choices_from_livestatus_row(row)
-                for row in livestatus_query_bare("service", params["context"], columns)
+        choices = {
+            (template.id, template.title or metric_title(template.id))
+            for row in livestatus_query_bare(
+                "service",
+                params["context"],
+                ["service_check_command", "service_perf_data", "service_metrics"],
             )
-        )
+            for template in get_graph_templates(translated_metrics_from_row(row))
+        }
 
     return sorted(
         (v for v in choices if _matches_id_or_title(value, v)), key=lambda a: a[1].lower()
@@ -59,10 +55,3 @@ def graph_templates_autocompleter(value: str, params: dict) -> Choices:
 
 def _matches_id_or_title(ident: str, choice: tuple[str | None, str]) -> bool:
     return ident.lower() in (choice[0] or "").lower() or ident.lower() in choice[1].lower()
-
-
-def _graph_choices_from_livestatus_row(row: Row) -> Iterable[tuple[str, str]]:
-    yield from (
-        (template.id, template.title or metric_title(template.id))
-        for template in get_graph_templates(translated_metrics_from_row(row))
-    )

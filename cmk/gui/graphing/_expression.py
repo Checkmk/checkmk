@@ -21,9 +21,11 @@ from ._type_defs import GraphConsoldiationFunction, TranslatedMetric
 # TODO CMK-15246 Checkmk 2.4: Remove legacy objects/RPNs
 
 
-def _unit_mult(u1: UnitInfo, u2: UnitInfo) -> UnitInfo:
+def _unit_mult(left_unit_info: UnitInfo, right_unit_info: UnitInfo) -> UnitInfo:
     # TODO: real unit computation!
-    return u2 if u1 in (unit_info[""], unit_info["count"]) else u1
+    return (
+        right_unit_info if left_unit_info in (unit_info[""], unit_info["count"]) else left_unit_info
+    )
 
 
 _unit_div: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
@@ -37,10 +39,6 @@ def _choose_operator_color(a: str, b: str) -> str:
     if b == "#000000":
         return a
     return render_color(mix_colors(parse_color(a), parse_color(b)))
-
-
-def _make_unit_info(explicit_unit_id: str, unit_info_: UnitInfo) -> UnitInfo:
-    return get_unit_info(explicit_unit_id) if explicit_unit_id else unit_info_
 
 
 @dataclass(frozen=True)
@@ -78,12 +76,15 @@ class Constant(MetricExpression):
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricExpressionResult:
+        if self.explicit_unit_id:
+            unit_info_ = get_unit_info(self.explicit_unit_id)
+        elif isinstance(self.value, int):
+            unit_info_ = unit_info["count"]
+        else:
+            unit_info_ = unit_info[""]
         return MetricExpressionResult(
             self.value,
-            _make_unit_info(
-                self.explicit_unit_id,
-                unit_info["count"] if isinstance(self.value, int) else unit_info[""],
-            ),
+            unit_info_,
             self.explicit_color or "#000000",
         )
 
@@ -108,9 +109,10 @@ class Metric(MetricExpression):
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.name].value,
-            _make_unit_info(
-                self.explicit_unit_id,
-                translated_metrics[self.name].unit_info,
+            (
+                get_unit_info(self.explicit_unit_id)
+                if self.explicit_unit_id
+                else translated_metrics[self.name].unit_info
             ),
             self.explicit_color or translated_metrics[self.name].color,
         )
@@ -136,9 +138,10 @@ class WarningOf(MetricExpression):
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["warn"],
-            _make_unit_info(
-                self.explicit_unit_id,
-                self.metric.evaluate(translated_metrics).unit_info,
+            (
+                get_unit_info(self.explicit_unit_id)
+                if self.explicit_unit_id
+                else self.metric.evaluate(translated_metrics).unit_info
             ),
             self.explicit_color or scalar_colors.get("warn", "#808080"),
         )
@@ -164,9 +167,10 @@ class CriticalOf(MetricExpression):
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["crit"],
-            _make_unit_info(
-                self.explicit_unit_id,
-                self.metric.evaluate(translated_metrics).unit_info,
+            (
+                get_unit_info(self.explicit_unit_id)
+                if self.explicit_unit_id
+                else self.metric.evaluate(translated_metrics).unit_info
             ),
             self.explicit_color or scalar_colors.get("crit", "#808080"),
         )
@@ -192,9 +196,10 @@ class MinimumOf(MetricExpression):
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["min"],
-            _make_unit_info(
-                self.explicit_unit_id,
-                self.metric.evaluate(translated_metrics).unit_info,
+            (
+                get_unit_info(self.explicit_unit_id)
+                if self.explicit_unit_id
+                else self.metric.evaluate(translated_metrics).unit_info
             ),
             self.explicit_color or scalar_colors.get("min", "#808080"),
         )
@@ -220,9 +225,10 @@ class MaximumOf(MetricExpression):
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["max"],
-            _make_unit_info(
-                self.explicit_unit_id,
-                self.metric.evaluate(translated_metrics).unit_info,
+            (
+                get_unit_info(self.explicit_unit_id)
+                if self.explicit_unit_id
+                else self.metric.evaluate(translated_metrics).unit_info
             ),
             self.explicit_color or scalar_colors.get("max", "#808080"),
         )
@@ -248,10 +254,7 @@ class Sum(MetricExpression):
         if len(self.summands) == 0:
             return MetricExpressionResult(
                 0.0,
-                _make_unit_info(
-                    self.explicit_unit_id,
-                    unit_info[""],
-                ),
+                get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info[""],
                 self.explicit_color or "#000000",
             )
 
@@ -267,10 +270,7 @@ class Sum(MetricExpression):
 
         return MetricExpressionResult(
             sum(values),
-            _make_unit_info(
-                self.explicit_unit_id,
-                unit_info_,
-            ),
+            get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info_,
             self.explicit_color or color,
         )
 
@@ -295,7 +295,7 @@ class Product(MetricExpression):
         if len(self.factors) == 0:
             return MetricExpressionResult(
                 1.0,
-                _make_unit_info(self.explicit_unit_id, unit_info[""]),
+                get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info[""],
                 self.explicit_color or "#000000",
             )
 
@@ -311,10 +311,7 @@ class Product(MetricExpression):
 
         return MetricExpressionResult(
             product,
-            _make_unit_info(
-                self.explicit_unit_id,
-                unit_info_,
-            ),
+            get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info_,
             self.explicit_color or color,
         )
 
@@ -346,9 +343,10 @@ class Difference(MetricExpression):
 
         return MetricExpressionResult(
             value,
-            _make_unit_info(
-                self.explicit_unit_id,
-                _unit_sub(minuend_result.unit_info, subtrahend_result.unit_info),
+            (
+                get_unit_info(self.explicit_unit_id)
+                if self.explicit_unit_id
+                else _unit_sub(minuend_result.unit_info, subtrahend_result.unit_info)
             ),
             (
                 self.explicit_color
@@ -386,9 +384,10 @@ class Fraction(MetricExpression):
 
         return MetricExpressionResult(
             value,
-            _make_unit_info(
-                self.explicit_unit_id,
-                _unit_div(dividend_result.unit_info, divisor_result.unit_info),
+            (
+                get_unit_info(self.explicit_unit_id)
+                if self.explicit_unit_id
+                else _unit_div(dividend_result.unit_info, divisor_result.unit_info)
             ),
             (
                 self.explicit_color
@@ -419,10 +418,7 @@ class Minimum(MetricExpression):
         if len(self.operands) == 0:
             return MetricExpressionResult(
                 float("nan"),
-                _make_unit_info(
-                    self.explicit_unit_id,
-                    unit_info[""],
-                ),
+                get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info[""],
                 self.explicit_color or "#000000",
             )
 
@@ -455,10 +451,7 @@ class Maximum(MetricExpression):
         if len(self.operands) == 0:
             return MetricExpressionResult(
                 float("nan"),
-                _make_unit_info(
-                    self.explicit_unit_id,
-                    unit_info[""],
-                ),
+                get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info[""],
                 self.explicit_color or "#000000",
             )
 
@@ -502,10 +495,7 @@ class Percent(MetricExpression):
                 .evaluate(translated_metrics)
                 .value
             ),
-            _make_unit_info(
-                self.explicit_unit_id,
-                unit_info["%"],
-            ),
+            get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info["%"],
             self.explicit_color or self.percent_value.evaluate(translated_metrics).color,
         )
 
@@ -535,20 +525,14 @@ class Average(MetricExpression):
         if len(self.operands) == 0:
             return MetricExpressionResult(
                 float("nan"),
-                _make_unit_info(
-                    self.explicit_unit_id,
-                    unit_info[""],
-                ),
+                get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info[""],
                 self.explicit_color or "#000000",
             )
 
         result = Sum(self.operands).evaluate(translated_metrics)
         return MetricExpressionResult(
             result.value / len(self.operands),
-            _make_unit_info(
-                self.explicit_unit_id,
-                result.unit_info,
-            ),
+            get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else result.unit_info,
             self.explicit_color or result.color,
         )
 
@@ -576,10 +560,7 @@ class Merge(MetricExpression):
                 return result
         return MetricExpressionResult(
             float("nan"),
-            _make_unit_info(
-                self.explicit_unit_id,
-                unit_info[""],
-            ),
+            get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info[""],
             self.explicit_color or "#000000",
         )
 

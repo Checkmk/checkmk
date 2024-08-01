@@ -49,6 +49,10 @@ def main() {
     );
 
     def cross_edition_target = env.CROSS_EDITION_TARGET ?: "";
+    if (cross_edition_target) {
+        // see CMK-18366
+        distros = ["ubuntu-22.04"];
+    }
     def make_target = build_make_target(EDITION, cross_edition_target);
 
     print(

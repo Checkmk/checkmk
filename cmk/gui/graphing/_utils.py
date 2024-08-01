@@ -572,18 +572,10 @@ def available_metrics_translated(
         check_command,
         config=active_config,
     )
-    if not rrd_perf_data + perf_data:
-        return {}
-
-    if not perf_data:
-        perf_data = rrd_perf_data
-
-    else:
-        current_variables = [p.metric_name for p in perf_data]
-        for p in rrd_perf_data:
-            if p.metric_name not in current_variables:
-                perf_data.append(p)
-
+    current_variables = [p.metric_name for p in perf_data]
+    for p in rrd_perf_data:
+        if p.metric_name not in current_variables:
+            perf_data.append(p)
     return translate_metrics(perf_data, check_command, explicit_color)
 
 

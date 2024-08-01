@@ -114,7 +114,7 @@ urllib3 = "*"  # needed by requests
 pyopenssl = "*"
 pbr = "==5.11.1"  # needed by jira
 pyghmi = "==1.5.60"  # needed by base for IPMI
-requests = "<2.32"  # pinned due to docker-py, see https://github.com/docker/docker-py/issues/3256
+requests = "~=2.32"
 requests-kerberos = "==0.14.0"  # needed by check_bi_aggr
 jinja2 = "*"  # needed by flask
 werkzeug = "*"  # direct dependency and needed by flask

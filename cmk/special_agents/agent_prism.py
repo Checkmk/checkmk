@@ -9,7 +9,6 @@ from collections.abc import Sequence
 from typing import Any, TypedDict
 
 import requests
-from requests.adapters import HTTPAdapter
 
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
@@ -17,18 +16,9 @@ from cmk.special_agents.v0_unstable.agent_common import (
     special_agent_main,
 )
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 LOGGING = logging.getLogger("agent_prism")
-
-
-class HostNameValidationAdapter(HTTPAdapter):
-    def __init__(self, host_name: str) -> None:
-        super().__init__()
-        self._reference_host_name = host_name
-
-    def cert_verify(self, conn, url, verify, cert):
-        conn.assert_hostname = self._reference_host_name
-        return super().cert_verify(conn, url, verify, cert)
 
 
 class GatewayData(TypedDict):
@@ -57,7 +47,7 @@ class SessionManager:
         )
         self._timeout = timeout
         if isinstance(cert_check, str):
-            self._session.mount(base_url, HostNameValidationAdapter(cert_check))
+            self._session.mount(base_url, HostnameValidationAdapter(cert_check))
 
     def get(self, url: str, params: dict[str, str] | None = None) -> Any:
         try:

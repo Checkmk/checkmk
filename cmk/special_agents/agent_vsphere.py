@@ -22,12 +22,12 @@ from xml.dom.minicompat import NodeList
 import dateutil.parser
 import requests
 import urllib3
-from requests.adapters import HTTPAdapter
 
 import cmk.utils.password_store
 import cmk.utils.paths
 
 import cmk.special_agents.v0_unstable.misc as utils
+from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -1041,16 +1041,6 @@ class ESXCookieInvalid(RuntimeError):
     pass
 
 
-class HostNameValidationAdapter(HTTPAdapter):
-    def __init__(self, host_name: str) -> None:
-        super().__init__()
-        self._reference_host_name = host_name
-
-    def cert_verify(self, conn, url, verify, cert):
-        conn.assert_hostname = self._reference_host_name
-        return super().cert_verify(conn, url, verify, cert)
-
-
 class ESXSession(requests.Session):
     """Encapsulates the Sessions with the ESX system"""
 
@@ -1081,7 +1071,7 @@ class ESXSession(requests.Session):
             self.verify = False
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
         elif isinstance(cert_check, str):
-            self.mount(service, HostNameValidationAdapter(cert_check))
+            self.mount(service, HostnameValidationAdapter(cert_check))
 
         self._post_url = f"{service}/sdk"
         self.headers.update(

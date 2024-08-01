@@ -135,5 +135,5 @@ def generate_api_session(connection_options: dict) -> ApiSession:
         connection_options["api_url"],
         auth=connection_options.get("auth"),
         token=connection_options.get("token"),
-        no_cert_check=not connection_options["verify-cert"],
+        tls_cert_verification=connection_options["verify-cert"],
     )

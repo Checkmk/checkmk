@@ -11,25 +11,15 @@ from netapp_ontap import resources as NetAppResource
 from netapp_ontap.error import NetAppRestError
 from netapp_ontap.host_connection import HostConnection
 from pydantic import BaseModel
-from requests.adapters import HTTPAdapter
 
 from cmk.plugins.netapp import models  # pylint: disable=cmk-module-layer-violation
 from cmk.special_agents.v0_unstable.agent_common import CannotRecover, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 __version__ = "2.3.0b1"
 
 USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
-
-
-class HostNameValidationAdapter(HTTPAdapter):
-    def __init__(self, host_name: str) -> None:
-        super().__init__()
-        self._reference_host_name = host_name
-
-    def cert_verify(self, conn, url, verify, cert):
-        conn.assert_hostname = self._reference_host_name
-        return super().cert_verify(conn, url, verify, cert)
 
 
 def write_section(
@@ -893,7 +883,7 @@ def agent_netapp_main(args: Args) -> int:
 
         if isinstance(args.cert_server_name, str):
             connection.session.mount(
-                connection.origin, HostNameValidationAdapter(args.cert_server_name)
+                connection.origin, HostnameValidationAdapter(args.cert_server_name)
             )
 
         logger.debug("Start writing sections")

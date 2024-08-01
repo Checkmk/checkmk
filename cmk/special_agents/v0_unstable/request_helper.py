@@ -14,6 +14,7 @@ from typing import Any, Literal, TypedDict
 from urllib.request import build_opener, HTTPSHandler, Request
 
 from requests import Session
+from requests.adapters import HTTPAdapter
 
 StringMap = dict[str, str]  # should be Mapping[] but we're not ready yet..
 
@@ -108,11 +109,21 @@ class HTTPSAuthRequester(Requester):
         return json.loads(response.read())
 
 
+class HostnameValidationAdapter(HTTPAdapter):
+    def __init__(self, hostname: str) -> None:
+        super().__init__()
+        self._reference_hostname = hostname
+
+    def cert_verify(self, conn, url, verify, cert):
+        conn.assert_hostname = self._reference_hostname
+        return super().cert_verify(conn, url, verify, cert)
+
+
 def create_api_connect_session(
     api_url: str,
-    no_cert_check: bool = False,
     auth: Any = None,
     token: str | None = None,
+    tls_cert_verification: bool | HostnameValidationAdapter = True,
 ) -> "ApiSession":
     """Create a custom requests Session
 
@@ -129,7 +140,7 @@ def create_api_connect_session(
         token:
             token for Bearer token request
     """
-    session = ApiSession(api_url, not no_cert_check)
+    session = ApiSession(api_url, tls_cert_verification)
 
     if auth:
         session.auth = auth
@@ -148,10 +159,19 @@ class ApiSession(Session):
 
     """
 
-    def __init__(self, base_url: str | None = None, ssl_verify: bool = True):
+    def __init__(
+        self,
+        base_url: str,
+        tls_cert_verification: bool | HostnameValidationAdapter = True,
+    ):
         super().__init__()
-        self._base_url = base_url if base_url else ""
-        self.verify = ssl_verify
+        self._base_url = base_url
+
+        if isinstance(tls_cert_verification, HostnameValidationAdapter):
+            self.mount(self._base_url, tls_cert_verification)
+            self.verify = True
+        else:
+            self.verify = tls_cert_verification
 
     def request(self, method, url, **kwargs):  # type: ignore[override] # pylint: disable=arguments-differ
         url = urljoin(self._base_url, url)

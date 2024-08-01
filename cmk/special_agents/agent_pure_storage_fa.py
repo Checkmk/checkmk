@@ -15,10 +15,10 @@ from typing import NamedTuple
 
 import requests
 import urllib3
-from requests.adapters import HTTPAdapter
 
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 _LOGGER = logging.getLogger("agent_pure_storage_fa")
 __version__ = "2.3.0b1"
@@ -114,16 +114,6 @@ class SectionError(Exception):
     pass
 
 
-class HostNameValidationAdapter(HTTPAdapter):
-    def __init__(self, host_name: str) -> None:
-        super().__init__()
-        self._reference_host_name = host_name
-
-    def cert_verify(self, conn, url, verify, cert):
-        conn.assert_hostname = self._reference_host_name
-        return super().cert_verify(conn, url, verify, cert)
-
-
 class _PureStorageFlashArraySession:
     def __init__(self, server: str, cert_check: bool | str, timeout: int) -> None:
         self._session = requests.Session()
@@ -136,7 +126,7 @@ class _PureStorageFlashArraySession:
             self._verify = False
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
         elif isinstance(cert_check, str):
-            self._session.mount(self._base_url, HostNameValidationAdapter(cert_check))
+            self._session.mount(self._base_url, HostnameValidationAdapter(cert_check))
 
         self._timeout = timeout
         self._x_auth_token = ""

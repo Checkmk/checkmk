@@ -9,7 +9,7 @@ import logging
 import socket
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Callable, TextIO
+from typing import TextIO
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter

@@ -30,10 +30,10 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 command_arguments=[
                     "--config",
                     "{'hostname': '', 'connection': 'my-server', "
-                    "'verify_cert': False, 'protocol': 'http', "
-                    "'ignore_alerts': {'ignore_na': True, "
-                    "'ignore_alert_rules': [], "
+                    "'protocol': 'http', 'ignore_alerts': "
+                    "{'ignore_na': True, 'ignore_alert_rules': [], "
                     "'ignore_alert_groups': []}}",
+                    "--disable-cert-verification",
                 ]
             ),
             id="without credentials",
@@ -58,8 +58,8 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 command_arguments=[
                     "--config",
                     "{'hostname': 'my-host', 'connection': "
-                    "'my-server', 'verify_cert': True, 'protocol': "
-                    "'http', 'ignore_alerts': {'ignore_na': False, "
+                    "'my-server', 'protocol': 'http', "
+                    "'ignore_alerts': {'ignore_na': False, "
                     "'ignore_alert_rules': ['a', 'b'], "
                     "'ignore_alert_groups': ['c']}}",
                     "auth_login",
@@ -88,13 +88,12 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 command_arguments=[
                     "--config",
                     "{'hostname': '', 'connection': 'my-server', "
-                    "'verify_cert': True, 'protocol': 'https', "
-                    "'ignore_alerts': {'ignore_na': True, "
-                    "'ignore_alert_rules': ['a', 'b'], "
-                    "'ignore_alert_groups': []}}",
+                    "'protocol': 'https', 'ignore_alerts': "
+                    "{'ignore_na': True, 'ignore_alert_rules': ['a', "
+                    "'b'], 'ignore_alert_groups': []}}",
                     "auth_token",
                     "--token",
-                    Secret(id=0, format="%s", pass_safely=True),
+                    Secret(0),
                 ]
             ),
             id="with token",

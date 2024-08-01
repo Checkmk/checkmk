@@ -29,10 +29,10 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
             SpecialAgentCommand(
                 command_arguments=[
                     "--config",
-                    "{'connection': 'prometheus-server', "
-                    "'verify_cert': False, 'protocol': 'http', "
-                    "'exporter': [], 'promql_checks': [], "
+                    "{'connection': 'prometheus-server', 'protocol': "
+                    "'http', 'exporter': [], 'promql_checks': [], "
                     "'host_address': '1.2.3.4', 'host_name': 'host'}",
+                    "--disable-cert-verification",
                 ]
             ),
             id="minimal configuration",
@@ -60,10 +60,9 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
             SpecialAgentCommand(
                 command_arguments=[
                     "--config",
-                    "{'connection': 'prometheus-server', "
-                    "'verify_cert': True, 'protocol': 'http', "
-                    "'exporter': [('node_exporter', {'entities': "
-                    "['df', 'diskstat', 'kernel']})], "
+                    "{'connection': 'prometheus-server', 'protocol': "
+                    "'http', 'exporter': [('node_exporter', "
+                    "{'entities': ['df', 'diskstat', 'kernel']})], "
                     "'promql_checks': [{'service_description': "
                     "'my-service', 'metric_components': "
                     "[{'metric_label': 'my-metric', 'promql_query': "
@@ -138,13 +137,13 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
             SpecialAgentCommand(
                 command_arguments=[
                     "--config",
-                    "{'connection': 'prometheus-server', "
-                    "'verify_cert': True, 'protocol': 'https', "
-                    "'exporter': [('node_exporter', {'host_mapping': "
-                    "'abc123', 'entities': ['df', 'diskstat', "
-                    "'kernel']}), ('cadvisor', {'entity_level': "
-                    "('both', {'container_id': 'long', "
-                    "'prepend_namespaces': 'use_namespace'}), "
+                    "{'connection': 'prometheus-server', 'protocol': "
+                    "'https', 'exporter': [('node_exporter', "
+                    "{'host_mapping': 'abc123', 'entities': ['df', "
+                    "'diskstat', 'kernel']}), ('cadvisor', "
+                    "{'entity_level': ('both', {'container_id': "
+                    "'long', 'prepend_namespaces': "
+                    "'use_namespace'}), "
                     "'namespace_include_patterns': ['p1', 'p2'], "
                     "'entities': ['diskio', 'cpu', 'df', "
                     "'interfaces', 'memory']})], 'promql_checks': "
@@ -165,7 +164,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "--username",
                     "user",
                     "--password-reference",
-                    Secret(id=0, format="%s", pass_safely=True),
+                    Secret(0),
                 ]
             ),
             id="full configuration",

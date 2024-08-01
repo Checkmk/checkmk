@@ -40,6 +40,11 @@ def parse_arguments(argv):
         help="The configuration is passed as repr object. This option will change in the future.",
     )
     add_authentication_args(parser)
+    parser.add_argument(
+        "--disable-cert-verification",
+        action="store_true",
+        help="Do not verify TLS certificate.",
+    )
     args = parser.parse_args(argv)
     return args
 
@@ -900,7 +905,7 @@ def main(argv=None):
         session = generate_api_session(
             get_api_url(config["connection"], config["protocol"]),
             authentication_from_args(args),
-            config.get("verify_cert", False),
+            not args.disable_cert_verification,
         )
         exporter_options = config_args["exporter_options"]
         # default cases always must be there

@@ -45,7 +45,10 @@ def _commands_function(
         "--config",
         repr(
             params.model_dump(
-                exclude={"auth_basic"},
+                exclude={
+                    "auth_basic",
+                    "verify_cert",
+                },
             )
         ),
     ]
@@ -64,6 +67,8 @@ def _commands_function(
                 "--token",
                 token,
             ]
+    if not params.verify_cert:
+        args.append("--disable-cert-verification")
     yield SpecialAgentCommand(command_arguments=args)
 
 

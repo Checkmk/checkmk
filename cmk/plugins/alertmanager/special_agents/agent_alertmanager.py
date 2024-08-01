@@ -37,6 +37,11 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="The configuration is passed as repr object. This option will change in the future.",
     )
     add_authentication_args(parser)
+    parser.add_argument(
+        "--disable-cert-verification",
+        action="store_true",
+        help="Do not verify TLS certificate.",
+    )
     args = parser.parse_args(argv)
     return args
 
@@ -141,7 +146,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         session = generate_api_session(
             get_api_url(config["connection"], config["protocol"]),
             authentication_from_args(args),
-            config.get("verify_cert", False),
+            not args.disable_cert_verification,
         )
         api_client = AlertmanagerAPI(session)
         alertmanager_rules_section(api_client, config)

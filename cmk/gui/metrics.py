@@ -39,12 +39,7 @@ from cmk.gui.graphing._html_render import (
 )
 from cmk.gui.graphing._loader import load_graphing_plugins
 from cmk.gui.graphing._type_defs import TranslatedMetric
-from cmk.gui.graphing._utils import (
-    add_graphing_plugins,
-    parse_perf_data,
-    parse_perf_data_from_performance_data_livestatus_column,
-    translate_metrics,
-)
+from cmk.gui.graphing._utils import add_graphing_plugins, parse_perf_data, translate_metrics
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageResult
@@ -192,15 +187,6 @@ def translate_perf_data(
         perf_data_string,
         check_command,
         config=config,
-    )
-    return translate_metrics(perf_data, check_command)
-
-
-def translate_perf_data_from_performance_data_livestatus_column(
-    perf_data_mapping: Mapping[str, float], check_command: str | None = None
-) -> Mapping[str, TranslatedMetric]:
-    perf_data, check_command = parse_perf_data_from_performance_data_livestatus_column(
-        perf_data_mapping, check_command
     )
     return translate_metrics(perf_data, check_command)
 

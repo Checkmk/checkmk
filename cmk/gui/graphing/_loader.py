@@ -95,6 +95,13 @@ def _vs_type(
     return Float
 
 
+def _make_unit_id(unit: metrics_api.Unit) -> str:
+    return (
+        f"{unit.notation.__class__.__name__}_{unit.notation.symbol}"
+        f"_{unit.precision.__class__.__name__}_{unit.precision.digits}"
+    )
+
+
 def _make_unit_info(
     *,
     unit_id: str,
@@ -153,12 +160,7 @@ def _make_unit_info(
 
 
 def register_unit(unit: metrics_api.Unit) -> UnitInfo:
-    if (
-        unit_id := (
-            f"{unit.notation.__class__.__name__}_{unit.notation.symbol}"
-            f"_{unit.precision.__class__.__name__}_{unit.precision.digits}"
-        )
-    ) in _units_from_api:
+    if (unit_id := _make_unit_id(unit)) in _units_from_api:
         return _units_from_api[unit_id]
     return _units_from_api.register(
         _make_unit_info(
@@ -290,6 +292,23 @@ def get_unit_info(unit_id: str) -> UnitInfo:
     if unit_id in unit_info.keys():
         return unit_info[unit_id]
     return unit_info[""]
+
+
+def make_unit_info(unit: metrics_api.Unit) -> UnitInfo:
+    unit_id = _make_unit_id(unit)
+    return _compute_unit_info(
+        unit_id,
+        _make_unit_info(
+            unit_id=unit_id,
+            notation=unit.notation,
+            symbol=unit.notation.symbol,
+            precision=unit.precision,
+            conversion=lambda v: v,
+        ),
+        active_config,
+        user,
+        [_TemperatureUnitConverter],
+    )
 
 
 @dataclass(frozen=True)

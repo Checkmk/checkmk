@@ -38,7 +38,7 @@ from ._legacy import (
     unit_info,
     UnitInfo,
 )
-from ._loader import perfometers_from_api, register_unit
+from ._loader import make_unit_info, perfometers_from_api
 from ._type_defs import TranslatedMetric
 
 
@@ -204,7 +204,7 @@ def _evaluate_quantity(
             )
         case metrics_api.Constant():
             return _EvaluatedQuantity(
-                register_unit(quantity.unit),
+                make_unit_info(quantity.unit),
                 parse_color_from_api(quantity.color),
                 quantity.value,
             )
@@ -254,7 +254,7 @@ def _evaluate_quantity(
             for f in quantity.factors:
                 product *= _evaluate_quantity(f, translated_metrics).value
             return _EvaluatedQuantity(
-                register_unit(quantity.unit),
+                make_unit_info(quantity.unit),
                 parse_color_from_api(quantity.color),
                 product,
             )
@@ -268,7 +268,7 @@ def _evaluate_quantity(
             )
         case metrics_api.Fraction():
             return _EvaluatedQuantity(
-                register_unit(quantity.unit),
+                make_unit_info(quantity.unit),
                 parse_color_from_api(quantity.color),
                 (
                     _evaluate_quantity(quantity.dividend, translated_metrics).value

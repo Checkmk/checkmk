@@ -9,14 +9,15 @@ from contextlib import contextmanager, nullcontext
 from typing import Iterator
 
 import pytest
+from faker import Faker
 from playwright.sync_api import expect
 
+from tests.testlib.host_details import HostDetails
 from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.setup.add_rule_periodic_discovery import (
     AddRulePeriodicServiceDiscovery,
 )
 from tests.testlib.playwright.pom.setup.host_effective_parameters import HostEffectiveParameters
-from tests.testlib.playwright.pom.setup.hosts import HostDetails
 from tests.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
@@ -177,8 +178,20 @@ def test_create_rules(
             ), f'Rule creation for ruleset "{ruleset_name}" has failed!'
 
 
+@pytest.mark.parametrize(
+    "created_host",
+    [
+        pytest.param(
+            HostDetails(
+                name=f"test_host_{Faker().first_name()}",
+                ip="127.0.0.1",
+            )
+        )
+    ],
+    indirect=["created_host"],
+)
 def test_periodic_service_discovery_rule(
-    dashboard_page: Dashboard, host_details: HostDetails
+    dashboard_page: Dashboard, created_host: HostDetails
 ) -> None:
     """Test the creation & prioritization of a new rule for periodic service discovery.
 
@@ -216,9 +229,9 @@ def test_periodic_service_discovery_rule(
 
     logger.info(
         "Check that the new rule is present in the 'Effective parameters of %s' page",
-        host_details.name,
+        created_host.name,
     )
-    effective_parameters_page = HostEffectiveParameters(ruleset_page.page, host_details)
+    effective_parameters_page = HostEffectiveParameters(ruleset_page.page, created_host)
     effective_parameters_page.expand_section("Service discovery rules")
     assert (
         effective_parameters_page.service_discovery_period.inner_text()

@@ -5,6 +5,7 @@
 import logging
 import re
 from abc import abstractmethod
+from re import Pattern
 from typing import Literal, overload
 from urllib.parse import urljoin
 
@@ -91,12 +92,12 @@ class CmkPage(LocatorHelper):
         logger.info("Press keyboard key: %d", key.value)
         self.page.keyboard.press(str(key.value))
 
-    def get_link(self, name: str, exact: bool = True) -> Locator:
+    def get_link(self, name: str | Pattern[str], exact: bool = True) -> Locator:
         """Returns a web-element from the `main_area`, which is a `link`."""
         return self.main_area.locator().get_by_role(role="link", name=name, exact=exact)
 
     def activate_changes(self) -> None:
-        self.get_link("changes", exact=False).click()
+        self.get_link(re.compile("^[1-9][0-9]* changes?$"), exact=False).click()
         self.activate_selected()
         self.expect_success_state()
 

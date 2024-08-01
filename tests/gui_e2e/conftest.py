@@ -10,10 +10,10 @@ from collections.abc import Iterator
 from typing import Any
 
 import pytest
-from faker import Faker
 from playwright.sync_api import Browser, BrowserContext, expect, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
+from tests.testlib.host_details import HostDetails
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.plugin import (
     manage_new_browser_context,
@@ -21,7 +21,7 @@ from tests.testlib.playwright.plugin import (
 )
 from tests.testlib.playwright.pom.dashboard import Dashboard, DashboardMobile
 from tests.testlib.playwright.pom.login import LoginPage
-from tests.testlib.playwright.pom.setup.hosts import AddHost, HostDetails, SetupHost
+from tests.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
 from tests.testlib.site import ADMIN_USER, get_site_factory, Site
 
 logger = logging.getLogger(__name__)
@@ -156,10 +156,15 @@ def fixture_current_branch(test_site: Site) -> str:
     return branch
 
 
-@pytest.fixture(name="host_details")
-def fixture_host(dashboard_page: Dashboard) -> Iterator[HostDetails]:
-    """Create a host and delete it after the test."""
-    host_details = HostDetails(name=f"test_host_{Faker().first_name()}", ip="127.0.0.1")
+@pytest.fixture(name="created_host")
+def fixture_host(
+    dashboard_page: Dashboard, request: pytest.FixtureRequest
+) -> Iterator[HostDetails]:
+    """Create a host and delete it after the test.
+
+    This fixture uses indirect pytest parametrization to define host details.
+    """
+    host_details = request.param
     add_host_page = AddHost(dashboard_page.page)
     add_host_page.create_host(host_details)
     yield host_details

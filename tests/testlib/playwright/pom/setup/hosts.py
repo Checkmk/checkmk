@@ -4,25 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from dataclasses import dataclass
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
+from tests.testlib.host_details import HostDetails
 from tests.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class HostDetails:
-    name: str
-    ip: str
-    site: str | None = None
-    tag_agent: str | None = None
-    tag_address_family: str | None = None
-    labels: dict | None = None
 
 
 class SetupHost(CmkPage):
@@ -139,6 +129,26 @@ class AddHost(CmkPage):
         expect(self.main_area.get_suggestion(self.suggestions[0])).to_be_visible()
         expect(self.host_name_text_field).to_be_visible()
 
+    @property
+    def agent_and_api_integration_checkbox(self) -> Locator:
+        return (
+            self.main_area.locator()
+            .get_by_role("cell", name="Checkmk agent / API")
+            .locator("label")
+        )
+
+    @property
+    def agent_and_api_integration_dropdown_button(self) -> Locator:
+        return self.main_area.locator("div#attr_entry_tag_agent >> b")
+
+    @property
+    def snmp_checkbox(self) -> Locator:
+        return self.main_area.locator().get_by_role("cell", name="SNMP").locator("label")
+
+    @property
+    def snmp_dropdown_button(self) -> Locator:
+        return self.main_area.locator("div#attr_entry_tag_snmp_ds >> b")
+
     def create_host(self, host: HostDetails) -> None:
         """On `Setup -> Hosts -> Add host` page, create a new host and activate changes.
 
@@ -149,6 +159,18 @@ class AddHost(CmkPage):
         self.host_name_text_field.fill(host.name)
         self.ipv4_address_checkbox.click()
         self.ipv4_address_text_field.fill(host.ip)
+
+        if host.agent_and_api_integration:
+            self.agent_and_api_integration_checkbox.click()
+            self.agent_and_api_integration_dropdown_button.click()
+            self.main_area.locator().get_by_role(
+                "option", name=host.agent_and_api_integration
+            ).click()
+
+        if host.snmp:
+            self.snmp_checkbox.click()
+            self.snmp_dropdown_button.click()
+            self.main_area.locator().get_by_role("option", name=host.snmp).click()
 
         logger.info("Save new host")
         self.main_area.get_suggestion("Save & view folder").click()

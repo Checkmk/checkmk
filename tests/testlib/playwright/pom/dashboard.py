@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from re import Pattern
 from typing import override
 
 from playwright.sync_api import expect, Locator, Page
@@ -92,7 +93,7 @@ class DashboardMobile(CmkPage):
         expect(self.logout).to_be_visible()
 
     @override
-    def get_link(self, name: str, exact: bool = True) -> Locator:
+    def get_link(self, name: str | Pattern[str], exact: bool = True) -> Locator:
         return self.page.get_by_role(role="link", name=name, exact=exact)
 
     @property

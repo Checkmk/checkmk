@@ -1438,7 +1438,7 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         Constant(
                             value=10,
-                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
+                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
                             explicit_color=COLOR_HEX,
                         ),
                         "stack",
@@ -1481,7 +1481,7 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         Product(
                             [Metric("metric-name-7")],
-                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
+                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
                             explicit_color=COLOR_HEX,
                         ),
                         "stack",
@@ -1500,7 +1500,7 @@ COLOR_HEX = "#1e90ff"
                         Fraction(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
-                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
+                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
                             explicit_color=COLOR_HEX,
                         ),
                         "stack",
@@ -1600,7 +1600,7 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         Constant(
                             value=10,
-                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
+                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
                             explicit_color=COLOR_HEX,
                         ),
                         "line",
@@ -1617,7 +1617,7 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         Product(
                             [Metric("metric-name-7")],
-                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
+                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
                             explicit_color=COLOR_HEX,
                         ),
                         "line",
@@ -1636,7 +1636,7 @@ COLOR_HEX = "#1e90ff"
                         Fraction(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
-                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
+                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
                             explicit_color=COLOR_HEX,
                         ),
                         "line",

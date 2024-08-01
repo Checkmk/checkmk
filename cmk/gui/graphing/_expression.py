@@ -39,8 +39,8 @@ def _choose_operator_color(a: str, b: str) -> str:
     return render_color(mix_colors(parse_color(a), parse_color(b)))
 
 
-def _make_unit_info(explicit_unit_name: str, unit_info_: UnitInfo) -> UnitInfo:
-    return get_unit_info(explicit_unit_name) if explicit_unit_name else unit_info_
+def _make_unit_info(explicit_unit_id: str, unit_info_: UnitInfo) -> UnitInfo:
+    return get_unit_info(explicit_unit_id) if explicit_unit_id else unit_info_
 
 
 @dataclass(frozen=True)
@@ -71,7 +71,7 @@ class MetricExpression(abc.ABC):
 class Constant(MetricExpression):
     value: int | float
     _: KW_ONLY
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -81,7 +81,7 @@ class Constant(MetricExpression):
         return MetricExpressionResult(
             self.value,
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 unit_info["count"] if isinstance(self.value, int) else unit_info[""],
             ),
             self.explicit_color or "#000000",
@@ -99,7 +99,7 @@ class Metric(MetricExpression):
     name: MetricName
     consolidation_func_name: GraphConsoldiationFunction | None = None
     _: KW_ONLY
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -109,7 +109,7 @@ class Metric(MetricExpression):
         return MetricExpressionResult(
             translated_metrics[self.name].value,
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 translated_metrics[self.name].unit_info,
             ),
             self.explicit_color or translated_metrics[self.name].color,
@@ -127,7 +127,7 @@ class WarningOf(MetricExpression):
     metric: Metric
     name: Final = "warn"
     _: KW_ONLY
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -137,7 +137,7 @@ class WarningOf(MetricExpression):
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["warn"],
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 self.metric.evaluate(translated_metrics).unit_info,
             ),
             self.explicit_color or scalar_colors.get("warn", "#808080"),
@@ -155,7 +155,7 @@ class CriticalOf(MetricExpression):
     metric: Metric
     name: Final = "crit"
     _: KW_ONLY
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -165,7 +165,7 @@ class CriticalOf(MetricExpression):
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["crit"],
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 self.metric.evaluate(translated_metrics).unit_info,
             ),
             self.explicit_color or scalar_colors.get("crit", "#808080"),
@@ -183,7 +183,7 @@ class MinimumOf(MetricExpression):
     metric: Metric
     name: Final = "min"
     _: KW_ONLY
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -193,7 +193,7 @@ class MinimumOf(MetricExpression):
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["min"],
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 self.metric.evaluate(translated_metrics).unit_info,
             ),
             self.explicit_color or scalar_colors.get("min", "#808080"),
@@ -211,7 +211,7 @@ class MaximumOf(MetricExpression):
     metric: Metric
     name: Final = "max"
     _: KW_ONLY
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -221,7 +221,7 @@ class MaximumOf(MetricExpression):
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["max"],
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 self.metric.evaluate(translated_metrics).unit_info,
             ),
             self.explicit_color or scalar_colors.get("max", "#808080"),
@@ -238,7 +238,7 @@ class MaximumOf(MetricExpression):
 class Sum(MetricExpression):
     summands: Sequence[MetricExpression]
     _: KW_ONLY
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -249,7 +249,7 @@ class Sum(MetricExpression):
             return MetricExpressionResult(
                 0.0,
                 _make_unit_info(
-                    self.explicit_unit_name,
+                    self.explicit_unit_id,
                     unit_info[""],
                 ),
                 self.explicit_color or "#000000",
@@ -268,7 +268,7 @@ class Sum(MetricExpression):
         return MetricExpressionResult(
             sum(values),
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 unit_info_,
             ),
             self.explicit_color or color,
@@ -285,7 +285,7 @@ class Sum(MetricExpression):
 class Product(MetricExpression):
     factors: Sequence[MetricExpression]
     _: KW_ONLY
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -295,7 +295,7 @@ class Product(MetricExpression):
         if len(self.factors) == 0:
             return MetricExpressionResult(
                 1.0,
-                _make_unit_info(self.explicit_unit_name, unit_info[""]),
+                _make_unit_info(self.explicit_unit_id, unit_info[""]),
                 self.explicit_color or "#000000",
             )
 
@@ -312,7 +312,7 @@ class Product(MetricExpression):
         return MetricExpressionResult(
             product,
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 unit_info_,
             ),
             self.explicit_color or color,
@@ -329,7 +329,7 @@ class Product(MetricExpression):
 class Difference(MetricExpression):
     minuend: MetricExpression
     subtrahend: MetricExpression
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -347,7 +347,7 @@ class Difference(MetricExpression):
         return MetricExpressionResult(
             value,
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 _unit_sub(minuend_result.unit_info, subtrahend_result.unit_info),
             ),
             (
@@ -369,7 +369,7 @@ class Difference(MetricExpression):
 class Fraction(MetricExpression):
     dividend: MetricExpression
     divisor: MetricExpression
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -387,7 +387,7 @@ class Fraction(MetricExpression):
         return MetricExpressionResult(
             value,
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 _unit_div(dividend_result.unit_info, divisor_result.unit_info),
             ),
             (
@@ -409,7 +409,7 @@ class Fraction(MetricExpression):
 class Minimum(MetricExpression):
     operands: Sequence[MetricExpression]
     _: KW_ONLY
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -420,7 +420,7 @@ class Minimum(MetricExpression):
             return MetricExpressionResult(
                 float("nan"),
                 _make_unit_info(
-                    self.explicit_unit_name,
+                    self.explicit_unit_id,
                     unit_info[""],
                 ),
                 self.explicit_color or "#000000",
@@ -445,7 +445,7 @@ class Minimum(MetricExpression):
 class Maximum(MetricExpression):
     operands: Sequence[MetricExpression]
     _: KW_ONLY
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -456,7 +456,7 @@ class Maximum(MetricExpression):
             return MetricExpressionResult(
                 float("nan"),
                 _make_unit_info(
-                    self.explicit_unit_name,
+                    self.explicit_unit_id,
                     unit_info[""],
                 ),
                 self.explicit_color or "#000000",
@@ -486,7 +486,7 @@ class Percent(MetricExpression):
 
     percent_value: MetricExpression
     base_value: MetricExpression
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -503,7 +503,7 @@ class Percent(MetricExpression):
                 .value
             ),
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 unit_info["%"],
             ),
             self.explicit_color or self.percent_value.evaluate(translated_metrics).color,
@@ -525,7 +525,7 @@ class Percent(MetricExpression):
 class Average(MetricExpression):
     operands: Sequence[MetricExpression]
     _: KW_ONLY
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -536,7 +536,7 @@ class Average(MetricExpression):
             return MetricExpressionResult(
                 float("nan"),
                 _make_unit_info(
-                    self.explicit_unit_name,
+                    self.explicit_unit_id,
                     unit_info[""],
                 ),
                 self.explicit_color or "#000000",
@@ -546,7 +546,7 @@ class Average(MetricExpression):
         return MetricExpressionResult(
             result.value / len(self.operands),
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 result.unit_info,
             ),
             self.explicit_color or result.color,
@@ -563,7 +563,7 @@ class Average(MetricExpression):
 class Merge(MetricExpression):
     operands: Sequence[MetricExpression]
     _: KW_ONLY
-    explicit_unit_name: str = ""
+    explicit_unit_id: str = ""
     explicit_color: str = ""
 
     def evaluate(
@@ -577,7 +577,7 @@ class Merge(MetricExpression):
         return MetricExpressionResult(
             float("nan"),
             _make_unit_info(
-                self.explicit_unit_name,
+                self.explicit_unit_id,
                 unit_info[""],
             ),
             self.explicit_color or "#000000",
@@ -733,9 +733,9 @@ def _parse_expression(
         expression, explicit_color_ = expression.rsplit("#", 1)  # drop appended color information
         explicit_color = f"#{explicit_color_}"
 
-    explicit_unit_name = ""
+    explicit_unit_id = ""
     if "@" in expression:
-        expression, explicit_unit_name = expression.rsplit("@", 1)  # appended unit name
+        expression, explicit_unit_id = expression.rsplit("@", 1)  # appended unit name
 
     stack: list[MetricExpression | RPNOperators] = []
     for p in expression.split(","):
@@ -772,7 +772,7 @@ def _parse_expression(
                     )
                 )
 
-    return stack, explicit_unit_name, explicit_color
+    return stack, explicit_unit_id, explicit_color
 
 
 def _resolve_stack(
@@ -820,101 +820,101 @@ def _resolve_stack(
     return resolved[0]
 
 
-def _add_explicit_unit_name_or_color(
-    expression: MetricExpression, explicit_unit_name: str, explicit_color: str
+def _add_explicit_unit_id_or_color(
+    expression: MetricExpression, explicit_unit_id: str, explicit_color: str
 ) -> MetricExpression:
     match expression:
         case Constant():
             return Constant(
                 expression.value,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case Metric():
             return Metric(
                 expression.name,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case WarningOf():
             return WarningOf(
                 expression.metric,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case CriticalOf():
             return CriticalOf(
                 expression.metric,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case MinimumOf():
             return MinimumOf(
                 expression.metric,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case MaximumOf():
             return MaximumOf(
                 expression.metric,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case Sum():
             return Sum(
                 expression.summands,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case Product():
             return Product(
                 expression.factors,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case Difference():
             return Difference(
                 minuend=expression.minuend,
                 subtrahend=expression.subtrahend,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case Fraction():
             return Fraction(
                 dividend=expression.dividend,
                 divisor=expression.divisor,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case Minimum():
             return Minimum(
                 expression.operands,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case Maximum():
             return Maximum(
                 expression.operands,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case Percent():
             return Percent(
                 percent_value=expression.percent_value,
                 base_value=expression.base_value,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case Average():
             return Average(
                 expression.operands,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
         case Merge():
             return Merge(
                 expression.operands,
-                explicit_unit_name=explicit_unit_name,
+                explicit_unit_id=explicit_unit_id,
                 explicit_color=explicit_color,
             )
     assert False, expression
@@ -929,14 +929,14 @@ def parse_expression(
 
     (
         stack,
-        explicit_unit_name,
+        explicit_unit_id,
         explicit_color,
     ) = _parse_expression(expression, translated_metrics)
 
     if isinstance(resolved := _resolve_stack(stack), MetricExpression):
         return (
-            _add_explicit_unit_name_or_color(resolved, explicit_unit_name, explicit_color)
-            if explicit_unit_name or explicit_color
+            _add_explicit_unit_id_or_color(resolved, explicit_unit_id, explicit_color)
+            if explicit_unit_id or explicit_color
             else resolved
         )
     raise TypeError(resolved)
@@ -948,7 +948,7 @@ def parse_conditional_expression(
 ) -> ConditionalMetricExpression:
     (
         stack,
-        _explicit_unit_name,
+        _explicit_unit_id,
         _explicit_color,
     ) = _parse_expression(expression, translated_metrics)
 

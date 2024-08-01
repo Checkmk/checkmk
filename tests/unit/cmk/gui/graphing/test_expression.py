@@ -86,7 +86,7 @@ def test_evaluate_cpu_utilization(
             "if_in_octets,8,*@bits/s",
             Product(
                 factors=[Metric(name="if_in_octets"), Constant(value=8)],
-                explicit_unit_name="bits/s",
+                explicit_unit_id="bits/s",
             ),
             16.0,
             "bits/s",
@@ -163,7 +163,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0@bytes",
-            Constant(value=97.0, explicit_unit_name="bytes"),
+            Constant(value=97.0, explicit_unit_id="bytes"),
             97.0,
             "bytes",
             "#000000",

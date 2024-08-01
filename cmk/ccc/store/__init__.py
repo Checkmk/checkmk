@@ -14,7 +14,6 @@ from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 
-from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.ccc.i18n import _
 from cmk.ccc.store._file import (
@@ -59,7 +58,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger("cmk.store")
-tracer = trace.get_tracer()
 
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
 # care about encoding a path to UTF-8. The others don't to that.
@@ -113,38 +111,34 @@ def makedirs(path: Path | str, mode: int = 0o770) -> None:
 def load_mk_file(
     path: Path | str, default: Mapping[str, object], lock: bool = False
 ) -> Mapping[str, object]:
-    with tracer.start_as_current_span(
-        f"load_mk_file[{path}]",
-        attributes={"cmk.file.path": str(path)},
-    ):
-        if not isinstance(path, Path):
-            path = Path(path)
+    if not isinstance(path, Path):
+        path = Path(path)
 
-        if default is None:  # leave this for now, we still have a lot of `Any`s flying around
-            raise MKGeneralException(
-                _(
-                    "You need to provide a config dictionary to merge with the "
-                    "read configuration. The dictionary should have all expected "
-                    "keys and their default values set."
-                )
+    if default is None:  # leave this for now, we still have a lot of `Any`s flying around
+        raise MKGeneralException(
+            _(
+                "You need to provide a config dictionary to merge with the "
+                "read configuration. The dictionary should have all expected "
+                "keys and their default values set."
             )
+        )
 
-        if lock:
-            acquire_lock(path)
+    if lock:
+        acquire_lock(path)
 
-        try:
-            exec(
-                compile(path.read_bytes(), path, "exec"), globals(), default
-            )  # nosec B102 # BNS:aee528
-        except FileNotFoundError:
-            pass
-        except (MKTerminate, MKTimeout):
-            raise
-        except Exception as e:
-            # TODO: How to handle debug mode or logging?
-            raise MKGeneralException(_('Cannot read configuration file "%s": %s') % (path, e))
+    try:
+        exec(
+            compile(path.read_bytes(), path, "exec"), globals(), default
+        )  # nosec B102 # BNS:aee528
+    except FileNotFoundError:
+        pass
+    except (MKTerminate, MKTimeout):
+        raise
+    except Exception as e:
+        # TODO: How to handle debug mode or logging?
+        raise MKGeneralException(_('Cannot read configuration file "%s": %s') % (path, e))
 
-        return default
+    return default
 
 
 # A simple wrapper for cases where you only have to read a single value from a .mk file.
@@ -153,18 +147,14 @@ def load_from_mk_file(path: Path | str, key: str, default: Any, lock: bool = Fal
 
 
 def save_mk_file(path: Path | str, mk_content: str, add_header: bool = True) -> None:
-    with tracer.start_as_current_span(
-        f"save_mk_file[{path}]",
-        attributes={"cmk.file.path": str(path)},
-    ):
-        content = ""
+    content = ""
 
-        if add_header:
-            content += "# Written by Checkmk store\n\n"
+    if add_header:
+        content += "# Written by Checkmk store\n\n"
 
-        content += mk_content
-        content += "\n"
-        save_text_to_file(path, content)
+    content += mk_content
+    content += "\n"
+    save_text_to_file(path, content)
 
 
 # A simple wrapper for cases where you only have to write a single value to a .mk file.
@@ -197,46 +187,22 @@ def save_to_mk_file(path: Path | str, key: str, value: Any, pprint_value: bool =
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
 def load_object_from_file(path: Path | str, *, default: Any, lock: bool = False) -> Any:
-    with (
-        tracer.start_as_current_span(
-            f"load_object_from_file[{path}]",
-            attributes={"cmk.file.path": str(path)},
-        ),
-        _leave_locked_unless_exception(path) if lock else nullcontext(),
-    ):
+    with _leave_locked_unless_exception(path) if lock else nullcontext():
         return ObjectStore(Path(path), serializer=DimSerializer()).read_obj(default=default)
 
 
 def load_object_from_pickle_file(path: Path | str, *, default: Any, lock: bool = False) -> Any:
-    with (
-        tracer.start_as_current_span(
-            f"load_object_from_pickle_file[{path}]",
-            attributes={"cmk.file.path": str(path)},
-        ),
-        _leave_locked_unless_exception(path) if lock else nullcontext(),
-    ):
+    with _leave_locked_unless_exception(path) if lock else nullcontext():
         return ObjectStore(Path(path), serializer=PickleSerializer()).read_obj(default=default)
 
 
 def load_text_from_file(path: Path | str, default: str = "", lock: bool = False) -> str:
-    with (
-        tracer.start_as_current_span(
-            f"load_text_from_file[{path}]",
-            attributes={"cmk.file.path": str(path)},
-        ),
-        _leave_locked_unless_exception(path) if lock else nullcontext(),
-    ):
+    with _leave_locked_unless_exception(path) if lock else nullcontext():
         return ObjectStore(Path(path), serializer=TextSerializer()).read_obj(default=default)
 
 
 def load_bytes_from_file(path: Path | str, default: bytes = b"", lock: bool = False) -> bytes:
-    with (
-        tracer.start_as_current_span(
-            f"load_bytes_from_file[{path}]",
-            attributes={"cmk.file.path": str(path)},
-        ),
-        _leave_locked_unless_exception(path) if lock else nullcontext(),
-    ):
+    with _leave_locked_unless_exception(path) if lock else nullcontext():
         return ObjectStore(Path(path), serializer=BytesSerializer()).read_obj(default=default)
 
 
@@ -278,13 +244,7 @@ def _write(path: Path, serializer: Serializer, content: Any) -> None:
     #
     # NOTE:
     #  * this creates the file with 0 bytes in case it is missing
-    with (
-        tracer.start_as_current_span(
-            f"_write[{path}]",
-            attributes={"cmk.file.path": str(path)},
-        ),
-        store.locked(),
-    ):
+    with store.locked():
         store.write_obj(content)
 
 

@@ -263,15 +263,20 @@ def post_request(
         verify = False
 
     try:
-        response = requests.post(  # nosec B113
+        response = requests.post(
             url=url,
             json=message_constructor(context),
             proxies=deserialize_http_proxy_config(serialized_proxy_config).to_requests_proxies(),
             headers=headers,
             verify=verify,
+            timeout=110,
         )
     except requests.exceptions.ProxyError:
         sys.stderr.write("Cannot connect to proxy: %s\n" % serialized_proxy_config)
+        sys.exit(2)
+    except requests.exceptions.Timeout:
+        # Not expose the url in the error, as it might contain sensitive information
+        sys.stderr.write("Connection timeout in notification plugin \n")
         sys.exit(2)
 
     return response

@@ -698,7 +698,7 @@ class ABCACApacheTest(ACTest, abc.ABC):
         cfg = ConfigDomainOMD().default_globals()
         url = "http://127.0.0.1:%s/server-status?auto" % cfg["site_apache_tcp_port"]
 
-        response = requests.get(url, headers={"Accept": "text/plain"})  # nosec B113
+        response = requests.get(url, headers={"Accept": "text/plain"}, timeout=110)
         return response.text
 
 

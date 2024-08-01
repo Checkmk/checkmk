@@ -37,7 +37,7 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     MinimalGraphTemplateRange,
     ScalarDefinition,
 )
-from cmk.gui.metrics import translate_perf_data
+from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -95,11 +95,12 @@ from cmk.ccc.exceptions import MKGeneralException
     ],
 )
 def test_rpn_stack(expression: str, result: MetricOperation) -> None:
-    translated_metrics = translate_perf_data(
+    perf_data, check_command = parse_perf_data(
         "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
+        "check_mk-df",
         config=active_config,
-        check_command="check_mk-df",
     )
+    translated_metrics = translate_metrics(perf_data, check_command)
     lq_row = {"site": "", "host_name": "", "service_description": ""}
     assert (
         gt.metric_expression_to_graph_recipe_expression(
@@ -148,11 +149,12 @@ def test_create_graph_recipe_from_template() -> None:
         range=MinimalGraphTemplateRange(min=Constant(0), max=MaximumOf(Metric("fs_used"))),
         omit_zero_metrics=False,
     )
-    translated_metrics = translate_perf_data(
+    perf_data, check_command = parse_perf_data(
         "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
+        "check_mk-df",
         config=active_config,
-        check_command="check_mk-df",
     )
+    translated_metrics = translate_metrics(perf_data, check_command)
     lq_row = {"site": "", "host_name": "", "service_description": ""}
     specification = TemplateGraphSpecification(
         site=SiteId("Site"),
@@ -245,7 +247,7 @@ def test_create_graph_recipe_from_template() -> None:
 
 
 @pytest.mark.parametrize(
-    "expression, perf_string, check_command, result_color",
+    "expression, perf_data_string, check_command, result_color",
     [
         (
             "load15",
@@ -257,11 +259,12 @@ def test_create_graph_recipe_from_template() -> None:
     ],
 )
 def test_metric_unit_color(
-    expression: str, perf_string: str, check_command: str | None, result_color: str
+    expression: str, perf_data_string: str, check_command: str | None, result_color: str
 ) -> None:
-    translated_metrics = translate_perf_data(
-        perf_string, config=active_config, check_command=check_command
+    perf_data, check_command = parse_perf_data(
+        perf_data_string, check_command, config=active_config
     )
+    translated_metrics = translate_metrics(perf_data, check_command)
     translated_metric = translated_metrics.get(expression)
     assert translated_metric is not None
     metric_definition = MetricDefinition(
@@ -275,17 +278,18 @@ def test_metric_unit_color(
 
 
 @pytest.mark.parametrize(
-    "expression, perf_string, check_command",
+    "expression, perf_data_string, check_command",
     [
         ("test", "", "check_mk-local"),
     ],
 )
 def test_metric_unit_color_skip(
-    expression: str, perf_string: str, check_command: str | None
+    expression: str, perf_data_string: str, check_command: str | None
 ) -> None:
-    translated_metrics = translate_perf_data(
-        perf_string, config=active_config, check_command=check_command
+    perf_data, check_command = parse_perf_data(
+        perf_data_string, check_command, config=active_config
     )
+    translated_metrics = translate_metrics(perf_data, check_command)
     metric_definition = MetricDefinition(
         expression=parse_expression(expression, translated_metrics),
         line_type="line",
@@ -294,17 +298,18 @@ def test_metric_unit_color_skip(
 
 
 @pytest.mark.parametrize(
-    "expression, perf_string, check_command",
+    "expression, perf_data_string, check_command",
     [
         ("level,altitude,+", "test=5;5;10;0;20", "check_mk-local"),
     ],
 )
 def test_metric_unit_color_exception(
-    expression: str, perf_string: str, check_command: str | None
+    expression: str, perf_data_string: str, check_command: str | None
 ) -> None:
-    translated_metrics = translate_perf_data(
-        perf_string, config=active_config, check_command=check_command
+    perf_data, check_command = parse_perf_data(
+        perf_data_string, check_command, config=active_config
     )
+    translated_metrics = translate_metrics(perf_data, check_command)
     metric_definition = MetricDefinition(
         expression=parse_expression(expression, translated_metrics),
         line_type="line",

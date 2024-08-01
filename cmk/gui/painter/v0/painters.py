@@ -15,11 +15,16 @@ from cmk.utils.labels import Labels
 from cmk.utils.render import approx_age
 from cmk.utils.statename import short_host_state_name, short_service_state_name
 
-from cmk.gui import metrics, sites
+from cmk.gui import sites
 from cmk.gui.config import Config
 from cmk.gui.graphing._color import render_color_icon
 from cmk.gui.graphing._type_defs import TranslatedMetric
-from cmk.gui.graphing._utils import get_extended_metric_info, registered_metrics
+from cmk.gui.graphing._utils import (
+    get_extended_metric_info,
+    parse_perf_data,
+    registered_metrics,
+    translate_metrics,
+)
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -728,11 +733,10 @@ class PainterSvcMetrics(Painter):
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        translated_metrics = metrics.translate_perf_data(
-            row["service_perf_data"],
-            config=self.config,
-            check_command=row["service_check_command"],
+        perf_data, check_command = parse_perf_data(
+            row["service_perf_data"], row["service_check_command"], config=self.config
         )
+        translated_metrics = translate_metrics(perf_data, check_command)
 
         if row["service_perf_data"] and not translated_metrics:
             return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
@@ -5462,9 +5466,11 @@ class AbstractColumnSpecificMetric(Painter):
         parameters = cell.painter_parameters()
         assert parameters is not None
         show_metric = parameters["metric"]
-        translated_metrics = metrics.translate_perf_data(
-            perf_data_entries, config=self.config, check_command=check_command
+
+        perf_data, check_command = parse_perf_data(
+            perf_data_entries, check_command, config=self.config
         )
+        translated_metrics = translate_metrics(perf_data, check_command)
 
         if show_metric not in translated_metrics:
             return "", ""

@@ -16,7 +16,6 @@ from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.gui import metrics
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._expression import Constant, CriticalOf, Metric, Product, WarningOf
@@ -34,7 +33,7 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
 )
 from cmk.gui.graphing._legacy import UnitInfo
 from cmk.gui.graphing._type_defs import TranslatedMetric
-from cmk.gui.graphing._utils import translate_metrics
+from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
 _GRAPH_TEMPLATES = [
@@ -154,7 +153,7 @@ def test__replace_expressions_missing_scalars() -> None:
 
 
 @pytest.mark.parametrize(
-    "perf_string, result",
+    "perf_data_string, result",
     [
         pytest.param(
             "one=5;;;; power=5;;;; output=5;;;;",
@@ -173,8 +172,10 @@ def test__replace_expressions_missing_scalars() -> None:
     ],
 )
 def test_horizontal_rules_from_thresholds(
-    perf_string: str, result: Sequence[HorizontalRule]
+    perf_data_string: str, result: Sequence[HorizontalRule]
 ) -> None:
+    perf_data, check_command = parse_perf_data(perf_data_string, None, config=active_config)
+    translated_metrics = translate_metrics(perf_data, check_command)
     assert (
         gt._horizontal_rules_from_thresholds(
             [
@@ -191,7 +192,7 @@ def test_horizontal_rules_from_thresholds(
                     title="Warning output",
                 ),
             ],
-            metrics.translate_perf_data(perf_string, config=active_config),
+            translated_metrics,
         )
         == result
     )

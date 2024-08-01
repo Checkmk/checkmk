@@ -14,7 +14,6 @@
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
 import json
-from collections.abc import Mapping
 from typing import Any
 
 from livestatus import SiteId
@@ -26,7 +25,6 @@ from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pages
 from cmk.gui import utils
-from cmk.gui.config import Config
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _legacy as graphing_legacy
 from cmk.gui.graphing import _utils as graphing_utils
@@ -38,8 +36,7 @@ from cmk.gui.graphing._html_render import (
     host_service_graph_popup_cmk,
 )
 from cmk.gui.graphing._loader import load_graphing_plugins
-from cmk.gui.graphing._type_defs import TranslatedMetric
-from cmk.gui.graphing._utils import add_graphing_plugins, parse_perf_data, translate_metrics
+from cmk.gui.graphing._utils import add_graphing_plugins
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageResult
@@ -163,33 +160,6 @@ def metric_to_text(metric: dict[str, Any], value: int | float | None = None) -> 
 # aliases to be compatible to old plugins
 physical_precision = cmk.utils.render.physical_precision
 age_human_readable = cmk.utils.render.approx_age
-
-# .
-#   .--Evaluation----------------------------------------------------------.
-#   |          _____            _             _   _                        |
-#   |         | ____|_   ____ _| |_   _  __ _| |_(_) ___  _ __             |
-#   |         |  _| \ \ / / _` | | | | |/ _` | __| |/ _ \| '_ \            |
-#   |         | |___ \ V / (_| | | |_| | (_| | |_| | (_) | | | |           |
-#   |         |_____| \_/ \__,_|_|\__,_|\__,_|\__|_|\___/|_| |_|           |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Parsing of performance data into metrics, evaluation of expressions |
-#   '----------------------------------------------------------------------'
-
-
-def translate_perf_data(
-    perf_data_string: str,
-    *,
-    config: Config,
-    check_command: str | None = None,
-) -> Mapping[str, TranslatedMetric]:
-    perf_data, check_command = parse_perf_data(
-        perf_data_string,
-        check_command,
-        config=config,
-    )
-    return translate_metrics(perf_data, check_command)
-
 
 # .
 #   .--Hover-Graph---------------------------------------------------------.

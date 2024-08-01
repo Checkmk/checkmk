@@ -11,11 +11,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from requests.auth import HTTPBasicAuth
+
 from cmk.utils.password_store import lookup
 
 from cmk.special_agents.v0_unstable.request_helper import (
     ApiSession,
-    create_api_connect_session,
     HostnameValidationAdapter,
     parse_api_url,
 )
@@ -121,19 +122,19 @@ def generate_api_session(
     )
     match authentication:
         case LoginAuth(username=username, password=password):
-            return create_api_connect_session(
+            return ApiSession(
                 api_url,
-                auth=(username, password),
+                auth=HTTPBasicAuth(username, password),
                 tls_cert_verification=tls_cert_verification_,
             )
         case TokenAuth(token):
-            return create_api_connect_session(
+            return ApiSession(
                 api_url,
-                token=token,
                 tls_cert_verification=tls_cert_verification_,
+                additional_headers={"Authorization": "Bearer " + token},
             )
         case _:
-            return create_api_connect_session(
+            return ApiSession(
                 api_url,
                 tls_cert_verification=tls_cert_verification_,
             )

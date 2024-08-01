@@ -8,13 +8,15 @@ import abc
 import base64
 import json
 import ssl
+from collections.abc import Mapping
 from functools import reduce
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
 from typing import Any, Literal, TypedDict
 from urllib.request import build_opener, HTTPSHandler, Request
 
-from requests import Session
+from requests import Response, Session
 from requests.adapters import HTTPAdapter
+from requests.auth import HTTPBasicAuth
 
 StringMap = dict[str, str]  # should be Mapping[] but we're not ready yet..
 
@@ -119,63 +121,37 @@ class HostnameValidationAdapter(HTTPAdapter):
         return super().cert_verify(conn, url, verify, cert)
 
 
-def create_api_connect_session(
-    api_url: str,
-    auth: Any = None,
-    token: str | None = None,
-    tls_cert_verification: bool | HostnameValidationAdapter = True,
-) -> "ApiSession":
-    """Create a custom requests Session
+class ApiSession:
+    """Class for issuing multiple API calls
 
-    Args:
-        api_url:
-            url address to the server api
-
-        no_cert_check:
-            option if ssl certificate should be verified
-
-        auth:
-            authentication option (either username & password or OAuth1 object)
-
-        token:
-            token for Bearer token request
-    """
-    session = ApiSession(api_url, tls_cert_verification)
-
-    if auth:
-        session.auth = auth
-    elif token:
-        session.headers.update({"Authorization": "Bearer " + token})
-
-    return session
-
-
-class ApiSession(Session):
-    """Adjusted requests.session class with a focus on multiple API calls
-
-    ApiSession behaves similar to the requests.session
-    with the exception that a base url is provided and persisted
-    all requests forms use the base url and append the actual request
-
+    ApiSession behaves similar to requests.Session with the exception that a
+    base URL is provided and persisted.
+    All requests use the base URL and append the provided url to it.
     """
 
     def __init__(
         self,
         base_url: str,
+        auth: HTTPBasicAuth | None = None,
         tls_cert_verification: bool | HostnameValidationAdapter = True,
+        additional_headers: Mapping[str, str] | None = None,
     ):
-        super().__init__()
+        self._session = Session()
+        self._session.auth = auth
+        self._session.headers.update(additional_headers or {})
         self._base_url = base_url
 
         if isinstance(tls_cert_verification, HostnameValidationAdapter):
-            self.mount(self._base_url, tls_cert_verification)
+            self._session.mount(self._base_url, tls_cert_verification)
             self.verify = True
         else:
             self.verify = tls_cert_verification
 
-    def request(self, method, url, **kwargs):  # type: ignore[override] # pylint: disable=arguments-differ
-        url = urljoin(self._base_url, url)
-        return super().request(method, url, **kwargs)
+    def request(self, method: str, url: str, **kwargs: object) -> Response:
+        return self._session.request(method, urljoin(self._base_url, url, **kwargs))
+
+    def get(self, url: str, **kwargs: object) -> Response:
+        return self.request("get", url, **kwargs)
 
 
 def parse_api_url(

@@ -32,7 +32,9 @@ def main(sys_argv=None):
         "Content-Type": "application/json",
     }
     try:
-        data = requests.get("https://%s/hm/api/v1/devices" % ip, headers=headers).text  # nosec B113
+        data = requests.get(
+            "https://%s/hm/api/v1/devices" % ip, headers=headers
+        ).text  # nosec B113 # BNS:0b0eac
     except Exception as e:
         sys.stderr.write("Connection error: %s" % e)
         return 2

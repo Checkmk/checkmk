@@ -59,7 +59,7 @@ def main():
     }
 
     try:
-        response = requests.get(address, headers=headers, params=params)  # nosec B113
+        response = requests.get(address, headers=headers, params=params)  # nosec B113 # BNS:0b0eac
     except requests.RequestException:
         bail_out(
             "Request to the API failed. Please check your connection settings. "

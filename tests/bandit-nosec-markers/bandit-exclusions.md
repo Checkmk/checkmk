@@ -31,6 +31,7 @@ Note that Bandit is picky about the exact format.
 | `BNS:bbfc92` | `B701` | The test code in the examples is hard coded and does not currently take in external input. |
 | `BNS:a7d6b8` | `B202` | Bandit is not updated (tarfile check added July 2022) for the changes to tarfile.extractall() filters from python 3.12. |
 | `BNS:13b2c8` | `B108` | Using /tmp directory on host, reviewed. |
-| `BNS:248184` | `B602` | The hardcoded find command used here outputs the modification time (as a number), assuming the input is strictly a path.|
-| `BNS:b00359` | `B602` |Intended Shell functionality.|
-| `BNS:ff2c84` | `B411` |The xmlrpc submodule version being used is safe to xml attacks.|
+| `BNS:248184` | `B602` | The hardcoded find command used here outputs the modification time (as a number), assuming the input is strictly a path. |
+| `BNS:b00359` | `B602` | Intended Shell functionality.|
+| `BNS:ff2c84` | `B411` | The xmlrpc submodule version being used is safe to xml attacks. |
+| `BNS:0b0eac` | `B113` | The timeout will be enforced by the executor process for special agents and active checks (CMK-18517). |

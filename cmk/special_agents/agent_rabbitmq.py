@@ -154,7 +154,7 @@ def _handle_output(section, section_data):
 
 
 def _handle_request(url, args):
-    response = requests.get(  # nosec B113
+    response = requests.get(  # nosec B113 # BNS:0b0eac
         url,
         auth=(args.user, args.password),
     )

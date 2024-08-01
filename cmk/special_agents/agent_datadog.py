@@ -244,7 +244,7 @@ class ImplDatadogAPI:
         params: Mapping[str, str | int],
         version: str = "v1",
     ) -> requests.Response:
-        return requests.get(  # nosec B113ü
+        return requests.get(  # nosec B113 # BNS:0b0eac
             f"{self._api_url}/{version}/{api_endpoint}",
             headers=self._query_heads,
             params=params,
@@ -257,7 +257,7 @@ class ImplDatadogAPI:
         body: Mapping[str, Any],
         version: str = "v1",
     ) -> requests.Response:
-        return requests.post(  # nosec B113
+        return requests.post(  # nosec B113 # BNS:0b0eac
             f"{self._api_url}/{version}/{api_endpoint}",
             headers=self._query_heads,
             json=body,

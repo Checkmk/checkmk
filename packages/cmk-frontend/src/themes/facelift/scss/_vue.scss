@@ -6,3 +6,18 @@
 table.nform select.cascading_dropdown {
   margin: 0 5px 5px 0;
 }
+
+div.vue_help {
+  display: none;
+  div.info_icon {
+    img.icon {
+      content: url("images/icon_info.svg");
+    }
+  }
+}
+
+body.show_help {
+  div.vue_help {
+    display: flex;
+  }
+}

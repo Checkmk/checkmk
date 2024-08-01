@@ -39,6 +39,8 @@ export function toggle() {
 
 function switch_help(how: boolean) {
     // recursive scan for all div class=help elements
+    if (how) document.body.classList.add("show_help");
+    else document.body.classList.remove("show_help");
     const helpdivs = document.getElementsByClassName(
         "help"
     ) as HTMLCollectionOf<HTMLElement>;

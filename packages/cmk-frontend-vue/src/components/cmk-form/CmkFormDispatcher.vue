@@ -13,6 +13,7 @@ import type { ValidationMessages } from '@/lib/validation'
 import CmkFormFixedValue from '@/components/cmk-form/element/CmkFormFixedValue.vue'
 import CmkFormBooleanChoice from '@/components/cmk-form/element/CmkFormBooleanChoice.vue'
 import CmkFormMultilineText from '@/components/cmk-form/element/CmkFormMultilineText.vue'
+import FormHelp from '@/components/cmk-form/FormHelp.vue'
 
 const props = defineProps<{
   spec: FormSpec
@@ -42,10 +43,13 @@ function getComponent(): IComponent {
 </script>
 
 <template>
-  <component
-    :is="getComponent()"
-    v-model:data="data"
-    :backend-validation="backendValidation"
-    :spec="spec"
-  />
+  <div>
+    <FormHelp :help="spec.help" />
+    <component
+      :is="getComponent()"
+      v-model:data="data"
+      :backend-validation="backendValidation"
+      :spec="spec"
+    />
+  </div>
 </template>

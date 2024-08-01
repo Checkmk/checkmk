@@ -28,8 +28,12 @@ following targets to build a package for the current git:
 ## Dealing with Windows artifacts
 
 Checkmk ships with several parts that are compiled on Windows build systems,
-these are a) the Windows agent and b) the optional python interpreter for
-plugins. When these files are not existing previous to the packaging of Checkmk,
+these are
+
+- a) the Windows agent
+- b) the optional python interpreter for plugins.
+
+When these files are not existing previous to the packaging of Checkmk,
 the build will fail.
 
 For the moment there is an internal helper script
@@ -59,8 +63,8 @@ Jenkins using the following environment variables
 - `BAZEL_CACHE_USER=bazel-password`
 
 Once this is configured correctly the first build will produce build artifacts
-and upload them to the nexus server. On the next run, either the locally or
-remotely cached build artifacts are used.
+and upload them to the nexus/bazel server. On the next run, either the locally
+or remotely cached build artifacts are used.
 
 The build cache is saved per branch based on the `BRANCH_VERSION` definition in
 `defines.make`. It needs to be updated when a new stable branch is forked from
@@ -73,7 +77,7 @@ Clone from the Checkmk Git, then execute the following commands:
 ```bash
 # Run everything in our pre-built docker images. 
 # This may take a while as it's pulling the image from the registry
-scripts/run-in-docker.sh bash  
+scripts/run-in-docker.sh bash
 
 # Fake the windows artifacts - they need to be built on a windows node
 scripts/fake-windows-artifacts
@@ -90,9 +94,15 @@ make deb
 It will use the OMD package build cache to create a `.deb` file in the `omd`
 directory.
 
-## How to build one OMD package?
+## How to build a single OMD package?
 
 The OMD packages are built in the following phases in general:
+
+  1. unpacking
+  2. building
+  3. intermediate install
+    - optionally processing build cache
+  4. installing to final directory
 
 ### `{PKG}_UNPACK` - Unpack the source archive
 
@@ -133,12 +143,36 @@ in `omd/build/stamps`.
 
 ### Incrementally work on a specific package
 
-To execute a build step of your choice, you can do it like follows. 
+#### Simple packages
 
+Simplest and fastest package build is `nrpe`, just execute the following
+commands inside the build container
+
+```sh
+cd omd
+
+../scripts/run-bazel.sh build @nrpe//:nrpe
+# or
+make nrpe-build
+
+# there are no stamps available for this package at $PWD/build/stamps
+
+# install the package
+make nrpe-install
+# target location is check_mk/omd/build/dest/omd/versions/<VERSION>
 ```
+
+#### Complex packages
+
+A complex package with almost all possible dependencies to other packages like
+`perl`, `python3-modules`, `python` and `openSSL` is `net-snmp`. You can do it
+like follows to build it.
+
+```sh
 # If you're starting from a clean repo, make sure that all needed dependencies are built.
 # e.g. when you want to build the package "net-snmp":
 cd omd
+
 make PACKAGES="net-snmp" install
 
 # Now the stamps should be in-place - verify it with:
@@ -153,7 +187,7 @@ make $PWD/build/stamps/net-snmp*build
 
 ## Incremental package building
 
-TODO: See omd/Makefile and omd/debian/rules. Should be configurable by
+TODO: See `omd/Makefile` and `omd/debian/rules`. Should be configurable by
 environment variables in the future.
 
 ## Measuring build times
@@ -164,7 +198,7 @@ build take how much time.
 During packaging there are entries written to stdout of the build job. They look
 like this:
 
-```
+```sh
 +++ [1638200385] Build step '/home/lm/git/checkmk/omd/build/stamps/openssl-1.1.1l-install': done
 ```
 
@@ -176,7 +210,7 @@ The log contains absolute time stamps. You may use the helper script
 
 An other option would be to use `remake` like this:
 
-```
+```sh
 cd omd
 MAKE="remake --profile" make deb
 ```
@@ -196,21 +230,21 @@ name variables to avoid name clashes.
 
 ## Add/remove new package to distribution
 
-Summary: you must modify omd/Makefile, omd/packages/packages.make and create 
-[name].make which build/deploy your binary or library.
+Summary: you must modify `omd/Makefile`, `omd/packages/packages.make` and
+create `[name].make` which build/deploy your binary or library.
 
 Step by step:
 
-1. Modify PACKAGES variable in omd/Makefile adding a line with [name] of a 
-package to be added.
-2. Create a corresponding directory with name of the package in the omd/packages 
-subdir, i.e. omd/packages/[name].
+1. Modify `PACKAGES` variable in `omd/Makefile` adding a line with `[name]` of
+a package to be added.
+2. Create a corresponding directory with name of the package in the
+`omd/packages` subdir, i.e. `omd/packages/[name]`.
 3. Create in the directory from p.2 the file having name of the package and 
-extension make, i.e. omd/packages/[name]/[name].make
-4. Add omd/packages/[name]/[name].make to the rule include in the file 
-omd/packages/package.make
+extension make, i.e. `omd/packages/[name]/[name].make`
+4. Add `omd/packages/[name]/[name].make` to the rule include in the file
+`omd/packages/package.make`
 
-In the simple cases you should use livestatus.make or unixcat.make as a template.
+In the simple cases you should use `livestatus.make` or `unixcat.make` as a template.
 
-To remove package just remove the line in omd/Makefile, the line in 
-omd/packages/package.make and directory in the omd/packages.
+To remove package just remove the line in `omd/Makefile`, the line in
+`omd/packages/package.make` and directory in the `omd/packages`.

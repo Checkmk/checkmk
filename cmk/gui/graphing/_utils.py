@@ -8,7 +8,7 @@ import http
 import re
 import shlex
 from collections import Counter
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Literal, NewType, NotRequired, TypedDict
 
 from livestatus import livestatus_lql
@@ -25,7 +25,7 @@ from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 
 from ._legacy import check_metrics, CheckMetricEntry
 from ._metrics import get_metric_spec_with_color
-from ._type_defs import LineType, ScalarBounds, TranslatedMetric
+from ._type_defs import LineType, Original, ScalarBounds, TranslatedMetric
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):
@@ -46,10 +46,9 @@ SizeEx = NewType("SizeEx", int)
 
 
 class _NormalizedPerfData(TypedDict):
-    orig_name: list[str]
+    originals: Sequence[Original]
     value: float
     scalar: ScalarBounds
-    scale: list[float]
     auto_graph: bool
 
 
@@ -287,10 +286,9 @@ def _normalize_perf_data(
     translation_entry = perfvar_translation(perf_data_tuple.lookup_metric_name, check_command)
 
     new_entry = _NormalizedPerfData(
-        orig_name=[perf_data_tuple.metric_name],
+        originals=[Original(perf_data_tuple.metric_name, translation_entry["scale"])],
         value=perf_data_tuple.value * translation_entry["scale"],
         scalar=_scalar_bounds(perf_data_tuple, translation_entry["scale"]),
-        scale=[translation_entry["scale"]],  # needed for graph recipes
         # Do not create graphs for ungraphed metrics if listed here
         auto_graph=translation_entry["auto_graph"],
     )
@@ -331,20 +329,15 @@ def translate_metrics(
     color_counter: Counter[Literal["metric", "predictive"]] = Counter()
     for entry in perf_data:
         metric_name, normalized = _normalize_perf_data(entry, check_command)
-        if metric_name in translated_metrics:
-            translated_metric = translated_metrics[metric_name]
-            orig_name = list(translated_metric.orig_name) + list(normalized["orig_name"])
-            scale = list(translated_metric.scale) + list(normalized["scale"])
-        else:
-            orig_name = normalized["orig_name"]
-            scale = normalized["scale"]
-
         mi = get_metric_spec_with_color(metric_name, color_counter)
         translated_metrics[metric_name] = TranslatedMetric(
-            orig_name=orig_name,
+            originals=(
+                list(translated_metrics[metric_name].originals) + list(normalized["originals"])
+                if metric_name in translated_metrics
+                else normalized["originals"]
+            ),
             value=mi.unit_info.conversion(normalized["value"]),
             scalar=_translated_metric_scalar(mi.unit_info.conversion, normalized["scalar"]),
-            scale=scale,
             auto_graph=normalized["auto_graph"],
             title=str(mi.title),
             unit_info=mi.unit_info,

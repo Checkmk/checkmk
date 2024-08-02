@@ -298,16 +298,13 @@ def _to_metric_operation(
                 site_id=lq_row["site"],
                 host_name=lq_row["host_name"],
                 service_name=lq_row.get("service_description", "_HOST_"),
-                metric_name=pnp_cleanup(orig_name),
+                metric_name=pnp_cleanup(original.name),
                 consolidation_func_name=(
                     expression.consolidation_func_name or enforced_consolidation_function
                 ),
-                scale=scale,
+                scale=original.scale,
             )
-            for orig_name, scale in zip(
-                translated_metrics[expression.name].orig_name,
-                translated_metrics[expression.name].scale,
-            )
+            for original in translated_metrics[expression.name].originals
         ]
         if len(metrics) > 1:
             return MetricOpOperator(operator_name="MERGE", operands=metrics)

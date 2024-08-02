@@ -42,7 +42,7 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
 )
 from cmk.gui.graphing._legacy import AutomaticDict, CheckMetricEntry, RawGraphTemplate, UnitInfo
 from cmk.gui.graphing._metrics import _get_legacy_metric_info
-from cmk.gui.graphing._type_defs import TranslatedMetric
+from cmk.gui.graphing._type_defs import Original, TranslatedMetric
 from cmk.gui.graphing._utils import _NormalizedPerfData, TranslationInfo
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -230,13 +230,12 @@ def test_find_matching_translation(
             "check_mk-lnx_if",
             (
                 "if_in_bps",
-                {
-                    "orig_name": ["in"],
-                    "value": 3975009.607464,
-                    "scalar": {"max": 1000000000, "min": 0},
-                    "scale": [8],
-                    "auto_graph": True,
-                },
+                _NormalizedPerfData(
+                    originals=[Original("in", 8.0)],
+                    value=3975009.607464,
+                    scalar={"max": 1000000000, "min": 0},
+                    auto_graph=True,
+                ),
             ),
         ),
         (
@@ -244,13 +243,12 @@ def test_find_matching_translation(
             "check_mk-imaginary",
             (
                 "fast",
-                {
-                    "orig_name": ["fast"],
-                    "value": 5.0,
-                    "scalar": {"warn": 4.0, "crit": 9.0, "min": 0.0, "max": 10.0},
-                    "scale": [1.0],
-                    "auto_graph": True,
-                },
+                _NormalizedPerfData(
+                    originals=[Original("fast", 1.0)],
+                    value=5.0,
+                    scalar={"warn": 4.0, "crit": 9.0, "min": 0.0, "max": 10.0},
+                    auto_graph=True,
+                ),
             ),
         ),
     ],
@@ -430,10 +428,9 @@ def test__compute_predictive_metrics(
             _compute_predictive_metrics(
                 {
                     "metric_name": TranslatedMetric(
-                        orig_name=["metric_name"],
+                        originals=[Original("metric_name", 1.0)],
                         value=0.0,
                         scalar={},
-                        scale=[1.0],
                         auto_graph=True,
                         title="",
                         unit_info=UnitInfo(
@@ -447,10 +444,9 @@ def test__compute_predictive_metrics(
                         color="#0080c0",
                     ),
                     "predict_metric_name": TranslatedMetric(
-                        orig_name=["predict_metric_name"],
+                        originals=[Original("predict_metric_name", 1.0)],
                         value=0.0,
                         scalar={},
-                        scale=[1.0],
                         auto_graph=True,
                         title="",
                         unit_info=UnitInfo(
@@ -464,10 +460,9 @@ def test__compute_predictive_metrics(
                         color="#0080c0",
                     ),
                     "predict_lower_metric_name": TranslatedMetric(
-                        orig_name=["predict_lower_metric_name"],
+                        originals=[Original("predict_lower_metric_name", 1.0)],
                         value=0.0,
                         scalar={},
-                        scale=[1.0],
                         auto_graph=True,
                         title="",
                         unit_info=UnitInfo(

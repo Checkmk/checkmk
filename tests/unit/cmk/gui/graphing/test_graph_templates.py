@@ -32,7 +32,7 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     ScalarDefinition,
 )
 from cmk.gui.graphing._legacy import UnitInfo
-from cmk.gui.graphing._type_defs import TranslatedMetric
+from cmk.gui.graphing._type_defs import Original, TranslatedMetric
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
@@ -309,10 +309,9 @@ def test__to_metric_operation(
             Metric("metric-name"),
             {
                 "metric-name": TranslatedMetric(
-                    orig_name=list(orig_names),
+                    originals=[Original(n, s) for n, s in zip(orig_names, scales)],
                     value=23.5,
                     scalar={},
-                    scale=list(scales),
                     auto_graph=False,
                     title="Title",
                     unit_info=UnitInfo(

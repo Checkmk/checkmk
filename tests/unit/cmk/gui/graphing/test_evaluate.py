@@ -9,7 +9,7 @@ import pytest
 
 from cmk.gui.graphing._legacy import UnitInfo
 from cmk.gui.graphing._perfometer import _evaluate_quantity, _perfometer_matches
-from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
+from cmk.gui.graphing._type_defs import Original, ScalarBounds, TranslatedMetric
 
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
@@ -66,10 +66,9 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers_api.Perfometer:
 
 def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric:
     return TranslatedMetric(
-        orig_name=[name],
+        originals=[Original(name, 1.0)],
         value=10.0,
         scalar=scalar,
-        scale=[1.0],
         auto_graph=False,
         title="Title 1",
         unit_info=UnitInfo(
@@ -267,10 +266,9 @@ def test__perfometer_matches(
             "name",
             {
                 "name": TranslatedMetric(
-                    orig_name=["name"],
+                    originals=[Original("name", 1.0)],
                     value=10.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -296,10 +294,9 @@ def test__perfometer_matches(
             ),
             {
                 "name": TranslatedMetric(
-                    orig_name=["name"],
+                    originals=[Original("name", 1.0)],
                     value=10.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -320,10 +317,9 @@ def test__perfometer_matches(
             metrics_api.WarningOf("name"),
             {
                 "name": TranslatedMetric(
-                    orig_name=["name"],
+                    originals=[Original("name", 1.0)],
                     value=10.0,
                     scalar={"warn": 5.0},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -344,10 +340,9 @@ def test__perfometer_matches(
             metrics_api.CriticalOf("name"),
             {
                 "name": TranslatedMetric(
-                    orig_name=["name"],
+                    originals=[Original("name", 1.0)],
                     value=10.0,
                     scalar={"crit": 5.0},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -368,10 +363,9 @@ def test__perfometer_matches(
             metrics_api.MinimumOf("name", metrics_api.Color.BLUE),
             {
                 "name": TranslatedMetric(
-                    orig_name=["name"],
+                    originals=[Original("name", 1.0)],
                     value=10.0,
                     scalar={"min": 5.0},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -392,10 +386,9 @@ def test__perfometer_matches(
             metrics_api.MaximumOf("name", metrics_api.Color.BLUE),
             {
                 "name": TranslatedMetric(
-                    orig_name=["name"],
+                    originals=[Original("name", 1.0)],
                     value=10.0,
                     scalar={"max": 5.0},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -420,10 +413,9 @@ def test__perfometer_matches(
             ),
             {
                 "name1": TranslatedMetric(
-                    orig_name=["name1"],
+                    originals=[Original("name1", 1.0)],
                     value=10.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -437,10 +429,9 @@ def test__perfometer_matches(
                     color="#123456",
                 ),
                 "name2": TranslatedMetric(
-                    orig_name=["name2"],
+                    originals=[Original("name2", 1.0)],
                     value=5.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -466,10 +457,9 @@ def test__perfometer_matches(
             ),
             {
                 "name1": TranslatedMetric(
-                    orig_name=["name1"],
+                    originals=[Original("name1", 1.0)],
                     value=10.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -483,10 +473,9 @@ def test__perfometer_matches(
                     color="#123456",
                 ),
                 "name2": TranslatedMetric(
-                    orig_name=["name2"],
+                    originals=[Original("name2", 1.0)],
                     value=5.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -512,10 +501,9 @@ def test__perfometer_matches(
             ),
             {
                 "name1": TranslatedMetric(
-                    orig_name=["name1"],
+                    originals=[Original("name1", 1.0)],
                     value=10.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -529,10 +517,9 @@ def test__perfometer_matches(
                     color="#123456",
                 ),
                 "name2": TranslatedMetric(
-                    orig_name=["name2"],
+                    originals=[Original("name2", 1.0)],
                     value=3.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -559,10 +546,9 @@ def test__perfometer_matches(
             ),
             {
                 "name1": TranslatedMetric(
-                    orig_name=["name1"],
+                    originals=[Original("name1", 1.0)],
                     value=10.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(
@@ -576,10 +562,9 @@ def test__perfometer_matches(
                     color="#123456",
                 ),
                 "name2": TranslatedMetric(
-                    orig_name=["name2"],
+                    originals=[Original("name2", 1.0)],
                     value=5.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=False,
                     title="Title 1",
                     unit_info=UnitInfo(

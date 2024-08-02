@@ -20,7 +20,7 @@ from cmk.gui.graphing._perfometer import (
     MetricRendererStack,
     parse_perfometer,
 )
-from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
+from cmk.gui.graphing._type_defs import Original, ScalarBounds, TranslatedMetric
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_api
@@ -39,10 +39,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
             },
             {
                 "m1": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=1,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -56,10 +55,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     color="#111111",
                 ),
                 "m2": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=2,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -73,10 +71,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     color="#222222",
                 ),
                 "m3": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=3,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -90,10 +87,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     color="#333333",
                 ),
                 "m4": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=4,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -118,10 +114,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
             },
             {
                 "m1": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=1,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -135,10 +130,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     color="#111111",
                 ),
                 "m2": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=2,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -152,10 +146,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     color="#222222",
                 ),
                 "m3": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=3,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -169,10 +162,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     color="#333333",
                 ),
                 "m4": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=4,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -186,10 +178,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     color="#444444",
                 ),
                 "m5": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=5,
                     scalar={"max": 5},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -214,10 +205,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
             },
             {
                 "m1": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=1,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -231,10 +221,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     color="#111111",
                 ),
                 "m2": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=2,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -248,10 +237,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     color="#222222",
                 ),
                 "m3": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=3,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -265,10 +253,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     color="#333333",
                 ),
                 "m4": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=4,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -293,10 +280,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
             },
             {
                 "m1": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=1,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -321,10 +307,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
             },
             {
                 "m1": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=1,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -338,10 +323,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     color="#111111",
                 ),
                 "m2": TranslatedMetric(
-                    orig_name=[],
+                    originals=[],
                     value=2,
                     scalar={},
-                    scale=[],
                     auto_graph=False,
                     title="",
                     unit_info=UnitInfo(
@@ -407,10 +391,9 @@ class TestMetricometerRendererLegacyLinear:
             },
             {
                 "my_metric": TranslatedMetric(
-                    orig_name=["my_metric"],
+                    originals=[Original("my_metric", 1.0)],
                     value=60.0,
                     scalar={"warn": 80.0, "crit": 90.0},
-                    scale=[1.0],
                     auto_graph=True,
                     title="My metric",
                     unit_info=unit_info,
@@ -511,10 +494,9 @@ class TestMetricometerRendererLegacyLogarithmic:
             },
             {
                 "my_metric": TranslatedMetric(
-                    orig_name=["my_metric"],
+                    originals=[Original("my_metric", 1.0)],
                     value=123.0,
                     scalar={"warn": 158.0, "crit": 176.0},
-                    scale=[1.0],
                     auto_graph=True,
                     title="My metric",
                     unit_info=unit_info,
@@ -752,10 +734,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
             ["metric-name"],
             {
                 "metric-name": TranslatedMetric(
-                    orig_name=["metric-name"],
+                    originals=[Original("metric-name", 1.0)],
                     value=2600.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=True,
                     title="Metric name 1",
                     unit_info=UnitInfo(
@@ -776,10 +757,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
             ["metric-name1", "metric-name2"],
             {
                 "metric-name1": TranslatedMetric(
-                    orig_name=["metric-name1"],
+                    originals=[Original("metric-name1", 1.0)],
                     value=2000.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=True,
                     title="Metric name 1",
                     unit_info=UnitInfo(
@@ -793,10 +773,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     color="#111111",
                 ),
                 "metric-name2": TranslatedMetric(
-                    orig_name=["metric-name2"],
+                    originals=[Original("metric-name2", 1.0)],
                     value=600.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=True,
                     title="Metric name 2",
                     unit_info=UnitInfo(
@@ -817,10 +796,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
             ["metric-name1", "metric-name2", "metric-name3"],
             {
                 "metric-name1": TranslatedMetric(
-                    orig_name=["metric-name1"],
+                    originals=[Original("metric-name1", 1.0)],
                     value=2000.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=True,
                     title="Metric name 1",
                     unit_info=UnitInfo(
@@ -834,10 +812,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     color="#111111",
                 ),
                 "metric-name2": TranslatedMetric(
-                    orig_name=["metric-name2"],
+                    originals=[Original("metric-name2", 1.0)],
                     value=400.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=True,
                     title="Metric name 2",
                     unit_info=UnitInfo(
@@ -851,10 +828,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     color="#222222",
                 ),
                 "metric-name3": TranslatedMetric(
-                    orig_name=["metric-name3"],
+                    originals=[Original("metric-name3", 1.0)],
                     value=200.0,
                     scalar={},
-                    scale=[1.0],
                     auto_graph=True,
                     title="Metric name 3",
                     unit_info=UnitInfo(
@@ -915,10 +891,9 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
         ),
         {
             "metric-name1": TranslatedMetric(
-                orig_name=["metric-name1"],
+                originals=[Original("metric-name1", 1.0)],
                 value=1300.0,
                 scalar={},
-                scale=[1.0],
                 auto_graph=True,
                 title="Metric name 1",
                 unit_info=UnitInfo(
@@ -932,10 +907,9 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                 color="#111111",
             ),
             "metric-name2": TranslatedMetric(
-                orig_name=["metric-name2"],
+                originals=[Original("metric-name2", 1.0)],
                 value=1300.0,
                 scalar={},
-                scale=[1.0],
                 auto_graph=True,
                 title="Metric name 2",
                 unit_info=UnitInfo(
@@ -960,10 +934,9 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
             ["metric-name"],
             {
                 "metric-name": TranslatedMetric(
-                    orig_name=["metric-name"],
+                    originals=[Original("metric-name", 1.0)],
                     value=101.0,
                     scalar=ScalarBounds(),
-                    scale=[1.0],
                     auto_graph=True,
                     title="Metric name",
                     unit_info=UnitInfo(
@@ -985,10 +958,9 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
             ["metric-name1", "metric-name2"],
             {
                 "metric-name1": TranslatedMetric(
-                    orig_name=["metric-name1"],
+                    originals=[Original("metric-name1", 1.0)],
                     value=99.0,
                     scalar=ScalarBounds(),
-                    scale=[1.0],
                     auto_graph=True,
                     title="Metric name 1",
                     unit_info=UnitInfo(
@@ -1002,10 +974,9 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     color="#111111",
                 ),
                 "metric-name2": TranslatedMetric(
-                    orig_name=["metric-name2"],
+                    originals=[Original("metric-name2", 1.0)],
                     value=2.0,
                     scalar=ScalarBounds(),
-                    scale=[1.0],
                     auto_graph=True,
                     title="Metric name 2",
                     unit_info=UnitInfo(

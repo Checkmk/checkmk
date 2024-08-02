@@ -35,6 +35,12 @@ class RRDDataKey:
 RRDData = Mapping[RRDDataKey, TimeSeries]
 
 
+@dataclass(frozen=True)
+class Original:
+    name: str
+    scale: float
+
+
 class ScalarBounds(TypedDict, total=False):
     warn: float
     crit: float
@@ -44,10 +50,9 @@ class ScalarBounds(TypedDict, total=False):
 
 @dataclass(frozen=True)
 class TranslatedMetric:
-    orig_name: Sequence[str]
+    originals: Sequence[Original]
     value: float
     scalar: ScalarBounds
-    scale: Sequence[float]
     auto_graph: bool
     title: str
     unit_info: UnitInfo

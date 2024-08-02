@@ -1,14 +1,19 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("//omd/packages/rules:define_from_flag.bzl", "define_from_flag")
 
-CMK_VERSION = "2.4.0b1"
+define_from_flag(
+    name = "cmk_version_define",
+    macro = "VERSION",
+    value = "//:cmk_version",
+)
 
 # Keep code using VERSION apart to minimize cache invalidation.
 cc_library(
     name = "neb_version",
     srcs = ["src/CmkVersion.cc"],
     hdrs = ["include/neb/CmkVersion.h"],
-    local_defines = [r'VERSION=\"' + CMK_VERSION + r'\"'],
     strip_include_prefix = "include/",
+    deps = [":cmk_version_define"],
 )
 
 # Our generated & patched headers for Nagios 3 & 4

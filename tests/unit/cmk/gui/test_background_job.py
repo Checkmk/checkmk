@@ -36,15 +36,8 @@ from cmk.gui.background_job import (
 )
 
 import cmk.ccc.version as cmk_version
-from cmk.trace import (
-    BatchSpanProcessor,
-    get_tracer,
-    init_tracing,
-    ReadableSpan,
-    SpanExporter,
-    SpanExportResult,
-    TracerProvider,
-)
+from cmk.trace import get_tracer, init_tracing, ReadableSpan, TracerProvider
+from cmk.trace.export import BatchSpanProcessor, SpanExporter, SpanExportResult
 
 tracer = get_tracer()
 

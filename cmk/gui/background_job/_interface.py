@@ -11,7 +11,8 @@ from typing import Callable, ContextManager, NamedTuple
 
 from cmk.utils import render
 
-from cmk.trace import Link, SpanExporter, TracerProvider
+from cmk.trace import Link, TracerProvider
+from cmk.trace.export import SpanExporter
 
 from ._defines import BackgroundJobDefines
 

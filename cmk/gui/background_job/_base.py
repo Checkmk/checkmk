@@ -27,15 +27,8 @@ from cmk.gui.utils.urls import makeuri_contextless
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.trace import (
-    get_tracer,
-    init_span_processor,
-    Link,
-    SpanExporter,
-    Status,
-    StatusCode,
-    TracerProvider,
-)
+from cmk.trace import get_tracer, Link, Status, StatusCode, TracerProvider
+from cmk.trace.export import init_span_processor, SpanExporter
 
 from ._defines import BackgroundJobDefines
 from ._interface import BackgroundProcessInterface, JobParameters

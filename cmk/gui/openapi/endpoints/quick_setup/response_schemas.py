@@ -35,30 +35,38 @@ class Errors(BaseSchema):
     )
 
 
-class QuickSetupStageResponse(BaseSchema):
-    stage_id = fields.Integer(
-        example=1,
-        description="The id of the stage.",
-    )
+class QuickSetupNextStageStructure(BaseSchema):
     components = fields.List(
         fields.Dict,
         example=[],
         description="A collection of stage components",
     )
-    errors = fields.Nested(
-        Errors,
-        example={},
-        description="All formspec errors and general stage errors",
+    button_txt = fields.String(
+        example="Next",
+        description="The text of the button",
         allow_none=True,
+    )
+
+
+class QuickSetupStageResponse(BaseSchema):
+    stage_id = fields.Integer(
+        example=1,
+        description="The id of the stage.",
     )
     stage_recap = fields.List(
         fields.Dict,
         example=[],
         description="A collection of widget recaps",
     )
-    button_txt = fields.String(
-        example="Next",
-        description="The text of the button",
+    next_stage_structure = fields.Nested(
+        QuickSetupNextStageStructure,
+        example={"components": [], "button_txt": ""},
+        description="The next stage structure",
+    )
+    errors = fields.Nested(
+        Errors,
+        example={},
+        description="All formspec errors and general stage errors",
         allow_none=True,
     )
 

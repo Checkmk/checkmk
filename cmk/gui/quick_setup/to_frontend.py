@@ -118,10 +118,15 @@ class Errors:
 
 
 @dataclass
-class Stage:
-    stage_id: StageId
+class NextStageStructure:
     components: Sequence[dict]
     button_txt: str | None
+
+
+@dataclass
+class Stage:
+    stage_id: StageId
+    next_stage_structure: NextStageStructure | None = None
     errors: Errors | None = None
     stage_recap: Sequence[Widget] = field(default_factory=list)
 
@@ -413,11 +418,13 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
         ],
         stage=Stage(
             stage_id=first_stage.stage_id,
-            components=[
-                _get_stage_components_from_widget(widget)
-                for widget in first_stage.configure_components
-            ],
-            button_txt=first_stage.button_txt,
+            next_stage_structure=NextStageStructure(
+                components=[
+                    _get_stage_components_from_widget(widget)
+                    for widget in first_stage.configure_components
+                ],
+                button_txt=first_stage.button_txt,
+            ),
         ),
         button_complete_label=quick_setup.button_complete_label,
     )
@@ -486,13 +493,17 @@ def retrieve_next_stage(
         next_stage = get_stage_with_id(quick_setup, StageId(current_stage.stage_id + 1))
     except InvalidStageException:
         # TODO: What should we return in this case?
-        return Stage(stage_id=StageId(-1), components=[], button_txt=None)
+        return Stage(stage_id=StageId(-1))
 
     return Stage(
         stage_id=next_stage.stage_id,
-        components=[
-            _get_stage_components_from_widget(widget) for widget in next_stage.configure_components
-        ],
+        next_stage_structure=NextStageStructure(
+            components=[
+                _get_stage_components_from_widget(widget)
+                for widget in next_stage.configure_components
+            ],
+            button_txt=next_stage.button_txt,
+        ),
         stage_recap=[
             r
             for recap_callable in current_stage.recap
@@ -501,7 +512,6 @@ def retrieve_next_stage(
                 expected_form_spec_map,
             )
         ],
-        button_txt=next_stage.button_txt,
     )
 
 

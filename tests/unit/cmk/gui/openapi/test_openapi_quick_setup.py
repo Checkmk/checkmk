@@ -56,8 +56,8 @@ def test_quick_setup_get(clients: ClientRegistry) -> None:
     )
     resp = clients.QuickSetup.get_overview_and_first_stage("quick_setup_test")
     assert len(resp.json["overviews"]) == 1
-    assert len(resp.json["stage"]["components"]) == 1
-    assert resp.json["stage"]["button_txt"] == "Next"
+    assert len(resp.json["stage"]["next_stage_structure"]["components"]) == 1
+    assert resp.json["stage"]["next_stage_structure"]["button_txt"] == "Next"
 
 
 def test_validate_retrieve_next(clients: ClientRegistry) -> None:
@@ -95,7 +95,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
     assert resp.json["stage_id"] == 2
     assert resp.json["errors"] is None
     assert len(resp.json["stage_recap"]) == 1
-    assert resp.json["button_txt"] == "Next"
+    assert resp.json["next_stage_structure"]["button_txt"] == "Next"
 
 
 def _form_spec_extra_validate(
@@ -143,7 +143,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
         },
         "stage_errors": [],
     }
-    assert resp.json["button_txt"] is None
+    assert resp.json["next_stage_structure"] is None
 
 
 def test_quick_setup_save(clients: ClientRegistry) -> None:

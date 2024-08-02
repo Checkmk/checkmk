@@ -109,8 +109,6 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
             Stage(
                 stage_id=current_stage_id,
                 errors=errors,
-                components=[],
-                button_txt=None,
             ),
             status_code=400,
         )

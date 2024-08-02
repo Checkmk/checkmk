@@ -39,6 +39,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.trace import (
+    exporter_from_config,
     get_tracer,
     get_tracer_provider,
     init_tracing,
@@ -47,7 +48,6 @@ from cmk.trace import (
     trace_send_config,
     TracerProvider,
 )
-from cmk.trace.export import exporter_from_config
 
 from ._app import BackgroundJobFlaskApp
 from ._defines import BackgroundJobDefines

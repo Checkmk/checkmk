@@ -5,19 +5,19 @@
 
 """Provides functionality to enable tracing in the Python components of Checkmk"""
 
+import logging
 import socket
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import TextIO
 
 from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk import trace as sdk_trace
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import export as sdk_export
-
-from ._config import LocalTarget as LocalTarget  # pylint: disable=useless-import-alias
-from ._config import trace_send_config as trace_send_config  # pylint: disable=useless-import-alias
-from ._config import TraceSendConfig as TraceSendConfig  # pylint: disable=useless-import-alias
+from opentelemetry.sdk.trace import export
 
 # Re-export 3rd party names to avoid direct dependencies in the code
-Span = trace.Span
 SpanKind = trace.SpanKind
 Link = trace.Link
 get_tracer_provider = trace.get_tracer_provider
@@ -25,12 +25,50 @@ set_span_in_context = trace.set_span_in_context
 Status = trace.Status
 StatusCode = trace.StatusCode
 INVALID_SPAN = trace.INVALID_SPAN
-BatchSpanProcessor = sdk_export.BatchSpanProcessor
-SpanExporter = sdk_export.SpanExporter
-SpanExportResult = sdk_export.SpanExportResult
+BatchSpanProcessor = export.BatchSpanProcessor
+SpanExporter = export.SpanExporter
+SpanExportResult = export.SpanExportResult
 ReadableSpan = sdk_trace.ReadableSpan
 TracerProvider = sdk_trace.TracerProvider
-get_current_span = trace.get_current_span
+
+
+@dataclass(frozen=True)
+class LocalTarget:
+    port: int
+
+
+@dataclass
+class TraceSendConfig:
+    enabled: bool
+    target: LocalTarget | str
+
+
+def trace_send_config(config: Mapping[str, str]) -> TraceSendConfig:
+    target: LocalTarget | str
+    if (target := config.get("CONFIG_TRACE_SEND_TARGET", "local_site")) == "local_site":
+        target = LocalTarget(_trace_receive_port(config))
+    return TraceSendConfig(
+        enabled=config.get("CONFIG_TRACE_SEND") == "on",
+        target=target,
+    )
+
+
+def _trace_receive_port(config: Mapping[str, str]) -> int:
+    return int(config["CONFIG_TRACE_RECEIVE_PORT"])
+
+
+def exporter_from_config(
+    config: TraceSendConfig, exporter_class: type[OTLPSpanExporter] = OTLPSpanExporter
+) -> OTLPSpanExporter | None:
+    if not config.enabled:
+        return None
+    if isinstance(config.target, LocalTarget):
+        return exporter_class(
+            endpoint=f"http://localhost:{config.target.port}",
+            insecure=True,
+            timeout=3,
+        )
+    return exporter_class(endpoint=config.target, timeout=3)
 
 
 def init_tracing(
@@ -55,6 +93,10 @@ def get_tracer() -> trace.Tracer:
     return trace.get_tracer("cmk.trace")
 
 
+def get_current_span() -> trace.Span:
+    return trace.get_current_span()
+
+
 def get_current_tracer_provider() -> TracerProvider:
     if isinstance(provider := trace.get_tracer_provider(), TracerProvider):
         return provider
@@ -75,3 +117,64 @@ def _init_tracer_provider(
         )
     )
     return provider
+
+
+def init_logging() -> None:
+    """Add log entries as events to spans
+
+    We currently work with Jaeger, which does not support logs.
+    Adding logs to spans is a workaround to see logs in the Jaeger UI.
+
+    If we would switch to a different backend, we could use something like this:
+
+        from opentelemetry._logs import set_logger_provider
+        from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
+        from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+        from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+
+        logger_provider = LoggerProvider(resource=Resource.create({"service.name": service_name}))
+        set_logger_provider(logger_provider)
+
+        exporter = OTLPLogExporter(endpoint="http://localhost:9123", insecure=True)
+        logger_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
+        handler = LoggingHandler(level=logging.INFO, logger_provider=logger_provider)
+        logging.getLogger().addHandler(handler)
+    """
+    logging.getLogger().addHandler(_JaegerLogHandler())
+
+
+class _JaegerLogHandler(logging.StreamHandler[TextIO]):  # pylint: disable=too-few-public-methods
+    """Add python logger records to the current span"""
+
+    def emit(self, record: logging.LogRecord) -> None:
+        # See here https://docs.python.org/3/library/logging.html#logrecord-objects
+        try:
+            span = trace.get_current_span()
+            if span is INVALID_SPAN:
+                return
+
+            message = self.format(record)
+            span.add_event(
+                message,
+                {
+                    # "asctime": record.asctime,
+                    # "created": record.created,
+                    # "filename": record.filename,
+                    # "funcName": record.funcName,
+                    "log.level": record.levelname,
+                    "log.logger": record.name,
+                    # "log.message": message,
+                    # "lineno": record.lineno,
+                    # "module": record.module,
+                    # "msecs": record.msecs,
+                    # "pathname": record.pathname,
+                    # "process": record.process or "",
+                    # "processName": record.processName or "",
+                    # "thread": record.thread or "",
+                    # "threadName": record.threadName or "",
+                },
+            )
+        except RecursionError:
+            raise
+        except Exception:  # pylint: disable=broad-except
+            self.handleError(record)

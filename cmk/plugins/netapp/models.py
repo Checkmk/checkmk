@@ -509,7 +509,8 @@ class ShelfTemperatureModel(ShelfObjectModel):
     ============
     """
 
-    temperature: int
+    temperature: int | None
+    state: Literal["ok", "error"]
     ambient: bool
 
     low_warning: int | None = None

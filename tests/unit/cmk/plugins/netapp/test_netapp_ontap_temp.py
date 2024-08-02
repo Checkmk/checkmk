@@ -28,6 +28,7 @@ SENSORS_SECTION = {
     "Ambient Shelf 2": [
         ShelfTemperatureModelFactory.build(
             list_id="2",
+            state="ok",
             id=111,
             temperature=20.0,
             ambient=True,
@@ -40,6 +41,7 @@ SENSORS_SECTION = {
     "Internal Shelf 2": [
         ShelfTemperatureModelFactory.build(
             list_id="2",
+            state="ok",
             temperature=50.0,
             ambient=False,
             low_warning=None,
@@ -51,6 +53,7 @@ SENSORS_SECTION = {
     "Ambient Shelf 1": [
         ShelfTemperatureModelFactory.build(
             list_id="1",
+            state="ok",
             temperature=50.0,
             ambient=True,
             low_warning=None,
@@ -60,6 +63,7 @@ SENSORS_SECTION = {
         ),
         ShelfTemperatureModelFactory.build(
             list_id="1",
+            state="ok",
             temperature=10.0,
             ambient=True,
             low_warning=None,
@@ -69,7 +73,19 @@ SENSORS_SECTION = {
         ),
         ShelfTemperatureModelFactory.build(
             list_id="1",
+            state="ok",
             temperature=20.0,
+            ambient=True,
+            low_warning=None,
+            low_critical=None,
+            high_warning=None,
+            high_critical=None,
+        ),
+        ShelfTemperatureModelFactory.build(
+            list_id="1",
+            id=20,
+            state="error",
+            temperature=None,
             ambient=True,
             low_warning=None,
             low_critical=None,
@@ -80,13 +96,14 @@ SENSORS_SECTION = {
     "Internal Shelf 1": [
         ShelfTemperatureModelFactory.build(
             list_id="1",
+            state="ok",
             temperature=30.0,
             ambient=False,
             low_warning=None,
             low_critical=None,
             high_warning=None,
             high_critical=None,
-        )
+        ),
     ],
 }
 
@@ -123,6 +140,7 @@ def test_check_netapp_ontap_temp_() -> None:
         Metric("temp", 50.0),
         Result(state=State.OK, summary="Average: 26.7 °C"),
         Result(state=State.OK, summary="Lowest: 10 °C"),
+        Result(state=State.CRIT, summary="Additional failed sensors: 1 (1/20)"),
     ]
 
 

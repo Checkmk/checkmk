@@ -110,6 +110,7 @@ class QuickSetupOverview:
     quick_setup_id: QuickSetupId
     overviews: list[StageOverview]
     stage: Stage
+    button_complete_label: str
 
 
 def _get_stage_components_from_widget(widget: Widget) -> dict:
@@ -397,6 +398,7 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
             ],
             button_txt=first_stage.button_txt,
         ),
+        button_complete_label=quick_setup.button_complete_label,
     )
 
 

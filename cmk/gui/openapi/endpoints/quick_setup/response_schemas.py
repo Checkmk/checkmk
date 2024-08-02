@@ -78,6 +78,10 @@ class QuickSetupOverviewResponse(BaseSchema):
         example={"stage_id": 1, "components": []},
         description="The first stage",
     )
+    button_complete_label = fields.String(
+        example="Save cofniguration",
+        description="The label of the complete button of the overall Quick setup",
+    )
 
 
 class QuickSetupSaveResponse(BaseSchema):

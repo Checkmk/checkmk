@@ -42,4 +42,5 @@ class QuickSetup:
     title: str
     id: QuickSetupId
     stages: Sequence[QuickSetupStage]
+    button_complete_label: str
     save_action: Callable[[Sequence[IncomingStage]], str] | None = None

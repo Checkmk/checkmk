@@ -34,6 +34,7 @@ def register_quick_setup(setup_stages: Sequence[QuickSetupStage] | None = None) 
             id=QuickSetupId("quick_setup_test"),
             stages=setup_stages if setup_stages is not None else [],
             save_action=lambda stages: "http://save/url",
+            button_complete_label="Complete",
         ),
     )
 

@@ -202,4 +202,5 @@ quick_setup_aws = QuickSetup(
     id=QuickSetupId("aws_quick_setup"),
     stages=aws_stages(),
     save_action=save_action,
+    button_complete_label=_("Save & go to Activate changes"),
 )

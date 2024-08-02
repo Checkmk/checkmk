@@ -14,6 +14,7 @@ from opentelemetry import trace as otel_trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
 from cmk import trace
+from cmk.trace import export, logs
 
 
 def test_trace_send_config() -> None:
@@ -56,7 +57,7 @@ def test_trace_send_config() -> None:
 
 def test_exporter_from_config_disabled() -> None:
     assert (
-        trace.exporter_from_config(
+        export.exporter_from_config(
             trace.TraceSendConfig(enabled=False, target=trace.LocalTarget(1234)),
         )
         is None
@@ -85,7 +86,7 @@ class StubExporter(OTLPSpanExporter):
 
 def test_exporter_from_config_local_site() -> None:
     config = trace.TraceSendConfig(enabled=True, target=trace.LocalTarget(1234))
-    exporter = trace.exporter_from_config(config, StubExporter)
+    exporter = export.exporter_from_config(config, StubExporter)
     assert isinstance(exporter, StubExporter)
     assert exporter.test_timeout == 3
     assert exporter.test_endpoint == "http://localhost:1234"
@@ -146,7 +147,7 @@ def test_get_current_tracer_provider() -> None:
     assert provider == trace.get_current_tracer_provider()
 
 
-def test_init_logging_attaches_logs_as_events(caplog: pytest.LogCaptureFixture) -> None:
+def test_logs_initialize_attaches_logs_as_events(caplog: pytest.LogCaptureFixture) -> None:
     logger = logging.getLogger("cmk.trace.test")
     caplog.set_level(logging.INFO, logger="cmk.trace.test")
 
@@ -166,7 +167,7 @@ def trace_logging(logger: logging.Logger) -> Iterator[None]:
     orig_handlers = logger.handlers
 
     try:
-        trace.init_logging()
+        logs.add_span_log_handler()
         yield
     finally:
         logger.handlers = orig_handlers

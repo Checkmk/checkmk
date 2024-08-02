@@ -31,7 +31,7 @@ from cmk.gui.graphing._expression import (
     Sum,
     WarningOf,
 )
-from cmk.gui.graphing._from_api import MetricInfoExtended, metrics_from_api
+from cmk.gui.graphing._from_api import metrics_from_api
 from cmk.gui.graphing._graph_templates_from_plugins import (
     _compute_predictive_metrics,
     get_graph_templates,
@@ -1433,7 +1433,7 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         Metric("metric-name-1"),
                         "stack",
-                        "metric-name-1",
+                        "Title",
                     ),
                     MetricDefinition(
                         Constant(
@@ -1447,12 +1447,12 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         WarningOf(Metric("metric-name-2")),
                         "stack",
-                        "Warning of metric-name-2",
+                        "Warning of Title",
                     ),
                     MetricDefinition(
                         CriticalOf(Metric("metric-name-3")),
                         "stack",
-                        "Critical of metric-name-3",
+                        "Critical of Title",
                     ),
                     MetricDefinition(
                         MinimumOf(
@@ -1460,7 +1460,7 @@ COLOR_HEX = "#1e90ff"
                             explicit_color=COLOR_HEX,
                         ),
                         "stack",
-                        "metric-name-4",
+                        "Title",
                     ),
                     MetricDefinition(
                         MaximumOf(
@@ -1468,7 +1468,7 @@ COLOR_HEX = "#1e90ff"
                             explicit_color=COLOR_HEX,
                         ),
                         "stack",
-                        "metric-name-5",
+                        "Title",
                     ),
                     MetricDefinition(
                         Sum(
@@ -1565,25 +1565,25 @@ COLOR_HEX = "#1e90ff"
                 scalars=[
                     ScalarDefinition(
                         WarningOf(Metric("metric-name-2")),
-                        "Warning of metric-name-2",
+                        "Warning of Title",
                     ),
                     ScalarDefinition(
                         CriticalOf(Metric("metric-name-3")),
-                        "Critical of metric-name-3",
+                        "Critical of Title",
                     ),
                     ScalarDefinition(
                         MinimumOf(
                             Metric("metric-name-4"),
                             explicit_color=COLOR_HEX,
                         ),
-                        "metric-name-4",
+                        "Title",
                     ),
                     ScalarDefinition(
                         MaximumOf(
                             Metric("metric-name-5"),
                             explicit_color=COLOR_HEX,
                         ),
-                        "metric-name-5",
+                        "Title",
                     ),
                 ],
                 conflicting_metrics=(),
@@ -1595,7 +1595,7 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         Metric("metric-name-1"),
                         "line",
-                        "metric-name-1",
+                        "Title",
                     ),
                     MetricDefinition(
                         Constant(
@@ -1663,7 +1663,7 @@ COLOR_HEX = "#1e90ff"
                 optional_metrics=(),
                 consolidation_function=None,
                 omit_zero_metrics=False,
-                metrics=[MetricDefinition(Metric("metric-name"), "line", "metric-name")],
+                metrics=[MetricDefinition(Metric("metric-name"), "line", "Title")],
             ),
             id="explicit-range",
         ),
@@ -1685,7 +1685,7 @@ COLOR_HEX = "#1e90ff"
                 optional_metrics=["metric-name-opt"],
                 consolidation_function=None,
                 omit_zero_metrics=False,
-                metrics=[MetricDefinition(Metric("metric-name"), "line", "metric-name")],
+                metrics=[MetricDefinition(Metric("metric-name"), "line", "Title")],
             ),
             id="optional-conflicting",
         ),
@@ -1696,18 +1696,11 @@ def test_graph_template_from_graph(
 ) -> None:
     for r in raw_metric_names:
         metrics_from_api.register(
-            MetricInfoExtended(
+            metrics_api.Metric(
                 name=r,
-                title=r,
-                unit_info=UnitInfo(
-                    id="id",
-                    title="Title",
-                    symbol="",
-                    render=lambda v: f"{v}",
-                    js_render="v => v",
-                    conversion=lambda v: v,
-                ),
-                color="#000000",
+                title=Title("Title"),
+                unit=metrics_api.Unit(metrics_api.DecimalNotation("")),
+                color=metrics_api.Color.BLUE,
             )
         )
     assert GraphTemplate.from_graph(graph.name, graph) == expected_template
@@ -1770,35 +1763,35 @@ def test_graph_template_from_graph(
                 scalars=[
                     ScalarDefinition(
                         WarningOf(Metric("metric-name-l3"), "warn"),
-                        "Warning of metric-name-l3",
+                        "Warning of Title",
                     ),
                     ScalarDefinition(
                         CriticalOf(Metric("metric-name-l4"), "crit"),
-                        "Critical of metric-name-l4",
+                        "Critical of Title",
                     ),
                     ScalarDefinition(
                         MinimumOf(Metric("metric-name-l5"), "min", explicit_color=COLOR_HEX),
-                        "metric-name-l5",
+                        "Title",
                     ),
                     ScalarDefinition(
                         MaximumOf(Metric("metric-name-l6"), "max", explicit_color=COLOR_HEX),
-                        "metric-name-l6",
+                        "Title",
                     ),
                     ScalarDefinition(
                         WarningOf(Metric("metric-name-u3"), "warn"),
-                        "Warning of metric-name-u3",
+                        "Warning of Title",
                     ),
                     ScalarDefinition(
                         CriticalOf(Metric("metric-name-u4"), "crit"),
-                        "Critical of metric-name-u4",
+                        "Critical of Title",
                     ),
                     ScalarDefinition(
                         MinimumOf(Metric("metric-name-u5"), "min", explicit_color=COLOR_HEX),
-                        "metric-name-u5",
+                        "Title",
                     ),
                     ScalarDefinition(
                         MaximumOf(Metric("metric-name-u6"), "max", explicit_color=COLOR_HEX),
-                        "metric-name-u6",
+                        "Title",
                     ),
                 ],
                 conflicting_metrics=["metric-name-confl-l", "metric-name-confl-u"],
@@ -1806,10 +1799,10 @@ def test_graph_template_from_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-l1"), "-stack", "metric-name-l1"),
-                    MetricDefinition(Metric("metric-name-u1"), "stack", "metric-name-u1"),
-                    MetricDefinition(Metric("metric-name-l2"), "-line", "metric-name-l2"),
-                    MetricDefinition(Metric("metric-name-u2"), "line", "metric-name-u2"),
+                    MetricDefinition(Metric("metric-name-l1"), "-stack", "Title"),
+                    MetricDefinition(Metric("metric-name-u1"), "stack", "Title"),
+                    MetricDefinition(Metric("metric-name-l2"), "-line", "Title"),
+                    MetricDefinition(Metric("metric-name-u2"), "line", "Title"),
                 ],
             ),
             id="lower-upper",
@@ -1845,8 +1838,8 @@ def test_graph_template_from_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
-                    MetricDefinition(Metric("metric-name-u"), "line", "metric-name-u"),
+                    MetricDefinition(Metric("metric-name-l"), "-line", "Title"),
+                    MetricDefinition(Metric("metric-name-u"), "line", "Title"),
                 ],
             ),
             id="range-both",
@@ -1881,8 +1874,8 @@ def test_graph_template_from_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
-                    MetricDefinition(Metric("metric-name-u"), "line", "metric-name-u"),
+                    MetricDefinition(Metric("metric-name-l"), "-line", "Title"),
+                    MetricDefinition(Metric("metric-name-u"), "line", "Title"),
                 ],
             ),
             id="range-only-lower",
@@ -1917,8 +1910,8 @@ def test_graph_template_from_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
-                    MetricDefinition(Metric("metric-name-u"), "line", "metric-name-u"),
+                    MetricDefinition(Metric("metric-name-l"), "-line", "Title"),
+                    MetricDefinition(Metric("metric-name-u"), "line", "Title"),
                 ],
             ),
             id="range-only-upper",
@@ -1932,18 +1925,11 @@ def test_graph_template_from_bidirectional(
 ) -> None:
     for r in raw_metric_names:
         metrics_from_api.register(
-            MetricInfoExtended(
+            metrics_api.Metric(
                 name=r,
-                title=r,
-                unit_info=UnitInfo(
-                    id="id",
-                    title="Title",
-                    symbol="",
-                    render=lambda v: f"{v}",
-                    js_render="v => v",
-                    conversion=lambda v: v,
-                ),
-                color="#000000",
+                title=Title("Title"),
+                unit=metrics_api.Unit(metrics_api.DecimalNotation("")),
+                color=metrics_api.Color.BLUE,
             )
         )
     assert GraphTemplate.from_bidirectional(graph.name, graph) == expected_template

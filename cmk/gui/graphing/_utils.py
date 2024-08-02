@@ -9,6 +9,7 @@ import re
 import shlex
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping
+from dataclasses import dataclass
 from typing import Literal, NewType, NotRequired, TypedDict
 
 from livestatus import livestatus_lql
@@ -19,14 +20,20 @@ from cmk.utils.metrics import MetricName
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKHTTPException
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
+from cmk.gui.utils.speaklater import LazyString
 
-from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
-from ._from_api import get_unit_info, MetricInfoExtended, metrics_from_api
-from ._legacy import check_metrics, CheckMetricEntry, metric_info, MetricInfo, unit_info
+from ._color import (
+    get_gray_tone,
+    get_palette_color_by_index,
+    parse_color_from_api,
+    parse_color_into_hexrgb,
+)
+from ._from_api import get_unit_info, metrics_from_api, register_unit
+from ._legacy import check_metrics, CheckMetricEntry, metric_info, MetricInfo, unit_info, UnitInfo
 from ._type_defs import LineType, ScalarBounds, TranslatedMetric
 
 
@@ -329,6 +336,14 @@ def _get_legacy_metric_info(
     )
 
 
+@dataclass(frozen=True)
+class MetricInfoExtended:
+    name: MetricName
+    title: str | LazyString
+    unit_info: UnitInfo
+    color: str
+
+
 def _get_extended_metric_info(
     metric_name: str, color_counter: Counter[Literal["metric", "predictive"]]
 ) -> MetricInfoExtended:
@@ -337,8 +352,12 @@ def _get_extended_metric_info(
             mfa = metrics_from_api[lookup_metric_name]
             return MetricInfoExtended(
                 name=metric_name,
-                title=_("Prediction of ") + mfa.title + _(" (lower levels)"),
-                unit_info=get_unit_info(mfa.unit_info.id),
+                title=(
+                    _("Prediction of ")
+                    + mfa.title.localize(translate_to_current_language)
+                    + _(" (lower levels)")
+                ),
+                unit_info=get_unit_info(register_unit(mfa.unit).id),
                 color=get_gray_tone(color_counter),
             )
 
@@ -353,8 +372,12 @@ def _get_extended_metric_info(
             mfa = metrics_from_api[lookup_metric_name]
             return MetricInfoExtended(
                 name=metric_name,
-                title=_("Prediction of ") + mfa.title + _(" (upper levels)"),
-                unit_info=get_unit_info(mfa.unit_info.id),
+                title=(
+                    _("Prediction of ")
+                    + mfa.title.localize(translate_to_current_language)
+                    + _(" (upper levels)")
+                ),
+                unit_info=get_unit_info(register_unit(mfa.unit).id),
                 color=get_gray_tone(color_counter),
             )
 
@@ -368,9 +391,9 @@ def _get_extended_metric_info(
         mfa = metrics_from_api[metric_name]
         return MetricInfoExtended(
             name=metric_name,
-            title=mfa.title,
-            unit_info=get_unit_info(mfa.unit_info.id),
-            color=mfa.color,
+            title=mfa.title.localize(translate_to_current_language),
+            unit_info=get_unit_info(register_unit(mfa.unit).id),
+            color=parse_color_from_api(mfa.color),
         )
     else:
         mi = _get_legacy_metric_info(metric_name, color_counter)

@@ -7,11 +7,8 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Protocol, Self
 
-from cmk.utils.metrics import MetricName
-
 from cmk.gui.config import active_config, Config
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
@@ -312,16 +309,8 @@ def registered_units() -> Sequence[RegisteredUnit]:
     )
 
 
-@dataclass(frozen=True)
-class MetricInfoExtended:
-    name: MetricName
-    title: str | LazyString
-    unit_info: UnitInfo
-    color: str
-
-
-class MetricsFromAPI(Registry[MetricInfoExtended]):
-    def plugin_name(self, instance: MetricInfoExtended) -> str:
+class MetricsFromAPI(Registry[metrics_api.Metric]):
+    def plugin_name(self, instance: metrics_api.Metric) -> str:
         return instance.name
 
 

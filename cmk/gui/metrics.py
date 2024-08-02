@@ -29,13 +29,7 @@ from cmk.gui import utils
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _legacy as graphing_legacy
 from cmk.gui.graphing import _utils as graphing_utils
-from cmk.gui.graphing._from_api import (
-    graphs_from_api,
-    MetricInfoExtended,
-    metrics_from_api,
-    perfometers_from_api,
-    register_unit,
-)
+from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api, perfometers_from_api
 from cmk.gui.graphing._graph_render_config import GraphRenderConfig
 from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
 from cmk.gui.graphing._graph_templates_from_plugins import GraphTemplate
@@ -44,7 +38,7 @@ from cmk.gui.graphing._html_render import (
     host_service_graph_popup_cmk,
 )
 from cmk.gui.http import request
-from cmk.gui.i18n import _, translate_to_current_language
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import PageResult
 
@@ -161,14 +155,7 @@ def _add_graphing_plugins(
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     for plugin in plugins.plugins.values():
         if isinstance(plugin, metrics_api.Metric):
-            metrics_from_api.register(
-                MetricInfoExtended(
-                    name=plugin.name,
-                    title=plugin.title.localize(translate_to_current_language),
-                    unit_info=register_unit(plugin.unit),
-                    color=graphing_color.parse_color_from_api(plugin.color),
-                )
-            )
+            metrics_from_api.register(plugin)
 
         elif isinstance(plugin, translations_api.Translation):
             for check_command in plugin.check_commands:

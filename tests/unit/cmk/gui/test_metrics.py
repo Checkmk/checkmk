@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.graphing._expression import CriticalOf, Metric, WarningOf
-from cmk.gui.graphing._from_api import metrics_from_api
 from cmk.gui.graphing._graph_templates_from_plugins import (
     get_graph_template,
     GraphTemplate,
@@ -12,21 +11,20 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     ScalarDefinition,
 )
 from cmk.gui.graphing._legacy import check_metrics
+from cmk.gui.graphing._utils import get_extended_metric_info
 from cmk.gui.metrics import _add_graphing_plugins, _load_graphing_plugins
 
 
 def test_add_graphing_plugins() -> None:
     _add_graphing_plugins(_load_graphing_plugins())
 
-    assert "idle_connections" in metrics_from_api
-    idle_connections = metrics_from_api["idle_connections"]
+    idle_connections = get_extended_metric_info("idle_connections")
     assert idle_connections.name == "idle_connections"
     assert idle_connections.title == "Idle connections"
     assert idle_connections.unit_info.id == "DecimalNotation__StrictPrecision_2"
     assert idle_connections.color == "#7814a0"
 
-    assert "active_connections" in metrics_from_api
-    active_connections = metrics_from_api["active_connections"]
+    active_connections = get_extended_metric_info("active_connections")
     assert active_connections.name == "active_connections"
     assert active_connections.title == "Active connections"
     assert active_connections.unit_info.id == "DecimalNotation__StrictPrecision_2"

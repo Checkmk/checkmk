@@ -18,7 +18,7 @@ from cmk.utils.statename import short_host_state_name, short_service_state_name
 from cmk.gui import sites
 from cmk.gui.config import Config
 from cmk.gui.graphing._color import render_color_icon
-from cmk.gui.graphing._metrics import get_extended_metric_info, registered_metrics
+from cmk.gui.graphing._metrics import get_metric_spec, registered_metrics
 from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.hooks import request_memoize
@@ -5423,7 +5423,7 @@ class AbstractColumnSpecificMetric(Painter):
             if not parameters:
                 # Used in Edit-View
                 return _("Show single metric")
-            return str(get_extended_metric_info(parameters["metric"]).title)
+            return str(get_metric_spec(parameters["metric"]).title)
         except KeyError:
             return _("Metric not found")
 

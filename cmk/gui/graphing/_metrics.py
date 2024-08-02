@@ -37,20 +37,20 @@ def _get_legacy_metric_info(
 
 
 @dataclass(frozen=True)
-class MetricInfoExtended:
+class MetricSpec:
     name: MetricName
     title: str | LazyString
     unit_info: UnitInfo
     color: str
 
 
-def get_extended_metric_info_with_color(
+def get_metric_spec_with_color(
     metric_name: str, color_counter: Counter[Literal["metric", "predictive"]]
-) -> MetricInfoExtended:
+) -> MetricSpec:
     if metric_name.startswith("predict_lower_"):
         if (lookup_metric_name := metric_name[14:]) in metrics_from_api:
             mfa = metrics_from_api[lookup_metric_name]
-            return MetricInfoExtended(
+            return MetricSpec(
                 name=metric_name,
                 title=(
                     _("Prediction of ")
@@ -70,7 +70,7 @@ def get_extended_metric_info_with_color(
     elif metric_name.startswith("predict_"):
         if (lookup_metric_name := metric_name[8:]) in metrics_from_api:
             mfa = metrics_from_api[lookup_metric_name]
-            return MetricInfoExtended(
+            return MetricSpec(
                 name=metric_name,
                 title=(
                     _("Prediction of ")
@@ -89,7 +89,7 @@ def get_extended_metric_info_with_color(
         )
     elif metric_name in metrics_from_api:
         mfa = metrics_from_api[metric_name]
-        return MetricInfoExtended(
+        return MetricSpec(
             name=metric_name,
             title=mfa.title.localize(translate_to_current_language),
             unit_info=get_unit_info(register_unit(mfa.unit).id),
@@ -98,7 +98,7 @@ def get_extended_metric_info_with_color(
     else:
         mi = _get_legacy_metric_info(metric_name, color_counter)
 
-    return MetricInfoExtended(
+    return MetricSpec(
         name=metric_name,
         title=mi["title"],
         unit_info=unit_info[mi["unit"]],
@@ -106,8 +106,8 @@ def get_extended_metric_info_with_color(
     )
 
 
-def get_extended_metric_info(metric_name: str) -> MetricInfoExtended:
-    return get_extended_metric_info_with_color(metric_name, Counter())
+def get_metric_spec(metric_name: str) -> MetricSpec:
+    return get_metric_spec_with_color(metric_name, Counter())
 
 
 def registered_metrics() -> Iterator[tuple[str, str]]:

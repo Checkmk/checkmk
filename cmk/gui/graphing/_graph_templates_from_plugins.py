@@ -33,7 +33,7 @@ from ._expression import (
 )
 from ._from_api import graphs_from_api, register_unit
 from ._legacy import graph_info, RawGraphTemplate
-from ._metrics import get_extended_metric_info
+from ._metrics import get_metric_spec
 from ._type_defs import GraphConsoldiationFunction, LineType, TranslatedMetric
 
 
@@ -167,7 +167,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Metric(quantity),
                 line_type=line_type,
-                title=str(get_extended_metric_info(quantity).title),
+                title=str(get_metric_spec(quantity).title),
             )
         case metrics_api.Constant():
             return MetricDefinition(
@@ -180,38 +180,34 @@ def _parse_quantity(
                 title=str(quantity.title.localize(translate_to_current_language)),
             )
         case metrics_api.WarningOf():
-            metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=WarningOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=_("Warning of %s") % metric_.title,
+                title=_("Warning of %s") % get_metric_spec(quantity.metric_name).title,
             )
         case metrics_api.CriticalOf():
-            metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=CriticalOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=_("Critical of %s") % metric_.title,
+                title=_("Critical of %s") % get_metric_spec(quantity.metric_name).title,
             )
         case metrics_api.MinimumOf():
-            metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=MinimumOf(
                     Metric(quantity.metric_name),
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(metric_.title),
+                title=str(get_metric_spec(quantity.metric_name).title),
             )
         case metrics_api.MaximumOf():
-            metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=MaximumOf(
                     Metric(quantity.metric_name),
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(metric_.title),
+                title=str(get_metric_spec(quantity.metric_name).title),
             )
         case metrics_api.Sum():
             return MetricDefinition(

@@ -30,7 +30,7 @@ from cmk.ccc.version import parse_check_mk_version
 from ._from_api import get_unit_info
 from ._graph_specification import GraphDataRange, GraphRecipe
 from ._legacy import check_metrics, CheckMetricEntry
-from ._metrics import get_extended_metric_info
+from ._metrics import get_metric_spec
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction, RRDData, RRDDataKey
 from ._utils import find_matching_translation
@@ -298,5 +298,5 @@ def translate_and_merge_rrd_columns(
     return TimeSeries(
         single_value_series,
         time_window=relevant_ts[0].twindow,
-        conversion=get_extended_metric_info(metric_name).unit_info.conversion,
+        conversion=get_metric_spec(metric_name).unit_info.conversion,
     )

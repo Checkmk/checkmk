@@ -11,20 +11,20 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     ScalarDefinition,
 )
 from cmk.gui.graphing._legacy import check_metrics
-from cmk.gui.graphing._metrics import get_extended_metric_info
+from cmk.gui.graphing._metrics import get_metric_spec
 from cmk.gui.metrics import _add_graphing_plugins, _load_graphing_plugins
 
 
 def test_add_graphing_plugins() -> None:
     _add_graphing_plugins(_load_graphing_plugins())
 
-    idle_connections = get_extended_metric_info("idle_connections")
+    idle_connections = get_metric_spec("idle_connections")
     assert idle_connections.name == "idle_connections"
     assert idle_connections.title == "Idle connections"
     assert idle_connections.unit_info.id == "DecimalNotation__StrictPrecision_2"
     assert idle_connections.color == "#7814a0"
 
-    active_connections = get_extended_metric_info("active_connections")
+    active_connections = get_metric_spec("active_connections")
     assert active_connections.name == "active_connections"
     assert active_connections.title == "Active connections"
     assert active_connections.unit_info.id == "DecimalNotation__StrictPrecision_2"

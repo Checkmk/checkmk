@@ -8,8 +8,7 @@ import http
 import re
 import shlex
 from collections import Counter
-from collections.abc import Callable, Iterator, Mapping
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping
 from typing import Literal, NewType, NotRequired, TypedDict
 
 from livestatus import livestatus_lql
@@ -20,20 +19,12 @@ from cmk.utils.metrics import MetricName
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKHTTPException
-from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
-from cmk.gui.utils.speaklater import LazyString
 
-from ._color import (
-    get_gray_tone,
-    get_palette_color_by_index,
-    parse_color_from_api,
-    parse_color_into_hexrgb,
-)
-from ._from_api import get_unit_info, metrics_from_api, register_unit
-from ._legacy import check_metrics, CheckMetricEntry, metric_info, MetricInfo, unit_info, UnitInfo
+from ._legacy import check_metrics, CheckMetricEntry
+from ._metrics import get_extended_metric_info, get_extended_metric_info_with_color
 from ._type_defs import LineType, ScalarBounds, TranslatedMetric
 
 
@@ -66,13 +57,6 @@ class TranslationInfo(TypedDict):
     name: str
     scale: float
     auto_graph: bool
-
-
-def registered_metrics() -> Iterator[tuple[str, str]]:
-    for metric_id, mie in metrics_from_api.items():
-        yield metric_id, str(mie.title)
-    for metric_id, mi in metric_info.items():
-        yield metric_id, str(mi["title"])
 
 
 # .
@@ -323,93 +307,6 @@ def _normalize_perf_data(
     return translation_entry["name"], new_entry
 
 
-def _get_legacy_metric_info(
-    metric_name: str, color_counter: Counter[Literal["metric", "predictive"]]
-) -> MetricInfo:
-    if metric_name in metric_info:
-        return metric_info[metric_name]
-    color_counter.update({"metric": 1})
-    return MetricInfo(
-        title=metric_name.title(),
-        unit="",
-        color=get_palette_color_by_index(color_counter["metric"]),
-    )
-
-
-@dataclass(frozen=True)
-class MetricInfoExtended:
-    name: MetricName
-    title: str | LazyString
-    unit_info: UnitInfo
-    color: str
-
-
-def _get_extended_metric_info(
-    metric_name: str, color_counter: Counter[Literal["metric", "predictive"]]
-) -> MetricInfoExtended:
-    if metric_name.startswith("predict_lower_"):
-        if (lookup_metric_name := metric_name[14:]) in metrics_from_api:
-            mfa = metrics_from_api[lookup_metric_name]
-            return MetricInfoExtended(
-                name=metric_name,
-                title=(
-                    _("Prediction of ")
-                    + mfa.title.localize(translate_to_current_language)
-                    + _(" (lower levels)")
-                ),
-                unit_info=get_unit_info(register_unit(mfa.unit).id),
-                color=get_gray_tone(color_counter),
-            )
-
-        mi_ = _get_legacy_metric_info(lookup_metric_name, color_counter)
-        mi = MetricInfo(
-            title=_("Prediction of ") + mi_["title"] + _(" (lower levels)"),
-            unit=mi_["unit"],
-            color=get_gray_tone(color_counter),
-        )
-    elif metric_name.startswith("predict_"):
-        if (lookup_metric_name := metric_name[8:]) in metrics_from_api:
-            mfa = metrics_from_api[lookup_metric_name]
-            return MetricInfoExtended(
-                name=metric_name,
-                title=(
-                    _("Prediction of ")
-                    + mfa.title.localize(translate_to_current_language)
-                    + _(" (upper levels)")
-                ),
-                unit_info=get_unit_info(register_unit(mfa.unit).id),
-                color=get_gray_tone(color_counter),
-            )
-
-        mi_ = _get_legacy_metric_info(lookup_metric_name, color_counter)
-        mi = MetricInfo(
-            title=_("Prediction of ") + mi_["title"] + _(" (upper levels)"),
-            unit=mi_["unit"],
-            color=get_gray_tone(color_counter),
-        )
-    elif metric_name in metrics_from_api:
-        mfa = metrics_from_api[metric_name]
-        return MetricInfoExtended(
-            name=metric_name,
-            title=mfa.title.localize(translate_to_current_language),
-            unit_info=get_unit_info(register_unit(mfa.unit).id),
-            color=parse_color_from_api(mfa.color),
-        )
-    else:
-        mi = _get_legacy_metric_info(metric_name, color_counter)
-
-    return MetricInfoExtended(
-        name=metric_name,
-        title=mi["title"],
-        unit_info=unit_info[mi["unit"]],
-        color=parse_color_into_hexrgb(mi["color"]),
-    )
-
-
-def get_extended_metric_info(metric_name: str) -> MetricInfoExtended:
-    return _get_extended_metric_info(metric_name, Counter())
-
-
 def _translated_metric_scalar(
     conversion: Callable[[float], float], scalar_bounds: ScalarBounds
 ) -> ScalarBounds:
@@ -447,7 +344,7 @@ def translate_metrics(
             orig_name = normalized["orig_name"]
             scale = normalized["scale"]
 
-        mi = _get_extended_metric_info(metric_name, color_counter)
+        mi = get_extended_metric_info_with_color(metric_name, color_counter)
         translated_metrics[metric_name] = TranslatedMetric(
             orig_name=orig_name,
             value=mi.unit_info.conversion(normalized["value"]),

@@ -40,12 +40,8 @@ from cmk.gui.visuals import livestatus_query_bare
 from ..config import active_config
 from ._from_api import registered_units
 from ._graph_render_config import GraphRenderConfigBase
-from ._utils import (
-    get_extended_metric_info,
-    parse_perf_data,
-    perfvar_translation,
-    registered_metrics,
-)
+from ._metrics import get_extended_metric_info, registered_metrics
+from ._utils import parse_perf_data, perfvar_translation
 
 
 def migrate_graph_render_options_title_format(

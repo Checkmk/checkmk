@@ -41,6 +41,7 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     ScalarDefinition,
 )
 from cmk.gui.graphing._legacy import AutomaticDict, CheckMetricEntry, RawGraphTemplate, UnitInfo
+from cmk.gui.graphing._metrics import _get_legacy_metric_info
 from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import _NormalizedPerfData, TranslationInfo
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
@@ -471,12 +472,12 @@ def test__compute_predictive_metrics(
 
 def test__get_legacy_metric_info() -> None:
     color_counter: Counter[Literal["metric", "predictive"]] = Counter()
-    assert utils._get_legacy_metric_info("foo", color_counter) == {
+    assert _get_legacy_metric_info("foo", color_counter) == {
         "title": "Foo",
         "unit": "",
         "color": "12/a",
     }
-    assert utils._get_legacy_metric_info("bar", color_counter) == {
+    assert _get_legacy_metric_info("bar", color_counter) == {
         "title": "Bar",
         "unit": "",
         "color": "13/a",

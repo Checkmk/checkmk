@@ -11,7 +11,7 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     ScalarDefinition,
 )
 from cmk.gui.graphing._legacy import check_metrics
-from cmk.gui.graphing._utils import get_extended_metric_info
+from cmk.gui.graphing._metrics import get_extended_metric_info
 from cmk.gui.metrics import _add_graphing_plugins, _load_graphing_plugins
 
 

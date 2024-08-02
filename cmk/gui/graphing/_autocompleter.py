@@ -9,7 +9,8 @@ from cmk.gui.type_defs import Choices
 from cmk.gui.visuals import livestatus_query_bare
 
 from ._graph_templates_from_plugins import get_graph_template_choices, get_graph_templates
-from ._utils import metric_title, registered_metrics, translated_metrics_from_row
+from ._metrics import registered_metrics
+from ._utils import metric_title, translated_metrics_from_row
 from ._valuespecs import metrics_of_query
 
 

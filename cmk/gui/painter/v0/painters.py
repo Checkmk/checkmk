@@ -18,13 +18,9 @@ from cmk.utils.statename import short_host_state_name, short_service_state_name
 from cmk.gui import sites
 from cmk.gui.config import Config
 from cmk.gui.graphing._color import render_color_icon
+from cmk.gui.graphing._metrics import get_extended_metric_info, registered_metrics
 from cmk.gui.graphing._type_defs import TranslatedMetric
-from cmk.gui.graphing._utils import (
-    get_extended_metric_info,
-    parse_perf_data,
-    registered_metrics,
-    translate_metrics,
-)
+from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

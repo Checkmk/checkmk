@@ -1,4 +1,9 @@
 {
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
   "users": [
     {
       "name": "###SITE###",

@@ -1,23 +1,21 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
-    name="all_srcs",
-    srcs=glob(["**"]),
+    name = "all_srcs",
+    srcs = glob(["**"]),
 )
 
 configure_make(
-    name="xmlsec1",
-    visibility = ["//visibility:public"],
-    lib_name="xmlsec1",
-    lib_source=":all_srcs",
-    configure_command="configure",
-    configure_in_place=True,
+    name = "xmlsec1",
+    args = ["-j6"],
+    configure_command = "configure",
+    configure_in_place = True,
     configure_options = [
         "--with-openssl=$$EXT_BUILD_DEPS/openssl",
         "--disable-mans",
         "--disable-docs",
     ],
-    args=["-j6"],
+    copts = ["-Wl,--rpath,$ORIGIN_VAR/../lib"],
 
     # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
     # combined with foreign_cc/configure_make's RPATH agnosticness
@@ -32,7 +30,7 @@ configure_make(
     # for those the flags definded with `copts` will be appended rather than
     # prepended, resulting in wrong RPATH components in front of `$ORIGIN/../lib`
     # For that reason we need to manually set RPATH outside Bazel (during `make`)
-    env={
+    env = {
         "PKG_CONFIG_PATH": ":".join([
             "/usr/lib/pkgconfig",
             "/usr/lib64/pkgconfig",
@@ -40,14 +38,16 @@ configure_make(
         ]),
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
     },
-    copts=["-Wl,--rpath,$ORIGIN_VAR/../lib"],
-    deps=["@openssl"],
-    out_binaries=["xmlsec1"],
+    lib_name = "xmlsec1",
+    lib_source = ":all_srcs",
+    out_binaries = ["xmlsec1"],
     # Looks like Bazel doesn't know .la files, but we need them.
     #  see https://stackoverflow.com/questions/75282435
     # So instead of listing library files explicitly we just deliver the
     # whole `lib` folder, containing shared and dynamic libraries as well as
     # .la files
-    out_data_dirs=["lib"],
-    targets=["install"],
+    out_data_dirs = ["lib"],
+    targets = ["install"],
+    visibility = ["//visibility:public"],
+    deps = ["@openssl"],
 )

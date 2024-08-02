@@ -23,6 +23,6 @@ def patch(version_str, sha256):
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",
-        build_file = "@omd_packages//omd/packages/patch:BUILD.patch",
+        build_file = "@omd_packages//omd/packages/patch:BUILD.patch.bazel",
         strip_prefix = "patch-" + version_str,
     )

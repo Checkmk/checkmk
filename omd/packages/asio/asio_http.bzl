@@ -1,8 +1,8 @@
 load("@omd_packages//omd/packages/rules:local_archive.bzl", "local_archive")
 
-def asio(version, sha256):
+def asio(version_str, sha256):
     # Newer versions available from https://registry.bazel.build/modules/asio
-    filename = "asio-" + version
+    filename = "asio-" + version_str
     local_archive(
         name = "asio",
         src = "//:third_party/asio/" + filename + ".tar.gz",

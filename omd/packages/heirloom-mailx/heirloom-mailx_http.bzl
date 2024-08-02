@@ -10,7 +10,7 @@ def heirloommailx(version_str, sha256):
             UPSTREAM_MIRROR_URL + filename,
         ],
         sha256 = sha256,
-        build_file = "@omd_packages//omd/packages/heirloom-mailx:BUILD.bazel",
+        build_file = "@omd_packages//omd/packages/heirloom-mailx:BUILD.heirloom-mailx.bazel",
         patches = [
             "//omd/packages/heirloom-mailx/patches:0001-nail-11.25-config.dif",
             "//omd/packages/heirloom-mailx/patches:0002-mailx-12.3-pager.dif",

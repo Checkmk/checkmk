@@ -1,22 +1,27 @@
 filegroup(
-  name = "package_source_files",
-  srcs =  glob([
-    "**",
-  ]),
+    name = "package_source_files",
+    srcs = glob([
+        "**",
+    ]),
 )
 
 # TODO: This is only needed to find the root of the bazel files.
 # A better way should be found.
 filegroup(
-  name = "package_root",
-  srcs = ["WORKSPACE"],
+    name = "package_root",
+    srcs = ["WORKSPACE"],
 )
 
 genrule(
     name = "build",
-    visibility = ["//visibility:public"],
-    srcs = [":package_source_files", ":package_root"],
-    outs = ["bin/patch", "share/man/man1/patch.1"],
+    srcs = [
+        ":package_source_files",
+        ":package_root",
+    ],
+    outs = [
+        "bin/patch",
+        "share/man/man1/patch.1",
+    ],
     cmd = """
         cd $$(dirname $(execpath :package_root))
         ./configure --prefix=''
@@ -24,4 +29,5 @@ genrule(
         cd -
         make DESTDIR=$$(realpath $(RULEDIR)) -C $$(dirname $(execpath :package_root)) install
     """,
+    visibility = ["//visibility:public"],
 )

@@ -1,18 +1,16 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
-    name="all_srcs",
-    srcs=glob(["**"]),
+    name = "all_srcs",
+    srcs = glob(["**"]),
 )
 
 configure_make(
-    name="openssl",
-    lib_name="openssl",
-    lib_source=":all_srcs",
-    visibility=["//visibility:public"],
-    configure_command="config",
-    configure_in_place=True,
-    configure_options=[
+    name = "openssl",
+    args = ["-j6"],
+    configure_command = "config",
+    configure_in_place = True,
+    configure_options = [
         # In order to relocate OpenSSL after the Bazel build to a configurable
         # directory (e.g. /omd/versions/2.3.0p23-cee/skel/etc/ssl/) we have to
         # binary search/replace the compiled-in path.
@@ -28,7 +26,7 @@ configure_make(
         "no-module",
         "-O2",
     ],
-    args=["-j6"],
+    copts = ["-Wl,--rpath,$ORIGIN_VAR/../lib"],
 
     # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
     # combined with foreign_cc/configure_make's RPATH agnosticness
@@ -43,19 +41,20 @@ configure_make(
     # for those the flags definded with `copts` will be appended rather than
     # prepended, resulting in wrong RPATH components in front of `$ORIGIN/../lib`
     # For that reason we need to manually set RPATH outside Bazel (during `make`)
-    env={"ORIGIN_VAR": "\\\\$$\\$$ORIGIN"},
-    copts=["-Wl,--rpath,$ORIGIN_VAR/../lib"],
-
-    targets=[
-        "build_programs",
-        "install_sw",
-        "install_ssldirs",
-    ],
-    out_binaries=[
+    env = {"ORIGIN_VAR": "\\\\$$\\$$ORIGIN"},
+    lib_name = "openssl",
+    lib_source = ":all_srcs",
+    out_binaries = [
         "openssl",
         "c_rehash",
     ],
-    out_shared_libs=[
+    out_data_dirs = [
+        "skel",
+        "tar",
+        "lib/pkgconfig",
+        "lib/engines-3",
+    ],
+    out_shared_libs = [
         # Note that for Linux builds, libssl must come before libcrypto on the
         # linker command-line. As such, libssl must be listed before libcrypto.
         "libssl.so",
@@ -63,20 +62,20 @@ configure_make(
         "libcrypto.so",
         "libcrypto.so.3",
     ],
-    out_static_libs=[
+    out_static_libs = [
         "libssl.a",
         "libcrypto.a",
-    ],
-    out_data_dirs=[
-        "skel",
-        "tar",
-        "lib/pkgconfig",
-        "lib/engines-3",
     ],
     postfix_script = """
         tar -C ${INSTALLDIR}/../ \
             --exclude="openssl/tar" \
             -cf ${INSTALLDIR}/tar/openssl.tar \
             openssl
-    """
+    """,
+    targets = [
+        "build_programs",
+        "install_sw",
+        "install_ssldirs",
+    ],
+    visibility = ["//visibility:public"],
 )

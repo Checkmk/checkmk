@@ -71,6 +71,8 @@ rules_pkg_dependencies()
 #   '----------------------------------------------------------------------'
 load(
     "//:package_versions.bzl",
+    "ASIO_SHA256",
+    "ASIO_VERSION",
     "CRYPT_SSL_SHA256",
     "CRYPT_SSL_VERSION",
     "ERLANG_VERSION",
@@ -80,6 +82,8 @@ load(
     "HEIRLOOMMAILX_VERSION",
     "HEIRLOOM_PKGTOOLS_SHA256",
     "HEIRLOOM_PKGTOOLS_VERSION",
+    "HTTPLIB_SHA256",
+    "HTTPLIB_VERSION",
     "JAEGER_SHA256",
     "JAEGER_VERSION",
     "LCAB_SHA256",
@@ -108,6 +112,8 @@ load(
     "PNP4NAGIOS_VERSION",
     "PYTHON_SHA256",
     "PYTHON_VERSION",
+    "RE2_SHA256",
+    "RE2_VERSION",
     "REDFISH_MKP_COMMIT_HASH",
     "REDFISH_MKP_SHA256",
     "REDFISH_MKP_VERSION",
@@ -159,18 +165,18 @@ redis(
     version_str = REDIS_VERSION,
 )
 
-load("//omd/packages/asio:asio.bzl", "asio")
+load("//omd/packages/asio:asio_http.bzl", "asio")
 
 asio(
-    sha256 = "09b9fe5c670c7bd47c7ee957cd9c184b4c8f0620d5b08b38ce837a24df971bca",
-    version = "1.24.0-patched",
+    sha256 = ASIO_SHA256,
+    version_str = ASIO_VERSION,
 )
 
-load("//omd/packages/re2:re2.bzl", "re2")
+load("//omd/packages/re2:re2_http.bzl", "re2")
 
 re2(
-    sha256 = "665b65b6668156db2b46dddd33405cd422bd611352c5052ab3dae6a5fbac5506",
-    version = "2022-12-01",
+    sha256 = RE2_SHA256,
+    version_str = RE2_VERSION,
 )
 
 load("//omd/packages/openssl:openssl_http.bzl", "openssl")
@@ -360,11 +366,11 @@ glibconfig("glibconfig-default", "/usr/lib/x86_64-linux-gnu/glib-2.0")
 
 glibconfig("glibconfig-centos", "/usr/lib64/glib-2.0")
 
-load("//omd/packages/httplib:httplib.bzl", "httplib")
+load("//omd/packages/httplib:httplib_http.bzl", "httplib")
 
 httplib(
-    sha256 = "2a4503f9f2015f6878baef54cd94b01849cc3ed19dfe95f2c9775655bea8b73f",
-    version = "0.13.3",
+    sha256 = HTTPLIB_SHA256,
+    version_str = HTTPLIB_VERSION,
 )
 
 http_archive(

@@ -1,1 +1,1 @@
-[rabbitmq_shovel].
+[rabbitmq_shovel,rabbitmq_auth_mechanism_ssl].

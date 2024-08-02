@@ -11,7 +11,6 @@ from typing import Literal
 from cmk.utils.metrics import MetricName
 
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.utils.speaklater import LazyString
 
 from ._color import (
     get_gray_tone,
@@ -39,7 +38,7 @@ def _get_legacy_metric_info(
 @dataclass(frozen=True)
 class MetricSpec:
     name: MetricName
-    title: str | LazyString
+    title: str
     unit_info: UnitInfo
     color: str
 
@@ -100,7 +99,7 @@ def get_metric_spec_with_color(
 
     return MetricSpec(
         name=metric_name,
-        title=mi["title"],
+        title=str(mi["title"]),
         unit_info=unit_info[mi["unit"]],
         color=parse_color_into_hexrgb(mi["color"]),
     )

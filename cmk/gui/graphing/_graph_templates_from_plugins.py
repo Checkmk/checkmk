@@ -167,7 +167,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Metric(quantity),
                 line_type=line_type,
-                title=str(get_metric_spec(quantity).title),
+                title=get_metric_spec(quantity).title,
             )
         case metrics_api.Constant():
             return MetricDefinition(
@@ -198,7 +198,7 @@ def _parse_quantity(
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(get_metric_spec(quantity.metric_name).title),
+                title=get_metric_spec(quantity.metric_name).title,
             )
         case metrics_api.MaximumOf():
             return MetricDefinition(
@@ -207,7 +207,7 @@ def _parse_quantity(
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(get_metric_spec(quantity.metric_name).title),
+                title=get_metric_spec(quantity.metric_name).title,
             )
         case metrics_api.Sum():
             return MetricDefinition(

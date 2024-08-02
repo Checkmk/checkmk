@@ -373,7 +373,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 def _metric_choices(check_command: str, perfvars: tuple[MetricName_, ...]) -> Iterator[Choice]:
     for perfvar in perfvars:
         metric_name = perfvar_translation(perfvar, check_command)["name"]
-        yield metric_name, str(get_metric_spec(metric_name).title)
+        yield metric_name, get_metric_spec(metric_name).title
 
 
 def metrics_of_query(

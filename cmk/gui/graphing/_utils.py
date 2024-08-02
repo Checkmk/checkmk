@@ -32,7 +32,6 @@ class MKCombinedGraphLimitExceededError(MKHTTPException):
     status = http.HTTPStatus.BAD_REQUEST
 
 
-GraphRangeSpec = tuple[int | str, int | str]
 SizeEx = NewType("SizeEx", int)
 
 

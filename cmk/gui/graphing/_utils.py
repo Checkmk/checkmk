@@ -252,36 +252,21 @@ def find_matching_translation(
     return TranslationSpec(name=metric_name, scale=1.0, auto_graph=True, deprecated="")
 
 
-def _scalar_bounds(perf_data_tuple: PerfDataTuple, scale: float) -> ScalarBounds:
-    """rescale "warn, crit, min, max" PERFVAR_BOUNDS values
-
-    Return "None" entries if no performance data and hence no scalars are available
-    """
+def _translated_scalar(
+    perf_data_tuple: PerfDataTuple,
+    scale: float,
+    conversion: Callable[[float], float],
+) -> ScalarBounds:
     scalars: ScalarBounds = {}
     if perf_data_tuple.warn is not None:
-        scalars["warn"] = float(perf_data_tuple.warn) * scale
+        scalars["warn"] = conversion(float(perf_data_tuple.warn) * scale)
     if perf_data_tuple.crit is not None:
-        scalars["crit"] = float(perf_data_tuple.crit) * scale
+        scalars["crit"] = conversion(float(perf_data_tuple.crit) * scale)
     if perf_data_tuple.min is not None:
-        scalars["min"] = float(perf_data_tuple.min) * scale
+        scalars["min"] = conversion(float(perf_data_tuple.min) * scale)
     if perf_data_tuple.max is not None:
-        scalars["max"] = float(perf_data_tuple.max) * scale
+        scalars["max"] = conversion(float(perf_data_tuple.max) * scale)
     return scalars
-
-
-def _translated_metric_scalar(
-    conversion: Callable[[float], float], scalar_bounds: ScalarBounds
-) -> ScalarBounds:
-    scalar: ScalarBounds = {}
-    if (warning := scalar_bounds.get("warn")) is not None:
-        scalar["warn"] = conversion(warning)
-    if (critical := scalar_bounds.get("crit")) is not None:
-        scalar["crit"] = conversion(critical)
-    if (minimum := scalar_bounds.get("min")) is not None:
-        scalar["min"] = conversion(minimum)
-    if (maximum := scalar_bounds.get("max")) is not None:
-        scalar["max"] = conversion(maximum)
-    return scalar
 
 
 def translate_metrics(
@@ -318,9 +303,10 @@ def translate_metrics(
                 else originals
             ),
             value=mi.unit_info.conversion(perf_data_tuple.value * translation_spec.scale),
-            scalar=_translated_metric_scalar(
+            scalar=_translated_scalar(
+                perf_data_tuple,
+                translation_spec.scale,
                 mi.unit_info.conversion,
-                _scalar_bounds(perf_data_tuple, translation_spec.scale),
             ),
             auto_graph=translation_spec.auto_graph,
             title=str(mi.title),

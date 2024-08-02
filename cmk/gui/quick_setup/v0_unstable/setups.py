@@ -33,7 +33,7 @@ class QuickSetupStage:
     configure_components: Sequence[Widget]
     validators: Iterable[CallableValidator]
     recap: Iterable[CallableRecap]
-    button_txt: str
+    button_label: str
     sub_title: str | None = None
 
 

@@ -37,7 +37,7 @@ def test_form_spec_recap() -> None:
             ],
             validators=[],
             recap=[],
-            button_txt="Next",
+            button_label="Next",
         ),
     ]
 

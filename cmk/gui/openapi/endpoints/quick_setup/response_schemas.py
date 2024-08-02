@@ -41,7 +41,7 @@ class QuickSetupNextStageStructure(BaseSchema):
         example=[],
         description="A collection of stage components",
     )
-    button_txt = fields.String(
+    button_label = fields.String(
         example="Next",
         description="The text of the button",
         allow_none=True,
@@ -60,7 +60,7 @@ class QuickSetupStageResponse(BaseSchema):
     )
     next_stage_structure = fields.Nested(
         QuickSetupNextStageStructure,
-        example={"components": [], "button_txt": ""},
+        example={"components": [], "button_label": ""},
         description="The next stage structure",
     )
     errors = fields.Nested(

@@ -120,7 +120,7 @@ class Errors:
 @dataclass
 class NextStageStructure:
     components: Sequence[dict]
-    button_txt: str | None
+    button_label: str | None
 
 
 @dataclass
@@ -423,7 +423,7 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
                     _get_stage_components_from_widget(widget)
                     for widget in first_stage.configure_components
                 ],
-                button_txt=first_stage.button_txt,
+                button_label=first_stage.button_label,
             ),
         ),
         button_complete_label=quick_setup.button_complete_label,
@@ -502,7 +502,7 @@ def retrieve_next_stage(
                 _get_stage_components_from_widget(widget)
                 for widget in next_stage.configure_components
             ],
-            button_txt=next_stage.button_txt,
+            button_label=next_stage.button_label,
         ),
         stage_recap=[
             r

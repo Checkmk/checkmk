@@ -9,6 +9,7 @@ RABBITMQ_MNESIA_BASE="${OMD_ROOT}/var/rabbitmq/mnesia"
 RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
 RABBITMQ_ENABLED_PLUGINS_FILE="${OMD_ROOT}/etc/rabbitmq/enabled_plugins"
 EXECUTE="${OMD_ROOT}/bin/rabbitmq-server"
+INITLOG="${RABBITMQ_LOG_BASE}/init.log"
 
 getpid() {
     cat "${PIDFILE}" 2>/dev/null
@@ -81,7 +82,7 @@ case "$1" in
         fi
 
         touch "${PIDFILE}"
-        nohup "${0}" "start-blocking" &>/dev/null &
+        nohup "${0}" "start-blocking" &>"${INITLOG}" &
 
         # try for one minute to interpret the outcome
         await_process_start 60 && exit_successfully "OK"

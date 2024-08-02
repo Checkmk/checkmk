@@ -1133,12 +1133,12 @@ def test_translate_metrics(
 
 
 @pytest.mark.parametrize(
-    ["all_translations", "check_command", "expected_result"],
+    ["translations", "check_command", "expected_result"],
     [
         pytest.param(
             {},
             "check_mk-x",
-            None,
+            {},
             id="no matching entry",
         ),
         pytest.param(
@@ -1174,19 +1174,19 @@ def test_translate_metrics(
                 "check_mk-y": {MetricName("a"): {"scale": 2}},
             },
             None,
-            None,
+            {},
             id="no check command",
         ),
     ],
 )
 def test_lookup_metric_translations_for_check_command(
-    all_translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
+    translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     check_command: str | None,
-    expected_result: Mapping[MetricName, CheckMetricEntry] | None,
+    expected_result: Mapping[MetricName, CheckMetricEntry],
 ) -> None:
     assert (
         utils.lookup_metric_translations_for_check_command(
-            all_translations,
+            translations,
             check_command,
         )
         == expected_result

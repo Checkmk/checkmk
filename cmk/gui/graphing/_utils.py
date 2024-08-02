@@ -230,7 +230,7 @@ def perfvar_translation(
     """Get translation info for one performance var."""
     translation_entry = find_matching_translation(
         MetricName(perfvar_name),
-        lookup_metric_translations_for_check_command(check_metrics, check_command) or {},
+        lookup_metric_translations_for_check_command(check_metrics, check_command),
     )
     return TranslationInfo(
         name=translation_entry.get("name", perfvar_name),
@@ -242,15 +242,15 @@ def perfvar_translation(
 def lookup_metric_translations_for_check_command(
     translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     check_command: str | None,  # None due to CMK-13883
-) -> Mapping[MetricName, CheckMetricEntry] | None:
+) -> Mapping[MetricName, CheckMetricEntry]:
     if not check_command:
-        return None
+        return {}
     return translations.get(
         check_command,
         (
-            translations.get(check_command.replace("check_mk-mgmt_", "check_mk-", 1))
+            translations.get(check_command.replace("check_mk-mgmt_", "check_mk-", 1), {})
             if check_command.startswith("check_mk-mgmt_")
-            else None
+            else {}
         ),
     )
 

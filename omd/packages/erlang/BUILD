@@ -30,7 +30,7 @@ configure_make(
         "--enable-smp-support",
         "--enable-threads",
         "--with-microstate-accounting=extra",
-        "--with-ssl=$EXT_BUILD_DEPS/openssl",
+        "--with-ssl=$$EXT_BUILD_DEPS/openssl",
         "--without-common_test",
         "--without-debugger",
         "--without-dialyzer",

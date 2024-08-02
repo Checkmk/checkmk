@@ -538,7 +538,7 @@ def fetch_temperatures(
                 id=temp["id"],
                 # installed=temp["installed"],
                 state=temp["state"],
-                temperature=temp["temperature"],
+                temperature=temp.get("temperature"),
                 ambient=temp["ambient"],
                 low_warning=temp.get("threshold", {}).get("low", {}).get("warning"),
                 low_critical=temp.get("threshold", {}).get("low", {}).get("critical"),

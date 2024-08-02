@@ -350,7 +350,6 @@ CEE_UNUSED_PACKAGES = [
     "requests-kerberos",
     "setuptools-scm",
     "snmpsim-lextudio",
-    "setuptools",  # works around https://github.com/kevin1024/vcrpy/issues/85
 ]
 
 

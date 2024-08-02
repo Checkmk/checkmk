@@ -50,7 +50,6 @@ from cmk.gui.graphing._legacy import (
 from cmk.gui.graphing._metrics import _get_legacy_metric_info
 from cmk.gui.graphing._type_defs import Original, TranslatedMetric
 from cmk.gui.graphing._utils import (
-    _NormalizedPerfData,
     find_matching_translation,
     lookup_metric_translations_for_check_command,
     TranslationSpec,
@@ -309,43 +308,6 @@ def test_find_matching_translation(
     expected_result: TranslationSpec,
 ) -> None:
     assert find_matching_translation(MetricName("my_metric"), translations) == expected_result
-
-
-@pytest.mark.parametrize(
-    "perf_data, check_command, result",
-    [
-        (
-            PerfDataTuple("in", "in", 496876.200933, "", None, None, 0, 125000000),
-            "check_mk-lnx_if",
-            (
-                "if_in_bps",
-                _NormalizedPerfData(
-                    originals=[Original("in", 8.0)],
-                    value=3975009.607464,
-                    scalar={"max": 1000000000, "min": 0},
-                    auto_graph=True,
-                ),
-            ),
-        ),
-        (
-            PerfDataTuple("fast", "fast", 5, "", 4, 9, 0, 10),
-            "check_mk-imaginary",
-            (
-                "fast",
-                _NormalizedPerfData(
-                    originals=[Original("fast", 1.0)],
-                    value=5.0,
-                    scalar={"warn": 4.0, "crit": 9.0, "min": 0.0, "max": 10.0},
-                    auto_graph=True,
-                ),
-            ),
-        ),
-    ],
-)
-def test__normalize_perf_data(
-    perf_data: PerfDataTuple, check_command: str, result: tuple[str, _NormalizedPerfData]
-) -> None:
-    assert utils._normalize_perf_data(perf_data, check_command) == result
 
 
 @pytest.mark.parametrize(

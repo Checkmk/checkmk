@@ -8,7 +8,7 @@ import http
 import re
 import shlex
 from collections import Counter
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Literal, NewType, NotRequired, TypedDict
 
@@ -44,13 +44,6 @@ class Curve(TypedDict):
 
 GraphRangeSpec = tuple[int | str, int | str]
 SizeEx = NewType("SizeEx", int)
-
-
-class _NormalizedPerfData(TypedDict):
-    originals: Sequence[Original]
-    value: float
-    scalar: ScalarBounds
-    auto_graph: bool
 
 
 # .
@@ -276,29 +269,6 @@ def _scalar_bounds(perf_data_tuple: PerfDataTuple, scale: float) -> ScalarBounds
     return scalars
 
 
-def _normalize_perf_data(
-    perf_data_tuple: PerfDataTuple, check_command: str
-) -> tuple[str, _NormalizedPerfData]:
-    translation_spec = find_matching_translation(
-        MetricName(perf_data_tuple.lookup_metric_name),
-        lookup_metric_translations_for_check_command(check_metrics, check_command),
-    )
-
-    normalized = _NormalizedPerfData(
-        originals=[Original(perf_data_tuple.metric_name, translation_spec.scale)],
-        value=perf_data_tuple.value * translation_spec.scale,
-        scalar=_scalar_bounds(perf_data_tuple, translation_spec.scale),
-        # Do not create graphs for ungraphed metrics if listed here
-        auto_graph=translation_spec.auto_graph,
-    )
-
-    if perf_data_tuple.metric_name.startswith("predict_lower_"):
-        return f"predict_lower_{translation_spec.name}", normalized
-    if perf_data_tuple.metric_name.startswith("predict_"):
-        return f"predict_{translation_spec.name}", normalized
-    return translation_spec.name, normalized
-
-
 def _translated_metric_scalar(
     conversion: Callable[[float], float], scalar_bounds: ScalarBounds
 ) -> ScalarBounds:
@@ -326,18 +296,33 @@ def translate_metrics(
     """
     translated_metrics: dict[str, TranslatedMetric] = {}
     color_counter: Counter[Literal["metric", "predictive"]] = Counter()
-    for entry in perf_data:
-        metric_name, normalized = _normalize_perf_data(entry, check_command)
+    for perf_data_tuple in perf_data:
+        translation_spec = find_matching_translation(
+            MetricName(perf_data_tuple.lookup_metric_name),
+            lookup_metric_translations_for_check_command(check_metrics, check_command),
+        )
+
+        if perf_data_tuple.metric_name.startswith("predict_lower_"):
+            metric_name = f"predict_lower_{translation_spec.name}"
+        elif perf_data_tuple.metric_name.startswith("predict_"):
+            metric_name = f"predict_{translation_spec.name}"
+        else:
+            metric_name = translation_spec.name
+
+        originals = [Original(perf_data_tuple.metric_name, translation_spec.scale)]
         mi = get_metric_spec_with_color(metric_name, color_counter)
         translated_metrics[metric_name] = TranslatedMetric(
             originals=(
-                list(translated_metrics[metric_name].originals) + list(normalized["originals"])
+                list(translated_metrics[metric_name].originals) + originals
                 if metric_name in translated_metrics
-                else normalized["originals"]
+                else originals
             ),
-            value=mi.unit_info.conversion(normalized["value"]),
-            scalar=_translated_metric_scalar(mi.unit_info.conversion, normalized["scalar"]),
-            auto_graph=normalized["auto_graph"],
+            value=mi.unit_info.conversion(perf_data_tuple.value * translation_spec.scale),
+            scalar=_translated_metric_scalar(
+                mi.unit_info.conversion,
+                _scalar_bounds(perf_data_tuple, translation_spec.scale),
+            ),
+            auto_graph=translation_spec.auto_graph,
             title=str(mi.title),
             unit_info=mi.unit_info,
             color=explicit_color or mi.color,

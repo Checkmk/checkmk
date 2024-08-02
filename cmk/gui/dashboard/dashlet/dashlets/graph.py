@@ -22,7 +22,8 @@ from cmk.gui.graphing._graph_specification import GraphSpecification
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._graph_templates_from_plugins import get_graph_template_choices
 from cmk.gui.graphing._html_render import GraphDestinations
-from cmk.gui.graphing._utils import metric_title, MKCombinedGraphLimitExceededError
+from cmk.gui.graphing._metrics import get_metric_spec
+from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -97,7 +98,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                     (
                         _("Deprecated choice, please re-select")
                         if value == self._MARKER_DEPRECATED_CHOICE
-                        else metric_title(value)
+                        else str(get_metric_spec(value).title)
                     ),
                 ),
             )

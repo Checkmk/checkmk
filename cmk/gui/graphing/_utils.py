@@ -24,7 +24,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 
 from ._legacy import check_metrics, CheckMetricEntry
-from ._metrics import get_metric_spec, get_metric_spec_with_color
+from ._metrics import get_metric_spec_with_color
 from ._type_defs import LineType, ScalarBounds, TranslatedMetric
 
 
@@ -433,10 +433,6 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
         info["service_description"] = service_description
 
     return info
-
-
-def metric_title(metric_name: MetricName) -> str:
-    return str(get_metric_spec(metric_name).title)
 
 
 # .

@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-07-31 10:08+0000\n"
+"PO-Revision-Date: 2024-08-02 11:57+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -32212,7 +32212,7 @@ msgid "Levels for used/free space"
 msgstr "Level für genutzten/freien Platz"
 
 msgid "Levels for user managed backup files"
-msgstr "Level für Benutzerverwaltete Backupdateien"
+msgstr "Level für benutzerverwaltete Backup-Dateien"
 
 msgid "Levels for wait"
 msgstr "Level für Wartezeiten"
@@ -37390,7 +37390,6 @@ msgstr "Namespaces"
 msgid "Native cluster mode"
 msgstr "Nativer Cluster-Modus"
 
-#, fuzzy
 msgid ""
 "Native: Use the cluster check function implemented by the check plug-in. If "
 "it is available, it is probably the best choice, as it implements logic "
@@ -38384,7 +38383,6 @@ msgstr ""
 "automatisch ungültig und der Benutzer muss sich vom aktuellen oder einem "
 "anderen Gerät aus erneut anmelden."
 
-#, fuzzy
 msgid ""
 "Normally a user login session is valid until the password is changed or the "
 "user is locked. By enabling this option, you can apply a time limit to login "
@@ -38474,7 +38472,6 @@ msgstr ""
 "werden und dann der schlechteste der verbleibenden Knoten den Status "
 "bestimmt. "
 
-#, fuzzy
 msgid ""
 "Normally, the interface checks create a single service for each interface. "
 "By defining interface groups, multiple interfaces can be combined together. "
@@ -38484,7 +38481,7 @@ msgstr ""
 "Normalerweise erzeugen die Schnittstellenprüfungen für jede Schnittstelle "
 "einen einzelnen Service. Durch die Definition von Schnittstellengruppen "
 "können mehrere Schnittstellen miteinander kombiniert werden. Für jede Gruppe "
-"wird ein einzelner Service erstellt. Dieser Service meldet die "
+"wird ein einzelner Service erstellt. Diese Services melden die "
 "Gesamtverkehrsmenge, die über alle Gruppenmitglieder summiert wird."
 
 msgid ""
@@ -39899,7 +39896,7 @@ msgstr "Bei ausgewählten Instanzen"
 msgid "On selected users"
 msgstr "Bei ausgewählten Benutzern"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "On the %s you can configure a push configuration, where the monitored host "
 "is expected to send the data to the monitoring server without being actively "
@@ -39908,16 +39905,12 @@ msgid ""
 "If you are configuring agent only monitoring, you might want to also set the "
 "\"%s\" attribute to \"%s\"."
 msgstr ""
-"Standardmäßig versucht der Server, den überwachten Host zu kontaktieren und "
-"die Daten durch Initialisierung einer TCP-Verbindung abzurufen. Auf der "
-"Seite %s können Sie eine Push-Konfiguration konfigurieren, bei welcher der "
+"Für \"%s\" können Sie eine Push-Konfiguration konfigurieren, bei welcher der "
 "überwachte Host die Daten an den Monitoring-Server senden soll, ohne aktiv "
 "ausgelöst zu werden.\n"
 "\n"
-"Wenn Sie dies konfigurieren, wollen Sie gegebenenfalls auch das Attribut \"%s"
-"\" auf \"%s\" setzen. Ein Host, der von einer Instanz nicht erreicht werden "
-"kann, ist einer der Hauptgründe, warum Sie eine Push-Verbindung einsetzen "
-"wollen werden."
+"Wenn Sie ein reines Agenten-Monitoring konfigurieren, sollten Sie auch das "
+"Attribut \"%s\" auf \"%s\" setzen."
 
 msgid ""
 "On this page you can test the defined logfile patterns against a custom "
@@ -40061,7 +40054,6 @@ msgstr ""
 "beachten Sie, dass dies zu einer nicht eindeutigen Service-Beschreibung "
 "führen kann, was dazu führt, dass einige Services nicht angezeigt werden!"
 
-#, fuzzy
 msgid ""
 "Only apply the rule if the notification originates from certain types of "
 "check plug-ins. Note: Host notifications never match this rule, if this "
@@ -40178,12 +40170,12 @@ msgstr ""
 "automatisch Kontakte überwachen lassen. Die Zuordnung von Hosts zu "
 "Kontaktgruppen kann auch über <a href='%s'>Regeln</a> definiert werden."
 
-#, fuzzy
 msgid ""
 "Only monitor following database instances (if detected or manually added)"
-msgstr "Nur folgende SIDs überwachen (falls entdeckt oder manuell hinzugefügt)"
+msgstr ""
+"Nur folgende Datenbank-Instanzen überwachen (falls entdeckt oder manuell "
+"hinzugefügt)"
 
-#, fuzzy
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "Nur nötig, wenn Sie mehrere MySQL-Instanzen auf einem Server haben"
 
@@ -40390,9 +40382,8 @@ msgstr "Betriebszustand"
 msgid "Operational states"
 msgstr "Betriebszustände"
 
-#, fuzzy
 msgid "Operational status"
-msgstr "Betriebszustände"
+msgstr "Betriebszustand"
 
 msgid "Operations"
 msgstr "Operationen"
@@ -40601,9 +40592,8 @@ msgstr "Oracle PGA-Info"
 msgid "Oracle PGA memory statistics"
 msgstr "Oracle PGA-Speicher-Statistik"
 
-#, fuzzy
 msgid "Oracle RMAN backups"
-msgstr "Oracle RMAN-Sicherungen"
+msgstr "Oracle RMAN-Backups"
 
 msgid "Oracle SGA info"
 msgstr "Oracle SGA-Info"
@@ -40735,7 +40725,6 @@ msgstr "Organisation"
 msgid "Organisation ID"
 msgstr "Organisations-ID"
 
-#, fuzzy
 msgid "Organisation name"
 msgstr "Name der Organisation"
 
@@ -40881,7 +40870,6 @@ msgstr ""
 "Andernfalls können Sie nach Ablauf Ihrer Checkmk-Lizenz keine \"Änderungen "
 "aktivieren\"."
 
-#, fuzzy
 msgid ""
 "Our system will recognize breaks in the trend and set them automatically,\n"
 "but as a user your are required to select how flexible the trend is when it\n"
@@ -40945,32 +40933,26 @@ msgstr "Ausfall-Statistik"
 msgid "Outbound messages"
 msgstr "Ausgehende Nachrichten"
 
-#, fuzzy
 msgid "Outbound rule"
 msgstr "Ausgangsregel"
 
-#, fuzzy
 msgid "Outbound rules"
 msgstr "Ausgangsregeln"
 
 msgid "Outcome & Action"
 msgstr "Ergebnis & Aktion"
 
-#, fuzzy
 msgid "Outgoing packets maximum"
 msgstr "Ausgehende Pakete Maximum"
 
-#, fuzzy
 msgid "Outgoing packets minimum"
 msgstr "Ausgehende Pakete Minimum"
 
-#, fuzzy
 msgid "Outgoing traffic maximum"
-msgstr "Ausgehende Bandbreite Maximum"
+msgstr "Ausgehender Verkehr Maximum"
 
-#, fuzzy
 msgid "Outgoing traffic minimum"
-msgstr "Ausgehende Bandbreite Minimum"
+msgstr "Ausgehender Verkehr Minimum"
 
 msgid "Output"
 msgstr "Ausgabe"
@@ -41218,7 +41200,6 @@ msgstr "PEND"
 msgid "PEND services of host group"
 msgstr "PEND-Services der Host-Gruppe"
 
-#, fuzzy
 msgid "PENDING services of host"
 msgstr "PENDING Services von Host"
 
@@ -41284,9 +41265,8 @@ msgstr "PSU"
 msgid "PSU (Chassis/Bay)"
 msgstr "Netzteil (Chassis/Schacht)"
 
-#, fuzzy
 msgid "PSU capacity levels"
-msgstr "Netzteil Kapazitätslevel"
+msgstr "PSU Kapazitätslevel"
 
 msgid "PUBLISH messages received"
 msgstr "Empfangene PUBLISH-Nachrichten"
@@ -41418,7 +41398,6 @@ msgstr "Level für Seitenaktivität"
 msgid "Page Life Expectancy"
 msgstr "Lebensdauer der Seite"
 
-#, fuzzy
 msgid "Page activity"
 msgstr "Seitenaktivität"
 
@@ -41428,14 +41407,12 @@ msgstr "Seitenumbruch"
 msgid "Page cache mapped into userspace with huge pages"
 msgstr "Seiten-Cache im Benutzerbereich mit großen Seiten abgebildet"
 
-#, fuzzy
 msgid "Page lookups"
-msgstr "Seitenlookup"
+msgstr "Seitensuchen"
 
 msgid "Page not found"
 msgstr "Seite nicht gefunden"
 
-#, fuzzy
 msgid "Page reads"
 msgstr "Seiten-Lesevorgänge"
 
@@ -41460,7 +41437,6 @@ msgstr "Seitentabellen"
 msgid "Page title"
 msgstr "Seitentitel"
 
-#, fuzzy
 msgid "Page writes"
 msgstr "Seiten-Schreibvorgänge"
 
@@ -41497,9 +41473,8 @@ msgstr "Palo Alto Status"
 msgid "Palo Alto Users"
 msgstr "Palo Alto Benutzer"
 
-#, fuzzy
 msgid "Palo Alto sessions"
-msgstr "Palo Alto Sessions"
+msgstr "Palo Alto Sitzungen"
 
 msgid "Panning"
 msgstr "Schwenken"
@@ -41671,7 +41646,6 @@ msgstr "Partielles Backup"
 msgid "Partial diff backup"
 msgstr "Partielles diff-Backup"
 
-#, fuzzy
 msgid "Partition name"
 msgstr "Partitions-Name"
 
@@ -41832,11 +41806,9 @@ msgstr "Pe"
 msgid "Peak value of active sessions"
 msgstr "Spitzenwert der aktiven Sitzungen"
 
-#, fuzzy
 msgid "Peer IP address"
 msgstr "IP-Adresse des Peers"
 
-#, fuzzy
 msgid "Peer name"
 msgstr "Name des Peers"
 
@@ -41879,7 +41851,6 @@ msgstr "Ausstehende Service-Erkennung"
 msgid "Pending services"
 msgstr "Services im Status PENDING"
 
-#, fuzzy
 msgid "Pending services of site"
 msgstr "Ausstehende Services einer Instanz"
 
@@ -42229,16 +42200,14 @@ msgstr "Leistungsdiagramme von Checkmk Server"
 msgid "Performance data"
 msgstr "Leistungsdaten"
 
-#, fuzzy
 msgid "Performance data for latency"
-msgstr "Leistungsdaten für Latenzzeit"
+msgstr "Leistungsdaten für Latenz"
 
 msgid "Performance data for protocols"
 msgstr "Metriken für einzelne Protokolle"
 
-#, fuzzy
 msgid "Performance data for queue length"
-msgstr "Leistungsdaten für Wartenschlangen-Länge"
+msgstr "Leistungsdaten für Wartenschlangenlänge"
 
 msgid ""
 "Performance data related to sizing, e.g. number of helpers, hosts, services"

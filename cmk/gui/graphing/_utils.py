@@ -163,7 +163,7 @@ def parse_perf_data(
         check_command = _parse_check_command(check_command)
 
     # Split the perf data string into parts. Preserve quoted strings!
-    parts = _split_perf_data(perf_data_string)
+    parts = shlex.split(perf_data_string)
 
     # Try if check command is appended to performance data
     # in a PNP like style
@@ -216,11 +216,6 @@ def _float_or_int(val: str | None) -> int | float | None:
             return float(val)
         except ValueError:
             return None
-
-
-def _split_perf_data(perf_data_string: str) -> list[str]:
-    """Split the perf data string into parts. Preserve quoted strings!"""
-    return shlex.split(perf_data_string)
 
 
 def perfvar_translation(

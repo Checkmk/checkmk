@@ -54,23 +54,41 @@ from cmk.graphing.v1 import Title
 UNIT = metrics_api.Unit(metrics_api.DecimalNotation(""))
 
 
-@pytest.mark.parametrize(
-    "data_string, result",
-    [
-        ("he lo", ["he", "lo"]),
-        ("'há li'", ["há li"]),
-        ("hé ßß", ["hé", "ßß"]),
-    ],
-)
-def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
-    assert utils._split_perf_data(data_string) == result
-
-
 @pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
     "perf_str, check_command, result",
     [
         ("", None, ([], "")),
+        (
+            "he lo=1",
+            None,
+            (
+                [
+                    PerfDataTuple("lo", "lo", 1, "", None, None, None, None),
+                ],
+                "",
+            ),
+        ),
+        (
+            "'há li'=2",
+            None,
+            (
+                [
+                    PerfDataTuple("há_li", "há_li", 2, "", None, None, None, None),
+                ],
+                "",
+            ),
+        ),
+        (
+            "hé ßß=3",
+            None,
+            (
+                [
+                    PerfDataTuple("ßß", "ßß", 3, "", None, None, None, None),
+                ],
+                "",
+            ),
+        ),
         (
             "hi=6 [ihe]",
             "ter",

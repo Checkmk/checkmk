@@ -28,7 +28,7 @@ _STRING_TABLE = [
 
 
 @pytest.fixture(name="check_plugin", scope="module")
-def check_plugin_fixutre(fix_register: FixRegister) -> CheckPlugin:
+def check_plugin_fixture(fix_register: FixRegister) -> CheckPlugin:
     return fix_register.check_plugins[CheckPluginName("mongodb_collections")]
 
 

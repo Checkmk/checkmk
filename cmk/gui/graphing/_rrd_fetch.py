@@ -33,7 +33,7 @@ from ._legacy import check_metrics, CheckMetricEntry
 from ._metrics import get_metric_spec
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction, RRDData, RRDDataKey
-from ._utils import find_matching_translation
+from ._utils import find_matching_translation, TranslationSpec
 
 
 def fetch_rrd_data_for_graph(
@@ -268,7 +268,7 @@ def all_rrd_columns_potentially_relevant_for_metric(
 def translate_and_merge_rrd_columns(
     target_metric: MetricName,
     rrd_columms: Iterable[tuple[str, TimeSeriesValues]],
-    translations: Mapping[MetricName, CheckMetricEntry],
+    translations: Mapping[MetricName, TranslationSpec],
 ) -> TimeSeries:
     def scaler(scale: float) -> Callable[[float], float]:
         return lambda v: v * scale
@@ -284,10 +284,8 @@ def translate_and_merge_rrd_columns(
         metric_name = MetricName(column_name.split(":")[1])
         metric_translation = find_matching_translation(metric_name, translations)
 
-        if metric_translation.get("name", metric_name) == target_metric:
-            relevant_ts.append(
-                TimeSeries(data, conversion=scaler(metric_translation.get("scale", 1)))
-            )
+        if metric_translation.name == target_metric:
+            relevant_ts.append(TimeSeries(data, conversion=scaler(metric_translation.scale)))
 
     if not relevant_ts:
         return TimeSeries([0, 0, 0])

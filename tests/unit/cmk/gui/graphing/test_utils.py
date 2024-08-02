@@ -40,10 +40,21 @@ from cmk.gui.graphing._graph_templates_from_plugins import (
     MinimalGraphTemplateRange,
     ScalarDefinition,
 )
-from cmk.gui.graphing._legacy import AutomaticDict, CheckMetricEntry, RawGraphTemplate, UnitInfo
+from cmk.gui.graphing._legacy import (
+    AutomaticDict,
+    check_metrics,
+    CheckMetricEntry,
+    RawGraphTemplate,
+    UnitInfo,
+)
 from cmk.gui.graphing._metrics import _get_legacy_metric_info
 from cmk.gui.graphing._type_defs import Original, TranslatedMetric
-from cmk.gui.graphing._utils import _NormalizedPerfData, TranslationInfo
+from cmk.gui.graphing._utils import (
+    _NormalizedPerfData,
+    find_matching_translation,
+    lookup_metric_translations_for_check_command,
+    TranslationSpec,
+)
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -169,19 +180,50 @@ def test_parse_perf_data2(request_context: None, set_config: SetConfig) -> None:
 
 
 @pytest.mark.parametrize(
-    "perf_name, check_command, result",
+    "perf_name, check_command, expected_translation_spec",
     [
-        ("in", "check_mk-lnx_if", {"scale": 8, "name": "if_in_bps", "auto_graph": True}),
+        (
+            "in",
+            "check_mk-lnx_if",
+            TranslationSpec(
+                name="if_in_bps",
+                scale=8,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
         (
             "memused",
             "check_mk-hr_mem",
-            {"auto_graph": True, "name": "mem_lnx_total_used", "scale": 1024**2},
+            TranslationSpec(
+                name="mem_lnx_total_used",
+                scale=1024**2,
+                auto_graph=True,
+                deprecated="",
+            ),
         ),
-        ("fake", "check_mk-imaginary", {"auto_graph": True, "name": "fake", "scale": 1.0}),
+        (
+            "fake",
+            "check_mk-imaginary",
+            TranslationSpec(
+                name="fake",
+                scale=1.0,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
     ],
 )
-def test_perfvar_translation(perf_name: str, check_command: str, result: TranslationInfo) -> None:
-    assert utils.perfvar_translation(perf_name, check_command) == result
+def test_perfvar_translation(
+    perf_name: str, check_command: str, expected_translation_spec: TranslationSpec
+) -> None:
+    assert (
+        find_matching_translation(
+            MetricName(perf_name),
+            lookup_metric_translations_for_check_command(check_metrics, check_command),
+        )
+        == expected_translation_spec
+    )
 
 
 @pytest.mark.parametrize(
@@ -189,37 +231,84 @@ def test_perfvar_translation(perf_name: str, check_command: str, result: Transla
     [
         pytest.param(
             {},
-            {},
+            TranslationSpec(
+                name=MetricName("my_metric"),
+                scale=1.0,
+                auto_graph=True,
+                deprecated="",
+            ),
             id="no translations",
         ),
         pytest.param(
-            {MetricName("old_name"): {"name": MetricName("new_name")}},
-            {},
+            {
+                MetricName("old_name"): TranslationSpec(
+                    name=MetricName("new_name"),
+                    scale=1.0,
+                    auto_graph=True,
+                    deprecated="",
+                )
+            },
+            TranslationSpec(
+                name=MetricName("my_metric"),
+                scale=1.0,
+                auto_graph=True,
+                deprecated="",
+            ),
             id="no applicable translations",
         ),
         pytest.param(
             {
-                MetricName("my_metric"): {"name": MetricName("new_name")},
-                MetricName("other_metric"): {"name": MetricName("other_new_name"), "scale": 0.1},
+                MetricName("my_metric"): TranslationSpec(
+                    name=MetricName("new_name"),
+                    scale=2.0,
+                    auto_graph=True,
+                    deprecated="",
+                ),
+                MetricName("other_metric"): TranslationSpec(
+                    name=MetricName("other_new_name"),
+                    scale=0.1,
+                    auto_graph=True,
+                    deprecated="",
+                ),
             },
-            {"name": MetricName("new_name")},
+            TranslationSpec(
+                name=MetricName("new_name"),
+                scale=2.0,
+                auto_graph=True,
+                deprecated="",
+            ),
             id="1-to-1 translations",
         ),
         pytest.param(
             {
-                MetricName("~.*my_metric"): {"scale": 5},
-                MetricName("other_metric"): {"name": MetricName("other_new_name"), "scale": 0.1},
+                MetricName("~.*my_metric"): TranslationSpec(
+                    name=MetricName("~.*my_metric"),
+                    scale=5.0,
+                    auto_graph=True,
+                    deprecated="",
+                ),
+                MetricName("other_metric"): TranslationSpec(
+                    name=MetricName("other_new_name"),
+                    scale=0.1,
+                    auto_graph=True,
+                    deprecated="",
+                ),
             },
-            {"scale": 5},
+            TranslationSpec(
+                name=MetricName("~.*my_metric"),
+                scale=5.0,
+                auto_graph=True,
+                deprecated="",
+            ),
             id="regex translations",
         ),
     ],
 )
 def test_find_matching_translation(
-    translations: Mapping[MetricName, CheckMetricEntry],
-    expected_result: CheckMetricEntry,
+    translations: Mapping[MetricName, TranslationSpec],
+    expected_result: TranslationSpec,
 ) -> None:
-    assert utils.find_matching_translation(MetricName("my_metric"), translations) == expected_result
+    assert find_matching_translation(MetricName("my_metric"), translations) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -1160,7 +1249,14 @@ def test_translate_metrics(
                 "check_mk-y": {MetricName("a"): {"scale": 2}},
             },
             "check_mk-x",
-            {MetricName("old"): {"name": MetricName("new")}},
+            {
+                MetricName("old"): TranslationSpec(
+                    name=MetricName("new"),
+                    scale=1.0,
+                    auto_graph=True,
+                    deprecated="",
+                )
+            },
             id="standard check",
         ),
         pytest.param(
@@ -1169,7 +1265,14 @@ def test_translate_metrics(
                 "check_mk-y": {MetricName("a"): {"scale": 2}},
             },
             "check_mk-mgmt_x",
-            {MetricName("old"): {"name": MetricName("new")}},
+            {
+                MetricName("old"): TranslationSpec(
+                    name=MetricName("new"),
+                    scale=1.0,
+                    auto_graph=True,
+                    deprecated="",
+                )
+            },
             id="management board, fallback to standard check",
         ),
         pytest.param(
@@ -1178,7 +1281,14 @@ def test_translate_metrics(
                 "check_mk-mgmt_x": {MetricName("old"): {"scale": 3}},
             },
             "check_mk-mgmt_x",
-            {MetricName("old"): {"scale": 3}},
+            {
+                MetricName("old"): TranslationSpec(
+                    name="old",
+                    scale=3,
+                    auto_graph=True,
+                    deprecated="",
+                )
+            },
             id="management board, explicit entry",
         ),
         pytest.param(
@@ -1195,15 +1305,10 @@ def test_translate_metrics(
 def test_lookup_metric_translations_for_check_command(
     translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     check_command: str | None,
-    expected_result: Mapping[MetricName, CheckMetricEntry],
+    expected_result: Mapping[MetricName, TranslationSpec],
 ) -> None:
-    assert (
-        utils.lookup_metric_translations_for_check_command(
-            translations,
-            check_command,
-        )
-        == expected_result
-    )
+    metric_translations = lookup_metric_translations_for_check_command(translations, check_command)
+    assert metric_translations == expected_result
 
 
 def test_automatic_dict_append() -> None:

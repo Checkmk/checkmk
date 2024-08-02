@@ -9,6 +9,7 @@ import re
 import shlex
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from typing import Literal, NewType, NotRequired, TypedDict
 
 from livestatus import livestatus_lql
@@ -49,12 +50,6 @@ class _NormalizedPerfData(TypedDict):
     originals: Sequence[Original]
     value: float
     scalar: ScalarBounds
-    auto_graph: bool
-
-
-class TranslationInfo(TypedDict):
-    name: str
-    scale: float
     auto_graph: bool
 
 
@@ -217,29 +212,21 @@ def _float_or_int(val: str | None) -> int | float | None:
             return None
 
 
-def perfvar_translation(
-    perfvar_name: str,
-    check_command: str | None,  # None due to CMK-13883
-) -> TranslationInfo:
-    """Get translation info for one performance var."""
-    translation_entry = find_matching_translation(
-        MetricName(perfvar_name),
-        lookup_metric_translations_for_check_command(check_metrics, check_command),
-    )
-    return TranslationInfo(
-        name=translation_entry.get("name", perfvar_name),
-        scale=translation_entry.get("scale", 1.0),
-        auto_graph=translation_entry.get("auto_graph", True),
-    )
+@dataclass(frozen=True)
+class TranslationSpec:
+    name: MetricName
+    scale: float
+    auto_graph: bool
+    deprecated: str
 
 
 def lookup_metric_translations_for_check_command(
     translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     check_command: str | None,  # None due to CMK-13883
-) -> Mapping[MetricName, CheckMetricEntry]:
+) -> Mapping[MetricName, TranslationSpec]:
     if not check_command:
         return {}
-    return translations.get(
+    translation_by_metric_names = translations.get(
         check_command,
         (
             translations.get(check_command.replace("check_mk-mgmt_", "check_mk-", 1), {})
@@ -247,20 +234,29 @@ def lookup_metric_translations_for_check_command(
             else {}
         ),
     )
+    return {
+        m: TranslationSpec(
+            name=t.get("name", m),
+            scale=t.get("scale", 1.0),
+            auto_graph=t.get("auto_graph", True),
+            deprecated=t.get("deprecated", ""),
+        )
+        for m, t in translation_by_metric_names.items()
+    }
 
 
 def find_matching_translation(
     metric_name: MetricName,
-    translations_: Mapping[MetricName, CheckMetricEntry],
-) -> CheckMetricEntry:
-    if translation := translations_.get(metric_name):
+    translation_by_metric_names: Mapping[MetricName, TranslationSpec],
+) -> TranslationSpec:
+    if translation := translation_by_metric_names.get(metric_name):
         return translation
-    for orig_metric_name, translation in translations_.items():
+    for orig_metric_name, translation in translation_by_metric_names.items():
         if orig_metric_name.startswith("~") and cmk.utils.regex.regex(orig_metric_name[1:]).match(
             metric_name
         ):  # Regex entry
             return translation
-    return {}
+    return TranslationSpec(name=metric_name, scale=1.0, auto_graph=True, deprecated="")
 
 
 def _scalar_bounds(perf_data_tuple: PerfDataTuple, scale: float) -> ScalarBounds:
@@ -283,21 +279,24 @@ def _scalar_bounds(perf_data_tuple: PerfDataTuple, scale: float) -> ScalarBounds
 def _normalize_perf_data(
     perf_data_tuple: PerfDataTuple, check_command: str
 ) -> tuple[str, _NormalizedPerfData]:
-    translation_entry = perfvar_translation(perf_data_tuple.lookup_metric_name, check_command)
+    translation_spec = find_matching_translation(
+        MetricName(perf_data_tuple.lookup_metric_name),
+        lookup_metric_translations_for_check_command(check_metrics, check_command),
+    )
 
-    new_entry = _NormalizedPerfData(
-        originals=[Original(perf_data_tuple.metric_name, translation_entry["scale"])],
-        value=perf_data_tuple.value * translation_entry["scale"],
-        scalar=_scalar_bounds(perf_data_tuple, translation_entry["scale"]),
+    normalized = _NormalizedPerfData(
+        originals=[Original(perf_data_tuple.metric_name, translation_spec.scale)],
+        value=perf_data_tuple.value * translation_spec.scale,
+        scalar=_scalar_bounds(perf_data_tuple, translation_spec.scale),
         # Do not create graphs for ungraphed metrics if listed here
-        auto_graph=translation_entry["auto_graph"],
+        auto_graph=translation_spec.auto_graph,
     )
 
     if perf_data_tuple.metric_name.startswith("predict_lower_"):
-        return f"predict_lower_{translation_entry['name']}", new_entry
+        return f"predict_lower_{translation_spec.name}", normalized
     if perf_data_tuple.metric_name.startswith("predict_"):
-        return f"predict_{translation_entry['name']}", new_entry
-    return translation_entry["name"], new_entry
+        return f"predict_{translation_spec.name}", normalized
+    return translation_spec.name, normalized
 
 
 def _translated_metric_scalar(

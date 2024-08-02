@@ -29,6 +29,7 @@ from cmk.gui.graphing._rrd_fetch import (
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._type_defs import RRDDataKey
+from cmk.gui.graphing._utils import TranslationSpec
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -166,10 +167,12 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
             ),
         ],
         {
-            "my_old_metric": {
-                "name": "my_metric",
-                "scale": 10,
-            }
+            "my_old_metric": TranslationSpec(
+                name="my_metric",
+                scale=10,
+                auto_graph=True,
+                deprecated="",
+            )
         },
     ) == TimeSeries(
         [10, 20, 3, 4],
@@ -294,7 +297,7 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
 
 
 @pytest.mark.parametrize(
-    ["canonical_name", "current_version", "all_translations", "expected_result"],
+    ["canonical_name", "current_version", "translations", "expected_result"],
     [
         pytest.param(
             MetricName("my_metric"),
@@ -373,14 +376,14 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
 def test_reverse_translate_into_all_potentially_relevant_metrics(
     canonical_name: MetricName,
     current_version: int,
-    all_translations: Iterable[Mapping[MetricName, CheckMetricEntry]],
+    translations: Iterable[Mapping[MetricName, CheckMetricEntry]],
     expected_result: frozenset[MetricName],
 ) -> None:
     assert (
         _reverse_translate_into_all_potentially_relevant_metrics(
             canonical_name,
             current_version,
-            all_translations,
+            translations,
         )
         == expected_result
     )

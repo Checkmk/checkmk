@@ -40,8 +40,13 @@ from cmk.gui.visuals import livestatus_query_bare
 from ..config import active_config
 from ._from_api import registered_units
 from ._graph_render_config import GraphRenderConfigBase
+from ._legacy import check_metrics
 from ._metrics import get_metric_spec, registered_metrics
-from ._utils import parse_perf_data, perfvar_translation
+from ._utils import (
+    find_matching_translation,
+    lookup_metric_translations_for_check_command,
+    parse_perf_data,
+)
 
 
 def migrate_graph_render_options_title_format(
@@ -372,7 +377,10 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 
 def _metric_choices(check_command: str, perfvars: tuple[MetricName_, ...]) -> Iterator[Choice]:
     for perfvar in perfvars:
-        metric_name = perfvar_translation(perfvar, check_command)["name"]
+        metric_name = find_matching_translation(
+            MetricName_(perfvar),
+            lookup_metric_translations_for_check_command(check_metrics, check_command),
+        ).name
         yield metric_name, get_metric_spec(metric_name).title
 
 

@@ -11,7 +11,7 @@
       "vhost": "/",
       "configure": "^cmk\\.app\\..*",
       "write": "^cmk\\..*",
-      "read": "^cmk\\.(local|intersite)\\..*"
+      "read": "^cmk\\.(local|intersite|app).*"
     }
   ],
   "policies": [],

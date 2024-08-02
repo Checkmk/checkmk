@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 from itertools import zip_longest
-from typing import assert_never, Literal, TypedDict, TypeVar
+from typing import assert_never, Literal, NotRequired, TypedDict, TypeVar
 
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
@@ -49,7 +49,7 @@ from ._legacy import UnitInfo
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point
 from ._type_defs import LineType, RRDData
-from ._utils import Curve, SizeEx
+from ._utils import SizeEx
 
 Seconds = int
 
@@ -212,6 +212,15 @@ def compute_graph_artwork(
 #   +----------------------------------------------------------------------+
 #   |  Translate mathematical values into points in grid to paint          |
 #   '----------------------------------------------------------------------'
+
+
+class Curve(TypedDict):
+    line_type: LineType | Literal["ref"]
+    color: str
+    title: str
+    rrddata: TimeSeries
+    # Added during runtime by _compute_scalars
+    scalars: NotRequired[dict[str, tuple[TimeSeriesValue, str]]]
 
 
 # Compute the location of the curves of the graph, implement

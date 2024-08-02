@@ -10,7 +10,7 @@ import shlex
 from collections import Counter
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Literal, NewType, NotRequired, TypedDict
+from typing import Literal, NewType
 
 from livestatus import livestatus_lql
 
@@ -21,25 +21,15 @@ from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.log import logger
-from cmk.gui.time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 
 from ._legacy import check_metrics, CheckMetricEntry
 from ._metrics import get_metric_spec_with_color
-from ._type_defs import LineType, Original, ScalarBounds, TranslatedMetric
+from ._type_defs import Original, ScalarBounds, TranslatedMetric
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):
     status = http.HTTPStatus.BAD_REQUEST
-
-
-class Curve(TypedDict):
-    line_type: LineType | Literal["ref"]
-    color: str
-    title: str
-    rrddata: TimeSeries
-    # Added during runtime by _compute_scalars
-    scalars: NotRequired[dict[str, tuple[TimeSeriesValue, str]]]
 
 
 GraphRangeSpec = tuple[int | str, int | str]

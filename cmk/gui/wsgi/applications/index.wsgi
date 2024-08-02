@@ -16,7 +16,7 @@ from cmk.utils.profile_switcher import (
 
 from cmk import trace
 from cmk.ccc.site import get_omd_config, omd_site
-from cmk.trace.export import exporter_from_config, init_span_processor
+from cmk.trace.export import exporter_from_config
 
 DEBUG = False
 
@@ -59,7 +59,7 @@ def _request_hook(span: trace.Span, environ: WSGIEnvironment) -> None:
     span.update_name(get_default_span_name(env))
 
 
-init_span_processor(
+trace.init_span_processor(
     trace.init_tracing(omd_site(), "gui"),
     exporter_from_config(trace.trace_send_config(get_omd_config(paths.omd_root))),
 )

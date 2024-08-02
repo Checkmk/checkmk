@@ -10,6 +10,7 @@ import socket
 from opentelemetry import trace
 from opentelemetry.sdk import trace as sdk_trace
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import export as sdk_export
 
 from ._config import LocalTarget as LocalTarget  # pylint: disable=useless-import-alias
 from ._config import trace_send_config as trace_send_config  # pylint: disable=useless-import-alias
@@ -24,6 +25,9 @@ set_span_in_context = trace.set_span_in_context
 Status = trace.Status
 StatusCode = trace.StatusCode
 INVALID_SPAN = trace.INVALID_SPAN
+BatchSpanProcessor = sdk_export.BatchSpanProcessor
+SpanExporter = sdk_export.SpanExporter
+SpanExportResult = sdk_export.SpanExportResult
 ReadableSpan = sdk_trace.ReadableSpan
 TracerProvider = sdk_trace.TracerProvider
 get_current_span = trace.get_current_span
@@ -39,6 +43,12 @@ def init_tracing(
         provider := _init_tracer_provider(service_namespace, service_name, host_name)
     )
     return provider
+
+
+def init_span_processor(provider: TracerProvider, exporter: SpanExporter | None = None) -> None:
+    """Add a span processor to the applications tracer provider"""
+    if exporter is not None:
+        provider.add_span_processor(BatchSpanProcessor(exporter, export_timeout_millis=3000))
 
 
 def get_tracer() -> trace.Tracer:

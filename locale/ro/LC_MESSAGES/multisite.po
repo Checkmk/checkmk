@@ -38915,6 +38915,10 @@ msgstr ""
 msgid "Message averaging"
 msgstr "Media mesajelor"
 
+#, fuzzy
+msgid "Message broker port"
+msgstr "Mesaj pentru alertele gazdelor"
+
 msgid "Message count"
 msgstr "Număr de mesaje"
 

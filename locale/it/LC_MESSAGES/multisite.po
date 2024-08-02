@@ -38531,6 +38531,10 @@ msgstr ""
 msgid "Message averaging"
 msgstr "Media dei messaggi"
 
+#, fuzzy
+msgid "Message broker port"
+msgstr "Messaggio per gli avvisi dell'host"
+
 msgid "Message count"
 msgstr "Conteggio dei messaggi"
 

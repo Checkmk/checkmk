@@ -38883,6 +38883,10 @@ msgstr ""
 msgid "Message averaging"
 msgstr "Bericht gemiddelde"
 
+#, fuzzy
+msgid "Message broker port"
+msgstr "Bericht voor hostwaarschuwingen"
+
 msgid "Message count"
 msgstr "Aantal berichten"
 

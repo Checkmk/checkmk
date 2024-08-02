@@ -37973,6 +37973,10 @@ msgstr "メッセージは、以下の設定または継承された設定に従
 msgid "Message averaging"
 msgstr "メッセージの平均化"
 
+#, fuzzy
+msgid "Message broker port"
+msgstr "ホストアラートのメッセージ"
+
 msgid "Message count"
 msgstr "メッセージ数"
 

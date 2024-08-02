@@ -39198,6 +39198,10 @@ msgstr ""
 msgid "Message averaging"
 msgstr "Promedio de mensajes"
 
+#, fuzzy
+msgid "Message broker port"
+msgstr "Mensaje para las alertas de host"
+
 msgid "Message count"
 msgstr "Recuento de mensajes"
 

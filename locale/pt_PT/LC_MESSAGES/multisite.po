@@ -38872,6 +38872,10 @@ msgstr ""
 msgid "Message averaging"
 msgstr "Média de mensagens"
 
+#, fuzzy
+msgid "Message broker port"
+msgstr "Mensagem para alertas do anfitrião"
+
 msgid "Message count"
 msgstr "Contagem de mensagens"
 

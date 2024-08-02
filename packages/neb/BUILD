@@ -73,6 +73,12 @@ cc_shared_library(
     ],
 )
 
+alias(
+    name = "neb",
+    actual = "neb_shared",
+    visibility = ["//visibility:public"],
+)
+
 cc_library(
     name = "test_utilities",
     testonly = 1,

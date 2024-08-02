@@ -79,7 +79,7 @@ class QuickSetupOverviewResponse(BaseSchema):
         description="The first stage",
     )
     button_complete_label = fields.String(
-        example="Save cofniguration",
+        example="Save configuration",
         description="The label of the complete button of the overall Quick setup",
     )
 

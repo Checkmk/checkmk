@@ -24,12 +24,14 @@ from cmk.gui.openapi.restful_objects.constructors import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.to_frontend import (
+    build_expected_formspec_map,
     complete_quick_setup,
+    get_stage_with_id,
     quick_setup_overview,
     QuickSetupOverview,
     retrieve_next_stage,
     Stage,
-    validate_current_stage,
+    validate_stage,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import IncomingStage, QuickSetupSaveRedirect
@@ -94,11 +96,25 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
         IncomingStage(stage_id=stage["stage_id"], form_data=stage["form_data"])
         for stage in body["stages"]
     ]
+    current_stage_id = stages[-1].stage_id
 
     if (
-        error_stage := validate_current_stage(quick_setup=quick_setup, incoming_stages=stages)
+        errors := validate_stage(
+            stage=get_stage_with_id(quick_setup, current_stage_id),
+            formspec_lookup=build_expected_formspec_map(quick_setup.stages),
+            stages_raw_formspecs=[stage.form_data for stage in stages],
+        )
     ) is not None:
-        return _serve_data(data=error_stage, status_code=400)
+        return _serve_data(
+            Stage(
+                stage_id=current_stage_id,
+                errors=errors,
+                components=[],
+                button_txt=None,
+            ),
+            status_code=400,
+        )
+
     return _serve_data(data=retrieve_next_stage(quick_setup=quick_setup, incoming_stages=stages))
 
 

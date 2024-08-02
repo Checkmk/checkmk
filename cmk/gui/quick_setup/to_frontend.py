@@ -113,6 +113,9 @@ class Errors:
     formspec_errors: ValidationErrorMap = field(default_factory=dict)
     stage_errors: GeneralStageErrors = field(default_factory=list)
 
+    def exist(self) -> bool:
+        return bool(self.formspec_errors or self.stage_errors)
+
 
 @dataclass
 class Stage:
@@ -397,7 +400,7 @@ def validate_unique_id(
 
 
 def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
-    first_stage = _get_stage_with_id(quick_setup, StageId(1))
+    first_stage = get_stage_with_id(quick_setup, StageId(1))
     return QuickSetupOverview(
         quick_setup_id=quick_setup.id,
         overviews=[
@@ -440,46 +443,31 @@ def recaps_form_spec(
     ]
 
 
-def validate_current_stage(
-    quick_setup: QuickSetup,
-    incoming_stages: Sequence[IncomingStage],
-) -> Stage | None:
-    current_stage_id = incoming_stages[-1].stage_id
-    current_stage = _get_stage_with_id(quick_setup, current_stage_id)
-
+def validate_stage(
+    stage: QuickSetupStage,
+    formspec_lookup: Mapping[FormSpecId, FormSpec],
+    stages_raw_formspecs: Sequence[RawFormData],
+) -> Errors | None:
     errors = Errors()
-    expected_form_spec_map = build_expected_formspec_map(quick_setup.stages)
-    form_data = [stage.form_data for stage in incoming_stages]
+
     errors.stage_errors.extend(
-        _stage_validate_all_form_spec_keys_existing(form_data[-1], expected_form_spec_map)
+        _stage_validate_all_form_spec_keys_existing(stages_raw_formspecs[-1], formspec_lookup)
     )
-    errors.formspec_errors = _form_spec_validate(form_data, expected_form_spec_map)
-    if errors.formspec_errors or errors.stage_errors:
-        return Stage(
-            stage_id=current_stage_id,
-            errors=errors,
-            components=[],
-            button_txt=None,
-        )
-    combined_parsed_form_data_up_to_current_stage = _form_spec_parse(
-        form_data, expected_form_spec_map
-    )
+    errors.formspec_errors = _form_spec_validate(stages_raw_formspecs, formspec_lookup)
+    if errors.exist():
+        return errors
 
-    for validator in current_stage.validators:
-        errors_stage = validator(
-            combined_parsed_form_data_up_to_current_stage,
-            expected_form_spec_map,
-        )
-        errors.stage_errors.extend(errors_stage)
+    parsed_formspecs_data = _form_spec_parse(stages_raw_formspecs, formspec_lookup)
 
-    if errors.formspec_errors or errors.stage_errors:
-        return Stage(
-            stage_id=current_stage_id,
-            errors=errors,
-            components=[],
-            button_txt=None,
+    for validator in stage.validators:
+        errors.stage_errors.extend(
+            validator(
+                parsed_formspecs_data,
+                formspec_lookup,
+            )
         )
-    return None
+
+    return errors if errors.exist() else None
 
 
 def retrieve_next_stage(
@@ -487,7 +475,7 @@ def retrieve_next_stage(
     incoming_stages: Sequence[IncomingStage],
 ) -> Stage:
     current_stage_id = incoming_stages[-1].stage_id
-    current_stage = _get_stage_with_id(quick_setup, current_stage_id)
+    current_stage = get_stage_with_id(quick_setup, current_stage_id)
 
     expected_form_spec_map = build_expected_formspec_map(quick_setup.stages)
     combined_parsed_form_data_by_stage = [
@@ -495,7 +483,7 @@ def retrieve_next_stage(
     ]
 
     try:
-        next_stage = _get_stage_with_id(quick_setup, StageId(current_stage.stage_id + 1))
+        next_stage = get_stage_with_id(quick_setup, StageId(current_stage.stage_id + 1))
     except InvalidStageException:
         # TODO: What should we return in this case?
         return Stage(stage_id=StageId(-1), components=[], button_txt=None)
@@ -534,7 +522,7 @@ def complete_quick_setup(
     )
 
 
-def _get_stage_with_id(quick_setup: QuickSetup, stage_id: StageId) -> QuickSetupStage:
+def get_stage_with_id(quick_setup: QuickSetup, stage_id: StageId) -> QuickSetupStage:
     for stage in quick_setup.stages:
         if stage.stage_id == stage_id:
             return stage

@@ -18,7 +18,7 @@ from cmk.gui.graphing._formatter import (
     StandardScientificFormatter,
     TimeFormatter,
 )
-from cmk.gui.graphing._from_api import register_unit
+from cmk.gui.graphing._from_api import register_unit_info
 
 from cmk.graphing.v1 import metrics as metrics_api
 
@@ -138,13 +138,13 @@ from cmk.graphing.v1 import metrics as metrics_api
         ),
     ],
 )
-def test_register_unit(
+def test_register_unit_info(
     precision: metrics_api.AutoPrecision | metrics_api.StrictPrecision,
     value: int | float,
     expected: str,
 ) -> None:
     unit = metrics_api.Unit(metrics_api.DecimalNotation("unit"), precision)
-    assert register_unit(unit).render(value) == expected
+    assert register_unit_info(unit).render(value) == expected
 
 
 @pytest.mark.parametrize(
@@ -290,7 +290,7 @@ def test_render_unit_notation(
     expected: str,
 ) -> None:
     unit = metrics_api.Unit(notation, metrics_api.StrictPrecision(2))
-    assert register_unit(unit).render(value) == expected
+    assert register_unit_info(unit).render(value) == expected
 
 
 @pytest.mark.parametrize(
@@ -409,7 +409,7 @@ def test_render_unit_notation(
     ],
 )
 def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
-    assert register_unit(unit).js_render == expected
+    assert register_unit_info(unit).js_render == expected
 
 
 @pytest.mark.parametrize(

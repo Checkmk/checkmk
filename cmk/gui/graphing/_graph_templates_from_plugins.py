@@ -31,7 +31,7 @@ from ._expression import (
     Sum,
     WarningOf,
 )
-from ._from_api import graphs_from_api, register_unit
+from ._from_api import graphs_from_api, register_unit_info
 from ._legacy import graph_info, RawGraphTemplate
 from ._metrics import get_metric_spec
 from ._type_defs import GraphConsoldiationFunction, LineType, TranslatedMetric
@@ -173,7 +173,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Constant(
                     quantity.value,
-                    explicit_unit_id=register_unit(quantity.unit).id,
+                    explicit_unit_id=register_unit_info(quantity.unit).id,
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
@@ -222,7 +222,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Product(
                     [_parse_quantity(f, line_type).expression for f in quantity.factors],
-                    explicit_unit_id=register_unit(quantity.unit).id,
+                    explicit_unit_id=register_unit_info(quantity.unit).id,
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
@@ -243,7 +243,7 @@ def _parse_quantity(
                 expression=Fraction(
                     dividend=_parse_quantity(quantity.dividend, line_type).expression,
                     divisor=_parse_quantity(quantity.divisor, line_type).expression,
-                    explicit_unit_id=register_unit(quantity.unit).id,
+                    explicit_unit_id=register_unit_info(quantity.unit).id,
                     explicit_color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,

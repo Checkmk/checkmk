@@ -18,7 +18,7 @@ from ._color import (
     parse_color_from_api,
     parse_color_into_hexrgb,
 )
-from ._from_api import get_unit_info, metrics_from_api, register_unit
+from ._from_api import metrics_from_api, register_unit_info
 from ._legacy import metric_info, MetricInfo, unit_info, UnitInfo
 
 
@@ -56,7 +56,7 @@ def get_metric_spec_with_color(
                     + mfa.title.localize(translate_to_current_language)
                     + _(" (lower levels)")
                 ),
-                unit_info=get_unit_info(register_unit(mfa.unit).id),
+                unit_info=register_unit_info(mfa.unit),
                 color=get_gray_tone(color_counter),
             )
 
@@ -76,7 +76,7 @@ def get_metric_spec_with_color(
                     + mfa.title.localize(translate_to_current_language)
                     + _(" (upper levels)")
                 ),
-                unit_info=get_unit_info(register_unit(mfa.unit).id),
+                unit_info=register_unit_info(mfa.unit),
                 color=get_gray_tone(color_counter),
             )
 
@@ -91,7 +91,7 @@ def get_metric_spec_with_color(
         return MetricSpec(
             name=metric_name,
             title=mfa.title.localize(translate_to_current_language),
-            unit_info=get_unit_info(register_unit(mfa.unit).id),
+            unit_info=register_unit_info(mfa.unit),
             color=parse_color_from_api(mfa.color),
         )
     else:

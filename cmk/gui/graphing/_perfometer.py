@@ -26,7 +26,7 @@ from ._expression import (
     parse_conditional_expression,
     parse_expression,
 )
-from ._from_api import make_unit_info, perfometers_from_api
+from ._from_api import perfometers_from_api, register_unit_info
 from ._legacy import (
     DualPerfometerSpec,
     LegacyPerfometer,
@@ -203,7 +203,7 @@ def _evaluate_quantity(
             )
         case metrics_api.Constant():
             return _EvaluatedQuantity(
-                make_unit_info(quantity.unit),
+                register_unit_info(quantity.unit),
                 parse_color_from_api(quantity.color),
                 quantity.value,
             )
@@ -253,7 +253,7 @@ def _evaluate_quantity(
             for f in quantity.factors:
                 product *= _evaluate_quantity(f, translated_metrics).value
             return _EvaluatedQuantity(
-                make_unit_info(quantity.unit),
+                register_unit_info(quantity.unit),
                 parse_color_from_api(quantity.color),
                 product,
             )
@@ -267,7 +267,7 @@ def _evaluate_quantity(
             )
         case metrics_api.Fraction():
             return _EvaluatedQuantity(
-                make_unit_info(quantity.unit),
+                register_unit_info(quantity.unit),
                 parse_color_from_api(quantity.color),
                 (
                     _evaluate_quantity(quantity.dividend, translated_metrics).value

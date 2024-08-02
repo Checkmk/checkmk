@@ -35,48 +35,6 @@ class MKCombinedGraphLimitExceededError(MKHTTPException):
 SizeEx = NewType("SizeEx", int)
 
 
-# .
-#   .--Constants-----------------------------------------------------------.
-#   |              ____                _              _                    |
-#   |             / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___              |
-#   |            | |   / _ \| '_ \/ __| __/ _` | '_ \| __/ __|             |
-#   |            | |__| (_) | | | \__ \ || (_| | | | | |_\__ \             |
-#   |             \____\___/|_| |_|___/\__\__,_|_| |_|\__|___/             |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Various constants to be used by the declarations of the plugins.    |
-#   '----------------------------------------------------------------------'
-# TODO: Refactor to some namespace object
-
-KB = 1024
-MB = KB * 1024
-GB = MB * 1024
-TB = GB * 1024
-PB = TB * 1024
-
-m = 0.001
-K = 1000
-M = K * 1000
-G = M * 1000
-T = G * 1000
-P = T * 1000
-
-scale_symbols = {
-    m: "m",
-    1: "",
-    KB: "k",
-    MB: "M",
-    GB: "G",
-    TB: "T",
-    PB: "P",
-    K: "k",
-    M: "M",
-    G: "G",
-    T: "T",
-    P: "P",
-}
-
-
 def _parse_perf_values(
     data_str: str,
 ) -> tuple[str, str, tuple[str | None, str | None, str | None, str | None]]:
@@ -351,21 +309,6 @@ def translated_metrics_from_row(
     )
 
 
-# .
-#   .--Graphs--------------------------------------------------------------.
-#   |                    ____                 _                            |
-#   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
-#   |                  | |  _| '__/ _` | '_ \| '_ \/ __|                   |
-#   |                  | |_| | | | (_| | |_) | | | \__ \                   |
-#   |                   \____|_|  \__,_| .__/|_| |_|___/                   |
-#   |                                  |_|                                 |
-#   +----------------------------------------------------------------------+
-#   |  Implementation of time graphs - basic code, not the rendering       |
-#   |  Rendering of the graphs is done by PNP4Nagios, we just create PHP   |
-#   |  templates for PNP here.                                             |
-#   '----------------------------------------------------------------------'
-
-
 def get_graph_data_from_livestatus(only_sites, host_name, service_description):
     columns = ["perf_data", "metrics", "check_command"]
     query = livestatus_lql([host_name], columns, service_description)
@@ -382,15 +325,43 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
     return info
 
 
-# .
-#   .--Definitions---------------------------------------------------------.
-#   |            ____        __ _       _ _   _                            |
-#   |           |  _ \  ___ / _(_)_ __ (_) |_(_) ___  _ __  ___            |
-#   |           | | | |/ _ \ |_| | '_ \| | __| |/ _ \| '_ \/ __|           |
-#   |           | |_| |  __/  _| | | | | | |_| | (_) | | | \__ \           |
-#   |           |____/ \___|_| |_|_| |_|_|\__|_|\___/|_| |_|___/           |
+#   .--Constants-----------------------------------------------------------.
+#   |              ____                _              _                    |
+#   |             / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___              |
+#   |            | |   / _ \| '_ \/ __| __/ _` | '_ \| __/ __|             |
+#   |            | |__| (_) | | | \__ \ || (_| | | | | |_\__ \             |
+#   |             \____\___/|_| |_|___/\__\__,_|_| |_|\__|___/             |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+# TODO: Refactor to some namespace object
+
+KB = 1024
+MB = KB * 1024
+GB = MB * 1024
+TB = GB * 1024
+PB = TB * 1024
+
+m = 0.001
+K = 1000
+M = K * 1000
+G = M * 1000
+T = G * 1000
+P = T * 1000
+
+scale_symbols = {
+    m: "m",
+    1: "",
+    KB: "k",
+    MB: "M",
+    GB: "G",
+    TB: "T",
+    PB: "P",
+    K: "k",
+    M: "M",
+    G: "G",
+    T: "T",
+    P: "P",
+}
 
 MAX_CORES = 128
 

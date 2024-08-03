@@ -62656,6 +62656,11 @@ msgstr "Cet hôte est désactivé"
 msgid "This host is flapping"
 msgstr "Cet hôte est en train de s'agiter"
 
+#, python-format
+msgid ""
+"This host is missing one or more of the labels: %s (it has the labels %s)"
+msgstr ""
+
 msgid "This host is stale"
 msgstr "Cet hôte est périmé"
 

@@ -61974,6 +61974,11 @@ msgstr "Este anfitrião está desactivado"
 msgid "This host is flapping"
 msgstr "Este anfitrião está a bater"
 
+#, python-format
+msgid ""
+"This host is missing one or more of the labels: %s (it has the labels %s)"
+msgstr ""
+
 msgid "This host is stale"
 msgstr "Este hospedeiro está fora de moda"
 

@@ -62609,6 +62609,11 @@ msgstr "Este host está deshabilitado"
 msgid "This host is flapping"
 msgstr "Este host está aleteando"
 
+#, python-format
+msgid ""
+"This host is missing one or more of the labels: %s (it has the labels %s)"
+msgstr ""
+
 msgid "This host is stale"
 msgstr "Este host está caducado"
 

@@ -61430,6 +61430,11 @@ msgstr "Questo host è disabilitato"
 msgid "This host is flapping"
 msgstr "Questo ospite si sta agitando"
 
+#, python-format
+msgid ""
+"This host is missing one or more of the labels: %s (it has the labels %s)"
+msgstr ""
+
 msgid "This host is stale"
 msgstr "Questo host è stantio"
 

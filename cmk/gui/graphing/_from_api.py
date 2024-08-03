@@ -235,19 +235,10 @@ def _compute_unit_info(
 
 
 def register_unit_info(unit: metrics_api.Unit) -> UnitInfo:
-    if (
-        unit_id := (
-            f"{unit.notation.__class__.__name__}_{unit.notation.symbol}"
-            f"_{unit.precision.__class__.__name__}_{unit.precision.digits}"
-        )
-    ) in _units_from_api:
-        return _compute_unit_info(
-            unit_id,
-            _units_from_api[unit_id],
-            active_config,
-            user,
-            [_TemperatureUnitConverter],
-        )
+    unit_id = (
+        f"{unit.notation.__class__.__name__}_{unit.notation.symbol}"
+        f"_{unit.precision.__class__.__name__}_{unit.precision.digits}"
+    )
     return _compute_unit_info(
         unit_id,
         _units_from_api.register(

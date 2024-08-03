@@ -112,7 +112,7 @@ function removeElement(index: ElementIndex) {
 }
 
 function addElement() {
-  data.value[newElementIndex.value] = props.spec.element_default_value
+  data.value[newElementIndex.value] = JSON.parse(JSON.stringify(props.spec.element_default_value))
   elementValidation.value[newElementIndex.value] = []
   frontendOrder.value.push(newElementIndex.value)
   newElementIndex.value += 1

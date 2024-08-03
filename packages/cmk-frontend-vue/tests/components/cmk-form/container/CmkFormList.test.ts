@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import CmkFormList from '@/components/cmk-form/container/CmkFormList.vue'
 import type * as FormSpec from '@/vue_formspec_components'
+import { renderFormWithData } from '../cmk-form-helper'
 
 const stringValidators: FormSpec.Validators[] = [
   {
@@ -99,4 +100,50 @@ test('CmkFormList shows frontend validation on existing element', async () => {
   await fireEvent.update(textbox, '')
 
   screen.getByText('String length must be between 1 and 20')
+})
+
+const dictSpec: FormSpec.Dictionary = {
+  type: 'dictionary',
+  title: 'dictTitle',
+  help: 'fooHelp',
+  validators: [],
+  elements: [
+    {
+      ident: 'bar',
+      required: true,
+      default_value: 'baz',
+      parameter_form: stringFormSpec
+    }
+  ]
+}
+
+const listSpec: FormSpec.List = {
+  type: 'list',
+  title: 'fooTitle',
+  help: 'fooHelp',
+  validators: [],
+  element_template: dictSpec,
+  element_default_value: {},
+  editable_order: false,
+  add_element_label: 'Add element',
+  remove_element_label: 'Remove element',
+  no_element_label: 'No element'
+}
+
+test('CmkFormList adds two new elements and enters data', async () => {
+  const { getCurrentData } = renderFormWithData({
+    spec: listSpec,
+    data: [],
+    backendValidation: []
+  })
+
+  const addElementButton = await screen.findByRole<HTMLInputElement>('button', {
+    name: 'Add element'
+  })
+  await fireEvent.click(addElementButton)
+  await fireEvent.click(addElementButton)
+
+  const element = await screen.getAllByRole('textbox', { name: 'barTitle' })
+  await fireEvent.update(element[0]!, '1234')
+  expect(getCurrentData()).toMatch('[{"bar":"1234"},{"bar":"baz"}]')
 })

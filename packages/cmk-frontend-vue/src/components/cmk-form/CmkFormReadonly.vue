@@ -66,7 +66,13 @@ function renderForm(
       return renderBooleanChoice(formSpec as BooleanChoice, value as boolean)
     case 'multiline_text':
       return renderMultilineText(formSpec as MultilineText, value as string)
+    case 'data_size':
+      return renderDataSize(value as [string, string])
   }
+}
+
+function renderDataSize(value: [string, string]): VNode {
+  return h('div', [h('span', value[0]), h('span', ' '), h('span', value[1])])
 }
 
 function renderMultilineText(formSpec: MultilineText, value: string): VNode {

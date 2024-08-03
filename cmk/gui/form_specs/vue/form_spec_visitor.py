@@ -26,6 +26,7 @@ from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, RenderMo
 from cmk.gui.form_specs.vue.utils import get_visitor, register_visitor_class
 from cmk.gui.form_specs.vue.visitors.boolean_choice import BooleanChoiceVisitor
 from cmk.gui.form_specs.vue.visitors.cascading_single_choice import CascadingSingleChoiceVisitor
+from cmk.gui.form_specs.vue.visitors.data_size import DataSizeVisitor
 from cmk.gui.form_specs.vue.visitors.dictionary import DictionaryVisitor
 from cmk.gui.form_specs.vue.visitors.fixed_value import FixedValueVisitor
 from cmk.gui.form_specs.vue.visitors.float import FloatVisitor
@@ -43,6 +44,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,
+    DataSize,
     Dictionary,
     FixedValue,
     Float,
@@ -84,6 +86,7 @@ def register_form_specs():
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
     register_visitor_class(MultilineText, MultilineTextVisitor)
     register_visitor_class(RegularExpression, StringVisitor, recompose_regular_expression)
+    register_visitor_class(DataSize, DataSizeVisitor)
 
     # Recomposed
     register_visitor_class(Percentage, FloatVisitor, recompose_percentage)

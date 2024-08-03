@@ -16,7 +16,8 @@ export type Components =
   | CascadingSingleChoice
   | FixedValue
   | BooleanChoice
-  | MultilineText;
+  | MultilineText
+  | DataSize;
 export type Integer = FormSpec & {
   type: "integer";
   label?: string;
@@ -87,6 +88,12 @@ export type MultilineText = FormSpec & {
   label?: string;
   macro_support?: boolean;
   monospaced?: boolean;
+  input_hint?: string;
+};
+export type DataSize = FormSpec & {
+  type: "data_size";
+  label?: string;
+  displayed_magnitudes: string[];
   input_hint?: string;
 };
 

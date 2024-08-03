@@ -16,6 +16,9 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: Weblate 5.0.2\n"
 
+msgid " "
+msgstr ""
+
 #, python-format
 msgid " %s, outage duration %s"
 msgstr " %s, duración de la interrupción %s"
@@ -53032,6 +53035,10 @@ msgstr "Guardar"
 msgid "Save & go to %s"
 msgstr "Guardar y pasar a %s"
 
+#, fuzzy
+msgid "Save & go to Activate changes"
+msgstr "No activar los cambios"
+
 msgid "Save & go to host properties"
 msgstr "Guardar e ir a las propiedades del host"
 
@@ -66473,6 +66480,11 @@ msgstr "Este host está deshabilitado"
 
 msgid "This host is flapping"
 msgstr "Este host está aleteando"
+
+#, python-format
+msgid ""
+"This host is missing one or more of the labels: %s (it has the labels %s)"
+msgstr ""
 
 msgid "This host is stale"
 msgstr "Este host está caducado"

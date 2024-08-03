@@ -16,6 +16,9 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Weblate 5.0.2\n"
 
+msgid " "
+msgstr ""
+
 #, python-format
 msgid " %s, outage duration %s"
 msgstr " %s, 停止期間 %s"
@@ -51518,6 +51521,10 @@ msgstr "保存する"
 msgid "Save & go to %s"
 msgstr "保存して%sに移動します"
 
+#, fuzzy
+msgid "Save & go to Activate changes"
+msgstr "変更をアクティブにしないでください"
+
 msgid "Save & go to host properties"
 msgstr "保存してホストプロパティに移動します"
 
@@ -64454,6 +64461,11 @@ msgstr "このホストは無効になっています"
 
 msgid "This host is flapping"
 msgstr "このホストはフラッピングしています"
+
+#, python-format
+msgid ""
+"This host is missing one or more of the labels: %s (it has the labels %s)"
+msgstr ""
 
 msgid "This host is stale"
 msgstr "このホストは古くなっています"

@@ -43,7 +43,7 @@ function getElementsFromProps(): ElementFromProps[] {
   props.spec.elements.forEach((element: DictionaryElement) => {
     let isActive = element.ident in data.value ? true : element.required
     if (isActive && data.value[element.ident] === undefined) {
-      data.value[element.ident] = defaultValues[element.ident]
+      data.value[element.ident] = JSON.parse(JSON.stringify(defaultValues[element.ident]))
     }
     elements.push({
       dict_config: element,
@@ -69,7 +69,10 @@ function toggleElement(event: MouseEvent, key: string) {
 <template>
   <table class="dictionary">
     <tbody>
-      <tr v-for="dict_element in getElementsFromProps()" :key="dict_element.dict_config.ident">
+      <tr
+        v-for="dict_element in getElementsFromProps()"
+        :key="$componentId + dict_element.dict_config.ident"
+      >
         <td class="dictleft">
           <span class="checkbox">
             <input

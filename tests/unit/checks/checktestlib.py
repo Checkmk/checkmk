@@ -73,28 +73,6 @@ class Check(BaseCheck):
         return self.info.check_function(item, params, info)
 
 
-class ActiveCheck(BaseCheck):
-    def __init__(self, name: str) -> None:
-        from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
-            config,
-        )
-
-        super().__init__(name)
-        self.info = config.active_check_info.get(self.name[len("check_") :])
-
-    def run_argument_function(self, params: Mapping[str, object]) -> Sequence[str]:
-        assert self.info, "Active check has to be implemented in the legacy API"
-        return self.info["argument_function"](params)
-
-    def run_service_description(self, params: object) -> object:
-        assert self.info, "Active check has to be implemented in the legacy API"
-        return self.info["service_description"](params)
-
-    def run_generate_icmp_services(self, host_config: object, params: object) -> object:
-        assert self.info, "Active check has to be implemented in the legacy API"
-        yield from self.info["service_generator"](host_config, params)
-
-
 class SpecialAgent:
     def __init__(self, name: str) -> None:
         from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
@@ -460,28 +438,6 @@ def assertDiscoveryResultsEqual(check, actual, expected):
         )
 
 
-class BasicItemState:
-    """Item state as returned by get_item_state
-
-    We assert that we have exactly two values,
-    where the first one is either float or int.
-    """
-
-    def __init__(self, *args) -> None:  # type: ignore[no-untyped-def]
-        if len(args) == 1:
-            args = args[0]
-        msg = "BasicItemState: expected 2-tuple (time_diff, value) - not %r"
-        assert isinstance(args, tuple), msg % args
-        assert len(args) == 2, msg % args
-        self.time_diff, self.value = args
-
-        time_diff_type = type(self.time_diff)
-        msg = "BasicItemState: time_diff should be of type float/int - not %r"
-        assert time_diff_type in (float, int), msg % time_diff_type
-        # We do allow negative time diffs.
-        # We want to be able to test time anomalies.
-
-
 class _MockValueStore:
     def __init__(self, getter: Callable) -> None:
         self._getter = getter
@@ -532,74 +488,6 @@ def mock_item_state(mock_state):
     )
 
     return mock.patch(target, _MockVSManager(_MockValueStore(getter)))
-
-
-class MockHostExtraConf:
-    """Mock the calls to get_host_values.
-
-    Due to our rather unorthodox import structure, we cannot mock
-    get_host_merged_dict directly (it's a global var in running checks!)
-    Instead, we mock the calls to cmk.base.config.get_host_values.
-
-    Passing a single dict to this objects init method will result in
-    get_host_merged_dict returning said dict.
-
-    You can also pass a list of dicts, but that's rather pointless, as
-    get_host_merged_dict will return a merged dict, the result of
-
-        merged_dict = {}
-        for d in reversed(list_of_dicts):
-            merged_dict.update(d)
-    .
-
-    Usage:
-
-    with MockHostExtraConf(mockconfig):
-        # run your check test here,
-        # get_host_merged_dict in your check will return
-        # mockconfig
-
-    See for example 'test_df_check.py'.
-    """
-
-    def __init__(
-        self,
-        check: object,
-        mock_config: Callable | dict[object, object],
-        target: str = "get_host_values",
-    ) -> None:
-        self.target = target
-        self.context: Any = None  # TODO: Figure out the right type
-        self.check = check
-        self.config = mock_config
-
-    def __call__(self, _hostname, _ruleset):
-        # ensure the default value is sane
-        if hasattr(self.config, "__call__"):
-            return self.config(_hostname, _ruleset)
-
-        if self.target == "get_host_values" and isinstance(self.config, dict):
-            return [self.config]
-        return self.config
-
-    def __enter__(self):
-        """The default context: just mock get_item_state"""
-        import cmk.base.config  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
-
-        # we can't use get_config_cache here because it may lead to flakiness
-        config_cache = cmk.base.config.reset_config_cache()
-        self.context = mock.patch.object(
-            config_cache.ruleset_matcher,
-            self.target,
-            # I'm the MockObj myself!
-            new_callable=lambda: self,
-        )
-        assert self.context is not None
-        return self.context.__enter__()
-
-    def __exit__(self, *exc_info):
-        assert self.context is not None
-        return self.context.__exit__(*exc_info)
 
 
 class ImmutablesChangedError(AssertionError):

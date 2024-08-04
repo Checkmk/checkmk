@@ -18,7 +18,6 @@ from ..checktestlib import (
     Immutables,
     MissingCheckInfoError,
     mock_item_state,
-    MockHostExtraConf,
 )
 from .checkhandler import checkhandler
 
@@ -66,10 +65,7 @@ def get_merged_parameters(check, provided_p):
 
 
 def get_mock_values(dataset, subcheck):
-    mock_is_d = getattr(dataset, "mock_item_state", {})
-    mock_hc_d = getattr(dataset, "mock_host_conf", {})
-    mock_hc_m = getattr(dataset, "mock_host_conf_merged", {})
-    return mock_is_d.get(subcheck, {}), mock_hc_d.get(subcheck, []), mock_hc_m.get(subcheck, {})
+    return getattr(dataset, "mock_item_state", {}).get(subcheck, {})
 
 
 def get_discovery_expected(subcheck, dataset):
@@ -185,13 +181,9 @@ def run(check_info, dataset):
             immu.test(" after get_info_argument ")
             immu.register(info_arg, "info_arg")
 
-            mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
+            item_state = get_mock_values(dataset, subcheck)
 
-            with (
-                mock_item_state(mock_is),
-                MockHostExtraConf(check, mock_hec),
-                MockHostExtraConf(check, mock_hecm, "get_host_merged_dict"),
-            ):
+            with mock_item_state(item_state):
                 run_test_on_discovery(check, subcheck, dataset, info_arg, immu)
 
                 run_test_on_checks(check, subcheck, dataset, info_arg, immu)

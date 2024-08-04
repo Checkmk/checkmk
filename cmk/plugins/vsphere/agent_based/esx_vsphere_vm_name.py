@@ -15,17 +15,12 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib import esx_vsphere
 
 
-def discovery_name(section: esx_vsphere.SectionVM) -> DiscoveryResult:
-    if section is None:
-        return
+def discovery_name(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:
     if section.name is not None:
         yield Service()
 
 
-def check_name(section: esx_vsphere.SectionVM) -> CheckResult:
-    if section is None:
-        raise IgnoreResultsError("No VM information currently available")
-
+def check_name(section: esx_vsphere.SectionESXVm) -> CheckResult:
     if section.name is None:
         raise IgnoreResultsError("No information about name")
 

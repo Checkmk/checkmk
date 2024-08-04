@@ -129,12 +129,12 @@ check_plugin_esx_vsphere_vm_snapshots_summary = CheckPlugin(
 )
 
 
-def discover_snapshots(section: esx_vsphere.SectionVM) -> DiscoveryResult:
+def discover_snapshots(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:
     yield Service()
 
 
-def check_snapshots(params: Mapping[str, Any], section: esx_vsphere.SectionVM) -> CheckResult:
-    raw_snapshots = " ".join(section.snapshots if section else []).split("|")
+def check_snapshots(params: Mapping[str, Any], section: esx_vsphere.SectionESXVm) -> CheckResult:
+    raw_snapshots = " ".join(section.snapshots).split("|")
     iter_snapshots_tuple = (x.split(" ", 3) for x in raw_snapshots if x)
 
     yield from check_snapshots_summary(
@@ -144,7 +144,7 @@ def check_snapshots(params: Mapping[str, Any], section: esx_vsphere.SectionVM) -
                 time=int(x[1]),
                 state=x[2],
                 name=x[3],
-                vm=section.name if (section and section.name) else "",
+                vm=section.name if section.name else "",
             )
             for x in iter_snapshots_tuple
         ],

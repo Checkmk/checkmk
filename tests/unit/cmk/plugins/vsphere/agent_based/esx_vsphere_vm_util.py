@@ -9,8 +9,8 @@ from cmk.plugins.lib import esx_vsphere
 
 
 class ESXVMFactory(ModelFactory):
-    __model__ = esx_vsphere.ESXVm
+    __model__ = esx_vsphere.SectionESXVm
 
 
-def esx_vm_section(**kwargs) -> esx_vsphere.ESXVm:  # type: ignore[no-untyped-def]
+def esx_vm_section(**kwargs) -> esx_vsphere.SectionESXVm:  # type: ignore[no-untyped-def]
     return ESXVMFactory.build(**kwargs)

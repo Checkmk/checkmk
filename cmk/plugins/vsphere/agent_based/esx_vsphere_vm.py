@@ -10,14 +10,13 @@ from cmk.plugins.lib.esx_vsphere import (
     ESXDataStore,
     ESXMemory,
     ESXStatus,
-    ESXVm,
     HeartBeat,
     HeartBeatStatus,
-    SectionVM,
+    SectionESXVm,
 )
 
 
-def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
+def parse_esx_vsphere_vm(string_table: StringTable) -> SectionESXVm | None:
     grouped_values: dict[str, list[str]] = {}
     for line in string_table:
         # Do not monitor VM templates
@@ -25,7 +24,7 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
             return None
         grouped_values[line[0]] = line[1:]
 
-    return ESXVm(
+    return SectionESXVm(
         mounted_devices=grouped_values.get("config.hardware.device", []),
         snapshots=grouped_values.get("snapshot.rootSnapshotList", []),
         status=_parse_vm_status(grouped_values),
@@ -154,7 +153,7 @@ def _parse_esx_datastore_section(
     return stores
 
 
-def host_label_esx_vshpere_vm(section: SectionVM) -> HostLabelGenerator:
+def host_label_esx_vshpere_vm(section: SectionESXVm) -> HostLabelGenerator:
     """Host label function
 
     Labels:
@@ -164,7 +163,7 @@ def host_label_esx_vshpere_vm(section: SectionVM) -> HostLabelGenerator:
             and to "vm" if the host is a virtual machine.
 
     """
-    if section and section.host is not None:
+    if section.host is not None:
         yield HostLabel("cmk/vsphere_object", "vm")
 
 

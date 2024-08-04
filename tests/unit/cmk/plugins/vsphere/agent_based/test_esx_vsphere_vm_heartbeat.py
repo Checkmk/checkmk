@@ -75,5 +75,5 @@ def testcheck_heartbeat_params(vm_status: HeartBeatStatus, params_key: str) -> N
     assert results[0].state == State.OK
 
 
-def _esx_vm_section(heartbeat: esx_vsphere.HeartBeat) -> esx_vsphere.ESXVm:
+def _esx_vm_section(heartbeat: esx_vsphere.HeartBeat) -> esx_vsphere.SectionESXVm:
     return esx_vm_section(heartbeat=heartbeat)

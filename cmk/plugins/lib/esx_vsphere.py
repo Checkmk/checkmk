@@ -83,7 +83,7 @@ class HeartBeat(BaseModel):
     value: str
 
 
-class ESXVm(BaseModel):
+class SectionESXVm(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     mounted_devices: Sequence[str]
@@ -96,9 +96,6 @@ class ESXVm(BaseModel):
     heartbeat: HeartBeat | None
     host: str | None
     name: str | None
-
-
-SectionVM = ESXVm | None
 
 
 def average_parsed_data(values: CounterValues) -> float:

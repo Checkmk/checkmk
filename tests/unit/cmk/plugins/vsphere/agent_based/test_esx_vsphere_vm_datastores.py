@@ -66,5 +66,5 @@ def test_check_datastore_with_no_capacity():
     assert results[0].summary.endswith("(0 B/0.0% free)")
 
 
-def _esx_vm_section(datastores: Sequence[esx_vsphere.ESXDataStore]) -> esx_vsphere.ESXVm:
+def _esx_vm_section(datastores: Sequence[esx_vsphere.ESXDataStore]) -> esx_vsphere.SectionESXVm:
     return esx_vm_section(datastores=datastores)

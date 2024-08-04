@@ -20,18 +20,12 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib import esx_vsphere
 
 
-def discovery_mem_usage(section: esx_vsphere.SectionVM) -> DiscoveryResult:
-    if section is None:
-        return
-
+def discovery_mem_usage(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:
     if section.memory is not None:
         yield Service()
 
 
-def check_mem_usage(params: Mapping[str, Any], section: esx_vsphere.SectionVM) -> CheckResult:
-    if section is None:
-        raise IgnoreResultsError("No VM information currently available")
-
+def check_mem_usage(params: Mapping[str, Any], section: esx_vsphere.SectionESXVm) -> CheckResult:
     if section.power_state != "poweredOn":
         yield Result(state=State.OK, summary=f"VM is {section.power_state}, skipping this check")
         return

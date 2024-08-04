@@ -7,7 +7,6 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
-    IgnoreResultsError,
     render,
     Result,
     Service,
@@ -16,18 +15,12 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib import esx_vsphere
 
 
-def discovery_datastores(section: esx_vsphere.SectionVM) -> DiscoveryResult:
-    if section is None:
-        return
-
+def discovery_datastores(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:
     if section.datastores is not None:
         yield Service()
 
 
-def check_datastores(section: esx_vsphere.SectionVM) -> CheckResult:
-    if section is None:
-        raise IgnoreResultsError("No VM information currently available")
-
+def check_datastores(section: esx_vsphere.SectionESXVm) -> CheckResult:
     if section.datastores is None:
         yield Result(state=State.UNKNOWN, summary="Datastore information is missing")
         return

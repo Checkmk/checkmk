@@ -26,15 +26,12 @@ CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def discovery_heartbeat(section: esx_vsphere.SectionVM) -> DiscoveryResult:
-    if section is None:
-        return
-
+def discovery_heartbeat(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:
     if section.heartbeat is not None:
         yield Service()
 
 
-def check_heartbeat(params: Mapping[str, Any], section: esx_vsphere.SectionVM) -> CheckResult:
+def check_heartbeat(params: Mapping[str, Any], section: esx_vsphere.SectionESXVm) -> CheckResult:
     """
     Possible values (this list is taken from the official documentation)
        gray - VMware Tools are not installed or not running.
@@ -42,9 +39,6 @@ def check_heartbeat(params: Mapping[str, Any], section: esx_vsphere.SectionVM) -
        yellow - Intermittent heartbeat. May be due to guest load.
        green - Guest operating system is responding normally.
     """
-    if section is None:
-        raise IgnoreResultsError("No VM information currently available")
-
     heartbeat = section.heartbeat
     if heartbeat is None:
         raise IgnoreResultsError("No information about VM Heartbeat")

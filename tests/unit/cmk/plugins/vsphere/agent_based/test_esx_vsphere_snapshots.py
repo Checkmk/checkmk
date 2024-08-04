@@ -13,7 +13,7 @@ import time_machine
 from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.lib.esx_vsphere import ESXVm
+from cmk.plugins.lib.esx_vsphere import SectionESXVm
 from cmk.plugins.vsphere.agent_based.esx_vsphere_snapshot import (
     check_snapshots,
     check_snapshots_summary,
@@ -190,5 +190,5 @@ def test_time_reference_snapshot() -> None:
     ]
 
 
-def _esx_vm_section(snapshots: Sequence[str]) -> ESXVm:
+def _esx_vm_section(snapshots: Sequence[str]) -> SectionESXVm:
     return esx_vm_section(snapshots=snapshots, name="test_vm_name")

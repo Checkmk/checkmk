@@ -159,6 +159,8 @@ ActivationState = dict[str, SiteActivationState]
 FileFilterFunc = Callable[[str], bool] | None
 ActivationSource = Literal["GUI", "REST API", "INTERNAL"]
 
+tracer = trace.get_tracer()
+
 
 class SiteReplicationStatus(TypedDict, total=False):
     last_activation: ActivationId | None
@@ -1291,6 +1293,7 @@ class ActivateChangesManager(ActivateChanges):
     # For each site a separate thread is started that controls the activation of the
     # configuration on that site. The state is checked by the general activation
     # thread.
+    @tracer.start_as_current_span("activate_changes")
     def start(
         self,
         sites: list[SiteId],
@@ -1341,6 +1344,7 @@ class ActivateChangesManager(ActivateChanges):
         self._sites = self._get_sites(sites)
         self._source = source
         self._activation_id = self._new_activation_id()
+        trace.get_current_span().set_attribute("cmk.activate.id", self._activation_id)
 
         self._site_snapshot_settings = self._get_site_snapshot_settings(
             self._activation_id, self._sites
@@ -1533,6 +1537,7 @@ class ActivateChangesManager(ActivateChanges):
                 raise
             raise MKUserError(None, _("Can not start activation: %s") % e)
 
+    @tracer.start_as_current_span("create_snapshots")
     def _create_snapshots(self):
         """Creates the needed SyncSnapshots for each applicable site.
 
@@ -1645,6 +1650,7 @@ class ActivateChangesManager(ActivateChanges):
                 ),
             )
 
+    @tracer.start_as_current_span("start_activation")
     def _start_activation(self) -> None:
         self._log_activation()
         assert self._activation_id is not None
@@ -1737,11 +1743,11 @@ class SnapshotManager:
 
     def generate_snapshots(self) -> None:
         if not self._site_snapshot_settings:
-            # Nothing to do
-            return
+            return  # Nothing to do
 
         # 1. Collect files to "var/check_mk/site_configs" directory
-        self._data_collector.prepare_snapshot_files()
+        with tracer.start_as_current_span("prepare_snapshot_files"):
+            self._data_collector.prepare_snapshot_files()
 
         # 2. Allow hooks to further modify the reference data for the remote site
         hooks.call("post-snapshot-creation", self._site_snapshot_settings)
@@ -1787,17 +1793,21 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         first_site = site_ids.pop(0)
 
         # Create first directory and clone it once for each destination site
-        self._prepare_site_config_directory(first_site)
-        self._clone_site_config_directories(first_site, site_ids)
+        with tracer.start_as_current_span("prepare_first_site"):
+            self._prepare_site_config_directory(first_site)
+            self._clone_site_config_directories(first_site, site_ids)
 
         for site_id, snapshot_settings in sorted(
             self._site_snapshot_settings.items(), key=lambda x: x[0]
         ):
-            site_globals = get_site_globals(site_id, snapshot_settings.site_config)
-
-            save_site_global_settings(site_globals, custom_site_path=snapshot_settings.work_dir)
-
-            create_distributed_wato_files(Path(snapshot_settings.work_dir), site_id, is_remote=True)
+            with tracer.start_as_current_span(f"prepare_site_{site_id}"):
+                save_site_global_settings(
+                    get_site_globals(site_id, snapshot_settings.site_config),
+                    custom_site_path=snapshot_settings.work_dir,
+                )
+                create_distributed_wato_files(
+                    Path(snapshot_settings.work_dir), site_id, is_remote=True
+                )
 
     def _prepare_site_config_directory(self, site_id: SiteId) -> None:
         """
@@ -2220,6 +2230,7 @@ def _error_callback(error: BaseException) -> None:
     logger.error(str(error))
 
 
+@tracer.start_as_current_span("sync_and_activate")
 def sync_and_activate(
     activation_id: str,
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],

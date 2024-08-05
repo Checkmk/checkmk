@@ -765,6 +765,7 @@ def _merge_results(
 
 
 def _get_tarfile_from_remotesite(site: SiteId, tarfile_name: str, timeout: int) -> str:
+    cmk.utils.paths.diagnostics_dir.mkdir(parents=True, exist_ok=True)
     tarfile_localpath = _create_file_path()
     with open(tarfile_localpath, "wb") as file:
         file.write(_get_diagnostics_dump_file(site, tarfile_name, timeout))

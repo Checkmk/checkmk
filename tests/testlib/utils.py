@@ -396,7 +396,7 @@ def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: floa
 def parse_files(pathname: Path, pattern: str, ignore_case: bool = True) -> dict[str, list[str]]:
     """Parse file(s) for a given pattern."""
     pattern_obj = re.compile(pattern, re.IGNORECASE if ignore_case else 0)
-    LOGGER.info("Parsing logs for '%s'", pattern)
+    LOGGER.info("Parsing logs for '%s' in %s", pattern, pathname)
     match_dict: dict[str, list[str]] = {}
     for file_path in glob.glob(str(pathname), recursive=True):
         with open(file_path, "r", encoding="utf-8") as file:

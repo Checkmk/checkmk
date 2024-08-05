@@ -19,7 +19,6 @@ ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override
 # the EDITIONS environment variable handed over by some jenkins test jobs.
 # Looks like we need to cleanup the EDITION handling here.
-GCC_TOOLCHAIN := /opt/gcc-$(shell make --no-print-directory --file=../defines.make print-GCC_VERSION)
 AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS)
 
 # A random time zone between UTC-11...UTC+14. Note the recursively expanded

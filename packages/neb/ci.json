@@ -1,5 +1,5 @@
 {
-    "command_line": "GCC_TOOLCHAIN=/opt/gcc-13.2.0 ./run --clean --all",
+    "command_line": "./run --clean --all",
     "maintainers": ["team-main@checkmk.com"],
     "dependencies": ["packages/neb/", "packages/livestatus/"]
 }

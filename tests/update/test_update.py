@@ -7,7 +7,7 @@ import logging
 import pytest
 
 from tests.testlib.site import Site
-from tests.testlib.utils import current_base_branch_name, get_services_with_status
+from tests.testlib.utils import current_base_branch_name, get_services_with_status, parse_files
 from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.hostaddress import HostName
@@ -95,3 +95,12 @@ def test_update(  # pylint: disable=too-many-branches
         f"\nDetails: {err_details})"
     )
     assert base_ok_services.issubset(target_ok_services), err_msg
+
+    match_dict = parse_files(pathname=test_site.logs_dir / "/*log*", pattern="error")
+    assert not match_dict, f"Error string found in one or more log files: {match_dict}"
+
+    # TODO: Uncomment the following block once the following issues are resolved:
+    #   * CMK-18519
+    #   * CMK-18520
+    # match_dict_subs = parse_files(pathname=test_site.logs_dir + "/**/*log*", pattern="error")
+    # assert not match_dict_subs, f"Error string found in one or more log files: {match_dict}"

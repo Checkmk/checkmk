@@ -1148,6 +1148,10 @@ class Site:
     def result_dir(self) -> str:
         return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)
 
+    @property
+    def logs_dir(self) -> Path:
+        return Path(self.root) / "var/log"
+
     def get_automation_secret(self) -> str:
         secret_path = "var/check_mk/web/automation/automation.secret"
         secret = self.read_file(secret_path).strip()

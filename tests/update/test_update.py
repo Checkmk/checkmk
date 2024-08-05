@@ -87,11 +87,15 @@ def test_update(test_setup: tuple[Site, Edition, bool]) -> None:
         expected_licensed = True
     assert expected_licensed == is_test_site_licensed(target_site)
 
-    match_dict = parse_files(pathname=test_site.logs_dir / "/*log*", pattern="error")
+    match_dict = parse_files(pathname=test_site.logs_dir / "*log*", pattern="error")
     assert not match_dict, f"Error string found in one or more log files: {match_dict}"
 
-    # TODO: Uncomment the following block once the following issues are resolved:
-    #   * CMK-18519
-    #   * CMK-18520
-    # match_dict_subs = parse_files(pathname=test_site.logs_dir + "/**/*log*", pattern="error")
-    # assert not match_dict_subs, f"Error string found in one or more log files: {match_dict}"
+    match_dict_subs = parse_files(pathname=test_site.logs_dir / "**/*log*", pattern="error")
+
+    # TODO: Remove the following line after CMK-18519 is done
+    match_dict_subs.pop("/omd/sites/update_central/var/log/apache/error_log")
+
+    # TODO: Remove the following line after CMK-18520 is done
+    match_dict_subs.pop("/omd/sites/update_central/var/log/agent-receiver/error.log")
+
+    assert not match_dict_subs, f"Error string found in one or more log files: {match_dict}"

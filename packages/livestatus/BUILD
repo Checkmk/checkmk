@@ -14,14 +14,14 @@ cc_library(
         "include/livestatus/Poller.h",
     ],
     copts = ["-O3"],
-    includes = ["include"],
+    strip_include_prefix = "include/",
     visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "livestatus_headers",
     hdrs = glob(["include/livestatus/*.h"]),
-    includes = ["include"],
+    strip_include_prefix = "include/",
     visibility = ["//visibility:public"],
     deps = ["@asio"],
 )

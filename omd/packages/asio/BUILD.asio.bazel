@@ -6,6 +6,6 @@ cc_library(
         "include/**/*.hpp",
         "include/**/*.ipp",
     ]),
-    includes = ["include"],
+    strip_include_prefix = "include/",
     visibility = ["//visibility:public"],
 )

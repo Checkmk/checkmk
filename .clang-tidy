@@ -33,4 +33,6 @@ WarningsAsErrors: '*'
 CheckOptions:
   bugprone-signed-char-misuse.CharTypdefsToIgnore: 'int8_t'
   cert-str34-c.CharTypdefsToIgnore: 'int8_t'
+  # There is a cycle within the Asio library: asio/io_context.hpp <=> asio/impl/io_context.ipp
+  misc-header-include-cycle.IgnoredFilesList: '/asio/io_context\.hpp$'
 ...

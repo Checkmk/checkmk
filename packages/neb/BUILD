@@ -7,8 +7,8 @@ cc_library(
     name = "neb_version",
     srcs = ["src/CmkVersion.cc"],
     hdrs = ["include/neb/CmkVersion.h"],
-    includes = ["include"],
     local_defines = [r'VERSION=\"' + CMK_VERSION + r'\"'],
+    strip_include_prefix = "include/",
 )
 
 # Our generated & patched headers for Nagios 3 & 4
@@ -20,7 +20,7 @@ cc_library(
             "third_party/include/nagios4/*.h",
         ],
     ),
-    includes = ["third_party/include"],
+    strip_include_prefix = "third_party/include/",
     tags = ["no-clang-tidy"],
 )
 
@@ -55,7 +55,7 @@ cc_library(
         "include/neb/nagios.h",
     ],
     copts = ["-O3"],
-    includes = ["include"],
+    strip_include_prefix = "include/",
     deps = [
         ":neb_nagios_headers",
         ":neb_version",

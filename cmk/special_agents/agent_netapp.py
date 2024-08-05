@@ -76,7 +76,7 @@ except ImportError:
     # 2.0 backwards compatibility
     import xml.etree.ElementTree as ET  # type: ignore[no-redef]
 
-__version__ = "2.3.0p12"
+__version__ = "2.3.0p13"
 
 USER_AGENT = f"checkmk-special-netapp-{__version__}"
 

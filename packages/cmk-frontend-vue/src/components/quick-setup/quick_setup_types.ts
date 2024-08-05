@@ -33,8 +33,11 @@ export interface QuickSetupStageSpec {
   /** @property {AllValidationMessages} form_spec_errors - Object containing the validation errors of all FormSpecWidgets from current stage*/
   form_spec_errors?: AllValidationMessages
 
-  /** @property {string[]} stage_errors - List of global errors from the current stage */
-  other_errors?: string[]
+  /** @property {string[] | sttring} stage_errors - List of validation errors from the current stage */
+  stage_errors?: string[] | string
+
+  /** @property {string[] | string} other_errors - List of validation errors from the current stage */
+  other_errors?: string[] | string
 }
 
 export interface QuickSetupStageWithIndexSpec {
@@ -52,4 +55,10 @@ export interface QuickSetupStageWithIndexSpec {
 
   /** @property {QuickSetupStageSpec} spec - Components, titles, subtitles, text, error messages, data, etc of current stage */
   spec: QuickSetupStageSpec
+
+  /** @property {string[] | string} other_errors - Data of the current stage */
+  other_errors?: string[] | string
+
+  /** @property {string} next_button_label - Label for the "save" button */
+  save_button_label: string
 }

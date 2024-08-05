@@ -1,21 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-
-import AlertBox from '@/components/common/AlertBox.vue'
-import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
-import LoadingIcon from '@/components/common/LoadingIcon.vue'
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import { Label } from '@/components/ui/label'
 
-import Button from './element/IconButton.vue'
 import CompositeWidget from './widgets/CompositeWidget.vue'
+import Button from './element/IconButton.vue'
+import LoadingIcon from '@/components/common/LoadingIcon.vue'
+import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
+
 import { type QuickSetupStageWithIndexSpec, type StageData } from './quick_setup_types'
+import AlertBox from '@/components/common/AlertBox.vue'
 
 const emit = defineEmits(['prevStage', 'nextStage', 'save', 'update'])
 const props = defineProps<QuickSetupStageWithIndexSpec>()
 
 const isFirst = computed(() => props.index == 0)
-const isLast = computed(() => props.index == props.numberOfStages - 1)
 const isCompleted = computed(() => props.index < props.selectedStage)
 
 let userInput: StageData = (props?.spec.user_input as StageData) || {}
@@ -24,6 +23,18 @@ const updateData = (id: string, value: object) => {
   userInput[id] = value
   emit('update', props.index, userInput)
 }
+
+const asArray = (value?: string[] | string): string[] => {
+  if (!value) {
+    return []
+  }
+  return Array.isArray(value) ? value : [value]
+}
+
+const combinedErrors = computed(() => {
+  const errors = [...asArray(props?.spec?.stage_errors), ...asArray(props?.other_errors)]
+  return errors
+})
 </script>
 
 <template>
@@ -47,11 +58,6 @@ const updateData = (id: string, value: object) => {
             <div v-if="props.spec.sub_title">
               <Label variant="subtitle">{{ props.spec.sub_title }}</Label>
             </div>
-            <AlertBox v-if="props.spec?.other_errors?.length" variant="error">
-              <ul>
-                <li v-for="error in props.spec.other_errors" :key="error">{{ error }}</li>
-              </ul>
-            </AlertBox>
             <ErrorBoundary>
               <CompositeWidget
                 v-if="props.spec?.components"
@@ -61,16 +67,17 @@ const updateData = (id: string, value: object) => {
                 @update="updateData"
               />
             </ErrorBoundary>
+            <AlertBox v-if="combinedErrors.length" variant="error">
+              <p v-for="error in combinedErrors" :key="error">{{ error }}</p>
+            </AlertBox>
           </div>
 
           <div v-if="!loading" class="qs-stage__action">
             <Button
-              v-if="!isLast"
               :label="props.spec.next_button_label || 'Next'"
               variant="next"
               @click="$emit('nextStage')"
             />
-            <Button v-if="isLast" label="Save" variant="save" @click="$emit('save')" />
             <Button
               v-if="!isFirst"
               style="padding-left: 1rem"
@@ -140,7 +147,7 @@ const updateData = (id: string, value: object) => {
 .qs-stage__action {
   padding-top: 1rem;
   position: relative;
-  left: -1rem;
+  left: -0.8rem;
 }
 
 .qs-stage__loading {

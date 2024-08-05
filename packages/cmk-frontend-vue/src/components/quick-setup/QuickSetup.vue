@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, onBeforeMount } from 'vue'
 
-import AlertBox from '@/components/common/AlertBox.vue'
 import LoadingIcon from '@/components/common/LoadingIcon.vue'
-
+import Button from './element/IconButton.vue'
 import QuickSetupStage from './QuickSetupStage.vue'
 import { type QuickSetupSpec, type QuickSetupStageSpec, type StageData } from './quick_setup_types'
 import {
@@ -13,7 +12,8 @@ import {
   type RestApiError,
   type QSStageResponse
 } from './rest_api_types'
-import { getOverview, validateStage } from './rest_api'
+
+import { completeQuickSetup, getOverview, validateStage } from './rest_api'
 
 const props = defineProps<QuickSetupSpec>()
 const currentStage = ref(0) //Selected stage. We start in stage 0
@@ -40,7 +40,7 @@ const initializeStagesData = (skeleton: QSInitializationResponse) => {
       components: isFirst ? skeleton.stage.next_stage_structure.components : [],
       recap: [],
       form_spec_errors: {},
-      other_errors: [],
+      stage_errors: [],
       user_input: ref<StageData>({})
     })
   }
@@ -69,18 +69,12 @@ const update = (index: number, value: StageData) => {
   formData.value[index] = value
 }
 
-const save = async () => {
-  console.log('Trigger save data and go to activate changes if success')
-
-  //This will be changed in the next commit
-  await nextStage()
-}
-
 const handleError = (err: RestApiError) => {
   if (err.type === 'general') {
     globalError.value = (err as GeneralError).general_error
   } else {
     stages.value[currentStage.value]!.form_spec_errors = (err as ValidationError).formspec_errors
+    stages.value[currentStage.value]!.stage_errors = (err as ValidationError).stage_errors
   }
 }
 
@@ -114,6 +108,7 @@ const nextStage = async () => {
   //Clear form_spec_errors and other_errors from thisStage
   stages.value[thisStage]!.form_spec_errors = {}
   stages.value[thisStage]!.other_errors = []
+  stages.value[thisStage]!.stage_errors = []
   stages.value[thisStage]!.recap = result.stage_recap
 
   //If we have not finished the quick setup yet, update data and display next stage
@@ -124,22 +119,39 @@ const nextStage = async () => {
       next_button_label: result.next_stage_structure.button_label || '',
       recap: [],
       form_spec_errors: {},
-      other_errors: []
+      stage_errors: []
     }
-
-    currentStage.value = nextStage
-  } else {
-    //Otherwise, we are done. Display last info and prepare to launch
   }
+
+  currentStage.value = nextStage
 }
 
 const prevStage = () => {
+  globalError.value = null
   currentStage.value = Math.max(currentStage.value - 1, 0)
+}
+
+const save = async () => {
+  loading.value = true
+  globalError.value = null
+
+  const userInput: StageData[] = []
+
+  for (let i = 0; i < numberOfStages.value; i++) {
+    const formData = (stages.value[i]!.user_input || {}) as StageData
+    userInput.push(formData)
+  }
+
+  try {
+    const { redirect_url: redirectUrl } = await completeQuickSetup(props.quick_setup_id, userInput)
+    window.location.href = redirectUrl
+  } catch (err) {
+    handleError(err as RestApiError)
+  }
 }
 </script>
 
 <template>
-  <AlertBox v-if="globalError" variant="error">{{ globalError }}</AlertBox>
   <ol v-if="ready" class="quick-setup">
     <QuickSetupStage
       v-for="(stg, index) in stages"
@@ -149,6 +161,8 @@ const prevStage = () => {
       :number-of-stages="numberOfStages"
       :loading="loading"
       :spec="stg"
+      :other_errors="globalError || []"
+      :save_button_label="buttonCompleteLabel"
       @prev-stage="prevStage"
       @next-stage="nextStage"
       @save="save"
@@ -156,6 +170,15 @@ const prevStage = () => {
     />
   </ol>
   <LoadingIcon v-else />
+  <div v-if="currentStage >= numberOfStages" class="qs-main__action">
+    <div v-if="loading">
+      <p class="qs-main__loading"><LoadingIcon :height="16" />Please wait...</p>
+    </div>
+    <div v-else>
+      <Button :label="buttonCompleteLabel" variant="save" @click="save" />
+      <Button style="padding-left: 1rem" label="Back" variant="prev" @click="prevStage" />
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -163,5 +186,15 @@ const prevStage = () => {
   counter-reset: stage-index;
   --size: 3rem;
   --spacing: 0.5rem;
+}
+
+.qs-main__action {
+  padding-top: 1rem;
+  padding-left: 7.5rem;
+  position: relative;
+}
+
+.qs-stage__loading {
+  padding-left: 1rem;
 }
 </style>

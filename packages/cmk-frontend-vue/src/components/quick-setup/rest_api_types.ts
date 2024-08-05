@@ -77,3 +77,14 @@ export interface GeneralError extends RestApiError {
   type: 'general'
   general_error: string
 }
+
+/**
+ * Request to complete the quick setup
+ */
+export interface QSRequestComplete {
+  stages: QSStageRequest[]
+}
+
+export interface QSResponseComplete {
+  redirect_url: string
+}

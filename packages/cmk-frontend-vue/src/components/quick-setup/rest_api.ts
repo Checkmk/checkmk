@@ -1,5 +1,9 @@
 import axios from 'axios'
-import { GET_QUICK_SETUP_OVERVIEW_URL, VALIDATE_QUICK_SETUP_STAGE_URL } from '@/constants/rest_api'
+import {
+  COMPLETE_QUICK_SETUP_URL,
+  GET_QUICK_SETUP_OVERVIEW_URL,
+  VALIDATE_QUICK_SETUP_STAGE_URL
+} from '@/constants/rest_api'
 import { type StageData } from './quick_setup_types'
 
 import {
@@ -7,7 +11,9 @@ import {
   type QSInitializationResponse,
   type QSValidateStagesRequest,
   type QSStageResponse,
-  type ValidationError
+  type ValidationError,
+  type QSResponseComplete,
+  type QSRequestComplete
 } from './rest_api_types'
 
 // import { ACTIVATE_CHANGES_URL } from '@/constants/ui'
@@ -21,13 +27,16 @@ import {
 
 const processError = (err: unknown): ValidationError | GeneralError => {
   if (!axios.isAxiosError(err)) {
-    return { type: 'general', general_error: 'Unknown error has ocurred' } as GeneralError
+    return { type: 'general', general_error: 'Unknown error has occurred' } as GeneralError
   }
 
   if (err.response?.status === 400) {
     return { type: 'validation', ...err.response.data?.errors } as ValidationError
   } else {
-    return { type: 'general', general_error: err.message } as GeneralError
+    return {
+      type: 'general',
+      general_error: err?.response?.data?.title || err.message
+    } as GeneralError
   }
 }
 
@@ -59,6 +68,27 @@ export const validateStage = async (
     const payload: QSValidateStagesRequest = {
       quick_setup_id: quickSetupId,
       stages: formData.map((stage, index) => ({ stage_id: index + 1, form_data: stage }))
+    }
+
+    axios
+      .post(url, payload)
+      .then((response) => {
+        resolve(response.data)
+      })
+      .catch((err) => {
+        reject(processError(err))
+      })
+  })
+}
+
+export const completeQuickSetup = async (
+  quickSetupId: string,
+  formData: StageData[]
+): Promise<QSResponseComplete> => {
+  return new Promise((resolve, reject) => {
+    const url = COMPLETE_QUICK_SETUP_URL.replace('{QUICK_SETUP_ID}', quickSetupId)
+    const payload: QSRequestComplete = {
+      stages: formData.map((step, index) => ({ stage_id: index + 1, form_data: step }))
     }
 
     axios

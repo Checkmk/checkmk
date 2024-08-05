@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-neb.groovy
+/// file: test-package-neb.groovy
 
 def main() {
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");

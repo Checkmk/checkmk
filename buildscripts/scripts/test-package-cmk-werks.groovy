@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-werks-package.groovy
+/// file: test-package-cmk-werks.groovy
 
 def main() {
     dir("${checkout_dir}") {

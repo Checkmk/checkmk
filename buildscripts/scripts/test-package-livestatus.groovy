@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-livestatus.groovy
+/// file: test-package-livestatus.groovy
 
 def main() {
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");

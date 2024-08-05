@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-mk-sql.groovy
+/// file: test-package-mk-sql.groovy
 
 def main() {
     dir("${checkout_dir}") {

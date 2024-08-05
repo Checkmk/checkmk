@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-agent-controller.groovy
+/// file: test-package-agent-controller.groovy
 
 def main() {
     dir("${checkout_dir}") {

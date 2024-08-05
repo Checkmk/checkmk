@@ -98,6 +98,8 @@ configure_make(
                 INSTALLSITEMAN3DIR=/share/man/man3 \
                 INSTALLARCHLIB=/lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi \
                 install
+        patchelf --set-rpath "\\$ORIGIN" \
+            ${INSTALLDIR}/lib/libnetsnmp.so
     """,
     targets = [
         "",

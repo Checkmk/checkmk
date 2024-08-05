@@ -12,6 +12,8 @@ $(STUNNEL_BUILD):
 $(STUNNEL_INSTALL): $(STUNNEL_BUILD)
 	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(STUNNEL)/$(STUNNEL)/bin $(DESTDIR)$(OMD_ROOT)/
 	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(STUNNEL)/$(STUNNEL)/lib $(DESTDIR)$(OMD_ROOT)/
+	patchelf --set-rpath "\$$ORIGIN/../" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/stunnel/libstunnel.so"
 	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(STUNNEL)/$(STUNNEL)/share/$(STUNNEL).bash $(DESTDIR)$(OMD_ROOT)/skel/etc/bash_completion.d/
 	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(STUNNEL)/skel/ $(DESTDIR)$(OMD_ROOT)/skel
 	cd $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/ && $(LN) -sf ../init.d/$(STUNNEL) 85-$(STUNNEL)

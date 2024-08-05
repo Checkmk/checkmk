@@ -79,6 +79,12 @@ configure_make(
                 ${INSTALLDIR}/bin/rrdinfo \
                 ${INSTALLDIR}/bin/rrdtool \
                 ${INSTALLDIR}/bin/rrdupdate
+        find "${INSTALLDIR}/lib" -name "rrdtool*.so" -exec \
+            patchelf --set-rpath "\\$ORIGIN/../../" {} \\;
+        find "${INSTALLDIR}/lib" -name "RRDs.so" -exec \
+            patchelf --set-rpath "\\$ORIGIN/../../../../../../" {} \\;
+        find "${INSTALLDIR}/lib" -name "librrd.so" -exec \
+            patchelf --set-rpath "\\$ORIGIN" {} \\;
     """,
     targets = [
         "-C po all",

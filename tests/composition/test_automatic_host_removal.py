@@ -2,11 +2,14 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+import logging
+
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 from tests.testlib.utils import wait_until
 
-from .utils import LOGGER
+logger = logging.getLogger(__name__)
 
 
 @skip_if_saas_edition
@@ -33,7 +36,7 @@ def test_automatic_host_removal(
             "value"
         ]
 
-    LOGGER.info("Waiting for hosts to be removed")
+    logger.info("Waiting for hosts to be removed")
     wait_until(
         _no_hosts_exist,
         timeout=150,

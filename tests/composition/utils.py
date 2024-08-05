@@ -11,8 +11,8 @@ from pathlib import Path
 from tests.testlib.agent import get_package_type, wait_for_baking_job
 from tests.testlib.site import Site
 
-LOGGER = logging.getLogger("composition-tests")
-LOGGER.setLevel(logging.INFO)
+logger = logging.getLogger("composition-tests")
+logger.setLevel(logging.INFO)
 
 
 def get_package_extension() -> str:
@@ -27,7 +27,7 @@ def get_package_extension() -> str:
 
 
 def bake_agent(site: Site, hostname: str) -> tuple[str, Path]:
-    LOGGER.info('Create host "%s" and bake agent...', hostname)
+    logger.info('Create host "%s" and bake agent...', hostname)
     start_time = time.time()
     site.openapi.create_host(
         hostname,

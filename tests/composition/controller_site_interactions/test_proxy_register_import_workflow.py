@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import subprocess
 from pathlib import Path
 
@@ -13,7 +14,7 @@ from tests.testlib.utils import run
 
 from cmk.utils.hostaddress import HostName
 
-from ..utils import LOGGER
+logger = logging.getLogger(__name__)
 
 
 @skip_if_not_containerized
@@ -58,7 +59,7 @@ def test_proxy_register_import_workflow(
         check=True,
     )
 
-    LOGGER.info("Waiting for controller to open TCP socket or push data")
+    logger.info("Waiting for controller to open TCP socket or push data")
     wait_until_host_receives_data(central_site, hostname)
 
     central_site.openapi.discover_services_and_wait_for_completion(hostname)

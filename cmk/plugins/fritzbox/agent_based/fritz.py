@@ -65,8 +65,14 @@ def _section_to_interface(section: Section) -> interfaces.Section[interfaces.Int
                 ),
             ),
             interfaces.Counters(
-                in_octets=int(section.get("NewTotalBytesReceived", 0)),
-                out_octets=int(section.get("NewTotalBytesSent", 0)),
+                in_octets=int(
+                    section.get(
+                        "NewX_AVM_DE_TotalBytesReceived64", section.get("NewTotalBytesReceived", 0)
+                    )
+                ),
+                out_octets=int(
+                    section.get("NewX_AVM_DE_TotalBytesSent64", section.get("NewTotalBytesSent", 0))
+                ),
             ),
         )
     ]

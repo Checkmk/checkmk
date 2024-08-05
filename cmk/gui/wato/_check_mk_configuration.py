@@ -1423,7 +1423,7 @@ class EnableDeprecatedAutomationuserAuthentication(ConfigVariable):
                 "URL). GET parameters are usually logged by proxies and web servers and are not "
                 "deemed secure for secrets. See Werk #16223 for more information."
             ),
-            default_value=True,
+            default_value=False,
         )
 
 

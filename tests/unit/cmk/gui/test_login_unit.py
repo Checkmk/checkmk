@@ -9,6 +9,7 @@ from __future__ import annotations
 from base64 import b64encode
 from collections.abc import Generator, Iterator
 from http.cookies import SimpleCookie
+from unittest.mock import patch
 
 import flask
 import pytest
@@ -295,6 +296,8 @@ def test_auth_session_times(flask_app: flask.Flask, auth_request: http.Request) 
         assert session.session_info.last_activity >= last_activity
 
 
+# the url auth for the automationuser is disabled by default so it must be enabled for this test
+@patch("cmk.gui.auth.active_config")
 def test_ignore_transaction_ids(
     request_context: Iterator[None],
     with_automation_user: tuple[UserId, str],

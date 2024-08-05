@@ -18,6 +18,8 @@ from ._config import TraceSendConfig as TraceSendConfig  # pylint: disable=usele
 # Re-export 3rd party names to avoid direct dependencies in the code
 Span = trace.Span
 SpanKind = trace.SpanKind
+SpanContext = trace.SpanContext
+NonRecordingSpan = trace.NonRecordingSpan
 Link = trace.Link
 get_tracer_provider = trace.get_tracer_provider
 set_span_in_context = trace.set_span_in_context

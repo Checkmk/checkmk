@@ -25,6 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.watolib.audit_log import log_audit
 
+from cmk import trace
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -65,6 +66,20 @@ class SnapshotStatus(TypedDict):
     # b) False - No or invalid checksums
     # c) True  - Checksums successfully validated
     checksums: NotRequired[None | bool]
+
+
+def create_snapshot_subprocess(
+    comment: str,
+    created_by: Literal[""] | UserId,
+    secret: bytes,
+    max_snapshots: int,
+    use_git: bool,
+    parent_span_context: trace.SpanContext,
+) -> None:
+    """Entry point of the backup subprocess"""
+    context = trace.set_span_in_context(trace.NonRecordingSpan(parent_span_context))
+    with trace.get_tracer().start_as_current_span("create_backup_snapshot", context):
+        create_snapshot(comment, created_by, secret, max_snapshots, use_git)
 
 
 def create_snapshot(

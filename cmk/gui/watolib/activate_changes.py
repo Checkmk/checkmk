@@ -111,7 +111,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 
-from cmk import mkp_tool
+from cmk import mkp_tool, trace
 from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.ccc import store, version
 from cmk.ccc.exceptions import MKGeneralException
@@ -1555,13 +1555,14 @@ class ActivateChangesManager(ActivateChanges):
                 )
 
             backup_snapshot_proc = multiprocessing.Process(
-                target=backup_snapshots.create_snapshot,
+                target=backup_snapshots.create_snapshot_subprocess,
                 args=(
                     self._comment,
                     user.id or "",
                     backup_snapshots.snapshot_secret(),
                     active_config.wato_max_snapshots,
                     active_config.wato_use_git,
+                    trace.get_current_span().get_span_context(),
                 ),
             )
             backup_snapshot_proc.start()

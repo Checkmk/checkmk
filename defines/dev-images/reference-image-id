@@ -46,6 +46,7 @@ if [ -n "${VERBOSE}" ]; then
     echo >&2 " - BUILD_IMAGE_TAG:........... '${BUILD_IMAGE_TAG}'"
     echo >&2 " - DOCKER_REGISTRY_NO_HTTP:... '${DOCKER_REGISTRY_NO_HTTP}'"
     echo >&2 " - PULL_BASE_IMAGE:........... '${PULL_BASE_IMAGE}'"
+    echo >&2 " - PULL_CACHE_IMAGE:.......... '${PULL_CACHE_IMAGE}'"
     echo >&2 " - POPULATE_BUILD_CACHE:...... '${POPULATE_BUILD_CACHE}'"
     echo >&2 " - NO_CACHE:.................. '${NO_CACHE}'"
     echo >&2 " - populate build context at:. ${TEMP_CONTEXT_DIR}"
@@ -57,12 +58,14 @@ else
     DECENT_OUTPUT_TIMEOUT=2
 fi
 
-# Pre-fetch caching image. This is not required but was reported to solve some
-# issues and keeps fetching and building more transparent
-"${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
-    docker pull \
-    "${CACHE_IMAGE}" \
-    1>&2 || true
+if [ -n "${PULL_CACHE_IMAGE}" ]; then
+    # Pre-fetch caching image. This is not required but was reported to solve some
+    # issues and keeps fetching and building more transparent
+    "${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
+        docker pull \
+        "${CACHE_IMAGE}" \
+        1>&2 || true
+fi
 
 # Copy over stuff we need for the build process but is located in folders we
 # cannot use as build context

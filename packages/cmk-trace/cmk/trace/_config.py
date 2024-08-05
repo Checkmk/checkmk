@@ -19,13 +19,14 @@ class TraceSendConfig:
 
 
 def trace_send_config(config: Mapping[str, str]) -> TraceSendConfig:
+    trace_enabled = config.get("CONFIG_TRACE_SEND") == "on"
+    if not trace_enabled:
+        return TraceSendConfig(enabled=False, target="")
+
     target: LocalTarget | str
     if (target := config.get("CONFIG_TRACE_SEND_TARGET", "local_site")) == "local_site":
         target = LocalTarget(_trace_receive_port(config))
-    return TraceSendConfig(
-        enabled=config.get("CONFIG_TRACE_SEND") == "on",
-        target=target,
-    )
+    return TraceSendConfig(enabled=True, target=target)
 
 
 def _trace_receive_port(config: Mapping[str, str]) -> int:

@@ -17,7 +17,10 @@ from cmk import trace
 from cmk.trace import export, logs
 
 
-def test_trace_send_config() -> None:
+@pytest.mark.parametrize(
+    "trace_enabled, expected_target", [(True, trace.LocalTarget(4321)), (False, "")]
+)
+def test_trace_send_config(trace_enabled: bool, expected_target: trace.LocalTarget | str) -> None:
     assert trace.trace_send_config(
         {
             "CONFIG_ADMIN_MAIL": "",
@@ -49,16 +52,16 @@ def test_trace_send_config() -> None:
             "CONFIG_TRACE_RECEIVE": "off",
             "CONFIG_TRACE_RECEIVE_ADDRESS": "[::1]",
             "CONFIG_TRACE_RECEIVE_PORT": "4321",
-            "CONFIG_TRACE_SEND": "off",
+            "CONFIG_TRACE_SEND": "on" if trace_enabled else "off",
             "CONFIG_TRACE_SEND_TARGET": "local_site",
         }
-    ) == trace.TraceSendConfig(enabled=False, target=trace.LocalTarget(4321))
+    ) == trace.TraceSendConfig(enabled=trace_enabled, target=expected_target)
 
 
 def test_exporter_from_config_disabled() -> None:
     assert (
         export.exporter_from_config(
-            trace.TraceSendConfig(enabled=False, target=trace.LocalTarget(1234)),
+            trace.TraceSendConfig(enabled=False, target=""),
         )
         is None
     )

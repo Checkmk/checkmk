@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ..v0_unstable._registry import QuickSetupRegistry
-from .aws_stages import quick_setup_aws
+from .aws import quick_setup_aws
 
 
 def register(registry: QuickSetupRegistry) -> None:

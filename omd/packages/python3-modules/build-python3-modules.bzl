@@ -79,12 +79,13 @@ build_cmd = """
     if [[ "{requirements}" = -r* || "{requirements}" = git+* ]]; then
         REQUIREMENTS="{requirements}"
     else
-        REQUIREMENTS=$$HOME/tmp/$$MODULE_NAME
-	rm -rf $$REQUIREMENTS
-	mkdir -p $$REQUIREMENTS
+        TMP_BUILD_BASE=$$HOME/tmp/{module_name}
+	rm -rf $$TMP_BUILD_BASE
+	mkdir -p $$TMP_BUILD_BASE/packages/{module_name}
+        REQUIREMENTS=$$TMP_BUILD_BASE/packages/cmk-{module_name}
         echo "Copy package sources"
-        echo "cp -r {requirements}/** $$REQUIREMENTS"
-        cp -r {requirements}/** $$REQUIREMENTS
+        cp -r --parents {requirements} $$TMP_BUILD_BASE
+        ls -al $$REQUIREMENTS
     fi
 
     # Under some distros (e.g. almalinux), the build may use an available c++ system compiler instead of our own /opt/bin/g++

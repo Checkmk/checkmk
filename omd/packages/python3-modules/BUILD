@@ -30,6 +30,7 @@ config_setting(
     cmd = select({
         "//conditions:default": build_cmd.format(
             git_ssl_no_verify = "",
+            module_name = module,
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             pypi_mirror = INTERNAL_PYPI_MIRROR,
@@ -37,6 +38,7 @@ config_setting(
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
+            module_name = module,
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             pypi_mirror = INTERNAL_PYPI_MIRROR,
@@ -58,8 +60,8 @@ config_setting(
         "@omd_packages//packages:cmk-mkp-tool",
         "@omd_packages//packages:cmk-rulesets",
         "@omd_packages//packages:cmk-server-side-calls",
-        "@omd_packages//packages:cmk-trace",
         "@omd_packages//packages:cmk-werks",
+        "@omd_packages//packages/cmk-trace:files",
         "@openssl",
         "@python",
     ],
@@ -69,6 +71,7 @@ config_setting(
     cmd = select({
         "//conditions:default": build_cmd.format(
             git_ssl_no_verify = "",
+            module_name = module,
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             pypi_mirror = INTERNAL_PYPI_MIRROR,
@@ -76,6 +79,7 @@ config_setting(
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
+            module_name = module,
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             pypi_mirror = INTERNAL_PYPI_MIRROR,
@@ -88,7 +92,7 @@ config_setting(
     ("rulesets", "$(execpath @omd_packages//packages:cmk-rulesets)"),
     ("server-side-calls", "$(execpath @omd_packages//packages:cmk-server-side-calls)"),
     ("werks", "$(execpath @omd_packages//packages:cmk-werks)"),
-    ("trace", "$(execpath @omd_packages//packages:cmk-trace)"),
+    ("trace", "$(locations @omd_packages//packages/cmk-trace:files)"),
     ("agent-based", "$(execpath @omd_packages//packages:cmk-agent-based)"),
     ("messaging", "$(execpath @omd_packages//packages:cmk-messaging)"),
     ("mkp-tool", "$(execpath @omd_packages//packages:cmk-mkp-tool)"),

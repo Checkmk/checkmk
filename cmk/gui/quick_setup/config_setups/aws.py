@@ -136,7 +136,6 @@ def configure_services_to_monitor(stage_id: StageId) -> QuickSetupStage:
                                     parameter_form=String(
                                         title=Title("Site selection"),
                                         field_size=FieldSize.MEDIUM,
-                                        custom_validate=(validators.LengthInRange(min_value=1),),
                                     ),
                                     required=True,
                                 ),

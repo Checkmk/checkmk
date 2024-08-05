@@ -617,7 +617,8 @@ def create_and_save_special_agent_bundle(
 
     host_name = all_stages_form_data[FormSpecId("host_data")]["host_name"]
     host_path = all_stages_form_data[FormSpecId("host_data")]["host_path"]
-    site_id = all_stages_form_data[FormSpecId("site")]["site_selection"]
+
+    site_selection = _find_unique_id(all_stages_form_data, "site_selection")
 
     # TODO: DCD still to be implemented cmk-18341
     create_config_bundle(
@@ -642,7 +643,7 @@ def create_and_save_special_agent_bundle(
                     host_path=host_path,
                     rulespec_name=rulespec_name,
                     bundle_id=BundleId(bundle_id),
-                    site_id=site_id,
+                    site_id=SiteId(site_selection) if site_selection else omd_site(),
                 )
             ],
         ),

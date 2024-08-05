@@ -12,7 +12,7 @@ import {
   type ValidationError,
   type GeneralError,
   type RestApiError,
-  type QSValidateStagesResponse
+  type QSStageResponse
 } from './rest_api_types'
 import { getOverview, validateStep } from './rest_api'
 
@@ -37,8 +37,8 @@ const initializeStagesData = (skeleton: QSInitializationResponse) => {
     stage.value.push({
       title: overview.title,
       sub_title: overview.sub_title || null,
-      next_button_label: isFirst ? skeleton.stage.button_txt || null : null,
-      components: isFirst ? skeleton.stage.components : [],
+      next_button_label: isFirst ? skeleton.stage.next_stage_structure.button_label || null : null,
+      components: isFirst ? skeleton.stage.next_stage_structure.components : [],
       recap: [],
       form_spec_errors: {},
       other_errors: [],
@@ -99,7 +99,7 @@ const nextStep = async () => {
     userInput.push(formData)
   }
 
-  let result: QSValidateStagesResponse | null = null
+  let result: QSStageResponse | null = null
 
   try {
     result = await validateStep(props.quick_setup_id, userInput)
@@ -121,8 +121,8 @@ const nextStep = async () => {
   if (nextStage < steps.value) {
     stage.value[nextStage] = {
       ...stage.value[nextStage]!,
-      components: result.components,
-      next_button_label: result.button_txt || '',
+      components: result.next_stage_structure.components,
+      next_button_label: result.next_stage_structure.button_label || '',
       recap: [],
       form_spec_errors: {},
       other_errors: []

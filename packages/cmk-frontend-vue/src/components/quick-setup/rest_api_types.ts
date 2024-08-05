@@ -2,35 +2,38 @@ import type { ValidationMessages } from '@/lib/validation'
 import { type ComponentSpec } from './widgets/widget_types'
 
 /**
- * Stage spec
+ * Common stage structure
  */
-export interface QSStageSpec {
-  stage_id: number
+export interface QSStageStructure {
   components: ComponentSpec[]
-  button_txt: string | null
+  button_label: string
 }
 
 /**
- * Overview
- */
-export interface QSOverviewSpec {
-  stage_id: number
-  title: string
-  sub_title?: string | null
-}
-
-/**
- * API response when initializing the Quick Setup
+ * Response from the API when initializing the quick setup
  */
 export interface QSInitializationResponse {
   quick_setup_id: string
   overviews: QSOverviewSpec[]
-  stage: QSStageSpec
+  stage: {
+    stage_id: number
+    stage_recap: ComponentSpec[]
+    next_stage_structure: QSStageStructure
+  }
   button_complete_label: string
 }
 
 /**
- * Stage data to validate
+ * Overview spec
+ */
+export interface QSOverviewSpec {
+  stage_id: number
+  title: string
+  sub_title: string | null
+}
+
+/**
+ * Request for stage validation
  */
 interface QSStageRequest {
   stage_id: number
@@ -38,7 +41,25 @@ interface QSStageRequest {
 }
 
 /**
- * API request to validate data from stage 0..x
+ * Request to validate the current stage
+ */
+export interface QSValidateStagesRequest {
+  quick_setup_id: string
+  stages: QSStageRequest[]
+}
+
+/**
+ * Response from the API when validating a stage
+ */
+export interface QSStageResponse {
+  stage_id: number
+  next_stage_structure: QSStageStructure
+  errors: QsStageValidationError | null
+  stage_recap: ComponentSpec[]
+}
+
+/**
+ * Error types from stage validation
  */
 export interface QsStageValidationError {
   formspec_errors: Record<string, ValidationMessages>
@@ -55,18 +76,4 @@ export interface ValidationError extends RestApiError, QsStageValidationError {
 export interface GeneralError extends RestApiError {
   type: 'general'
   general_error: string
-}
-
-export interface QSValidateStagesRequest {
-  quick_setup_id: string
-  stages: QSStageRequest[]
-}
-
-export interface QSValidateStagesResponse {
-  stage_id: number
-  components: ComponentSpec[]
-  errors: QsStageValidationError | null
-  stage_summary: unknown
-  stage_recap: ComponentSpec[]
-  button_txt: string
 }

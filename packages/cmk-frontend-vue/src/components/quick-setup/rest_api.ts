@@ -6,7 +6,7 @@ import {
   type GeneralError,
   type QSInitializationResponse,
   type QSValidateStagesRequest,
-  type QSValidateStagesResponse,
+  type QSStageResponse,
   type ValidationError
 } from './rest_api_types'
 
@@ -53,7 +53,7 @@ export const getOverview = async (quickSetupId: string): Promise<QSInitializatio
 export const validateStep = async (
   quickSetupId: string,
   formData: StageData[]
-): Promise<QSValidateStagesResponse> => {
+): Promise<QSStageResponse> => {
   return new Promise((resolve, reject) => {
     const url = VALIDATE_QUICK_SETUP_STEP_URL
     const payload: QSValidateStagesRequest = {

@@ -58,6 +58,7 @@ cc_library(
     includes = ["include"],
     deps = [
         ":neb_nagios_headers",
+        ":neb_version",
         "//packages/livestatus:livestatus_headers",
         "@asio",
     ],

@@ -544,7 +544,10 @@ def _compute_labels_from_api(
 ) -> Sequence[Label]:
     abs_min_y = abs(min_y)
     abs_max_y = abs(max_y)
-    match min_y >= 0, max_y >= 0:
+
+    # min_y / max_y might be of type np.floating (or similar), which is a sub-type of float.
+    # If this is the case, eg. min_y >= 0 is of type np.bool, which does *not* match bool 😱.
+    match bool(min_y >= 0), bool(max_y >= 0):
         case True, True:
             return ([Label(0, "0")] if abs_min_y == 0 else []) + list(
                 formatter.render_y_labels(

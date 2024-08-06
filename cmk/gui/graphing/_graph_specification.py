@@ -188,7 +188,6 @@ class GraphMetric(BaseModel, frozen=True):
     operation: Annotated[SerializeAsAny[MetricOperation], PlainValidator(parse_metric_operation)]
     unit: str
     color: str
-    visible: bool
 
 
 class GraphSpecification(BaseModel, ABC, frozen=True):

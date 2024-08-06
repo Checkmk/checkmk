@@ -219,7 +219,6 @@ def create_graph_recipe_from_template(
             ),
             unit=unit_color.unit if unit_color else "",
             color=unit_color.color if unit_color else "#000000",
-            visible=True,
         )
 
     metrics = list(map(_graph_metric, graph_template.metrics))

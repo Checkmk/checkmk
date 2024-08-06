@@ -76,7 +76,6 @@ _GRAPH_RECIPE = GraphRecipe(
             ),
             color="#ffa000",
             unit="c",
-            visible=True,
         )
     ],
     unit="c",

@@ -185,7 +185,6 @@ def test_create_graph_recipe_from_template() -> None:
                 ),
                 unit="IECNotation_B_AutoPrecision_2",
                 color="#1e90ff",
-                visible=True,
             ),
             GraphMetric(
                 title="Free space",
@@ -213,7 +212,6 @@ def test_create_graph_recipe_from_template() -> None:
                 ),
                 unit="IECNotation_B_AutoPrecision_2",
                 color="#e3fff9",
-                visible=True,
             ),
             GraphMetric(
                 title="Total size",
@@ -228,7 +226,6 @@ def test_create_graph_recipe_from_template() -> None:
                 ),
                 unit="IECNotation_B_AutoPrecision_2",
                 color="#37fa37",
-                visible=True,
             ),
         ],
         additional_html=None,

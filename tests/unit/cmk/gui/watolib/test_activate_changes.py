@@ -294,9 +294,9 @@ def test_automation_get_config_sync_state(request_context: None) -> None:
             ),
             "etc/omd/site.conf": (
                 33200,
-                907,
+                941,
                 None,
-                "1aaee952a074c574ff3df71b81356ae29e8c80cb6ec8cc89baabd5e0463e10f4",
+                "8b0a3be9479c9302deeafb8093f301224933fd74a7b8d733aa7a7d066296d16a",
             ),
         },
         0,

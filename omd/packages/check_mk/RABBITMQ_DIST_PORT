@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# Alias: TCP port number for RabbitMQ distribution port
+# Menu: Basic
+# Description:
+#  Configure the port on which the RabbitMQ node will
+#  communicate with commandline tools.
+#  If the port isn't available, the next available port
+#  will be chosen. It does not need to be reachable via
+#  network.
+
+case "${1}" in
+    default)
+        PORT=$("${OMD_ROOT}/lib/omd/next_free_port" RABBITMQ_DIST_PORT 25672)
+        echo "${PORT}"
+        ;;
+    choices)
+        echo "[0-9]{1,5}"
+        ;;
+    set)
+        PORT=$("${OMD_ROOT}/lib/omd/next_free_port" RABBITMQ_DIST_PORT "${2}")
+
+        if [ "${PORT}" != "${2}" ]; then
+            echo "RabbitMQ distribution port ${2} is in use. I've choosen ${PORT} instead." >&2
+            echo "${PORT}"
+        fi
+        ;;
+esac

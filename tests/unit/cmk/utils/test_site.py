@@ -33,6 +33,7 @@ def test_get_omd_config(patch_omd_site: None) -> None:
         "CONFIG_NSCA_TCP_PORT": "5667",
         "CONFIG_PNP4NAGIOS": "on",
         "CONFIG_RABBITMQ_PORT": "5672",
+        "CONFIG_RABBITMQ_DIST_PORT": "25672",
         "CONFIG_TMPFS": "on",
         "CONFIG_TRACE_JAEGER_ADMIN_PORT": "14269",
         "CONFIG_TRACE_JAEGER_UI_PORT": "13333",

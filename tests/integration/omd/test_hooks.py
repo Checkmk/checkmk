@@ -33,6 +33,7 @@ def test_hooks(site: Site) -> None:
         "TRACE_SEND",
         "TRACE_SEND_TARGET",
         "RABBITMQ_PORT",
+        "RABBITMQ_DIST_PORT",
     ]
 
     if not site.version.is_raw_edition():

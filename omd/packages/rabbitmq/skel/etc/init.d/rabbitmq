@@ -9,7 +9,9 @@ RABBITMQ_LOG_BASE="${OMD_ROOT}/var/log/rabbitmq"
 RABBITMQ_MNESIA_BASE="${OMD_ROOT}/var/rabbitmq/mnesia"
 RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
 RABBITMQ_ENABLED_PLUGINS_FILE="${OMD_ROOT}/etc/rabbitmq/enabled_plugins"
+RABBITMQ_DIST_PORT="${CONFIG_RABBITMQ_DIST_PORT:?}"
 EXECUTE="${OMD_ROOT}/bin/rabbitmq-server"
+
 
 getpid() {
     cat "${PIDFILE}" 2>/dev/null
@@ -72,6 +74,7 @@ case "$1" in
             RABBITMQ_LOG_BASE="${RABBITMQ_LOG_BASE}" \
             RABBITMQ_PID_FILE="${PIDFILE}" \
             RABBITMQ_MNESIA_BASE="${RABBITMQ_MNESIA_BASE}" \
+            RABBITMQ_DIST_PORT="${RABBITMQ_DIST_PORT}" \
             flock "${PIDFILE}" --command "${EXECUTE}"
         rm --force "${PIDFILE}" # should be removed by rabbitmq itself
         ;;

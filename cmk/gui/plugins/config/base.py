@@ -366,6 +366,9 @@ class CREConfig:
     # Default temperature unit
     default_temperature_unit: str = TemperatureUnit.CELSIUS.value
 
+    # Configuration bundles
+    configuration_bundles: dict[str, Any] = field(default_factory=dict)
+
     #     _   _               ____  ____
     #    | | | |___  ___ _ __|  _ \| __ )
     #    | | | / __|/ _ \ '__| | | |  _ \

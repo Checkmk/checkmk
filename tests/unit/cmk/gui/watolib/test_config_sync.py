@@ -27,6 +27,7 @@ from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.watolib import activate_changes, config_sync
 
 import cmk.ccc.version as cmk_version
+from cmk import trace
 from cmk.bi.type_defs import frozen_aggregations_dir
 
 
@@ -521,24 +522,23 @@ def _synchronize_site(
         site_id, activation_manager._activation_id, activation_manager, time.time(), "GUI"
     )
 
+    current_span = trace.get_current_span()
     fetch_state_result = activate_changes.fetch_sync_state(
         snapshot_settings.snapshot_components,
         site_activation_state,
         {},
+        current_span,
     )
 
     assert fetch_state_result is not None
-    (
-        sync_state,
-        site_activation_state,
-        sync_start,
-    ) = fetch_state_result
+    sync_state, site_activation_state, sync_start = fetch_state_result
 
     calc_delta_result = activate_changes.calc_sync_delta(
         sync_state,
         file_filter_func,
         site_activation_state,
         sync_start,
+        current_span,
     )
     assert calc_delta_result is not None
     sync_delta, site_activation_state, sync_start = calc_delta_result
@@ -549,5 +549,6 @@ def _synchronize_site(
         Path(snapshot_settings.work_dir),
         site_activation_state,
         sync_start,
+        current_span,
     )
     assert sync_result is not None

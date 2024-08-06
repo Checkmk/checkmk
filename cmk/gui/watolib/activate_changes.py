@@ -722,36 +722,40 @@ def fetch_sync_state(
     replication_paths: list[ReplicationPath],
     site_activation_state: SiteActivationState,
     central_file_infos: ConfigSyncFileInfos,
+    origin_span: trace.Span,
 ) -> tuple[SyncState, SiteActivationState, float] | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
+    with tracer.start_as_current_span(
+        f"fetch_sync_state[{site_id}]",
+        context=trace.set_span_in_context(origin_span),
+    ):
+        sync_start = time.time()
+        try:
+            _set_sync_state(site_activation_state)
 
-    sync_start = time.time()
-    try:
-        _set_sync_state(site_activation_state)
+            _set_sync_state(site_activation_state, _("Fetching sync state"))
+            site_logger.debug("Starting config sync (%r)", site_activation_state)
 
-        _set_sync_state(site_activation_state, _("Fetching sync state"))
-        site_logger.debug("Starting config sync (%r)", site_activation_state)
+            remote_file_infos, remote_config_generation = _get_config_sync_state(
+                site_id, replication_paths
+            )
+            site_logger.debug("Received %d file infos from remote", len(remote_file_infos))
 
-        remote_file_infos, remote_config_generation = _get_config_sync_state(
-            site_id, replication_paths
-        )
-        site_logger.debug("Received %d file infos from remote", len(remote_file_infos))
-
-        return (
-            SyncState(
-                central_file_infos=central_file_infos,
-                remote_file_infos=remote_file_infos,
-                remote_config_generation=remote_config_generation,
-            ),
-            site_activation_state,
-            sync_start,
-        )
-    except Exception as e:
-        duration = time.time() - sync_start
-        update_activation_time(site_id, ACTIVATION_TIME_SYNC, duration)
-        _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
-        return None
+            return (
+                SyncState(
+                    central_file_infos=central_file_infos,
+                    remote_file_infos=remote_file_infos,
+                    remote_config_generation=remote_config_generation,
+                ),
+                site_activation_state,
+                sync_start,
+            )
+        except Exception as e:
+            duration = time.time() - sync_start
+            update_activation_time(site_id, ACTIVATION_TIME_SYNC, duration)
+            _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
+            return None
 
 
 def calc_sync_delta(
@@ -759,24 +763,29 @@ def calc_sync_delta(
     file_filter_func: FileFilterFunc,
     site_activation_state: SiteActivationState,
     sync_start: float,
+    origin_span: trace.Span,
 ) -> tuple[SyncDelta, SiteActivationState, float] | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
-    try:
-        _set_sync_state(site_activation_state, _("Computing differences"))
+    with tracer.start_as_current_span(
+        f"calc_sync_delta[{site_id}]",
+        context=trace.set_span_in_context(origin_span),
+    ):
+        try:
+            _set_sync_state(site_activation_state, _("Computing differences"))
 
-        sync_delta = get_file_names_to_sync(site_id, site_logger, sync_state, file_filter_func)
+            sync_delta = get_file_names_to_sync(site_id, site_logger, sync_state, file_filter_func)
 
-        site_logger.debug("New files to be synchronized: %r", sync_delta.to_sync_new)
-        site_logger.debug("Changed files to be synchronized: %r", sync_delta.to_sync_changed)
-        site_logger.debug("Obsolete files to be deleted: %r", sync_delta.to_delete)
+            site_logger.debug("New files to be synchronized: %r", sync_delta.to_sync_new)
+            site_logger.debug("Changed files to be synchronized: %r", sync_delta.to_sync_changed)
+            site_logger.debug("Obsolete files to be deleted: %r", sync_delta.to_delete)
 
-        return sync_delta, site_activation_state, sync_start
-    except Exception as e:
-        duration = time.time() - sync_start
-        update_activation_time(site_id, ACTIVATION_TIME_SYNC, duration)
-        _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
-        return None
+            return sync_delta, site_activation_state, sync_start
+        except Exception as e:
+            duration = time.time() - sync_start
+            update_activation_time(site_id, ACTIVATION_TIME_SYNC, duration)
+            _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
+            return None
 
 
 def synchronize_files(
@@ -785,43 +794,48 @@ def synchronize_files(
     site_config_dir: Path,
     site_activation_state: SiteActivationState,
     sync_start: float,
+    origin_span: trace.Span,
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
 
-    try:
-        if (
-            not sync_delta.to_sync_new
-            and not sync_delta.to_sync_changed
-            and not sync_delta.to_delete
-        ):
-            site_logger.debug("Finished config sync (Nothing to be done)")
-            return site_activation_state
+    with tracer.start_as_current_span(
+        f"synchronize_files[{site_id}]",
+        context=trace.set_span_in_context(origin_span),
+    ):
+        try:
+            if (
+                not sync_delta.to_sync_new
+                and not sync_delta.to_sync_changed
+                and not sync_delta.to_delete
+            ):
+                site_logger.debug("Finished config sync (Nothing to be done)")
+                return site_activation_state
 
-        _set_sync_state(
-            site_activation_state,
-            _("Transferring: %d new, %d changed and %d vanished files")
-            % (
-                len(sync_delta.to_sync_new),
-                len(sync_delta.to_sync_changed),
-                len(sync_delta.to_delete),
-            ),
-        )
-        _synchronize_files(
-            site_id,
-            sync_delta.to_sync_new + sync_delta.to_sync_changed,
-            sync_delta.to_delete,
-            remote_config_generation,
-            site_config_dir,
-        )
-        site_logger.debug("Finished config sync")
-        return site_activation_state
-    except Exception as e:
-        _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
-        return None
-    finally:
-        duration = time.time() - sync_start
-        update_activation_time(site_id, ACTIVATION_TIME_SYNC, duration)
+            _set_sync_state(
+                site_activation_state,
+                _("Transferring: %d new, %d changed and %d vanished files")
+                % (
+                    len(sync_delta.to_sync_new),
+                    len(sync_delta.to_sync_changed),
+                    len(sync_delta.to_delete),
+                ),
+            )
+            _synchronize_files(
+                site_id,
+                sync_delta.to_sync_new + sync_delta.to_sync_changed,
+                sync_delta.to_delete,
+                remote_config_generation,
+                site_config_dir,
+            )
+            site_logger.debug("Finished config sync")
+            return site_activation_state
+        except Exception as e:
+            _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
+            return None
+        finally:
+            duration = time.time() - sync_start
+            update_activation_time(site_id, ACTIVATION_TIME_SYNC, duration)
 
 
 def _set_done_result(
@@ -960,29 +974,33 @@ def activate_remote_changes(
     activate_changes: ActivateChanges,
     prevent_activate: bool,
     site_activation_state: SiteActivationState,
+    origin_span: trace.Span,
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
+    with tracer.start_as_current_span(
+        f"activate_remote_changes[{site_id}]",
+        context=trace.set_span_in_context(origin_span),
+    ):
+        try:
+            _set_result(site_activation_state, PHASE_FINISHING, _("Finalizing"))
+            site_changes_activate_until = activate_changes.get_changes_to_activate(site_id)
 
-    try:
-        _set_result(site_activation_state, PHASE_FINISHING, _("Finalizing"))
-        site_changes_activate_until = activate_changes.get_changes_to_activate(site_id)
+            configuration_warnings = {}
+            if prevent_activate:
+                _confirm_synchronized_changes(site_id)
+            else:
+                if activate_changes.is_activate_needed_until(site_id):
+                    configuration_warnings = _do_activate(
+                        site_id, site_changes_activate_until, site_activation_state
+                    )
+                _confirm_activated_changes(site_id, site_changes_activate_until)
 
-        configuration_warnings = {}
-        if prevent_activate:
-            _confirm_synchronized_changes(site_id)
-        else:
-            if activate_changes.is_activate_needed_until(site_id):
-                configuration_warnings = _do_activate(
-                    site_id, site_changes_activate_until, site_activation_state
-                )
-            _confirm_activated_changes(site_id, site_changes_activate_until)
-
-        _set_done_result(configuration_warnings, site_activation_state)
-        return site_activation_state
-    except Exception as e:
-        _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
-        return None
+            _set_done_result(configuration_warnings, site_activation_state)
+            return site_activation_state
+        except Exception as e:
+            _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
+            return None
 
 
 class ActivateChanges:
@@ -2288,6 +2306,7 @@ def sync_and_activate(
                         site_snapshot_settings[site_id].snapshot_components,
                         site_activation_state,
                         site_central_file_infos[site_id],
+                        trace.get_current_span(),
                     ),
                     error_callback=_error_callback,
                 )
@@ -2295,7 +2314,12 @@ def sync_and_activate(
             else:
                 async_result = task_pool.apply_async(
                     func=copy_request_context(activate_remote_changes),
-                    args=(activate_changes, prevent_activate, site_activation_state),
+                    args=(
+                        activate_changes,
+                        prevent_activate,
+                        site_activation_state,
+                        trace.get_current_span(),
+                    ),
                     error_callback=_error_callback,
                 )
                 active_tasks["activate_remote_changes"][site_id] = async_result
@@ -2362,7 +2386,13 @@ def _handle_active_tasks(
 
         active_tasks["calc_sync_delta"][site_id] = task_pool.apply_async(
             func=copy_request_context(calc_sync_delta),
-            args=(sync_state, file_filter_func, activation_state, sync_start_time),
+            args=(
+                sync_state,
+                file_filter_func,
+                activation_state,
+                sync_start_time,
+                trace.get_current_span(),
+            ),
             error_callback=_error_callback,
         )
 
@@ -2383,6 +2413,7 @@ def _handle_active_tasks(
                 Path(site_snapshot_settings[site_id].work_dir),
                 activation_state,
                 sync_start_time,
+                trace.get_current_span(),
             ),
             error_callback=_error_callback,
         )
@@ -2397,7 +2428,12 @@ def _handle_active_tasks(
 
         active_tasks["activate_remote_changes"][site_id] = task_pool.apply_async(
             func=copy_request_context(activate_remote_changes),
-            args=(activate_changes, prevent_activate, activation_state),
+            args=(
+                activate_changes,
+                prevent_activate,
+                activation_state,
+                trace.get_current_span(),
+            ),
             error_callback=_error_callback,
         )
 

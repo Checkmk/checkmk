@@ -970,7 +970,7 @@ def _do_activate(
     return configuration_warnings
 
 
-def activate_remote_changes(
+def activate_site_changes(
     activate_changes: ActivateChanges,
     prevent_activate: bool,
     site_activation_state: SiteActivationState,
@@ -979,7 +979,7 @@ def activate_remote_changes(
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
     with tracer.start_as_current_span(
-        f"activate_remote_changes[{site_id}]",
+        f"activate_site_changes[{site_id}]",
         context=trace.set_span_in_context(origin_span),
     ):
         try:
@@ -2239,7 +2239,7 @@ class ActiveTasks(TypedDict):
     fetch_sync_state: MutableMapping[SiteId, AsyncResult]
     calc_sync_delta: MutableMapping[SiteId, AsyncResult]
     synchronize_files: MutableMapping[SiteId, AsyncResult]
-    activate_remote_changes: MutableMapping[SiteId, AsyncResult]
+    activate_site_changes: MutableMapping[SiteId, AsyncResult]
 
 
 def _error_callback(error: BaseException) -> None:
@@ -2295,7 +2295,7 @@ def sync_and_activate(
             fetch_sync_state={},
             calc_sync_delta={},
             synchronize_files={},
-            activate_remote_changes={},
+            activate_site_changes={},
         )
 
         for site_id, site_activation_state in site_activation_states.items():
@@ -2313,7 +2313,7 @@ def sync_and_activate(
                 active_tasks["fetch_sync_state"][site_id] = async_result
             else:
                 async_result = task_pool.apply_async(
-                    func=copy_request_context(activate_remote_changes),
+                    func=copy_request_context(activate_site_changes),
                     args=(
                         activate_changes,
                         prevent_activate,
@@ -2322,7 +2322,7 @@ def sync_and_activate(
                     ),
                     error_callback=_error_callback,
                 )
-                active_tasks["activate_remote_changes"][site_id] = async_result
+                active_tasks["activate_site_changes"][site_id] = async_result
 
         remote_config_generation_per_site: dict[SiteId, int] = {}
         # we want to mostly parallelize the activation steps, but if one site takes longer,
@@ -2333,7 +2333,7 @@ def sync_and_activate(
             len(active_tasks["fetch_sync_state"]) > 0
             or len(active_tasks["calc_sync_delta"]) > 0
             or len(active_tasks["synchronize_files"]) > 0
-            or len(active_tasks["activate_remote_changes"]) > 0
+            or len(active_tasks["activate_site_changes"]) > 0
         ):
             time.sleep(0.1)
             _handle_active_tasks(
@@ -2426,8 +2426,8 @@ def _handle_active_tasks(
         if (activation_state := async_result.get()) is None:
             return  # exception handling happens in thread
 
-        active_tasks["activate_remote_changes"][site_id] = task_pool.apply_async(
-            func=copy_request_context(activate_remote_changes),
+        active_tasks["activate_site_changes"][site_id] = task_pool.apply_async(
+            func=copy_request_context(activate_site_changes),
             args=(
                 activate_changes,
                 prevent_activate,
@@ -2437,11 +2437,11 @@ def _handle_active_tasks(
             error_callback=_error_callback,
         )
 
-    for site_id, async_result in list(active_tasks["activate_remote_changes"].items()):
+    for site_id, async_result in list(active_tasks["activate_site_changes"].items()):
         if not async_result.ready():
             return
 
-        active_tasks["activate_remote_changes"].pop(site_id)
+        active_tasks["activate_site_changes"].pop(site_id)
 
 
 class ActivateChangesSchedulerBackgroundJob(BackgroundJob):

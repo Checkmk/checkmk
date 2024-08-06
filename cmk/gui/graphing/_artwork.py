@@ -157,10 +157,11 @@ def compute_graph_artwork(
     *,
     graph_display_id: str = "",
 ) -> GraphArtwork:
+    unit_info = get_unit_info(graph_recipe.unit)
     curves = list(compute_graph_artwork_curves(graph_recipe, graph_data_range))
 
     pin_time = _load_graph_pin()
-    _compute_scalars(graph_recipe, curves, pin_time)
+    _compute_scalars(unit_info.render, curves, pin_time)
     layouted_curves, mirrored = _layout_graph_curves(curves)  # do stacking, mirroring
     width, height = size
 
@@ -179,7 +180,12 @@ def compute_graph_artwork(
         curves=layouted_curves,
         horizontal_rules=graph_recipe.horizontal_rules,
         vertical_axis=_compute_graph_v_axis(
-            graph_recipe, graph_data_range, SizeEx(height), layouted_curves, mirrored
+            unit_info,
+            graph_recipe.explicit_vertical_range,
+            graph_data_range,
+            SizeEx(height),
+            layouted_curves,
+            mirrored,
         ),
         time_axis=_compute_graph_t_axis(start_time, end_time, width, step),
         mark_requested_end_time=graph_recipe.mark_requested_end_time,
@@ -437,10 +443,8 @@ def order_graph_curves_for_legend_and_mouse_hover(
 
 
 def _compute_scalars(
-    graph_recipe: GraphRecipe, curves: Iterable[Curve], pin_time: int | None
+    unit_renderer: Callable[[float], str], curves: Iterable[Curve], pin_time: int | None
 ) -> None:
-    unit_info = get_unit_info(graph_recipe.unit)
-
     for curve in curves:
         rrddata = curve["rrddata"]
 
@@ -463,29 +467,33 @@ def _compute_scalars(
 
         curve["scalars"] = {}
         for key, value in scalars.items():
-            curve["scalars"][key] = _render_scalar_value(value, unit_info)
+            curve["scalars"][key] = _render_scalar_value(value, unit_renderer)
 
 
 def compute_curve_values_at_timestamp(
-    curves: Iterable[Curve], unit_id: str, hover_time: int
+    curves: Iterable[Curve],
+    unit_renderer: Callable[[float], str],
+    hover_time: int,
 ) -> Iterator[CurveValue]:
-    unit_info = get_unit_info(unit_id)
     yield from (
         CurveValue(
             title=curve["title"],
             color=curve["color"],
             rendered_value=_render_scalar_value(
-                _get_value_at_timestamp(hover_time, curve["rrddata"]), unit_info
+                _get_value_at_timestamp(hover_time, curve["rrddata"]), unit_renderer
             ),
         )
         for curve in curves
     )
 
 
-def _render_scalar_value(value: float | None, unit_info: UnitInfo) -> tuple[TimeSeriesValue, str]:
+def _render_scalar_value(
+    value: float | None,
+    unit_renderer: Callable[[float], str],
+) -> tuple[TimeSeriesValue, str]:
     if value is None:
         return None, _("n/a")
-    return value, unit_info.render(value)
+    return value, unit_renderer(value)
 
 
 def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesValue:
@@ -712,20 +720,19 @@ def _render_legacy_labels(
 #
 # height -> Graph area height in ex
 def _compute_graph_v_axis(
-    graph_recipe: GraphRecipe,
+    unit_info: UnitInfo,
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
     graph_data_range: GraphDataRange,
     height_ex: SizeEx,
     layouted_curves: Sequence[LayoutedCurve],
     mirrored: bool,
 ) -> VerticalAxis:
-    unit_info = get_unit_info(graph_recipe.unit)
-
     # Calculate the the value range
     # distance   -> amount of values visible in vaxis (max_value - min_value)
     # min_value  -> value of lowest v axis label (taking extra margin and zooming into account)
     # max_value  -> value of highest v axis label (taking extra margin and zooming into account)
     v_axis_min_max = _compute_v_axis_min_max(
-        graph_recipe.explicit_vertical_range,
+        explicit_vertical_range,
         layouted_curves,
         graph_data_range.vertical_range,
         mirrored,

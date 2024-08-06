@@ -49,6 +49,13 @@ configure_make(
         "@omd_packages//omd/packages/Python:pip",
         "@omd_packages//omd/packages/Python:sitecustomize.py",
     ],
+    env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
+    },
 
     # rules_foreign_cc defaults the install_prefix to "python". This conflicts with the "python" executable that is generated.
     install_prefix = INSTALL_PREFIX,

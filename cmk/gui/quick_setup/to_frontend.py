@@ -80,7 +80,7 @@ from cmk.gui.watolib.passwords import load_passwords
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
-from cmk.rulesets.v1.form_specs import FormSpec, Password
+from cmk.rulesets.v1.form_specs import Dictionary, FormSpec, Password
 
 
 class InvalidStageException(MKGeneralException):
@@ -196,12 +196,24 @@ def _form_spec_parse(
     }
 
 
+def _collect_params_with_defaults_from_form_data(
+    all_stages_form_data: ParsedFormData, rulespec_name: str
+) -> Mapping[str, object]:
+    return _add_defaults_to_form_data(
+        _get_rule_defaults(rulespec_name),
+        _collect_params_from_form_data(all_stages_form_data, rulespec_name),
+    )
+
+
+def _get_parameter_form_from_rulespec_name(rulespec_name: str) -> Dictionary | None:
+    _parameter_form = form_spec_registry[rulespec_name.split(":")[1]].rule_spec.parameter_form
+    return _parameter_form() if callable(_parameter_form) else _parameter_form
+
+
 def _collect_params_from_form_data(
     all_stages_form_data: ParsedFormData, rulespec_name: str
 ) -> Mapping[str, object]:
-    _parameter_form = form_spec_registry[rulespec_name.split(":")[1]].rule_spec.parameter_form
-    parameter_form = _parameter_form() if callable(_parameter_form) else _parameter_form
-    if parameter_form is None:
+    if (parameter_form := _get_parameter_form_from_rulespec_name(rulespec_name)) is None:
         return {}
     possible_expected_keys = parameter_form.elements.keys()
 
@@ -217,9 +229,7 @@ def _collect_params_from_form_data(
 def _collect_passwords_from_form_data(
     all_stages_form_data: ParsedFormData, rulespec_name: str
 ) -> Mapping[str, str]:
-    _parameter_form = form_spec_registry[rulespec_name.split(":")[1]].rule_spec.parameter_form
-    parameter_form = _parameter_form() if callable(_parameter_form) else _parameter_form
-    if parameter_form is None:
+    if (parameter_form := _get_parameter_form_from_rulespec_name(rulespec_name)) is None:
         return {}
     possible_expected_password_keys = [
         key
@@ -251,7 +261,7 @@ def _form_data_to_diag_special_agent_input(
             host_name=HostName(host_name or ""), host_alias=host_name or ""
         ),
         agent_name=rulespec_name.split(":")[1],
-        params=_collect_params_from_form_data(all_stages_form_data, rulespec_name),
+        params=_collect_params_with_defaults_from_form_data(all_stages_form_data, rulespec_name),
         passwords=_collect_passwords_from_form_data(all_stages_form_data, rulespec_name),
     )
 
@@ -354,6 +364,33 @@ def _recap_service_discovery(
             list_type="check",
         )
     ]
+
+
+def _get_rule_defaults(rulespec_name: str) -> dict[str, object]:
+    if (parameter_form := _get_parameter_form_from_rulespec_name(rulespec_name)) is None:
+        return {}
+
+    return serialize_data_for_frontend(
+        form_spec=parameter_form,
+        field_id="rule_id",
+        origin=DataOrigin.DISK,
+        do_validate=False,
+    ).data
+
+
+def _add_defaults_to_form_data(
+    default_dict: dict, update_dict: Mapping[str, object]
+) -> Mapping[str, object]:
+    return {
+        key: (
+            _add_defaults_to_form_data(default_dict[key], value)
+            if isinstance(value, dict)
+            and key in default_dict
+            and isinstance(default_dict[key], dict)
+            else value
+        )
+        for key, value in update_dict.items()
+    }
 
 
 def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpecWrapper]:
@@ -586,7 +623,7 @@ def create_rule_from_form_data(
         folder=host_path,
         ruleset=rulespec_name,
         spec=RuleSpec(
-            value=_collect_params_from_form_data(
+            value=_collect_params_with_defaults_from_form_data(
                 all_stages_form_data=all_stages_form_data,
                 rulespec_name=rulespec_name,
             ),

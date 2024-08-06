@@ -74,6 +74,7 @@ class HostSearch(CmkPage):
         expected_position: int = 0,
     ) -> None:
         """Check that label filter is applied correctly.
+
         Check that label name and logical operator are correct at the expected position.
         """
         # example of returned result - ['is', 'test_label:foo', 'and', '(Select label)']
@@ -81,5 +82,7 @@ class HostSearch(CmkPage):
 
         assert (
             labels_text[expected_position * 2] == logical_operator
-        ), "The bool option is incorrect"
-        assert labels_text[expected_position * 2 + 1] == label, "The label is not correct"
+        ), "Logical operator used to filter hosts using labels is incorrect."
+        assert (
+            labels_text[expected_position * 2 + 1] == label
+        ), "Label used to filter hosts is incorrect."

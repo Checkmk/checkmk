@@ -8,5 +8,5 @@ else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-npm run build-only
+npm run build
 cp ./dist/assets/*.js* "$ROOT/share/check_mk/web/htdocs/js/"

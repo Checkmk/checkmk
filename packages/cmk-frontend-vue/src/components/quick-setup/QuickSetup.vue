@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, onBeforeMount, defineAsyncComponent } from 'vue'
+import { computed, ref, onBeforeMount } from 'vue'
 
 import LoadingIcon from '@/components/LoadingIcon.vue'
 
-const AlertBox = defineAsyncComponent(() => import('@/components/AlertBox.vue'))
-const QuickSetupStep = defineAsyncComponent(() => import('./QuickSetupStep.vue'))
+import AlertBox from '@/components/AlertBox.vue'
+import QuickSetupStep from './QuickSetupStep.vue'
 
 import { type QuickSetupSpec, type QuickSetupStageSpec, type StageData } from './quick_setup_types'
 import {

@@ -8,9 +8,8 @@ from __future__ import annotations
 from typing import get_args, overload, TypeAlias, TypeGuard
 
 import cryptography.exceptions
-import cryptography.hazmat.primitives.asymmetric as asym
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import ec, ed448, ed25519, padding, rsa, types
 
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.types import (
@@ -43,27 +42,24 @@ class PublicKeyPEM(SerializedPEM):
 
 
 PublicKeyType: TypeAlias = (
-    asym.ed25519.Ed25519PublicKey
-    | asym.ed448.Ed448PublicKey
-    | asym.rsa.RSAPublicKey
-    | asym.ec.EllipticCurvePublicKey
+    ed25519.Ed25519PublicKey | ed448.Ed448PublicKey | rsa.RSAPublicKey | ec.EllipticCurvePublicKey
 )
 
 
-def is_supported_public_key_type(key: asym.types.PublicKeyTypes) -> TypeGuard[PublicKeyType]:
+def is_supported_public_key_type(key: types.PublicKeyTypes) -> TypeGuard[PublicKeyType]:
     # get_args is a workaround for mypy bug https://github.com/python/mypy/issues/12155
     return isinstance(key, get_args(PublicKeyType))
 
 
 PrivateKeyType: TypeAlias = (
-    asym.ed25519.Ed25519PrivateKey
-    | asym.ed448.Ed448PrivateKey
-    | asym.rsa.RSAPrivateKey
-    | asym.ec.EllipticCurvePrivateKey
+    ed25519.Ed25519PrivateKey
+    | ed448.Ed448PrivateKey
+    | rsa.RSAPrivateKey
+    | ec.EllipticCurvePrivateKey
 )
 
 
-def is_supported_private_key_type(key: asym.types.PrivateKeyTypes) -> TypeGuard[PrivateKeyType]:
+def is_supported_private_key_type(key: types.PrivateKeyTypes) -> TypeGuard[PrivateKeyType]:
     # get_args is a workaround for mypy bug https://github.com/python/mypy/issues/12155
     return isinstance(key, get_args(PrivateKeyType))
 
@@ -86,7 +82,7 @@ class PrivateKey:
 
     @classmethod
     def generate_rsa(cls, key_size: int) -> PrivateKey:
-        return cls(asym.rsa.generate_private_key(public_exponent=65537, key_size=key_size))
+        return cls(rsa.generate_private_key(public_exponent=65537, key_size=key_size))
 
     @overload
     @classmethod
@@ -216,14 +212,14 @@ class PrivateKey:
     def public_key(self) -> PublicKey:
         return PublicKey(self._key.public_key())
 
-    def get_raw_rsa_key(self) -> asym.rsa.RSAPrivateKey:
+    def get_raw_rsa_key(self) -> rsa.RSAPrivateKey:
         """
         Get the raw underlying key IF it is an RSA key. Raise a ValueError otherwise.
 
         This should be avoided, but can be useful in situations where other key types are not
         supported yet.
         """
-        if not isinstance(self._key, asym.rsa.RSAPrivateKey):
+        if not isinstance(self._key, rsa.RSAPrivateKey):
             raise ValueError("Not an RSA private key")
 
         return self._key
@@ -288,14 +284,14 @@ class PublicKey:
             serialization.PublicFormat.OpenSSH,
         ).decode("utf-8")
 
-    def get_raw_rsa_key(self) -> asym.rsa.RSAPublicKey:
+    def get_raw_rsa_key(self) -> rsa.RSAPublicKey:
         """
         Get the raw underlying key IF it is an RSA key. Raise a ValueError otherwise.
 
         This should be avoided, but can be useful in situations where other key types are not
         supported yet.
         """
-        if not isinstance(self._key, asym.rsa.RSAPublicKey):
+        if not isinstance(self._key, rsa.RSAPublicKey):
             raise ValueError("Not an RSA public key")
 
         return self._key
@@ -311,7 +307,7 @@ class PublicKey:
         """
         try:
             self.get_raw_rsa_key().verify(
-                signature, message, asym.padding.PKCS1v15(), digest_algorithm.value
+                signature, message, padding.PKCS1v15(), digest_algorithm.value
             )
         except cryptography.exceptions.InvalidSignature as e:
             raise InvalidSignatureError(e) from e

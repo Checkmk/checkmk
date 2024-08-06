@@ -144,7 +144,7 @@ $(PROTOBUF_INSTALL_LIBRARY): $(PROTOBUF_CACHE_PKG_PROCESS_LIBRARY)
 	    --exclude 'libprotobuf-lite.*' \
 	    --exclude 'protobuf-lite.pc' \
 	    $(PROTOBUF_INSTALL_DIR_LIBRARY)/ $(DESTDIR)$(OMD_ROOT)/
-	patchelf --set-rpath "\$ORIGIN/" "$(DESTDIR)$(OMD_ROOT)/lib/libprotobuf.so"
+	patchelf --set-rpath "\$$ORIGIN/" "$(DESTDIR)$(OMD_ROOT)/lib/libprotobuf.so"
 	$(TOUCH) $@
 
 

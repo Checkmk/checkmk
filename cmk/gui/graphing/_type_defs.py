@@ -16,7 +16,7 @@ from cmk.gui.time_series import TimeSeries
 
 from ._legacy import UnitInfo
 
-GraphConsoldiationFunction = Literal["max", "min", "average"]
+GraphConsolidationFunction = Literal["max", "min", "average"]
 GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 Operators = Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
@@ -28,7 +28,7 @@ class RRDDataKey:
     host_name: HostName
     service_name: ServiceName
     metric_name: str
-    consolidation_func_name: GraphConsoldiationFunction | None
+    consolidation_func_name: GraphConsolidationFunction | None
     scale: float
 
 

@@ -13,13 +13,13 @@ from ._graph_specification import (
     GraphSpecification,
     HorizontalRule,
 )
-from ._type_defs import GraphConsoldiationFunction
+from ._type_defs import GraphConsolidationFunction
 
 
 class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     title: str
     unit: str
-    consolidation_function: GraphConsoldiationFunction | None
+    consolidation_function: GraphConsolidationFunction | None
     explicit_vertical_range: tuple[float | None, float | None]
     omit_zero_metrics: bool
     horizontal_rules: Sequence[HorizontalRule]

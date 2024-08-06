@@ -34,7 +34,7 @@ from ._expression import (
 from ._from_api import graphs_from_api, register_unit_info
 from ._legacy import graph_info, RawGraphTemplate
 from ._metrics import get_metric_spec
-from ._type_defs import GraphConsoldiationFunction, LineType, TranslatedMetric
+from ._type_defs import GraphConsolidationFunction, LineType, TranslatedMetric
 
 
 def _graph_templates_from_plugins() -> (
@@ -294,7 +294,7 @@ class GraphTemplate:
     scalars: Sequence[ScalarDefinition]
     conflicting_metrics: Sequence[str]
     optional_metrics: Sequence[str]
-    consolidation_function: GraphConsoldiationFunction | None
+    consolidation_function: GraphConsolidationFunction | None
     range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None
     omit_zero_metrics: bool
     metrics: Sequence[MetricDefinition]

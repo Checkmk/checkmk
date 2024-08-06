@@ -32,7 +32,7 @@ from cmk.ccc.plugin_registry import Registry
 
 from ._graph_render_config import GraphRenderOptions
 from ._timeseries import AugmentedTimeSeries, derive_num_points_twindow, time_series_math
-from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData, RRDDataKey
+from ._type_defs import GraphConsolidationFunction, LineType, Operators, RRDData, RRDDataKey
 from ._unit import ConvertibleUnitSpecification, NonConvertibleUnitSpecification
 
 
@@ -152,7 +152,7 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
     host_name: HostName
     service_name: ServiceName
     metric_name: MetricName
-    consolidation_func_name: GraphConsoldiationFunction | None
+    consolidation_func_name: GraphConsolidationFunction | None
     scale: float
 
     @staticmethod
@@ -269,7 +269,7 @@ class GraphRecipe(BaseModel, frozen=True):
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     horizontal_rules: Sequence[HorizontalRule]
     omit_zero_metrics: bool
-    consolidation_function: GraphConsoldiationFunction | None
+    consolidation_function: GraphConsolidationFunction | None
     # TODO: Use Sequence once https://github.com/pydantic/pydantic/issues/9319 is resolved
     # Internal marker: pydantic-9319
     metrics: list[GraphMetric]

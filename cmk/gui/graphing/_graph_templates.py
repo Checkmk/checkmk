@@ -53,7 +53,7 @@ from ._graph_templates_from_plugins import (
     MinimalGraphTemplateRange,
     ScalarDefinition,
 )
-from ._type_defs import GraphConsoldiationFunction, TranslatedMetric
+from ._type_defs import GraphConsolidationFunction, TranslatedMetric
 from ._utils import get_graph_data_from_livestatus, translated_metrics_from_row
 
 
@@ -287,7 +287,7 @@ def _to_metric_operation(
     expression: MetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
     lq_row: Row,
-    enforced_consolidation_function: GraphConsoldiationFunction | None,
+    enforced_consolidation_function: GraphConsolidationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
     if isinstance(expression, Constant):
         return MetricOpConstant(value=float(expression.value))
@@ -429,7 +429,7 @@ def metric_expression_to_graph_recipe_expression(
     metric_expression: MetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
     lq_row: Row,
-    enforced_consolidation_function: GraphConsoldiationFunction | None,
+    enforced_consolidation_function: GraphConsolidationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
     return _to_metric_operation(
         metric_expression,

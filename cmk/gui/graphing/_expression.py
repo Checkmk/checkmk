@@ -16,7 +16,7 @@ from cmk.utils.metrics import MetricName
 from ._color import mix_colors, parse_color, render_color, scalar_colors
 from ._from_api import get_unit_info
 from ._legacy import unit_info, UnitInfo
-from ._type_defs import GraphConsoldiationFunction, TranslatedMetric
+from ._type_defs import GraphConsolidationFunction, TranslatedMetric
 
 # TODO CMK-15246 Checkmk 2.4: Remove legacy objects/RPNs
 
@@ -98,7 +98,7 @@ class Constant(MetricExpression):
 @dataclass(frozen=True)
 class Metric(MetricExpression):
     name: MetricName
-    consolidation_func_name: GraphConsoldiationFunction | None = None
+    consolidation_func_name: GraphConsolidationFunction | None = None
     _: KW_ONLY
     explicit_unit_id: str = ""
     explicit_color: str = ""
@@ -642,7 +642,7 @@ class LessEqualThan(ConditionalMetricExpression):
 
 def _extract_consolidation_func_name(
     expression: str,
-) -> tuple[str, GraphConsoldiationFunction | None]:
+) -> tuple[str, GraphConsolidationFunction | None]:
     if expression.endswith(".max"):
         return expression[:-4], "max"
     if expression.endswith(".min"):

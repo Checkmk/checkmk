@@ -34,7 +34,7 @@ from ._graph_specification import GraphDataRange, GraphRecipe
 from ._legacy import check_metrics, CheckMetricEntry
 from ._metrics import get_metric_spec
 from ._timeseries import op_func_wrapper, time_series_operators
-from ._type_defs import GraphConsoldiationFunction, RRDData, RRDDataKey
+from ._type_defs import GraphConsolidationFunction, RRDData, RRDDataKey
 from ._unit import user_specific_unit
 from ._utils import find_matching_translation, TranslationSpec
 
@@ -89,7 +89,7 @@ def fetch_rrd_data_for_graph(
 
 
 def _align_and_resample_rrds(
-    rrd_data: RRDData, consolidation_func_name: GraphConsoldiationFunction | None
+    rrd_data: RRDData, consolidation_func_name: GraphConsolidationFunction | None
 ) -> None:
     """RRDTool aligns start/end/step to its internal precision.
 
@@ -150,7 +150,7 @@ def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
         data.end -= step
 
 
-MetricProperties = tuple[str, GraphConsoldiationFunction | None, float]
+MetricProperties = tuple[str, GraphConsolidationFunction | None, float]
 
 
 def _group_needed_rrd_data_by_service(
@@ -175,7 +175,7 @@ def _fetch_rrd_data(
     host_name: HostName,
     service_description: ServiceName,
     metrics: set[MetricProperties],
-    consolidation_func_name: GraphConsoldiationFunction | None,
+    consolidation_func_name: GraphConsolidationFunction | None,
     graph_data_range: GraphDataRange,
 ) -> list[tuple[MetricProperties, TimeSeriesValues]]:
     start_time, end_time = graph_data_range.time_range
@@ -195,7 +195,7 @@ def _fetch_rrd_data(
 
 def rrd_columns(
     metrics: Iterable[MetricProperties],
-    consolidation_func_name: GraphConsoldiationFunction | None,
+    consolidation_func_name: GraphConsolidationFunction | None,
     data_range: str,
 ) -> Iterator[ColumnName]:
     """RRD data columns for each metric
@@ -254,7 +254,7 @@ def _reverse_translate_into_all_potentially_relevant_metrics_cached(
 
 def all_rrd_columns_potentially_relevant_for_metric(
     metric_name: MetricName,
-    consolidation_func_name: GraphConsoldiationFunction,
+    consolidation_func_name: GraphConsolidationFunction,
     from_time: int,
     until_time: int,
 ) -> Iterator[ColumnName]:

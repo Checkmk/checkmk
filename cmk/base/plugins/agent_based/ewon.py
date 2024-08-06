@@ -272,7 +272,7 @@ def _check_oxyreduct(params: Mapping[str, Any], data: Mapping[int, float]) -> Ch
 
 
 def discovery_ewon(params: Mapping[Literal["device"], Any], section: Section) -> DiscoveryResult:
-    device_name = params["device"]
+    device_name = params.get("device")
 
     yield Service(item="eWON Status", parameters={"device": device_name})
 
@@ -282,7 +282,7 @@ def discovery_ewon(params: Mapping[Literal["device"], Any], section: Section) ->
 
 
 def check_ewon(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    device_name = params["device"]
+    device_name = params.get("device")
     if item == "eWON Status":
         if device_name is None:
             yield Result(

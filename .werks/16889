@@ -1,0 +1,12 @@
+Title: ewon: KeyError (device)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1722930487
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+An existing rule for <code>check_ewon</code> without the mandatory key <code>device</code> would result in an exception
+<code>KeyError (device)</code>.
+This change makes the check function use a default, if <code>device</code> is not set.

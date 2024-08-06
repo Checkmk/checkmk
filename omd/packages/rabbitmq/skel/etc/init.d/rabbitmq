@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 PIDFILE="${OMD_ROOT}/tmp/run/rabbitmq.pid"
+RABBITMQ_NODENAME="rabbit-###SITE###"
 RABBITMQ_LOG_BASE="${OMD_ROOT}/var/log/rabbitmq"
 RABBITMQ_MNESIA_BASE="${OMD_ROOT}/var/rabbitmq/mnesia"
 RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
@@ -65,7 +66,8 @@ case "$1" in
         # to test with systems rabbitmq: comment out the above two lines, and uncomment the following line
         # EXECUTE=/usr/lib/rabbitmq/bin/rabbitmq-server
 
-        RABBITMQ_ENABLED_PLUGINS_FILE="${RABBITMQ_ENABLED_PLUGINS_FILE}" \
+        RABBITMQ_NODENAME="${RABBITMQ_NODENAME}" \
+            RABBITMQ_ENABLED_PLUGINS_FILE="${RABBITMQ_ENABLED_PLUGINS_FILE}" \
             RABBITMQ_CONFIG_FILES="${RABBITMQ_CONFIG_FILES}" \
             RABBITMQ_LOG_BASE="${RABBITMQ_LOG_BASE}" \
             RABBITMQ_PID_FILE="${PIDFILE}" \

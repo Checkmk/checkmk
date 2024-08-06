@@ -105,3 +105,44 @@ def test_active_check_httpv2_cert_validity_globally() -> None:
             ],
         ),
     ]
+
+
+def test_active_check_httpv2_options_dont_merge() -> None:
+    # individual settings are not merged with the global ones.
+    assert list(
+        active_check_httpv2(
+            {
+                "endpoints": [
+                    {
+                        "individual_settings": {
+                            "content": {"body": ("string", "Needle")},
+                        },
+                        "service_name": {
+                            "name": "service",
+                            "prefix": "auto",
+                        },
+                        "url": "https://haystack.huge",
+                    },
+                ],
+                "standard_settings": {
+                    "cert": ("fixed", (3456000.0, 1728000.0)),
+                },
+            },
+            HostConfig(
+                name="testhost",
+                ipv4_config=IPv4Config(address="1.2.3.4"),
+            ),
+        )
+    ) == [
+        ActiveCheckCommand(
+            service_description="HTTPS service",
+            command_arguments=[
+                "--url",
+                "https://haystack.huge",
+                "--certificate-levels",
+                "40,20",
+                "--body-string",
+                "Needle",
+            ],
+        ),
+    ]

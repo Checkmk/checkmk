@@ -19,12 +19,12 @@ from pydantic import BaseModel
 
 import cmk.utils.render
 
+from cmk.gui.config import active_config
+from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
-
-from cmk.graphing.v1 import metrics as metrics_api
 
 from ._color import fade_color, parse_color, render_color
 from ._formatter import (
@@ -32,6 +32,7 @@ from ._formatter import (
     EngineeringScientificFormatter,
     IECFormatter,
     Label,
+    NotationFormatter,
     SIFormatter,
     StandardScientificFormatter,
     TimeFormatter,
@@ -49,6 +50,7 @@ from ._legacy import UnitInfo
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point
 from ._type_defs import LineType, RRDData
+from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
 
 Seconds = int
@@ -157,11 +159,22 @@ def compute_graph_artwork(
     *,
     graph_display_id: str = "",
 ) -> GraphArtwork:
-    unit_info = get_unit_info(graph_recipe.unit)
+    unit_spec: UserSpecificUnit | UnitInfo
+    if graph_recipe.unit_spec:
+        unit_spec = user_specific_unit(
+            graph_recipe.unit_spec,
+            user,
+            active_config,
+        )
+        renderer: Callable[[float], str] = unit_spec.formatter.render
+    else:
+        unit_spec = get_unit_info(graph_recipe.unit)
+        renderer = unit_spec.render
+
     curves = list(compute_graph_artwork_curves(graph_recipe, graph_data_range))
 
     pin_time = _load_graph_pin()
-    _compute_scalars(unit_info.render, curves, pin_time)
+    _compute_scalars(renderer, curves, pin_time)
     layouted_curves, mirrored = _layout_graph_curves(curves)  # do stacking, mirroring
     width, height = size
 
@@ -180,7 +193,7 @@ def compute_graph_artwork(
         curves=layouted_curves,
         horizontal_rules=graph_recipe.horizontal_rules,
         vertical_axis=_compute_graph_v_axis(
-            unit_info,
+            unit_spec,
             graph_recipe.explicit_vertical_range,
             graph_data_range,
             SizeEx(height),
@@ -530,7 +543,7 @@ def _make_formatter(
     | EngineeringScientificFormatter
     | TimeFormatter
 ):
-    precision = metrics_api.AutoPrecision(2)
+    precision = AutoPrecision(decimal_places=2)
     match formatter_ident:
         case "Decimal":
             return DecimalFormatter(symbol, precision)
@@ -547,14 +560,7 @@ def _make_formatter(
 
 
 def _compute_labels_from_api(
-    formatter: (
-        DecimalFormatter
-        | SIFormatter
-        | IECFormatter
-        | StandardScientificFormatter
-        | EngineeringScientificFormatter
-        | TimeFormatter
-    ),
+    formatter: NotationFormatter,
     height_ex: SizeEx,
     mirrored: bool,
     *,
@@ -720,7 +726,7 @@ def _render_legacy_labels(
 #
 # height -> Graph area height in ex
 def _compute_graph_v_axis(
-    unit_info: UnitInfo,
+    unit_spec: UserSpecificUnit | UnitInfo,
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
     graph_data_range: GraphDataRange,
     height_ex: SizeEx,
@@ -739,9 +745,14 @@ def _compute_graph_v_axis(
         height_ex,
     )
 
-    if formatter_ident := unit_info.formatter_ident:
+    if isinstance(unit_spec, UserSpecificUnit) or unit_spec.formatter_ident:
+        if isinstance(unit_spec, UserSpecificUnit):
+            formatter = unit_spec.formatter
+        elif unit_spec.formatter_ident:
+            formatter = _make_formatter(unit_spec.formatter_ident, unit_spec.symbol)
+
         labels = _compute_labels_from_api(
-            _make_formatter(formatter_ident, unit_info.symbol),
+            formatter,
             height_ex,
             mirrored,
             min_y=v_axis_min_max.label_range[0],
@@ -762,7 +773,7 @@ def _compute_graph_v_axis(
         rendered_labels, max_label_length, graph_unit = _render_legacy_labels(
             height_ex,
             v_axis_min_max,
-            unit_info,
+            unit_spec,
             mirrored,
         )
         label_range = v_axis_min_max.label_range

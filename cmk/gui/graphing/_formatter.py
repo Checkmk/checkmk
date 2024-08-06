@@ -9,7 +9,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Final, Literal
 
-from cmk.graphing.v1 import metrics as metrics_api
+from pydantic import BaseModel
 
 _MAX_DIGITS: Final = 5
 
@@ -41,10 +41,20 @@ class Label:
     text: str
 
 
+class AutoPrecision(BaseModel, frozen=True):
+    type: Literal["auto"] = "auto"
+    decimal_places: int
+
+
+class FixedPrecision(BaseModel, frozen=True):
+    type: Literal["fixed"] = "fixed"
+    decimal_places: int
+
+
 @dataclass(frozen=True)
 class NotationFormatter:
     symbol: str
-    precision: metrics_api.AutoPrecision | metrics_api.StrictPrecision
+    precision: AutoPrecision | FixedPrecision
     use_max_digits_for_labels: bool = True
 
     @abc.abstractmethod
@@ -74,10 +84,10 @@ class NotationFormatter:
         value_floor = math.floor(value)
         if value == value_floor:
             return value
-        digits = self.precision.digits
-        if isinstance(self.precision, metrics_api.AutoPrecision):
+        digits = self.precision.decimal_places
+        if isinstance(self.precision, AutoPrecision):
             if exponent := abs(math.ceil(math.log10(value - value_floor))):
-                digits = compute_auto_precision_digits(exponent, self.precision.digits)
+                digits = compute_auto_precision_digits(exponent, self.precision.decimal_places)
         return (
             round(value, min(digits, _MAX_DIGITS))
             if use_max_digits_for_labels

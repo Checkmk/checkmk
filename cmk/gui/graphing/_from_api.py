@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Protocol, Self
+from typing import assert_never, Protocol, Self
 
 from cmk.gui.config import active_config, Config
 from cmk.gui.logged_in import LoggedInUser, user
@@ -18,8 +18,10 @@ from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 
 from ._formatter import (
+    AutoPrecision,
     DecimalFormatter,
     EngineeringScientificFormatter,
+    FixedPrecision,
     IECFormatter,
     NotationFormatter,
     SIFormatter,
@@ -73,25 +75,35 @@ def _make_unit_info(
     precision: metrics_api.AutoPrecision | metrics_api.StrictPrecision,
     conversion: Callable[[float], float],
 ) -> UnitInfo:
+
+    internal_precision: AutoPrecision | FixedPrecision
+    match precision:
+        case metrics_api.AutoPrecision(digits):
+            internal_precision = AutoPrecision(decimal_places=digits)
+        case metrics_api.StrictPrecision(digits):
+            internal_precision = FixedPrecision(decimal_places=digits)
+        case _:
+            assert_never(precision)
+
     formatter: NotationFormatter
     match notation:
         case metrics_api.DecimalNotation():
-            formatter = DecimalFormatter(symbol, precision)
+            formatter = DecimalFormatter(symbol, internal_precision)
             js_formatter = "DecimalFormatter"
         case metrics_api.SINotation():
-            formatter = SIFormatter(symbol, precision)
+            formatter = SIFormatter(symbol, internal_precision)
             js_formatter = "SIFormatter"
         case metrics_api.IECNotation():
-            formatter = IECFormatter(symbol, precision)
+            formatter = IECFormatter(symbol, internal_precision)
             js_formatter = "IECFormatter"
         case metrics_api.StandardScientificNotation():
-            formatter = StandardScientificFormatter(symbol, precision)
+            formatter = StandardScientificFormatter(symbol, internal_precision)
             js_formatter = "StandardScientificFormatter"
         case metrics_api.EngineeringScientificNotation():
-            formatter = EngineeringScientificFormatter(symbol, precision)
+            formatter = EngineeringScientificFormatter(symbol, internal_precision)
             js_formatter = "EngineeringScientificFormatter"
         case metrics_api.TimeNotation():
-            formatter = TimeFormatter(symbol, precision)
+            formatter = TimeFormatter(symbol, internal_precision)
             js_formatter = "TimeFormatter"
 
     match precision:

@@ -11,7 +11,14 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Annotated, final, Literal
 
-from pydantic import BaseModel, computed_field, field_validator, PlainValidator, SerializeAsAny
+from pydantic import (
+    BaseModel,
+    computed_field,
+    Field,
+    field_validator,
+    PlainValidator,
+    SerializeAsAny,
+)
 
 from livestatus import SiteId
 
@@ -26,6 +33,7 @@ from cmk.ccc.plugin_registry import Registry
 from ._graph_render_config import GraphRenderOptions
 from ._timeseries import AugmentedTimeSeries, derive_num_points_twindow, time_series_math
 from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData, RRDDataKey
+from ._unit import ConvertibleUnitSpecification, NonConvertibleUnitSpecification
 
 
 @dataclass(frozen=True)
@@ -255,6 +263,10 @@ class AdditionalGraphHTML(BaseModel, frozen=True):
 class GraphRecipe(BaseModel, frozen=True):
     title: str
     unit: str
+    unit_spec: ConvertibleUnitSpecification | NonConvertibleUnitSpecification | None = Field(
+        default=None,
+        discriminator="type",
+    )
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     horizontal_rules: Sequence[HorizontalRule]
     omit_zero_metrics: bool

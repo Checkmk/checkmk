@@ -19,7 +19,9 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui import sites
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.type_defs import ColumnName
 
@@ -33,6 +35,7 @@ from ._legacy import check_metrics, CheckMetricEntry
 from ._metrics import get_metric_spec
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction, RRDData, RRDDataKey
+from ._unit import user_specific_unit
 from ._utils import find_matching_translation, TranslationSpec
 
 
@@ -40,7 +43,15 @@ def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
 ) -> RRDData:
-    conversion = get_unit_info(graph_recipe.unit).conversion
+    conversion = (
+        user_specific_unit(
+            graph_recipe.unit_spec,
+            user,
+            active_config,
+        ).conversion
+        if graph_recipe.unit_spec
+        else get_unit_info(graph_recipe.unit).conversion
+    )
     by_service = _group_needed_rrd_data_by_service(
         key
         for metric in graph_recipe.metrics

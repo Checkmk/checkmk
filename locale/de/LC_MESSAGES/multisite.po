@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-08-02 11:57+0000\n"
+"PO-Revision-Date: 2024-08-05 23:11+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -40653,9 +40653,8 @@ msgstr "Oracle Dataguard-Statistiken"
 msgid "Oracle hit ratio"
 msgstr "Oracle Trefferquote"
 
-#, fuzzy
 msgid "Oracle instance"
-msgstr "Oracle-Instanzen"
+msgstr "Oracle-Instanz"
 
 msgid "Oracle instances"
 msgstr "Oracle-Instanzen"
@@ -40663,11 +40662,9 @@ msgstr "Oracle-Instanzen"
 msgid "Oracle library cache statistics"
 msgstr "Oracle Bibliotheks-Cache Statistik"
 
-#, fuzzy
 msgid "Oracle long active sessions"
 msgstr "Oracle langlaufende Sitzungen"
 
-#, fuzzy
 msgid "Oracle performance"
 msgstr "Oracle Leistung"
 
@@ -40677,29 +40674,24 @@ msgstr "Oracle Leistungserkennung"
 msgid "Oracle physical IO"
 msgstr "Oracle physikalischer IO"
 
-#, fuzzy
 msgid "Oracle processes"
 msgstr "Oracle Prozesse"
 
-#, fuzzy
 msgid "Oracle recovery area"
-msgstr "Oracle Recovery Bereiche"
+msgstr "Oracle Recovery Bereich"
 
 msgid "Oracle recovery areas"
 msgstr "Oracle Recovery Bereiche"
 
-#, fuzzy
 msgid "Oracle recovery status"
 msgstr "Oracle Recovery Status"
 
 msgid "Oracle release of the remote database"
 msgstr "Oracle-Release der Remote-Datenbank"
 
-#, fuzzy
 msgid "Oracle scheduler job"
-msgstr "Oracle Schedulerjob"
+msgstr "Oracle Scheduler-Job"
 
-#, fuzzy
 msgid "Oracle sessions"
 msgstr "Oracle Sitzungen"
 
@@ -40712,7 +40704,6 @@ msgstr "Oracle Tablespaces"
 msgid "Oracle total Memory"
 msgstr "Oracle Gesamtspeicher"
 
-#, fuzzy
 msgid "Oracle undo retention"
 msgstr "Oracle Undo Retention"
 
@@ -42245,7 +42236,6 @@ msgstr "Regelmäßige Benachrichtigungen bei Service-Problemen"
 msgid "Periodic service discovery"
 msgstr "Periodische Service-Erkennung"
 
-#, fuzzy
 msgid "Permanent generation memory"
 msgstr "Permanent-Generation-Speicher"
 
@@ -42391,7 +42381,6 @@ msgstr "Phase 2.4: Aktivierung der Änderungen"
 msgid "Phase Number"
 msgstr "Phase Zahl"
 
-#, fuzzy
 msgid "Phase merging"
 msgstr "Zusammenfassen von Phasen"
 
@@ -42416,11 +42405,9 @@ msgstr "Physikalische CPU Nutzung"
 msgid "Physical Disks"
 msgstr "Physikalische Platten"
 
-#, fuzzy
 msgid "Physical address (MAC)"
 msgstr "Physikalische Adresse (MAC)"
 
-#, fuzzy
 msgid "Physical components"
 msgstr "Physikalische Komponenten"
 
@@ -42436,25 +42423,20 @@ msgstr "Verbrauchte physikalische Prozessoren"
 msgid "Physical state of port"
 msgstr "Physischer Status des Ports"
 
-#, fuzzy
 msgid "Physical volume free partitions"
 msgstr "Freie Partitionen auf physikalischem Datenträger"
 
-#, fuzzy
 msgid "Physical volume name"
 msgstr "Physikalischer Datenträgername"
 
-#, fuzzy
 msgid "Physical volume status"
 msgstr "Physikalischer Datenträgerstatus"
 
-#, fuzzy
 msgid "Physical volume total partitions"
-msgstr "Gesamten Partionen auf physikalischem Datenträger"
+msgstr "Gesamt-Partitionen auf physikalischem Datenträger"
 
-#, fuzzy
 msgid "Physical volumes"
-msgstr "Physikalischer Datenträgerstatus"
+msgstr "Physikalische Datenträger"
 
 msgid "Piano Bar"
 msgstr "Klavier"
@@ -42492,13 +42474,11 @@ msgstr "Ausdrücke für Piggyback-Host-Namen"
 msgid "Ping"
 msgstr "Ping"
 
-#, fuzzy
 msgid "Ping IPv4 address identified by its index (starting at 1)"
-msgstr "Ping IPv4-Adresse, die durch ihren Index identifiziert wird"
+msgstr "Ping IPv4-Adresse identifiziert durch ihren Index (beginnend bei 1)"
 
-#, fuzzy
 msgid "Ping IPv6 address identified by its index (starting at 1)"
-msgstr "Ping IPv6-Adresse, die durch ihren Index identifiziert wird"
+msgstr "Ping IPv6-Adresse identifiziert durch ihren Index (beginnend bei 1)"
 
 msgid "Ping additional IPv4 addresses"
 msgstr "Alle zusätzlichen IPv4-Adresse anpingen"
@@ -42538,7 +42518,6 @@ msgstr ""
 msgid "Placement"
 msgstr "Platzierung"
 
-#, fuzzy
 msgid "Plain email"
 msgstr "Einfache E-Mail"
 
@@ -42571,9 +42550,8 @@ msgstr ""
 msgid "Plans"
 msgstr "Pläne"
 
-#, fuzzy
 msgid "Platform firmware level"
-msgstr "Plattform Firmware-Ebene"
+msgstr "Plattform Firmware-Level"
 
 msgid "Play alarm sounds"
 msgstr "Alarmtöne abspielen"
@@ -43210,58 +43188,49 @@ msgstr "Schalter ist AN"
 msgid "Plug item number or name"
 msgstr "Anschlussnummer oder -name"
 
-#, fuzzy
 msgid "Plug-in"
 msgstr "Plugin"
 
 msgid "Plug-in API references"
 msgstr "Plugin-API Referenzen"
 
-#, fuzzy
 msgid "Plug-in Name"
-msgstr "Pluginname"
+msgstr "Plugin-Name"
 
-#, fuzzy
 msgid "Plug-in file pattern"
 msgstr "Plugin-Dateimuster"
 
-#, fuzzy
 msgid "Plug-in heartbeat timeout"
-msgstr "Plugin Heartbeat Zeitüberschreitung"
+msgstr "Plugin Heartbeat Timeout"
 
-#, fuzzy
 msgid "Plug-in is disabled"
 msgstr "Plugin ist deaktiviert"
 
-#, fuzzy
 msgid "Plug-in output"
 msgstr "Plugin-Ausgabe"
 
-#, fuzzy
 msgid "Plug-in output in case of absent updates"
-msgstr "Plugin Ausgabe wenn keine Updates vorhanden sind"
+msgstr "Plugin-Ausgabe wenn keine Updates vorhanden sind"
 
-#, fuzzy
 msgid "Plug-in parameters"
 msgstr "Plugin-Parameter"
 
-#, fuzzy
 msgid "Plug-ins directory"
 msgstr "Plugin-Verzeichnis"
 
-#, fuzzy
 msgid ""
 "Plug-ins for local agent extensions or communication with the agent in "
 "general"
 msgstr ""
-"Plugins für lokale Agentenerweiterungen oder Kommunikation mit dem Agenten"
+"Plugins für lokale Agentenerweiterungen oder allgemeine Kommunikation mit "
+"dem Agenten"
 
-#, fuzzy
 msgid ""
 "Plug-ins for operating systems, things like memory, CPU, filesystems, etc."
-msgstr "Plugins für Betriebssystem, Dinge wie Speicher, CPU, Dateisystem, etc."
+msgstr ""
+"Plugins für Betriebssysteme, Dinge wie Speicher, CPU, Dateisysteme, etc."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Plug-ins matching this pattern will be excluded from the comparison with the "
 "required versions specified in '%s' and from the duplicates check."
@@ -43270,7 +43239,6 @@ msgstr ""
 "angegebenen erforderlichen Versionen und von der Prüfung auf Dubletten "
 "ausgeschlossen."
 
-#, fuzzy
 msgid ""
 "Plug-ins or local checks matching this pattern will be excluded from the "
 "comparison with the specified required versions."
@@ -43278,11 +43246,9 @@ msgstr ""
 "Plugins oder lokale Checks, die diesem Muster entsprechen, werden von dem "
 "Vergleich mit den angegebenen erforderlichen Versionen ausgeschlossen."
 
-#, fuzzy
 msgid "Plug-ins that directly check networking protocols like HTTP or IMAP"
 msgstr "Plugins, die direkt Netzwerkprotokolle wie HTTP oder IMAP prüfen"
 
-#, fuzzy
 msgid "Plug-ins, local checks and MRPE for non-root users"
 msgstr "Plugins, lokale Checks und MRPE für nicht-root-Benutzer"
 
@@ -43399,9 +43365,8 @@ msgstr "Port der Microsoft SQL Server-Instanz"
 msgid "Port types to include in usage statistics"
 msgstr "Porttypen, die in die Belegungsstatistik eingeschlossen werden"
 
-#, fuzzy
 msgid "Port usage"
-msgstr "Portbelegung"
+msgstr "Port-Auslastung"
 
 msgid "Port:"
 msgstr "Port:"
@@ -43457,7 +43422,6 @@ msgstr "PostgreSQL-Datenbank Bloat"
 msgid "PostgreSQL database connections"
 msgstr "PostgreSQL-Datenbankverbindungen"
 
-#, fuzzy
 msgid "PostgreSQL database statistics"
 msgstr "PostgreSQL Datenbankstatistiken"
 
@@ -43479,15 +43443,12 @@ msgstr "Zustand der Stromversorgung unbekannt"
 msgid "Power supplies"
 msgstr "Netzteile"
 
-#, fuzzy
 msgid "Power supply name"
 msgstr "Name des Netzteils"
 
-#, fuzzy
 msgid "Power supply unit"
 msgstr "Netzteil"
 
-#, fuzzy
 msgid "Power supply wattage"
 msgstr "Wattleistung des Netzteils"
 

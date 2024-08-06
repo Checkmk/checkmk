@@ -9,8 +9,6 @@ import warnings
 
 import werkzeug
 from flask import Flask, redirect
-from opentelemetry.instrumentation.redis import RedisInstrumentor
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from werkzeug.debug import DebuggedApplication
 from werkzeug.exceptions import BadRequest
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -20,6 +18,8 @@ from cmk.gui import http
 from cmk.gui.session import FileBasedSession
 from cmk.gui.wsgi.blueprints.checkmk import checkmk
 from cmk.gui.wsgi.blueprints.rest_api import rest_api
+
+from .trace import instrument_app_dependencies
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     # Until this can work, we need to do it at runtime in `FileBasedSession`.
     # app.config["PERMANENT_SESSION_LIFETIME"] = active_config.session_mgmt["user_idle_timeout"]
 
-    _instrument()
+    instrument_app_dependencies()
 
     # NOTE: some schemas are generically generated. On default, for duplicate schema names, we
     # get name+increment which we have deemed fine. We can therefore suppress those warnings.
@@ -93,11 +93,6 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
         return redirect(dest)
 
     return app
-
-
-def _instrument() -> None:
-    RequestsInstrumentor().instrument()
-    RedisInstrumentor().instrument()
 
 
 __all__ = ["make_wsgi_app", "CheckmkFlaskApp"]

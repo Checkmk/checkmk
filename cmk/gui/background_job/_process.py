@@ -34,6 +34,7 @@ from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.single_global_setting import load_gui_log_levels
 from cmk.gui.utils import get_failed_plugins
+from cmk.gui.wsgi.trace import instrument_app_dependencies
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKTerminate
@@ -81,6 +82,7 @@ def run_process(job_parameters: JobParameters) -> None:
             init_tracing(omd_site(), "gui"),
             exporter_from_config(trace_send_config(get_omd_config(paths.omd_root))),
         )
+        instrument_app_dependencies()
         _initialize_environment(
             logger, job_id, Path(work_dir), lock_wato, is_stoppable, override_job_log_level
         )

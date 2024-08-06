@@ -43,7 +43,7 @@ export function isInteger(value: string): boolean {
 }
 
 export function isFloat(value: string): boolean {
-  return /^-?\d+\.?\d+$/.test(value)
+  return /^-?\d+(\.\d+)?$/.test(value)
 }
 
 export type ValidationMessages = ValidationMessage[]

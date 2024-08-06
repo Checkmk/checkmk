@@ -258,14 +258,14 @@ def _check_oxyreduct(params: Mapping[str, Any], data: Mapping[int, float]) -> Ch
             except KeyError:
                 levels = tag_params.get("levels")
 
-            template = f"%.2f {tag_params.get('unit', '')}".strip()
+            unit_str = tag_params.get("unit", "")
             yield from check_levels(
                 value,
                 metric_name=tag_params.get("perfvar"),
                 levels_lower=levels[2:],
                 levels_upper=levels[:2],
                 label=tag_params["name"],
-                render_func=lambda v: template % v,  # pylint: disable=cell-var-from-loop
+                render_func=lambda v, u=unit_str: f"{v:.2f} {u}".strip(),
             )
 
         # if it's a bitmask, try to determine if they are good flags

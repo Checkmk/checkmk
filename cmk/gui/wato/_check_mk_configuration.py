@@ -6281,11 +6281,11 @@ def _valuespec_snmpv3_contexts():
                     choices=lambda: [(None, _("All SNMP sections"))] + get_snmp_section_names(),
                 ),
                 ListOfStrings(
-                    title=_("SNMP Context IDs"),
+                    title=_("SNMP context names"),
                     allow_empty=False,
                 ),
                 DropdownChoice(
-                    title=_("Error Handling"),
+                    title=_("Error handling"),
                     choices=lambda: [
                         ("stop_on_timeout", _("Stop SNMP processing on timeout")),
                         ("continue_on_timeout", _("Continue with other SNMP contexts on timeout")),

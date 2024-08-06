@@ -1,0 +1,12 @@
+Title: check_ewon: ValueError (incomplete format)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1722930770
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+Formatting a value with unit <code>%</code> would result in an invalid format-string making <code>check_ewon</code>
+crash with an exception <code>ValueError (incomplete format)</code>.
+This change makes <code>check_ewon</code> use f-formatting instead of <code>%</code>-formatting.

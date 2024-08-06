@@ -71,66 +71,7 @@ rules_pkg_dependencies()
 #   '----------------------------------------------------------------------'
 load(
     "//:package_versions.bzl",
-    "ASIO_SHA256",
-    "ASIO_VERSION",
-    "CRYPT_SSL_SHA256",
-    "CRYPT_SSL_VERSION",
-    "ERLANG_VERSION",
-    "FREETDS_SHA256",
-    "FREETDS_VERSION",
-    "HEIRLOOMMAILX_SHA256",
-    "HEIRLOOMMAILX_VERSION",
-    "HEIRLOOM_PKGTOOLS_SHA256",
-    "HEIRLOOM_PKGTOOLS_VERSION",
-    "HTTPLIB_SHA256",
-    "HTTPLIB_VERSION",
-    "JAEGER_SHA256",
-    "JAEGER_VERSION",
-    "LCAB_SHA256",
-    "LCAB_VERSION",
-    "LIBGSF_SHA256",
-    "LIBGSF_VERSION",
-    "MOD_FCGID_SHA256",
-    "MOD_FCGID_VERSION",
-    "MOD_WSGI_SHA256",
-    "MOD_WSGI_VERSION",
-    "MONITORING_PLUGINS_SHA256",
-    "MONITORING_PLUGINS_VERSION",
-    "MSITOOLS_SHA256",
-    "MSITOOLS_VERSION",
-    "NAGIOS_SHA256",
-    "NAGIOS_VERSION",
-    "NET_SNMP_SHA256",
-    "NET_SNMP_VERSION",
-    "NRPE_SHA256",
-    "NRPE_VERSION",
-    "OPENSSL_SHA256",
-    "OPENSSL_VERSION",
-    "PATCH_SHA256",
-    "PATCH_VERSION",
-    "PNP4NAGIOS_SHA256",
-    "PNP4NAGIOS_VERSION",
-    "PYTHON_SHA256",
     "PYTHON_VERSION",
-    "RE2_SHA256",
-    "RE2_VERSION",
-    "REDFISH_MKP_COMMIT_HASH",
-    "REDFISH_MKP_SHA256",
-    "REDFISH_MKP_VERSION",
-    "REDIS_SHA256",
-    "REDIS_VERSION",
-    "ROBOTMK_SHA256",
-    "ROBOTMK_VERSION",
-    "RRDTOOL_SHA256",
-    "RRDTOOL_VERSION",
-    "SNAP7_SHA256",
-    "SNAP7_VERSION",
-    "STUNNEL_SHA256",
-    "STUNNEL_VERSION",
-    "XINETD_SHA256",
-    "XINETD_VERSION",
-    "XMLSEC1_SHA256",
-    "XMLSEC1_VERSION",
 )
 
 cargo_deps(
@@ -154,160 +95,159 @@ check_http_deps()
 load("//omd/packages/patch:patch_http.bzl", "patch")
 
 patch(
-    sha256 = PATCH_SHA256,
-    version_str = PATCH_VERSION,
+    sha256 = "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
+    version_str = "2.7.6",
 )
 
 load("//omd/packages/redis:redis_http.bzl", "redis")
 
 redis(
-    sha256 = REDIS_SHA256,
-    version_str = REDIS_VERSION,
+    sha256 = "5b2b8b7a50111ef395bf1c1d5be11e6e167ac018125055daa8b5c2317ae131ab",
+    version_str = "6.2.6",
 )
 
 load("//omd/packages/asio:asio_http.bzl", "asio")
 
 asio(
-    sha256 = ASIO_SHA256,
-    version_str = ASIO_VERSION,
+    sha256 = "09b9fe5c670c7bd47c7ee957cd9c184b4c8f0620d5b08b38ce837a24df971bca",
+    version_str = "1.24.0-patched",
 )
 
 load("//omd/packages/re2:re2_http.bzl", "re2")
 
 re2(
-    sha256 = RE2_SHA256,
-    version_str = RE2_VERSION,
+    sha256 = "665b65b6668156db2b46dddd33405cd422bd611352c5052ab3dae6a5fbac5506",
+    version_str = "2022-12-01",
 )
 
 load("//omd/packages/openssl:openssl_http.bzl", "openssl")
 
 openssl(
-    sha256 = OPENSSL_SHA256,
-    version_str = OPENSSL_VERSION,
+    sha256 = "88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313",
+    version_str = "3.0.13",
 )
 
 load("//omd/packages/xmlsec1:xmlsec1_http.bzl", "xmlsec1")
 
 xmlsec1(
-    sha256 = XMLSEC1_SHA256,
-    version_str = XMLSEC1_VERSION,
+    sha256 = "5f8dfbcb6d1e56bddd0b5ec2e00a3d0ca5342a9f57c24dffde5c796b2be2871c",
+    version_str = "1.2.37",
 )
 
 load("//omd/packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx")
 
 heirloommailx(
-    sha256 = HEIRLOOMMAILX_SHA256,
-    version_str = HEIRLOOMMAILX_VERSION,
+    sha256 = "015ba4209135867f37a0245d22235a392b8bbed956913286b887c2e2a9a421ad",
+    version_str = "12.5",
 )
 
 load("//omd/packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins")
 
 monitoring_plugins(
-    sha256 = MONITORING_PLUGINS_SHA256,
-    version_str = MONITORING_PLUGINS_VERSION,
+    sha256 = "7023b1dc17626c5115b061e7ce02e06f006e35af92abf473334dffe7ff3c2d6d",
+    version_str = "2.3.3",
 )
 
 load("//omd/packages/stunnel:stunnel_http.bzl", "stunnel")
 
 stunnel(
-    sha256 = STUNNEL_SHA256,
-    version_str = STUNNEL_VERSION,
+    sha256 = "c74c4e15144a3ae34b8b890bb31c909207301490bd1e51bfaaa5ffeb0a994617",
+    version_str = "5.63",
 )
 
 load("//omd/packages/freetds:freetds_http.bzl", "freetds")
 
 freetds(
-    sha256 = FREETDS_SHA256,
-    version_str = FREETDS_VERSION,
+    sha256 = "be7c90fc771f30411eff6ae3a0d2e55961f23a950a4d93c44d4c488006e64c70",
+    version_str = "0.95.95",
 )
 
 load("//omd/packages/heirloom-pkgtools:heirloom-pkgtools_http.bzl", "heirloom_pkgtools")
 
 heirloom_pkgtools(
-    sha256 = HEIRLOOM_PKGTOOLS_SHA256,
-    version_str = HEIRLOOM_PKGTOOLS_VERSION,
+    sha256 = "aa94d33550847d57c62138cabd0f742d4af2f14aa2bfb9e9d4a9427bf498e6cc",
+    version_str = "070227",
 )
 
 load("//omd/packages/libgsf:libgsf_http.bzl", "libgsf")
 
 libgsf(
-    sha256 = LIBGSF_SHA256,
-    version_str = LIBGSF_VERSION,
+    sha256 = "68bede10037164764992970b4cb57cd6add6986a846d04657af9d5fac774ffde",
+    version_str = "1.14.44",
 )
 
 load("//omd/packages/lcab:lcab_http.bzl", "lcab")
 
 lcab(
-    sha256 = LCAB_SHA256,
-    version_str = LCAB_VERSION,
+    sha256 = "065f2c1793b65f28471c0f71b7cf120a7064f28d1c44b07cabf49ec0e97f1fc8",
+    version_str = "1.0b12",
 )
 
 load("//omd/packages/msitools:msitools_http.bzl", "msitools")
 
 msitools(
-    sha256 = MSITOOLS_SHA256,
-    version_str = MSITOOLS_VERSION,
+    sha256 = "152eb4149cb44f178af93d17bbe0921b5312f30fb4780e5be113b35747b5cd2e",
+    version_str = "0.94",
 )
 
 load("//omd/packages/snap7:snap7_http.bzl", "snap7")
 
 snap7(
-    sha256 = SNAP7_SHA256,
-    version_str = SNAP7_VERSION,
+    sha256 = "fe137737b432d95553ebe5d5f956f0574c6a80c0aeab7a5262fb36b535df3cf4",
+    version_str = "1.4.2",
 )
 
 load("//omd/packages/perl-modules:perl-modules_http.bzl", "perl_modules")
 
-# TODO: Centralize perl modules versions
 perl_modules()
 
 load("//omd/packages/crypt-ssleay:cryptssl_http.bzl", "crypt_ssleay")
 
 crypt_ssleay(
-    sha256 = CRYPT_SSL_SHA256,
-    version_str = CRYPT_SSL_VERSION,
+    sha256 = "f5d34f813677829857cf8a0458623db45b4d9c2311daaebe446f9e01afa9ffe8",
+    version_str = "0.72",
 )
 
 load("//omd/packages/nrpe:nrpe_http.bzl", "nrpe")
 
 nrpe(
-    sha256 = NRPE_SHA256,
-    version_str = NRPE_VERSION,
+    sha256 = "8ad2d1846ab9011fdd2942b8fc0c99dfad9a97e57f4a3e6e394a4ead99c0f1f0",
+    version_str = "3.2.1",
 )
 
 load("//omd/packages/Python:Python_http.bzl", "python")
 
 python(
-    sha256 = PYTHON_SHA256,
+    sha256 = "56bfef1fdfc1221ce6720e43a661e3eb41785dd914ce99698d8c7896af4bdaa1",
     version_str = PYTHON_VERSION,
 )
 
 load("//omd/packages/pnp4nagios:pnp4nagios_http.bzl", "pnp4nagios")
 
 pnp4nagios(
-    sha256 = PNP4NAGIOS_SHA256,
-    version_str = PNP4NAGIOS_VERSION,
+    sha256 = "ab59a8a02d0f70de3cf89b12fe1e9216e4b1127bc29c04a036cd06dde72ee8fb",
+    version_str = "0.6.26",
 )
 
 load("//omd/packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid")
 
 mod_fcgid(
-    sha256 = MOD_FCGID_SHA256,
-    version_str = MOD_FCGID_VERSION,
+    sha256 = "1cbad345e3376b5d7c8f9a62b471edd7fa892695b90b79502f326b4692a679cf",
+    version_str = "2.3.9",
 )
 
 load("//omd/packages/xinetd:xinetd_http.bzl", "xinetd")
 
 xinetd(
-    sha256 = XINETD_SHA256,
-    version_str = XINETD_VERSION,
+    sha256 = "2baa581010bc70361abdfa37f121e92aeb9c5ce67f9a71913cebd69359cc9654",
+    version_str = "2.3.15.4",
 )
 
 load("//omd/packages/nagios:nagios_http.bzl", "nagios")
 
 nagios(
-    sha256 = NAGIOS_SHA256,
-    version_str = NAGIOS_VERSION,
+    sha256 = "b4323f8c027bf3f409225eeb4f7fb8e55856092ef5f890206fc2983bc75b072e",
+    version_str = "3.5.1",
 )
 
 load("//omd/packages/python3-modules:create_python_requirements.bzl", "create_python_requirements")
@@ -328,36 +268,36 @@ create_python_requirements(
 load("//omd/packages/mod_wsgi:mod_wsgi_http.bzl", "mod_wsgi")
 
 mod_wsgi(
-    sha256 = MOD_WSGI_SHA256,
-    version_str = MOD_WSGI_VERSION,
+    sha256 = "ee926a3fd5675890b908ebc23db1f8f7f03dc3459241abdcf35d46c68e1be29b",
+    version_str = "4.9.4",
 )
 
 load("//omd/packages/net-snmp:net-snmp_http.bzl", "netsnmp")
 
 netsnmp(
-    sha256 = NET_SNMP_SHA256,
-    version_str = NET_SNMP_VERSION,
+    sha256 = "75b59d67e871aaaa31c8cef89ba7d06972782b97736b7e8c3399f36b50a8816f",
+    version_str = "5.9.1",
 )
 
 load("//omd/packages/robotmk:robotmk_http.bzl", "robotmk")
 
 robotmk(
-    sha256 = ROBOTMK_SHA256,
-    version_str = ROBOTMK_VERSION,
+    sha256 = "03bd994e41079b060f9a370569bbfec94ac05463255c440c07424c5b8bd10f67",
+    version_str = "v3.0.0-alpha-4",
 )
 
 load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool")
 
 rrdtool(
-    sha256 = RRDTOOL_SHA256,
-    version_str = RRDTOOL_VERSION,
+    sha256 = "a199faeb7eff7cafc46fac253e682d833d08932f3db93a550a4a5af180ca58db",
+    version_str = "1.7.2",
 )
 
 load("//omd/packages/rrdtool:rrdtool_native.bzl", "rrdtool_native")
 
 rrdtool_native(
-    sha256 = RRDTOOL_SHA256,
-    version_str = RRDTOOL_VERSION,
+    sha256 = "a199faeb7eff7cafc46fac253e682d833d08932f3db93a550a4a5af180ca58db",
+    version_str = "1.7.2",
 )
 
 load("//omd/packages/glib:glib.bzl", "glibconfig")
@@ -369,8 +309,8 @@ glibconfig("glibconfig-centos", "/usr/lib64/glib-2.0")
 load("//omd/packages/httplib:httplib_http.bzl", "httplib")
 
 httplib(
-    sha256 = HTTPLIB_SHA256,
-    version_str = HTTPLIB_VERSION,
+    sha256 = "2a4503f9f2015f6878baef54cd94b01849cc3ed19dfe95f2c9775655bea8b73f",
+    version_str = "0.13.3",
 )
 
 http_archive(
@@ -427,16 +367,16 @@ protobuf_deps()
 load("//omd/packages/redfish_mkp:redfish_mkp_http.bzl", "redfish_mkp")
 
 redfish_mkp(
-    commit_hash = REDFISH_MKP_COMMIT_HASH,
-    sha256 = REDFISH_MKP_SHA256,
-    version_str = REDFISH_MKP_VERSION,
+    commit_hash = "35b0ef91252bbba9b147ec12dc120bcc70bb3cf6",
+    sha256 = "c388a2b5525a55a6e0b175c014a3cb375062b4643d2ceed7ee188c054b2f0c8c",
+    version_str = "2.3.38",
 )
 
 load("//omd/packages/jaeger:jaeger_http.bzl", "jaeger")
 
 jaeger(
-    sha256 = JAEGER_SHA256,
-    version_str = JAEGER_VERSION,
+    sha256 = "0581d1d3c59ea32d1c3d8a1a6783341ab99a050428abb5d29c717e468680c365",
+    version_str = "1.58.1",
 )
 
 http_archive(
@@ -449,7 +389,7 @@ http_archive(
 load("//omd/packages/erlang:erlang_http.bzl", "erlang")
 
 erlang(
-    version_str = ERLANG_VERSION,
+    version_str = "c1805ad6200cec57bf86640fb9a1c715db515b78",  # This is v26.2.5.2
 )
 
 http_archive(

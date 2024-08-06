@@ -1,7 +1,11 @@
-load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR", "RRDLIB_MAJOR", "RRDLIB_MAJOR_DOT_MINOR")
+load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 MAKE_PARALLEL = "-j4"
+
+RRDLIB_MAJOR_DOT_MINOR = "8.2.1"
+
+RRDLIB_MAJOR = RRDLIB_MAJOR_DOT_MINOR.split(".")[0]
 
 filegroup(
     name = "all_srcs",

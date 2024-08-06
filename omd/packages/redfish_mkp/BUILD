@@ -1,4 +1,4 @@
-load("//:package_versions.bzl", "REDFISH_MKP_VERSION")
+REDFISH_MKP_VERSION = "2.3.38"
 
 genrule(
     name = "fetch_package",

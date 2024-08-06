@@ -1,4 +1,4 @@
-load("//:package_versions.bzl", "JAEGER_VERSION")
+JAEGER_VERSION = "1.58.1"
 
 genrule(
     name = "fetch_package",

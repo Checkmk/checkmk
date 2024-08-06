@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-08-01 14:22+0000\n"
+"PO-Revision-Date: 2024-08-05 23:11+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -37475,9 +37475,8 @@ msgstr ""
 msgid "Message averaging"
 msgstr "Meldungen mitteln"
 
-#, fuzzy
 msgid "Message broker port"
-msgstr "Nachricht für Hostvorfälle"
+msgstr "Port des Meldungsmaklers"
 
 msgid "Message count"
 msgstr "Nachrichtenanzahl"
@@ -42678,125 +42677,95 @@ msgstr "Oracle Commit Warteklasse"
 msgid "Oracle commit wait class (FG)"
 msgstr "Oracle Commit Warteklasse (FG)"
 
-#, fuzzy
 msgid "Oracle concurrency wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle Parallelitäts-Warteklasse"
 
-#, fuzzy
 msgid "Oracle concurrency wait class (FG)"
-msgstr "Oracle %s wait class (FG)"
+msgstr "Oracle Parallelitäts-Warteklasse (FG)"
 
-#, fuzzy
 msgid "Oracle configuration wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle Konfigurations-Warteklasse"
 
-#, fuzzy
 msgid "Oracle configuration wait class (FG)"
-msgstr "Oracle %s wait class (FG)"
+msgstr "Oracle Konfigurations-Warteklasse (FG)"
 
-#, fuzzy
 msgid "Oracle consistent gets"
-msgstr "Oracle-Instanzen"
+msgstr ""
 
-#, fuzzy
 msgid "Oracle control file large read bytes"
-msgstr "Oracle Summe Large Read in Bytes"
+msgstr "Oracle Kontrolldatei Large Read in Bytes"
 
-#, fuzzy
 msgid "Oracle control file large reads"
-msgstr "Oracle Summe Large Reads"
+msgstr "Oracle Kontrolldatei Large Reads"
 
-#, fuzzy
 msgid "Oracle control file large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr "Oracle Kontrolldatei Large Write in Bytes"
 
-#, fuzzy
 msgid "Oracle control file large writes"
-msgstr "Oracle Summe Large Writes"
+msgstr "Oracle Kontrolldatei Large Writes"
 
-#, fuzzy
 msgid "Oracle control file small read bytes"
-msgstr "Oracle Summe Small Read in Bytes"
+msgstr "Oracle Kontrolldatei Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle control file small reads"
-msgstr "Oracle Summe Small Reads"
+msgstr "Oracle Kontrolldatei Small Reads"
 
-#, fuzzy
 msgid "Oracle control file small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr "Oracle Kontrolldatei Small Write in Bytes"
 
-#, fuzzy
 msgid "Oracle control file small writes"
-msgstr "Oracle Summe Small Writes"
+msgstr "Oracle Kontrolldatei Small Writes"
 
-#, fuzzy
 msgid "Oracle count"
-msgstr "Gesamtanzahl"
+msgstr "Oracle Zählung"
 
-#, fuzzy
 msgid "Oracle data file backup large read bytes"
-msgstr "Oracle Summe Large Read in Bytes"
+msgstr "Oracle Datensicherung Large Read in Bytes"
 
-#, fuzzy
 msgid "Oracle data file backup large reads"
-msgstr "Oracle Summe Large Reads"
+msgstr "Oracle Datensicherung Large Reads"
 
-#, fuzzy
 msgid "Oracle data file backup large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr "Oracle Datensicherung Large Write in Bytes"
 
-#, fuzzy
 msgid "Oracle data file backup large writes"
-msgstr "Oracle Summe Large Writes"
+msgstr "Oracle Datensicherung Large Writes"
 
-#, fuzzy
 msgid "Oracle data file backup small read bytes"
-msgstr "Oracle Summe Small Read in Bytes"
+msgstr "Oracle Datensicherung Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle data file backup small reads"
-msgstr "Oracle Summe Small Reads"
+msgstr "Oracle Datensicherung Small Reads"
 
-#, fuzzy
 msgid "Oracle data file backup small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr "Oracle Datensicherung Small Write in Bytes"
 
-#, fuzzy
 msgid "Oracle data file backup small writes"
-msgstr "Oracle Summe Small Writes"
+msgstr "Oracle Datensicherung Small Writes"
 
-#, fuzzy
 msgid "Oracle data file copy large read bytes"
-msgstr "Oracle Summe Large Read in Bytes"
+msgstr "Oracle Dateikopie Large Read in Bytes"
 
-#, fuzzy
 msgid "Oracle data file copy large reads"
-msgstr "Oracle Summe Large Reads"
+msgstr "Oracle Dateikopie Large Reads"
 
-#, fuzzy
 msgid "Oracle data file copy large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr "Oracle Dateikopie Large Write in Bytes"
 
-#, fuzzy
 msgid "Oracle data file copy large writes"
-msgstr "Oracle Summe Large Writes"
+msgstr "Oracle Dateikopie Large Writes"
 
-#, fuzzy
 msgid "Oracle data file copy small read bytes"
-msgstr "Oracle Summe Small Read in Bytes"
+msgstr "Oracle Dateikopie Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle data file copy small reads"
-msgstr "Oracle Summe Small Reads"
+msgstr "Oracle Dateikopie Small Reads"
 
-#, fuzzy
 msgid "Oracle data file copy small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr "Oracle Dateikopie Small Write in Bytes"
 
-#, fuzzy
 msgid "Oracle data file copy small writes"
-msgstr "Oracle Summe Small Writes"
+msgstr "Oracle Dateikopie Small Writes"
 
 msgid "Oracle data file incremental backup large read bytes"
 msgstr "Oracle Datendatei inkrementelles Backup große Lesebytes"
@@ -42804,9 +42773,8 @@ msgstr "Oracle Datendatei inkrementelles Backup große Lesebytes"
 msgid "Oracle data file incremental backup large reads"
 msgstr "Oracle Datendatei inkrementelles Backup große Lesezugriffe"
 
-#, fuzzy
 msgid "Oracle data file incremental backup large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr "Oracle inkrementelle Datensicherung Large Write in Bytes"
 
 msgid "Oracle data file incremental backup large writes"
 msgstr "Oracle Datendatei inkrementelles Backup große Schreibzugriffe"
@@ -42817,76 +42785,59 @@ msgstr "Oracle Datendatei inkrementelles Backup kleine Lesebytes"
 msgid "Oracle data file incremental backup small reads"
 msgstr "Oracle Datendatei inkrementelles Backup kleine Lesezugriffe"
 
-#, fuzzy
 msgid "Oracle data file incremental backup small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr "Oracle inkrementelle Datensicherung Small Write in Bytes"
 
 msgid "Oracle data file incremental backup small writes"
 msgstr "Oracle Datendatei inkrementelles Backup kleine Schreibzugriffe"
 
-#, fuzzy
 msgid "Oracle data file large read bytes"
-msgstr "Oracle Summe Large Read in Bytes"
+msgstr "Oracle inkrementelle Datensicherung Large Read in Bytes"
 
-#, fuzzy
 msgid "Oracle data file large reads"
-msgstr "Oracle Summe Large Reads"
+msgstr "Oracle Datei Large Reads"
 
-#, fuzzy
 msgid "Oracle data file large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr "Oracle Datei Large Write in Bytes"
 
-#, fuzzy
 msgid "Oracle data file large writes"
-msgstr "Oracle Summe Large Writes"
+msgstr "Oracle Datei Large Writes"
 
-#, fuzzy
 msgid "Oracle data file small read bytes"
-msgstr "Oracle Summe Small Read in Bytes"
+msgstr "Oracle Datei Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle data file small reads"
-msgstr "Oracle Summe Small Reads"
+msgstr "Oracle Datei Small Reads"
 
-#, fuzzy
 msgid "Oracle data file small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr "Oracle Datei Small Write in Bytes"
 
-#, fuzzy
 msgid "Oracle data file small writes"
-msgstr "Oracle Summe Small Writes"
+msgstr "Oracle Datei Small Writes"
 
-#, fuzzy
 msgid "Oracle data pump dump file large read bytes"
-msgstr "Oracle Summe Large Read in Bytes"
+msgstr ""
 
-#, fuzzy
 msgid "Oracle data pump dump file large reads"
-msgstr "Oracle Summe Large Reads"
+msgstr ""
 
-#, fuzzy
 msgid "Oracle data pump dump file large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr ""
 
-#, fuzzy
 msgid "Oracle data pump dump file large writes"
-msgstr "Oracle Summe Large Writes"
+msgstr ""
 
-#, fuzzy
 msgid "Oracle data pump dump file small read bytes"
-msgstr "Oracle Summe Small Read in Bytes"
+msgstr ""
 
-#, fuzzy
 msgid "Oracle data pump dump file small reads"
-msgstr "Oracle Summe Small Reads"
+msgstr ""
 
-#, fuzzy
 msgid "Oracle data pump dump file small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr ""
 
-#, fuzzy
 msgid "Oracle data pump dump file small writes"
-msgstr "Oracle Summe Small Writes"
+msgstr ""
 
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
 msgstr "Oracle-Datenbanken (Linux, Solaris, AIX, Windows)"
@@ -42894,200 +42845,153 @@ msgstr "Oracle-Datenbanken (Linux, Solaris, AIX, Windows)"
 msgid "Oracle dataguard statistics"
 msgstr "Oracle Dataguard-Statistiken"
 
-#, fuzzy
 msgid "Oracle external table large read bytes"
-msgstr "Oracle Summe Large Read in Bytes"
+msgstr "Oracle externe Tabelle Large Read in Bytes"
 
-#, fuzzy
 msgid "Oracle external table large reads"
-msgstr "Oracle Summe Large Reads"
+msgstr "Oracle externe Tabelle Large Reads"
 
-#, fuzzy
 msgid "Oracle external table large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr "Oracle externe Tabelle Large Write in Bytes"
 
-#, fuzzy
 msgid "Oracle external table large writes"
-msgstr "Oracle Summe Large Writes"
+msgstr "Oracle externe Tabelle Large Writes"
 
-#, fuzzy
 msgid "Oracle external table small read bytes"
-msgstr "Oracle Summe Small Read in Bytes"
+msgstr "Oracle externe Tabelle Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle external table small reads"
-msgstr "Oracle Summe Small Reads"
+msgstr "Oracle externe Tabelle Small Reads"
 
-#, fuzzy
 msgid "Oracle external table small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr "Oracle externe Tabelle Small Write in Bytes"
 
-#, fuzzy
 msgid "Oracle external table small writes"
-msgstr "Oracle Summe Small Writes"
+msgstr "Oracle externe Tabelle Small Writes"
 
-#, fuzzy
 msgid "Oracle flashback log large read bytes"
-msgstr "Oracle Summe Large Read in Bytes"
+msgstr "Oracle Flashback-Protokoll Large Read in Bytes"
 
-#, fuzzy
 msgid "Oracle flashback log large reads"
-msgstr "Oracle Summe Large Reads"
+msgstr "Oracle Flashback-Protokoll Large Reads"
 
-#, fuzzy
 msgid "Oracle flashback log large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr "Oracle Flashback-Protokoll Large Write in Bytes"
 
-#, fuzzy
 msgid "Oracle flashback log large writes"
-msgstr "Oracle Summe Large Writes"
+msgstr "Oracle Flashback-Protokoll Large Writes"
 
-#, fuzzy
 msgid "Oracle flashback log small read bytes"
-msgstr "Oracle Summe Small Read in Bytes"
+msgstr "Oracle Flashback-Protokoll Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle flashback log small reads"
-msgstr "Oracle Summe Small Reads"
+msgstr "Oracle Flashback-Protokoll Small Reads"
 
-#, fuzzy
 msgid "Oracle flashback log small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr "Oracle Flashback-Protokoll Small Write in Bytes"
 
-#, fuzzy
 msgid "Oracle flashback log small writes"
-msgstr "Oracle Summe Small Writes"
+msgstr "Oracle Flashback-Protokoll Small Writes"
 
-#, fuzzy
 msgid "Oracle free buffer wait"
-msgstr "Oracle Bufferpool-Statistik"
+msgstr "Oracle freier Puffer wartend"
 
 msgid "Oracle hit ratio"
 msgstr "Oracle Trefferquote"
 
-#, fuzzy
 msgid "Oracle idle wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle Leerlauf-Warteklasse"
 
-#, fuzzy
 msgid "Oracle idle wait class (FG)"
-msgstr "Oracle %s wait class (FG)"
+msgstr "Oracle Leerlauf-Warteklasse (FG)"
 
-#, fuzzy
 msgid "Oracle instance"
-msgstr "Oracle-Instanzen"
+msgstr "Oracle-Instanz"
 
 msgid "Oracle instances"
 msgstr "Oracle-Instanzen"
 
-#, fuzzy
 msgid "Oracle large pool size"
-msgstr "Umfangreiche Poolgröße"
+msgstr "Oracle große Poolgröße"
 
-#, fuzzy
 msgid "Oracle library cache hit ratio"
-msgstr "Oracle Bibliotheks-Cache Statistik"
+msgstr "Oracle Bibliotheks-Cache Trefferquote"
 
 msgid "Oracle library cache statistics"
 msgstr "Oracle Bibliotheks-Cache Statistik"
 
-#, fuzzy
 msgid "Oracle log file large read bytes"
-msgstr "Oracle Summe Large Read in Bytes"
+msgstr "Oracle Log-Datei Large Read in Bytes"
 
-#, fuzzy
 msgid "Oracle log file large reads"
-msgstr "Oracle Summe Large Reads"
+msgstr "Oracle Log-Datei Large Reads"
 
-#, fuzzy
 msgid "Oracle log file large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr "Oracle Log-Datei Large Write in Bytes"
 
-#, fuzzy
 msgid "Oracle log file large writes"
-msgstr "Oracle Summe Large Writes"
+msgstr "Oracle Log-Datei Large Writes"
 
-#, fuzzy
 msgid "Oracle log file small read bytes"
-msgstr "Oracle Summe Small Read in Bytes"
+msgstr "Oracle Log-Datei Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle log file small reads"
-msgstr "Oracle Summe Small Reads"
+msgstr "Oracle Log-Datei Small Reads"
 
-#, fuzzy
 msgid "Oracle log file small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr "Oracle Log-Datei Small Write in Bytes"
 
-#, fuzzy
 msgid "Oracle log file small writes"
-msgstr "Oracle Summe Small Writes"
+msgstr "Oracle Log-Datei Small Writes"
 
-#, fuzzy
 msgid "Oracle long active sessions"
 msgstr "Oracle langlaufende Sitzungen"
 
-#, fuzzy
 msgid "Oracle maximum SGA size"
-msgstr "maximale Tablespacegröße"
+msgstr "Oracle maximale SGA-Größe"
 
-#, fuzzy
 msgid "Oracle memory"
 msgstr "Oracle-Speicher"
 
-#, fuzzy
 msgid "Oracle network wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle Netzwerk-Warteklasse"
 
-#, fuzzy
 msgid "Oracle network wait class (FG)"
-msgstr "Oracle %s wait class (FG)"
+msgstr "Oracle Netzwerk-Warteklasse (FG)"
 
-#, fuzzy
 msgid "Oracle number of nodes in target state"
-msgstr "Anzahl der Knoten, die sich nicht im Zielzustand befinden"
+msgstr "Oracle Anzahl der Knoten, die sich nicht im Zielzustand befinden"
 
-#, fuzzy
 msgid "Oracle other large read bytes"
-msgstr "Oracle Summe Large Read in Bytes"
+msgstr "Oracle andere Large Read in Bytes"
 
-#, fuzzy
 msgid "Oracle other large reads"
-msgstr "Oracle Summe Large Reads"
+msgstr "Oracle andere Large Reads"
 
-#, fuzzy
 msgid "Oracle other large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr "Oracle andere Large Write in Bytes"
 
-#, fuzzy
 msgid "Oracle other large writes"
-msgstr "Oracle Summe Large Writes"
+msgstr "Oracle andere Large Writes"
 
-#, fuzzy
 msgid "Oracle other small read bytes"
-msgstr "Oracle Summe Small Read in Bytes"
+msgstr "Oracle andere Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle other small reads"
-msgstr "Oracle Summe Small Reads"
+msgstr "Oracle andere Small Reads"
 
-#, fuzzy
 msgid "Oracle other small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr "Oracle andere Small Write in Bytes"
 
-#, fuzzy
 msgid "Oracle other small writes"
-msgstr "Oracle Summe Small Writes"
+msgstr "Oracle andere Small Writes"
 
-#, fuzzy
 msgid "Oracle other wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle andere Warteklasse"
 
-#, fuzzy
 msgid "Oracle other wait class (FG)"
-msgstr "Oracle %s wait class (FG)"
+msgstr "Oracle andere Warteklasse (FG)"
 
-#, fuzzy
 msgid "Oracle performance"
 msgstr "Oracle Leistung"
 
@@ -43097,83 +43001,65 @@ msgstr "Oracle Leistungserkennung"
 msgid "Oracle physical IO"
 msgstr "Oracle physikalischer IO"
 
-#, fuzzy
 msgid "Oracle physical IO reads"
-msgstr "Oracle physikalischer IO"
+msgstr "Oracle physikalische E/A Lesevorgänge"
 
-#, fuzzy
 msgid "Oracle physical reads"
-msgstr "Oracle physikalischer IO"
+msgstr "Oracle physikalische Lesevorgänge"
 
-#, fuzzy
 msgid "Oracle physical writes"
-msgstr "Oracle physikalischer IO"
+msgstr "Oracle physikalische Schreibvorgänge"
 
-#, fuzzy
 msgid "Oracle pin hits sum"
-msgstr "Oracle %s %s %s"
+msgstr "Oracle Pin-Treffersumme"
 
-#, fuzzy
 msgid "Oracle pins sum"
-msgstr "Oracle-Instanzen"
+msgstr "Oracle Pin-Summe"
 
-#, fuzzy
 msgid "Oracle processes"
 msgstr "Oracle Prozesse"
 
-#, fuzzy
 msgid "Oracle recovery area"
-msgstr "Oracle Recovery Bereiche"
+msgstr "Oracle Recovery Bereich"
 
 msgid "Oracle recovery areas"
 msgstr "Oracle Recovery Bereiche"
 
-#, fuzzy
 msgid "Oracle recovery status"
 msgstr "Oracle Recovery Status"
 
-#, fuzzy
 msgid "Oracle redo buffers"
-msgstr "Redo-Puffer"
+msgstr "Oracle Redo-Puffer"
 
 msgid "Oracle release of the remote database"
 msgstr "Oracle-Release der Remote-Datenbank"
 
-#, fuzzy
 msgid "Oracle scheduler job"
-msgstr "Oracle Schedulerjob"
+msgstr "Oracle Scheduler-Job"
 
-#, fuzzy
 msgid "Oracle scheduler wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle Scheduler-Warteklasse"
 
-#, fuzzy
 msgid "Oracle scheduler wait class (FG)"
-msgstr "Oracle %s wait class (FG)"
+msgstr "Oracle Scheduler-Warteklasse (FG)"
 
-#, fuzzy
 msgid "Oracle sessions"
 msgstr "Oracle Sitzungen"
 
-#, fuzzy
 msgid "Oracle shared IO pool size"
-msgstr "Gemeinsame Poolgröße"
+msgstr "Oracle gemeinsame E/A-Poolgröße"
 
-#, fuzzy
 msgid "Oracle shared pool size"
-msgstr "Gemeinsame Poolgröße"
+msgstr "Oracle gemeinsame Poolgröße"
 
-#, fuzzy
 msgid "Oracle streams pool size"
-msgstr "Poolgröße von Strömen"
+msgstr "Oracle Poolgröße von Strömen"
 
-#, fuzzy
 msgid "Oracle system I/O wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle System E/A-Warteklasse"
 
-#, fuzzy
 msgid "Oracle system I/O wait class (FG)"
-msgstr "Oracle %s wait class (FG)"
+msgstr "Oracle System E/A-Warteklasse (FG)"
 
 msgid "Oracle system parameters"
 msgstr "Oracle-Systemparameter"
@@ -43181,108 +43067,83 @@ msgstr "Oracle-Systemparameter"
 msgid "Oracle tablespaces"
 msgstr "Oracle Tablespaces"
 
-#, fuzzy
 msgid "Oracle temp file large read bytes"
-msgstr "Oracle Summe Large Read in Bytes"
+msgstr "Oracle Temporärdatei Large Read in Bytes"
 
-#, fuzzy
 msgid "Oracle temp file large reads"
-msgstr "Oracle Summe Large Reads"
+msgstr "Oracle Temporärdatei Large Reads"
 
-#, fuzzy
 msgid "Oracle temp file large write bytes"
-msgstr "Oracle Summe Large Write in Bytes"
+msgstr "Oracle Temporärdatei Large Write in Bytes"
 
-#, fuzzy
 msgid "Oracle temp file large writes"
-msgstr "Oracle Summe Large Writes"
+msgstr "Oracle Temporärdatei Large Writes"
 
-#, fuzzy
 msgid "Oracle temp file small read bytes"
-msgstr "Oracle Summe Small Read in Bytes"
+msgstr "Oracle Temporärdatei Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle temp file small reads"
-msgstr "Oracle Summe Small Reads"
+msgstr "Oracle Temporärdatei Small Reads"
 
-#, fuzzy
 msgid "Oracle temp file small write bytes"
-msgstr "Oracle Summe Small Write in Bytes"
+msgstr "Oracle Temporärdatei Small Write in Bytes"
 
-#, fuzzy
 msgid "Oracle temp file small writes"
-msgstr "Oracle Summe Small Writes"
+msgstr "Oracle Temporärdatei Small Writes"
 
 msgid "Oracle total Memory"
 msgstr "Oracle Gesamtspeicher"
 
-#, fuzzy
 msgid "Oracle total PGA allocated"
-msgstr "PGA insgesamt zugewiesen"
+msgstr "Oracle PGA insgesamt zugewiesen"
 
-#, fuzzy
 msgid "Oracle total PGA inuse"
-msgstr "PGA insgesamt verwendet"
+msgstr "Oracle PGA insgesamt verwendet"
 
-#, fuzzy
 msgid "Oracle total freeable PGA memory"
-msgstr "Insgesamt frei verfügbarer PGA-Speicher"
+msgstr "Oracle insgesamt frei verfügbarer PGA-Speicher"
 
-#, fuzzy
 msgid "Oracle total large read bytes"
 msgstr "Oracle Summe Large Read in Bytes"
 
-#, fuzzy
 msgid "Oracle total large reads"
 msgstr "Oracle Summe Large Reads"
 
-#, fuzzy
 msgid "Oracle total large write bytes"
 msgstr "Oracle Summe Large Write in Bytes"
 
-#, fuzzy
 msgid "Oracle total large writes"
 msgstr "Oracle Summe Large Writes"
 
-#, fuzzy
 msgid "Oracle total small read bytes"
 msgstr "Oracle Summe Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle total small reads"
 msgstr "Oracle Summe Small Reads"
 
-#, fuzzy
 msgid "Oracle total small write bytes"
 msgstr "Oracle Summe Small Write in Bytes"
 
-#, fuzzy
 msgid "Oracle total small writes"
 msgstr "Oracle Summe Small Writes"
 
-#, fuzzy
 msgid "Oracle total waited"
 msgstr "Oracle Gesamtwartezeit"
 
-#, fuzzy
 msgid "Oracle total waited (FG)"
 msgstr "Oracle Gesamtwartezeit (FG)"
 
-#, fuzzy
 msgid "Oracle undo retention"
 msgstr "Oracle Undo Retention"
 
-#, fuzzy
 msgid "Oracle user I/O wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle Benutzer E/A-Warteklasse"
 
-#, fuzzy
 msgid "Oracle user I/O wait class (FG)"
-msgstr "Oracle %s wait class (FG)"
+msgstr "Oracle Benutzer E/A-Warteklasse (FG)"
 
-#, fuzzy
 msgid "Oracle wait class"
-msgstr "Oracle %s wait class"
+msgstr "Oracle Warteklasse"
 
 msgid "Order"
 msgstr "Ordnung"
@@ -43774,9 +43635,8 @@ msgstr "PEND-Services der Host-Gruppe"
 msgid "PENDING services of host"
 msgstr "PENDING Services von Host"
 
-#, fuzzy
 msgid "PGs Activating + Undersized"
-msgstr "Aktivierung erforderlich"
+msgstr ""
 
 msgid "PGs Activating + Undersized + Degradedpgstate"
 msgstr ""
@@ -43784,9 +43644,8 @@ msgstr ""
 msgid "PGs Active + Clean"
 msgstr ""
 
-#, fuzzy
 msgid "PGs Active + Clean + Inconsistent"
-msgstr "Primary - Inconsistent"
+msgstr ""
 
 msgid "PGs Active + Clean + Remapped"
 msgstr ""
@@ -43931,13 +43790,11 @@ msgstr ""
 msgid "PGs Active + Undersized + Remapped + Backfilling"
 msgstr ""
 
-#, fuzzy
 msgid "PGs Down"
-msgstr "Unerreichbar"
+msgstr ""
 
-#, fuzzy
 msgid "PGs Incomplete"
-msgstr "vollständig"
+msgstr ""
 
 msgid "PGs Peering"
 msgstr ""
@@ -43966,9 +43823,8 @@ msgstr ""
 msgid "PGs Undersized + Peered"
 msgstr ""
 
-#, fuzzy
 msgid "PGs Unknown"
-msgstr "Unbekannt"
+msgstr ""
 
 msgid "PID"
 msgstr "PID"
@@ -45070,7 +44926,6 @@ msgstr "Regelmäßige Benachrichtigungen bei Service-Problemen"
 msgid "Periodic service discovery"
 msgstr "Periodische Service-Erkennung"
 
-#, fuzzy
 msgid "Permanent generation memory"
 msgstr "Permanent-Generation-Speicher"
 
@@ -45216,7 +45071,6 @@ msgstr "Phase 2.4: Aktivierung der Änderungen"
 msgid "Phase Number"
 msgstr "Phase Zahl"
 
-#, fuzzy
 msgid "Phase merging"
 msgstr "Zusammenfassen von Phasen"
 
@@ -45241,11 +45095,9 @@ msgstr "Physikalische CPU Nutzung"
 msgid "Physical Disks"
 msgstr "Physikalische Platten"
 
-#, fuzzy
 msgid "Physical address (MAC)"
 msgstr "Physikalische Adresse (MAC)"
 
-#, fuzzy
 msgid "Physical components"
 msgstr "Physikalische Komponenten"
 
@@ -45261,25 +45113,20 @@ msgstr "Verbrauchte physikalische Prozessoren"
 msgid "Physical state of port"
 msgstr "Physischer Status des Ports"
 
-#, fuzzy
 msgid "Physical volume free partitions"
 msgstr "Freie Partitionen auf physikalischem Datenträger"
 
-#, fuzzy
 msgid "Physical volume name"
 msgstr "Physikalischer Datenträgername"
 
-#, fuzzy
 msgid "Physical volume status"
 msgstr "Physikalischer Datenträgerstatus"
 
-#, fuzzy
 msgid "Physical volume total partitions"
-msgstr "Gesamten Partionen auf physikalischem Datenträger"
+msgstr "Gesamt-Partitionen auf physikalischem Datenträger"
 
-#, fuzzy
 msgid "Physical volumes"
-msgstr "Physikalischer Datenträgerstatus"
+msgstr "Physikalische Datenträger"
 
 msgid "Piano Bar"
 msgstr "Klavier"
@@ -45317,13 +45164,11 @@ msgstr "Ausdrücke für Piggyback-Host-Namen"
 msgid "Ping"
 msgstr "Ping"
 
-#, fuzzy
 msgid "Ping IPv4 address identified by its index (starting at 1)"
-msgstr "Ping IPv4-Adresse, die durch ihren Index identifiziert wird"
+msgstr "Ping IPv4-Adresse identifiziert durch ihren Index (beginnend bei 1)"
 
-#, fuzzy
 msgid "Ping IPv6 address identified by its index (starting at 1)"
-msgstr "Ping IPv6-Adresse, die durch ihren Index identifiziert wird"
+msgstr "Ping IPv6-Adresse identifiziert durch ihren Index (beginnend bei 1)"
 
 msgid "Ping additional IPv4 addresses"
 msgstr "Alle zusätzlichen IPv4-Adresse anpingen"
@@ -45363,11 +45208,9 @@ msgstr ""
 msgid "Placement"
 msgstr "Platzierung"
 
-#, fuzzy
 msgid "Placement Groups"
-msgstr "Platzierung"
+msgstr "Platzierungsgruppen"
 
-#, fuzzy
 msgid "Plain email"
 msgstr "Einfache E-Mail"
 
@@ -45400,9 +45243,8 @@ msgstr ""
 msgid "Plans"
 msgstr "Pläne"
 
-#, fuzzy
 msgid "Platform firmware level"
-msgstr "Plattform Firmware-Ebene"
+msgstr "Plattform Firmware-Level"
 
 msgid "Play alarm sounds"
 msgstr "Alarmtöne abspielen"
@@ -45599,9 +45441,8 @@ msgid "Please enter an automation secret of at least 10 characters."
 msgstr ""
 "Bitte geben Sie ein Automatisierungspasswort mit mindestens 10 Zeichen ein."
 
-#, fuzzy
 msgid "Please enter the Multisite URL of the remote site."
-msgstr "Bitte geben Sie die Multisite URL der Remote-Instanz ein."
+msgstr "Bitte geben Sie die Multisite-URL der Remote-Instanz ein."
 
 msgid ""
 "Please enter the complete shell command including path name and arguments to "
@@ -45861,11 +45702,10 @@ msgstr ""
 "Bitte legen Sie einen Host-Namen für die Neuklassifizierung des Host-Status "
 "fest"
 
-#, fuzzy
 msgid "Please set a service name for service state reclassification"
 msgstr ""
-"Bitte stellen Sie eine Service-Beschreibung für die Reklassifizierung des "
-"Service-Status ein"
+"Bitte geben Sie einen Service-Namen für die Neuklassifizierung des Service-"
+"Status an"
 
 msgid "Please specify a full name or descriptive alias for the user."
 msgstr ""
@@ -46005,21 +45845,19 @@ msgstr "Bitte Passwort festlegen."
 msgid "Please supply a title for you auxiliary tag."
 msgstr "Bitte Titel für das Hilfsmerkmal eingeben."
 
-#, fuzzy
 msgid ""
 "Please use only a-z, A-Z, 0-9, space, underscore, dot and hyphen for your "
 "service name"
 msgstr ""
-"Bitte nutzen Sie nur a-z, A-Z, 0-9, Leerzeichen, Unterstrich, Punkt und "
-"Bindestrich für Ihre Service-Beschreibung"
+"Bitte verwenden Sie nur a-z, A-Z, 0-9, Leerzeichen, Unterstrich, Punkt und "
+"Bindestrich für Ihren Service-Namen"
 
-#, fuzzy
 msgid ""
 "Please use only a-z, A-Z, 0-9, space, underscore, dot, hyphen and slash for "
 "your service name"
 msgstr ""
-"Bitte nutzen Sie nur a-z, A-Z, 0-9, Leerzeichen, Unterstrich, Punkt, "
-"Bindestrich und Schrägstrich für Ihre Service-Beschreibung"
+"Bitte verwenden Sie nur a-z, A-Z, 0-9, Leerzeichen, Unterstrich, Punkt, "
+"Bindestrich und Schrägstrich für Ihren Service-Namen"
 
 msgid ""
 "Please use this option if you have multiple sites in a distributed setup "
@@ -46046,58 +45884,49 @@ msgstr "Schalter ist AN"
 msgid "Plug item number or name"
 msgstr "Anschlussnummer oder -name"
 
-#, fuzzy
 msgid "Plug-in"
 msgstr "Plugin"
 
 msgid "Plug-in API references"
 msgstr "Plugin-API Referenzen"
 
-#, fuzzy
 msgid "Plug-in Name"
-msgstr "Pluginname"
+msgstr "Plugin-Name"
 
-#, fuzzy
 msgid "Plug-in file pattern"
 msgstr "Plugin-Dateimuster"
 
-#, fuzzy
 msgid "Plug-in heartbeat timeout"
-msgstr "Plugin Heartbeat Zeitüberschreitung"
+msgstr "Plugin Heartbeat Timeout"
 
-#, fuzzy
 msgid "Plug-in is disabled"
 msgstr "Plugin ist deaktiviert"
 
-#, fuzzy
 msgid "Plug-in output"
 msgstr "Plugin-Ausgabe"
 
-#, fuzzy
 msgid "Plug-in output in case of absent updates"
-msgstr "Plugin Ausgabe wenn keine Updates vorhanden sind"
+msgstr "Plugin-Ausgabe wenn keine Updates vorhanden sind"
 
-#, fuzzy
 msgid "Plug-in parameters"
 msgstr "Plugin-Parameter"
 
-#, fuzzy
 msgid "Plug-ins directory"
 msgstr "Plugin-Verzeichnis"
 
-#, fuzzy
 msgid ""
 "Plug-ins for local agent extensions or communication with the agent in "
 "general"
 msgstr ""
-"Plugins für lokale Agentenerweiterungen oder Kommunikation mit dem Agenten"
+"Plugins für lokale Agentenerweiterungen oder allgemeine Kommunikation mit "
+"dem Agenten"
 
-#, fuzzy
 msgid ""
 "Plug-ins for operating systems, things like memory, CPU, filesystems, etc."
-msgstr "Plugins für Betriebssystem, Dinge wie Speicher, CPU, Dateisystem, etc."
+msgstr ""
+"Plugins für Betriebssysteme, Dinge wie Speicher, CPU, Dateisysteme, etc."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Plug-ins matching this pattern will be excluded from the comparison with the "
 "required versions specified in '%s' and from the duplicates check."
@@ -46106,7 +45935,6 @@ msgstr ""
 "angegebenen erforderlichen Versionen und von der Prüfung auf Dubletten "
 "ausgeschlossen."
 
-#, fuzzy
 msgid ""
 "Plug-ins or local checks matching this pattern will be excluded from the "
 "comparison with the specified required versions."
@@ -46114,11 +45942,9 @@ msgstr ""
 "Plugins oder lokale Checks, die diesem Muster entsprechen, werden von dem "
 "Vergleich mit den angegebenen erforderlichen Versionen ausgeschlossen."
 
-#, fuzzy
 msgid "Plug-ins that directly check networking protocols like HTTP or IMAP"
 msgstr "Plugins, die direkt Netzwerkprotokolle wie HTTP oder IMAP prüfen"
 
-#, fuzzy
 msgid "Plug-ins, local checks and MRPE for non-root users"
 msgstr "Plugins, lokale Checks und MRPE für nicht-root-Benutzer"
 
@@ -46205,9 +46031,8 @@ msgstr "Portindex"
 msgid "Port index or 'Total'"
 msgstr "Portindex oder 'Total'"
 
-#, fuzzy
 msgid "Port must be between 0 and 65535"
-msgstr "Der Wert für %s muss zwischen %d und %d sein"
+msgstr "Port muss zwischen 0 und 65535 liegen"
 
 msgid "Port number"
 msgstr "Portnummer"
@@ -46236,9 +46061,8 @@ msgstr "Port der Microsoft SQL Server-Instanz"
 msgid "Port types to include in usage statistics"
 msgstr "Porttypen, die in die Belegungsstatistik eingeschlossen werden"
 
-#, fuzzy
 msgid "Port usage"
-msgstr "Portbelegung"
+msgstr "Port-Auslastung"
 
 msgid "Port:"
 msgstr "Port:"
@@ -46294,7 +46118,6 @@ msgstr "PostgreSQL-Datenbank Bloat"
 msgid "PostgreSQL database connections"
 msgstr "PostgreSQL-Datenbankverbindungen"
 
-#, fuzzy
 msgid "PostgreSQL database statistics"
 msgstr "PostgreSQL Datenbankstatistiken"
 
@@ -46316,15 +46139,12 @@ msgstr "Zustand der Stromversorgung unbekannt"
 msgid "Power supplies"
 msgstr "Netzteile"
 
-#, fuzzy
 msgid "Power supply name"
 msgstr "Name des Netzteils"
 
-#, fuzzy
 msgid "Power supply unit"
 msgstr "Netzteil"
 
-#, fuzzy
 msgid "Power supply wattage"
 msgstr "Wattleistung des Netzteils"
 

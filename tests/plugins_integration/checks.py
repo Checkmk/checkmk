@@ -469,8 +469,13 @@ def setup_source_host(site: Site, source_host_name: str, skip_cleanup: bool = Fa
     if config.piggyback:
         _wait_for_piggyback_hosts(site, source_host=source_host_name)
         count = 0
-        while (n_pending_changes := len(site.openapi.pending_changes([site.id]))) > 0 and count < 3:
-            site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
+        while (
+            n_pending_changes := len(site.openapi.pending_changes([site.id]))
+        ) > 0 and count < 10:
+            logger.info(
+                "Waiting for changes to be activated by the DCD connector. Count: %s", count
+            )
+            time.sleep(5)
             count += 1
         assert n_pending_changes == 0, "Pending changes found!"
 

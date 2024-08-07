@@ -471,7 +471,7 @@ def setup_source_host(site: Site, source_host_name: str, skip_cleanup: bool = Fa
         count = 0
         while (
             n_pending_changes := len(site.openapi.pending_changes([site.id]))
-        ) > 0 and count < 10:
+        ) > 0 and count < 60:
             logger.info(
                 "Waiting for changes to be activated by the DCD connector. Count: %s", count
             )

@@ -108,7 +108,6 @@ def test_active_check_httpv2_cert_validity_globally() -> None:
 
 
 def test_active_check_httpv2_options_dont_merge() -> None:
-    # individual settings are not merged with the global ones.
     assert list(
         active_check_httpv2(
             {
@@ -136,6 +135,13 @@ def test_active_check_httpv2_options_dont_merge() -> None:
     ) == [
         ActiveCheckCommand(
             service_description="HTTPS service",
-            command_arguments=["--url", "https://haystack.huge", "--body-string", "Needle"],
+            command_arguments=[
+                "--url",
+                "https://haystack.huge",
+                "--certificate-levels",
+                "40,20",
+                "--body-string",
+                "Needle",
+            ],
         ),
     ]

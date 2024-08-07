@@ -18,11 +18,11 @@ def test_automatic_host_removal(
     remote_site: Site,
 ) -> None:
     central_site.openapi.create_host(
-        hostname="not-dns-resovable-central",
+        hostname=(unresolvable_host_central := "not-dns-resovable-central"),
         attributes={"site": central_site.id},
     )
     central_site.openapi.create_host(
-        hostname="not-dns-resovable-remote",
+        hostname=(unresolvable_host_remote := "not-dns-resovable-remote"),
         attributes={"site": remote_site.id},
     )
     central_site.openapi.create_rule(
@@ -31,14 +31,18 @@ def test_automatic_host_removal(
     )
     central_site.openapi.activate_changes_and_wait_for_completion()
 
-    def _no_hosts_exist() -> bool:
-        return not central_site.openapi.get("domain-types/host_config/collections/all").json()[
-            "value"
-        ]
+    def _host_removal_done() -> bool:
+        hostnames = {
+            _["id"]
+            for _ in central_site.openapi.get("domain-types/host_config/collections/all").json()[
+                "value"
+            ]
+        }
+        return not hostnames.intersection({unresolvable_host_central, unresolvable_host_remote})
 
     logger.info("Waiting for hosts to be removed")
     wait_until(
-        _no_hosts_exist,
+        _host_removal_done,
         timeout=150,
         interval=20,
     )

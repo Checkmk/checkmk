@@ -226,7 +226,7 @@ def get_host_names(site: Site | None = None) -> list[str]:
 
 
 def read_disk_dump(host_name: str) -> str:
-    """Return the content of an agent dump from the dumps folder."""
+    """Return the content of an agent dump from the dumps' folder."""
     dump_file_path = f"{config.dump_dir}/{host_name}"
     with open(dump_file_path, encoding="utf-8") as dump_file:
         return dump_file.read()

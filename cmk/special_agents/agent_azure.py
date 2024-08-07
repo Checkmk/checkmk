@@ -20,8 +20,9 @@ import logging
 import re
 import string
 import sys
+import time
 from collections import defaultdict
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from multiprocessing import Lock, Process, Queue
 from queue import Empty as QueueEmpty
 from typing import Any, Literal, NamedTuple
@@ -468,12 +469,28 @@ class BaseApiClient(abc.ABC):
             return self._ratelimit
         return None
 
-    def _update_ratelimit(self, response):
+    def _update_ratelimit(self, response: requests.Response) -> None:
         try:
             new_value = int(response.headers["x-ms-ratelimit-remaining-subscription-reads"])
         except (KeyError, ValueError, TypeError):
             return
         self._ratelimit = min(self._ratelimit, new_value)
+
+    def _handle_ratelimit(self, get_response: Callable[[], requests.Response]) -> requests.Response:
+
+        response = get_response()
+        self._update_ratelimit(response)
+
+        for cool_off_interval in (5, 10):
+            if response.status_code != 429:
+                break
+
+            LOGGER.debug("Rate limit exceeded, waiting %s seconds", cool_off_interval)
+            time.sleep(cool_off_interval)
+            response = get_response()
+            self._update_ratelimit(response)
+
+        return response
 
     def _get(
         self,
@@ -571,15 +588,17 @@ class BaseApiClient(abc.ABC):
         return data
 
     def _request_json_from_url(self, method, url, *, body=None, params=None):
-        response = requests.request(
-            method,
-            url,
-            json=body,
-            params=params,
-            headers=self._headers,
-            proxies=self._http_proxy_config.to_requests_proxies(),
-        )
-        self._update_ratelimit(response)
+        def get_response():
+            return requests.request(
+                method,
+                url,
+                json=body,
+                params=params,
+                headers=self._headers,
+                proxies=self._http_proxy_config.to_requests_proxies(),
+            )
+
+        response = self._handle_ratelimit(get_response)
         json_data = response.json()
         LOGGER.debug("response: %r", json_data)
         return json_data

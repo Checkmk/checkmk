@@ -159,17 +159,9 @@ def configure_services_to_monitor(stage_id: StageId) -> QuickSetupStage:
                 ],
             ),
         ],
-        validators=[
-            # TODO: move to correct location
-            validate_test_connection(RuleGroup.SpecialAgents("aws")),
-        ],
+        validators=[],
         recap=[
             recaps_form_spec,
-            # TODO: move to correct location and add correct services_of_interest
-            recap_service_discovery(
-                RuleGroup.SpecialAgents("aws"),
-                [ServiceInterest(".*", "services")],
-            ),
         ],
         button_label="Review and run service discovery",
     )
@@ -181,9 +173,14 @@ def review_and_run_service_discovery(stage_id: StageId) -> QuickSetupStage:
         title=_("Review and run service discovery"),
         sub_title=_("Review your configuration, run and preview service discovery"),
         configure_components=[],
-        validators=[],
-        recap=[],
-        button_label="Run & preview service discovery",
+        validators=[validate_test_connection(RuleGroup.SpecialAgents("aws"))],
+        recap=[
+            recap_service_discovery(
+                RuleGroup.SpecialAgents("aws"),
+                [ServiceInterest(".*", "services")],
+            )
+        ],
+        button_label="Run preview service discovery",
     )
 
 

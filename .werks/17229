@@ -1,0 +1,17 @@
+Title: CPU utilization checking: Alert if utilization is exactly at threshold for too long
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1723014220
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+Many CPU utilization checks can be configured to alert if the utilization is too high for too long
+(configuration options <em>Levels over an extended time period on total CPU utilization</em> and <em>Levels
+over an extended time period on a single core CPU utilization</em>).
+
+Before, Checkmk alerted only if the utilization was above the threshold for too long. As of this
+werk, Checkmk alerts if the utilization is above or exactly at the threshold for too long. This is
+consistent with the general behavior of Checkmk to check against upper thresholds with a "greater
+than or equal to" operation.

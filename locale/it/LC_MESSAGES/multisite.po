@@ -21609,9 +21609,6 @@ msgstr "Pari"
 msgid "Error"
 msgstr "Errore"
 
-msgid "Error Handling"
-msgstr "Gestione degli errori"
-
 #, python-format
 msgid "Error during discovery of %s"
 msgstr "Errore durante la scoperta di %s"
@@ -38645,9 +38642,6 @@ msgstr "Previsione metrica"
 msgid "Metric History"
 msgstr "Storia metrica"
 
-msgid "Metric aggregation"
-msgstr "Aggregazione metrica"
-
 msgid "Metric label"
 msgstr "Etichetta metrica"
 
@@ -51891,9 +51885,6 @@ msgstr "Livelli superiori di utilizzo SNAT"
 msgid "SNMP"
 msgstr "SNMP"
 
-msgid "SNMP Context IDs"
-msgstr "ID di contesto SNMP"
-
 msgid "SNMP Information"
 msgstr "Informazioni SNMP"
 
@@ -51918,6 +51909,10 @@ msgstr "Comunità SNMP (SNMP versioni 1 e 2c)"
 #, fuzzy
 msgid "SNMP community for the SNMP trap"
 msgstr "Comunità SNMP per la trappola SNMP"
+
+#, fuzzy
+msgid "SNMP context names"
+msgstr "ID di contesto SNMP"
 
 msgid "SNMP credentials"
 msgstr "Credenziali SNMP"
@@ -63762,6 +63757,10 @@ msgid ""
 "'cmk --create-diagnostics-dump' with appropriate parameters in the context "
 "of the affected site. See the %s."
 msgstr ""
+
+#, fuzzy
+msgid "The timeout must be at least 1 second."
+msgstr "Il cluster deve avere almeno un nodo"
 
 #, python-format
 msgid ""
@@ -83324,6 +83323,12 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Error Handling"
+#~ msgstr "Gestione degli errori"
+
+#~ msgid "Metric aggregation"
+#~ msgstr "Aggregazione metrica"
 
 #, fuzzy, python-format
 #~ msgid "The following characters are forbidden: %s"

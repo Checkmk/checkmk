@@ -21811,10 +21811,6 @@ msgstr "Gelijk aan"
 msgid "Error"
 msgstr "Fout"
 
-#, fuzzy
-msgid "Error Handling"
-msgstr "Foutafhandeling"
-
 #, python-format
 msgid "Error during discovery of %s"
 msgstr "Fout tijdens het ontdekken van %s"
@@ -38997,9 +38993,6 @@ msgstr "Metrische prognose"
 msgid "Metric History"
 msgstr "Metrische geschiedenis"
 
-msgid "Metric aggregation"
-msgstr "Metrische aggregatie"
-
 msgid "Metric label"
 msgstr "Metrisch etiket"
 
@@ -52349,9 +52342,6 @@ msgstr "SNAT-gebruik bovenste niveaus"
 msgid "SNMP"
 msgstr "SNMP"
 
-msgid "SNMP Context IDs"
-msgstr "SNMP Context ID's"
-
 msgid "SNMP Information"
 msgstr "SNMP-informatie"
 
@@ -52376,6 +52366,10 @@ msgstr "SNMP gemeenschap (SNMP versies 1 en 2c)"
 #, fuzzy
 msgid "SNMP community for the SNMP trap"
 msgstr "SNMP Community voor de SNMP trap"
+
+#, fuzzy
+msgid "SNMP context names"
+msgstr "SNMP Context ID's"
 
 msgid "SNMP credentials"
 msgstr "SNMP geloofsbrieven"
@@ -64324,6 +64318,10 @@ msgid ""
 "'cmk --create-diagnostics-dump' with appropriate parameters in the context "
 "of the affected site. See the %s."
 msgstr ""
+
+#, fuzzy
+msgid "The timeout must be at least 1 second."
+msgstr "Het cluster moet ten minste één knooppunt hebben"
 
 #, python-format
 msgid ""
@@ -84103,6 +84101,13 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~ msgid "Error Handling"
+#~ msgstr "Foutafhandeling"
+
+#~ msgid "Metric aggregation"
+#~ msgstr "Metrische aggregatie"
 
 #, fuzzy, python-format
 #~ msgid "The following characters are forbidden: %s"

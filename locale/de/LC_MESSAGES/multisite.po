@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-08-05 23:11+0000\n"
+"PO-Revision-Date: 2024-08-06 17:51+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -21114,9 +21114,6 @@ msgstr "Entspricht"
 msgid "Error"
 msgstr "Fehler"
 
-msgid "Error Handling"
-msgstr "Fehlerbehandlung"
-
 #, python-format
 msgid "Error during discovery of %s"
 msgstr "Fehler bei der Erkennung von %s"
@@ -37587,9 +37584,6 @@ msgstr "Metrik-Vorhersage"
 msgid "Metric History"
 msgstr "Metrik-Historie"
 
-msgid "Metric aggregation"
-msgstr "Metrik-Aggregation"
-
 msgid "Metric label"
 msgstr "Metrik-Bezeichnung"
 
@@ -45194,7 +45188,6 @@ msgstr "Ping Timeout"
 msgid "Placeholder VMs"
 msgstr "Platzhalter-VMs"
 
-#, fuzzy
 msgid ""
 "Placeholder VMs are created by the Site Recovery Manager(SRM) and act as "
 "backup virtual machines in case the default VM is unable to start. This "
@@ -46258,9 +46251,8 @@ msgstr "Präfixübereinstimmung"
 msgid "Prefix text"
 msgstr "Zusätzlicher Text"
 
-#, fuzzy
 msgid "Prepare AWS for Checkmk"
-msgstr "GIT für Checkmk eingerichtet"
+msgstr "AWS für Checkmk vorbereiten"
 
 msgid "Prepend namespace prefix for hosts"
 msgstr "Namespace-Präfix für Hosts voranstellen"
@@ -46520,16 +46512,14 @@ msgstr "Prozesserkennung (nur SNMP)"
 msgid "Process handles"
 msgstr "Prozesshandles"
 
-#, fuzzy
 msgid "Process match textual description or path of process"
 msgstr "Abgleich der textuellen Beschreibung oder Prozesspfad verarbeiten"
 
 msgid "Process name"
 msgstr "Prozessname"
 
-#, fuzzy
 msgid "Process name for usage in the Nagios service name"
-msgstr "Prozessname zur Verwendung in der Nagios Service-Beschreibung"
+msgstr "Prozessname zur Verwendung im Nagios Service-Namen"
 
 msgid "Process name matching"
 msgstr "Abgleich von Prozessnamen"
@@ -46537,20 +46527,17 @@ msgstr "Abgleich von Prozessnamen"
 msgid "Process new logfiles from the beginning"
 msgstr "Neue Logdateien von Anfang an verarbeiten"
 
-#, fuzzy
 msgid "Process path matching"
 msgstr "Abgleich von Prozesspfaden"
 
 msgid "Process preexisting log messages"
 msgstr "Bereits existierende Mitteilungen verarbeiten"
 
-#, fuzzy
 msgid "Process runtime"
 msgstr "Prozesslaufzeit"
 
-#, fuzzy
 msgid "Process status matching"
-msgstr "Mit Prozessstatus abgleichen"
+msgstr "Prozessstatus abgleichen"
 
 msgid "Processed bytes"
 msgstr "Verarbeitete Bytes"
@@ -46568,7 +46555,6 @@ msgstr "Bearbeitung der ersten Instanz %s"
 msgid "Processing of incoming events"
 msgstr "Verarbeitung von eingehenden Ereignissen"
 
-#, fuzzy
 msgid "Processing of piggybacked host data"
 msgstr "Verarbeitung von Piggybacked-Host-Daten"
 
@@ -46582,17 +46568,14 @@ msgstr "Bearbeitungszeit pro Nachricht"
 msgid "Processor"
 msgstr "Prozessor"
 
-#, fuzzy
 msgid "Processor entitled capacity"
-msgstr "Berechtigte Prozessor Kapazität"
+msgstr "Berechtigte Prozessor-Kapazität"
 
-#, fuzzy
 msgid "Processor implementation mode"
 msgstr "Prozessor-Implementierungsmodus"
 
-#, fuzzy
 msgid "Processor max. capacity"
-msgstr "Prozessor Max. Kapazität"
+msgstr "Prozessor max. Kapazität"
 
 msgid "Product"
 msgstr "Produkt"
@@ -46643,9 +46626,8 @@ msgstr "Prometheus"
 msgid "Prometheus API endpoint"
 msgstr "Prometheus API-Endpunkt"
 
-#, fuzzy
 msgid "Prometheus Alertmanager"
-msgstr "Alert Manager"
+msgstr "Prometheus Alert Manager"
 
 msgid ""
 "Prometheus Scrape Targets (include Prometheus Exporters) to fetch "
@@ -46752,9 +46734,8 @@ msgstr "Bereitgestellter Speicherplatz"
 msgid "Provisioning Levels"
 msgstr "Schwellen für Provisionierung"
 
-#, fuzzy
 msgid "Provisioning levels"
-msgstr "Schwellen für Provisionierung"
+msgstr "Level für Provisionierung"
 
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
@@ -46911,7 +46892,6 @@ msgstr "Python-Version"
 msgid "Python agent plug-in execution (UNIX)"
 msgstr "Python Agent Plugin Ausführung (UNIX)"
 
-#, fuzzy
 msgid ""
 "Python or YAML file to read variables from. (<a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
@@ -46988,7 +46968,6 @@ msgstr "Abfrage von Elasticsearch Logs"
 msgid "Query or SQL statement"
 msgstr "Query oder SQL-Anfrage"
 
-#, fuzzy
 msgid "Query time limit"
 msgstr "Zeitbegrenzung für Abfrage"
 
@@ -47019,7 +46998,6 @@ msgstr "Warteschlangeninfo"
 msgid "Queue length"
 msgstr "Länge der Warteschlange"
 
-#, fuzzy
 msgid "Queue manager name"
 msgstr "Name des Warteschlangenmanagers"
 
@@ -47062,7 +47040,6 @@ msgstr "Zu überspringende Warteschlangen"
 msgid "Queues to monitor"
 msgstr "Zu überwachende Warteschlangen"
 
-#, fuzzy
 msgid "Quick Setup"
 msgstr "Quick Setup"
 
@@ -47195,7 +47172,6 @@ msgstr "REST Endpunkt-URL"
 msgid "REWRITE"
 msgstr "UMSCHREIBEN"
 
-#, fuzzy
 msgid "RMAN backups"
 msgstr "RMAN Backups"
 
@@ -47208,7 +47184,6 @@ msgstr "RMON-Statistik"
 msgid "RPC Backlog"
 msgstr "RPC-Backlog"
 
-#, fuzzy
 msgid "RPC backlog"
 msgstr "RPC-Backlog"
 
@@ -47254,7 +47229,6 @@ msgstr ""
 "oder Jahr spezifizieren, sind dynamisch auf die entsprechenden "
 "Kalenderzeiträume zutreffend."
 
-#, fuzzy
 msgid "RRD overflows rate"
 msgstr "RRD Überlaufrate"
 
@@ -47310,48 +47284,38 @@ msgstr "RX Alarm"
 msgid "RX Signal Power"
 msgstr "RX Signalstärke"
 
-#, fuzzy
 msgid "RX signal power lane 1"
-msgstr "RX Signal Stromleitung %d"
+msgstr "RX Signal Stromleitung 1"
 
-#, fuzzy
 msgid "RX signal power lane 2"
-msgstr "RX Signal Stromleitung %d"
+msgstr "RX Signal Stromleitung 2"
 
-#, fuzzy
 msgid "RX signal power lane 3"
-msgstr "RX Signal Stromleitung %d"
+msgstr "RX Signal Stromleitung 3"
 
-#, fuzzy
 msgid "RX signal power lane 4"
-msgstr "RX Signal Stromleitung %d"
+msgstr "RX Signal Stromleitung 4"
 
-#, fuzzy
 msgid "RX signal power lane 5"
-msgstr "RX Signal Stromleitung %d"
+msgstr "RX Signal Stromleitung 5"
 
-#, fuzzy
 msgid "RX signal power lane 6"
-msgstr "RX Signal Stromleitung %d"
+msgstr "RX Signal Stromleitung 6"
 
-#, fuzzy
 msgid "RX signal power lane 7"
-msgstr "RX Signal Stromleitung %d"
+msgstr "RX Signal Stromleitung 7"
 
-#, fuzzy
 msgid "RX signal power lane 8"
-msgstr "RX Signal Stromleitung %d"
+msgstr "RX Signal Stromleitung 8"
 
-#, fuzzy
 msgid "RX signal power lane 9"
-msgstr "RX Signal Stromleitung %d"
+msgstr "RX Signal Stromleitung 9"
 
 msgid "RX/TX"
 msgstr "RX/TX"
 
-#, fuzzy
 msgid "RXi signal power lane 0"
-msgstr "RX Signal Stromleitung %d"
+msgstr "RXi Signal Stromleitung 0"
 
 msgid "RabbitMQ"
 msgstr "RabbitMQ"
@@ -47455,7 +47419,6 @@ msgstr "Rate des Verlusts von Leistungsdaten zu InfluxDB"
 msgid "Rate of performance data loss for RRD"
 msgstr "Rate des Verlusts von Leistungsdaten zu RRD"
 
-#, fuzzy
 msgid "Rate of performance data loss for carbon"
 msgstr "Rate des Verlusts von Leistungsdaten zu Carbon"
 
@@ -47498,16 +47461,14 @@ msgstr "Lesezugriff auf alle Module"
 msgid "Read and written blocks"
 msgstr "Gelesene und geschriebene Blöcke"
 
-#, fuzzy
 msgid "Read average RTT (ms)"
-msgstr "Mittelwert von RTT lesen (ms)"
+msgstr "Mittelwert von RTT Lesezugriffen (ms)"
 
 msgid "Read average exe"
 msgstr "Durchschnittliche Leseausführungszeit (EXE)"
 
-#, fuzzy
 msgid "Read average executions (ms)"
-msgstr "Lesen der Ausführungen im Durchnitt (ms)"
+msgstr "Mittelwert von Lese-Ausführungen (ms)"
 
 msgid "Read average rtt"
 msgstr "Durchschnittliche Leseumlaufzeit (RTT)"
@@ -47521,7 +47482,6 @@ msgstr "Lese Bytes pro Operation"
 msgid "Read capacity"
 msgstr "Lesekapazitätseinheiten"
 
-#, fuzzy
 msgid "Read capacity units"
 msgstr "Lesekapazitätseinheiten"
 
@@ -47531,57 +47491,44 @@ msgstr "Lesetreffer"
 msgid "Read latency"
 msgstr "Leselatenz"
 
-#, fuzzy
 msgid "Read latency 0-0.1 ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 0-0,1 ms"
 
-#, fuzzy
 msgid "Read latency 0.1-0.2 ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 0,1-0,2 ms"
 
-#, fuzzy
 msgid "Read latency 0.2-0.5 ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 0,2-0,5 ms"
 
-#, fuzzy
 msgid "Read latency 0.5-1.0 ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 0,5-1,0 ms"
 
-#, fuzzy
 msgid "Read latency 1-2 ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 1-2 ms"
 
-#, fuzzy
 msgid "Read latency 10-20 ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 10-20 ms"
 
-#, fuzzy
 msgid "Read latency 100-200 ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 100-200 ms"
 
-#, fuzzy
 msgid "Read latency 2-5 ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 2-5 ms"
 
-#, fuzzy
 msgid "Read latency 20-50 ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 20-50 ms"
 
-#, fuzzy
 msgid "Read latency 200-500 ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 200-500 ms"
 
-#, fuzzy
 msgid "Read latency 5-10 ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 5-10 ms"
 
-#, fuzzy
 msgid "Read latency 50-100 ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 50-100 ms"
 
-#, fuzzy
 msgid "Read latency 500+ ms"
-msgstr "Leselatenz"
+msgstr "Leselatenz 500+ ms"
 
 msgid ""
 "Read more about [regexes|regular expression matching in Checkmk] in our user "
@@ -47596,13 +47543,11 @@ msgstr "Schreibschutz"
 msgid "Read operations"
 msgstr "Lesezugriffe"
 
-#, fuzzy
 msgid "Read operations /s"
 msgstr "Lesezugriffe pro Sekunde"
 
-#, fuzzy
 msgid "Read queue-length"
-msgstr "Warteschlangenlänge lesen"
+msgstr "Länge der Lese-Warteschlange"
 
 msgid "Read recovery latency"
 msgstr "Recovery-Leselatenz"
@@ -47613,9 +47558,8 @@ msgstr "Replikat pro Zentralinstanz lesen"
 msgid "Read retransmission"
 msgstr "Leseretransmission"
 
-#, fuzzy
 msgid "Read retransmissions"
-msgstr "Leseretransmission"
+msgstr "Lese-Retransmission"
 
 msgid "Read size per operation"
 msgstr "Lesegröße pro Operation"
@@ -47708,9 +47652,8 @@ msgstr "Empfangsfehler"
 msgid "Receive fallback notifications"
 msgstr "Fallback-Benachrichtigungen empfangen"
 
-#, fuzzy
 msgid "Receive traces"
-msgstr "Empfangene Frames"
+msgstr "Spuren empfangen"
 
 msgid "Received"
 msgstr "Empfangen"
@@ -47749,9 +47692,8 @@ msgstr ""
 msgid "Received messages"
 msgstr "Erhaltene Nachrichten"
 
-#, fuzzy
 msgid "Receiving traces is disabled"
-msgstr "Diese Instanz ist deaktiviert"
+msgstr "Empfang von Spuren ist deaktiviert"
 
 msgid "Recent event history"
 msgstr "Jüngste Ereignisgeschichte"
@@ -47805,20 +47747,17 @@ msgstr "Zusätzliche Metriken aufzeichnen"
 msgid "Recover"
 msgstr "Wiederherstellen"
 
-#, fuzzy
 msgid "Recovering"
 msgstr "Wiederherstellen"
 
 msgid "Recovery Services Vault"
 msgstr "Recovery Services-Tresor"
 
-#, fuzzy
 msgid "Recovery area"
-msgstr "Recovery Area"
+msgstr "Recovery-Bereich"
 
-#, fuzzy
 msgid "Recovery status"
-msgstr "Recovery Status"
+msgstr "Recovery-Status"
 
 msgid "Recurring"
 msgstr "Wiederkehren"
@@ -48064,7 +48003,6 @@ msgstr "Registrierte Telefone"
 msgid "Registration and fallback"
 msgstr "Registrierung und Fallback"
 
-#, fuzzy
 msgid "Registration state"
 msgstr "Registrierungsstatus"
 
@@ -48077,9 +48015,8 @@ msgstr "Register"
 msgid "Registry Keys to search for software (Windows)"
 msgstr "Registrierungsschlüssel, in denen nach Software gesucht wird (Windows)"
 
-#, fuzzy
 msgid "Regular Asserts"
-msgstr "Regelmäßiges Lebenszeichen"
+msgstr ""
 
 msgid "Regular expression"
 msgstr "Regulärer Ausdruck"
@@ -48214,11 +48151,9 @@ msgstr "Relativer Pfad zu robot.yaml"
 msgid "Relative path to test suite file or folder"
 msgstr "Relativer Pfad zu Test-Suite-Datei oder -Ordner"
 
-#, fuzzy
 msgid "Relative time of alert"
-msgstr "Relative Zeitpunkt des Alarms"
+msgstr "Relativer Zeitpunkt des Alarms"
 
-#, fuzzy
 msgid "Relay log size"
 msgstr "Relay Logdateigröße"
 
@@ -48270,7 +48205,6 @@ msgstr "Verbleibende Tage bis zum Ablauf der SLES-Lizenz"
 msgid "Remaining days until the Windows license expires"
 msgstr "Verbleibende Tage bis zum Ablauf der Windows-Lizenz"
 
-#, fuzzy
 msgid "Remaining reads"
 msgstr "Verbleibende Leseoperationen"
 
@@ -48427,9 +48361,8 @@ msgstr ""
 msgid "Remove filter"
 msgstr "Filter entfernen"
 
-#, fuzzy
 msgid "Remove name"
-msgstr "Entferne alles"
+msgstr "Name entfernen"
 
 msgid "Remove only matching vanished services"
 msgstr "Nur übereinstimmende verschwundene Services entfernen"
@@ -48487,9 +48420,8 @@ msgstr "Zwei-Faktor-Authentifizierung entfernen"
 msgid "Remove two-factor authentication of %s"
 msgstr "Zwei-Faktor-Authentifizierung von %s entfernen"
 
-#, fuzzy
 msgid "Remove value"
-msgstr "Entferne alles"
+msgstr "Wert entfernen"
 
 msgid "Remove vanished services"
 msgstr "Verschwundene Services entfernen"
@@ -48978,9 +48910,8 @@ msgstr "Anforderungsmetriken"
 msgid "Request rate"
 msgstr "Anfragerate"
 
-#, fuzzy
 msgid "Request too large"
-msgstr "Anfragerate"
+msgstr "zu große Anfrage"
 
 msgid "Request transfer rate"
 msgstr "Übertragungsrate abfragen"
@@ -49001,7 +48932,6 @@ msgstr ""
 "Fordert Daten von einem Bazel Remote Cache Instanz Metrics Endpunkt mit "
 "Version v2.4.1 oder höher an"
 
-#, fuzzy
 msgid "Requests data from a Jenkins instance."
 msgstr "Fordert Daten von einer Jenkins-Instanz an."
 
@@ -49018,7 +48948,6 @@ msgstr ""
 "Fordert Daten von der API von IvantiNeurons for MDM (ehemals Mobileiron "
 "Cloud) an und gibt einen Piggyback-Host pro zurückgegebenem Gerät aus."
 
-#, fuzzy
 msgid "Requests in processing"
 msgstr "Aktuell bearbeitete Anfragen"
 
@@ -49092,9 +49021,8 @@ msgstr "Reseller"
 msgid "Reserved DB instances"
 msgstr "Reservierte DB-Instanzen"
 
-#, fuzzy
 msgid "Reserved size"
-msgstr "Reservierter Platz"
+msgstr "Reservierte Größe"
 
 msgid "Reserved space"
 msgstr "Reservierter Platz"
@@ -49169,9 +49097,8 @@ msgstr "Verhältnis der residenten Elemente"
 msgid "Resident memory averaging"
 msgstr "Durchschnittlicher residenter Speicher"
 
-#, fuzzy
 msgid "Resident memory size"
-msgstr "Auslastung des residenten Speichers"
+msgstr "Größe des residenten Speichers"
 
 msgid "Resident memory usage"
 msgstr "Auslastung des residenten Speichers"
@@ -49197,9 +49124,8 @@ msgstr ""
 msgid "Resident size"
 msgstr "Resident-Größe"
 
-#, fuzzy
 msgid "Resident size (average)"
-msgstr "Resident-Größe"
+msgstr "Resident-Größe (Durchschnitt)"
 
 msgid "Resolution notes for host cases"
 msgstr "Lösungshinweise für Host-Fälle"
@@ -49548,13 +49474,11 @@ msgstr "Änderungen rückgängig machen"
 msgid "Revert changes?"
 msgstr "Änderungen rückgängig machen?"
 
-#, fuzzy
 msgid "Revert foreign changes"
-msgstr "Aktiviere fremde Änderungen"
+msgstr "Verwerfe fremde Änderungen"
 
-#, fuzzy
 msgid "Review and run service discovery"
-msgstr "Speichern & Service-Erkennung durchführen"
+msgstr "Überprüfen und Service-Erkennung durchführen"
 
 #, fuzzy
 msgid "Review your configuration, run and preview service discovery"
@@ -50408,9 +50332,6 @@ msgstr "Obergrenzen für SNAT-Nutzung"
 msgid "SNMP"
 msgstr "SNMP"
 
-msgid "SNMP Context IDs"
-msgstr "SNMP Kontext-IDs"
-
 msgid "SNMP Information"
 msgstr "SNMP-Information"
 
@@ -50435,6 +50356,10 @@ msgstr "SNMP Community (SNMP Version 1 und 2c)"
 #, fuzzy
 msgid "SNMP community for the SNMP trap"
 msgstr "SNMP-Community für die SNMP-Trap"
+
+#, fuzzy
+msgid "SNMP context names"
+msgstr "SNMP Kontext-IDs"
 
 msgid "SNMP credentials"
 msgstr "SNMP-Zugangsdaten"
@@ -62384,6 +62309,10 @@ msgstr ""
 "es auch möglich, die Support Diagnostics von der Kommandozeile aus mit dem "
 "Befehl 'cmk --create-diagnostics-dump' mit den entsprechenden Parametern im "
 "Kontext der betroffenen Instanz aufzurufen. Beachten Sie hierzu %s."
+
+#, fuzzy
+msgid "The timeout must be at least 1 second."
+msgstr "Der Cluster muss zumindest einen Knoten haben"
 
 #, python-format
 msgid ""
@@ -81598,6 +81527,12 @@ msgstr "{region} ({id_})"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Error Handling"
+#~ msgstr "Fehlerbehandlung"
+
+#~ msgid "Metric aggregation"
+#~ msgstr "Metrik-Aggregation"
 
 #, python-format
 #~ msgid "The following characters are forbidden: %s"

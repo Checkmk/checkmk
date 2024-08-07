@@ -16,7 +16,7 @@ from cmk.utils.certs import CertManagementEvent
 from cmk.utils.crypto.certificate import Certificate, CertificateWithPrivateKey
 from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
-from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError
+from cmk.utils.crypto.types import HashAlgorithm, PEMDecodingError
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.user import UserId
 
@@ -367,7 +367,7 @@ class PageUploadKey:
 
             try:
                 self._upload_key(key_file, value["alias"], PasswordType(value["passphrase"]))
-            except InvalidPEMError:
+            except PEMDecodingError:
                 raise MKUserError(None, _("The file does not look like a valid key file."))
             return HTTPRedirect(
                 makeuri_contextless(request, [("mode", self.back_mode)], filename="wato.py"),

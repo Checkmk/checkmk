@@ -14,8 +14,8 @@ from cryptography.hazmat.primitives.asymmetric import ec, ed448, ed25519, paddin
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.types import (
     HashAlgorithm,
-    InvalidPEMError,
     MKCryptoException,
+    PEMDecodingError,
     SerializedPEM,
     Signature,
 )
@@ -104,17 +104,17 @@ class PrivateKey:
         `password` can be given if the key is encrypted.
 
         Raises:
-            InvalidPEMError: if the PEM cannot be decoded.
+            PEMDecodingError: if the PEM cannot be decoded.
             WrongPasswordError: if an encrypted PEM cannot be decrypted with the given password.
                 NOTE: it seems we cannot rely on this error being raised. In the unit tests we
-                sometimes saw an InvalidPEMError instead. Expect to see that as well.
+                sometimes saw an PEMDecodingError instead. Expect to see that as well.
             TypeError: when trying to load an EncryptedPrivateKeyPEM but no password is given.
                 This would be caught by mypy though.
 
         >>> PrivateKey.load_pem(EncryptedPrivateKeyPEM(""))
         Traceback (most recent call last):
             ...
-        cmk.utils.crypto.types.InvalidPEMError
+        cmk.utils.crypto.types.PEMDecodingError
 
         >>> pem = EncryptedPrivateKeyPEM(
         ...     "\\n".join([
@@ -156,7 +156,7 @@ class PrivateKey:
         except ValueError as exception:
             if str(exception) == "Bad decrypt. Incorrect password?":
                 raise WrongPasswordError
-            raise InvalidPEMError
+            raise PEMDecodingError
 
         if not is_supported_private_key_type(key):
             # We support only key types that can be used to for signatures. See class docstring.

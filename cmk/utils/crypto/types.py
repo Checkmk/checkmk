@@ -69,5 +69,11 @@ class MKCryptoException(Exception):
     """Common baseclass for this module's exceptions"""
 
 
-class InvalidPEMError(MKCryptoException):
-    """The PEM is invalid"""
+class PEMDecodingError(MKCryptoException):
+    """Decoding a PEM has failed.
+
+    Possible reasons:
+     - PEM structure is invalid
+     - decoded content is not as expected
+     - PEM is encrypted and the password is wrong
+    """

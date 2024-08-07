@@ -14,7 +14,7 @@ from cmk.utils.crypto.keys import (
     WrongPasswordError,
 )
 from cmk.utils.crypto.password import Password
-from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError, Signature
+from cmk.utils.crypto.types import HashAlgorithm, PEMDecodingError, Signature
 
 
 @pytest.mark.parametrize(
@@ -40,8 +40,8 @@ def test_de_serialization(
     encrypted_pem = private_key.dump_pem(Password("verysecure"))
     assert encrypted_pem.str.startswith("-----BEGIN ENCRYPTED PRIVATE KEY-----")
 
-    with pytest.raises((WrongPasswordError, InvalidPEMError)):
-        # This should really be a WrongPasswordError, but for some reason we see an InvalidPEMError
+    with pytest.raises((WrongPasswordError, PEMDecodingError)):
+        # This should really be a WrongPasswordError, but for some reason we see an PEMDecodingError
         # instead. We're not sure if it's an issue of our unit tests or if this confusion can also
         # happen in production. See also `PrivateKey.load_pem()`.
         PrivateKey.load_pem(encrypted_pem, Password("wrong"))

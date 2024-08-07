@@ -55,7 +55,7 @@ from cmk.utils.crypto.keys import (
     PublicKey,
 )
 from cmk.utils.crypto.password import Password
-from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError, MKCryptoException, SerializedPEM
+from cmk.utils.crypto.types import HashAlgorithm, MKCryptoException, PEMDecodingError, SerializedPEM
 
 
 class CertificatePEM(SerializedPEM):
@@ -126,7 +126,7 @@ class CertificateWithPrivateKey(NamedTuple):
                 r"-----BEGIN CERTIFICATE-----[\s\w+/=]+-----END CERTIFICATE-----", content
             )
         ) is None:
-            raise InvalidPEMError("Could not find certificate")
+            raise PEMDecodingError("Could not find certificate")
         cert = Certificate.load_pem(CertificatePEM(cert_match.group(0)))
 
         if passphrase is not None:
@@ -136,7 +136,7 @@ class CertificateWithPrivateKey(NamedTuple):
                     content,
                 )
             ) is None:
-                raise InvalidPEMError("Could not find encrypted private key")
+                raise PEMDecodingError("Could not find encrypted private key")
             key = PrivateKey.load_pem(EncryptedPrivateKeyPEM(key_match.group(0)), passphrase)
         else:
             if (
@@ -144,7 +144,7 @@ class CertificateWithPrivateKey(NamedTuple):
                     r"-----BEGIN PRIVATE KEY-----[\s\w+/=]+-----END PRIVATE KEY-----", content
                 )
             ) is None:
-                raise InvalidPEMError("Could not find private key")
+                raise PEMDecodingError("Could not find private key")
             key = PrivateKey.load_pem(PlaintextPrivateKeyPEM(key_match.group(0)), None)
 
         return cls(
@@ -358,7 +358,7 @@ class Certificate:
         try:
             return cls(x509.load_pem_x509_certificate(pem_data.bytes))
         except ValueError:
-            raise InvalidPEMError("Unable to load certificate.")
+            raise PEMDecodingError("Unable to load certificate.")
 
     def dump_pem(self) -> CertificatePEM:
         return CertificatePEM(self._cert.public_bytes(serialization.Encoding.PEM))

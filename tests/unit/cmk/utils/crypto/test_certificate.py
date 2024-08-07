@@ -28,7 +28,7 @@ from cmk.utils.crypto.certificate import (
 )
 from cmk.utils.crypto.keys import InvalidSignatureError
 from cmk.utils.crypto.password import Password
-from cmk.utils.crypto.types import InvalidPEMError
+from cmk.utils.crypto.types import PEMDecodingError
 
 
 def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> None:
@@ -117,18 +117,18 @@ def test_write_and_read(tmp_path: Path, self_signed_cert: CertificateWithPrivate
 
 def test_loading_combined_file_content(self_signed_cert: CertificateWithPrivateKey) -> None:
     pw = Password("unittest")
-    with pytest.raises(InvalidPEMError, match="Could not find certificate"):
+    with pytest.raises(PEMDecodingError, match="Could not find certificate"):
         CertificateWithPrivateKey.load_combined_file_content("", None)
 
-    with pytest.raises(InvalidPEMError, match="Unable to load certificate."):
+    with pytest.raises(PEMDecodingError, match="Unable to load certificate."):
         CertificateWithPrivateKey.load_combined_file_content(
             "-----BEGIN CERTIFICATE-----a-----END CERTIFICATE-----", None
         )
 
     file_content = self_signed_cert.certificate.dump_pem().str
-    with pytest.raises(InvalidPEMError, match="Could not find private key"):
+    with pytest.raises(PEMDecodingError, match="Could not find private key"):
         CertificateWithPrivateKey.load_combined_file_content(file_content, None)
-    with pytest.raises(InvalidPEMError, match="Could not find encrypted private key"):
+    with pytest.raises(PEMDecodingError, match="Could not find encrypted private key"):
         CertificateWithPrivateKey.load_combined_file_content(file_content, pw)
 
     assert (

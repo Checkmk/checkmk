@@ -11,13 +11,16 @@ all saves substantial CPU resources as opposed to running Checkmk
 in adhoc mode (about 75%).
 """
 
+import enum
 import itertools
 import os
 import py_compile
 import re
 import socket
 import sys
+from collections.abc import Mapping
 from pathlib import Path
+from typing import assert_never
 
 import cmk.utils.config_path
 import cmk.utils.password_store
@@ -34,8 +37,8 @@ from cmk.checkengine.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
-from cmk.base import config, server_side_calls
-from cmk.base.config import ConfigCache
+from cmk.base import server_side_calls
+from cmk.base.config import ConfigCache, FilterMode, lookup_ip_address, save_packed_config
 
 from cmk.ccc import store
 from cmk.discover_plugins import PluginLocation
@@ -48,6 +51,11 @@ _INSTANTIATION_PATTERN = re.compile(
     f" = {HostCheckConfig.__name__}\\(.*?\n\\)",
     re.DOTALL,
 )
+
+
+class PrecompileMode(enum.Enum):
+    DELAYED = enum.auto()
+    INSTANT = enum.auto()
 
 
 class HostCheckStore:
@@ -63,7 +71,14 @@ class HostCheckStore:
         path = HostCheckStore.host_check_file_path(config_path, hostname)
         return path.with_suffix(path.suffix + ".py")
 
-    def write(self, config_path: VersionedConfigPath, hostname: HostName, host_check: str) -> None:
+    def write(
+        self,
+        config_path: VersionedConfigPath,
+        hostname: HostName,
+        host_check: str,
+        *,
+        precompile_mode: PrecompileMode,
+    ) -> None:
         compiled_filename = self.host_check_file_path(config_path, hostname)
         source_filename = self.host_check_source_file_path(config_path, hostname)
 
@@ -72,25 +87,35 @@ class HostCheckStore:
         store.save_text_to_file(source_filename, host_check)
 
         # compile python (either now or delayed - see host_check code for delay_precompile handling)
-        if config.delay_precompile:
-            compiled_filename.symlink_to(hostname + ".py")
-        else:
-            py_compile.compile(
-                file=str(source_filename),
-                cfile=str(compiled_filename),
-                dfile=str(compiled_filename),
-                doraise=True,
-            )
-            os.chmod(compiled_filename, 0o750)  # nosec B103 # BNS:c29b0e
+        match precompile_mode:
+            case PrecompileMode.DELAYED:
+                compiled_filename.symlink_to(hostname + ".py")
+            case PrecompileMode.INSTANT:
+                py_compile.compile(
+                    file=str(source_filename),
+                    cfile=str(compiled_filename),
+                    dfile=str(compiled_filename),
+                    doraise=True,
+                )
+                os.chmod(compiled_filename, 0o750)  # nosec B103 # BNS:c29b0e
+            case other:
+                assert_never(other)
 
         console.verbose(f" ==> {compiled_filename}.", file=sys.stderr)
 
 
-def precompile_hostchecks(config_path: VersionedConfigPath, config_cache: ConfigCache) -> None:
+def precompile_hostchecks(
+    config_path: VersionedConfigPath,
+    config_cache: ConfigCache,
+    legacy_check_plugin_names: Mapping[CheckPluginName, str],
+    legacy_check_plugin_files: Mapping[str, str],
+    *,
+    precompile_mode: PrecompileMode,
+) -> None:
     console.verbose("Creating precompiled host check config...")
     hosts_config = config_cache.hosts_config
 
-    config.save_packed_config(config_path, config_cache)
+    save_packed_config(config_path, config_cache)
 
     console.verbose("Precompiling host checks...")
 
@@ -109,12 +134,17 @@ def precompile_hostchecks(config_path: VersionedConfigPath, config_cache: Config
                 config_cache,
                 config_path,
                 hostname,
+                legacy_check_plugin_names,
+                legacy_check_plugin_files,
+                precompile_mode=precompile_mode,
             )
             if host_check is None:
                 console.verbose("(no Checkmk checks)")
                 continue
 
-            host_check_store.write(config_path, hostname, host_check)
+            host_check_store.write(
+                config_path, hostname, host_check, precompile_mode=precompile_mode
+            )
         except Exception as e:
             if cmk.ccc.debug.enabled():
                 raise
@@ -126,14 +156,17 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     config_cache: ConfigCache,
     config_path: VersionedConfigPath,
     hostname: HostName,
+    legacy_check_plugin_names: Mapping[CheckPluginName, str],
+    legacy_check_plugin_files: Mapping[str, str],
     *,
     verify_site_python: bool = True,
+    precompile_mode: PrecompileMode,
 ) -> str | None:
     (
         needed_legacy_check_plugin_names,
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
-    ) = _get_needed_plugin_names(config_cache, hostname)
+    ) = _get_needed_plugin_names(config_cache, hostname, legacy_check_plugin_names)
 
     if hostname in config_cache.hosts_config.clusters:
         assert config_cache.nodes(hostname)
@@ -142,7 +175,7 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
                 node_needed_legacy_check_plugin_names,
                 node_needed_agent_based_check_plugin_names,
                 node_needed_agent_based_inventory_plugin_names,
-            ) = _get_needed_plugin_names(config_cache, node)
+            ) = _get_needed_plugin_names(config_cache, node, legacy_check_plugin_names)
             needed_legacy_check_plugin_names.update(node_needed_legacy_check_plugin_names)
             needed_agent_based_check_plugin_names.update(node_needed_agent_based_check_plugin_names)
             needed_agent_based_inventory_plugin_names.update(
@@ -170,7 +203,11 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
         needed_agent_based_inventory_plugin_names,
     )
 
-    checks_to_load = sorted(_get_legacy_check_file_names_to_load(needed_legacy_check_plugin_names))
+    checks_to_load = sorted(
+        _get_legacy_check_file_names_to_load(
+            needed_legacy_check_plugin_names, legacy_check_plugin_files
+        )
+    )
 
     for check_plugin_name in sorted(needed_legacy_check_plugin_names):
         console.verbose_no_lf(f" {tty.green}{check_plugin_name}{tty.normal}", file=sys.stderr)
@@ -189,18 +226,18 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
         for node in config_cache.nodes(hostname):
             node_ip_stack_config = ConfigCache.ip_stack_config(node)
             if IPStackConfig.IPv4 in node_ip_stack_config:
-                needed_ipaddresses[node] = config.lookup_ip_address(
+                needed_ipaddresses[node] = lookup_ip_address(
                     config_cache, node, family=socket.AddressFamily.AF_INET
                 )
 
             if IPStackConfig.IPv6 in node_ip_stack_config:
-                needed_ipv6addresses[node] = config.lookup_ip_address(
+                needed_ipv6addresses[node] = lookup_ip_address(
                     config_cache, node, family=socket.AddressFamily.AF_INET6
                 )
 
         try:
             if IPStackConfig.IPv4 in ip_stack_config:
-                needed_ipaddresses[hostname] = config.lookup_ip_address(
+                needed_ipaddresses[hostname] = lookup_ip_address(
                     config_cache, hostname, family=socket.AddressFamily.AF_INET
                 )
         except Exception:
@@ -208,25 +245,26 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
 
         try:
             if IPStackConfig.IPv6 in ip_stack_config:
-                needed_ipv6addresses[hostname] = config.lookup_ip_address(
+                needed_ipv6addresses[hostname] = lookup_ip_address(
                     config_cache, hostname, family=socket.AddressFamily.AF_INET6
                 )
         except Exception:
             pass
     else:
         if IPStackConfig.IPv4 in ip_stack_config:
-            needed_ipaddresses[hostname] = config.lookup_ip_address(
+            needed_ipaddresses[hostname] = lookup_ip_address(
                 config_cache, hostname, family=socket.AddressFamily.AF_INET
             )
 
         if IPStackConfig.IPv6 in ip_stack_config:
-            needed_ipv6addresses[hostname] = config.lookup_ip_address(
+            needed_ipv6addresses[hostname] = lookup_ip_address(
                 config_cache, hostname, family=socket.AddressFamily.AF_INET6
             )
 
     # assign the values here, just to let the type checker do its job
     host_check_config = HostCheckConfig(
-        delay_precompile=bool(config.delay_precompile),
+        delay_precompile=precompile_mode
+        is PrecompileMode.DELAYED,  # propagation of enum would break b/c of the repr() below :-(
         src=str(HostCheckStore.host_check_source_file_path(config_path, hostname)),
         dst=str(HostCheckStore.host_check_file_path(config_path, hostname)),
         verify_site_python=verify_site_python,
@@ -248,7 +286,9 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
 
 
 def _get_needed_plugin_names(
-    config_cache: ConfigCache, host_name: HostName
+    config_cache: ConfigCache,
+    host_name: HostName,
+    legacy_check_plugin_names: Mapping[CheckPluginName, str],
 ) -> tuple[set[str], set[CheckPluginName], set[InventoryPluginName]]:
     ssc_api_special_agents = {p.name for p in server_side_calls.load_special_agents()[1].values()}
     needed_legacy_check_plugin_names = {
@@ -266,11 +306,14 @@ def _get_needed_plugin_names(
     # plugins are not.
     needed_agent_based_check_plugin_names = config_cache.check_table(
         host_name,
-        filter_mode=config.FilterMode.INCLUDE_CLUSTERED,
+        filter_mode=FilterMode.INCLUDE_CLUSTERED,
         skip_ignored=False,
     ).needed_check_names()
 
-    legacy_names = (_resolve_legacy_plugin_name(pn) for pn in needed_agent_based_check_plugin_names)
+    legacy_names = (
+        _resolve_legacy_plugin_name(pn, legacy_check_plugin_names)
+        for pn in needed_agent_based_check_plugin_names
+    )
     needed_legacy_check_plugin_names.update(ln for ln in legacy_names if ln is not None)
 
     # Inventory plugins get passed parsed data these days.
@@ -281,7 +324,7 @@ def _get_needed_plugin_names(
             needed_agent_based_inventory_plugin_names.add(inventory_plugin.name)
             for parsed_section_name in inventory_plugin.sections:
                 # check if we must add the legacy check plug-in:
-                legacy_check_name = config.legacy_check_plugin_names.get(
+                legacy_check_name = legacy_check_plugin_names.get(
                     CheckPluginName(str(parsed_section_name))
                 )
                 if legacy_check_name is not None:
@@ -294,8 +337,10 @@ def _get_needed_plugin_names(
     )
 
 
-def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> str | None:
-    legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
+def _resolve_legacy_plugin_name(
+    check_plugin_name: CheckPluginName, legacy_check_plugin_names: Mapping[CheckPluginName, str]
+) -> str | None:
+    legacy_name = legacy_check_plugin_names.get(check_plugin_name)
     if legacy_name:
         return legacy_name
 
@@ -311,11 +356,12 @@ def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> str | Non
         return None
 
     # just try to get the legacy name of the 'regular' plugin:
-    return config.legacy_check_plugin_names.get(check_plugin_name.create_basic_name())
+    return legacy_check_plugin_names.get(check_plugin_name.create_basic_name())
 
 
 def _get_legacy_check_file_names_to_load(
     needed_check_plugin_names: set[str],
+    legacy_check_plugin_files: Mapping[str, str],
 ) -> set[str]:
     # check info table
     # We need to include all those plugins that are referenced in the hosts
@@ -323,11 +369,11 @@ def _get_legacy_check_file_names_to_load(
     return {
         filename
         for check_plugin_name in needed_check_plugin_names
-        for filename in _find_check_plugins(check_plugin_name)
+        for filename in _find_check_plugins(check_plugin_name, legacy_check_plugin_files)
     }
 
 
-def _find_check_plugins(checktype: str) -> set[str]:
+def _find_check_plugins(checktype: str, legacy_check_plugin_files: Mapping[str, str]) -> set[str]:
     """Find files to be included in precompile host check for a certain
     check (for example df or mem.used).
 
@@ -337,7 +383,7 @@ def _find_check_plugins(checktype: str) -> set[str]:
         filename
         for candidate in (section_name_of(checktype), checktype)
         # in case there is no "main check" anymore, the lookup fails -> skip.
-        if (filename := config.legacy_check_plugin_files.get(candidate)) is not None
+        if (filename := legacy_check_plugin_files.get(candidate)) is not None
     }
 
 

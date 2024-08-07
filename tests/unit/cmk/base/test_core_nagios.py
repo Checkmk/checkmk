@@ -350,7 +350,9 @@ class TestHostCheckStore:
         assert not store.host_check_source_file_path(config_path, hostname).exists()
         assert not store.host_check_file_path(config_path, hostname).exists()
 
-        store.write(config_path, hostname, "xyz")
+        store.write(
+            config_path, hostname, "xyz", precompile_mode=core_nagios.PrecompileMode.INSTANT
+        )
 
         assert store.host_check_source_file_path(config_path, hostname).exists()
         assert store.host_check_file_path(config_path, hostname).exists()
@@ -380,6 +382,9 @@ def test_dump_precompiled_hostcheck(
         config_cache,
         config_path,
         hostname,
+        legacy_check_plugin_names={},
+        legacy_check_plugin_files={},
+        precompile_mode=core_nagios.PrecompileMode.INSTANT,
     )
     assert host_check is not None
     assert host_check.startswith("#!/usr/bin/env python3")
@@ -396,6 +401,9 @@ def test_dump_precompiled_hostcheck_without_check_mk_service(
         config_cache,
         config_path,
         hostname,
+        legacy_check_plugin_names={},
+        legacy_check_plugin_files={},
+        precompile_mode=core_nagios.PrecompileMode.INSTANT,
     )
     assert host_check is None
 
@@ -408,6 +416,9 @@ def test_dump_precompiled_hostcheck_not_existing_host(
         config_cache,
         config_path,
         HostName("not-existing"),
+        legacy_check_plugin_names={},
+        legacy_check_plugin_files={},
+        precompile_mode=core_nagios.PrecompileMode.INSTANT,
     )
     assert host_check is None
 

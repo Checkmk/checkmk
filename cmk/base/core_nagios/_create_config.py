@@ -43,7 +43,7 @@ from cmk.base.core_config import (
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
-from ._precompile_host_checks import precompile_hostchecks
+from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 
 _ContactgroupName = str
 ObjectSpec = dict[str, Any]
@@ -69,7 +69,14 @@ class NagiosCore(core_config.MonitoringCore):
     ) -> None:
         self._config_cache = config_cache
         self._create_core_config(config_path, licensing_handler, passwords, ip_address_of)
-        self._precompile_hostchecks(config_path)
+        self._precompile_hostchecks(
+            config_path,
+            config.legacy_check_plugin_names,
+            config.legacy_check_plugin_files,
+            precompile_mode=(
+                PrecompileMode.DELAYED if config.delay_precompile else PrecompileMode.INSTANT
+            ),
+        )
 
     def _create_core_config(
         self,
@@ -107,10 +114,23 @@ class NagiosCore(core_config.MonitoringCore):
 
         store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
 
-    def _precompile_hostchecks(self, config_path: VersionedConfigPath) -> None:
+    def _precompile_hostchecks(
+        self,
+        config_path: VersionedConfigPath,
+        legacy_check_plugin_names: Mapping[CheckPluginName, str],
+        legacy_check_plugin_files: Mapping[str, str],
+        *,
+        precompile_mode: PrecompileMode,
+    ) -> None:
         with suppress(IOError):
             print("Precompiling host checks...", end="", flush=True, file=sys.stdout)
-        precompile_hostchecks(config_path, self._config_cache)
+        precompile_hostchecks(
+            config_path,
+            self._config_cache,
+            legacy_check_plugin_names,
+            legacy_check_plugin_files,
+            precompile_mode=precompile_mode,
+        )
         with suppress(IOError):
             print(tty.ok + "\n", end="", flush=True, file=sys.stdout)
 

@@ -22,25 +22,25 @@ logger = logging.getLogger(__name__)
 def test_update(  # pylint: disable=too-many-branches
     test_setup: tuple[Site, bool],
 ) -> None:
-    test_site, disable_interactive_mode = test_setup
-    base_version = test_site.version
+    base_site, disable_interactive_mode = test_setup
+    base_version = base_site.version
 
     hostname = HostName("test-host")
     ip_address = "127.0.0.1"
     logger.info("Creating new host: %s", hostname)
-    test_site.openapi.create_host(
+    base_site.openapi.create_host(
         hostname=hostname, attributes={"ipaddress": ip_address, "tag_agent": "cmk-agent"}
     )
 
-    test_site.activate_changes_and_wait_for_core_reload()
+    base_site.activate_changes_and_wait_for_core_reload()
 
     logger.info("Discovering services and waiting for completion...")
-    test_site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
-    test_site.openapi.activate_changes_and_wait_for_completion()
-    test_site.schedule_check(hostname, "Check_MK", 0)
+    base_site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
+    base_site.openapi.activate_changes_and_wait_for_completion()
+    base_site.schedule_check(hostname, "Check_MK", 0)
 
     # get baseline monitoring data for each host
-    base_data = test_site.get_host_services(hostname)
+    base_data = base_site.get_host_services(hostname)
 
     base_ok_services = get_services_with_status(base_data, 0)
     # used in debugging mode
@@ -56,7 +56,7 @@ def test_update(  # pylint: disable=too-many-branches
         fallback_branch=current_base_branch_name(),
     )
 
-    target_site = update_site(test_site, target_version, not disable_interactive_mode)
+    target_site = update_site(base_site, target_version, not disable_interactive_mode)
 
     # get the service status codes and check them
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"

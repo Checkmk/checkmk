@@ -204,44 +204,32 @@ class ServiceDescription(BaseModel):
 class HttpEndpoint(BaseModel):
     service_name: ServiceDescription
     url: str
-    settings: HttpSettings | None = None
+    settings: HttpSettings
 
 
-class RawEndpoint(BaseModel):
-    service_name: ServiceDescription
-    url: str
-    individual_settings: HttpSettings | None = None
+def parse_http_params(params: Mapping[str, object]) -> Sequence[HttpEndpoint]:
 
+    def _parse_dict(o: object) -> dict:
+        if not isinstance(o, dict):
+            raise TypeError(o)
+        return o
 
-class RawParams(BaseModel):
-    endpoints: list[RawEndpoint]
-    standard_settings: HttpSettings | None = None
+    if not isinstance(endpoints := params["endpoints"], Sequence):
+        raise TypeError(endpoints)
 
-
-def parse_http_params(raw_params: Mapping[str, object]) -> Sequence[HttpEndpoint]:
-    params = RawParams.model_validate(raw_params)
+    fallbacks = _parse_dict(params.get("standard_settings", {}))
     return [
-        HttpEndpoint(
-            service_name=endpoint.service_name,
-            url=endpoint.url,
-            settings=_merge_settings(params.standard_settings, endpoint.individual_settings),
+        HttpEndpoint.model_validate(
+            {
+                **endpoint,
+                "settings": {
+                    **fallbacks,
+                    **_parse_dict(endpoint.get("individual_settings", {})),
+                },
+            },
         )
-        for endpoint in params.endpoints
+        for endpoint in endpoints
     ]
-
-
-def _merge_settings(
-    standard: HttpSettings | None, individual: HttpSettings | None
-) -> HttpSettings | None:
-    if individual is None:
-        return standard
-
-    if standard is None:
-        return individual
-
-    return HttpSettings.model_validate(
-        standard.model_dump(exclude_none=True) | individual.model_dump(exclude_none=True)
-    )
 
 
 def generate_http_services(
@@ -262,20 +250,17 @@ def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str | Secret]:
     yield "--url"
     yield endpoint.url
 
-    if (settings := endpoint.settings) is None:
-        return
-
-    if (connection := settings.connection) is not None:
+    if (connection := endpoint.settings.connection) is not None:
         yield from _connection_args(connection)
-    if (response_time := settings.response_time) is not None:
+    if (response_time := endpoint.settings.response_time) is not None:
         yield from _response_time_arguments(response_time)
-    if (server_response := settings.server_response) is not None:
+    if (server_response := endpoint.settings.server_response) is not None:
         yield from _status_code_args(server_response)
-    if (cert := settings.cert) is not None:
+    if (cert := endpoint.settings.cert) is not None:
         yield from _cert_args(cert)
-    if (document := settings.document) is not None:
+    if (document := endpoint.settings.document) is not None:
         yield from _document_args(document)
-    if (content := settings.content) is not None:
+    if (content := endpoint.settings.content) is not None:
         yield from _content_args(content)
 
 

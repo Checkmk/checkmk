@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils import paths
 from cmk.utils.user import UserId
 
 from cmk.base.server_side_calls import load_special_agents
@@ -15,6 +16,8 @@ from cmk.gui.quick_setup.to_frontend import (
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.session import UserContext
+
+from cmk.ccc.version import edition, Edition
 
 ALL_FORM_SPEC_DATA: ParsedFormData = {
     FormSpecId("formspec_unique_id"): {
@@ -89,16 +92,25 @@ EXPECTED_PARAMS = {
     },
     "overall_tags": {},
 }
+
+CRE_GLOBAL_SERVICES = {
+    "ce": ("none", None),
+}
+ALL_GLOBAL_SERVICES = {
+    **CRE_GLOBAL_SERVICES,
+    **{
+        "cloudfront": ("none", None),
+        "route53": ("none", None),
+    },
+}
 EXPECTED_PARAMS_WITH_DEFAULTS = {
     **EXPECTED_PARAMS,
     **{
         "piggyback_naming_convention": "ip_region_instance",
         "access": {},
-        "global_services": {
-            "ce": ("none", None),
-            "cloudfront": ("none", None),
-            "route53": ("none", None),
-        },
+        "global_services": (
+            CRE_GLOBAL_SERVICES if edition(paths.omd_root) is Edition.CRE else ALL_GLOBAL_SERVICES
+        ),
     },
 }
 

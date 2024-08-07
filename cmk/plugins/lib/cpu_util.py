@@ -403,7 +403,7 @@ def cpu_util_time(
     Only sends `notice` output .
     """
     core_states = value_store.get("cpu.util.core.high", {})
-    if perc <= threshold:
+    if perc < threshold:
         # drop core from states
         value_store["cpu.util.core.high"] = {k: v for k, v in core_states.items() if k != core}
         return

@@ -382,14 +382,17 @@ def _add_defaults_to_form_data(
     default_dict: dict, update_dict: Mapping[str, object]
 ) -> Mapping[str, object]:
     return {
-        key: (
-            _add_defaults_to_form_data(default_dict[key], value)
-            if isinstance(value, dict)
-            and key in default_dict
-            and isinstance(default_dict[key], dict)
-            else value
-        )
-        for key, value in update_dict.items()
+        **{
+            key: (
+                _add_defaults_to_form_data(default_dict[key], value)
+                if isinstance(value, dict)
+                and key in default_dict
+                and isinstance(default_dict[key], dict)
+                else value
+            )
+            for key, value in update_dict.items()
+        },
+        **{key: value for key, value in default_dict.items() if key not in update_dict},
     }
 
 

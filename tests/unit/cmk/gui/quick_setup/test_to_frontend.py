@@ -3,15 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.user import UserId
 
 from cmk.base.server_side_calls import load_special_agents
 
 from cmk.gui.quick_setup.to_frontend import (
     _collect_params_from_form_data,
+    _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
+from cmk.gui.session import UserContext
 
 ALL_FORM_SPEC_DATA: ParsedFormData = {
     FormSpecId("formspec_unique_id"): {
@@ -86,6 +89,18 @@ EXPECTED_PARAMS = {
     },
     "overall_tags": {},
 }
+EXPECTED_PARAMS_WITH_DEFAULTS = {
+    **EXPECTED_PARAMS,
+    **{
+        "piggyback_naming_convention": "ip_region_instance",
+        "access": {},
+        "global_services": {
+            "ce": ("none", None),
+            "cloudfront": ("none", None),
+            "route53": ("none", None),
+        },
+    },
+}
 
 EXPECTED_PASSWORDS = {"ca2f6299-622f-4339-80bb-14a4ae03bdda": "my_secret_access_key"}
 
@@ -103,3 +118,14 @@ def test_quick_setup_collect_passwords_from_form_data() -> None:
         _collect_passwords_from_form_data(ALL_FORM_SPEC_DATA, "special_agents:aws")
         == EXPECTED_PASSWORDS
     )
+
+
+def test_quick_setup_collect_params_with_defaults_from_form_data(
+    with_user: tuple[UserId, str], patch_theme: None
+) -> None:
+    load_special_agents()
+    with UserContext(with_user[0]):
+        assert (
+            _collect_params_with_defaults_from_form_data(ALL_FORM_SPEC_DATA, "special_agents:aws")
+            == EXPECTED_PARAMS_WITH_DEFAULTS
+        )

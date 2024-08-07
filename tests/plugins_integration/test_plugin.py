@@ -22,14 +22,7 @@ from tests.plugins_integration.checks import (
 logger = logging.getLogger(__name__)
 
 
-HOSTNAMES = [
-    name
-    for name in get_host_names()
-    if name not in ("agent-2.1.0p11-ms-exchange", "agent-1.2.6b12-win-ad-replication")
-]
-
-
-@pytest.mark.parametrize("source_host_name", HOSTNAMES)
+@pytest.mark.parametrize("source_host_name", get_host_names())
 def test_plugin(
     test_site: Site,
     source_host_name: str,

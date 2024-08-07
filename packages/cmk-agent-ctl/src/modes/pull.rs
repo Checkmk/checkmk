@@ -684,7 +684,7 @@ mod tests {
         }
         #[test]
         fn test_empty_list() {
-            let args = &vec![];
+            let args = &[];
             assert!(is_addr_allowed(&to_sock_addr("127.0.0.2"), args));
             assert!(is_addr_allowed(&to_sock_addr("127.0.0.1"), args));
         }

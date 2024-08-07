@@ -108,4 +108,4 @@ def test_checks_sanity(host_services: dict[str, ServiceInfo]) -> None:
         f"(Details: {[host_services[s] for s in not_ok_services]})"
     )
 
-    assert len(host_services) == len(get_services_with_status(host_services, 0)) > 0, err_msg
+    assert len(host_services) == len(ok_services) > 0, err_msg

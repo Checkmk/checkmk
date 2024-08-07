@@ -21,3 +21,6 @@ item:
 
 discovery:
  One service is created on each system which provides the {postconf}.
+ If {postconf} is not installed, we fall back to {ssmtp}. On FreeBSD
+ systems, if both {postconf} and {ssmtp} are not installed, we check
+ the DragonFly Mail Agent (dma) instead.

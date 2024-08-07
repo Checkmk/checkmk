@@ -502,7 +502,7 @@ run_purely_synchronous_sections() {
     fi
 
     # Filesystem usage for ZFS
-    if inpath zfs; then
+    if kldstat -m zfs -q && inpath zfs; then
         echo '<<<zfsget>>>'
         zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type ||
             zfs get -Hp name,quota,used,avail,mountpoint,type
@@ -695,7 +695,7 @@ run_purely_synchronous_sections() {
     fi
 
     # check zpool status
-    if inpath zpool; then
+    if kldstat -m zfs -q && inpath zpool; then
         echo "<<<zpool_status>>>"
         zpool status -x | grep -v "errors: No known data errors"
     fi

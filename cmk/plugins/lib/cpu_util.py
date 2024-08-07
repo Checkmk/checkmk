@@ -172,7 +172,7 @@ def check_cpu_util(
 
     if "core_util_time_total" in params:
         threshold, warn, crit = params["core_util_time_total"]
-        yield from cpu_util_time(
+        yield from _cpu_util_time(
             core="total",
             perc=util,
             threshold=threshold,
@@ -328,7 +328,7 @@ def _util_perfdata(
     """
     if "core_util_time" in params:
         threshold, warn, crit = params["core_util_time"]
-        yield from cpu_util_time(
+        yield from _cpu_util_time(
             core=core,
             perc=total_perc,
             threshold=threshold,
@@ -386,7 +386,7 @@ def _util_perfdata(
 #   '----------------------------------------------------------------------'
 
 
-def cpu_util_time(
+def _cpu_util_time(
     *,
     core: str,
     perc: float,

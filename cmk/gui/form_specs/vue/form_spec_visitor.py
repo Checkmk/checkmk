@@ -12,15 +12,14 @@ from typing import Any, Literal, TypeVar
 
 import cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components as VueComponents
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.private import SingleChoiceExtended
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec, UnknownFormSpec
-from cmk.gui.form_specs.vue.form_spec_recomposers.percentage import (
-    recompose as recompose_percentage,
-)
-from cmk.gui.form_specs.vue.form_spec_recomposers.regular_expression import (
-    recompose as recompose_regular_expression,
-)
-from cmk.gui.form_specs.vue.form_spec_recomposers.unknown_form_spec import (
-    recompose as recompose_unknown_form_spec,
+from cmk.gui.form_specs.vue.form_spec_recomposers import (
+    recompose_host_state,
+    recompose_percentage,
+    recompose_regular_expression,
+    recompose_single_choice,
+    recompose_unknown_form_spec,
 )
 from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, RenderMode, VisitorOptions
 from cmk.gui.form_specs.vue.utils import get_visitor, register_visitor_class
@@ -49,6 +48,7 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     Float,
     FormSpec,
+    HostState,
     Integer,
     List,
     MultilineText,
@@ -78,7 +78,7 @@ def register_form_specs():
     register_visitor_class(Dictionary, DictionaryVisitor)
     register_visitor_class(String, StringVisitor)
     register_visitor_class(Float, FloatVisitor)
-    register_visitor_class(SingleChoice, SingleChoiceVisitor)
+    register_visitor_class(SingleChoiceExtended, SingleChoiceVisitor)
     register_visitor_class(CascadingSingleChoice, CascadingSingleChoiceVisitor)
     register_visitor_class(List, ListVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
@@ -89,6 +89,8 @@ def register_form_specs():
     register_visitor_class(DataSize, DataSizeVisitor)
 
     # Recomposed
+    register_visitor_class(HostState, SingleChoiceVisitor, recompose_host_state)
+    register_visitor_class(SingleChoice, SingleChoiceVisitor, recompose_single_choice)
     register_visitor_class(Percentage, FloatVisitor, recompose_percentage)
     register_visitor_class(UnknownFormSpec, LegacyValuespecVisitor, recompose_unknown_form_spec)
 

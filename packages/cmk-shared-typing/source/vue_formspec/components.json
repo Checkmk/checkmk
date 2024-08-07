@@ -225,12 +225,10 @@
                 }
             ]
         },
-        "single_choice_element": {
+        "single_choice_element_extended": {
             "type": "object",
             "properties": {
-                "name": {
-                    "type": "string"
-                },
+                "name": {},
                 "title": {
                     "type": "string"
                 }
@@ -250,7 +248,7 @@
                 "elements": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/$defs/single_choice_element"
+                        "$ref": "#/$defs/single_choice_element_extended"
                     },
                     "default": []
                 },

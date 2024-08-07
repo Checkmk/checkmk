@@ -49,7 +49,7 @@ function renderForm(
     case 'float':
       return renderSimpleValue(formSpec, value as string, backendValidation)
     case 'single_choice':
-      return renderSingleChoice(formSpec as SingleChoice, value as string, backendValidation)
+      return renderSingleChoice(formSpec as SingleChoice, value as unknown, backendValidation)
     case 'list':
       return renderList(formSpec as List, value as unknown[], backendValidation)
     case 'cascading_single_choice':
@@ -151,7 +151,7 @@ function renderSimpleValue(
 
 function renderSingleChoice(
   formSpec: SingleChoice,
-  value: string,
+  value: unknown,
   backendValidation: ValidationMessages = []
 ): VNode {
   for (const element of formSpec.elements) {

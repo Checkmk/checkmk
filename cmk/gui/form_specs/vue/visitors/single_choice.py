@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
+from typing import Generic, TypeVar
+
+from cmk.gui.form_specs import private
+from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
 from cmk.gui.form_specs.vue.type_defs import DefaultValue, EMPTY_VALUE, EmptyValue, Value
 from cmk.gui.form_specs.vue.utils import (
@@ -20,11 +23,12 @@ from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import translate_to_current_language
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import SingleChoice
+
+T = TypeVar("T")
 
 
-class SingleChoiceVisitor(FormSpecVisitor[SingleChoice, str]):
-    def _parse_value(self, raw_value: object) -> str | EmptyValue:
+class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtended[T], T]):
+    def _parse_value(self, raw_value: object) -> T | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
             if isinstance(
@@ -33,25 +37,24 @@ class SingleChoiceVisitor(FormSpecVisitor[SingleChoice, str]):
                 return prefill_default
             raw_value = prefill_default
 
-        if not isinstance(raw_value, str):
+        if not isinstance(raw_value, self.form_spec.type):
             return EMPTY_VALUE
-        # TODO: what about types which inherit from str?
         return raw_value
 
     def _to_vue(
-        self, raw_value: object, parsed_value: str | EmptyValue
-    ) -> tuple[VueComponents.SingleChoice, Value]:
+        self, raw_value: object, parsed_value: T | EmptyValue
+    ) -> tuple[vue_formspec_components.SingleChoice, Value]:
         title, help_text = get_title_and_help(self.form_spec)
 
         elements = [
-            VueComponents.SingleChoiceElement(
+            vue_formspec_components.SingleChoiceElementExtended(
                 name=element.name,
                 title=element.title.localize(translate_to_current_language),
             )
             for element in self.form_spec.elements
         ]
         return (
-            VueComponents.SingleChoice(
+            vue_formspec_components.SingleChoice(
                 title=title,
                 help=help_text,
                 elements=elements,
@@ -64,11 +67,11 @@ class SingleChoiceVisitor(FormSpecVisitor[SingleChoice, str]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: str | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+        self, raw_value: object, parsed_value: T | EmptyValue
+    ) -> list[vue_formspec_components.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, Title("Invalid choice"))
         return compute_validation_errors(compute_validators(self.form_spec), parsed_value)
 
-    def _to_disk(self, raw_value: object, parsed_value: str) -> str:
+    def _to_disk(self, raw_value: object, parsed_value: T) -> T:
         return parsed_value

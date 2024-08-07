@@ -59,7 +59,7 @@ export type LegacyValuespec = FormSpec & {
 };
 export type SingleChoice = FormSpec & {
   type: "single_choice";
-  elements: SingleChoiceElement[];
+  elements: SingleChoiceElementExtended[];
   no_elements_text?: string;
   frozen: boolean;
   label?: string;
@@ -133,8 +133,8 @@ export interface DictionaryElement {
   default_value: unknown;
   parameter_form: FormSpec;
 }
-export interface SingleChoiceElement {
-  name: string;
+export interface SingleChoiceElementExtended {
+  name: unknown;
   title: string;
 }
 export interface CascadingSingleChoiceElement {

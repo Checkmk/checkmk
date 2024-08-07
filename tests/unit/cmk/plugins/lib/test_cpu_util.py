@@ -105,7 +105,12 @@ def test_check_cpu_util_unix() -> None:
             100,
             100,
             (13, 23),
-            [],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="my_core is under high load for: 35 seconds (warn/crit at 13 seconds/23 seconds)",
+                ),
+            ],
             id="at threshold",
         ),
         pytest.param(

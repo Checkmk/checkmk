@@ -561,6 +561,14 @@ run_purely_synchronous_sections() {
     elif [ -x /usr/sbin/ssmtp ]; then
         echo '<<<postfix_mailq>>>'
         mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
+    elif [ -x /usr/libexec/dma ]; then
+        # Check status of DragonFly BSD Mail Agent (dma)
+        echo '<<<postfix_mailq>>>'
+        /usr/libexec/dma -bp | tail -n 7
+        dma_count=$(/usr/libexec/dma -bp | grep "^ID" | wc -l)
+        if [ "${dma_count}" -gt 0 ]; then
+            echo "${dma_count} Requests."
+        fi
     fi
 
     # Check status of qmail mailqueue

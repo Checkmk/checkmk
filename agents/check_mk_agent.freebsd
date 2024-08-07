@@ -574,7 +574,7 @@ run_purely_synchronous_sections() {
 
     # Multipathing is supported in FreeBSD by now
     # http://www.mywushublog.com/2010/06/freebsd-and-multipath/
-    if kldstat -v | grep g_multipath >/dev/null; then
+    if kldstat -m g_multipath -q; then
         echo '<<<freebsd_multipath>>>'
         gmultipath status | grep -v ^Name
     fi

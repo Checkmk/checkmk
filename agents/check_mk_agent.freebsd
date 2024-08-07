@@ -145,8 +145,8 @@ set_default_paths() {
     # under multiple directories.
     # Will be ignored if MK_INSTALLDIR is already set and not empty.
     : "${MK_LIBDIR:="/usr/local/lib/check_mk_agent"}"
-    : "${MK_CONFDIR:="/etc/check_mk"}"
-    : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
+    : "${MK_CONFDIR:="/usr/local/etc/check_mk"}"
+    : "${MK_VARDIR:="/var/db/check_mk_agent"}"
     : "${MK_LOGDIR:="/var/log/check_mk_agent"}"
     : "${MK_BIN:="/usr/bin"}"
 }
@@ -154,7 +154,7 @@ set_default_paths() {
 preamble_1() {
     # Make sure locally installed binaries are found
     # Only add binaries if they are not already in the path! If you append to path in a loop the process will
-    # eventually each the 128k size limit for the environment and become a zombie process. See execve manpage.
+    # eventually reach the 128k size limit for the environment and become a zombie process. See execve manpage.
     [ "${PATH#*"/usr/local/bin"}" != "${PATH}" ] || PATH="${PATH}:/usr/local/bin"
     [ "${PATH#*"/usr/local/sbin"}" != "${PATH}" ] || PATH="${PATH}:/usr/local/sbin"
     [ -d "/var/qmail/bin" ] && { [ "${PATH#*"/var/qmail/bin"}" != "${PATH}" ] || PATH="${PATH}:/var/qmail/bin"; }

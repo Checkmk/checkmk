@@ -12,7 +12,6 @@ RABBITMQ_ENABLED_PLUGINS_FILE="${OMD_ROOT}/etc/rabbitmq/enabled_plugins"
 RABBITMQ_DIST_PORT="${CONFIG_RABBITMQ_DIST_PORT:?}"
 EXECUTE="${OMD_ROOT}/bin/rabbitmq-server"
 
-
 getpid() {
     cat "${PIDFILE}" 2>/dev/null
 }

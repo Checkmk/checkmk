@@ -169,7 +169,6 @@ check_info["azure_agent_info"] = LegacyCheckDefinition(
     check_default_parameters={
         "warning_levels": (1, 10),
         "exception_levels": (1, 1),
-        "remaining_reads_levels_lower": (125, 50),
         "remaining_reads_unknown_state": 1,
     },
 )

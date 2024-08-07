@@ -69,8 +69,8 @@ def _parameter_valuespec_azure_agent_info():
                 Tuple(
                     title=_("Lower levels for remaining API reads"),
                     elements=[
-                        Integer(title=_("Warning below"), default_value=6000),
-                        Integer(title=_("Critical below"), default_value=3000),
+                        Integer(title=_("Warning below")),
+                        Integer(title=_("Critical below")),
                     ],
                 ),
             ),

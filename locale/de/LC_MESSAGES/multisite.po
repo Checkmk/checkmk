@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-08-05 23:11+0000\n"
+"PO-Revision-Date: 2024-08-06 17:51+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -42504,7 +42504,6 @@ msgstr "Ping Timeout"
 msgid "Placeholder VMs"
 msgstr "Platzhalter-VMs"
 
-#, fuzzy
 msgid ""
 "Placeholder VMs are created by the Site Recovery Manager(SRM) and act as "
 "backup virtual machines in case the default VM is unable to start. This "
@@ -43820,7 +43819,6 @@ msgstr "Prozesserkennung (nur SNMP)"
 msgid "Process handles"
 msgstr "Prozesshandles"
 
-#, fuzzy
 msgid "Process match textual description or path of process"
 msgstr "Abgleich der textuellen Beschreibung oder Prozesspfad verarbeiten"
 
@@ -43836,20 +43834,17 @@ msgstr "Abgleich von Prozessnamen"
 msgid "Process new logfiles from the beginning"
 msgstr "Neue Logdateien von Anfang an verarbeiten"
 
-#, fuzzy
 msgid "Process path matching"
 msgstr "Abgleich von Prozesspfaden"
 
 msgid "Process preexisting log messages"
 msgstr "Bereits existierende Mitteilungen verarbeiten"
 
-#, fuzzy
 msgid "Process runtime"
 msgstr "Prozesslaufzeit"
 
-#, fuzzy
 msgid "Process status matching"
-msgstr "Mit Prozessstatus abgleichen"
+msgstr "Prozessstatus abgleichen"
 
 msgid "Process stored SNMP walks with agent simulator"
 msgstr "Verarbeite gespeicherte SNMP Walks mit dem Agentensimulator"
@@ -43870,7 +43865,6 @@ msgstr "Bearbeitung der ersten Instanz %s"
 msgid "Processing of incoming events"
 msgstr "Verarbeitung von eingehenden Ereignissen"
 
-#, fuzzy
 msgid "Processing of piggybacked host data"
 msgstr "Verarbeitung von Piggybacked-Host-Daten"
 
@@ -43884,17 +43878,14 @@ msgstr "Bearbeitungszeit pro Nachricht"
 msgid "Processor"
 msgstr "Prozessor"
 
-#, fuzzy
 msgid "Processor entitled capacity"
-msgstr "Berechtigte Prozessor Kapazität"
+msgstr "Berechtigte Prozessor-Kapazität"
 
-#, fuzzy
 msgid "Processor implementation mode"
 msgstr "Prozessor-Implementierungsmodus"
 
-#, fuzzy
 msgid "Processor max. capacity"
-msgstr "Prozessor Max. Kapazität"
+msgstr "Prozessor max. Kapazität"
 
 msgid "Product"
 msgstr "Produkt"
@@ -44050,9 +44041,8 @@ msgstr "Bereitgestellter Speicherplatz"
 msgid "Provisioning Levels"
 msgstr "Schwellen für Provisionierung"
 
-#, fuzzy
 msgid "Provisioning levels"
-msgstr "Schwellen für Provisionierung"
+msgstr "Level für Provisionierung"
 
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
@@ -44209,7 +44199,6 @@ msgstr "Python-Version"
 msgid "Python agent plug-in execution (UNIX)"
 msgstr "Python Agent Plugin Ausführung (UNIX)"
 
-#, fuzzy
 msgid ""
 "Python or YAML file to read variables from. (<a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
@@ -44286,7 +44275,6 @@ msgstr "Abfrage von Elasticsearch Logs"
 msgid "Query or SQL statement"
 msgstr "Query oder SQL-Anfrage"
 
-#, fuzzy
 msgid "Query time limit"
 msgstr "Zeitbegrenzung für Abfrage"
 
@@ -44317,7 +44305,6 @@ msgstr "Warteschlangeninfo"
 msgid "Queue length"
 msgstr "Länge der Warteschlange"
 
-#, fuzzy
 msgid "Queue manager name"
 msgstr "Name des Warteschlangenmanagers"
 
@@ -44489,7 +44476,6 @@ msgstr "REST Endpunkt-URL"
 msgid "REWRITE"
 msgstr "UMSCHREIBEN"
 
-#, fuzzy
 msgid "RMAN backups"
 msgstr "RMAN Backups"
 
@@ -44502,7 +44488,6 @@ msgstr "RMON-Statistik"
 msgid "RPC Backlog"
 msgstr "RPC-Backlog"
 
-#, fuzzy
 msgid "RPC backlog"
 msgstr "RPC-Backlog"
 
@@ -44548,7 +44533,6 @@ msgstr ""
 "oder Jahr spezifizieren, sind dynamisch auf die entsprechenden "
 "Kalenderzeiträume zutreffend."
 
-#, fuzzy
 msgid "RRD overflows rate"
 msgstr "RRD Überlaufrate"
 
@@ -44713,7 +44697,6 @@ msgstr "Rate des Verlusts von Leistungsdaten zu InfluxDB"
 msgid "Rate of performance data loss for RRD"
 msgstr "Rate des Verlusts von Leistungsdaten zu RRD"
 
-#, fuzzy
 msgid "Rate of performance data loss for carbon"
 msgstr "Rate des Verlusts von Leistungsdaten zu Carbon"
 
@@ -44756,16 +44739,14 @@ msgstr "Lesezugriff auf alle Module"
 msgid "Read and written blocks"
 msgstr "Gelesene und geschriebene Blöcke"
 
-#, fuzzy
 msgid "Read average RTT (ms)"
-msgstr "Mittelwert von RTT lesen (ms)"
+msgstr "Mittelwert von RTT Lesezugriffen (ms)"
 
 msgid "Read average exe"
 msgstr "Durchschnittliche Leseausführungszeit (EXE)"
 
-#, fuzzy
 msgid "Read average executions (ms)"
-msgstr "Lesen der Ausführungen im Durchnitt (ms)"
+msgstr "Mittelwert von Lese-Ausführungen (ms)"
 
 msgid "Read average rtt"
 msgstr "Durchschnittliche Leseumlaufzeit (RTT)"
@@ -44779,7 +44760,6 @@ msgstr "Lese Bytes pro Operation"
 msgid "Read capacity"
 msgstr "Lesekapazitätseinheiten"
 
-#, fuzzy
 msgid "Read capacity units"
 msgstr "Lesekapazitätseinheiten"
 
@@ -44802,13 +44782,11 @@ msgstr "Schreibschutz"
 msgid "Read operations"
 msgstr "Lesezugriffe"
 
-#, fuzzy
 msgid "Read operations /s"
 msgstr "Lesezugriffe pro Sekunde"
 
-#, fuzzy
 msgid "Read queue-length"
-msgstr "Warteschlangenlänge lesen"
+msgstr "Länge der Lese-Warteschlange"
 
 msgid "Read recovery latency"
 msgstr "Recovery-Leselatenz"
@@ -44819,9 +44797,8 @@ msgstr "Replikat pro Zentralinstanz lesen"
 msgid "Read retransmission"
 msgstr "Leseretransmission"
 
-#, fuzzy
 msgid "Read retransmissions"
-msgstr "Leseretransmission"
+msgstr "Lese-Retransmission"
 
 msgid "Read size per operation"
 msgstr "Lesegröße pro Operation"
@@ -45021,13 +44998,11 @@ msgstr "Wiederherstellen"
 msgid "Recovery Services Vault"
 msgstr "Recovery Services-Tresor"
 
-#, fuzzy
 msgid "Recovery area"
-msgstr "Recovery Area"
+msgstr "Recovery-Bereich"
 
-#, fuzzy
 msgid "Recovery status"
-msgstr "Recovery Status"
+msgstr "Recovery-Status"
 
 msgid "Recurring"
 msgstr "Wiederkehren"
@@ -45273,7 +45248,6 @@ msgstr "Registrierte Telefone"
 msgid "Registration and fallback"
 msgstr "Registrierung und Fallback"
 
-#, fuzzy
 msgid "Registration state"
 msgstr "Registrierungsstatus"
 
@@ -45419,11 +45393,9 @@ msgstr "Relativer Pfad zu robot.yaml"
 msgid "Relative path to test suite file or folder"
 msgstr "Relativer Pfad zu Test-Suite-Datei oder -Ordner"
 
-#, fuzzy
 msgid "Relative time of alert"
-msgstr "Relative Zeitpunkt des Alarms"
+msgstr "Relativer Zeitpunkt des Alarms"
 
-#, fuzzy
 msgid "Relay log size"
 msgstr "Relay Logdateigröße"
 
@@ -45475,7 +45447,6 @@ msgstr "Verbleibende Tage bis zum Ablauf der SLES-Lizenz"
 msgid "Remaining days until the Windows license expires"
 msgstr "Verbleibende Tage bis zum Ablauf der Windows-Lizenz"
 
-#, fuzzy
 msgid "Remaining reads"
 msgstr "Verbleibende Leseoperationen"
 
@@ -46175,9 +46146,8 @@ msgstr "Anforderungsmetriken"
 msgid "Request rate"
 msgstr "Anfragerate"
 
-#, fuzzy
 msgid "Request too large"
-msgstr "Anfragerate"
+msgstr "zu große Anfrage"
 
 msgid "Request transfer rate"
 msgstr "Übertragungsrate abfragen"
@@ -46198,7 +46168,6 @@ msgstr ""
 "Fordert Daten von einem Bazel Remote Cache Instanz Metrics Endpunkt mit "
 "Version v2.4.1 oder höher an"
 
-#, fuzzy
 msgid "Requests data from a Jenkins instance."
 msgstr "Fordert Daten von einer Jenkins-Instanz an."
 
@@ -46215,7 +46184,6 @@ msgstr ""
 "Fordert Daten von der API von IvantiNeurons for MDM (ehemals Mobileiron "
 "Cloud) an und gibt einen Piggyback-Host pro zurückgegebenem Gerät aus."
 
-#, fuzzy
 msgid "Requests in processing"
 msgstr "Aktuell bearbeitete Anfragen"
 
@@ -46289,9 +46257,8 @@ msgstr "Reseller"
 msgid "Reserved DB instances"
 msgstr "Reservierte DB-Instanzen"
 
-#, fuzzy
 msgid "Reserved size"
-msgstr "Reservierter Platz"
+msgstr "Reservierte Größe"
 
 msgid "Reserved space"
 msgstr "Reservierter Platz"
@@ -46366,9 +46333,8 @@ msgstr "Verhältnis der residenten Elemente"
 msgid "Resident memory averaging"
 msgstr "Durchschnittlicher residenter Speicher"
 
-#, fuzzy
 msgid "Resident memory size"
-msgstr "Auslastung des residenten Speichers"
+msgstr "Größe des residenten Speichers"
 
 msgid "Resident memory usage"
 msgstr "Auslastung des residenten Speichers"
@@ -46741,9 +46707,8 @@ msgstr "Änderungen rückgängig machen"
 msgid "Revert changes?"
 msgstr "Änderungen rückgängig machen?"
 
-#, fuzzy
 msgid "Revert foreign changes"
-msgstr "Aktiviere fremde Änderungen"
+msgstr "Verwerfe fremde Änderungen"
 
 msgid "Revolutions per minute"
 msgstr "Umdrehungen pro Minute"

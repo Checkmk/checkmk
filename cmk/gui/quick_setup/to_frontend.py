@@ -687,4 +687,8 @@ def create_and_save_special_agent_bundle(
     )
     # config sync
     # service discovery "fix_all" and wait for job to finish
-    return makeuri_contextless(request, [("mode", ModeActivateChanges.name())])
+    return makeuri_contextless(
+        request,
+        [("mode", ModeActivateChanges.name())],
+        filename="wato.py",
+    )

@@ -9,6 +9,9 @@ from livestatus import LivestatusResponse
 
 from cmk.gui import sites, visuals
 from cmk.gui.exceptions import MKMissingDataError
+from cmk.gui.graphing._legacy import UnitInfo
+from cmk.gui.graphing._metrics import MetricSpec
+from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName, VisualContext
@@ -80,10 +83,22 @@ def create_service_view_url(context):
     )
 
 
-def purge_metric_for_js(metric):
+def purge_metric_spec_for_js(metric_spec: MetricSpec) -> dict[str, object]:
+    return {"bounds": {}} | _purge_unit_info_for_js(metric_spec.unit_info)
+
+
+def purge_translated_metric_for_js(translated_metric: TranslatedMetric) -> dict[str, object]:
+    return {"bounds": translated_metric.scalar} | _purge_unit_info_for_js(
+        translated_metric.unit_info
+    )
+
+
+def _purge_unit_info_for_js(unit_info: UnitInfo) -> dict[str, object]:
     return {
-        "bounds": metric.get("scalar", {}),
-        "unit": {k: v for k, v in metric["unit"].items() if k in ["js_render", "stepping"]},
+        "unit": {
+            "js_render": unit_info.js_render,
+            "stepping": unit_info.stepping,
+        }
     }
 
 

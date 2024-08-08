@@ -265,7 +265,7 @@ def _create_periodic_service_discovery_rule(test_site_update: Site) -> Iterator[
     test_site_update.openapi.activate_changes_and_wait_for_completion()
 
 
-@pytest.fixture(name="dcd_connector", scope="function")
+@pytest.fixture(name="dcd_connector", scope="session")
 def _dcd_connector(test_site: Site) -> Iterator[None]:
     if checks.config.piggyback:
         logger.info("Creating a DCD connection for piggyback hosts...")

@@ -19,7 +19,7 @@ async fn main() {
             }
         }
     } else {
-        display_and_log(&result.err().unwrap());
+        display_and_log(result.err().unwrap());
         std::process::exit(1);
     }
 }

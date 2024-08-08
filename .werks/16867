@@ -1,0 +1,15 @@
+Title: azure: Remove unnecessary 'metric not found' errors
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1723131636
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+When querying metrics, Azure agent was reporting each missing metric in the
+details of the 'Azure Agent Info' service. This didn't influence the status
+of the service but still implied an error.
+
+It was misleading because some metrics aren't defined in some types
+of resources. Now, those metrics are optional and won't cause an error.

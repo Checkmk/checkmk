@@ -197,6 +197,22 @@ ALL_METRICS: dict[str, list[tuple]] = {
     ],
 }
 
+OPTIONAL_METRICS: Mapping[str, Sequence[str]] = {
+    "Microsoft.Sql/servers/databases": [
+        "storage_percent",
+        "deadlock",
+        "dtu_consumption_percent",
+    ],
+    "Microsoft.DBforMySQL/servers": ["seconds_behind_master"],
+    "Microsoft.DBforMySQL/flexibleServers": ["replication_lag"],
+    "Microsoft.DBforPostgreSQL/servers": ["pg_replica_log_delay_in_seconds"],
+    "Microsoft.Network/loadBalancers": ["AllocatedSnatPorts", "UsedSnatPorts"],
+    "Microsoft.Compute/virtualMachines": [
+        "CPU Credits Consumed",
+        "CPU Credits Remaining",
+    ],
+}
+
 
 def parse_arguments(argv: Sequence[str]) -> Args:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -1279,7 +1295,7 @@ class MetricCache(DataCache):
         return True
 
     def get_live_data(self, *args: Any) -> Any:
-        mgmt_client, resource_id, err = args
+        mgmt_client, resource_id, resource_type, err = args
         metricnames, interval, aggregation, filter_ = self.metric_definition
 
         raw_metrics = mgmt_client.metrics(
@@ -1297,7 +1313,11 @@ class MetricCache(DataCache):
             if parsed_metric is not None:
                 metrics.append(parsed_metric)
             else:
-                msg = "metric not found: {} ({})".format(raw_metric["name"]["value"], aggregation)
+                metric_name = raw_metric["name"]["value"]
+                if metric_name in OPTIONAL_METRICS.get(resource_type, []):
+                    continue
+
+                msg = "metric not found: {} ({})".format(metric_name, aggregation)
                 err.add("info", resource_id, msg)
                 LOGGER.info(msg)
 
@@ -1347,7 +1367,11 @@ def gather_metrics(mgmt_client, resource, debug=False):
         cache = MetricCache(resource, metric_def, NOW, debug=debug)
         try:
             resource.metrics += cache.get_data(
-                mgmt_client, resource.info["id"], err, use_cache=cache.cache_interval > 60
+                mgmt_client,
+                resource.info["id"],
+                resource.info["type"],
+                err,
+                use_cache=cache.cache_interval > 60,
             )
         except ApiError as exc:
             if debug:

@@ -4,14 +4,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Library to connect to the message broker"""
 
-from ._config import cacert_file, cert_file, get_local_port, key_file
+from ._config import (
+    BrokerCertificates,
+    cacert_file,
+    cert_file,
+    get_local_port,
+    key_file,
+    multisite_cacert_file,
+    multisite_cert_file,
+    multisite_key_file,
+    TLS_PATH_CUSTOMERS,
+)
 from ._connection import Channel, Connection
 
 __all__ = [
-    "get_local_port",
+    "BrokerCertificates",
     "cacert_file",
     "cert_file",
+    "get_local_port",
     "key_file",
     "Channel",
     "Connection",
+    "multisite_cacert_file",
+    "multisite_cert_file",
+    "multisite_key_file",
+    "TLS_PATH_CUSTOMERS",
 ]

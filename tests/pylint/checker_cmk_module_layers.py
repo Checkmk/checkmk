@@ -80,6 +80,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported=imported, component=Component("cmk.rulesets")),
             _in_component(imported=imported, component=Component("cmk.server_side_calls")),
             _in_component(imported=imported, component=Component("cmk.werks")),
+            _in_component(imported=imported, component=Component("cmk.messaging")),
             _in_component(imported=imported, component=Component("cmk.mkp_tool")),
             _in_component(imported=imported, component=Component("cmk.graphing")),
             _in_component(imported=imported, component=Component("cmk.trace")),
@@ -651,6 +652,7 @@ _COMPONENTS = (
     (Component("cmk.gui.cme"), _allow_for_gui_cme),
     (Component("cmk.gui"), _allow_for_gui),
     (Component("cmk.ec"), _is_default_allowed_import),
+    (Component("cmk.messaging"), _allow_for_gui),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.piggyback_hub"), _allow_for_cmk_piggyback_hub),
     (

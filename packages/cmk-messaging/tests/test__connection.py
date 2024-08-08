@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from cmk.messaging import Channel
 
 
-class Message(BaseModel):  # type: ignore[misc]
+class Message(BaseModel):
     """Test model for messages"""
 
     text: str

@@ -26,9 +26,11 @@ py_version = 312
 explicit_package_bases = true
 packages = ["cmk", "tests"]
 strict = true
+# my-py warns about decorated functions containing type "Any"
+# but they come from pydantic base classes:
+disallow_any_decorated = false
 # Miscellaneous stuff not in --strict
-disallow_any_decorated = true
-disallow_any_explicit = true
+disallow_any_explicit = false
 disallow_any_expr = true
 disallow_any_generics = true
 disallow_any_unimported = true

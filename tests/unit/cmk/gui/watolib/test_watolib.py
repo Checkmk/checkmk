@@ -55,6 +55,7 @@ def test_registered_automation_commands() -> None:
         "fetch-agent-output-get-file",
         "fetch-agent-output-get-status",
         "fetch-agent-output-start",
+        "store-broker-certs",
         "network-scan",
         "ping",
         "get-config-sync-state",

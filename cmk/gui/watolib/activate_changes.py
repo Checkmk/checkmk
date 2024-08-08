@@ -84,7 +84,7 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.watolib import backup_snapshots, config_domain_name
+from cmk.gui.watolib import backup_snapshots, broker_certificates, config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.config_domain_name import (
@@ -1299,6 +1299,20 @@ class ActivateChangesManager(ActivateChanges):
         for key in self.info_keys:
             setattr(self, key, from_file[key])
 
+    def _broker_certificates(self):
+        local_broker_ca = broker_certificates.generate_local_broker_ca()
+        need_local_broker_update = False
+        for site_id, settings in self.dirty_sites():
+            # only remote
+            if site_id == omd_site():
+                continue
+            need_local_broker_update |= broker_certificates.generate_remote_broker_certificate(
+                local_broker_ca, site_id, settings
+            )
+
+        if need_local_broker_update:
+            broker_certificates.dump_central_site_broker_certificates()
+
     # Creates the snapshot and starts the single site sync processes. In case these
     # steps could not be started, exceptions are raised and have to be handled by
     # the caller.
@@ -1387,6 +1401,7 @@ class ActivateChangesManager(ActivateChanges):
         self._save_activation()
 
         self._start_activation()
+        self._broker_certificates()
 
         return self._activation_id
 
@@ -1618,7 +1633,9 @@ class ActivateChangesManager(ActivateChanges):
         logger.debug("Finished all snapshots")
 
     def _get_site_snapshot_settings(
-        self, activation_id: ActivationId, sites: list[SiteId]
+        self,
+        activation_id: ActivationId,
+        sites: list[SiteId],
     ) -> dict[SiteId, SnapshotSettings]:
         snapshot_settings = {}
 

@@ -5,11 +5,12 @@
 """Configuraton values"""
 import ssl
 import subprocess
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
 
 import pika
+from pydantic import BaseModel
 
 if TYPE_CHECKING:
     F = TypeVar("F", bound=Callable[[], int])
@@ -21,6 +22,16 @@ else:
 
 
 _TLS_PATH = ("etc", "rabbitmq", "ssl")
+_TLS_PATH_MULTISITE = (*_TLS_PATH, "multisite")
+TLS_PATH_CUSTOMERS = (*_TLS_PATH_MULTISITE, "customers")
+
+
+class BrokerCertificates(BaseModel):
+    """The certificates for the messaging broker"""
+
+    key: bytes
+    cert: bytes
+    cas: Sequence[bytes]
 
 
 @lru_cache
@@ -42,6 +53,36 @@ def cert_file(omd_root: Path) -> Path:
 def key_file(omd_root: Path) -> Path:
     """Get the path of the local messaging broker key"""
     return omd_root.joinpath(*_TLS_PATH, "key.pem")
+
+
+def multisite_cacert_file(omd_root: Path, customer: str = "") -> Path:
+    """Get the path of the messaging broker ca for a customer"""
+    base_path = (
+        omd_root.joinpath(*TLS_PATH_CUSTOMERS, customer)
+        if customer
+        else omd_root.joinpath(*_TLS_PATH_MULTISITE)
+    )
+    return base_path.joinpath("ca.pem")
+
+
+def multisite_cert_file(omd_root: Path, site: str, customer: str = "") -> Path:
+    """Get the path of the messaging broker certificate for a customer's site"""
+    base_path = (
+        omd_root.joinpath(*TLS_PATH_CUSTOMERS, customer)
+        if customer
+        else omd_root.joinpath(*_TLS_PATH_MULTISITE)
+    )
+    return base_path.joinpath(f"{site}_cert.pem")
+
+
+def multisite_key_file(omd_root: Path, site: str, customer: str = "") -> Path:
+    """Get the path of the local messaging broker key"""
+    base_path = (
+        omd_root.joinpath(*TLS_PATH_CUSTOMERS, customer)
+        if customer
+        else omd_root.joinpath(*_TLS_PATH_MULTISITE)
+    )
+    return base_path.joinpath(f"{site}_key.pem")
 
 
 def make_connection_params(omd_root: Path, server: str, port: int) -> pika.ConnectionParameters:

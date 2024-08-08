@@ -5,7 +5,7 @@
 import typing
 
 from cmk.rulesets.v1._localize import Message
-from cmk.rulesets.v1.form_specs.validators import ValidationError
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, ValidationError
 
 T = typing.TypeVar("T")
 
@@ -60,3 +60,10 @@ class IsFloat:
     def __call__(self, value: typing.Any) -> None:
         if not isinstance(value, (float, int)):
             raise ValidationError(self.error_msg)
+
+
+class NotEmpty(LengthInRange):
+    def __init__(self):
+        super().__init__(
+            min_value=1, max_value=None, error_msg=Message("An empty value is not allowed here")
+        )

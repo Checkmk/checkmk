@@ -9,7 +9,10 @@ import typing
 from collections.abc import Callable
 from typing import Any, Literal, NamedTuple
 
+from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
+
+tracer = trace.get_tracer()
 
 
 class Hook(NamedTuple):
@@ -72,15 +75,17 @@ def registered(name: str) -> bool:
 
 
 def call(name: str, *args: Any) -> None:
-    n = 0
-    for hook in hooks.get(name, []):
-        n += 1
-        try:
-            hook.handler(*args)
-        except Exception as e:
-            t, v, tb = sys.exc_info()
-            msg = "".join(traceback.format_exception(t, v, tb, None))
-            raise MKGeneralException(msg) from e
+    if not (registered_hooks := hooks.get(name, [])):
+        return
+
+    with tracer.start_as_current_span(f"hook_call[{name}]"):
+        for hook in registered_hooks:
+            try:
+                hook.handler(*args)
+            except Exception as e:
+                t, v, tb = sys.exc_info()
+                msg = "".join(traceback.format_exception(t, v, tb, None))
+                raise MKGeneralException(msg) from e
 
 
 ClearEvent = Literal[

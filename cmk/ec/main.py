@@ -752,8 +752,11 @@ class EventServer(ECServerThread):
         try:
             if varbinds_and_ipaddress := self._snmp_trap_parser(data, address):
                 yield create_event_from_trap(varbinds_and_ipaddress[0], varbinds_and_ipaddress[1])
-        except Exception:
-            self._logger.exception("exception while handling an SNMP trap, skipping this one")
+        except Exception as e:
+            # NOTE: SNMPTrapParser._handle_unauthenticated_snmptrap() logs more details about what
+            # went wrong on "verbose" logging level, anyway. We do not log on "info" here to avoid
+            # possible log spam from a misconfigured/buggy device.
+            self._logger.debug("skipping unparsable SNMP trap, reason: %s", e)
 
     def process_potential_event_instrumented(self, events: Iterable[Event]) -> None:
         """

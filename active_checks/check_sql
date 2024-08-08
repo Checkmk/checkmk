@@ -282,6 +282,19 @@ def oracle_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> A
     except ImportError as exc:
         bail_out(3, "%s. Please install it via 'pip install oracledb'." % exc)
 
+    try:
+        oracledb.init_oracle_client()
+    except oracledb.DatabaseError as dbe:
+        # this seems to be the official way to differentiate between exceptions:
+        # https://python-oracledb.readthedocs.io/en/latest/user_guide/exception_handling.html#exception
+        if dbe.args[0].full_code == "DPI-1047":
+            LOG.info(
+                "Could not activate thick mode, will continue and use thin mode instead. "
+                "https://python-oracledb.readthedocs.io/en/latest/user_guide/initialization.html#initializing-python-oracledb"
+            )
+        else:
+            raise
+
     cstring = f"{user}/{pwd}@{host}:{port}/{db_name}"
     return oracledb.connect(cstring)
 

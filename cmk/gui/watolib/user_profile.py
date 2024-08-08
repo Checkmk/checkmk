@@ -5,10 +5,11 @@
 
 import ast
 import time
+from collections.abc import Mapping
 from datetime import datetime
 from multiprocessing import TimeoutError as mp_TimeoutError
 from multiprocessing.pool import ThreadPool
-from typing import Any, NamedTuple
+from typing import Any, cast, Literal, NamedTuple
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -25,6 +26,7 @@ from cmk.gui.site_config import (
     is_replication_enabled,
     is_wato_slave_site,
 )
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -172,7 +174,9 @@ def handle_ldap_sync_finished(logger, profiles_to_synchronize, changes):
         add_change("edit-users", "<br>".join(changes), add_user=False)
 
 
-def push_user_profiles_to_site_transitional_wrapper(site, user_profiles):
+def push_user_profiles_to_site_transitional_wrapper(
+    site: SiteConfiguration, user_profiles: Mapping[UserId, UserSpec]
+) -> Literal[True] | str:
     try:
         return push_user_profiles_to_site(site, user_profiles)
     except MKAutomationException as e:
@@ -224,21 +228,24 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
     return response
 
 
-def push_user_profiles_to_site(site, user_profiles):
-    def _serialize(user_profiles):
+def push_user_profiles_to_site(
+    site: SiteConfiguration, user_profiles: Mapping[UserId, UserSpec]
+) -> Literal[True]:
+    def _serialize(user_profiles: Mapping[UserId, UserSpec]) -> Mapping[UserId, UserSpec]:
         """Do not synchronize user session information"""
         return {
-            user_id: {k: v for k, v in profile.items() if k != "session_info"}
+            user_id: cast(UserSpec, {k: v for k, v in profile.items() if k != "session_info"})
             for user_id, profile in user_profiles.items()
         }
 
-    return do_remote_automation(
+    do_remote_automation(
         site, "push-profiles", [("profiles", repr(_serialize(user_profiles)))], timeout=60
     )
+    return True
 
 
 class PushUserProfilesRequest(NamedTuple):
-    user_profiles: dict
+    user_profiles: Mapping[UserId, UserSpec]
 
 
 class PushUserProfilesToSite(AutomationCommand):
@@ -250,7 +257,7 @@ class PushUserProfilesToSite(AutomationCommand):
             ast.literal_eval(request.get_str_input_mandatory("profiles"))
         )
 
-    def execute(self, api_request):
+    def execute(self, api_request: PushUserProfilesRequest) -> Literal[True]:
         user_profiles = api_request.user_profiles
 
         if not user_profiles:

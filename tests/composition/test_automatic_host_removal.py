@@ -17,32 +17,37 @@ def test_automatic_host_removal(
     central_site: Site,
     remote_site: Site,
 ) -> None:
-    central_site.openapi.create_host(
-        hostname=(unresolvable_host_central := "not-dns-resovable-central"),
-        attributes={"site": central_site.id},
-    )
-    central_site.openapi.create_host(
-        hostname=(unresolvable_host_remote := "not-dns-resovable-remote"),
-        attributes={"site": remote_site.id},
-    )
-    central_site.openapi.create_rule(
+    rule_id = central_site.openapi.create_rule(
         ruleset_name="automatic_host_removal",
         value=("enabled", {"checkmk_service_crit": 1}),
     )
-    central_site.openapi.activate_changes_and_wait_for_completion()
+    try:
+        central_site.openapi.create_host(
+            hostname=(unresolvable_host_central := "not-dns-resovable-central"),
+            attributes={"site": central_site.id},
+        )
+        central_site.openapi.create_host(
+            hostname=(unresolvable_host_remote := "not-dns-resovable-remote"),
+            attributes={"site": remote_site.id},
+        )
+        central_site.openapi.activate_changes_and_wait_for_completion()
 
-    def _host_removal_done() -> bool:
-        hostnames = {
-            _["id"]
-            for _ in central_site.openapi.get("domain-types/host_config/collections/all").json()[
-                "value"
-            ]
-        }
-        return not hostnames.intersection({unresolvable_host_central, unresolvable_host_remote})
+        def _host_removal_done() -> bool:
+            hostnames = {
+                _["id"]
+                for _ in central_site.openapi.get(
+                    "domain-types/host_config/collections/all"
+                ).json()["value"]
+            }
+            return not hostnames.intersection({unresolvable_host_central, unresolvable_host_remote})
 
-    logger.info("Waiting for hosts to be removed")
-    wait_until(
-        _host_removal_done,
-        timeout=150,
-        interval=20,
-    )
+        logger.info("Waiting for hosts to be removed")
+        wait_until(
+            _host_removal_done,
+            timeout=150,
+            interval=20,
+        )
+
+    finally:
+        central_site.openapi.delete_rule(rule_id=rule_id)
+        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)

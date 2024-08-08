@@ -28,23 +28,27 @@ def _test_register_workflow(
     hostname: HostName,
     host_attributes: Mapping[str, object],
 ) -> None:
-    site.openapi.create_host(hostname=hostname, attributes=dict(host_attributes))
-    site.openapi.activate_changes_and_wait_for_completion()
+    try:
+        site.openapi.create_host(hostname=hostname, attributes=dict(host_attributes))
+        site.openapi.activate_changes_and_wait_for_completion()
 
-    register_controller(agent_ctl, site, hostname)
+        register_controller(agent_ctl, site, hostname)
 
-    logger.info("Waiting for controller to open TCP socket or push data")
-    wait_until_host_receives_data(site, hostname)
+        logger.info("Waiting for controller to open TCP socket or push data")
+        wait_until_host_receives_data(site, hostname)
 
-    site.openapi.discover_services_and_wait_for_completion(hostname)
-    site.openapi.activate_changes_and_wait_for_completion()
+        site.openapi.discover_services_and_wait_for_completion(hostname)
+        site.openapi.activate_changes_and_wait_for_completion()
 
-    wait_until_host_has_services(
-        site,
-        hostname,
-        timeout=30,
-        interval=10,
-    )
+        wait_until_host_has_services(
+            site,
+            hostname,
+            timeout=30,
+            interval=10,
+        )
+    finally:
+        site.openapi.delete_host(hostname=hostname)
+        site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
 
 @skip_if_not_containerized

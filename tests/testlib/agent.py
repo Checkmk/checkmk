@@ -195,14 +195,14 @@ def controller_status_json(controller_path: Path) -> Mapping[str, Any]:
 
 def controller_connection_json(
     controller_status: Mapping[str, Any], site: Site
-) -> Mapping[str, Any] | None:
+) -> Mapping[str, Any]:
     return next(
         (
             _
             for _ in controller_status["connections"]
             if _["site_id"] == f"{site.http_address}/{site.id}"
         ),
-        None,
+        {},
     )
 
 

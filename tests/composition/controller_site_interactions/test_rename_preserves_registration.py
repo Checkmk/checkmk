@@ -6,7 +6,11 @@
 from contextlib import suppress
 from pathlib import Path
 
-from tests.testlib.agent import controller_status_json, register_controller
+from tests.testlib.agent import (
+    controller_connection_json,
+    controller_status_json,
+    register_controller,
+)
 from tests.testlib.openapi_session import UnexpectedResponse
 from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
 from tests.testlib.site import Site
@@ -43,10 +47,9 @@ def _test_rename_preserves_registration(
         )
         assert central_site.openapi.get_host(new_hostname) is not None
         controller_status = controller_status_json(agent_ctl)
+        connection_details = controller_connection_json(controller_status, central_site)
         try:
-            assert (
-                HostName(controller_status["connections"][0]["remote"]["hostname"]) == new_hostname
-            )
+            assert HostName(connection_details["remote"]["hostname"]) == new_hostname
         except Exception as e:
             raise Exception(
                 f"Checking if controller sees renaming failed. Status output:\n{controller_status}"
@@ -55,6 +58,7 @@ def _test_rename_preserves_registration(
         with suppress(UnexpectedResponse):
             central_site.openapi.delete_host(hostname)
             central_site.openapi.delete_host(new_hostname)
+        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
 
 @skip_if_not_containerized

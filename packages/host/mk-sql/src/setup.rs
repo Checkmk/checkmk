@@ -23,7 +23,7 @@ pub struct Env {
     /// guaranteed to contain dir or None
     state_dir: Option<PathBuf>,
 
-    ///
+    /// disable caching
     disable_caching: bool,
 }
 

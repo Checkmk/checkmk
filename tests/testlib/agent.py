@@ -126,6 +126,14 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]
 def register_controller(
     ctl_path: Path, site: Site, hostname: HostName, site_address: str | None = None
 ) -> None:
+    # first we delete all registrations to have a sane default state
+    run(
+        [
+            ctl_path.as_posix(),
+            "delete-all",
+        ],
+        sudo=True,
+    )
     run(
         [
             ctl_path.as_posix(),

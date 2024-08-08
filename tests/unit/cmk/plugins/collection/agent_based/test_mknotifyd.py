@@ -28,7 +28,7 @@ from cmk.plugins.collection.agent_based.mknotifyd import (  # Queue,
 INFO_ERROR = [["1571212728"], ["[EX]"], ["Binary file (standard input) matches"]]
 SECTION_ERROR = MkNotifySection(
     timestamp=1571212728.0,
-    sites={"EX": Site(spools={}, connections={})},  #  queues={})},
+    sites={"EX": Site(spools={}, connections={})},
 )
 
 INFO_STANDARD = [

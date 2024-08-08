@@ -185,6 +185,19 @@ def controller_status_json(controller_path: Path) -> Mapping[str, Any]:
     return json.loads(run([controller_path.as_posix(), "status", "--json"], sudo=True).stdout)
 
 
+def controller_connection_json(
+    controller_status: Mapping[str, Any], site: Site
+) -> Mapping[str, Any] | None:
+    return next(
+        (
+            _
+            for _ in controller_status["connections"]
+            if _["site_id"] == f"{site.http_address}/{site.id}"
+        ),
+        None,
+    )
+
+
 def wait_until_host_has_services(
     site: Site,
     hostname: HostName,

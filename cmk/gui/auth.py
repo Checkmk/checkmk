@@ -21,7 +21,6 @@ import cmk.utils.paths
 from cmk.utils import deprecation_warnings
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password
-from cmk.utils.crypto.secrets import Secret
 from cmk.utils.local_secrets import AutomationUserSecret, SiteInternalSecret
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.user import UserId
@@ -37,6 +36,8 @@ from cmk.gui.userdb.session import generate_auth_hash
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent
 from cmk.gui.utils.urls import requested_file_name
+
+from cmk.crypto.secrets import Secret
 
 auth_logger = logger.getChild("auth")
 

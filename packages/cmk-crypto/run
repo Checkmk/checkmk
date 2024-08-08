@@ -195,8 +195,7 @@ main() {
     parse_options "$@"
     test ${RUN_CLEAN} = yes && run_clean
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
-    # TODO: re-enable when tests are moved here
-    false && test ${RUN_UNIT_TESTS} = yes && run_unit_tests
+    test ${RUN_UNIT_TESTS} = yes && run_unit_tests
     test ${RUN_MYPY} = yes && run_mypy
     test ${RUN_PYLINT} = yes && run_pylint
     test ${RUN_BANDIT} = yes && run_bandit

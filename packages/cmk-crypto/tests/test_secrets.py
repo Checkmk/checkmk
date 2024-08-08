@@ -2,10 +2,11 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Test the secrets"""
 
 from pathlib import Path
 
-from cmk.utils.crypto.secrets import LocalSecret, Secret
+from cmk.crypto.secrets import LocalSecret, Secret
 
 
 def test_create_secret_and_hmac(tmp_path: Path) -> None:
@@ -15,6 +16,8 @@ def test_create_secret_and_hmac(tmp_path: Path) -> None:
     my_secret_file.write_bytes(b"my test secret")
 
     class MySecret(LocalSecret):
+        """Mockup"""
+
         path = my_secret_file
 
     secret = MySecret()

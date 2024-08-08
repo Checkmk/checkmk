@@ -9,8 +9,9 @@ import secrets
 from pathlib import Path
 
 from cmk.utils import paths
-from cmk.utils.crypto.secrets import LocalSecret, Secret
 from cmk.utils.user import UserId
+
+from cmk.crypto.secrets import LocalSecret, Secret
 
 
 class AuthenticationSecret(LocalSecret):

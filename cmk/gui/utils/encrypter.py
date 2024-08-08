@@ -7,8 +7,8 @@ import os
 
 from flask import session
 
-from cmk.utils.crypto.secrets import Secret
-from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
+from cmk.crypto.secrets import Secret
+from cmk.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 
 
 class Encrypter:

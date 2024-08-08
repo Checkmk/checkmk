@@ -55,18 +55,6 @@ def test_automation_user_gui(site: Site) -> None:
     session = CMKWebSession(site)
     response = session.get(
         "dashboard.py",
-        params={
-            "_username": username,
-            "_secret": password,
-        },
-    )
-    assert "Dashboard" in response.text
-    assert not session.is_logged_in()
-    assert session.get_auth_cookie() is None
-
-    session = CMKWebSession(site)
-    response = session.get(
-        "dashboard.py",
         auth=(username, password),
     )
     assert "Dashboard" in response.text
@@ -94,18 +82,6 @@ def test_automation_user_rest_api(site: Site) -> None:
     """
     username = "automation"
     password = site.get_automation_secret()
-
-    session = CMKWebSession(site)
-    response = session.get(
-        f"/{site.id}/check_mk/api/1.0/version",
-        params={
-            "_username": username,
-            "_secret": password,
-        },
-    )
-    assert "site" in response.json()
-    assert not session.is_logged_in()
-    assert session.get_auth_cookie() is None
 
     session = CMKWebSession(site)
     response = session.get(
@@ -284,13 +260,6 @@ def test_failed_login_counter_automation(site: Site) -> None:
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             auth=(username, "wrong_password"),
-            expected_code=401,
-        )
-        assert 0 == _get_failed_logins(site, username)
-
-        # deprecated automation login (Werk #16223)
-        session.get(
-            f"/{site.id}/check_mk/api/1.0/version?_username={username}&_secret=wrong_password",
             expected_code=401,
         )
         assert 0 == _get_failed_logins(site, username)

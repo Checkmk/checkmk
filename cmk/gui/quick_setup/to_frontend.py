@@ -34,6 +34,7 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
 from cmk.gui.form_specs.vue.registries import form_spec_registry
 from cmk.gui.form_specs.vue.type_defs import DataOrigin
 from cmk.gui.http import request
+from cmk.gui.i18n import ungettext
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     IncomingStage,
     QuickSetupSaveRedirect,
@@ -345,25 +346,16 @@ def _recap_service_discovery(
     check_preview_entry_by_service_interest, others = _check_preview_entry_by_service_interest(
         services_of_interest, service_discovery_result
     )
-
-    return [
-        ListOfWidgets(
-            items=[
-                *[
-                    Text(
-                        text=f"{len(check_preview_entries)} {service_interest.label}",
-                    )
-                    for service_interest, check_preview_entries in check_preview_entry_by_service_interest.items()
-                ],
-                *[
-                    Text(
-                        text=f"{len(others)} other services",
-                    )
-                ],
-            ],
-            list_type="check",
+    items: list[Widget] = [
+        Text(
+            text=f"{len(check_preview_entries)} {service_interest.label}",
         )
+        for service_interest, check_preview_entries in check_preview_entry_by_service_interest.items()
     ]
+    if len(others) >= 1:
+        items.append(Text(text=ungettext("%s other service", "%s other services", len(others))))
+
+    return [ListOfWidgets(items=items, list_type="check")]
 
 
 def _get_rule_defaults(rulespec_name: str) -> dict[str, object]:

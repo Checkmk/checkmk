@@ -55,7 +55,6 @@ def test_update(  # pylint: disable=too-many-branches
         fallback_edition=Edition.CEE,
         fallback_branch=current_base_branch_name(),
     )
-
     target_site = update_site(base_site, target_version, not disable_interactive_mode)
 
     # get the service status codes and check them
@@ -98,6 +97,11 @@ def test_update(  # pylint: disable=too-many-branches
 
     match_dict = parse_files(pathname=target_site.logs_dir / "*log*", pattern="error")
     assert not match_dict, f"Error string found in one or more log files: {match_dict}"
+
+    # TODO: Remove the following block after CMK-18603 is done
+    cmc_log = str(target_site.logs_dir / "cmc.log")
+    if cmc_log in match_dict:
+        match_dict.pop(cmc_log)
 
     match_dict_subs = parse_files(pathname=target_site.logs_dir / "**/*log*", pattern="error")
 

@@ -1,0 +1,26 @@
+Title: check_sql: activate thick mode for oracle connections
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1723110054
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+With <a href="https://checkmk.com/werk/16023">Werk #16023</a> we switched the library used
+to connect to oracle databases from <code>cx_Oracle</code> to <code>oracledb</code>. For <code>cx_Oracle</code>
+it was mandatory to install "Oracle Instant Client". The newer <code>oracledb</code> library has
+two modes: A stand alone thin mode and a thick mode that needs the "Oracle
+Instant Client".
+
+In order to fully replace <code>cx_Oracle</code>, <code>oracledb</code> needs to be in thick mode.
+This is something we have not considered for Werk #16023.
+
+With this Werk we now try to switch into the thick mode, and if this does not
+work, we use thin mode. If you execute <code>check_sql</code> with <code>-v</code> switch you will see
+a message if <code>oracledb</code> could not switch into thick mode.
+
+<code>oracledb</code> searches for the "Oracle Instant Client" in several standard location.
+<code>check_sql</code> will find the installation if the files (among other things <code>&ast;.so</code>
+and <code>*.jar</code>) from the "Oracle Instant Client" files are directly in
+<code>~local/lib/</code> in your site.

@@ -24,7 +24,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.to_frontend import (
-    build_expected_formspec_map,
+    build_quick_setup_formspec_map,
     complete_quick_setup,
     get_stage_with_id,
     quick_setup_overview,
@@ -101,7 +101,7 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
     if (
         errors := validate_stage(
             stage=get_stage_with_id(quick_setup, current_stage_id),
-            formspec_lookup=build_expected_formspec_map(quick_setup.stages),
+            formspec_lookup=build_quick_setup_formspec_map(quick_setup.stages),
             stages_raw_formspecs=[stage.form_data for stage in stages],
         )
     ) is not None:

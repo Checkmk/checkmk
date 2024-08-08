@@ -397,7 +397,9 @@ def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpe
             yield component
 
 
-def build_expected_formspec_map(stages: Sequence[QuickSetupStage]) -> Mapping[FormSpecId, FormSpec]:
+def build_quick_setup_formspec_map(
+    stages: Sequence[QuickSetupStage],
+) -> Mapping[FormSpecId, FormSpec]:
     return {
         widget.id: cast(FormSpec, widget.form_spec)
         for stage in stages
@@ -513,12 +515,13 @@ def retrieve_next_stage(
     quick_setup: QuickSetup,
     incoming_stages: Sequence[IncomingStage],
 ) -> Stage:
+    # TODO: stage_id dependency should be removed
     current_stage_id = incoming_stages[-1].stage_id
     current_stage = get_stage_with_id(quick_setup, current_stage_id)
 
-    expected_form_spec_map = build_expected_formspec_map(quick_setup.stages)
+    quick_setup_formspec_map = build_quick_setup_formspec_map(quick_setup.stages)
     combined_parsed_form_data_by_stage = [
-        _form_spec_parse([stage.form_data], expected_form_spec_map) for stage in incoming_stages
+        _form_spec_parse([stage.form_data], quick_setup_formspec_map) for stage in incoming_stages
     ]
 
     current_stage_recap = [
@@ -526,7 +529,7 @@ def retrieve_next_stage(
         for recap_callable in current_stage.recap
         for r in recap_callable(
             combined_parsed_form_data_by_stage,
-            expected_form_spec_map,
+            quick_setup_formspec_map,
         )
     ]
 
@@ -565,7 +568,7 @@ def complete_quick_setup(
         redirect_url=quick_setup.save_action(
             _form_spec_parse(
                 [stage.form_data for stage in incoming_stages],
-                build_expected_formspec_map(quick_setup.stages),
+                build_quick_setup_formspec_map(quick_setup.stages),
             )
         )
     )

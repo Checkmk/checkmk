@@ -218,8 +218,9 @@ pub fn get_plain_section_names() -> HashSet<String> {
 impl Section {
     /// Converts entry to Section
     /// - databases:     # name
-    ///   is_async: true    # option
+    ///   is_async: true # option
     ///   disabled: true # option
+    ///
     /// Note: yaml_rust2 represents such entry as a LinkedHashMap
     pub fn from_yaml(entry: &Yaml) -> Result<Self> {
         let mut section = entry

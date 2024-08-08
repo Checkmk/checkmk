@@ -37,7 +37,7 @@ pub struct Args {
     #[arg(long)]
     pub no_spool: bool,
 
-    ///  
+    /// Clean caches
     #[arg(long)]
     pub clean_caches: bool,
 

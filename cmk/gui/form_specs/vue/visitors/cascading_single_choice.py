@@ -15,8 +15,8 @@ from cmk.gui.form_specs.vue.type_defs import (
     Value,
 )
 from cmk.gui.form_specs.vue.utils import (
-    compute_input_hint,
     compute_label,
+    compute_text_input_hint,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -82,7 +82,7 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[
                 help=help_text,
                 elements=vue_elements,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
-                input_hint=compute_input_hint(self.form_spec.prefill),
+                input_hint=compute_text_input_hint(self.form_spec.prefill),
             ),
             (selected_name, selected_value),
         )

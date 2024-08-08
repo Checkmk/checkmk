@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { FormValidation } from '@/components/cmk-form/'
 import type * as FormSpec from '@/vue_formspec_components'
 import { useValidation } from '../utils/validation'
-import { validateValue, type ValidationMessages } from '@/lib/validation'
+import { type ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{
   spec: FormSpec.MultilineText
@@ -11,29 +11,11 @@ const props = defineProps<{
 }>()
 
 const data = defineModel('data', { type: String, required: true })
-const validation = useValidation<string>(data, () => props.backendValidation)
-
-const emit = defineEmits<{
-  (e: 'update:data', value: string): void
-}>()
-
-const value = computed({
-  get(): string {
-    return data.value
-  },
-  set(value: string) {
-    validation.value = []
-    validateValue(value, props.spec.validators!).forEach((error) => {
-      validation.value = [{ message: error, location: [], invalid_value: value }]
-    })
-    emit('update:data', value)
-  }
-})
-
-const placeholder = computed(() => {
-  return props.spec.input_hint || ''
-})
-
+const [validation, value] = useValidation<string>(
+  data,
+  props.spec.validators,
+  () => props.backendValidation
+)
 const style = computed(() => {
   return props.spec.monospaced
     ? {
@@ -51,7 +33,7 @@ const style = computed(() => {
   <textarea
     v-model="value"
     :style="style"
-    :placeholder="placeholder"
+    :placeholder="spec.input_hint || ''"
     rows="20"
     cols="60"
     type="text"

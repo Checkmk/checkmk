@@ -123,13 +123,13 @@ def get_prefill_default(prefill: _PrefillTypes[ModelT]) -> ModelT | EmptyValue:
     return prefill.value
 
 
-def compute_input_hint(prefill: _PrefillTypes[ModelT]) -> ModelT | None | str:
+def compute_text_input_hint(prefill: _PrefillTypes[ModelT]) -> str | None:
     if not isinstance(prefill, InputHint):
         return None
 
     if isinstance(prefill.value, Title):
         return prefill.value.localize(translate_to_current_language)
-    return prefill.value
+    return str(prefill.value)
 
 
 def compute_label(label: Label | None) -> str | None:

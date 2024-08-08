@@ -3,7 +3,7 @@ import type * as FormSpec from '@/vue_formspec_components'
 import CmkFormCascadingSingleChoice from '@/components/cmk-form/container/CmkFormCascadingSingleChoice.vue'
 import { renderFormWithData } from '../cmk-form-helper'
 
-const stringValidators: FormSpec.Validators[] = [
+const stringValidators: FormSpec.Validator[] = [
   {
     type: 'length_in_range',
     min_value: 1,
@@ -95,7 +95,7 @@ test('CmkFormCascadingSingleChoice sets default on switch', async () => {
   const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
   await fireEvent.update(element, 'integerChoice')
 
-  const integerElement = screen.getByRole<HTMLInputElement>('textbox', {
+  const integerElement = screen.getByRole<HTMLInputElement>('spinbutton', {
     name: 'nestedIntegerLabel'
   })
   expect(integerElement.value).toBe('5')

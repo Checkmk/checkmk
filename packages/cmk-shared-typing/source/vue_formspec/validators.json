@@ -74,7 +74,7 @@
         "type"
       ]
     },
-    "validators": {
+    "validator": {
       "discriminator": {
         "propertyName": "type"
       },

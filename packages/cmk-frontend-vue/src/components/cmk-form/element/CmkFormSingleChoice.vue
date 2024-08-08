@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { FormValidation } from '@/components/cmk-form/'
 import type { SingleChoice } from '@/vue_formspec_components'
 import { useValidation } from '../utils/validation'
-import { validateValue, type ValidationMessages } from '@/lib/validation'
+import { type ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{
   spec: SingleChoice
@@ -11,20 +10,11 @@ const props = defineProps<{
 }>()
 
 const data = defineModel('data', { type: String, required: true })
-const validation = useValidation<string>(data, () => props.backendValidation)
-
-const value = computed({
-  get(): string {
-    return data.value
-  },
-  set(value: string) {
-    validation.value = []
-    validateValue(value, props.spec.validators!).forEach((error) => {
-      validation.value = [{ message: error, location: [], invalid_value: value }]
-    })
-    data.value = value
-  }
-})
+const [validation, value] = useValidation<string>(
+  data,
+  props.spec.validators,
+  () => props.backendValidation
+)
 </script>
 
 <template>

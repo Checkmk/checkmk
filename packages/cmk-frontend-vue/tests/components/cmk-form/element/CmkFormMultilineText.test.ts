@@ -3,7 +3,7 @@ import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 import CmkFormMultilineText from '@/components/cmk-form/element/CmkFormMultilineText.vue'
 
-const validators: FormSpec.Validators[] = [
+const validators: FormSpec.Validator[] = [
   {
     type: 'length_in_range',
     min_value: 1,

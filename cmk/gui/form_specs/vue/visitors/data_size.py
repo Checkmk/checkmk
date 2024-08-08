@@ -8,7 +8,7 @@ from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as 
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
 from cmk.gui.form_specs.vue.type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
 from cmk.gui.form_specs.vue.utils import (
-    compute_input_hint,
+    compute_text_input_hint,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -106,7 +106,7 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
         #       However, the backend validation expects a valid integer valid after
         #       the float/string value went through the parse function
         vue_validators = [IsFloat()] + compute_validators(self.form_spec)
-        input_hint = str(compute_input_hint(self.form_spec.prefill))
+        input_hint = str(compute_text_input_hint(self.form_spec.prefill))
         return (
             VueComponents.DataSize(
                 title=title,

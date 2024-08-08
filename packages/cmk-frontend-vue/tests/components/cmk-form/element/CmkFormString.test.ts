@@ -3,7 +3,7 @@ import CmkFormString from '@/components/cmk-form/element/CmkFormString.vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
-const validators: FormSpec.Validators[] = [
+const validators: FormSpec.Validator[] = [
   {
     type: 'length_in_range',
     min_value: 1,

@@ -134,12 +134,12 @@ def _build_value_validation_for_class_with_input_hint(
     ]
     + list(
         _build_value_validation_for_class_with_input_hint(
-            Integer, 5, [5, 10], [10.1, "10", "asdf", {}, None]
+            Integer, 5, [5, 10, 5, 10], [10.1, "5", "10", "5.1", "asdf", {}, None]
         )
     )
     + list(
         _build_value_validation_for_class_with_input_hint(
-            Float, 5.0, [5.0, 10.0, 5, 10], ["10.0", "10", "asdf", {}, None]
+            Float, 5.0, [5.0, 10.0, 5, 10], ["5", "10.0", "asdf", {}, None]
         )
     )
     + list(
@@ -198,7 +198,7 @@ def test_validation(
     )
     + list(
         _build_value_validation_for_class_with_input_hint(
-            Float, 5.0, [5.0, 10.0, 5, 10], ["10.0", "10", "asdf", {}, None]
+            Float, 5.0, [5.0, 10.0, 5, 10], ["10", "10.1", "10.1.1", "asdf", {}, None]
         )
     )
     + list(

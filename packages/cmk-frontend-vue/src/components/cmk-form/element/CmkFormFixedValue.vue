@@ -11,7 +11,11 @@ const props = defineProps<{
 }>()
 
 const data = defineModel<number | string | boolean>('data', { required: true })
-const validation = useValidation<number | string | boolean>(data, () => props.backendValidation)
+const [validation, _value] = useValidation<number | string | boolean>(
+  data,
+  props.spec.validators,
+  () => props.backendValidation
+)
 
 const fixedValue = computed(() => {
   return props.spec.label || props.spec.value

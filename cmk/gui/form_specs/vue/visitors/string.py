@@ -14,7 +14,7 @@ from cmk.gui.form_specs.vue.type_defs import (
     Value,
 )
 from cmk.gui.form_specs.vue.utils import (
-    compute_input_hint,
+    compute_text_input_hint,
     compute_validation_errors,
     create_validation_error,
     get_prefill_default,
@@ -54,7 +54,7 @@ class StringVisitor(FormSpecVisitor[String, str]):
                 title=title,
                 help=help_text,
                 validators=build_vue_validators(self._validators()),
-                input_hint=compute_input_hint(self.form_spec.prefill),
+                input_hint=compute_text_input_hint(self.form_spec.prefill),
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

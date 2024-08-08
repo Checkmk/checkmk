@@ -11,14 +11,14 @@ from cmk.gui.i18n import _
 import cmk.rulesets.v1.form_specs.validators as formspec_validators
 
 
-def build_vue_validators(validators: Sequence[object]) -> list[VueComponents.Validators]:
+def build_vue_validators(validators: Sequence[object]) -> list[VueComponents.Validator]:
     result = []
     for validator in validators:
         result.extend(_build_vue_validator(validator))
     return result
 
 
-def _build_vue_validator(validator: object) -> list[VueComponents.Validators]:
+def _build_vue_validator(validator: object) -> list[VueComponents.Validator]:
     try:
         if build_function := _validator_registry.get(type(validator)):
             return build_function(validator)
@@ -29,7 +29,7 @@ def _build_vue_validator(validator: object) -> list[VueComponents.Validators]:
 
 def _build_in_range_validator(
     validator: formspec_validators.NumberInRange,
-) -> list[VueComponents.Validators]:
+) -> list[VueComponents.Validator]:
     value_from, value_to = validator.range
     assert not isinstance(value_from, float)
     assert not isinstance(value_to, float)
@@ -51,7 +51,7 @@ def _build_in_range_validator(
 
 def _build_length_in_range_validator(
     validator: formspec_validators.LengthInRange,
-) -> list[VueComponents.Validators]:
+) -> list[VueComponents.Validator]:
     value_from, value_to = validator.range
     assert not isinstance(value_from, float)
     assert not isinstance(value_to, float)
@@ -66,7 +66,7 @@ def _build_length_in_range_validator(
 
 def _build_is_integer_validator(
     validator: private_form_specs_validators.IsInteger,
-) -> list[VueComponents.Validators]:
+) -> list[VueComponents.Validator]:
     return [
         VueComponents.IsInteger(
             error_message=validator.error_msg.localize(_),
@@ -76,7 +76,7 @@ def _build_is_integer_validator(
 
 def _build_is_float_validator(
     validator: private_form_specs_validators.IsFloat,
-) -> list[VueComponents.Validators]:
+) -> list[VueComponents.Validator]:
     return [
         VueComponents.IsFloat(
             error_message=validator.error_msg.localize(_),
@@ -84,7 +84,7 @@ def _build_is_float_validator(
     ]
 
 
-VueValidatorCreator = Callable[[Any], list[VueComponents.Validators]]
+VueValidatorCreator = Callable[[Any], list[VueComponents.Validator]]
 _validator_registry: dict[type, VueValidatorCreator] = {}
 
 

@@ -1,6 +1,6 @@
-import type { DictionaryElement, ValidationMessage, Validators } from '@/vue_formspec_components'
+import type { DictionaryElement, ValidationMessage, Validator } from '@/vue_formspec_components'
 
-export function validateValue(newValue: unknown, validators: Validators[]): string[] {
+export function validateValue(newValue: unknown, validators: Validator[]): string[] {
   const errors: string[] = []
   for (const validator of validators) {
     if (validator.type === 'length_in_range') {

@@ -9,7 +9,7 @@ from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as 
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
 from cmk.gui.form_specs.vue.type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
 from cmk.gui.form_specs.vue.utils import (
-    compute_input_hint,
+    compute_text_input_hint,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -34,19 +34,22 @@ class IntegerVisitor(FormSpecVisitor[Integer, int]):
                 return prefill_default
             raw_value = prefill_default
 
+        #  23 / -23 / "23" / "-23" -> OK
+        #  23.0 / "23.0" / other   -> EMPTY_VALUE
         if not isinstance(raw_value, int):
             return EMPTY_VALUE
-        return raw_value
+        try:
+            return int(raw_value)
+        except ValueError:
+            return EMPTY_VALUE
 
     def _validators(self) -> Sequence[Callable[[int], object]]:
         return [IsInteger()] + compute_validators(self.form_spec)
 
     def _to_vue(
         self, raw_value: object, parsed_value: int | EmptyValue
-    ) -> tuple[VueComponents.Integer, int | str]:
+    ) -> tuple[VueComponents.Integer, str | int]:
         title, help_text = get_title_and_help(self.form_spec)
-        input_hint = compute_input_hint(self.form_spec.prefill)
-
         return (
             VueComponents.Integer(
                 title=title,
@@ -54,7 +57,7 @@ class IntegerVisitor(FormSpecVisitor[Integer, int]):
                 unit=self.form_spec.unit_symbol,
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(self._validators()),
-                input_hint=input_hint,
+                input_hint=compute_text_input_hint(self.form_spec.prefill),
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

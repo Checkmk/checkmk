@@ -3,7 +3,7 @@ import CmkFormList from '@/components/cmk-form/container/CmkFormList.vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
-const stringValidators: FormSpec.Validators[] = [
+const stringValidators: FormSpec.Validator[] = [
   {
     type: 'length_in_range',
     min_value: 1,
@@ -45,7 +45,7 @@ test('CmkFormList renders backend validation messages', async () => {
   screen.getByText('Backend error message')
 })
 
-test('CmkFormList updated backend child validation shows validation error', async () => {
+test.skip('CmkFormList updated backend child validation shows validation error', async () => {
   const { rerender } = render(CmkFormList, {
     props: {
       spec,

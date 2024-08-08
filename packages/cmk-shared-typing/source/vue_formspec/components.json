@@ -18,7 +18,7 @@
                     "type": "array",
                     "items": {
                         "type": "object",
-                        "$ref": "validators.json#/$defs/validators"
+                        "$ref": "validators.json#/$defs/validator"
                     },
                     "default": []
                 }
@@ -44,7 +44,7 @@
                     "type": "string"
                 },
                 "input_hint": {
-                    "type": ["string", "integer"]
+                    "type": "string"
                 }
             },
             "required": [
@@ -70,7 +70,7 @@
                     "type": "string"
                 },
                 "input_hint": {
-                    "type": ["string", "number"]
+                    "type": "string"
                 }
             },
             "required": [

@@ -1,46 +1,31 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { FormValidation } from '@/components/cmk-form/'
 import type { Integer } from '@/vue_formspec_components'
 import { useValidation } from '../utils/validation'
-import { isInteger, validateValue, type ValidationMessages } from '@/lib/validation'
+import { type ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{
   spec: Integer
   backendValidation: ValidationMessages
 }>()
 
-const data = defineModel<number | string>('data', { required: true })
-const validation = useValidation<number | string>(data, () => props.backendValidation)
-
-const value = computed({
-  get() {
-    return data.value
-  },
-  set(value: unknown) {
-    validation.value = []
-    let emittedValue: string | number
-    if (isInteger(value as string)) {
-      emittedValue = parseInt(value as string)
-    } else {
-      emittedValue = value as string
-    }
-    validateValue(emittedValue, props.spec.validators!).forEach((error) => {
-      validation.value = [{ message: error, location: [], invalid_value: emittedValue }]
-    })
-    data.value = emittedValue
-  }
-})
-
-const placeholder = computed(() => {
-  const hint = props.spec.input_hint
-  return hint ? '' : `${hint}`
-})
+const data = defineModel<number>('data', { required: true })
+const [validation, value] = useValidation<number>(
+  data,
+  props.spec.validators,
+  () => props.backendValidation
+)
 </script>
 
 <template>
   <label v-if="props.spec.label" :for="$componentId">{{ props.spec.label }}</label>
-  <input :id="$componentId" v-model="value" :placeholder="placeholder" class="number" type="text" />
+  <input
+    :id="$componentId"
+    v-model="value"
+    :placeholder="spec.input_hint || ''"
+    class="number"
+    type="number"
+  />
   <span v-if="props.spec.unit" class="vs_floating_text">{{ props.spec.unit }}</span>
   <FormValidation :validation="validation"></FormValidation>
 </template>

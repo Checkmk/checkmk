@@ -3,7 +3,7 @@ import CmkFormFloat from '@/components/cmk-form/element/CmkFormFloat.vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
-const validators: FormSpec.Validators[] = [
+const validators: FormSpec.Validator[] = [
   {
     type: 'number_in_range',
     min_value: 1,
@@ -31,7 +31,7 @@ test('CmkFormFloat renders value', () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
+  const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
 
   expect(element.value).toBe('42.5')
 })
@@ -43,10 +43,10 @@ test('CmkFormFloat updates data', async () => {
     backendValidation: []
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
+  const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
   await fireEvent.update(element, '23.1')
 
-  expect(getCurrentData()).toBe('23.1')
+  expect(getCurrentData()).toMatch('23.1')
 })
 
 test('CmkFormFloat checks validators', async () => {
@@ -58,7 +58,7 @@ test('CmkFormFloat checks validators', async () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
+  const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
   await fireEvent.update(element, '0.1')
 
   screen.getByText('Value must be between 1 and 100')

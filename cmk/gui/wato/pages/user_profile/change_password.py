@@ -6,7 +6,6 @@
 import time
 from datetime import datetime
 
-from cmk.utils.crypto.password import Password
 from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui import forms, userdb
@@ -25,6 +24,8 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.watolib.mode import redirect
 from cmk.gui.watolib.users import verify_password_policy
+
+from cmk.crypto.password import Password
 
 from .abstract_page import ABCUserProfilePage
 

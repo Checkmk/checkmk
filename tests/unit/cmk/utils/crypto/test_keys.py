@@ -12,9 +12,9 @@ from cmk.utils.crypto.keys import (
     PublicKey,
     PublicKeyPEM,
 )
-from cmk.utils.crypto.password import Password
 
 from cmk.crypto import HashAlgorithm, PEMDecodingError, Signature
+from cmk.crypto.password import Password
 
 
 @pytest.mark.parametrize(

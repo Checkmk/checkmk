@@ -11,7 +11,6 @@ from datetime import datetime
 from urllib.parse import unquote
 
 import cmk.utils.paths
-from cmk.utils.crypto.password import Password
 from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.utils.licensing.registry import get_remaining_trial_time_rounded
 from cmk.utils.local_secrets import AutomationUserSecret
@@ -47,6 +46,7 @@ from cmk.gui.utils.user_errors import user_errors
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.site import omd_site, url_prefix
+from cmk.crypto.password import Password
 
 
 def register(page_registry: PageRegistry) -> None:

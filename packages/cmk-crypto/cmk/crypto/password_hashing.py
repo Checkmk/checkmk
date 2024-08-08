@@ -11,20 +11,23 @@ The format contains an identifier for the hash algorithm that was used, the numb
 a salt, and the actual checksum -- which is all the information needed to verify the hash with a
 given password (see `verify`).
 """
+
 import logging
 import re
+from typing import NewType
 
 import bcrypt
 
-from cmk.utils.crypto.password import Password, PasswordHash
-
-from cmk.crypto import MKCryptoException
+from ._types import MKCryptoException
+from .password import Password
 
 logger = logging.getLogger(__name__)
 
 # Using code should not be able to change the number of rounds (to unsafe values), but test code
 # has to run with reduced rounds. They can be monkeypatched here.
 BCRYPT_ROUNDS = 12
+
+PasswordHash = NewType("PasswordHash", str)
 
 
 class PasswordTooLongError(MKCryptoException):

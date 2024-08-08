@@ -11,7 +11,6 @@ from collections.abc import Iterator
 from datetime import datetime
 
 import cmk.utils.paths
-from cmk.utils.crypto.password import PasswordHash
 from cmk.utils.user import UserId
 
 from cmk.gui import config
@@ -19,6 +18,8 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import UserObject, UserSpec
 from cmk.gui.userdb.store import load_users, save_users
 from cmk.gui.watolib.users import edit_users
+
+from cmk.crypto.password_hashing import PasswordHash
 
 
 def _mk_user_obj(

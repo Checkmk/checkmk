@@ -54,9 +54,9 @@ from cmk.utils.crypto.keys import (
     PrivateKeyType,
     PublicKey,
 )
-from cmk.utils.crypto.password import Password
 
 from cmk.crypto import HashAlgorithm, MKCryptoException, PEMDecodingError, SerializedPEM
+from cmk.crypto.password import Password
 
 
 class CertificatePEM(SerializedPEM):

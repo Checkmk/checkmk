@@ -2,17 +2,28 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Test password hashing"""
+
+from typing import Iterator
+from unittest.mock import patch
 
 import pytest
 
-from cmk.utils.crypto import password_hashing as ph
-from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.crypto import password_hashing as ph
+from cmk.crypto.password import Password
+
+
+@pytest.fixture(autouse=True, scope="module")
+def reduce_password_hashing_rounds() -> Iterator[None]:
+    """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
+    with patch.object(ph, "BCRYPT_ROUNDS", 4):
+        yield
 
 
 @pytest.mark.parametrize("password", ["blä", "😀", "😀" * 18, "a" * 72])
 def test_hash_verify_roundtrip(password: str) -> None:
     pw_hash = ph.hash_password(Password(password))
-    assert pw_hash.startswith("$2y$04$")  # bcrypt 4 rounds
+    assert str(pw_hash).startswith("$2y$04$")  # bcrypt 4 rounds
     ph.verify(Password(password), pw_hash)
 
 
@@ -41,7 +52,7 @@ def test_bcrypt_too_long(password: str) -> None:
     ],
 )
 def test_verify(valid_hash: str) -> None:
-    ph.verify(Password("foobar"), PasswordHash(valid_hash))
+    ph.verify(Password("foobar"), ph.PasswordHash(valid_hash))
 
 
 @pytest.mark.parametrize(
@@ -54,7 +65,7 @@ def test_verify(valid_hash: str) -> None:
 )
 def test_verify_invalid_password_failure(password: str, password_hash: str) -> None:
     with pytest.raises(ph.PasswordInvalidError):
-        ph.verify(Password(password), PasswordHash(password_hash))
+        ph.verify(Password(password), ph.PasswordHash(password_hash))
 
 
 @pytest.mark.parametrize(
@@ -79,7 +90,7 @@ def test_verify_invalid_password_failure(password: str, password_hash: str) -> N
 )
 def test_verify_invalid_hash_failure(password: str, password_hash: str) -> None:
     with pytest.raises(ValueError, match="Invalid salt"):
-        ph.verify(Password(password), PasswordHash(password_hash))
+        ph.verify(Password(password), ph.PasswordHash(password_hash))
 
 
 @pytest.mark.parametrize(
@@ -96,7 +107,7 @@ def test_verify_invalid_hash_failure(password: str, password_hash: str) -> None:
 )
 def test_verify_null_bytes(password: str, password_hash: str) -> None:
     with pytest.raises(ValueError):
-        ph.verify(Password(password), PasswordHash(password_hash))
+        ph.verify(Password(password), ph.PasswordHash(password_hash))
 
 
 @pytest.mark.parametrize(
@@ -109,7 +120,7 @@ def test_verify_null_bytes(password: str, password_hash: str) -> None:
 )
 def test_verify_invalid_rounds(password: str, pw_hash: str) -> None:
     with pytest.raises(ValueError, match="Invalid salt"):
-        ph.verify(Password(password), PasswordHash(pw_hash))
+        ph.verify(Password(password), ph.PasswordHash(pw_hash))
 
 
 @pytest.mark.parametrize(
@@ -132,4 +143,4 @@ def test_verify_invalid_rounds(password: str, pw_hash: str) -> None:
     ],
 )
 def test_is_unsupported_legacy_hash(unsupported: bool, pw_hash: str) -> None:
-    assert ph.is_unsupported_legacy_hash(PasswordHash(pw_hash)) == unsupported
+    assert ph.is_unsupported_legacy_hash(ph.PasswordHash(pw_hash)) == unsupported

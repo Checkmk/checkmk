@@ -17,7 +17,6 @@ from pydantic import BaseModel
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
 from cmk.utils.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey
-from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
@@ -28,6 +27,8 @@ from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
 
 from cmk.crypto import HashAlgorithm
+from cmk.crypto.password import Password
+from cmk.crypto.password_hashing import PasswordHash
 from cmk.crypto.secrets import Secret
 
 _ContactgroupName = str

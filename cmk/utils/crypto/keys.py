@@ -11,9 +11,8 @@ import cryptography.exceptions
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, ed448, ed25519, padding, rsa, types
 
-from cmk.utils.crypto.password import Password
-
 from cmk.crypto import HashAlgorithm, MKCryptoException, PEMDecodingError, SerializedPEM, Signature
+from cmk.crypto.password import Password
 
 
 class InvalidSignatureError(MKCryptoException):

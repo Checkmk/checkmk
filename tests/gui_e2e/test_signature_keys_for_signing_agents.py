@@ -16,9 +16,9 @@ from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.site import Site
 
 from cmk.utils.crypto.certificate import CertificateWithPrivateKey
-from cmk.utils.crypto.password import Password
 
 from cmk.crypto import HashAlgorithm
+from cmk.crypto.password import Password
 
 logger = logging.getLogger(__name__)
 

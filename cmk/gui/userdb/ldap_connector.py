@@ -51,7 +51,6 @@ from six import ensure_str
 
 import cmk.utils.paths
 from cmk.utils import password_store
-from cmk.utils.crypto.password import Password
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.user import UserId
@@ -87,6 +86,7 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
+from cmk.crypto.password import Password
 
 from ._connections import (
     active_connections,

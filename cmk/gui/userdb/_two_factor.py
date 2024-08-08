@@ -5,11 +5,12 @@
 
 import ast
 
-from cmk.utils.crypto import password_hashing
-from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.user import UserId
 
 from cmk.gui.type_defs import TwoFactorCredentials
+
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
 
 from .store import load_custom_attr, save_two_factor_credentials
 
@@ -42,7 +43,7 @@ def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFacto
 
 def make_two_factor_backup_codes(
     *, rounds: int | None = None
-) -> list[tuple[Password, PasswordHash]]:
+) -> list[tuple[Password, password_hashing.PasswordHash]]:
     """Creates a set of new two factor backup codes
 
     The codes are returned in plain form for displaying and in hashed+salted form for storage

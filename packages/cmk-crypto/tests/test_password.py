@@ -2,15 +2,13 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from typing import Any
+"""Tests for the Password type"""
 
 import pytest
 from cryptography.hazmat.primitives import hashes
 
-from cmk.utils.crypto.password import Password, PasswordPolicy
-
-from cmk.crypto import HashAlgorithm
+from cmk.crypto._types import HashAlgorithm
+from cmk.crypto.password import Password, PasswordPolicy
 
 
 @pytest.mark.parametrize(
@@ -45,7 +43,7 @@ def test_invalid_password(password: str, error: str) -> None:
         (Password("123"), 123, False),
     ],
 )
-def test_password_eq(a: Password, b: Any, expected: bool) -> None:
+def test_password_eq(a: Password, b: Password | int, expected: bool) -> None:
     assert (a == b) == expected
 
 
@@ -57,7 +55,7 @@ def test_hash_algorithms_from_cryptography() -> None:
 
 def test_hash_algorithms_from_cryptography_unsupported() -> None:
     with pytest.raises(ValueError):
-        HashAlgorithm.from_cryptography(hashes.MD5())
+        HashAlgorithm.from_cryptography(hashes.MD5())  # nosec
 
 
 OK = PasswordPolicy.Result.OK

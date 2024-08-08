@@ -2,7 +2,7 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+"""A type for human-readable passwords with some convenience functions"""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import secrets
 import string
 from dataclasses import dataclass
 from enum import Enum
-from typing import Final, NewType
+from typing import Final
 
 
 @dataclass
@@ -109,6 +109,3 @@ class Password:
         if not isinstance(other, Password):
             return False
         return secrets.compare_digest(self.raw_bytes, other.raw_bytes)
-
-
-PasswordHash = NewType("PasswordHash", str)

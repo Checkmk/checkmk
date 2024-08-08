@@ -45,7 +45,6 @@ from cmk.utils.backup.targets.remote_interface import (
 from cmk.utils.backup.type_defs import SiteBackupInfo
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
 from cmk.utils.certs import CertManagementEvent
-from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.paths import omd_root
 from cmk.utils.schedule import next_scheduled_time
 
@@ -104,6 +103,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
 from cmk.crypto import PEMDecodingError
+from cmk.crypto.password import Password as PasswordType
 
 
 def register() -> None:

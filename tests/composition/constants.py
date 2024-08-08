@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from cmk.utils.crypto.password import Password
+from cmk.crypto.password import Password
 
 # Note: Constants and provided test files must match
 TEST_HOST_1 = "au_test_1"

@@ -6,8 +6,6 @@
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.utils.crypto import password_hashing
-from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
@@ -20,6 +18,9 @@ from cmk.gui.userdb import (
     UserConnector,
 )
 from cmk.gui.utils.htpasswd import Htpasswd
+
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
 
 
 # Checkmk supports different authentication frontends for verifying the
@@ -36,7 +37,7 @@ from cmk.gui.utils.htpasswd import Htpasswd
 # See:
 # - https://httpd.apache.org/docs/2.4/misc/password_encryptions.html
 #
-def hash_password(password: Password) -> PasswordHash:
+def hash_password(password: Password) -> password_hashing.PasswordHash:
     """Hash a password
 
     Invalid inputs raise MKUserError.
@@ -107,7 +108,7 @@ class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
                 continue
 
             if user.get("password"):
-                entries[uid] = PasswordHash(
+                entries[uid] = password_hashing.PasswordHash(
                     "{}{}".format("!" if user["locked"] else "", user["password"])
                 )
 

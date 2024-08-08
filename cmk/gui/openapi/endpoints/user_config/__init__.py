@@ -8,7 +8,6 @@ import time
 from collections.abc import Mapping
 from typing import Any, Literal, TypedDict
 
-from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
@@ -32,6 +31,8 @@ from cmk.gui.userdb import (
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.users import delete_users, edit_users, verify_password_policy
+
+from cmk.crypto.password import Password
 
 TIMESTAMP_RANGE = tuple[float, float]
 

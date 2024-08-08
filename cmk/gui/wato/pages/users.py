@@ -12,7 +12,6 @@ from functools import partial
 from typing import cast, Literal, overload
 
 from cmk.utils import paths, render
-from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
 from cmk.gui import background_job, forms, gui_background_job, userdb, weblib
@@ -103,6 +102,7 @@ from cmk.gui.watolib.users import (
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
 from cmk.ccc.version import Edition, edition
+from cmk.crypto.password import Password
 
 
 def register(_mode_registry: ModeRegistry) -> None:

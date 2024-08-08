@@ -9,7 +9,6 @@ from typing import cast
 
 from cmk.utils.config_validation_layer.users.contacts import validate_contacts
 from cmk.utils.config_validation_layer.users.users import validate_users
-from cmk.utils.crypto.password import Password, PasswordPolicy
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
@@ -34,6 +33,8 @@ from cmk.gui.watolib.user_scripts import (
     user_script_title,
 )
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
+
+from cmk.crypto.password import Password, PasswordPolicy
 
 
 def delete_users(users_to_delete: Sequence[UserId]) -> None:

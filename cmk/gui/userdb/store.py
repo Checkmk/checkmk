@@ -20,8 +20,6 @@ from six import ensure_str
 import cmk.utils.paths
 from cmk.utils.config_validation_layer.users.contacts import validate_contacts
 from cmk.utils.config_validation_layer.users.users import validate_users
-from cmk.utils.crypto import password_hashing
-from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.paths import htpasswd_file, var_dir
 from cmk.utils.user import UserId
@@ -46,6 +44,8 @@ from cmk.ccc.store import (
     save_text_to_file,
     save_to_mk_file,
 )
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
 
 from ._connections import active_connections, get_connection
 from ._connector import UserConnector
@@ -161,7 +161,7 @@ def _load_users(
             result[uid] = contact
             result[uid]["roles"] = ["user"]
             result[uid]["locked"] = True
-            result[uid]["password"] = PasswordHash("")
+            result[uid]["password"] = password_hashing.PasswordHash("")
 
     # Passwords are read directly from the apache htpasswd-file.
     # That way heroes of the command line will still be able to
@@ -263,7 +263,7 @@ def _add_passwords(users: Users) -> Users:
     for uid, password in htpwd_entries.items():
         if password.startswith("!"):
             locked = True
-            password = PasswordHash(password[1:])
+            password = password_hashing.PasswordHash(password[1:])
         else:
             locked = False
 

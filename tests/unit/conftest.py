@@ -35,7 +35,6 @@ from tests.unit.cmk.utils.crypto.certs import (  # pylint: disable=unused-import
 import livestatus
 
 import cmk.utils.caching
-import cmk.utils.crypto.password_hashing
 import cmk.utils.paths
 from cmk.utils import redis, tty
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
@@ -52,6 +51,7 @@ from cmk.utils.livestatus_helpers.testing import (
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
+import cmk.crypto.password_hashing
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
 
@@ -400,7 +400,7 @@ def use_fakeredis_client() -> Iterator[None]:
 @pytest.fixture(autouse=True, scope="session")
 def reduce_password_hashing_rounds() -> Iterator[None]:
     """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
-    with patch.object(cmk.utils.crypto.password_hashing, "BCRYPT_ROUNDS", 4):
+    with patch.object(cmk.crypto.password_hashing, "BCRYPT_ROUNDS", 4):
         yield
 
 

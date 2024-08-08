@@ -20,7 +20,6 @@ from tests.testlib.rest_api_client import ClientRegistry
 from tests.unit.cmk.gui.conftest import SetConfig
 
 from cmk.utils import paths
-from cmk.utils.crypto.password import PasswordHash
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
@@ -44,6 +43,7 @@ from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
 
 from cmk.ccc import version
+from cmk.crypto.password_hashing import PasswordHash
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"

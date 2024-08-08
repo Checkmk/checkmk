@@ -7,7 +7,6 @@
 from collections.abc import Collection
 
 import cmk.utils.paths
-from cmk.utils.crypto.password import Password
 
 from cmk.gui.backup import handler
 from cmk.gui.http import request
@@ -17,6 +16,8 @@ from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+
+from cmk.crypto.password import Password
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:

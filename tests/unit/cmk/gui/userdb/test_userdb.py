@@ -18,8 +18,6 @@ from pytest import MonkeyPatch
 from tests.testlib.repo import is_managed_repo
 
 import cmk.utils.paths
-from cmk.utils.crypto import password_hashing
-from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.user import UserId
 
 import cmk.gui.userdb._custom_attributes
@@ -46,6 +44,8 @@ from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.valuespec import Dictionary
 
 import cmk.ccc.version
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
 
 if TYPE_CHECKING:
     from tests.unit.cmk.gui.conftest import SetConfig, SingleRequest
@@ -744,8 +744,8 @@ def test_save_two_factor_credentials(user_id: UserId) -> None:
                 ),
             },
             "backup_codes": [
-                PasswordHash("asdr2ar2a2ra2rara2"),
-                PasswordHash("dddddddddddddddddd"),
+                password_hashing.PasswordHash("asdr2ar2a2ra2rara2"),
+                password_hashing.PasswordHash("dddddddddddddddddd"),
             ],
             "totp_credentials": {
                 "uuid": TotpCredential(

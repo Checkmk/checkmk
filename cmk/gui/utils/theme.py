@@ -83,6 +83,9 @@ class Theme:
         if icon_path := self._find_icon_in_dir("images/icons", icon_name, prefix=""):
             return icon_path
 
+        if icon_name == "missing" and prefix == "icon_":
+            raise RuntimeError("Icon 'missing' not found in any icon path.")
+
         return self.detect_icon_path("missing", "icon_")
 
     def _find_icon_in_dir(self, icon_dir: str, icon_name: str, prefix: str) -> str | None:

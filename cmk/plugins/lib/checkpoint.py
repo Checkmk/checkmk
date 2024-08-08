@@ -7,6 +7,7 @@ from cmk.agent_based.v2 import all_of, any_of, matches, startswith
 
 DETECT = all_of(
     any_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2620"),
         matches(".1.3.6.1.2.1.1.1.0", "[^ ]+ [^ ]+ [^ ]*cp( .*)?"),
         startswith(".1.3.6.1.2.1.1.1.0", "IPSO "),
         matches(".1.3.6.1.2.1.1.1.0", "Linux.*cpx.*"),

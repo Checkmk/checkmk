@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, TextInput
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, MonitoringState, TextInput
 
 
 def _item_spec_heartbeat_crm_resources():
@@ -32,6 +32,13 @@ def _parameter_valuespec_heartbeat_crm_resources() -> Dictionary:
                         FixedValue(value=None, totext="", title=_("Do not check the node")),
                         TextInput(allow_empty=False, title=_("Expected node")),
                     ],
+                ),
+            ),
+            (
+                "monitoring_state_if_unmanaged_nodes",
+                MonitoringState(
+                    title=_("State if at least one node is unmanaged"),
+                    default_value=1,
                 ),
             ),
         ],

@@ -16,6 +16,7 @@ from cmk.plugins.collection.agent_based.heartbeat_crm import (
     check_heartbeat_crm_resources,
     discover_heartbeat_crm,
     heartbeat_crm_parse_resources,
+    HeartbeatCrmResourcesParameters,
     parse_heartbeat_crm,
     Section,
 )
@@ -294,7 +295,10 @@ def test_check_heartbeat_crm_resources_promotable_clone(section_3: Section) -> N
     assert list(
         check_heartbeat_crm_resources(
             "clone_1",
-            {"expected_node": None},
+            HeartbeatCrmResourcesParameters(
+                expected_node=None,
+                monitoring_state_if_unmanaged_nodes=1,
+            ),
             section_3,
         )
     ) == [Result(state=State.OK, summary="clone_1 Master Started ha_b")]
@@ -304,7 +308,10 @@ def test_check_heartbeat_crm_resources_simple(section_3: Section) -> None:
     assert list(
         check_heartbeat_crm_resources(
             "grp_omd",
-            {"expected_node": None},
+            HeartbeatCrmResourcesParameters(
+                expected_node=None,
+                monitoring_state_if_unmanaged_nodes=1,
+            ),
             section_3,
         )
     ) == [
@@ -372,7 +379,10 @@ def test_check_heartbeat_crm_resources_only() -> None:
     assert list(
         _check_heartbeat_crm_resources(
             resources["checkmk"],
-            {"expected_node": None},
+            HeartbeatCrmResourcesParameters(
+                expected_node=None,
+                monitoring_state_if_unmanaged_nodes=1,
+            ),
         )
     ) == [
         Result(
@@ -397,4 +407,8 @@ def test_check_heartbeat_crm_resources_only() -> None:
         ),
         Result(state=State.OK, summary="checkmk_omd (ocf::custom:omd): Stopped (unmanaged)"),
         Result(state=State.CRIT, summary='Resource is in state "Stopped"'),
+        Result(
+            state=State.WARN,
+            summary="Unmanaged nodes: xxxxxxxx-rrrrr",
+        ),
     ]

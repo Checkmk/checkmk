@@ -17,7 +17,8 @@ export type Components =
   | FixedValue
   | BooleanChoice
   | MultilineText
-  | DataSize;
+  | DataSize
+  | Catalog;
 export type Integer = FormSpec & {
   type: "integer";
   label?: string;
@@ -96,6 +97,10 @@ export type DataSize = FormSpec & {
   displayed_magnitudes: string[];
   input_hint?: string;
 };
+export type Catalog = FormSpec & {
+  type: "catalog";
+  topics: Topic[];
+};
 
 export interface VueFormspecComponents {
   components?: Components;
@@ -142,6 +147,10 @@ export interface CascadingSingleChoiceElement {
   title: string;
   default_value: unknown;
   parameter_form: FormSpec;
+}
+export interface Topic {
+  key: string;
+  dictionary: FormSpec;
 }
 export interface ValidationMessage {
   location: string[];

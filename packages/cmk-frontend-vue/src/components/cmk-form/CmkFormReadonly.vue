@@ -68,6 +68,8 @@ function renderForm(
       return renderMultilineText(formSpec as MultilineText, value as string)
     case 'data_size':
       return renderDataSize(value as [string, string])
+    case 'catalog':
+      return h('div', 'Catalog does not support readonly')
   }
 }
 

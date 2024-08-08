@@ -12,7 +12,7 @@ from typing import Any, Literal, TypeVar
 
 import cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components as VueComponents
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import SingleChoiceExtended
+from cmk.gui.form_specs.private import Catalog, SingleChoiceExtended
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec, UnknownFormSpec
 from cmk.gui.form_specs.vue.form_spec_recomposers import (
     recompose_host_state,
@@ -25,6 +25,7 @@ from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, RenderMo
 from cmk.gui.form_specs.vue.utils import get_visitor, register_visitor_class
 from cmk.gui.form_specs.vue.visitors.boolean_choice import BooleanChoiceVisitor
 from cmk.gui.form_specs.vue.visitors.cascading_single_choice import CascadingSingleChoiceVisitor
+from cmk.gui.form_specs.vue.visitors.catalog import CatalogVisitor
 from cmk.gui.form_specs.vue.visitors.data_size import DataSizeVisitor
 from cmk.gui.form_specs.vue.visitors.dictionary import DictionaryVisitor
 from cmk.gui.form_specs.vue.visitors.fixed_value import FixedValueVisitor
@@ -87,6 +88,7 @@ def register_form_specs():
     register_visitor_class(MultilineText, MultilineTextVisitor)
     register_visitor_class(RegularExpression, StringVisitor, recompose_regular_expression)
     register_visitor_class(DataSize, DataSizeVisitor)
+    register_visitor_class(Catalog, CatalogVisitor)
 
     # Recomposed
     register_visitor_class(HostState, SingleChoiceVisitor, recompose_host_state)

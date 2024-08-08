@@ -46,7 +46,7 @@ const spec: FormSpec.CascadingSingleChoice = {
     {
       name: 'integerChoice',
       title: 'integerChoiceTitle',
-      default_value: 5,
+      default_value: '5',
       parameter_form: integerFormSpec
     }
   ]
@@ -100,7 +100,7 @@ test('CmkFormCascadingSingleChoice sets default on switch', async () => {
   })
   expect(integerElement.value).toBe('5')
 
-  expect(getCurrentData()).toMatch('["integerChoice",5]')
+  expect(getCurrentData()).toMatch('["integerChoice","5"]')
 })
 
 test('CmkFormCascadingSingleChoice checks validators', async () => {

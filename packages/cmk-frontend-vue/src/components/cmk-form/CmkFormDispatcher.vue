@@ -15,6 +15,7 @@ import CmkFormBooleanChoice from '@/components/cmk-form/element/CmkFormBooleanCh
 import CmkFormMultilineText from '@/components/cmk-form/element/CmkFormMultilineText.vue'
 import FormHelp from '@/components/cmk-form/FormHelp.vue'
 import CmkFormDataSize from '@/components/cmk-form/element/CmkFormDataSize.vue'
+import CmkFormCatalog from '@/components/cmk-form/element/CmkFormCatalog.vue'
 
 const props = defineProps<{
   spec: FormSpec
@@ -36,7 +37,8 @@ const components: Record<Components['type'], unknown> = {
   fixed_value: CmkFormFixedValue,
   boolean_choice: CmkFormBooleanChoice,
   multiline_text: CmkFormMultilineText,
-  data_size: CmkFormDataSize
+  data_size: CmkFormDataSize,
+  catalog: CmkFormCatalog
 }
 
 function getComponent(): IComponent {

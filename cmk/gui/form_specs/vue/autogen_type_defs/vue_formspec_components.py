@@ -177,6 +177,18 @@ class DataSize(FormSpec):
     input_hint: Optional[str] = None
 
 
+@dataclass(kw_only=True)
+class Topic:
+    key: str
+    dictionary: Dictionary
+
+
+@dataclass(kw_only=True)
+class Catalog(FormSpec):
+    topics: list[Topic]
+    type: str = "catalog"
+
+
 Components = Union[
     Integer,
     Float,
@@ -190,6 +202,7 @@ Components = Union[
     BooleanChoice,
     MultilineText,
     DataSize,
+    Catalog,
 ]
 
 

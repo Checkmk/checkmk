@@ -430,7 +430,47 @@
             },
             "required": [
                 "type",
-                "displayed_magnitudes",
+                "displayed_magnitudes"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
+        "topic": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "dictionary": {
+                    "$ref": "#/$defs/dictionary"
+                }
+            },
+            "required": [
+                "key",
+                "title",
+                "dictionary"
+            ]
+        },
+        "catalog": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "catalog",
+                    "default": "catalog"
+                },
+                "topics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/topic"
+                    }
+                },
+            },
+            "required": [
+                "type",
+                "topics"
             ],
             "allOf": [
                 {
@@ -478,6 +518,9 @@
                 },
                 {
                     "$ref": "#/$defs/data_size"
+                },
+                {
+                    "$ref": "#/$defs/catalog"
                 }
             ],
             "required": [

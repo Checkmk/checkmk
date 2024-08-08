@@ -10,7 +10,6 @@ from typing import Any, Literal
 
 from marshmallow import validate, ValidationError
 
-from cmk.utils.crypto import certificate, keys
 from cmk.utils.tags import BuiltinTagConfig, TagGroupID, TagID
 
 from cmk.gui.config import active_config
@@ -26,6 +25,7 @@ from cmk.gui.watolib.tags import (
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 
 from cmk import fields
+from cmk.crypto import certificate, keys
 from cmk.fields import validators
 
 

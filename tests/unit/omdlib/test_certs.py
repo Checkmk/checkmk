@@ -14,8 +14,9 @@ import pytest
 from omdlib.certs import CertificateAuthority  # pylint: disable=wrong-import-order
 
 from cmk.utils.certs import root_cert_path, RootCA
-from cmk.utils.crypto.certificate import Certificate, CertificatePEM
-from cmk.utils.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
+
+from cmk.crypto.certificate import Certificate, CertificatePEM
+from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
 
 CA_NAME = "test-ca"
 

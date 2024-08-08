@@ -22,16 +22,6 @@ from tests.testlib.repo import (
     repo_path,
 )
 
-# Import this fixture to not clutter this file, but it's unused here...
-from tests.unit.cmk.utils.crypto.certs import (  # pylint: disable=unused-import
-    fixture_ed25519_private_key,
-    fixture_rsa_private_key,
-    fixture_secp256k1_private_key,
-    fixture_self_signed,
-    fixture_self_signed_ec,
-    fixture_self_signed_ed25519,
-)
-
 import livestatus
 
 import cmk.utils.caching

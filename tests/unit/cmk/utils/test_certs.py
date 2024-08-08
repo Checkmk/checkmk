@@ -13,13 +13,20 @@ import time_machine
 from cryptography import x509
 from dateutil.relativedelta import relativedelta
 
-from tests.unit.cmk.utils.crypto.certs import rsa_private_keys_equal
-
 from livestatus import SiteId
 
 from cmk.utils.certs import CN_TEMPLATE, RootCA
-from cmk.utils.crypto.certificate import Certificate, CertificateWithPrivateKey, X509Name
-from cmk.utils.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
+
+from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey, X509Name
+from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
+
+
+def _rsa_private_keys_equal(key_a: PrivateKey, key_b: PrivateKey) -> bool:
+    """Check if two keys are the same RSA key"""
+    # Assert keys are RSA keys here just to cut corners on type checking. ed25519 keys don't have
+    # private_numbers(). Also, no-one else needs __eq__ on PrivateKey at the moment.
+    return key_a.get_raw_rsa_key().private_numbers() == key_b.get_raw_rsa_key().private_numbers()
+
 
 _CA = b"""-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDpDGxoGtI59lZM
@@ -191,7 +198,7 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
     assert filename.exists()
     loaded = RootCA.load(filename)
     assert loaded.certificate._cert == ca.certificate._cert
-    assert rsa_private_keys_equal(loaded.private_key, ca.private_key)
+    assert _rsa_private_keys_equal(loaded.private_key, ca.private_key)
 
 
 def test_sign_csr_with_local_ca() -> None:

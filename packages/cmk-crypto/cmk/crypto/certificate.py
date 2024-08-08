@@ -45,7 +45,8 @@ from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from dateutil.relativedelta import relativedelta
 
-from cmk.utils.crypto.keys import (
+from ._types import HashAlgorithm, MKCryptoException, PEMDecodingError, SerializedPEM
+from .keys import (
     EncryptedPrivateKeyPEM,
     InvalidSignatureError,
     is_supported_public_key_type,
@@ -54,9 +55,7 @@ from cmk.utils.crypto.keys import (
     PrivateKeyType,
     PublicKey,
 )
-
-from cmk.crypto import HashAlgorithm, MKCryptoException, PEMDecodingError, SerializedPEM
-from cmk.crypto.password import Password
+from .password import Password
 
 
 class CertificatePEM(SerializedPEM):
@@ -74,7 +73,7 @@ class CertificateWithPrivateKey(NamedTuple):
     private_key: PrivateKey
 
     @classmethod
-    def generate_self_signed(
+    def generate_self_signed(  # pylint: disable=too-many-arguments
         cls,
         common_name: str,
         organization: str,
@@ -133,7 +132,7 @@ class CertificateWithPrivateKey(NamedTuple):
         if passphrase is not None:
             if (
                 key_match := re.search(
-                    r"-----BEGIN ENCRYPTED PRIVATE KEY-----[\s\w+/=]+-----END ENCRYPTED PRIVATE KEY-----",
+                    r"-----BEGIN ENCRYPTED PRIVATE KEY-----[\s\w+/=]+-----END ENCRYPTED PRIVATE KEY-----",  # pylint: disable=line-too-long
                     content,
                 )
             ) is None:
@@ -274,7 +273,7 @@ class Certificate:
         self._cert = certificate
 
     @classmethod
-    def _create(
+    def _create(  # pylint: disable=too-many-arguments
         cls,
         *,
         # subject info
@@ -326,7 +325,6 @@ class Certificate:
         # RFC 3279 2.3 and other links in RFC 5280 4.2.1.9. before enabling more usages.
         builder = builder.add_extension(
             x509.KeyUsage(
-                # TODO: we need digital_signature for TLS
                 digital_signature=not is_ca,  # signing data
                 content_commitment=False,  # aka non_repudiation
                 key_encipherment=False,
@@ -358,8 +356,8 @@ class Certificate:
     def load_pem(cls, pem_data: CertificatePEM) -> Certificate:
         try:
             return cls(x509.load_pem_x509_certificate(pem_data.bytes))
-        except ValueError:
-            raise PEMDecodingError("Unable to load certificate.")
+        except ValueError as exc:
+            raise PEMDecodingError("Unable to load certificate.") from exc
 
     def dump_pem(self) -> CertificatePEM:
         return CertificatePEM(self._cert.public_bytes(serialization.Encoding.PEM))

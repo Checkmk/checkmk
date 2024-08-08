@@ -15,9 +15,8 @@ from playwright.sync_api import TimeoutError as PWTimeoutError
 from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.site import Site
 
-from cmk.utils.crypto.certificate import CertificateWithPrivateKey
-
 from cmk.crypto import HashAlgorithm
+from cmk.crypto.certificate import CertificateWithPrivateKey
 from cmk.crypto.password import Password
 
 logger = logging.getLogger(__name__)

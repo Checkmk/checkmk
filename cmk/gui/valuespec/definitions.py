@@ -65,7 +65,6 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.regex
 from cmk.utils import dateutils
-from cmk.utils.crypto import certificate, keys
 from cmk.utils.hostaddress import HostAddress as HostAddressType
 from cmk.utils.images import CMKImage, ImageType
 from cmk.utils.labels import AndOrNotLiteral, LabelSources
@@ -115,6 +114,7 @@ from cmk.gui.view_utils import render_labels
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Version
+from cmk.crypto import certificate, keys
 
 seconds_per_day = 86400
 

@@ -4,6 +4,9 @@ version = "0.9.0"
 dependencies = [
     "bcrypt",
     "cryptography",
+    "python-dateutil",
+    "types-python-dateutil",
+    "time-machine",
 ]
 
 [build-system]

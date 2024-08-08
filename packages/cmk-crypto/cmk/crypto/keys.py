@@ -2,6 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Public and private key types for asymmetric cryptography"""
 
 from __future__ import annotations
 
@@ -11,8 +12,8 @@ import cryptography.exceptions
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, ed448, ed25519, padding, rsa, types
 
-from cmk.crypto import HashAlgorithm, MKCryptoException, PEMDecodingError, SerializedPEM, Signature
-from cmk.crypto.password import Password
+from ._types import HashAlgorithm, MKCryptoException, PEMDecodingError, SerializedPEM, Signature
+from .password import Password
 
 
 class InvalidSignatureError(MKCryptoException):

@@ -10,9 +10,9 @@ from typing import Literal
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import algorithms, Cipher, modes
 
-from cmk.utils.crypto import certificate, keys
-
-from cmk.crypto import HashAlgorithm
+from ._types import HashAlgorithm
+from .certificate import Certificate
+from .keys import PrivateKey, PublicKey
 
 
 class AesCbcCipher:
@@ -51,7 +51,7 @@ class AesCbcCipher:
         return block[: -block[-1]]
 
 
-def encrypt_for_rsa_key(recipient_key: keys.PublicKey, data: bytes) -> bytes:
+def encrypt_for_rsa_key(recipient_key: PublicKey, data: bytes) -> bytes:
     """Deprecated. Do not use."""
     return recipient_key.get_raw_rsa_key().encrypt(
         data,
@@ -63,7 +63,7 @@ def encrypt_for_rsa_key(recipient_key: keys.PublicKey, data: bytes) -> bytes:
     )
 
 
-def decrypt_with_rsa_key(recipient_key: keys.PrivateKey, data: bytes) -> bytes:
+def decrypt_with_rsa_key(recipient_key: PrivateKey, data: bytes) -> bytes:
     """Deprecated. Do not use."""
     return recipient_key.get_raw_rsa_key().decrypt(
         data,
@@ -75,7 +75,7 @@ def decrypt_with_rsa_key(recipient_key: keys.PrivateKey, data: bytes) -> bytes:
     )
 
 
-def certificate_md5_digest(cert: certificate.Certificate) -> str:
+def certificate_md5_digest(cert: Certificate) -> str:
     """Deprecated. Do not use.
 
     Calculates a digest that corresponds to pyOpenSSL certificate's `.digest("md5")` method.

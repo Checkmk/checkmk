@@ -9,16 +9,15 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any, IO
 
-from cmk.utils.crypto.certificate import Certificate, CertificatePEM
-from cmk.utils.crypto.deprecated import (
+from cmk.ccc.exceptions import MKException, MKGeneralException
+from cmk.crypto.certificate import Certificate, CertificatePEM
+from cmk.crypto.deprecated import (
     AesCbcCipher,
     certificate_md5_digest,
     decrypt_with_rsa_key,
     encrypt_for_rsa_key,
 )
-from cmk.utils.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey, PublicKey
-
-from cmk.ccc.exceptions import MKException, MKGeneralException
+from cmk.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey, PublicKey
 from cmk.crypto.password import Password
 
 

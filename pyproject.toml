@@ -187,7 +187,6 @@ module = [
   "cmk.gui.watolib.registration",
   "cmk.notification_plugins.*",
   "cmk.update_config.*",
-  "cmk.utils.crypto.*",
   "cmk.utils.livestatus_helpers.*",
   "tests.gui_e2e.*",
   "tests.unit.cmk.ec.*",

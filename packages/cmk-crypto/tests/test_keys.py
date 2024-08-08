@@ -2,19 +2,67 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Tests for public / private keys"""
 
 import pytest
 
-from cmk.utils.crypto.keys import (
+from cmk.crypto import HashAlgorithm, PEMDecodingError, Signature
+from cmk.crypto.keys import (
     InvalidSignatureError,
     PlaintextPrivateKeyPEM,
     PrivateKey,
     PublicKey,
     PublicKeyPEM,
 )
-
-from cmk.crypto import HashAlgorithm, PEMDecodingError, Signature
 from cmk.crypto.password import Password
+
+
+@pytest.fixture(name="rsa_private_key", scope="module")
+def fixture_rsa_private_key() -> PlaintextPrivateKeyPEM:
+    # openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:1024
+    return PlaintextPrivateKeyPEM(
+        """-----BEGIN PRIVATE KEY-----
+MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBALV1mKMO/Md5BsM7
+JI1PGvYdbO+qlgVQ1xni8v1kLGv94e32HRfCKf0heVI3lkJi4qdXRcQOP6dzr/u0
+ZtgesLJIKwAX/2w47vT4PdMliSeYDKHGfrakvk9xlbGr+jxYviRJx0NJpIZR6pjW
+nYdP2O5QakUa2/6XsIBTDtE9b7crAgMBAAECgYEAqnV5mVNu6gMq8yMPxx7UePZT
+ayCYJQ43wj2LfbUodZndLqjP04212/AiA7XsFRjHSeOVygKIkUj/vDdPlR3fZUVH
+WHzdCnBhMiQzz7XGIO06mkgjpJVkxSy5Ob8moapzucJAZRZNdxcpZZOquJHyCqAo
+Hr1oedZ2udvAWxosDIECQQDhWu06JGik2uhoiUIiExNbBTylsMsPUlqsX5eJzVJU
+69POK+Y6coJNlOgLTipQrdKUNeoHHrBCbdnw6luQUbIxAkEAziKRBx2qa0uknYTy
+PnfDr92hoME555VlJ2t3qOso+7to5Fpp/RrGAZJU8RljTETBE13+NUqsf1b5Z84a
++2msGwJBAMpK4xUEReNmlqXwQKtx0DgutUhPMZjpZnfBv7h11Whh4dn7Uko5LHsU
+JlCvtBCEWLmuxAvsInEfRzqaReOBUqECQQCXDqmsx0aNnj8h170VnfpfNFEvVqoy
+VT5tZsmnlbzQzIOPY9prymTz3eI1VF96EqBSqvyQ3QoPvxLByT3oo4WlAkBJm0f4
+Jf8ojkhcjV5Nqk1rHKBxr2FuvR3u9oAoiOvg5bZ9gtUFJzgU1P6dnwrfvepJJyK2
+fCP26dGEODI0TDgM
+-----END PRIVATE KEY-----
+"""
+    )
+
+
+@pytest.fixture(name="ed25519_private_key", scope="module")
+def fixture_ed25519_private_key() -> PlaintextPrivateKeyPEM:
+    # openssl genpkey -algorithm Ed25519
+    return PlaintextPrivateKeyPEM(
+        """-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIPhi2Ui8zfyHhfsPYpsdv9oKd+plPXkFjlgTCnMMbHaR
+-----END PRIVATE KEY-----
+"""
+    )
+
+
+@pytest.fixture(name="secp256k1_private_key", scope="module")
+def fixture_secp256k1_private_key() -> PlaintextPrivateKeyPEM:
+    # openssl ecparam -name prime256v1 -genkey | openssl pkcs8 -topk8 -nocrypt
+    return PlaintextPrivateKeyPEM(
+        """-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgN/NMXDhBlntMLzN/
+4z+usHyn6zZMQqGohG0lqm03hnShRANCAARHBsjyc39qc+foF1ZbU7lqM5X2VkMu
+RyG9V7BoZNR2t7aqZ/ab551SpZc3t6hj9xnIa/1+2mXAmNEqH920LpWM
+-----END PRIVATE KEY-----
+"""
+    )
 
 
 @pytest.mark.parametrize(

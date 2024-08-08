@@ -23,13 +23,14 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.gui_background_job import ActionHandler, JobRenderer
 from cmk.gui.htmllib.header import make_header
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.escaping import escape_attribute
+from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
@@ -332,10 +333,12 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             filename="download_agent_output.py",
         )
 
-        button = html.render_icon_button(download_url, _("Download"), "agent_output")
         job_interface.send_progress_update("Job finished.")
         job_interface.send_result_message(
-            _("%s Click on the icon to download the agent output.") % button
+            _("%s Click on the icon to download the agent output.")
+            % HTMLGenerator.render_icon_button(
+                url=download_url, title=_("Download"), icon="agent_output", theme=Theme()
+            )
         )
 
 

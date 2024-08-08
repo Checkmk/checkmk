@@ -62,9 +62,9 @@ class HostStatus(CmkPage):
         self.page.wait_for_url(url=re.compile(services_of_host_url_pattern), wait_until="load")
 
         logger.info("Navigate to '%s'", self.page_title)
-        self.main_area.dropdown_button("Host").click()
-        expect(self.main_area.dropdown_menu("menu_host_single")).to_be_visible()
-        self.main_area.dropdown_menu_item("menu_host_single", "Status of host").click()
+        self.main_area.click_dropdown_menu_item(
+            dropdown_button="Host", menu_id="menu_host_single", menu_item="Status of host"
+        )
         status_of_host_url_pattern = (
             quote_plus(f"host={self.host_details.name}") + ".*" + quote_plus("view_name=hoststatus")
         )

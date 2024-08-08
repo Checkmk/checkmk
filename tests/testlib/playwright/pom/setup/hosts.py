@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
+from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.testlib.playwright.pom.page import CmkPage
 
@@ -53,6 +54,36 @@ class SetupHost(CmkPage):
     @property
     def add_folder(self) -> Locator:
         return self.get_link("Add folder")
+
+    def _host_row(self, host_name: str) -> Locator:
+        return self.main_area.locator(f"tr:has(td:has-text('{host_name}'))")
+
+    def effective_parameters_button(self, host_name: str) -> Locator:
+        return self._host_row(host_name).get_by_role("link", name="View the rule based effective")
+
+    @property
+    def successfully_deleted_msg(self) -> Locator:
+        return self.main_area.locator().get_by_text("Successfully deleted", exact=False)
+
+    def select_hosts(self, host_names: list[str]) -> None:
+        for host_name in host_names:
+            self._host_row(host_name).locator("label").click()
+
+    def delete_selected_hosts(self) -> None:
+        logger.info("Delete selected hosts")
+        self.main_area.click_dropdown_menu_item(
+            dropdown_button="Hosts", menu_id="menu_hosts", menu_item="Delete hosts"
+        )
+        self.main_area.locator().get_by_role(role="button", name="Delete").click()
+        try:
+            expect(self.successfully_deleted_msg).to_be_visible(timeout=5000)
+        except PWTimeoutError as e:
+            if self.main_area.locator("div.error").count() != 0:
+                error_msg = (
+                    f"The following error appears in the UI:\n {self.main_area.get_error_text()}"
+                )
+                e.add_note(error_msg)
+            raise e
 
 
 class AddHost(CmkPage):
@@ -203,8 +234,9 @@ class HostProperties(CmkPage):
     def delete_host(self) -> None:
         """On `setup -> Hosts -> Properties`, delete host and activate changes."""
         logger.info("Delete host: %s", self.details.name)
-        self.main_area.dropdown_button("Host").click()
-        self.main_area.dropdown_menu_item("menu_host", "Delete").click()
+        self.main_area.click_dropdown_menu_item(
+            dropdown_button="Host", menu_id="menu_host", menu_item="Delete"
+        )
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
         self.page.wait_for_url(
             url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"

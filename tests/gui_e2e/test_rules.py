@@ -12,6 +12,12 @@ import pytest
 from playwright.sync_api import expect
 
 from tests.testlib.playwright.pom.dashboard import Dashboard
+from tests.testlib.playwright.pom.setup.add_rule_periodic_discovery import (
+    AddRulePeriodicServiceDiscovery,
+)
+from tests.testlib.playwright.pom.setup.host_effective_parameters import HostEffectiveParameters
+from tests.testlib.playwright.pom.setup.hosts import HostDetails
+from tests.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
 from tests.testlib.utils import makedirs
@@ -169,3 +175,57 @@ def test_create_rules(
             assert (
                 created_rule_count == 1
             ), f'Rule creation for ruleset "{ruleset_name}" has failed!'
+
+
+def test_periodic_service_discovery_rule(
+    dashboard_page: Dashboard, host_details: HostDetails
+) -> None:
+    """Test the creation & prioritization of a new rule for periodic service discovery.
+
+    Create a new rule for periodic service discovery, move it to the top, check that the new rule
+    was moved successfully. Then navigate to the 'Effective parameters of <host>' page and check the
+    presence of the new rule.
+    """
+    rule_description = "Test rule description"
+    period_in_hours = "12"
+
+    logger.info("Add a new rule for periodic service discovery")
+    add_periodic_service_discovery_page = AddRulePeriodicServiceDiscovery(dashboard_page.page)
+    add_periodic_service_discovery_page.description_text_field.fill(rule_description)
+    add_periodic_service_discovery_page.hours_text_field.fill(period_in_hours)
+    add_periodic_service_discovery_page.save_button.click()
+    ruleset_page = Ruleset(
+        add_periodic_service_discovery_page.page,
+        "Periodic service discovery",
+        navigate_to_page=False,
+    )
+    ruleset_page.main_area.check_success(ruleset_page.created_new_rule_message)
+    expect(
+        ruleset_page.rule_position(rule_description),
+        message="Unexpected position of the new rule after creation.",
+    ).to_have_text("1")
+
+    logger.info("Move the new rule to the top")
+    new_rule_move_icon = ruleset_page.move_icon(rule_description)
+    new_rule_move_icon.drag_to(ruleset_page.rules_table_header())
+    expect(
+        ruleset_page.rule_position(rule_description),
+        message="Unexpected position of the new rule after moving it to the top",
+    ).to_have_text("0")
+    ruleset_page.activate_changes()
+
+    logger.info(
+        "Check that the new rule is present in the 'Effective parameters of %s' page",
+        host_details.name,
+    )
+    effective_parameters_page = HostEffectiveParameters(ruleset_page.page, host_details)
+    effective_parameters_page.expand_section("Service discovery rules")
+    assert (
+        effective_parameters_page.service_discovery_period.inner_text()
+        == f"{period_in_hours} hours"
+    ), "Unexpected service discovery period after adding a new rule"
+
+    logger.info("Delete the new rule")
+    ruleset_page = Ruleset(effective_parameters_page.page, "Periodic service discovery")
+    ruleset_page.delete_icon(rule_description).click()
+    ruleset_page.delete_button.click()

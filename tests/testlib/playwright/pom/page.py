@@ -95,6 +95,11 @@ class CmkPage(LocatorHelper):
         """Returns a web-element from the `main_area`, which is a `link`."""
         return self.main_area.locator().get_by_role(role="link", name=name, exact=exact)
 
+    def activate_changes(self) -> None:
+        self.get_link("changes", exact=False).click()
+        self.activate_selected()
+        self.expect_success_state()
+
     def goto(self, url: str, event: str = "load") -> None:
         """Override `Page.goto`. Additionally, wait for the page to `load`, by default.
 
@@ -325,14 +330,23 @@ class MainArea(LocatorHelper):
         """Return a locator defined by element and text via xpath."""
         return self.locator(f"//{element}[text() = '{text}']")
 
+    @property
+    def page_menu_bar(self) -> Locator:
+        return self.locator("table#page_menu_bar")
+
     def dropdown_button(self, name: str, exact: bool = True) -> Locator:
-        return self.locator().get_by_role(role="heading", name=name, exact=exact)
+        return self.page_menu_bar.get_by_role(role="heading", name=name, exact=exact)
 
     def dropdown_menu(self, menu_id: str) -> Locator:
         return self.locator(f"div#{menu_id}")
 
     def dropdown_menu_item(self, menu_id: str, item_name: str) -> Locator:
         return self.dropdown_menu(menu_id).locator(f"span:has-text('{item_name}')")
+
+    def click_dropdown_menu_item(self, dropdown_button: str, menu_id: str, menu_item: str) -> None:
+        self.dropdown_button(dropdown_button).click()
+        expect(self.dropdown_menu(menu_id)).to_be_visible()
+        self.dropdown_menu_item(menu_id, menu_item).click()
 
 
 class Sidebar(LocatorHelper):

@@ -28,7 +28,8 @@ from cmk.utils.crypto.certificate import (
 )
 from cmk.utils.crypto.keys import InvalidSignatureError
 from cmk.utils.crypto.password import Password
-from cmk.utils.crypto.types import PEMDecodingError
+
+from cmk.crypto import PEMDecodingError
 
 
 def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> None:

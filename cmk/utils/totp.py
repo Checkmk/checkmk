@@ -9,7 +9,7 @@ import math
 import secrets
 from enum import Enum
 
-from cmk.utils.crypto.types import HashAlgorithm
+from cmk.crypto import HashAlgorithm
 
 
 class TotpVersion(Enum):

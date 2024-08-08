@@ -9,7 +9,8 @@ import pytest
 from cryptography.hazmat.primitives import hashes
 
 from cmk.utils.crypto.password import Password, PasswordPolicy
-from cmk.utils.crypto.types import HashAlgorithm
+
+from cmk.crypto import HashAlgorithm
 
 
 @pytest.mark.parametrize(

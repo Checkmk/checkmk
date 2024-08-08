@@ -53,6 +53,7 @@ config_setting(
         "@freetds",
         "@omd_packages//omd/packages/omd:use_system_openssl",
         "@omd_packages//packages:cmk-agent-based",
+        "@omd_packages//packages:cmk-crypto",
         "@omd_packages//packages:cmk-graphing",
         "@omd_packages//packages:cmk-livestatus-client",
         "@omd_packages//packages:cmk-messaging",
@@ -88,6 +89,7 @@ config_setting(
     }),
 ) for module, dep in [
     ("agent-receiver", "$(locations @omd_packages//packages/cmk-agent-receiver:files)"),
+    ("crypto", "$(execpath @omd_packages//packages:cmk-crypto)"),
     ("graphing", "$(execpath @omd_packages//packages:cmk-graphing)"),
     ("rulesets", "$(execpath @omd_packages//packages:cmk-rulesets)"),
     ("server-side-calls", "$(execpath @omd_packages//packages:cmk-server-side-calls)"),
@@ -109,6 +111,7 @@ genrule(
         for module in all_requirements + [
             "agent-based",
             "agent-receiver",
+            "crypto",
             "graphing",
             "messaging",
             "mkp-tool",

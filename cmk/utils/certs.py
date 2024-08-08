@@ -24,11 +24,11 @@ from cmk.utils.crypto.certificate import (
     X509Name,
 )
 from cmk.utils.crypto.keys import is_supported_private_key_type, PrivateKey
-from cmk.utils.crypto.types import HashAlgorithm
 from cmk.utils.log.security_event import SecurityEvent
 from cmk.utils.user import UserId
 
 from cmk.ccc.site import omd_site
+from cmk.crypto import HashAlgorithm
 
 
 class _CNTemplate:

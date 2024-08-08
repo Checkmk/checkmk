@@ -17,7 +17,8 @@ from tests.testlib.site import Site
 
 from cmk.utils.crypto.certificate import CertificateWithPrivateKey
 from cmk.utils.crypto.password import Password
-from cmk.utils.crypto.types import HashAlgorithm
+
+from cmk.crypto import HashAlgorithm
 
 logger = logging.getLogger(__name__)
 

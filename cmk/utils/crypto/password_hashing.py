@@ -17,7 +17,8 @@ import re
 import bcrypt
 
 from cmk.utils.crypto.password import Password, PasswordHash
-from cmk.utils.crypto.types import MKCryptoException
+
+from cmk.crypto import MKCryptoException
 
 logger = logging.getLogger(__name__)
 

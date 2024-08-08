@@ -15,7 +15,6 @@ import cmk.utils.render
 from cmk.utils.certs import CertManagementEvent
 from cmk.utils.crypto.certificate import Certificate, CertificateWithPrivateKey
 from cmk.utils.crypto.password import Password as PasswordType
-from cmk.utils.crypto.types import HashAlgorithm, PEMDecodingError
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.user import UserId
 
@@ -49,6 +48,7 @@ from cmk.gui.valuespec import (
 
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
+from cmk.crypto import HashAlgorithm, PEMDecodingError
 
 
 class KeypairStore:

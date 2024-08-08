@@ -11,7 +11,8 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import algorithms, Cipher, modes
 
 from cmk.utils.crypto import certificate, keys
-from cmk.utils.crypto.types import HashAlgorithm
+
+from cmk.crypto import HashAlgorithm
 
 
 class AesCbcCipher:

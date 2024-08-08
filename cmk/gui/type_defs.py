@@ -19,7 +19,6 @@ from cmk.utils.crypto.certificate import Certificate, CertificatePEM, Certificat
 from cmk.utils.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.crypto.secrets import Secret
-from cmk.utils.crypto.types import HashAlgorithm
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
@@ -28,6 +27,8 @@ from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
+
+from cmk.crypto import HashAlgorithm
 
 _ContactgroupName = str
 SizePT = NewType("SizePT", float)

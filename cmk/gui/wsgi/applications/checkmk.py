@@ -17,7 +17,6 @@ import livestatus
 
 import cmk.utils.paths
 import cmk.utils.profile
-from cmk.utils.crypto.types import MKCryptoException
 
 from cmk.gui import pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -49,6 +48,7 @@ from cmk.gui.wsgi.type_defs import WSGIResponse
 import cmk.ccc.store
 from cmk import trace
 from cmk.ccc.exceptions import MKException
+from cmk.crypto import MKCryptoException
 
 tracer = trace.get_tracer()
 

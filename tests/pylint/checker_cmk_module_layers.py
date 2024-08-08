@@ -67,6 +67,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
         (
             imported == "cmk",
             _in_component(imported=imported, component=Component("cmk.ccc")),
+            _in_component(imported=imported, component=Component("cmk.crypto")),
             _in_component(imported=imported, component=Component("cmk.utils")),
             _in_component(imported=imported, component=Component("cmk.fields")),
             _in_component(imported=imported, component=Component("cmk.automations")),

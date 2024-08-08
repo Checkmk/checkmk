@@ -25,7 +25,6 @@ from werkzeug.routing import Map, Rule, Submount
 from livestatus import SiteId
 
 from cmk.utils import paths
-from cmk.utils.crypto.types import MKCryptoException
 
 from cmk.gui import session
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
@@ -54,6 +53,7 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc import crash_reporting, store
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.site import omd_site
+from cmk.crypto import MKCryptoException
 
 if TYPE_CHECKING:
     from cmk.gui.http import HTTPMethod

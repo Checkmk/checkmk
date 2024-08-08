@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "a2485665e859096d3a7fe51aadf950a75091fb7a38da07f7471af2612b8791a6"
+            "sha256": "fd07d145cb596e436537fe3d0872ac48d024cba4ba393ac88672417564584bea"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -435,6 +435,10 @@
         "cmk-agent-receiver": {
             "editable": true,
             "path": "./packages/cmk-agent-receiver"
+        },
+        "cmk-crypto": {
+            "editable": true,
+            "path": "./packages/cmk-crypto"
         },
         "cmk-graphing": {
             "editable": true,

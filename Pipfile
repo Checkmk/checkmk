@@ -159,6 +159,7 @@ opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues
 protobuf = "*"  # For development, Runtime modules are shipped by omd/packages/protobuf
 cmk-agent-based = {editable = true, path = "./packages/cmk-agent-based"}
 cmk-agent-receiver = {editable = true, path = "./packages/cmk-agent-receiver"}
+cmk-crypto = {editable = true, path = "./packages/cmk-crypto"}
 cmk-graphing = {editable = true, path = "./packages/cmk-graphing"}
 cmk-messaging = {editable = true, path = "./packages/cmk-messaging"}
 cmk-mkp-tool = {editable = true, path = "./packages/cmk-mkp-tool"}

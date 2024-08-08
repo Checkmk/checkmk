@@ -122,6 +122,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_AGENT_RECEIVER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-receiver/' || true"
 
+    - NAME: CHANGED_CMK_CRYPTO_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-crypto/' || true"
+
     - NAME: CHANGED_CMK_GRAPHING_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-graphing/' || true"
 
@@ -420,6 +423,13 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-agent-receiver.txt"
       TEXT_ON_SKIP: "No cmk-agent-receiver files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-receiver.txt"
+
+    - NAME: "Package cmk-crypto"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_CRYPTO_FILES
+      DIR: "packages/cmk-crypto"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-crypto.txt"
+      TEXT_ON_SKIP: "No cmk-crypto files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-crypto.txt"
 
     - NAME: "Package cmk-graphing"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_GRAPHING_FILES

@@ -21,10 +21,6 @@ from cmk.utils.crypto.types import (
 )
 
 
-class WrongPasswordError(MKCryptoException):
-    """The private key could not be decrypted, probably due to a wrong password"""
-
-
 class InvalidSignatureError(MKCryptoException):
     """A signature could not be verified"""
 
@@ -104,59 +100,16 @@ class PrivateKey:
         `password` can be given if the key is encrypted.
 
         Raises:
-            PEMDecodingError: if the PEM cannot be decoded.
-            WrongPasswordError: if an encrypted PEM cannot be decrypted with the given password.
-                NOTE: it seems we cannot rely on this error being raised. In the unit tests we
-                sometimes saw an PEMDecodingError instead. Expect to see that as well.
-            TypeError: when trying to load an EncryptedPrivateKeyPEM but no password is given.
-                This would be caught by mypy though.
-
-        >>> PrivateKey.load_pem(EncryptedPrivateKeyPEM(""))
-        Traceback (most recent call last):
-            ...
-        cmk.utils.crypto.types.PEMDecodingError
-
-        >>> pem = EncryptedPrivateKeyPEM(
-        ...     "\\n".join([
-        ...         "-----BEGIN ENCRYPTED PRIVATE KEY-----",
-        ...         "MIIC3TBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQIMRfolchikB0CAggA",
-        ...         "MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBBvZ2ZdTgc5U+OgzNvBs3cXBIIC",
-        ...         "gBe7tt6aHu+sfCvU8EzFqVbkf3f3qt6P/YEJZu4zXeGXrE+4D7E64PYooqGk+ZvU",
-        ...         "/xyqHNoRzbAGEAqqEsMhZxjhQbgLmWVqGCJrqkkl8d5UlcG661AuevhYqIW8D3Bk",
-        ...         "PfezIOnL+tDJuNb8y3KgQU0mqjUZ/BFLy6uTm6hQWeBluU5xtJ3C59o2JCP3pQwz",
-        ...         "5V/EuLu0nLRSxCxDGcZqCr0s5A0AGv4U7xA9LEgER+ZuXLa2m+zp8VI8aR+1zUp+",
-        ...         "lWq4rFY2UnA3DNayS/5QV0ljgDbE8Bzje6dwDhRiFUhgIwHa4C6EEDTajAXxbJEz",
-        ...         "JebDaz9HLUMbfFdE2LYjagQx/kopb35eZUihZs3uHZXgXCQzeaaG7bunPBdiCuML",
-        ...         "n0Cg+h13PmuH4eXuzcLEvwGzJrBrhenuYs/Vp9PYhwI7gIq+pqx7cgBprOge4xqM",
-        ...         "gZbyhYoWCITEMg6lMYga1uZuBtvkel7/0PtC35qxdJyo5AEUCwSisY//t7oZownH",
-        ...         "e8RlioxKnCisNxtcMYkPLmU68HNklZSX4/FrSd9zrWrpxC9XKKYeixe/RZPApeXO",
-        ...         "phVLXl8KaX/xEAuonEZXH9XaZRnYA1Lg4Hl3lfbbHVffet9X1jpRRo4RCuQ+yQrJ",
-        ...         "+YvX8SvnNAYHB1Pfp6aEqauUBR6FisUhHx2xahvnJ8y1GFNwY1VUEDdB63Ai0JVK",
-        ...         "zIzEXU8/psX8xDh5Gm+n4ZVkgbuJQdvQgYLNT6vEglytEuJXYKFZQY4zX8J+vc3N",
-        ...         "AVqHeoR61JEG+AcMdUgg2bO3vYorcQ8b3kwKkZzoBNeghMl6IS0Lj5tLVixweS5d",
-        ...         "Rnp7GPpozA4jOM89/WEk+LE=",
-        ...         "-----END ENCRYPTED PRIVATE KEY-----"
-        ...     ])
-        ... )
-
-        >>> PrivateKey.load_pem(pem, Password("foo"))
-        <cmk.utils.crypto.keys.PrivateKey object at 0x...>
+            PEMDecodingError: if the PEM cannot be decoded or decrypted.
+            ValueError: if the decoded key type is not supported.
         """
-
-        # TODO: Remove WrongPasswordError, this breaks with cryptography 43.0.0
-        # >>> PrivateKey.load_pem(pem, Password("not foo"))
-        # Traceback (most recent call last):
-        #     ...
-        # cmk.utils.crypto.keys.WrongPasswordError
 
         pw = password.raw_bytes if password is not None else None
         try:
             key = serialization.load_pem_private_key(pem_data.bytes, password=pw)
 
-        except ValueError as exception:
-            if str(exception) == "Bad decrypt. Incorrect password?":
-                raise WrongPasswordError
-            raise PEMDecodingError
+        except ValueError as exc:
+            raise PEMDecodingError("Invalid PEM or wrong password") from exc
 
         if not is_supported_private_key_type(key):
             # We support only key types that can be used to for signatures. See class docstring.

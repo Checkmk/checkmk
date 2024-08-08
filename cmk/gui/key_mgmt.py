@@ -14,7 +14,6 @@ from livestatus import SiteId
 import cmk.utils.render
 from cmk.utils.certs import CertManagementEvent
 from cmk.utils.crypto.certificate import Certificate, CertificateWithPrivateKey
-from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.crypto.types import HashAlgorithm, PEMDecodingError
 from cmk.utils.log.security_event import log_security_event
@@ -365,10 +364,8 @@ class PageUploadKey:
             if not key_file:
                 raise MKUserError(None, _("You need to provide a key file."))
 
-            try:
-                self._upload_key(key_file, value["alias"], PasswordType(value["passphrase"]))
-            except PEMDecodingError:
-                raise MKUserError(None, _("The file does not look like a valid key file."))
+            self._upload_key(key_file, value["alias"], PasswordType(value["passphrase"]))
+
             return HTTPRedirect(
                 makeuri_contextless(request, [("mode", self.back_mode)], filename="wato.py"),
                 code=302,
@@ -387,17 +384,17 @@ class PageUploadKey:
         return cert_spec[1]
 
     def _upload_key(self, key_file: str, alias: str, passphrase: PasswordType) -> None:
-        # This will raise various ValueErrors, if the cert is not valid, if the passphrase is wrong, etc.
         try:
             key_pair = CertificateWithPrivateKey.load_combined_file_content(key_file, passphrase)
-        except WrongPasswordError:
-            raise MKUserError("key_p_passphrase", "Invalid pass phrase")
+        except PEMDecodingError:
+            raise MKUserError(None, _("The key file is invalid or the password is wrong."))
 
         try:
             # check if the key is an RSA key, which is assumed by backup encryption at the moment
             _rsa_key = key_pair.private_key.get_raw_rsa_key()
         except ValueError:
             raise MKUserError("key_p_key_file_0", "Only RSA keys are supported at this time")
+
         cert = key_pair.certificate
         self._log_upload_key(cert)
         key = Key(
@@ -537,7 +534,7 @@ class PageDownloadKey:
 
             try:
                 keys[key_id].to_certificate_with_private_key(PasswordType(value["passphrase"]))
-            except (WrongPasswordError, ValueError):
+            except (PEMDecodingError, ValueError):
                 raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))
 
             self._send_download(keys, key_id)

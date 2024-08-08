@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="self_signed_cert", scope="module")
 def fixture_self_signed() -> CertificateWithPrivateKey:
     return CertificateWithPrivateKey.generate_self_signed(
-        common_name="Some CN", organization="e2etest"
+        common_name="Some CN", organization="e2etest", key_size=1024
     )
 
 
@@ -110,7 +110,7 @@ def test_upload_signing_keys(
 
     # pem is invalid
     upload_function(dashboard_page, "Some description", "password", "invalid")
-    dashboard_page.main_area.check_error("The file does not look like a valid key file.")
+    dashboard_page.main_area.check_error("The key file is invalid or the password is wrong.")
 
     # This is very delicate...
     # But will be fixed soon
@@ -123,14 +123,7 @@ def test_upload_signing_keys(
 
     # passphrase is invalid
     upload_function(dashboard_page, "Some description", "password", pem_content)
-    # There is a weird bug that is not reproducible and a wrong password can be
-    # mistreated as an invalid file. This happens so rarely and we don't think
-    # users are too confused by that so we leave it as is, but we should except
-    # both cases...
-    # See also: tests/unit/cmk/utils/crypto/test_certificate.py
-    dashboard_page.main_area.check_error(
-        re.compile("(Invalid pass phrase)|(The file does not look like a valid key file.)")
-    )
+    dashboard_page.main_area.check_error("The key file is invalid or the password is wrong.")
 
     # all ok
     upload_function(dashboard_page, "Some description", "SecureP4ssword", pem_content)
@@ -182,7 +175,6 @@ def with_key_fixture(
     delete_key(dashboard_page, key_name)
 
 
-@pytest.mark.xfail(reason="Currently does not return an error message, see CMK-18451.", strict=True)
 def test_download_key(dashboard_page: Dashboard, with_key: str) -> None:
     """Test downloading a key.
 

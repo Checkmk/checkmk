@@ -45,8 +45,8 @@ from cmk.utils.backup.targets.remote_interface import (
 from cmk.utils.backup.type_defs import SiteBackupInfo
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
 from cmk.utils.certs import CertManagementEvent
-from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
+from cmk.utils.crypto.types import PEMDecodingError
 from cmk.utils.paths import omd_root
 from cmk.utils.schedule import next_scheduled_time
 
@@ -2129,7 +2129,7 @@ class PageBackupRestore:
                     # Validate the passphrase
                     try:
                         key.to_certificate_with_private_key(passphrase)
-                    except (ValueError, WrongPasswordError):
+                    except (PEMDecodingError, ValueError):
                         raise MKUserError("_key_p_passphrase", _("Invalid passphrase"))
 
                     transactions.check_transaction()  # invalidate transid

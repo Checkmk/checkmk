@@ -21,7 +21,7 @@ central_site_ids: list[str] = []
 
 # The scope of the site fixtures is "module" to avoid that changing the site properties in a module
 # may result in a test failing in another one. It also makes analyzing the job artifacts easier.
-@pytest.fixture(name="central_site", scope="module")
+@pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     site_number = len(central_site_ids)
     central_site_ids.append(f"{site_number}_central")
@@ -32,7 +32,7 @@ def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     )
 
 
-@pytest.fixture(name="remote_site", scope="module")
+@pytest.fixture(name="remote_site", scope="session")
 def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator[Site]:
     site_number = central_site.id.split("_")[1]
     remote_site_generator = site_factory.get_test_site(
@@ -102,7 +102,7 @@ def _add_remote_site_to_central_site(
     )
 
 
-@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="module")
+@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
 def _installed_agent_ctl_in_unknown_state(central_site: Site) -> Path:
     return install_agent_package(_agent_package_path(central_site))
 

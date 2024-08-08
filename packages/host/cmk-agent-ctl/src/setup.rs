@@ -79,20 +79,6 @@ impl PathResolver {
     }
 }
 
-trait ExistsOr {
-    fn exists_or(self, other_path: PathBuf) -> PathBuf;
-}
-
-impl ExistsOr for PathBuf {
-    fn exists_or(self, other_path: PathBuf) -> PathBuf {
-        if self.exists() {
-            self
-        } else {
-            other_path
-        }
-    }
-}
-
 pub fn connection_timeout() -> u64 {
     match env::var(constants::ENV_CONNECTION_TIMEOUT) {
         Err(_) => constants::CONNECTION_TIMEOUT,

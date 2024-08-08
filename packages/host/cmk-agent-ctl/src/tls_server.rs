@@ -16,9 +16,6 @@ use tokio_rustls::rustls::{
 };
 use tokio_rustls::TlsAcceptor;
 
-#[cfg(windows)]
-use std::io::{Read, Result as IoResult, Write};
-
 pub fn tls_acceptor<'a>(
     connections: impl Iterator<Item = &'a config::TrustedConnection>,
 ) -> AnyhowResult<TlsAcceptor> {
@@ -140,34 +137,6 @@ fn sni_resolver<'a>(
     }
 
     Ok(Arc::new(resolver))
-}
-
-#[cfg(windows)]
-pub struct IoStream {
-    // Windows Agent will not use stdio/stdin as a communication channel
-    // This is just temporary stub to keep API more or less in sync.
-    reader: std::io::Stdin,
-    writer: std::io::Stdout,
-}
-
-#[cfg(windows)]
-impl Read for IoStream {
-    fn read(&mut self, buf: &mut [u8]) -> IoResult<usize> {
-        let mut handle = self.reader.lock();
-        handle.read(buf)
-    }
-}
-
-#[cfg(windows)]
-impl Write for IoStream {
-    fn write(&mut self, buf: &[u8]) -> IoResult<usize> {
-        let mut handle = self.writer.lock();
-        handle.write(buf)
-    }
-    fn flush(&mut self) -> IoResult<()> {
-        let mut handle = self.writer.lock();
-        handle.flush()
-    }
 }
 
 #[cfg(test)]

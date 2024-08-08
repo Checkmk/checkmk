@@ -529,6 +529,20 @@ def retrieve_next_stage(
         _form_spec_parse([stage.form_data], expected_form_spec_map) for stage in incoming_stages
     ]
 
+    current_stage_recap = [
+        r
+        for recap_callable in current_stage.recap
+        for r in recap_callable(
+            combined_parsed_form_data_by_stage,
+            expected_form_spec_map,
+        )
+    ]
+
+    if current_stage_id == quick_setup.stages[-1].stage_id:
+        return Stage(
+            stage_id=StageId(-1), next_stage_structure=None, stage_recap=current_stage_recap
+        )
+
     try:
         next_stage = get_stage_with_id(quick_setup, StageId(current_stage.stage_id + 1))
     except InvalidStageException:
@@ -544,14 +558,7 @@ def retrieve_next_stage(
             ],
             button_label=next_stage.button_label,
         ),
-        stage_recap=[
-            r
-            for recap_callable in current_stage.recap
-            for r in recap_callable(
-                combined_parsed_form_data_by_stage,
-                expected_form_spec_map,
-            )
-        ],
+        stage_recap=current_stage_recap,
     )
 
 

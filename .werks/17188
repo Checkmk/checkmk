@@ -1,0 +1,13 @@
+Title: Check Point plug-ins: increase detection sensitivity
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1723122722
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+Some Check Point devices have not been discovered as expected.
+We now additionally consider all devices where the system object
+identifier points to Check Points enterprise SNMP tree
+<em>".1.3.6.1.4.1.2620"</em>.

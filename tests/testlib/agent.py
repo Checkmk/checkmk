@@ -204,15 +204,31 @@ def wait_until_host_receives_data(
     timeout: int = 120,
     interval: int = 20,
 ) -> None:
-    wait_until(
-        lambda: not site.execute(
+    try:
+        wait_until(
+            lambda: not site.execute(
+                ["cmk", "-d", hostname],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            ).wait(),
+            timeout=timeout,
+            interval=interval,
+        )
+    except TimeoutError as e:
+        proc = site.execute(
             ["cmk", "-d", hostname],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        ).wait(),
-        timeout=timeout,
-        interval=interval,
-    )
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        proc.wait()
+        output = proc.stdout.read() if proc.stdout else ""
+        logger.error(
+            'Executing "cmk -d %s" failed with RC:%s! Output:\n%s',
+            hostname,
+            proc.returncode,
+            output,
+        )
+        raise e
 
 
 def controller_status_json(contoller_path: Path) -> Mapping[str, Any]:

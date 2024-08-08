@@ -17,6 +17,7 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 from pprint import pformat
+from typing import Any
 
 import pexpect  # type: ignore[import-untyped]
 import pytest
@@ -215,6 +216,7 @@ def run(
     check: bool = True,
     sudo: bool = False,
     substitute_user: str | None = None,
+    **kwargs: Any,
 ) -> subprocess.CompletedProcess:
     """Run a process and return a CompletedProcess object."""
     if sudo:
@@ -226,10 +228,11 @@ def run(
         proc = subprocess.run(
             args,
             encoding="utf-8",
-            stdin=subprocess.DEVNULL,
+            stdin=None if kwargs.get("input") else kwargs.get("stdin", subprocess.DEVNULL),
             capture_output=True,
             close_fds=True,
             check=check,
+            **kwargs,
         )
     except subprocess.CalledProcessError as e:
         raise RuntimeError(

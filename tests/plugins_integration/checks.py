@@ -59,13 +59,15 @@ class CheckConfig:
 
     def load(self):
         data_dir_default = str(qa_test_data_path() / "plugins_integration")
-        dump_dir_default = f"{data_dir_default}/dumps" + ("/piggyback" if self.piggyback else "")
-        response_dir_default = f"{data_dir_default}/responses" + (
-            "/piggyback" if self.piggyback else ""
-        )
+        dump_dir_default = f"{data_dir_default}/dumps"
+        response_dir_default = f"{data_dir_default}/responses"
+
+        if self.piggyback:
+            self.dump_dir = str(qa_test_data_path() / "plugins_integration/dumps/piggyback")
+        else:
+            self.dump_dir = str(self.dump_dir or os.getenv("DUMP_DIR", dump_dir_default))
 
         self.data_dir = str(self.data_dir or os.getenv("DATA_DIR", data_dir_default))
-        self.dump_dir = str(self.dump_dir or os.getenv("DUMP_DIR", dump_dir_default))
         self.response_dir = str(
             self.response_dir or os.getenv("RESPONSE_DIR", response_dir_default)
         )
@@ -173,8 +175,11 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
         ) from exc
 
 
-def get_host_names(site: Site | None = None) -> list[str]:
+def get_host_names(site: Site | None = None, piggyback: bool = False) -> list[str]:
     """Return the list of agent/snmp hosts via filesystem or site.openapi."""
+    if piggyback:
+        config.piggyback = True
+        config.load()
     host_names = []
     if site:
         hosts = [_ for _ in site.openapi.get_hosts() if _.get("id") not in (None, "", site.id)]
@@ -442,7 +447,9 @@ def setup_site(site: Site, dump_path: str) -> None:
 
 
 @contextmanager
-def setup_source_host(site: Site, source_host_name: str, skip_cleanup: bool = False) -> Iterator:
+def setup_source_host(
+    site: Site, source_host_name: str, piggyback: bool = False, skip_cleanup: bool = False
+) -> Iterator:
     logger.info('Creating host "%s"...', source_host_name)
     host_attributes = {
         "ipaddress": "127.0.0.1",
@@ -466,7 +473,7 @@ def setup_source_host(site: Site, source_host_name: str, skip_cleanup: bool = Fa
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
 
-    if config.piggyback:
+    if piggyback:
         _wait_for_piggyback_hosts(site, source_host=source_host_name)
         count = 0
         while (

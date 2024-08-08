@@ -108,6 +108,8 @@ class SessionInfo:
     encrypter_secret: str = field(default_factory=lambda: Secret.generate(32).b64_str)
     # In case it is enabled: Was it already authenticated?
     two_factor_completed: bool = False
+    # Enable a 'login' state for enforcing two factor
+    two_factor_required: bool = False
     # We don't care about the specific object, because it's internal to the fido2 library
     webauthn_action_state: WebAuthnActionState | None = None
 

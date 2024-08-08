@@ -153,6 +153,7 @@ def test_registered_configvars() -> None:
         "quicksearch_search_order",
         "remote_status",
         "replication",
+        "require_two_factor_all_users",
         "reschedule_timeout",
         "restart_locking",
         "retention_interval",

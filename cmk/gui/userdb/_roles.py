@@ -117,6 +117,7 @@ class UserRole:
     alias: str
     builtin: bool = False
     permissions: dict[str, bool] = field(default_factory=dict)
+    two_factor: bool = False
     basedon: str | None = None
 
     def to_dict(self) -> dict[str, str | dict | bool]:
@@ -125,11 +126,13 @@ class UserRole:
                 "alias": self.alias,
                 "permissions": self.permissions,
                 "builtin": True,
+                "two_factor": self.two_factor,
             }
 
         return {
             "alias": self.alias,
             "permissions": self.permissions,
             "builtin": False,
+            "two_factor": self.two_factor,
             "basedon": self.basedon,
         }

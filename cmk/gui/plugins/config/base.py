@@ -392,6 +392,7 @@ class CREConfig:
     log_logon_failures: bool = True
     lock_on_logon_failures: int | None = 10
     default_dynamic_visual_permission: Literal["yes", "no"] = "yes"
+    require_two_factor_all_users: bool = False
     session_mgmt: dict[str, Any] = field(
         default_factory=lambda: {
             "max_duration": {"enforce_reauth": 86400, "enforce_reauth_warning_threshold": 900},

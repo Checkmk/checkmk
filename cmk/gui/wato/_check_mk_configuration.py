@@ -197,6 +197,7 @@ def register(
     config_variable_registry.register(ConfigVariableSingleUserSession)
     config_variable_registry.register(ConfigVariableDefaultUserProfile)
     config_variable_registry.register(ConfigVariableUserSecurityNotifications)
+    config_variable_registry.register(ConfigVariableRequireTwoFactorAllUsers)
     contact_group_usage_finder_registry.register(
         find_usages_of_contact_group_in_default_user_profile
     )
@@ -2523,6 +2524,27 @@ class ConfigVariableLogLogonFailures(ConfigVariable):
                 "If enabled, the username and client IP, the request "
                 "is coming from, is logged."
             ),
+        )
+
+
+class ConfigVariableRequireTwoFactorAllUsers(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserManagement
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "require_two_factor_all_users"
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Enforce two factor authentication"),
+            help=_(
+                "Enabling this option will enforce two factor authentication for all users. "
+                "Enabling this setting will overide role based two factor enforcement."
+            ),
+            label=_("Enforce for all users"),
         )
 
 

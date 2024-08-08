@@ -69,14 +69,15 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
 
             trace.get_current_span().set_attribute("cmk.auth.user_id", str(user_id))
 
-            two_factor_ok = requested_file_name(request) in (
+            two_factor_login_pages = requested_file_name(request) in (
                 "user_login_two_factor",
                 "user_webauthn_login_begin",
                 "user_webauthn_login_complete",
             )
 
+            # Two factor login
             if (
-                not two_factor_ok
+                not two_factor_login_pages
                 and userdb.is_two_factor_login_enabled(user_id)
                 and not session.session_info.two_factor_completed
             ):
@@ -84,7 +85,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
                     "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
                 )
 
-            if not two_factor_ok and requested_file_name(request) != "user_change_pw":
+            if not two_factor_login_pages and requested_file_name(request) != "user_change_pw":
                 if change_reason := userdb.need_to_change_pw(user_id, datetime.now()):
                     raise HTTPRedirect(
                         f"user_change_pw.py?_origtarget={urlencode(makeuri(request, []))}&reason={change_reason}"

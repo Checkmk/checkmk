@@ -161,6 +161,9 @@ class ModeRoles(WatoMode):
                 # Type
                 table.cell(_("Type"), _("built-in") if role.builtin else _("custom"))
 
+                # Two factor
+                table.cell(_("Two Factor"), _("Required") if role.two_factor else _("Not required"))
+
                 # Modifications
                 table.cell(
                     _("Modifications"),
@@ -248,6 +251,9 @@ class ModeEditRole(WatoMode):
         except ValidationError as exc:
             raise MKUserError("id", str(exc))
 
+        if new_two_factor := html.get_checkbox("two_factor"):
+            self._role.two_factor = new_two_factor
+
         self._role.name = new_id
 
         userroles.update_permissions(self._role, request.itervars(prefix="perm_"))
@@ -280,6 +286,18 @@ class ModeEditRole(WatoMode):
         forms.section(_("Alias"))
         html.help(_("An alias or description of the role"))
         html.text_input("alias", self._role.alias, size=50)
+
+        forms.section(_("Enforce two factor authentication"))
+        html.help(
+            _(
+                "If set, all users with this role will be required to setup two factor authentication. "
+                "'Enforce two factor authentication' in global settings will override this setting."
+            )
+        )
+        html.checkbox(
+            "two_factor",
+            self._role.two_factor,
+        )
 
         # Based on
         if not self._role.builtin:

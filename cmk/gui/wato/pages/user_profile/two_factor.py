@@ -151,6 +151,14 @@ def _handle_success_auth(user_id: UserId) -> None:
     raise HTTPRedirect(origtarget)
 
 
+def _handle_revoke_all_backup_codes(user_id: UserId, credentials: TwoFactorCredentials) -> None:
+    credentials["backup_codes"] = []
+    _log_event_usermanagement(TwoFactorEventType.backup_remove)
+    save_two_factor_credentials(user_id, credentials)
+    send_security_message(user_id, SecurityNotificationEvent.backup_revoked)
+    flash(_("All backup codes have been deleted"))
+
+
 overview_page_name: str = "user_two_factor_overview"
 
 
@@ -188,14 +196,14 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             else:
                 return
             save_two_factor_credentials(user.id, credentials)
+            if not is_two_factor_login_enabled(user.id):
+                session.session_info.two_factor_completed = False
+                if credentials["backup_codes"]:
+                    _handle_revoke_all_backup_codes(user.id, credentials)
             flash(_("Selected credential has been deleted"))
 
         if request.has_var("_delete_codes"):
-            credentials["backup_codes"] = []
-            _log_event_usermanagement(TwoFactorEventType.backup_remove)
-            save_two_factor_credentials(user.id, credentials)
-            send_security_message(user.id, SecurityNotificationEvent.backup_revoked)
-            flash(_("All backup codes have been deleted"))
+            _handle_revoke_all_backup_codes(user.id, credentials)
 
         if request.has_var("_backup_codes"):
             codes = make_two_factor_backup_codes()

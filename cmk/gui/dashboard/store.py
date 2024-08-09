@@ -76,8 +76,12 @@ def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> D
     }
 
 
-def save_and_replicate_all_dashboards() -> None:
+def save_all_dashboards() -> None:
     visuals.save("dashboards", get_all_dashboards())
+
+
+def save_and_replicate_all_dashboards() -> None:
+    save_all_dashboards()
     user_profile_async_replication_page(
         back_url=request.get_url_input("back", "edit_dashboards.py")
     )
@@ -118,7 +122,10 @@ def load_dashboard_with_cloning(
 
         all_dashboards[(active_user, name)] = board
         permitted_dashboards[name] = board
-        save_and_replicate_all_dashboards()
+        # TODO: add replication again. Don't replicate dashboard since it's breaking GUI-Crawler,
+        #  (apparently the cmk javascript module is not loaded yet)
+        #  Uncaught ReferenceError: cmk is not defined
+        save_all_dashboards()
 
     return board
 

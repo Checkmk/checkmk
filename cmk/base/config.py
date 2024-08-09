@@ -169,7 +169,10 @@ CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 LegacySSCConfigModel = object
 
-SSCRules = Sequence[tuple[str, Sequence[Mapping[str, object] | LegacySSCConfigModel]]]
+LegacySSCRules = Sequence[tuple[str, Sequence[LegacySSCConfigModel]]]
+SSCRules = Sequence[tuple[str, Sequence[Mapping[str, object]]]]
+
+MixedSSCRules = LegacySSCRules | SSCRules
 
 
 class FilterMode(enum.Enum):
@@ -1885,8 +1888,10 @@ class ConfigCache:
         self.__explicit_host_attributes: dict[HostName, dict[str, str]] = {}
         self.__computed_datasources: dict[HostName | HostAddress, ComputedDataSources] = {}
         self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
-        self.__active_checks: dict[HostName, SSCRules] = {}
-        self.__special_agents: dict[HostName, SSCRules] = {}
+        # TODO: active checks are actually "SSCRules" now (no longer mixed).
+        # This is currently validated very late.
+        self.__active_checks: dict[HostName, MixedSSCRules] = {}
+        self.__special_agents: dict[HostName, MixedSSCRules] = {}
         self.__hostgroups: dict[HostName, Sequence[str]] = {}
         self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
@@ -2553,14 +2558,14 @@ class ConfigCache:
         """Return the free form configured custom checks without formalization"""
         return self.ruleset_matcher.get_host_values(host_name, custom_checks)
 
-    def active_checks(self, host_name: HostName) -> SSCRules:
+    def active_checks(self, host_name: HostName) -> MixedSSCRules:
         """Returns the list of active checks configured for this host
 
         These are configured using the active check formalization of WATO
         where the whole parameter set is configured using valuespecs.
         """
 
-        def make_active_checks() -> SSCRules:
+        def make_active_checks() -> MixedSSCRules:
             configured_checks: list[tuple[str, Sequence[object]]] = []
             for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
                 # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
@@ -2615,8 +2620,8 @@ class ConfigCache:
             }.values()
         )
 
-    def special_agents(self, host_name: HostName) -> SSCRules:
-        def special_agents_impl() -> SSCRules:
+    def special_agents(self, host_name: HostName) -> MixedSSCRules:
+        def special_agents_impl() -> MixedSSCRules:
             matched: list[tuple[str, Sequence[Mapping[str, object] | LegacySSCConfigModel]]] = []
             # Previous to 1.5.0 it was not defined in which order the special agent
             # rules overwrite each other. When multiple special agents were configured
@@ -2695,12 +2700,12 @@ class ConfigCache:
             ]
 
         def _compose_filtered_ssc_rules(
-            rules: SSCRules,
+            rules: MixedSSCRules,
         ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
             return [(name, _filter_newstyle_ssc_rule(unfiltered)) for name, unfiltered in rules]
 
         def _gather_secrets_from(
-            rules_function: Callable[[HostName], SSCRules]
+            rules_function: Callable[[HostName], MixedSSCRules]
         ) -> Mapping[str, str]:
             return {
                 id_: secret

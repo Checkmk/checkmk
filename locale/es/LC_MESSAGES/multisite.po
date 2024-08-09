@@ -30204,6 +30204,9 @@ msgstr ""
 "Si un usuario carece de este permiso, sólo podrá ver los eventos que se "
 "originen en un host del que sea contacto."
 
+msgid "If a version difference is detected this state will be used."
+msgstr ""
+
 msgid ""
 "If access to the internet for downloading the sources for creating RCC "
 "environments is only possible via a network proxy, you can specify this here."
@@ -34234,6 +34237,10 @@ msgstr "Cola Jenkins"
 #, fuzzy
 msgid "Jenkins system metrics"
 msgstr "Parámetros del sistema Oracle"
+
+#, fuzzy
+msgid "Jenkins version"
+msgstr "conexiones pendientes"
 
 #, fuzzy
 msgid "Jira URL"
@@ -54583,6 +54590,10 @@ msgstr "Edad del estado de servicio"
 
 msgid "Service state if no map rule matches"
 msgstr "Estado del servicio si no coincide ninguna regla del mapa"
+
+#, fuzzy
+msgid "Service state on version difference"
+msgstr "Porcentaje del estado del servicio"
 
 msgid "Service state percentage"
 msgstr "Porcentaje del estado del servicio"

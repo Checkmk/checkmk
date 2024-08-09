@@ -29975,6 +29975,9 @@ msgstr ""
 "gebeurtenissen zien die afkomstig zijn van een host waarvoor hij/zij een "
 "contactpersoon is."
 
+msgid "If a version difference is detected this state will be used."
+msgstr ""
+
 msgid ""
 "If access to the internet for downloading the sources for creating RCC "
 "environments is only possible via a network proxy, you can specify this here."
@@ -33973,6 +33976,10 @@ msgstr "Jenkins wachtrij"
 #, fuzzy
 msgid "Jenkins system metrics"
 msgstr "Oracle systeemparameters"
+
+#, fuzzy
+msgid "Jenkins version"
+msgstr "in behandeling zijnde verbindingen"
 
 #, fuzzy
 msgid "Jira URL"
@@ -54107,6 +54114,10 @@ msgstr "Leeftijd dienststaat"
 
 msgid "Service state if no map rule matches"
 msgstr "Dienst status als er geen kaart regel overeenkomt"
+
+#, fuzzy
+msgid "Service state on version difference"
+msgstr "Dienststaat percentage"
 
 msgid "Service state percentage"
 msgstr "Dienststaat percentage"

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-08-06 17:51+0000\n"
+"PO-Revision-Date: 2024-08-08 05:00+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -14590,7 +14590,6 @@ msgstr "Connectの資格情報(ODBCインターフェース)"
 msgid "Credentials for HTTP Basic Authentication"
 msgstr "HTTP基本認証の資格情報"
 
-#, fuzzy
 msgid "Credentials for HTTP basic authentication"
 msgstr "HTTP基本認証の資格情報"
 
@@ -14616,7 +14615,6 @@ msgid ""
 msgstr ""
 "認証情報が設定されていないか、無効です。ライセンス設定を確認してください"
 
-#, fuzzy
 msgid "Credentials to access the database"
 msgstr "データベースにアクセスするための認証情報"
 
@@ -14717,9 +14715,8 @@ msgstr "クリティカル"
 msgid "Critical if below"
 msgstr "下回る場合はクリティカル"
 
-#, fuzzy
 msgid "Critical if below or equal"
-msgstr "以下の場合はクリティカル"
+msgstr "等しいまたは下回る場合はクリティカル"
 
 msgid "Critical if equal or below"
 msgstr "等しいか下回る場合はクリティカル"
@@ -14745,13 +14742,12 @@ msgstr "残りのクリティカルレベル"
 msgid "Critical level is at least"
 msgstr "少なくともクリティカルレベルです"
 
-#, fuzzy
 msgid "Critical level is at most"
-msgstr "少なくともクリティカルレベルです"
+msgstr "最大でもクリティカルレベルです"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Critical of %s"
-msgstr "クリティカル %sの場合"
+msgstr "%sクリティカル"
 
 msgid "Critical threshold"
 msgstr "クリティカルしきい値"
@@ -14798,7 +14794,6 @@ msgstr "現在のイベント"
 msgid "Current host check attempt"
 msgstr "現在のホストチェックの試行"
 
-#, fuzzy
 msgid "Current host notification number"
 msgstr "現在のホスト通知番号"
 
@@ -14817,14 +14812,12 @@ msgstr "現在の名前"
 msgid "Current number of processes"
 msgstr "現在のプロセス数"
 
-#, fuzzy
 msgid "Current number of sessions"
 msgstr "現在のセッション数"
 
 msgid "Current on Power Channel"
 msgstr "電力チャネルの電流"
 
-#, fuzzy
 msgid "Current password"
 msgstr "現在のパスワード"
 
@@ -14837,7 +14830,6 @@ msgstr "現在のキューの深度(%)"
 msgid "Current replication mode"
 msgstr "現在のレプリケーションモード"
 
-#, fuzzy
 msgid "Current service notification number"
 msgstr "現在のサービス通知番号"
 
@@ -14869,7 +14861,6 @@ msgstr "現在のスレッド数レベル"
 msgid "Current threads busy levels"
 msgstr "現在のスレッドのビジーレベル"
 
-#, fuzzy
 msgid "Current users"
 msgstr "現在のユーザー"
 
@@ -14985,14 +14976,12 @@ msgstr "カスタムフッターリンク"
 msgid "Custom graph"
 msgstr "カスタムグラフ"
 
-#, fuzzy
 msgid "Custom graph time ranges"
 msgstr "カスタムグラフの時間範囲"
 
 msgid "Custom graphs"
 msgstr "カスタムグラフ"
 
-#, fuzzy
 msgid "Custom host"
 msgstr "カスタムホスト"
 
@@ -15005,7 +14994,6 @@ msgstr "カスタムホスト名プレフィックス"
 msgid "Custom host notes"
 msgstr "カスタムホストノート"
 
-#, fuzzy
 msgid "Custom host/service notes URL"
 msgstr "カスタムホスト/サービスノートのURL"
 
@@ -15052,9 +15040,8 @@ msgstr "このユーザーのカスタム通知テーブル"
 msgid "Custom probe state"
 msgstr "カスタムプローブの状態"
 
-#, fuzzy
 msgid "Custom profile"
-msgstr "カスタムタイトル"
+msgstr "カスタムプロフィール"
 
 msgid "Custom search query"
 msgstr "カスタム検索クエリ"
@@ -15062,9 +15049,8 @@ msgstr "カスタム検索クエリ"
 msgid "Custom service attributes"
 msgstr "カスタムサービス属性"
 
-#, fuzzy
 msgid "Custom service configuration update"
-msgstr "ホストとサービスの構成ルール"
+msgstr "カスタムサービス構成の更新"
 
 msgid "Custom service name"
 msgstr "カスタムサービス名"
@@ -15204,7 +15190,6 @@ msgstr ""
 "を使用すると、通知の量が挿入され、<tt>$COUNT_HOSTS$</tt>を使用すると、ホスト"
 "の量が適用されます。"
 
-#, fuzzy
 msgid "Customize time range"
 msgstr "時間範囲をカスタマイズ"
 
@@ -15217,7 +15202,6 @@ msgstr "カスタマイズ"
 msgid "Cut everything after first space"
 msgstr "最初のスペースの後にすべてをカットします"
 
-#, fuzzy
 msgid "DATAPROXY - Throttled server connections"
 msgstr "DATAPROXY - スロットルされたサーバー接続"
 
@@ -15390,15 +15374,12 @@ msgstr "のLDAPサーバーを検出するためのDNSドメイン名"
 msgid "DNS failed queries"
 msgstr "DNSがクエリに失敗しました"
 
-#, fuzzy
 msgid "DNS host name"
 msgstr "DNSホスト名"
 
-#, fuzzy
 msgid "DNS host name or IP address"
 msgstr "DNSホスト名またはIPアドレス"
 
-#, fuzzy
 msgid "DNS host name or IP address of database server"
 msgstr "DNSホスト名またはデータベースサーバーのIPアドレス"
 
@@ -15465,9 +15446,8 @@ msgstr "DRBDは次のように表示されます"
 msgid "DROP"
 msgstr "ドロップ"
 
-#, fuzzy
 msgid "DSA"
-msgstr "DNS"
+msgstr "DSA"
 
 msgid "Daemon state and summarized count of containers and their states"
 msgstr "デーモンの状態とコンテナーの要約数とその状態"
@@ -15546,7 +15526,6 @@ msgstr "データディレクトリ"
 msgid "Data engress"
 msgstr "データ入力"
 
-#, fuzzy
 msgid "Data files"
 msgstr "データファイル"
 
@@ -15604,9 +15583,8 @@ msgstr "下位層を対象としたデータ"
 msgid "Data targeted for within tier"
 msgstr "階層内を対象としたデータ"
 
-#, fuzzy
 msgid "Data to collect (Sections)"
-msgstr "ガベージコレクション"
+msgstr "収集データ（セレクション）"
 
 msgid "Data to move down"
 msgstr "下に移動するデータ"
@@ -15638,9 +15616,8 @@ msgstr "データ転送"
 msgid "Data transfer cache size"
 msgstr "データ転送キャッシュサイズ"
 
-#, fuzzy
 msgid "Data transfer rate"
-msgstr "データ転送"
+msgstr "データ転送速度"
 
 msgid "Data type"
 msgstr "データ・タイプ"
@@ -15689,24 +15666,20 @@ msgstr "データベースのバックアップ"
 msgid "Database changed to emergency"
 msgstr "データベースが緊急事態に変更されました"
 
-#, fuzzy
 msgid "Database connections"
 msgstr "データベース接続"
 
 msgid "Database diff backup"
 msgstr "データベースの差分バックアップ"
 
-#, fuzzy
 msgid "Database files are restored"
 msgstr "データベースファイルが復元されます"
 
-#, fuzzy
 msgid "Database for MySQL flexible server"
-msgstr "MySQL用データベース"
+msgstr "MySQLフレキシブルサーバー用データベース"
 
-#, fuzzy
 msgid "Database for MySQL single server"
-msgstr "MySQL用データベース"
+msgstr "MySQLシングルサーバー用データベース"
 
 msgid "Database for PostgreSQL"
 msgstr "PostgreSQL用データベース"
@@ -15723,19 +15696,15 @@ msgstr "データベースを回復する必要があります"
 msgid "Database name"
 msgstr "データベース名"
 
-#, fuzzy
 msgid "Database offline"
 msgstr "データベースオフライン"
 
-#, fuzzy
 msgid "Database online"
 msgstr "データベースオンライン"
 
-#, fuzzy
 msgid "Database password"
 msgstr "データベースパスワード"
 
-#, fuzzy
 msgid "Database port"
 msgstr "データベースポート"
 
@@ -15751,7 +15720,6 @@ msgstr "データベースサイズ"
 msgid "Database sizes"
 msgstr "データベースサイズ"
 
-#, fuzzy
 msgid "Database suspect"
 msgstr "データベース サスペクト"
 
@@ -15761,11 +15729,9 @@ msgstr "データベーススループットユニット"
 msgid "Database throughput units in percent"
 msgstr "データベーススループット単位(パーセント)"
 
-#, fuzzy
 msgid "Database user"
 msgstr "データベースユーザー"
 
-#, fuzzy
 msgid "Database user credentials"
 msgstr "データベースユーザー資格情報"
 
@@ -15794,11 +15760,9 @@ msgstr "サービス出力に表示されるDatadogタグ"
 msgid "Datafile"
 msgstr "データファイル"
 
-#, fuzzy
 msgid "Datafile sizes"
 msgstr "データファイルのサイズ"
 
-#, fuzzy
 msgid "Dataguard statistics"
 msgstr "データガード統計"
 
@@ -15812,7 +15776,6 @@ msgstr "データソースの状態"
 msgid "Datasource: %s"
 msgstr "データソース: %s"
 
-#, fuzzy
 msgid "Datastore name"
 msgstr "データストア名"
 
@@ -15831,9 +15794,8 @@ msgstr "日付と時刻の範囲"
 msgid "Date (YYYY-MM-DD)"
 msgstr "日付(YYYY-MM-DD)"
 
-#, fuzzy
 msgid "Date and time"
-msgstr "ダウンタイム終了時間"
+msgstr "日付と時間"
 
 msgid "Date format"
 msgstr "日付形式"
@@ -15868,9 +15830,8 @@ msgstr "日"
 msgid "Day of creation"
 msgstr "作成日"
 
-#, fuzzy
 msgid "Day of the month"
-msgstr "その月の同じ日"
+msgstr "その月の日"
 
 msgid "Day of the month (1-31)"
 msgstr "月の日(1-31)"
@@ -15962,9 +15923,8 @@ msgstr ""
 msgid "Debug"
 msgstr "デバッグ"
 
-#, fuzzy
 msgid "Debug livestatus queries"
-msgstr "Livestatusクエリをデバッグする"
+msgstr "Livestatusクエリのデバッグ"
 
 msgid "Debug mode"
 msgstr "デバッグモード"
@@ -16041,7 +16001,6 @@ msgstr "デフォルトの %s テンプレート"
 msgid "Default (%s)"
 msgstr "デフォルト(%s)"
 
-#, fuzzy
 msgid "Default BI visualization settings"
 msgstr "デフォルトのBI視覚化設定"
 
@@ -16054,15 +16013,12 @@ msgstr "デフォルト設定"
 msgid "Default credentials"
 msgstr "デフォルトの資格情報"
 
-#, fuzzy
 msgid "Default expiration time (relative)"
-msgstr "デフォルトのレポート時間範囲"
+msgstr "デフォルトの有効期限（相対）"
 
-#, fuzzy
 msgid "Default graph layout"
 msgstr "デフォルトのグラフレイアウト"
 
-#, fuzzy
 msgid "Default increment"
 msgstr "デフォルトのインクリメント"
 
@@ -16102,11 +16058,9 @@ msgstr "検出されたサービスのデフォルトパラメータ"
 msgid "Default parameters when no time period matches"
 msgstr "期間が一致しない場合のデフォルト パラメータ"
 
-#, fuzzy
 msgid "Default profile"
-msgstr "デフォルトのユーザープロファイル"
+msgstr "デフォルトのプロファイル"
 
-#, fuzzy
 msgid "Default reporting time range"
 msgstr "デフォルトのレポート時間範囲"
 
@@ -16126,7 +16080,6 @@ msgstr "停止した自動開始サービスが見つかった場合のデフォ
 msgid "Default state to report when tunnel can not be found anymore"
 msgstr "トンネルが見つからなくなったときに報告するデフォルトの状態"
 
-#, fuzzy
 msgid "Default status"
 msgstr "デフォルトステータス"
 
@@ -16151,7 +16104,6 @@ msgstr "デフォルトを少なく表示する"
 msgid "Default to show more"
 msgstr "デフォルトをもっと表示にする"
 
-#, fuzzy
 msgid "Default topic"
 msgstr "デフォルトのトピック"
 
@@ -16161,7 +16113,6 @@ msgstr "デフォルトのユーザープロファイル"
 msgid "Default value"
 msgstr "デフォルト値"
 
-#, fuzzy
 msgid "Deferred files age"
 msgstr "遅延ファイルの経過時間"
 
@@ -16212,7 +16163,6 @@ msgstr ""
 "MTreeの可能な状態から監視状態、つまりチェックの結果への変換を定義します。これ"
 "により、チェックで使用されるデフォルトのマッピングが上書きされます。"
 
-#, fuzzy
 msgid "Define host assignment"
 msgstr "ホスト割り当ての定義"
 
@@ -16327,7 +16277,6 @@ msgstr ""
 msgid "Defines what information to query."
 msgstr "クエリする情報を定義します。"
 
-#, fuzzy
 msgid ""
 "Defines what information to query. Checks for cluster, indices and shard "
 "statistics follow soon."
@@ -16918,140 +16867,108 @@ msgstr "精度に応じて、単位はミリ秒またはマイクロ秒のいず
 msgid "Deploy %s"
 msgstr "%sを展開する"
 
-#, fuzzy
 msgid "Deploy AD-Replication plug-in"
 msgstr "ADレプリケーションプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy Arcserve plug-in"
 msgstr "Arcserveプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy DB2 memory plug-in"
-msgstr "DB2 memoryプラグインをデプロイします"
+msgstr "DB2 memoryプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy IBM MQ plug-in"
-msgstr "IBMMQプラグインをデプロイします"
+msgstr "IBMMQプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy ISC DHCP-Daemon plug-in"
 msgstr "ISC DHCP-Daemonプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy Inotify plug-in"
 msgstr "Inotifyプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy Kaspersky Anti-Virus plug-in"
 msgstr "Kaspersky Anti-Virusプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy LVM plug-in"
 msgstr "LVMプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy Linux filesystem quota plug-in"
 msgstr "Linuxファイルシステムクォータプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy MS Office 365 plug-in"
-msgstr "MS Office 365プラグインを展開する"
+msgstr "MS Office 365プラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy MSSQL Server plug-in"
 msgstr "MSSQL Serverプラグインを展開する"
 
-#, fuzzy
 msgid "Deploy MTR plug-in asynchronously"
 msgstr "MTRプラグインを非同期でデプロイする"
 
-#, fuzzy
 msgid "Deploy Mailman plug-in"
 msgstr "Mailmanプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy MegaRAID plug-in"
 msgstr "MegaRAIDプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy NFS4 exports plug-in"
 msgstr "NFS4エクスポートプラグインをデプロイする"
 
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitorのデプロイ(ヘッドレス)"
 
-#, fuzzy
 msgid "Deploy Oracle databases plug-in"
 msgstr "ORACLEデータベースプラグインをデプロイします"
 
-#, fuzzy
 msgid "Deploy Robotmk scheduler and agent plug-in"
-msgstr "nvidia_smi エージェントプラグインをデプロイする"
+msgstr "Robotmkスケジューラとエージェントプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy SMART plug-in"
 msgstr "SMARTプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy SUSEConnect plug-in"
 msgstr "SUSEConnectプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy StorCLI plug-in"
 msgstr "StorCLIプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy Symantec Anti Virus plug-in"
 msgstr "Symantec AntiVirusプラグインをデプロイします"
 
-#, fuzzy
 msgid "Deploy Unitrends plug-ins"
 msgstr "Unitrendsプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy VxVM plug-in"
 msgstr "VxVMプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy Windows License plug-in"
-msgstr "Windowsライセンスプラグインを展開する"
+msgstr "Windowsライセンスプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy Windows McAfee AV client plug-in"
 msgstr "Windows McAfee AVクライアントプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy Windows Multipath plug-in"
-msgstr "Windowsマルチパスプラグインを展開する"
+msgstr "Windowsマルチパスプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy Windows Printer Queue plug-in"
-msgstr "Windowsプリンターキュープラグインを展開する"
+msgstr "Windowsプリンターキュープラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy Windows Updates plug-in"
-msgstr "WindowsUpdateプラグインを展開する"
+msgstr "WindowsUpdateプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy Zorp plug-in"
 msgstr "Zorpプラグインをデプロイする"
 
 msgid "Deploy agents"
 msgstr "エージェントを展開する"
 
-#, fuzzy
 msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"
-msgstr "バッチファイルプラグインを展開する-WinXP / Win2k以降に推奨"
+msgstr "バッチファイルプラグインをデプロイする-WinXP / Win2k以降推奨"
 
 msgid "Deploy custom files with agent"
 msgstr "エージェントを使用してカスタムファイルをデプロイする"
 
-#, fuzzy
 msgid "Deploy iptables plug-in"
 msgstr "iptablesプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy logged in users plug-in"
 msgstr "ログインしたユーザーのプラグインをデプロイする"
 
@@ -17061,149 +16978,117 @@ msgstr "mk_mongodb.pyを認証付きでデプロイします。"
 msgid "Deploy mk_mongodb.py without authentication."
 msgstr "mk_mongodb.pyを認証なしでデプロイします。"
 
-#, fuzzy
 msgid "Deploy plug-in for Citrix XenApp"
-msgstr "CitrixXenAppのプラグインを展開する"
+msgstr "CitrixXenAppのプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for Citrix licenses"
 msgstr "Citrixライセンス用のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for DAG"
 msgstr "DAG用のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for DB2"
-msgstr "DB2用のプラグインをデプロイします"
+msgstr "DB2用のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for Hyper-V VM Guest Information"
-msgstr "Hyper-V VMゲスト情報用のプラグインをデプロイします"
+msgstr "Hyper-V VMゲスト情報用のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for Hyper-V VMs"
 msgstr "Hyper-V VM用のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for JAR signatures"
-msgstr "JAR署名用のプラグインをデプロイします"
+msgstr "JAR署名用のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for MS Exchange database latency"
-msgstr "MS Exchangeデータベースの遅延用のプラグインをデプロイする"
+msgstr "MS Exchangeデータベースレイテンシーのプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for MS IIS Application Pool States"
-msgstr "MS IIS Application Pool States のプラグインをデプロイします"
+msgstr "MS IIS Application Pool States のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for NFS IO Stats"
-msgstr "NFS IO Statsのプラグインをデプロイします"
+msgstr "NFS IO Statsのプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for Veeam backup status"
 msgstr "Veeamバックアップステータス用のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for Windows DHCP pools"
-msgstr "Windows DHCPプール用のプラグインを展開する"
+msgstr "Windows DHCPプール用のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for Windows System Info"
-msgstr "Windowsシステム情報用のプラグインを展開する"
+msgstr "Windowsシステム情報用のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for Windows Task Scheduler"
-msgstr "Windowsタスクスケジューラ用のプラグインを展開する"
+msgstr "Windowsタスクスケジューラ用のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in for Windows broadcom bonding"
 msgstr "Windows Broadcomボンディング用のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy plug-in that updates agent automatically"
-msgstr "エージェントを自動的に更新するプラグインをデプロイします"
+msgstr "エージェント自動アップデートプラグインをデプロイする"
 
 #, fuzzy
 msgid "Deploy plugin for Ceph"
 msgstr "DAG用のプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy powershell plug-in - recommended for Win2k8 upwards"
-msgstr "PowerShellプラグインをデプロイする-Win2k8以降に推奨"
+msgstr "PowerShellプラグインをデプロイする-Win2k8以降推奨"
 
-#, fuzzy
 msgid "Deploy remote desktop licenses plug-in"
-msgstr "リモートデスクトップライセンスプラグインを展開する"
+msgstr "リモートデスクトップライセンスプラグインをデプロイする"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deploy the %s plug-in and its configuration"
-msgstr "%sプラグインとその構成をデプロイします"
+msgstr "%sプラグインとその構成をデプロイする"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deploy the %s plug-in without configuration"
-msgstr "構成なしで %s プラグインをデプロイします"
+msgstr "構成なしで %s プラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the APT plug-in"
-msgstr "APTプラグインをデプロイします"
+msgstr "APTプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the Checkmk CUPS queues plug-in"
-msgstr "Checkmk CUPSキュープラグインをデプロイします"
+msgstr "Checkmk CUPSキュープラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the Checkmk EMC ScaleIO plug-in"
-msgstr "Checkmk EMCScaleIOプラグインをデプロイします"
+msgstr "Checkmk EMCScaleIOプラグインをデプロイする"
 
 #, fuzzy
 msgid "Deploy the Checkmk HW/SW Inventory plug-in"
 msgstr "Checkmk Inventoryプラグインをデプロイします"
 
-#, fuzzy
 msgid "Deploy the Checkmk object counts plug-in"
-msgstr "Checkmkオブジェクトカウントプラグインをデプロイ"
+msgstr "Checkmkオブジェクトカウントプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the Docker container plug-in"
-msgstr "Dockerコンテナプラグインをデプロイします"
+msgstr "Dockerコンテナプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the Docker plug-in"
-msgstr "Dockerプラグインをデプロイします"
+msgstr "Dockerプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the Jolokia plug-in"
-msgstr "Jolokiaプラグインをデプロイします"
+msgstr "Jolokiaプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the MySQL plug-in"
-msgstr "MySQLプラグインをデプロイします"
+msgstr "MySQLプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the Plesk plug-ins"
-msgstr "pleskプラグインをデプロイする"
+msgstr "Pleskプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the PostgreSQL plug-in"
-msgstr "PostgreSQLプラグインをデプロイします"
+msgstr "PostgreSQLプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the SAP HANA plug-in"
-msgstr "SAPHANAプラグインをデプロイします"
+msgstr "SAP HANAプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the SAP R/3 plug-in"
-msgstr "SAP R/3プラグインをデプロイします"
+msgstr "SAP R/3プラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the SAP router plug-in"
-msgstr "SAPルータープラグインをデプロイします"
+msgstr "SAPルータープラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the SSH daemon configuration plug-in"
-msgstr "SSHデーモン構成プラグインをデプロイします"
+msgstr "SSHデーモン構成プラグインをデプロイする"
 
 #, fuzzy
 msgid "Deploy the TSM plug-in and run it asynchronously"
@@ -17213,11 +17098,9 @@ msgstr "MTRプラグインを非同期でデプロイする"
 msgid "Deploy the TSM plug-in and run it synchronously"
 msgstr "MTRプラグインを非同期でデプロイする"
 
-#, fuzzy
 msgid "Deploy the Zypper plug-in"
-msgstr "Zypperプラグインをデプロイします"
+msgstr "Zypperプラグインをデプロイする"
 
-#, fuzzy
 msgid ""
 "Deploy the agent plug-in <tt>mk_postgres</tt>. This will create information "
 "necessary for all <tt>postgres_*</tt> checks"
@@ -17225,28 +17108,22 @@ msgstr ""
 "エージェントプラグイン<tt> mk_postgres </tt>をデプロイします。これにより、す"
 "べての<tt> postgres _ * </tt>チェックに必要な情報が作成されます"
 
-#, fuzzy
 msgid "Deploy the agent plug-in <tt>mk_sshd_config</tt>."
 msgstr "エージェントプラグイン <tt>mk_sshd_config </tt> をデプロイする。"
 
-#, fuzzy
 msgid "Deploy the agent plug-in <tt>mk_suseconnect</tt>."
 msgstr "エージェントプラグイン<tt>mk_suseconnect</tt>をデプロイします。"
 
-#, fuzzy
 msgid "Deploy the agent plug-in <tt>zorp</tt> on your target system."
 msgstr ""
 "エージェントプラグイン <tt>zorp</tt>をターゲットシステムにデプロイします。"
 
-#, fuzzy
 msgid "Deploy the mk_filehandler plug-in"
 msgstr "mk_filehandlerプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the netstat plug-in"
-msgstr "netstatプラグインをデプロイします"
+msgstr "netstatプラグインをデプロイする"
 
-#, fuzzy
 msgid "Deploy the nvidia_smi agent plug-in"
 msgstr "nvidia_smi エージェントプラグインをデプロイする"
 
@@ -17259,14 +17136,14 @@ msgstr "デプロイ"
 msgid "Deployment problems"
 msgstr "デプロイする問題"
 
-#, fuzzy
 msgid ""
 "Deployment status of host {} is corrupted. Consider deleting the "
 "corresponding file on Checkmk-Server at {} and re-registering host {}. "
 "Exception: {}"
 msgstr ""
-"ホスト %s のデプロイメントステータスが破損しています。Check_MK-Serverの %s に"
-"ある対応するファイルを削除し、ホスト %s を再登録することを検討してください"
+"ホスト {}のデプロイメントステータスが破損しています。Check_MK-Serverの{}にあ"
+"る対応するファイルを削除し、ホスト{}を再登録することを検討してください。例"
+"外：{}"
 
 #, fuzzy
 msgid "Deployment type"
@@ -17282,9 +17159,8 @@ msgstr "非推奨"
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "非推奨のHW/SWインベントリプラグイン"
 
-#, fuzzy
 msgid "Deprecated check plug-ins"
-msgstr "廃止されたチェックプラグイン"
+msgstr "非推奨のチェックプラグイン"
 
 msgid "Deprecated choice, please re-select"
 msgstr "非推奨の選択、再選択してください"
@@ -17340,14 +17216,12 @@ msgstr "説明"
 msgid "Design graph - %s"
 msgstr "デザイングラフ-%s"
 
-#, fuzzy
 msgid "Design this graph"
-msgstr "このグラフを設計する"
+msgstr "このグラフをデザインする"
 
 msgid "Desired replicas"
 msgstr "必要なレプリカ"
 
-#, fuzzy
 msgid "Desktop group name"
 msgstr "デスクトップグループ名"
 
@@ -17393,9 +17267,8 @@ msgstr "サービス通知詳細"
 msgid "Detect and use proxies configured on the target system"
 msgstr "ターゲットシステム上に設定されたプロキシを検出し、使用する"
 
-#, fuzzy
 msgid "Detect instances"
-msgstr "インスタンスの自動検出"
+msgstr "インスタンスの検出"
 
 msgid "Detect network parent hosts"
 msgstr "ネットワークの親ホストを検出する"
@@ -17470,7 +17343,6 @@ msgstr "利用可能なデバイス"
 msgid "Device going online"
 msgstr "デバイスがオンラインになります"
 
-#, fuzzy
 msgid "Device number"
 msgstr "デバイス番号"
 
@@ -17589,9 +17461,8 @@ msgstr "すべてのサービスグループへの直接リンク"
 msgid "Direct local delivery without spooling"
 msgstr "スプーリングなしの直接ローカル配信"
 
-#, fuzzy
 msgid "Direct login to web GUI allowed"
-msgstr "WebGUIへの直接ログインが許可されました"
+msgstr "WebGUIへの直接ログインを許可"
 
 msgid "Direct mapping of VM state to monitoring state"
 msgstr "VM状態から監視状態への直接マッピング"
@@ -17667,13 +17538,11 @@ msgstr "すべての個人通知を無効にする"
 msgid "Disable automatic host removal"
 msgstr "ホストの自動削除を無効化"
 
-#, fuzzy
 msgid "Disable automatic user synchronization (use central site users)"
-msgstr "自動ユーザー同期を無効にする(マスターサイトユーザーを使用)"
+msgstr "ユーザー自動同期を無効にする(セントラルサイトユーザーを使用)"
 
-#, fuzzy
 msgid "Disable bulkwalks"
-msgstr "全てを無効化"
+msgstr "バルクウォークの無効化"
 
 msgid "Disable certificate validation"
 msgstr "証明書の検証を無効にする"
@@ -17705,9 +17574,8 @@ msgstr "通知を無効にする"
 msgid "Disable notifications?"
 msgstr "通知を無効にしますか?"
 
-#, fuzzy
 msgid "Disable or enable forwarding"
-msgstr "無効または有効なセクション(SNMP)"
+msgstr "転送を無効または有効にする"
 
 msgid "Disable passive checks"
 msgstr "パッシブチェックを無効にする"
@@ -17832,9 +17700,8 @@ msgstr "RMON統計サービスの発見"
 msgid "Discover a service checking the average of all CPUs"
 msgstr "全CPUの平均値をチェックするサービスを発見する"
 
-#, fuzzy
 msgid "Discover disabled tasks"
-msgstr "登録されたホストを検出"
+msgstr "無効なタスクの発見"
 
 msgid "Discover individual services for each CPU"
 msgstr "各CPUに対応した個別のサービスを発見する"
@@ -17861,9 +17728,8 @@ msgstr "検出されたホストラベル (%s)"
 msgid "Discovered process name"
 msgstr "検出されたプロセス名"
 
-#, fuzzy
 msgid "Discovered service labels"
-msgstr "検出したサービスラベルを表示"
+msgstr "発見されたサービスラベル"
 
 msgid "Discovery"
 msgstr "発見"
@@ -17943,9 +17809,8 @@ msgstr "ディスクバックエンドバイトの退避（フルキャッシュ
 msgid "Disk backend bytes removed or overwritten"
 msgstr "ディスクバックエンドバイトの削除または上書き"
 
-#, fuzzy
 msgid "Disk backend size"
-msgstr "IDキャッシュサイズ"
+msgstr "ディスクバックエンドのサイズ"
 
 msgid "Disk backend uncompressed"
 msgstr "ディスクバックエンドの圧縮なし"
@@ -17974,9 +17839,8 @@ msgstr "ディスク使用率"
 msgid "Disk read"
 msgstr "ディスク読取"
 
-#, fuzzy
 msgid "Disk read I/O operations"
-msgstr "ディスク読込操作"
+msgstr "ディスク読込 I/O操作"
 
 msgid "Disk read latency"
 msgstr "ディスク読み取りの待ち時間"
@@ -18005,9 +17869,8 @@ msgstr "ディスク使用率"
 msgid "Disk write"
 msgstr "ディスク書込"
 
-#, fuzzy
 msgid "Disk write I/O operations"
-msgstr "ディスク書込操作"
+msgstr "ディスク書込 I/O操作"
 
 msgid "Disk write latency"
 msgstr "ディスク書き込みの待ち時間"
@@ -18018,7 +17881,6 @@ msgstr "ディスク書込操作"
 msgid "Disk write throughput per second"
 msgstr "ディスク書込スループット/秒"
 
-#, fuzzy
 msgid "Disk writeback"
 msgstr "ディスクライトバック"
 
@@ -18043,9 +17905,8 @@ msgstr "ホストのDisoveredホストラベル"
 msgid "Disovered services of the host"
 msgstr "ホストのサービスを発見"
 
-#, fuzzy
 msgid "Dispatch notification"
-msgstr "通知を無効にする"
+msgstr "通知の配信"
 
 msgid "Display"
 msgstr "表示"
@@ -18071,7 +17932,6 @@ msgstr "SLA統計を表示する"
 msgid "Display SLA subresults for each requirement"
 msgstr "各要件のSLAサブ結果を表示する"
 
-#, fuzzy
 msgid "Display SLA time range and period in table header"
 msgstr "テーブルヘッダーにSLAの時間範囲と期間を表示する"
 
@@ -18155,11 +18015,9 @@ msgstr "表示名"
 msgid "Display node details on"
 msgstr "にノードの詳細を表示する"
 
-#, fuzzy
 msgid "Display only a summary of all datafiles"
 msgstr "すべてのデータファイルの要約のみを表示する"
 
-#, fuzzy
 msgid "Display only a summary of all transactionlogs"
 msgstr "すべてのトランザクションログの要約のみを表示します"
 
@@ -18267,11 +18125,12 @@ msgstr "選択したサービスの散布図と平均線を表示します。"
 msgid "Displays a single metric of a specific host and service."
 msgstr "特定のホストとサービスの単一のメトリックを表示します。"
 
-#, fuzzy
 msgid ""
 "Displays a sorted list of services according to a selected metric. Note: In "
 "rare cases some metrics might be missing."
-msgstr "選択した状態のサービス量を表示します。"
+msgstr ""
+"選択したメトリクスに従って、サービスのリストをソートして表示します。注: まれ"
+"に、一部のメトリクスが欠落している場合があります。"
 
 msgid "Displays a static text to the user."
 msgstr "静的テキストをユーザーに表示します。"
@@ -18286,9 +18145,8 @@ msgstr "すべてのBI集計を表示する。"
 msgid "Displays all aggregations of a certain group."
 msgstr "特定のグループのすべての集計を表示します。"
 
-#, fuzzy
 msgid "Displays all frozen BI aggregations."
-msgstr "すべてのBI集計を表示する。"
+msgstr "凍結された BI 集約をすべて表示します。"
 
 msgid "Displays amount of hosts in a selected state."
 msgstr "選択されたホストの数を表示します。"
@@ -18296,9 +18154,8 @@ msgstr "選択されたホストの数を表示します。"
 msgid "Displays amount of services in a selected state."
 msgstr "選択した状態のサービス量を表示します。"
 
-#, fuzzy
 msgid "Displays an overview of all Checkmk servers and sites\n"
-msgstr "すべての Checkmk サーバーとインスタンスの概要を表示します\n"
+msgstr "すべてのCheckmkサーバーとサイトの概要を表示します\n"
 
 msgid "Displays either sites and states or hosts and states of a site"
 msgstr "サイトと状態、またはサイトのホストと状態のいずれかを表示する"
@@ -18400,9 +18257,8 @@ msgstr "アクションをキャンセルする"
 msgid "Do inventory and service configuration on existing hosts."
 msgstr "既存ホストのインベントリとサービス設定を行う。"
 
-#, fuzzy
 msgid "Do no longer continue here"
-msgstr "Dockerノードコンテナレベル"
+msgstr "もうここで続けることはありません"
 
 msgid "Do not activate changes"
 msgstr "変更をアクティブにしないでください"
@@ -18454,310 +18310,236 @@ msgstr "ケースを変換しないでください"
 msgid "Do not create hosts"
 msgstr "ホストを作成しない"
 
-#, fuzzy
 msgid "Do not deploy AD-Replication plug-in"
 msgstr "AD-Replicationプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy DB2 memory plug-in"
 msgstr "DB2メモリー・プラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy ISC DHCP-Daemon plug-in"
 msgstr "ISC DHCP-Daemonプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy Inotify plug-in"
 msgstr "Inotifyプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy Kaspersky Anti-Virus plug-in"
 msgstr "Kaspersky Anti-Virusプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy LVM plug-in"
 msgstr "LVMプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy Linux filesystem quota plug-in"
 msgstr "Linuxファイルシステムクォータプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "MySQLプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy MTR plug-in"
 msgstr "MTRプラグインをデプロイしない"
 
-#, fuzzy
 msgid "Do not deploy Mailman plug-in"
 msgstr "Mailmanプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy NFS4 exports plug-in"
 msgstr "NFS4エクスポートプラグインをデプロイしないでください"
 
 msgid "Do not deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitor (headless)をデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy Oracle databases plug-in"
-msgstr "ORACLEデータベースプラグインをデプロイしない"
+msgstr "ORACLEデータベースプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy Robotmk"
-msgstr "mtrプラグインをデプロイしないでください"
+msgstr "Robotmkをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy SMART plug-in"
 msgstr "SMARTプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy SUSEConnect plug-in"
 msgstr "SUSEConnectプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy Symantec Anti Virus plug-in"
 msgstr "Symantec AntiVirusプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy Unitrends plug-ins"
 msgstr "Unitrendsプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy VxVM plug-in"
 msgstr "VxVMプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy Windows License plug-in"
 msgstr "Windowsライセンスプラグインを展開しないでください"
 
-#, fuzzy
 msgid "Do not deploy Windows McAfee AV client plug-in"
 msgstr "Windows McAfee AVクライアントプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy Windows Multipath plug-in"
 msgstr "Windowsマルチパスプラグインを展開しないでください"
 
-#, fuzzy
 msgid "Do not deploy Windows Printer Queue plug-in"
 msgstr "Windowsプリンターキュープラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy Windows Updates plug-in"
 msgstr "Windows Updateプラグインを展開しないでください"
 
-#, fuzzy
 msgid "Do not deploy automatic agent update plug-in"
-msgstr "自動エージェント更新プラグインをデプロイしないでください"
+msgstr "エージェントの自動アップデートプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy iptables plug-in"
 msgstr "iptablesプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy logged in users plug-in"
-msgstr "ログインしたユーザーのプラグインをデプロイしない"
+msgstr "ログインしたユーザーのプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy mk_mongodb.py plug-in"
-msgstr "mk_mongodb.pyプラグインをデプロイしない"
+msgstr "mk_mongodb.pyプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in"
-msgstr "プラグインをデプロイしない"
+msgstr "プラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Citrix XenApp"
 msgstr "Citrix XenAppのプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Citrix licenses"
 msgstr "Citrixライセンスのプラグインを展開しないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for DAG"
 msgstr "DAGのプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
-msgstr "Hyper-V VMゲスト情報のプラグインを展開しないでください"
+msgstr "Hyper-V VMゲスト情報のプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Hyper-V VMs"
 msgstr "Hyper-V VM用のプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for JAR signatures"
 msgstr "JAR署名用のプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for MS Exchange database latency"
-msgstr "MS Exchangeデータベース遅延用のプラグインを展開しないでください"
+msgstr "MS Exchangeデータベース遅延用のプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for MS IIS Application Pool States"
-msgstr "MS IIS Application Pool Statesのプラグインをデプロイしない"
+msgstr "MS IIS Application Pool Statesのプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for MS Office 365"
 msgstr "MS Office365のプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Microsoft SQL Server"
-msgstr "Microsoft SQL Serverのプラグインを展開しないでください"
+msgstr "Microsoft SQL Serverのプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for NFS IO Stats"
 msgstr "NFS IO Statsのプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Veeam backup status"
 msgstr "Veeamバックアップステータスのプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Windows DHCP pools"
-msgstr "WindowsDHCPプール用のプラグインを展開しないでください"
+msgstr "WindowsDHCPプール用のプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Windows System Info"
-msgstr "Windowsシステム情報用のプラグインを展開しないでください"
+msgstr "Windowsシステム情報用のプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Windows Task Scheduler"
-msgstr "Windowsタスクスケジューラ用のプラグインを展開しないでください"
+msgstr "Windowsタスクスケジューラ用のプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Windows broadcom bonding"
-msgstr "Windows broadcom bonding用のプラグインを展開しないでください"
+msgstr "Windows broadcom bonding用のプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Windows interfaces"
 msgstr "Windowsインターフェイス用のプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy remote desktop licenses plug-in"
-msgstr "リモートデスクトップライセンスプラグインを展開しないでください"
+msgstr "リモートデスクトップライセンスプラグインをデプロイしないでください"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Do not deploy the %s plug-in"
-msgstr "%s プラグインを展開しない"
+msgstr "%s プラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the APT plug-in"
 msgstr "APTプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the Apache Status plug-in"
 msgstr "Apache Statusプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the Arcserve plug-in"
-msgstr "Arcserveプラグインを導入しないでください"
+msgstr "Arcserveプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the Checkmk CUPS queues plug-in"
 msgstr "Checkmk CUPSキュープラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the Checkmk EMC ScaleIO plug-in"
-msgstr "Checkmk EMC ScaleIOプラグインを導入しないでください"
+msgstr "Checkmk EMC ScaleIOプラグインをデプロイしないでください"
 
 #, fuzzy
 msgid "Do not deploy the Checkmk HW/SW Inventory plug-in"
 msgstr "Checkmk Inventory プラグインをデプロイしない"
 
-#, fuzzy
 msgid "Do not deploy the Checkmk site objects plug-in"
 msgstr "Checkmkサイトオブジェクトプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the DB2 plug-in"
 msgstr "DB2プラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the DNS client plug-in"
-msgstr "DNSクライアントプラグインを展開しないでください"
+msgstr "DNSクライアントプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the Docker container plug-in"
 msgstr "Dockerコンテナプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the Docker plug-in"
 msgstr "Dockerプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the IBM MQ plug-in"
 msgstr "IBM MQプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the Jolokia plug-in"
 msgstr "Jolokiaプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the MegaRAID plug-in"
 msgstr "MegaRAIDプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the MySQL plug-in"
 msgstr "MySQLプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the NGINX status plug-in"
 msgstr "NGINXステータスプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the Plesk plug-ins"
-msgstr "pleskプラグインをデプロイしないでください"
+msgstr "Pleskプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the PostgreSQL plug-in"
 msgstr "PostgreSQLプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the Redis plug-in"
 msgstr "Redisプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the SAP HANA plug-in"
 msgstr "SAP HANA プラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the SAP R/3 plug-in"
 msgstr "SAP R/3プラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the SAP router plug-in"
 msgstr "SAPルータープラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the SSH daemon configuration plug-in"
 msgstr "SSHデーモン設定プラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the StorCLI plug-in"
 msgstr "StorCLIプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the TSM plug-in"
 msgstr "TSMプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the Zypper plug-in"
 msgstr "Zypperプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "mk_filehandlerプラグインをデプロイしない"
 
-#, fuzzy
 msgid "Do not deploy the netstat plug-in"
 msgstr "netstatプラグインをデプロイしないでください"
 
-#, fuzzy
 msgid "Do not deploy the nvidia_smi agent plug-in"
 msgstr "nvidia_smiエージェントプラグインをデプロイしない"
 
@@ -18782,7 +18564,6 @@ msgstr "履歴とタイムラインのアイコンを表示しない"
 msgid "Do not display legend for availability levels"
 msgstr "可用性レベルの凡例を表示しない"
 
-#, fuzzy
 msgid "Do not display plug-in output in timeline"
 msgstr "プラグインの出力をタイムラインに表示しない"
 
@@ -29125,6 +28906,9 @@ msgstr ""
 "ユーザーにこの権限がない場合、ユーザーは、自分が連絡先であるホストから発生し"
 "たイベントのみを表示できます。"
 
+msgid "If a version difference is detected this state will be used."
+msgstr ""
+
 msgid ""
 "If access to the internet for downloading the sources for creating RCC "
 "environments is only possible via a network proxy, you can specify this here."
@@ -33024,6 +32808,10 @@ msgstr "Jenkinsキュー"
 #, fuzzy
 msgid "Jenkins system metrics"
 msgstr "Oracleシステムパラメータ"
+
+#, fuzzy
+msgid "Jenkins version"
+msgstr "保留中の接続"
 
 #, fuzzy
 msgid "Jira URL"
@@ -52917,6 +52705,10 @@ msgstr "サービス状態経過日数"
 
 msgid "Service state if no map rule matches"
 msgstr "一致するマップルールがない場合のサービス状態"
+
+#, fuzzy
+msgid "Service state on version difference"
+msgstr "サービス状態のパーセンテージ"
 
 msgid "Service state percentage"
 msgstr "サービス状態のパーセンテージ"

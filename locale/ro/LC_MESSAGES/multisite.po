@@ -29986,6 +29986,9 @@ msgstr ""
 "Dacă un utilizator nu are această permisiune, poate vedea numai evenimentele "
 "care provin de la o gazdă pentru care este persoană de contact."
 
+msgid "If a version difference is detected this state will be used."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If access to the internet for downloading the sources for creating RCC "
@@ -34038,6 +34041,10 @@ msgstr "Coada Jenkins"
 #, fuzzy
 msgid "Jenkins system metrics"
 msgstr "Parametrii sistemului Oracle"
+
+#, fuzzy
+msgid "Jenkins version"
+msgstr "conexiuni în așteptare"
 
 #, fuzzy
 msgid "Jira URL"
@@ -54187,6 +54194,10 @@ msgstr "Vârsta statului de serviciu"
 msgid "Service state if no map rule matches"
 msgstr ""
 "Starea serviciului în cazul în care nicio regulă de hartă nu corespunde"
+
+#, fuzzy
+msgid "Service state on version difference"
+msgstr "Procentul de stare de serviciu"
 
 msgid "Service state percentage"
 msgstr "Procentul de stare de serviciu"

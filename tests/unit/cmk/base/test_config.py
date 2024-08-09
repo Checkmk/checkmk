@@ -2989,7 +2989,9 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
 
     assert agent_based_register.is_registered_check_plugin(CheckPluginName("duplicate_plugin"))
     with pytest.raises(MKGeneralException):
-        config._extract_check_plugins(duplicate_plugin, validate_creation_kwargs=False)
+        config._add_checks_to_register(
+            config._make_check_plugins(duplicate_plugin, validate_creation_kwargs=False)[1]
+        )
 
 
 def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
@@ -3022,7 +3024,7 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert agent_based_register.is_registered_section_plugin(SectionName("duplicate_plugin"))
-    config._extract_agent_and_snmp_sections(duplicate_plugin)
+    config._add_sections_to_register(config._make_agent_and_snmp_sections(duplicate_plugin)[1])
     assert (
         agent_based_register.get_section_plugin(SectionName("duplicate_plugin"))
         == registered_section

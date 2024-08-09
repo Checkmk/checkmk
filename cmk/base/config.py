@@ -111,7 +111,11 @@ from cmk.checkengine.summarize import SummaryConfig
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import default_config
 from cmk.base.api.agent_based.cluster_mode import ClusterMode
-from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentSectionPlugin,
+    CheckPlugin,
+    SNMPSectionPlugin,
+)
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_section_plugin_from_legacy,
@@ -1422,11 +1426,15 @@ def load_checks(
 
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in sane_check_info})
 
-    return [
-        *ignored_plugins_errors,
-        *_extract_agent_and_snmp_sections(sane_check_info),
-        *_extract_check_plugins(sane_check_info, validate_creation_kwargs=did_compile),
-    ]
+    section_errors, sections = _make_agent_and_snmp_sections(sane_check_info)
+    check_errors, checks = _make_check_plugins(
+        sane_check_info, validate_creation_kwargs=did_compile
+    )
+
+    _add_sections_to_register(sections)
+    _add_checks_to_register(checks)
+
+    return [*ignored_plugins_errors, *section_errors, *check_errors]
 
 
 # Constructs a new check context dictionary. It contains the whole check API.
@@ -1537,25 +1545,29 @@ AUTO_MIGRATION_ERR_MSG = (
 )
 
 
-def _extract_agent_and_snmp_sections(
+def _add_sections_to_register(sections: Iterable[SNMPSectionPlugin | AgentSectionPlugin]) -> None:
+    for section in sections:
+        if agent_based_register.is_registered_section_plugin(section.name):
+            continue
+        agent_based_register.add_section_plugin(section)
+
+
+def _make_agent_and_snmp_sections(
     legacy_checks: Mapping[str, LegacyCheckDefinition]
-) -> list[str]:
+) -> tuple[list[str], Sequence[SNMPSectionPlugin | AgentSectionPlugin]]:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
     in check_info to create API compliant section plugins.
     """
     errors = []
-    # start with the "main"-checks, the ones without '.' in their names:
-    main_checks = [(name, cinfo) for name, cinfo in legacy_checks.items() if "." not in name]
+    sections = []
 
-    for section_name, check_info_element in main_checks:
-        if agent_based_register.is_registered_section_plugin(SectionName(section_name)):
+    for section_name, check_info_element in legacy_checks.items():
+        if (parse_function := check_info_element.parse_function) is None:
             continue
-
         try:
-            assert (parse_function := check_info_element.parse_function) is not None
-            agent_based_register.add_section_plugin(
+            sections.append(
                 create_section_plugin_from_legacy(
                     name=section_name,
                     parse_function=parse_function,
@@ -1571,43 +1583,41 @@ def _extract_agent_and_snmp_sections(
                 raise MKGeneralException(exc) from exc
             errors.append(AUTO_MIGRATION_ERR_MSG % ("section", section_name))
 
-    if cmk.ccc.debug.enabled():
-        subchecks = (name for name in legacy_checks if "." in name)
-        for subcheck in subchecks:
-            assert agent_based_register.is_registered_section_plugin(
-                SectionName(section_name_of(subcheck))
+    return errors, sections
+
+
+def _add_checks_to_register(checks: Iterable[CheckPlugin]) -> None:
+    for check in checks:
+        present_plugin = agent_based_register.get_check_plugin(check.name)
+
+        if present_plugin is not None and present_plugin.location is not None:
+            # module is not None => it's a new plug-in
+            # (allow loading multiple times, e.g. update-config)
+            # implemented here instead of the agent based register so that new API code does not
+            # need to include any handling of legacy cases
+            raise ValueError(
+                f"Legacy check plug-in still exists for check plug-in {check.name}. "
+                "Please remove legacy plug-in."
             )
+        agent_based_register.add_check_plugin(check)
 
-    return errors
 
-
-def _extract_check_plugins(
+def _make_check_plugins(
     legacy_checks: Mapping[str, LegacyCheckDefinition], *, validate_creation_kwargs: bool
-) -> list[str]:
+) -> tuple[list[str], Sequence[CheckPlugin]]:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
     in check_info to create API compliant check plug-ins.
     """
     errors = []
+    checks = []
     for check_plugin_name, check_info_element in sorted(legacy_checks.items()):
         # skip pure section declarations:
         if check_info_element.service_name is None:
             continue
         try:
-            present_plugin = agent_based_register.get_check_plugin(
-                CheckPluginName(maincheckify(check_plugin_name))
-            )
-            if present_plugin is not None and present_plugin.location is not None:
-                # module is not None => it's a new plug-in
-                # (allow loading multiple times, e.g. update-config)
-                # implemented here instead of the agent based register so that new API code does not
-                # need to include any handling of legacy cases
-                raise ValueError(
-                    f"Legacy check plug-in still exists for check plug-in {check_plugin_name}. "
-                    "Please remove legacy plug-in."
-                )
-            agent_based_register.add_check_plugin(
+            checks.append(
                 create_check_plugin_from_legacy(
                     check_plugin_name,
                     check_info_element,
@@ -1621,7 +1631,7 @@ def _extract_check_plugins(
                 raise MKGeneralException(exc) from exc
             errors.append(AUTO_MIGRATION_ERR_MSG % ("check plug-in", check_plugin_name))
 
-    return errors
+    return errors, checks
 
 
 # .

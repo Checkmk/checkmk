@@ -24,6 +24,7 @@ import time
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from multiprocessing import Lock, Process, Queue
+from pathlib import Path
 from queue import Empty as QueueEmpty
 from typing import Any, Literal, NamedTuple
 
@@ -445,7 +446,7 @@ class BaseApiClient(abc.ABC):
         self._base_url = authority_urls.base
         self._http_proxy_config = http_proxy_config
 
-    def login(self, tenant, client, secret):
+    def login(self, tenant: str, client: str, secret: str) -> None:
         client_app = msal.ConfidentialClientApplication(
             client,
             secret,
@@ -787,7 +788,7 @@ class GroupConfig:
     def fetchall(self):
         return not self.resources
 
-    def add_key(self, key, value):
+    def add_key(self, key: str, value: str) -> None:
         if key == "resources":
             self.resources = value.split(",")
             return
@@ -908,7 +909,7 @@ class Section:
         else:  # assume one single line
             self._cont.append(self.formatline(info))
 
-    def write(self, write_empty=False):
+    def write(self, write_empty: bool = False) -> None:
         if not (write_empty or self._cont):
             return
         with self.LOCK:
@@ -921,12 +922,12 @@ class Section:
 
 
 class AzureSection(Section):
-    def __init__(self, name, piggytargets=("",)) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, name: str, piggytargets: Iterable[str] = ("",)) -> None:
         super().__init__("azure_%s" % name, piggytargets, separator=124, options=[])
 
 
 class LabelsSection(Section):
-    def __init__(self, piggytarget) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, piggytarget: str) -> None:
         super().__init__("azure_labels", [piggytarget], separator=0, options=[])
 
 
@@ -935,7 +936,7 @@ class IssueCollector:
         super().__init__()
         self._list: list[tuple[str, str]] = []
 
-    def add(self, issue_type, issued_by, issue_msg) -> None:  # type: ignore[no-untyped-def]
+    def add(self, issue_type: str, issued_by: str, issue_msg: str) -> None:
         issue = {"type": issue_type, "issued_by": issued_by, "msg": issue_msg}
         self._list.append(("issue", json.dumps(issue)))
 
@@ -986,7 +987,7 @@ def create_metric_dict(metric, aggregation, interval_id):
     return None
 
 
-def get_attrs_from_uri(uri):
+def get_attrs_from_uri(uri: str) -> Mapping[str, str]:
     """The uri contains info on subscription, resource group, provider."""
     attrs = {}
     segments = uri.split("/")
@@ -1019,9 +1020,9 @@ class AzureResource:
 
         self.metrics: list = []
 
-    def dumpinfo(self):
+    def dumpinfo(self) -> Sequence[tuple]:
         # TODO: Hmmm, should the variable-length tuples actually be lists?
-        lines: list[tuple] = [("Resource",), (json.dumps(self.info),)]
+        lines: list[tuple[str | int, ...]] = [("Resource",), (json.dumps(self.info),)]
         if self.metrics:
             lines += [("metrics following", len(self.metrics))]
             lines += [(json.dumps(m),) for m in self.metrics]
@@ -1040,7 +1041,7 @@ def filter_keys(mapping: Mapping, keys: Iterable[str]) -> Mapping:
     return {k: v for k, v in items if v is not None}
 
 
-def process_vm(mgmt_client, vmach, args):
+def process_vm(mgmt_client: MgmtApiClient, vmach: AzureResource, args: Args) -> None:
     use_keys = ("statuses",)
 
     inst_view = mgmt_client.vmview(vmach.info["group"], vmach.info["name"])
@@ -1329,7 +1330,7 @@ class MetricCache(DataCache):
         )
 
     @staticmethod
-    def get_cache_path(resource):
+    def get_cache_path(resource: AzureResource) -> Path:
         valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
         subdir = "".join(c if c in valid_chars else "_" for c in resource.info["id"])
         return AZURE_CACHE_FILE_PATH / subdir
@@ -1406,7 +1407,9 @@ def write_section_app_registrations(graph_client: GraphApiClient, args: argparse
     section.write()
 
 
-def gather_metrics(mgmt_client, resource, debug=False):
+def gather_metrics(
+    mgmt_client: MgmtApiClient, resource: AzureResource, debug: bool = False
+) -> IssueCollector:
     """
     Gather all metrics for a resource. These metrics have different time
     resolutions, so every metric needs its own cache.

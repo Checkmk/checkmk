@@ -81,8 +81,6 @@ class ActiveCheck:
     def get_active_service_data(
         self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object] | object]]]
     ) -> Iterator[ActiveServiceData]:
-        # remove setting the host context when deleting the old API
-        # the host name is passed as an argument in the new API
         for plugin_name, plugin_params in active_checks_rules:
             plugin_params = _ensure_mapping_str_object(plugin_params)
 
@@ -179,8 +177,6 @@ class ActiveCheck:
     def get_active_service_descriptions(
         self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object] | object]]]
     ) -> Iterator[ActiveServiceDescription]:
-        # remove setting the host context when deleting the old API
-        # the host name is passed as an argument in the new API
         for plugin_name, plugin_params in active_checks_rules:
             plugin_params = _ensure_mapping_str_object(plugin_params)
 

@@ -115,6 +115,13 @@ def pytest_addoption(parser):
         default=None,
     )
 
+    parser.addoption(
+        "--enable-piggyback",
+        action="store_true",
+        default=False,
+        help="Enable piggyback hosts via a DCD connector",
+    )
+
 
 def pytest_configure(config):
     # parse options that control the test execution
@@ -134,6 +141,7 @@ def pytest_configure(config):
     checks.config.host_names = config.getoption(name="--host-names")
     checks.config.check_names = config.getoption(name="--check-names")
     checks.config.dump_types = config.getoption(name="--dump-types")
+    checks.config.piggyback = config.getoption(name="--enable-piggyback")
 
     checks.config.load()
 

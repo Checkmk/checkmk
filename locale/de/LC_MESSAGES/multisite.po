@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-08-06 17:51+0000\n"
+"PO-Revision-Date: 2024-08-08 23:44+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -2100,9 +2100,9 @@ msgid ""
 "in one go. This avoids frequent core restarts in situations with frequent "
 "services changes."
 msgstr ""
-"Hier kann eine Verzögerung konfiguriert werden, um mehrere Hosts zu sammeln "
-"und gleichzeitig zu erkennen. Dies vermeidet häufige Core-Neustarts bei "
-"häufigen Service-Wechseln."
+"Hier kann eine Verzögerung konfiguriert werden, so dass mehrere Erkennungen "
+"auf einmal aktiviert werden können. Dadurch werden häufige Neustarts des "
+"Kerns in Situationen mit häufigen Service-Änderungen vermieden."
 
 msgid ""
 "A deployment enters various states during its lifecycle. Depending on this a "
@@ -4855,7 +4855,7 @@ msgid "Agent updates"
 msgstr "Agentenupdates"
 
 msgid "Agent updates are currently disabled"
-msgstr "Agentenupdates sind aktuell ausgeschaltet"
+msgstr "Agentenupdates sind aktuell deaktiviert"
 
 #, python-format
 msgid "Agent updates are disabled for host name %s because it is"
@@ -5867,7 +5867,7 @@ msgstr ""
 "Benachrichtigungen. In älteren Versionen hat diese Einstellung nur die "
 "Sichtbarkeit von Ereignissen in der GUI beeinflusst und <i>nicht</i> die "
 "Benachrichtigungen. Neue Regeln haben diese Option automatisch aktiviert, "
-"bestehende nicht."
+"für bestehende ist diese standardmäßig deaktiviert."
 
 msgid "Altered"
 msgstr "Geändert"
@@ -17338,7 +17338,7 @@ msgid "Disable vanished services"
 msgstr "Deaktiviere verschwundene Services"
 
 msgid "Disabled"
-msgstr "Deaktivierung"
+msgstr "Deaktiviert"
 
 msgid "Disabled "
 msgstr "Deaktiviert "
@@ -17347,7 +17347,7 @@ msgid "Disabled (configured away by admin)"
 msgstr "Deaktiviert (vom Administrator wegkonfiguriert)"
 
 msgid "Disabled active checks"
-msgstr "Abgeschaltete aktive Checks"
+msgstr "Deaktivierte aktive Checks"
 
 msgid "Disabled alerts"
 msgstr "Deaktivierte Warnmeldungen"
@@ -20107,7 +20107,7 @@ msgid ""
 "activities of the slave. If disabled only problems will be logged."
 msgstr ""
 "Mit dieser Option werden detaillierte Logeinträge für alle Replikationen der "
-"Remote-Instanz erzeugt. Wenn abgeschaltet, dann werden nur Probleme "
+"Remote-Instanz erzeugt. Wenn deaktiviert, dann werden nur Probleme "
 "protokolliert."
 
 msgid ""
@@ -23863,7 +23863,7 @@ msgid "Graph collections"
 msgstr "Graphensammlung"
 
 msgid "Graph is disabled"
-msgstr "Der Graph ist deaktiviert"
+msgstr "Graph ist deaktiviert"
 
 msgid "Graph is visible"
 msgstr "Graph ist sichtbar"
@@ -24524,7 +24524,7 @@ msgid "Has changed"
 msgstr "Hat sich geändert"
 
 msgid "Has never been activated"
-msgstr "Wurde nicht aktiviert"
+msgstr "Wurde noch nie aktiviert"
 
 msgid "Has performance data"
 msgstr "Hat Leistungsdaten"
@@ -25087,12 +25087,13 @@ msgid ""
 "host names in question."
 msgstr ""
 "Hier können Sie eine explizite Liste von Host-Namen angeben, für welche die "
-"Regel greifen oder nicht greifen soll. Wenn Sie die Option nicht verwenden, "
-"greift die Regel auf alle Hosts mit den oben eingestellten Merkmalen. Die "
-"Namen, die Sie hier angeben, werden unter Unterscheidung von Groß-/"
-"Kleinschrift verglichen. Alternativ können Sie reguläre Ausdrücke angeben. "
-"Stellen Sie dazu dem Ausdruck eine Tilde (<tt>~</tt>) voran. Der reguläre "
-"Ausdruck muss dann auf den <i>Anfang</i> des Host-Namens passen."
+"Regel greifen oder nicht greifen soll. Lassen Sie diese Option deaktiviert, "
+"wenn Sie möchten, dass die Regel für alle durch die angegebenen Tags "
+"spezifizierten Hosts gilt. Die Namen, die Sie hier angeben, werden unter "
+"Unterscheidung von Groß-/Kleinschrift verglichen. Alternativ können Sie "
+"reguläre Ausdrücke angeben. Stellen Sie dazu dem Ausdruck eine Tilde (<tt>~</"
+"tt>) voran. Der reguläre Ausdruck muss dann auf den <i>Anfang</i> des Host-"
+"Namens passen."
 
 msgid ""
 "Here you can enter either device state number (e.g. from SNMP devices) or "
@@ -30824,9 +30825,9 @@ msgid ""
 msgstr ""
 "Sie können verschiedene Benutzerattribute, wie E-Mail oder vollständigen "
 "Namen, aus dem LDAP-Verzeichnis holen. Dies erledigen Plugins, die einzeln "
-"ein- und ausgeschaltet werden können. Wenn ein Plugin aktiviert ist, wird es "
-"bei der nächsten Synchronisierung der Benutzerkonten verwendet, um deren "
-"Attribute zu sammeln. Die Benutzeroptionen, die aus LDAP in Checkmk "
+"aktiviert oder deaktiviert werden können. Wenn ein Plugin aktiviert ist, "
+"wird es bei der nächsten Synchronisierung der Benutzerkonten verwendet, um "
+"deren Attribute zu sammeln. Die Benutzeroptionen, die aus LDAP in Checkmk "
 "importiert werden, sind im Setup gesperrt."
 
 msgid "It is possible to let users edit their custom attributes."
@@ -35262,7 +35263,7 @@ msgid "Maximum number of parsed lines per log file"
 msgstr "Maximale Anzahl Zeilen, die pro Datei gelesen werden"
 
 msgid "Maximum number of re-executions"
-msgstr "Maximale Anzahl an erneuten Ausführungen"
+msgstr "Maximale Anzahl an Wiederausführungen"
 
 msgid "Maximum number of ready control plane nodes"
 msgstr "Maximale Anzahl einsatzbereiter Control-Plane-Knoten"
@@ -37967,7 +37968,7 @@ msgid ""
 "performance data processing is disabled."
 msgstr ""
 "Keine Historischen Metriken vorhanden, obwohl der Check Performancedaten "
-"liefert. Eventuell ist die Verarbeitung von Performancedaten abgeschaltet."
+"liefert. Eventuell ist die Verarbeitung von Performancedaten deaktiviert."
 
 msgid "No hosts discovered"
 msgstr "Keine Hosts erkannt"
@@ -38067,7 +38068,7 @@ msgid "No proxy"
 msgstr "Kein Proxy"
 
 msgid "No re-executions"
-msgstr "Keine erneuten Ausführungen"
+msgstr "Keine Wiederausführungen"
 
 #, python-format
 msgid "No remote %s processed."
@@ -38779,10 +38780,10 @@ msgstr "Benachrichtigungen sind deaktiviert"
 
 #, python-format
 msgid "Notifications are disabled for this %s"
-msgstr "Benachrichtigungen für %s abgeschaltet"
+msgstr "Benachrichtigungen sind für %s deaktiviert"
 
 msgid "Notifications are disabled, but is configured to be periodic"
-msgstr "Benachrichtigungen sind deaktiviert, sind periodisch konfiguriert"
+msgstr "Benachrichtigungen sind deaktiviert, aber periodisch konfiguriert"
 
 msgid "Notifications are kept back for bulking at most for this time."
 msgstr ""
@@ -38791,7 +38792,7 @@ msgstr ""
 
 #, python-format
 msgid "Notifications are manually disabled for this %s"
-msgstr "Benachrichtigungen für %s sind manuell abgeschaltet"
+msgstr "Benachrichtigungen für %s sind manuell deaktiviert"
 
 #, python-format
 msgid "Notifications are manually enabled for this %s"
@@ -42791,8 +42792,8 @@ msgid ""
 "Please make sure that you have activated it with <tt>omd config set MKEVENTD "
 "on</tt> before starting this site."
 msgstr ""
-"Bitte stellen Sie sicher, dass <tt>omd config set MKEVENTD on</tt> "
-"ausgeführt wurde bevor Sie die Instanz starten."
+"Bitte stellen Sie sicher, dass Sie es mit <tt>omd config set MKEVENTD on</"
+"tt> aktiviert haben, bevor Sie diese Instanz starten."
 
 msgid "Please make sure, that the data is URL-encoded."
 msgstr "Bitte stellen Sie sicher, dass die Daten URL codiert sind."
@@ -42802,7 +42803,7 @@ msgid ""
 "change is activated only during an inventory. Saving this rule is not "
 "enough. This is due to the nature of inventory rules."
 msgstr ""
-"Bitte beachten: Wenn hier Grenzwerte angegeben und geändert werden, wird die "
+"Bitte beachten Sie, dass, wenn Sie hier Level festlegen oder ändern, die "
 "Änderung nur während einer Inventur aktiviert wird. Das Speichern dieser "
 "Regel ist nicht ausreichend. Dies liegt in der Natur von Inventurregeln "
 "begründet."
@@ -42813,9 +42814,9 @@ msgid ""
 "This is due to the nature ofinventory rules."
 msgstr ""
 "Bitte beachten Sie, dass, wenn Sie hier Levels festlegen oder ändern, die "
-"Änderung nur bei einer Inventur aktiviert wird und das Speichern dieser "
-"Regel nicht ausreicht. Dies ist auf die Eigenart der Inventarisierungsregeln "
-"zurückzuführen."
+"Änderung nur während einer Inventur aktiviert wird. Das Speichern dieser "
+"Regel ist nicht ausreichend. Dies liegt in der Natur von Inventurregeln "
+"begründet."
 
 msgid ""
 "Please note that the mapping to the numeric ServiceNow state may be changed "
@@ -42835,7 +42836,6 @@ msgstr ""
 "\"</tt> in Ihrer System-Apache-Konfiguration setzen müssen, um die Checkmk-"
 "Oberfläche über die SSL-Einrichtung zu informieren."
 
-#, fuzzy
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
 "underscores. If you are unsure about the correct spelling of the name, then "
@@ -42844,12 +42844,12 @@ msgid ""
 "Please do not mix up the service name with the display name of the service. "
 "The latter one is just being displayed as a further information."
 msgstr ""
-"Bitte beachten, dass der Agent Leerzeichen in Service-Namen durch <tt>_</tt> "
-"ersetzt. Wenn Sie den genauen Namen nicht kennen dann schauen Sie zuerst auf "
-"die Agentenausgaben (cmk -d Host). Service-Namen finden Sie in der 1. Spalte "
-"im Abschnitt &lt;&lt;&lt;Services&gt;&gt;&gt;. Bitte Service-Namen nicht mit "
-"angezeigtem Namen verwechseln. Der angezeigte Name dient nur als "
-"Zusatzinformation."
+"Bitte beachten, dass der Agent Leerzeichen in Service-Namen durch "
+"Unterstrich ersetzt. Wenn Sie sich bezüglich der Schreibweise unsicher sind, "
+"dann schauen Sie zuerst auf die Agentenausgaben (cmk -d HOSTNAME). Service-"
+"Namen finden Sie in der 1. Spalte im Abschnitt &lt;&lt;&lt;Services&gt;&gt;"
+"&gt;. Bitte verwechseln Sie den Service-Namen nicht mit dem angezeigten "
+"Namen des Services. Der angezeigte Name dient nur als Zusatzinformation."
 
 #, python-format
 msgid ""
@@ -44713,10 +44713,10 @@ msgid "Rcvd"
 msgstr "Empfangen"
 
 msgid "Re-execution strategy"
-msgstr "Strategie der erneuten Ausführung"
+msgstr "Strategie der Wiederausführung"
 
 msgid "Re-executions"
-msgstr "Erneute Ausführungen"
+msgstr "Wiederausführungen"
 
 msgid "Read"
 msgstr "Lesen"
@@ -45323,7 +45323,6 @@ msgstr "Regulärer Ausdruck: "
 msgid "Regular expressions for message classification"
 msgstr "Reguläre Ausdrücke zur Eintragsklassifikation"
 
-#, fuzzy
 msgid ""
 "Regular expressions matching the beginning of the internal name or the "
 "description of the service. If no name is given then this rule will match "
@@ -45333,13 +45332,13 @@ msgid ""
 "*mssql</tt> matches all services which contain <tt>MSSQL</tt> or <tt>MsSQL</"
 "tt> or <tt>mssql</tt> or..."
 msgstr ""
-"Reguläre Ausdrücke, die auf den Anfang des internen Namens oder des "
-"Anzeigenamens eines Services passen. Wenn kein Ausdruck angegeben wird, dann "
-"wird die Regel auf alle Services greifen. Der Vergleich wird mit dem "
-"<i>Anfang</i> des Service-Namens vorgenommen. Er <i>unterscheidet Groß-/"
+"Reguläre Ausdrücke, die auf den Anfang des internen Namens oder der "
+"Beschreibung eines Services zutreffen. Wenn kein Ausdruck angegeben wird, "
+"dann greift die Regel auf alle Services. Der Match wird mit dem <i>Anfang</"
+"i> des Service-Namens vorgenommen. Er <i>unterscheidet Groß-/"
 "Kleinschreibung</i>. Sie können die Schreibung ignorieren, indem Sie dem "
-"Ausdruck in <tt>(?i)</tt> voranstellen. Beispiel: <tt>(?i).*mssql</tt> passt "
-"auf alle Services, die <tt>MSSQL</tt> oder <tt>MsSQL</tt> oder <tt>mssql</"
+"Ausdruck <tt>(?i)</tt> voranstellen. Beispiel: <tt>(?i).*mssql</tt> trifft "
+"auf alle Services zu, die <tt>MSSQL</tt> oder <tt>MsSQL</tt> oder <tt>mssql</"
 "tt> oder ähnliches enthalten."
 
 msgid "Regular expressions to expect"
@@ -45517,15 +45516,14 @@ msgstr ""
 "schlägt die Prüfung fehl. Beispiel: 'myDirectory' (Die Datei wird nach '~/"
 "myDirectory' hochgeladen)."
 
-#, fuzzy
 msgid ""
 "Remote path to the file to be downloaded. The path is relative to the home "
 "directory of the user. If you also enabled 'Put file to SFTP server', you "
 "can use the same file for both tests."
 msgstr ""
-"Remote-Pfad inklusive des Dateinamens (z.B. 'Testdatei'). Wenn 'Schiebe "
-"Datei zu SFTP-Server' verwendet wird, kann die gleiche Datei für beide Tests "
-"benutzt werden."
+"Remote-Pfad zu der herunterzuladenden Datei. Der Pfad ist relativ zum Home-"
+"Verzeichnis des Benutzers. Wenn Sie auch 'Datei auf SFTP-Server ablegen' "
+"aktiviert haben, können Sie dieselbe Datei für beide Tests verwenden."
 
 msgid "Remote port number"
 msgstr "Remote-Portnummer"
@@ -45963,7 +45961,7 @@ msgid "Replication interval"
 msgstr "Replikations Intervall"
 
 msgid "Replication is disabled"
-msgstr "Replikation ist abgeschaltet"
+msgstr "Replikation ist deaktiviert"
 
 msgid "Replication lag"
 msgstr "Replikationsverzögerung"
@@ -46750,7 +46748,7 @@ msgid "Robot Framework parameters"
 msgstr "Robot-Framework-Parameter"
 
 msgid "Robot Framework re-executions"
-msgstr "Erneute Robot-Framework-Ausführungen"
+msgstr "Robot-Framework-Wiederausführungen"
 
 #, python-format
 msgid "Robot Framework: %s"
@@ -46796,9 +46794,8 @@ msgstr "Rollen & Berechtigungen"
 msgid "Roles: Role Management"
 msgstr "Rollen: Rollenverwaltung"
 
-#, fuzzy
 msgid "Rotate every Monday at 00:00 local time"
-msgstr "Jeden Montag um 00:00 Ortszeit rotieren"
+msgstr "Rotation jeden Montag um 00:00 Ortszeit"
 
 msgid "Rotate every day at 00:00 local time"
 msgstr "Jeden Tag um 00:00 Ortszeit rotieren"
@@ -46824,7 +46821,6 @@ msgstr "Umlauf"
 msgid "Route53"
 msgstr "Route53"
 
-#, fuzzy
 msgid "Router (FQDN, IP address)"
 msgstr "Router (FQDN, IP-Adresse)"
 
@@ -46949,7 +46945,6 @@ msgstr "Darstellung der Regel: %s"
 msgid "Rule search"
 msgstr "Regelsuche"
 
-#, fuzzy
 msgid "Rule search: Deprecated rulesets"
 msgstr "Regelsuche: Veraltete Regelsätze"
 
@@ -47189,16 +47184,14 @@ msgstr "Laufende Sitzungen"
 msgid "Runtime"
 msgstr "Laufzeit"
 
-#, fuzzy
 msgid "Runtime (peak attempt)"
-msgstr "Laufzeit (Peak Attempt)"
+msgstr "Laufzeit (Peak-Versuch)"
 
 msgid "Runtime run queue"
 msgstr "Laufzeit-Warteschlange"
 
-#, fuzzy
 msgid "Runtime-limit ratio (peak attempt)"
-msgstr "Laufzeit-Limit-Verhältnis (Peak Attempt)"
+msgstr "Laufzeit-Limit-Verhältnis (Peak-Versuch)"
 
 msgid "Rx"
 msgstr "Rx"
@@ -47257,7 +47250,6 @@ msgstr "SAP R/3"
 msgid "SAP R/3 grouped values discovery"
 msgstr "SAP R/3 Erkennung gruppierter Werte"
 
-#, fuzzy
 msgid "SAP R/3 monitoring plug-in"
 msgstr "SAP R/3 Monitoring-Plugin"
 
@@ -47309,44 +47301,35 @@ msgstr "SHA-2 (SHA-512)"
 msgid "SID"
 msgstr "SID"
 
-#, fuzzy
 msgid "SIP - Authentication errors"
 msgstr "SIP - Authentifizierungsfehler"
 
-#, fuzzy
 msgid "SIP - Average holding time for incoming messages"
 msgstr "SIP - Durchschnittliche Haltedauer eingehender Nachrichten"
 
 msgid "SIP - Average incoming message processing time"
 msgstr "SIP - Durchschnittliche Bearbeitungszeit eingehender Nachrichten"
 
-#, fuzzy
 msgid "SIP - Average outgoing queue delay"
 msgstr "SIP - Durchschnittliche Verzögerung in Ausgangswarteschlange"
 
-#, fuzzy
 msgid "SIP - Flow-controlled connections"
 msgstr "SIP - Verbindungen unter Flusskontrolle"
 
-#, fuzzy
 msgid "SIP - Incoming messages timed out"
 msgstr "SIP - Timeout bei eingehenden Nachrichten"
 
-#, fuzzy
 msgid "SIP - Incoming requests dropped"
 msgstr "SIP - Verworfene eingehende Anfragen"
 
-#, fuzzy
 msgid "SIP - Incoming responses dropped"
 msgstr "SIP - Verworfene eingehende Antworten"
 
-#, fuzzy
 msgid "SIP - Local 503 responses"
 msgstr "SIP - Lokale 503 Antworten"
 
-#, fuzzy
 msgid "SIP - Sends timed out"
-msgstr "SIP - Schreibvoränge Timeout"
+msgstr "SIP - Sende-Timeouts"
 
 msgid "SKIP PACK"
 msgstr "Paket auslassen"
@@ -47423,7 +47406,6 @@ msgstr "SMS-Verbrauch"
 msgid "SMS success rate"
 msgstr "SMS-Erfolgsrate"
 
-#, fuzzy
 msgid "SMT threads"
 msgstr "SMT Threads"
 
@@ -47496,7 +47478,6 @@ msgstr "SNMP Community"
 msgid "SNMP community (SNMP Versions 1 and 2c)"
 msgstr "SNMP Community (SNMP Version 1 und 2c)"
 
-#, fuzzy
 msgid "SNMP community for the SNMP trap"
 msgstr "SNMP-Community für die SNMP-Trap"
 
@@ -47577,7 +47558,6 @@ msgstr "SQL-Datenbanken"
 msgid "SQL Re-Compilations/sec"
 msgstr "SQL-Rekompilationen/sec"
 
-#, fuzzy
 msgid "SQL database user credentials"
 msgstr "SQL Datenbankbenutzer-Anmeldedaten"
 
@@ -47798,7 +47778,6 @@ msgstr "Geplante Ausfallzeittiefe"
 msgid "Scheduled downtimes"
 msgstr "Geplante Wartungszeiten"
 
-#, fuzzy
 msgid "Scheduled jobs"
 msgstr "Geplante Jobs"
 
@@ -47819,7 +47798,6 @@ msgstr ""
 msgid "Scheduler"
 msgstr "Planer"
 
-#, fuzzy
 msgid "Scheduler job name"
 msgstr "Name des Scheduler-Jobs"
 
@@ -48275,7 +48253,6 @@ msgstr "Wählen Sie ein Symbol aus"
 msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "Wählen Sie eine iCalender-Datei (<tt>*.ics</tt>) von Ihrem Rechner"
 
-#, fuzzy
 msgid "Select datasource"
 msgstr "Datenquelle auswählen"
 
@@ -48637,13 +48614,12 @@ msgstr "Benachrichtigungen an Event Console senden"
 msgid "Send notifications to remote Event Console"
 msgstr "Benachrichtigungen an Remote Event Console senden"
 
-#, fuzzy
 msgid ""
 "Send out HTML/ASCII email notification according to notification rules "
 "(uncheck to avoid spam)"
 msgstr ""
-"Benachrichtigung gemäß den Benachrichtigungsregeln verschicken "
-"(deaktivieren, um Spam zu vermeiden)"
+"HTML/ASCII E-Mail-Benachrichtigung gemäß den Benachrichtigungsregeln "
+"verschicken (deaktivieren, um Spam zu vermeiden)"
 
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
@@ -48703,7 +48679,6 @@ msgstr "Sensor-ID"
 msgid "Sensor Name"
 msgstr "Name des Sensors"
 
-#, fuzzy
 msgid "Sensor description and index"
 msgstr "Sensorbeschreibung und -index"
 
@@ -48749,7 +48724,6 @@ msgstr "Seriennummer"
 msgid "Serial number"
 msgstr "Seriennummer"
 
-#, fuzzy
 msgid "Serial number - LEGACY, don't use"
 msgstr "Seriennummer - VERALTET, nicht verwenden"
 
@@ -49067,13 +49041,11 @@ msgstr "Service-Labels"
 msgid "Service level"
 msgstr "Service-Ebene"
 
-#, fuzzy
 msgid "Service level at least"
-msgstr "Service-Ebene (mindestens)"
+msgstr "minimale Service-Ebene"
 
-#, fuzzy
 msgid "Service level at most"
-msgstr "Service-Ebene (höchstens)"
+msgstr "maximale Service-Ebene"
 
 msgid "Service level of forwarded events shown in Event Console."
 msgstr ""
@@ -49085,11 +49057,9 @@ msgstr ""
 "Service-Ebene der weitergeleiteten Logs, die in der Event Console angezeigt "
 "werden."
 
-#, fuzzy
 msgid "Service level of hosts"
 msgstr "Service-Ebene der Hosts"
 
-#, fuzzy
 msgid "Service level of services"
 msgstr "Service-Ebene der Services"
 
@@ -49099,7 +49069,6 @@ msgstr "Service-Ebenen"
 msgid "Service limits"
 msgstr "Service-Grenzen"
 
-#, fuzzy
 msgid "Service metrics"
 msgstr "Servicemetriken"
 
@@ -49133,9 +49102,8 @@ msgstr "Anzeigeoptionen für Anzahl von Serviceausfällen"
 msgid "Service output text"
 msgstr "Ausgabetext des Services"
 
-#, fuzzy
 msgid "Service packs"
-msgstr "Service Packs"
+msgstr "Service Pakete"
 
 msgid "Service performance data (source code)"
 msgstr "Service-Performancedaten (Quellcode)"
@@ -49184,7 +49152,6 @@ msgstr "Service-Suche"
 msgid "Service service level"
 msgstr "Service-Service-Ebene"
 
-#, fuzzy
 msgid "Service sescription"
 msgstr "Service-Beschreibung"
 
@@ -49227,7 +49194,6 @@ msgstr "Service-Statistik"
 msgid "Service status"
 msgstr "Service-Status"
 
-#, fuzzy
 msgid "Service status grouping"
 msgstr "Servicestatus-Gruppierung"
 
@@ -49237,7 +49203,6 @@ msgstr "Service-Tags"
 msgid "Service tags (with titles)"
 msgstr "Service-Merkmale (mit Titeln)"
 
-#, fuzzy
 msgid "Service time"
 msgstr "Servicezeit"
 
@@ -49296,13 +49261,11 @@ msgstr "Services von Host %s"
 msgid "Services of host group"
 msgstr "Services der Host-Gruppe"
 
-#, fuzzy
 msgid "Services of hosts"
-msgstr "Services von Host"
+msgstr "Services des Hosts"
 
-#, fuzzy
 msgid "Services of site"
-msgstr "Services von Instanz"
+msgstr "Services der Instanz"
 
 msgid "Services per cluster"
 msgstr "Services pro Cluster"
@@ -49319,8 +49282,8 @@ msgid ""
 "that already exist will continued to be monitored but be marked as obsolete "
 "in the service list of a host."
 msgstr ""
-"Services, die durch diese Regel als <u>ignoriert</u> festgelegt sind, werden "
-"bei der automatischen Service-Erkennung nicht zum Host hinzugefügt. "
+"Services, die durch diese Regel als <u>deaktiviert</u> festgelegt sind, "
+"werden bei der automatischen Service-Erkennung nicht zum Host hinzugefügt. "
 "Services, die bereits vorhanden sind, werden in Zukunft nicht mehr überwacht "
 "und als obsolet in der Host-Liste gekennzeichnet."
 
@@ -49340,7 +49303,6 @@ msgstr "Sitzungstimeout bei Inaktivität"
 msgid "Session management"
 msgstr "Sitzungsverwaltung"
 
-#, fuzzy
 msgid "Session rate"
 msgstr "Sitzungsrate"
 
@@ -49442,40 +49404,33 @@ msgstr "Level einstellen"
 msgid "Set levels for the Checkmk helper usage"
 msgstr "Level für die Auslastung der Checkmk-Helper festlegen"
 
-#, fuzzy
 msgid "Set levels for the Checkmk livestatus overflows"
 msgstr "Level für Überläufe von Checkmk Livestatus festlegen"
 
-#, fuzzy
 msgid "Set levels for the Checkmk livestatus usage"
-msgstr "Level für die Nutzung von Checkmk Livestatus festlegen"
+msgstr "Level für die Auslastung von Checkmk Livestatus festlegen"
 
 msgid "Set levels for the check helper usage"
 msgstr "Level für die Auslastung der Check-Helper festlegen"
 
-#, fuzzy
 msgid "Set levels for the check latency time"
 msgstr "Level für die Check-Latenzzeit einstellen"
 
 msgid "Set levels for the checker helper usage"
 msgstr "Level für die Auslastung der Checker-Helper festlegen"
 
-#, fuzzy
 msgid "Set levels for the checker latency time"
 msgstr "Level für die Checker-Latenzzeit einstellen"
 
 msgid "Set levels for the fetcher helper usage"
 msgstr "Level für die Auslastung der Fetcher-Helper festlegen"
 
-#, fuzzy
 msgid "Set levels for the fetcher latency time"
 msgstr "Level für die Latenzzeit der Fetcher festlegen"
 
-#, fuzzy
 msgid "Set levels for the number of hosts"
 msgstr "Level für die Host-Anzahl festlegen"
 
-#, fuzzy
 msgid "Set levels for the number of services"
 msgstr "Level für die Service-Anzahl festlegen"
 
@@ -49486,7 +49441,6 @@ msgstr "Grenzwert und Pegel für %s festlegen"
 msgid "Set limits and levels for running on-demand instances"
 msgstr "Legen Sie Grenzen und Schwellen für laufende On-Demand-Instanzen fest"
 
-#, fuzzy
 msgid "Set limits and levels for running on-demand vCPUs on instance families"
 msgstr ""
 "Grenzen und Level für laufende on-demand vCPUs auf Instanzfamilien festlegen"
@@ -49510,9 +49464,8 @@ msgstr "Maximales Alter einstellen"
 msgid "Set monitoring states for no-smoke and smoke cases"
 msgstr "Monitoring-Zustände für rauchfreie und rauchentwickelnde Situationen"
 
-#, fuzzy
 msgid "Set optional timeout for connections to Jira"
-msgstr "Optionalen Timeout Wert für Verbindungen zu JIRA einstellen"
+msgstr "Optionalen Timeout für Verbindungen zu JIRA einstellen"
 
 msgid "Set optional timeout for connections to ServiceNow"
 msgstr "Optionalen Timeout für Verbindungen zu ServiceNow einstellen"
@@ -49545,10 +49498,10 @@ msgid ""
 "activate services matching', both rules have to apply for a service to be "
 "activated."
 msgstr ""
-"Setzen Sie hier Service-Namen oder reguläre Ausdrücke, um nur diejenigen "
-"Services automatisch zu aktivieren auf die dieses Muster zutreffen. Wenn "
-"dies zusammen mit \"Zutreffende Services nicht aktivieren\" verwendet wird "
-"müssen beide Regeln zutreffen damit der Service aktiviert wird."
+"Setzen Sie hier Service-Namen oder reguläre Ausdrücke, um nur passende "
+"Services automatisch zu aktivieren. Wenn Sie dies zusammen mit \"Zutreffende "
+"Services nicht aktivieren\" verwenden, müssen beide Regeln zutreffen damit "
+"ein Service aktiviert wird."
 
 msgid ""
 "Set service names or regular expression patterns here to change labels of "
@@ -49603,10 +49556,10 @@ msgid ""
 "'Activate only services matching', both rules have to apply for a service to "
 "be activated."
 msgstr ""
-"Setzen Sie hier Service-Namen oder reguläre Ausdrücke um zu verhindern dass "
-"Services auf die dieses Muster zutrifft automatisch aktiviert werden. Wenn "
-"Sie dies zusammen mit \"Nur zutreffende Services aktivieren\" verwenden dann "
-"müssen beide Regeln zutreffen damit ein Service aktiviert wird."
+"Setzen Sie hier Service-Namen oder reguläre Ausdrücke, um passende Services "
+"nicht automatisch zu aktivieren. Wenn Sie dies zusammen mit \"Nur "
+"zutreffende Services aktivieren\" verwenden, müssen beide Regeln zutreffen "
+"damit ein Service aktiviert wird."
 
 msgid ""
 "Set service names or regular expression patterns here to prevent removing of "
@@ -49976,9 +49929,8 @@ msgid ""
 "Setup is disabled. Please set <tt>wato_enabled = True</tt> in your "
 "<tt>multisite.mk</tt> if you want to use Setup."
 msgstr ""
-"Das Setup-Menü ist deaktiviert. Bitte setzen Sie <tt>wato_enabled = True</"
-"tt> in Ihrer <tt>multisite.mk</tt>, wenn Sie das Setup-Menü verwenden "
-"möchten."
+"Setup-Menü ist deaktiviert. Bitte setzen Sie <tt>wato_enabled = True</tt> in "
+"Ihrer <tt>multisite.mk</tt>, wenn Sie das Setup-Menü verwenden möchten."
 
 msgid "Setup, site management"
 msgstr "Installation, Instanzverwaltung"
@@ -50062,9 +50014,8 @@ msgstr "Gemeinsame Speicherauslastung"
 msgid "Shared pool size"
 msgstr "Gemeinsame Poolgröße"
 
-#, fuzzy
 msgid "Shared processor mode"
-msgstr "Shared Processor Mode"
+msgstr "Shared Processor Modus"
 
 msgid "Shared with"
 msgstr "Freigegeben an"
@@ -50083,7 +50034,6 @@ msgstr "Kurzbeschreibung für Host %s"
 msgid "Short description for service %s"
 msgstr "Kurzbeschreibung für den Service %s"
 
-#, fuzzy
 msgid "Short time intervals"
 msgstr "Kurze Zeitintervalle"
 
@@ -50537,7 +50487,6 @@ msgstr "Zeige die vertikale Achse"
 msgid "Show volume name in service output"
 msgstr "Volumen-Namen in der Service-Ausgabe anzeigen"
 
-#, fuzzy
 msgid ""
 "Show/hide community translated languages in the \"Language\" dropdown (User "
 "> Edit profile). Note that these translations are contributed by the Checkmk "
@@ -50553,7 +50502,6 @@ msgstr ""
 "der Community übersetzte Sprache eingestellt hat, wird die Sprache des "
 "Benutzers auf „Englisch“ geändert."
 
-#, fuzzy
 msgid "Show/hide password"
 msgstr "Passwort anzeigen/ausblenden"
 
@@ -50929,7 +50877,7 @@ msgid "Site icon"
 msgstr "Instanz-Symbol"
 
 msgid "Site is disabled"
-msgstr "Diese Instanz ist deaktiviert"
+msgstr "Instanz ist deaktiviert"
 
 msgid "Site is missing"
 msgstr "Instanz fehlt"
@@ -51026,11 +50974,9 @@ msgstr "Größe der RRDs"
 msgid "Size of active mail queue"
 msgstr "Größe der Active-Mailqueue"
 
-#, fuzzy
 msgid "Size of agents"
 msgstr "Größe der Agenten"
 
-#, fuzzy
 msgid "Size of core"
 msgstr "Größe des Kerns"
 
@@ -51040,18 +50986,15 @@ msgstr "Größe der Deferred-Mailqueue"
 msgid "Size of extensions"
 msgstr "Größe von Erweiterungen"
 
-#, fuzzy
 msgid "Size of history"
 msgstr "Größe der History"
 
-#, fuzzy
 msgid "Size of inventory"
 msgstr "Größe des Inventars"
 
 msgid "Size of license"
 msgstr "Größe der Lizenzierung"
 
-#, fuzzy
 msgid "Size of local"
 msgstr "Größe von Lokal"
 
@@ -51070,7 +51013,6 @@ msgstr "Größe der gespeicherten Nachrichten"
 msgid "Size of the queue"
 msgstr "Anzahl der E-Mails in der Warteschlange"
 
-#, fuzzy
 msgid "Size of tmp"
 msgstr "Größe von Tmp"
 
@@ -51126,7 +51068,6 @@ msgstr ""
 "der zugehörige Checkmk-Dienst oder die zugehörigen Dienste nicht verfügbar "
 "sind."
 
-#, fuzzy
 msgid "Skipping this test (plug-in is not enabled)"
 msgstr "Diesen Test auslassen (Plugin ist nicht aktiviert)"
 
@@ -51616,13 +51557,11 @@ msgstr "Klänge in Ansichten"
 msgid "Source"
 msgstr "Quelle"
 
-#, fuzzy
 msgid "Source IP address"
 msgstr "IP-Adresse der Quelle"
 
-#, fuzzy
 msgid "Source NAT name"
-msgstr "Source NAT Name"
+msgstr "NAT-Name der Quelle"
 
 msgid "Source Path"
 msgstr "Quellpfad"
@@ -52493,7 +52432,6 @@ msgstr "Veraltung"
 msgid "Staleness value to mark hosts / services stale"
 msgstr "Veraltungswert, ab dem Hosts/Services als veraltet gelten"
 
-#, fuzzy
 msgid "Stand by"
 msgstr "Standby"
 
@@ -52590,9 +52528,8 @@ msgstr "Wiederherstellung dieses Backups starten"
 msgid "Start restore of this backup"
 msgstr "Die Wiederherstellung dieser Sicherung starten"
 
-#, fuzzy
 msgid "Start time of process"
-msgstr "Größe von Prozessen"
+msgstr "Startzeit des Prozesses"
 
 msgid "Start type"
 msgstr "Starttyp"
@@ -52734,7 +52671,7 @@ msgid "State flag (on/off)"
 msgstr "Statusflag (an/aus)"
 
 msgid "State for 'disabled since'"
-msgstr "Status für 'disabled since'"
+msgstr "Status für 'deaktiviert seit'"
 
 msgid "State for 'is idle'"
 msgstr "Status für 'is idle'"
@@ -52825,7 +52762,7 @@ msgid "State if ha local State is Active-Secondary"
 msgstr "Status, wenn HA-Local-Status Aktiv-Sekundär ist"
 
 msgid "State if ha local State is Disabled"
-msgstr "Status, wenn HA-Local-Status Deaktiviert ist"
+msgstr "Status, wenn HA-Local-Status deaktiviert ist"
 
 msgid "State if ha local State is Non-Functional"
 msgstr "Status, wenn HA-Local-Status Nicht Funktionsfähig ist"
@@ -52852,7 +52789,7 @@ msgid "State if ha peer State is Active-Secondary"
 msgstr "Status, wenn HA-Peer-Status Aktiv-Sekundär ist"
 
 msgid "State if ha peer State is Disabled"
-msgstr "Status, wenn HA-Peer-Status Deaktiviert ist"
+msgstr "Status, wenn HA-Peer-Status deaktiviert ist"
 
 msgid "State if ha peer State is Non-Functional"
 msgstr "Status, wenn HA-Peer-Status Nicht Funktionsfähig ist"
@@ -52888,7 +52825,7 @@ msgid "State if mode is Active-Passive"
 msgstr "Status, wenn der Modus Aktiv-Passiv ist"
 
 msgid "State if mode is Disabled"
-msgstr "Status, wenn Modus Disabled ist"
+msgstr "Status, wenn Modus deaktiviert ist"
 
 msgid "State if no backup found"
 msgstr "Status, wenn bestimmte Sektionen fehlen"
@@ -52944,13 +52881,11 @@ msgstr "Status bei allgemeiner Zeitüberschreitung"
 msgid "State in case of absent updates"
 msgstr "Status bei fehlenden Updates"
 
-#, fuzzy
 msgid "State in case of archive log mode is disabled: "
-msgstr "Status falls der Archivelogmodus abgeschaltet ist: "
+msgstr "Status falls der Archiv-Logmodus deaktiviert ist: "
 
-#, fuzzy
 msgid "State in case of archive log mode is enabled: "
-msgstr "Status falls der Archivelogmodus eingeschaltet ist: "
+msgstr "Status falls der Archiv-Logmodus eingeschaltet ist: "
 
 msgid "State in case of available but not enabled TLS"
 msgstr "Status bei verfügbarem, aber nicht aktiviertem TLS"
@@ -52958,17 +52893,14 @@ msgstr "Status bei verfügbarem, aber nicht aktiviertem TLS"
 msgid "State in case of connection problems"
 msgstr "Status bei Verbindungsproblemen"
 
-#, fuzzy
 msgid "State in case of database is PRIMARY and not OPEN: "
 msgstr "Status, falls die Datenbank PRIMARY und nicht OPEN ist: "
 
-#, fuzzy
 msgid "State in case of force logging is disabled: "
-msgstr "Status falls Force Logging abgeschaltet ist: "
+msgstr "Status falls Force Logging deaktiviert ist: "
 
-#, fuzzy
 msgid "State in case of force logging is enabled: "
-msgstr "Status falls Force Logging eingeschaltet ist: "
+msgstr "Status falls Force Logging aktiviert ist: "
 
 msgid "State in case of logins are not possible: "
 msgstr "Status, falls Logins nicht möglich sind: "
@@ -53275,7 +53207,7 @@ msgid "State when normal updates are pending"
 msgstr "Status, wenn normale Updates ausstehen"
 
 msgid "State when one of the streams is in state disabled"
-msgstr "Zustand, wenn einer der Ströme im Zustand disabled ist"
+msgstr "Zustand, wenn einer der Ströme im Zustand deaktiviert ist"
 
 msgid "State when packages are locked"
 msgstr "Zustand, wenn Pakete gesperrt sind"
@@ -53392,7 +53324,6 @@ msgstr "Status aktive Checks"
 msgid "Status change"
 msgstr "Statusänderung"
 
-#, fuzzy
 msgid "Status classification"
 msgstr "Status-Klassifizierung"
 
@@ -53901,11 +53832,9 @@ msgstr "Suite-Name"
 msgid "Sum"
 msgstr "Summe"
 
-#, fuzzy
 msgid "Summarize datafiles"
 msgstr "Datendateien zusammenfassen"
 
-#, fuzzy
 msgid "Summarize transactionlogs"
 msgstr "Transaktionslog zusammenfassen"
 
@@ -54035,15 +53964,12 @@ msgstr "Auf geraden Seiten rechte und linke Ränder vertauschen"
 msgid "Swap used"
 msgstr "Genutzter Swap"
 
-#, fuzzy
 msgid "Swarm managers"
 msgstr "Swarm Manager"
 
-#, fuzzy
 msgid "Swarm node ID"
 msgstr "Swarm Knoten-ID"
 
-#, fuzzy
 msgid "Swarm state"
 msgstr "Swarm Status"
 
@@ -54118,7 +54044,6 @@ msgstr "LDAP-Synchronisation"
 msgid "Sync with the following LDAP connections"
 msgstr "Mit den folgenden LDAP-Verbindungen synchronisieren"
 
-#, fuzzy
 msgid "Sync-Plug-in: Roles"
 msgstr "Sync-Plugins: Rollen"
 
@@ -54169,7 +54094,6 @@ msgstr "Synthetisches Monitoring ist ein Add-on."
 msgid "Synthetic Monitoring tests"
 msgstr "Tests des synthetischen Monitorings"
 
-#, fuzzy
 msgid "Synthetic monitoring"
 msgstr "Synthetisches Monitoring"
 
@@ -54211,9 +54135,8 @@ msgstr ""
 "Syslog-Einrichtung für weitergeleitete Logs, die in der Event Console "
 "angezeigt werden."
 
-#, fuzzy
 msgid "Syslog facility to use"
-msgstr "Syslog Facility"
+msgstr "zu verwendende Syslog Facility"
 
 msgid "Syslog priority"
 msgstr "Syslog-Priorität"
@@ -54268,7 +54191,6 @@ msgstr "System-Authentifizierung"
 msgid "System global targets"
 msgstr "Systemweite Sicherungsziele"
 
-#, fuzzy
 msgid "System location"
 msgstr "System-Ort"
 
@@ -54281,7 +54203,6 @@ msgstr "System Meldungen"
 msgid "System name"
 msgstr "Systemname"
 
-#, fuzzy
 msgid "System parameters"
 msgstr "System-Parameter"
 
@@ -54453,7 +54374,6 @@ msgstr "TNS-Alias %s"
 msgid "TP Link: Used memory via SNMP"
 msgstr "TP Link: Verwendeter Speicher über SNMP"
 
-#, fuzzy
 msgid "TS quotas (not used)"
 msgstr "TS Kontingente (nicht verwendet)"
 
@@ -54611,7 +54531,6 @@ msgstr ""
 msgid "Tags of the alert."
 msgstr "Merkmale des Alerts."
 
-#, fuzzy
 msgid "Tags of the host"
 msgstr "Merkmale des Hosts"
 
@@ -56399,9 +56318,10 @@ msgid ""
 "disabled by default. It allows you to create a number of random hosts and "
 "thus simulate larger environments."
 msgstr ""
-"Für Tests und Entwicklung können Sie eine bestimmte Anzahl von Hosts "
-"automatisch erzeugen lassen um größere Umgebungen zu simulieren. Diese "
-"Option ist standardmäßig abgeschaltet."
+"Die Erstellung von Zufalls-Hosts ist eine Funktion für Test- und "
+"Entwicklungszwecke und standardmäßig deaktiviert. Sie ermöglicht es Ihnen, "
+"eine Reihe von zufälligen Hosts zu erstellen und so größere Umgebungen zu "
+"simulieren."
 
 msgid "The credential does not exist"
 msgstr "Diese Zugangsdaten sind nicht vorhanden"
@@ -56694,7 +56614,6 @@ msgstr ""
 "Form `PGPORT=\"5432\"`. Eine genauere Beschreibung finden Sie im Header des "
 "Agentenplugins."
 
-#, fuzzy
 msgid ""
 "The event daemon keeps statistics about the rate of messages, events rule "
 "hits, and other stuff. These values are updated in the interval configured "
@@ -56702,7 +56621,7 @@ msgid ""
 "i>"
 msgstr ""
 "Der Event-Daemon führt Statistiken über die Anzahl von Nachrichten, "
-"Ereignissen, Regeltreffern und anderen Dingen. Die Werte werden im hier "
+"Ereigniss-Regeltreffern und anderen Dingen. Diese Werte werden im hier "
 "festgelegten Zeitintervall aktualisiert und im Seitenleisten-Snapin <i>Event "
 "Console Leistungsdaten</i> angezeigt"
 
@@ -57214,9 +57133,8 @@ msgstr ""
 "Übereinstimmende Regeln werden auf der Seite des Alert Manager-Agenten "
 "herausgefiltert."
 
-#, fuzzy
 msgid "The index must be greater or equal to 1."
-msgstr "Die Zeit darf nicht größer als %02d:%02d sein."
+msgstr "Der Index muss größer oder gleich 1 sein."
 
 #, python-format
 msgid "The info %s does not exist."
@@ -57533,12 +57451,11 @@ msgid "The match is case sensitive."
 msgstr ""
 "Die Suche wird unter Beachtung von Groß- und Kleinschreibung ausgeführt."
 
-#, fuzzy
 msgid ""
 "The match type is defined by the discovery ruleset type of the check plug-in."
 msgstr ""
-"Die Art der Übereinstimmung wird durch die Art des Erkennungsregelsatzes des "
-"Check-Plugins definiert."
+"Der Match-Typ wird durch den Typ des Erkennungsregelsatzes des Check-Plugins "
+"definiert."
 
 #, python-format
 msgid "The matching criteria must contain the label '%s'."
@@ -57855,9 +57772,8 @@ msgstr "Der Name des Dashboards fehlt."
 msgid "The name of the database on the DBMS"
 msgstr "Der Name der Datenbank innerhalb des DMBS"
 
-#, fuzzy
 msgid "The name of the datastore"
-msgstr "Name des Datastore"
+msgstr "Der Name des Datenspeichers"
 
 msgid ""
 "The name of the group is used as an internal key. It cannot be changed "
@@ -58098,61 +58014,54 @@ msgstr ""
 "Intervall, verbraucht eine Menge Datei-Deskriptoren auf dem Host, auf dem "
 "dieses Plugin läuft."
 
-#, fuzzy
 msgid ""
 "The numerical ID of the Jira custom field for sites. Please use this option "
 "if you have multiple sites in a distributed setup which send their "
 "notifications to the same Jira instance."
 msgstr ""
 "Die numerische ID des JIRA-Benutzerfeldes für Instanzen. Bitte verwenden Sie "
-"diese Option, wenn Sie mehrere Standorte in einer verteilten Einrichtung "
-"haben, die ihre Benachrichtigungen an dieselbe JIRA-Instanz senden."
+"diese Option, wenn Sie mehrere Instanzen in einem verteilten Setup haben, "
+"die ihre Benachrichtigungen an dieselbe JIRA-Instanz senden."
 
-#, fuzzy
 msgid "The numerical Jira custom field ID for host problems."
-msgstr "Die numerische JIRA custom field ID für Hostprobleme."
+msgstr "Die numerische JIRA Benutzerfeld-ID für Hostprobleme."
 
-#, fuzzy
 msgid "The numerical Jira custom field ID for service problems."
-msgstr "Die numerische JIRA custom field ID für Serviceprobleme."
+msgstr "Die numerische JIRA Benutzerfeld-ID für Service-Probleme."
 
-#, fuzzy
 msgid ""
 "The numerical Jira issue type ID. If not set, it will be retrieved from a "
 "custom user attribute named <tt>jiraissuetype</tt>. If that is not set, the "
 "notification will fail."
 msgstr ""
-"Die numerische JIRA issue type ID. Wenn nicht festgelegt, wird sie von einem "
+"Die numerische JIRA Ausgabetyp-ID. Wenn nicht festgelegt, wird sie von einem "
 "benutzerdefinierten Attribut namens <tt> jiraissuetype </tt> abgerufen. Wenn "
 "dieses Attribut nicht festgelegt ist, schlägt die Benachrichtigung fehl."
 
-#, fuzzy
 msgid ""
 "The numerical Jira priority ID. If not set, it will be retrieved from a "
 "custom user attribute named <tt>jirapriority</tt>. If that is not set, the "
 "standard priority will be used."
 msgstr ""
-"Die numerische JIRA priority ID. Wenn nicht festgelegt, wird sie von einem "
+"Die numerische JIRA Prioritäts-ID. Wenn nicht festgelegt, wird sie von einem "
 "benutzerdefinierten Attribut mit dem Namen <tt> jirapriority </tt> "
-"abgerufen. Wenn dieses Attribut nicht festgelegt ist, schlägt die "
-"Benachrichtigung fehl."
+"abgerufen. Wenn dieses Attribut nicht festgelegt ist, wird die "
+"Standardpriorität genutzt."
 
-#, fuzzy
 msgid ""
 "The numerical Jira project ID. If not set, it will be retrieved from a "
 "custom user attribute named <tt>jiraproject</tt>. If that is not set, the "
 "notification will fail."
 msgstr ""
-"Die numerische JIRA project ID. Wenn nicht festgelegt, wird sie von einem "
+"Die numerische JIRA Projekt-ID. Wenn nicht festgelegt, wird sie von einem "
 "benutzerdefinierten Attribut mit dem Namen <tt> jiraproject </tt> abgerufen. "
 "Wenn dieses Attribut nicht festgelegt ist, schlägt die Benachrichtigung fehl."
 
-#, fuzzy
 msgid ""
 "The numerical Jira resolution transition ID. 11 - 'To Do', 21 - 'In "
 "Progress', 31 - 'Done'"
 msgstr ""
-"The numerische JIRA resolution transition ID. 11 - 'To Do', 21 - 'In "
+"Die numerische JIRA Auflösungsübergangs-ID. 11 - 'To Do', 21 - 'In "
 "Progress', 31 - 'Done'"
 
 msgid "The official Checkmk user guide"
@@ -58268,7 +58177,7 @@ msgstr ""
 "und die dazugehörige IP Adresse ist einem der überwachten Hosts zugewiesen, "
 "dann wird dieser Host zum Parent. Wenn kein Host existiert, dann wird ein "
 "künstliches ping-only Gateway-Host angelegt (wenn Sie diese Option nicht "
-"abgeschaltet haben)."
+"deaktiviert haben)."
 
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
@@ -58300,9 +58209,8 @@ msgstr "Das Passwort für diesen Benutzer."
 msgid "The password or API key of the user."
 msgstr "Das Passwort oder der API-Schlüssel des Benutzers."
 
-#, fuzzy
 msgid "The password used to connect to the Bazel Cache"
-msgstr "Das Passwort für die Verbindung zur Datenbank"
+msgstr "Das Passwort für die Verbindung zum Bazel Cache"
 
 msgid "The password used to connect to the database"
 msgstr "Das Passwort für die Verbindung zur Datenbank"
@@ -58362,33 +58270,30 @@ msgstr ""
 "unabhängig von den tatsächlichen Check-Levels, die sowohl für freie als auch "
 "für belegte Speicherwerte eingestellt werden können."
 
-#, fuzzy
 msgid ""
 "The placeholder <tt>\\0</tt> will be replaced by the original text of this "
 "field to match. Note that as an alternative, you may also use the rule Host "
 "name translation for Incoming Messages in the Global Settings of the EC to "
 "accomplish your task."
 msgstr ""
-"Der Platzhalter <tt>\\0</tt> wird durch den ursprünglich zutreffenden Text "
-"ersetzt. Bemerkung: Alternativ können Sie auch die Regel \"Übersetzung von "
-"Host-Namen für eingehende Meldungen in den globalen Einstellungen der EC\" "
-"verwenden."
+"Der Platzhalter <tt>\\0</tt> wird durch den für dieses Feld ursprünglich "
+"zutreffenden Text ersetzt. Beachten Sie, dass Sie alternativ auch die Regel "
+"Host-Namenübersetzung für eingehende Nachrichten in den globalen "
+"Einstellungen der EC verwenden können, um Ihre Aufgabe zu erfüllen."
 
-#, fuzzy
 msgid ""
 "The placeholder <tt>\\0</tt> will be replaced by the original text of this "
 "field. This allows you to add new information in front or at the end."
 msgstr ""
-"Der Platzhalter <tt>\\0</tt> wird durch den Original-Text ersetzt. Damit "
-"können Sie am Anfang oder am Ende Ergänzungen hinzufügen."
+"Der Platzhalter <tt>\\0</tt> wird durch den Original-Text des Felds ersetzt. "
+"Damit können Sie am Anfang oder am Ende Informationen hinzufügen."
 
-#, fuzzy
 msgid ""
 "The placeholder <tt>\\0</tt> will be replaced by the original text of this "
 "field. This allows you to add new information in front or at the end. "
 msgstr ""
-"Der Platzhalter <tt>\\0</tt> wird durch den ursprünglichen Text ersetzt. "
-"Damit können Sie am Anfang oder am Ende Ergänzungen hinzufügen. "
+"Der Platzhalter <tt>\\0</tt> wird durch den ursprünglichen Text des Felds "
+"ersetzt. Damit können Sie am Anfang oder am Ende Informationen hinzufügen. "
 
 msgid ""
 "The plug-in <tt>isc_dhcpd</tt> collects information about a DHCP server "
@@ -58458,15 +58363,14 @@ msgstr ""
 "Endpunkte und HTTPS, wenn TLS-Verschlüsselung verwendet wird. Alternativ "
 "können Sie die Präfix-Option auch nicht verwenden."
 
-#, fuzzy
 msgid ""
 "The prefix is automatically attached to each service name to be able to "
 "organize them. The prefix is static and will be CERT. Alternatively, you may "
 "choose not to use the prefix option."
 msgstr ""
-"Das Präfix wird automatisch an jeden Service-Namen angehängt, um ihn zu "
-"organisieren. Das Präfix ist statisch und lautet CERT. Alternativ können Sie "
-"die Präfix-Option auch nicht verwenden."
+"Das Präfix wird automatisch an jeden Service-Namen angehängt, um ihn "
+"organisieren zu können. Das Präfix ist statisch und lautet CERT. Alternativ "
+"können Sie die Präfix-Option auch nicht verwenden."
 
 msgid ""
 "The problems above might be caused by missing caches. Please trigger a "
@@ -58974,7 +58878,7 @@ msgid "The service name"
 msgstr "Der Service-Name"
 
 msgid "The service name will be <b>Mail Loop</b> plus this name"
-msgstr "Der Name des Services lautet <b>Mail Loop</b> plus diesen Namen"
+msgstr "Der Service-Name lautet <b>Mail Loop</b> plus diesen Namen"
 
 msgid ""
 "The service will not warn if self-signed certificates are used if this "
@@ -58995,7 +58899,7 @@ msgid ""
 "notififcations. This is disabled by default."
 msgstr ""
 "Die Seitenleiste kann so eingestellt werden, dass regelmäßig prüft, ob es "
-"neue Popup-Alarme gibt. Das ist per Default aus."
+"neue Popup-Alarme gibt. Dies ist standardmäßig deaktiviert."
 
 msgid ""
 "The sidecar details can be displayed either on the queried host or the "
@@ -59126,9 +59030,8 @@ msgstr ""
 msgid "The state of the job is ignored by default."
 msgstr "Der Status des Auftrags wird standardmäßig ignoriert."
 
-#, fuzzy
 msgid "The status of this site could not be determined."
-msgstr "Der Status dieser Instanz ist noch nicht festgelegt worden."
+msgstr "Der Status dieser Instanz konnte nicht festgestellt werden."
 
 msgid "The status of this site has not yet been determined."
 msgstr "Der Status dieser Instanz ist noch nicht festgelegt worden."
@@ -59499,9 +59402,8 @@ msgstr ""
 msgid "The username used for broker authentication."
 msgstr "Benutzername, welcher für die Broker-Authentifizierung verwendet wird."
 
-#, fuzzy
 msgid "The username used to connect to the Bazel Cache"
-msgstr "Der Benutzername für die Verbindung zur Datenbank"
+msgstr "Der Benutzername für die Verbindung zum Bazel Cache"
 
 msgid "The username used to connect to the database"
 msgstr "Der Benutzername für die Verbindung zur Datenbank"
@@ -59959,7 +59861,6 @@ msgstr ""
 "Diese Services werden einem Cluster-Host durch eine Regel in einem der "
 "Regelsets <i>%s</i> oder <i>%s</i> zugewiesen."
 
-#, fuzzy
 msgid ""
 "These services are provided by so called active checks. You can also "
 "integrate custom Nagios plug-ins."
@@ -59967,16 +59868,14 @@ msgstr ""
 "Diese Services werden durch so genannte aktive Checks bereitgestellt. Sie "
 "können auch eigene Nagios-Plugins integrieren."
 
-#, fuzzy
 msgid ""
 "These services do not use the Checkmk agent or Checkmk-SNMP engine but "
 "actively call a classical check plug-in, that you have installed yourself."
 msgstr ""
 "Diese Services nutzen nicht den Checkmk-Agenten oder die SNMP-Maschine von "
-"Checkmk sondern rufen klassische, aktive Check-Plugins auf, die Sie selbst "
+"Checkmk sondern rufen klassische Check-Plugins auf, die Sie selbst "
 "installiert haben."
 
-#, fuzzy
 msgid ""
 "These services do not use the Checkmk agent or Checkmk-SNMP engine but "
 "actively call a classical check plug-in, that you have installed yourself. "
@@ -59984,23 +59883,21 @@ msgid ""
 "<i>Disabled services</i> oder <i>Disabled checks</i>."
 msgstr ""
 "Diese Services nutzen nicht den Checkmk-Agenten oder die SNMP-Maschine von "
-"Checkmk sondern rufen klassische, aktive Check-Plugins auf, die Sie selber "
+"Checkmk sondern rufen ein klassisches Check-Plugins auf, das Sie selber "
 "installiert haben. Diese Services sind durch eine Regel im Regelsatz "
 "<i>Deaktivierte Services</i> oder <i>Deaktivierte Checks</i> deaktiviert "
 "worden."
 
-#, fuzzy
 msgid ""
 "These services do not use the Checkmk agent or Checkmk-SNMP engine but "
 "actively call classical check plug-ins. They have been added by a rule in "
 "the section <i>Active checks</i> or implicitely by Checkmk."
 msgstr ""
 "Diese Services nutzen nicht den Checkmk-Agenten oder die SNMP-Maschine von "
-"Checkmk sondern rufen klassische, aktive Check-Plugins auf. Sie wurden mit "
-"einer Regel im Abschnitt <i>Aktive Checks</i> hinzugefügt oder implizit von "
+"Checkmk sondern rufen klassische Check-Plugins auf. Sie wurden mit einer "
+"Regel im Abschnitt <i>Aktive Checks</i> hinzugefügt oder implizit von "
 "Checkmk erzeugt."
 
-#, fuzzy
 msgid ""
 "These services do not use the Checkmk agent or Checkmk-SNMP engine but "
 "actively call classical check plug-ins. They have been added by a rule in "
@@ -60008,11 +59905,11 @@ msgid ""
 "have been disabled by creating a rule in the rule set <i>Disabled services</"
 "i> oder <i>Disabled checks</i>."
 msgstr ""
-"Diese Services nutzen nicht den Checkmk-Agenten oder Checkmk-SNMP, sondern "
-"rufen aktiv klassische Check-Plugins auf. Sie wurden mit einer Regel im "
-"Abschnitt <i>Aktive Checks</i> oder implizit von Checkmk hinzugefügt. Diese "
-"Services wurden durch eine Regel in den Regelsätzen <i>Deaktivierte "
-"Services</i> oder <i>Deaktivierte Checks</i> deaktiviert."
+"Diese Services nutzen nicht den Checkmk-Agenten oder SNMP-Maschine von "
+"Checkmk, sondern rufen klassische Check-Plugins auf. Sie wurden mit einer "
+"Regel im Abschnitt <i>Aktive Checks</i> oder implizit von Checkmk "
+"hinzugefügt. Diese Services wurden durch eine Regel in den Regelsätzen "
+"<i>Deaktivierte Services</i> oder <i>Deaktivierte Checks</i> deaktiviert."
 
 msgid ""
 "These services had been added to the monitoring by a previous discovery but "
@@ -61282,7 +61179,7 @@ msgstr ""
 "definierten Sektion übereinstimmen."
 
 msgid "This name will be used in the description of the service"
-msgstr "Dieser Name wird als Service-Beschreibung verwendet"
+msgstr "Dieser Name wird in der Service-Beschreibung verwendet"
 
 msgid "This node is not in the frozen aggregation"
 msgstr "Dieser Knoten befindet sich nicht in der eingefrorenen Aggregation"
@@ -62687,7 +62584,8 @@ msgid ""
 "description as service name."
 msgstr ""
 "Dieser Regelsatz steuert die Service-Erkennung von Brocade-Ports. Sie können "
-"dabei festlegen, welche Ports in die Überwachung aufgenommen werden."
+"die Portzustände für das Inventory und die Verwendung der Beschreibung als "
+"Service-Name konfigurieren."
 
 msgid ""
 "This rule can be used to customize the data acquisition interval of SNMP "
@@ -63458,10 +63356,10 @@ msgid ""
 "implementations such as filesystem checks via SNMP on hosts that also have "
 "the Checkmk agent installed."
 msgstr ""
-"Dieser Regelsatz ist ähnlich wie 'Services ignorieren' - selektiert aber "
-"nach <b>Typ</b>. Damit können Sie auf sehr spezielle Anforderungen reagieren "
-"wie: Dateisystemchecks über SNMP auf Hosts abschalten auf denen der Checkmk "
-"Agent installiert ist."
+"Dieser Regelsatz ist ähnlich wie 'Deaktivierte Services', wählt aber die zu "
+"deaktivierenden Checks nach ihrem <b>Typ</b> aus. Damit können Sie bestimmte "
+"technische Implementierungen wie Dateisystemprüfungen über SNMP auf Hosts "
+"deaktivieren, auf denen auch der Checkmk-Agent installiert ist."
 
 msgid ""
 "This ruleset only applies to the summary Systemd service and not the "
@@ -69772,6 +69670,10 @@ msgid ""
 "The item condition name depends on the rule, the item is always part of the "
 "service name."
 msgstr ""
+"Verwenden Sie dieses Feld, um nach Regeln zu suchen, deren Item-Bedingung so "
+"eingestellt ist, dass sie mit dem angegebenen Item übereinstimmt (entweder "
+"indem sie nicht gesetzt oder gesetzt ist). Der Name der Item-Bedingung hängt "
+"von der Regel ab, das Item ist immer Teil des Service-Namens."
 
 msgid ""
 "Use this field to search the description, comment, host and service "
@@ -70283,7 +70185,7 @@ msgid "User profile cleanup"
 msgstr "Bereinigung von Benutzerprofilen"
 
 msgid "User profiles can not be edited (Setup is disabled)."
-msgstr "Benutzerprofile können nicht geändert werden (Setup ist abgeschaltet)."
+msgstr "Benutzerprofile können nicht geändert werden (Setup ist deaktiviert)."
 
 msgid "User quotas on filesystems (Linux)"
 msgstr "Nutzerkontingente in Dateisystemen"
@@ -72238,7 +72140,6 @@ msgstr ""
 "aktiviert werden. Nur mit dieser Berechtigung kann ein Benutzer in diesem "
 "Fall die aktuelle Konfiguration aktivieren."
 
-#, fuzzy
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
 "of different users might pile up before changes are activated. Only with "
@@ -72469,7 +72370,7 @@ msgid ""
 "<b>before</b> the levels on total CPU utilization are being applied."
 msgstr ""
 "Wenn diese Option aktiviert ist, wird die CPU-Auslastung gemittelt <b>bevor</"
-"b> die Level angewendet werden."
+"b> die Level auf die Gesamt-CPU-Auslastung angewendet werden."
 
 msgid ""
 "When this option is activated then the block rate is being averaged "
@@ -72484,8 +72385,8 @@ msgid ""
 "deactivate averaging."
 msgstr ""
 "Wenn diese Option aktiviert ist, wird ein Durchschnitt über die Paketraten "
-"berechnet, <b>bevor</b> diese mit den Level verglichen werden. Wird diese "
-"auf Null gesetzt, wird die Durchschnittsbildung deaktiviert."
+"berechnet <b>bevor</b> die Level angewendet werden. Wird diese auf Null "
+"gesetzt, wird die Durchschnittsbildung deaktiviert."
 
 msgid ""
 "When this option is active you will not get <b>any</b> alerts or other "
@@ -73061,7 +72962,7 @@ msgid ""
 "case the monitoring site is operated in a failover cluster configuration "
 "this option is required to prevent from potentially duplicated log entries."
 msgstr ""
-"Mit aktivieren dieser Option können Cluster-Knoten IPs auf einen Cluster "
+"Wenn diese Option aktiviert ist, können Cluster-Knoten IPs auf einen Cluster "
 "abgebildet werden. Wenn die Monitoring-Instanz in einer Failover-Cluster-"
 "Konfiguration betrieben wird, ist diese Option erforderlich, um potenziell "
 "doppelte Log-Einträge zu verhindern."
@@ -75022,9 +74923,9 @@ msgid ""
 "You have not created any rule packs yet. The Event Console is useless unless "
 "you have activated <i>Force message archiving</i> in the global settings."
 msgstr ""
-"Sie haben noch keine Regelpakete erzeugt. Die Event Console ist somit "
-"nutzlos. (es sei denn, Sie haben das <i>Erzwingen von Meldungsarchivierung</"
-"i> in den globalen Einstellungen aktiviert)."
+"Sie haben noch keine Regelpakete erzeugt. Die Event Console ist nutzlos bis "
+"Sie das <i>Erzwingen von Meldungsarchivierung</i> in den globalen "
+"Einstellungen aktiviert haben."
 
 msgid "You have not created any rules yet."
 msgstr "Sie haben noch keine Regeln erstellt."

@@ -6,6 +6,7 @@ End If
 
 Const CMK_VERSION = "2.4.0b1"
 CONST HKLM = &H80000002
+Set rego = GetObject("WinMgmts:{impersonationLevel=impersonate}!\\.\root\default:StdRegProv")
 
 Dim delay
 Dim exePaths
@@ -116,6 +117,31 @@ Sub getWMIObject2(strClass,arrVars)
                     strTemp = strTemp & item.value
                 End If
             Next
+        Next
+        outPut(Mid(strTemp,3))
+    Next
+End Sub
+
+Sub getOSDetails(arrVars)
+    Set Entries = objClass.ExecQuery("Select * from Win32_OperatingSystem")
+	Dim dwValue
+	strKeyPath = "SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+	strValueName = "UBR"
+	intUBRErrCode = rego.GetDWORDValue(HKLM, strKeyPath, strValueName, dwValue)
+    For Each entry in Entries
+        strTemp = "A"
+        For Each label in arrVars
+            strTemp = strTemp & "|"
+            For Each item in entry.Properties_
+                If LCase(item.name) = LCase(label) Then
+                    strTemp = strTemp & item.value
+                End If
+            Next
+			' Modify version field to include UBR
+			If LCase(label) = "version" and intUBRErrCode = 0 Then
+			    strUBR = CStr(dwValue) ' Convert DWORD to str
+				strTemp =  strTemp & "." & strUBR
+			End If
         Next
         outPut(Mid(strTemp,3))
     Next
@@ -276,7 +302,7 @@ Call getWMIObject("Win32_Processor",cpuVars)
 ' OS Version
 Call startSection("win_os",124,timeUntil)
 osVars = Array( "csname", "caption", "version", "OSArchitecture", "servicepackmajorversion", "ServicePackMinorVersion", "InstallDate" )
-Call getWMIObject2("Win32_OperatingSystem",osVars)
+Call getOSDetails(osVars)
 
 ' Memory
 'Get-WmiObject Win32_PhysicalMemory -ComputerName $name  | select BankLabel,DeviceLocator,Capacity,Manufacturer,PartNumber,SerialNumber,Speed
@@ -336,7 +362,6 @@ Loop
 
 ' Search Registry
 Call startSection("win_reg_uninstall",124,timeUntil)
-Set rego = GetObject("WinMgmts:{impersonationLevel=impersonate}!\\.\root\default:StdRegProv")
 regVars = Array("DisplayName", "Publisher", "InstallLocation", "PSChildName", "DisplayVersion", "EstimatedSize", "InstallDate", "Language")
 
 For Each path in regPaths

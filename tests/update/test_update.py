@@ -95,20 +95,16 @@ def test_update(  # pylint: disable=too-many-branches
     )
     assert base_ok_services.issubset(target_ok_services), err_msg
 
-    match_dict = parse_files(pathname=target_site.logs_dir / "*log*", pattern="error")
+    error_match_dict = parse_files(pathname=target_site.logs_dir / "**/*log*", pattern="error")
 
     # TODO: Remove the following block after CMK-18603 is done
     cmc_log = str(target_site.logs_dir / "cmc.log")
-    if cmc_log in match_dict:
-        match_dict.pop(cmc_log)
-
-    assert not match_dict, f"Error string found in one or more log files: {match_dict}"
-
-    match_dict_subs = parse_files(pathname=target_site.logs_dir / "**/*log*", pattern="error")
+    if cmc_log in error_match_dict:
+        error_match_dict.pop(cmc_log)
 
     # TODO: Remove the following block after CMK-18520 is done
     agent_receiver_error_log = str(target_site.logs_dir / "agent-receiver/error.log")
-    if agent_receiver_error_log in match_dict_subs:
-        match_dict_subs.pop(agent_receiver_error_log)
+    if agent_receiver_error_log in error_match_dict:
+        error_match_dict.pop(agent_receiver_error_log)
 
-    assert not match_dict_subs, f"Error string found in one or more log files: {match_dict_subs}"
+    assert not error_match_dict, f"Error string found in one or more log files: {error_match_dict}"

@@ -7,7 +7,7 @@
 import pytest
 from cryptography.hazmat.primitives import hashes
 
-from cmk.crypto._types import HashAlgorithm
+from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.password import Password, PasswordPolicy
 
 

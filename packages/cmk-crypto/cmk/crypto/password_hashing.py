@@ -17,7 +17,7 @@ from typing import NewType
 
 import bcrypt
 
-from ._types import MKCryptoException
+from . import MKCryptoException
 from .password import Password
 
 logger = logging.getLogger(__name__)

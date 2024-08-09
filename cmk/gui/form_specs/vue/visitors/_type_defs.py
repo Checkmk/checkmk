@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from enum import Enum, auto
+from enum import auto, Enum
 from typing import Any
 
 DataForDisk = Any

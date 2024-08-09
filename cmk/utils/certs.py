@@ -21,13 +21,13 @@ from cmk.utils.log.security_event import SecurityEvent
 from cmk.utils.user import UserId
 
 from cmk.ccc.site import omd_site
-from cmk.crypto import HashAlgorithm
 from cmk.crypto.certificate import (
     Certificate,
     CertificateSigningRequest,
     CertificateWithPrivateKey,
     X509Name,
 )
+from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
 
 

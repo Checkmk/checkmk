@@ -102,8 +102,8 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
-from cmk.crypto import PEMDecodingError
 from cmk.crypto.password import Password as PasswordType
+from cmk.crypto.pem import PEMDecodingError
 
 
 def register() -> None:

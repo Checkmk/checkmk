@@ -46,9 +46,10 @@ from cmk.gui.valuespec import (
 
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
-from cmk.crypto import HashAlgorithm, PEMDecodingError
 from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey
+from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.password import Password as PasswordType
+from cmk.crypto.pem import PEMDecodingError
 
 
 class KeypairStore:

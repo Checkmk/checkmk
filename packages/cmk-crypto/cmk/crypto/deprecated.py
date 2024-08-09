@@ -10,8 +10,8 @@ from typing import Literal
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import algorithms, Cipher, modes
 
-from ._types import HashAlgorithm
 from .certificate import Certificate
+from .hash import HashAlgorithm
 from .keys import PrivateKey, PublicKey
 
 

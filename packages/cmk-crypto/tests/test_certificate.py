@@ -17,7 +17,6 @@ import time_machine
 from cryptography import x509
 from dateutil.relativedelta import relativedelta
 
-from cmk.crypto import PEMDecodingError
 from cmk.crypto.certificate import (
     Certificate,
     CertificatePEM,
@@ -29,6 +28,7 @@ from cmk.crypto.certificate import (
 )
 from cmk.crypto.keys import InvalidSignatureError, PlaintextPrivateKeyPEM, PrivateKey
 from cmk.crypto.password import Password
+from cmk.crypto.pem import PEMDecodingError
 
 
 def _rsa_private_keys_equal(key_a: PrivateKey, key_b: PrivateKey) -> bool:

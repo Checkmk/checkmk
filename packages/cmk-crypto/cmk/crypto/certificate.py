@@ -45,7 +45,8 @@ from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from dateutil.relativedelta import relativedelta
 
-from ._types import HashAlgorithm, MKCryptoException, PEMDecodingError, SerializedPEM
+from . import MKCryptoException
+from .hash import HashAlgorithm
 from .keys import (
     EncryptedPrivateKeyPEM,
     InvalidSignatureError,
@@ -56,9 +57,10 @@ from .keys import (
     PublicKey,
 )
 from .password import Password
+from .pem import _PEMData, PEMDecodingError
 
 
-class CertificatePEM(SerializedPEM):
+class CertificatePEM(_PEMData):
     """A certificate in pem format"""
 
 

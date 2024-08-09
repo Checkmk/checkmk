@@ -6,15 +6,17 @@
 
 import pytest
 
-from cmk.crypto import HashAlgorithm, PEMDecodingError, Signature
+from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import (
     InvalidSignatureError,
     PlaintextPrivateKeyPEM,
     PrivateKey,
     PublicKey,
     PublicKeyPEM,
+    Signature,
 )
 from cmk.crypto.password import Password
+from cmk.crypto.pem import PEMDecodingError
 
 
 @pytest.fixture(name="rsa_private_key", scope="module")

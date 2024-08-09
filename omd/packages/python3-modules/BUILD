@@ -87,7 +87,7 @@ config_setting(
         ),
     }),
 ) for module, dep in [
-    ("agent-receiver", "$(execpath @omd_packages//packages/cmk-agent-receiver:files)"),
+    ("agent-receiver", "$(locations @omd_packages//packages/cmk-agent-receiver:files)"),
     ("graphing", "$(execpath @omd_packages//packages:cmk-graphing)"),
     ("rulesets", "$(execpath @omd_packages//packages:cmk-rulesets)"),
     ("server-side-calls", "$(execpath @omd_packages//packages:cmk-server-side-calls)"),

@@ -53,7 +53,7 @@ SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES = frozenset(
     }
 )
 
-ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
+ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
     # to add a new metric, just add a made up name, run the
     # agent, and you'll get a error listing available metrics!
     # key: list of (name(s), interval, aggregation, filter)
@@ -61,12 +61,12 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
     # Also remember to add the service to the WATO rule:
     # cmk/gui/plugins/wato/special_agents/azure.py
     "Microsoft.Network/virtualNetworkGateways": [
-        ("AverageBandwidth,P2SBandwidth", "PT5M", "average", None),
-        ("TunnelIngressBytes", "PT5M", "count", None),
-        ("TunnelEgressBytes", "PT5M", "count", None),
-        ("TunnelIngressPacketDropCount", "PT5M", "count", None),
-        ("TunnelEgressPacketDropCount", "PT5M", "count", None),
-        ("P2SConnectionCount", "PT1M", "maximum", None),
+        ("AverageBandwidth,P2SBandwidth", "PT5M", "average"),
+        ("TunnelIngressBytes", "PT5M", "count"),
+        ("TunnelEgressBytes", "PT5M", "count"),
+        ("TunnelIngressPacketDropCount", "PT5M", "count"),
+        ("TunnelEgressPacketDropCount", "PT5M", "count"),
+        ("P2SConnectionCount", "PT1M", "maximum"),
     ],
     "Microsoft.Sql/servers/databases": [
         (
@@ -74,7 +74,6 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
             "connection_successful,connection_failed",
             "PT1M",
             "average",
-            None,
         ),
     ],
     "Microsoft.Storage/storageAccounts": [
@@ -82,17 +81,15 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
             "UsedCapacity,Ingress,Egress,Transactions",
             "PT1H",
             "total",
-            None,
         ),
         (
             "SuccessServerLatency,SuccessE2ELatency,Availability",
             "PT1H",
             "average",
-            None,
         ),
     ],
     "Microsoft.Web/sites": [
-        ("CpuTime,AverageResponseTime,Http5xx", "PT1M", "total", None),
+        ("CpuTime,AverageResponseTime,Http5xx", "PT1M", "total"),
     ],
     "Microsoft.DBforMySQL/servers": [
         (
@@ -100,19 +97,16 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
             "storage_percent,active_connections",
             "PT1M",
             "average",
-            None,
         ),
         (
             "connections_failed,network_bytes_ingress,network_bytes_egress",
             "PT1M",
             "total",
-            None,
         ),
         (
             "seconds_behind_master",
             "PT1M",
             "maximum",
-            None,
         ),
     ],
     "Microsoft.DBforMySQL/flexibleServers": [
@@ -124,19 +118,16 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
             "storage_percent,active_connections",
             "PT1M",
             "average",
-            None,
         ),
         (
             "aborted_connections,network_bytes_ingress,network_bytes_egress",
             "PT1M",
             "total",
-            None,
         ),
         (
             "replication_lag",
             "PT1M",
             "maximum",
-            None,
         ),
     ],
     "Microsoft.DBforPostgreSQL/servers": [
@@ -145,19 +136,16 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
             "storage_percent,active_connections",
             "PT1M",
             "average",
-            None,
         ),
         (
             "connections_failed,network_bytes_ingress,network_bytes_egress",
             "PT1M",
             "total",
-            None,
         ),
         (
             "pg_replica_log_delay_in_seconds",
             "PT1M",
             "maximum",
-            None,
         ),
     ],
     "Microsoft.DBforPostgreSQL/flexibleServers": [
@@ -165,19 +153,16 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
             "cpu_percent,memory_percent,disk_iops_consumed_percentage,storage_percent,active_connections",
             "PT1M",
             "average",
-            None,
         ),
         (
             "connections_failed,network_bytes_ingress,network_bytes_egress",
             "PT1M",
             "total",
-            None,
         ),
         (
             "physical_replication_delay_in_seconds",
             "PT1M",
             "maximum",
-            None,
         ),
     ],
     "Microsoft.Network/trafficmanagerprofiles": [
@@ -185,13 +170,11 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
             "QpsByEndpoint",
             "PT1M",
             "total",
-            None,
         ),
         (
             "ProbeAgentCurrentEndpointStateByProfileResourceId",
             "PT1M",
             "maximum",
-            None,
         ),
     ],
     "Microsoft.Network/loadBalancers": [
@@ -199,31 +182,27 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
             "ByteCount",
             "PT1M",
             "total",
-            None,
         ),
         (
             "AllocatedSnatPorts,UsedSnatPorts,VipAvailability,DipAvailability",
             "PT1M",
             "average",
-            None,
         ),
     ],
     "Microsoft.Network/applicationGateways": [
-        ("HealthyHostCount", "PT1M", "average", None),
-        ("FailedRequests", "PT1M", "count", None),
+        ("HealthyHostCount", "PT1M", "average"),
+        ("FailedRequests", "PT1M", "count"),
     ],
     "Microsoft.Compute/virtualMachines": [
         (
             "Percentage CPU,CPU Credits Consumed,CPU Credits Remaining,Available Memory Bytes,Disk Read Operations/Sec,Disk Write Operations/Sec",
             "PT1M",
             "average",
-            None,
         ),
         (
             "Network In Total,Network Out Total,Disk Read Bytes,Disk Write Bytes",
             "PT1M",
             "total",
-            None,
         ),
     ],
 }
@@ -970,7 +949,7 @@ class LabelsSection(Section):
         super().__init__("azure_labels", [piggytarget], separator=0, options=[])
 
 
-class IssueCollecter:
+class IssueCollector:
     def __init__(self) -> None:
         super().__init__()
         self._list: list[tuple[str, str]] = []
@@ -986,7 +965,7 @@ class IssueCollecter:
         return len(self._list)
 
 
-def create_metric_dict(metric, aggregation, interval_id, filter_):
+def create_metric_dict(metric, aggregation, interval_id):
     name = metric["name"]["value"]
     metric_dict = {
         "name": name,
@@ -994,7 +973,6 @@ def create_metric_dict(metric, aggregation, interval_id, filter_):
         "value": None,
         "unit": metric["unit"].lower(),
         "timestamp": None,
-        "filter": filter_,
         "interval_id": interval_id,
         "interval": None,
     }
@@ -1342,7 +1320,7 @@ class MetricCache(DataCache):
     def __init__(
         self,
         resource: AzureResource,
-        metric_definition: tuple[str, str, str, None],
+        metric_definition: tuple[str, str, str],
         ref_time: datetime.datetime,
         debug: bool = False,
     ) -> None:
@@ -1380,8 +1358,12 @@ class MetricCache(DataCache):
         return True
 
     def get_live_data(self, *args: Any) -> Any:
-        mgmt_client, resource_id, resource_type, err = args
-        metricnames, interval, aggregation, filter_ = self.metric_definition
+        mgmt_client: MgmtApiClient = args[0]
+        resource_id: str = args[1]
+        resource_type: str = args[2]
+        err: IssueCollector = args[3]
+
+        metricnames, interval, aggregation = self.metric_definition
 
         raw_metrics = mgmt_client.metrics(
             resource_id,
@@ -1389,12 +1371,12 @@ class MetricCache(DataCache):
             interval=interval,
             metricnames=metricnames,
             aggregation=aggregation,
-            filter=filter_,
+            filter=None,
         )
 
         metrics = []
         for raw_metric in raw_metrics:
-            parsed_metric = create_metric_dict(raw_metric, aggregation, interval, filter_)
+            parsed_metric = create_metric_dict(raw_metric, aggregation, interval)
             if parsed_metric is not None:
                 metrics.append(parsed_metric)
             else:
@@ -1442,13 +1424,13 @@ def write_section_app_registrations(graph_client: GraphApiClient, args: argparse
 
 def gather_metrics(
     mgmt_client: MgmtApiClient, resource: AzureResource, debug: bool = False
-) -> IssueCollecter:
+) -> IssueCollector:
     """
     Gather all metrics for a resource. These metrics have different time
     resolutions, so every metric needs its own cache.
     Along the way collect ocurrring errors.
     """
-    err = IssueCollecter()
+    err = IssueCollector()
     metric_definitions = ALL_METRICS.get(resource.info["type"], [])
     for metric_def in metric_definitions:
         cache = MetricCache(resource, metric_def, NOW, debug=debug)

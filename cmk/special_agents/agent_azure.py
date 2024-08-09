@@ -465,7 +465,7 @@ class BaseApiClient(abc.ABC):
         self._base_url = authority_urls.base
         self._http_proxy_config = http_proxy_config
 
-    def login(self, tenant, client, secret):
+    def login(self, tenant: str, client: str, secret: str) -> None:
         client_app = msal.ConfidentialClientApplication(
             client,
             secret,
@@ -806,7 +806,7 @@ class GroupConfig:
     def fetchall(self):
         return not self.resources
 
-    def add_key(self, key, value):
+    def add_key(self, key: str, value: str) -> None:
         if key == "resources":
             self.resources = value.split(",")
             return
@@ -906,7 +906,7 @@ class Section:
     LOCK = Lock()
 
     def __init__(
-        self, name: str, piggytargets: Sequence[str], separator: int, options: Sequence[str]
+        self, name: str, piggytargets: Iterable[str], separator: int, options: Sequence[str]
     ) -> None:
         super().__init__()
         self._sep = chr(separator)
@@ -927,7 +927,7 @@ class Section:
         else:  # assume one single line
             self._cont.append(self.formatline(info))
 
-    def write(self, write_empty=False):
+    def write(self, write_empty: bool = False) -> None:
         if not (write_empty or self._cont):
             return
         with self.LOCK:
@@ -940,7 +940,7 @@ class Section:
 
 
 class AzureSection(Section):
-    def __init__(self, name: str, piggytargets: Sequence[str] = ("",)) -> None:
+    def __init__(self, name: str, piggytargets: Iterable[str] = ("",)) -> None:
         super().__init__("azure_%s" % name, piggytargets, separator=124, options=[])
 
 
@@ -1004,7 +1004,7 @@ def create_metric_dict(metric, aggregation, interval_id):
     return None
 
 
-def get_attrs_from_uri(uri):
+def get_attrs_from_uri(uri: str) -> Mapping[str, str]:
     """The uri contains info on subscription, resource group, provider."""
     attrs = {}
     segments = uri.split("/")
@@ -1035,9 +1035,9 @@ class AzureResource:
             self.piggytargets.append(group.lower())
         self.metrics: list = []
 
-    def dumpinfo(self):
+    def dumpinfo(self) -> Sequence[tuple]:
         # TODO: Hmmm, should the variable-length tuples actually be lists?
-        lines: list[tuple] = [("Resource",), (json.dumps(self.info),)]
+        lines: list[tuple[str | int, ...]] = [("Resource",), (json.dumps(self.info),)]
         if self.metrics:
             lines += [("metrics following", len(self.metrics))]
             lines += [(json.dumps(m),) for m in self.metrics]
@@ -1056,7 +1056,7 @@ def filter_keys(mapping: Mapping, keys: Iterable[str]) -> Mapping:
     return {k: v for k, v in items if v is not None}
 
 
-def process_vm(mgmt_client, vmach, args):
+def process_vm(mgmt_client: MgmtApiClient, vmach: AzureResource, args: Args) -> None:
     use_keys = ("statuses",)
 
     inst_view = mgmt_client.vmview(vmach.info["group"], vmach.info["name"])

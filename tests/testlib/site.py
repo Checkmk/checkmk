@@ -974,17 +974,14 @@ class Site:
             omd_status_output = self.execute(
                 ["omd", "status"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
             ).communicate()[0]
-            ps_output_file = self.result_dir() / "processes.out"
-            write_file(
-                ps_output_file,
-                self.execute(
-                    ["ps", "-ef"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                ).communicate()[0],
-                sudo=True,
-            )
+            ps_output = self.execute(
+                ["ps", "-ef"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            ).communicate()[0]
             self.save_results()
+
+            write_file(ps_output_file := self.result_dir() / "processes.out", ps_output, sudo=True)
 
             self.report_crashes()
 

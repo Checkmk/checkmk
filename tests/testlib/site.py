@@ -989,6 +989,7 @@ class Site:
                 "Site was not running completely while it should be! Enforcing stop.\n\n"
                 f"Output of omd status:\n{omd_status_output}\n\n"
                 f'See "{ps_output_file}" for full "ps -ef" output!',
+                returncode=1,
             )
 
     def is_running(self) -> bool:

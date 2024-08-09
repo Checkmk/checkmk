@@ -1,0 +1,18 @@
+Title: azure: Fetch metrics in bulk
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1725635005
+Edition: cre
+Level: 1
+Version: 2.2.0p35
+
+Until now, Azure agent fetched metrics for each resource individually.
+This resulted in many requests made to the Azure API.
+After the changes in Azure API rate limits it started causing agent timeouts in
+large environments.
+
+Now, the Azure agent fetches metrics in bulk per resource type and region.
+This way the number of requests is significantly reduced.
+Since metrics are no longer fetched per resource, parallel execution is also
+removed together with the <code>Force agent to run in single thread</code> option.

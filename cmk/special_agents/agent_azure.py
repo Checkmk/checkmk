@@ -25,7 +25,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from multiprocessing import Lock, Process, Queue
 from pathlib import Path
 from queue import Empty as QueueEmpty
-from typing import Any
+from typing import Any, TypeVar
 
 import msal  # type: ignore[import]
 import requests
@@ -37,6 +37,7 @@ from cmk.utils.paths import tmp_dir
 
 from cmk.special_agents.utils import DataCache, vcrtrace
 
+T = TypeVar("T")
 Args = argparse.Namespace
 GroupLabels = Mapping[str, Mapping[str, str]]
 
@@ -195,6 +196,10 @@ OPTIONAL_METRICS: Mapping[str, Sequence[str]] = {
         "CPU Credits Remaining",
     ],
 }
+
+
+def _chunks(list_: Sequence[T], length: int = 50) -> Sequence[Sequence[T]]:
+    return [list_[i : i + length] for i in range(0, len(list_), length)]
 
 
 def parse_arguments(argv: Sequence[str]) -> Args:
@@ -488,15 +493,18 @@ class BaseApiClient(abc.ABC):
     def _request(
         self,
         method,
-        uri_end,
+        uri_end=None,
+        full_uri=None,
         body=None,
         key=None,
         params=None,
         next_page_key="nextLink",
     ):
-        json_data = self._request_json_from_url(
-            method, self._base_url + uri_end, body=body, params=params
-        )
+        uri = full_uri or self._base_url + uri_end
+        if not uri:
+            raise ValueError("No URI provided")
+
+        json_data = self._request_json_from_url(method, uri, body=body, params=params)
 
         if key is None:
             return json_data
@@ -591,12 +599,17 @@ class MgmtApiClient(BaseApiClient):
         subscription,
         http_proxy_config: HTTPProxyConfig,
     ) -> None:
-        base_url = f"{self.resource}/subscriptions/{subscription}/"
+        self._subscription = subscription
+
+        base_url = f"{self.resource}/subscriptions/{self._subscription}/"
         super().__init__(base_url, http_proxy_config)
+
+    def regional_base_url(self, region):
+        return f"https://{region}.metrics.monitor.azure.com/subscriptions/{self._subscription}"
 
     @staticmethod
     def _get_available_metrics_from_exception(
-        desired_names: str, api_error: ApiError, resource_id: str
+        desired_names: str, api_error: ApiError, resource_type: str
     ) -> str | None:
         error_message = api_error.args[0]
         match = re.match(
@@ -609,7 +622,7 @@ class MgmtApiClient(BaseApiClient):
         available_names = match.groups()[0]
         retry_names = set(desired_names.split(",")) & set(available_names.split(","))
         if not retry_names:
-            LOGGER.debug("None of the expected metrics are available for resource %s", resource_id)
+            LOGGER.debug("None of the expected metrics are available for %s", resource_type)
             return None
 
         return ",".join(sorted(retry_names))
@@ -706,18 +719,30 @@ class MgmtApiClient(BaseApiClient):
             params={"api-version": "2021-10-01", "$top": "100"},
         )
 
-    def metrics(self, resource_id, **params):
-        url = resource_id.split("/", 3)[-1] + "/providers/microsoft.insights/metrics"
-        params["api-version"] = "2018-01-01"
+    def metrics(self, region, resource_ids, params):
+        params["api-version"] = "2023-10-01"
         try:
-            return self._get(url, key="value", params=params)
+            return self._request(
+                "POST",
+                full_uri=self.regional_base_url(region) + "/metrics:getBatch",
+                body={"resourceids": resource_ids},
+                params=params,
+                key="values",
+            )
+
         except ApiError as exc:
             retry_names = self._get_available_metrics_from_exception(
-                params["metricnames"], exc, resource_id
+                params["metricnames"], exc, params["metricnamespace"]
             )
             if retry_names:
                 params["metricnames"] = retry_names
-                return self._get(url, key="value", params=params)
+                return self._request(
+                    "POST",
+                    full_uri=self.regional_base_url(region) + "/metrics:getBatch",
+                    body={"resourceids": resource_ids},
+                    params=params,
+                    key="values",
+                )
             return []
 
 
@@ -1240,16 +1265,17 @@ def process_recovery_services_vaults(mgmt_client: MgmtApiClient, resource: Azure
 
 
 class MetricCache(DataCache):
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(
         self,
-        resource: AzureResource,
         metric_definition: tuple[str, str, str],
+        resource_type: str,
+        region: str,
         ref_time: datetime.datetime,
-        debug=False,
+        debug: bool = False,
     ) -> None:
         self.metric_definition = metric_definition
-        metricnames = metric_definition[0]
-        super().__init__(self.get_cache_path(resource), metricnames, debug=debug)
+        metric_names = metric_definition[0]
+        super().__init__(self.get_cache_path(resource_type, region), metric_names, debug=debug)
         self.remaining_reads = None
         self.timedelta = {
             "PT1M": datetime.timedelta(minutes=1),
@@ -1261,16 +1287,13 @@ class MetricCache(DataCache):
         # were missing some metrics with 3 minutes).
         # More info on Azure Monitor Ingestion time:
         # https://docs.microsoft.com/en-us/azure/azure-monitor/logs/data-ingestion-time
-        start = ref_time - 5 * self.timedelta
-        self._timespan = "{}/{}".format(
-            start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            ref_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        )
+        self.start_time = (ref_time - 5 * self.timedelta).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.end_time = ref_time.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @staticmethod
-    def get_cache_path(resource: AzureResource) -> Path:
+    def get_cache_path(resource_type: str, region: str) -> Path:
         valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
-        subdir = "".join(c if c in valid_chars else "_" for c in resource.info["id"])
+        subdir = "".join(c if c in valid_chars else "_" for c in f"{region}_{resource_type}")
         return AZURE_CACHE_FILE_PATH / subdir
 
     @property
@@ -1282,34 +1305,43 @@ class MetricCache(DataCache):
 
     def get_live_data(self, *args: Any) -> Any:
         mgmt_client: MgmtApiClient = args[0]
-        resource_id: str = args[1]
-        resource_type: str = args[2]
-        err: IssueCollector = args[3]
+        region: str = args[1]
+        resource_ids: Sequence[str] = args[2]
+        resource_type: str = args[3]
+        err: IssueCollector = args[4]
 
-        metricnames, interval, aggregation = self.metric_definition
+        metric_names, interval, aggregation = self.metric_definition
 
-        raw_metrics = mgmt_client.metrics(
-            resource_id,
-            timespan=self._timespan,
-            interval=interval,
-            metricnames=metricnames,
-            aggregation=aggregation,
-            filter=None,
-        )
+        params = {
+            "starttime": self.start_time,
+            "endtime": self.end_time,
+            "interval": interval,
+            "metricnames": metric_names,
+            "metricnamespace": resource_type,
+            "aggregation": aggregation,
+        }
 
-        metrics = []
-        for raw_metric in raw_metrics:
-            parsed_metric = create_metric_dict(raw_metric, aggregation, interval)
-            if parsed_metric is not None:
-                metrics.append(parsed_metric)
-            else:
-                metric_name = raw_metric["name"]["value"]
-                if metric_name in OPTIONAL_METRICS.get(resource_type, []):
-                    continue
+        raw_metrics = []
+        for chunk in _chunks(resource_ids):
+            raw_metrics += mgmt_client.metrics(region, chunk, params)
 
-                msg = "metric not found: {} ({})".format(metric_name, aggregation)
-                err.add("info", resource_id, msg)
-                LOGGER.info(msg)
+        metrics = defaultdict(list)
+
+        for resource_metrics in raw_metrics:
+            resource_id = resource_metrics["resourceid"]
+
+            for raw_metric in resource_metrics["value"]:
+                parsed_metric = create_metric_dict(raw_metric, aggregation, interval)
+                if parsed_metric is not None:
+                    metrics[resource_id].append(parsed_metric)
+                else:
+                    metric_name = raw_metric["name"]["value"]
+                    if metric_name in OPTIONAL_METRICS.get(resource_type, []):
+                        continue
+
+                    msg = "metric not found: {} ({})".format(metric_name, aggregation)
+                    err.add("info", resource_id, msg)
+                    LOGGER.info(msg)
 
         return metrics
 
@@ -1346,30 +1378,60 @@ def write_section_app_registrations(graph_client: GraphApiClient, args: argparse
 
 
 def gather_metrics(
-    mgmt_client: MgmtApiClient, resource: AzureResource, debug: bool = False
+    mgmt_client: MgmtApiClient, all_resources: Sequence[AzureResource], args: Args
 ) -> IssueCollector:
     """
-    Gather all metrics for a resource. These metrics have different time
-    resolutions, so every metric needs its own cache.
-    Along the way collect ocurrring errors.
+    Gather metrics for all resources. Metrics are collected per resource type, region, metric
+    aggregation and time resolution. One query collects metrics of all resources of a given type.
     """
+    resource_dict = {resource.info["id"]: resource for resource in all_resources}
     err = IssueCollector()
-    metric_definitions = ALL_METRICS.get(resource.info["type"], [])
-    for metric_def in metric_definitions:
-        cache = MetricCache(resource, metric_def, NOW, debug=debug)
-        try:
-            resource.metrics += cache.get_data(
-                mgmt_client,
-                resource.info["id"],
-                resource.info["type"],
-                err,
-                use_cache=cache.cache_interval > 60,
+
+    grouped_resource_ids = defaultdict(list)
+    for resource in all_resources:
+        if (
+            resource.info["type"] == "Microsoft.Compute/virtualMachines"
+            and args.piggyback_vms == "grouphost"
+        ):
+            continue
+
+        grouped_resource_ids[(resource.info["type"], resource.info["location"])].append(
+            resource.info["id"]
+        )
+
+    for group, resource_ids in grouped_resource_ids.items():
+        resource_type, resource_region = group
+
+        metric_definitions = ALL_METRICS.get(resource_type, [])
+        for metric_definition in metric_definitions:
+
+            cache = MetricCache(
+                metric_definition, resource_type, resource_region, NOW, debug=args.debug
             )
-        except ApiError as exc:
-            if debug:
-                raise
-            err.add("exception", resource.info["id"], str(exc))
-            LOGGER.exception(exc)
+            try:
+                metrics = cache.get_data(
+                    mgmt_client,
+                    resource_region,
+                    resource_ids,
+                    resource_type,
+                    err,
+                    use_cache=cache.cache_interval > 60,
+                )
+
+                for resource_id, resource_metrics in metrics.items():
+                    if (metric_resource := resource_dict.get(resource_id)) is not None:
+                        metric_resource.metrics += resource_metrics
+                    else:
+                        LOGGER.info(
+                            "Resource %s found in metrics cache no longer monitored", resource_id
+                        )
+
+            except ApiError as exc:
+                if args.debug:
+                    raise
+                err.add("exception", "metric collection", str(exc))
+                LOGGER.exception(exc)
+
     return err
 
 
@@ -1414,18 +1476,6 @@ def process_resource(
         process_load_balancer(mgmt_client, resource)
     elif resource_type == "Microsoft.DBforMySQL/flexibleServers":
         resource.section = "servers"  # use the same section as for single servers
-
-    # metrics aren't collected for VMs if they are mapped to a resource host
-    err = (
-        gather_metrics(mgmt_client, resource, debug=args.debug)
-        if resource_type != "Microsoft.Compute/virtualMachines" or args.piggyback_vms != "grouphost"
-        else None
-    )
-
-    if err:
-        agent_info_section = AzureSection("agent_info")
-        agent_info_section.add(err.dumpinfo())
-        sections.append(agent_info_section)
 
     section = AzureSection(resource.section, resource.piggytargets)
     section.add(resource.dumpinfo())
@@ -1715,6 +1765,11 @@ def main_subscription(args, selector, subscription):
     write_group_info(monitored_groups, monitored_resources, group_labels)
 
     usage_details(mgmt_client, monitored_groups, args)
+
+    if err := gather_metrics(mgmt_client, monitored_resources, args):
+        agent_info_section = AzureSection("agent_info")
+        agent_info_section.add(err.dumpinfo())
+        agent_info_section.write()
 
     func_args = ((mgmt_client, resource, group_labels, args) for resource in monitored_resources)
     mapper = get_mapper(args.debug, args.sequential, args.timeout)

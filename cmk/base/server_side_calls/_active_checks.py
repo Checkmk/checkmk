@@ -85,10 +85,8 @@ class ActiveCheck:
         # the host name is passed as an argument in the new API
         for plugin_name, plugin_params in active_checks_rules:
             plugin_params = _ensure_mapping_str_object(plugin_params)
-            if (active_check := self._plugins.get(plugin_name)) is None:
-                continue
 
-            service_iterator = self._iterate_services(active_check, plugin_params)
+            service_iterator = self._iterate_services(plugin_name, plugin_params)
 
             try:
                 yield from self._get_service_data(plugin_name, service_iterator)
@@ -100,8 +98,10 @@ class ActiveCheck:
                 )
 
     def _iterate_services(
-        self, active_check: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
+        self, plugin_name: str, plugin_params: Sequence[Mapping[str, object]]
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
+        if (active_check := self._plugins.get(plugin_name)) is None:
+            return
         for conf_dict in plugin_params:
             # actually these ^- are configuration sets.
             proxy_config = ProxyConfig(self.host_name, self._http_proxies)
@@ -183,14 +183,12 @@ class ActiveCheck:
         # the host name is passed as an argument in the new API
         for plugin_name, plugin_params in active_checks_rules:
             plugin_params = _ensure_mapping_str_object(plugin_params)
-            if (active_check := self._plugins.get(plugin_name)) is None:
-                continue
 
             try:
                 for desc, _args, _command_line, params in self._iterate_services(
-                    active_check, plugin_params
+                    plugin_name, plugin_params
                 ):
-                    yield ActiveServiceDescription(active_check.name, desc, params)
+                    yield ActiveServiceDescription(plugin_name, desc, params)
 
             except Exception as e:
                 if cmk.ccc.debug.enabled():

@@ -670,6 +670,12 @@ msgstr "%s de %s%%"
 msgid "%s on the exclusion list."
 msgstr "%s sur la liste d'exclusion."
 
+#, fuzzy, python-format
+msgid "%s other service"
+msgid_plural "%s other services"
+msgstr[0] "Autres services"
+msgstr[1] "Autres services"
+
 #, python-format
 msgid "%s properties"
 msgstr "%s propriétés"
@@ -6156,6 +6162,10 @@ msgstr "Un alias ou une description de ce groupe."
 msgid "An connection error occurred: %s"
 msgstr "Une exception s'est produite : %s"
 
+#, fuzzy
+msgid "An empty value is not allowed here"
+msgstr "Une valeur vide n'est pas autorisée ici."
+
 msgid "An empty value is not allowed here."
 msgstr "Une valeur vide n'est pas autorisée ici."
 
@@ -6551,9 +6561,6 @@ msgstr "Aperçu des applications"
 
 msgid "Applications, Processes & Services"
 msgstr "Applications, processus et services"
-
-msgid "Applied Filters:"
-msgstr "Filtres appliqués :"
 
 msgid "Apply"
 msgstr "Appliquer"
@@ -20841,9 +20848,6 @@ msgid "Edit layout only available if header is enabled"
 msgstr ""
 "La modification de la mise en page n'est disponible que si l'en-tête est "
 "activé"
-
-msgid "Edit metric"
-msgstr "Métrique d'édition"
 
 msgid "Edit model"
 msgstr "Modifier le modèle"
@@ -53090,9 +53094,6 @@ msgstr "Sauvegarder & ; visualiser le dossier"
 msgid "Save as new layout for this aggregation"
 msgstr "Créer une copie de cette agrégation"
 
-msgid "Save filters & go to designer"
-msgstr "Sauvegarder les filtres et passer au concepteur"
-
 msgid "Save response"
 msgstr "Sauvegarder la réponse"
 
@@ -62415,9 +62416,6 @@ msgstr ""
 msgid "The file does not contain XML text"
 msgstr "Le fichier ne contient pas de texte XML"
 
-msgid "The file does not look like a valid key file."
-msgstr "Le fichier ne ressemble pas à un fichier clé valide."
-
 msgid "The file does not seem to be a valid iCalendar file."
 msgstr "Le fichier ne semble pas être un fichier iCalendar valide."
 
@@ -62958,6 +62956,9 @@ msgstr "Le travail a été supprimé."
 #, fuzzy, python-format
 msgid "The key / certificate already exists (Key: %d, Description: %s)"
 msgstr "La paire de clés existe déjà (Clé : %d, Description : %s)"
+
+msgid "The key file is invalid or the password is wrong."
+msgstr ""
 
 msgid ""
 "The key size is provided as an integer and needs to match exactly the value "
@@ -84963,6 +84964,18 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "The file does not look like a valid key file."
+#~ msgstr "Le fichier ne ressemble pas à un fichier clé valide."
+
+#~ msgid "Applied Filters:"
+#~ msgstr "Filtres appliqués :"
+
+#~ msgid "Edit metric"
+#~ msgstr "Métrique d'édition"
+
+#~ msgid "Save filters & go to designer"
+#~ msgstr "Sauvegarder les filtres et passer au concepteur"
 
 #, fuzzy
 #~ msgid "Error Handling"

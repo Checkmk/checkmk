@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2024-08-08 23:03+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -671,6 +671,12 @@ msgstr "%s von %s%%"
 #, python-format
 msgid "%s on the exclusion list."
 msgstr "%s auf der Ausschlussliste."
+
+#, fuzzy, python-format
+msgid "%s other service"
+msgid_plural "%s other services"
+msgstr[0] "Andere Services"
+msgstr[1] "Andere Services"
 
 #, python-format
 msgid "%s properties"
@@ -5963,6 +5969,10 @@ msgstr "Alias/Beschreibung der Gruppe."
 msgid "An connection error occurred: %s"
 msgstr "Es ist ein Verbindungsfehler aufgetreten: %s"
 
+#, fuzzy
+msgid "An empty value is not allowed here"
+msgstr "Leerer Wert ist hier nicht erlaubt."
+
 msgid "An empty value is not allowed here."
 msgstr "Leerer Wert ist hier nicht erlaubt."
 
@@ -6349,9 +6359,6 @@ msgstr "Anwendungsübersicht"
 
 msgid "Applications, Processes & Services"
 msgstr "Anwendungen, Prozesse & Services"
-
-msgid "Applied Filters:"
-msgstr "Angewandte Filter:"
 
 msgid "Apply"
 msgstr "Anwenden"
@@ -19969,9 +19976,6 @@ msgstr "Layout bearbeiten"
 
 msgid "Edit layout only available if header is enabled"
 msgstr "Layout bearbeiten ist nur verfügbar, wenn der Header aktiviert ist"
-
-msgid "Edit metric"
-msgstr "Metrik bearbeiten"
 
 msgid "Edit model"
 msgstr "Modell editieren"
@@ -50545,9 +50549,6 @@ msgstr "Liste speichern & ansehen"
 msgid "Save as new layout for this aggregation"
 msgstr "Als neues Layout für diese Aggregation speichern"
 
-msgid "Save filters & go to designer"
-msgstr "Filter speichern & zum Designer gehen"
-
 msgid "Save response"
 msgstr "Antwort speichern"
 
@@ -59605,9 +59606,6 @@ msgstr ""
 msgid "The file does not contain XML text"
 msgstr "Die Datei enthält keinen XML-Text"
 
-msgid "The file does not look like a valid key file."
-msgstr "Diese Datei ist scheinbar keine gültige Schlüssel-Datei."
-
 msgid "The file does not seem to be a valid iCalendar file."
 msgstr "Die Datei scheint keine gültige iCalendar-Datei zu sein."
 
@@ -60146,6 +60144,9 @@ msgid "The key / certificate already exists (Key: %d, Description: %s)"
 msgstr ""
 "Der Schlüssel / das Zertifikat existiert bereits (Schlüssel: %d, "
 "Beschreibung: %s)"
+
+msgid "The key file is invalid or the password is wrong."
+msgstr ""
 
 msgid ""
 "The key size is provided as an integer and needs to match exactly the value "
@@ -81347,6 +81348,18 @@ msgstr "{region} ({id_})"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "The file does not look like a valid key file."
+#~ msgstr "Diese Datei ist scheinbar keine gültige Schlüssel-Datei."
+
+#~ msgid "Applied Filters:"
+#~ msgstr "Angewandte Filter:"
+
+#~ msgid "Edit metric"
+#~ msgstr "Metrik bearbeiten"
+
+#~ msgid "Save filters & go to designer"
+#~ msgstr "Filter speichern & zum Designer gehen"
 
 #~ msgid "Error Handling"
 #~ msgstr "Fehlerbehandlung"

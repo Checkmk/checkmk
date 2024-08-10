@@ -671,6 +671,12 @@ msgstr "%s van %s%%"
 msgid "%s on the exclusion list."
 msgstr "%s op de uitsluit lijst."
 
+#, fuzzy, python-format
+msgid "%s other service"
+msgid_plural "%s other services"
+msgstr[0] "Andere diensten"
+msgstr[1] "Andere diensten"
+
 #, python-format
 msgid "%s properties"
 msgstr "%s eigenschappen"
@@ -6099,6 +6105,10 @@ msgstr "Een alias of beschrijving van deze groep."
 msgid "An connection error occurred: %s"
 msgstr "Er is een uitzondering opgetreden: %s"
 
+#, fuzzy
+msgid "An empty value is not allowed here"
+msgstr "Een lege waarde is hier niet toegestaan."
+
 msgid "An empty value is not allowed here."
 msgstr "Een lege waarde is hier niet toegestaan."
 
@@ -6492,9 +6502,6 @@ msgstr "Overzicht toepassingen"
 
 msgid "Applications, Processes & Services"
 msgstr "Toepassingen, processen en diensten"
-
-msgid "Applied Filters:"
-msgstr "Toegepaste filters:"
 
 msgid "Apply"
 msgstr "Solliciteer"
@@ -20656,9 +20663,6 @@ msgstr "Lay-out bewerken"
 
 msgid "Edit layout only available if header is enabled"
 msgstr "Wijzig lay-out alleen beschikbaar als koptekst is ingeschakeld"
-
-msgid "Edit metric"
-msgstr "Bewerk metriek"
 
 msgid "Edit model"
 msgstr "Model bewerken"
@@ -52598,9 +52602,6 @@ msgstr "Map opslaan en bekijken"
 msgid "Save as new layout for this aggregation"
 msgstr "Maak een kopie van deze aggregatie"
 
-msgid "Save filters & go to designer"
-msgstr "Bewaar filters & ga naar ontwerper"
-
 msgid "Save response"
 msgstr "Reactie opslaan"
 
@@ -61824,9 +61825,6 @@ msgstr ""
 msgid "The file does not contain XML text"
 msgstr "Het bestand bevat geen XML-tekst"
 
-msgid "The file does not look like a valid key file."
-msgstr "Het bestand ziet er niet uit als een geldig sleutelbestand."
-
 #, fuzzy
 msgid "The file does not seem to be a valid iCalendar file."
 msgstr "Het bestand lijkt geen geldig iCalendar bestand te zijn.AAA"
@@ -62366,6 +62364,9 @@ msgstr "De opdracht is verwijderd."
 #, fuzzy, python-format
 msgid "The key / certificate already exists (Key: %d, Description: %s)"
 msgstr "Het sleutelpaar bestaat al (Sleutel: %d, Beschrijving: %s)"
+
+msgid "The key file is invalid or the password is wrong."
+msgstr ""
 
 msgid ""
 "The key size is provided as an integer and needs to match exactly the value "
@@ -84112,6 +84113,18 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "The file does not look like a valid key file."
+#~ msgstr "Het bestand ziet er niet uit als een geldig sleutelbestand."
+
+#~ msgid "Applied Filters:"
+#~ msgstr "Toegepaste filters:"
+
+#~ msgid "Edit metric"
+#~ msgstr "Bewerk metriek"
+
+#~ msgid "Save filters & go to designer"
+#~ msgstr "Bewaar filters & ga naar ontwerper"
 
 #, fuzzy
 #~ msgid "Error Handling"

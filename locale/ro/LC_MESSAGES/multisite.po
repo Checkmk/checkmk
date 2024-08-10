@@ -673,6 +673,13 @@ msgstr "%s de %s%%"
 msgid "%s on the exclusion list."
 msgstr "%s pe lista de excludere."
 
+#, fuzzy, python-format
+msgid "%s other service"
+msgid_plural "%s other services"
+msgstr[0] "Alte servicii"
+msgstr[1] "Alte servicii"
+msgstr[2] "Alte servicii"
+
 #, python-format
 msgid "%s properties"
 msgstr "%s proprietăți"
@@ -6104,6 +6111,10 @@ msgstr "Un pseudonim sau o descriere a acestui grup."
 msgid "An connection error occurred: %s"
 msgstr "S-a produs o excepție: %s"
 
+#, fuzzy
+msgid "An empty value is not allowed here"
+msgstr "Aici nu este permisă o valoare goală."
+
 msgid "An empty value is not allowed here."
 msgstr "Aici nu este permisă o valoare goală."
 
@@ -6495,9 +6506,6 @@ msgstr "Prezentare generală a aplicațiilor"
 
 msgid "Applications, Processes & Services"
 msgstr "Aplicații, procese & Servicii"
-
-msgid "Applied Filters:"
-msgstr "Filtre aplicate:"
 
 msgid "Apply"
 msgstr "Aplicați"
@@ -20685,9 +20693,6 @@ msgstr "Editați aspectul"
 
 msgid "Edit layout only available if header is enabled"
 msgstr "Editarea aspectului este disponibilă numai dacă este activat antetul"
-
-msgid "Edit metric"
-msgstr "Editare metrică"
 
 msgid "Edit model"
 msgstr "Editați modelul"
@@ -52644,9 +52649,6 @@ msgstr "Salvați & vizualizați folderul"
 msgid "Save as new layout for this aggregation"
 msgstr "Salvați ca nou aspect pentru această agregare"
 
-msgid "Save filters & go to designer"
-msgstr "Salvați filtrele și mergeți la designer"
-
 msgid "Save response"
 msgstr "Salvați răspunsul"
 
@@ -61946,9 +61948,6 @@ msgstr ""
 msgid "The file does not contain XML text"
 msgstr "Fișierul nu conține text XML"
 
-msgid "The file does not look like a valid key file."
-msgstr "Fișierul nu pare a fi un fișier cheie valid."
-
 msgid "The file does not seem to be a valid iCalendar file."
 msgstr "Fișierul nu pare a fi un fișier iCalendar valid."
 
@@ -62486,6 +62485,9 @@ msgstr "Sarcina a fost ștearsă."
 #, python-format
 msgid "The key / certificate already exists (Key: %d, Description: %s)"
 msgstr "Cheia / certificatul există deja (Cheie: %d, Descriere: %s)"
+
+msgid "The key file is invalid or the password is wrong."
+msgstr ""
 
 msgid ""
 "The key size is provided as an integer and needs to match exactly the value "
@@ -84247,6 +84249,18 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "The file does not look like a valid key file."
+#~ msgstr "Fișierul nu pare a fi un fișier cheie valid."
+
+#~ msgid "Applied Filters:"
+#~ msgstr "Filtre aplicate:"
+
+#~ msgid "Edit metric"
+#~ msgstr "Editare metrică"
+
+#~ msgid "Save filters & go to designer"
+#~ msgstr "Salvați filtrele și mergeți la designer"
 
 #~ msgid "Error Handling"
 #~ msgstr "Gestionarea erorilor"

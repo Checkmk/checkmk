@@ -5,6 +5,7 @@
 
 from typing import Generic, Sequence, TypeVar
 
+from cmk.gui.form_specs.private.list_extended import ListExtended
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
 from cmk.gui.form_specs.vue.type_defs import (
@@ -25,16 +26,15 @@ from cmk.gui.form_specs.vue.utils import (
 from cmk.gui.i18n import translate_to_current_language
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import List
 
 T = TypeVar("T")
 
 
-class ListVisitor(Generic[T], FormSpecVisitor[List[T], Sequence[T]]):
-    def _parse_value(self, raw_value: object) -> list[T] | EmptyValue:
+class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
+    def _parse_value(self, raw_value: object) -> Sequence[T] | EmptyValue:
         raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
-            raw_value = []
+            return self.form_spec.prefill.value
 
         if not isinstance(raw_value, list):
             return EMPTY_VALUE

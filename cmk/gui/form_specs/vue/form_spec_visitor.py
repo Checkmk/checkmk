@@ -12,10 +12,16 @@ from typing import Any, Literal, TypeVar
 
 import cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components as VueComponents
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import Catalog, SingleChoiceExtended
-from cmk.gui.form_specs.private.definitions import LegacyValueSpec, UnknownFormSpec
+from cmk.gui.form_specs.private import (
+    Catalog,
+    LegacyValueSpec,
+    ListExtended,
+    SingleChoiceExtended,
+    UnknownFormSpec,
+)
 from cmk.gui.form_specs.vue.form_spec_recomposers import (
     recompose_host_state,
+    recompose_list,
     recompose_percentage,
     recompose_regular_expression,
     recompose_single_choice,
@@ -81,7 +87,6 @@ def register_form_specs():
     register_visitor_class(Float, FloatVisitor)
     register_visitor_class(SingleChoiceExtended, SingleChoiceVisitor)
     register_visitor_class(CascadingSingleChoice, CascadingSingleChoiceVisitor)
-    register_visitor_class(List, ListVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
@@ -89,10 +94,12 @@ def register_form_specs():
     register_visitor_class(RegularExpression, StringVisitor, recompose_regular_expression)
     register_visitor_class(DataSize, DataSizeVisitor)
     register_visitor_class(Catalog, CatalogVisitor)
+    register_visitor_class(ListExtended, ListVisitor)
 
     # Recomposed
     register_visitor_class(HostState, SingleChoiceVisitor, recompose_host_state)
     register_visitor_class(SingleChoice, SingleChoiceVisitor, recompose_single_choice)
+    register_visitor_class(List, ListVisitor, recompose_list)
     register_visitor_class(Percentage, FloatVisitor, recompose_percentage)
     register_visitor_class(UnknownFormSpec, LegacyValuespecVisitor, recompose_unknown_form_spec)
 

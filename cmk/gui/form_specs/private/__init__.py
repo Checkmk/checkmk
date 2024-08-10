@@ -10,10 +10,12 @@ from .definitions import (
     SingleChoiceExtended,
     UnknownFormSpec,
 )
+from .list_extended import ListExtended
 
 __all__ = [
     "Catalog",
     "LegacyValueSpec",
+    "ListExtended",
     "SingleChoiceElementExtended",
     "SingleChoiceExtended",
     "UnknownFormSpec",

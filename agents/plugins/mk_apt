@@ -20,10 +20,11 @@ CMK_VERSION="2.4.0b1"
 # This variable can either be "upgrade" or "dist-upgrade"
 UPGRADE=upgrade
 DO_UPDATE=yes
+FILE="/var/cache/apt/pkgcache.bin"
 
 check_apt_update() {
     if [ "$DO_UPDATE" = yes ]; then
-        if [ $(($(date +%s) - $(date -r "$FILE" +%s))) -gt 86400 ]; then
+        if [ $(($(date +%s) - $(date -r "/var/cache/apt/pkgcache.bin" +%s))) -gt 86400 ]; then
             # NOTE: Even with -qq, apt-get update can output several lines to
             # stderr, e.g.:
             #

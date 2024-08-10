@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-08-08 05:05+0000\n"
+"PO-Revision-Date: 2024-08-10 00:57+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -17819,7 +17819,6 @@ msgstr "ホスト名を表示しない"
 msgid "Do not encrypt the backup"
 msgstr "バックアップを暗号化しないでください"
 
-#, fuzzy
 msgid ""
 "Do not forget to activate the plug-in (i.e., deploy with or without "
 "configuration in at least one of your rules. It can be useful to create "
@@ -17831,11 +17830,10 @@ msgstr ""
 "少なくとも1つのルールでプラグインをアクティブ化する(つまり、設定の有無にかか"
 "わらずデプロイを実行する)ことを忘れないでください。部分的にしか記入されていな"
 "いルールを作成すると便利な場合があります。ルールの実行は<i>パラメータごと</i>"
-"に基づいて行われるため、たとえば、リストの一番上に1つのルールを作成して、他の"
-"パラメータを設定せずにホストの一部のルールのアクティブ化を<i>いいえ</i>に設定"
-"することができます。。"
+"に行われるため、たとえば、リストの一番上に他のパラメータを設定せずに、ホスト"
+"の一部のルールのアクティブ化を<i>no</i>に設定するだけのルールを作成することが"
+"できます。"
 
-#, fuzzy
 msgid ""
 "Do not forget to activate the plug-in in at least one of your rules. It can "
 "be useful to create rules that are only partially filled out. Since the rule "
@@ -17845,9 +17843,9 @@ msgid ""
 msgstr ""
 "少なくとも1つのルールでプラグインをアクティブ化することを忘れないでください。"
 "部分的にしか記入されていないルールを作成すると便利な場合があります。ルールの"
-"実行は<i>パラメータごと</i>に基づいて行われるため、たとえば、リストの一番上に"
-"1つのルールを作成して、他のパラメータを設定せずにホストの一部のルールのアク"
-"ティブ化を<i>いいえ</i>に設定することができます。。"
+"実行は<i>パラメータごと</i>に行われるため、たとえば、リストの一番上に他のパラ"
+"メータを設定せずに、ホストの一部のルールのアクティブ化を<i>no</i>に設定するだ"
+"けのルールを作成することができます。"
 
 msgid "Do not graph completely zero metrics"
 msgstr "完全にゼロのメトリックをグラフ化しないでください"
@@ -17933,9 +17931,8 @@ msgstr "コンテキストを転送しない"
 msgid "Do not translate SNMP traps"
 msgstr "SNMPトラップを変換しないでください"
 
-#, fuzzy
 msgid "Do not trust"
-msgstr "グループ化しないでください"
+msgstr "信用しないでください"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "キーに'aws:' プレフィックスを使用しないでください。"
@@ -17946,9 +17943,8 @@ msgstr "値に\"aws:\"プレフィックスを使用しないでください。"
 msgid "Do not use Checkmk Python, even if it has been installed"
 msgstr "Checkmk Pythonがインストールされている場合でも、使用しないでください"
 
-#, fuzzy
 msgid "Do not use a prefix"
-msgstr "名前空間プレフィックスを使用しないでください"
+msgstr "接頭辞は使用しないでください"
 
 msgid "Do not use absolute levels"
 msgstr "絶対レベルを使用しないでください"
@@ -18049,13 +18045,11 @@ msgstr "一致するサービスをアクティブ化しないでください"
 msgid "Don't apply compression"
 msgstr "圧縮しないこと"
 
-#, fuzzy
 msgid "Don't change labels for matching services"
-msgstr "一致する消失したサービスを削除しない"
+msgstr "一致するサービスのラベルを変更しない"
 
-#, fuzzy
 msgid "Don't change parameters for matching services"
-msgstr "このサービスのパラメーターを表示および編集する"
+msgstr "一致するサービスのパラメーターを変更しない"
 
 msgid "Don't change state"
 msgstr "状態を変更しないでください"
@@ -18070,7 +18064,6 @@ msgstr ""
 msgid "Don't forget the instance: instance:dbname"
 msgstr "インスタンスを忘れないでください:instance:dbname"
 
-#, fuzzy
 msgid "Don't handle real-time checks"
 msgstr "リアルタイムチェックを処理しない"
 
@@ -18163,7 +18156,6 @@ msgstr "SNMP walkをダウンロード"
 msgid "Download agent output"
 msgstr "エージェント出力のダウンロード"
 
-#, fuzzy
 msgid "Download agent output / SNMP walks"
 msgstr "エージェント出力/SNMPウォークのダウンロード"
 
@@ -18208,13 +18200,11 @@ msgstr "検証依頼書のダウンロード"
 msgid "Downloaded Agent"
 msgstr "ダウンロードしたエージェント"
 
-#, fuzzy
 msgid "Downloads Checkmk agent and plug-ins for Linux"
-msgstr "Linux用のCheckmkエージェントとプラグインをダウンロードします"
+msgstr "Linux用のCheckmkエージェントとプラグインをダウンロード"
 
-#, fuzzy
 msgid "Downloads Checkmk agent and plug-ins for Windows"
-msgstr "CheckmkエージェントとWindows用プラグインをダウンロードします"
+msgstr "CheckmkエージェントとWindows用プラグインをダウンロード"
 
 msgid "Downloads Checkmk agents for other operating systems"
 msgstr ""
@@ -18253,16 +18243,14 @@ msgstr "ダウンタイムコメント"
 msgid "Downtime comment (regex)"
 msgstr "ダウンタイムコメント（正規表現）"
 
-#, fuzzy
 msgid "Downtime date picker"
-msgstr "ダウンタイム終了時間"
+msgstr "ダウンタイム日付選択"
 
 msgid "Downtime duration (if flexible)"
 msgstr "ダウンタイム期間(フレキシブルな場合)"
 
-#, fuzzy
 msgid "Downtime duration presets"
-msgstr "ダウンタイム期間(フレキシブルな場合)"
+msgstr "ダウンタイムのプリセット"
 
 msgid "Downtime end"
 msgstr "ダウンタイム終了"
@@ -18300,9 +18288,8 @@ msgstr "ダウンタイム開始時間"
 msgid "Downtime stopped"
 msgstr "ダウンタイムが停止しました"
 
-#, fuzzy
 msgid "Downtime time picker"
-msgstr "ダウンタイム終了時間"
+msgstr "ダウンタイム時間選択"
 
 msgid "Downtime will not start anymore after"
 msgstr "ダウンタイムはその後開始されません"
@@ -18322,14 +18309,12 @@ msgstr "ドライバ"
 msgid "Driver"
 msgstr "ドライバ"
 
-#, fuzzy
 msgid "Driver date"
 msgstr "ドライバ日付"
 
 msgid "Driver type to use instead of doing an auto selection"
 msgstr "自動選択せずに使用するドライバの種類"
 
-#, fuzzy
 msgid "Driver version"
 msgstr "ドライババージョン"
 
@@ -18586,7 +18571,6 @@ msgstr "ESTABLISHED"
 msgid "ESX Datastores (used space and growth)"
 msgstr "ESXデータストア(使用済みスペースと拡張)"
 
-#, fuzzy
 msgid "ESX Host System Maintenance Mode"
 msgstr "ESXホストシステムメンテナンスモード"
 
@@ -18809,7 +18793,6 @@ msgstr ""
 "ビジネスインテリジェンスのすべてのルールと集計を編集し、ルールパックを作成、"
 "変更、削除します。"
 
-#, fuzzy
 msgid "Edit and analyse the check parameters for this service"
 msgstr "サービスのチェックパラメータを編集および分析する"
 
@@ -18861,15 +18844,12 @@ msgstr "顧客%sを編集する"
 msgid "Edit dashboards"
 msgstr "ダッシュボードを編集する"
 
-#, fuzzy
 msgid "Edit defaults"
-msgstr "デフォルトです"
+msgstr "デフォルトを編集する"
 
-#, fuzzy
 msgid "Edit downtimes"
 msgstr "ダウンタイムを編集する"
 
-#, fuzzy
 msgid "Edit downtimes?"
 msgstr "ダウンタイムを編集しますか?"
 
@@ -19214,7 +19194,6 @@ msgstr "Elastic Compute Cloud(EC2)"
 msgid "Elastic Container Service (ECS)"
 msgstr "Elastic Containerサービス(ECS)"
 
-#, fuzzy
 msgid "Elastic IP addresses"
 msgstr "Elastic IPアドレス"
 
@@ -19299,9 +19278,8 @@ msgstr "要素レベルを追加"
 msgid "Elements to show"
 msgstr "表示するエレメント"
 
-#, fuzzy
 msgid "Elliptic curve"
-msgstr "電流"
+msgstr "楕円曲線Elliptic curve"
 
 msgid "Email"
 msgstr "Eメール"
@@ -19309,16 +19287,14 @@ msgstr "Eメール"
 msgid "Email address"
 msgstr "Eメールアドレス"
 
-#, fuzzy
 msgid "Email address attribute"
 msgstr "Eメールアドレス属性"
 
 msgid "Email address used for account identification"
 msgstr "アカウントの識別に使用されるEメールアドレス"
 
-#, fuzzy
 msgid "Email addresses to mail PDF reports to"
-msgstr "電子メールアドレスからPDFレポートをメール"
+msgstr "PDFレポートの送付先メールアドレス"
 
 msgid "Email sent"
 msgstr "送信済みメール"
@@ -19327,11 +19303,10 @@ msgstr "送信済みメール"
 msgid "Emailed report to %s."
 msgstr "レポートを %sに電子メールで送信しました。"
 
-#, fuzzy
 msgid "Emails"
 msgstr "Eメール"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Emails containing %s per second"
 msgstr "1秒あたり %s を含むメール"
 
@@ -19375,13 +19350,11 @@ msgstr "ネットワーク(TCP)を介したLivestatusアクセスを有効にす
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH(LOGIN)を有効にする"
 
-#, fuzzy
 msgid "Enable SNMPv2c for hosts"
-msgstr "ホストのSNMPv2cとバルクウォークを有効にする"
+msgstr "ホストに対してSNMPv2cを有効にする"
 
-#, fuzzy
 msgid "Enable SNMPv2c for management boards"
-msgstr "マネジメントボードのSNMPv2cとバルクウォークを有効化する"
+msgstr "マネジメントボードのSNMPv2cを有効化する"
 
 msgid "Enable TLS"
 msgstr "TLSを有効にする"
@@ -19389,7 +19362,6 @@ msgstr "TLSを有効にする"
 msgid "Enable active checks"
 msgstr "アクティブチェックを有効にする"
 
-#, fuzzy
 msgid "Enable ad hoc downtime"
 msgstr "アドホックダウンタイムを有効にする"
 
@@ -19429,9 +19401,8 @@ msgstr ""
 msgid "Enable flap detection"
 msgstr "フラップ検出を有効にする"
 
-#, fuzzy
 msgid "Enable forwarding"
-msgstr "行のシェーディングを有効にする"
+msgstr "転送を有効にする"
 
 msgid "Enable generation of performance data from trends"
 msgstr "トレンドからのパフォーマンスデータの生成を可能にする"
@@ -19443,7 +19414,6 @@ msgstr ""
 "バックアップされたファイルのgzip圧縮を有効にします。バックアップによって作成"
 "されたtarアーカイブは、バックアップ中にgzip圧縮されます。"
 
-#, fuzzy
 msgid "Enable handling of real-time checks"
 msgstr "リアルタイムチェックの処理を有効にする"
 
@@ -19514,9 +19484,8 @@ msgstr "サービス通知を有効にする"
 msgid "Enable synchronous delivery via SMTP"
 msgstr "SMTP経由の同期配信を有効にする"
 
-#, fuzzy
 msgid "Enable the ntopng host filter"
-msgstr "このntopngインスタンスを有効にします"
+msgstr "ntopngホストフィルターを有効にする"
 
 msgid "Enable this ntopng instance"
 msgstr "このntopngインスタンスを有効にします"
@@ -19727,9 +19696,8 @@ msgstr "終了しました"
 msgid "Endpoint"
 msgstr "エンドポイント"
 
-#, fuzzy
 msgid "Endpoints to monitor"
-msgstr "監視対象領域"
+msgstr "監視対象のエンドポイント"
 
 msgid "Enforce IPv4"
 msgstr "IPv4を適用する"
@@ -19746,13 +19714,11 @@ msgstr "Python2バージョンを適用する"
 msgid "Enforce Python 3 version"
 msgstr "Python3バージョンを適用する"
 
-#, fuzzy
 msgid "Enforce TLS v1.2"
-msgstr "SSLを使用し、TLSv1.2を適用します"
+msgstr "TLS v1.2の施行"
 
-#, fuzzy
 msgid "Enforce TLS v1.3"
-msgstr "SSLを使用し、TLSv1.1を適用します"
+msgstr "TLS v1.3の施行"
 
 msgid "Enforce agent data encryption"
 msgstr "エージェントデータの暗号化"
@@ -19763,14 +19729,12 @@ msgstr "変更を強制する"
 msgid "Enforce lower case User-IDs."
 msgstr "小文字のユーザーIDを適用します。"
 
-#, fuzzy
 msgid "Enforce re-authentication after"
-msgstr "再認証を強制する:"
+msgstr "認証後再認証を強制する"
 
 msgid "Enforce show more"
 msgstr "もっと表示を強制する"
 
-#, fuzzy
 msgid "Enforced service"
 msgstr "施行されたサービス"
 
@@ -19795,9 +19759,8 @@ msgstr ".rpmと.debのバージョンを常に増やすようにする。"
 msgid "Enter"
 msgstr "入る"
 
-#, fuzzy
 msgid "Enter a comment to acknowledge problems"
-msgstr "問題を認知"
+msgstr "問題の承認コメントを入力"
 
 #, fuzzy
 msgid "Enter a comment to schedule downtime"

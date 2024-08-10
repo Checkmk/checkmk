@@ -60,6 +60,7 @@ const dictionaryFormSpec: FormSpec.Dictionary = {
   title: 'fooTitle',
   help: 'fooHelp',
   validators: [],
+  groups: [],
   elements: [
     {
       ident: 'bar',

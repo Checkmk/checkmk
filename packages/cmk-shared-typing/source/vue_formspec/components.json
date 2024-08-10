@@ -172,6 +172,24 @@
                 }
             ]
         },
+        "dictionary_group": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "help": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "key",
+                "title"
+            ]
+        },
         "dictionary_element": {
             "type": "object",
             "properties": {
@@ -180,6 +198,9 @@
                 },
                 "required": {
                     "type": "boolean"
+                },
+                "group": {
+                    "$ref": "#/$defs/dictionary_group"
                 },
                 "default_value": {},
                 "parameter_form": {
@@ -207,6 +228,12 @@
                     },
                     "default": []
                 },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/dictionary_group"
+                    }
+                },
                 "no_elements_text": {
                     "type": "string"
                 },
@@ -217,7 +244,8 @@
             "required": [
                 "type",
                 "elements",
-                "static_elements_key"
+                "static_elements_key",
+                "groups"
             ],
             "allOf": [
                 {
@@ -466,7 +494,7 @@
                     "items": {
                         "$ref": "#/$defs/topic"
                     }
-                },
+                }
             },
             "required": [
                 "type",

@@ -40,6 +40,7 @@ export type String = FormSpec & {
 export type Dictionary = FormSpec & {
   type: "dictionary";
   elements: DictionaryElement[];
+  groups: DictionaryGroup[];
   no_elements_text?: string;
   additional_static_elements?: {};
 };
@@ -135,8 +136,14 @@ export interface LengthInRange {
 export interface DictionaryElement {
   ident: string;
   required: boolean;
+  group?: DictionaryGroup;
   default_value: unknown;
   parameter_form: FormSpec;
+}
+export interface DictionaryGroup {
+  key: string;
+  title: string;
+  help?: string;
 }
 export interface SingleChoiceElementExtended {
   name: unknown;

@@ -105,6 +105,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
 
         return (
             VueComponents.Dictionary(
+                groups=[],
                 title=title,
                 help=help_text,
                 elements=elements_keyspec,

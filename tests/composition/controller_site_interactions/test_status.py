@@ -27,7 +27,7 @@ logger = logging.getLogger("agent-receiver")
 def _get_status_output_json(
     *,
     site: Site,
-    agent_ctl: Path,
+    ctl_path: Path,
     hostname: HostName,
     host_attributes: Mapping[str, object],
 ) -> Iterator[Mapping[str, Any]]:
@@ -35,8 +35,8 @@ def _get_status_output_json(
         site.openapi.create_host(hostname=hostname, attributes=dict(host_attributes))
         site.openapi.activate_changes_and_wait_for_completion()
 
-        register_controller(agent_ctl, site, hostname)
-        yield controller_status_json(agent_ctl)
+        register_controller(ctl_path, site, hostname)
+        yield controller_status_json(ctl_path)
     finally:
         site.openapi.delete_host(hostname=hostname)
         site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
@@ -49,7 +49,7 @@ def test_status_pull(
 ) -> None:
     with _get_status_output_json(
         site=central_site,
-        agent_ctl=agent_ctl,
+        ctl_path=agent_ctl,
         hostname=HostName("pull-host"),
         host_attributes={},
     ) as controller_status:
@@ -71,7 +71,7 @@ def test_status_push(
 ) -> None:
     with _get_status_output_json(
         site=central_site,
-        agent_ctl=agent_ctl,
+        ctl_path=agent_ctl,
         hostname=HostName("push-host"),
         host_attributes={"cmk_agent_connection": HostAgentConnectionMode.PUSH.value},
     ) as controller_status:

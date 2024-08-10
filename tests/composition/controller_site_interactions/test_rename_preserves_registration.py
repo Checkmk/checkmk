@@ -22,7 +22,7 @@ def _test_rename_preserves_registration(
     *,
     central_site: Site,
     registration_site: Site,
-    agent_ctl: Path,
+    ctl_path: Path,
     hostname: HostName,
 ) -> None:
     new_hostname = HostName(f"{hostname}-renamed")
@@ -36,7 +36,7 @@ def _test_rename_preserves_registration(
         )
         central_site.openapi.activate_changes_and_wait_for_completion()
         register_controller(
-            agent_ctl,
+            ctl_path,
             registration_site,
             hostname,
         )
@@ -46,7 +46,7 @@ def _test_rename_preserves_registration(
             etag=response_create.headers["ETag"],
         )
         assert central_site.openapi.get_host(new_hostname) is not None
-        controller_status = controller_status_json(agent_ctl)
+        controller_status = controller_status_json(ctl_path)
         connection_details = controller_connection_json(controller_status, registration_site)
         assert (
             connection_details["remote"]["hostname"] == new_hostname
@@ -66,7 +66,7 @@ def test_rename_preserves_registration_central(
     _test_rename_preserves_registration(
         central_site=central_site,
         registration_site=central_site,
-        agent_ctl=agent_ctl,
+        ctl_path=agent_ctl,
         hostname=HostName("central"),
     )
 
@@ -80,6 +80,6 @@ def test_rename_preserves_registration_remote(
     _test_rename_preserves_registration(
         central_site=central_site,
         registration_site=remote_site,
-        agent_ctl=agent_ctl,
+        ctl_path=agent_ctl,
         hostname=HostName("remote"),
     )

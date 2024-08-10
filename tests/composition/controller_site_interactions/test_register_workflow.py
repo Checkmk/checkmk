@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 def _test_register_workflow(
     *,
     site: Site,
-    agent_ctl: Path,
+    ctl_path: Path,
     hostname: HostName,
     host_attributes: Mapping[str, object],
 ) -> None:
@@ -32,7 +32,7 @@ def _test_register_workflow(
         site.openapi.create_host(hostname=hostname, attributes=dict(host_attributes))
         site.openapi.activate_changes_and_wait_for_completion()
 
-        register_controller(agent_ctl, site, hostname)
+        register_controller(ctl_path, site, hostname)
 
         logger.info("Waiting for controller to open TCP socket or push data")
         wait_until_host_receives_data(site, hostname)
@@ -58,7 +58,7 @@ def test_register_workflow_pull(
 ) -> None:
     _test_register_workflow(
         site=central_site,
-        agent_ctl=agent_ctl,
+        ctl_path=agent_ctl,
         hostname=HostName("pull-host"),
         host_attributes={"ipaddress": "127.0.0.1"},
     )
@@ -72,7 +72,7 @@ def test_register_workflow_push(
 ) -> None:
     _test_register_workflow(
         site=central_site,
-        agent_ctl=agent_ctl,
+        ctl_path=agent_ctl,
         hostname=HostName("push-host"),
         host_attributes={
             "cmk_agent_connection": HostAgentConnectionMode.PUSH.value,

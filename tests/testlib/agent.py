@@ -103,37 +103,43 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]
 
     daemon_path = str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py")
 
-    with execute(["python3", daemon_path, ctl_path.as_posix()], sudo=True) as daemon:
-        yield daemon
     logger.info("Running agent controller daemon...")
-    with execute([daemon_path], sudo=True) as daemon:
-        # wait for a dump being returned successfully (may not work immediately after starting the agent controller)
-        wait_until(
-            lambda: execute([ctl_path.as_posix(), "dump"], sudo=True).wait() == 0,
-            timeout=3,
-            interval=0.1,
-        )
+    with execute(
+        [daemon_path, "--agent-controller-path", ctl_path.as_posix()],
+        sudo=True,
+        shell=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        start_new_session=True,
+    ) as daemon:
         try:
+            # wait for a dump being returned successfully, which may not work immediately
+            # after starting the agent controller, so we retry for some time
+            wait_until(
+                lambda: execute([ctl_path.as_posix(), "dump"], sudo=True).wait() == 0,
+                timeout=3,
+                interval=0.1,
+            )
+
             yield daemon
         finally:
-            assert daemon.returncode is None, "Daemon was killed unexpectedly!"
-            logger.info("Killing agent controller daemon...")
-            daemon.kill()
-            logger.info("daemon.stdout: %s", daemon.stdout)
-            logger.info("daemon.stderr: %s", daemon.stderr)
+            daemon_rc = daemon.returncode
+            if daemon_rc is None:
+                logger.info("Terminating agent controller daemon...")
+                run(["kill", "--", f"-{os.getpgid(daemon.pid)}"], sudo=True)
+                daemon.kill()
+            daemon_output, _ = daemon.communicate(timeout=5)
+            logger.info("Agent controller daemon output: %s", daemon_output)
+            assert (
+                daemon_rc is None
+            ), f"Agent controller daemon unexpectedly exited (RC={daemon_rc})!"
 
 
 def register_controller(
     ctl_path: Path, site: Site, hostname: HostName, site_address: str | None = None
 ) -> None:
     # first we delete all registrations to have a sane default state
-    run(
-        [
-            ctl_path.as_posix(),
-            "delete-all",
-        ],
-        sudo=True,
-    )
     run(
         [
             ctl_path.as_posix(),

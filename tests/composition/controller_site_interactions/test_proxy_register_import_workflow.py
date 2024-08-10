@@ -22,14 +22,6 @@ def test_proxy_register_import_workflow(
     central_site: Site,
     agent_ctl: Path,
 ) -> None:
-    run(
-        [
-            agent_ctl.as_posix(),
-            "delete-all",
-        ],
-        sudo=True,
-    )
-
     hostname = HostName("proxy-host")
     central_site.openapi.create_host(hostname=hostname, attributes={"ipaddress": "127.0.0.1"})
     central_site.openapi.activate_changes_and_wait_for_completion()

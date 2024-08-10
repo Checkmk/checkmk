@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import argparse
 import contextlib
 import logging
-import os
 import socketserver
 import subprocess
 import sys
@@ -15,7 +15,18 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-agent_controller_path = Path(os.getenv("CMK_AGENT_CTL", "/usr/bin/cmk-agent-ctl"))
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Runs an agent controller daemon in a non-systemd enabled environment."
+    )
+    parser.add_argument(
+        "--agent-controller-path",
+        type=Path,
+        default="/usr/bin/cmk-agent-ctl",
+        help="The agent controller path.",
+    )
+    return parser.parse_args()
 
 
 class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
@@ -50,7 +61,8 @@ def _provide_agent_unix_socket() -> Iterator[None]:
     try:
         yield
     finally:
-        proc.kill()
+        proc.terminate()
+        proc.join()
         socket_address.unlink(missing_ok=True)
 
 
@@ -65,8 +77,12 @@ def _run_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen]:
         try:
             yield proc
         finally:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except TimeoutError:
+                proc.kill()
             stdout, stderr = proc.communicate()
-            proc.kill()
             logger.info("Stdout from controller daemon process:\n%s", stdout)
             logger.info("Stderr from controller daemon process:\n%s", stderr)
 
@@ -88,5 +104,6 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen]:
 
 
 if __name__ == "__main__":
-    with agent_controller_daemon(agent_controller_path) as daemon:
+    args = parse_args()
+    with agent_controller_daemon(args.agent_controller_path) as daemon:
         sys.exit(daemon.wait())

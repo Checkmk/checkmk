@@ -46,8 +46,7 @@ def test_proxy_register_import_workflow(
             sudo=True,
         )
         run(
-            ["sudo", agent_ctl.as_posix(), "import"],
-            check=True,
+            [agent_ctl.as_posix(), "import"],
             sudo=True,
             text=True,
             input=proxy_registration_proc.stdout,

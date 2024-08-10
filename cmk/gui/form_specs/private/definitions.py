@@ -9,7 +9,7 @@ from typing import Any, Generic, TypeVar
 
 from cmk.gui.valuespec import ValueSpec
 
-from cmk.rulesets.v1 import Label, Message, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, InputHint, InvalidElementValidator
 
 T = TypeVar("T")
@@ -18,6 +18,18 @@ T = TypeVar("T")
 @dataclass(frozen=True, kw_only=True)
 class LegacyValueSpec(FormSpec[Any]):
     valuespec: ValueSpec[Any]
+
+    @classmethod
+    def wrap(cls, valuespec: ValueSpec[Any]) -> "LegacyValueSpec":
+        return cls(
+            title=Title(  # pylint: disable=localization-of-non-literal-string
+                str(valuespec.title() or "")
+            ),  # pylint: disable=localization-of-non-literal-string
+            help_text=Help(  # pylint: disable=localization-of-non-literal-string
+                str(valuespec.help() or "")
+            ),
+            valuespec=valuespec,
+        )
 
 
 @dataclass(frozen=True, kw_only=True)

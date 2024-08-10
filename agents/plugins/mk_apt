@@ -23,12 +23,14 @@ DO_UPDATE=yes
 
 check_apt_update() {
     if [ "$DO_UPDATE" = yes ]; then
-        # NOTE: Even with -qq, apt-get update can output several lines to
-        # stderr, e.g.:
-        #
-        # W: There is no public key available for the following key IDs:
-        # 1397BC53640DB551
-        apt-get update -qq 2>/dev/null
+        if [ $(($(date +%s) - $(date -r "$FILE" +%s))) -gt 86400 ]; then
+            # NOTE: Even with -qq, apt-get update can output several lines to
+            # stderr, e.g.:
+            #
+            # W: There is no public key available for the following key IDs:
+            # 1397BC53640DB551
+            apt-get update -qq 2>/dev/null
+        fi
     fi
     apt-get -o 'Debug::NoLocking=true' -o 'APT::Get::Show-User-Simulation-Note=false' -s -qq "$UPGRADE" | grep -v '^Conf'
 }

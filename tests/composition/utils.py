@@ -29,12 +29,13 @@ def get_package_extension() -> str:
 def bake_agent(site: Site, hostname: str) -> tuple[str, Path]:
     logger.info('Create host "%s" and bake agent...', hostname)
     start_time = time.time()
+    if site.openapi.get_host(hostname):
+        site.openapi.delete_host(hostname)
     site.openapi.create_host(
         hostname,
         attributes={"ipaddress": site.http_address},
         bake_agent=True,
     )
-
     site.activate_changes_and_wait_for_core_reload()
 
     # A baking job just got triggered automatically after adding the host. wait for it to finish.

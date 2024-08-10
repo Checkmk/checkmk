@@ -88,7 +88,7 @@ function getClass(ident: string) {
       </tr>
       <FormCatalogDictionary
         v-model="data[topic.ident]!"
-        :entries="topic.dictionary.elements"
+        :elements="topic.dictionary.elements"
         :backend-validation="elementValidation[topic.ident]!"
       />
       <tr class="bottom">

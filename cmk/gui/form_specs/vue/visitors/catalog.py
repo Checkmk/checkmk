@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
-from typing import Any, cast, Mapping, Sequence
+from typing import Any, cast, Mapping, Self, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private.catalog import Catalog, Topic
 from cmk.gui.form_specs.vue import shared_type_defs
-from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement
@@ -106,15 +105,8 @@ class Dict2CatalogConverter:
     catalog: Catalog
 
     @classmethod
-    def build_from_dictionary(
-        cls, dictionary: ValueSpecDictionary | FormSpecDictionary, headers: Headers
-    ) -> "Dict2CatalogConverter":
-        if isinstance(dictionary, ValueSpecDictionary):
-            return cls._build_from_valuespec_dictionary(dictionary, headers)
-
-        if isinstance(dictionary, FormSpecDictionary):
-            return cls._build_from_formspec_dictionary(dictionary, headers)
-        raise MKGeneralException(f"invalid dictionary type {type(dictionary)}")
+    def build_from_dictionary(cls, dictionary: FormSpecDictionary, headers: Headers) -> Self:
+        return cls._build_from_formspec_dictionary(dictionary, headers)
 
     @staticmethod
     def _normalize_header(
@@ -133,7 +125,7 @@ class Dict2CatalogConverter:
     @classmethod
     def _build_from_formspec_dictionary(
         cls, dictionary: FormSpecDictionary, headers: Headers
-    ) -> "Dict2CatalogConverter":
+    ) -> Self:
         topic_elements: dict[str, dict[str, DictElement[Any]]] = {}
         topic_title: dict[str, Title] = {}
         element_to_topic: dict[str, str] = {}
@@ -167,14 +159,8 @@ class Dict2CatalogConverter:
 
         return cls(catalog=Catalog(topics=topics))
 
-    @classmethod
-    def _build_from_valuespec_dictionary(
-        cls, dictionary: ValueSpecDictionary, headers: Headers
-    ) -> "Dict2CatalogConverter":
-        raise NotImplementedError()
-
     def convert_flat_to_catalog_config(
-        self, flat_config: dict[str, dict[str, object]]
+        self, flat_config: dict[str, object]
     ) -> Mapping[str, dict[str, object]]:
         topic_for_ident: dict[str, str] = {}
         for topic in self.catalog.topics:
@@ -190,3 +176,8 @@ class Dict2CatalogConverter:
             catalog_config.setdefault(target_topic, {})[ident] = value
 
         return catalog_config
+
+    def convert_catalog_to_flat_config(
+        self, config: dict[str, dict[str, object]]
+    ) -> dict[str, object]:
+        return {k: v for values in config.values() for k, v in values.items()}

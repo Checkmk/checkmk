@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from .dictionary import recompose as recompose_dictionary
 from .host_state import recompose as recompose_host_state
 from .list import recompose as recompose_list
 from .percentage import recompose as recompose_percentage
@@ -11,6 +12,7 @@ from .single_choice import recompose as recompose_single_choice
 from .unknown_form_spec import recompose as recompose_unknown_form_spec
 
 __all__ = [
+    "recompose_dictionary",
     "recompose_list",
     "recompose_percentage",
     "recompose_regular_expression",

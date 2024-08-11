@@ -114,7 +114,7 @@ def migrate_value(form_spec: FormSpec[ModelT], options: VisitorOptions, value: A
     return value
 
 
-_PrefillTypes = DefaultValue[ModelT] | InputHint[ModelT] | InputHint[Title]
+_PrefillTypes = DefaultValue[ModelT] | InputHint[ModelT] | InputHint[Title] | EmptyValue
 
 
 def get_prefill_default(prefill: _PrefillTypes[ModelT]) -> ModelT | EmptyValue:

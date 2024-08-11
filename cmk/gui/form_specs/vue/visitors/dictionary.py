@@ -5,6 +5,7 @@
 import ast
 from typing import Mapping
 
+from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
 from cmk.gui.form_specs.vue.type_defs import (
@@ -19,17 +20,21 @@ from cmk.gui.form_specs.vue.utils import (
     compute_validation_errors,
     compute_validators,
     create_validation_error,
+    get_prefill_default,
     get_title_and_help,
     get_visitor,
     migrate_value,
 )
 
-from cmk.rulesets.v1.form_specs import Dictionary
 
-
-class DictionaryVisitor(FormSpecVisitor[Dictionary, Mapping[str, object]]):
+class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]]):
     def _compute_default_values(self) -> Mapping[str, object]:
-        return {key: DEFAULT_VALUE for key, el in self.form_spec.elements.items() if el.required}
+        prefill_default = get_prefill_default(self.form_spec.prefill)
+        if isinstance(prefill_default, EmptyValue):
+            return {
+                key: DEFAULT_VALUE for key, el in self.form_spec.elements.items() if el.required
+            }
+        return prefill_default
 
     def _get_static_elements(self) -> set[str]:
         return set(self.form_spec.ignored_elements or ())

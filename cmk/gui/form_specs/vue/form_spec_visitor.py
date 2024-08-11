@@ -14,12 +14,14 @@ import cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components as VueCo
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private import (
     Catalog,
+    DictionaryExtended,
     LegacyValueSpec,
     ListExtended,
     SingleChoiceExtended,
     UnknownFormSpec,
 )
 from cmk.gui.form_specs.vue.form_spec_recomposers import (
+    recompose_dictionary,
     recompose_host_state,
     recompose_list,
     recompose_percentage,
@@ -82,7 +84,7 @@ def register_form_specs():
     # TODO: add test which checks if all available FormSpecs have a visitor
     # Native rendering
     register_visitor_class(Integer, IntegerVisitor)
-    register_visitor_class(Dictionary, DictionaryVisitor)
+    register_visitor_class(DictionaryExtended, DictionaryVisitor)
     register_visitor_class(String, StringVisitor)
     register_visitor_class(Float, FloatVisitor)
     register_visitor_class(SingleChoiceExtended, SingleChoiceVisitor)
@@ -102,6 +104,7 @@ def register_form_specs():
     register_visitor_class(List, ListVisitor, recompose_list)
     register_visitor_class(Percentage, FloatVisitor, recompose_percentage)
     register_visitor_class(UnknownFormSpec, LegacyValuespecVisitor, recompose_unknown_form_spec)
+    register_visitor_class(Dictionary, DictionaryVisitor, recompose_dictionary)
 
 
 register_form_specs()

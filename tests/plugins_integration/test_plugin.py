@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 def test_plugin(
     test_site: Site,
     source_host_name: str,
-    dcd_connector: None,
     tmp_path_factory: pytest.TempPathFactory,
     pytestconfig: pytest.Config,
 ) -> None:

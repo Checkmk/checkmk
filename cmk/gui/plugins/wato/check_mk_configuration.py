@@ -4911,7 +4911,7 @@ class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
 
     @property
     def title(self) -> str:
-        return _("General Settings")
+        return _("General settings")
 
 
 def _help_dyndns_hosts():

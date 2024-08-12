@@ -3830,7 +3830,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                                 "rechable again within the selected number of seconds since "
                                 "the previous unreachability (not since the takeover)"
                             ),
-                            label=_("Fallback if master comes back within"),
+                            label=_("Fallback if central comes back within"),
                             unit=_("sec"),
                             minvalue=1,
                             default_value=60,
@@ -3857,7 +3857,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                             totext=_("logging is enabled"),
                             help=_(
                                 "Enabling this option will create detailed log entries for all "
-                                "replication activities of the slave. If disabled only problems "
+                                "replication activities of the remote site. If disabled only problems "
                                 "will be logged."
                             ),
                         ),

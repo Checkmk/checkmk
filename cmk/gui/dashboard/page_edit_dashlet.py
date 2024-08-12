@@ -229,7 +229,7 @@ def dashlet_vs_general_settings(
     dashlet_type: type[Dashlet], single_infos: SingleInfos
 ) -> Dictionary:
     return Dictionary(
-        title=_("General Settings"),
+        title=_("General settings"),
         render="form",
         optional_keys=["title", "title_url"],
         elements=[

@@ -1258,7 +1258,7 @@ def _expected_rulespec_group_choices():
         ("activechecks", "HTTP, TCP, Email, ..."),
         ("agent", "Access to agents"),
         ("agent/check_mk_agent", "&nbsp;&nbsp;\u2319 Checkmk agent"),
-        ("agent/general_settings", "&nbsp;&nbsp;\u2319 General Settings"),
+        ("agent/general_settings", "&nbsp;&nbsp;\u2319 General settings"),
         ("agents", "Agent rules"),
         ("agents/generic_options", "&nbsp;&nbsp;\u2319 Generic Options"),
         ("checkparams", "Service discovery rules"),

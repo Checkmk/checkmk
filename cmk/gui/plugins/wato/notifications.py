@@ -1405,7 +1405,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                 (
                     "url",
                     TextInput(
-                        title=_("Domain (only used for european accounts)"),
+                        title=_("Domain (only used for European accounts)"),
                         help=_(
                             "If you have an european account, please set the "
                             "domain of your opsgenie. Specify an absolute URL like "

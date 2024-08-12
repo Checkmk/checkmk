@@ -662,7 +662,7 @@ class JiraPluginResponse(PluginName):
     )
     monitoring_url = fields.String(
         example="",
-        description="Configure the base URL for the monitoring web GUI here. Include the site name. Used for link to Checkmk out of Jira",
+        description="Configure the base URL for the monitoring web GUI here. Include the site name. Used for linking to Checkmk out of Jira",
     )
     site_custom_id = fields.Nested(CheckboxWithStrValueOutput)
     priority_id = fields.Nested(CheckboxWithStrValueOutput)

@@ -9,7 +9,7 @@ UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 
 metric_fireeye_stat_attachment = metrics.Metric(
     name="fireeye_stat_attachment",
-    title=Title("Emails containing Attachment per second"),
+    title=Title("Emails containing attachment per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.ORANGE,
 )

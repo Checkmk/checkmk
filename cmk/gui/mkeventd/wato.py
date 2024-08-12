@@ -3972,7 +3972,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                                 "reachable again within the selected number of seconds since "
                                 "the previous unreachability (not since the takeover)"
                             ),
-                            label=_("Fallback if master comes back within"),
+                            label=_("Fallback if central comes back within"),
                             unit=_("sec"),
                             minvalue=1,
                             default_value=60,
@@ -3999,7 +3999,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                             totext=_("logging is enabled"),
                             help=_(
                                 "Enabling this option will create detailed log entries for all "
-                                "replication activities of the slave. If disabled only problems "
+                                "replication activities of the remote site. If disabled only problems "
                                 "will be logged."
                             ),
                         ),
@@ -4087,10 +4087,10 @@ class ConfigVariableEventConsoleSqliteFreelistSize(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Filesize(
-            title=_("Event Console History Fragmentation Limit Size"),
+            title=_("Event Console history fragmentation limit size"),
             help=_(
-                "Event Console History can become fragmented over time. So if the total"
-                "size of deleted entries reaches this number the Event Console History will be cleaned up."
+                "Event Console History can become fragmented over time. So if the total "
+                "size of deleted entries reaches this number the Event Console history will be cleaned up."
             ),
             minvalue=1 * 1024 * 1024,
             maxvalue=100 * 1024 * 1024,

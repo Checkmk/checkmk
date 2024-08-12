@@ -15,13 +15,13 @@ metric_analyzed_rate = metrics.Metric(
 )
 metric_fireeye_stat_maliciousattachment = metrics.Metric(
     name="fireeye_stat_maliciousattachment",
-    title=Title("Emails containing Malicious Attachment per second"),
+    title=Title("Emails containing malicious attachment per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.YELLOW,
 )
 metric_fireeye_stat_maliciousurl = metrics.Metric(
     name="fireeye_stat_maliciousurl",
-    title=Title("Emails containing Malicious URL per second"),
+    title=Title("Emails containing malicious URL per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_GRAY,
 )

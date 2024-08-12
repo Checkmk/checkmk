@@ -50,7 +50,7 @@ rulespec_registry.register(
 
 def _parameter_valuespec_mssql_transactionlogs():
     return Dictionary(
-        title=_("File Size Levels"),
+        title=_("File size levels"),
         help=_(
             "Specify levels for transactionlogs of a database. Please note that relative "
             "levels will only work if there is a max_size set for the file on the database "

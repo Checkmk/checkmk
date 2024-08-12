@@ -2170,9 +2170,9 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
     @property
     def help(self):
         return _(
-            "Adds the user to contactgroups based on the group memberships in LDAP. This "
-            "plugin adds the user only to existing contactgroups while the name of the "
-            "contactgroup must match the common name (cn) of the LDAP group."
+            "Adds the user to contact groups based on the group memberships in LDAP. This "
+            "plug-in adds the user only to existing contact groups while the name of the "
+            "contact group must match the common name (cn) of the LDAP group."
         )
 
     def lock_attributes(self, params):

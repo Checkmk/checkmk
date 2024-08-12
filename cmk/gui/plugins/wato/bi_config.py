@@ -389,7 +389,7 @@ class ModeBIEditPack(ABCBIMode):
                             "contact groups specified here - even if they have no administrator priviledges."
                         ),
                         movable=False,
-                        add_label=_("Add Contact Group"),
+                        add_label=_("Add contact group"),
                     ),
                 ),
                 (

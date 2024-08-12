@@ -19,7 +19,7 @@ from cmk.gui.valuespec import (
 
 def _valuespec_active_checks_form_submit() -> Tuple:
     return Tuple(
-        title=_("Check HTML Form Submit"),
+        title=_("Check HTML form submit"),
         help=_(
             "Check submission of HTML forms via HTTP/HTTPS using the plugin <tt>check_form_submit</tt> "
             "provided with Checkmk. This plugin provides more functionality than <tt>check_http</tt>, "

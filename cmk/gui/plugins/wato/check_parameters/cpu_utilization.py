@@ -49,7 +49,7 @@ def cpu_util_elements():
                     "may go unnoticed when only monitoring the total utilization of the CPU. "
                     "With this configuration, Checkmk will alert if a single core is "
                     "exceeding a utilization threshold over an extended period of time."
-                    "This is currently only supported on linux and windows agents "
+                    "This is currently only supported on Linux and Windows agents "
                     "as well as devices monitored through the host-resource mib"
                 ),
             ),

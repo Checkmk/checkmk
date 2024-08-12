@@ -352,9 +352,7 @@ class HTMLGenerator(HTMLWriter):
         main_javascript: str = "main",
         force: bool = False,
     ) -> None:
-        javascript_files = [main_javascript]
-        if get_render_mode() != ExperimentalRenderMode.BACKEND:
-            javascript_files.append("vue")
+        javascript_files = [main_javascript, "vue"]
         if force or not self._header_sent:
             self.write_html(HTML.without_escaping("<!DOCTYPE HTML>\n"))
             self.open_html()

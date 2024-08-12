@@ -38,6 +38,7 @@
 
 import json
 import re
+import shlex
 from collections.abc import Sequence
 
 from livestatus import SiteId
@@ -1164,16 +1165,13 @@ class AggregationIcon(Icon):
         if what == "service" and row.get("service_check_command", "").startswith(
             "check_mk_active-bi_aggr!"
         ):
-            args = row["service_check_command"]
-            start = args.find("-b' '") + 5
-            end = args.find("' ", start)
-            base_url = args[start:end].rstrip("/")
+            command = row["service_check_command"]
+            args = shlex.split(command)
+            base_url = args[1]
             base_url = base_url.replace("$HOSTADDRESS$", row["host_address"])
             base_url = base_url.replace("$HOSTNAME$", row["host_name"])
 
-            start = args.find("-a' '") + 5
-            end = args.find("' ", start)
-            aggr_name = args[start:end]
+            aggr_name = args[3]
             aggr_name = aggr_name.replace("$HOSTADDRESS$", row["host_address"])
             aggr_name = aggr_name.replace("$HOSTNAME$", row["host_name"])
 

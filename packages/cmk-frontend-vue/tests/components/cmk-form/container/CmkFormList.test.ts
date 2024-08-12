@@ -65,7 +65,7 @@ test.skip('CmkFormList updated backend child validation shows validation error',
   })
 
   screen.getByText('Backend error message')
-  const textbox = screen.getByRole<HTMLInputElement>('textbox', { name: 'barTitle' })
+  const textbox = screen.getByRole<HTMLInputElement>('textbox')
   expect(textbox.value).toBe('other value')
 })
 
@@ -80,7 +80,7 @@ test('CmkFormList local child validation overwrites backend validation', async (
     }
   })
 
-  const textbox = await screen.findByRole<HTMLInputElement>('textbox', { name: 'barTitle' })
+  const textbox = await screen.findByRole<HTMLInputElement>('textbox')
   await fireEvent.update(textbox, '')
 
   screen.getByText('String length must be between 1 and 20')
@@ -96,7 +96,7 @@ test('CmkFormList shows frontend validation on existing element', async () => {
     }
   })
 
-  const textbox = await screen.findByRole<HTMLInputElement>('textbox', { name: 'barTitle' })
+  const textbox = await screen.findByRole<HTMLInputElement>('textbox')
   await fireEvent.update(textbox, '')
 
   screen.getByText('String length must be between 1 and 20')
@@ -107,6 +107,7 @@ const dictSpec: FormSpec.Dictionary = {
   title: 'dictTitle',
   help: 'fooHelp',
   validators: [],
+  groups: [],
   elements: [
     {
       ident: 'bar',
@@ -143,7 +144,7 @@ test('CmkFormList adds two new elements and enters data', async () => {
   await fireEvent.click(addElementButton)
   await fireEvent.click(addElementButton)
 
-  const element = await screen.getAllByRole('textbox', { name: 'barTitle' })
+  const element = await screen.getAllByRole('textbox')
   await fireEvent.update(element[0]!, '1234')
   expect(getCurrentData()).toMatch('[{"bar":"1234"},{"bar":"baz"}]')
 })

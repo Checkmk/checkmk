@@ -25,6 +25,7 @@ const spec: FormSpec.Dictionary = {
   title: 'fooTitle',
   help: 'fooHelp',
   validators: [],
+  groups: [],
   elements: [
     {
       ident: 'bar',
@@ -58,7 +59,7 @@ test('CmkFormDictionary displays dictelement data', async () => {
   const checkbox = screen.getByRole<HTMLInputElement>('checkbox', { name: 'barTitle' })
   expect(checkbox.checked).toBeTruthy()
 
-  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'barTitle' })
+  const element = screen.getByRole<HTMLInputElement>('textbox')
   expect(element.value).toBe('some_value')
 
   expect(getCurrentData()).toBe('{"bar":"some_value"}')
@@ -76,7 +77,7 @@ test('CmkFormDictionary checking non-required element fills default', async () =
   const checkbox = screen.getByRole('checkbox', { name: 'barTitle' })
   await fireEvent.click(checkbox)
 
-  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'barTitle' })
+  const element = screen.getByRole<HTMLInputElement>('textbox')
   expect(element.value).toBe('baz')
 })
 
@@ -92,7 +93,7 @@ test('CmkFormDictionary enable element, check frontend validators', async () => 
   const checkbox = screen.getByRole('checkbox', { name: 'barTitle' })
   await fireEvent.click(checkbox)
 
-  const element = screen.getByRole('textbox', { name: 'barTitle' })
+  const element = screen.getByRole('textbox')
   await fireEvent.update(element, '')
 
   screen.getByText('String length must be between 1 and 20')
@@ -137,6 +138,7 @@ test('CmkFormDictionary appends default of required element if missing in data',
       type: 'dictionary',
       title: 'fooTitle',
       help: 'fooHelp',
+      groups: [],
       validators: [],
       elements: [
         {
@@ -165,7 +167,7 @@ test('CmkFormDictionary checks frontend validators on existing element', async (
     }
   })
 
-  const element = await screen.getByRole('textbox', { name: 'barTitle' })
+  const element = await screen.getByRole('textbox')
   await fireEvent.update(element, '')
 
   screen.getByText('String length must be between 1 and 20')

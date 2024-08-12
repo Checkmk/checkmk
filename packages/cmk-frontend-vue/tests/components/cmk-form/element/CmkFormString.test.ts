@@ -29,7 +29,7 @@ test('CmkFormString renders value', () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooTitle' })
+  const element = screen.getByRole<HTMLInputElement>('textbox')
 
   expect(element.value).toBe('fooData')
 })
@@ -41,7 +41,7 @@ test('CmkFormString updates data', async () => {
     backendValidation: []
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooTitle' })
+  const element = screen.getByRole<HTMLInputElement>('textbox')
   await fireEvent.update(element, 'some_other_value')
 
   expect(getCurrentData()).toBe('"some_other_value"')
@@ -56,7 +56,7 @@ test('CmkFormString checks validators', async () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooTitle' })
+  const element = screen.getByRole<HTMLInputElement>('textbox')
   await fireEvent.update(element, '')
 
   screen.getByText('String length must be between 1 and 20')

@@ -18,7 +18,6 @@ const [validation, value] = useValidation<string>(
 </script>
 
 <template>
-  <label :for="$componentId">{{ props.spec.title }}</label>
   <input :id="$componentId" v-model="value" :placeholder="spec.input_hint || ''" type="text" />
   <FormValidation :validation="validation"></FormValidation>
 </template>

@@ -46,7 +46,7 @@ const spec: FormSpec.CascadingSingleChoice = {
     {
       name: 'integerChoice',
       title: 'integerChoiceTitle',
-      default_value: '5',
+      default_value: 5,
       parameter_form: integerFormSpec
     }
   ]
@@ -62,9 +62,7 @@ test('CmkFormCascadingSingleChoice displays data', () => {
   const selectElement = screen.getByRole<HTMLInputElement>('combobox', { name: /fooLabel/i })
   expect(selectElement.value).toBe('stringChoice')
 
-  const stringElement = screen.getByRole<HTMLInputElement>('textbox', {
-    name: 'nestedStringTitle'
-  })
+  const stringElement = screen.getByRole<HTMLInputElement>('textbox', {})
   expect(stringElement.value).toBe('some_value')
 
   expect(getCurrentData()).toMatch('["stringChoice","some_value"]')
@@ -77,9 +75,7 @@ test('CmkFormDictionary updates data', async () => {
     backendValidation: []
   })
 
-  const stringElement = screen.getByRole<HTMLInputElement>('textbox', {
-    name: 'nestedStringTitle'
-  })
+  const stringElement = screen.getByRole<HTMLInputElement>('textbox')
   await fireEvent.update(stringElement, 'other_value')
 
   expect(getCurrentData()).toMatch('["stringChoice","other_value"]')
@@ -100,7 +96,7 @@ test('CmkFormCascadingSingleChoice sets default on switch', async () => {
   })
   expect(integerElement.value).toBe('5')
 
-  expect(getCurrentData()).toMatch('["integerChoice","5"]')
+  expect(getCurrentData()).toMatch('["integerChoice",5]')
 })
 
 test('CmkFormCascadingSingleChoice checks validators', async () => {
@@ -112,9 +108,7 @@ test('CmkFormCascadingSingleChoice checks validators', async () => {
     }
   })
 
-  const stringElement = screen.getByRole<HTMLInputElement>('textbox', {
-    name: 'nestedStringTitle'
-  })
+  const stringElement = screen.getByRole<HTMLInputElement>('textbox')
   await fireEvent.update(stringElement, '')
 
   screen.getByText('String length must be between 1 and 20')

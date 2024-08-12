@@ -28,7 +28,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                     IndividualOrStoredPassword(
                         title=_(
                             "API Key to use. Depending on your opsgenie "
-                            "subscription you can use global or team integration api "
+                            "subscription you can use global or team integration API "
                             "keys."
                         ),
                         allow_empty=False,

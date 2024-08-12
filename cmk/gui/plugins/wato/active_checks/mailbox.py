@@ -323,7 +323,7 @@ def migrate_check_mail_loop_params(params):
 def _valuespec_active_checks_mail_loop() -> Migrate:
     return Migrate(
         Dictionary(
-            title=_("Check Email Delivery"),
+            title=_("Check email delivery"),
             help=_(
                 "This active check sends out special emails to a defined mail address using either "
                 "the SMTP protocol or an EWS connection and then tries to receive these mails back "
@@ -438,7 +438,7 @@ def migrate_check_mail_params(params):
 def _valuespec_active_checks_mail() -> Migrate:
     return Migrate(
         valuespec=Dictionary(
-            title=_("Check Email"),
+            title=_("Check email"),
             help=_(
                 "The basic function of this check is to log in into an IMAP, POP3 or EWS mailbox "
                 "to monitor whether or not the login is possible. An extended feature is, that the "

@@ -212,14 +212,20 @@ def create_config_bundle(
     all_bundles[bundle_id] = bundle
     store.save(all_bundles)
 
-    if entities.passwords:
-        _create_passwords(bundle_ident, entities.passwords)
-    if entities.hosts:
-        _create_hosts(bundle_ident, entities.hosts)
-    if entities.rules:
-        _create_rules(bundle_ident, entities.rules)
-    if entities.dcd_connections:
-        _create_dcd_connections(bundle_ident, entities.dcd_connections)
+    try:
+        if entities.passwords:
+            _create_passwords(bundle_ident, entities.passwords)
+        if entities.hosts:
+            _create_hosts(bundle_ident, entities.hosts)
+        if entities.rules:
+            _create_rules(bundle_ident, entities.rules)
+        if entities.dcd_connections:
+            _create_dcd_connections(bundle_ident, entities.dcd_connections)
+    except Exception as e:
+        # TODO: CMK-18626 (validate and create function for each config object should be separate)
+        #  and everything should be validated first before we commit to any save actions
+        delete_config_bundle(bundle_id)
+        raise MKGeneralException(f"Failed to create configuration bundle {bundle_id}") from e
 
 
 def delete_config_bundle(bundle_id: BundleId) -> None:

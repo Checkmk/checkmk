@@ -34,7 +34,7 @@ def _transform_tuple_format(params: tuple[str, Any]) -> dict:
 def _valuespec_active_checks_form_submit() -> Transform:
     return Transform(
         valuespec=Dictionary(
-            title=_("Check HTML Form Submit"),
+            title=_("Check HTML form submit"),
             help=_(
                 "Check submission of HTML forms via HTTP/HTTPS using the plug-in <tt>check_form_submit</tt> "
                 "provided with Checkmk. This plug-in provides more functionality than <tt>check_http</tt>, "

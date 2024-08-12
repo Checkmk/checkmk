@@ -287,7 +287,7 @@ def _parameter_valuespec_systemd_units() -> Dictionary:
             (
                 "cpu_time",
                 Tuple(
-                    title=_("CPU Time upper levels"),
+                    title=_("CPU time upper levels"),
                     help=_("Define the upper levels for the consumed CPU time."),
                     elements=[
                         TimeSpan(title=_("Warning at"), display=MIN_SEC_MS),

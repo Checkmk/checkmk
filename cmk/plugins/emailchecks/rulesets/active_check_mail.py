@@ -321,7 +321,7 @@ def _forward_to_ec_form() -> Dictionary:
 
 
 rule_spec_mail = ActiveCheck(
-    title=Title("Check Email"),
+    title=Title("Check email"),
     topic=Topic.APPLICATIONS,
     name="mail",
     parameter_form=_valuespec_active_checks_mail,

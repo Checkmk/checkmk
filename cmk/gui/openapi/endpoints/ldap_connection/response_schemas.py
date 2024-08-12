@@ -623,7 +623,7 @@ class LDAPSyncPlugins(BaseSchema):
     contact_group_membership = fields.Nested(
         LDAPContactGroupMembership,
         description="Adds the user to contact groups based on the group memberships in LDAP. This plug-in "
-        "adds the user only to existing contactgroups while the name of the contactgroup must match the "
+        "adds the user only to existing contact groups while the name of the contact group must match the "
         "common name (cn) of the LDAP group.",
     )
     groups_to_custom_user_attributes = fields.Nested(

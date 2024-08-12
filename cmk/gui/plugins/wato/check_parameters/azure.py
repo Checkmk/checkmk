@@ -366,7 +366,7 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_vms,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms,
-        title=lambda: _("Azure Virtual Machines"),
+        title=lambda: _("Azure virtual machines"),
     )
 )
 
@@ -470,7 +470,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms_summary,
-        title=lambda: _("Azure Virtual Machines Summary"),
+        title=lambda: _("Azure virtual machines summary"),
     )
 )
 

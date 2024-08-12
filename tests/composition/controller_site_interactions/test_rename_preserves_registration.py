@@ -47,13 +47,10 @@ def _test_rename_preserves_registration(
         )
         assert central_site.openapi.get_host(new_hostname) is not None
         controller_status = controller_status_json(agent_ctl)
-        connection_details = controller_connection_json(controller_status, central_site)
-        try:
-            assert HostName(connection_details["remote"]["hostname"]) == new_hostname
-        except Exception as e:
-            raise Exception(
-                f"Checking if controller sees renaming failed. Status output:\n{controller_status}"
-            ) from e
+        connection_details = controller_connection_json(controller_status, registration_site)
+        assert (
+            connection_details["remote"]["hostname"] == new_hostname
+        ), f"Checking if controller sees renaming failed!\nStatus:\n{controller_status}"
     finally:
         with suppress(UnexpectedResponse):
             central_site.openapi.delete_host(hostname)

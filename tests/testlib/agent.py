@@ -196,7 +196,16 @@ def controller_status_json(controller_path: Path) -> Mapping[str, Any]:
 def controller_connection_json(
     controller_status: Mapping[str, Any], site: Site
 ) -> Mapping[str, Any]:
-    return next(
+    """Get the site-specific connection details from a controller_status mapping.
+
+    Assert that the connection is found and that the structure of the connection status is valid.
+    """
+    assert (
+        "connections" in controller_status
+    ), f"No connections returned as part of controller status!\nStatus:\n{controller_status}"
+    # iterate over the connections and return the first match
+    # return an empty response if no match was found (or the list is empty)
+    controller_connection: Mapping[str, Any] = next(
         (
             _
             for _ in controller_status["connections"]
@@ -204,6 +213,25 @@ def controller_connection_json(
         ),
         {},
     )
+    assert (
+        controller_connection
+    ), f'No controller connection found for site "{site.id}"!\nStatus:\n{controller_status}'
+    assert "remote" in controller_connection, (
+        "No remote endpoint details returned as part of controller connection details!"
+        f"\nStatus:\n{controller_status}"
+    )
+    assert (
+        not "error" in controller_connection["remote"]
+    ), f"Error in status output: {controller_connection['remote']['error']}"
+    assert "hostname" in controller_connection["remote"], (
+        "No remote endpoint hostname returned as part of controller connection details!"
+        f"\nStatus:\n{controller_status}"
+    )
+    assert "connection_mode" in controller_connection["remote"], (
+        "No remote endpoint connection mode returned as part of controller connection details!"
+        f"\nStatus:\n{controller_status}"
+    )
+    return controller_connection
 
 
 def wait_until_host_has_services(

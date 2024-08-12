@@ -42,6 +42,7 @@ def _get_status_output_json(
         site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
 
+@skip_if_not_containerized
 def test_status_pull(
     central_site: Site,
     agent_ctl: Path,
@@ -52,19 +53,14 @@ def test_status_pull(
         hostname=HostName("pull-host"),
         host_attributes={},
     ) as controller_status:
-        remote_status = controller_connection_json(controller_status, central_site)["remote"]
-        logger.debug("Status output: {remote_status}")
-        assert not remote_status.get("error"), f"Error in status output: {remote_status['error']}"
-        assert remote_status.get(
-            "hostname"
-        ), 'Error in status output: No "hostname" field returned!'
+        connection_details = controller_connection_json(controller_status, central_site)
         assert (
-            remote_status["hostname"] == "pull-host"
-        ), f"Error in status output: Invalid host name {remote_status['hostname']} returned!"
+            connection_details["remote"]["hostname"] == "pull-host"
+        ), f"Error in status output: Invalid host name returned!\nStatus:\n{controller_status}"
         assert (
-            HostAgentConnectionMode(remote_status["connection_mode"])
+            HostAgentConnectionMode(connection_details["remote"]["connection_mode"])
             is HostAgentConnectionMode.PULL
-        )
+        ), f"Error in status output: Invalid connection mode returned!\nStatus:\n{controller_status}"
 
 
 @skip_if_not_containerized
@@ -79,15 +75,11 @@ def test_status_push(
         hostname=HostName("push-host"),
         host_attributes={"cmk_agent_connection": HostAgentConnectionMode.PUSH.value},
     ) as controller_status:
-        remote_status = controller_connection_json(controller_status, central_site)["remote"]
-        assert not remote_status.get("error"), f"Error in status output: {remote_status['error']}"
-        assert remote_status.get(
-            "hostname"
-        ), 'Error in status output: No "hostname" field returned!'
+        connection_details = controller_connection_json(controller_status, central_site)
         assert (
-            remote_status["hostname"] == "push-host"
-        ), f'Error in status output: Invalid host name "{remote_status["hostname"]}" returned!'
+            connection_details["remote"]["hostname"] == "push-host"
+        ), f"Error in status output: Invalid host name returned!\nStatus:\n{controller_status}"
         assert (
-            HostAgentConnectionMode(remote_status["connection_mode"])
+            HostAgentConnectionMode(connection_details["remote"]["connection_mode"])
             is HostAgentConnectionMode.PUSH
         )

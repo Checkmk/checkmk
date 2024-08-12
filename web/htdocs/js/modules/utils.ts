@@ -744,8 +744,17 @@ export function add_simplebar_scrollbar_to_object(obj: Nullable<HTMLElement>) {
 }
 
 export function content_scrollbar(scrollable_id: string) {
-    if (g_content_scrollbar === null)
+    if (g_content_scrollbar === null) {
+        const element = document.getElementById(scrollable_id);
+        const current_position = element!.scrollTop;
         g_content_scrollbar = add_simplebar_scrollbar(scrollable_id);
+        if (current_position) {
+            const scrollElement = g_content_scrollbar!.getScrollElement();
+            if (scrollElement) {
+                scrollElement.scrollTop = current_position;
+            }
+        }
+    }
     return g_content_scrollbar;
 }
 

@@ -1,0 +1,14 @@
+Title: Save scrollbar position on page load
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1723462396
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+The sidebar of the main frame always scrolled up to the top after the page
+load.
+
+This was an issue if you e.g. edited large views and already scrolled down
+before the whole page was loaded.

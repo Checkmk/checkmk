@@ -36,8 +36,7 @@ from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData
 from ._unit import ConvertibleUnitSpecification, NonConvertibleUnitSpecification
 
 
-@dataclass(frozen=True)
-class HorizontalRule:
+class HorizontalRule(BaseModel, frozen=True):
     value: float
     rendered_value: str
     color: str

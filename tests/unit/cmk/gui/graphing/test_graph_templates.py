@@ -163,9 +163,24 @@ def test__replace_expressions_missing_scalars() -> None:
         pytest.param(
             "one=5;7;6;; power=5;9;10;; output=5;2;3;;",
             [
-                HorizontalRule(7.0, "7.00", "#ffd000", "Warning"),
-                HorizontalRule(10.0, "10 W", "#ff3232", "Critical power"),
-                HorizontalRule(-2.0, "-2.00", "#ffd000", "Warning output"),
+                HorizontalRule(
+                    value=7.0,
+                    rendered_value="7.00",
+                    color="#ffd000",
+                    title="Warning",
+                ),
+                HorizontalRule(
+                    value=10.0,
+                    rendered_value="10 W",
+                    color="#ff3232",
+                    title="Critical power",
+                ),
+                HorizontalRule(
+                    value=-2.0,
+                    rendered_value="-2.00",
+                    color="#ffd000",
+                    title="Warning output",
+                ),
             ],
             id="Thresholds present",
         ),

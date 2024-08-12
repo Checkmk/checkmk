@@ -183,10 +183,10 @@ def _horizontal_rules_from_thresholds(
             if (result := entry.expression.evaluate(translated_metrics)).value:
                 horizontal_rules.append(
                     HorizontalRule(
-                        result.value,
-                        result.unit_info.render(result.value),
-                        result.color,
-                        entry.title,
+                        value=result.value,
+                        rendered_value=result.unit_info.render(result.value),
+                        color=result.color,
+                        title=entry.title,
                     )
                 )
         # Scalar value like min and max are always optional. This makes configuration

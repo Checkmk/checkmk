@@ -26,8 +26,6 @@ type Timestamp = number;
 type Seconds = number;
 type TimeRange = [number, number];
 export type TimeSeriesValue = number | null;
-type LazyString = string; // not sure how teal with this for the moment
-export type HorizontalRule = [number, string, string, string | LazyString];
 type SizePT = number;
 
 interface GraphTitleFormat {
@@ -146,6 +144,13 @@ interface MinimalVerticalRange {
     type: "minimal";
     min: number | null;
     max: number | null;
+}
+
+export interface HorizontalRule {
+    value: number;
+    rendered_value: string;
+    color: string;
+    title: string;
 }
 
 //this type is from cmk/gui/plugins/metrics/artwork.py:82
@@ -656,7 +661,7 @@ function render_graph(graph: GraphArtwork) {
     // Paint curves
     const curves = graph["curves"];
     const step = graph["step"] / 2.0;
-    let i, color, opacity;
+    let color, opacity;
     for (let i = 0; i < curves.length; i++) {
         const curve = curves[i];
         const points = curve["points"];
@@ -738,16 +743,15 @@ function render_graph(graph: GraphArtwork) {
     // Paint horizontal rules like warn and crit
     ctx.save();
     ctx.lineWidth = rule_line_width;
-    let position;
-    const rules = graph["horizontal_rules"];
-    for (i = 0; i < rules.length; i++) {
-        position = rules[i][0];
-        color = rules[i][2];
-        if (position >= v_range_from && position <= v_range_to) {
+    for (const horizontal_rule of graph.horizontal_rules) {
+        if (
+            horizontal_rule.value >= v_range_from &&
+            horizontal_rule.value <= v_range_to
+        ) {
             paint_line(
-                coordinate_trans.trans(t_range_from, position),
-                coordinate_trans.trans(t_range_to, position),
-                color
+                coordinate_trans.trans(t_range_from, horizontal_rule.value),
+                coordinate_trans.trans(t_range_to, horizontal_rule.value),
+                horizontal_rule.color
             );
         }
     }

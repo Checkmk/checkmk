@@ -135,9 +135,9 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
                 const rule_tag = "level_" + idx;
                 plot_definitions.push({
                     hidden: false,
-                    label: rule[3],
+                    label: rule.title,
                     plot_type: "line",
-                    color: rule[2],
+                    color: rule.color,
                     id: rule_tag,
                     is_scalar: true,
                     use_tags: [rule_tag],
@@ -145,13 +145,13 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
                 data.push({
                     // @ts-ignore
                     timestamp: start,
-                    value: rule[0],
+                    value: rule.value,
                     tag: rule_tag,
                 });
                 data.push({
                     // @ts-ignore
                     timestamp: end,
-                    value: rule[0],
+                    value: rule.value,
                     tag: rule_tag,
                 });
             }

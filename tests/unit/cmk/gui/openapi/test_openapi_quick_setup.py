@@ -18,7 +18,6 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
-    StageId,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
@@ -43,7 +42,6 @@ def test_quick_setup_get(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
             QuickSetupStage(
-                stage_id=StageId(1),
                 title="stage1",
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
@@ -64,7 +62,6 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
             QuickSetupStage(
-                stage_id=StageId(1),
                 title="stage1",
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
@@ -74,7 +71,6 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
                 button_label="Next",
             ),
             QuickSetupStage(
-                stage_id=StageId(2),
                 title="stage2",
                 configure_components=[],
                 validators=[],
@@ -85,14 +81,8 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
     )
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="quick_setup_test",
-        stages=[
-            {
-                "stage_id": 1,
-                "form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "test_account_name"}},
-            },
-        ],
+        stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "test_account_name"}}}],
     )
-    assert resp.json["stage_id"] == 2
     assert resp.json["errors"] is None
     assert len(resp.json["stage_recap"]) == 1
     assert resp.json["next_stage_structure"]["button_label"] == "Next"
@@ -108,7 +98,6 @@ def test_failing_validate(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
             QuickSetupStage(
-                stage_id=StageId(1),
                 title="stage1",
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
@@ -121,16 +110,10 @@ def test_failing_validate(clients: ClientRegistry) -> None:
     )
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="quick_setup_test",
-        stages=[
-            {
-                "stage_id": 1,
-                "form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: 5}},
-            },
-        ],
+        stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: 5}}}],
         expect_ok=False,
     )
     assert resp.assert_status_code(400)
-    assert resp.json["stage_id"] == 1
     assert resp.json["errors"] == {
         "formspec_errors": {
             "formspec_unique_id": [
@@ -150,7 +133,6 @@ def test_quick_setup_save(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
             QuickSetupStage(
-                stage_id=StageId(1),
                 title="stage1",
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
@@ -178,7 +160,6 @@ def test_unique_id_must_be_unique(
     register_quick_setup(
         setup_stages=[
             QuickSetupStage(
-                stage_id=StageId(1),
                 title="stage1",
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
@@ -191,12 +172,7 @@ def test_unique_id_must_be_unique(
     )
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="quick_setup_test",
-        stages=[
-            {
-                "stage_id": 1,
-                "form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "I should be unique"}},
-            },
-        ],
+        stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "I should be unique"}}}],
         expect_ok=False,
     )
     resp.assert_status_code(400)

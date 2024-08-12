@@ -10,11 +10,6 @@ from cmk import fields
 
 
 class QuickSetupStageRequest(BaseSchema):
-    stage_id = fields.Integer(
-        required=True,
-        example=1,
-        description="The id of the stage.",
-    )
     form_data = fields.Dict(
         required=True,
         example={},
@@ -35,7 +30,7 @@ class QuickSetupRequest(BaseSchema):
             required=True,
             description="A stage id and its components",
         ),
-        example=[{"stage_id": 1, "form_data": {}}, {"stage_id": 2, "form_data": {}}],
+        example=[{"form_data": {}}, {"form_data": {}}],
         description="A list of stages",
     )
 
@@ -47,9 +42,6 @@ class QuickSetupFinalSaveRequest(BaseSchema):
             required=True,
             description="A stage id and it's form data",
         ),
-        example=[
-            {"stage_id": 1, "stage_data": []},
-            {"stage_id": 2, "stage_data": []},
-        ],
+        example=[{"stage_data": []}, {"stage_data": []}],
         description="A list of stages' form data",
     )

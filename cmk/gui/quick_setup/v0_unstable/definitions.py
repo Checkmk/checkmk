@@ -6,14 +6,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from cmk.gui.quick_setup.v0_unstable.type_defs import RawFormData, StageId
+from cmk.gui.quick_setup.v0_unstable.type_defs import RawFormData
 
 from cmk.ccc.exceptions import MKGeneralException
 
 
 @dataclass
-class IncomingStage:  # Request
-    stage_id: StageId
+class IncomingStage:
     form_data: RawFormData
 
 

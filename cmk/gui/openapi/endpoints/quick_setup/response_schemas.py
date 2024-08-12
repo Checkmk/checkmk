@@ -8,10 +8,6 @@ from cmk import fields
 
 
 class QuickSetupStageOverviewResponse(BaseSchema):
-    stage_id = fields.Integer(
-        example=1,
-        description="The id of the stage.",
-    )
     title = fields.String(
         example="Prepare AWS for Checkmk",
         description="The title of a stage",
@@ -49,10 +45,6 @@ class QuickSetupNextStageStructure(BaseSchema):
 
 
 class QuickSetupStageResponse(BaseSchema):
-    stage_id = fields.Integer(
-        example=1,
-        description="The id of the stage.",
-    )
     stage_recap = fields.List(
         fields.Dict,
         example=[],
@@ -83,7 +75,7 @@ class QuickSetupOverviewResponse(BaseSchema):
     )
     stage = fields.Nested(
         QuickSetupStageResponse,
-        example={"stage_id": 1, "components": []},
+        example={"components": []},
         description="The first stage",
     )
     button_complete_label = fields.String(

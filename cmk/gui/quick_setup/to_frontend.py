@@ -52,7 +52,6 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     QuickSetupId,
     RawFormData,
     ServiceInterest,
-    StageId,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
@@ -104,7 +103,6 @@ ValidationErrorMap = MutableMapping[FormSpecId, MutableSequence[QuickSetupValida
 
 @dataclass
 class StageOverview:
-    stage_id: StageId
     title: str
     sub_title: str | None
 
@@ -126,7 +124,6 @@ class NextStageStructure:
 
 @dataclass
 class Stage:
-    stage_id: StageId
     next_stage_structure: NextStageStructure | None = None
     errors: Errors | None = None
     stage_recap: Sequence[Widget] = field(default_factory=list)
@@ -439,25 +436,22 @@ def validate_unique_id(
 
 
 def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
-    first_stage = get_stage_with_id(quick_setup, StageId(1))
     return QuickSetupOverview(
         quick_setup_id=quick_setup.id,
         overviews=[
             StageOverview(
-                stage_id=stage.stage_id,
                 title=stage.title,
                 sub_title=stage.sub_title,
             )
             for stage in quick_setup.stages
         ],
         stage=Stage(
-            stage_id=first_stage.stage_id,
             next_stage_structure=NextStageStructure(
                 components=[
                     _get_stage_components_from_widget(widget)
-                    for widget in first_stage.configure_components
+                    for widget in quick_setup.stages[0].configure_components
                 ],
-                button_label=first_stage.button_label,
+                button_label=quick_setup.stages[0].button_label,
             ),
         ),
         button_complete_label=quick_setup.button_complete_label,
@@ -515,9 +509,8 @@ def retrieve_next_stage(
     quick_setup: QuickSetup,
     incoming_stages: Sequence[IncomingStage],
 ) -> Stage:
-    # TODO: stage_id dependency should be removed
-    current_stage_id = incoming_stages[-1].stage_id
-    current_stage = get_stage_with_id(quick_setup, current_stage_id)
+    current_stage_index = len(incoming_stages) - 1
+    current_stage = quick_setup.stages[current_stage_index]
 
     quick_setup_formspec_map = build_quick_setup_formspec_map(quick_setup.stages)
     combined_parsed_form_data_by_stage = [
@@ -533,19 +526,12 @@ def retrieve_next_stage(
         )
     ]
 
-    if current_stage_id == quick_setup.stages[-1].stage_id:
-        return Stage(
-            stage_id=StageId(-1), next_stage_structure=None, stage_recap=current_stage_recap
-        )
+    if current_stage_index == len(quick_setup.stages) - 1:
+        return Stage(next_stage_structure=None, stage_recap=current_stage_recap)
 
-    try:
-        next_stage = get_stage_with_id(quick_setup, StageId(current_stage.stage_id + 1))
-    except InvalidStageException:
-        # TODO: What should we return in this case?
-        return Stage(stage_id=StageId(-1))
+    next_stage = quick_setup.stages[current_stage_index + 1]
 
     return Stage(
-        stage_id=next_stage.stage_id,
         next_stage_structure=NextStageStructure(
             components=[
                 _get_stage_components_from_widget(widget)
@@ -572,13 +558,6 @@ def complete_quick_setup(
             )
         )
     )
-
-
-def get_stage_with_id(quick_setup: QuickSetup, stage_id: StageId) -> QuickSetupStage:
-    for stage in quick_setup.stages:
-        if stage.stage_id == stage_id:
-            return stage
-    raise InvalidStageException(f"The stage id '{stage_id}' does not exist.")
 
 
 def create_host_from_form_data(

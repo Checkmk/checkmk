@@ -13,7 +13,7 @@ from cmk.gui.quick_setup.to_frontend import (
 )
 from cmk.gui.quick_setup.v0_unstable.definitions import IncomingStage
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
-from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageId
+from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecRecap, FormSpecWrapper
 
 from cmk.rulesets.v1 import Title
@@ -23,7 +23,6 @@ from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, Strin
 def test_form_spec_recap() -> None:
     setup_stages = [
         QuickSetupStage(
-            stage_id=StageId(1),
             title="stage1",
             configure_components=[
                 FormSpecWrapper(
@@ -59,9 +58,7 @@ def test_form_spec_recap() -> None:
 
 
 def test_retrieve_next_following_last_stage() -> None:
-    quick_setup = QuickSetupFactory.build(
-        stages=[QuickSetupStageFactory.build(stage_id=StageId(1))]
-    )
-    incoming_stages = [IncomingStage(stage_id=StageId(1), form_data=RawFormData({}))]
+    quick_setup = QuickSetupFactory.build(stages=[QuickSetupStageFactory.build()])
+    incoming_stages = [IncomingStage(form_data=RawFormData({}))]
     stage = retrieve_next_stage(quick_setup=quick_setup, incoming_stages=incoming_stages)
     assert stage.next_stage_structure is None

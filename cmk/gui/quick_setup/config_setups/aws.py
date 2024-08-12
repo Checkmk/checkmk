@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
 
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -16,12 +15,7 @@ from cmk.gui.quick_setup.to_frontend import (
     validate_unique_id,
 )
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
-from cmk.gui.quick_setup.v0_unstable.type_defs import (
-    ParsedFormData,
-    QuickSetupId,
-    ServiceInterest,
-    StageId,
-)
+from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, QuickSetupId, ServiceInterest
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,
@@ -37,9 +31,8 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String, validators
 
 
-def prepare_aws(stage_id: StageId) -> QuickSetupStage:
+def prepare_aws() -> QuickSetupStage:
     return QuickSetupStage(
-        stage_id=stage_id,
         title=_("Prepare AWS for Checkmk"),
         configure_components=[
             ListOfWidgets(
@@ -73,9 +66,8 @@ def prepare_aws(stage_id: StageId) -> QuickSetupStage:
     )
 
 
-def configure_host_and_region(stage_id: StageId) -> QuickSetupStage:
+def configure_host_and_region() -> QuickSetupStage:
     return QuickSetupStage(
-        stage_id=stage_id,
         title=_("Configure host and regions"),
         sub_title=_(
             "Name your host, define the path and select the regions you would like to monitor"
@@ -115,9 +107,8 @@ def configure_host_and_region(stage_id: StageId) -> QuickSetupStage:
     )
 
 
-def configure_services_to_monitor(stage_id: StageId) -> QuickSetupStage:
+def configure_services_to_monitor() -> QuickSetupStage:
     return QuickSetupStage(
-        stage_id=stage_id,
         title=_("Configure services to monitor"),
         sub_title=_("Select and configure AWS services you would like to monitor"),
         configure_components=[
@@ -167,9 +158,8 @@ def configure_services_to_monitor(stage_id: StageId) -> QuickSetupStage:
     )
 
 
-def review_and_run_service_discovery(stage_id: StageId) -> QuickSetupStage:
+def review_and_run_service_discovery() -> QuickSetupStage:
     return QuickSetupStage(
-        stage_id=stage_id,
         title=_("Review and run service discovery"),
         sub_title=_("Review your configuration, run and preview service discovery"),
         configure_components=[],
@@ -184,15 +174,6 @@ def review_and_run_service_discovery(stage_id: StageId) -> QuickSetupStage:
     )
 
 
-def aws_stages() -> Sequence[QuickSetupStage]:
-    return [
-        prepare_aws(StageId(1)),
-        configure_host_and_region(StageId(2)),
-        configure_services_to_monitor(StageId(3)),
-        review_and_run_service_discovery(StageId(4)),
-    ]
-
-
 def save_action(all_stages_form_data: ParsedFormData) -> str:
     return create_and_save_special_agent_bundle(
         special_agent_name="aws",
@@ -203,7 +184,12 @@ def save_action(all_stages_form_data: ParsedFormData) -> str:
 quick_setup_aws = QuickSetup(
     title=_("Amazon Web Services (AWS)"),
     id=QuickSetupId("aws_quick_setup"),
-    stages=aws_stages(),
+    stages=[
+        prepare_aws(),
+        configure_host_and_region(),
+        configure_services_to_monitor(),
+        review_and_run_service_discovery(),
+    ],
     save_action=save_action,
     button_complete_label=_("Save & go to Activate changes"),
 )

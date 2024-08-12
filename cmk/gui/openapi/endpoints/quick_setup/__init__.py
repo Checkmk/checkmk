@@ -26,7 +26,6 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.to_frontend import (
     build_quick_setup_formspec_map,
     complete_quick_setup,
-    get_stage_with_id,
     quick_setup_overview,
     QuickSetupOverview,
     retrieve_next_stage,
@@ -92,28 +91,19 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
-    stages = [
-        IncomingStage(stage_id=stage["stage_id"], form_data=stage["form_data"])
-        for stage in body["stages"]
-    ]
-    current_stage_id = stages[-1].stage_id
+    stages_received = [IncomingStage(form_data=stage["form_data"]) for stage in body["stages"]]
 
     if (
         errors := validate_stage(
-            stage=get_stage_with_id(quick_setup, current_stage_id),
+            stage=quick_setup.stages[len(stages_received) - 1],
             formspec_lookup=build_quick_setup_formspec_map(quick_setup.stages),
-            stages_raw_formspecs=[stage.form_data for stage in stages],
+            stages_raw_formspecs=[stage.form_data for stage in stages_received],
         )
     ) is not None:
-        return _serve_data(
-            Stage(
-                stage_id=current_stage_id,
-                errors=errors,
-            ),
-            status_code=400,
-        )
-
-    return _serve_data(data=retrieve_next_stage(quick_setup=quick_setup, incoming_stages=stages))
+        return _serve_data(Stage(errors=errors), status_code=400)
+    return _serve_data(
+        data=retrieve_next_stage(quick_setup=quick_setup, incoming_stages=stages_received)
+    )
 
 
 @Endpoint(

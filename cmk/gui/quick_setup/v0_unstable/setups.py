@@ -12,7 +12,6 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
-    StageId,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
 
@@ -28,7 +27,6 @@ CallableSaveAction = Callable[[ParsedFormData], str]
 
 @dataclass(frozen=True)
 class QuickSetupStage:
-    stage_id: StageId
     title: str
     configure_components: Sequence[Widget]
     validators: Iterable[CallableValidator]

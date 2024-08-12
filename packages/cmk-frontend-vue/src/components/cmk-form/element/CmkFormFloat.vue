@@ -23,9 +23,22 @@ const [validation, value] = useValidation<number>(
     :id="$componentId"
     v-model="value"
     :placeholder="spec.input_hint || ''"
-    class="number"
+    class="number no-spinner"
+    step="any"
     type="number"
   />
   <span v-if="props.spec.unit" class="vs_floating_text">{{ props.spec.unit }}</span>
   <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.no-spinner[type='number'] {
+  -moz-appearance: textfield;
+}
+</style>

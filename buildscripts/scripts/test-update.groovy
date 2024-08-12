@@ -17,7 +17,9 @@ def build_make_target(edition) {
 
 def main() {
     check_job_parameters([
-        ["OVERRIDE_DISTROS"],
+        "VERSION",
+        "OVERRIDE_DISTROS",
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
     ]);
 
     check_environment_variables([
@@ -29,14 +31,14 @@ def main() {
 
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, "daily");
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     def edition = params.EDITION;
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_update_tests");
     def docker_tag = versioning.select_docker_tag(
-        "",                // 'build tag'
-        safe_branch_name,  // 'branch' returns '<BRANCH>-latest'
+        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
+        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
 
     def make_target = build_make_target(edition);
@@ -45,7 +47,7 @@ def main() {
         DOCKER_GROUP_ID: get_docker_group_id(),
         DISTRO_LIST: distros,
         EDITION: edition,
-        VERSION: "daily",
+        VERSION: VERSION,
         DOCKER_TAG: docker_tag,
         MAKE_TARGET: make_target,
         BRANCH: safe_branch_name,

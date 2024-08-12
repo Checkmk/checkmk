@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import pprint
+import re
 import subprocess
 import sys
 import time
@@ -1223,6 +1224,12 @@ class Site:
             crash = json.loads(self.read_file(crash_file))
             crash_type = crash.get("exc_type", "")
             crash_detail = crash.get("exc_value", "")
+            if re.search("list index out of range", crash_detail):
+                logger.warning("Ignored crash report due to CMK-18633!")
+                continue
+            if re.search("Cannot render negative timespan", crash_detail):
+                logger.warning("Ignored crash report due to CMK-18635!")
+                continue
             pytest_check.fail(
                 f"""Crash report detected! {crash_type}: {crash_detail}.
                 See {crash_file} for more details."""

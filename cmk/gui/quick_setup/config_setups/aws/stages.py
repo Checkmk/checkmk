@@ -6,6 +6,8 @@ from collections.abc import Sequence
 
 from cmk.utils.rulesets.definition import RuleGroup
 
+from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
+from cmk.gui.quick_setup.config_setups.aws import ruleset_helper
 from cmk.gui.quick_setup.v0_unstable.predefined import complete, recaps
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
 from cmk.gui.quick_setup.v0_unstable.predefined import widgets
@@ -22,8 +24,6 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 from cmk.gui.user_sites import get_configured_site_choices, site_attribute_default_value
 
 from cmk.ccc.i18n import _
-from cmk.plugins.aws import ruleset_helper  # pylint: disable=cmk-module-layer-violation
-from cmk.plugins.aws.rulesets import aws  # pylint: disable=cmk-module-layer-violation
 from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,

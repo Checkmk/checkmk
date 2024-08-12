@@ -13,7 +13,7 @@ from opsgenie_sdk.api.alert.close_alert_payload import CloseAlertPayload  # type
 from opsgenie_sdk.api.alert.create_alert_payload import CreateAlertPayload  # type: ignore[import]
 from opsgenie_sdk.api_client import ApiClient  # type: ignore[import]
 from opsgenie_sdk.configuration import Configuration  # type: ignore[import]
-from opsgenie_sdk.rest import ApiException  # type: ignore[import]
+from opsgenie_sdk.exceptions import ApiException, AuthenticationException  # type: ignore[import]
 
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
@@ -63,12 +63,15 @@ class Connector:
 
         try:
             response = self.alert_api.create_alert(create_alert_payload=body)
-
-            sys.stdout.write("Request id: %s, successfully created alert.\n" % response.request_id)
-            return 0
-        except ApiException as err:
-            sys.stderr.write("Exception when calling AlertApi->create_alert: %s\n" % err)
+        except (ApiException, AuthenticationException) as err:
+            sys.stderr.write(f"Exception when calling AlertApi -> create_alert: {err}\n")
             return 2
+        except Exception as e:
+            sys.stderr.write(f"Unhandled exception: {e}\n")
+            return 2
+
+        sys.stdout.write(f"Request id: {response.request_id}, successfully created alert.\n")
+        return 0
 
     def handle_alert_deletion(
         self,
@@ -86,14 +89,19 @@ class Connector:
 
         try:
             response = self.alert_api.close_alert(
-                identifier=alias, identifier_type="alias", close_alert_payload=body
+                identifier=alias,
+                identifier_type="alias",
+                close_alert_payload=body,
             )
-            sys.stdout.write("Request id: %s, successfully closed alert.\n" % response.request_id)
-            return 0
-
-        except ApiException as err:
-            sys.stderr.write("Exception when calling AlertApi->close_alert: %s\n" % err)
+        except (ApiException, AuthenticationException) as err:
+            sys.stderr.write(f"Exception when calling AlertApi -> close_alert: {err}\n")
             return 2
+        except Exception as e:
+            sys.stderr.write(f"Unhandled exception: {e}\n")
+            return 2
+
+        sys.stdout.write(f"Request id: {response.request_id}, successfully closed alert.\n")
+        return 0
 
     def handle_alert_ack(
         self, ack_author: str, ack_comment: str, alias: str | None, alert_source: str | None
@@ -107,16 +115,21 @@ class Connector:
 
         try:
             response = self.alert_api.acknowledge_alert(
-                identifier=alias, identifier_type="alias", acknowledge_alert_payload=body
+                identifier=alias,
+                identifier_type="alias",
+                acknowledge_alert_payload=body,
             )
-
-            sys.stdout.write(
-                "Request id: %s, successfully added acknowledgedment.\n" % response.request_id
-            )
-            return 0
-        except ApiException as err:
-            sys.stderr.write("Exception when calling AlertApi->acknowledge_alert: %s\n" % err)
+        except (ApiException, AuthenticationException) as err:
+            sys.stderr.write(f"Exception when calling AlertApi -> acknowledge_alert: {err}\n")
             return 2
+        except Exception as e:
+            sys.stderr.write(f"Unhandled exception: {e}\n")
+            return 2
+
+        sys.stdout.write(
+            f"Request id: {response.request_id}, successfully added acknowledgedment.\n"
+        )
+        return 0
 
 
 def main() -> int:

@@ -1,0 +1,13 @@
+Title: Opsgenie: Better error handling
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1723465965
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+In earlier versions some errors (like authentication failures) lead to a
+traceback.
+
+Errors should be shown in a better way now.

@@ -46,7 +46,7 @@ def test_quick_setup_get(clients: ClientRegistry) -> None:
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
                 ],
-                validators=[],
+                custom_validators=[],
                 recap=[],
                 button_label="Next",
             ),
@@ -66,14 +66,14 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
                 ],
-                validators=[],
+                custom_validators=[],
                 recap=[recaps_form_spec],
                 button_label="Next",
             ),
             QuickSetupStage(
                 title="stage2",
                 configure_components=[],
-                validators=[],
+                custom_validators=[],
                 recap=[],
                 button_label="Next",
             ),
@@ -102,7 +102,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
                 ],
-                validators=[_form_spec_extra_validate],
+                custom_validators=[_form_spec_extra_validate],
                 recap=[],
                 button_label="Next",
             ),
@@ -137,7 +137,7 @@ def test_quick_setup_save(clients: ClientRegistry) -> None:
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
                 ],
-                validators=[],
+                custom_validators=[],
                 recap=[],
                 button_label="Next",
             ),
@@ -164,7 +164,7 @@ def test_unique_id_must_be_unique(
                 configure_components=[
                     unique_id_formspec_wrapper(Title("account name")),
                 ],
-                validators=[validate_unique_id],
+                custom_validators=[validate_unique_id],
                 recap=[recaps_form_spec],
                 button_label="Next",
             ),

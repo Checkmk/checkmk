@@ -494,9 +494,9 @@ def validate_stage(
 
     parsed_formspecs_data = _form_spec_parse(stages_raw_formspecs, formspec_lookup)
 
-    for validator in stage.validators:
+    for custom_validator in stage.custom_validators:
         errors.stage_errors.extend(
-            validator(
+            custom_validator(
                 parsed_formspecs_data,
                 formspec_lookup,
             )

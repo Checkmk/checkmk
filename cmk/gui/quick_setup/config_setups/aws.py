@@ -60,7 +60,7 @@ def prepare_aws() -> QuickSetupStage:
                 form_spec=Dictionary(elements=aws.quick_setup_stage_1()),
             ),
         ],
-        validators=[validate_unique_id],
+        custom_validators=[validate_unique_id],
         recap=[recaps_form_spec],
         button_label="Configure host and region",
     )
@@ -101,7 +101,7 @@ def configure_host_and_region() -> QuickSetupStage:
                 form_spec=Dictionary(elements=aws.quick_setup_stage_2()),
             ),
         ],
-        validators=[],
+        custom_validators=[],
         recap=[recaps_form_spec],
         button_label="Configure services to monitor",
     )
@@ -150,7 +150,7 @@ def configure_services_to_monitor() -> QuickSetupStage:
                 ],
             ),
         ],
-        validators=[],
+        custom_validators=[],
         recap=[
             recaps_form_spec,
         ],
@@ -163,7 +163,7 @@ def review_and_run_service_discovery() -> QuickSetupStage:
         title=_("Review and run service discovery"),
         sub_title=_("Review your configuration, run and preview service discovery"),
         configure_components=[],
-        validators=[validate_test_connection(RuleGroup.SpecialAgents("aws"))],
+        custom_validators=[validate_test_connection(RuleGroup.SpecialAgents("aws"))],
         recap=[
             recap_service_discovery(
                 RuleGroup.SpecialAgents("aws"),

@@ -29,7 +29,7 @@ CallableSaveAction = Callable[[ParsedFormData], str]
 class QuickSetupStage:
     title: str
     configure_components: Sequence[Widget]
-    validators: Iterable[CallableValidator]
+    custom_validators: Iterable[CallableValidator]
     recap: Iterable[CallableRecap]
     button_label: str
     sub_title: str | None = None

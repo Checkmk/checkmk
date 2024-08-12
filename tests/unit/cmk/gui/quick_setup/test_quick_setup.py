@@ -41,7 +41,7 @@ def test_form_spec_recap() -> None:
                     ),
                 ),
             ],
-            validators=[],
+            custom_validators=[],
             recap=[],
             button_label="Next",
         ),

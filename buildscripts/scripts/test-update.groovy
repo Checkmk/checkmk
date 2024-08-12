@@ -11,7 +11,8 @@ def main() {
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
 
     def safe_branch_name = versioning.safe_branch_name(scm);
-    def cmk_version = versioning.get_cmk_version(safe_branch_name, "daily");
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, "daily");
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_tests");
     def docker_tag = versioning.select_docker_tag(

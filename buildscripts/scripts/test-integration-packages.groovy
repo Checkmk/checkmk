@@ -22,7 +22,8 @@ def main() {
 
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_tests");
     def safe_branch_name = versioning.safe_branch_name(scm);
-    def cmk_version = versioning.get_cmk_version(safe_branch_name, VERSION);
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, VERSION);
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // FIXME, 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'

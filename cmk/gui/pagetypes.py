@@ -133,7 +133,7 @@ class BaseSpec(_BaseSpecMandatory, total=False):
 
 class _OverridableSpecMandatory(BaseSpec):
     owner: UserId
-    public: bool | tuple[Literal["contact_groups"], Sequence[str]]
+    public: bool | tuple[Literal["contact_groups", "sites"], Sequence[str]]
 
 
 class OverridableSpec(_OverridableSpecMandatory, total=False):
@@ -155,7 +155,9 @@ class PageRendererSpec(OverridableContainerSpec):
     is_show_more: bool
 
 
-def _deserialize_public(public: object) -> bool | tuple[Literal["contact_groups"], Sequence[str]]:
+def _deserialize_public(
+    public: object,
+) -> bool | tuple[Literal["contact_groups", "sites"], Sequence[str]]:
     if public is None:
         # Note: public is not allowed to be None (from typing perspective)
         # But if it's set to None we get a crash :(
@@ -165,9 +167,9 @@ def _deserialize_public(public: object) -> bool | tuple[Literal["contact_groups"
         return public
 
     if isinstance(public, tuple) and len(public) == 2:
-        ident, contact_groups = public
-        if ident == "contact_groups" and isinstance(contact_groups, list):
-            return "contact_groups", contact_groups
+        ident, permitted = public
+        if ident in ["contact_groups", "sites"] and isinstance(permitted, list):
+            return ident, permitted
 
     raise TypeError(public)
 

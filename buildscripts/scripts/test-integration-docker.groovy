@@ -23,9 +23,10 @@ def main() {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
     def package_dir = "${checkout_dir}/downloaded_packages_for_docker_tests";
-    def branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def cmk_version = versioning.get_cmk_version(branch_name, branch_version, VERSION);
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     print(
         """
@@ -67,7 +68,7 @@ def main() {
     // TODO: don't run make-test-docker but use docker.inside() instead
     stage('test cmk-docker integration') {
         dir("${checkout_dir}/tests") {
-            def cmd = "make test-docker-docker WORKSPACE='${checkout_dir}' BRANCH='$branch_name' EDITION='$EDITION' VERSION='$cmk_version'";
+            def cmd = "make test-docker-docker WORKSPACE='${checkout_dir}' BRANCH='$safe_branch_name' EDITION='$EDITION' VERSION='$cmk_version'";
             on_dry_run_omit(LONG_RUNNING, "RUN ${cmd}") {
                 sh(cmd);
             }

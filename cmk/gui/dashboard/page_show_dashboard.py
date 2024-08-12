@@ -67,9 +67,12 @@ from .dashlet import (
     StaticTextDashletConfig,
 )
 from .store import (
+    get_all_dashboards,
     get_permitted_dashboards,
     get_permitted_dashboards_by_owners,
-    load_dashboard_with_cloning,
+    load_dashboard,
+    save_all_dashboards,
+    save_and_replicate_all_dashboards,
 )
 from .type_defs import DashboardConfig, DashboardName
 
@@ -134,7 +137,24 @@ def draw_dashboard(name: DashboardName, owner: UserId) -> None:
     if mode == "edit" and not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-    board = load_dashboard_with_cloning(get_permitted_dashboards(), name, edit=mode == "edit")
+    need_replication = False
+    permitted_dashboards = get_permitted_dashboards()
+    board = load_dashboard(permitted_dashboards, name)
+
+    if mode == "edit" and board["owner"] == UserId.builtin():
+        # Trying to edit a built-in dashboard results in doing a copy
+        all_dashboards = get_all_dashboards()
+        active_user = user.id
+        assert active_user is not None
+        board = copy.deepcopy(board)
+        board["owner"] = active_user
+        board["public"] = False
+
+        all_dashboards[(active_user, name)] = board
+        permitted_dashboards[name] = board
+        save_all_dashboards()
+        need_replication = True
+
     board = _add_context_to_dashboard(board)
 
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
@@ -171,6 +191,11 @@ def draw_dashboard(name: DashboardName, owner: UserId) -> None:
             breadcrumb, name, board, board_context, unconfigured_single_infos, mode
         ),
     )
+
+    if need_replication:
+        save_and_replicate_all_dashboards(
+            makeuri(request, [("name", name), ("edit", "1" if mode == "edit" else "0")])
+        )
 
     call_hooks("dashboard_banner", name)
 
@@ -718,10 +743,9 @@ def _extend_display_dropdown(
 class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
     def _get_context(self, page_name: str) -> VisualContext:
         dashboard_name = page_name
-        board = load_dashboard_with_cloning(
+        board = load_dashboard(
             get_permitted_dashboards(),
             dashboard_name,
-            edit=False,
         )
         board = _add_context_to_dashboard(board)
 

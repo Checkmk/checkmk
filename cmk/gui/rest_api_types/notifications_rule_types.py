@@ -2629,6 +2629,7 @@ class API_JiraData(TypedDict, total=False):
     host_summary: CheckboxStrAPIType
     service_summary: CheckboxStrAPIType
     label: CheckboxStrAPIType
+    graphs_per_notification: CheckboxIntAPIType
     resolution_id: CheckboxStrAPIType
     optional_timeout: CheckboxStrAPIType
 

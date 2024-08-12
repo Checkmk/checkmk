@@ -687,6 +687,7 @@ class JiraPluginResponse(PluginName):
     host_summary = fields.Nested(CheckboxWithStrValueOutput)
     service_summary = fields.Nested(CheckboxWithStrValueOutput)
     label = fields.Nested(CheckboxWithStrValueOutput)
+    graphs_per_notification = fields.Nested(GraphsPerNotification)
     resolution_id = fields.Nested(CheckboxWithStrValueOutput)
     optional_timeout = fields.Nested(CheckboxWithStrValueOutput)
 

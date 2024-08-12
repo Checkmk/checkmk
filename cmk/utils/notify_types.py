@@ -530,6 +530,7 @@ class JiraIssuePluginModel(TypedDict):
     host_summary: NotRequired[str]
     service_summary: NotRequired[str]
     label: NotRequired[str]
+    graphs_per_notification: NotRequired[int]
     resolution: NotRequired[str]
     timeout: NotRequired[str]
     site_customid: NotRequired[str]

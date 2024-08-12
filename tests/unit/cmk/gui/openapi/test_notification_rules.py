@@ -806,6 +806,10 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": "label_key:label_value",
         },
+        "graphs_per_notification": {
+            "state": "enabled",
+            "value": 3,
+        },
         "resolution_id": {
             "state": "enabled",
             "value": "abc",

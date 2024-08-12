@@ -10,8 +10,6 @@
 # This script creates a nifty HTML email in multipart format with
 # attached graphs and such neat stuff. Sweet!
 
-import base64
-import os
 import socket
 import sys
 from collections.abc import Callable
@@ -22,15 +20,12 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Literal, NamedTuple, NoReturn
 
-import requests
-
-from cmk.ccc import site
 from cmk.ccc.exceptions import MKException
 
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
-from cmk.utils.paths import omd_root
 
 from cmk.notification_plugins import utils
+from cmk.notification_plugins.utils import render_cmk_graphs
 
 
 def tmpl_head_html(html_section: str) -> str:
@@ -695,75 +690,16 @@ def send_mail(message: Message, target: str, from_address: str, context: dict[st
     return 0
 
 
-def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
-    if context["WHAT"] == "HOST":
-        svc_desc = "_HOST_"
-    else:
-        svc_desc = context["SERVICEDESC"]
-
-    request = requests.Request(
-        "GET",
-        f"http://localhost:{site.get_apache_port(omd_root)}/{os.environ['OMD_SITE']}/check_mk/ajax_graph_images.py",
-        params={
-            "host": context["HOSTNAME"],
-            "service": svc_desc,
-            "num_graphs": context["PARAMETER_GRAPHS_PER_NOTIFICATION"],
-        },
-    ).prepare()
-
-    timeout = 10
-
-    try:
-        response = requests.Session().send(
-            request,
-            timeout=timeout,
-        )
-        base64_strings = response.json()
-    except requests.exceptions.ReadTimeout:
-        if opt_debug:
-            raise
-        sys.stderr.write(f"ERROR: Timed out fetching graphs ({timeout} sec)\nURL: {request.url}\n")
-        return []
-    except requests.exceptions.JSONDecodeError as e:
-        if response.text == "":
-            return []
-        if opt_debug:
-            raise
-        sys.stderr.write(
-            f"ERROR: Failed to decode graphs: {e}\nURL: {request.url}\nData: {response.text!r}\n"
-        )
-        return []
-    except Exception as e:
-        if opt_debug:
-            raise
-        sys.stderr.write(f"ERROR: Failed to fetch graphs: {e}\nURL: {request.url}\n")
-        return []
-
-    return [base64.b64decode(s) for s in base64_strings]
-
-
-def render_performance_graphs(context: dict[str, str], is_bulk: bool) -> tuple[AttachmentList, str]:
-    graphs = render_cmk_graphs(context, is_bulk)
-
+def render_performance_graphs(context: dict[str, str]) -> tuple[AttachmentList, str]:
     attachments: AttachmentList = []
     graph_code = ""
-    for source, graph_png in enumerate(graphs):
-        if context["WHAT"] == "HOST":
-            svc_desc = "_HOST_"
-        else:
-            svc_desc = context["SERVICEDESC"].replace(" ", "_")
-            # replace forbidden windows characters < > ? " : | \ / *
-            for token in ["<", ">", "?", '"', ":", "|", "\\", "/", "*"]:
-                svc_desc = svc_desc.replace(token, "x%s" % ord(token))
-
-        filename = "%s-%s-%d.png" % (context["HOSTNAME"], svc_desc, source)
-
-        attachments.append(AttachmentNamedTuple("img", filename, graph_png, "inline"))
+    for graph in render_cmk_graphs(context):
+        attachments.append(AttachmentNamedTuple("img", graph.filename, graph.data, "inline"))
 
         cls = ""
         if context.get("PARAMETER_NO_FLOATING_GRAPHS"):
             cls = ' class="nofloat"'
-        graph_code += f'<img src="cid:{filename}"{cls} />'
+        graph_code += f'<img src="cid:{graph.filename}"{cls} />'
 
     if graph_code:
         graph_code = (
@@ -805,7 +741,7 @@ def construct_content(
     if "graph" in elements and "ALERTHANDLEROUTPUT" not in context:
         # Add Checkmk graphs
         try:
-            attachments, graph_code = render_performance_graphs(context, is_bulk)
+            attachments, graph_code = render_performance_graphs(context)
             content_html += graph_code
         except Exception as e:
             sys.stderr.write("Failed to add graphs to mail. Continue without them. (%s)\n" % e)

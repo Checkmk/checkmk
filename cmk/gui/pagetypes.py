@@ -137,14 +137,14 @@ class BaseConfig:
 
 class OverridableModel(BaseModel):
     owner: UserId
-    public: bool | tuple[Literal["contact_groups"], Sequence[str]] | None
+    public: bool | tuple[Literal["contact_groups", "sites"], Sequence[str]] | None
     hidden: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
 
 
 @dataclass(kw_only=True)
 class OverridableConfig(BaseConfig):
     owner: UserId
-    public: bool | tuple[Literal["contact_groups"], Sequence[str]] | None
+    public: bool | tuple[Literal["contact_groups", "sites"], Sequence[str]] | None
     hidden: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
 
 

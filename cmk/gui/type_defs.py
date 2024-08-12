@@ -239,7 +239,7 @@ class Visual(TypedDict):
     icon: Icon | None
     hidden: bool
     hidebutton: bool
-    public: bool | tuple[Literal["contact_groups"], Sequence[str]]
+    public: bool | tuple[Literal["contact_groups", "sites"], Sequence[str]]
     packaged: bool
     link_from: LinkFromSpec
     megamenu_search_terms: Sequence[str]

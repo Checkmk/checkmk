@@ -509,8 +509,8 @@ class LDAPGroupsToAttributes(LDAPCheckbox):
     groups_to_sync = fields.List(
         fields.Nested(LDAPGroupsToSyncSelector),
         description="Specify the groups to control the value of a given user attribute. If a user is "
-        "not a member of a group, the attribute will be left at it's default value. When a single "
-        "attribute is set by multiple groups and a user is member of multiple of these groups, the "
+        "not a member of a group, the attribute will be left at its default value. When a single "
+        "attribute is set by multiple groups and a user is a member of multiple of these groups, the "
         "later plug-in in the list will override the others.",
         example=[
             {
@@ -662,7 +662,7 @@ class LDAPOther(BaseSchema):
     sync_interval = fields.Nested(
         LDAPSyncInterval,
         description="This option defines the interval of the LDAP synchronization. This setting "
-        "is only used by sites which have the Automatic User Synchronization enabled.",
+        "is only used by sites which have the automatic user synchronization enabled.",
     )
 
 

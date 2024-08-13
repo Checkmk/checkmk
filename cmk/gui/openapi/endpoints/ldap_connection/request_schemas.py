@@ -856,7 +856,7 @@ class LDAPOtherRequest(BaseSchema):
     sync_interval = fields.Nested(
         LDAPSyncIntervalRequest,
         description="This option defines the interval of the LDAP synchronization. This setting is only"
-        " used by sites which have the Automatic User Synchronization enabled.",
+        " used by sites which have the automatic user synchronization enabled.",
         load_default={"days": 0, "hours": 0, "minutes": 5},
     )
 

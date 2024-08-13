@@ -376,7 +376,7 @@ class ModeDiagHost(WatoMode):
                         unit=_("sec"),
                         display_format="%.0f",  # show values consistent to
                         size=2,  # SNMP-Timeout
-                        title=_('TCP Connection Timeout (<a href="%s">Rules</a>)')
+                        title=_('TCP connection timeout (<a href="%s">Rules</a>)')
                         % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "tcp_connect_timeouts")]
                         ),

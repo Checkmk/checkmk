@@ -33,7 +33,7 @@ def _valuespec_winperf_msx_queues_inventory() -> Dictionary:
                                 title=_("Offset"),
                                 help=_(
                                     "The offset of the information relative to counter base."
-                                    " You can get a detailed list of available counters in a windows shell with the command 'lodctr /s:counters.txt'."
+                                    " You can get a detailed list of available counters in a Windows shell with the command 'lodctr /s:counters.txt'."
                                 ),
                             ),
                         ],

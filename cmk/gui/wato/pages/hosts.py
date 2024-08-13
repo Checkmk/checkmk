@@ -164,7 +164,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                     "nodes_%d" % nr,
                     _(
                         "The node <b>%s</b> does not exist "
-                        " (must be a host that is configured with WATO)"
+                        " (must be a host that is configured via Setup)"
                     )
                     % cluster_node,
                 )

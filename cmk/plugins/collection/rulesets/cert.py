@@ -436,7 +436,7 @@ def _signature_algorithm_choice() -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Certificate signature algorithm"),
         help_text=Help(
-            "The signature algorithm algorithm for the "
+            "The signature algorithm for the "
             "certificate's signature. Please note that an matching is done on "
             "the OID"
         ),

@@ -1889,7 +1889,7 @@ builtin_views.update(
             ],
             "public": True,
             "sorters": [],
-            "title": _l("Status of Host"),
+            "title": _l("Status of host"),
             "topic": "monitoring",
             "user_sortable": True,
             "single_infos": ["host"],

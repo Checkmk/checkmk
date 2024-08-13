@@ -223,7 +223,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
 
     filter_registry.register(
         RegexFilter(
-            title=_l("Summary (plugin output) (regex)"),
+            title=_l("Summary (plug-in output) (regex)"),
             sort_index=202,
             info="service",
             query_filter=query_filters.TextQuery(

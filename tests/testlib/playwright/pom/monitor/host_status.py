@@ -43,7 +43,7 @@ class HostStatus(CmkPage):
         navigate_to_page: bool = True,
     ) -> None:
         self.host_details = host
-        self.page_title = f"Status of Host {host.name}"
+        self.page_title = f"Status of host {host.name}"
         super().__init__(page, navigate_to_page)
 
     def navigate(self) -> None:

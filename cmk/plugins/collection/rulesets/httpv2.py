@@ -547,7 +547,7 @@ def _valuespec_content() -> Dictionary:
                     help_text=Help(
                         "The provided header key and value need to match exactly with the "
                         "actual header of the response. Please note that the service will "
-                        "get a WARN if any, the key or the value, is not matching. If searching "
+                        "get a WARN, if either the key or the value does not match. If searching "
                         "for a regular expression, the first match is considered a success."
                     ),
                     prefill=DefaultValue("string"),
@@ -572,9 +572,9 @@ def _valuespec_content() -> Dictionary:
                 parameter_form=CascadingSingleChoice(
                     title=Title("Search in body"),
                     help_text=Help(
-                        "The provided string to look for needs to be exact as in the raw document "
-                        "body. This includes html markups in between user facing strings. This is "
-                        "also true if looking through a regular expression."
+                        "The provided string to be looked for needs to be exactly the same as in "
+                        "the raw document body. This includes html markups between user-oriented "
+                        "strings. This is also true for searching in a regular expression."
                     ),
                     prefill=DefaultValue("string"),
                     elements=[
@@ -660,7 +660,7 @@ def _valuespec_endpoints() -> List:
                                 parameter_form=SingleChoice(
                                     title=Title("Prefix"),
                                     help_text=Help(
-                                        "The prefix is automatically added to each service to be able to organize them. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose not to use the prefix option."
+                                        "The prefix is automatically added to each service to be able to organize it. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose not to use the prefix option."
                                     ),
                                     elements=[
                                         SingleChoiceElement(
@@ -697,7 +697,7 @@ def _valuespec_endpoints() -> List:
                         title=Title("URL"),
                         help_text=Help(
                             "The URL to monitor. This URL must include the protocol (HTTP or "
-                            "HTTPS), the full address and, if needed, also the port the endpoint "
+                            "HTTPS), the full address and, if needed, also the port of the endpoint "
                             "if using a non standard port. The URL may also include query "
                             "parameters or anchors. You may use macros in this field. The most "
                             "common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$. "

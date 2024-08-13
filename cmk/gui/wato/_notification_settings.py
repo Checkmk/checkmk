@@ -201,8 +201,8 @@ class ConfigVariableFailedNotificationHorizon(ConfigVariable):
         return Age(
             title=_("Failed notification horizon"),
             help=_(
-                "The tactical overview snap-in is reporing about notifications that could not be sent "
-                'by Checkmk. Users with the permission "See failed Notifications (all)" get the number '
+                "The tactical overview snap-in is reporting about notifications that could not be sent "
+                'by Checkmk. Users with the permission "See failed notifications (all)" get the number '
                 "of failed notification within the configured horizon."
             ),
             default_value=60 * 60 * 24 * 7,

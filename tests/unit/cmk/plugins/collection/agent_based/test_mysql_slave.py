@@ -113,9 +113,12 @@ def test_mysql_slave_error(
     section = fix_register.agent_sections[SectionName("mysql_slave")].parse_function(MYSQL_ERROR)
     plugin = fix_register.check_plugins[CheckPluginName("mysql_slave")]
 
-    assert not (
-        list(plugin.discovery_function(section))
-    )  # TODO: this is a bug, it should be discovered
-    assert not (
-        list(plugin.check_function(item="mysql", section=section, params={}))
-    )  # TODO: this is a bug, an error should be shown
+    assert list(plugin.discovery_function(section)) == [
+        Service(item="mysql"),
+    ]
+    assert list(plugin.check_function(item="mysql", section=section, params={})) == [
+        Result(
+            state=State.CRIT,
+            summary="ERROR 1227 (42000) at line 1: Access denied; you need (at least one of) the SUPER, SLAVE MONITOR privilege(s) for this operation",
+        ),
+    ]

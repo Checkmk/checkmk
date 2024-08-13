@@ -191,7 +191,7 @@ expected_attributes = {
         "show_in_host_search": False,
         "show_in_table": False,
         "show_inherited_value": False,
-        "topic": "Network Scan",
+        "topic": "Network scan",
     },
     "network_scan_result": {
         "class_name": "NetworkScanResultAttribute",
@@ -204,7 +204,7 @@ expected_attributes = {
         "show_in_host_search": False,
         "show_in_table": False,
         "show_inherited_value": False,
-        "topic": "Network Scan",
+        "topic": "Network scan",
     },
     "parents": {
         "class_name": "ParentsAttribute",
@@ -510,7 +510,7 @@ def test_host_attribute_topics_for_folders() -> None:
         ("address", "Network address"),
         ("monitoring_agents", "Monitoring agents"),
         ("custom_attributes", "Custom attributes"),
-        ("network_scan", "Network Scan"),
+        ("network_scan", "Network scan"),
         ("management_board", "Management board"),
         ("meta_data", "Creation / Locking"),
     ]

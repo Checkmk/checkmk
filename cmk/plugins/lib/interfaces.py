@@ -954,7 +954,7 @@ def _get_packet_levels(
         "abs": none_levels(),
     }
 
-    # Second iteration: seperate by perc and abs for easier further processing
+    # Second iteration: separate by perc and abs for easier further processing
     for name in PACKET_TYPES:
         for direction in DIRECTIONS:
             levels = params.get(name, {})
@@ -1205,7 +1205,7 @@ def discover_interfaces(  # pylint: disable=too-many-branches
         group_oper_status = "2"  # operation status, default is down (2)
         group_speed = 0.0  # total maximum speed of all interfaces in this group
 
-        # Extract labels, they will be handled seperately.
+        # Extract labels, they will be handled separately.
         group_labels = group_configuration.pop("labels", None)
 
         # find all interfaces matching the group to compute state and speed

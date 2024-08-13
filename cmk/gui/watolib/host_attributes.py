@@ -250,7 +250,7 @@ class HostAttributeTopicNetworkScan(HostAttributeTopic):
 
     @property
     def title(self) -> str:
-        return _("Network Scan")
+        return _("Network scan")
 
     @property
     def sort_index(self) -> int:
@@ -830,7 +830,7 @@ def _transform_attribute_topic_title_to_id(topic_title: str) -> str | None:
         "Address": "address",
         "Monitoring agents": "monitoring_agents",
         "Management board": "management_board",
-        "Network Scan": "network_scan",
+        "Network scan": "network_scan",
         "Custom attributes": "custom_attributes",
         "Host tags": "custom_attributes",
         "Tags": "custom_attributes",

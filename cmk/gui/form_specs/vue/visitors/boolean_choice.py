@@ -57,7 +57,7 @@ class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, bool]):
     ) -> list[VueComponents.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(
-                "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid BooleanChoice")
+                "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid boolean choice")
             )
         return compute_validation_errors(compute_validators(self.form_spec), raw_value)
 

@@ -73,7 +73,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
             if "OMD_ROOT" in os.environ
             else Path("/tmp")  # nosec B108 # BNS:13b2c8
         ),
-        help="This plugin needs a file to store information about sent, received "
+        help="This plug-in needs a file to store information about sent, received "
         "and expected mails. Defaults to either '/tmp/' or "
         "'/omd/sites/<sitename>/var/check_mk' when executed from within an "
         "OMD site",

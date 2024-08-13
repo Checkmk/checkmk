@@ -36,7 +36,7 @@ metric_recovering = Metric(
 )
 metric_pgstates = Metric(
     name="pgstates",
-    title=Title("Placement Groups"),
+    title=Title("Placement groups"),
     unit=UNIT_COUNTER,
     color=Color.DARK_BROWN,
 )

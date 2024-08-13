@@ -279,7 +279,7 @@ def test_graph_template_with_layered_areas(request_context: None) -> None:
             MetricOpRRDSource(
                 site_id=SiteId("Site-ID"),
                 host_name=HostName("HostName"),
-                service_name="Service Description",
+                service_name="Service description",
                 metric_name="metric-name",
                 consolidation_func_name=None,
                 scale=1.0,
@@ -295,7 +295,7 @@ def test_graph_template_with_layered_areas(request_context: None) -> None:
                     MetricOpRRDSource(
                         site_id=SiteId("Site-ID"),
                         host_name=HostName("HostName"),
-                        service_name="Service Description",
+                        service_name="Service description",
                         metric_name="metric-name",
                         consolidation_func_name=None,
                         scale=1.0,
@@ -303,7 +303,7 @@ def test_graph_template_with_layered_areas(request_context: None) -> None:
                     MetricOpRRDSource(
                         site_id=SiteId("Site-ID"),
                         host_name=HostName("HostName"),
-                        service_name="Service Description",
+                        service_name="Service description",
                         metric_name="old-metric-name",
                         consolidation_func_name=None,
                         scale=2.0,
@@ -343,7 +343,7 @@ def test__to_metric_operation(
             {
                 "site": "Site-ID",
                 "host_name": "HostName",
-                "service_description": "Service Description",
+                "service_description": "Service description",
             },
             None,
         )

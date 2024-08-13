@@ -30,8 +30,8 @@ rulespec_registry.register(
         item_spec=_item_spec_raid,
         parameter_valuespec=lambda: Dictionary(
             elements=(),
-            title=_("This plugin has no paramaters"),
-            empty_text=_("This plugin has no paramaters"),
+            title=_("This plug-in has no paramaters"),
+            empty_text=_("This plug-in has no paramaters"),
         ),
         title=lambda: _("RAID: overall state"),
     )

@@ -51,7 +51,7 @@ def _valuespec_active_checks_by_ssh():
                                     (
                                         "description",
                                         TextInput(
-                                            title=_("Service Description"),
+                                            title=_("Service description"),
                                             help=_(
                                                 "Must be unique for every host. Defaults to command that is executed."
                                             ),

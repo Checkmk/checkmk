@@ -605,7 +605,7 @@ def _vs_alternative_levels(  # pylint: disable=redefined-builtin
                 optional_keys=False,
             ),
             Dictionary(
-                title="Provide seperate levels for in and out",
+                title="Provide separate levels for in and out",
                 elements=[
                     (
                         "in",

@@ -603,7 +603,7 @@ class LDAPConnectionValuespec(Dictionary):
                 Dictionary(
                     title=_("Attribute sync plug-ins"),
                     help=_(
-                        "It is possible to fetch several attributes of users, like Email or full names, "
+                        "It is possible to fetch several attributes of users, like email or full names, "
                         "from the LDAP directory. This is done by plug-ins which can be individually enabled "
                         "or disabled. When enabling a plug-in, it is used upon the next synchronization of "
                         "user accounts for gathering their attributes. The user options which get imported "

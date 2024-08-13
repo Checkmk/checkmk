@@ -1012,7 +1012,7 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
         super().__init__(["services"], "services", "s")
 
     def get_match_topic(self) -> str:
-        return _("Service Description")
+        return _("Service description")
 
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return ["service_description"]

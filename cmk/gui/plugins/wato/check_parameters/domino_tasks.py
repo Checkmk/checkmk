@@ -65,7 +65,7 @@ def _valuespec_inv_domino_tasks_rules() -> Dictionary:
             (
                 "descr",
                 TextInput(
-                    title=_("Service Description"),
+                    title=_("Service description"),
                     allow_empty=False,
                     help=_(
                         "<p>The service name may contain one or more occurances of <tt>%s</tt>. In this "

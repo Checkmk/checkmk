@@ -272,7 +272,7 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
 
         match (attribute, ref_value):
             case (DiskAttribute.TEMPERATURE, _):
-                # Currently handled in a seperate check plug-in "smart.temp"
+                # Currently handled in a separate check plug-in "smart.temp"
                 continue
 
             case (DiskAttribute.AVAILABLE_SPARE, _):

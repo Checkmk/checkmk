@@ -68,7 +68,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
         elements={
             "description": form_specs.DictElement[str](
                 parameter_form=form_specs.String(
-                    title=Title("Service sescription"),
+                    title=Title("Service description"),
                     help_text=Help("The name of this active service to be displayed."),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                     macro_support=True,

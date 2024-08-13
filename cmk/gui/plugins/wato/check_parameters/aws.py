@@ -1001,7 +1001,7 @@ def _parameter_valuespec_aws_elbv2_limits() -> Dictionary:
                 "network_load_balancer_target_groups",
                 vs_aws_limits(_("Network Load Balancer Target Groups"), 3000),
             ),
-            ("load_balancer_target_groups", vs_aws_limits(_("Load balancers Target Groups"), 3000)),
+            ("load_balancer_target_groups", vs_aws_limits(_("Load balancers target groups"), 3000)),
         ]
     )
 
@@ -1541,7 +1541,7 @@ def _vs_aws_dynamodb_capacity(title: str, unit: str) -> Dictionary:
 
 def _parameter_valuespec_aws_dynamodb_capacity() -> Dictionary:
     return Dictionary(
-        title=_("Levels on Read/Write Capacity"),
+        title=_("Levels on read/write capacity"),
         elements=[
             (
                 "levels_read",

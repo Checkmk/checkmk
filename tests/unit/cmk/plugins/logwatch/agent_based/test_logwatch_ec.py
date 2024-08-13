@@ -751,7 +751,7 @@ def test_forward_tcp_message_update_old_spoolfiles() -> None:
     # read and moved to the correct subfolder.
 
     # first we create a spooled message for a logwatch_ec service with "separate_checks" = False
-    # this is the same as the old behaviour, before werk 15397 with "seperate_checks" = True
+    # this is the same as the old behaviour, before werk 15397 with "separate_checks" = True
     with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:02:00Z"), tick=False):
         _result, messages_forwarded = _forward_message(
             tcp_result="set exception",

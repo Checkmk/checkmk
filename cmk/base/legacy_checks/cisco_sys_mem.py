@@ -46,6 +46,6 @@ check_info["cisco_sys_mem"] = LegacyCheckDefinition(
     service_name="Supervisor Mem Used",
     discovery_function=inventory_cisco_sys_mem,
     check_function=check_cisco_sys_mem,
-    check_ruleset_name="cisco_supervisor_mem",  # seperate group since only percentage,
+    check_ruleset_name="cisco_supervisor_mem",  # separate group since only percentage,
     check_default_parameters={"levels": (80.0, 90.0)},
 )

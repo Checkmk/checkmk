@@ -2307,7 +2307,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
     def help(self):
         return _(
             "Sets custom user attributes based on the group memberships in LDAP. This "
-            "plugin can be used to set custom user attributes to specified values "
+            "plug-in can be used to set custom user attributes to specified values "
             "for all users which are member of a group in LDAP. The specified group "
             "name must match the common name (CN) of the LDAP group."
         )

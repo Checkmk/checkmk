@@ -3241,7 +3241,7 @@ class ELBv2Limits(AWSSectionLimits):
             "",
             AWSLimit(
                 "load_balancer_target_groups",
-                "Load balancers Target Groups",
+                "Load balancers target groups",
                 limits["target-groups"],
                 target_groups_count,
             ),

@@ -443,7 +443,7 @@ class ModeBIEditPack(ABCBIMode):
                     "contact_groups",
                     ListOf(
                         valuespec=ContactGroupSelection(),
-                        title=_("Permitted Contact Groups"),
+                        title=_("Permitted contact groups"),
                         help=_(
                             "The rules and aggregations in this pack can be edited by all members of the "
                             "contact groups specified here - even if they have no administrator priviledges."

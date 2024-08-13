@@ -30,7 +30,7 @@ def _valuespec_active_checks_notify_count():
                 (
                     "description",
                     TextInput(
-                        title=_("Service Description"),
+                        title=_("Service description"),
                         help=_("The name that will be used in the service name"),
                         allow_empty=False,
                     ),

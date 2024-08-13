@@ -494,7 +494,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
     def valuespec(self) -> ValueSpec:
         return Dictionary(
             elements=self._network_scan_elements,
-            title=_("Network Scan"),
+            title=_("Network scan"),
             help=_(
                 "For each folder an automatic network scan can be configured. It will "
                 "try to detect new hosts in the configured IP ranges by sending pings "

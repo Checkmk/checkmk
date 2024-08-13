@@ -537,6 +537,23 @@ class MicrosoftTeamsPluginModel(TypedDict):
     affected_host_groups: NotRequired[Literal[True]]
 
 
+OpsgenieElement = Literal[
+    "omd_site",
+    "hosttags",
+    "address",
+    "abstime",
+    "reltime",
+    "longoutput",
+    "ack_author",
+    "ack_comment",
+    "notification_author",
+    "notification_comment",
+    "perfdata",
+    "notesurl",
+    "context",
+]
+
+
 class OpsGenieIssuesPluginModel(TypedDict, total=False):
     password: Required[tuple[Literal["password", "store"], str]]
     url: str
@@ -554,6 +571,7 @@ class OpsGenieIssuesPluginModel(TypedDict, total=False):
     actions: list[str]
     tags: list[str]
     entity: str
+    elements: list[OpsgenieElement]
 
 
 class PagerDutyPluginModel(TypedDict):

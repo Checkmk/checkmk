@@ -4,7 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOfStrings, TextAreaUnicode, TextInput
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    ListChoice,
+    ListOfStrings,
+    TextAreaUnicode,
+    TextInput,
+)
 from cmk.gui.wato import HTTPProxyReference, IndividualOrStoredPassword
 
 from ._base import NotificationParameter
@@ -195,6 +202,28 @@ $LONGSERVICEOUTPUT$
                         help=_("Is used to specify which domain the alert is related to."),
                         allow_empty=False,
                         size=68,
+                    ),
+                ),
+                (
+                    "elements",
+                    ListChoice(
+                        title=_("Extra properties"),
+                        choices=[
+                            ("omdsite", _("Site ID")),
+                            ("hosttags", _("Tags of the host")),
+                            ("address", _("IP address of host")),
+                            ("abstime", _("Absolute time of alert")),
+                            ("reltime", _("Relative time of alert")),
+                            ("longoutput", _("Additional plug-in output")),
+                            ("ack_author", _("Acknowledgement author")),
+                            ("ack_comment", _("Acknowledgement comment")),
+                            ("notification_author", _("Notification author")),
+                            ("notification_comment", _("Notification comment")),
+                            ("perfdata", _("Metrics")),
+                            ("notesurl", _("Custom host/service notes URL")),
+                            ("context", _("Complete variable list (for testing)")),
+                        ],
+                        default_value=["abstime", "address", "longoutput"],
                     ),
                 ),
             ],

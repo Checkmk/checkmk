@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 import sys
+from pprint import pformat
 
 from opsgenie_sdk.api.alert import AlertApi  # type: ignore[import-untyped]
 from opsgenie_sdk.api.alert.acknowledge_alert_payload import (  # type: ignore[import-untyped]
@@ -22,6 +24,8 @@ from opsgenie_sdk.exceptions import (  # type: ignore[import-untyped]
     AuthenticationException,
 )
 
+from cmk.utils.notify_types import PluginNotificationContext
+
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
 
@@ -39,36 +43,9 @@ class Connector:
         api_client: "ApiClient" = ApiClient(configuration=conf)
         self.alert_api = AlertApi(api_client=api_client)
 
-    def handle_alert_creation(
-        self,
-        note_created: str,
-        actions_list: list[str],
-        desc: str,
-        msg: str,
-        priority: str,
-        teams_list: list[dict[str, str] | None],
-        tags_list: list[str],
-        entity_value: str,
-        alert_source: str | None,
-        alias: str | None,
-        owner: str | None,
-    ) -> int:
-        body = CreateAlertPayload(
-            note=note_created,
-            actions=actions_list,
-            description=desc,
-            message=msg,
-            priority=priority,
-            responders=teams_list,
-            tags=tags_list,
-            entity=entity_value,
-            source=alert_source,
-            alias=alias,
-            user=owner,
-        )
-
+    def handle_alert_creation(self, create_alert_payload: CreateAlertPayload) -> int:
         try:
-            response = self.alert_api.create_alert(create_alert_payload=body)
+            response = self.alert_api.create_alert(create_alert_payload=create_alert_payload)
         except (ApiException, AuthenticationException) as err:
             sys.stderr.write(f"Exception when calling AlertApi -> create_alert: {err}\n")
             return 2
@@ -80,23 +57,13 @@ class Connector:
         return 0
 
     def handle_alert_deletion(
-        self,
-        note_closed: str,
-        owner: str | None,
-        alias: str | None,
-        alert_source: str | None,
+        self, alias: str | None, close_alert_payload: CloseAlertPayload
     ) -> int:
-        body = CloseAlertPayload(
-            source=alert_source,
-            user=owner,
-            note=note_closed,
-        )
-
         try:
             response = self.alert_api.close_alert(
                 identifier=alias,
                 identifier_type="alias",
-                close_alert_payload=body,
+                close_alert_payload=close_alert_payload,
             )
         except (ApiException, AuthenticationException) as err:
             sys.stderr.write(f"Exception when calling AlertApi -> close_alert: {err}\n")
@@ -109,19 +76,13 @@ class Connector:
         return 0
 
     def handle_alert_ack(
-        self, ack_author: str, ack_comment: str, alias: str | None, alert_source: str | None
+        self, alias: str | None, acknowledge_alert_payload: CloseAlertPayload
     ) -> int:
-        body = AcknowledgeAlertPayload(
-            source=alert_source,
-            user=ack_author,
-            note=ack_comment,
-        )
-
         try:
             response = self.alert_api.acknowledge_alert(
                 identifier=alias,
                 identifier_type="alias",
-                acknowledge_alert_payload=body,
+                acknowledge_alert_payload=acknowledge_alert_payload,
             )
         except (ApiException, AuthenticationException) as err:
             sys.stderr.write(f"Exception when calling AlertApi -> acknowledge_alert: {err}\n")
@@ -134,6 +95,31 @@ class Connector:
             f"Request id: {response.request_id}, successfully added acknowledgedment.\n"
         )
         return 0
+
+
+def get_extra_properties(context: PluginNotificationContext) -> dict[str, str]:
+    all_elements: dict[str, tuple[str, str]] = {
+        "omdsite": ("Site ID", os.environ["OMD_SITE"]),
+        "hosttags": ("Tags of the Host", "\n".join((context.get("HOST_TAGS", "").split()))),
+        "address": ("IP address of host", context.get("HOSTADDRESS", "")),
+        "abstime": ("Absolute time of alert", context.get("LONGDATETIME", "")),
+        "reltime": ("Relative time of alert", context.get("LASTHOSTSTATECHANGE_REL", "")),
+        "longoutput": ("Additional plug-in output", context.get("LONGSERVICEOUTPUT$", "")),
+        "ack_author": ("Acknowledgement author", context.get("SERVICEACKAUTHOR", "")),
+        "ack_comment": ("Acknowledgement comment", context.get("SERVICEACKCOMMENT", "")),
+        "notification_author": ("Notification Author", context.get("NOTIFICATIONAUTHOR", "")),
+        "notification_comment": ("Notification comment", context.get("NOTIFICATIONCOMMENT", "")),
+        "perfdata": ("Metrics", context.get("HOSTPERFDATA", "")),
+        "notesurl": ("Custom host/service notes URL", context.get("SERVICENOTESURL", "")),
+        "context": ("Complete variable list (for testing)", str(pformat(context))),
+    }
+
+    subset_of_elements: dict[str, str] = {
+        all_elements[param][0]: all_elements[param][1]
+        for param in context.get("PARAMETER_ELEMENTSS", "").split()
+        if all_elements[param][1]
+    }
+    return subset_of_elements
 
 
 def main() -> int:
@@ -212,22 +198,41 @@ $LONGSERVICEOUTPUT$
 
     if context["NOTIFICATIONTYPE"] == "PROBLEM":
         return connector.handle_alert_creation(
-            note_created,
-            actions_list,
-            desc,
-            msg,
-            priority,
-            teams_list,
-            tags_list,
-            entity_value,
-            alert_source,
-            alias,
-            owner,
+            create_alert_payload=CreateAlertPayload(
+                note=note_created,
+                actions=actions_list,
+                description=desc,
+                message=msg,
+                priority=priority,
+                responders=teams_list,
+                tags=tags_list,
+                entity=entity_value,
+                source=alert_source,
+                alias=alias,
+                user=owner,
+                details=get_extra_properties(context),
+            )
         )
+
     if context["NOTIFICATIONTYPE"] == "RECOVERY":
-        return connector.handle_alert_deletion(note_closed, owner, alias, alert_source)
+        return connector.handle_alert_deletion(
+            alias=alias,
+            close_alert_payload=CloseAlertPayload(
+                source=alert_source,
+                user=owner,
+                note=note_closed,
+            ),
+        )
+
     if context["NOTIFICATIONTYPE"] == "ACKNOWLEDGEMENT":
-        return connector.handle_alert_ack(ack_author, ack_comment, alias, alert_source)
+        return connector.handle_alert_ack(
+            alias=alias,
+            acknowledge_alert_payload=AcknowledgeAlertPayload(
+                source=alert_source,
+                user=ack_author,
+                note=ack_comment,
+            ),
+        )
 
     sys.stdout.write("Notification type %s not supported\n" % (context["NOTIFICATIONTYPE"]))
     return 0

@@ -17,6 +17,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
 @dataclass(frozen=True)
 class QuickSetupStageForTest(QuickSetupStage):
     recap: Sequence
+    configure_components: Sequence
     custom_validators: Sequence
 
 

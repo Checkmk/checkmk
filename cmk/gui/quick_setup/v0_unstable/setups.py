@@ -23,12 +23,13 @@ CallableRecap = Callable[
     Sequence[Widget],
 ]
 CallableSaveAction = Callable[[ParsedFormData], str]
+WidgetConfigurator = Callable[[], Sequence[Widget]]
 
 
 @dataclass(frozen=True)
 class QuickSetupStage:
     title: str
-    configure_components: Sequence[Widget]
+    configure_components: WidgetConfigurator | Sequence[Widget]
     custom_validators: Iterable[CallableValidator]
     recap: Iterable[CallableRecap]
     button_label: str

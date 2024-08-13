@@ -447,8 +447,16 @@ def build_quick_setup_formspec_map(
     return {
         widget.id: cast(FormSpec, widget.form_spec)
         for stage in stages
-        for widget in _flatten_formspec_wrappers(stage.configure_components)
+        for widget in _flatten_formspec_wrappers(stage_components(stage))
     }
+
+
+def stage_components(stage: QuickSetupStage) -> Sequence[Widget]:
+    return (
+        stage.configure_components()
+        if callable(stage.configure_components)
+        else stage.configure_components
+    )
 
 
 def _find_unique_id(form_data: Any, target_key: str) -> None | str:
@@ -496,7 +504,7 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
             next_stage_structure=NextStageStructure(
                 components=[
                     _get_stage_components_from_widget(widget)
-                    for widget in quick_setup.stages[0].configure_components
+                    for widget in stage_components(quick_setup.stages[0])
                 ],
                 button_label=quick_setup.stages[0].button_label,
             ),
@@ -581,8 +589,7 @@ def retrieve_next_stage(
     return Stage(
         next_stage_structure=NextStageStructure(
             components=[
-                _get_stage_components_from_widget(widget)
-                for widget in next_stage.configure_components
+                _get_stage_components_from_widget(widget) for widget in stage_components(next_stage)
             ],
             button_label=next_stage.button_label,
         ),

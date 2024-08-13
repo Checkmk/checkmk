@@ -61,6 +61,7 @@ function setupVue() {
       console.log('vue fully mounted table')
     } else if (vueApp.app_name == 'quick_setup') {
       const app = createApp(QuickSetup, { quick_setup_id: vueApp.quick_setup_id })
+      app.use(mixinUniqueId)
       app.mount(div)
     } else {
       throw `can not load vue app "${vueApp.app_name}"`

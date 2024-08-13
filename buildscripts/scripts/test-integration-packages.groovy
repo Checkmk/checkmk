@@ -43,10 +43,12 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |safe_branch_name:......  │${safe_branch_name}│
-        |docker_tag:............  │${docker_tag}│
         |distros:...............  │${distros}│
-        |cmk_version:...........  │${cmk_version}
+        |safe_branch_name:......  │${safe_branch_name}│
+        |cmk_version:............ │${cmk_version}│
+        |cmk_version_rc_aware:... │${cmk_version_rc_aware}│
+        |branch_version:......... │${branch_version}│
+        |docker_tag:............  │${docker_tag}│
         |===================================================
         """.stripMargin());
 
@@ -62,7 +64,7 @@ def main() {
                 VERSION: VERSION,
                 DOCKER_TAG: docker_tag,
                 MAKE_TARGET: "test-integration-docker",
-                BRANCH: versioning.branch_name(scm),
+                BRANCH: safe_branch_name,
                 cmk_version: cmk_version,
             );
         }

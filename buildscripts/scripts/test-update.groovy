@@ -64,7 +64,11 @@ def main() {
         |distros:.................. │${distros}│
         |edition:.................. │${edition}│
         |safe_branch_name:......... │${safe_branch_name}│
+        |cmk_version:.............. │${cmk_version}│
+        |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
+        |branch_version:........... │${branch_version}│
         |docker_tag:............... │${docker_tag}│
+        |cross_edition_target:..... |${cross_edition_target}|
         |checkout_dir:............. │${checkout_dir}│
         |make_target:.............. |${make_target}|
         |===================================================

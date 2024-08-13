@@ -106,7 +106,6 @@ UNMIGRATED = {
     "appdynamics",
     "ddn_s2a",
     "gcp_status",
-    "graylog",
     "hivemanager",
     "hivemanager_ng",
     "hp_msa",

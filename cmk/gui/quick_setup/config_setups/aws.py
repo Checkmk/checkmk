@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+from typing import Sequence
 
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -22,13 +22,25 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecId,
     ListOfWidgets,
     Text,
+    Widget,
 )
+from cmk.gui.user_sites import get_configured_site_choices, site_attribute_default_value
 
 from cmk.ccc.i18n import _
 from cmk.plugins.aws import ruleset_helper  # pylint: disable=cmk-module-layer-violation
 from cmk.plugins.aws.rulesets import aws  # pylint: disable=cmk-module-layer-violation
-from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String, validators
+from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FieldSize,
+    InputHint,
+    SingleChoice,
+    SingleChoiceElement,
+    String,
+    validators,
+)
 
 
 def prepare_aws() -> QuickSetupStage:
@@ -110,52 +122,68 @@ def configure_host_and_region() -> QuickSetupStage:
     )
 
 
+def _configure() -> Sequence[Widget]:
+    site_default_value = site_attribute_default_value()
+    return [
+        FormSpecDictWrapper(
+            id=FormSpecId("configure_services_to_monitor"),
+            rendering_option="table",
+            form_spec=Dictionary(elements=aws.quick_setup_stage_3()),
+        ),
+        Collapsible(
+            title="Other options",
+            items=[
+                FormSpecDictWrapper(
+                    id=FormSpecId("site"),
+                    rendering_option="table",
+                    form_spec=Dictionary(
+                        elements={
+                            "site_selection": DictElement(
+                                parameter_form=SingleChoice(
+                                    elements=[
+                                        SingleChoiceElement(
+                                            name=site_id,
+                                            title=Title(  # pylint: disable=localization-of-non-literal-string
+                                                title
+                                            ),
+                                        )
+                                        for site_id, title in get_configured_site_choices()
+                                    ],
+                                    label=Label("Site selection"),
+                                    prefill=(
+                                        DefaultValue(site_default_value)
+                                        if site_default_value
+                                        else InputHint(Title("Please choose"))
+                                    ),
+                                ),
+                                required=True,
+                            )
+                        }
+                    ),
+                ),
+                FormSpecDictWrapper(
+                    id=FormSpecId("aws_tags"),
+                    rendering_option="table",
+                    form_spec=Dictionary(
+                        elements={
+                            "overall_tags": DictElement(
+                                parameter_form=ruleset_helper.formspec_aws_tags(
+                                    Title("Restrict monitoring services by one of these AWS tags")
+                                ),
+                            ),
+                        },
+                    ),
+                ),
+            ],
+        ),
+    ]
+
+
 def configure_services_to_monitor() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Configure services to monitor"),
         sub_title=_("Select and configure AWS services you would like to monitor"),
-        configure_components=[
-            FormSpecDictWrapper(
-                id=FormSpecId("configure_services_to_monitor"),
-                rendering_option="table",
-                form_spec=Dictionary(elements=aws.quick_setup_stage_3()),
-            ),
-            Collapsible(
-                title="Other options",
-                items=[
-                    FormSpecDictWrapper(  # TODO Placeholder for site selection
-                        id=FormSpecId("site"),
-                        rendering_option="table",
-                        form_spec=Dictionary(
-                            elements={
-                                "site_selection": DictElement(
-                                    parameter_form=String(
-                                        title=Title("Site selection"),
-                                        field_size=FieldSize.MEDIUM,
-                                    ),
-                                    required=True,
-                                ),
-                            }
-                        ),
-                    ),
-                    FormSpecDictWrapper(
-                        id=FormSpecId("aws_tags"),
-                        rendering_option="table",
-                        form_spec=Dictionary(
-                            elements={
-                                "overall_tags": DictElement(
-                                    parameter_form=ruleset_helper.formspec_aws_tags(
-                                        Title(
-                                            "Restrict monitoring services by one of these AWS tags"
-                                        )
-                                    ),
-                                ),
-                            },
-                        ),
-                    ),
-                ],
-            ),
-        ],
+        configure_components=_configure,
         custom_validators=[],
         recap=[
             recaps_form_spec,

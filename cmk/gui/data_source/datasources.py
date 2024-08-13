@@ -515,13 +515,17 @@ class ServiceDiscoveryRowTable(RowTable):
                     continue
 
                 state, check, service_description = parts
-                if state not in ["Ignored service", "Vanished service", "Unmonitored service"]:
+                if state not in [
+                    "Service ignored",
+                    "Service vanished",
+                    "Service unmonitored",
+                ]:
                     continue
 
                 this_row = row.copy()
                 this_row.update(
                     {
-                        "discovery_state": state.split(" ")[0].lower(),
+                        "discovery_state": state.split(" ")[1].lower(),
                         "discovery_check": check,
                         "discovery_service": service_description,
                     }

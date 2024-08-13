@@ -40,13 +40,7 @@ def create_stage(Map args, time_stage_started) {
         println("CMD: ${args.COMMAND}");
         def cmd_status;
 
-        withCredentials(args.SEC_VAR_LIST.collect{string(credentialsId: it, variable: it)} +
-            usernamePassword(
-                credentialsId: 'bazel-caching-credentials',
-                /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
-                passwordVariable: 'BAZEL_CACHE_PASSWORD',
-                usernameVariable: 'BAZEL_CACHE_USER'),
-        ) {
+        withCredentials(args.SEC_VAR_LIST.collect{string(credentialsId: it, variable: it)}) {
             withEnv(args.ENV_VAR_LIST) {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     dir(args.DIR) {

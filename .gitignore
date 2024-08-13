@@ -82,7 +82,6 @@ tests/.hypothesis/
 /buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
 /bazel-*
 /bazel_log*
-/MODULE.bazel.lock
 user.bazelrc
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode

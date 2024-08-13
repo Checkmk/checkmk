@@ -1218,7 +1218,7 @@ class Site:
         ]
         for crash_dir in crash_dirs:
             crash_file = crash_dir / "crash.info"
-            if not os.path.exists(crash_file):
+            if os.access(crash_dir, os.R_OK) and not os.path.exists(crash_file):
                 pytest_check.fail(f"Crash report detected!\nSee {crash_dir} for more details.")
                 continue
             crash = json.loads(self.read_file(crash_file))

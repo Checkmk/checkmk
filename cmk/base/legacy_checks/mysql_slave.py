@@ -6,16 +6,28 @@
 
 # mypy: disable-error-code="arg-type"
 
+import re
+from typing import NamedTuple
+
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v2 import render, Result, State
+
+
+class Error(NamedTuple):
+    message: str
 
 
 @mysql_parse_per_item
 def parse_mysql_slave(string_table):
     data: dict[str, int | bool | None] = {}
+    if len(string_table) == 1:
+        line = " ".join(string_table[0])
+        if re.match(r"^ERROR [0-9 ()]+ at line \d+:", line):
+            return Error(line)
+
     for line in string_table:
         if not line[0].endswith(":"):
             continue
@@ -38,6 +50,10 @@ def discover_mysql_slave(section):
 
 def check_mysql_slave(item, params, parsed):
     if not (data := parsed.get(item)):
+        return
+
+    if isinstance(data, Error):
+        yield Result(state=State.CRIT, summary=data.message)
         return
 
     if data["Slave_IO_Running"]:

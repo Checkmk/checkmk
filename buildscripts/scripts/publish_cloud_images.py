@@ -26,7 +26,7 @@ from azure.mgmt.resource import ResourceManagementClient
 from msrest.polling import LROPoller
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-from cmk.utils.version import _PatchVersion, Version
+from cmk.utils.version import _BaseVersion, RType, Version
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -98,8 +98,7 @@ class CloudPublisher(abc.ABC):
         self.image_name = image_name
 
     @abc.abstractmethod
-    async def publish(self):
-        ...
+    async def publish(self): ...
 
     @staticmethod
     def build_release_notes_url(version: str) -> str:
@@ -263,8 +262,9 @@ class AzurePublisher(CloudPublisher):
         self.subscription_id = subscription_id
         self.resource_group = resource_group
         # Use Checkmk_Cloud_Edition_2.2b5 for e.g. testing
+        assert self.version.base is not None
         self.gallery_image_name = (
-            f"Checkmk-Cloud-Edition-{self.version.version.major}.{self.version.version.minor}"
+            f"Checkmk-Cloud-Edition-{self.version.base.major}.{self.version.base.minor}"
         )
         self.compute_client = ComputeManagementClient(
             credentials,
@@ -288,24 +288,24 @@ class AzurePublisher(CloudPublisher):
             )
 
     @staticmethod
-    def azure_compatible_version(version: _PatchVersion) -> str:
+    def azure_compatible_version(version: Version) -> str:
         """
         Yea, this is great... but azure doesn't accept our versioning schema
-        >>> AzurePublisher.azure_compatible_version(Version("2.2.0p5").version)
+        >>> AzurePublisher.azure_compatible_version(Version.from_str("2.2.0p5"))
         '2.2.5'
         """
-        return f"{version.major}.{version.minor}.{version.patch}"
+        assert isinstance(version.base, _BaseVersion)
+        return f"{version.base.major}.{version.base.minor}.{version.release.value}"
 
     async def build_gallery_image(self):
         image_id = list(self.get_azure_image_id())[0]
         print(f"Creating new gallery image from {self.version=} by using {image_id=}")
-        assert isinstance(self.version.version, _PatchVersion)
         self.update_succesful(
             self.compute_client.gallery_image_versions.begin_create_or_update(
                 resource_group_name=self.resource_group,
                 gallery_name=self.GALLERY_NAME,
                 gallery_image_name=self.gallery_image_name,
-                gallery_image_version_name=self.azure_compatible_version(self.version.version),
+                gallery_image_version_name=self.azure_compatible_version(self.version),
                 gallery_image_version=GalleryImageVersion(
                     location=self.LOCATION,
                     publishing_profile=GalleryImageVersionPublishingProfile(
@@ -360,8 +360,8 @@ class AzurePublisher(CloudPublisher):
 
 
 def ensure_using_official_release(version: str) -> Version:
-    parsed_version = Version(version)
-    if not isinstance(parsed_version.version, _PatchVersion):
+    parsed_version = Version.from_str(version)
+    if parsed_version.release.r_type not in (RType.p, RType.na):
         raise RuntimeError(
             f"We only want to publish official patch releases, got {parsed_version} instead."
         )

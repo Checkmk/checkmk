@@ -65,6 +65,7 @@ API_DOMAIN = Literal[
     "saml_connection",
     "parent_scan",
     "quick_setup",
+    "managed_robots",
 ]
 
 
@@ -2795,6 +2796,24 @@ class QuickSetupClient(RestApiClient):
         )
 
 
+class ManagedRobotsClient(RestApiClient):
+    domain: API_DOMAIN = "managed_robots"
+
+    def show(self, robot_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{robot_id}",
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, robot_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{robot_id}",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -2840,6 +2859,7 @@ class ClientRegistry:
     SamlConnection: SAMLConnectionClient
     ParentScan: ParentScanClient
     QuickSetup: QuickSetupClient
+    ManagedRobots: ManagedRobotsClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -2877,4 +2897,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         ParentScan=ParentScanClient(request_handler, url_prefix),
         SamlConnection=SAMLConnectionClient(request_handler, url_prefix),
         QuickSetup=QuickSetupClient(request_handler, url_prefix),
+        ManagedRobots=ManagedRobotsClient(request_handler, url_prefix),
     )

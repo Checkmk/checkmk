@@ -1,7 +1,7 @@
 [project]
 name = "cmk-agent-based"
 version = "1.0.0"
-dependencies = ["pydantic"]
+dependencies = ["pydantic", "pytest"]
 
 [build-system]
 requires = ["setuptools"]

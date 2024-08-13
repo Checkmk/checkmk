@@ -148,8 +148,7 @@ run_clean() {
 }
 
 run_unit_tests() {
-    setup_venv
-    pytest
+    bazel test //packages/cmk-agent-based:all
 }
 
 run_check_format() {

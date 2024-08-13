@@ -2142,7 +2142,11 @@ class CommandRemoveDowntime(Command):
 
     @property
     def is_suggested(self) -> bool:
-        return request.var("view_name") == "downtimes"
+        return request.var("view_name", "") in [
+            "downtimes",
+            "downtimes_of_host",
+            "downtimes_of_service",
+        ]
 
     def _confirm_dialog_options(
         self,

@@ -1787,8 +1787,8 @@ msgid ""
 "matching subexpressions are used for the service names. The matched "
 "substrings corresponding to the remaining groups are copied into the regular "
 "expression, nevertheless.</p><p>As an alternative to <tt>%s</tt> you may "
-"also use <tt>%1</tt>, <tt>%2</tt>, etc.  These will be replaced by the "
-"first, second, ... matching group. This allows you to reorder thing"
+"also use <tt>%1</tt>, <tt>%2</tt>, etc. These will be replaced by the first, "
+"second, ... matching group. This allows you to reorder things."
 msgstr ""
 "<p>Le nom du processus peut contenir une ou plusieurs occurrences de <tt>%s</"
 "tt> ;. Dans ce cas, le motif doit être une expression régulière et être "
@@ -2359,7 +2359,7 @@ msgid ""
 "go unnoticed when only monitoring the total utilization of the CPU. With "
 "this configuration, Checkmk will alert if a single core is exceeding a "
 "utilization threshold over an extended period of time. This is currently "
-"only supported on linux and windows agents as well as devices monitored "
+"only supported on Linux and Windows agents as well as devices monitored "
 "through the host-resource mib"
 msgstr ""
 "Un seul thread utilisant pleinement un seul cœur (potentiellement dû à un "
@@ -2541,9 +2541,10 @@ msgstr "Événements du système APC Inrow"
 msgid "APC Symmetra Checks"
 msgstr "Chèques APC Symmetra"
 
+#, fuzzy
 msgid ""
 "API Key to use. Depending on your opsgenie subscription you can use global "
-"or team integration api keys."
+"or team integration API keys."
 msgstr ""
 "Clé API à utiliser. En fonction de votre abonnement à opsgenie, vous pouvez "
 "utiliser des clés API d'intégration globale ou d'équipe."
@@ -3623,9 +3624,6 @@ msgstr "Ajouter un certificat CA ou auto-signé"
 msgid "Add Condition"
 msgstr "Ajouter une condition"
 
-msgid "Add Contact Group"
-msgstr "Ajouter un groupe de contacts"
-
 msgid "Add Counter"
 msgstr "Ajouter un compteur"
 
@@ -4389,7 +4387,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Adds a headless version of the OpenHardwareMonitor to the windows agent. The "
+"Adds a headless version of the OpenHardwareMonitor to the Windows agent. The "
 "agent will then automatically use this to provide readings of hardware "
 "sensors (temperature, fans, ...) to Checkmk. This does require .Net to be "
 "installed on the target system. Please leave this disabled if you have a "
@@ -4407,8 +4405,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Adds the user to contact groups based on the group memberships in LDAP. This "
-"plugin adds the user only to existing contactgroups while the name of the "
-"contactgroup must match the common name (cn) of the LDAP group."
+"plug-in adds the user only to existing contact groups while the name of the "
+"contact group must match the common name (cn) of the LDAP group."
 msgstr ""
 "Ajoute l'utilisateur aux groupes de contact en se basant sur les membres du "
 "groupe dans LDAP. Ce plugin ajoute l'utilisateur uniquement aux groupes de "
@@ -8309,17 +8307,19 @@ msgstr "Instances VM Azure"
 msgid "Azure VNet Gateway"
 msgstr "Passerelle Azure VNet"
 
-msgid "Azure Virtual Machines"
-msgstr "Machines virtuelles Azure"
-
-msgid "Azure Virtual Machines Summary"
-msgstr "Résumé des machines virtuelles Azure"
-
 msgid "Azure services to monitor"
 msgstr "Services Azure à surveiller"
 
 msgid "Azure storage accounts"
 msgstr "Comptes de stockage Azure"
+
+#, fuzzy
+msgid "Azure virtual machines"
+msgstr "Machines virtuelles Azure"
+
+#, fuzzy
+msgid "Azure virtual machines summary"
+msgstr "Résumé des machines virtuelles Azure"
 
 msgid "Azure web servers (IIS)"
 msgstr "Serveurs web Azure (IIS)"
@@ -8684,9 +8684,6 @@ msgstr "Diagramme à barres"
 
 msgid "Bar graphics representing the state history"
 msgstr "Barre graphique représentant l'histoire de l'État"
-
-msgid "Barplot"
-msgstr "Diagramme en barres"
 
 msgid "Barracuda: Mail Queue"
 msgstr "Barracuda : File d'attente de courrier"
@@ -9417,7 +9414,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
-"monitored via a seperate metric. Setting levels on the used total bandwidth "
+"monitored via a separate metric. Setting levels on the used total bandwidth "
 "is optional. If you set levels you might also consider using averaging."
 msgstr ""
 "En activant cet élément, la somme du trafic entrant et sortant sera "
@@ -9927,10 +9924,11 @@ msgid ""
 "well-known locations. You can specify a full path here instead."
 msgstr ""
 
+#, fuzzy
 msgid ""
 "By default, the controller ignores proxy servers configured on the target "
-"system and connects directly (eg. when querying the agent receiver port from "
-"the Checkmk REST API)."
+"system and connects directly (e.g. when querying the agent receiver port "
+"from the Checkmk REST API)."
 msgstr ""
 "Par défaut, le contrôleur ignore les serveurs proxy configurés sur le "
 "système cible et se connecte directement (par exemple, lors de "
@@ -10296,10 +10294,6 @@ msgstr "Réservation de l'unité centrale"
 msgid "CPU Time"
 msgstr "Temps CPU"
 
-#, fuzzy
-msgid "CPU Time upper levels"
-msgstr "Définir les niveaux supérieurs"
-
 msgid "CPU Utilization"
 msgstr "Utilisation du CPU"
 
@@ -10395,6 +10389,10 @@ msgstr "Temps CPU dans l'espace système"
 
 msgid "CPU time in user space"
 msgstr "Temps CPU dans l'espace utilisateur"
+
+#, fuzzy
+msgid "CPU time upper levels"
+msgstr "Définir les niveaux supérieurs"
 
 msgid "CPU total in ms"
 msgstr "Total du CPU en ms"
@@ -11388,16 +11386,11 @@ msgstr "Vérifier la ville par rapport à Regex"
 msgid "Check DNS service"
 msgstr "Vérifier le service DNS"
 
-msgid "Check Email"
-msgstr "Vérifier l'e-mail"
-
-msgid "Check Email Delivery"
-msgstr "Vérifier la livraison des e-mails"
-
 msgid "Check FTP Service"
 msgstr "Vérifier le service FTP"
 
-msgid "Check HTML Form Submit"
+#, fuzzy
+msgid "Check HTML form submit"
 msgstr "Vérifier l'envoi du formulaire HTML"
 
 #, fuzzy
@@ -11529,6 +11522,14 @@ msgstr "Vérifiez la page du manuel"
 #, fuzzy
 msgid "Check document size"
 msgstr "Taille moyenne des documents"
+
+#, fuzzy
+msgid "Check email"
+msgstr "Vérifier l'e-mail"
+
+#, fuzzy
+msgid "Check email delivery"
+msgstr "Vérifier la livraison des e-mails"
 
 msgid "Check event state in Event Console"
 msgstr "Vérifier l'état de l'événement dans la console d'événements"
@@ -12084,6 +12085,18 @@ msgid "Checkmk: Other: Secs"
 msgstr "Checkmk : Autre"
 
 #, fuzzy
+msgid "Checkmk: Setup: Bytes"
+msgstr "Checkmk : BI"
+
+#, fuzzy
+msgid "Checkmk: Setup: Requests"
+msgstr "Checkmk : BI"
+
+#, fuzzy
+msgid "Checkmk: Setup: Secs"
+msgstr "Checkmk : BI"
+
+#, fuzzy
 msgid "Checkmk: Sidebar elements: Bytes"
 msgstr "Checkmk : Éléments de la barre latérale"
 
@@ -12106,18 +12119,6 @@ msgstr "Checkmk : Vues"
 #, fuzzy
 msgid "Checkmk: Views: Secs"
 msgstr "Checkmk : Vues"
-
-#, fuzzy
-msgid "Checkmk: WATO: Bytes"
-msgstr "Checkmk : WATO"
-
-#, fuzzy
-msgid "Checkmk: WATO: Requests"
-msgstr "Checkmk : WATO"
-
-#, fuzzy
-msgid "Checkmk: WATO: Secs"
-msgstr "Checkmk : WATO"
 
 #, python-format
 msgid "Checkmk: Your license expires %s"
@@ -13781,7 +13782,7 @@ msgstr "Configurer la suppression automatique des hôtes surveillés."
 #, fuzzy
 msgid ""
 "Configure the base URL for the monitoring web GUI here. Include the site "
-"name. Used for link to Checkmk out of Jira."
+"name. Used for linking to Checkmk out of Jira."
 msgstr ""
 "Configurez ici l'URL de base de l'interface Web de surveillance. Incluez le "
 "nom du site. Utilisé pour le lien vers check_mk hors de jira."
@@ -19940,7 +19941,8 @@ msgstr "N'existe pas"
 msgid "Does not match any service"
 msgstr "Ne correspond à aucun service"
 
-msgid "Domain (only used for european accounts)"
+#, fuzzy
+msgid "Domain (only used for European accounts)"
 msgstr "Domaine (utilisé uniquement pour les comptes européens)"
 
 msgid "Domino Mail Queue Names"
@@ -20284,7 +20286,7 @@ msgid ""
 "it is the only method to continue monitoring the Oracle database. Usually "
 "you need to <tt>disable</tt> the option only in the following case: It's "
 "impossible to correctly adjust permissions for Oracle binaries, mode group "
-"with group Administrator is not applicable and it is not possible to use "
+"with group Administrator is not applicable and it is not possible to use a "
 "custom account to monitor the Oracle database. Even if the check is enabled "
 "you may allow some groups and/or users to still have write access to the "
 "Oracle binaries."
@@ -21272,19 +21274,19 @@ msgid "Emails"
 msgstr "Courriel"
 
 #, fuzzy
-msgid "Emails containing Attachment per second"
-msgstr "Emails contenant %s par seconde"
-
-#, fuzzy
-msgid "Emails containing Malicious Attachment per second"
-msgstr "Emails contenant %s par seconde"
-
-#, fuzzy
-msgid "Emails containing Malicious URL per second"
-msgstr "Emails contenant %s par seconde"
-
-#, fuzzy
 msgid "Emails containing URL per second"
+msgstr "Emails contenant %s par seconde"
+
+#, fuzzy
+msgid "Emails containing attachment per second"
+msgstr "Emails contenant %s par seconde"
+
+#, fuzzy
+msgid "Emails containing malicious URL per second"
+msgstr "Emails contenant %s par seconde"
+
+#, fuzzy
+msgid "Emails containing malicious attachment per second"
 msgstr "Emails contenant %s par seconde"
 
 msgid "Embed existing view"
@@ -21592,9 +21594,10 @@ msgstr ""
 "sur la durée des processus. Elle fournit les champs suivants : user_time, "
 "system_time, children_user_time et children_system_time"
 
+#, fuzzy
 msgid ""
 "Enabling this option will create detailed log entries for all replication "
-"activities of the slave. If disabled only problems will be logged."
+"activities of the remote site. If disabled only problems will be logged."
 msgstr ""
 "L'activation de cette option permet de créer des entrées de journal "
 "détaillées pour toutes les activités de réplication de l'esclave. Si elle "
@@ -22166,12 +22169,9 @@ msgstr "Événement Console Événement"
 msgid "Event Console Events"
 msgstr "Événements de la console d'événements"
 
-msgid "Event Console History Fragmentation Limit Size"
-msgstr ""
-
 msgid ""
-"Event Console History can become fragmented over time. So if the totalsize "
-"of deleted entries reaches this number the Event Console History will be "
+"Event Console History can become fragmented over time. So if the total size "
+"of deleted entries reaches this number the Event Console history will be "
 "cleaned up."
 msgstr ""
 
@@ -22196,6 +22196,10 @@ msgstr "Console d'événements désactivée"
 
 msgid "Event Console enabled"
 msgstr "Console d'événements activée"
+
+#, fuzzy
+msgid "Event Console history fragmentation limit size"
+msgstr "Configuration de la console d'événements correspondant à '%s'"
 
 #, fuzzy
 msgid "Event Console housekeeping interval"
@@ -23600,7 +23604,8 @@ msgstr "Faux résultats de contrôle"
 msgid "Fallback email address for notifications"
 msgstr "Adresse électronique de secours pour les notifications"
 
-msgid "Fallback if master comes back within"
+#, fuzzy
+msgid "Fallback if central comes back within"
 msgstr "Fallback si le maître revient dans les limites"
 
 msgid "Fallback notification email format"
@@ -23789,9 +23794,6 @@ msgstr "Paramètres d'analyse des fichiers"
 
 msgid "File Size"
 msgstr "Taille du fichier"
-
-msgid "File Size Levels"
-msgstr "Niveaux de taille des fichiers"
 
 msgid "File accessed"
 msgstr "Fichier consulté"
@@ -56623,6 +56625,9 @@ msgstr "Skype pour les entreprises XMPP"
 msgid "Slab (Various smaller caches)"
 msgstr "Dalle (diverses petites caches)"
 
+msgid "Slack Webhooks must use HTTPS."
+msgstr ""
+
 msgid "Slave usage bytes across all pools"
 msgstr "Octets d'utilisation des esclaves dans tous les pools"
 
@@ -84964,6 +84969,27 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "Add Contact Group"
+#~ msgstr "Ajouter un groupe de contacts"
+
+#~ msgid "Barplot"
+#~ msgstr "Diagramme en barres"
+
+#, fuzzy
+#~ msgid "Checkmk: WATO: Bytes"
+#~ msgstr "Checkmk : WATO"
+
+#, fuzzy
+#~ msgid "Checkmk: WATO: Requests"
+#~ msgstr "Checkmk : WATO"
+
+#, fuzzy
+#~ msgid "Checkmk: WATO: Secs"
+#~ msgstr "Checkmk : WATO"
+
+#~ msgid "File Size Levels"
+#~ msgstr "Niveaux de taille des fichiers"
 
 #~ msgid "The file does not look like a valid key file."
 #~ msgstr "Le fichier ne ressemble pas à un fichier clé valide."

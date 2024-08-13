@@ -14,6 +14,8 @@ import {
 } from './rest_api_types'
 
 import { completeQuickSetup, getOverview, validateStage } from './rest_api'
+import { asStringArray } from './utils'
+import AlertBox from '../common/AlertBox.vue'
 
 const props = defineProps<QuickSetupSpec>()
 const currentStage = ref(0) //Selected stage. We start in stage 0
@@ -23,6 +25,16 @@ const numberOfStages = computed(() => stages.value.length) //Number of stages
 const globalError = ref<string | null>(null) //Main error message
 const loading = ref(false)
 const buttonCompleteLabel = ref('Save')
+const saveValidationErrors = ref<string[] | string>([])
+const isOnSaveStage = computed(() => currentStage.value >= numberOfStages.value)
+
+const combinedOnSaveErrors = computed(() => {
+  const errors = [
+    ...asStringArray(saveValidationErrors.value || []),
+    ...asStringArray(globalError.value || [])
+  ]
+  return errors
+})
 
 // Lets store all the user input in this object. The record index is the stage number
 // When sending data to the Rest API, we send all from index 0..currentStage.
@@ -74,7 +86,12 @@ const handleError = (err: RestApiError) => {
     globalError.value = (err as GeneralError).general_error
   } else {
     stages.value[currentStage.value]!.form_spec_errors = (err as ValidationError).formspec_errors
-    stages.value[currentStage.value]!.stage_errors = (err as ValidationError).stage_errors
+
+    if (isOnSaveStage.value) {
+      stages.value[currentStage.value]!.stage_errors = (err as ValidationError).stage_errors
+    } else {
+      saveValidationErrors.value = (err as ValidationError).stage_errors
+    }
   }
 }
 
@@ -109,6 +126,7 @@ const nextStage = async () => {
   stages.value[thisStage]!.form_spec_errors = {}
   stages.value[thisStage]!.other_errors = []
   stages.value[thisStage]!.stage_errors = []
+
   stages.value[thisStage]!.recap = result.stage_recap
 
   //If we have not finished the quick setup yet, update data and display next stage
@@ -127,11 +145,13 @@ const nextStage = async () => {
 }
 
 const prevStage = () => {
+  saveValidationErrors.value = []
   globalError.value = null
   currentStage.value = Math.max(currentStage.value - 1, 0)
 }
 
 const save = async () => {
+  saveValidationErrors.value = []
   loading.value = true
   globalError.value = null
 
@@ -146,6 +166,7 @@ const save = async () => {
     const { redirect_url: redirectUrl } = await completeQuickSetup(props.quick_setup_id, userInput)
     window.location.href = redirectUrl
   } catch (err) {
+    loading.value = false
     handleError(err as RestApiError)
   }
 }
@@ -170,15 +191,19 @@ const save = async () => {
     />
   </ol>
   <LoadingIcon v-else />
-  <div v-if="currentStage >= numberOfStages" class="qs-main__action">
+  <div v-if="isOnSaveStage" class="qs-main__action">
     <div v-if="loading">
       <p class="qs-main__loading"><LoadingIcon :height="16" />Please wait...</p>
     </div>
     <div v-else>
+      <AlertBox v-if="combinedOnSaveErrors.length" variant="error" style="margin-left: 1rem">
+        <p v-for="error in combinedOnSaveErrors" :key="error">{{ error }}</p>
+      </AlertBox>
       <Button :label="buttonCompleteLabel" variant="save" @click="save" />
       <Button style="padding-left: 1rem" label="Back" variant="prev" @click="prevStage" />
     </div>
   </div>
+  {{ currentStage + 1 }} / {{ numberOfStages }}
 </template>
 
 <style scoped>

@@ -3,13 +3,13 @@ import { computed } from 'vue'
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import { Label } from '@/components/ui/label'
 
+import QuickSetupStageContent from './QuickSetupStageContent.vue'
 import CompositeWidget from './widgets/CompositeWidget.vue'
 import Button from './element/IconButton.vue'
 import LoadingIcon from '@/components/common/LoadingIcon.vue'
 import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
 
 import { type QuickSetupStageWithIndexSpec, type StageData } from './quick_setup_types'
-import AlertBox from '@/components/common/AlertBox.vue'
 
 const emit = defineEmits(['prevStage', 'nextStage', 'save', 'update'])
 const props = defineProps<QuickSetupStageWithIndexSpec>()
@@ -23,18 +23,6 @@ const updateData = (id: string, value: object) => {
   userInput[id] = value
   emit('update', props.index, userInput)
 }
-
-const asArray = (value?: string[] | string): string[] => {
-  if (!value) {
-    return []
-  }
-  return Array.isArray(value) ? value : [value]
-}
-
-const combinedErrors = computed(() => {
-  const errors = [...asArray(props?.spec?.stage_errors), ...asArray(props?.other_errors)]
-  return errors
-})
 </script>
 
 <template>
@@ -49,7 +37,7 @@ const combinedErrors = computed(() => {
       <Label variant="title">{{ props.spec.title }}</Label>
 
       <ErrorBoundary>
-        <CompositeWidget v-if="isCompleted" :items="props.spec.recap || []" @update="updateData" />
+        <CompositeWidget v-if="isCompleted" :items="props.spec.recap || []" />
       </ErrorBoundary>
 
       <Collapsible :open="props.index == props.selectedStage">
@@ -58,18 +46,14 @@ const combinedErrors = computed(() => {
             <div v-if="props.spec.sub_title">
               <Label variant="subtitle">{{ props.spec.sub_title }}</Label>
             </div>
-            <ErrorBoundary>
-              <CompositeWidget
-                v-if="props.spec?.components"
-                :items="props.spec.components"
-                :data="userInput"
-                :errors="props.spec?.form_spec_errors || {}"
-                @update="updateData"
-              />
-            </ErrorBoundary>
-            <AlertBox v-if="combinedErrors.length" variant="error">
-              <p v-for="error in combinedErrors" :key="error">{{ error }}</p>
-            </AlertBox>
+            <QuickSetupStageContent
+              :components="props.spec?.components || []"
+              :form_spec_errors="props.spec?.form_spec_errors || {}"
+              :stage_errors="props.spec?.stage_errors || []"
+              :other_errors="props.other_errors || []"
+              :user_input="userInput"
+              @update="updateData"
+            />
           </div>
 
           <div v-if="!loading" class="qs-stage__action">

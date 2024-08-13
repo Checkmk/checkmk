@@ -5,9 +5,7 @@ import { getWidget } from './utils'
 const props = defineProps<CompositeWidgetProps>()
 const emit = defineEmits(['update'])
 
-const updateData = (id: string, value: object) => {
-  emit('update', id, value)
-}
+const updateData = (id: string, value: object) => emit('update', id, value)
 </script>
 
 <template>

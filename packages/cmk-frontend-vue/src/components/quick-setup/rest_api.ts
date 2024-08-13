@@ -31,7 +31,14 @@ const processError = (err: unknown): ValidationError | GeneralError => {
   }
 
   if (err.response?.status === 400) {
-    return { type: 'validation', ...err.response.data?.errors } as ValidationError
+    if (err.response.data?.errors) {
+      return {
+        type: 'validation',
+        ...(err.response.data?.errors || err.response.data?.detail)
+      } as ValidationError
+    } else {
+      return { type: 'validation', stage_errors: err.response.data?.detail } as ValidationError
+    }
   } else {
     return {
       type: 'general',

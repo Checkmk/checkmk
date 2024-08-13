@@ -40,7 +40,7 @@ const alertClass = computed(() => {
 </script>
 
 <template>
-  <div :class="alertClass">
+  <div :class="alertClass" :style="{ maxWidth: 'fit-content' }">
     <img class="loading" :height="32" :src="alertIcon" />
     <slot />
   </div>

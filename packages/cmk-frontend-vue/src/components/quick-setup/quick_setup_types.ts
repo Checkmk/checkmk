@@ -11,24 +11,12 @@ export interface QuickSetupSpec {
 export type StageData = Record<string, object>
 type AllValidationMessages = Record<string, ValidationMessages>
 
-export interface QuickSetupStageSpec {
-  /** @property {string} title - String to be displayed next to the stage number */
-  title: string
-
-  /** @property {string} sub_title - String to be displayed below the title in current stage */
-  sub_title?: string | null
-
-  /** @property {string} next_button_label - Label for the "go to the next stage" button */
-  next_button_label?: string | null
-
+export interface QuickSetupStageContentSpec {
   /** @property {ComponentSpec[]} components - List of widgets to render in current stage */
   components?: ComponentSpec[]
 
-  /** @property {ComponentSpec[]} recap - List of widgets to render in completed stages*/
-  recap?: ComponentSpec[]
-
   /** @property {unknown} user_input - Input from the user */
-  user_input: unknown
+  user_input?: unknown
 
   /** @property {AllValidationMessages} form_spec_errors - Object containing the validation errors of all FormSpecWidgets from current stage*/
   form_spec_errors?: AllValidationMessages
@@ -38,6 +26,19 @@ export interface QuickSetupStageSpec {
 
   /** @property {string[] | string} other_errors - List of validation errors from the current stage */
   other_errors?: string[] | string
+}
+export interface QuickSetupStageSpec extends QuickSetupStageContentSpec {
+  /** @property {string} title - String to be displayed next to the stage number */
+  title: string
+
+  /** @property {string} sub_title - String to be displayed below the title in current stage */
+  sub_title?: string | null
+
+  /** @property {string} next_button_label - Label for the "go to the next stage" button */
+  next_button_label?: string | null
+
+  /** @property {ComponentSpec[]} recap - List of widgets to render in completed stages*/
+  recap?: ComponentSpec[]
 }
 
 export interface QuickSetupStageWithIndexSpec {

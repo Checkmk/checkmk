@@ -282,8 +282,8 @@ netsnmp(
 load("//omd/packages/robotmk:robotmk_http.bzl", "robotmk")
 
 robotmk(
-    sha256 = "03bd994e41079b060f9a370569bbfec94ac05463255c440c07424c5b8bd10f67",
-    version_str = "v3.0.0-alpha-4",
+    sha256 = "5b2a77d803372e0762704607cfd426c4cba894c0ff3ac93bb97ba0baf5e2dabf",
+    version_str = "v3.0.0-alpha-5",
 )
 
 load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool")

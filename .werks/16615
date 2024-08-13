@@ -1,6 +1,6 @@
 Title: Remove websphere_mq plugin
 Class: security
-Compatible: compat
+Compatible: incomp
 Component: checks
 Date: 1710155388
 Edition: cre

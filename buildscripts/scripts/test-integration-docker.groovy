@@ -24,12 +24,17 @@ def main() {
 
     def package_dir = "${checkout_dir}/packages";
     def safe_branch_name = versioning.safe_branch_name(scm);
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
+    // this is save on master as there are no tags/versions built other than daily
+    def branch_name = (VERSION == "daily") ? safe_branch_name : branch_version;
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     print(
         """
         |===== CONFIGURATION ===============================
+        |branch_name:.............. │${branch_name}│
         |safe_branch_name:......... │${safe_branch_name}│
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
@@ -71,7 +76,7 @@ def main() {
     // TODO: don't run make-test-docker but use docker.inside() instead
     stage('test cmk-docker integration') {
         dir("${checkout_dir}/tests") {
-            def cmd = "make test-docker-docker WORKSPACE='${checkout_dir}' BRANCH='$safe_branch_name' EDITION='$EDITION' VERSION='$cmk_version'";
+            def cmd = "make test-docker-docker WORKSPACE='${checkout_dir}' BRANCH='$branch_name' EDITION='$EDITION' VERSION='$cmk_version'";
             on_dry_run_omit(LONG_RUNNING, "RUN ${cmd}") {
                 sh(cmd);
             }

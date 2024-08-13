@@ -34,8 +34,11 @@ def main() {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
     def package_dir = "${checkout_dir}/download";
+    def safe_branch_name = versioning.safe_branch_name(scm);
+    def branch_version = versioning.get_branch_version(checkout_dir);
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
-    def branch_name = (VERSION == "daily") ? versioning.safe_branch_name(scm) : versioning.get_branch_version(checkout_dir);
+    // this is save on master as there are no tags/versions built other than daily
+    def branch_name = (VERSION == "daily") ? safe_branch_name : branch_version;
     def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def source_dir = package_dir + "/" + cmk_version_rc_aware;
@@ -48,6 +51,7 @@ def main() {
         """
         |===== CONFIGURATION ===============================
         |branch_name:......... │${branch_name}│
+        |safe_branch_name:.... │${safe_branch_name}│
         |cmk_version:......... │${cmk_version}│
         |cmk_version_rc_aware: │${cmk_version_rc_aware}│
         |branch_version:...... │${branch_version}│

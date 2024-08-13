@@ -22,6 +22,10 @@ def main() {
 
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_tests");
     def safe_branch_name = versioning.safe_branch_name(scm);
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
+    // this is save on master as there are no tags/versions built other than daily
+    def branch_name = (VERSION == "daily") ? safe_branch_name : branch_version;
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(
@@ -40,11 +44,13 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |distros:...............  │${distros}│
-        |safe_branch_name:......  │${safe_branch_name}│
-        |cmk_version:............ │${cmk_version}│
-        |cmk_version_rc_aware:... │${cmk_version_rc_aware}│
-        |docker_tag:............  │${docker_tag}│
+        |distros:.................  │${distros}│
+        |branch_name:.............. │${branch_name}│
+        |safe_branch_name:........  │${safe_branch_name}│
+        |cmk_version:.............. │${cmk_version}│
+        |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
+        |branch_version:........... │${branch_version}│
+        |docker_tag:..............  │${docker_tag}│
         |===================================================
         """.stripMargin());
 
@@ -59,7 +65,7 @@ def main() {
             VERSION: VERSION,
             DOCKER_TAG: docker_tag,
             MAKE_TARGET: "test-integration-docker",
-            BRANCH: safe_branch_name,
+            BRANCH: branch_name,
             cmk_version: cmk_version,
         )
     }

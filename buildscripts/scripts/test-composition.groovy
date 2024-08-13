@@ -23,6 +23,10 @@ def main() {
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_tests");
 
     def safe_branch_name = versioning.safe_branch_name(scm);
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
+    // this is save on master as there are no tags/versions built other than daily
+    def branch_name = (VERSION == "daily") ? safe_branch_name : branch_version;
     def docker_tag = versioning.select_docker_tag(
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
@@ -42,6 +46,7 @@ def main() {
         """
         |===== CONFIGURATION ===============================
         |distros:...................│${distros}│
+        |branch_name:.............. │${branch_name}│
         |safe_branch_name:......... │${safe_branch_name}│
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
@@ -60,7 +65,7 @@ def main() {
             VERSION: VERSION,
             DOCKER_TAG: docker_tag,
             MAKE_TARGET: "test-composition-docker",
-            BRANCH: safe_branch_name,  // FIXME was BRANCH before
+            BRANCH: branch_name,
             cmk_version: cmk_version,
         );
     }

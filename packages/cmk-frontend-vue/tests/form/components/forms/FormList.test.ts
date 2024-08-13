@@ -138,9 +138,7 @@ test('FormList adds two new elements and enters data', async () => {
     backendValidation: []
   })
 
-  const addElementButton = await screen.findByRole<HTMLInputElement>('button', {
-    name: 'Add element'
-  })
+  const addElementButton = await screen.getByText('Add element')
   await fireEvent.click(addElementButton)
   await fireEvent.click(addElementButton)
 

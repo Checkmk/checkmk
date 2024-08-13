@@ -22,6 +22,24 @@ body.show_help {
   }
 }
 
-img.treeangle.vue {
+img.vue.treeangle {
   content: url("images/tree_closed.svg");
+}
+
+img.vue.element_dragger {
+  content: url("images/icon_drag.svg");
+}
+
+img.vue.icon_close {
+  content: url("images/icon_close.svg");
+}
+
+img.vue.icon_plus {
+  content: url("images/icon_plus.svg");
+  vertical-align: middle;
+}
+
+span.vue.add_element_text {
+  font-weight: 700;
+  vertical-align: middle;
 }

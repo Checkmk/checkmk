@@ -55,9 +55,6 @@ function setValidation(newBackendValidation: ValidationMessages) {
 }
 
 let tableRef = ref<HTMLTableElement | null>(null)
-const CLASS_LISTOF_ELEMENT = 'listof_element'
-const CLASS_ELEMENT_DRAGGER = 'element_dragger'
-const CLASS_VLOF_BUTTONS = 'vlof_buttons'
 
 function dragStart(event: DragEvent) {
   ;(event.target! as HTMLTableCellElement).closest('tr')!.classList.add('dragging')
@@ -138,21 +135,20 @@ function sendDataUpstream() {
 </script>
 
 <template>
-  <table ref="tableRef" class="valuespec_listof">
+  <table ref="tableRef" class="valuespec_listof vue_list">
     <template v-for="backendIndex in frontendOrder" :key="backendIndex">
-      <tr :class="CLASS_LISTOF_ELEMENT">
-        <td :class="CLASS_VLOF_BUTTONS">
+      <tr class="listof_element">
+        <td class="vlof_buttons">
           <a
             v-if="props.spec.editable_order"
             @dragstart="dragStart"
             @drag="dragging"
             @dragend="dragEnd"
-            ><img src="themes/modern-dark/images/icon_drag.svg" :class="CLASS_ELEMENT_DRAGGER" />
+            ><img class="vue element_dragger" />
           </a>
           <a title="Delete this entry">
             <img
-              class="icon iconbutton"
-              src="themes/modern-dark/images/icon_close.svg"
+              class="icon iconbutton vue icon_close"
               @click.prevent="removeElement(backendIndex)"
             />
           </a>
@@ -168,6 +164,9 @@ function sendDataUpstream() {
       </tr>
     </template>
   </table>
-  <input type="button" class="button" :value="spec.add_element_label" @click.prevent="addElement" />
+  <a class="vlof_add_button" @click.prevent="addElement">
+    <img class="vue icon_plus" />
+    <span class="vue add_element_text">{{ spec.add_element_label }}</span>
+  </a>
   <FormValidation :validation="validation"></FormValidation>
 </template>

@@ -283,7 +283,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
             ("ident", _("Identity")),
             ("security", _("Security")),
             ("notify", _("Notifications")),
-            ("personal", _("Personal Settings")),
+            ("personal", _("Personal settings")),
         ]
 
     @property

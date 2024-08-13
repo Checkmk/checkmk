@@ -1559,12 +1559,12 @@ def register_tag_and_label_filters(filter_registry: FilterRegistry) -> None:
 
 
 def register_kubernetes_filters(filter_registry: FilterRegistry) -> None:
-    filter_kubernetes_register(filter_registry, _("Kubernetes Cluster"), "cluster")
-    filter_kubernetes_register(filter_registry, _("Kubernetes Namespace"), "namespace")
-    filter_kubernetes_register(filter_registry, _("Kubernetes Node"), "node")
-    filter_kubernetes_register(filter_registry, _("Kubernetes Deployment"), "deployment")
-    filter_kubernetes_register(filter_registry, _("Kubernetes DaemonSet"), "daemonset")
-    filter_kubernetes_register(filter_registry, _("Kubernetes StatefulSet"), "statefulset")
+    filter_kubernetes_register(filter_registry, _("Kubernetes cluster"), "cluster")
+    filter_kubernetes_register(filter_registry, _("Kubernetes namespace"), "namespace")
+    filter_kubernetes_register(filter_registry, _("Kubernetes node"), "node")
+    filter_kubernetes_register(filter_registry, _("Kubernetes deployment"), "deployment")
+    filter_kubernetes_register(filter_registry, _("Kubernetes daemonSet"), "daemonset")
+    filter_kubernetes_register(filter_registry, _("Kubernetes statefulSet"), "statefulset")
 
 
 def filter_kubernetes_register(

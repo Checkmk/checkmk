@@ -63,7 +63,7 @@ def parse_arguments(argv):
         "--values",
         required=True,
         type=_get_values_list,
-        help=f"Comma seperated list of values to fetch from 3par system. Choose from: {', '.join(VALID_VALUES)}",
+        help=f"Comma separated list of values to fetch from 3par system. Choose from: {', '.join(VALID_VALUES)}",
     )
     parser.add_argument("host", help="Host name or IP address of 3par system")
     args = parser.parse_args(argv)

@@ -29,7 +29,7 @@ def _valuespec_active_checks_sftp():
                 elements=[
                     (
                         "description",
-                        TextInput(title=_("Service Description"), default_value="SFTP", size=30),
+                        TextInput(title=_("Service description"), default_value="SFTP", size=30),
                     ),
                     ("port", NetworkPort(title=_("Port"), default_value=22)),
                     (

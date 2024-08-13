@@ -114,7 +114,7 @@ ProblemsDashboard = DashboardConfig(
             ViewDashletConfig(
                 {
                     "type": "view",
-                    "title": _("Service Problems (unhandled)"),
+                    "title": _("Service problems (unhandled)"),
                     "title_url": "view.py?view_name=svcproblems&is_service_acknowledged=0",
                     "position": (1, 19),
                     "size": (GROW, MAX),
@@ -279,7 +279,7 @@ SimpleProblemsDashboard = DashboardConfig(
             ViewDashletConfig(
                 {
                     "type": "view",
-                    "title": _("Service Problems (unhandled)"),
+                    "title": _("Service problems (unhandled)"),
                     "title_url": "view.py?view_name=svcproblems&is_service_acknowledged=0",
                     "show_title": True,
                     "position": (1, 19),

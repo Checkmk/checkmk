@@ -468,7 +468,7 @@ def _get_matching_child_group(single_file, grouping_conditions):
 
 def grouping_multiple_groups(config_section_name, files_iter, grouping_conditions):
     """create multiple groups per section if the agent is configured
-    for grouping. each group is shown as a seperate service. if a file
+    for grouping. each group is shown as a separate service. if a file
     does not belong to a group, it is added to the section."""
     parent_group_name = config_section_name
     # Initalise dict with parent and child group because they should be in the section

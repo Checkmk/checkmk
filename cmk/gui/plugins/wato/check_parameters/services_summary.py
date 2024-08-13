@@ -23,7 +23,7 @@ def _parameter_valuespec_services_summary():
                     help=_(
                         "Regular expressions matching the beginning of the internal name "
                         "or the description of the service. "
-                        "If no name is given then this rule will match all services. The "
+                        "If no name is given, then this rule will match all services. The "
                         "match is done on the <i>beginning</i> of the service name. It "
                         "is done <i>case sensitive</i>. You can do a case insensitive match "
                         "by prefixing the regular expression with <tt>(?i)</tt>. Example: "

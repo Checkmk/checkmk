@@ -702,7 +702,7 @@ class DiscoveryPageRenderer:
 
         for label_id, label in discovery_result.host_labels.items():
             # For visualization of the changed host labels the old value and the new value
-            # of the host label are used the values are seperated with an arrow (\u279c)
+            # of the host label are used the values are separated with an arrow (\u279c)
             if label_id in discovery_result.changed_labels:
                 changed_host_labels.setdefault(
                     label_id,

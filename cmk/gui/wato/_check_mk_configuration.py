@@ -2873,7 +2873,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("tplink_mem", _("TP Link: Used memory via SNMP")),
                 ("ups_bat_temp", _("Generic UPS Device: Temperature sensor")),
                 ("vms_diskstat_df", _("Disk space on OpenVMS")),
-                ("wmic_process", _("Resource consumption of windows processes")),
+                ("wmic_process", _("Resource consumption of Windows processes")),
                 ("zfsget", _("Used space in ZFS pools and filesystems")),
             ],
             render_orientation="vertical",

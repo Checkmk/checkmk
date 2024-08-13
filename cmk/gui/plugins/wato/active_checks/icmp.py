@@ -33,7 +33,7 @@ def _valuespec_active_checks_icmp() -> ValueSpec:
         (
             "description",
             TextInput(
-                title=_("Service Description"),
+                title=_("Service description"),
                 allow_empty=False,
                 default_value="PING",
             ),

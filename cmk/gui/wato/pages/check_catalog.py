@@ -342,7 +342,7 @@ def _render_manpage_list(  # type: ignore[no-untyped-def]
             table.cell(
                 _("Type of Check"), HTMLWriter.render_a(entry["title"], href=url), css=["title"]
             )
-            table.cell(_("Plug-in Name"), HTMLWriter.render_tt(entry["name"]), css=["name"])
+            table.cell(_("Plug-in name"), HTMLWriter.render_tt(entry["name"]), css=["name"])
             table.cell(
                 _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css=["agents"]
             )

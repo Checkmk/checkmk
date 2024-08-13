@@ -1987,7 +1987,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
     @property
     def help(self):
         return _(
-            "This plugin fetches all information which are needed to check whether or "
+            "This plug-in fetches all information which are needed to check whether or "
             "not an already authenticated user should be deauthenticated, e.g. because "
             "the password has changed in LDAP or the account has been locked."
         )
@@ -2103,7 +2103,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
     @property
     def help(self):
         return _(
-            "This plugin synchronizes a field of the users LDAP account to the pager attribute "
+            "This plug-in synchronizes a field of the users LDAP account to the pager attribute "
             "of the Setup user accounts, which is then forwarded to the monitoring core and can be used "
             "for notifications. By default the LDAP attribute <tt>mobile</tt> is used."
         )
@@ -2238,7 +2238,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
     def help(self):
         return _(
             "Sets custom user attributes based on the group memberships in LDAP. This "
-            "plugin can be used to set custom user attributes to specified values "
+            "plug-in can be used to set custom user attributes to specified values "
             "for all users which are member of a group in LDAP. The specified group "
             "name must match the common name (CN) of the LDAP group."
         )

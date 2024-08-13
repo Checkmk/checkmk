@@ -22,6 +22,18 @@ def main() {
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
 
+    print(
+        """
+        |===== CONFIGURATION ===============================
+        |distros:.................. │${distros}│
+        |safe_branch_name:......... │${safe_branch_name}│
+        |cmk_version:.............. │${cmk_version}│
+        |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
+        |docker_tag:............... │${docker_tag}│
+        |checkout_dir:............. │${checkout_dir}│
+        |===================================================
+        """.stripMargin());
+
     testing_helper.run_make_targets(
         DOCKER_GROUP_ID: get_docker_group_id(),
         DISTRO_LIST: distros,

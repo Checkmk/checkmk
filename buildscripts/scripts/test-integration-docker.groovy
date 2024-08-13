@@ -30,7 +30,11 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |cmk_version:....................(local)  │${cmk_version}│
+        |safe_branch_name:......... │${safe_branch_name}│
+        |cmk_version:.............. │${cmk_version}│
+        |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
+        |branch_version:........... │${branch_version}│
+        |checkout_dir:............. │${checkout_dir}│
         |===================================================
         """.stripMargin());
 

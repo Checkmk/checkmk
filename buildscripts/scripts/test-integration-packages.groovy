@@ -41,6 +41,9 @@ def main() {
         """
         |===== CONFIGURATION ===============================
         |distros:...............  │${distros}│
+        |safe_branch_name:......  │${safe_branch_name}│
+        |cmk_version:............ │${cmk_version}│
+        |cmk_version_rc_aware:... │${cmk_version_rc_aware}│
         |docker_tag:............  │${docker_tag}│
         |===================================================
         """.stripMargin());
@@ -56,7 +59,7 @@ def main() {
             VERSION: VERSION,
             DOCKER_TAG: docker_tag,
             MAKE_TARGET: "test-integration-docker",
-            BRANCH: versioning.branch_name(scm),
+            BRANCH: safe_branch_name,
             cmk_version: cmk_version,
         )
     }

@@ -1804,6 +1804,7 @@ msgstr ""
 "container door de expressie \"%s\" (zonder de aanhalingstekens) te "
 "specificeren, en \"%s\" te selecteren.</p>"
 
+#, fuzzy
 msgid ""
 "<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
 "you do this, then the pattern must be a regular expression and be prefixed "
@@ -1817,8 +1818,8 @@ msgid ""
 "first matching subexpressions are used for the service descriptions. The "
 "matched substrings corresponding to the remaining groups are copied into the "
 "regular expression, nevertheless.</p><p>As an alternative to <tt>%s</tt> you "
-"may also use <tt>%1</tt>, <tt>%2</tt>, etc.  These will be replaced by the "
-"first, second, ... matching group. This allows you to reorder thing"
+"may also use <tt>%1</tt>, <tt>%2</tt>, etc. These will be replaced by the "
+"first, second, ... matching group. This allows you to reorder things."
 msgstr ""
 "<p>De procesnaam mag een of meer voorkomens van <tt>%s</tt> bevatten. Als u "
 "dit doet, dan moet het patroon een reguliere expressie zijn en voorafgegaan "
@@ -2363,7 +2364,7 @@ msgid ""
 "go unnoticed when only monitoring the total utilization of the CPU. With "
 "this configuration, Checkmk will alert if a single core is exceeding a "
 "utilization threshold over an extended period of time. This is currently "
-"only supported on linux and windows agents as well as devices monitored "
+"only supported on Linux and Windows agents as well as devices monitored "
 "through the host-resource mib"
 msgstr ""
 "Een enkele thread die een enkele core volledig gebruikt (mogelijk door een "
@@ -2548,9 +2549,10 @@ msgstr "APC Inrow Systeem Gebeurtenissen"
 msgid "APC Symmetra Checks"
 msgstr "APC Symmetra Controles"
 
+#, fuzzy
 msgid ""
 "API Key to use. Depending on your opsgenie subscription you can use global "
-"or team integration api keys."
+"or team integration API keys."
 msgstr ""
 "API Sleutel te gebruiken. Afhankelijk van uw opsgenie abonnement kunt u "
 "globale of team integratie api sleutels gebruiken."
@@ -3629,9 +3631,6 @@ msgstr "CA of zelfondertekend certificaat toevoegen"
 msgid "Add Condition"
 msgstr "Voorwaarde toevoegen"
 
-msgid "Add Contact Group"
-msgstr "Contactgroep toevoegen"
-
 msgid "Add Counter"
 msgstr "Teller toevoegen"
 
@@ -4393,7 +4392,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Adds a headless version of the OpenHardwareMonitor to the windows agent. The "
+"Adds a headless version of the OpenHardwareMonitor to the Windows agent. The "
 "agent will then automatically use this to provide readings of hardware "
 "sensors (temperature, fans, ...) to Checkmk. This does require .Net to be "
 "installed on the target system. Please leave this disabled if you have a "
@@ -4410,8 +4409,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Adds the user to contact groups based on the group memberships in LDAP. This "
-"plugin adds the user only to existing contactgroups while the name of the "
-"contactgroup must match the common name (cn) of the LDAP group."
+"plug-in adds the user only to existing contact groups while the name of the "
+"contact group must match the common name (cn) of the LDAP group."
 msgstr ""
 "Voegt de gebruiker toe aan contactgroepen gebaseerd op de "
 "groepslidmaatschappen in LDAP. Deze plugin voegt de gebruiker alleen toe aan "
@@ -7745,17 +7744,19 @@ msgstr "Azure VM-instanties"
 msgid "Azure VNet Gateway"
 msgstr "Azure VNet Gateway"
 
-msgid "Azure Virtual Machines"
-msgstr "Azure virtuele machines"
-
-msgid "Azure Virtual Machines Summary"
-msgstr "Samenvatting Azure virtuele machines"
-
 msgid "Azure services to monitor"
 msgstr "Te controleren Azure diensten"
 
 msgid "Azure storage accounts"
 msgstr "Azure opslagaccounts"
+
+#, fuzzy
+msgid "Azure virtual machines"
+msgstr "Azure virtuele machines"
+
+#, fuzzy
+msgid "Azure virtual machines summary"
+msgstr "Samenvatting Azure virtuele machines"
 
 msgid "Azure web servers (IIS)"
 msgstr "Azure webservers (IIS)"
@@ -8089,9 +8090,6 @@ msgstr "Staafdiagram"
 
 msgid "Bar graphics representing the state history"
 msgstr "Staafdiagrammen die de geschiedenis van de staat weergeven"
-
-msgid "Barplot"
-msgstr "Barplot"
 
 msgid "Barracuda: Mail Queue"
 msgstr "Barracuda: Mail Queue"
@@ -8823,7 +8821,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
-"monitored via a seperate metric. Setting levels on the used total bandwidth "
+"monitored via a separate metric. Setting levels on the used total bandwidth "
 "is optional. If you set levels you might also consider using averaging."
 msgstr ""
 "Door dit item te activeren wordt de som van inkomend en uitgaand verkeer "
@@ -10668,16 +10666,11 @@ msgstr "Controleer stad met Regex"
 msgid "Check DNS service"
 msgstr "Controleer DNS service"
 
-msgid "Check Email"
-msgstr "Controleer e-mail"
-
-msgid "Check Email Delivery"
-msgstr "Aflevering van e-mail controleren"
-
 msgid "Check FTP Service"
 msgstr "Controleer FTP Service"
 
-msgid "Check HTML Form Submit"
+#, fuzzy
+msgid "Check HTML form submit"
 msgstr "Controleer HTML-formulier verzenden"
 
 #, fuzzy
@@ -10811,6 +10804,14 @@ msgstr "Zie handleiding pagina"
 #, fuzzy
 msgid "Check document size"
 msgstr "Gemiddelde documentgrootte"
+
+#, fuzzy
+msgid "Check email"
+msgstr "Controleer e-mail"
+
+#, fuzzy
+msgid "Check email delivery"
+msgstr "Aflevering van e-mail controleren"
 
 msgid "Check event state in Event Console"
 msgstr "Controleer gebeurtenisstatus in gebeurtenissen Console"
@@ -11365,6 +11366,18 @@ msgid "Checkmk: Other: Secs"
 msgstr "Checkmk: Andere"
 
 #, fuzzy
+msgid "Checkmk: Setup: Bytes"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Setup: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Setup: Secs"
+msgstr "Checkmk: BI"
+
+#, fuzzy
 msgid "Checkmk: Sidebar elements: Bytes"
 msgstr "Checkmk: Zijbalk elementen"
 
@@ -11387,18 +11400,6 @@ msgstr "Checkmk: Views"
 #, fuzzy
 msgid "Checkmk: Views: Secs"
 msgstr "Checkmk: Views"
-
-#, fuzzy
-msgid "Checkmk: WATO: Bytes"
-msgstr "Checkmk: WATO"
-
-#, fuzzy
-msgid "Checkmk: WATO: Requests"
-msgstr "Checkmk: WATO"
-
-#, fuzzy
-msgid "Checkmk: WATO: Secs"
-msgstr "Checkmk: WATO"
 
 #, python-format
 msgid "Checkmk: Your license expires %s"
@@ -12992,7 +12993,7 @@ msgstr "Configureer de automatische verwijdering van bewaakte hosts."
 #, fuzzy
 msgid ""
 "Configure the base URL for the monitoring web-GUI here. Include the site "
-"name. Used for link to Checkmk out of Jira."
+"name. Used for linking to Checkmk out of Jira."
 msgstr ""
 "Configureer hier de basis URL voor de Monitoring Web-GUI. Voeg de naam van "
 "de site toe. Gebruikt voor link naar check_mk uit jira."
@@ -19007,7 +19008,8 @@ msgstr "Bestaat niet"
 msgid "Does not match any service"
 msgstr "Komt niet overeen met een dienst"
 
-msgid "Domain (only used for european accounts)"
+#, fuzzy
+msgid "Domain (only used for European accounts)"
 msgstr "Domein (alleen gebruikt voor Europese rekeningen)"
 
 msgid "Domino Mail Queue Names"
@@ -19343,7 +19345,7 @@ msgid ""
 "it is the only method to continue monitoring the Oracle database. Usually "
 "you need to <tt>disable</tt> the option only in the following case: It's "
 "impossible to correctly adjust permissions for Oracle binaries, mode group "
-"with group Administrator is not applicable and it is not possible to use "
+"with group Administrator is not applicable and it is not possible to use a "
 "custom account to monitor the Oracle database. Even if the check is enabled "
 "you may allow some groups and/or users to still have write access to the "
 "Oracle binaries."
@@ -20586,9 +20588,10 @@ msgstr ""
 "geeft de volgende velden: user_time, system_time, children_user_time en "
 "children_system_time"
 
+#, fuzzy
 msgid ""
 "Enabling this option will create detailed log entries for all replication "
-"activities of the slave. If disabled only problems will be logged."
+"activities of the remote site. If disabled only problems will be logged."
 msgstr ""
 "Het inschakelen van deze optie zal gedetailleerde logboekitems aanmaken voor "
 "alle replicatieactiviteiten van de slaaf. Indien uitgeschakeld zullen alleen "
@@ -22463,7 +22466,8 @@ msgstr "Valse controleresultaten"
 msgid "Fallback email address for notifications"
 msgstr "Terugval-e-mailadres voor kennisgevingen"
 
-msgid "Fallback if master comes back within"
+#, fuzzy
+msgid "Fallback if central comes back within"
 msgstr "Terugval als de master terugkomt binnen"
 
 msgid "Fallback notification email format"
@@ -22651,9 +22655,6 @@ msgstr "Instellingen voor bestandsparsing"
 
 msgid "File Size"
 msgstr "Bestandsgrootte"
-
-msgid "File Size Levels"
-msgstr "Niveaus bestandsgrootte"
 
 msgid "File accessed"
 msgstr "Bestand benaderd"
@@ -24122,9 +24123,6 @@ msgstr "Algemene opties"
 msgid "General Permissions"
 msgstr "Algemene Toestemmingen"
 
-msgid "General Settings"
-msgstr "Algemene Instellingen"
-
 msgid "General display options"
 msgstr "Algemene weergaveopties"
 
@@ -24153,6 +24151,10 @@ msgstr "General Purpose SSD (gp2) ruimte"
 #, fuzzy
 msgid "General purpose SSD (gp3) space"
 msgstr "General Purpose SSD (gp3) ruimte"
+
+#, fuzzy
+msgid "General settings"
+msgstr "Algemene Instellingen"
 
 msgid "Generate"
 msgstr "Genereer"
@@ -79570,6 +79572,27 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Add Contact Group"
+#~ msgstr "Contactgroep toevoegen"
+
+#~ msgid "Barplot"
+#~ msgstr "Barplot"
+
+#, fuzzy
+#~ msgid "Checkmk: WATO: Bytes"
+#~ msgstr "Checkmk: WATO"
+
+#, fuzzy
+#~ msgid "Checkmk: WATO: Requests"
+#~ msgstr "Checkmk: WATO"
+
+#, fuzzy
+#~ msgid "Checkmk: WATO: Secs"
+#~ msgstr "Checkmk: WATO"
+
+#~ msgid "File Size Levels"
+#~ msgstr "Niveaus bestandsgrootte"
 
 #~ msgid "Database Name"
 #~ msgstr "Databank Naam"

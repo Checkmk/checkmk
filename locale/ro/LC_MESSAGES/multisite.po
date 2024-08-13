@@ -1812,6 +1812,7 @@ msgstr ""
 "exclude toate procesele aparținând unui container docker specificând "
 "expresia \"%s\" (fără ghilimele) și selectând \"%s\".</p>."
 
+#, fuzzy
 msgid ""
 "<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
 "you do this, then the pattern must be a regular expression and be prefixed "
@@ -1825,8 +1826,8 @@ msgid ""
 "first matching subexpressions are used for the service descriptions. The "
 "matched substrings corresponding to the remaining groups are copied into the "
 "regular expression, nevertheless.</p><p>As an alternative to <tt>%s</tt> you "
-"may also use <tt>%1</tt>, <tt>%2</tt>, etc.  These will be replaced by the "
-"first, second, ... matching group. This allows you to reorder thing"
+"may also use <tt>%1</tt>, <tt>%2</tt>, etc. These will be replaced by the "
+"first, second, ... matching group. This allows you to reorder things."
 msgstr ""
 "<p>Numele procesului poate conține una sau mai multe apariții ale <tt>%s</"
 "tt>. Dacă faceți acest lucru, atunci modelul trebuie să fie o expresie "
@@ -2379,7 +2380,7 @@ msgid ""
 "go unnoticed when only monitoring the total utilization of the CPU. With "
 "this configuration, Checkmk will alert if a single core is exceeding a "
 "utilization threshold over an extended period of time. This is currently "
-"only supported on linux and windows agents as well as devices monitored "
+"only supported on Linux and Windows agents as well as devices monitored "
 "through the host-resource mib"
 msgstr ""
 "Un singur fir de execuție care utilizează pe deplin un singur nucleu "
@@ -2570,9 +2571,10 @@ msgstr "Evenimentele sistemului APC Inrow"
 msgid "APC Symmetra Checks"
 msgstr "Verificări APC Symmetra"
 
+#, fuzzy
 msgid ""
 "API Key to use. Depending on your opsgenie subscription you can use global "
-"or team integration api keys."
+"or team integration API keys."
 msgstr ""
 "Cheia API de utilizat. În funcție de abonamentul dvs. la opsgenie, puteți "
 "utiliza chei API de integrare globală sau de echipă."
@@ -3637,9 +3639,6 @@ msgstr "Adăugați un certificat CA sau un certificat auto-semnat"
 msgid "Add Condition"
 msgstr "Adaugă Condiție"
 
-msgid "Add Contact Group"
-msgstr "Adăugați un grup de contacte"
-
 msgid "Add Counter"
 msgstr "Adaugă Contoar"
 
@@ -4390,8 +4389,9 @@ msgstr ""
 "punct specifică bitul care trebuie recuperat. Numărul bitului este "
 "întotdeauna cuprins între 0 și 7."
 
+#, fuzzy
 msgid ""
-"Adds a headless version of the OpenHardwareMonitor to the windows agent. The "
+"Adds a headless version of the OpenHardwareMonitor to the Windows agent. The "
 "agent will then automatically use this to provide readings of hardware "
 "sensors (temperature, fans, ...) to Checkmk. This does require .Net to be "
 "installed on the target system. Please leave this disabled if you have a "
@@ -4409,8 +4409,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Adds the user to contact groups based on the group memberships in LDAP. This "
-"plugin adds the user only to existing contactgroups while the name of the "
-"contactgroup must match the common name (cn) of the LDAP group."
+"plug-in adds the user only to existing contact groups while the name of the "
+"contact group must match the common name (cn) of the LDAP group."
 msgstr ""
 "Adaugă utilizatorul la grupurile de contact în baza apartenenței din LDAP. "
 "Aceast plugin adaugă utilizatorul numai la grupuri de contacte existente și "
@@ -7737,17 +7737,19 @@ msgstr "Instanțe Azure VM"
 msgid "Azure VNet Gateway"
 msgstr "Azure VNet Gateway"
 
-msgid "Azure Virtual Machines"
-msgstr "Mașini virtuale Azure"
-
-msgid "Azure Virtual Machines Summary"
-msgstr "Rezumat al mașinilor virtuale Azure"
-
 msgid "Azure services to monitor"
 msgstr "Servicii Azure de monitorizat"
 
 msgid "Azure storage accounts"
 msgstr "Conturi de stocare Azure"
+
+#, fuzzy
+msgid "Azure virtual machines"
+msgstr "Mașini virtuale Azure"
+
+#, fuzzy
+msgid "Azure virtual machines summary"
+msgstr "Rezumat al mașinilor virtuale Azure"
 
 msgid "Azure web servers (IIS)"
 msgstr "Servere web Azure (IIS)"
@@ -8078,9 +8080,6 @@ msgstr "Diagramă cu bare"
 
 msgid "Bar graphics representing the state history"
 msgstr "Grafice cu bare reprezentând istoria statului"
-
-msgid "Barplot"
-msgstr "Barplot"
 
 msgid "Barracuda: Mail Queue"
 msgstr "Barracuda: Coadă de corespondență"
@@ -8798,7 +8797,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
-"monitored via a seperate metric. Setting levels on the used total bandwidth "
+"monitored via a separate metric. Setting levels on the used total bandwidth "
 "is optional. If you set levels you might also consider using averaging."
 msgstr ""
 "Prin activarea acestui element, suma traficului de intrare și de ieșire va "
@@ -10691,16 +10690,11 @@ msgstr "Verificați orașul în comparație cu Regex"
 msgid "Check DNS service"
 msgstr "Verificați serviciul DNS"
 
-msgid "Check Email"
-msgstr "Verificați e-mailul"
-
-msgid "Check Email Delivery"
-msgstr "Verificați livrarea e-mailurilor"
-
 msgid "Check FTP Service"
 msgstr "Verificați serviciul FTP"
 
-msgid "Check HTML Form Submit"
+#, fuzzy
+msgid "Check HTML form submit"
 msgstr "Verificați Formularul HTML Trimitere"
 
 #, fuzzy
@@ -10824,6 +10818,14 @@ msgstr "Verificați vechimea documentului"
 
 msgid "Check document size"
 msgstr "Verificați dimensiunea documentului"
+
+#, fuzzy
+msgid "Check email"
+msgstr "Verificați e-mailul"
+
+#, fuzzy
+msgid "Check email delivery"
+msgstr "Verificați livrarea e-mailurilor"
 
 msgid "Check event state in Event Console"
 msgstr "Verificați starea evenimentului în Consola de evenimente"
@@ -11369,6 +11371,18 @@ msgid "Checkmk: Other: Secs"
 msgstr "Checkmk: Altele"
 
 #, fuzzy
+msgid "Checkmk: Setup: Bytes"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Setup: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Setup: Secs"
+msgstr "Checkmk: BI"
+
+#, fuzzy
 msgid "Checkmk: Sidebar elements: Bytes"
 msgstr "Checkmk: Elemente de bară laterală"
 
@@ -11391,18 +11405,6 @@ msgstr "Checkmk: Vizualizări"
 #, fuzzy
 msgid "Checkmk: Views: Secs"
 msgstr "Checkmk: Vizualizări"
-
-#, fuzzy
-msgid "Checkmk: WATO: Bytes"
-msgstr "Checkmk: WATO"
-
-#, fuzzy
-msgid "Checkmk: WATO: Requests"
-msgstr "Checkmk: WATO"
-
-#, fuzzy
-msgid "Checkmk: WATO: Secs"
-msgstr "Checkmk: WATO"
 
 #, python-format
 msgid "Checkmk: Your license expires %s"
@@ -12997,7 +12999,7 @@ msgstr "Configurați eliminarea automată a gazdelor monitorizate."
 #, fuzzy
 msgid ""
 "Configure the base URL for the monitoring web-GUI here. Include the site "
-"name. Used for link to Checkmk out of Jira."
+"name. Used for linking to Checkmk out of Jira."
 msgstr ""
 "Configurați aici URL-ul de bază pentru Monitorizare Web-GUI. Includeți "
 "numele site-ului. Utilizat pentru linkul către check_mk din jira."
@@ -19030,7 +19032,8 @@ msgstr "Nu există"
 msgid "Does not match any service"
 msgstr "Nu se potrivește cu niciun serviciu"
 
-msgid "Domain (only used for european accounts)"
+#, fuzzy
+msgid "Domain (only used for European accounts)"
 msgstr "Domeniu (utilizat numai pentru conturile europene)"
 
 msgid "Domino Mail Queue Names"
@@ -19361,7 +19364,7 @@ msgid ""
 "it is the only method to continue monitoring the Oracle database. Usually "
 "you need to <tt>disable</tt> the option only in the following case: It's "
 "impossible to correctly adjust permissions for Oracle binaries, mode group "
-"with group Administrator is not applicable and it is not possible to use "
+"with group Administrator is not applicable and it is not possible to use a "
 "custom account to monitor the Oracle database. Even if the check is enabled "
 "you may allow some groups and/or users to still have write access to the "
 "Oracle binaries."
@@ -20607,9 +20610,10 @@ msgstr ""
 "Aceasta oferă următoarele câmpuri: user_time, system_time, "
 "children_user_time și children_system_time"
 
+#, fuzzy
 msgid ""
 "Enabling this option will create detailed log entries for all replication "
-"activities of the slave. If disabled only problems will be logged."
+"activities of the remote site. If disabled only problems will be logged."
 msgstr ""
 "Activarea acestei opțiuni va crea intrări de jurnal detaliate pentru toate "
 "activitățile de replicare ale sclavului. Dacă este dezactivată, vor fi "
@@ -22493,7 +22497,8 @@ msgstr "Rezultate false ale verificărilor"
 msgid "Fallback email address for notifications"
 msgstr "Adresa de e-mail de rezervă pentru notificări"
 
-msgid "Fallback if master comes back within"
+#, fuzzy
+msgid "Fallback if central comes back within"
 msgstr "Fallback în cazul în care maestrul se întoarce în"
 
 msgid "Fallback notification email format"
@@ -22681,9 +22686,6 @@ msgstr "Setări de parsificare a fișierelor"
 
 msgid "File Size"
 msgstr "Dimensiunea fișierului"
-
-msgid "File Size Levels"
-msgstr "Niveluri de mărime a fișierelor"
 
 msgid "File accessed"
 msgstr "Fișier accesat"
@@ -24144,9 +24146,6 @@ msgstr "Opțiuni generale"
 msgid "General Permissions"
 msgstr "Permisiuni generale"
 
-msgid "General Settings"
-msgstr "Setări generale"
-
 msgid "General display options"
 msgstr "Opțiuni generale de afișare"
 
@@ -24173,6 +24172,10 @@ msgstr "Spațiu SSD de uz general (gp2)"
 
 msgid "General purpose SSD (gp3) space"
 msgstr "Spațiu SSD cu scop general (gp3)"
+
+#, fuzzy
+msgid "General settings"
+msgstr "Setări generale"
 
 msgid "Generate"
 msgstr "Generați"
@@ -79694,6 +79697,27 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Add Contact Group"
+#~ msgstr "Adăugați un grup de contacte"
+
+#~ msgid "Barplot"
+#~ msgstr "Barplot"
+
+#, fuzzy
+#~ msgid "Checkmk: WATO: Bytes"
+#~ msgstr "Checkmk: WATO"
+
+#, fuzzy
+#~ msgid "Checkmk: WATO: Requests"
+#~ msgstr "Checkmk: WATO"
+
+#, fuzzy
+#~ msgid "Checkmk: WATO: Secs"
+#~ msgstr "Checkmk: WATO"
+
+#~ msgid "File Size Levels"
+#~ msgstr "Niveluri de mărime a fișierelor"
 
 #~ msgid "Database Name"
 #~ msgstr "Numele bazei de date"

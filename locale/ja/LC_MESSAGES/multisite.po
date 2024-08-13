@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2024-08-10 00:57+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
@@ -1751,6 +1751,7 @@ msgstr ""
 "とえば、このルールを使用して、式 \"%s\" (引用符なし)を指定し、 \"%s\" を選択"
 "することで、Dockerコンテナに属するすべてのプロセスを除外できます。</p>"
 
+#, fuzzy
 msgid ""
 "<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
 "you do this, then the pattern must be a regular expression and be prefixed "
@@ -1764,8 +1765,8 @@ msgid ""
 "first matching subexpressions are used for the service descriptions. The "
 "matched substrings corresponding to the remaining groups are copied into the "
 "regular expression, nevertheless.</p><p>As an alternative to <tt>%s</tt> you "
-"may also use <tt>%1</tt>, <tt>%2</tt>, etc.  These will be replaced by the "
-"first, second, ... matching group. This allows you to reorder thing"
+"may also use <tt>%1</tt>, <tt>%2</tt>, etc. These will be replaced by the "
+"first, second, ... matching group. This allows you to reorder things."
 msgstr ""
 "<p>プロセス名には、<tt>%s</tt>を1つ以上含めえることができます。この場合、パ"
 "ターンは接頭辞〜が付いた正規表現である必要があります。説明の<tt>%s</tt>ごと"
@@ -2274,12 +2275,13 @@ msgstr ""
 msgid "A single host related aggregation"
 msgstr "単一のホスト関連の集約"
 
+#, fuzzy
 msgid ""
 "A single thread fully utilizing a single core (potentially due to a bug) may "
 "go unnoticed when only monitoring the total utilization of the CPU. With "
 "this configuration, Checkmk will alert if a single core is exceeding a "
 "utilization threshold over an extended period of time. This is currently "
-"only supported on linux and windows agents as well as devices monitored "
+"only supported on Linux and Windows agents as well as devices monitored "
 "through the host-resource mib"
 msgstr ""
 "CPU総使用率のみを監視している場合、単一コアを完全に利用している単一スレッド"
@@ -2455,9 +2457,10 @@ msgstr "APC Inrowシステムイベント"
 msgid "APC Symmetra Checks"
 msgstr "APC Symmetraチェック"
 
+#, fuzzy
 msgid ""
 "API Key to use. Depending on your opsgenie subscription you can use global "
-"or team integration api keys."
+"or team integration API keys."
 msgstr ""
 "使用するAPIキー。opsgenieサブスクリプションに応じて、グローバルまたはチーム統"
 "合APIキーを使用できます。"
@@ -3483,9 +3486,6 @@ msgstr "CAまたは自己署名証明書を追加します"
 msgid "Add Condition"
 msgstr "条件を追加"
 
-msgid "Add Contact Group"
-msgstr "連絡先グループを追加"
-
 msgid "Add Counter"
 msgstr "カウンターを追加"
 
@@ -4217,8 +4217,9 @@ msgstr ""
 "アドレスはドット表記で、ドット前の数字で取り込むバイトを、ドット後の数字で取"
 "り込むビットを指定します。ビットの番号は常に0から7までです。"
 
+#, fuzzy
 msgid ""
-"Adds a headless version of the OpenHardwareMonitor to the windows agent. The "
+"Adds a headless version of the OpenHardwareMonitor to the Windows agent. The "
 "agent will then automatically use this to provide readings of hardware "
 "sensors (temperature, fans, ...) to Checkmk. This does require .Net to be "
 "installed on the target system. Please leave this disabled if you have a "
@@ -4232,10 +4233,11 @@ msgstr ""
 "は、これを無効のままにしてください。通常のOpenHardwareMonitorソフトウェアを実"
 "行している場合も、これは必要ありません。"
 
+#, fuzzy
 msgid ""
 "Adds the user to contact groups based on the group memberships in LDAP. This "
-"plugin adds the user only to existing contactgroups while the name of the "
-"contactgroup must match the common name (cn) of the LDAP group."
+"plug-in adds the user only to existing contact groups while the name of the "
+"contact group must match the common name (cn) of the LDAP group."
 msgstr ""
 "LDAPのグループメンバーシップに基づいて、ユーザーを連絡先グループに追加しま"
 "す。このプラグインは、既存の連絡先グループにのみユーザーを追加しますが、連絡"
@@ -7382,17 +7384,19 @@ msgstr "Azure VMインスタンス"
 msgid "Azure VNet Gateway"
 msgstr "AzureVNetゲートウェイ"
 
-msgid "Azure Virtual Machines"
-msgstr "Azure仮想マシン"
-
-msgid "Azure Virtual Machines Summary"
-msgstr "Azure仮想マシンの概要"
-
 msgid "Azure services to monitor"
 msgstr "監視するAzureサービス"
 
 msgid "Azure storage accounts"
 msgstr "Azureストレージアカウント"
+
+#, fuzzy
+msgid "Azure virtual machines"
+msgstr "Azure仮想マシン"
+
+#, fuzzy
+msgid "Azure virtual machines summary"
+msgstr "Azure仮想マシンの概要"
 
 msgid "Azure web servers (IIS)"
 msgstr "Azure Webサーバー(IIS)"
@@ -7717,9 +7721,6 @@ msgstr "棒グラフ"
 
 msgid "Bar graphics representing the state history"
 msgstr "状態履歴を表すバーのグラフィック"
-
-msgid "Barplot"
-msgstr "棒グラフ"
 
 msgid "Barracuda: Mail Queue"
 msgstr "Barracuda:メールキュー"
@@ -8392,9 +8393,10 @@ msgstr ""
 "い場合にルールパックをスキップするために使用できます。注:反転したルールが一致"
 "する場合、一致グループは存在できません。"
 
+#, fuzzy
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
-"monitored via a seperate metric. Setting levels on the used total bandwidth "
+"monitored via a separate metric. Setting levels on the used total bandwidth "
 "is optional. If you set levels you might also consider using averaging."
 msgstr ""
 "このアイテムをアクティブにすると、着信トラフィックと発信トラフィックの合計が"
@@ -10190,16 +10192,11 @@ msgstr "正規表現に対するCheck City"
 msgid "Check DNS service"
 msgstr "DNSサービスを確認する"
 
-msgid "Check Email"
-msgstr "メールをチェックする"
-
-msgid "Check Email Delivery"
-msgstr "メール配信を確認する"
-
 msgid "Check FTP Service"
 msgstr "FTPサービスを確認する"
 
-msgid "Check HTML Form Submit"
+#, fuzzy
+msgid "Check HTML form submit"
 msgstr "HTMLフォームの送信を確認する"
 
 msgid "Check HTTP service (deprecated)"
@@ -10319,6 +10316,14 @@ msgstr "ドキュメントの経過時間を確認する"
 
 msgid "Check document size"
 msgstr "ドキュメントのサイズを確認する"
+
+#, fuzzy
+msgid "Check email"
+msgstr "メールをチェックする"
+
+#, fuzzy
+msgid "Check email delivery"
+msgstr "メール配信を確認する"
 
 msgid "Check event state in Event Console"
 msgstr "イベントコンソールでイベントの状態を確認する"
@@ -10828,6 +10833,18 @@ msgstr "Checkmk:他: Requests"
 msgid "Checkmk: Other: Secs"
 msgstr "Checkmk: その他: Secs"
 
+#, fuzzy
+msgid "Checkmk: Setup: Bytes"
+msgstr "Checkmk: BI: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Setup: Requests"
+msgstr "Checkmk:BI: Requests"
+
+#, fuzzy
+msgid "Checkmk: Setup: Secs"
+msgstr "Checkmk: BI: Secs"
+
 msgid "Checkmk: Sidebar elements: Bytes"
 msgstr "Checkmk: サイドバー要素: Bytes"
 
@@ -10845,15 +10862,6 @@ msgstr "Checkmk: ビュー: Requests"
 
 msgid "Checkmk: Views: Secs"
 msgstr "Checkmk: ビュー: Secs"
-
-msgid "Checkmk: WATO: Bytes"
-msgstr "Checkmk: WATO: Bytes"
-
-msgid "Checkmk: WATO: Requests"
-msgstr "Checkmk: WATO: Requests"
-
-msgid "Checkmk: WATO: Secs"
-msgstr "Checkmk: WATO: Secs"
 
 #, python-format
 msgid "Checkmk: Your license expires %s"
@@ -12369,9 +12377,10 @@ msgstr ""
 msgid "Configure the automatic removal of monitored hosts."
 msgstr "監視対象ホストの自動削除を設定します。"
 
+#, fuzzy
 msgid ""
 "Configure the base URL for the monitoring web-GUI here. Include the site "
-"name. Used for link to Checkmk out of Jira."
+"name. Used for linking to Checkmk out of Jira."
 msgstr ""
 "監視 Web-GUI のベース URL をここで設定します。サイト名を含めてください。Jira"
 "からCheckmkへのリンクに使用します。"
@@ -18033,7 +18042,8 @@ msgstr "存在しない"
 msgid "Does not match any service"
 msgstr "どのサービスとも一致しません"
 
-msgid "Domain (only used for european accounts)"
+#, fuzzy
+msgid "Domain (only used for European accounts)"
 msgstr "ドメイン(ヨーロッパのアカウントにのみ使用)"
 
 msgid "Domino Mail Queue Names"
@@ -18359,7 +18369,7 @@ msgid ""
 "it is the only method to continue monitoring the Oracle database. Usually "
 "you need to <tt>disable</tt> the option only in the following case: It's "
 "impossible to correctly adjust permissions for Oracle binaries, mode group "
-"with group Administrator is not applicable and it is not possible to use "
+"with group Administrator is not applicable and it is not possible to use a "
 "custom account to monitor the Oracle database. Even if the check is enabled "
 "you may allow some groups and/or users to still have write access to the "
 "Oracle binaries."
@@ -19587,9 +19597,10 @@ msgstr ""
 "理時間に関する情報が提供されます。次のフィールドを提供します: user_time, "
 "system_time, children_user_time and children_system_time"
 
+#, fuzzy
 msgid ""
 "Enabling this option will create detailed log entries for all replication "
-"activities of the slave. If disabled only problems will be logged."
+"activities of the remote site. If disabled only problems will be logged."
 msgstr ""
 "このオプションを有効にすると、スレーブのすべてのレプリケーションアクティビ"
 "ティの詳細なログエントリが作成されます。無効にすると、問題のみがログに記録さ"
@@ -21436,7 +21447,8 @@ msgstr "フェイクチェック結果"
 msgid "Fallback email address for notifications"
 msgstr "通知用のフォールバックメールアドレス"
 
-msgid "Fallback if master comes back within"
+#, fuzzy
+msgid "Fallback if central comes back within"
 msgstr "マスターが戻ってきた場合のフォールバック"
 
 msgid "Fallback notification email format"
@@ -21624,9 +21636,6 @@ msgstr "ファイル解析設定"
 
 msgid "File Size"
 msgstr "ファイルサイズ"
-
-msgid "File Size Levels"
-msgstr "ファイルサイズレベル"
 
 msgid "File accessed"
 msgstr "アクセスされたファイル"
@@ -23062,9 +23071,6 @@ msgstr "一般的なオプション"
 msgid "General Permissions"
 msgstr "一般的な権限"
 
-msgid "General Settings"
-msgstr "一般設定"
-
 msgid "General display options"
 msgstr "一般的な表示オプション"
 
@@ -23093,6 +23099,10 @@ msgstr "汎用SSD (gp2) スペース"
 #, fuzzy
 msgid "General purpose SSD (gp3) space"
 msgstr "汎用SSD (gp3) スペース"
+
+#, fuzzy
+msgid "General settings"
+msgstr "一般設定"
 
 msgid "Generate"
 msgstr "生成する"
@@ -77307,6 +77317,24 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Add Contact Group"
+#~ msgstr "連絡先グループを追加"
+
+#~ msgid "Barplot"
+#~ msgstr "棒グラフ"
+
+#~ msgid "Checkmk: WATO: Bytes"
+#~ msgstr "Checkmk: WATO: Bytes"
+
+#~ msgid "Checkmk: WATO: Requests"
+#~ msgstr "Checkmk: WATO: Requests"
+
+#~ msgid "Checkmk: WATO: Secs"
+#~ msgstr "Checkmk: WATO: Secs"
+
+#~ msgid "File Size Levels"
+#~ msgstr "ファイルサイズレベル"
 
 #~ msgid "Database Name"
 #~ msgstr "データベース名"

@@ -40,6 +40,7 @@ common:ci --memory_profile=bazel-memory.profile
 common:ci --extra_toolchains="//omd/packages/toolchain:ci"
 common:ci --local_resources=cpu=HOST_CPUS
 common:ci --local_resources=memory=HOST_RAM*.67
+common:ci --lockfile_mode=error
 
 ## For specific commands
 # build:ci ...

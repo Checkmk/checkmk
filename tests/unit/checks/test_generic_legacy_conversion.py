@@ -1087,7 +1087,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "sophos_memory",
         "sophos_messages",
         "splunk_alerts",
-        "splunk_health",
         "splunk_jobs",
         "splunk_license_state",
         "splunk_license_usage",

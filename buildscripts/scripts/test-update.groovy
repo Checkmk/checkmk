@@ -43,6 +43,21 @@ def main() {
 
     def make_target = build_make_target(edition);
 
+    print(
+        """
+        |===== CONFIGURATION ===============================
+        |distros:.................. │${distros}│
+        |edition:.................. │${edition}│
+        |safe_branch_name:......... │${safe_branch_name}│
+        |cmk_version:.............. │${cmk_version}│
+        |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
+        |branch_version:........... │${branch_version}│
+        |docker_tag:............... │${docker_tag}│
+        |checkout_dir:............. │${checkout_dir}│
+        |make_target:.............. |${make_target}|
+        |===================================================
+        """.stripMargin());
+
     testing_helper.run_make_targets(
         DOCKER_GROUP_ID: get_docker_group_id(),
         DISTRO_LIST: distros,

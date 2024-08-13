@@ -844,7 +844,7 @@ def test_registered_sorters() -> None:
         },
         "host_check_age": {
             "columns": ["host_has_been_checked", "host_last_check"],
-            "title": "The time since the last check of the host",
+            "title": "Time since the last check of the host",
         },
         "host_check_command": {"columns": ["host_check_command"], "title": "Host check command"},
         "host_check_duration": {"columns": ["host_execution_time"], "title": "Host check duration"},
@@ -900,7 +900,7 @@ def test_registered_sorters() -> None:
         },
         "host_state_age": {
             "columns": ["host_has_been_checked", "host_last_state_change"],
-            "title": "The age of the current host state",
+            "title": "Age of the current host state",
         },
         "host_tag_address_family": {
             "columns": ["host_custom_variable_names", "host_custom_variable_values"],
@@ -1728,7 +1728,7 @@ def test_registered_sorters() -> None:
         },
         "svc_check_age": {
             "columns": ["service_has_been_checked", "service_last_check", "service_cached_at"],
-            "title": "The time since the last check of the service",
+            "title": "Time since the last check of the service",
         },
         "svc_check_command": {
             "columns": ["service_check_command"],

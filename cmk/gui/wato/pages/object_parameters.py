@@ -193,7 +193,7 @@ class ModeObjectParameters(WatoMode):
                     "",
                     "",
                     True,
-                    _("This check is not configurable via WATO"),
+                    _("This check is not configurable via Setup"),
                 )
 
             # Logwatch needs a special handling, since it is not configured
@@ -228,7 +228,7 @@ class ModeObjectParameters(WatoMode):
                             "",
                             "",
                             True,
-                            _("This check is not configurable via WATO"),
+                            _("This check is not configurable via Setup"),
                         )
                         return service_result
 
@@ -264,7 +264,7 @@ class ModeObjectParameters(WatoMode):
             checkgroup = serviceinfo["checkgroup"]
             checktype = serviceinfo["checktype"]
             if not checkgroup:
-                html.write_text(_("This check is not configurable via WATO"))
+                html.write_text(_("This check is not configurable via Setup"))
             else:
                 rulespec = rulespec_registry["static_checks:" + checkgroup]
                 itemspec = rulespec.item_spec

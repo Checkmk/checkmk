@@ -932,7 +932,7 @@ class ModeEditUser(WatoMode):
             _(
                 "The email address is optional and is needed "
                 "if the user is a monitoring contact and receives notifications "
-                "via Email."
+                "via email."
             )
         )
 

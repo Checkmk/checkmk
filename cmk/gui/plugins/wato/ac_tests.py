@@ -146,8 +146,8 @@ class ACTestLiveproxyd(ACTest):
         elif not is_wato_slave_site():
             yield ACResultWARN(
                 _(
-                    "The Livestatus Proxy is not only good for slave sites, "
-                    "enable it for your master site"
+                    "The Livestatus Proxy is not only good for remote sites, "
+                    "enable it for your central site"
                 )
             )
 
@@ -1165,7 +1165,7 @@ class ACTestDeprecatedCheckPlugins(ACTest):
     def help(self) -> str:
         return _(
             "The check plugin API for plugins in <tt>%s</tt> is deprecated."
-            " Plugin files in this folder are still considered, but starting from Checkmk version"
+            " Plug-in files in this folder are still considered, but starting from Checkmk version"
             " 2.3 the API they are using may change at any time without notice."
             " Please migrate the plugins to the new API."
             " More information can be found in <a href='%s'>our online documentation</a>."
@@ -1200,7 +1200,7 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
     def help(self) -> str:
         return _(
             "The old inventory plugin API has been removed in Checkmk version 2.2."
-            " Plugin files in <tt>'%s'</tt> are ignored."
+            " Plug-in files in <tt>'%s'</tt> are ignored."
             " Please migrate the plugins to the new API."
         ) % str(local_inventory_dir)
 

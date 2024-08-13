@@ -992,7 +992,7 @@ class PainterSvcCheckAge(Painter):
         return "svc_check_age"
 
     def title(self, cell: Cell) -> str:
-        return _("The time since the last check of the service")
+        return _("Time since the last check of the service")
 
     def short_title(self, cell: Cell) -> str:
         return _("Checked")
@@ -2020,7 +2020,7 @@ class PainterHostStateAge(Painter):
         return "host_state_age"
 
     def title(self, cell: Cell) -> str:
-        return _("The age of the current host state")
+        return _("Age of the current host state")
 
     def short_title(self, cell: Cell) -> str:
         return _("Age")
@@ -2043,7 +2043,7 @@ class PainterHostCheckAge(Painter):
         return "host_check_age"
 
     def title(self, cell: Cell) -> str:
-        return _("The time since the last check of the host")
+        return _("Time since the last check of the host")
 
     def short_title(self, cell: Cell) -> str:
         return _("Checked")

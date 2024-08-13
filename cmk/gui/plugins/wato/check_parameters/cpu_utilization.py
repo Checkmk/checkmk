@@ -158,7 +158,7 @@ def cpu_util_elements():
                     "details page, showing utilization of individual cores. "
                     "Please note that this graph may be impractical on "
                     "device with very many cores. "
-                    "This is currently only supported on linux and windows agents "
+                    "This is currently only supported on Linux and Windows agents "
                     "as well as devices monitored through the host-resource mib"
                 ),
                 choices=[

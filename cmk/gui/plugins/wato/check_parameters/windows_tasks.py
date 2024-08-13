@@ -197,7 +197,7 @@ def _valuespec_windows_tasks_discovery():
                 FixedValue(
                     title=_("Discover disabled tasks"),
                     value=True,
-                    totext=_("Tasks are discovered regardless of Scheduled Task State."),
+                    totext=_("Tasks are discovered regardless of scheduled task state."),
                 ),
             ),
         ],

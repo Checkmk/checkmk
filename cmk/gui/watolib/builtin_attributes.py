@@ -1024,7 +1024,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
             help=_("Specify the site that should monitor this host."),
             invalid_choice_error=_(
                 "The configured site is not known to this site. In case you "
-                "are configuring in a distributed slave, this may be a host "
+                "are configuring in a remote site, this may be a host "
                 "monitored by another site. If you want to modify this "
                 "host, you will have to change the site attribute to the "
                 "local site. But this may make the host be monitored from "

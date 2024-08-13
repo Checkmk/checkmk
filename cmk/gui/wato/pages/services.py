@@ -1386,7 +1386,7 @@ class DiscoveryPageRenderer:
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
                     "call classical check plugins. They have been added by a rule in the section "
-                    "<i>Active checks</i> or implicitely by Checkmk."
+                    "<i>Active checks</i> or implicitly by Checkmk."
                 ),
             ),
             TableGroupEntry(
@@ -1415,7 +1415,7 @@ class DiscoveryPageRenderer:
                 title=_("Custom checks - defined via rule"),
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
-                    "call a classical check plugin, that you have installed yourself."
+                    "call a classical check plugin that you have installed yourself."
                 ),
             ),
             TableGroupEntry(
@@ -1463,7 +1463,7 @@ class DiscoveryPageRenderer:
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
                     "call classical check plugins. They have been added by a rule in the section "
-                    "<i>Active checks</i> or implicitely by Checkmk. "
+                    "<i>Active checks</i> or implicitly by Checkmk. "
                     "These services have been disabled by creating a rule in the rule set "
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."
                 ),
@@ -1474,7 +1474,7 @@ class DiscoveryPageRenderer:
                 title=_("Disabled custom checks - defined via rule"),
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
-                    "call a classical check plugin, that you have installed yourself. "
+                    "call a classical check plugin that you have installed yourself. "
                     "These services have been disabled by creating a rule in the rule set "
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."
                 ),

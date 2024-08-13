@@ -1050,7 +1050,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
             RegExp(
                 title=_("Text to match"),
                 help=_(
-                    "The rules does only apply when the given regular expression matches "
+                    "The rule only applies when the given regular expression matches "
                     "the message text (infix search)."
                 ),
                 size=64,
@@ -1076,7 +1076,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
             RegExp(
                 title=_("Match host"),
                 help=_(
-                    "The rules does only apply when the given regular expression matches "
+                    "The rule only applies when the given regular expression matches "
                     "the host name the message originates from. Note: in some cases the "
                     "event might use the IP address instead of the host name."
                 ),
@@ -1089,7 +1089,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
             IPv4Network(
                 title=_("Match original source IP address"),
                 help=_(
-                    "The rules does only apply when the event is being received from a "
+                    "The rule only applies when the event is being received from a "
                     "certain IP address. You can specify either a single IP address "
                     "or an IPv4 network in the notation X.X.X.X/Bits."
                 ),
@@ -1257,7 +1257,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                 )
                 + _(
                     "The placeholder <tt>\\0</tt> will be replaced by the original text of this field. "
-                    "This allows you to add new information in front or at the end. "
+                    "This allows you to add new information at the beginning or at the end. "
                 )
                 + _(
                     "You can also use the placeholders $MATCH_GROUPS_MESSAGE_1$ for message match groups and "
@@ -1302,7 +1302,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                 )
                 + _(
                     "The placeholder <tt>\\0</tt> will be replaced by the original text of this field. "
-                    "This allows you to add new information in front or at the end."
+                    "This allows you to add new information at the beginning or at the end."
                 )
                 + _(
                     "You can also use the placeholders $MATCH_GROUPS_MESSAGE_1$ for message match groups and "
@@ -1323,7 +1323,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                 )
                 + _(
                     "The placeholder <tt>\\0</tt> will be replaced by the original text of this field. "
-                    "This allows you to add new information in front or at the end."
+                    "This allows you to add new information at the beginning or at the end."
                 ),
                 size=64,
                 allow_empty=False,
@@ -1341,7 +1341,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                 )
                 + _(
                     "The placeholder <tt>\\0</tt> will be replaced by the original text of this field. "
-                    "This allows you to add new information in front or at the end."
+                    "This allows you to add new information at the beginning or at the end."
                 ),
                 size=64,
                 allow_empty=False,
@@ -3880,7 +3880,7 @@ class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Age(
-            title=_("State Retention Interval"),
+            title=_("State retention interval"),
             help=_(
                 "In this interval the event daemon will save its state "
                 "to disk, so that you won't lose your current event "
@@ -3923,12 +3923,12 @@ class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Age(
-            title=_("Statistics Interval"),
+            title=_("Statistics interval"),
             help=_(
                 "The event daemon keeps statistics about the rate of messages, events "
                 "rule hits, and other stuff. These values are updated in the interval "
                 "configured here and are available in the sidebar snapin <i>Event Console "
-                "Performance</i>"
+                "performance</i>"
             ),
         )
 

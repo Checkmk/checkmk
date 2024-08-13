@@ -89,6 +89,9 @@ function entriesForTopic(topic: Topic) {
       </tr>
     </thead>
     <tbody :class="{ open: openTopics[topic.key], closed: !openTopics[topic.key] }">
+      <tr>
+        <td colspan="2" />
+      </tr>
       <tr v-for="entry in entriesForTopic(topic)" :key="entry.ident">
         <td class="legend">
           <div class="title">
@@ -102,7 +105,7 @@ function entriesForTopic(topic: Topic) {
             >
           </div>
         </td>
-        <td>
+        <td class="content">
           <CmkFormDispatcher
             v-model:data="(data[topic.key]! as Record<string, object>)[entry.ident]!"
             :backend-validation="backendValidation"

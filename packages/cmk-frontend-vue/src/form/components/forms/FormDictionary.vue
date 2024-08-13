@@ -67,6 +67,14 @@ function toggleElement(event: MouseEvent, key: string) {
     data.value[key] = defaultValues[key]
   }
 }
+
+function indentRequired(element: DictionaryElement): boolean {
+  return !(
+    element.required &&
+    element.parameter_form.title === '' &&
+    element.parameter_form.type === 'boolean_choice'
+  )
+}
 </script>
 
 <template>
@@ -77,20 +85,29 @@ function toggleElement(event: MouseEvent, key: string) {
         :key="$componentId + dict_element.dict_config.ident"
       >
         <td class="dictleft">
-          <span class="checkbox">
-            <input
-              v-if="!dict_element.dict_config.required"
-              :id="$componentId + dict_element.dict_config.ident"
-              v-model="dict_element.is_active"
-              :onclick="(event: MouseEvent) => toggleElement(event, dict_element.dict_config.ident)"
-              type="checkbox"
-            />
-            <label :for="$componentId + dict_element.dict_config.ident">
-              {{ dict_element.dict_config.parameter_form.title }}
-            </label>
-          </span>
-          <br />
-          <div class="dictelement indent">
+          <template v-if="indentRequired(dict_element.dict_config)">
+            <span class="checkbox">
+              <input
+                v-if="!dict_element.dict_config.required"
+                :id="$componentId + dict_element.dict_config.ident"
+                v-model="dict_element.is_active"
+                :onclick="
+                  (event: MouseEvent) => toggleElement(event, dict_element.dict_config.ident)
+                "
+                type="checkbox"
+              />
+              <label :for="$componentId + dict_element.dict_config.ident">
+                {{ dict_element.dict_config.parameter_form.title }}
+              </label>
+            </span>
+            <br />
+          </template>
+          <div
+            :class="{
+              indent: indentRequired(dict_element.dict_config),
+              dictelement: indentRequired(dict_element.dict_config)
+            }"
+          >
             <FormEdit
               v-if="dict_element.is_active"
               v-model:data="data[dict_element.dict_config.ident]"

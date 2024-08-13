@@ -127,7 +127,12 @@ def test_cmk_pnp_template_removed(site: Site) -> None:
 
 def test_cmk_ajax_graph_images(site: Site) -> None:
     web = CMKWebSession(site)
-    response = web.get("/%s/check_mk/ajax_graph_images.py" % site.id)
+    response = web.get(
+        "/%s/check_mk/ajax_graph_images.py" % site.id,
+        headers={
+            "Authorization": f"InternalToken {site.get_site_internal_secret().b64_str}",
+        },
+    )
     assert response.text == ""
 
 

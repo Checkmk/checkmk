@@ -24,6 +24,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils.escaping import escape, escape_permissive
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.notify import find_wato_folder, NotificationContext
 from cmk.utils.notify_types import PluginNotificationContext
 from cmk.utils.paths import omd_root
@@ -489,6 +490,7 @@ def render_cmk_graphs(context: dict[str, str], raise_exception: bool = False) ->
             "service": svc_desc,
             "num_graphs": context["PARAMETER_GRAPHS_PER_NOTIFICATION"],
         },
+        headers={"Authorization": f"InternalToken {SiteInternalSecret().secret.b64_str}"},
     ).prepare()
 
     timeout = 10

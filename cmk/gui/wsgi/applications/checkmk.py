@@ -64,7 +64,6 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     # Currently these are:
     #  * noauth:run_cron
     #  * noauth:deploy_agent
-    #  * noauth:ajax_graph_images
     #  * noauth:automation
     #
     @functools.wraps(func)

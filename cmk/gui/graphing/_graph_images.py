@@ -25,9 +25,8 @@ from cmk.gui.graphing._graph_templates import get_template_graph_specification
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
-from cmk.gui.pages import Page, PageResult
-from cmk.gui.session import SuperUserContext
+from cmk.gui.logged_in import LoggedInSuperUser, user
+from cmk.gui.pages import Page
 from cmk.gui.type_defs import SizePT
 
 from ._artwork import compute_graph_artwork, compute_graph_artwork_curves, GraphArtwork
@@ -54,18 +53,16 @@ from ._utils import get_graph_data_from_livestatus
 class AjaxGraphImagesForNotifications(Page):
     @classmethod
     def ident(cls) -> str:
-        return "noauth:ajax_graph_images"
+        return "ajax_graph_images"
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
-        """Registered as `noauth:ajax_graph_images`."""
-        if request.remote_ip not in ["127.0.0.1", "::1"]:
-            raise MKUnauthenticatedException(
-                _("You are not allowed to access this page (%s).") % request.remote_ip
-            )
+    def page(self) -> None:
+        """Registered as `ajax_graph_images`."""
+        if not isinstance(user, LoggedInSuperUser):
+            # This page used to be noauth but restricted to local ips.
+            # Now we use the SiteInternalSecret for this.
+            raise MKUnauthenticatedException(_("You are not allowed to access this page."))
 
-        with SuperUserContext():
-            _answer_graph_image_request()
-        return None
+        _answer_graph_image_request()
 
 
 def _answer_graph_image_request() -> None:

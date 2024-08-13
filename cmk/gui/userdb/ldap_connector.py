@@ -2330,8 +2330,8 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
                         title=_("Groups to synchronize"),
                         help=_(
                             "Specify the groups to control the value of a given user attribute. If a user is "
-                            "not a member of a group, the attribute will be left at it's default value. When "
-                            "a single attribute is set by multiple groups and a user is member of multiple "
+                            "not a member of a group, the attribute will be left at its default value. When "
+                            "a single attribute is set by multiple groups and a user is a member of multiple "
                             "of these groups, the later plugin in the list will override the others."
                         ),
                         allow_empty=False,

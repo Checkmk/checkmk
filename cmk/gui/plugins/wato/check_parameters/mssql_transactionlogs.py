@@ -31,7 +31,7 @@ def _valuespec_mssql_transactionlogs_discovery():
                 "summarize_transactionlogs",
                 Checkbox(
                     title=_("Display only a summary of all transactionlogs"),
-                    label=_("Summarize transactionlogs"),
+                    label=_("Summarize transaction logs"),
                 ),
             ),
         ],

@@ -259,13 +259,13 @@ class ModeDiagnostics(WatoMode):
                                         "(see inline help)."
                                     ),
                                     help=_(
-                                        "The timeout in seconds when gathering the Support "
-                                        "Diagnostics Data. The default is 110 seconds. When "
+                                        "The timeout in seconds when gathering the support "
+                                        "diagnostics data. The default is 110 seconds. When "
                                         "very large files are collected, it's also possible to "
-                                        "call the support diagnostics from command line using "
-                                        "the command 'cmk --create-diagnostics-dump' with "
+                                        "call the support diagnostics from the command line "
+                                        "using the command 'cmk --create-diagnostics-dump' with "
                                         "appropriate parameters in the context of the affected "
-                                        "site. See the %s"
+                                        "site. See the %s."
                                     )
                                     % html.render_a(
                                         "user manual",

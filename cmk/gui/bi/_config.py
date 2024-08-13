@@ -1433,7 +1433,7 @@ class ModeBIEditRule(ABCBIMode):
                     help=_(
                         # xgettext: no-python-format
                         "This option allows you to display an additional, freely configurable text, to the rule outcome, "
-                        "which may describe the state more in detail. For example, instead of <tt>CRIT</tt>, the rule can now "
+                        "which may describe the state in more detail. For example, instead of <tt>CRIT</tt>, the rule can now "
                         "display <tt>CRIT, less than 70% of servers reachable</tt>. This message is also shown within the BI aggregation "
                         "check plug-ins."
                     ),
@@ -1848,7 +1848,7 @@ class BIModeEditAggregation(ABCBIMode):
         if value.endswith(".new"):
             raise MKUserError(
                 varprefix,
-                _("The suffix .new is a reserved keyword an cannot be used as aggregation id"),
+                _("The suffix .new is a reserved keyword and cannot be used as aggregation id"),
             )
 
     @classmethod

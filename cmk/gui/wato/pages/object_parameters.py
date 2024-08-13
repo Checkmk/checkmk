@@ -232,7 +232,7 @@ class ModeObjectParameters(WatoMode):
             "",
             "",
             True,
-            _("This check is not configurable via WATO"),
+            _("This check is not configurable via Setup"),
         )
         if not checkgroup or checkgroup == "None":
             not_configurable_render()
@@ -316,7 +316,7 @@ class ModeObjectParameters(WatoMode):
         if rulespec is None or (
             rulespec_allow_list is not None and not rulespec_allow_list.is_visible(rulespec.name)
         ):
-            html.write_text(_("This check is not configurable via WATO"))
+            html.write_text(_("This check is not configurable via Setup"))
             return
 
         rulespec = rulespec_registry[RuleGroup.StaticChecks(checkgroup)]

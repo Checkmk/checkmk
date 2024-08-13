@@ -419,8 +419,8 @@ def _slow_view_logging_help():
         "<li>a threshold (in seconds) at"
         " <b>Setup > General > Global settings > User interface > Threshold for slow views</b>.</li>"
         "</ul>"
-        "The logging is disable by default. The default threshold is set to 60 seconds."
-        " If enabled one log entry per view rendering that exceeeds the configured threshold"
+        "The logging is disabled by default. The default threshold is set to 60 seconds."
+        " If enabled one log entry per view rendering that exceeds the configured threshold"
         " is logged to <b>var/log/web.log</b>."
     )
 
@@ -1199,7 +1199,7 @@ class ConfigVariableSidebarNotifyInterval(ConfigVariable):
             ),
             title=_("Interval of sidebar popup notification updates"),
             help=_(
-                "The sidebar can be configured to regularly check for pending popup notififcations. "
+                "The sidebar can be configured to regularly check for pending popup notifications. "
                 "This is disabled by default."
             ),
             none_label=_("(disabled)"),

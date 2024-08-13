@@ -121,7 +121,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
                     choices=[
                         (None, _("The queried ESX system (vCenter / Host)")),
                         ("esxhost", _("The ESX Host")),
-                        ("vm", _("The Virtual Machine")),
+                        ("vm", _("The virtual machine")),
                     ],
                     default_value=None,
                 ),
@@ -140,7 +140,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
                     choices=[
                         (None, _("The queried ESX system (vCenter / Host)")),
                         ("esxhost", _("The ESX Host")),
-                        ("vm", _("The Virtual Machine")),
+                        ("vm", _("The virtual machine")),
                     ],
                     default_value=None,
                 ),

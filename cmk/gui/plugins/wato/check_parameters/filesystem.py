@@ -259,7 +259,7 @@ def _discovery_valuespec_qtree_quota() -> Dictionary:
                     title=_("Exclude volume from service name"),
                     help=_(
                         "The service description of qtree services is composed of the "
-                        "quota, quota-users and the volume name by default. Check this box"
+                        "quota, quota-users and the volume name by default. Check this box "
                         "if you would like to use the quota and quota-users combination as the "
                         "service description on its own. "
                         "Please be advised that this may lead to a service description that is "

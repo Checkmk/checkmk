@@ -774,7 +774,7 @@ class ModeDistributedMonitoring(WatoMode):
             _("Connections"),
             empty_text=_(
                 "You have not configured any local or remotes sites. Multisite will "
-                "implicitely add the data of the local monitoring site. If you add remotes "
+                "implicitly add the data of the local monitoring site. If you add remotes "
                 "sites, please do not forget to add your local monitoring site also, if "
                 "you want to display its data."
             ),

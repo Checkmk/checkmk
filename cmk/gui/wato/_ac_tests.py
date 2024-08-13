@@ -179,8 +179,8 @@ class ACTestLiveproxyd(ACTest):
             return ACSingleResult(
                 state=ACResultState.WARN,
                 text=_(
-                    "The Livestatus Proxy is not only good for slave sites, "
-                    "enable it for your master site"
+                    "The Livestatus Proxy is not only good for remote sites, "
+                    "enable it for your central site"
                 ),
                 site_id=site_id,
             )
@@ -1251,7 +1251,7 @@ class ACTestDeprecatedCheckPlugins(ACTest):
     def help(self) -> str:
         return _(
             "The check plug-in API for plug-ins in <tt>%s</tt> is deprecated."
-            " Plugin files in this folder are still considered, but the API they are using may change at any time without notice."
+            " Plug-in files in this folder are still considered, but the API they are using may change at any time without notice."
             " Please migrate the plug-ins to the new API."
             " More information can be found in our <a href='%s'>User Guide</a>."
         ) % (
@@ -1287,7 +1287,7 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
     def help(self) -> str:
         return _(
             "The old inventory plug-in API has been removed in Checkmk version 2.2."
-            " Plugin files in <tt>'%s'</tt> are ignored."
+            " Plug-in files in <tt>'%s'</tt> are ignored."
             " Please migrate the plug-ins to the new API."
         ) % str(local_inventory_dir)
 

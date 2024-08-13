@@ -508,7 +508,7 @@ def _page_menu_networking_topic(view: View) -> list[PageMenuTopic]:
             title=_("Network monitoring"),
             entries=[
                 PageMenuEntry(
-                    title=_("Parent/Child topology"),
+                    title=_("Parent/child topology"),
                     icon_name="aggr",
                     item=make_simple_link(
                         makeuri_contextless(

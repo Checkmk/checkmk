@@ -41,7 +41,7 @@ def parse_arguments(argv):
         "--values",
         type=_get_values_list,
         default=VALID_VALUES,
-        help="Comma seperated list of values to fetch from 3par system. Choose from: %r"
+        help="Comma separated list of values to fetch from 3par system. Choose from: %r"
         % VALID_VALUES,
     )
     parser.add_argument("host", help="Host name or IP address of 3par system")

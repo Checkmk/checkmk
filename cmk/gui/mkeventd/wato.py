@@ -4041,14 +4041,14 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                 choices=[
                                     (
                                         "email",
-                                        _("Send Email"),
+                                        _("Send email"),
                                         Dictionary(
                                             optional_keys=False,
                                             elements=[
                                                 (
                                                     "to",
                                                     TextInput(
-                                                        title=_("Recipient Email address"),
+                                                        title=_("Recipient email address"),
                                                         allow_empty=False,
                                                     ),
                                                 ),

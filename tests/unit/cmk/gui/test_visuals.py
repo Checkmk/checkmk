@@ -3659,7 +3659,7 @@ expected_filters: dict[str, dict[str, Any]] = {
         "info": "host",
         "link_columns": [],
         "sort_index": 550,
-        "title": "Kubernetes Deployment",
+        "title": "Kubernetes deployment",
     },
     "kubernetes_daemonset": {
         "comment": None,

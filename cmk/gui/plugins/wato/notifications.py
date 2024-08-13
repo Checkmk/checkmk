@@ -185,9 +185,9 @@ def _vs_add_common_mail_elements(elements):
             "disable_multiplexing",
             FixedValue(
                 value=True,
-                title=_("Send seperate notifications to every recipient"),
+                title=_("Send separate notifications to every recipient"),
                 totext=_(
-                    "A seperate notification is send to every recipient. Recipients "
+                    "A separate notification is send to every recipient. Recipients "
                     "cannot see which other recipients were notified."
                 ),
                 help=_(

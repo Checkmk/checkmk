@@ -330,7 +330,7 @@ def parse_arguments(argv):
         "-m",
         "--sections",
         default=sections,
-        help="""Comma seperated list of data to query. Possible values: %s (default: all)"""
+        help="""Comma separated list of data to query. Possible values: %s (default: all)"""
         % ", ".join(sections),
     )
     parser.add_argument(

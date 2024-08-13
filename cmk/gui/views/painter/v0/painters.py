@@ -5396,7 +5396,7 @@ class PainterHostKubernetesDeployment(_PainterHostKubernetes):
     _constraints = ["deployment", "namespace", "cluster-host", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes Deployment")
+        return _("Kubernetes deployment")
 
     def short_title(self, cell: Cell) -> str:
         return _("Deployment")

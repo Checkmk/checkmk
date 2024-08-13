@@ -33,4 +33,4 @@ class ShowParentChildTopology(Icon):
             [("host_regex", f"{row['host_name']}$")],
             filename="parent_child_topology.py",
         )
-        return "aggr", _("Host Parent/Child topology"), url
+        return "aggr", _("Host Parent/child topology"), url

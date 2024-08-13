@@ -22,7 +22,7 @@ def _valuespec_active_checks_notify_count():
         ),
         elements=[
             TextInput(
-                title=_("Service Description"),
+                title=_("Service description"),
                 help=_("The name that will be used in the service description"),
                 allow_empty=False,
             ),

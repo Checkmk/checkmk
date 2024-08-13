@@ -609,7 +609,7 @@ metric_info["aws_elbv2_network_load_balancer_target_groups"] = {
 }
 
 metric_info["aws_elbv2_load_balancer_target_groups"] = {
-    "title": _l("Load balancers Target Groups"),
+    "title": _l("Load balancers target groups"),
     "unit": "count",
     "color": "35/a",
 }

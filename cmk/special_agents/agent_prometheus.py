@@ -389,7 +389,7 @@ class KubeStateExporter:
                     resource_type
                 ] = cluster_value
 
-        # Adding the limits seperately
+        # Adding the limits separately
         if self.cluster_name in result:
             result[self.cluster_name].update(self._cluster_limits())
         return [result]

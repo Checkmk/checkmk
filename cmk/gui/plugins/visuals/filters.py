@@ -1683,12 +1683,12 @@ def filter_kubernetes_register(  # type:ignore[no-untyped-def]
     )
 
 
-filter_kubernetes_register(_("Kubernetes Cluster"), "cluster")
-filter_kubernetes_register(_("Kubernetes Namespace"), "namespace")
-filter_kubernetes_register(_("Kubernetes Node"), "node")
-filter_kubernetes_register(_("Kubernetes Deployment"), "deployment")
-filter_kubernetes_register(_("Kubernetes DaemonSet"), "daemonset")
-filter_kubernetes_register(_("Kubernetes StatefulSet"), "statefulset")
+filter_kubernetes_register(_("Kubernetes cluster"), "cluster")
+filter_kubernetes_register(_("Kubernetes namespace"), "namespace")
+filter_kubernetes_register(_("Kubernetes node"), "node")
+filter_kubernetes_register(_("Kubernetes deployment"), "deployment")
+filter_kubernetes_register(_("Kubernetes daemonSet"), "daemonset")
+filter_kubernetes_register(_("Kubernetes statefulSet"), "statefulset")
 
 
 class CustomAttributeFilter(Filter):

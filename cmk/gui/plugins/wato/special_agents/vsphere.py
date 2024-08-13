@@ -109,7 +109,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
                         ("hostsystem", _("Host Systems")),
                         ("virtualmachine", _("Virtual Machines")),
                         ("datastore", _("Datastores")),
-                        ("counters", _("Performance Counters")),
+                        ("counters", _("Performance counters")),
                         ("licenses", _("License Usage")),
                     ],
                     default_value=["hostsystem", "virtualmachine", "datastore", "counters"],
@@ -125,9 +125,9 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
                     true_label=_("ignore"),
                     false_label=_("monitor"),
                     help=_(
-                        "Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
+                        "Placeholder VMs are created by the Site Recovery Manager (SRM) and act as backup "
                         "virtual machines in case the default vm is unable to start. This option tells the "
-                        "vsphere agent to exclude placeholder vms in its output."
+                        "vSphere agent to exclude placeholder vms in its output."
                     ),
                 ),
             ),

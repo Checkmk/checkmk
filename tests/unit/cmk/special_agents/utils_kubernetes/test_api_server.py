@@ -148,7 +148,7 @@ def test_version_endpoint_no_json(core_api: CoreAPI) -> None:
     """
 
     Invalid endpoint, since returned data is not json. RawAPI will not
-    identify this issue. Instead, the issue needs to be handled seperately.
+    identify this issue. Instead, the issue needs to be handled separately.
     """
     with patch(CALL_API) as mock_request:
         mock_request.return_value = (FakeByteResponse("I'm not json"), 200, {})
@@ -160,7 +160,7 @@ def test_version_endpoint_invalid_json(core_api: CoreAPI) -> None:
     """
 
     Invalid endpoint, since gitVersion field is missing. RawAPI will not
-    identify this issue. Instead, the issue needs to be handled seperately.
+    identify this issue. Instead, the issue needs to be handled separately.
     """
 
     # arrange

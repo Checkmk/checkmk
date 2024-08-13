@@ -73,7 +73,7 @@ labels with other special characters.
         >>> is_prefix_part = lambda x: bool(validation_prefix_part.fullmatch(x))
         >>> is_prefix_part('a-a')  #  DNS label
         True
-        >>> is_prefix_part('a.a')  # Two DNS labels seperated by a dot
+        >>> is_prefix_part('a.a')  # Two DNS labels separated by a dot
         True
         >>> is_prefix_part('A')  # not a DNS label, upper case not allowed
         False

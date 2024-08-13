@@ -599,7 +599,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                 Dictionary(
                     title=_("Attribute sync plugins"),
                     help=_(
-                        "It is possible to fetch several attributes of users, like Email or full names, "
+                        "It is possible to fetch several attributes of users, like email or full names, "
                         "from the LDAP directory. This is done by plugins which can individually enabled "
                         "or disabled. When enabling a plugin, it is used upon the next synchonisation of "
                         "user accounts for gathering their attributes. The user options which get imported "

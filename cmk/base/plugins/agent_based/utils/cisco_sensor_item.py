@@ -8,7 +8,7 @@ def cisco_sensor_item(description: str, sensor_id: str) -> str:
     # trial_string can be:
     # Empty
     # A single string
-    # A string seperated by commas with status information
+    # A string separated by commas with status information
     # -> Depends on the device model
     try:
         splitted = [x.strip() for x in description.split(",")]

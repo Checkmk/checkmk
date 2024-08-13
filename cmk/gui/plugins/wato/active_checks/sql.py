@@ -57,7 +57,7 @@ def _valuespec_active_checks_sql() -> Dictionary:
             (
                 "description",
                 TextInput(
-                    title=_("Service Description"),
+                    title=_("Service description"),
                     help=_("The name of this active service to be displayed."),
                     allow_empty=False,
                 ),

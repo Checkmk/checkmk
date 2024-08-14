@@ -46,6 +46,7 @@ def get_visitor(
         visitor, recomposer_function = registered_form_spec
         if recomposer_function is not None:
             form_spec = recomposer_function(form_spec)
+            return get_visitor(form_spec, options)
         return visitor(form_spec, options)
 
     # If the form spec has no valid visitor, convert it to the legacy valuespec visitor

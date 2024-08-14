@@ -20,31 +20,8 @@ from cmk.gui.form_specs.private import (
     SingleChoiceExtended,
     UnknownFormSpec,
 )
-from cmk.gui.form_specs.vue.form_spec_recomposers import (
-    recompose_dictionary,
-    recompose_host_state,
-    recompose_list,
-    recompose_percentage,
-    recompose_regular_expression,
-    recompose_service_state,
-    recompose_single_choice,
-    recompose_unknown_form_spec,
-)
 from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, RenderMode, VisitorOptions
 from cmk.gui.form_specs.vue.utils import get_visitor, register_visitor_class
-from cmk.gui.form_specs.vue.visitors.boolean_choice import BooleanChoiceVisitor
-from cmk.gui.form_specs.vue.visitors.cascading_single_choice import CascadingSingleChoiceVisitor
-from cmk.gui.form_specs.vue.visitors.catalog import CatalogVisitor
-from cmk.gui.form_specs.vue.visitors.data_size import DataSizeVisitor
-from cmk.gui.form_specs.vue.visitors.dictionary import DictionaryVisitor
-from cmk.gui.form_specs.vue.visitors.fixed_value import FixedValueVisitor
-from cmk.gui.form_specs.vue.visitors.float import FloatVisitor
-from cmk.gui.form_specs.vue.visitors.integer import IntegerVisitor
-from cmk.gui.form_specs.vue.visitors.legacy_valuespec import LegacyValuespecVisitor
-from cmk.gui.form_specs.vue.visitors.list import ListVisitor
-from cmk.gui.form_specs.vue.visitors.multiline_text import MultilineTextVisitor
-from cmk.gui.form_specs.vue.visitors.single_choice import SingleChoiceVisitor
-from cmk.gui.form_specs.vue.visitors.string import StringVisitor
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
@@ -67,6 +44,32 @@ from cmk.rulesets.v1.form_specs import (
     ServiceState,
     SingleChoice,
     String,
+)
+
+from .form_spec_recomposers import (
+    recompose_dictionary,
+    recompose_host_state,
+    recompose_list,
+    recompose_percentage,
+    recompose_regular_expression,
+    recompose_service_state,
+    recompose_single_choice,
+    recompose_unknown_form_spec,
+)
+from .visitors import (
+    BooleanChoiceVisitor,
+    CascadingSingleChoiceVisitor,
+    CatalogVisitor,
+    DataSizeVisitor,
+    DictionaryVisitor,
+    FixedValueVisitor,
+    FloatVisitor,
+    IntegerVisitor,
+    LegacyValuespecVisitor,
+    ListVisitor,
+    MultilineTextVisitor,
+    SingleChoiceVisitor,
+    StringVisitor,
 )
 
 T = TypeVar("T")

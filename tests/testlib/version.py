@@ -352,6 +352,7 @@ def code_name(distro_name):
         "sles-15sp4": "sles15sp4",
         "sles-12sp5": "sles12sp5",
         "sles-15sp5": "sles15sp5",
+        "sles-15sp6": "sles15sp6",
     }.get(distro_name):
         return code
     raise RuntimeError(f"Unknown distro: {distro_name}")

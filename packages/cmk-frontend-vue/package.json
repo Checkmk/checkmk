@@ -14,38 +14,38 @@
     "prettier": "prettier --write tests/ src/ *.json *.ts *.html"
   },
   "dependencies": {
-    "axios": "^1.7.2",
+    "axios": "^1.7.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "core-js": "^3.37.1",
+    "core-js": "^3.38.0",
     "crossfilter2": "^1.5.4",
     "d3": "^7.9.0",
     "jquery": "^3.7.1",
-    "lucide-vue-next": "^0.407.0",
-    "radix-vue": "^1.9.0",
-    "tailwind-merge": "^2.4.0",
+    "lucide-vue-next": "^0.427.0",
+    "radix-vue": "^1.9.4",
+    "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
-    "vue": "^3.4.27"
+    "vue": "^3.4.37"
   },
   "devDependencies": {
-    "@rushstack/eslint-patch": "^1.10.3",
+    "@rushstack/eslint-patch": "^1.10.4",
     "@testing-library/vue": "^8.1.0",
     "@tsconfig/node20": "^20.1.4",
     "@types/d3": "^7.4.3",
     "@types/node": "^20.14.2",
-    "@vitejs/plugin-vue": "^5.0.5",
+    "@vitejs/plugin-vue": "^5.1.2",
     "@vue/eslint-config-prettier": "^9.0.0",
     "@vue/eslint-config-typescript": "^13.0.0",
     "@vue/tsconfig": "^0.5.1",
     "chai": "^5.1.1",
     "eslint": "^8.56.0",
-    "eslint-plugin-vue": "^9.26.0",
-    "jsdom": "^24.1.0",
-    "npm-run-all2": "^6.2.0",
-    "prettier": "^3.3.1",
-    "typescript": "~5.4.5",
-    "vite": "^5.2.12",
+    "eslint-plugin-vue": "^9.27.0",
+    "jsdom": "^24.1.1",
+    "npm-run-all2": "^6.2.2",
+    "prettier": "^3.3.3",
+    "typescript": "~5.5.4",
+    "vite": "^5.4.0",
     "vitest": "^1.6.0",
-    "vue-tsc": "^2.0.19"
+    "vue-tsc": "^2.0.29"
   }
 }

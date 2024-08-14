@@ -130,6 +130,7 @@ export const cmk_export = {
         background_job: background_job,
         backup: backup,
         bi: bi,
+        d3: d3,
         dashboard: dashboard,
         element_dragging: element_dragging,
         figures: cmk_figures,

@@ -11,9 +11,9 @@ import subprocess
 import tarfile
 import time
 from collections.abc import Iterator, Mapping
-from contextlib import contextmanager, nullcontext
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, ContextManager
+from typing import Any
 
 import docker.client  # type: ignore[import-untyped]
 import docker.errors  # type: ignore[import-untyped]
@@ -21,7 +21,6 @@ import docker.models  # type: ignore[import-untyped]
 import docker.models.containers  # type: ignore[import-untyped]
 import requests
 
-from tests.testlib.cse.utils import create_cse_initial_config, cse_openid_oauth_provider
 from tests.testlib.repo import repo_path
 from tests.testlib.utils import wait_until
 from tests.testlib.version import CMKVersion, version_from_env
@@ -31,7 +30,6 @@ logger = logging.getLogger()
 build_path = str(repo_path() / "docker_image")
 image_prefix = "docker-tests"
 distro_codename = "jammy"
-cse_config_root = Path("/tmp/cmk-docker-test/cse-config-volume")
 
 
 def cleanup_old_packages() -> None:
@@ -247,10 +245,6 @@ def start_checkmk(
             "fix this, then restart your computer and try again."
         ) from e
 
-    if version.is_saas_edition():
-        create_cse_initial_config(root=Path(cse_config_root))
-        volumes = (volumes or []) + get_cse_volumes(cse_config_root)
-
     kwargs = {
         key: value
         for key, value in {
@@ -299,30 +293,12 @@ def start_checkmk(
 
     logger.debug(c.logs().decode("utf-8"))
 
-    cse_oauth_context_mngr: ContextManager = nullcontext()
-    if version.is_saas_edition():
-        # TODO: The Oauth provider is currently not reachable from the Checkmk container.
-        # To fix this, we should contenairize the Oauth provider as well and provide the Oauth
-        # provider container IP address to the Checkmk container (via the cognito-cmk.json file).
-        # This is similar to what we are doing with the Oracle container in the test_docker_oracle
-        # test.
-        cse_oauth_context_mngr = cse_openid_oauth_provider(
-            site_url=f"http://{get_container_ip(c)}:5000", config_root=cse_config_root
-        )
     try:
-        with cse_oauth_context_mngr:
-            yield c
+        yield c
     finally:
         if os.getenv("CLEANUP", "1") != "0":
             c.stop()
             c.remove(force=True)
-
-
-def get_cse_volumes(config_root: Path) -> list[str]:
-    cse_config_dir = Path("etc/cse")
-    cse_config_on_local_machine = config_root / cse_config_dir
-    cse_config_on_container = Path("/") / cse_config_dir
-    return [f"{cse_config_on_local_machine}:{cse_config_on_container}:ro"]
 
 
 def checkmk_docker_automation_secret(

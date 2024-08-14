@@ -1,0 +1,10 @@
+Title: Fix "Downtime active or pending" painter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1723637611
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+The painter showed always "pending".

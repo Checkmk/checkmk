@@ -4176,10 +4176,10 @@ class PainterDowntimeType(Painter):
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["downtime_type"]
+        return ["is_pending"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["downtime_type"] == 0 and _("active") or _("pending"))
+        return (None, row["is_pending"] == 0 and _("active") or _("pending"))
 
 
 class PainterDowntimeEntryTime(Painter):

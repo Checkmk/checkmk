@@ -80,7 +80,7 @@ TableDowntimes::TableDowntimes(ICore *mc) {
     addColumn(std::make_unique<BoolColumn<row_type>>(
         "is_pending",
         "1 if the downtime is currently pending (not active), 0 if it is active",
-        offsets, [](const row_type &row) { return !row.pending(); }));
+        offsets, [](const row_type &row) { return row.pending(); }));
     TableHosts::addColumns(this, *mc, "host_", offsets.add([](Row r) {
         return &r.rawData<row_type>()->host();
     }),

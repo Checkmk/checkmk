@@ -673,11 +673,11 @@ def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
 
 
 def _wait_for_piggyback_hosts(
-    site: Site, source_host: str, max_count: int = 40, sleep_time: float = 5, strict: bool = True
+    site: Site, source_host: str, max_count: int = 80, sleep_time: float = 5, strict: bool = True
 ) -> None:
     count = 0
     while not (piggyback_hosts := get_piggyback_hosts(site, source_host)) and count < max_count:
-        logger.info("Waiting for piggyback hosts to be created...")
+        logger.info("Waiting for piggyback hosts to be created. Count: %s/%s", count, max_count)
         time.sleep(sleep_time)
         count += 1
     if strict:

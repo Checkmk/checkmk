@@ -5,7 +5,6 @@
 
 import json
 import pprint
-import traceback
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from typing import Any, Literal, TypeVar
@@ -148,16 +147,13 @@ def render_form_spec(
     display_mode: RenderMode = RenderMode.EDIT,
 ) -> None:
     """Renders the valuespec via vue within a div"""
-    try:
-        vue_app_config = serialize_data_for_frontend(
-            form_spec, field_id, origin, do_validate, value, display_mode
-        )
-        logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
-        logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
-        logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
-        html.div("", data_cmk_vue_app=json.dumps(asdict(vue_app_config)))
-    except Exception as e:
-        logger.warning("".join(traceback.format_exception(e)))
+    vue_app_config = serialize_data_for_frontend(
+        form_spec, field_id, origin, do_validate, value, display_mode
+    )
+    logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
+    logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
+    logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
+    html.div("", data_cmk_vue_app=json.dumps(asdict(vue_app_config)))
 
 
 def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> Any:

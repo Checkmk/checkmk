@@ -40,18 +40,6 @@ http_archive(
     ],
 )
 
-RULES_RUST_VERSION = "0.36.2"
-
-http_archive(
-    name = "rules_rust",
-    sha256 = "a761d54e49db06f863468e6bba4a13252b1bd499e8f706da65e279b3bcbc5c52",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_rust/releases/download/" + RULES_RUST_VERSION + "/rules_rust-v" + RULES_RUST_VERSION + ".tar.gz",
-        "https://github.com/bazelbuild/rules_rust/releases/download/" + RULES_RUST_VERSION + "/rules_rust-v" + RULES_RUST_VERSION + ".tar.gz",
-        UPSTREAM_MIRROR_URL + "rules_rust-v" + RULES_RUST_VERSION + ".tar.gz",
-    ],
-)
-
 load("//omd/packages/rules:cargo_deps.bzl", "cargo_deps")
 load("//omd/packages/rules:rust_workspace.bzl", "rust_workspace")
 
@@ -316,20 +304,6 @@ http_archive(
     strip_prefix = "googletest-57e107a10ea4ff5d8d31df9e4833f80b414b0dd2",
     url = "https://github.com/google/googletest/archive/57e107a10ea4ff5d8d31df9e4833f80b414b0dd2.tar.gz",
 )
-
-http_archive(
-    name = "rules_cc",
-    sha256 = "35f2fb4ea0b3e61ad64a369de284e4fbbdcdba71836a5555abb5e194cf119509",
-    strip_prefix = "rules_cc-624b5d59dfb45672d4239422fa1e3de1822ee110",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_cc/archive/624b5d59dfb45672d4239422fa1e3de1822ee110.tar.gz",
-        "https://github.com/bazelbuild/rules_cc/archive/624b5d59dfb45672d4239422fa1e3de1822ee110.tar.gz",
-    ],
-)
-
-load("@rules_cc//cc:repositories.bzl", "rules_cc_dependencies")
-
-rules_cc_dependencies()
 
 http_archive(
     name = "rules_proto",

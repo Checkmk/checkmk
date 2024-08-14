@@ -511,6 +511,86 @@ def setup_source_host(site: Site, source_host_name: str, skip_cleanup: bool = Fa
             site.openapi.delete_host(source_host_name)
 
 
+@contextmanager
+def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
+    logger.info('Creating source host "%s"...', source_host_name)
+    host_attributes = {"ipaddress": "127.0.0.1", "tag_agent": "cmk-agent"}
+    site.openapi.create_host(
+        hostname=source_host_name,
+        attributes=host_attributes,
+        bake_agent=False,
+    )
+
+    logger.info("Injecting agent-output...")
+    dump_path_repo = str(qa_test_data_path() / "plugins_integration/dumps/piggyback")
+    dump_path_site = site.path("var/check_mk/dumps")
+    assert (
+        run(
+            [
+                "sudo",
+                "cp",
+                "-f",
+                f"{dump_path_repo}/{source_host_name}",
+                f"{dump_path_site}/{source_host_name}",
+            ]
+        ).returncode
+        == 0
+    )
+    logger.info("Running service discovery...")
+    site.openapi.discover_services_and_wait_for_completion(source_host_name)
+
+    logger.info("Activating changes & reloading core...")
+    site.activate_changes_and_wait_for_core_reload()
+
+    _wait_for_piggyback_hosts(site, source_host=source_host_name)
+
+    count = 0
+    while (n_pending_changes := len(site.openapi.pending_changes([site.id]))) > 0 and count < 60:
+        logger.info("Waiting for changes to be activated by the DCD connector. Count: %s", count)
+        time.sleep(5)
+        count += 1
+    assert n_pending_changes == 0, "Pending changes found!"
+
+    hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
+    for hostname in hostnames:
+        logger.info("Scheduling checks & checking for pending services...")
+        pending_checks = []
+        for idx in range(3):
+            # we have to schedule the checks multiple times (twice at least):
+            # => once to get baseline data
+            # => a second time to calculate differences
+            # => a third time since some checks require it
+            site.schedule_check(hostname, "Check_MK", 0, 60)
+            pending_checks = site.openapi.get_host_services(hostname, pending=True)
+            if idx > 0 and len(pending_checks) == 0:
+                break
+
+        if pending_checks:
+            logger.info(
+                '%s pending service(s) found on host "%s": %s',
+                len(pending_checks),
+                hostname,
+                ",".join(
+                    _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
+                ),
+            )
+
+    yield
+    # Todo: perform a proper site-cleanup: CMK-18659
+    # finally:
+    #     if not config.skip_cleanup:
+    #
+    #         # hostnames = [_.get("id") for _ in site.openapi.get_hosts()]
+    #         # for hostname in hostnames:
+    #         #     logger.info('Deleting host "%s"...', hostname)
+    #         #     site.openapi.delete_host(hostname)
+    #         #
+    #         # logger.info("Activating changes & reloading core...")
+    #         # site.activate_changes_and_wait_for_core_reload()
+    #
+    #         # assert run(["sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]).returncode == 0
+
+
 def setup_hosts(site: Site, host_names: list[str]) -> None:
     agent_host_names = [_ for _ in host_names if "snmp" not in _]
     snmp_host_names = [_ for _ in host_names if "snmp" in _]

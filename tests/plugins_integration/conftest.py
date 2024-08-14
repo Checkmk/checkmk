@@ -178,6 +178,27 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
             assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
 
 
+# Todo: perform a proper site-cleanup and change this fixture's scope: CMK-18659
+@pytest.fixture(name="test_site_piggyback", scope="function")
+def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
+    for site in get_site_factory(prefix="PB_").get_test_site(
+        auto_cleanup=not checks.config.skip_cleanup
+    ):
+        dump_path = site.path("var/check_mk/dumps")
+
+        # create dump folder in the test site
+        logger.info('Creating folder "%s"...', dump_path)
+        rc = site.execute(["mkdir", "-p", dump_path]).wait()
+        assert rc == 0
+
+        ruleset_name = "datasource_programs"
+        logger.info('Creating rule "%s"...', ruleset_name)
+        site.openapi.create_rule(ruleset_name=ruleset_name, value=f"cat {dump_path}/<HOST>")
+        logger.info('Rule "%s" created!', ruleset_name)
+
+        yield site
+
+
 @pytest.fixture(name="site_factory_update", scope="session")
 def _get_sf_update():
     base_version = get_min_version(Edition.CEE)
@@ -265,8 +286,9 @@ def _create_periodic_service_discovery_rule(test_site_update: Site) -> Iterator[
     test_site_update.openapi.activate_changes_and_wait_for_completion()
 
 
-@pytest.fixture(name="dcd_connector", scope="session")
-def _dcd_connector(test_site: Site) -> Iterator[None]:
+# Todo: perform a proper site-cleanup and change this fixture's scope: CMK-18659
+@pytest.fixture(name="dcd_connector", scope="function")
+def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
     if checks.config.piggyback:
         logger.info("Creating a DCD connection for piggyback hosts...")
         dcd_id = "dcd_connector"
@@ -276,17 +298,21 @@ def _dcd_connector(test_site: Site) -> Iterator[None]:
             "tag_piggyback": "piggyback",
             "tag_address_family": "no-ip",
         }
-        test_site.openapi.create_dynamic_host_configuration(
+        test_site_piggyback.openapi.create_dynamic_host_configuration(
             dcd_id=dcd_id,
             title="DCD Connector for piggyback hosts",
             host_attributes=host_attributes,
             interval=1,
             validity_period=600,
         )
-        test_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        test_site_piggyback.openapi.activate_changes_and_wait_for_completion(
+            force_foreign_changes=True
+        )
         yield
         if not checks.config.skip_cleanup:
-            test_site.openapi.delete_dynamic_host_configuration(dcd_id)
-            test_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+            test_site_piggyback.openapi.delete_dynamic_host_configuration(dcd_id)
+            test_site_piggyback.openapi.activate_changes_and_wait_for_completion(
+                force_foreign_changes=True
+            )
     else:
         yield  # a fixture must yield or return something

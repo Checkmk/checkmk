@@ -10,7 +10,7 @@ from tests.plugins_integration.checks import (
     get_piggyback_hosts,
     read_cmk_dump,
     read_disk_dump,
-    setup_source_host,
+    setup_source_host_piggyback,
 )
 
 
@@ -25,21 +25,24 @@ def _read_piggyback_hosts_from_dump(dump: str) -> set[str]:
 
 @pytest.mark.parametrize("source_host_name", get_host_names())
 def test_plugin_piggyback(
-    test_site: Site, source_host_name: str, dcd_connector: None, pytestconfig: pytest.Config
+    test_site_piggyback: Site,
+    source_host_name: str,
+    dcd_connector: None,
+    pytestconfig: pytest.Config,
 ) -> None:
     if not pytestconfig.getoption(name="--enable-piggyback"):
         pytest.skip("Piggyback tests are not selected.")
 
-    with setup_source_host(test_site, source_host_name):
+    with setup_source_host_piggyback(test_site_piggyback, source_host_name):
         disk_dump = read_disk_dump(source_host_name)
-        cmk_dump = read_cmk_dump(source_host_name, test_site, "agent")
+        cmk_dump = read_cmk_dump(source_host_name, test_site_piggyback, "agent")
         assert disk_dump == cmk_dump != "", "Raw data mismatch!"
 
-        piggyback_hostnames = get_piggyback_hosts(test_site, source_host_name)
+        piggyback_hostnames = get_piggyback_hosts(test_site_piggyback, source_host_name)
         assert set(piggyback_hostnames) == _read_piggyback_hosts_from_dump(disk_dump)
 
         for hostname in piggyback_hostnames:
-            host_services = test_site.get_host_services(hostname)
+            host_services = test_site_piggyback.get_host_services(hostname)
             ok_services = get_services_with_status(host_services, 0)
             not_ok_services = [service for service in host_services if service not in ok_services]
             err_msg = (

@@ -26,6 +26,7 @@ from cmk.gui.form_specs.vue.form_spec_recomposers import (
     recompose_list,
     recompose_percentage,
     recompose_regular_expression,
+    recompose_service_state,
     recompose_single_choice,
     recompose_unknown_form_spec,
 )
@@ -63,6 +64,7 @@ from cmk.rulesets.v1.form_specs import (
     MultilineText,
     Percentage,
     RegularExpression,
+    ServiceState,
     SingleChoice,
     String,
 )
@@ -100,6 +102,7 @@ def register_form_specs():
 
     # Recomposed
     register_visitor_class(HostState, SingleChoiceVisitor, recompose_host_state)
+    register_visitor_class(ServiceState, SingleChoiceVisitor, recompose_service_state)
     register_visitor_class(SingleChoice, SingleChoiceVisitor, recompose_single_choice)
     register_visitor_class(List, ListVisitor, recompose_list)
     register_visitor_class(Percentage, FloatVisitor, recompose_percentage)

@@ -78,7 +78,7 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<BoolColumn<IDowntime>>(
         "is_pending",
         "1 if the downtime is currently pending (not active), 0 if it is active",
-        offsets, [](const IDowntime &r) { return !r.pending(); }));
+        offsets, [](const IDowntime &r) { return r.pending(); }));
     TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
         return r.rawData<IDowntime>()->host().handle();
     }),

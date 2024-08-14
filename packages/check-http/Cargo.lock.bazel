@@ -1,5 +1,5 @@
 {
-  "checksum": "6c10cbe48bde67ce66778de228e2648d15fd78121a031ec1fb6ceadf1674a115",
+  "checksum": "3bde05ce47581b3bb30e4e8359c720c8f0555441c58ddd54725c4feb7d9abb7f",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -5585,6 +5585,12 @@
           ],
           "selects": {}
         },
+        "extra_deps": {
+          "common": [
+            "@openssl//:openssl_shared"
+          ],
+          "selects": {}
+        },
         "edition": "2018",
         "version": "0.9.101"
       },
@@ -5611,8 +5617,7 @@
         },
         "build_script_env": {
           "common": {
-            "OPENSSL_NO_VENDOR": "1",
-            "OPENSSL_STATIC": "0"
+            "OPENSSL_NO_VENDOR": "1"
           },
           "selects": {}
         },

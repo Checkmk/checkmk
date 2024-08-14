@@ -79,3 +79,34 @@ configure_make(
     ],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "fg-libssl.so",
+    srcs = [":openssl"],
+    output_group = "libssl.so.3",
+)
+
+filegroup(
+    name = "fg-libcrypto.so",
+    srcs = [":openssl"],
+    output_group = "libcrypto.so.3",
+)
+
+cc_import(
+    name = "libssl.so",
+    shared_library = ":fg-libssl.so",
+)
+
+cc_import(
+    name = "libcrypto.so",
+    shared_library = ":fg-libcrypto.so",
+)
+
+cc_library(
+    name = "openssl_shared",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":libcrypto.so",
+        ":libssl.so",
+    ],
+)

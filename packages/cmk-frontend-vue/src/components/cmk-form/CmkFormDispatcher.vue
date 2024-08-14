@@ -42,7 +42,11 @@ const components: Record<Components['type'], unknown> = {
 }
 
 function getComponent(): IComponent {
-  return components[props.spec.type as Components['type']] as IComponent
+  const result = components[props.spec.type as Components['type']]
+  if (result !== undefined) {
+    return result as IComponent
+  }
+  throw new Error(`Could not find Component for type=${props.spec.type}`)
 }
 </script>
 

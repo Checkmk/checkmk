@@ -10,7 +10,8 @@ from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import translate_to_current_language
 
-from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1 import Message
+from cmk.rulesets.v1.form_specs import InvalidElementMode
 
 from ._base import FormSpecVisitor
 from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue, Value
@@ -28,6 +29,11 @@ T = TypeVar("T")
 
 
 class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtended[T], T]):
+    def _is_valid_choice(self, value: T | EmptyValue) -> bool:
+        if isinstance(value, EmptyValue):
+            return False
+        return value in [x.name for x in self.form_spec.elements]
+
     def _parse_value(self, raw_value: object) -> T | EmptyValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
@@ -38,6 +44,27 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
 
         if not isinstance(raw_value, self.form_spec.type):
             return EMPTY_VALUE
+
+        if not self._is_valid_choice(raw_value):
+            # Note: An invalid choice does not always result in an empty value
+            # invalid_element_validation: InvalidElementValidator:InvalidElementMode.KEEP
+            #   Value is kept
+            #       -> invalid element will be shown in the frontend, but can't be saved.
+            #       -> invalid element will be written back _to_disk
+            # invalid_element_validation: InvalidElementValidator:InvalidElementMode.COMPLAIN
+            #   Value is considered invalid
+            #       -> validate generates an error message
+            #       -> to_vue generates an input hint, that the value is broken
+            #       -> to_disk would fail
+            # invalid_element_validation: None
+            #   Same behaviour as COMPLAIN, but with generic error texts
+            if (
+                self.form_spec.invalid_element_validation
+                and self.form_spec.invalid_element_validation.mode == InvalidElementMode.KEEP
+            ):
+                return raw_value
+            return EMPTY_VALUE
+
         return raw_value
 
     def _to_vue(
@@ -52,6 +79,14 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
             )
             for element in self.form_spec.elements
         ]
+
+        input_hint = compute_title_input_hint(self.form_spec.prefill)
+        if not self._is_valid_choice(parsed_value):
+            parsed_value = EMPTY_VALUE
+            invalid_validation = self.form_spec.invalid_element_validation
+            if invalid_validation and invalid_validation.display:
+                input_hint = localize(invalid_validation.display)
+
         return (
             shared_type_defs.SingleChoice(
                 title=title,
@@ -59,17 +94,31 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
                 elements=elements,
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(compute_validators(self.form_spec)),
-                frozen=self.form_spec.frozen and isinstance(raw_value, str),
-                input_hint=compute_title_input_hint(self.form_spec.prefill),
+                frozen=self.form_spec.frozen and isinstance(raw_value, self.form_spec.type),
+                input_hint=input_hint,
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )
 
+    def _compute_invalid_value_display_message(self, raw_value: object) -> str:
+        # Note: The InvalidElementValidator class offers an error_message and a "display" message
+        #       On error, the "display" message is shown as dropdown choice input hint
+        message = (
+            self.form_spec.invalid_element_validation
+            and self.form_spec.invalid_element_validation.error_msg
+        ) or Message("Invalid choice %r")
+        message_localized = localize(message)
+        if "%s" in message_localized or "%r" in message_localized:
+            return message_localized % (raw_value,)
+        return message_localized
+
     def _validate(
         self, raw_value: object, parsed_value: T | EmptyValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
-            return create_validation_error(raw_value, Title("Invalid choice"))
+        if isinstance(parsed_value, EmptyValue) or not self._is_valid_choice(parsed_value):
+            return create_validation_error(
+                "", self._compute_invalid_value_display_message(raw_value)
+            )
         return compute_validation_errors(compute_validators(self.form_spec), parsed_value)
 
     def _to_disk(self, raw_value: object, parsed_value: T) -> T:

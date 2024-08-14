@@ -20,6 +20,9 @@ const [validation, value] = useValidation<string>(
   <div>
     <label v-if="$props.spec.label" :for="$componentId">{{ spec.label }}</label>
     <select :id="$componentId" v-model="value" :disabled="spec.frozen">
+      <option v-if="value.length == 0" disabled selected hidden value="">
+        {{ props.spec.input_hint }}
+      </option>
       <option
         v-for="element in spec.elements"
         :key="JSON.stringify(element.name)"

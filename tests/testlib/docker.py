@@ -21,7 +21,6 @@ import docker.models  # type: ignore[import-untyped]
 import docker.models.containers  # type: ignore[import-untyped]
 import requests
 
-from tests.testlib.cse.utils import create_cse_initial_config, cse_openid_oauth_provider
 from tests.testlib.repo import repo_path
 from tests.testlib.utils import wait_until
 from tests.testlib.version import CMKVersion, version_from_env
@@ -248,6 +247,8 @@ def start_checkmk(
         ) from e
 
     if version.is_saas_edition():
+        from tests.testlib.cse.utils import create_cse_initial_config
+
         create_cse_initial_config(root=Path(cse_config_root))
         volumes = (volumes or []) + get_cse_volumes(cse_config_root)
 
@@ -301,6 +302,8 @@ def start_checkmk(
 
     cse_oauth_context_mngr: ContextManager = nullcontext()
     if version.is_saas_edition():
+        from tests.testlib.cse.utils import cse_openid_oauth_provider
+
         # TODO: The Oauth provider is currently not reachable from the Checkmk container.
         # To fix this, we should contenairize the Oauth provider as well and provide the Oauth
         # provider container IP address to the Checkmk container (via the cognito-cmk.json file).

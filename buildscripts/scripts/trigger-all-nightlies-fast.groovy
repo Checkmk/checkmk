@@ -9,6 +9,11 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def editions = versioning.get_editions();
 
+    if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) == 12) {
+        // build only enterprise on high noon
+        editions = "enterprise"
+    }
+
     def job_parameters = [
         [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE],
     ];

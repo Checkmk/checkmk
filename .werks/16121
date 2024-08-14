@@ -1,0 +1,18 @@
+Title: Fixed CMC crash when sending illegal metrics to InfluxDB
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1723645030
+Edition: cee
+Level: 1
+Version: 2.2.0p33
+
+When the CMC tried to send to a metric to an InfluxDB where the metric name
+was malformed (e.g. starting with an underscore), the CMC crashed.  This
+has been fixed, such metrics are now simply forwarded to the InfluxDB.  The
+latter will probably be a bit unhappy about such metric names, but this can
+be figured out via its logs, and the corresponding check can be fixed.
+
+Note that in a future Checkmk version, we will probably drop such metrics
+silently, logging this only for higher log levels to avoid log spam at the
+default log settings.

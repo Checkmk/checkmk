@@ -90,6 +90,7 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     CheckboxWithStrValue,
     EnableSyncDeliveryViaSMTP,
     FromAndToEmailFields,
+    JiraAuthOption,
     ManagementType,
     WebhookURLOption,
 )
@@ -660,8 +661,7 @@ class JiraIssuePlugin:
     option: PluginOptions = PluginOptions.CANCEL
     url: str | None = None
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
-    username: str | None = None
-    password: str | None = None
+    auth: JiraAuthOption = field(default_factory=JiraAuthOption)
     project_id: str | None = None
     issue_type_id: str | None = None
     host_custom_id: str | None = None
@@ -686,8 +686,7 @@ class JiraIssuePlugin:
             disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl"),
             ),
-            username=pluginparams["username"],
-            password=pluginparams["password"],
+            auth=JiraAuthOption.from_mk_file_format(pluginparams["auth"]),
             project_id=pluginparams["project"],
             issue_type_id=pluginparams["issuetype"],
             host_custom_id=pluginparams["host_customid"],
@@ -729,8 +728,7 @@ class JiraIssuePlugin:
             disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["disable_ssl_cert_verification"]
             ),
-            username=params["username"],
-            password=params["password"],
+            auth=JiraAuthOption.from_api_request(params["auth"]),
             project_id=params["project_id"],
             issue_type_id=params["issue_type_id"],
             host_custom_id=params["host_custom_id"],
@@ -752,8 +750,7 @@ class JiraIssuePlugin:
                 {
                     "jira_url": "" if self.url is None else self.url,
                     "disable_ssl_cert_verification": self.disable_ssl_cert_verification.api_response(),
-                    "username": "" if self.username is None else self.username,
-                    "password": "" if self.password is None else self.password,
+                    "auth": self.auth.api_response(),
                     "project_id": "" if self.project_id is None else self.project_id,
                     "issue_type_id": "" if self.issue_type_id is None else self.issue_type_id,
                     "host_custom_id": "" if self.host_custom_id is None else self.host_custom_id,
@@ -779,8 +776,7 @@ class JiraIssuePlugin:
         r = {
             "url": self.url,
             "ignore_ssl": self.disable_ssl_cert_verification.to_mk_file_format(),
-            "username": self.username,
-            "password": self.password,
+            "auth": self.auth.to_mk_file_format(),
             "host_customid": self.host_custom_id,
             "issuetype": self.issue_type_id,
             "label": self.label.to_mk_file_format(),

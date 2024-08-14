@@ -504,10 +504,22 @@ class IlertPluginModel(TypedDict):
     proxy_url: NotRequired[ProxyUrl]
 
 
+class JiraTokenAuthCredentials(TypedDict):
+    token: tuple[Literal["password", "store"], str]
+
+
+class JiraBasicAuthCredentials(TypedDict):
+    username: str
+    password: tuple[Literal["password", "store"], str]
+
+
+JiraBasicAuth = tuple[Literal["auth_basic"], JiraBasicAuthCredentials]
+JiraTokenAuth = tuple[Literal["auth_token"], JiraTokenAuthCredentials]
+
+
 class JiraIssuePluginModel(TypedDict):
     url: str
-    username: str
-    password: str
+    auth: JiraBasicAuth | JiraTokenAuth
     project: str
     issuetype: str
     host_customid: str

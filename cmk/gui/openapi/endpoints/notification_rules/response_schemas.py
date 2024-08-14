@@ -631,19 +631,36 @@ class IlertPluginResponse(PluginName):
 # Jira --------------------------------------------------------------
 
 
+class JiraAuthResponse(BaseSchema):
+    option = fields.String(
+        enum=["explicit_token", "token_store_id", "explicit_password", "password_store_id"],
+        description="The authentication method to use for Jira",
+        example="basic",
+    )
+    username = fields.String(
+        description="The username for the Jira connection",
+        example="user_1",
+    )
+    password = fields.String(
+        description="The password for the Jira connection",
+        example="password",
+    )
+    token = fields.String(
+        description="The token for the Jira connection",
+        example="token",
+    )
+    store_id = PASSWORD_STORE_ID_SHOULD_EXIST
+
+
 class JiraPluginResponse(PluginName):
     jira_url = fields.String(
         example="http://jira_url_example.com",
         description="Configure the Jira URL here",
     )
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
-    username = fields.String(
-        example="username_a",
-        description="Configure the user name here",
-    )
-    password = fields.String(
-        example="example_pass_123&*",
-        description="The password entered here is stored in plain text within the monitoring site. This usually needed because the monitoring process needs to have access to the unencrypted password because it needs to submit it to authenticate with remote systems",
+    auth = fields.Nested(
+        JiraAuthResponse,
+        description="The authentication credentials for the Jira connection",
     )
     project_id = fields.String(
         example="",

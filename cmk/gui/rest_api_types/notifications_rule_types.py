@@ -29,7 +29,11 @@ from cmk.utils.notify_types import (
     is_auto_urlprefix,
     is_manual_urlprefix,
     is_timeperiod_bulk,
+    JiraBasicAuth,
+    JiraBasicAuthCredentials,
     JiraPluginName,
+    JiraTokenAuth,
+    JiraTokenAuthCredentials,
     MailPluginName,
     MatchRegex,
     MgmntPriorityType,
@@ -2451,6 +2455,120 @@ class CheckboxWithListOfExtraPropertiesValues:
         return self.value
 
 
+class API_JiraExplicitToken(TypedDict, total=False):
+    option: Literal["explicit_token"]
+    token: str
+
+
+class API_JiraStoreToken(TypedDict, total=False):
+    option: Literal["token_store_id"]
+    store_id: str
+
+
+class API_JiraBasicAuthExplicit(TypedDict, total=False):
+    option: Literal["explicit_password"]
+    username: str
+    password: str
+
+
+class API_BasicAuthStore(TypedDict, total=False):
+    option: Literal["password_store_id"]
+    username: str
+    store_id: str
+
+
+@dataclass
+class JiraAuthOption:
+    auth_option: (
+        API_JiraExplicitToken
+        | API_JiraStoreToken
+        | API_JiraBasicAuthExplicit
+        | API_BasicAuthStore
+        | None
+    ) = None
+
+    @classmethod
+    def from_mk_file_format(cls, data: JiraBasicAuth | JiraTokenAuth | None) -> JiraAuthOption:
+        if data is None:
+            return cls()
+
+        if data[0] == "auth_basic":
+            if data[1]["password"][0] == "password":
+                return cls(
+                    auth_option=API_JiraBasicAuthExplicit(
+                        option="explicit_password",
+                        username=data[1]["username"],
+                        password=data[1]["password"][1],
+                    )
+                )
+            return cls(
+                auth_option=API_BasicAuthStore(
+                    option="password_store_id",
+                    username=data[1]["username"],
+                    store_id=data[1]["password"][1],
+                )
+            )
+
+        if data[1]["token"][0] == "password":
+            return cls(
+                auth_option=API_JiraExplicitToken(
+                    option="explicit_token",
+                    token=data[1]["token"][1],
+                )
+            )
+
+        return cls(
+            auth_option=API_JiraStoreToken(
+                option="token_store_id",
+                store_id=data[1]["token"][1],
+            ),
+        )
+
+    @classmethod
+    def from_api_request(
+        cls,
+        incoming: (
+            API_JiraExplicitToken
+            | API_JiraStoreToken
+            | API_JiraBasicAuthExplicit
+            | API_BasicAuthStore
+        ),
+    ) -> JiraAuthOption:
+        return cls(auth_option=incoming)
+
+    def api_response(
+        self,
+    ) -> (
+        API_JiraExplicitToken | API_JiraStoreToken | API_JiraBasicAuthExplicit | API_BasicAuthStore
+    ):
+        if self.auth_option is None:
+            return {}
+        return self.auth_option
+
+    def to_mk_file_format(self) -> JiraBasicAuth | JiraTokenAuth | None:
+        if self.auth_option is None:
+            return None
+
+        if self.auth_option["option"] == "explicit_password":
+            return "auth_basic", JiraBasicAuthCredentials(
+                username=self.auth_option["username"],
+                password=("password", self.auth_option["password"]),
+            )
+
+        if self.auth_option["option"] == "password_store_id":
+            return "auth_basic", JiraBasicAuthCredentials(
+                username=self.auth_option["username"],
+                password=("store", self.auth_option["store_id"]),
+            )
+
+        if self.auth_option["option"] == "explicit_token":
+            return "auth_token", JiraTokenAuthCredentials(
+                token=("password", self.auth_option["token"])
+            )
+
+        return "auth_token", JiraTokenAuthCredentials(token=("store", self.auth_option["store_id"]))
+
+
 # ----------------------------------------------------------------
 
 
@@ -2513,8 +2631,9 @@ class API_JiraData(TypedDict, total=False):
     plugin_name: Required[JiraPluginName]
     jira_url: str
     disable_ssl_cert_verification: CheckboxStateType
-    username: str
-    password: str
+    auth: (
+        API_JiraExplicitToken | API_JiraStoreToken | API_JiraBasicAuthExplicit | API_BasicAuthStore
+    )
     project_id: str
     issue_type_id: str
     host_custom_id: str

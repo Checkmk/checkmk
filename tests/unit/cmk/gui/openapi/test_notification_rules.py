@@ -5,7 +5,7 @@
 
 
 from collections.abc import Generator, Iterator
-from typing import Any, get_args, Literal
+from typing import Any, cast, get_args, Literal
 
 import pytest
 
@@ -22,6 +22,11 @@ from cmk.gui.openapi.endpoints.site_management.common import (
     default_config_example as _default_config,
 )
 from cmk.gui.rest_api_types.notifications_rule_types import (
+    API_BasicAuthStore,
+    API_JiraBasicAuthExplicit,
+    API_JiraData,
+    API_JiraExplicitToken,
+    API_JiraStoreToken,
     API_PushOverData,
     API_ServiceNowData,
     APIConditions,
@@ -772,8 +777,11 @@ plugin_test_data: list[PluginType] = [
         "plugin_name": "jira_issues",
         "jira_url": "https://test_jira_url.com/here",
         "disable_ssl_cert_verification": {"state": "disabled"},
-        "username": "Gav",
-        "password": "gav1234",
+        "auth": {
+            "option": "explicit_password",
+            "username": "Gavin",
+            "password": "gav1234",
+        },
         "project_id": "1234",
         "issue_type_id": "2345",
         "host_custom_id": "3456",
@@ -2060,3 +2068,47 @@ def test_match_host_tags(clients: ClientRegistry) -> None:
 
     resp = clients.RuleNotification.create(rule_config=config)
     assert resp.json["extensions"]["rule_config"] == config
+
+
+jira_auth_methods: list[
+    API_JiraExplicitToken | API_JiraStoreToken | API_JiraBasicAuthExplicit | API_BasicAuthStore
+] = [
+    {
+        "option": "explicit_password",
+        "username": "Gavin",
+        "password": "gav1234",
+    },
+    {
+        "option": "password_store_id",
+        "username": "Gavin",
+        "store_id": "some_store_id",
+    },
+    {
+        "option": "explicit_token",
+        "token": "some_jira_token",
+    },
+    {
+        "option": "token_store_id",
+        "store_id": "some_store_id",
+    },
+]
+
+
+@pytest.mark.parametrize("auth_method", jira_auth_methods)
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_create_jira_rule_with_auth_types(
+    clients: ClientRegistry,
+    auth_method: (
+        API_JiraExplicitToken | API_JiraStoreToken | API_JiraBasicAuthExplicit | API_BasicAuthStore
+    ),
+) -> None:
+    setup_site_data(clients)
+    jira_config = cast(API_JiraData, plugin_test_data[8])
+    jira_config["auth"] = auth_method
+    config = notification_rule_request_example()
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_PARAMS,
+        "plugin_params": jira_config,
+    }
+    r1 = clients.RuleNotification.create(rule_config=config)
+    assert r1.json["extensions"] == {"rule_config": config}

@@ -1313,6 +1313,53 @@ class IlertPluginCreate(PluginName):
 
 
 # Jira --------------------------------------------------------------
+class JiraAuthOptions(BaseSchema):
+    option = fields.String(
+        enum=["explicit_token", "token_store_id", "explicit_password", "password_store_id"],
+        required=True,
+        example="password_store_id",
+    )
+
+
+class JiraBasicAuth(JiraAuthOptions):
+    username = fields.String(
+        required=True,
+        example="username_example",
+        description="Your Jira username",
+    )
+
+
+class JiraBasicAuthExplicit(JiraBasicAuth):
+    password = fields.String(
+        required=True,
+        example="password_example",
+        description="Your Jira password",
+    )
+
+
+class JiraBasicAuthStorePassword(JiraBasicAuth):
+    store_id = PASSWORD_STORE_ID_SHOULD_EXIST
+
+
+class JiraExplicitToken(JiraAuthOptions):
+    token = fields.String(
+        required=True,
+        example="token_example",
+        description="Your Jira personal access token",
+    )
+
+
+class JiraAuthStoreToken(JiraAuthOptions):
+    store_id = PASSWORD_STORE_ID_SHOULD_EXIST
+
+
+class JiraAuthSelector(OptionOneOfSchema):
+    type_schemas = {
+        "password_store_id": JiraBasicAuthStorePassword,
+        "explicit_password": JiraBasicAuthExplicit,
+        "explicit_token": JiraExplicitToken,
+        "token_store_id": JiraAuthStoreToken,
+    }
 
 
 class JiraPluginCreate(PluginName):
@@ -1322,15 +1369,10 @@ class JiraPluginCreate(PluginName):
         description="Configure the Jira URL here",
     )
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
-    username = fields.String(
+    auth = fields.Nested(
+        JiraAuthSelector,
         required=True,
-        example="username_a",
-        description="Configure the user name here",
-    )
-    password = fields.String(
-        required=True,
-        example="example_pass_123&*",
-        description="The password entered here is stored in plain text within the monitoring site. This usually needed because the monitoring process needs to have access to the unencrypted password because it needs to submit it to authenticate with remote systems",
+        description="The authentication credentials for the Jira connection",
     )
     project_id = fields.String(
         required=True,

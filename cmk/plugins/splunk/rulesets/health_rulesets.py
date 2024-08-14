@@ -8,7 +8,7 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary, ServiceState
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
-rule_spec_mukke_usage_threshold_check_parameters = CheckParameters(
+rule_spec_check_parameters = CheckParameters(
     title=Title("Splunk Health"),
     topic=Topic.APPLICATIONS,
     parameter_form=lambda: Dictionary(

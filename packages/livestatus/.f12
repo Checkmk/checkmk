@@ -15,7 +15,7 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 if [ -d "$ROOT" ]; then
-    LIB="../../bazel-bin/packages/livestatus/liblivestatus_shared.so"
+    LIB="../../bazel-bin/packages/livestatus/liblivestatus.so"
     DEST="$ROOT/lib/liblivestatus.so.0.1"
     # Carefully keep the symlink structure intact, "install" would dereference.
     cp --verbose --no-dereference "$LIB" "$DEST"

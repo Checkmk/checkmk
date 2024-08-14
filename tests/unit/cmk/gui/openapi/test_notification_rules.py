@@ -1143,7 +1143,7 @@ plugin_test_data: list[PluginType] = [
         "plugin_name": "slack",
         "webhook_url": {
             "option": "explicit",
-            "url": "http://www.slack-webhook-url.com",
+            "url": "https://hooks.slack.com/services/sorry/not/real",
         },
         "url_prefix_for_links_to_checkmk": {
             "state": "enabled",
@@ -1173,6 +1173,22 @@ plugin_test_data: list[PluginType] = [
         "http_proxy": {
             "state": "enabled",
             "value": {"option": "environment"},
+        },
+    },
+    {
+        "plugin_name": "slack",
+        "webhook_url": {
+            "option": "explicit",
+            "url": "http://my-mattermost.local/hook/not-real",
+        },
+        "url_prefix_for_links_to_checkmk": {
+            "state": "disabled",
+        },
+        "disable_ssl_cert_verification": {
+            "state": "disabled",
+        },
+        "http_proxy": {
+            "state": "disabled",
         },
     },
     {

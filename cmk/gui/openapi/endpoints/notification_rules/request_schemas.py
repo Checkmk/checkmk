@@ -8,6 +8,7 @@ from typing import Any, get_args
 
 from marshmallow import post_load, pre_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
+from urllib3.util import parse_url
 
 from cmk.utils.notify_types import (
     CaseStateStr,
@@ -1860,10 +1861,28 @@ class SlackWebhookStore(ExplicitOrStoreOptions):
     store_id = PASSWORD_STORE_ID_SHOULD_EXIST
 
 
+def _validate_slack_uses_https(url: object) -> bool:
+    if not isinstance(url, str):
+        return False
+
+    parsed = parse_url(url)
+    if (
+        isinstance(parsed.host, str)
+        and parsed.host.endswith("slack.com")
+        and parsed.scheme != "https"
+    ):  # Mattermost uses the same plugin, but we allow HTTP there
+        raise ValidationError("Slack Webhooks must use HTTPS")
+
+    return True
+
+
 class SlackWebhookURL(ExplicitOrStoreOptions):
-    url = fields.String(
+    url = fields.URL(
         required=True,
         example="https://example_webhook_url.com",
+        schemes={"http", "https"},
+        validate=_validate_slack_uses_https,
+        description="Configure your Slack or Mattermost Webhook URL here. Slack Webhooks must use HTTPS",
     )
 
 

@@ -18,8 +18,8 @@ from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, QuickSetupId, ServiceInterest
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
+    FormSpecDictWrapper,
     FormSpecId,
-    FormSpecWrapper,
     ListOfWidgets,
     Text,
 )
@@ -55,9 +55,10 @@ def prepare_aws() -> QuickSetupStage:
             unique_id_formspec_wrapper(
                 title=Title("AWS account name"), prefill_template="aws_config"
             ),
-            FormSpecWrapper(
+            FormSpecDictWrapper(
                 id=FormSpecId("credentials"),
                 form_spec=Dictionary(elements=aws.quick_setup_stage_1()),
+                rendering_option="table",
             ),
         ],
         custom_validators=[validate_unique_id],
@@ -73,8 +74,9 @@ def configure_host_and_region() -> QuickSetupStage:
             "Name your host, define the path and select the regions you would like to monitor"
         ),
         configure_components=[
-            FormSpecWrapper(
+            FormSpecDictWrapper(
                 id=FormSpecId("host_data"),
+                rendering_option="table",
                 form_spec=Dictionary(
                     elements={
                         "host_name": DictElement(
@@ -96,8 +98,9 @@ def configure_host_and_region() -> QuickSetupStage:
                     }
                 ),
             ),
-            FormSpecWrapper(
+            FormSpecDictWrapper(
                 id=FormSpecId("configure_host_and_region"),
+                rendering_option="table",
                 form_spec=Dictionary(elements=aws.quick_setup_stage_2()),
             ),
         ],
@@ -112,15 +115,17 @@ def configure_services_to_monitor() -> QuickSetupStage:
         title=_("Configure services to monitor"),
         sub_title=_("Select and configure AWS services you would like to monitor"),
         configure_components=[
-            FormSpecWrapper(
+            FormSpecDictWrapper(
                 id=FormSpecId("configure_services_to_monitor"),
+                rendering_option="table",
                 form_spec=Dictionary(elements=aws.quick_setup_stage_3()),
             ),
             Collapsible(
                 title="Other options",
                 items=[
-                    FormSpecWrapper(  # TODO Placeholder for site selection
+                    FormSpecDictWrapper(  # TODO Placeholder for site selection
                         id=FormSpecId("site"),
+                        rendering_option="table",
                         form_spec=Dictionary(
                             elements={
                                 "site_selection": DictElement(
@@ -133,8 +138,9 @@ def configure_services_to_monitor() -> QuickSetupStage:
                             }
                         ),
                     ),
-                    FormSpecWrapper(
+                    FormSpecDictWrapper(
                         id=FormSpecId("aws_tags"),
+                        rendering_option="table",
                         form_spec=Dictionary(
                             elements={
                                 "overall_tags": DictElement(

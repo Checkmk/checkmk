@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
-from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper
+from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecDictWrapper, FormSpecId
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
 from cmk.rulesets.v1 import Title
@@ -15,9 +15,10 @@ from cmk.rulesets.v1.form_specs._base import DefaultValue
 def unique_id_formspec_wrapper(
     title: Title,
     prefill_template: str = "unique_id",
-) -> FormSpecWrapper:
-    return FormSpecWrapper(
+) -> FormSpecDictWrapper:
+    return FormSpecDictWrapper(
         id=FormSpecId(UniqueFormSpecIDStr),
+        rendering_option="table",
         form_spec=Dictionary(
             elements={
                 UniqueBundleIDStr: DictElement(

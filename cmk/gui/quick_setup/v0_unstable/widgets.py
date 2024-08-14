@@ -10,8 +10,7 @@ FormSpecId = NewType("FormSpecId", str)
 
 
 @dataclass
-class Widget:
-    widget_type: str
+class Widget: ...
 
 
 @dataclass
@@ -37,8 +36,14 @@ class ListOfWidgets(Widget):
 @dataclass
 class FormSpecWrapper(Widget):
     id: FormSpecId
-    widget_type: str = field(default="form_spec", init=False)
     form_spec: object
+    widget_type: str = field(default="form_spec")
+    rendering_option: str | None = None
+
+
+@dataclass
+class FormSpecDictWrapper(FormSpecWrapper):
+    rendering_option: Literal["table"] | None = None
 
 
 @dataclass

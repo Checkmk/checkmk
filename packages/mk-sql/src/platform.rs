@@ -326,18 +326,25 @@ pub mod registry {
             .collect::<Vec<InstanceInfo>>()
     }
 
-    fn get_transport(sql_key: &str, registry_instance_name: &str, transport_key: &str) -> bool {
-        let instance_sm_key = format!(
+    fn get_transport(
+        sql_key: &str,
+        registry_instance_name: &str,
+        transport_key: &str,
+        flag_names: &[&str],
+    ) -> bool {
+        let instance_key = format!(
             r"{}\MSSQLServer\SuperSocketNetLib\{}",
             registry_instance_name, transport_key
         );
         let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
         if let Ok(key) = root_key.open_subkey_with_flags(
-            sql_key.to_owned() + &instance_sm_key,
+            sql_key.to_owned() + &instance_key,
             winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
         ) {
-            let shared_memory: u32 = key.get_value("Enabled").unwrap_or_default();
-            shared_memory != 0
+            flag_names.iter().all(|flag| {
+                let on: u32 = key.get_value(flag).unwrap_or_default();
+                on != 0
+            })
         } else {
             false
         }
@@ -363,13 +370,13 @@ pub mod registry {
 
     fn get_enabled_transports(sql_key: &str, key_name: &str) -> Vec<Transport> {
         let mut transports = vec![];
-        if get_transport(sql_key, key_name, "Tcp") {
+        if get_transport(sql_key, key_name, "Tcp", &["Enabled", "ListenOnAllIPs"]) {
             transports.push(Transport::Tcp);
         }
-        if get_transport(sql_key, key_name, "Sm") {
+        if get_transport(sql_key, key_name, "Sm", &["Enabled"]) {
             transports.push(Transport::SharedMemory);
         }
-        if get_transport(sql_key, key_name, "Np") {
+        if get_transport(sql_key, key_name, "Np", &["Enabled"]) {
             transports.push(Transport::NamedPipe);
         }
         transports

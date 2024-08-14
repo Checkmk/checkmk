@@ -235,6 +235,21 @@ test('FormReadonly renders boolean: off', () => {
   screen.getByText('off')
 })
 
+test('FormReadonly renders time_span: simple', () => {
+  render(FormReadonly, {
+    props: {
+      spec: {
+        type: 'time_span',
+        displayed_magnitudes: ['millisecond', 'second', 'minute'],
+        i18n: { minute: 'ut_minute', second: 'ut_second', millisecond: 'ut_ms' }
+      } as FormSpec.TimeSpan,
+      backendValidation: [],
+      data: 66.6
+    }
+  })
+  screen.getByText('1 ut_minute 6 ut_second 600 ut_ms')
+})
+
 const multilineTextFormSpec: FormSpec.MultilineText = {
   type: 'multiline_text',
   title: 'fooTitle',

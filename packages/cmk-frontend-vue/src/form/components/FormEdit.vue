@@ -15,6 +15,7 @@ import FormMultilineText from '@/form/components/forms/FormMultilineText.vue'
 import FormHelp from '@/form/components/FormHelp.vue'
 import FormDataSize from '@/form/components/forms/FormDataSize.vue'
 import FormCatalog from '@/form/components/forms/FormCatalog.vue'
+import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
 import FormMultipleChoice from '@/form/components/forms/FormMultipleChoice.vue'
 import FormPassword from './forms/FormPassword.vue'
@@ -37,6 +38,7 @@ const components: Record<Components['type'], unknown> = {
   list: FormList,
   legacy_valuespec: FormLegacyValueSpec,
   fixed_value: FormFixedValue,
+  time_span: FormTimeSpan,
   boolean_choice: FormBooleanChoice,
   multiline_text: FormMultilineText,
   multiple_choice: FormMultipleChoice,

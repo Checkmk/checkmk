@@ -5,6 +5,7 @@ import type {
   Dictionary,
   FormSpec,
   List,
+  TimeSpan,
   SingleChoice,
   CascadingSingleChoice,
   LegacyValuespec,
@@ -20,6 +21,7 @@ import {
   groupListValidations,
   type ValidationMessages
 } from '@/form/components/utils/validation'
+import { splitToUnits, getSelectedMagnitudes, ALL_MAGNITUDES } from './utils/timeSpan'
 
 const props = defineProps<{
   spec: FormSpec
@@ -46,6 +48,8 @@ function renderForm(
   switch (formSpec.type as Components['type']) {
     case 'dictionary':
       return renderDict(formSpec as Dictionary, value as Record<string, unknown>, backendValidation)
+    case 'time_span':
+      return renderTimeSpan(formSpec as TimeSpan, value as number)
     case 'string':
     case 'integer':
     case 'float':
@@ -193,6 +197,18 @@ function renderPassword(formSpec: Password, value: (string | boolean)[]): VNode 
   } else {
     return h('div', [`${formSpec.i18n.password_store}, ${formSpec.i18n.password_choice_invalid}`])
   }
+}
+
+function renderTimeSpan(formSpec: TimeSpan, value: number): VNode {
+  const result = []
+  const values = splitToUnits(value, getSelectedMagnitudes(formSpec.displayed_magnitudes))
+  for (const [magnitude] of ALL_MAGNITUDES) {
+    const v = values[magnitude]
+    if (v !== undefined) {
+      result.push(`${v} ${formSpec.i18n[magnitude]}`)
+    }
+  }
+  return h('div', [result.join(' ')])
 }
 
 function renderSingleChoice(

@@ -637,6 +637,50 @@
                 }
             ]
         },
+        "time_span": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "time_span",
+                    "default": "time_span"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "i18n": {
+                    "title": "time_span_i18n",
+                    "type": "object",
+                    "properties": {
+                        "millisecond": {"type": "string"},
+                        "second": {"type": "string"},
+                        "minute": {"type": "string"},
+                        "hour": {"type": "string"},
+                        "day": {"type": "string"}
+                    },
+                    "required": [ "millisecond", "second", "minute", "hour", "day" ]
+                },
+                "displayed_magnitudes": {
+                    "type": "array",
+                    "items": {
+                        "enum": [ "millisecond", "second", "minute", "hour", "day" ],
+                        "title": "time_span_time_magnitude"
+                    }
+                },
+                "input_hint": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "displayed_magnitudes",
+                "i18n",
+                "prefill"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "components": {
             "discriminator": {
                 "propertyName": "type"
@@ -686,6 +730,9 @@
                 },
                 {
                     "$ref": "#/$defs/multiple_choice"
+                },
+                {
+                    "$ref": "#/$defs/time_span"
                 }
             ],
             "required": [

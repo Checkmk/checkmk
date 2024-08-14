@@ -11,7 +11,9 @@ from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.utils import escaping
 
 from cmk.rulesets.v1 import Label, Title
-from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.rulesets.v1.form_specs import FormSpec, Prefill
+
+# TODO: imports from _base are not necessary, ModelT can be defined locally and the other two can be imported from form_specs
 from cmk.rulesets.v1.form_specs._base import DefaultValue, InputHint, ModelT
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
@@ -87,8 +89,17 @@ def compute_text_input_hint(prefill: _PrefillTypes[ModelT]) -> str | None:
         return None
 
     if isinstance(prefill.value, Title):
+        # TODO: this is a very specialized if, that is only necessary for currenlty four FormSpecs:
+        # use ag `InputHint.Title` to find them. We could put that into a special title function
+        # and use the generic comput_input_hint function below for all other FormSpecs.
         return prefill.value.localize(translate_to_current_language)
     return str(prefill.value)
+
+
+def compute_input_hint(prefill: Prefill[ModelT]) -> ModelT | None:
+    if not isinstance(prefill, InputHint):
+        return None
+    return prefill.value
 
 
 def compute_label(label: Label | None) -> str | None:

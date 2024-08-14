@@ -142,6 +142,7 @@ run_build() {
             --use-standard-collections \
             --use-one-literal-as-default \
             --use-subclass-enum \
+            --use-title-as-name \
             --custom-file-header-path header_py.txt \
             --use-title-as-name \
             --custom-formatters "utils.format"

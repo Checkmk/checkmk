@@ -95,6 +95,23 @@ class Layout1(str, Enum):
 
 
 @dataclass(kw_only=True)
+class TimeSpanI18n:
+    millisecond: str
+    second: str
+    minute: str
+    hour: str
+    day: str
+
+
+class TimeSpanTimeMagnitude(str, Enum):
+    millisecond = "millisecond"
+    second = "second"
+    minute = "minute"
+    hour = "hour"
+    day = "day"
+
+
+@dataclass(kw_only=True)
 class ValidationMessage:
     location: list[str]
     message: str
@@ -257,6 +274,15 @@ class Catalog(FormSpec):
     type: str = "catalog"
 
 
+@dataclass(kw_only=True)
+class TimeSpan(FormSpec):
+    i18n: TimeSpanI18n
+    displayed_magnitudes: list[TimeSpanTimeMagnitude]
+    type: str = "time_span"
+    label: Optional[str] = None
+    input_hint: Optional[float] = None
+
+
 Components = Union[
     Integer,
     Float,
@@ -273,6 +299,7 @@ Components = Union[
     DataSize,
     Catalog,
     MultipleChoice,
+    TimeSpan,
 ]
 
 

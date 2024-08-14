@@ -20,7 +20,8 @@ export type Components =
   | Password
   | DataSize
   | Catalog
-  | MultipleChoice;
+  | MultipleChoice
+  | TimeSpan;
 export type Integer = FormSpec & {
   type: "integer";
   label?: string;
@@ -121,6 +122,14 @@ export type MultipleChoice = FormSpec & {
   elements: MultipleChoiceElement[];
   show_toggle_all: boolean;
 };
+export type TimeSpan = FormSpec & {
+  type?: "time_span";
+  label?: string;
+  i18n: TimeSpanI18N;
+  displayed_magnitudes: TimeSpanTimeMagnitude[];
+  input_hint?: number;
+};
+export type TimeSpanTimeMagnitude = "millisecond" | "second" | "minute" | "hour" | "day";
 
 export interface VueFormspecComponents {
   components?: Components;
@@ -187,6 +196,13 @@ export interface Topic {
 export interface MultipleChoiceElement {
   name: string;
   title: string;
+}
+export interface TimeSpanI18N {
+  millisecond: string;
+  second: string;
+  minute: string;
+  hour: string;
+  day: string;
 }
 export interface ValidationMessage {
   location: string[];

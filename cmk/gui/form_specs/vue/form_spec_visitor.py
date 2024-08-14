@@ -56,6 +56,7 @@ from cmk.rulesets.v1.form_specs import (
     ServiceState,
     SingleChoice,
     String,
+    TimeSpan,
 )
 
 from .validators import (
@@ -83,6 +84,7 @@ from .visitors import (
     register_visitor_class,
     SingleChoiceVisitor,
     StringVisitor,
+    TimeSpanVisitor,
 )
 from .visitors._type_defs import DataOrigin, DEFAULT_VALUE, VisitorOptions
 
@@ -117,6 +119,7 @@ def register_form_specs():
     register_visitor_class(Catalog, CatalogVisitor)
     register_visitor_class(ListExtended, ListVisitor)
     register_visitor_class(MultipleChoice, MultipleChoiceVisitor)
+    register_visitor_class(TimeSpan, TimeSpanVisitor)
 
     # Recomposed
     register_visitor_class(HostState, SingleChoiceVisitor, recompose_host_state)

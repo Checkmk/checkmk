@@ -13,7 +13,7 @@ from uuid import uuid4
 from livestatus import SiteId
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.password_store import Password as StorePassword
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleSpec
@@ -76,7 +76,9 @@ from cmk.gui.watolib.configuration_bundles import (
     CreateRule,
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.passwords import load_passwords
+from cmk.gui.watolib.services import get_check_table, perform_fix_all
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
@@ -567,7 +569,9 @@ def create_host_from_form_data(
     return CreateHost(
         name=host_name,
         folder=host_path,
-        attributes=HostAttributes(),
+        attributes=HostAttributes(
+            ipaddress=HostAddress("127.0.0.1")  # TODO: CMK-18691 IP address should not be required
+        ),
     )
 
 
@@ -669,8 +673,16 @@ def create_and_save_special_agent_bundle(
             ],
         ),
     )
-    # config sync
-    # service discovery "fix_all" and wait for job to finish
+
+    # TODO: config sync
+
+    host: Host = Host.load_host(host_name)
+    perform_fix_all(
+        discovery_result=get_check_table(host=host, action=host_name, raise_errors=False),
+        host=host,
+        raise_errors=False,
+    )
+
     return makeuri_contextless(
         request,
         [("mode", ModeActivateChanges.name())],

@@ -9,13 +9,18 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.table import Table
 from cmk.gui.utils.html import HTML
+from cmk.gui.watolib.mode import mode_url
+
+
+def _quick_setup_link(ident: GlobalIdent) -> str:
+    return mode_url("edit_configuration_bundle", bundle_id=ident["instance_id"])
 
 
 def quick_setup_render_link(ident: GlobalIdent) -> HTML:
     """Returns HTML for a link to the quick setup. This assumes the `ident` is for a quick setup."""
     return html.render_a(
-        _("[%s] - Quick setup") % ident["instance_id"],  # TODO: QUICK-SETUP - host name
-        "#",  # TODO: QUICK-SETUP - link to Quick setup
+        _("[%s] - Quick setup") % ident["instance_id"],
+        _quick_setup_link(ident),
         class_=["config-bundle-link"],
     )
 
@@ -34,26 +39,24 @@ def quick_setup_locked_warning(ident: GlobalIdent, type_name: str) -> None:
     This assumes the `ident` is for a quick setup."""
     html.div(
         html.render_div(
-            html.render_h2(  # TODO: QUICK-SETUP - rule type
+            html.render_h2(
                 _("Configured with %s Quick setup") % ident["instance_id"],
                 class_=["heading"],
             )
             + html.render_div(
                 _(
-                    "This {type_name} is part of the {host_name} configuration using Quick setup. "
+                    "This {type_name} is part of the {qs_name} configuration using Quick setup. "
                     "Some options cannot be edited to avoid conflicts.<br>Go to Quick "
-                    "setup to edit all parameters of {host_name}."
+                    "setup to edit all parameters of {qs_name}."
                 ).format(
-                    host_name=ident["instance_id"],  # TODO: QUICK-SETUP - host name
+                    qs_name=ident["instance_id"],
                     type_name=type_name,
                 ),
             )
             + html.render_div(
                 html.render_a(
-                    html.render_b(
-                        _("Edit %s") % ident["instance_id"]  # TODO: QUICK-SETUP - host name
-                    ),
-                    href="#",  # TODO: QUICK-SETUP - link to Quick setup
+                    html.render_b(_("Edit %s") % ident["instance_id"]),
+                    href=_quick_setup_link(ident),
                 ),
                 class_=["button-container"],
             ),
@@ -76,9 +79,9 @@ def quick_setup_duplication_warning(ident: GlobalIdent, type_name: str) -> None:
                         "associated with the source"
                     )
                     % type_name
-                    + html.render_a(  # TODO: QUICK-SETUP - host name
+                    + html.render_a(
                         _("[%s] - Quick setup") % ident["instance_id"],
-                        "#",  # TODO: QUICK-SETUP - link to Quick setup
+                        _quick_setup_link(ident),
                         class_=["config-bundle-link"],
                         style="margin-left: 2px;",
                     )

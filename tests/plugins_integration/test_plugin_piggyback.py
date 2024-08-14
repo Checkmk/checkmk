@@ -23,9 +23,13 @@ def _read_piggyback_hosts_from_dump(dump: str) -> set[str]:
     return piggyback_hosts
 
 
-@pytest.mark.skip(reason="Test still WIP.")
 @pytest.mark.parametrize("source_host_name", get_host_names())
-def test_plugin_piggyback(test_site: Site, source_host_name: str, dcd_connector: None) -> None:
+def test_plugin_piggyback(
+    test_site: Site, source_host_name: str, dcd_connector: None, pytestconfig: pytest.Config
+) -> None:
+    if not pytestconfig.getoption(name="--enable-piggyback"):
+        pytest.skip("Piggyback tests are not selected.")
+
     with setup_source_host(test_site, source_host_name):
         disk_dump = read_disk_dump(source_host_name)
         cmk_dump = read_cmk_dump(source_host_name, test_site, "agent")

@@ -1,0 +1,16 @@
+Title: Microsoft Teams: Updated notification message
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1723712510
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+Changes were made to the notification format for Microsoft Teams to reduce
+whitespace. No user action is required.
+
+Formatting rules for the details:
+* Supports Markdown, see <a href="https://learn.microsoft.com/en-us/adaptive-cards/authoring-cards/text-features">Microsoft's documentation</a>
+* Use <code>\n\n</code> for a new line
+* An empty line will lead to a separator (<code>\n\n\n\n</code>)

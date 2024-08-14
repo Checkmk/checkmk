@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import FormSpec, HostState
 def recompose(form_spec: FormSpec[Any]) -> FormSpec[Any]:
     if not isinstance(form_spec, HostState):
         raise MKGeneralException(
-            f"Cannot recompose form spec. Expected a SingleChoice form spec, got {type(form_spec)}"
+            f"Cannot recompose form spec. Expected a HostState form spec, got {type(form_spec)}"
         )
 
     return SingleChoiceExtended(
@@ -26,15 +26,15 @@ def recompose(form_spec: FormSpec[Any]) -> FormSpec[Any]:
         # SingleChoice
         elements=[
             SingleChoiceElementExtended(
-                name=0,
+                name=HostState.UP,
                 title=Title("UP"),
             ),
             SingleChoiceElementExtended(
-                name=1,
+                name=HostState.DOWN,
                 title=Title("DOWN"),
             ),
             SingleChoiceElementExtended(
-                name=2,
+                name=HostState.UNREACH,
                 title=Title("UNREACHABLE"),
             ),
         ],

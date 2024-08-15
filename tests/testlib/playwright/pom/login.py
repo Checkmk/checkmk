@@ -9,7 +9,7 @@ from urllib.parse import urljoin
 
 from playwright.sync_api import expect, Locator, Page, Response
 
-from tests.testlib.playwright.helpers import CmkCredentials
+from tests.testlib.playwright.helpers import CmkCredentials, DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -54,6 +54,9 @@ class LoginPage(CmkPage):
         expect(self.username_input).to_be_empty()
         expect(self.password_input).to_be_visible()
         expect(self.password_input).to_be_empty()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
 
     @property
     def username_input(self) -> Locator:

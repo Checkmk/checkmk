@@ -5,8 +5,9 @@
 import logging
 import re
 
-from playwright.sync_api import expect, Locator, Page
+from playwright.sync_api import expect, Locator
 
+from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -16,9 +17,6 @@ class ChangePassword(CmkPage):
     """Represent the page `Navigation bar -> User -> User profile -> Change password`."""
 
     page_title: str = "Change password"
-
-    def __init__(self, page: Page, navigate_to_page: bool = True) -> None:
-        super().__init__(page, navigate_to_page)
 
     def navigate(self) -> None:
         """Navigate to change password page, like a Checkmk GUI user."""
@@ -32,6 +30,9 @@ class ChangePassword(CmkPage):
         self.main_area.check_page_title(self.page_title)
         expect(self.current_password_input).to_be_visible()
         expect(self.new_password_input).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
 
     @property
     def current_password_input(self) -> Locator:

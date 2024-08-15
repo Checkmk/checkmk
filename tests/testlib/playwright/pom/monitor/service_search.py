@@ -9,6 +9,7 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
+from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,9 @@ class ServiceSearchPage(CmkPage):
         logger.info("Validate that current page is %s page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.filter_sidebar).to_be_visible(timeout=5000)
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
 
     @property
     def service_rows(self) -> Locator:

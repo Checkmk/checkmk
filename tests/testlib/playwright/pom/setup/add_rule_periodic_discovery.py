@@ -8,6 +8,7 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
+from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
 from tests.testlib.playwright.pom.setup.ruleset import Ruleset
 
@@ -37,6 +38,9 @@ class AddRulePeriodicServiceDiscovery(CmkPage):
         self.main_area.check_page_title(f"Add rule: {self.rule_name}")
         expect(self.description_text_field).to_be_visible()
         expect(self.hours_text_field).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
 
     @property
     def description_text_field(self) -> Locator:

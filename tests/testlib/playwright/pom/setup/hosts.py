@@ -10,6 +10,7 @@ from playwright.sync_api import expect, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.testlib.host_details import HostDetails
+from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -17,9 +18,6 @@ logger = logging.getLogger(__name__)
 
 class SetupHost(CmkPage):
     """Represent the page `setup -> Hosts`."""
-
-    def __init__(self, page: Page, navigate_to_page: bool = True) -> None:
-        super().__init__(page, navigate_to_page)
 
     def navigate(self) -> None:
         """Instructions to navigate to `setup -> Hosts` page.
@@ -36,6 +34,11 @@ class SetupHost(CmkPage):
         logger.info("Validate that current page is 'Setup hosts' page")
         expect(self.get_link("Add host")).to_be_visible()
         expect(self.get_link("Add folder")).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        mapping = DropdownListNameToID()
+        setattr(mapping, "Hosts", "menu_hosts")
+        return mapping
 
     @property
     def add_host(self) -> Locator:
@@ -61,9 +64,7 @@ class SetupHost(CmkPage):
 
     def delete_selected_hosts(self) -> None:
         logger.info("Delete selected hosts")
-        self.main_area.click_dropdown_menu_item(
-            dropdown_button="Hosts", menu_id="menu_hosts", menu_item="Delete hosts"
-        )
+        self.main_area.click_item_in_dropdown_list(dropdown_button="Hosts", item="Delete hosts")
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
         try:
             expect(self.successfully_deleted_msg).to_be_visible(timeout=5000)
@@ -110,6 +111,9 @@ class AddHost(CmkPage):
             url=re.compile(quote_plus("wato.py?folder=&mode=newhost")), wait_until="load"
         )
         self._validate_page()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
 
     @property
     def host_name_text_field(self) -> Locator:
@@ -253,12 +257,15 @@ class HostProperties(CmkPage):
         expect(self.main_area.get_text(text=HostProperties.links[0])).to_be_visible()
         expect(self.main_area.get_text(text=HostProperties.properties[0])).to_be_visible()
 
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        mapping = DropdownListNameToID()
+        setattr(mapping, "Host", "menu_host")
+        return mapping
+
     def delete_host(self) -> None:
         """On `setup -> Hosts -> Properties`, delete host and activate changes."""
         logger.info("Delete host: %s", self.details.name)
-        self.main_area.click_dropdown_menu_item(
-            dropdown_button="Host", menu_id="menu_host", menu_item="Delete"
-        )
+        self.main_area.click_item_in_dropdown_list(dropdown_button="Host", item="Delete")
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
         self.page.wait_for_url(
             url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"

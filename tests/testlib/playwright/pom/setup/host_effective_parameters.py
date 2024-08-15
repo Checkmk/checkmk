@@ -9,6 +9,7 @@ from urllib.parse import quote_plus
 from playwright.sync_api import expect, Locator, Page
 
 from tests.testlib.host_details import HostDetails
+from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
 from tests.testlib.playwright.pom.setup.hosts import SetupHost
 
@@ -59,6 +60,9 @@ class HostEffectiveParameters(CmkPage):
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.section_title(HostEffectiveParameters.sections[0])).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
 
     def section_title(self, section_name: str) -> Locator:
         return self.main_area.locator().get_by_role("cell", name=section_name)

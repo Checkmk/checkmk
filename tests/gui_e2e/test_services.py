@@ -49,8 +49,8 @@ def test_reschedule_active_checks(dashboard_page: Dashboard, created_host: HostD
     time.sleep(sleep_time)
 
     logger.info("Reschedule active checks")
-    service_search_page.main_area.click_dropdown_menu_item(
-        "Commands", "menu_commands", "Reschedule active checks"
+    service_search_page.main_area.click_item_in_dropdown_list(
+        "Commands", "Reschedule active checks"
     )
     expect(service_search_page.reschedule_active_checks_popup).to_be_visible()
     service_search_page.spread_over_minutes_textbox.fill("0")

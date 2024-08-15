@@ -10,6 +10,7 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
+from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,9 @@ class Ruleset(CmkPage):
         logger.info("Validate that current page is '%s' page", self.rule_name)
         self.main_area.check_page_title(self.rule_name)
         expect(self.main_area.get_suggestion("Add rule")).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
 
     @property
     def created_new_rule_message(self) -> Pattern[str]:

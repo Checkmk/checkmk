@@ -8,8 +8,9 @@ import re
 from typing import Literal
 from urllib.parse import quote_plus
 
-from playwright.sync_api import expect, Locator, Page
+from playwright.sync_api import expect, Locator
 
+from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -35,13 +36,6 @@ class HostSearch(CmkPage):
         "Show checkboxes",
     ]
 
-    def __init__(
-        self,
-        page: Page,
-        navigate_to_page: bool = True,
-    ) -> None:
-        super().__init__(page, navigate_to_page)
-
     def navigate(self) -> None:
         logger.info("Navigate to Monitor >> Overview >> %s", self.page_title)
         self.main_menu.monitor_menu("Host search").click()
@@ -54,6 +48,9 @@ class HostSearch(CmkPage):
         logger.info("Validate that current page is %s page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.filter_sidebar).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
 
     @property
     def found_hosts(self) -> Locator:

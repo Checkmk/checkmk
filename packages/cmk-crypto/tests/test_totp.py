@@ -2,12 +2,13 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Tests for the TOTP module"""
 
 import math
 
 import pytest
 
-from cmk.utils.totp import TOTP, TotpVersion
+from cmk.crypto.totp import TOTP, TotpVersion
 
 SECRET = b"12345678901234567890"
 
@@ -28,9 +29,11 @@ SECRET = b"12345678901234567890"
     ],
 )
 def test_hotp(count: int, hash_object: str, otp: int) -> None:
-    totp = TOTP(SECRET, TotpVersion.one)
-    hmac_sha1 = totp.hmac_hash(count)
+    totp = TOTP(SECRET, TotpVersion.ONE)
+
+    hmac_sha1 = totp._hmac_hash(count)  # pylint: disable=protected-access
     hotp = totp.generate_hotp(hmac_sha1)
+
     assert hmac_sha1.hexdigest() == hash_object
     assert hotp == otp
 
@@ -47,9 +50,11 @@ def test_hotp(count: int, hash_object: str, otp: int) -> None:
     ],
 )
 def test_totp_generate(time: int, otp: str) -> None:
-    totp = TOTP(SECRET, TotpVersion.rfc_totp)
+    totp = TOTP(SECRET, TotpVersion.RFC6238)
+
     gen_time = math.floor(time / 30)
     code = totp.generate_totp(gen_time)
+
     assert code == otp
 
 
@@ -61,7 +66,9 @@ def test_totp_generate(time: int, otp: str) -> None:
     ],
 )
 def test_totp_check(time: int, otp: str) -> None:
-    totp = TOTP(SECRET, TotpVersion.rfc_totp)
+    totp = TOTP(SECRET, TotpVersion.RFC6238)
+
     gen_time = math.floor(time / 30)
     status = totp.check_totp(otp, gen_time)
+
     assert status is True

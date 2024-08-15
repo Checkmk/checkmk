@@ -29,7 +29,6 @@ from fido2.webauthn import (
 
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.totp import TOTP, TotpVersion
 from cmk.utils.user import UserId
 
 from cmk.gui import forms
@@ -92,6 +91,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import PasswordHash
+from cmk.crypto.totp import TOTP
 
 from .abstract_page import ABCUserProfilePage
 from .page_menu import page_menu_dropdown_user_related
@@ -507,7 +507,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
         credentials = load_two_factor_credentials(user.id, lock=True)
 
         self.secret = b32decode(request.get_ascii_input_mandatory("_otp"))
-        otp = TOTP(self.secret, TotpVersion.one)
+        otp = TOTP(self.secret)
 
         alias = TextInput().from_html_vars("alias")
         now_time = otp.calculate_generation(datetime.datetime.now())
@@ -955,7 +955,7 @@ class UserLoginTwoFactor(Page):
             if totp_code := request.get_validated_type_input(Password, "_totp_code"):
                 totp_credential = credentials["totp_credentials"]
                 for credential in totp_credential:
-                    otp = TOTP(totp_credential[credential]["secret"], TotpVersion.one)
+                    otp = TOTP(totp_credential[credential]["secret"])
                     if otp.check_totp(
                         totp_code.raw_bytes.decode(),
                         otp.calculate_generation(datetime.datetime.now()),

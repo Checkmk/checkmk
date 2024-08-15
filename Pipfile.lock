@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "24fcfcb1f64a7136bd9b511391a2491a2ed5e82f2e11c1c74337f063ad76e092"
+            "sha256": "289d0a238d361a562b9251cb5f534b7a72c5cafacef02c6d7b2ef053b605244b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -225,21 +225,21 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:2b74c58f475ff0dcf2f3637da9367a9465d29fad971ff5d8dc54ac39554e9022",
-                "sha256:f8f16c2d0ec1dca291857f1c138d5c30e01e40f653443cc2679e2f6ae71b05a6"
+                "sha256:4ef285334a0edc3047e27a04caf00f7742e32c0f03a361101e768014ac5709dd",
+                "sha256:a872d8fdb3203c1eb0b12fa9e9d879e6f7fd02983a485f02189e6d5914ccd834"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==1.34.15"
+            "version": "==1.34.161"
         },
         "botocore": {
             "hashes": [
-                "sha256:16bcf871e67ef0177593f06e9e5bae4db51c9a9a2e953cb14feeb42d53441a85",
-                "sha256:c3c3404962a6d9d5e1634bd70ed53b8eff1ff17ee9d7a6240e9e8c94db48ad6f"
+                "sha256:16381bfb786142099abf170ce734b95a402a3a7f8e4016358712ac333c5568b2",
+                "sha256:6c606d2da6f62fde06880aff1190566af208875c29938b6b68741e607817975a"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==1.34.15"
+            "version": "==1.34.161"
         },
         "cached-property": {
             "hashes": [
@@ -2436,12 +2436,12 @@
         },
         "urllib3": {
             "hashes": [
-                "sha256:c97dfde1f7bd43a71c8d2a58e369e9b2bf692d1334ea9f9cae55add7d0dd0f84",
-                "sha256:fdb6d215c776278489906c2f8916e6e7d4f5a9b602ccbcfdf7f016fc8da0596e"
+                "sha256:a448b2f64d686155468037e1ace9f2d2199776e17f0a46610480d311f73e3472",
+                "sha256:dd505485549a7a552833da5e6063639d0d177c04f23bc3864e41e5dc5f612168"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.7'",
-            "version": "==2.0.7"
+            "markers": "python_version >= '3.8'",
+            "version": "==2.2.2"
         },
         "uvicorn": {
             "hashes": [
@@ -2848,20 +2848,20 @@
                 "logs"
             ],
             "hashes": [
-                "sha256:93321cfd3b2f161ed3b9fdf4176e5aed4a6f5a0d124cb9661cc238843180e6e0",
-                "sha256:d9b21c2771e2f067097400ee34d92e08e71986e4bc20f1f4f3b1be0fc3f7f61b"
+                "sha256:58291c105030ab589cf30c02dfb48df1e23cbabdc6e9e0fc3446982a83280edc",
+                "sha256:aff48426ed2dc03be038a1b8d0864f8ff1d6d7e0e024f9bd69ec8d0c78b4cf4c"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==1.34.15"
+            "version": "==1.34.161"
         },
         "botocore-stubs": {
             "hashes": [
-                "sha256:4cd79dd4419e2a229ffa8512154e91c91cad2376675f3ee3b07cbcbb5fd7a256",
-                "sha256:b42c5aa7bd00a11ff299cac20516db2901254a9b1abad531bddc8400213d91cd"
+                "sha256:59d9493c9724dff1a76004dc3ec1eca9290ccb46ddc057acf3ac44071d02d3cb",
+                "sha256:fff186b749b60814e01abbeca447d7c2d38d363c726bc23ee2f52da2dbcda868"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8' and python_version < '4.0'",
-            "version": "==1.34.15"
+            "version": "==1.34.161"
         },
         "bson": {
             "hashes": [
@@ -5396,12 +5396,12 @@
         },
         "urllib3": {
             "hashes": [
-                "sha256:c97dfde1f7bd43a71c8d2a58e369e9b2bf692d1334ea9f9cae55add7d0dd0f84",
-                "sha256:fdb6d215c776278489906c2f8916e6e7d4f5a9b602ccbcfdf7f016fc8da0596e"
+                "sha256:a448b2f64d686155468037e1ace9f2d2199776e17f0a46610480d311f73e3472",
+                "sha256:dd505485549a7a552833da5e6063639d0d177c04f23bc3864e41e5dc5f612168"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.7'",
-            "version": "==2.0.7"
+            "markers": "python_version >= '3.8'",
+            "version": "==2.2.2"
         },
         "uvicorn": {
             "hashes": [

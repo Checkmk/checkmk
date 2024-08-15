@@ -11,8 +11,8 @@ azure-mgmt-resource = "*"  # used by the release process to publish the azure im
 azure-mgmt-compute = "*"  # used by the release process to add a new image version
 bandit = "*"  # used by test/Makefile's test-bandit target
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
-boto3-stubs = {extras = ["logs"], version = "==1.34.15"}  # used for type checking, keep version in sync with boto3
-botocore-stubs = "==1.34.15"  # used for type checking, keep version in sync with botocore
+boto3-stubs = {extras = ["logs"], version = "*"}  # used for type checking, keep version in sync with boto3
+botocore-stubs = "*"  # used for type checking, keep version in sync with botocore
 bson = "*"  # used by test_mk_mongodb unit test
 checkmk-dev-tools = "~=0.1.60"  # provides tooling for build artifacts
 compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
@@ -133,8 +133,8 @@ pypdf = "*"  # needed by GUI (reporting)
 roman = "==4.0"  # needed by GUI (reporting)
 google-auth = "*"  # needed by kubernetes
 kubernetes = "==21.7.0"  # needed by kubernetes
-botocore = "==1.34.15"  # needed by boto3 (aws), keep version in sync with botocore-stubs
-boto3 = "==1.34.15"  # needed by boto3 (aws), keep version in sync with boto3-stubs
+botocore = "*"  # needed by boto3 (aws), keep version in sync with botocore-stubs
+boto3 = "*"  # needed by boto3 (aws), keep version in sync with boto3-stubs
 python-snap7 = "==1.3"  # needed by Siemens PLC special agent
 pymssql = "==2.2.11"  # needed by check_sql active check
 pymysql = "~=1.1.1"  # needed by check_sql active check

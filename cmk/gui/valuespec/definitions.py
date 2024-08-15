@@ -7880,9 +7880,9 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         return json_value
 
     def validate_datatype(self, value: IconSelectorModel, varprefix: str) -> None:
-        if self._with_emblem and not isinstance(value, (str, dict)):
+        if value is not None and self._with_emblem and not isinstance(value, (str, dict)):
             raise MKUserError(varprefix, "The type is %s, but should be str or dict" % type(value))
-        if not self._with_emblem and not isinstance(value, str):
+        if value is not None and not self._with_emblem and not isinstance(value, str):
             raise MKUserError(varprefix, "The type is %s, but should be str or dict" % type(value))
 
         icon_dict = self._transform_icon_str(value)

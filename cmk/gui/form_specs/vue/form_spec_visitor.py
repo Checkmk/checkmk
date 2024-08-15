@@ -88,7 +88,6 @@ T = TypeVar("T")
 @dataclass(kw_only=True)
 class VueAppConfig:
     id: str
-    app_name: str
     spec: VueComponents.FormSpec
     data: Any
     validation: Any
@@ -178,7 +177,7 @@ def render_form_spec(
     logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
     logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
     logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
-    html.div("", data_cmk_vue_app=json.dumps(asdict(vue_app_config)))
+    html.vue_app(app_name="form_spec", data=asdict(vue_app_config))
 
 
 def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> Any:
@@ -221,7 +220,6 @@ def serialize_data_for_frontend(
 
     return VueAppConfig(
         id=field_id,
-        app_name="form_spec",
         spec=vue_component,
         data=vue_value,
         validation=validation,

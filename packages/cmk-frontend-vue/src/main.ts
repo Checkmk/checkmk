@@ -19,53 +19,63 @@ import QuickSetup from './views/QuickSetup.vue'
 import { FormApp } from '@/form'
 
 function setupVue() {
-  document.querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app]').forEach((div) => {
+  document.querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app_name]').forEach((div) => {
     const dataset = div.dataset
-    if (dataset == undefined) {
+    if (dataset === undefined) {
       return
     }
 
-    const vueAppData = dataset['cmk_vue_app']
-    if (vueAppData == undefined) {
+    const appName = dataset['cmk_vue_app_name']
+    const appDataRaw = dataset['cmk_vue_app_data']
+    if (appName === undefined || appDataRaw === undefined) {
       return
     }
-    const vueApp = JSON.parse(vueAppData)
+    const appData = JSON.parse(appDataRaw)
 
-    if (vueApp.app_name == 'form_spec') {
-      const app = createApp(FormApp, {
-        id: vueApp.id,
-        spec: vueApp.spec,
-        // eslint has a false positive: assuming `data` is part of a vue component
-        // eslint-disable-next-line vue/no-deprecated-data-object-declaration, vue/no-shared-component-data
-        data: vueApp.data,
-        backendValidation: vueApp.validation,
-        renderMode: vueApp.render_mode
-      })
-      // Assign a unique id to each component, useful for label for=..
-      // until https://github.com/vuejs/rfcs/discussions/557 is resolved
-      app.use(mixinUniqueId)
-      app.mount(div)
-    } else if (vueApp.app_name == 'd3_table') {
-      console.log('vue create table')
-      const app = createApp(D3Table, {
-        table_spec: vueApp.component
-      })
-      app.mount(div)
-      console.log('vue fully mounted table')
-    } else if (vueApp.app_name == 'vue_table') {
-      console.log('vue create table')
-      const app = createApp(Table, {
-        table_spec: vueApp.component
-      })
-      app.mount(div)
-      console.log('vue fully mounted table')
-    } else if (vueApp.app_name == 'quick_setup') {
-      const app = createApp(QuickSetup, { quick_setup_id: vueApp.quick_setup_id })
-      app.use(mixinUniqueId)
-      app.mount(div)
-    } else {
-      throw `can not load vue app "${vueApp.app_name}"`
+    let app
+
+    switch (appName) {
+      case 'form_spec': {
+        app = createApp(FormApp, {
+          id: appData.id,
+          spec: appData.spec,
+          // eslint has a false positive: assuming `data` is part of a vue component
+          // eslint-disable-next-line vue/no-deprecated-data-object-declaration, vue/no-shared-component-data
+          data: appData.data,
+          backendValidation: appData.validation,
+          renderMode: appData.render_mode
+        })
+        // Assign a unique id to each component, useful for label for=..
+        // until https://github.com/vuejs/rfcs/discussions/557 is resolved
+        app.use(mixinUniqueId)
+        break
+      }
+      case 'd3_table': {
+        console.log('vue create table')
+        app = createApp(D3Table, {
+          table_spec: appData.component
+        })
+        console.log('vue fully mounted table')
+        break
+      }
+      case 'vue_table': {
+        console.log('vue create table')
+        app = createApp(Table, {
+          table_spec: appData.component
+        })
+        console.log('vue fully mounted table')
+        break
+      }
+      case 'quick_setup': {
+        app = createApp(QuickSetup, { quick_setup_id: appData.quick_setup_id })
+        app.use(mixinUniqueId)
+        break
+      }
+      default:
+        throw `can not load vue app "${appName}"`
     }
+
+    app.mount(div)
   })
 }
 

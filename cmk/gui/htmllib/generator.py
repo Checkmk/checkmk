@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import json
 import typing
-from typing import assert_never, Final, final, Literal
+from typing import Any, assert_never, Final, final, Literal
 
 from cmk.gui.i18n import _
 from cmk.gui.utils import escaping
@@ -376,6 +376,13 @@ class HTMLWriter:
 
     def div(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("div", content, **kwargs))
+
+    def vue_app(self, app_name: str, data: dict[str, Any]) -> None:
+        self.write_html(
+            render_element(
+                "div", None, data_cmk_vue_app_name=app_name, data_cmk_vue_app_data=json.dumps(data)
+            )
+        )
 
     def legend(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("legend", content, **kwargs))

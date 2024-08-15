@@ -69,7 +69,11 @@ def test_check_splunk_health() -> None:
             },
         ),
     ]
-    default_params: health.CheckParams = {"green": 0, "yellow": 1, "red": 2}
+    default_params: health.CheckParams = {
+        "green": State.OK.value,
+        "yellow": State.WARN.value,
+        "red": State.CRIT.value,
+    }
 
     actual = list(health.check_splunk_health(params=default_params, section=sections))
     expected: CheckResult = [
@@ -93,7 +97,11 @@ def test_check_splunk_health_custom_params_sets_red_to_warn() -> None:
             health=health.HealthStatus.RED,
         )
     ]
-    custom_params: health.CheckParams = {"green": 0, "yellow": 1, "red": 1}
+    custom_params: health.CheckParams = {
+        "green": State.OK.value,
+        "yellow": State.WARN.value,
+        "red": State.WARN.value,
+    }
 
     actual = list(health.check_splunk_health(params=custom_params, section=sections))
     expected: CheckResult = [Result(state=State.WARN, summary="Overall state: red")]

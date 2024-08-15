@@ -148,5 +148,9 @@ check_plugin_splunk_health = CheckPlugin(
     check_function=check_splunk_health,
     discovery_function=discover_splunk_health,
     check_ruleset_name="splunk_health",
-    check_default_parameters=CheckParams(green=0, yellow=1, red=2),
+    check_default_parameters=CheckParams(
+        green=State.OK.value,
+        yellow=State.WARN.value,
+        red=State.CRIT.value,
+    ),
 )

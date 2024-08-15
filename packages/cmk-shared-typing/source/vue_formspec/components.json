@@ -253,7 +253,7 @@
                 }
             ]
         },
-        "single_choice_element_extended": {
+        "single_choice_element": {
             "type": "object",
             "properties": {
                 "name": {},
@@ -276,7 +276,7 @@
                 "elements": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/$defs/single_choice_element_extended"
+                        "$ref": "#/$defs/single_choice_element"
                     },
                     "default": []
                 },

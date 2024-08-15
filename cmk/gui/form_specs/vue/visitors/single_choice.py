@@ -46,7 +46,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
         title, help_text = get_title_and_help(self.form_spec)
 
         elements = [
-            VueComponents.SingleChoiceElementExtended(
+            VueComponents.SingleChoiceElement(
                 name=element.name,
                 title=element.title.localize(translate_to_current_language),
             )

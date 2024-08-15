@@ -62,7 +62,7 @@ export type LegacyValuespec = FormSpec & {
 }
 export type SingleChoice = FormSpec & {
   type: 'single_choice'
-  elements: SingleChoiceElementExtended[]
+  elements: SingleChoiceElement[]
   no_elements_text?: string
   frozen: boolean
   label?: string
@@ -151,7 +151,7 @@ export interface DictionaryGroup {
   title: string
   help?: string
 }
-export interface SingleChoiceElementExtended {
+export interface SingleChoiceElement {
   name: unknown
   title: string
 }

@@ -47,7 +47,7 @@ class DictionaryGroup:
 
 
 @dataclass(kw_only=True)
-class SingleChoiceElementExtended:
+class SingleChoiceElement:
     name: Any
     title: str
 
@@ -138,7 +138,7 @@ class SingleChoice(FormSpec):
     frozen: bool
     input_hint: Any
     type: str = "single_choice"
-    elements: list[SingleChoiceElementExtended] = field(default_factory=lambda: [])
+    elements: list[SingleChoiceElement] = field(default_factory=lambda: [])
     no_elements_text: Optional[str] = None
     label: Optional[str] = None
 

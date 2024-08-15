@@ -35,6 +35,7 @@ class Arguments:
     verbosity: int
     pid_file: str
     log_file: str
+    omd_root: str
 
 
 def _parse_arguments(argv: list[str]) -> Arguments:
@@ -55,6 +56,7 @@ def _parse_arguments(argv: list[str]) -> Arguments:
     parser.add_argument("--debug", action="store_true", help="Let Python exceptions come through")
     parser.add_argument("pid_file", help="Path to the PID file")
     parser.add_argument("log_file", help="Path to the log file")
+    parser.add_argument("omd_root", help="Site root path")
 
     args = parser.parse_args(argv[1:])
     return Arguments(
@@ -63,6 +65,7 @@ def _parse_arguments(argv: list[str]) -> Arguments:
         debug=args.debug,
         pid_file=args.pid_file,
         log_file=args.log_file,
+        omd_root=args.omd_root,
     )
 
 
@@ -89,8 +92,7 @@ def _register_signal_handler() -> None:
     signal.signal(signal.SIGTERM, signal_handler)
 
 
-# a dummy daemon for now
-def run_piggyback_hub():
+def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> None:
     while True:
         time.sleep(5)
 
@@ -118,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         with pid_file_lock(Path(args.pid_file)):
-            run_piggyback_hub()
+            run_piggyback_hub(logger, Path(args.omd_root))
     except SignalException:
         logger.info("Stopping Piggyback Hub daemon.")
     except Exception as e:
@@ -127,5 +129,5 @@ def main(argv: list[str] | None = None) -> int:
         logger.exception("Unhandled exception: %s.", e)
         return 1
 
-    logger.info("Shuting down.")
+    logger.info("Shutting down.")
     return 0

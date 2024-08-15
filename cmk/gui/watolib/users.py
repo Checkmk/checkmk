@@ -4,12 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 from datetime import datetime
-from typing import cast
+from typing import cast, Literal
+
+from livestatus import SiteId
 
 from cmk.utils.crypto.password import Password, PasswordPolicy
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
+from cmk.utils.version import Edition, edition
 
 from cmk.gui import hooks, userdb
 from cmk.gui.config import active_config
@@ -29,6 +32,30 @@ from cmk.gui.watolib.user_scripts import (
     user_script_title,
 )
 
+# Wrong module layer violation warning due to CME/CRE split
+if edition() is Edition.CME:
+    from cmk.gui.cme.watolib.users import (  # pylint: disable=cmk-module-layer-violation
+        user_associated_sites,
+    )
+else:
+    from cmk.gui.cre.watolib.users import (  # pylint: disable=cmk-module-layer-violation
+        user_associated_sites,
+    )
+
+
+AffectedSites = set[SiteId] | Literal["all"]
+
+
+def _update_affected_sites(affected_sites: AffectedSites, user_attrs: UserSpec) -> AffectedSites:
+    if affected_sites == "all":
+        return "all"
+
+    associated_sites = user_associated_sites(user_attrs)
+    if associated_sites is None:
+        return "all"
+
+    return affected_sites | set(associated_sites)
+
 
 def delete_users(users_to_delete: Sequence[UserId]) -> None:
     user.need_permission("wato.users")
@@ -39,9 +66,11 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
     all_users = userdb.load_users(lock=True)
 
     deleted_users = []
+    affected_sites: AffectedSites = set()
     for entry in users_to_delete:
         if entry in all_users:  # Silently ignore not existing users
             deleted_users.append(entry)
+            affected_sites = _update_affected_sites(affected_sites, all_users[entry])
             del all_users[entry]
         else:
             raise MKUserError(None, _("Unknown user: %s") % entry)
@@ -60,7 +89,11 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
                     acting_user=user.id,
                 )
             )
-        add_change("edit-users", _l("Deleted user: %s") % ", ".join(deleted_users))
+        add_change(
+            "edit-users",
+            _l("Deleted user: %s") % ", ".join(deleted_users),
+            sites=None if affected_sites == "all" else list(affected_sites),
+        )
         userdb.save_users(all_users, datetime.now())
 
 
@@ -71,18 +104,20 @@ def edit_users(changed_users: UserObject) -> None:
     all_users = userdb.load_users(lock=True)
     new_users_info = []
     modified_users_info = []
+    affected_sites: AffectedSites = set()
     for user_id, settings in changed_users.items():
-        user_attrs = settings.get("attributes", {})
+        user_attrs: UserSpec = settings.get("attributes", {})
         is_new_user = settings.get("is_new_user", True)
         _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=is_new_user)
 
+        affected_sites = _update_affected_sites(affected_sites, user_attrs)
         if is_new_user:
             new_users_info.append(user_id)
+            add_internal_attributes(user_attrs)
         else:
             modified_users_info.append(user_id)
-
-        if is_new_user:
-            add_internal_attributes(user_attrs)
+            old_user_attrs = all_users[user_id]
+            affected_sites = _update_affected_sites(affected_sites, old_user_attrs)
 
         old_object = make_user_audit_log_object(all_users.get(user_id, {}))
         log_audit(
@@ -108,11 +143,13 @@ def edit_users(changed_users: UserObject) -> None:
         add_change(
             "edit-users",
             _l("Created new users: %s") % ", ".join(new_users_info),
+            sites=None if affected_sites == "all" else list(affected_sites),
         )
     if modified_users_info:
         add_change(
             "edit-users",
             _l("Modified users: %s") % ", ".join(modified_users_info),
+            sites=None if affected_sites == "all" else list(affected_sites),
         )
         hooks.call("users-changed", modified_users_info)
 

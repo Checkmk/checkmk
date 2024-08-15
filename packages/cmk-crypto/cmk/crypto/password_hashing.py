@@ -13,7 +13,6 @@ given password (see `verify`).
 """
 
 import logging
-import re
 from typing import NewType
 
 import bcrypt
@@ -92,17 +91,3 @@ def matches(password: Password, password_hash: PasswordHash) -> bool:
         raise ValueError("Null character identified in password hash.")
 
     return bcrypt.checkpw(password.raw_bytes, password_hash.encode("utf-8"))
-
-
-def is_unsupported_legacy_hash(password_hash: PasswordHash) -> bool:
-    """Was the hash algorithm used for this hash once supported but isn't anymore?"""
-    regex_list = [
-        r"^\$5\$(rounds=[0-9]+\$)?[a-zA-Z0-9\/.]{0,16}\$[a-zA-Z0-9\/.]{43}$",  # SHA256 crypt
-        r"^\$1\$[a-zA-Z0-9\/.]{0,8}\$[a-zA-Z0-9\/.]{22}",  # MD5 crypt
-        r"^\$apr1\$[a-zA-Z0-9\/.]{0,8}\$[a-zA-Z0-9\/.]{22}$",  # Apache MD5
-        r"^[a-zA-Z0-9\/.]{13}$",  # DES crypt
-    ]
-    for regex in regex_list:
-        if re.match(regex, password_hash):
-            return True
-    return False

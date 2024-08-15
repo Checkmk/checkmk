@@ -121,26 +121,3 @@ def test_verify_null_bytes(password: str, password_hash: str) -> None:
 def test_verify_invalid_rounds(password: str, pw_hash: str) -> None:
     with pytest.raises(ValueError, match="Invalid salt"):
         ph.verify(Password(password), ph.PasswordHash(pw_hash))
-
-
-@pytest.mark.parametrize(
-    "unsupported,pw_hash",
-    [
-        (True, "$1$49rn5.0y$XoUJMucpN.aQUEOquaj5C/"),
-        (True, "$apr1$EpPwa/X9$TB2UcQxmrSTJWQQcwHzJM/"),
-        (True, "WsbFVbJdvDcpY"),
-        (True, "48c/R8JAv757A"),  # Des crypt
-        (True, "$1$28772684$iEwNOgGugqO9.bIz5sk8k/"),  # MD5 Crypt
-        (
-            True,
-            "$5$rounds=5000$GX7BopJZJxPc/KEK$le16UF8I2Anb.rOrn22AUPWvzUETDGefUmAV8AZkGcD",
-        ),  # Sha256 crypt
-        (True, "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/"),
-        (False, "foobar"),  # ignore unrecognized algorithms
-        (False, ""),
-        (False, "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
-        (False, "$2y$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
-    ],
-)
-def test_is_unsupported_legacy_hash(unsupported: bool, pw_hash: str) -> None:
-    assert ph.is_unsupported_legacy_hash(ph.PasswordHash(pw_hash)) == unsupported

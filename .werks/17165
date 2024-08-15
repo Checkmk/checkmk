@@ -1,0 +1,14 @@
+Title: Fix warning on rule creation of "Icon image for..."
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1723726408
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+If you created a new rule "Icon image for hosts in status GUI" or "Icon image
+for services in status GUI", a warning like "Unable to read current options of
+this rule" was shown.
+
+The rule could still be created.

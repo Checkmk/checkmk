@@ -14,10 +14,6 @@ export MODULEBUILDRC="$OMD_ROOT/.modulebuildrc"
 export PERL_MM_OPT=INSTALL_BASE="$OMD_ROOT/local/lib/perl5/"
 export MANPATH="$OMD_ROOT/share/man:$MANPATH"
 export MAILRC="$OMD_ROOT/etc/mail.rc"
-# rabbitmq will search for its configuration under $RABBITMQ_HOME/etc, see also
-# https://www.rabbitmq.com/docs/install-generic-unix#file-locations
-export RABBITMQ_HOME=###ROOT###
-export PATH="$OMD_ROOT/lib/rabbitmq/sbin:$PATH"
 
 # Make the python requests module trust the CAs configured in Check_MK
 export REQUESTS_CA_BUNDLE=$OMD_ROOT/var/ssl/ca-certificates.crt

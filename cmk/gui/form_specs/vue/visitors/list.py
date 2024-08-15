@@ -19,7 +19,6 @@ from ._utils import (
     compute_validators,
     create_validation_error,
     get_title_and_help,
-    migrate_value,
 )
 
 T = TypeVar("T")
@@ -27,7 +26,6 @@ T = TypeVar("T")
 
 class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
     def _parse_value(self, raw_value: object) -> Sequence[T] | EmptyValue:
-        raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
             return self.form_spec.prefill.value
 

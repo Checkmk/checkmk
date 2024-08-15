@@ -22,7 +22,6 @@ from ._utils import (
     compute_validators,
     create_validation_error,
     get_title_and_help,
-    migrate_value,
 )
 
 
@@ -31,7 +30,6 @@ class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):
         return {topic.key: DEFAULT_VALUE for topic in self.form_spec.topics}
 
     def _parse_value(self, raw_value: object) -> Mapping[str, object] | EmptyValue:
-        raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
             raw_value = self._compute_default_values()
         if not isinstance(raw_value, dict):

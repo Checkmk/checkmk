@@ -20,7 +20,6 @@ from ._utils import (
     get_prefill_default,
     get_title_and_help,
     localize,
-    migrate_value,
 )
 
 _magnitudes_map: dict[SIMagnitude | IECMagnitude, tuple[str, int]] = {
@@ -76,7 +75,6 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
         return int(converted_value)
 
     def _parse_value(self, raw_value: object) -> int | EmptyValue:
-        raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
             if isinstance(
                 prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue

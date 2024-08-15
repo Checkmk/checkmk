@@ -18,7 +18,7 @@ from cmk.rulesets.v1 import Title
 
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue, Value
-from ._utils import create_validation_error, get_title_and_help, migrate_value
+from ._utils import create_validation_error, get_title_and_help
 
 
 class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
@@ -29,11 +29,14 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
     have a clear distinction
     """
 
-    def _parse_value(self, raw_value: object) -> object | EmptyValue:
+    def _migrate_disk_value(self, value: object) -> object:
         try:
-            return migrate_value(self.form_spec, self.options, raw_value)
+            return super()._migrate_disk_value(value)
         except MKUserError:
             return EMPTY_VALUE
+
+    def _parse_value(self, raw_value: object) -> object | EmptyValue:
+        return raw_value
 
     def _prepare_request_context(self, value: dict[str, Any]) -> None:
         assert "input_context" in value

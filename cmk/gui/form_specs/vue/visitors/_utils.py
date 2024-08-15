@@ -5,9 +5,7 @@
 from typing import Any, Callable, Optional, Protocol, Sequence
 
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin
-from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue as FormSpecDefaultValue
-from cmk.gui.form_specs.vue.visitors._type_defs import EMPTY_VALUE, EmptyValue, VisitorOptions
+from cmk.gui.form_specs.vue.visitors._type_defs import EMPTY_VALUE, EmptyValue
 from cmk.gui.htmllib import html
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.utils import escaping
@@ -73,16 +71,6 @@ def compute_validation_errors(
 
 def compute_validators(form_spec: FormSpec[ModelT]) -> list[Callable[[ModelT], object]]:
     return list(form_spec.custom_validate) if form_spec.custom_validate else []
-
-
-def migrate_value(form_spec: FormSpec[ModelT], options: VisitorOptions, value: Any) -> Any:
-    if (
-        not isinstance(value, FormSpecDefaultValue)
-        and options.data_origin == DataOrigin.DISK
-        and form_spec.migrate
-    ):
-        return form_spec.migrate(value)
-    return value
 
 
 _PrefillTypes = DefaultValue[ModelT] | InputHint[ModelT] | InputHint[Title] | EmptyValue

@@ -16,7 +16,6 @@ from ._utils import (
     compute_validators,
     create_validation_error,
     get_title_and_help,
-    migrate_value,
 )
 
 
@@ -51,7 +50,6 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
         return False
 
     def _parse_value(self, raw_value: object) -> dict[str, object] | EmptyValue:
-        raw_value = migrate_value(self.form_spec, self.options, raw_value)
         raw_value = (
             self._compute_default_values() if isinstance(raw_value, DefaultValue) else raw_value
         )

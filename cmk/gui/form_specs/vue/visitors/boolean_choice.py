@@ -17,13 +17,11 @@ from ._utils import (
     create_validation_error,
     get_title_and_help,
     localize,
-    migrate_value,
 )
 
 
 class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, bool]):
     def _parse_value(self, raw_value: object) -> bool | EmptyValue:
-        raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
             return self.form_spec.prefill.value
 

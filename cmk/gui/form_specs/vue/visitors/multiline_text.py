@@ -7,7 +7,6 @@ from typing import Callable, Sequence
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import MultilineText
 
@@ -20,13 +19,11 @@ from ._utils import (
     create_validation_error,
     get_prefill_default,
     get_title_and_help,
-    migrate_value,
 )
 
 
 class MultilineTextVisitor(FormSpecVisitor[MultilineText, str]):
     def _parse_value(self, raw_value: object) -> str | EmptyValue:
-        raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
             if isinstance(
                 prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
@@ -67,7 +64,5 @@ class MultilineTextVisitor(FormSpecVisitor[MultilineText, str]):
             )
         return compute_validation_errors(self._validators(), parsed_value)
 
-    def _to_disk(self, raw_value: object, parsed_value: str | EmptyValue) -> str:
-        if isinstance(parsed_value, EmptyValue):
-            raise MKGeneralException("Unable to serialize empty value")
+    def _to_disk(self, raw_value: object, parsed_value: str) -> str:
         return parsed_value

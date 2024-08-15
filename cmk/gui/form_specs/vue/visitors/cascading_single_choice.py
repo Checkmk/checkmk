@@ -23,13 +23,11 @@ from ._utils import (
     create_validation_error,
     get_prefill_default,
     get_title_and_help,
-    migrate_value,
 )
 
 
 class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[str, object]]):
     def _parse_value(self, raw_value: object) -> tuple[str, object] | EmptyValue:
-        raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
             if isinstance(
                 prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue

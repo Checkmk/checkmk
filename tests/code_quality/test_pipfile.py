@@ -341,7 +341,6 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 CEE_UNUSED_PACKAGES = [
     "cython",
-    "pbr",
     "ply",
     "psycopg2-binary",
     "pymssql",

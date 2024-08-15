@@ -110,7 +110,6 @@ pysnmp-lextudio = "==6.1.2"  # needed by Event Console
 snmpsim-lextudio = "==1.1.0"  # needed by pysnmp integration tests
 urllib3 = "*"  # needed by requests
 pyopenssl = "*"
-pbr = "==5.11.1"  # needed by jira
 pyghmi = "==1.5.60"  # needed by base for IPMI
 requests = "*"
 requests-kerberos = "==0.14.0"  # needed by check_bi_aggr

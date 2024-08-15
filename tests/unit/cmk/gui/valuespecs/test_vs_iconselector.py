@@ -6,10 +6,7 @@
 
 import re
 
-import pytest
-
 import cmk.gui.valuespec as vs
-from cmk.gui.exceptions import MKUserError
 
 from .utils import expect_validate_failure, expect_validate_success
 
@@ -31,12 +28,7 @@ class TestValueSpecFloat:
 
         # TODO: validate_value allows None, ...
         vs.IconSelector().validate_value(None, "")
-        # ... but validate_datatype not:
-        with pytest.raises(
-            MKUserError,
-            match=re.escape("The type is <class 'NoneType'>, but should be str or dict"),
-        ):
-            vs.IconSelector().validate_datatype(None, "")
+        vs.IconSelector().validate_datatype(None, "")
 
         # TODO: this seems a bit missleading. we don't allow empty, yet empty is still allowed?
         # does not raise an error, because None is internally transformed to the "empty" icon

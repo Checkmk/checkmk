@@ -175,7 +175,6 @@ from cmk.notification_plugins.msteams import _msteams_msg
             {
                 "NOTIFICATIONTYPE": "PROBLEM",
                 "WHAT": "HOST",
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
                 "MONITORING_HOST": "localhost",
                 "OMD_SITE": "testsite",
                 "HOSTNAME": "test-host",
@@ -200,14 +199,7 @@ from cmk.notification_plugins.msteams import _msteams_msg
                             "msteams": {"width": "Full"},
                             "type": "AdaptiveCard",
                             "version": "1.5",
-                            "actions": [
-                                {
-                                    "type": "Action.OpenUrl",
-                                    "role": "Button",
-                                    "title": "View host details in Checkmk",
-                                    "url": "http://localhost/testsite/view?key=test-host",
-                                }
-                            ],
+                            "actions": [],
                             "body": [
                                 {
                                     "type": "TextBlock",

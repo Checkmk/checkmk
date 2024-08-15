@@ -36,11 +36,20 @@ def _msteams_msg(
     context: PluginNotificationContext,
 ) -> dict[str, object]:
     title, summary, details, subtitle = _get_text_fields(context, notify_what := context["WHAT"])
-    info_url: str = (
+    actions = []
+    if info_url := (
         service_url_from_context(context)
         if notify_what == "SERVICE"
         else host_url_from_context(context)
-    )
+    ):
+        actions.append(
+            {
+                "type": "Action.OpenUrl",
+                "title": f"View {notify_what.lower()} details in Checkmk",
+                "url": info_url,
+                "role": "Button",
+            }
+        )
 
     return {
         "type": "message",
@@ -97,14 +106,7 @@ def _msteams_msg(
                         },
                         *_get_section_facts(context),
                     ],
-                    "actions": [
-                        {
-                            "type": "Action.OpenUrl",
-                            "title": f"View {notify_what.lower()} details in Checkmk",
-                            "url": info_url,
-                            "role": "Button",
-                        },
-                    ],
+                    "actions": actions,
                     "msteams": {
                         "width": "Full",
                     },

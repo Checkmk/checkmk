@@ -46516,10 +46516,16 @@ msgstr "Fase 1.1: In esecuzione sul sito \"%s\""
 msgid "Phase 1.1: Fetching from site \"%s\""
 msgstr "Fase 1.1: Recupero dal sito \"%s\""
 
-msgid "Phase 2.1: Extracting result"
+#, fuzzy
+msgid "Phase 1.2: Extracting result"
 msgstr "Fase 2.1: Estrarre il risultato"
 
-msgid "Phase 2.2: Fetching existing hosts"
+#, fuzzy
+msgid "Phase 2.1: Fetching existing hosts"
+msgstr "Fase 2.2: Recuperare gli host esistenti"
+
+#, fuzzy
+msgid "Phase 2.2: Deliver existing hosts"
 msgstr "Fase 2.2: Recuperare gli host esistenti"
 
 msgid "Phase 2.3: Updating config"
@@ -46527,6 +46533,10 @@ msgstr "Fase 2.3: Aggiornamento della configurazione"
 
 msgid "Phase 2.4: Activating changes"
 msgstr "Fase 2.4: Attivare i cambiamenti"
+
+#, fuzzy
+msgid "Phase 2: Deliver piggyback hosts"
+msgstr "Prefisso per l'hostname piggyback"
 
 msgid "Phase Number"
 msgstr "Numero di fase"
@@ -47047,6 +47057,10 @@ msgstr "Si prega di fornire un nome di host con cui effettuare il test."
 msgid "Please provide a relative Windows path"
 msgstr "Fornire un percorso relativo a Windows"
 
+#, fuzzy
+msgid "Please provide a relative path"
+msgstr "Fornire un percorso relativo a Windows"
+
 msgid "Please provide a service."
 msgstr "Fornite un servizio."
 
@@ -47057,6 +47071,10 @@ msgid "Please provide a valid name"
 msgstr "Si prega di fornire un nome valido"
 
 msgid "Please provide an absolute Windows path"
+msgstr "Fornire un percorso assoluto di Windows"
+
+#, fuzzy
+msgid "Please provide an absolute path"
 msgstr "Fornire un percorso assoluto di Windows"
 
 msgid ""
@@ -51135,6 +51153,10 @@ msgstr "Registri di Robotmk"
 #, fuzzy
 msgid "Robotmk plan"
 msgstr "Registri di Robotmk"
+
+#, fuzzy
+msgid "Robotmk scheduler (Linux)"
+msgstr "Robotmk Scheduler (Windows)"
 
 #, fuzzy
 msgid "Robotmk scheduler (Windows)"
@@ -56351,10 +56373,16 @@ msgstr ""
 "automaticamente al momento del salvataggio."
 
 msgid ""
-"Specify here whether the working directory of Robotmk (by default under `C:"
-"\\ProgramData\\checkmk\\agent\\robotmk_output\\working\\suites\\`) on the "
-"target host should be cleaned up either after a certain time or after a "
-"certain number of test executions."
+"Specify here whether the working directory of Robotmk (`/var/lib/"
+"check_mk_agent/robotmk/working/suites`) on the target host should be cleaned "
+"up either after a certain time or after a certain number of test executions."
+msgstr ""
+
+msgid ""
+"Specify here whether the working directory of Robotmk (`C:\\ProgramData"
+"\\checkmk\\agent\\robotmk_output\\working\\suites`) on the target host "
+"should be cleaned up either after a certain time or after a certain number "
+"of test executions."
 msgstr ""
 
 #, fuzzy, python-format
@@ -65197,6 +65225,11 @@ msgstr "Questo definisce una regola del modello di logfile"
 
 msgid "This defines one value grouping pattern"
 msgstr "Questo definisce un modello di raggruppamento di valori"
+
+msgid ""
+"This directory contains all Robot Framework suite directories. An absolute "
+"path is used to specify this directory, for example \"/var/robot\"."
+msgstr ""
 
 msgid ""
 "This directory contains all Robot Framework suite directories. An absolute "
@@ -80059,13 +80092,6 @@ msgstr ""
 
 msgid ""
 "You can specify a separate monitoring state for each possible combination of "
-"service state."
-msgstr ""
-"Potete specificare uno stato di monitoraggio separato per ogni possibile "
-"combinazione di stato di servizio."
-
-msgid ""
-"You can specify a separate monitoring state for each possible combination of "
 "service state. If you do not use this parameter, then only online/legacy_run "
 "will be assumed to be OK."
 msgstr ""
@@ -83390,6 +83416,13 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid ""
+#~ "You can specify a separate monitoring state for each possible combination "
+#~ "of service state."
+#~ msgstr ""
+#~ "Potete specificare uno stato di monitoraggio separato per ogni possibile "
+#~ "combinazione di stato di servizio."
 
 #~ msgid "Levels on Read/Write Capacity"
 #~ msgstr "Livelli sulla capacità di lettura/scrittura"

@@ -45562,10 +45562,16 @@ msgstr "フェーズ1.1:サイト \"%s\" で実行"
 msgid "Phase 1.1: Fetching from site \"%s\""
 msgstr "フェーズ1.1:サイト\"%s\"からのフェッチ"
 
-msgid "Phase 2.1: Extracting result"
+#, fuzzy
+msgid "Phase 1.2: Extracting result"
 msgstr "フェーズ2.1 : 結果の抽出"
 
-msgid "Phase 2.2: Fetching existing hosts"
+#, fuzzy
+msgid "Phase 2.1: Fetching existing hosts"
+msgstr "フェーズ2.2: 既存のホストの取得"
+
+#, fuzzy
+msgid "Phase 2.2: Deliver existing hosts"
 msgstr "フェーズ2.2: 既存のホストの取得"
 
 msgid "Phase 2.3: Updating config"
@@ -45573,6 +45579,10 @@ msgstr "フェーズ2.3:構成の更新"
 
 msgid "Phase 2.4: Activating changes"
 msgstr "フェーズ2.4:変更のアクティブ化"
+
+#, fuzzy
+msgid "Phase 2: Deliver piggyback hosts"
+msgstr "ピギーバックホスト名のプレフィックス"
 
 msgid "Phase Number"
 msgstr "フェーズ番号"
@@ -46087,6 +46097,10 @@ msgstr "テストするホスト名を指定してください。"
 msgid "Please provide a relative Windows path"
 msgstr "有効な名前を入力してください"
 
+#, fuzzy
+msgid "Please provide a relative path"
+msgstr "有効な名前を入力してください"
+
 msgid "Please provide a service."
 msgstr "サービスを提供してください。"
 
@@ -46098,6 +46112,10 @@ msgstr "有効な名前を入力してください"
 
 #, fuzzy
 msgid "Please provide an absolute Windows path"
+msgstr "有効な名前を入力してください"
+
+#, fuzzy
+msgid "Please provide an absolute path"
 msgstr "有効な名前を入力してください"
 
 msgid ""
@@ -50174,6 +50192,10 @@ msgstr "RobotMKのログ"
 
 #, fuzzy
 msgid "Robotmk plan"
+msgstr "RobotMKのログ"
+
+#, fuzzy
+msgid "Robotmk scheduler (Linux)"
 msgstr "RobotMKのログ"
 
 #, fuzzy
@@ -55349,11 +55371,22 @@ msgstr ""
 "電圧レベルが適用される範囲の上限で周波数範囲を指定します。リストは保存時に自"
 "動的にソートされます。"
 
+#, fuzzy
 msgid ""
-"Specify here whether the working directory of Robotmk (by default under `C:"
-"\\ProgramData\\checkmk\\agent\\robotmk_output\\working\\suites\\`) on the "
-"target host should be cleaned up either after a certain time or after a "
-"certain number of test executions."
+"Specify here whether the working directory of Robotmk (`/var/lib/"
+"check_mk_agent/robotmk/working/suites`) on the target host should be cleaned "
+"up either after a certain time or after a certain number of test executions."
+msgstr ""
+"ターゲットホスト上のRobotmkの作業ディレクトリ(デフォルトは ' C:\\ProgramData"
+"\\checkmk\\agent\\robotmk_output\\working\\suites\\ ' )を、一定時間後または一"
+"定回数のテスト実行後にクリーンアップするかどうかを指定します。"
+
+#, fuzzy
+msgid ""
+"Specify here whether the working directory of Robotmk (`C:\\ProgramData"
+"\\checkmk\\agent\\robotmk_output\\working\\suites`) on the target host "
+"should be cleaned up either after a certain time or after a certain number "
+"of test executions."
 msgstr ""
 "ターゲットホスト上のRobotmkの作業ディレクトリ(デフォルトは ' C:\\ProgramData"
 "\\checkmk\\agent\\robotmk_output\\working\\suites\\ ' )を、一定時間後または一"
@@ -63992,6 +64025,15 @@ msgstr "これは１つのログファイルのパターンルールを定義す
 
 msgid "This defines one value grouping pattern"
 msgstr "これは、1つの値のグループ化パターンを定義します"
+
+#, fuzzy
+msgid ""
+"This directory contains all Robot Framework suite directories. An absolute "
+"path is used to specify this directory, for example \"/var/robot\"."
+msgstr ""
+"このディレクトリにはすべての Robot Framework スイートのディレクトリが含まれま"
+"す。このディレクトリを指定するには絶対パスを使用します。例えば \"C:\\robot\" "
+"などです。"
 
 msgid ""
 "This directory contains all Robot Framework suite directories. An absolute "
@@ -78598,11 +78640,6 @@ msgstr ""
 
 msgid ""
 "You can specify a separate monitoring state for each possible combination of "
-"service state."
-msgstr "サービス状態の可能な組み合わせごとに、個別の監視状態を指定できます。"
-
-msgid ""
-"You can specify a separate monitoring state for each possible combination of "
 "service state. If you do not use this parameter, then only online/legacy_run "
 "will be assumed to be OK."
 msgstr ""
@@ -81919,6 +81956,12 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "You can specify a separate monitoring state for each possible combination "
+#~ "of service state."
+#~ msgstr ""
+#~ "サービス状態の可能な組み合わせごとに、個別の監視状態を指定できます。"
 
 #~ msgid "Levels on Read/Write Capacity"
 #~ msgstr "読み取り/書き込み容量のレベル"

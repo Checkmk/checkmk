@@ -45111,10 +45111,16 @@ msgstr "Phase 1.1: Ausführung auf Instanz \"%s\""
 msgid "Phase 1.1: Fetching from site \"%s\""
 msgstr "Phase 1.1: Holen von Instanz \"%s\""
 
-msgid "Phase 2.1: Extracting result"
+#, fuzzy
+msgid "Phase 1.2: Extracting result"
 msgstr "Phase 2.1: Ergebnis extrahieren"
 
-msgid "Phase 2.2: Fetching existing hosts"
+#, fuzzy
+msgid "Phase 2.1: Fetching existing hosts"
+msgstr "Phase 2.2: Bestehende Hosts holen"
+
+#, fuzzy
+msgid "Phase 2.2: Deliver existing hosts"
 msgstr "Phase 2.2: Bestehende Hosts holen"
 
 msgid "Phase 2.3: Updating config"
@@ -45122,6 +45128,10 @@ msgstr "Phase 2.3: Aktualisieren der Konfiguration"
 
 msgid "Phase 2.4: Activating changes"
 msgstr "Phase 2.4: Aktivierung der Änderungen"
+
+#, fuzzy
+msgid "Phase 2: Deliver piggyback hosts"
+msgstr "Präfix für Piggyback-Host-Name"
 
 msgid "Phase Number"
 msgstr "Phase Zahl"
@@ -45639,6 +45649,10 @@ msgstr "Bitte geben Sie einen Host-Namen an, mit dem Sie testen möchten."
 msgid "Please provide a relative Windows path"
 msgstr "Bitte geben Sie einen relativen Windows-Pfad an"
 
+#, fuzzy
+msgid "Please provide a relative path"
+msgstr "Bitte geben Sie einen relativen Windows-Pfad an"
+
 msgid "Please provide a service."
 msgstr "Bitte geben Sie einen Service an."
 
@@ -45649,6 +45663,10 @@ msgid "Please provide a valid name"
 msgstr "Bitte geben Sie einen gültigen Namen an"
 
 msgid "Please provide an absolute Windows path"
+msgstr "Bitte geben Sie einen absoluten Windows-Pfad an"
+
+#, fuzzy
+msgid "Please provide an absolute path"
 msgstr "Bitte geben Sie einen absoluten Windows-Pfad an"
 
 msgid ""
@@ -49619,6 +49637,10 @@ msgstr "Robotmk-Protokolle"
 
 msgid "Robotmk plan"
 msgstr "Robotmk-Plan"
+
+#, fuzzy
+msgid "Robotmk scheduler (Linux)"
+msgstr "Robotmk-Scheduler (Windows)"
 
 msgid "Robotmk scheduler (Windows)"
 msgstr "Robotmk-Scheduler (Windows)"
@@ -54743,11 +54765,23 @@ msgstr ""
 "den die Spannungslevel gelten sollen. Die Liste wird beim Speichern "
 "automatisch sortiert."
 
+#, fuzzy
 msgid ""
-"Specify here whether the working directory of Robotmk (by default under `C:"
-"\\ProgramData\\checkmk\\agent\\robotmk_output\\working\\suites\\`) on the "
-"target host should be cleaned up either after a certain time or after a "
-"certain number of test executions."
+"Specify here whether the working directory of Robotmk (`/var/lib/"
+"check_mk_agent/robotmk/working/suites`) on the target host should be cleaned "
+"up either after a certain time or after a certain number of test executions."
+msgstr ""
+"Geben Sie hier an, ob das Arbeitsverzeichnis von Robotmk (standardmäßig "
+"unter `C:\\ProgramData\\checkmk\\agent\\robotmk_output\\working\\suites\\`) "
+"auf dem Zielhost entweder nach einer bestimmten Zeit oder nach einer "
+"bestimmten Anzahl von Testausführungen bereinigt werden soll."
+
+#, fuzzy
+msgid ""
+"Specify here whether the working directory of Robotmk (`C:\\ProgramData"
+"\\checkmk\\agent\\robotmk_output\\working\\suites`) on the target host "
+"should be cleaned up either after a certain time or after a certain number "
+"of test executions."
 msgstr ""
 "Geben Sie hier an, ob das Arbeitsverzeichnis von Robotmk (standardmäßig "
 "unter `C:\\ProgramData\\checkmk\\agent\\robotmk_output\\working\\suites\\`) "
@@ -63641,6 +63675,15 @@ msgstr "Damit wird eine Suchmuster-Regel für Logdateien erzeugt"
 
 msgid "This defines one value grouping pattern"
 msgstr "Dies definiert ein Datengruppierungsmuster"
+
+#, fuzzy
+msgid ""
+"This directory contains all Robot Framework suite directories. An absolute "
+"path is used to specify this directory, for example \"/var/robot\"."
+msgstr ""
+"Dieses Verzeichnis enthält alle Verzeichnisse der Robot Framework-Suite. Zur "
+"Angabe dieses Verzeichnisses wird ein absoluter Pfad verwendet, zum Beispiel "
+"\"C:\\robot\"."
 
 msgid ""
 "This directory contains all Robot Framework suite directories. An absolute "
@@ -78070,13 +78113,6 @@ msgstr ""
 
 msgid ""
 "You can specify a separate monitoring state for each possible combination of "
-"service state."
-msgstr ""
-"Sie können einen eigenen Monitoring-Zustand für jede mögliche Kombination "
-"der Servicezustände festlegen."
-
-msgid ""
-"You can specify a separate monitoring state for each possible combination of "
 "service state. If you do not use this parameter, then only online/legacy_run "
 "will be assumed to be OK."
 msgstr ""
@@ -81446,6 +81482,13 @@ msgstr "{region} ({id_})"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid ""
+#~ "You can specify a separate monitoring state for each possible combination "
+#~ "of service state."
+#~ msgstr ""
+#~ "Sie können einen eigenen Monitoring-Zustand für jede mögliche Kombination "
+#~ "der Servicezustände festlegen."
 
 #~ msgid "Levels on Read/Write Capacity"
 #~ msgstr "Level für die Lese-/Schreibkapazität"

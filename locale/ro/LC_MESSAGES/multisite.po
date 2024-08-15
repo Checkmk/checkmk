@@ -46975,10 +46975,16 @@ msgstr "Faza 1.1: Se execută pe site-ul \"%s\""
 msgid "Phase 1.1: Fetching from site \"%s\""
 msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 
-msgid "Phase 2.1: Extracting result"
+#, fuzzy
+msgid "Phase 1.2: Extracting result"
 msgstr "Faza 2.1: Extragerea rezultatului"
 
-msgid "Phase 2.2: Fetching existing hosts"
+#, fuzzy
+msgid "Phase 2.1: Fetching existing hosts"
+msgstr "Faza 2.2: Obținerea gazdelor existente"
+
+#, fuzzy
+msgid "Phase 2.2: Deliver existing hosts"
 msgstr "Faza 2.2: Obținerea gazdelor existente"
 
 msgid "Phase 2.3: Updating config"
@@ -46986,6 +46992,10 @@ msgstr "Faza 2.3: Actualizarea configurației"
 
 msgid "Phase 2.4: Activating changes"
 msgstr "Faza 2.4: Activarea schimbărilor"
+
+#, fuzzy
+msgid "Phase 2: Deliver piggyback hosts"
+msgstr "Prefix pentru numele de gazdă piggyback"
 
 msgid "Phase Number"
 msgstr "Numărul fazei"
@@ -47521,6 +47531,10 @@ msgstr "Vă rugăm să furnizați un nume de gazdă cu care să testați."
 msgid "Please provide a relative Windows path"
 msgstr "Vă rugăm să furnizați o cale relativă Windows"
 
+#, fuzzy
+msgid "Please provide a relative path"
+msgstr "Vă rugăm să furnizați o cale relativă Windows"
+
 msgid "Please provide a service."
 msgstr "Vă rugăm să furnizați un serviciu."
 
@@ -47531,6 +47545,10 @@ msgid "Please provide a valid name"
 msgstr "Vă rugăm să furnizați un nume valid"
 
 msgid "Please provide an absolute Windows path"
+msgstr "Vă rugăm să furnizați o cale absolută pentru Windows"
+
+#, fuzzy
+msgid "Please provide an absolute path"
 msgstr "Vă rugăm să furnizați o cale absolută pentru Windows"
 
 msgid ""
@@ -51639,6 +51657,10 @@ msgstr "Jurnalele Robotmk"
 #, fuzzy
 msgid "Robotmk plan"
 msgstr "Jurnalele Robotmk"
+
+#, fuzzy
+msgid "Robotmk scheduler (Linux)"
+msgstr "Robotmk Scheduler (Windows)"
 
 #, fuzzy
 msgid "Robotmk scheduler (Windows)"
@@ -56953,10 +56975,20 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Specify here whether the working directory of Robotmk (by default under `C:"
-"\\ProgramData\\checkmk\\agent\\robotmk_output\\working\\suites\\`) on the "
-"target host should be cleaned up either after a certain time or after a "
-"certain number of test executions."
+"Specify here whether the working directory of Robotmk (`/var/lib/"
+"check_mk_agent/robotmk/working/suites`) on the target host should be cleaned "
+"up either after a certain time or after a certain number of test executions."
+msgstr ""
+"Specificați aici dacă directorul de lucru al Robotmk de pe gazda țintă "
+"trebuie curățat după un anumit timp sau după un anumit număr de execuții de "
+"test."
+
+#, fuzzy
+msgid ""
+"Specify here whether the working directory of Robotmk (`C:\\ProgramData"
+"\\checkmk\\agent\\robotmk_output\\working\\suites`) on the target host "
+"should be cleaned up either after a certain time or after a certain number "
+"of test executions."
 msgstr ""
 "Specificați aici dacă directorul de lucru al Robotmk de pe gazda țintă "
 "trebuie curățat după un anumit timp sau după un anumit număr de execuții de "
@@ -65947,6 +65979,11 @@ msgstr "Aceasta definește o regulă de model de fișier jurnal"
 
 msgid "This defines one value grouping pattern"
 msgstr "Aceasta definește un model de grupare a valorilor"
+
+msgid ""
+"This directory contains all Robot Framework suite directories. An absolute "
+"path is used to specify this directory, for example \"/var/robot\"."
+msgstr ""
 
 msgid ""
 "This directory contains all Robot Framework suite directories. An absolute "
@@ -80939,13 +80976,6 @@ msgstr ""
 
 msgid ""
 "You can specify a separate monitoring state for each possible combination of "
-"service state."
-msgstr ""
-"Puteți specifica o stare de monitorizare separată pentru fiecare combinație "
-"posibilă de stare a serviciului."
-
-msgid ""
-"You can specify a separate monitoring state for each possible combination of "
 "service state. If you do not use this parameter, then only online/legacy_run "
 "will be assumed to be OK."
 msgstr ""
@@ -84305,6 +84335,13 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid ""
+#~ "You can specify a separate monitoring state for each possible combination "
+#~ "of service state."
+#~ msgstr ""
+#~ "Puteți specifica o stare de monitorizare separată pentru fiecare "
+#~ "combinație posibilă de stare a serviciului."
 
 #~ msgid "Levels on Read/Write Capacity"
 #~ msgstr "Niveluri privind capacitatea de citire/scriere"

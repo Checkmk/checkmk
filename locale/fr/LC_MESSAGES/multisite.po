@@ -47348,10 +47348,16 @@ msgstr "Phase 1.1 : Exécution sur le site \"%s\""
 msgid "Phase 1.1: Fetching from site \"%s\""
 msgstr "Phase 1.1 : Récupération du site \"%s\""
 
-msgid "Phase 2.1: Extracting result"
+#, fuzzy
+msgid "Phase 1.2: Extracting result"
 msgstr "Phase 2.1 : Extraction du résultat"
 
-msgid "Phase 2.2: Fetching existing hosts"
+#, fuzzy
+msgid "Phase 2.1: Fetching existing hosts"
+msgstr "Phase 2.2 : Récupération des hôtes existants"
+
+#, fuzzy
+msgid "Phase 2.2: Deliver existing hosts"
 msgstr "Phase 2.2 : Récupération des hôtes existants"
 
 msgid "Phase 2.3: Updating config"
@@ -47359,6 +47365,10 @@ msgstr "Phase 2.3 : Mise à jour de la configuration"
 
 msgid "Phase 2.4: Activating changes"
 msgstr "Phase 2.4 : Activation des changements"
+
+#, fuzzy
+msgid "Phase 2: Deliver piggyback hosts"
+msgstr "Préfixe pour le nom d'hôte de ferroutage"
 
 msgid "Phase Number"
 msgstr "Numéro de phase"
@@ -47894,6 +47904,10 @@ msgstr ""
 msgid "Please provide a relative Windows path"
 msgstr "Veuillez fournir un nom valide"
 
+#, fuzzy
+msgid "Please provide a relative path"
+msgstr "Veuillez fournir un nom valide"
+
 msgid "Please provide a service."
 msgstr "Veuillez fournir un service."
 
@@ -47905,6 +47919,10 @@ msgstr "Veuillez fournir un nom valide"
 
 #, fuzzy
 msgid "Please provide an absolute Windows path"
+msgstr "Veuillez fournir un nom valide"
+
+#, fuzzy
+msgid "Please provide an absolute path"
 msgstr "Veuillez fournir un nom valide"
 
 msgid ""
@@ -52070,6 +52088,10 @@ msgstr "Journaux de RobotMK"
 
 #, fuzzy
 msgid "Robotmk plan"
+msgstr "Journaux de RobotMK"
+
+#, fuzzy
+msgid "Robotmk scheduler (Linux)"
 msgstr "Journaux de RobotMK"
 
 #, fuzzy
@@ -57387,10 +57409,16 @@ msgstr ""
 "automatiquement lors de la sauvegarde."
 
 msgid ""
-"Specify here whether the working directory of Robotmk (by default under `C:"
-"\\ProgramData\\checkmk\\agent\\robotmk_output\\working\\suites\\`) on the "
-"target host should be cleaned up either after a certain time or after a "
-"certain number of test executions."
+"Specify here whether the working directory of Robotmk (`/var/lib/"
+"check_mk_agent/robotmk/working/suites`) on the target host should be cleaned "
+"up either after a certain time or after a certain number of test executions."
+msgstr ""
+
+msgid ""
+"Specify here whether the working directory of Robotmk (`C:\\ProgramData"
+"\\checkmk\\agent\\robotmk_output\\working\\suites`) on the target host "
+"should be cleaned up either after a certain time or after a certain number "
+"of test executions."
 msgstr ""
 
 #, fuzzy, python-format
@@ -66408,6 +66436,11 @@ msgstr "Ceci définit une règle de modèle de fichier journal"
 
 msgid "This defines one value grouping pattern"
 msgstr "Ceci définit un modèle de groupement de valeurs"
+
+msgid ""
+"This directory contains all Robot Framework suite directories. An absolute "
+"path is used to specify this directory, for example \"/var/robot\"."
+msgstr ""
 
 msgid ""
 "This directory contains all Robot Framework suite directories. An absolute "
@@ -81620,13 +81653,6 @@ msgstr ""
 
 msgid ""
 "You can specify a separate monitoring state for each possible combination of "
-"service state."
-msgstr ""
-"Vous pouvez spécifier un état de surveillance distinct pour chaque "
-"combinaison possible d'état de service."
-
-msgid ""
-"You can specify a separate monitoring state for each possible combination of "
 "service state. If you do not use this parameter, then only online/legacy_run "
 "will be assumed to be OK."
 msgstr ""
@@ -85016,6 +85042,13 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid ""
+#~ "You can specify a separate monitoring state for each possible combination "
+#~ "of service state."
+#~ msgstr ""
+#~ "Vous pouvez spécifier un état de surveillance distinct pour chaque "
+#~ "combinaison possible d'état de service."
 
 #~ msgid "Levels on Read/Write Capacity"
 #~ msgstr "Niveaux de capacité de lecture/écriture"

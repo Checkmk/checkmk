@@ -46940,10 +46940,16 @@ msgstr "Fase 1.1: Uitvoeren op site \"%s\""
 msgid "Phase 1.1: Fetching from site \"%s\""
 msgstr "Fase 1.1: Afhalen van site \"%s\""
 
-msgid "Phase 2.1: Extracting result"
+#, fuzzy
+msgid "Phase 1.2: Extracting result"
 msgstr "Fase 2.1: Resultaat extraheren"
 
-msgid "Phase 2.2: Fetching existing hosts"
+#, fuzzy
+msgid "Phase 2.1: Fetching existing hosts"
+msgstr "Fase 2.2: Opzoeken van bestaande hosts"
+
+#, fuzzy
+msgid "Phase 2.2: Deliver existing hosts"
 msgstr "Fase 2.2: Opzoeken van bestaande hosts"
 
 msgid "Phase 2.3: Updating config"
@@ -46951,6 +46957,10 @@ msgstr "Fase 2.3: Configuratie bijwerken"
 
 msgid "Phase 2.4: Activating changes"
 msgstr "Fase 2.4: Activeren van veranderingen"
+
+#, fuzzy
+msgid "Phase 2: Deliver piggyback hosts"
+msgstr "Voorvoegsel voor piggyback hostname"
 
 msgid "Phase Number"
 msgstr "Fase Aantal"
@@ -47475,6 +47485,10 @@ msgid "Please provide a relative Windows path"
 msgstr "Geef een geldige naam"
 
 #, fuzzy
+msgid "Please provide a relative path"
+msgstr "Geef een geldige naam"
+
+#, fuzzy
 msgid "Please provide a service."
 msgstr "Geef een geldige naam"
 
@@ -47486,6 +47500,10 @@ msgstr "Geef een geldige naam"
 
 #, fuzzy
 msgid "Please provide an absolute Windows path"
+msgstr "Geef een geldige naam"
+
+#, fuzzy
+msgid "Please provide an absolute path"
 msgstr "Geef een geldige naam"
 
 msgid ""
@@ -51588,6 +51606,10 @@ msgstr "RobotMK logboeken"
 
 #, fuzzy
 msgid "Robotmk plan"
+msgstr "RobotMK logboeken"
+
+#, fuzzy
+msgid "Robotmk scheduler (Linux)"
 msgstr "RobotMK logboeken"
 
 #, fuzzy
@@ -56834,10 +56856,16 @@ msgstr ""
 "automatisch gesorteerd bij het opslaan."
 
 msgid ""
-"Specify here whether the working directory of Robotmk (by default under `C:"
-"\\ProgramData\\checkmk\\agent\\robotmk_output\\working\\suites\\`) on the "
-"target host should be cleaned up either after a certain time or after a "
-"certain number of test executions."
+"Specify here whether the working directory of Robotmk (`/var/lib/"
+"check_mk_agent/robotmk/working/suites`) on the target host should be cleaned "
+"up either after a certain time or after a certain number of test executions."
+msgstr ""
+
+msgid ""
+"Specify here whether the working directory of Robotmk (`C:\\ProgramData"
+"\\checkmk\\agent\\robotmk_output\\working\\suites`) on the target host "
+"should be cleaned up either after a certain time or after a certain number "
+"of test executions."
 msgstr ""
 
 #, fuzzy, python-format
@@ -65779,6 +65807,11 @@ msgstr "Dit definieert een logfile patroon regel"
 
 msgid "This defines one value grouping pattern"
 msgstr "Dit definieert een waarde groeperings patroon"
+
+msgid ""
+"This directory contains all Robot Framework suite directories. An absolute "
+"path is used to specify this directory, for example \"/var/robot\"."
+msgstr ""
 
 msgid ""
 "This directory contains all Robot Framework suite directories. An absolute "
@@ -80797,13 +80830,6 @@ msgstr ""
 
 msgid ""
 "You can specify a separate monitoring state for each possible combination of "
-"service state."
-msgstr ""
-"U kunt een aparte bewakingstoestand specificeren voor elke mogelijke "
-"combinatie van servicetoestanden."
-
-msgid ""
-"You can specify a separate monitoring state for each possible combination of "
 "service state. If you do not use this parameter, then only online/legacy_run "
 "will be assumed to be OK."
 msgstr ""
@@ -84164,6 +84190,13 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "You can specify a separate monitoring state for each possible combination "
+#~ "of service state."
+#~ msgstr ""
+#~ "U kunt een aparte bewakingstoestand specificeren voor elke mogelijke "
+#~ "combinatie van servicetoestanden."
 
 #~ msgid "Levels on Read/Write Capacity"
 #~ msgstr "Niveaus op lees/schrijfcapaciteit"

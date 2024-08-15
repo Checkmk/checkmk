@@ -1,0 +1,25 @@
+Title: Fix XSS in view page with SLA column
+Class: security
+Compatible: compat
+Component: wato
+Date: 1723724113
+Edition: cee
+Level: 1
+Version: 2.2.0p33
+
+Prior to this werk, the SLA (Service Level Agreement) titles were being rendered as HTML in the view page without proper escaping, leading to a potential XSS vulnerability.
+
+<strong>Affected Versions</strong>:
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0 (EOL)
+
+<strong>Indicators of Compromise</strong>:
+
+Cloning the view page of untrusted users who have injected HTML into the SLA titles.
+
+<strong>Vulnerability Management</strong>:
+
+We have rated the issue with a CVSS score of 4.8 (medium) with the following CVSS vector: <code>CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N</code>, and assigned <code>CVE-2024-38859</code>.

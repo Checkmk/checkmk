@@ -11,7 +11,8 @@ import type {
   ValidationMessage,
   FixedValue,
   BooleanChoice,
-  MultilineText
+  MultilineText,
+  MultipleChoice
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -70,7 +71,32 @@ function renderForm(
       return renderDataSize(value as [string, string])
     case 'catalog':
       return h('div', 'Catalog does not support readonly')
+    case 'multiple_choice':
+      return renderMultipleChoice(formSpec as MultipleChoice, value as string[])
   }
+}
+
+function renderMultipleChoice(formSpec: MultipleChoice, value: string[]): VNode {
+  let nameToTitle: Record<string, string> = {}
+  for (const element of formSpec.elements) {
+    nameToTitle[element.name] = element.title
+  }
+
+  const maxEntries = 10
+  const textTokens: string[] = []
+
+  // WIP: no i18n...
+  for (let [index, entry] of value.entries()) {
+    if (index >= maxEntries) {
+      break
+    }
+    textTokens.push(nameToTitle[entry]!)
+  }
+  let infoText = textTokens.join(', ')
+  if (value.length > maxEntries) {
+    infoText += ` and ${value.length - maxEntries} more`
+  }
+  return h('div', infoText)
 }
 
 function renderDataSize(value: [string, string]): VNode {

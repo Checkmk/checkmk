@@ -19,6 +19,7 @@ export type Components =
   | MultilineText
   | DataSize
   | Catalog
+  | MultipleChoice
 export type Integer = FormSpec & {
   type: 'integer'
   label?: string
@@ -102,6 +103,11 @@ export type Catalog = FormSpec & {
   type: 'catalog'
   topics: Topic[]
 }
+export type MultipleChoice = FormSpec & {
+  type: 'multiple_choice'
+  elements: MultipleChoiceElement[]
+  show_toggle_all: boolean
+}
 
 export interface VueFormspecComponents {
   components?: Components
@@ -158,6 +164,10 @@ export interface CascadingSingleChoiceElement {
 export interface Topic {
   key: string
   dictionary: FormSpec
+}
+export interface MultipleChoiceElement {
+  name: string
+  title: string
 }
 export interface ValidationMessage {
   location: string[]

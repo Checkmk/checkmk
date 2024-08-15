@@ -15,6 +15,7 @@ from .integer import IntegerVisitor
 from .legacy_valuespec import LegacyValuespecVisitor
 from .list import ListVisitor
 from .multiline_text import MultilineTextVisitor
+from .multiple_choice import MultipleChoiceVisitor
 from .single_choice import SingleChoiceVisitor
 from .string import StringVisitor
 
@@ -33,6 +34,7 @@ __all__ = [
     "LegacyValuespecVisitor",
     "ListVisitor",
     "MultilineTextVisitor",
+    "MultipleChoiceVisitor",
     "SingleChoiceVisitor",
     "StringVisitor",
 ]

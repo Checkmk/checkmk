@@ -16,6 +16,7 @@ import FormHelp from '@/form/components/FormHelp.vue'
 import FormDataSize from '@/form/components/forms/FormDataSize.vue'
 import FormCatalog from '@/form/components/forms/FormCatalog.vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
+import FormMultipleChoice from '@/form/components/forms/FormMultipleChoice.vue'
 
 const props = defineProps<{
   spec: FormSpec
@@ -37,6 +38,7 @@ const components: Record<Components['type'], unknown> = {
   fixed_value: FormFixedValue,
   boolean_choice: FormBooleanChoice,
   multiline_text: FormMultilineText,
+  multiple_choice: FormMultipleChoice,
   data_size: FormDataSize,
   catalog: FormCatalog
 }

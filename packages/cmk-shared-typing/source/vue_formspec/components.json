@@ -303,6 +303,51 @@
                 }
             ]
         },
+        "multiple_choice_element": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "title"
+            ]
+        },
+        "multiple_choice": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "multiple_choice",
+                    "default": "multiple_choice"
+                },
+                "elements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/multiple_choice_element"
+                    },
+                    "default": []
+                },
+                "show_toggle_all": {
+                    "type": "boolean",
+                    "default": false
+                }
+            },
+            "required": [
+                "type",
+                "elements",
+                "show_toggle_all"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "cascading_single_choice_element": {
             "type": "object",
             "properties": {
@@ -549,6 +594,9 @@
                 },
                 {
                     "$ref": "#/$defs/catalog"
+                },
+                {
+                    "$ref": "#/$defs/multiple_choice"
                 }
             ],
             "required": [

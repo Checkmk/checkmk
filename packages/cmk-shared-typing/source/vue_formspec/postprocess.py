@@ -13,6 +13,8 @@ STRIP_OPTIONAL = [
     ("FormSpec", "validators"),
     ("Dictionary", "elements"),
     ("SingleChoice", "elements"),
+    ("MultipleChoice", "elements"),
+    ("MultipleChoice", "show_toggle_all"),
     ("CascadingSingleChoice", "elements"),
 ]
 

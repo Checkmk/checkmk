@@ -107,19 +107,19 @@ class TestChannel:
     """Test the channel wrapper"""
 
     @staticmethod
-    def test_declare_queue_trivial() -> None:
+    def test_queue_declare_trivial() -> None:
         """Just declare the default queue and bind to it"""
         channel, test_channel = _make_test_channel()
 
-        channel.declare_queue()
+        channel.queue_declare()
         assert test_channel.declared_queues == ["cmk.app.my-app"]
         assert test_channel.bound_queues == [Binding("cmk.local", "*.my-app", "cmk.app.my-app")]
 
     @staticmethod
-    def test_declare_queue_multiple() -> None:
+    def test_queue_declare_multiple() -> None:
         channel, test_channel = _make_test_channel()
 
-        channel.declare_queue("my-queue", ["my-first-binding", "my-second-binding.*.yodo"])
+        channel.queue_declare("my-queue", ["my-first-binding", "my-second-binding.*.yodo"])
         assert test_channel.declared_queues == ["cmk.app.my-app.my-queue"]
         assert test_channel.bound_queues == [
             Binding("cmk.local", "*.my-app.my-first-binding", "cmk.app.my-app.my-queue"),

@@ -91,7 +91,7 @@ class Channel(Generic[_ModelT]):
             else f"{site}.{self.app}.{routing_sub_key}"
         )
 
-    def declare_queue(
+    def queue_declare(
         self,
         queue: str | None = None,
         bindings: Sequence[str | None] = (None,),

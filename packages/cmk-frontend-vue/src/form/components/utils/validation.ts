@@ -11,16 +11,16 @@ import type {
 export type ValidationMessages = ValidationMessage[]
 
 export function useValidation<Type>(
-  data: Ref<Type | string>,
+  data: Ref<Type>,
   validators: Validator[],
   getBackendValidation: () => ValidationMessages
-): [Ref<ValidationMessages>, WritableComputedRef<Type | string>] {
+): [Ref<ValidationMessages>, WritableComputedRef<Type>] {
   const validation = ref<ValidationMessages>([])
 
   const updateValidation = (newValidation: ValidationMessages) => {
     validation.value = newValidation
     newValidation.forEach((message) => {
-      data.value = message.invalid_value as string
+      data.value = message.invalid_value as Type
     })
   }
 
@@ -28,11 +28,11 @@ export function useValidation<Type>(
 
   watch(getBackendValidation, updateValidation)
 
-  const value = computed<Type | string>({
+  const value = computed<Type>({
     get() {
       return data.value
     },
-    set(value: Type | string) {
+    set(value: Type) {
       validation.value = []
       validateValue(value, validators).forEach((error) => {
         validation.value = [{ message: error, location: [], invalid_value: value }]

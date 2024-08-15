@@ -1,0 +1,15 @@
+Title: Skip unnecessary site activations when editing users
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1723702736
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+Previously, any changes to users required site activations on all
+existing sites. This created a lot of unnecessary activations where
+users only exist on certain sites.
+
+With this werk, only the sites associated with the changed users require
+an activation.

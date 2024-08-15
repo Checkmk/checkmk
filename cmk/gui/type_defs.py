@@ -14,6 +14,8 @@ from typing import Any, Literal, NamedTuple, TypedDict, Union
 
 from pydantic import BaseModel
 
+from livestatus import SiteId
+
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.crypto import HashAlgorithm
 from cmk.utils.crypto.certificate import (
@@ -150,7 +152,7 @@ class UserSpec(TypedDict, total=False):
     """
 
     alias: str
-    authorized_sites: Any  # TODO: Improve this
+    authorized_sites: Sequence[SiteId] | None  # "None"/field missing => all sites
     automation_secret: str
     connector: str | None  # Contains the connection id this user was synced from
     contactgroups: list[ContactgroupName]

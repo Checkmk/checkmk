@@ -133,6 +133,67 @@
                 }
             ]
         },
+        "password": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "password",
+                    "default": "password"
+                },
+                "password_store_choices": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "password_id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "password_id",
+                            "name"
+                        ]
+                    }
+                },
+                "i18n": {
+                    "type": "object",
+                    "title": "i18nPassword",
+                    "properties": {
+                        "explicit_password": {
+                            "type": "string"
+                        },
+                        "password_store": {
+                            "type": "string"
+                        },
+                        "no_password_store_choices": {
+                            "type": "string"
+                        },
+                        "password_choice_invalid": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "explicit_password",
+                        "password_store",
+                        "no_password_store_choices",
+                        "password_choice_invalid"
+                    ]
+                }
+            },
+            "required": [
+                "type",
+                "password_store_choices",
+                "i18n"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "list": {
             "type": "object",
             "properties": {
@@ -599,6 +660,9 @@
                 },
                 {
                     "$ref": "#/$defs/multiline_text"
+                },
+                {
+                    "$ref": "#/$defs/password"
                 },
                 {
                     "$ref": "#/$defs/data_size"

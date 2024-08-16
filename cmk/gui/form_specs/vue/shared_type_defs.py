@@ -45,6 +45,20 @@ Validator = Union[IsInteger, IsFloat, NumberInRange, LengthInRange]
 
 
 @dataclass(kw_only=True)
+class PasswordStoreChoice:
+    password_id: str
+    name: str
+
+
+@dataclass(kw_only=True)
+class I18nPassword:
+    explicit_password: str
+    password_store: str
+    no_password_store_choices: str
+    password_choice_invalid: str
+
+
+@dataclass(kw_only=True)
 class DictionaryGroup:
     key: str
     title: str
@@ -117,6 +131,13 @@ class String(FormSpec):
     type: str = "string"
     placeholder: Optional[str] = None
     input_hint: Optional[str] = None
+
+
+@dataclass(kw_only=True)
+class Password(FormSpec):
+    password_store_choices: list[PasswordStoreChoice]
+    i18n: I18nPassword
+    type: str = "password"
 
 
 @dataclass(kw_only=True)
@@ -240,6 +261,7 @@ Components = Union[
     FixedValue,
     BooleanChoice,
     MultilineText,
+    Password,
     DataSize,
     Catalog,
     MultipleChoice,

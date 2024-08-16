@@ -50,6 +50,7 @@ from cmk.rulesets.v1.form_specs import (
     List,
     MultilineText,
     MultipleChoice,
+    Password,
     Percentage,
     RegularExpression,
     ServiceState,
@@ -78,6 +79,7 @@ from .visitors import (
     ListVisitor,
     MultilineTextVisitor,
     MultipleChoiceVisitor,
+    PasswordVisitor,
     register_visitor_class,
     SingleChoiceVisitor,
     StringVisitor,
@@ -104,6 +106,7 @@ def register_form_specs():
     register_visitor_class(String, StringVisitor)
     register_visitor_class(Float, FloatVisitor)
     register_visitor_class(SingleChoiceExtended, SingleChoiceVisitor)
+    register_visitor_class(Password, PasswordVisitor)
     register_visitor_class(CascadingSingleChoice, CascadingSingleChoiceVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)

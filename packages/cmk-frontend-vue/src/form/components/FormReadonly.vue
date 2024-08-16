@@ -12,7 +12,8 @@ import type {
   FixedValue,
   BooleanChoice,
   MultilineText,
-  MultipleChoice
+  MultipleChoice,
+  Password
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -73,6 +74,8 @@ function renderForm(
       return h('div', 'Catalog does not support readonly')
     case 'multiple_choice':
       return renderMultipleChoice(formSpec as MultipleChoice, value as string[])
+    case 'password':
+      return renderPassword(formSpec as Password, value as (string | boolean)[])
   }
 }
 
@@ -175,6 +178,21 @@ function renderSimpleValue(
     isError ? { style: ERROR_BACKGROUND_COLOR } : {},
     isError ? [`${usedValue} - ${errorMessage}`] : [usedValue]
   )
+}
+
+function renderPassword(formSpec: Password, value: (string | boolean)[]): VNode {
+  if (value[0] === 'explicit_password') {
+    return h('div', [`${formSpec.i18n.explicit_password}, ******`])
+  }
+
+  const storeChoice = formSpec.password_store_choices.find(
+    (choice) => choice.password_id === value[1]
+  )
+  if (storeChoice) {
+    return h('div', [`${formSpec.i18n.password_store}, ${storeChoice.name}`])
+  } else {
+    return h('div', [`${formSpec.i18n.password_store}, ${formSpec.i18n.password_choice_invalid}`])
+  }
 }
 
 function renderSingleChoice(

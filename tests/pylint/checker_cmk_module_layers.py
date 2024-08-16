@@ -586,6 +586,19 @@ def _allow_for_cmk_fetchers(
     )
 
 
+def _allow_for_cmk_piggyback_hub(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported=imported, component=Component("cmk.messaging")),
+        )
+    )
+
+
 _COMPONENTS = (
     (Component("agents.special"), _is_allowed_for_special_agent_executable),
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
@@ -639,7 +652,7 @@ _COMPONENTS = (
     (Component("cmk.gui"), _allow_for_gui),
     (Component("cmk.ec"), _is_default_allowed_import),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
-    (Component("cmk.piggyback_hub"), _is_default_allowed_import),
+    (Component("cmk.piggyback_hub"), _allow_for_cmk_piggyback_hub),
     (
         Component("cmk.plugins.robotmk.agent_based.cee"),
         _is_allowed_for_robotmk_agent_based_cee_plugins,

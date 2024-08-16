@@ -8,14 +8,22 @@ import logging
 import os
 import signal
 import sys
+import threading
 import time
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from logging import getLogger
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from types import FrameType
 
+from pydantic import BaseModel
+
 from cmk.utils.daemon import daemonize, pid_file_lock
+from cmk.utils.hostaddress import HostName
+
+from cmk.messaging import Connection
+from cmk.piggyback import store_piggyback_raw_data
 
 VERBOSITY_MAP = {
     0: logging.INFO,
@@ -36,6 +44,14 @@ class Arguments:
     pid_file: str
     log_file: str
     omd_root: str
+
+
+class PiggybackPayload(BaseModel):
+    source_host: str
+    target_host: str
+    last_update: int
+    last_contact: int | None
+    sections: Sequence[bytes]
 
 
 def _parse_arguments(argv: list[str]) -> Arguments:
@@ -92,9 +108,56 @@ def _register_signal_handler() -> None:
     signal.signal(signal.SIGTERM, signal_handler)
 
 
+def _create_on_message(
+    logger: logging.Logger,
+    omd_root: Path,
+) -> Callable[[object, object, object, PiggybackPayload], None]:
+    def _on_message(
+        _channel: object, _delivery: object, _properties: object, received: PiggybackPayload
+    ) -> None:
+        logger.debug(
+            "Received payload for piggybacked host '%s' from source host '%s'",
+            received.target_host,
+            received.source_host,
+        )
+        store_piggyback_raw_data(
+            source_hostname=HostName(received.source_host),
+            piggybacked_raw_data={HostName(received.target_host): received.sections},
+            timestamp=received.last_update,
+            omd_root=omd_root,
+            status_file_timestamp=received.last_contact,
+        )
+
+    return _on_message
+
+
+def _receive_messages(logger: logging.Logger, omd_root: Path) -> None:
+    try:
+        with Connection("piggyback-hub", omd_root) as conn:
+            channel = conn.channel(PiggybackPayload)
+            channel.queue_declare(queue="payload")
+            on_message_callback = _create_on_message(logger, omd_root)
+
+            logger.debug("Waiting for messages")
+
+            while True:
+                channel.consume(on_message_callback, queue="payload")
+    except SignalException:
+        logger.debug("Stopping receiving messages")
+        return
+    except Exception as e:
+        logger.exception("Unhandled exception: %s.", e)
+
+
 def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> None:
+    # TODO: remove this loop when rabbitmq available in site
     while True:
         time.sleep(5)
+
+    receiving_thread = threading.Thread(target=_receive_messages, args=(logger, omd_root))
+
+    receiving_thread.start()
+    receiving_thread.join()
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -37,6 +37,7 @@ from cmk.utils.notify_types import (
     MkeventdPluginName,
     MSTeamsPluginName,
     NotifyBulkType,
+    OpsgenieElement,
     OpsGeniePluginName,
     OpsGeniePriorityPValueType,
     OpsGeniePriorityStrType,
@@ -2416,6 +2417,41 @@ class WebhookURLOption:
 
 
 # ----------------------------------------------------------------
+class CheckboxListOfExtraPropertiesAPIType(CheckboxStateType, total=False):
+    value: list[OpsgenieElement]
+
+
+@dataclass
+class CheckboxWithListOfExtraPropertiesValues:
+    value: list[OpsgenieElement] | None = None
+
+    @classmethod
+    def from_mk_file_format(
+        cls, data: list[OpsgenieElement] | None
+    ) -> CheckboxWithListOfExtraPropertiesValues:
+        return cls(value=data)
+
+    @classmethod
+    def from_api_request(
+        cls,
+        data: CheckboxListOfExtraPropertiesAPIType,
+    ) -> CheckboxWithListOfExtraPropertiesValues:
+        if data["state"] == "disabled":
+            return cls()
+        return cls(value=data["value"])
+
+    def api_response(self) -> CheckboxListOfExtraPropertiesAPIType:
+        state: CheckboxState = "disabled" if self.value is None else "enabled"
+        r: CheckboxListOfExtraPropertiesAPIType = {"state": state}
+        if self.value is not None:
+            r["value"] = self.value
+        return r
+
+    def to_mk_file_format(self) -> list[OpsgenieElement] | None:
+        return self.value
+
+
+# ----------------------------------------------------------------
 
 
 class API_AsciiMailData(TypedDict, total=False):
@@ -2511,6 +2547,7 @@ class API_OpsGenieIssueData(TypedDict, total=False):
     actions: CheckboxListOfStrAPIType
     tags: CheckboxListOfStrAPIType
     entity: CheckboxStrAPIType
+    extra_properties: CheckboxListOfExtraPropertiesAPIType
 
 
 class API_PagerDutyData(TypedDict, total=False):

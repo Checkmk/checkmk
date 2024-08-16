@@ -19,6 +19,7 @@ from cmk.utils.notify_types import (
     IncidentStateStr,
     MgmntPriorityType,
     MgmntUrgencyType,
+    OpsgenieElement,
     OpsGeniePriorityStrType,
     PluginOptions,
     PushOverPriorityStringType,
@@ -1437,6 +1438,21 @@ class ListOfStrOneOfSchema(CheckboxOneOfSchema):
     }
 
 
+class ListOfExtraProperties(Checkbox):
+    value = fields.List(
+        fields.String(enum=list(get_args(OpsgenieElement))),
+        load_default=["abstime", "address", "longoutput"],
+        uniqueItems=True,
+    )
+
+
+class ListOfExtraPropertiesOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": ListOfExtraProperties,
+    }
+
+
 class OpsGeniePluginCreate(PluginName):
     api_key = fields.Nested(
         OpsGenisStoreOrExplicitKeySelector,
@@ -1511,6 +1527,11 @@ class OpsGeniePluginCreate(PluginName):
         StrValueOneOfSchema,
         required=True,
         description="Is used to specify which domain the alert is related to",
+    )
+    extra_properties = fields.Nested(
+        ListOfExtraPropertiesOneOfSchema,
+        description="A list of extra properties that will be included in the notification",
+        load_default=lambda: {"state": "disabled"},
     )
 
 

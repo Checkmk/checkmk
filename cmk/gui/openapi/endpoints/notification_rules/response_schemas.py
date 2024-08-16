@@ -16,6 +16,7 @@ from cmk.utils.notify_types import (
     get_builtin_plugin_names,
     GroupbyType,
     IlertPriorityType,
+    OpsgenieElement,
     OpsGeniePriorityStrType,
     PluginOptions,
     PushOverPriorityStringType,
@@ -725,6 +726,14 @@ class CheckboxOpsGeniePriorityValue(CheckboxOutput):
     )
 
 
+class CheckboxOpsExtraPropertiesValue(CheckboxOutput):
+    value = fields.List(
+        fields.String(enum=list(get_args(OpsgenieElement))),
+        description="A list of extra properties to be included in the notification",
+        example=["abstime", "address", "longoutput"],
+    )
+
+
 class OpenGeniePluginResponse(PluginName):
     api_key = fields.Nested(OpsGeniePasswordResponse)
     domain = fields.Nested(CheckboxWithStrValueOutput)
@@ -742,6 +751,7 @@ class OpenGeniePluginResponse(PluginName):
     actions = fields.Nested(CheckboxWithListOfStrOutput)
     tags = fields.Nested(CheckboxWithListOfStrOutput)
     entity = fields.Nested(CheckboxWithStrValueOutput)
+    extra_properties = fields.Nested(CheckboxOpsExtraPropertiesValue)
 
 
 # PagerDuty ---------------------------------------------------------

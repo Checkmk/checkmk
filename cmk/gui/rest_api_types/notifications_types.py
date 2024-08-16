@@ -85,6 +85,7 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     CheckboxURLPrefix,
     CheckboxUseSiteIDPrefix,
     CheckboxWithIntValue,
+    CheckboxWithListOfExtraPropertiesValues,
     CheckboxWithListOfStrValues,
     CheckboxWithStrValue,
     EnableSyncDeliveryViaSMTP,
@@ -819,6 +820,9 @@ class OpsGenieIssuePlugin:
     actions: CheckboxWithListOfStrValues = field(default_factory=CheckboxWithListOfStrValues)
     tags: CheckboxWithListOfStrValues = field(default_factory=CheckboxWithListOfStrValues)
     entity: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
+    extra_properties: CheckboxWithListOfExtraPropertiesValues = field(
+        default_factory=CheckboxWithListOfExtraPropertiesValues
+    )
 
     @classmethod
     def from_mk_file_format(
@@ -877,6 +881,9 @@ class OpsGenieIssuePlugin:
             entity=CheckboxWithStrValue.from_mk_file_format(
                 pluginparams.get("entity"),
             ),
+            extra_properties=CheckboxWithListOfExtraPropertiesValues.from_mk_file_format(
+                pluginparams.get("elements"),
+            ),
         )
 
     @classmethod
@@ -904,6 +911,9 @@ class OpsGenieIssuePlugin:
             actions=CheckboxWithListOfStrValues.from_api_request(params["actions"]),
             tags=CheckboxWithListOfStrValues.from_api_request(params["tags"]),
             entity=CheckboxWithStrValue.from_api_request(params["entity"]),
+            extra_properties=CheckboxWithListOfExtraPropertiesValues.from_api_request(
+                params["extra_properties"],
+            ),
         )
 
     def api_response(self) -> APINotifyPlugin:
@@ -927,6 +937,7 @@ class OpsGenieIssuePlugin:
                     "actions": self.actions.api_response(),
                     "tags": self.tags.api_response(),
                     "entity": self.entity.api_response(),
+                    "extra_properties": self.extra_properties.api_response(),
                 }
             )
         r: APINotifyPlugin = {"option": self.option, "plugin_params": params}
@@ -952,6 +963,7 @@ class OpsGenieIssuePlugin:
             "actions": self.actions.to_mk_file_format(),
             "tags": self.tags.to_mk_file_format(),
             "entity": self.entity.to_mk_file_format(),
+            "elements": self.extra_properties.to_mk_file_format(),
         }
 
         return (

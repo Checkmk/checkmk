@@ -870,6 +870,7 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": "entity_test",
         },
+        "extra_properties": {"state": "disabled"},
     },
     {
         "plugin_name": "opsgenie_issues",
@@ -936,6 +937,24 @@ plugin_test_data: list[PluginType] = [
         "entity": {
             "state": "enabled",
             "value": "entity_test",
+        },
+        "extra_properties": {
+            "state": "enabled",
+            "value": [
+                "omd_site",
+                "hosttags",
+                "address",
+                "abstime",
+                "reltime",
+                "longoutput",
+                "ack_author",
+                "ack_comment",
+                "notification_author",
+                "notification_comment",
+                "perfdata",
+                "notesurl",
+                "context",
+            ],
         },
     },
     {

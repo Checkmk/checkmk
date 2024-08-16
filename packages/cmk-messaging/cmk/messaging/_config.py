@@ -50,6 +50,8 @@ def make_connection_params(omd_root: Path, server: str, port: int) -> pika.Conne
         port=port,
         ssl_options=pika.SSLOptions(_make_ssl_context(omd_root)),
         credentials=pika.credentials.ExternalCredentials(),
+        heartbeat=0,
+        blocked_connection_timeout=300,
     )
 
 

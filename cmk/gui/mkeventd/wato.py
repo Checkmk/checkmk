@@ -614,7 +614,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
         (
             "contact_groups",
             Dictionary(
-                title=_("Contact Groups"),
+                title=_("Contact groups"),
                 elements=[
                     (
                         "groups",

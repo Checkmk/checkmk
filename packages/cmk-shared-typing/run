@@ -19,7 +19,7 @@ usage() {
     echo "  -c, --clean             remove artifacts first"
     echo "  -b, --build             build"
     echo "  -F, --check-format      check for correct formatting"
-    echo "  -a, --all               shortcut for -F -u -m -p -B -C"
+    echo "  -a, --all               shortcut for -c -b -F -f"
     echo "  -f, --format            format sources"
     echo "  -j N, --jobs=N          allow N jobs at once, default is ${JOBS}"
     echo "  -h, --help              show this help"
@@ -57,7 +57,10 @@ parse_options() {
                 continue
                 ;;
             '-a' | '--all')
+                RUN_CLEAN=yes
+                RUN_BUILD=yes
                 RUN_CHECK_FORMAT=yes
+                RUN_FORMAT=yes
                 shift
                 continue
                 ;;
@@ -112,10 +115,11 @@ setup_venv() {
 
 run_clean() {
     rm -rf .cache .mypy_cache .pytest_cache .venv ./*.egg-info build
-    find cmk tests -type d -name __pycache__ -print0 | xargs --null --no-run-if-empty rm -rf
+    find python -type d -name __pycache__ -print0 | xargs --null --no-run-if-empty rm -rf
 }
 
 run_build() {
+    setup_venv
     mkdir -p python typescript
     cwd=$(pwd)
     export PYTHONPATH="$PYTHONPATH:$cwd"

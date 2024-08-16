@@ -203,7 +203,6 @@ const save = async () => {
       <Button style="padding-left: 1rem" label="Back" variant="prev" @click="prevStage" />
     </div>
   </div>
-  {{ currentStage + 1 }} / {{ numberOfStages }}
 </template>
 
 <style scoped>

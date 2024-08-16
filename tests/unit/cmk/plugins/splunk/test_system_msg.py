@@ -6,12 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, State, StringTable
-from cmk.plugins.collection.agent_based.splunk_system_msg import (
-    check,
-    parse,
-    Section,
-    SplunkMessage,
-)
+from cmk.plugins.splunk.agent_based.system_msg import check, parse, Section, SplunkMessage
 
 
 @pytest.mark.parametrize(

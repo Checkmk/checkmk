@@ -4,26 +4,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
+import json
 import logging
 import os
 import signal
 import sys
 import threading
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from logging import getLogger
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from types import FrameType
+from typing import Final
 
 from pydantic import BaseModel
 
 from cmk.utils.daemon import daemonize, pid_file_lock
 from cmk.utils.hostaddress import HostName
 
-from cmk.messaging import Connection
-from cmk.piggyback import store_piggyback_raw_data
+from cmk.messaging import Channel, Connection
+from cmk.piggyback import (
+    get_piggyback_raw_data,
+    load_last_distribution_time,
+    PiggybackMessage,
+    PiggybackMetaData,
+    store_last_distribution_time,
+    store_piggyback_raw_data,
+)
 
 VERBOSITY_MAP = {
     0: logging.INFO,
@@ -34,6 +43,10 @@ VERBOSITY_MAP = {
 
 class SignalException(Exception):
     pass
+
+
+PIGGYBACK_HUB_CONFIG_PATH: Final = "etc/check_mk/piggyback_hub.conf"
+SENDING_PAUSE = 60  # [s]
 
 
 @dataclass
@@ -52,6 +65,12 @@ class PiggybackPayload(BaseModel):
     last_update: int
     last_contact: int | None
     sections: Sequence[bytes]
+
+
+@dataclass
+class Target:
+    host_name: HostName
+    site_id: str
 
 
 def _parse_arguments(argv: list[str]) -> Arguments:
@@ -149,15 +168,111 @@ def _receive_messages(logger: logging.Logger, omd_root: Path) -> None:
         logger.exception("Unhandled exception: %s.", e)
 
 
+def _load_piggyback_targets(
+    piggyback_hub_config_path: Path, current_site_id: str
+) -> Sequence[Target]:
+    if not piggyback_hub_config_path.exists():
+        return []
+    with open(piggyback_hub_config_path, "r") as f:
+        piggyback_hub_config: Sequence[Mapping[str, str]] = json.load(f)
+
+    targets = []
+    for config in piggyback_hub_config:
+        match config:
+            case {"host_name": target_host_name, "site_id": target_site_id}:
+                if target_site_id != current_site_id:
+                    targets.append(
+                        Target(host_name=HostName(target_host_name), site_id=target_site_id)
+                    )
+            case other:
+                raise ValueError(f"Invalid piggyback_hub configuration: {other}")
+    return targets
+
+
+def _is_message_already_distributed(meta: PiggybackMetaData, omd_root: Path) -> bool:
+    if (
+        distribution_time := load_last_distribution_time(meta.source, meta.piggybacked, omd_root)
+    ) is None:
+        return False
+
+    return distribution_time >= meta.last_update
+
+
+def _get_piggyback_raw_data_to_send(
+    target_host: HostName, omd_root: Path
+) -> Sequence[PiggybackMessage]:
+    return [
+        data
+        for data in get_piggyback_raw_data(target_host, omd_root)
+        if not _is_message_already_distributed(data.meta, omd_root)
+    ]
+
+
+def _send_message(
+    channel: Channel,
+    piggyback_message: PiggybackMessage,
+    target_site_id: str,
+    omd_root: Path,
+) -> None:
+    channel.publish_for_site(
+        target_site_id,
+        PiggybackPayload(
+            source_host=piggyback_message.meta.source,
+            target_host=piggyback_message.meta.piggybacked,
+            last_update=piggyback_message.meta.last_update,
+            last_contact=piggyback_message.meta.last_contact,
+            sections=[piggyback_message.raw_data],
+        ),
+    )
+    store_last_distribution_time(
+        piggyback_message.meta.source,
+        piggyback_message.meta.piggybacked,
+        piggyback_message.meta.last_update,
+        omd_root,
+    )
+
+
+def _send_messages(logger: logging.Logger, omd_root: Path) -> None:
+    try:
+        with Connection("piggyback-hub", omd_root) as conn:
+            channel = conn.channel(PiggybackPayload)
+
+            while True:
+                targets = _load_piggyback_targets(
+                    omd_root / PIGGYBACK_HUB_CONFIG_PATH, omd_root.name
+                )
+                for target in targets:
+                    for piggyback_message in _get_piggyback_raw_data_to_send(
+                        target.host_name, omd_root
+                    ):
+                        logger.debug(
+                            "Sending payload for piggybacked host '%s' from source host '%s' to site '%s'",
+                            piggyback_message.meta.piggybacked,
+                            piggyback_message.meta.source,
+                            target.site_id,
+                        )
+                        _send_message(channel, piggyback_message, target.site_id, omd_root)
+
+                time.sleep(SENDING_PAUSE)
+    except SignalException:
+        logger.debug("Stopping distributing messages")
+        return
+    except Exception as e:
+        logger.exception("Unhandled exception: %s.", e)
+
+
 def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> None:
     # TODO: remove this loop when rabbitmq available in site
     while True:
         time.sleep(5)
 
     receiving_thread = threading.Thread(target=_receive_messages, args=(logger, omd_root))
+    sending_thread = threading.Thread(target=_send_messages, args=(logger, omd_root))
 
     receiving_thread.start()
+    sending_thread.start()
     receiving_thread.join()
+    sending_thread.join()
 
 
 def main(argv: list[str] | None = None) -> int:

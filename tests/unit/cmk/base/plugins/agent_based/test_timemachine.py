@@ -36,6 +36,17 @@ def test_check_timemachine_state_ok() -> None:
     ]
 
 
+def test_check_timemachine_state_ok_with_suffix() -> None:
+    info = "/Volumes/.timemachine/ACB123AB-C123-ABC1-23AB-C123ABC123AB/2022-05-05-202610.backup/2022-05-05-202610.backup"
+    result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=info))
+    assert result == [
+        Result(
+            state=State.OK,
+            summary="Last backup was at 2022-05-05 20:26:10: 18 hours 33 minutes ago",
+        )
+    ]
+
+
 def test_check_timemachine_state_crit(monkeypatch: pytest.MonkeyPatch) -> None:
     section = "/Volumes/Backup/Backups.backupdb/macvm/2022-05-01-202610"
     result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=section))

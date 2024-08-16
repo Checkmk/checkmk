@@ -55,7 +55,7 @@ def _check(now: datetime.datetime, params: Mapping[str, Any], section: str) -> C
         )
         return
 
-    raw_backup_time = section.split("/")[-1]
+    raw_backup_time = section.split("/")[-1].removesuffix(".backup")
     backup_time = datetime.datetime.strptime(raw_backup_time, "%Y-%m-%d-%H%M%S")
     backup_age = (now - backup_time).total_seconds()
 

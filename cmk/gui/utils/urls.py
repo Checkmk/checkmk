@@ -396,6 +396,7 @@ class DocReference(Enum):
     AGENT_WINDOWS = "agent_windows"
     ALERT_HANDLERS = "alert_handlers"
     ANALYZE_CONFIG = "analyze_configuration"
+    ANALYZE_NOTIFICATIONS = "notifications#_rule_evaluation_by_the_notification_module"
     AWS = "monitoring_aws"
     AZURE = "monitoring_azure"
     BACKUPS = "backup"

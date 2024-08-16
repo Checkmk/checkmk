@@ -116,6 +116,7 @@ from .._notification_parameter import notification_parameter_registry
 
 def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeNotifications)
+    mode_registry.register(ModeAnalyzeNotifications)
     mode_registry.register(ModeUserNotifications)
     mode_registry.register(ModePersonalUserNotifications)
     mode_registry.register(ModeEditNotificationRule)
@@ -375,7 +376,7 @@ class ABCNotificationsMode(ABCEventsMode):
                 else:
                     html.icon("checkmark", _("Create a notification"))
 
-                table.cell(_("Plug-in"), notify_plugin or _("Plain email"), css=["narrow nowrap"])
+                table.cell(_("Method"), notify_plugin or _("Plain email"), css=["narrow nowrap"])
 
                 table.cell(_("Bulk"), css=["narrow"])
                 if "bulk" in rule or "bulk_period" in rule:
@@ -489,6 +490,10 @@ class ABCNotificationsMode(ABCEventsMode):
         else:
             mode = "notification_rule"
 
+        back_mode = []
+        if request.var("mode") == "analyze_notifications":
+            back_mode.append(("back_mode", "analyze_notifications"))
+
         delete_url = make_confirm_delete_link(
             url=make_action_link(
                 [
@@ -496,6 +501,7 @@ class ABCNotificationsMode(ABCEventsMode):
                     ("user", userid),
                     ("_delete", nr),
                 ]
+                + back_mode
             ),
             title=_("Delete notification rule #%d") % nr,
             suffix=rule.get("description", ""),
@@ -507,6 +513,7 @@ class ABCNotificationsMode(ABCEventsMode):
                 ("user", userid),
                 ("_move", nr),
             ]
+            + back_mode
         )
         edit_url = folder_preserving_link(
             [
@@ -514,6 +521,7 @@ class ABCNotificationsMode(ABCEventsMode):
                 ("edit", nr),
                 ("user", userid),
             ]
+            + back_mode
         )
         clone_url = folder_preserving_link(
             [
@@ -521,6 +529,7 @@ class ABCNotificationsMode(ABCEventsMode):
                 ("clone", nr),
                 ("user", userid),
             ]
+            + back_mode
         )
 
         return NotificationRuleLinks(
@@ -548,8 +557,6 @@ class ModeNotifications(ABCNotificationsMode):
         super().__init__()
         options = user.load_file("notification_display_options", {})
         self._show_user_rules = options.get("show_user_rules", False)
-        self._show_backlog = options.get("show_backlog", False)
-        self._show_bulks = options.get("show_bulks", False)
 
     def title(self) -> str:
         return _("Notification configuration")
@@ -582,6 +589,15 @@ class ModeNotifications(ABCNotificationsMode):
                                         css_classes=(
                                             ["active"] if self._test_notification_ongoing() else []
                                         ),
+                                    ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                                PageMenuEntry(
+                                    title=_("Analyze recent notifications"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        folder_preserving_link([("mode", "analyze_notifications")])
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -623,47 +639,6 @@ class ModeNotifications(ABCNotificationsMode):
                             )
                         ),
                     ),
-                    PageMenuEntry(
-                        title=(
-                            _("Hide analysis")
-                            if self._show_backlog and not request.var("test_notification")
-                            else _("Show analysis")
-                        ),
-                        icon_name={
-                            "icon": "analyze",
-                            "emblem": "disable" if self._show_backlog else "enable",
-                        },
-                        item=make_simple_link(
-                            makeactionuri(
-                                request,
-                                transactions,
-                                addvars=[
-                                    ("_show_backlog", "" if self._show_backlog else "1"),
-                                ],
-                                delvars=("test_context", "test_notification"),
-                            )
-                        ),
-                        is_shortcut=True,
-                        is_suggested=True,
-                    ),
-                    PageMenuEntry(
-                        title=_("Hide bulks") if self._show_bulks else _("Show bulks"),
-                        icon_name={
-                            "icon": "bulk",
-                            "emblem": "disable" if self._show_bulks else "enable",
-                        },
-                        item=make_simple_link(
-                            makeactionuri(
-                                request,
-                                transactions,
-                                [
-                                    ("_show_bulks", "" if self._show_bulks else "1"),
-                                ],
-                            )
-                        ),
-                        is_shortcut=True,
-                        is_suggested=True,
-                    ),
                 ],
             ),
         )
@@ -674,16 +649,6 @@ class ModeNotifications(ABCNotificationsMode):
         if request.has_var("_show_user"):
             if transactions.check_transaction():
                 self._show_user_rules = bool(request.var("_show_user"))
-                self._save_notification_display_options()
-
-        elif request.has_var("_show_backlog"):
-            if transactions.check_transaction():
-                self._show_backlog = bool(request.var("_show_backlog"))
-                self._save_notification_display_options()
-
-        elif request.has_var("_show_bulks"):
-            if transactions.check_transaction():
-                self._show_bulks = bool(request.var("_show_bulks"))
                 self._save_notification_display_options()
 
         elif self._test_notification_ongoing():
@@ -697,13 +662,6 @@ class ModeNotifications(ABCNotificationsMode):
                     )
                 )
 
-        elif request.has_var("_replay"):
-            if transactions.check_transaction():
-                nr = request.get_integer_input_mandatory("_replay")
-                notification_replay(nr)
-                flash(_("Replayed notification number %d") % (nr + 1))
-                return None
-
         else:
             self._generic_rule_list_actions(
                 self._get_notification_rules(),
@@ -711,6 +669,10 @@ class ModeNotifications(ABCNotificationsMode):
                 _("notification rule"),
                 NotificationRuleConfigFile().save,
             )
+
+        if back_mode := request.var("back_mode"):
+            return redirect(mode_url(back_mode, user=request.get_str_input_mandatory("user")))
+
         return redirect(self.mode_url())
 
     def _test_notification_ongoing(self) -> bool:
@@ -797,28 +759,22 @@ class ModeNotifications(ABCNotificationsMode):
             "notification_display_options",
             {
                 "show_user_rules": self._show_user_rules,
-                "show_backlog": self._show_backlog,
-                "show_bulks": self._show_bulks,
             },
         )
 
     def page(self) -> None:
-        context, analyse = self._analyse_result_from_request()
-        # do not show notification backlog if test notifications was performed
-        self._show_backlog = self._show_backlog and not context
         self._show_no_fallback_contact_warning()
-        self._show_bulk_notifications()
+
+        context, analyse = self._analyse_result_from_request()
         self._show_notification_test_overview(context, analyse)
         self._show_notification_test_details(context, analyse)
-        self._show_notification_backlog()
+        if request.var("test_notification") and analyse:
+            self._show_resulting_notifications(result=analyse)
         self._show_rules(analyse)
 
     def _analyse_result_from_request(
         self,
     ) -> tuple[NotificationContext | None, NotifyAnalysisInfo | None]:
-        if request.var("analyse"):
-            nr = request.get_integer_input_mandatory("analyse")
-            return NotificationContext({}), notification_analyse(nr).result
         if request.var("test_notification"):
             try:
                 context = json.loads(request.get_str_input_mandatory("test_context"))
@@ -931,44 +887,6 @@ class ModeNotifications(ABCNotificationsMode):
                 return True
 
         return False
-
-    def _show_bulk_notifications(self) -> None:
-        if self._show_bulks:
-            # Warn if there are unsent bulk notifications
-            if not self._render_bulks(only_ripe=False):
-                html.show_message(_("Currently there are no unsent notification bulks pending."))
-        else:
-            # Warn if there are unsent bulk notifications
-            self._render_bulks(only_ripe=True)
-
-    def _render_bulks(self, only_ripe: bool) -> bool:
-        bulks = notification_get_bulks(only_ripe).result
-        if not bulks:
-            return False
-
-        title = _("Overdue bulk notifications!") if only_ripe else _("Open bulk notifications")
-        with table_element(title=title) as table:
-            for directory, age, interval, timeperiod, maxcount, uuids in bulks:
-                dirparts = directory.split("/")
-                contact = dirparts[-3]
-                method = dirparts[-2]
-                bulk_id = dirparts[-1].split(",", 2)[-1]
-                table.row()
-                table.cell(_("Contact"), contact)
-                table.cell(_("Method"), method)
-                table.cell(_("Bulk ID"), bulk_id)
-                table.cell(_("Max. Age (sec)"), str(interval), css=["number"])
-                table.cell(_("Age (sec)"), str(age), css=["number"])
-                if interval and interval != "n.a." and age >= float(interval):
-                    html.icon("warning", _("Age of oldest notification is over maximum age"))
-                table.cell(_("Time Period"), str(timeperiod))
-                table.cell(_("Max. Count"), str(maxcount), css=["number"])
-                table.cell(_("Count"), str(len(uuids)), css=["number"])
-                if len(uuids) >= maxcount:
-                    html.icon(
-                        "warning", _("Number of notifications exceeds maximum allowed number")
-                    )
-        return True
 
     def _show_notification_test_overview(
         self,
@@ -1094,86 +1012,6 @@ class ModeNotifications(ABCNotificationsMode):
         # This dummy row is needed for not destroying the odd/even row highlighting
         table.row(css=["notification_context hidden"])
 
-        if analyse is not None:
-            self._show_resulting_notifications(result=analyse)
-
-    def _show_notification_backlog(self) -> None:
-        """Show recent notifications. We can use them for rule analysis"""
-        if not self._show_backlog:
-            return
-
-        backlog = store.load_object_from_file(
-            cmk.utils.paths.var_dir + "/notify/backlog.mk",
-            default=[],
-        )
-        if not backlog:
-            return
-
-        with table_element(
-            table_id="backlog", title=_("Analysis: Recent notifications"), sortable=False
-        ) as table:
-            for nr, context in enumerate(backlog):
-                table.row()
-                table.cell("&nbsp;", css=["buttons"])
-
-                analyse_url = makeuri(request, [("analyse", str(nr))])
-                html.icon_button(
-                    analyse_url, _("Analyze ruleset with this notification"), "analyze"
-                )
-
-                html.icon_button(
-                    None,
-                    _("Show / hide notification context"),
-                    "toggle_context",
-                    onclick="cmk.wato.toggle_container('notification_context_%d')" % nr,
-                )
-
-                replay_url = makeactionuri(request, transactions, [("_replay", str(nr))])
-                html.icon_button(
-                    replay_url, _("Replay this notification, send it again!"), "reload_cmk"
-                )
-
-                if request.var("analyse") and nr == request.get_integer_input_mandatory("analyse"):
-                    html.icon("checkmark", _("You are analysing this notification"))
-
-                table.cell(_("Nr."), str(nr + 1), css=["number"])
-
-                table.cell(_("Time"), self._get_date(context), css=["nobr"])
-                nottype = context.get("NOTIFICATIONTYPE", "")
-                table.cell(_("Type"), nottype)
-
-                if nottype in ["PROBLEM", "RECOVERY"]:
-                    if context.get("SERVICESTATE"):
-                        statename = context["SERVICESTATE"][:4]
-                        state = context["SERVICESTATEID"]
-                        css = [f"state svcstate state{state}"]
-                    else:
-                        statename = context.get("HOSTSTATE")[:4]
-                        state = context["HOSTSTATEID"]
-                        css = [f"state hstate hstate{state}"]
-                    table.cell(
-                        _("State"),
-                        HTMLWriter.render_span(statename, class_=["state_rounded_fill"]),
-                        css=css,
-                    )
-                else:
-                    self._add_state_cells(table=table, nottype=nottype)
-
-                self._add_host_service_cells(
-                    table=table,
-                    context=context,
-                )
-                self._add_plugin_output_cells(table=table, context=context)
-
-                self._add_toggable_notification_context(
-                    table=table,
-                    context=context,
-                    ident=f"notification_context_{nr}",
-                )
-
-                # This dummy row is needed for not destroying the odd/even row highlighting
-                table.row(css=["notification_context hidden"])
-
     def _get_date(self, context: NotificationContext) -> str:
         if "MICROTIME" in context:
             return time.strftime(
@@ -1238,7 +1076,6 @@ class ModeNotifications(ABCNotificationsMode):
         rules = self._get_notification_rules()
         self._render_notification_rules(rules, show_title=True, analyse=analyse, start_nr=start_nr)
         start_nr += len(rules)
-
         if self._show_user_rules:
             for user_id, user_rules in sorted(
                 load_user_notification_rules().items(), key=lambda u: u[0]
@@ -1253,9 +1090,6 @@ class ModeNotifications(ABCNotificationsMode):
                 )
                 start_nr += len(user_rules)
 
-        if request.var("analyse") and analyse is not None:
-            self._show_resulting_notifications(result=analyse)
-
     def _show_resulting_notifications(self, result: NotifyAnalysisInfo) -> None:
         with table_element(table_id="plugins", title=_("Resulting notifications")) as table:
             for contact, plugin, parameters, bulk in result[1]:
@@ -1263,8 +1097,8 @@ class ModeNotifications(ABCNotificationsMode):
                 if contact.startswith("mailto:"):
                     contact = contact[7:]  # strip of fake-contact mailto:-prefix
                 table.cell(_("Recipient"), contact)
-                table.cell(_("Plug-in"), self._vs_notification_scripts().value_to_html(plugin))
-                table.cell(_("Plug-in parameters"), ", ".join(parameters))
+                table.cell(_("Method"), self._vs_notification_scripts().value_to_html(plugin))
+                table.cell(_("Parameters"), ", ".join(parameters))
                 table.cell(_("Bulking"))
                 if bulk:
                     html.write_text_permissive(_("Time horizon") + ": ")
@@ -1503,6 +1337,255 @@ def _validate_general_opts(value: dict, varprefix: str) -> None:
         raise MKUserError(
             f"{varprefix}_p_on_service_hint",
             _("If you want to test service notifications, please provide a service to test with."),
+        )
+
+
+class ModeAnalyzeNotifications(ModeNotifications):
+    def __init__(self) -> None:
+        super().__init__()
+        options = user.load_file("analyze_notification_display_options", {})
+        self._show_bulks = options.get("show_bulks", False)
+
+    @classmethod
+    def name(cls) -> str:
+        return "analyze_notifications"
+
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode] | None:
+        return ModeNotifications
+
+    def title(self) -> str:
+        return _("Analyze recent notifications")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Notifications"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Test notifications"),
+                                    name="test_notifications",
+                                    icon_name="analysis",
+                                    item=PageMenuPopup(
+                                        content=self._render_test_notifications(),
+                                        css_classes=(
+                                            ["active"] if self._test_notification_ongoing() else []
+                                        ),
+                                    ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                                PageMenuEntry(
+                                    title=_("Notifications"),
+                                    icon_name="notifications",
+                                    item=make_simple_link(
+                                        folder_preserving_link([("mode", "notifications")])
+                                    ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
+        )
+        self._extend_display_dropdown(menu)
+        menu.add_doc_reference(
+            _("Rule evaluation by the notification module"),
+            DocReference.ANALYZE_NOTIFICATIONS,
+        )
+        return menu
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Toggle elements"),
+                entries=[
+                    PageMenuEntry(
+                        title=(
+                            _("Hide notification bulks")
+                            if self._show_bulks
+                            else _("Show notification bulks")
+                        ),
+                        icon_name="toggle_" + ("on" if self._show_bulks else "off"),
+                        item=make_simple_link(
+                            makeactionuri(
+                                request,
+                                transactions,
+                                [
+                                    ("_show_bulks", "" if self._show_bulks else "1"),
+                                ],
+                            )
+                        ),
+                        is_shortcut=True,
+                        is_suggested=True,
+                    ),
+                ],
+            ),
+        )
+
+    def page(self) -> None:
+        result = self._get_result_from_request()
+        self._show_bulk_notifications()
+        self._show_notification_backlog()
+        if request.var("analyse") and result:
+            self._show_resulting_notifications(result=result)
+        self._show_rules(result)
+
+    def _get_result_from_request(
+        self,
+    ) -> NotifyAnalysisInfo | None:
+        if request.var("analyse"):
+            nr = request.get_integer_input_mandatory("analyse")
+            return notification_analyse(nr).result
+
+        return None
+
+    def _show_bulk_notifications(self) -> None:
+        if self._show_bulks:
+            # Warn if there are unsent bulk notifications
+            if not self._render_bulks(only_ripe=False):
+                html.show_message(_("Currently there are no unsent notification bulks pending."))
+        else:
+            # Warn if there are unsent bulk notifications
+            self._render_bulks(only_ripe=True)
+
+    def _render_bulks(self, only_ripe: bool) -> bool:
+        bulks = notification_get_bulks(only_ripe).result
+        if not bulks:
+            return False
+
+        title = _("Overdue bulk notifications!") if only_ripe else _("Open bulk notifications")
+        with table_element(title=title) as table:
+            for directory, age, interval, timeperiod, maxcount, uuids in bulks:
+                dirparts = directory.split("/")
+                contact = dirparts[-3]
+                method = dirparts[-2]
+                bulk_id = dirparts[-1].split(",", 2)[-1]
+                table.row()
+                table.cell(_("Contact"), contact)
+                table.cell(_("Method"), method)
+                table.cell(_("Bulk ID"), bulk_id)
+                table.cell(_("Max. Age (sec)"), str(interval), css=["number"])
+                table.cell(_("Age (sec)"), str(age), css=["number"])
+                if interval and interval != "n.a." and age >= float(interval):
+                    html.icon("warning", _("Age of oldest notification is over maximum age"))
+                table.cell(_("Time Period"), str(timeperiod))
+                table.cell(_("Max. Count"), str(maxcount), css=["number"])
+                table.cell(_("Count"), str(len(uuids)), css=["number"])
+                if len(uuids) >= maxcount:
+                    html.icon(
+                        "warning", _("Number of notifications exceeds maximum allowed number")
+                    )
+        return True
+
+    def _show_notification_backlog(self) -> None:
+        """Show recent notifications. We can use them for rule analysis"""
+        backlog = store.load_object_from_file(
+            cmk.utils.paths.var_dir + "/notify/backlog.mk",
+            default=[],
+        )
+        if not backlog:
+            return
+
+        with table_element(
+            table_id="backlog", title=_("Analysis: Recent notifications"), sortable=False
+        ) as table:
+            for nr, context in enumerate(backlog):
+                table.row()
+                table.cell("&nbsp;", css=["buttons"])
+
+                analyse_url = makeuri(request, [("analyse", str(nr))])
+                html.icon_button(
+                    analyse_url, _("Analyze ruleset with this notification"), "analyze"
+                )
+
+                html.icon_button(
+                    None,
+                    _("Show / hide notification context"),
+                    "toggle_context",
+                    onclick="cmk.wato.toggle_container('notification_context_%d')" % nr,
+                )
+
+                replay_url = makeactionuri(request, transactions, [("_replay", str(nr))])
+                html.icon_button(
+                    replay_url, _("Replay this notification, send it again!"), "reload_cmk"
+                )
+
+                if request.var("analyse") and nr == request.get_integer_input_mandatory("analyse"):
+                    html.icon("checkmark", _("You are analysing this notification"))
+
+                table.cell(_("Nr."), str(nr + 1), css=["number"])
+
+                table.cell(_("Time"), self._get_date(context), css=["nobr"])
+                nottype = context.get("NOTIFICATIONTYPE", "")
+                table.cell(_("Type"), nottype)
+
+                if nottype in ["PROBLEM", "RECOVERY"]:
+                    if context.get("SERVICESTATE"):
+                        statename = context["SERVICESTATE"][:4]
+                        state = context["SERVICESTATEID"]
+                        css = [f"state svcstate state{state}"]
+                    else:
+                        statename = context.get("HOSTSTATE")[:4]
+                        state = context["HOSTSTATEID"]
+                        css = [f"state hstate hstate{state}"]
+                    table.cell(
+                        _("State"),
+                        HTMLWriter.render_span(statename, class_=["state_rounded_fill"]),
+                        css=css,
+                    )
+                else:
+                    self._add_state_cells(table=table, nottype=nottype)
+
+                self._add_host_service_cells(
+                    table=table,
+                    context=context,
+                )
+                self._add_plugin_output_cells(table=table, context=context)
+
+                self._add_toggable_notification_context(
+                    table=table,
+                    context=context,
+                    ident=f"notification_context_{nr}",
+                )
+
+                # This dummy row is needed for not destroying the odd/even row highlighting
+                table.row(css=["notification_context hidden"])
+
+    def action(self) -> ActionResult:
+        check_csrf_token()
+
+        if request.has_var("_show_bulks"):
+            if transactions.check_transaction():
+                self._show_bulks = bool(request.var("_show_bulks"))
+                self._save_analyze_notification_display_options()
+
+        elif request.has_var("_replay"):
+            if transactions.check_transaction():
+                replay_nr = request.get_integer_input_mandatory("_replay")
+                notification_replay(replay_nr)
+                flash(_("Replayed notification number %d") % (replay_nr + 1))
+                return None
+
+        return redirect(self.mode_url())
+
+    def _save_analyze_notification_display_options(self) -> None:
+        user.save_file(
+            "analyze_notification_display_options",
+            {
+                "show_bulks": self._show_bulks,
+            },
         )
 
 
@@ -2260,6 +2343,9 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         log_what = "new-notification-rule" if self._new else "edit-notification-rule"
         self._add_change(log_what, self._log_text(self._edit_nr))
+
+        if back_mode := request.var("back_mode"):
+            return redirect(mode_url(back_mode))
 
         return self._back_mode()
 

@@ -7,6 +7,7 @@ from pathlib import Path
 
 _RELATIVE_PAYLOAD_DIR = "tmp/check_mk/piggyback"
 _RELATIVE_SOURCE_STATUS_DIR = "tmp/check_mk/piggyback_sources"
+_RELATIVE_DISTRIBUTION_STATUS_DIR = "tmp/check_mk/piggyback_distribution"
 
 
 def payload_dir(omd_root: Path) -> Path:
@@ -15,3 +16,7 @@ def payload_dir(omd_root: Path) -> Path:
 
 def source_status_dir(omd_root: Path) -> Path:
     return omd_root / _RELATIVE_SOURCE_STATUS_DIR
+
+
+def distribution_status_dir(omd_root: Path) -> Path:
+    return omd_root / _RELATIVE_DISTRIBUTION_STATUS_DIR
